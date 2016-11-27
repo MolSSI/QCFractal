@@ -7,7 +7,7 @@ mongo_qcdb is a MongoDB database backend for quantum chemical activities, partic
 # Schema Guide
 This MongoDB database has 3 collections: `databases`, `molecules`, and `pages`.
 
-## molecules
+### molecules
 A collection of atomic documents. That is, they do not have an external references and essentially define a set of usable data units. The schema of a database document is described below in JSON.
 
 ```json
@@ -34,7 +34,7 @@ A collection of atomic documents. That is, they do not have an external referenc
 }
 ```
 
-## databases
+### databases
 Collection which is home to a number of database documents. The schema of a database document is described below in JSON
 
 ```json
@@ -60,7 +60,7 @@ Collection which is home to a number of database documents. The schema of a data
 
 Each entry in the `molecules` array is a manual reference to a molecule `_id`. For more information on manual references, see https://docs.mongodb.com/v3.2/reference/database-references/#document-references
 
-##pages
+###pages
 A collection of `page` documents, which is essentially a dual key to multiple value lookup entry. Each page is a separate entry. The keys needed to access a page are [`molecule`,`method`].
 
 ```json
