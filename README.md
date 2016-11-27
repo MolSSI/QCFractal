@@ -2,7 +2,7 @@
 MongoDB backend for storing quantum chemical databases
 
 # Introduction
-mongo_qcdb is a MongoDB database backend for quantum chemical activities, particularly for use with the Psi4 project (). Currently, there is no open, standardized, and centralized repository for the outputs of computational chemistry calculations. Ease of access to such data is essential to progress, as individual calculations can take days or weeks to run. This backend is hopefully the answer to that problem.
+mongo_qcdb is a MongoDB database backend for quantum chemical activities, particularly for use with the Psi4 project (http://www.psicode.org/ or https://github.com/psi4). Currently, there is no open, standardized, and centralized repository for the outputs of computational chemistry calculations. Ease of access to such data is essential to progress, as individual calculations can take days or weeks to run. This backend is hopefully the answer to that problem.
 
 # Schema Guide
 This MongoDB database has 3 collections: `databases`, `molecules`, and `pages`.
@@ -61,7 +61,7 @@ Collection which is home to a number of database documents. The schema of a data
 Each entry in the `molecules` array is a manual reference to a molecule `_id`. For more information on manual references, see https://docs.mongodb.com/v3.2/reference/database-references/#document-references
 
 ##pages
-A collection of `page` documents, which is essentially a dual key to multiple value lookup entry. Each page is a separate entry. The key values are [`molecule`,`method`].
+A collection of `page` documents, which is essentially a dual key to multiple value lookup entry. Each page is a separate entry. The keys needed to access a page are [`molecule`,`method`].
 
 ```json
 {
