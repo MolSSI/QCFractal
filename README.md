@@ -12,8 +12,8 @@ A collection of atomic documents. That is, they do not have an external referenc
 
 ```json
 {
-  "name": "Carbon Dioxide",
   "symbol": "CO2",
+  "name": "Carbon Dioxide",
   "geometry": [
     {
       "x": "3.11",
@@ -33,6 +33,9 @@ A collection of atomic documents. That is, they do not have an external referenc
   ]
 }
 ```
+On initialization, the `molecules` collection is given a unique index on the `symbol` field. This is to enable rapid lookup from queries and obviates the need for manual references to the `_id` field. To understand the efficiency gains of an index, see https://docs.mongodb.com/manual/indexes/
+
+Because this is a unique index, each entry in the `molecules` database must have a unique `symbol`. To understand what this means, see https://docs.mongodb.com/v3.0/core/index-unique/
 
 ### databases
 Collection which is home to a number of database documents. The schema of a database document is described below in JSON
@@ -41,15 +44,15 @@ Collection which is home to a number of database documents. The schema of a data
 {
   "reactions": [
     {
-      "molecules": [4192705914, 4192705918],
+      "molecules": ["CO2", "C6H12O6"],
       "coefficients": [1.0, 1.2]
     },
     {
-      "molecules": [4141775914, 4110025918],
+      "molecules": ["CO2", "H2O"],
       "coefficients": [2.0, 5.4]
     },
     {
-      "molecules": [4192401914, 4444165918],
+      "molecules": ["H2O", "C6H12O6"],
       "coefficients": [3.0, 6.4]
     }
   ],
@@ -58,14 +61,14 @@ Collection which is home to a number of database documents. The schema of a data
 }
 ```
 
-Each entry in the `molecules` array is a manual reference to a molecule `_id`. For more information on manual references, see https://docs.mongodb.com/v3.2/reference/database-references/#document-references
+Each entry in the `molecules` array is the symbol of a molecule known in the `molecules` collection.
 
 ###pages
 A collection of `page` documents, which is essentially a dual key to multiple value lookup entry. Each page is a separate entry. The keys needed to access a page are [`molecule`,`method`].
 
 ```json
 {
-  "molecule": 4129481723,
+  "molecule": "CO2",
   "method": "METHOD_A",
   "value_1": 123,
   "value_2": 234,
@@ -74,5 +77,5 @@ A collection of `page` documents, which is essentially a dual key to multiple va
   "link": "http://example.com"
 }
 ```
-Again, molecule is the `_id` of the refrenced molecule. `value_n` will be replaced with proper values eventually, they are just placeholders.
+Again, molecule is the `symbol` of the refrenced molecule. `value_n` will be replaced with proper values eventually, they are just placeholders.
 
