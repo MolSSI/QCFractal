@@ -64,6 +64,8 @@ Collection which is home to a number of database documents. The schema of a data
 
 Each entry in the `molecules` array is the symbol of a molecule known in the `molecules` collection.
 
+On initialization, the `databases` collection is given a unique index on the `name` field. This is a unique key, so you can only have one of each.
+
 ###pages
 A collection of `page` documents, which is essentially a dual key to multiple value lookup entry. Each page is a separate entry. The keys needed to access a page are [`molecule`,`method`].
 
