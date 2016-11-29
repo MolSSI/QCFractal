@@ -1,0 +1,9 @@
+{
+  "molecule": "CO2",
+  "method": "A",
+  "value_1": 123,
+  "value_2": 234,
+  "value_3": 345,
+  "citation": "A. Smith and B. Jones",
+  "link": "http://example.com"
+}
