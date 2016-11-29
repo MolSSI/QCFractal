@@ -43,6 +43,7 @@ Collection which is home to a number of database documents. The schema of a data
 ```json
 {
   "reactions": [
+    "name": "S22",
     {
       "molecules": ["CO2", "C6H12O6"],
       "coefficients": [1.0, 1.2]
