@@ -1,21 +1,40 @@
 {
-  "symbol": "CO2",
+  "symbols": ["C", "O", "O"],
+  "masses": [16.0, 18.0, 18.0],
   "name": "Carbon Dioxide",
+  "charge": 0.0,
+  "multiplicity": 1,
+  "ghost": [false, false, false],
+  "comment": "",
+  ""
   "geometry": [
-    {
-      "x": "3.11",
-      "y": "5.12",
-      "z": "6.14"
+    [
+      3.11,
+      5.12,
+      6.14
+    ],
+    [
+      -3.13,
+      -7.12,
+      -9.18
+    ],
+    [
+      1.22,
+      5.11,
+      -1.89
+    ]
+  ],
+
+  "provenance": {
+
+        "input": "c1ccccc1",
+
+        "version": "0.7.4alpha0+21.gd658905.dirty",
+
+        "routine": "moldesign.from_smiles",
+
+        "creator": "MolecularDesignToolkit"
+
     },
-    {
-      "x": "-3.13",
-      "y": "-7.12",
-      "z": "-9.18"
-    },
-    {
-      "x": "1.22",
-      "y": "5.11",
-      "z": "-1.89"
-    }
-  ]
+	
 }
