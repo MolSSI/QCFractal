@@ -83,3 +83,5 @@ A collection of `page` documents, which is essentially a dual key to multiple va
 Again, molecule is the `symbol` of the refrenced molecule. `value_n` will be replaced with proper values eventually, they are just placeholders.
 
 On initialization, the `pages` collection is given a unique compound index on the `molecule` and `method` fields. Again, this is a unique compound key, so you can only have one of each pair. To understand how compound indices differ from regular indices, see https://docs.mongodb.com/manual/core/index-compound/#index-type-compound
+
+The index on any one collection can be viewed in detail with the db.COLLECTION_NAME.getIndexSpecs() shell command.
