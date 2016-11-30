@@ -5,7 +5,7 @@ MongoDB backend for storing quantum chemical databases
 mongo_qcdb is a MongoDB database backend for quantum chemical activities, particularly for use with the Psi4 project (http://www.psicode.org/ or https://github.com/psi4). Currently, there is no open, standardized, and centralized repository for the outputs of computational chemistry calculations. Ease of access to such data is essential to progress, as individual calculations can take days or weeks to run. This backend is hopefully the answer to that problem.
 
 # Schema Guide
-This MongoDB database has 3 collections: `databases`, `molecules`, and `pages`.
+This MongoDB database has 3 collections: `databases`, `molecules`, and `pages`. All documents are imported from JSON files.
 
 ## Hashing and Uniqueness
 
@@ -60,21 +60,14 @@ A collection of atomic documents. That is, they do not have an external referenc
   "ghost": [false, false, false],
   "comment": "A test comment",
   "geometry": [
-    [
-      3.11,
-      5.12,
-      6.14
-    ],
-    [
-      -3.13,
-      -7.12,
-      -9.18
-    ],
-    [
-      1.22,
-      5.11,
-      -1.89
-    ]
+    [3.11, 5.12, 6.14],
+    [-3.13, -7.12, -9.18],
+    [1.22, 5.11, -1.89]
+  ],
+  "fragments": [
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]
   ],
   "provenance": {
     "doi": "val",
