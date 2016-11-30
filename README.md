@@ -7,35 +7,46 @@ mongo_qcdb is a MongoDB database backend for quantum chemical activities, partic
 # Schema Guide
 This MongoDB database has 3 collections: `databases`, `molecules`, and `pages`.
 
+## hashing and uniqueness
+Before any document is entered into the Mongo database, we compute a SHA1 hash based on its JSON. This hash is used as the `_id` of the document instead of MongoDB's default ObjectID. SHA1 hashes are superior to ObjectIDs because the SHA1 hash is persistent through database flushes, whereas an ObjectID would be reset if a document is removed and re-added.
+
 ### molecules
 A collection of atomic documents. That is, they do not have an external references and essentially define a set of usable data units. The schema of a database document is described below in JSON.
 
 ```json
 {
-  "symbol": "CO2",
+  "symbols": ["C", "O", "O"],
+  "masses": [16.0, 18.0, 18.0],
   "name": "Carbon Dioxide",
+  "charge": 0.0,
+  "multiplicity": 1,
+  "ghost": [false, false, false],
+  "comment": "A test comment",
   "geometry": [
-    {
-      "x": "3.11",
-      "y": "5.12",
-      "z": "6.14"
-    },
-    {
-      "x": "-3.13",
-      "y": "-7.12",
-      "z": "-9.18"
-    },
-    {
-      "x": "1.22",
-      "y": "5.11",
-      "z": "-1.89"
-    }
-  ]
+    [
+      3.11,
+      5.12,
+      6.14
+    ],
+    [
+      -3.13,
+      -7.12,
+      -9.18
+    ],
+    [
+      1.22,
+      5.11,
+      -1.89
+    ]
+  ],
+  "provenance": {
+        "input": "c1ccccc1",
+        "version": "0.7.4alpha0+21.gd658905.dirty",
+        "routine": "moldesign.from_smiles",
+        "creator": "MolecularDesignToolkit"
+  }
 }
 ```
-On initialization, the `molecules` collection is given a unique index on the `symbol` field. This is to enable rapid lookup from queries and obviates the need for manual references to the `_id` field. To understand the efficiency gains of an index, see https://docs.mongodb.com/manual/indexes/
-
-Because this is a unique index, each entry in the `molecules` database must have a unique `symbol`. To understand what this means, see https://docs.mongodb.com/v3.0/core/index-unique/
 
 ### databases
 Collection which is home to a number of database documents. The schema of a database document is described below in JSON
@@ -45,16 +56,14 @@ Collection which is home to a number of database documents. The schema of a data
   "name": "S22",
   "reactions": [
     {
-      "molecules": ["CO2", "C6H12O6"],
+      "name": "cool reaction",
+      "molecules": ["8e102b34c4441c4b164a7d678591df550c90de74", "dbbacd78247e7b39ee5cb8e78d74423e98639203"],
       "coefficients": [1.0, 1.2]
     },
     {
-      "molecules": ["CO2", "H2O"],
+      "name": "crazy reaction",
+      "molecules": ["8e102b34c4441c4b164a7d678591df550c90de74", "8e102b34c4441c4b164a7d678591df550c90de74"],
       "coefficients": [2.0, 5.4]
-    },
-    {
-      "molecules": ["H2O", "C6H12O6"],
-      "coefficients": [3.0, 6.4]
     }
   ],
   "citation": "A. Smith and B. Jones",
@@ -62,17 +71,15 @@ Collection which is home to a number of database documents. The schema of a data
 }
 ```
 
-Each entry in the `molecules` array is the symbol of a molecule known in the `molecules` collection.
-
-On initialization, the `databases` collection is given a unique index on the `name` field. This is a unique key, so you can only have one of each.
+Each entry in the `molecules` array is the `_id` of a molecule known in the `molecules` collection. This is known as a manual reference: https://docs.mongodb.com/v3.2/reference/database-references/#manual-references
 
 ###pages
 A collection of `page` documents, which is essentially a dual key to multiple value lookup entry. Each page is a separate entry. The keys needed to access a page are [`molecule`,`method`].
 
 ```json
 {
-  "molecule": "CO2",
-  "method": "METHOD_A",
+  "molecule": "dbbacd78247e7b39ee5cb8e78d74423e98639203",
+  "method": "A",
   "value_1": 123,
   "value_2": 234,
   "value_3": 345,
@@ -80,8 +87,4 @@ A collection of `page` documents, which is essentially a dual key to multiple va
   "link": "http://example.com"
 }
 ```
-Again, molecule is the `symbol` of the refrenced molecule. `value_n` will be replaced with proper values eventually, they are just placeholders.
-
-On initialization, the `pages` collection is given a unique compound index on the `molecule` and `method` fields. Again, this is a unique compound key, so you can only have one of each pair. To understand how compound indices differ from regular indices, see https://docs.mongodb.com/manual/core/index-compound/#index-type-compound
-
-The index on any one collection can be viewed in detail with the db.COLLECTION_NAME.getIndexSpecs() shell command.
+Again, molecule is the `_id` of the referenced molecule. `value_n` will be replaced with proper values eventually, they are just placeholders. Again, a manual reference.
