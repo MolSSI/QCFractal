@@ -4,12 +4,24 @@
     {
       "name": "cool reaction",
       "molecules": ["8e102b34c4441c4b164a7d678591df550c90de74", "dbbacd78247e7b39ee5cb8e78d74423e98639203"],
-      "coefficients": [1.0, 1.2]
+      "coefficients": [1.0, 1.2],
+      "methods": ["MP2/aug-cc-pVDZ", "MP3/byg-aa-pPAZ", "N92/ygk-eq-hONE"],
+      "subset": "string",
+      "attributes": {
+        "R": 1.0,
+        "Q": 2.0
+      }
     },
     {
       "name": "crazy reaction",
       "molecules": ["8e102b34c4441c4b164a7d678591df550c90de74", "8e102b34c4441c4b164a7d678591df550c90de74"],
-      "coefficients": [2.0, 5.4]
+      "coefficients": [2.0, 5.4],
+      "methods": ["MP2/aug-cc-pVDZ", "MP3/byg-aa-pPAZ", "N92/ygk-eq-hONE"],
+      "subset": "string2",
+      "attributes": {
+        "R": 30,
+        "Q": 4.0
+      }
     }
   ],
   "citation": "A. Smith and B. Jones",

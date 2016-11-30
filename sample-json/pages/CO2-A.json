@@ -1,9 +1,21 @@
 {
   "molecule": "dbbacd78247e7b39ee5cb8e78d74423e98639203",
   "method": "A",
-  "value_1": 123,
-  "value_2": 234,
-  "value_3": 345,
-  "citation": "A. Smith and B. Jones",
-  "link": "http://example.com"
+  "value": [1.34],
+  "type": "gradient",
+  "options": {
+    "opt1": "val",
+    "opt2": "val"
+  },
+  "variables": {
+    "var1": "val",
+    "var2": "val"
+  },
+  "provenance": {
+    "doi": "val",
+    "tag": "val",
+    "version": "0.7.4alpha0+21.gd658905.dirty",
+    "routine": "moldesign.from_smiles",
+    "creator": "MolecularDesignToolkit"
+  }
 }
