@@ -172,4 +172,4 @@ A collection of `page` documents, which is essentially a dual key to multiple va
   }
 }
 ```
-Again, molecule is the `_id` of the referenced molecule. `value_n` will be replaced with proper values eventually, they are just placeholders. Again, a manual reference.
+Again, molecule is the `_id` of the referenced molecule. Again, a manual reference.
