@@ -39,7 +39,7 @@ A collection of atomic documents. That is, they do not have an external referenc
       -1.89
     ]
   ],
-  "provenance":{
+  "provenance": {
     "doi": "val",
     "tag": "val",
     "version": "0.7.4alpha0+21.gd658905.dirty",
