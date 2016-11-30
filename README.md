@@ -8,11 +8,16 @@ mongo_qcdb is a MongoDB database backend for quantum chemical activities, partic
 This MongoDB database has 3 collections: `databases`, `molecules`, and `pages`.
 
 ## Hashing and Uniqueness
+
+### Technique
+
 Before any document is entered into the Mongo database, we compute a SHA1 hash based on its JSON. This hash is used as the `_id` of the document instead of MongoDB's default ObjectID. This unique ID attached to each document added to the database prevents duplicate entries and increases access speed dramatically. To understand the benefits of indexing, see https://docs.mongodb.com/v3.2/core/index-single/
 
 SHA1 hashes are superior to ObjectIDs because the SHA1 hash is reflective of the actual content of the document. Hence, it is persistent through database flushes, whereas an ObjectID would be reset if a document is removed and re-added.
 
 For all document types, we only take a hash of a few essential fields as opposed to the entire document. This allows for small changes to the JSON during production without the need to recalculate the entire hash.
+
+### Hashed Fields
 
 Hashed fields for `molecules`
 ```json
