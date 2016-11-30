@@ -1,21 +1,32 @@
 {
-  "symbol": "H2O",
+  "symbols": ["H", "O", "O"],
+  "masses": [16.0, 18.0, 18.0],
   "name": "Water",
+  "charge": 0.0,
+  "multiplicity": 1,
+  "ghost": [false, false, false],
+  "comment": "A test comment",
   "geometry": [
-    {
-      "x": "7.71",
-      "y": "1.72",
-      "z": "2.16"
-    },
-    {
-      "x": "-6.11",
-      "y": "-6.72",
-      "z": "-1.38"
-    },
-    {
-      "x": "6.22",
-      "y": "1.46",
-      "z": "-1.69"
-    }
-  ]
+    [
+      3.11,
+      5.12,
+      6.14
+    ],
+    [
+      -3.13,
+      -7.12,
+      -9.18
+    ],
+    [
+      1.22,
+      5.11,
+      -1.89
+    ]
+  ],
+  "provenance": {
+        "input": "c1ccccc1",
+        "version": "0.7.4alpha0+21.gd658905.dirty",
+        "routine": "moldesign.from_smiles",
+        "creator": "MolecularDesignToolkit"
+  }
 }

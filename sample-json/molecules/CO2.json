@@ -5,8 +5,7 @@
   "charge": 0.0,
   "multiplicity": 1,
   "ghost": [false, false, false],
-  "comment": "",
-  ""
+  "comment": "A test comment",
   "geometry": [
     [
       3.11,
@@ -24,17 +23,10 @@
       -1.89
     ]
   ],
-
   "provenance": {
-
         "input": "c1ccccc1",
-
         "version": "0.7.4alpha0+21.gd658905.dirty",
-
         "routine": "moldesign.from_smiles",
-
         "creator": "MolecularDesignToolkit"
-
-    },
-	
+  }
 }

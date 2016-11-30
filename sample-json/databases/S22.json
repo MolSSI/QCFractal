@@ -2,16 +2,14 @@
   "name": "S22",
   "reactions": [
     {
-      "molecules": ["CO2", "C6H12O6"],
+      "name": "cool reaction",
+      "molecules": ["8e102b34c4441c4b164a7d678591df550c90de74", "dbbacd78247e7b39ee5cb8e78d74423e98639203"],
       "coefficients": [1.0, 1.2]
     },
     {
-      "molecules": ["CO2", "H2O"],
+      "name": "crazy reaction",
+      "molecules": ["8e102b34c4441c4b164a7d678591df550c90de74", "8e102b34c4441c4b164a7d678591df550c90de74"],
       "coefficients": [2.0, 5.4]
-    },
-    {
-      "molecules": ["H2O", "C6H12O6"],
-      "coefficients": [3.0, 6.4]
     }
   ],
   "citation": "A. Smith and B. Jones",

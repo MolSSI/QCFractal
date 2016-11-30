@@ -1,32 +1,24 @@
 from MongoQCDB import MongoQCDB
+from collections import OrderedDict
+import hashlib
 import json
 import os
 
 mongo = MongoQCDB("localhost", 27017, "local")
 print(mongo.setup)
 
-# Add all JSON molecules
-fn = os.path.dirname(os.path.abspath(__file__)) + "/sample-json/molecules/"
-for filename in os.listdir(fn):
-    json_data = open(fn + filename).read()
-    data = json.loads(json_data)
-    inserted = mongo.add_molecule(data["symbol"], data["name"], data["geometry"])
-    print("Added molecule: " + data["symbol"] + ". Success=" + str(inserted))
+m = hashlib.sha1()
+colls = ["molecules", "databases", "pages"]
 
-# Add all JSON databases
-fn = os.path.dirname(os.path.abspath(__file__)) + "/sample-json/databases/"
-for filename in os.listdir(fn):
-    json_data = open(fn + filename).read()
-    data = json.loads(json_data)
-    inserted = mongo.add_database(data["name"], data["reactions"], data["citation"], data["link"])
-    print("Added database: " + data["name"] + ". Success=" + str(inserted))
-
-# Add all JSON pages
-fn = os.path.dirname(os.path.abspath(__file__)) + "/sample-json/pages/"
-for filename in os.listdir(fn):
-    json_data = open(fn + filename).read()
-    data = json.loads(json_data)
-    inserted = mongo.add_page(data["molecule"], data["method"], data["value_1"],
-                       data["value_2"], data["value_3"], data["citation"],
-                       data["link"])
-    print("Added page: " + data["molecule"] + "-" + data["method"] + ". Success=" + str(inserted))
+# Add all JSON
+for col in colls:
+    fn = os.path.dirname(os.path.abspath(__file__)) + "/sample-json/" + col + "/"
+    for filename in os.listdir(fn):
+        json_data = open(fn + filename).read()
+        # Load JSON from file into OrderedDict
+        data = json.loads(json_data, object_pairs_hook=OrderedDict)
+        # Load structured string into hashlib
+        m.update(json.dumps(data).encode("utf-8"))
+        digest = m.hexdigest()
+        inserted = mongo.add_json(col, data, digest)
+        print("Added " + digest + " to " + col + ". Success=" + str(inserted) + ".")
