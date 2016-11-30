@@ -8,7 +8,7 @@ mongo_qcdb is a MongoDB database backend for quantum chemical activities, partic
 This MongoDB database has 3 collections: `databases`, `molecules`, and `pages`.
 
 ## hashing and uniqueness
-Before any document is entered into the Mongo database, we compute a SHA1 hash based on its JSON. This hash is used as the `_id` of the document instead of MongoDB's default ObjectID. SHA1 hashes are superior to ObjectIDs because the SHA1 hash is persistent through database flushes, whereas an ObjectID would be reset if a document is removed and re-added.
+Before any document is entered into the Mongo database, we compute a SHA1 hash based on its JSON. This hash is used as the `_id` of the document instead of MongoDB's default ObjectID. SHA1 hashes are superior to ObjectIDs because the SHA1 hash is persistent through database flushes, whereas an ObjectID would be reset if a document is removed and re-added. For molecules, we only take a hash of a few essential fields as opposed to the entire document. This allows for small changes to the JSON during production without the need to recalculate the entire hash.
 
 ### molecules
 A collection of atomic documents. That is, they do not have an external references and essentially define a set of usable data units. The schema of a database document is described below in JSON.
