@@ -39,11 +39,12 @@ A collection of atomic documents. That is, they do not have an external referenc
       -1.89
     ]
   ],
-  "provenance": {
-        "input": "c1ccccc1",
-        "version": "0.7.4alpha0+21.gd658905.dirty",
-        "routine": "moldesign.from_smiles",
-        "creator": "MolecularDesignToolkit"
+  "provenance":{
+    "doi": "val",
+    "tag": "val",
+    "version": "0.7.4alpha0+21.gd658905.dirty",
+    "routine": "moldesign.from_smiles",
+    "creator": "MolecularDesignToolkit"
   }
 }
 ```
@@ -58,12 +59,24 @@ Collection which is home to a number of database documents. The schema of a data
     {
       "name": "cool reaction",
       "molecules": ["8e102b34c4441c4b164a7d678591df550c90de74", "dbbacd78247e7b39ee5cb8e78d74423e98639203"],
-      "coefficients": [1.0, 1.2]
+      "coefficients": [1.0, 1.2],
+      "methods": ["MP2/aug-cc-pVDZ", "MP3/byg-aa-pPAZ", "N92/ygk-eq-hONE"],
+      "subset": "string",
+      "attributes": {
+        "R": 1.0,
+        "Q": 2.0
+      }
     },
     {
       "name": "crazy reaction",
       "molecules": ["8e102b34c4441c4b164a7d678591df550c90de74", "8e102b34c4441c4b164a7d678591df550c90de74"],
-      "coefficients": [2.0, 5.4]
+      "coefficients": [2.0, 5.4],
+      "methods": ["MP2/aug-cc-pVDZ", "MP3/byg-aa-pPAZ", "N92/ygk-eq-hONE"],
+      "subset": "string2",
+      "attributes": {
+        "R": 30,
+        "Q": 4.0
+      }
     }
   ],
   "citation": "A. Smith and B. Jones",
@@ -80,11 +93,23 @@ A collection of `page` documents, which is essentially a dual key to multiple va
 {
   "molecule": "dbbacd78247e7b39ee5cb8e78d74423e98639203",
   "method": "A",
-  "value_1": 123,
-  "value_2": 234,
-  "value_3": 345,
-  "citation": "A. Smith and B. Jones",
-  "link": "http://example.com"
+  "value": [1.34],
+  "type": "gradient",
+  "options": {
+    "opt1": "val",
+    "opt2": "val"
+  },
+  "variables": {
+    "var1": "val",
+    "var2": "val"
+  },
+  "provenance": {
+    "doi": "val",
+    "tag": "val",
+    "version": "0.7.4alpha0+21.gd658905.dirty",
+    "routine": "moldesign.from_smiles",
+    "creator": "MolecularDesignToolkit"
+  }
 }
 ```
 Again, molecule is the `_id` of the referenced molecule. `value_n` will be replaced with proper values eventually, they are just placeholders. Again, a manual reference.
