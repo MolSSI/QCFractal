@@ -39,7 +39,7 @@ A collection of atomic documents. That is, they do not have an external referenc
       -1.89
     ]
   ],
-  "provenance":{
+  "provenance": {
     "doi": "val",
     "tag": "val",
     "version": "0.7.4alpha0+21.gd658905.dirty",
@@ -59,7 +59,21 @@ Collection which is home to a number of database documents. The schema of a data
     {
       "name": "cool reaction",
       "molecules": ["8e102b34c4441c4b164a7d678591df550c90de74", "dbbacd78247e7b39ee5cb8e78d74423e98639203"],
-      "coefficients": [1.0, 1.2],
+      "stoichiometry": {
+        "default": {
+          "mol1hash": 1,
+          "mol2hash": -1,
+          "mol3hash":-1
+        },
+        "cp": {
+          "mol1hash": 1,
+          "mol2Mhash": -1,
+          "mol3Mhash": -1
+        },
+        "sapt": {
+          "mol1hash": 1
+        }
+      },
       "methods": ["MP2/aug-cc-pVDZ", "MP3/byg-aa-pPAZ", "N92/ygk-eq-hONE"],
       "subset": "string",
       "attributes": {
@@ -70,7 +84,21 @@ Collection which is home to a number of database documents. The schema of a data
     {
       "name": "crazy reaction",
       "molecules": ["8e102b34c4441c4b164a7d678591df550c90de74", "8e102b34c4441c4b164a7d678591df550c90de74"],
-      "coefficients": [2.0, 5.4],
+      "stoichiometry": {
+        "default": {
+          "mol1hash": 1,
+          "mol2hash": -1,
+          "mol3hash":-1
+        },
+        "cp": {
+          "mol1hash": 1,
+          "mol2Mhash": -1,
+          "mol3Mhash": -1
+        },
+        "sapt": {
+          "mol1hash": 1
+        }
+      },
       "methods": ["MP2/aug-cc-pVDZ", "MP3/byg-aa-pPAZ", "N92/ygk-eq-hONE"],
       "subset": "string2",
       "attributes": {
