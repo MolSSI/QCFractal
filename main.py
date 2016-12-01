@@ -7,7 +7,6 @@ import os
 mongo = MongoQCDB("localhost", 27017, "local")
 print(mongo.setup)
 
-m = hashlib.sha1()
 collections = ["molecules", "databases", "pages"]
 
 # For each collection, how to hash its JSON.
@@ -23,6 +22,8 @@ descriptor = {"molecules": "name", "databases": "name", "pages": "method"}
 for col in collections:
     fn = os.path.dirname(os.path.abspath(__file__)) + "/sample-json/" + col + "/"
     for filename in os.listdir(fn):
+        # Make hashlib
+        m = hashlib.sha1()
         json_data = open(fn + filename).read()
         # Load JSON from file into OrderedDict
         data = json.loads(json_data, object_pairs_hook=OrderedDict)
