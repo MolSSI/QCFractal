@@ -15,9 +15,9 @@ Before any document is entered into the Mongo database, we compute a SHA1 hash b
 
 SHA1 hashes are superior to ObjectIDs because the SHA1 hash is reflective of the actual content of the document. Hence, it is persistent through database flushes, whereas an ObjectID would be reset if a document is removed and re-added.
 
-For all document types, we only take a hash of a few essential fields as opposed to the entire document. This allows for small changes to the JSON during production without the need to recalculate the entire hash.
-
 ### Hashed Fields
+
+For all document types, we only take a hash of a few essential fields as opposed to the entire document. This allows for small changes to the JSON during production without the need to recalculate the entire hash.
 
 Hashed fields for `molecules`
 ```json
