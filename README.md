@@ -28,7 +28,9 @@ Hashed fields for `molecules`
 "multiplicity": 1,
 "ghost": [false, false, false],
 "geometry": [ .. ],
-"fragments":[[ .. ], ..]
+"fragments":[[ .. ], ..],
+"fragment_charges": [3.1, 2.1, 1.1],
+"fragment_multiplicities": [1, 2, 3]
 ```
 
 Hashed fields for `databases`
@@ -69,6 +71,8 @@ A collection of atomic documents. That is, they do not have an external referenc
     [4, 5, 6],
     [7, 8, 9]
   ],
+  "fragment_charges": [3.0, 2.2, 4.1],
+  "fragment_multiplicities": [5, 2, 3],
   "provenance": {
     "doi": "val",
     "tag": "val",
