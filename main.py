@@ -11,7 +11,8 @@ collections = ["molecules", "databases", "pages"]
 
 # For each collection, how to hash its JSON.
 hash_fields = {}
-hash_fields["molecules"] = ["symbols", "masses", "name", "charge", "multiplicity", "ghost", "geometry", "fragments"]
+hash_fields["molecules"] = ["symbols", "masses", "name", "charge", "multiplicity", "ghost", "geometry", "fragments",
+                            "fragment_charges", "fragment_multiplicities"]
 hash_fields["databases"] = ["name"]
 hash_fields["pages"] = ["molecule", "method"]
 

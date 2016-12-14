@@ -16,6 +16,8 @@
     [4, 5, 6],
     [7, 8, 9]
   ],
+  "fragment_charges": [3.0, 2.2, 4.1],
+  "fragment_multiplicities": [5, 2, 3],
   "provenance": {
     "doi": "val",
     "tag": "val",
