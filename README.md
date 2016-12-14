@@ -92,7 +92,6 @@ Collection which is home to a number of database documents. The schema of a data
   "reactions": [
     {
       "name": "cool reaction",
-      "molecules": ["8e102b34c4441c4b164a7d678591df550c90de74", "dbbacd78247e7b39ee5cb8e78d74423e98639203"],
       "stoichiometry": {
         "default": {
           "mol1hash": 1,
@@ -108,7 +107,7 @@ Collection which is home to a number of database documents. The schema of a data
           "mol1hash": 1
         }
       },
-      "methods": ["MP2/aug-cc-pVDZ", "MP3/byg-aa-pPAZ", "N92/ygk-eq-hONE"],
+      "reaction_results": ["MP2/aug-cc-pVDZ", "MP3/byg-aa-pPAZ", "N92/ygk-eq-hONE"],
       "subset": "string",
       "attributes": {
         "R": 1.0,
@@ -117,7 +116,6 @@ Collection which is home to a number of database documents. The schema of a data
     },
     {
       "name": "crazy reaction",
-      "molecules": ["8e102b34c4441c4b164a7d678591df550c90de74", "8e102b34c4441c4b164a7d678591df550c90de74"],
       "stoichiometry": {
         "default": {
           "mol1hash": 1,
@@ -133,7 +131,7 @@ Collection which is home to a number of database documents. The schema of a data
           "mol1hash": 1
         }
       },
-      "methods": ["MP2/aug-cc-pVDZ", "MP3/byg-aa-pPAZ", "N92/ygk-eq-hONE"],
+      "reaction_results": ["MP2/aug-cc-pVDZ", "MP3/byg-aa-pPAZ", "N92/ygk-eq-hONE"],
       "subset": "string2",
       "attributes": {
         "R": 30,
@@ -141,6 +139,13 @@ Collection which is home to a number of database documents. The schema of a data
       }
     }
   ],
+  "provenance": {
+    "doi": "val",
+    "tag": "val",
+    "version": "0.7.4alpha0+21.gd658905.dirty",
+    "routine": "moldesign.from_smiles",
+    "creator": "MolecularDesignToolkit"
+  },
   "citation": "A. Smith and B. Jones",
   "link": "http://example.com"
 }
