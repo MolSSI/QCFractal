@@ -1,0 +1,7 @@
+
+# RXN = rows
+# RXN_Results = columns
+
+value = get_data("HBC6", "FaNNFaNN_0.902439024390244", "cp", "WPBE/qzvp")
+series = get_data("HBC6", "cp", "WPBE/qzvp")
+dataframe = get_data("HBC6", "FaNNFaNN_0.902439024390244", "cp")

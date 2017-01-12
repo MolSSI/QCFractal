@@ -1,0 +1,3899 @@
+{
+    "name": "HBC6",
+    "reactions": [
+        {
+            "attributes": {
+                "R": 0.9444444444444444
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -20.4963,
+                    "B97/adz": -14.0543,
+                    "B2PLYP/adz": -16.7856,
+                    "PBE0/qzvp": -21.6826,
+                    "BLYP/adz": -14.1369,
+                    "B97/qzvp": -15.0115,
+                    "B3LYP/adz": -17.5033,
+                    "PBE/adz": -18.6975,
+                    "WPBE/adz": -19.7556,
+                    "PBE/qzvp": -19.5463,
+                    "B3LYP/qzvp": -18.3484,
+                    "BLYP/qzvp": -14.9434,
+                    "BP86/qzvp": -18.4706,
+                    "BP86/adz": -17.6367,
+                    "PBE0/adz": -20.7915,
+                    "B2PLYP/qzvp": -18.6362
+                }
+            },
+            "name": "FaOOFaOO_0.9444444444444444",
+            "stoichiometry": {
+                "cp": {
+                    "a7aae735734b2b1d5a74a5f1b2932758d0fc9c46": 1.0,
+                    "57d9fad847dda969b74431a846ea6eecd62f8b63": -1.0,
+                    "0f051c9deea4752efa26ec46fa1c90ed8ac1e21f": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.9722222222222222
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -20.2256,
+                    "B97/adz": -14.5819,
+                    "B2PLYP/adz": -17.3827,
+                    "PBE0/qzvp": -21.4408,
+                    "BLYP/adz": -15.0759,
+                    "B97/qzvp": -15.3652,
+                    "B3LYP/adz": -17.9404,
+                    "PBE/adz": -19.08,
+                    "WPBE/adz": -19.6274,
+                    "PBE/qzvp": -19.7789,
+                    "B3LYP/qzvp": -18.6385,
+                    "BLYP/qzvp": -15.7462,
+                    "BP86/qzvp": -18.7359,
+                    "BP86/adz": -18.0443,
+                    "PBE0/adz": -20.71,
+                    "B2PLYP/qzvp": -18.9233
+                }
+            },
+            "name": "FaOOFaOO_0.9722222222222222",
+            "stoichiometry": {
+                "cp": {
+                    "b88b05268f219eeb3e92b4755bc854711c4ab27c": 1.0,
+                    "e9634c07a63493eaac644d2c991a5ac7ec26743c": -1.0,
+                    "7c05c0d81d85123403fad490d9dfdc37d3b58691": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.0
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -19.8535,
+                    "B97/adz": -14.9,
+                    "B2PLYP/adz": -17.7657,
+                    "PBE0/qzvp": -21.058,
+                    "BLYP/adz": -15.713,
+                    "B97/qzvp": -15.5257,
+                    "B3LYP/adz": -18.1648,
+                    "PBE/adz": -19.2051,
+                    "WPBE/adz": -19.3847,
+                    "PBE/qzvp": -19.7654,
+                    "B3LYP/qzvp": -18.7301,
+                    "BLYP/qzvp": -16.2619,
+                    "BP86/qzvp": -18.7392,
+                    "BP86/adz": -18.1772,
+                    "PBE0/adz": -20.4763,
+                    "B2PLYP/qzvp": -19.0231
+                }
+            },
+            "name": "FaOOFaOO_1.0",
+            "stoichiometry": {
+                "cp": {
+                    "b75c3eb9abf55fa2697ad0fd346f94f0734e1843": -1.0,
+                    "a74e132c3ad6aa8caf31b09fe31944ee876aa9f6": 1.0,
+                    "6322dda9ed5d7ce33dd1b66f5aa8772a119af106": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.027777777777778
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -19.2259,
+                    "B97/adz": -14.8737,
+                    "B2PLYP/adz": -17.7759,
+                    "PBE0/qzvp": -20.3898,
+                    "BLYP/adz": -15.9133,
+                    "B97/qzvp": -15.3708,
+                    "B3LYP/adz": -18.022,
+                    "PBE/adz": -18.9442,
+                    "WPBE/adz": -18.8674,
+                    "PBE/qzvp": -19.3877,
+                    "B3LYP/qzvp": -18.4796,
+                    "BLYP/qzvp": -16.368,
+                    "BP86/qzvp": -18.3635,
+                    "BP86/adz": -17.9073,
+                    "PBE0/adz": -19.9369,
+                    "B2PLYP/qzvp": -18.7866
+                }
+            },
+            "name": "FaOOFaOO_1.027777777777778",
+            "stoichiometry": {
+                "cp": {
+                    "c8539a377d88ab7aa2eb3d60e6e9e77ce1be2862": -1.0,
+                    "75a0a70fc7adde069162897f9640eaec23d406c6": 1.0,
+                    "c759847cf4754e74976d6fadd51b4ca306f9dd70": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.0555555555555556
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -18.309,
+                    "B97/adz": -14.48,
+                    "B2PLYP/adz": -17.3732,
+                    "PBE0/qzvp": -19.4087,
+                    "BLYP/adz": -15.6525,
+                    "B97/qzvp": -14.8862,
+                    "B3LYP/adz": -17.4759,
+                    "PBE/adz": -18.2787,
+                    "WPBE/adz": -18.0384,
+                    "PBE/qzvp": -18.6354,
+                    "B3LYP/qzvp": -17.858,
+                    "BLYP/qzvp": -16.0478,
+                    "BP86/qzvp": -17.6008,
+                    "BP86/adz": -17.2191,
+                    "PBE0/adz": -19.0574,
+                    "B2PLYP/qzvp": -18.1802
+                }
+            },
+            "name": "FaOOFaOO_1.0555555555555556",
+            "stoichiometry": {
+                "cp": {
+                    "656eb00f2851969c14fb60e04500fea6fa2d73a6": -1.0,
+                    "4e201ed401f2b782844563761f8af35160412c58": -1.0,
+                    "38783c90fdbfe7f907a4e8a8fd2e65b93610aa9b": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.0833333333333333
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -17.143,
+                    "B97/adz": -13.7726,
+                    "B2PLYP/adz": -16.5998,
+                    "PBE0/qzvp": -18.1602,
+                    "BLYP/adz": -14.9875,
+                    "B97/qzvp": -14.1218,
+                    "B3LYP/adz": -16.5743,
+                    "PBE/adz": -17.268,
+                    "WPBE/adz": -16.9411,
+                    "PBE/qzvp": -17.5664,
+                    "B3LYP/qzvp": -16.9086,
+                    "BLYP/qzvp": -15.3536,
+                    "BP86/qzvp": -16.5123,
+                    "BP86/adz": -16.1765,
+                    "PBE0/adz": -17.8846,
+                    "B2PLYP/qzvp": -17.2434
+                }
+            },
+            "name": "FaOOFaOO_1.0833333333333333",
+            "stoichiometry": {
+                "cp": {
+                    "a691e54ebf9d99961725bf745eac6f3a40ca48c2": 1.0,
+                    "a0f16eed08500dbb25dd5c39acc8f4d46e3fa015": -1.0,
+                    "abb7656c2abf2d7367021d605377a27f5d5b41ea": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.1111111111111112
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -15.8087,
+                    "B97/adz": -12.8512,
+                    "B2PLYP/adz": -15.5496,
+                    "PBE0/qzvp": -16.7303,
+                    "BLYP/adz": -14.0279,
+                    "B97/qzvp": -13.1606,
+                    "B3LYP/adz": -15.4171,
+                    "PBE/adz": -16.019,
+                    "WPBE/adz": -15.664,
+                    "PBE/qzvp": -16.2763,
+                    "B3LYP/qzvp": -15.7168,
+                    "BLYP/qzvp": -14.3776,
+                    "BP86/qzvp": -15.1978,
+                    "BP86/adz": -14.893,
+                    "PBE0/adz": -16.5133,
+                    "B2PLYP/qzvp": -16.0592
+                }
+            },
+            "name": "FaOOFaOO_1.1111111111111112",
+            "stoichiometry": {
+                "cp": {
+                    "871d35072a38515d3fefb271306f6011f33d87c6": -1.0,
+                    "445aefce957e886ad88abdb9e51d01d599ade20f": 1.0,
+                    "a40181d5100e464266fdd2500b06cb5c6cb4241c": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.1388888888888888
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -14.3971,
+                    "B97/adz": -11.8215,
+                    "B2PLYP/adz": -14.3331,
+                    "PBE0/qzvp": -15.2155,
+                    "BLYP/adz": -12.8982,
+                    "B97/qzvp": -12.091,
+                    "B3LYP/adz": -14.1196,
+                    "PBE/adz": -14.6492,
+                    "WPBE/adz": -14.3034,
+                    "PBE/qzvp": -14.8699,
+                    "B3LYP/qzvp": -14.3829,
+                    "BLYP/qzvp": -13.2259,
+                    "BP86/qzvp": -13.7667,
+                    "BP86/adz": -13.492,
+                    "PBE0/adz": -15.0497,
+                    "B2PLYP/qzvp": -14.7264
+                }
+            },
+            "name": "FaOOFaOO_1.1388888888888888",
+            "stoichiometry": {
+                "cp": {
+                    "6165b84f76c4b42c1255c866eb5f60c870ccb46d": -1.0,
+                    "596fb2b78140a05c13f6bb61460d0b17a442a1a8": -1.0,
+                    "769b83723d280bba127a96f361b7a6155b16d846": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.1666666666666667
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -12.9874,
+                    "B97/adz": -10.768,
+                    "B2PLYP/adz": -13.0479,
+                    "PBE0/qzvp": -13.7007,
+                    "BLYP/adz": -11.7055,
+                    "B97/qzvp": -10.9911,
+                    "B3LYP/adz": -12.7808,
+                    "PBE/adz": -13.2562,
+                    "WPBE/adz": -12.9365,
+                    "PBE/qzvp": -13.4384,
+                    "B3LYP/qzvp": -13.0,
+                    "BLYP/qzvp": -11.9967,
+                    "BP86/qzvp": -12.3167,
+                    "BP86/adz": -12.0786,
+                    "PBE0/adz": -13.5816,
+                    "B2PLYP/qzvp": -13.3381
+                }
+            },
+            "name": "FaOOFaOO_1.1666666666666667",
+            "stoichiometry": {
+                "cp": {
+                    "0485dc5d8717e7706356c2fe0c303e24b7ef89be": 1.0,
+                    "12922bb9a88911babbf67f67a7144ce9f1daff1d": -1.0,
+                    "592972350f67161086a773a63209170096b7aedb": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.1944444444444444
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -11.6365,
+                    "B97/adz": -9.7482,
+                    "B2PLYP/adz": -11.7666,
+                    "PBE0/qzvp": -12.2481,
+                    "BLYP/adz": -10.525,
+                    "B97/qzvp": -9.9225,
+                    "B3LYP/adz": -11.4707,
+                    "PBE/adz": -11.9055,
+                    "WPBE/adz": -11.614,
+                    "PBE/qzvp": -12.0498,
+                    "B3LYP/qzvp": -11.6418,
+                    "BLYP/qzvp": -10.7685,
+                    "BP86/qzvp": -10.9196,
+                    "BP86/adz": -10.7216,
+                    "PBE0/adz": -12.1684,
+                    "B2PLYP/qzvp": -11.9685
+                }
+            },
+            "name": "FaOOFaOO_1.1944444444444444",
+            "stoichiometry": {
+                "cp": {
+                    "90245e722e67d31ad614f6f5892444d6c34227da": 1.0,
+                    "aca18153f08f6f928d0a8bfdaa59263e0bd639b9": -1.0,
+                    "9f04e2051965986c3a5e7a8d078bc3b7e2a91ed9": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.2222222222222223
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -10.3786,
+                    "B97/adz": -8.7902,
+                    "B2PLYP/adz": -10.5369,
+                    "PBE0/qzvp": -10.8968,
+                    "BLYP/adz": -9.4021,
+                    "B97/qzvp": -8.9202,
+                    "B3LYP/adz": -10.2321,
+                    "PBE/adz": -10.6358,
+                    "WPBE/adz": -10.3672,
+                    "PBE/qzvp": -10.7475,
+                    "B3LYP/qzvp": -10.3584,
+                    "BLYP/qzvp": -9.5953,
+                    "BP86/qzvp": -9.6214,
+                    "BP86/adz": -9.461,
+                    "PBE0/adz": -10.8453,
+                    "B2PLYP/qzvp": -10.6688
+                }
+            },
+            "name": "FaOOFaOO_1.2222222222222223",
+            "stoichiometry": {
+                "cp": {
+                    "7295c885e941db3323fdccabb8dff5f4deb13f67": -1.0,
+                    "17f1beb5a953792cf5c56266e61d72f59bc33f0f": 1.0,
+                    "cd41bdfda6a24e6ee1db9b67b7bdf5c602f4aa2e": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.2777777777777777
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -8.1986,
+                    "B97/adz": -7.1031,
+                    "B2PLYP/adz": -8.3337,
+                    "PBE0/qzvp": -8.5641,
+                    "BLYP/adz": -7.4102,
+                    "B97/qzvp": -7.1752,
+                    "B3LYP/adz": -8.0473,
+                    "PBE/adz": -8.4098,
+                    "WPBE/adz": -8.1751,
+                    "PBE/qzvp": -8.4802,
+                    "B3LYP/qzvp": -8.111,
+                    "BLYP/qzvp": -7.5224,
+                    "BP86/qzvp": -7.4004,
+                    "BP86/adz": -7.2902,
+                    "PBE0/adz": -8.538,
+                    "B2PLYP/qzvp": -8.3798
+                }
+            },
+            "name": "FaOOFaOO_1.2777777777777777",
+            "stoichiometry": {
+                "cp": {
+                    "a2429f9fcb49d6f8c431e82da324a6d80f2d9ef1": -1.0,
+                    "6234223a248f994e597ec364d4af807ebf4ecf7c": -1.0,
+                    "18a6927329db3bb67b02e6a14776237b9aa34b6d": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.3333333333333333
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -6.4661,
+                    "B97/adz": -5.7275,
+                    "B2PLYP/adz": -6.5356,
+                    "PBE0/qzvp": -6.7236,
+                    "BLYP/adz": -5.7981,
+                    "B97/qzvp": -5.7724,
+                    "B3LYP/adz": -6.2887,
+                    "PBE/adz": -6.6265,
+                    "WPBE/adz": -6.4253,
+                    "PBE/qzvp": -6.6751,
+                    "B3LYP/qzvp": -6.322,
+                    "BLYP/qzvp": -5.8627,
+                    "BP86/qzvp": -5.6828,
+                    "BP86/adz": -5.5963,
+                    "PBE0/adz": -6.7043,
+                    "B2PLYP/qzvp": -6.5453
+                }
+            },
+            "name": "FaOOFaOO_1.3333333333333333",
+            "stoichiometry": {
+                "cp": {
+                    "3a9fd73dfb477794c248d1d5015419d64abb740e": -1.0,
+                    "e8239f7677527b7166a67046bbb16c9844fdc188": 1.0,
+                    "491e5ad7180382c7a210953426851520214fc478": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.3888888888888888
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -5.1199,
+                    "B97/adz": -4.6463,
+                    "B2PLYP/adz": -5.1322,
+                    "PBE0/qzvp": -5.3039,
+                    "BLYP/adz": -4.5491,
+                    "B97/qzvp": -4.6713,
+                    "B3LYP/adz": -4.9305,
+                    "PBE/adz": -5.2418,
+                    "WPBE/adz": -5.0736,
+                    "PBE/qzvp": -5.2736,
+                    "B3LYP/qzvp": -4.9472,
+                    "BLYP/qzvp": -4.5851,
+                    "BP86/qzvp": -4.3983,
+                    "BP86/adz": -4.3303,
+                    "PBE0/adz": -5.2906,
+                    "B2PLYP/qzvp": -5.127
+                }
+            },
+            "name": "FaOOFaOO_1.3888888888888888",
+            "stoichiometry": {
+                "cp": {
+                    "9516b997ea45eedcf0bc7d3c9fbf21d6f308c6d6": -1.0,
+                    "5b69dc5294feab22b53fc280b7337053ff788a9d": 1.0,
+                    "88023e63a3c7beb4a1400d04c8b2ade39f4098af": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.5
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -3.2887,
+                    "B97/adz": -3.121,
+                    "B2PLYP/adz": -3.2393,
+                    "PBE0/qzvp": -3.3806,
+                    "BLYP/adz": -2.8783,
+                    "B97/qzvp": -3.1169,
+                    "B3LYP/adz": -3.1172,
+                    "PBE/adz": -3.3536,
+                    "WPBE/adz": -3.257,
+                    "PBE/qzvp": -3.3602,
+                    "B3LYP/qzvp": -3.1172,
+                    "BLYP/qzvp": -2.8865,
+                    "BP86/qzvp": -2.7486,
+                    "BP86/adz": -2.7205,
+                    "PBE0/adz": -3.3808,
+                    "B2PLYP/qzvp": -3.2279
+                }
+            },
+            "name": "FaOOFaOO_1.5",
+            "stoichiometry": {
+                "cp": {
+                    "fa6ceb08e557f8b37bf7109afd3a159be9331b93": 1.0,
+                    "e3b8a6178aa63fdffef613df06ae8dbf27bbe058": -1.0,
+                    "406314ea635f308e23d11ab84de22708ad05e141": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.611111111111111
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -2.1924,
+                    "B97/adz": -2.1263,
+                    "B2PLYP/adz": -2.1257,
+                    "PBE0/qzvp": -2.2298,
+                    "BLYP/adz": -1.8969,
+                    "B97/qzvp": -2.1217,
+                    "B3LYP/adz": -2.0548,
+                    "PBE/adz": -2.205,
+                    "WPBE/adz": -2.1756,
+                    "PBE/qzvp": -2.2065,
+                    "B3LYP/qzvp": -2.0563,
+                    "BLYP/qzvp": -1.9055,
+                    "BP86/qzvp": -1.827,
+                    "BP86/adz": -1.8165,
+                    "PBE0/adz": -2.2318,
+                    "B2PLYP/qzvp": -2.121
+                }
+            },
+            "name": "FaOOFaOO_1.611111111111111",
+            "stoichiometry": {
+                "cp": {
+                    "5e57dc72a7412029dff4ec98bb434fc925e2e5ac": -1.0,
+                    "14ce09c318ce91024500ca5fd65d04fb4efb76f7": 1.0,
+                    "056935073eccd5a68276ab734597c0cb1b1aab6e": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.777777777777778
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -1.2716,
+                    "B97/adz": -1.2322,
+                    "B2PLYP/adz": -1.2172,
+                    "PBE0/qzvp": -1.271,
+                    "BLYP/adz": -1.0947,
+                    "B97/qzvp": -1.235,
+                    "B3LYP/adz": -1.1857,
+                    "PBE/adz": -1.2422,
+                    "WPBE/adz": -1.2673,
+                    "PBE/qzvp": -1.2432,
+                    "B3LYP/qzvp": -1.1956,
+                    "BLYP/qzvp": -1.1147,
+                    "BP86/qzvp": -1.0903,
+                    "BP86/adz": -1.0762,
+                    "PBE0/adz": -1.2725,
+                    "B2PLYP/qzvp": -1.2206
+                }
+            },
+            "name": "FaOOFaOO_1.777777777777778",
+            "stoichiometry": {
+                "cp": {
+                    "1d142af8d95fc5481b1c668008fa711535768e9d": 1.0,
+                    "462056ecf1d03c24a9ef492c3b7ad37f4b044f47": -1.0,
+                    "1a82126be8f946d590d69f676b255092d32dadb3": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.9444444444444444
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -0.7878,
+                    "B97/adz": -0.7568,
+                    "B2PLYP/adz": -0.754,
+                    "PBE0/qzvp": -0.7767,
+                    "BLYP/adz": -0.6883,
+                    "B97/qzvp": -0.7548,
+                    "B3LYP/adz": -0.7414,
+                    "PBE/adz": -0.7545,
+                    "WPBE/adz": -0.7893,
+                    "PBE/qzvp": -0.7499,
+                    "B3LYP/qzvp": -0.75,
+                    "BLYP/qzvp": -0.7058,
+                    "BP86/qzvp": -0.7018,
+                    "BP86/adz": -0.6869,
+                    "PBE0/adz": -0.7813,
+                    "B2PLYP/qzvp": -0.7566
+                }
+            },
+            "name": "FaOOFaOO_1.9444444444444444",
+            "stoichiometry": {
+                "cp": {
+                    "4726c1012b72455d7de93b9cc013ae896eace2a2": -1.0,
+                    "b83cfc94fb4411ac498f6db3d651bb258c747ab9": 1.0,
+                    "d9e921b293d247c41a5f875bbdac69d2c0444344": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 2.2222222222222223
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -0.3992,
+                    "B97/adz": -0.3796,
+                    "B2PLYP/adz": -0.3842,
+                    "PBE0/qzvp": -0.3896,
+                    "BLYP/adz": -0.3619,
+                    "B97/qzvp": -0.3753,
+                    "B3LYP/adz": -0.384,
+                    "PBE/adz": -0.3761,
+                    "WPBE/adz": -0.4017,
+                    "PBE/qzvp": -0.371,
+                    "B3LYP/qzvp": -0.3855,
+                    "BLYP/qzvp": -0.3667,
+                    "BP86/qzvp": -0.3686,
+                    "BP86/adz": -0.3638,
+                    "PBE0/adz": -0.3936,
+                    "B2PLYP/qzvp": -0.3831
+                }
+            },
+            "name": "FaOOFaOO_2.2222222222222223",
+            "stoichiometry": {
+                "cp": {
+                    "029b14e8cefb01f5a507a0538a005d5b234fe0d7": 1.0,
+                    "b4593c5fb551045ac5f64b723354a890b06a4f95": -1.0,
+                    "9190f26775608c94c8ef4d10721078ff57b733af": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 2.7777777777777777
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -0.1397,
+                    "B97/adz": -0.1318,
+                    "B2PLYP/adz": -0.1337,
+                    "PBE0/qzvp": -0.1363,
+                    "BLYP/adz": -0.1301,
+                    "B97/qzvp": -0.131,
+                    "B3LYP/adz": -0.1364,
+                    "PBE/adz": -0.1303,
+                    "WPBE/adz": -0.1404,
+                    "PBE/qzvp": -0.1292,
+                    "B3LYP/qzvp": -0.1356,
+                    "BLYP/qzvp": -0.1295,
+                    "BP86/qzvp": -0.1304,
+                    "BP86/adz": -0.131,
+                    "PBE0/adz": -0.1372,
+                    "B2PLYP/qzvp": -0.1326
+                }
+            },
+            "name": "FaOOFaOO_2.7777777777777777",
+            "stoichiometry": {
+                "cp": {
+                    "692921d59630847b89df7d7ac5757bbf31b44d8d": -1.0,
+                    "8750fc1439a257560ee0b759ea05ace95f9770a8": -1.0,
+                    "20f03c25ec0fe520c6903e6c33231f2239b14eba": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.85
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -4.527,
+                    "B97/adz": 0.414,
+                    "B2PLYP/adz": -3.3279,
+                    "PBE0/qzvp": -6.4071,
+                    "BLYP/adz": -0.6361,
+                    "B97/qzvp": -0.0273,
+                    "B3LYP/adz": -3.3288,
+                    "PBE/adz": -4.5397,
+                    "WPBE/adz": -4.1511,
+                    "PBE/qzvp": -4.9576,
+                    "B3LYP/qzvp": -3.7224,
+                    "BLYP/qzvp": -0.9912,
+                    "BP86/qzvp": -3.8074,
+                    "BP86/adz": -3.4083,
+                    "PBE0/adz": -5.9565,
+                    "B2PLYP/qzvp": -4.5443
+                }
+            },
+            "name": "FaONFaON_0.85",
+            "stoichiometry": {
+                "cp": {
+                    "ee02e507dec7dc82544e979e01fc8863b49be582": -1.0,
+                    "86bfbab0aa7eb7dbfd70970f9289afec11703fe9": 1.0,
+                    "a33ee6163e18bfa08b1871d9d1f72ea5aeb68bfc": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.875
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -8.1539,
+                    "B97/adz": -3.5299,
+                    "B2PLYP/adz": -7.0385,
+                    "PBE0/qzvp": -10.0549,
+                    "BLYP/adz": -4.5095,
+                    "B97/qzvp": -3.9566,
+                    "B3LYP/adz": -7.0897,
+                    "PBE/adz": -8.2936,
+                    "WPBE/adz": -7.806,
+                    "PBE/qzvp": -8.6949,
+                    "B3LYP/qzvp": -7.4769,
+                    "BLYP/qzvp": -4.8684,
+                    "BP86/qzvp": -7.5596,
+                    "BP86/adz": -7.1655,
+                    "PBE0/adz": -9.6294,
+                    "B2PLYP/qzvp": -8.2001
+                }
+            },
+            "name": "FaONFaON_0.875",
+            "stoichiometry": {
+                "cp": {
+                    "d87ce3cdad55aebf0fc140653778a3680ffc0f0e": -1.0,
+                    "acf79ceca49b288cfa85f51d51c06cd37c640530": -1.0,
+                    "104efe1007c3b6d3eb58d2f3e20793ae13532271": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.9
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -10.7767,
+                    "B97/adz": -6.4884,
+                    "B2PLYP/adz": -9.8903,
+                    "PBE0/qzvp": -12.6363,
+                    "BLYP/adz": -7.5039,
+                    "B97/qzvp": -6.8675,
+                    "B3LYP/adz": -9.9147,
+                    "PBE/adz": -11.0563,
+                    "WPBE/adz": -10.4808,
+                    "PBE/qzvp": -11.4125,
+                    "B3LYP/qzvp": -10.2678,
+                    "BLYP/qzvp": -7.8396,
+                    "BP86/qzvp": -10.2886,
+                    "BP86/adz": -9.9271,
+                    "PBE0/adz": -12.2658,
+                    "B2PLYP/qzvp": -10.9389
+                }
+            },
+            "name": "FaONFaON_0.9",
+            "stoichiometry": {
+                "cp": {
+                    "f592f033e67a2ef97409dfc220c221cf5b0dc1f3": -1.0,
+                    "5613d019313648f97fd60bd35ec725d815f5f4ec": -1.0,
+                    "494b1c1407664e19f20f1a2402a14692c840f72b": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.925
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -12.6467,
+                    "B97/adz": -8.694,
+                    "B2PLYP/adz": -12.0389,
+                    "PBE0/qzvp": -14.4232,
+                    "BLYP/adz": -9.7816,
+                    "B97/qzvp": -9.017,
+                    "B3LYP/adz": -12.0,
+                    "PBE/adz": -13.0498,
+                    "WPBE/adz": -12.4117,
+                    "PBE/qzvp": -13.3517,
+                    "B3LYP/qzvp": -12.3109,
+                    "BLYP/qzvp": -10.0872,
+                    "BP86/qzvp": -12.2338,
+                    "BP86/adz": -11.9145,
+                    "PBE0/adz": -14.1182,
+                    "B2PLYP/qzvp": -12.9511
+                }
+            },
+            "name": "FaONFaON_0.925",
+            "stoichiometry": {
+                "cp": {
+                    "97930d2506712e38014c59d853e30090c0d8cd00": -1.0,
+                    "5963fbb5fb6b4460a7a44e1e76d367a4aa5a7afe": 1.0,
+                    "b34b68098932a8b436a988843dae90d3a6145b81": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.95
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -13.8705,
+                    "B97/adz": -10.2481,
+                    "B2PLYP/adz": -13.5428,
+                    "PBE0/qzvp": -15.536,
+                    "BLYP/adz": -11.4042,
+                    "B97/qzvp": -10.5204,
+                    "B3LYP/adz": -13.4245,
+                    "PBE/adz": -14.3666,
+                    "WPBE/adz": -13.6963,
+                    "PBE/qzvp": -14.6175,
+                    "B3LYP/qzvp": -13.6971,
+                    "BLYP/qzvp": -11.6855,
+                    "BP86/qzvp": -13.4998,
+                    "BP86/adz": -13.2183,
+                    "PBE0/adz": -15.2948,
+                    "B2PLYP/qzvp": -14.3154
+                }
+            },
+            "name": "FaONFaON_0.95",
+            "stoichiometry": {
+                "cp": {
+                    "786cee5b11073ecac5e8334c8d3ffdb1bd776e80": -1.0,
+                    "0a31cae96aa632de7450073632006d96047d431f": -1.0,
+                    "afa921c6b2687b8215d50f4e93bf81e818c0e3fe": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.975
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -14.5197,
+                    "B97/adz": -11.2156,
+                    "B2PLYP/adz": -14.4414,
+                    "PBE0/qzvp": -16.0542,
+                    "BLYP/adz": -12.4124,
+                    "B97/qzvp": -11.4509,
+                    "B3LYP/adz": -14.2399,
+                    "PBE/adz": -15.0696,
+                    "WPBE/adz": -14.4006,
+                    "PBE/qzvp": -15.2803,
+                    "B3LYP/qzvp": -14.4844,
+                    "BLYP/qzvp": -12.6815,
+                    "BP86/qzvp": -14.1543,
+                    "BP86/adz": -13.9017,
+                    "PBE0/adz": -15.8679,
+                    "B2PLYP/qzvp": -15.0834
+                }
+            },
+            "name": "FaONFaON_0.975",
+            "stoichiometry": {
+                "cp": {
+                    "fc28fd49450e0955f232a03d223859c8533f0806": -1.0,
+                    "fcc174a4d8ca8c549b93cbcdbc06b6c49d6bc2af": 1.0,
+                    "0b76f27e7ca4b1132d89d3e0ee50a1cae92cbc91": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.0
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -14.667,
+                    "B97/adz": -11.6706,
+                    "B2PLYP/adz": -14.789,
+                    "PBE0/qzvp": -16.0571,
+                    "BLYP/adz": -12.8643,
+                    "B97/qzvp": -11.8816,
+                    "B3LYP/adz": -14.5101,
+                    "PBE/adz": -15.2324,
+                    "WPBE/adz": -14.596,
+                    "PBE/qzvp": -15.4143,
+                    "B3LYP/qzvp": -14.7354,
+                    "BLYP/qzvp": -13.1308,
+                    "BP86/qzvp": -14.274,
+                    "BP86/adz": -14.0396,
+                    "PBE0/adz": -15.9152,
+                    "B2PLYP/qzvp": -15.3136
+                }
+            },
+            "name": "FaONFaON_1.0",
+            "stoichiometry": {
+                "cp": {
+                    "8f5b6d85ce13c57e31a51a5d6f03eaca11a6c467": -1.0,
+                    "39d8ccd6d88a0b7dbac3272da8982052b82f188e": 1.0,
+                    "1dbc2e5c62323f4c148b68764770019294aad556": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.025
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -14.3993,
+                    "B97/adz": -11.7051,
+                    "B2PLYP/adz": -14.6674,
+                    "PBE0/qzvp": -15.6384,
+                    "BLYP/adz": -12.8473,
+                    "B97/qzvp": -11.8976,
+                    "B3LYP/adz": -14.3246,
+                    "PBE/adz": -14.9517,
+                    "WPBE/adz": -14.3709,
+                    "PBE/qzvp": -15.1109,
+                    "B3LYP/qzvp": -14.5322,
+                    "BLYP/qzvp": -13.1115,
+                    "BP86/qzvp": -13.9526,
+                    "BP86/adz": -13.7321,
+                    "PBE0/adz": -15.5335,
+                    "B2PLYP/qzvp": -15.0861
+                }
+            },
+            "name": "FaONFaON_1.025",
+            "stoichiometry": {
+                "cp": {
+                    "43fb0c13644af48de6e9a528615a99d9a967ea19": 1.0,
+                    "1ddf557c98d132ab22c4332461bb7866740a85d0": -1.0,
+                    "1a07db1444ee49a2729a49c6a08695c686b37917": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.05
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -13.8174,
+                    "B97/adz": -11.4245,
+                    "B2PLYP/adz": -14.1801,
+                    "PBE0/qzvp": -14.9048,
+                    "BLYP/adz": -12.4707,
+                    "B97/qzvp": -11.5947,
+                    "B3LYP/adz": -13.7923,
+                    "PBE/adz": -14.3398,
+                    "WPBE/adz": -13.8254,
+                    "PBE/qzvp": -14.4763,
+                    "B3LYP/qzvp": -13.9759,
+                    "BLYP/qzvp": -12.7221,
+                    "BP86/qzvp": -13.2996,
+                    "BP86/adz": -13.0971,
+                    "PBE0/adz": -14.8332,
+                    "B2PLYP/qzvp": -14.5011
+                }
+            },
+            "name": "FaONFaON_1.05",
+            "stoichiometry": {
+                "cp": {
+                    "96584e526cb614ab0b0fee04aa8f038ffd02470e": 1.0,
+                    "4522d0c1f70b9d4fbf1cc902a9399d32010d0bfc": -1.0,
+                    "a53c68192372d216c3c0ebaef439a3f5f4c24c11": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.075
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -13.0246,
+                    "B97/adz": -10.9298,
+                    "B2PLYP/adz": -13.4354,
+                    "PBE0/qzvp": -13.9648,
+                    "BLYP/adz": -11.8461,
+                    "B97/qzvp": -11.0705,
+                    "B3LYP/adz": -13.0235,
+                    "PBE/adz": -13.5084,
+                    "WPBE/adz": -13.0592,
+                    "PBE/qzvp": -13.6196,
+                    "B3LYP/qzvp": -13.1748,
+                    "BLYP/qzvp": -12.0702,
+                    "BP86/qzvp": -12.4285,
+                    "BP86/adz": -12.2498,
+                    "PBE0/adz": -13.923,
+                    "B2PLYP/qzvp": -13.6675
+                }
+            },
+            "name": "FaONFaON_1.075",
+            "stoichiometry": {
+                "cp": {
+                    "85ef6e58527bb83fc04a68e3fcf0a5178022bca5": -1.0,
+                    "318e5f39953e7ed964b3840ad87469de07231490": 1.0,
+                    "9a67c4019568ea23d0134752f3f0c850932d715b": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.1
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -12.1132,
+                    "B97/adz": -10.3036,
+                    "B2PLYP/adz": -12.5323,
+                    "PBE0/qzvp": -12.9158,
+                    "BLYP/adz": -11.0711,
+                    "B97/qzvp": -10.4115,
+                    "B3LYP/adz": -12.1154,
+                    "PBE/adz": -12.5533,
+                    "WPBE/adz": -12.1605,
+                    "PBE/qzvp": -12.6391,
+                    "B3LYP/qzvp": -12.2305,
+                    "BLYP/qzvp": -11.2576,
+                    "BP86/qzvp": -11.4418,
+                    "BP86/adz": -11.2901,
+                    "PBE0/adz": -12.8976,
+                    "B2PLYP/qzvp": -12.6876
+                }
+            },
+            "name": "FaONFaON_1.1",
+            "stoichiometry": {
+                "cp": {
+                    "08cec8cdb248f879bdbbbc4b87fbf95379938c52": -1.0,
+                    "a4eeb37f17fd1410ab0dc0502a06c97a4ffeaa63": 1.0,
+                    "d0cdc23d295d90d3c1b04013eb2c4e33b6b90ea6": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.15
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -10.2033,
+                    "B97/adz": -8.8951,
+                    "B2PLYP/adz": -10.5547,
+                    "PBE0/qzvp": -10.7734,
+                    "BLYP/adz": -9.3557,
+                    "B97/qzvp": -8.9503,
+                    "B3LYP/adz": -10.1684,
+                    "PBE/adz": -10.5484,
+                    "WPBE/adz": -10.2362,
+                    "PBE/qzvp": -10.5966,
+                    "B3LYP/qzvp": -10.2227,
+                    "BLYP/qzvp": -9.4659,
+                    "BP86/qzvp": -9.4204,
+                    "BP86/adz": -9.3123,
+                    "PBE0/adz": -10.7777,
+                    "B2PLYP/qzvp": -10.6047
+                }
+            },
+            "name": "FaONFaON_1.15",
+            "stoichiometry": {
+                "cp": {
+                    "82b5e6b9e74d9129448b12c480427ea1c1db7a78": -1.0,
+                    "8f3302d21ee1cee6c5c8bf682b0d94de0ce43acf": 1.0,
+                    "b55c7beafe271f94f9157d84663c44f4e71a6edc": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.2
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -8.4298,
+                    "B97/adz": -7.5253,
+                    "B2PLYP/adz": -8.6681,
+                    "PBE0/qzvp": -8.8313,
+                    "BLYP/adz": -7.7088,
+                    "B97/qzvp": -7.5526,
+                    "B3LYP/adz": -8.3386,
+                    "PBE/adz": -8.6862,
+                    "WPBE/adz": -8.4277,
+                    "PBE/qzvp": -8.7165,
+                    "B3LYP/qzvp": -8.3597,
+                    "BLYP/qzvp": -7.767,
+                    "BP86/qzvp": -7.6101,
+                    "BP86/adz": -7.5231,
+                    "PBE0/adz": -8.8356,
+                    "B2PLYP/qzvp": -8.6676
+                }
+            },
+            "name": "FaONFaON_1.2",
+            "stoichiometry": {
+                "cp": {
+                    "311e10929c769c5f35201bf783376a7abd199a17": 1.0,
+                    "da3915dde8e4978622e569e48ef74b33b3a97c20": -1.0,
+                    "fcd6ede201a6a74fec69653a995b7a45f6f2d464": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.25
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -6.9208,
+                    "B97/adz": -6.3274,
+                    "B2PLYP/adz": -7.0535,
+                    "PBE0/qzvp": -7.206,
+                    "BLYP/adz": -6.2944,
+                    "B97/qzvp": -6.336,
+                    "B3LYP/adz": -6.7861,
+                    "PBE/adz": -7.109,
+                    "WPBE/adz": -6.8992,
+                    "PBE/qzvp": -7.1265,
+                    "B3LYP/qzvp": -6.7907,
+                    "BLYP/qzvp": -6.3221,
+                    "BP86/qzvp": -6.1294,
+                    "BP86/adz": -6.0563,
+                    "PBE0/adz": -7.21,
+                    "B2PLYP/qzvp": -7.0326
+                }
+            },
+            "name": "FaONFaON_1.25",
+            "stoichiometry": {
+                "cp": {
+                    "7876e3546433fbb979c0d14182a3f19867304f36": 1.0,
+                    "c6c1fe6ef48874980e68377db5fa33d59fcd82fa": -1.0,
+                    "bdc7439113050f66b9a1c6c3960f350b538bfcd2": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.35
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -4.7228,
+                    "B97/adz": -4.5044,
+                    "B2PLYP/adz": -4.724,
+                    "PBE0/qzvp": -4.8656,
+                    "BLYP/adz": -4.2513,
+                    "B97/qzvp": -4.4798,
+                    "B3LYP/adz": -4.5635,
+                    "PBE/adz": -4.8185,
+                    "WPBE/adz": -4.7075,
+                    "PBE/qzvp": -4.8116,
+                    "B3LYP/qzvp": -4.5513,
+                    "BLYP/qzvp": -4.248,
+                    "BP86/qzvp": -4.0902,
+                    "BP86/adz": -4.0588,
+                    "PBE0/adz": -4.8809,
+                    "B2PLYP/qzvp": -4.6946
+                }
+            },
+            "name": "FaONFaON_1.35",
+            "stoichiometry": {
+                "cp": {
+                    "0eb8e5102b304d1612a47e5faaebf939778ccf61": -1.0,
+                    "bc90b91de34f2b2f40175c9b8165386f672b5449": 1.0,
+                    "f42e3fab84ddce649a080cff85e0442328cf4a24": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.45
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -3.3351,
+                    "B97/adz": -3.2508,
+                    "B2PLYP/adz": -3.2875,
+                    "PBE0/qzvp": -3.3988,
+                    "BLYP/adz": -2.9859,
+                    "B97/qzvp": -3.2254,
+                    "B3LYP/adz": -3.1968,
+                    "PBE/adz": -3.3582,
+                    "WPBE/adz": -3.3316,
+                    "PBE/qzvp": -3.3472,
+                    "B3LYP/qzvp": -3.1849,
+                    "BLYP/qzvp": -2.98,
+                    "BP86/qzvp": -2.8877,
+                    "BP86/adz": -2.8835,
+                    "PBE0/adz": -3.4143,
+                    "B2PLYP/qzvp": -3.2666
+                }
+            },
+            "name": "FaONFaON_1.45",
+            "stoichiometry": {
+                "cp": {
+                    "d97ed90bb5bee80a1d1baacb162d4c21180eb033": -1.0,
+                    "6c2e07d63376254275f04897ef953e5ec67aeb3e": 1.0,
+                    "014593cbc7e81288de8b387f8f134f8873c88738": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.6
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -2.113,
+                    "B97/adz": -2.0568,
+                    "B2PLYP/adz": -2.0573,
+                    "PBE0/qzvp": -2.1202,
+                    "BLYP/adz": -1.8912,
+                    "B97/qzvp": -2.0508,
+                    "B3LYP/adz": -2.0191,
+                    "PBE/adz": -2.0718,
+                    "WPBE/adz": -2.117,
+                    "PBE/qzvp": -2.0681,
+                    "B3LYP/qzvp": -2.0209,
+                    "BLYP/qzvp": -1.9019,
+                    "BP86/qzvp": -1.8728,
+                    "BP86/adz": -1.8673,
+                    "PBE0/adz": -2.1285,
+                    "B2PLYP/qzvp": -2.0516
+                }
+            },
+            "name": "FaONFaON_1.6",
+            "stoichiometry": {
+                "cp": {
+                    "fb07971aae5ab797cf3d49f4437e92f98d4d099c": -1.0,
+                    "78cf38724981d3b996a50490d45ef83baabc96c9": 1.0,
+                    "5f2d371ab5e12f78121363668bcaf03b12105c0f": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.75
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -1.4266,
+                    "B97/adz": -1.376,
+                    "B2PLYP/adz": -1.3864,
+                    "PBE0/qzvp": -1.4161,
+                    "BLYP/adz": -1.2918,
+                    "B97/qzvp": -1.3723,
+                    "B3LYP/adz": -1.3723,
+                    "PBE/adz": -1.3735,
+                    "WPBE/adz": -1.4332,
+                    "PBE/qzvp": -1.3684,
+                    "B3LYP/qzvp": -1.3776,
+                    "BLYP/qzvp": -1.3061,
+                    "BP86/qzvp": -1.3015,
+                    "BP86/adz": -1.291,
+                    "PBE0/adz": -1.4237,
+                    "B2PLYP/qzvp": -1.3848
+                }
+            },
+            "name": "FaONFaON_1.75",
+            "stoichiometry": {
+                "cp": {
+                    "eb5d9ba7c0c4b8e7aea274cf22f573645af63a84": -1.0,
+                    "59fa6d509ee08d08ec0a913401b2631125ae52b6": -1.0,
+                    "0b299ee4fd7f237bc15e61946d16e6f70b2a0310": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 2.0
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -0.8216,
+                    "B97/adz": -0.7849,
+                    "B2PLYP/adz": -0.7998,
+                    "PBE0/qzvp": -0.8091,
+                    "BLYP/adz": -0.7612,
+                    "B97/qzvp": -0.7798,
+                    "B3LYP/adz": -0.8009,
+                    "PBE/adz": -0.7802,
+                    "WPBE/adz": -0.8266,
+                    "PBE/qzvp": -0.7745,
+                    "B3LYP/qzvp": -0.8024,
+                    "BLYP/qzvp": -0.7673,
+                    "BP86/qzvp": -0.7707,
+                    "BP86/adz": -0.7649,
+                    "PBE0/adz": -0.815,
+                    "B2PLYP/qzvp": -0.7974
+                }
+            },
+            "name": "FaONFaON_2.0",
+            "stoichiometry": {
+                "cp": {
+                    "10e16e9b343cefb2641e401cf667b582e537d47b": -1.0,
+                    "71b1381b889a5ae7414e175ae2a1d382fee1fc8c": -1.0,
+                    "5ccb6baf6f7be1aaba3aa4cf8091fa0779d3777e": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 2.5
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -0.3486,
+                    "B97/adz": -0.3312,
+                    "B2PLYP/adz": -0.3377,
+                    "PBE0/qzvp": -0.3433,
+                    "BLYP/adz": -0.3277,
+                    "B97/qzvp": -0.3308,
+                    "B3LYP/adz": -0.3421,
+                    "PBE/adz": -0.3289,
+                    "WPBE/adz": -0.3499,
+                    "PBE/qzvp": -0.3283,
+                    "B3LYP/qzvp": -0.3422,
+                    "BLYP/qzvp": -0.3287,
+                    "BP86/qzvp": -0.3305,
+                    "BP86/adz": -0.3298,
+                    "PBE0/adz": -0.3445,
+                    "B2PLYP/qzvp": -0.3368
+                }
+            },
+            "name": "FaONFaON_2.5",
+            "stoichiometry": {
+                "cp": {
+                    "b5b302b703a013bac820c8625af8578eb26caea9": -1.0,
+                    "0b83dbda84b82eab47871532cc46196bbe7f4f3c": -1.0,
+                    "8c5c6fabdf351c4554d56d9eedeb9a9b133a42a3": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.8292682926829269
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -7.7287,
+                    "B97/adz": -3.8117,
+                    "B2PLYP/adz": -6.0097,
+                    "PBE0/qzvp": -10.3665,
+                    "BLYP/adz": -3.8384,
+                    "B97/qzvp": -4.0785,
+                    "B3LYP/adz": -5.9682,
+                    "PBE/adz": -9.5823,
+                    "WPBE/adz": -7.4752,
+                    "PBE/qzvp": -9.8109,
+                    "B3LYP/qzvp": -6.1815,
+                    "BLYP/qzvp": -3.9731,
+                    "BP86/qzvp": -8.3147,
+                    "BP86/adz": -8.0944,
+                    "PBE0/adz": -10.0614,
+                    "B2PLYP/qzvp": -7.3101
+                }
+            },
+            "name": "FaNNFaNN_0.8292682926829269",
+            "stoichiometry": {
+                "cp": {
+                    "913c8b148cb337efb02666a42cd5e3b77566bedf": -1.0,
+                    "9598c77c8d264711e87c2f20ec5c207b8cab1ec2": -1.0,
+                    "08e01dc86a99e033816c49412aaa80623d5730b9": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.853658536585366
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -9.6708,
+                    "B97/adz": -6.0119,
+                    "B2PLYP/adz": -8.2001,
+                    "PBE0/qzvp": -12.2412,
+                    "BLYP/adz": -6.1611,
+                    "B97/qzvp": -6.2496,
+                    "B3LYP/adz": -8.1473,
+                    "PBE/adz": -11.5714,
+                    "WPBE/adz": -9.4403,
+                    "PBE/qzvp": -11.7782,
+                    "B3LYP/qzvp": -8.3408,
+                    "BLYP/qzvp": -6.2818,
+                    "BP86/qzvp": -10.3255,
+                    "BP86/adz": -10.1208,
+                    "PBE0/adz": -11.9628,
+                    "B2PLYP/qzvp": -9.3924
+                }
+            },
+            "name": "FaNNFaNN_0.853658536585366",
+            "stoichiometry": {
+                "cp": {
+                    "9e1baa688c195328670e792b64faeb24f6069367": 1.0,
+                    "5389bc4c1950f645e43546934799e2586ef4788c": -1.0,
+                    "daf6e25de8dd76cb40b6cd4500f35363ae76283c": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.878048780487805
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -11.3213,
+                    "B97/adz": -7.9131,
+                    "B2PLYP/adz": -10.1203,
+                    "PBE0/qzvp": -13.8023,
+                    "BLYP/adz": -8.1999,
+                    "B97/qzvp": -8.1184,
+                    "B3LYP/adz": -10.0369,
+                    "PBE/adz": -13.2501,
+                    "WPBE/adz": -11.1132,
+                    "PBE/qzvp": -13.4337,
+                    "B3LYP/qzvp": -10.2094,
+                    "BLYP/qzvp": -8.3057,
+                    "BP86/qzvp": -12.0246,
+                    "BP86/adz": -11.8374,
+                    "PBE0/adz": -13.5526,
+                    "B2PLYP/qzvp": -11.1987
+                }
+            },
+            "name": "FaNNFaNN_0.878048780487805",
+            "stoichiometry": {
+                "cp": {
+                    "be2b041beedcb30618503265e49ec4b5d79814b3": -1.0,
+                    "81bf8ac0b02ccae53bf56034ec6dbdd05c6ab86d": 1.0,
+                    "441c6252b22171dc5536e0bf1ef04d5997fc48a8": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.902439024390244
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -12.6777,
+                    "B97/adz": -9.5122,
+                    "B2PLYP/adz": -11.7564,
+                    "PBE0/qzvp": -15.0495,
+                    "BLYP/adz": -9.94,
+                    "B97/qzvp": -9.685,
+                    "B3LYP/adz": -11.6274,
+                    "PBE/adz": -14.6116,
+                    "WPBE/adz": -12.491,
+                    "PBE/qzvp": -14.7718,
+                    "B3LYP/qzvp": -11.7805,
+                    "BLYP/qzvp": -10.0329,
+                    "BP86/qzvp": -13.4061,
+                    "BP86/adz": -13.2353,
+                    "PBE0/adz": -14.8292,
+                    "B2PLYP/qzvp": -12.7185
+                }
+            },
+            "name": "FaNNFaNN_0.902439024390244",
+            "stoichiometry": {
+                "cp": {
+                    "44f3f538041fc41b9e880947109cf2339b83460f": -1.0,
+                    "eaf7c1cafa175952b3f729c5d644777efa47653e": -1.0,
+                    "a8140f1093cb167c59184b67fa0b4312cc442b38": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.926829268292683
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -13.7259,
+                    "B97/adz": -10.7926,
+                    "B2PLYP/adz": -13.0817,
+                    "PBE0/qzvp": -15.9709,
+                    "BLYP/adz": -11.3548,
+                    "B97/qzvp": -10.9374,
+                    "B3LYP/adz": -12.8963,
+                    "PBE/adz": -15.6379,
+                    "WPBE/adz": -13.559,
+                    "PBE/qzvp": -15.7769,
+                    "B3LYP/qzvp": -13.0345,
+                    "BLYP/qzvp": -11.4403,
+                    "BP86/qzvp": -14.452,
+                    "BP86/adz": -14.2937,
+                    "PBE0/adz": -15.7786,
+                    "B2PLYP/qzvp": -13.9296
+                }
+            },
+            "name": "FaNNFaNN_0.926829268292683",
+            "stoichiometry": {
+                "cp": {
+                    "6e1874dd4896933f0878378c7b6c578ff98f82d2": -1.0,
+                    "9ac97d93a323417ebef7025aee2a14c2fd092fd6": -1.0,
+                    "45b10f67c90f534ea3bc0cdc8fe988c20dc9a4ee": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.951219512195122
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -14.4482,
+                    "B97/adz": -11.7347,
+                    "B2PLYP/adz": -14.0646,
+                    "PBE0/qzvp": -16.5507,
+                    "BLYP/adz": -12.4133,
+                    "B97/qzvp": -11.8608,
+                    "B3LYP/adz": -13.8158,
+                    "PBE/adz": -16.308,
+                    "WPBE/adz": -14.2985,
+                    "PBE/qzvp": -16.431,
+                    "B3LYP/qzvp": -13.947,
+                    "BLYP/qzvp": -12.5007,
+                    "BP86/qzvp": -15.14,
+                    "BP86/adz": -14.9892,
+                    "PBE0/adz": -16.3826,
+                    "B2PLYP/qzvp": -14.8049
+                }
+            },
+            "name": "FaNNFaNN_0.951219512195122",
+            "stoichiometry": {
+                "cp": {
+                    "9e9e07e1820e6cfcd76be965715b98ec3cbe73cd": 1.0,
+                    "3d53760bd81660b8005d39af57b62ad527885272": -1.0,
+                    "0f8eb3d1d92c82dcf339c96cd5e74f14ca7ceb1a": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.9756097560975611
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -14.8322,
+                    "B97/adz": -12.3247,
+                    "B2PLYP/adz": -14.6806,
+                    "PBE0/qzvp": -16.7795,
+                    "BLYP/adz": -13.0929,
+                    "B97/qzvp": -12.4445,
+                    "B3LYP/adz": -14.3657,
+                    "PBE/adz": -16.6091,
+                    "WPBE/adz": -14.6969,
+                    "PBE/qzvp": -16.7239,
+                    "B3LYP/qzvp": -14.4997,
+                    "BLYP/qzvp": -13.1943,
+                    "BP86/qzvp": -15.4605,
+                    "BP86/adz": -15.3081,
+                    "PBE0/adz": -16.6298,
+                    "B2PLYP/qzvp": -15.3231
+                }
+            },
+            "name": "FaNNFaNN_0.9756097560975611",
+            "stoichiometry": {
+                "cp": {
+                    "48d77f7cde94f68eadb5c466a349c9dea7c927a2": -1.0,
+                    "07eae462b6716fd4fba94a3e3fe606f2e7883031": -1.0,
+                    "91322e759f7b32646be54817367d1c372313e3d1": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.0
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -14.8792,
+                    "B97/adz": -12.5673,
+                    "B2PLYP/adz": -14.9226,
+                    "PBE0/qzvp": -16.663,
+                    "BLYP/adz": -13.3901,
+                    "B97/qzvp": -12.6928,
+                    "B3LYP/adz": -14.5435,
+                    "PBE/adz": -16.5472,
+                    "WPBE/adz": -14.758,
+                    "PBE/qzvp": -16.6617,
+                    "B3LYP/qzvp": -14.6891,
+                    "BLYP/qzvp": -13.5165,
+                    "BP86/qzvp": -15.4174,
+                    "BP86/adz": -15.2551,
+                    "PBE0/adz": -16.5259,
+                    "B2PLYP/qzvp": -15.4786
+                }
+            },
+            "name": "FaNNFaNN_1.0",
+            "stoichiometry": {
+                "cp": {
+                    "678a00b1a9d4bb1134fe8adab8cbdf41ec4998a8": -1.0,
+                    "89f287342c865058d2069f1c37fc724002302703": -1.0,
+                    "e4f4b9500e38d4ffb8138ea69729dfe48bc9b321": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.024390243902439
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -14.6114,
+                    "B97/adz": -12.4898,
+                    "B2PLYP/adz": -14.8094,
+                    "PBE0/qzvp": -16.2277,
+                    "BLYP/adz": -13.3284,
+                    "B97/qzvp": -12.6285,
+                    "B3LYP/adz": -14.3727,
+                    "PBE/adz": -16.1528,
+                    "WPBE/adz": -14.507,
+                    "PBE/qzvp": -16.2714,
+                    "B3LYP/qzvp": -14.5334,
+                    "BLYP/qzvp": -13.4847,
+                    "BP86/qzvp": -15.0388,
+                    "BP86/adz": -14.8628,
+                    "PBE0/adz": -16.1003,
+                    "B2PLYP/qzvp": -15.2874
+                }
+            },
+            "name": "FaNNFaNN_1.024390243902439",
+            "stoichiometry": {
+                "cp": {
+                    "1d9fd9e78c727e436d0be5e0759938c425682c25": -1.0,
+                    "e0ac2dde3d125c6284d0e7de03c2efbba701ccda": -1.0,
+                    "3743303656bef7c4bddd5739e23bca058d86e2c2": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.048780487804878
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -14.0727,
+                    "B97/adz": -12.1444,
+                    "B2PLYP/adz": -14.3864,
+                    "PBE0/qzvp": -15.5219,
+                    "BLYP/adz": -12.9586,
+                    "B97/qzvp": -12.2951,
+                    "B3LYP/adz": -13.9034,
+                    "PBE/adz": -15.4812,
+                    "WPBE/adz": -13.9905,
+                    "PBE/qzvp": -15.6023,
+                    "B3LYP/qzvp": -14.0743,
+                    "BLYP/qzvp": -13.1399,
+                    "BP86/qzvp": -14.3757,
+                    "BP86/adz": -14.1891,
+                    "PBE0/adz": -15.4058,
+                    "B2PLYP/qzvp": -14.7904
+                }
+            },
+            "name": "FaNNFaNN_1.048780487804878",
+            "stoichiometry": {
+                "cp": {
+                    "fe1d92aa5986fae5f30ccf990a33063eb27b2305": -1.0,
+                    "04c4803632ba9af68457bda289852b4482469586": 1.0,
+                    "3dd7502331519377ec1b4cadef362e28cff972f1": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.0731707317073174
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -13.3238,
+                    "B97/adz": -11.5967,
+                    "B2PLYP/adz": -13.7184,
+                    "PBE0/qzvp": -14.6103,
+                    "BLYP/adz": -12.3506,
+                    "B97/qzvp": -11.7504,
+                    "B3LYP/adz": -13.2035,
+                    "PBE/adz": -14.6036,
+                    "WPBE/adz": -13.2692,
+                    "PBE/qzvp": -14.7201,
+                    "B3LYP/qzvp": -13.3727,
+                    "BLYP/qzvp": -12.543,
+                    "BP86/qzvp": -13.4959,
+                    "BP86/adz": -13.3086,
+                    "PBE0/adz": -14.5106,
+                    "B2PLYP/qzvp": -14.0488
+                }
+            },
+            "name": "FaNNFaNN_1.0731707317073174",
+            "stoichiometry": {
+                "cp": {
+                    "62f55af3b551408cf3939a2423d5001373d28d85": -1.0,
+                    "cbcf9e2d3d366fd6549a28ec576495b15ede070c": 1.0,
+                    "07c2938c1c071262eecc1b92978cff665fb4d430": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.1219512195121952
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -11.4612,
+                    "B97/adz": -10.1513,
+                    "B2PLYP/adz": -11.9279,
+                    "PBE0/qzvp": -12.4487,
+                    "BLYP/adz": -10.7108,
+                    "B97/qzvp": -10.2725,
+                    "B3LYP/adz": -11.3966,
+                    "PBE/adz": -12.5149,
+                    "WPBE/adz": -11.4578,
+                    "PBE/qzvp": -12.5977,
+                    "B3LYP/qzvp": -11.5237,
+                    "BLYP/qzvp": -10.8733,
+                    "BP86/qzvp": -11.3797,
+                    "BP86/adz": -11.224,
+                    "PBE0/adz": -12.3934,
+                    "B2PLYP/qzvp": -12.1147
+                }
+            },
+            "name": "FaNNFaNN_1.1219512195121952",
+            "stoichiometry": {
+                "cp": {
+                    "59e749c18dda579fc4b6d84ccaef2cf51b099144": -1.0,
+                    "1925c07ebb076be11211b1685e05a1d9461e4ea8": -1.0,
+                    "4204b2c9aab47ce3276f42cf01b9ed80ff32a20c": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.1707317073170733
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -9.4819,
+                    "B97/adz": -8.5627,
+                    "B2PLYP/adz": -9.9247,
+                    "PBE0/qzvp": -10.2225,
+                    "BLYP/adz": -8.8896,
+                    "B97/qzvp": -8.631,
+                    "B3LYP/adz": -9.4281,
+                    "PBE/adz": -10.3475,
+                    "WPBE/adz": -9.4943,
+                    "PBE/qzvp": -10.389,
+                    "B3LYP/qzvp": -9.4956,
+                    "BLYP/qzvp": -8.9881,
+                    "BP86/qzvp": -9.1983,
+                    "BP86/adz": -9.0873,
+                    "PBE0/adz": -10.2034,
+                    "B2PLYP/qzvp": -9.9991
+                }
+            },
+            "name": "FaNNFaNN_1.1707317073170733",
+            "stoichiometry": {
+                "cp": {
+                    "a0048da7e0b8d9fdc93b3c84de3e48eb15afc2ae": 1.0,
+                    "6e7f3f8c5b8b8f05f374a8c67b8476f6b562094f": -1.0,
+                    "c9ebd0e9b76e695e5ad567656062263c72e7b5dd": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.2195121951219514
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -7.6643,
+                    "B97/adz": -7.0742,
+                    "B2PLYP/adz": -8.0278,
+                    "PBE0/qzvp": -8.2179,
+                    "BLYP/adz": -7.1776,
+                    "B97/qzvp": -7.1037,
+                    "B3LYP/adz": -7.593,
+                    "PBE/adz": -8.369,
+                    "WPBE/adz": -7.659,
+                    "PBE/qzvp": -8.3859,
+                    "B3LYP/qzvp": -7.6186,
+                    "BLYP/qzvp": -7.2231,
+                    "BP86/qzvp": -7.2555,
+                    "BP86/adz": -7.1728,
+                    "PBE0/adz": -8.2122,
+                    "B2PLYP/qzvp": -8.0375
+                }
+            },
+            "name": "FaNNFaNN_1.2195121951219514",
+            "stoichiometry": {
+                "cp": {
+                    "49c42e57c91fb1d7a18f34bf7436c1b9e209c5e3": 1.0,
+                    "e317614b3b318588b609a787623efb9e1baee67b": -1.0,
+                    "d7a5dea316d0b0342b4628947983790feb7475f8": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.3170731707317076
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -4.8835,
+                    "B97/adz": -4.723,
+                    "B2PLYP/adz": -5.0639,
+                    "PBE0/qzvp": -5.2016,
+                    "BLYP/adz": -4.5181,
+                    "B97/qzvp": -4.7144,
+                    "B3LYP/adz": -4.7641,
+                    "PBE/adz": -5.3472,
+                    "WPBE/adz": -4.8517,
+                    "PBE/qzvp": -5.3417,
+                    "B3LYP/qzvp": -4.7582,
+                    "BLYP/qzvp": -4.5154,
+                    "BP86/qzvp": -4.4194,
+                    "BP86/adz": -4.3627,
+                    "PBE0/adz": -5.2036,
+                    "B2PLYP/qzvp": -5.0345
+                }
+            },
+            "name": "FaNNFaNN_1.3170731707317076",
+            "stoichiometry": {
+                "cp": {
+                    "d3ad29d7a36a1f5eac8ebb84d2cef4da283228c6": -1.0,
+                    "14da10e5fc1f499cdae95c6dbe89d2d984d2c215": -1.0,
+                    "a4daae6bf3de87218e207b6f6a1dcbbc72aa8504": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.4146341463414636
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -3.1283,
+                    "B97/adz": -3.172,
+                    "B2PLYP/adz": -3.2032,
+                    "PBE0/qzvp": -3.3186,
+                    "BLYP/adz": -2.8635,
+                    "B97/qzvp": -3.1411,
+                    "B3LYP/adz": -3.0127,
+                    "PBE/adz": -3.4373,
+                    "WPBE/adz": -3.1071,
+                    "PBE/qzvp": -3.4181,
+                    "B3LYP/qzvp": -2.9962,
+                    "BLYP/qzvp": -2.8445,
+                    "BP86/qzvp": -2.7569,
+                    "BP86/adz": -2.7334,
+                    "PBE0/adz": -3.3301,
+                    "B2PLYP/qzvp": -3.1729
+                }
+            },
+            "name": "FaNNFaNN_1.4146341463414636",
+            "stoichiometry": {
+                "cp": {
+                    "9b3d56d786595f72eed74a9a937a4656a2b51926": -1.0,
+                    "2f1bab9f8af70ff24ac52bdf2d975cd11f6d333b": -1.0,
+                    "8f97df4056106352b9df55bc4d9ecd105a27780f": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.5609756097560978
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -1.6819,
+                    "B97/adz": -1.7729,
+                    "B2PLYP/adz": -1.7001,
+                    "PBE0/qzvp": -1.7696,
+                    "BLYP/adz": -1.533,
+                    "B97/qzvp": -1.7516,
+                    "B3LYP/adz": -1.6075,
+                    "PBE/adz": -1.8368,
+                    "WPBE/adz": -1.6794,
+                    "PBE/qzvp": -1.8206,
+                    "B3LYP/qzvp": -1.5969,
+                    "BLYP/qzvp": -1.5225,
+                    "BP86/qzvp": -1.4892,
+                    "BP86/adz": -1.4897,
+                    "PBE0/adz": -1.7807,
+                    "B2PLYP/qzvp": -1.6836
+                }
+            },
+            "name": "FaNNFaNN_1.5609756097560978",
+            "stoichiometry": {
+                "cp": {
+                    "a068c3f0584e306b6ecb0471e92e09b435466134": -1.0,
+                    "7e0e15048fd36e97d9e714960b696518f5140e17": 1.0,
+                    "c16c64c05787513cf9c360c50b3e78dedc4648ed": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.707317073170732
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -0.9632,
+                    "B97/adz": -1.026,
+                    "B2PLYP/adz": -0.9738,
+                    "PBE0/qzvp": -1.0054,
+                    "BLYP/adz": -0.8912,
+                    "B97/qzvp": -1.0175,
+                    "B3LYP/adz": -0.9285,
+                    "PBE/adz": -1.0404,
+                    "WPBE/adz": -0.9671,
+                    "PBE/qzvp": -1.03,
+                    "B3LYP/qzvp": -0.9276,
+                    "BLYP/qzvp": -0.895,
+                    "BP86/qzvp": -0.8918,
+                    "BP86/adz": -0.8879,
+                    "PBE0/adz": -1.0136,
+                    "B2PLYP/qzvp": -0.9672
+                }
+            },
+            "name": "FaNNFaNN_1.707317073170732",
+            "stoichiometry": {
+                "cp": {
+                    "0a8d08110e6f60c59288931478cee16abb2a1ec9": -1.0,
+                    "43a025781114d294318c9e2435a44ab0ff13376d": -1.0,
+                    "12ffce4af3dcea29f9956d80f7356e549da73ade": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.9512195121951221
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -0.428,
+                    "B97/adz": -0.4619,
+                    "B2PLYP/adz": -0.4409,
+                    "PBE0/qzvp": -0.4457,
+                    "BLYP/adz": -0.4204,
+                    "B97/qzvp": -0.4555,
+                    "B3LYP/adz": -0.4284,
+                    "PBE/adz": -0.4629,
+                    "WPBE/adz": -0.4321,
+                    "PBE/qzvp": -0.4543,
+                    "B3LYP/qzvp": -0.4294,
+                    "BLYP/qzvp": -0.4263,
+                    "BP86/qzvp": -0.4346,
+                    "BP86/adz": -0.428,
+                    "PBE0/adz": -0.4523,
+                    "B2PLYP/qzvp": -0.4379
+                }
+            },
+            "name": "FaNNFaNN_1.9512195121951221",
+            "stoichiometry": {
+                "cp": {
+                    "fcf51ab3c044f0c167e2aee9d8ddd96b30b6abe7": -1.0,
+                    "a428a5d5ea1e5b51b83d60ac327caffc3525d13d": -1.0,
+                    "7d9a514b5739edfd96918ed344113947265f25c6": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 2.439024390243903
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -0.1129,
+                    "B97/adz": -0.13,
+                    "B2PLYP/adz": -0.121,
+                    "PBE0/qzvp": -0.1228,
+                    "BLYP/adz": -0.1251,
+                    "B97/qzvp": -0.1289,
+                    "B3LYP/adz": -0.1217,
+                    "PBE/adz": -0.1299,
+                    "WPBE/adz": -0.1141,
+                    "PBE/qzvp": -0.1281,
+                    "B3LYP/qzvp": -0.1206,
+                    "BLYP/qzvp": -0.1248,
+                    "BP86/qzvp": -0.1291,
+                    "BP86/adz": -0.1293,
+                    "PBE0/adz": -0.1244,
+                    "B2PLYP/qzvp": -0.119
+                }
+            },
+            "name": "FaNNFaNN_2.439024390243903",
+            "stoichiometry": {
+                "cp": {
+                    "ed5f753b09fc2bc45c89c55d0d0af282570efdea": 1.0,
+                    "2ffa456e874a4228a9cdc1cf785629cb4e27b126": -1.0,
+                    "c7718ec733eac7255d59e41423634d534f3752d3": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.8947368421052632
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -13.6735,
+                    "B97/adz": -7.7837,
+                    "B2PLYP/adz": -11.0815,
+                    "PBE0/qzvp": -15.1388,
+                    "BLYP/adz": -8.3159,
+                    "B97/qzvp": -8.5039,
+                    "B3LYP/adz": -11.4608,
+                    "PBE/adz": -12.5737,
+                    "WPBE/adz": -13.1104,
+                    "PBE/qzvp": -13.2236,
+                    "B3LYP/qzvp": -12.0996,
+                    "BLYP/qzvp": -8.9206,
+                    "BP86/qzvp": -12.1064,
+                    "BP86/adz": -11.4699,
+                    "PBE0/adz": -14.4558,
+                    "B2PLYP/qzvp": -12.6447
+                }
+            },
+            "name": "FaOOFaON_0.8947368421052632",
+            "stoichiometry": {
+                "cp": {
+                    "2f590c6253b8f8eecae74a2f55a6e349cf848856": -1.0,
+                    "70616262d8f78089d47665de1f76b61c67e6e861": 1.0,
+                    "eee83c7bdf18d86ddf20c26cf58ba399ec41aa53": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.9210526315789475
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -15.672,
+                    "B97/adz": -10.3005,
+                    "B2PLYP/adz": -13.5364,
+                    "PBE0/qzvp": -17.137,
+                    "BLYP/adz": -11.0008,
+                    "B97/qzvp": -10.9339,
+                    "B3LYP/adz": -13.8451,
+                    "PBE/adz": -14.9214,
+                    "WPBE/adz": -15.1871,
+                    "PBE/qzvp": -15.4946,
+                    "B3LYP/qzvp": -14.4152,
+                    "BLYP/qzvp": -11.5469,
+                    "BP86/qzvp": -14.3966,
+                    "BP86/adz": -13.8266,
+                    "PBE0/adz": -16.5397,
+                    "B2PLYP/qzvp": -14.9227
+                }
+            },
+            "name": "FaOOFaON_0.9210526315789475",
+            "stoichiometry": {
+                "cp": {
+                    "faabd02b445ece9f2aaee42cb3df36d679d3084c": -1.0,
+                    "0365690675c5fa5b996d81ad71fad2935012f4e8": -1.0,
+                    "b8e862a818c125147e351bffbc72a08504226c41": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.9473684210526316
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -16.8409,
+                    "B97/adz": -11.993,
+                    "B2PLYP/adz": -15.2032,
+                    "PBE0/qzvp": -18.2745,
+                    "BLYP/adz": -12.88,
+                    "B97/qzvp": -12.5267,
+                    "B3LYP/adz": -15.415,
+                    "PBE/adz": -16.4211,
+                    "WPBE/adz": -16.4445,
+                    "PBE/qzvp": -16.9052,
+                    "B3LYP/qzvp": -15.9045,
+                    "BLYP/qzvp": -13.3565,
+                    "BP86/qzvp": -15.8217,
+                    "BP86/adz": -15.3307,
+                    "PBE0/adz": -17.7764,
+                    "B2PLYP/qzvp": -16.3907
+                }
+            },
+            "name": "FaOOFaON_0.9473684210526316",
+            "stoichiometry": {
+                "cp": {
+                    "5a822ce1ed441cd875a1b6c5a1ab7d70d11f88b2": 1.0,
+                    "6f0d5c46e5e1919dec73101bbc211b8ba1f65b07": -1.0,
+                    "bb67763ef67fecbf887aeb5a94a83951b1cc933e": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.9736842105263159
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -17.3683,
+                    "B97/adz": -13.0228,
+                    "B2PLYP/adz": -16.2105,
+                    "PBE0/qzvp": -18.7439,
+                    "BLYP/adz": -14.0721,
+                    "B97/qzvp": -13.4612,
+                    "B3LYP/adz": -16.3139,
+                    "PBE/adz": -17.2269,
+                    "WPBE/adz": -17.0589,
+                    "PBE/qzvp": -17.6241,
+                    "B3LYP/qzvp": -16.726,
+                    "BLYP/qzvp": -14.4837,
+                    "BP86/qzvp": -16.5467,
+                    "BP86/adz": -16.1322,
+                    "PBE0/adz": -18.3442,
+                    "B2PLYP/qzvp": -17.2004
+                }
+            },
+            "name": "FaOOFaON_0.9736842105263159",
+            "stoichiometry": {
+                "cp": {
+                    "dbd0e4da182150f6a078bb5fa05f37dca2f07b10": -1.0,
+                    "839031792ff3317726ee89ee3971111f2abf8924": -1.0,
+                    "3da474070b2c7d27fa75cc3a8924eb0b7f0bf0cd": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.0
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -17.3581,
+                    "B97/adz": -13.4789,
+                    "B2PLYP/adz": -16.6243,
+                    "PBE0/qzvp": -18.654,
+                    "BLYP/adz": -14.6421,
+                    "B97/qzvp": -13.8405,
+                    "B3LYP/adz": -16.6174,
+                    "PBE/adz": -17.4273,
+                    "WPBE/adz": -17.1256,
+                    "PBE/qzvp": -17.7513,
+                    "B3LYP/qzvp": -16.967,
+                    "BLYP/qzvp": -15.0056,
+                    "BP86/qzvp": -16.6705,
+                    "BP86/adz": -16.3171,
+                    "PBE0/adz": -18.3404,
+                    "B2PLYP/qzvp": -17.4341
+                }
+            },
+            "name": "FaOOFaON_1.0",
+            "stoichiometry": {
+                "cp": {
+                    "7a6290c10ecde0ac87248af84c8b2a3c5bbb7d58": -1.0,
+                    "1cf10f5b54ce45663f921ac4bc69ad9f4a711996": -1.0,
+                    "6c212929d2dc2ce3c9199850f0bc200f22121b4c": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.0263157894736843
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -16.8957,
+                    "B97/adz": -13.4432,
+                    "B2PLYP/adz": -16.5085,
+                    "PBE0/qzvp": -18.0948,
+                    "BLYP/adz": -14.6576,
+                    "B97/qzvp": -13.7519,
+                    "B3LYP/adz": -16.3969,
+                    "PBE/adz": -17.1055,
+                    "WPBE/adz": -16.7268,
+                    "PBE/qzvp": -17.3758,
+                    "B3LYP/qzvp": -16.7031,
+                    "BLYP/qzvp": -14.9941,
+                    "BP86/qzvp": -16.2824,
+                    "BP86/adz": -15.9713,
+                    "PBE0/adz": -17.8498,
+                    "B2PLYP/qzvp": -17.1639
+                }
+            },
+            "name": "FaOOFaON_1.0263157894736843",
+            "stoichiometry": {
+                "cp": {
+                    "c2bb6b8c58f3df2c2362481166a842d4d6bbe688": -1.0,
+                    "d4d9b07438ec7de5e36ec61c7dc7b9d814ae0658": 1.0,
+                    "4cff4c274bf67d0142f3ed7f4706e66b5d744f51": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.0526315789473684
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -16.0781,
+                    "B97/adz": -13.0179,
+                    "B2PLYP/adz": -15.9535,
+                    "PBE0/qzvp": -17.168,
+                    "BLYP/adz": -14.2169,
+                    "B97/qzvp": -13.2919,
+                    "B3LYP/adz": -15.75,
+                    "PBE/adz": -16.3682,
+                    "WPBE/adz": -15.9616,
+                    "PBE/qzvp": -16.6012,
+                    "B3LYP/qzvp": -16.0263,
+                    "BLYP/qzvp": -14.5402,
+                    "BP86/qzvp": -15.4885,
+                    "BP86/adz": -15.2046,
+                    "PBE0/adz": -16.9762,
+                    "B2PLYP/qzvp": -16.4788
+                }
+            },
+            "name": "FaOOFaON_1.0526315789473684",
+            "stoichiometry": {
+                "cp": {
+                    "2fc63785076a7badf5a1e7554aae36d5922aac80": -1.0,
+                    "b7c3bd88138e95b7d9f3c838ff131d01f46f0afc": 1.0,
+                    "466856fe77dd7e9ed0f4946c6de3619e09d2fec1": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.0789473684210527
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -15.0179,
+                    "B97/adz": -12.3252,
+                    "B2PLYP/adz": -15.0778,
+                    "PBE0/qzvp": -15.9912,
+                    "BLYP/adz": -13.4482,
+                    "B97/qzvp": -12.5691,
+                    "B3LYP/adz": -14.8019,
+                    "PBE/adz": -15.3456,
+                    "WPBE/adz": -14.9471,
+                    "PBE/qzvp": -15.5479,
+                    "B3LYP/qzvp": -15.0497,
+                    "BLYP/qzvp": -13.7578,
+                    "BP86/qzvp": -14.4134,
+                    "BP86/adz": -14.1528,
+                    "PBE0/adz": -15.844,
+                    "B2PLYP/qzvp": -15.49
+                }
+            },
+            "name": "FaOOFaON_1.0789473684210527",
+            "stoichiometry": {
+                "cp": {
+                    "105ce04cd836742004b79c268e300f9ec9e7c46e": -1.0,
+                    "d76ce267426c415796ac11df7c70c7750224b53b": -1.0,
+                    "0a08451f4ff8341b87f0bc71888c37f2ecd992c8": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.105263157894737
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -13.8288,
+                    "B97/adz": -11.4839,
+                    "B2PLYP/adz": -14.0071,
+                    "PBE0/qzvp": -14.6832,
+                    "BLYP/adz": -12.4859,
+                    "B97/qzvp": -11.6924,
+                    "B3LYP/adz": -13.6817,
+                    "PBE/adz": -14.1676,
+                    "WPBE/adz": -13.7975,
+                    "PBE/qzvp": -14.3383,
+                    "B3LYP/qzvp": -13.8942,
+                    "BLYP/qzvp": -12.7693,
+                    "BP86/qzvp": -13.1841,
+                    "BP86/adz": -12.9521,
+                    "PBE0/adz": -14.5768,
+                    "B2PLYP/qzvp": -14.3178
+                }
+            },
+            "name": "FaOOFaON_1.105263157894737",
+            "stoichiometry": {
+                "cp": {
+                    "c74f7732c538c30ee99ce66d09eba975d6d4586e": -1.0,
+                    "2adb2a969ae85c57526d383db0b8e643bef91a29": 1.0,
+                    "9a7c8ff8a6283d82914033f3365569bb516d8a4f": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.131578947368421
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -12.6063,
+                    "B97/adz": -10.5879,
+                    "B2PLYP/adz": -12.8486,
+                    "PBE0/qzvp": -13.3442,
+                    "BLYP/adz": -11.4417,
+                    "B97/qzvp": -10.7551,
+                    "B3LYP/adz": -12.497,
+                    "PBE/adz": -12.9391,
+                    "WPBE/adz": -12.6028,
+                    "PBE/qzvp": -13.0765,
+                    "B3LYP/qzvp": -12.6673,
+                    "BLYP/qzvp": -11.6853,
+                    "BP86/qzvp": -11.9104,
+                    "BP86/adz": -11.7124,
+                    "PBE0/adz": -13.2737,
+                    "B2PLYP/qzvp": -13.07
+                }
+            },
+            "name": "FaOOFaON_1.131578947368421",
+            "stoichiometry": {
+                "cp": {
+                    "74c073fffb300b56701aae0827f1b0ffc577867d": 1.0,
+                    "8ccf71417e930ecb1b6d84bad375e1c19276d57a": -1.0,
+                    "12cf89c1519e79eff1761d4bb81f930c84ac361d": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.1578947368421053
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -11.416,
+                    "B97/adz": -9.6975,
+                    "B2PLYP/adz": -11.6793,
+                    "PBE0/qzvp": -12.0449,
+                    "BLYP/adz": -10.3916,
+                    "B97/qzvp": -9.8243,
+                    "B3LYP/adz": -11.3211,
+                    "PBE/adz": -11.73,
+                    "WPBE/adz": -11.4246,
+                    "PBE/qzvp": -11.8371,
+                    "B3LYP/qzvp": -11.4493,
+                    "BLYP/qzvp": -10.5892,
+                    "BP86/qzvp": -10.67,
+                    "BP86/adz": -10.5055,
+                    "PBE0/adz": -12.0014,
+                    "B2PLYP/qzvp": -11.8273
+                }
+            },
+            "name": "FaOOFaON_1.1578947368421053",
+            "stoichiometry": {
+                "cp": {
+                    "03575046cf2b463f89faee86a0630745e0907515": 1.0,
+                    "bb5860f08e4191cd4b585db481828bd01331c99b": -1.0,
+                    "77d59eae1d5b63bba3917d62cf1d4ef7966f7f53": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.2105263157894737
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -9.2622,
+                    "B97/adz": -8.0447,
+                    "B2PLYP/adz": -9.4824,
+                    "PBE0/qzvp": -9.7079,
+                    "BLYP/adz": -8.4305,
+                    "B97/qzvp": -8.1156,
+                    "B3LYP/adz": -9.1487,
+                    "PBE/adz": -9.5145,
+                    "WPBE/adz": -9.2571,
+                    "PBE/qzvp": -9.5813,
+                    "B3LYP/qzvp": -9.2147,
+                    "BLYP/qzvp": -8.5482,
+                    "BP86/qzvp": -8.4489,
+                    "BP86/adz": -8.3326,
+                    "PBE0/adz": -9.6885,
+                    "B2PLYP/qzvp": -9.5366
+                }
+            },
+            "name": "FaOOFaON_1.2105263157894737",
+            "stoichiometry": {
+                "cp": {
+                    "55239bc3670b044803356496d8892b7616176919": 1.0,
+                    "219ec950bf9972d230df9f462fc6a82306d5953b": -1.0,
+                    "fa6d0e05f2e3c1e14c114bbeaf35af111e3c41b3": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.263157894736842
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -7.473,
+                    "B97/adz": -6.6351,
+                    "B2PLYP/adz": -7.6058,
+                    "PBE0/qzvp": -7.786,
+                    "BLYP/adz": -6.7634,
+                    "B97/qzvp": -6.6787,
+                    "B3LYP/adz": -7.3198,
+                    "PBE/adz": -7.6589,
+                    "WPBE/adz": -7.4424,
+                    "PBE/qzvp": -7.7058,
+                    "B3LYP/qzvp": -7.354,
+                    "BLYP/qzvp": -6.8314,
+                    "BP86/qzvp": -6.6531,
+                    "BP86/adz": -6.5597,
+                    "PBE0/adz": -7.7703,
+                    "B2PLYP/qzvp": -7.6178
+                }
+            },
+            "name": "FaOOFaON_1.263157894736842",
+            "stoichiometry": {
+                "cp": {
+                    "82fb9df92e7b3aa03e76931c9de80f9909ebcee5": -1.0,
+                    "053ffe2dd5e483d33ec1af5dfc0501f42a08078b": -1.0,
+                    "88fdeabde91eb8005d57f70747d3e977cf6df32e": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.3157894736842106
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -6.0365,
+                    "B97/adz": -5.4864,
+                    "B2PLYP/adz": -6.0903,
+                    "PBE0/qzvp": -6.258,
+                    "BLYP/adz": -5.422,
+                    "B97/qzvp": -5.5106,
+                    "B3LYP/adz": -5.8572,
+                    "PBE/adz": -6.1707,
+                    "WPBE/adz": -5.9943,
+                    "PBE/qzvp": -6.2025,
+                    "B3LYP/qzvp": -5.8746,
+                    "BLYP/qzvp": -5.4604,
+                    "BP86/qzvp": -5.2643,
+                    "BP86/adz": -5.1875,
+                    "PBE0/adz": -6.2457,
+                    "B2PLYP/qzvp": -6.0845
+                }
+            },
+            "name": "FaOOFaON_1.3157894736842106",
+            "stoichiometry": {
+                "cp": {
+                    "6eaf0a3aa6cb2d496673f18f22f44ab9aad782cf": -1.0,
+                    "6700073acc4e71abe115645006a4a2b000a68343": 1.0,
+                    "bf3e4a3d67e26914baeffe8d0d4010f176475964": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.4210526315789476
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -4.0222,
+                    "B97/adz": -3.8113,
+                    "B2PLYP/adz": -3.982,
+                    "PBE0/qzvp": -4.1292,
+                    "BLYP/adz": -3.5637,
+                    "B97/qzvp": -3.8037,
+                    "B3LYP/adz": -3.8408,
+                    "PBE/adz": -4.0828,
+                    "WPBE/adz": -3.9922,
+                    "PBE/qzvp": -4.089,
+                    "B3LYP/qzvp": -3.8408,
+                    "BLYP/qzvp": -3.5721,
+                    "BP86/qzvp": -3.4219,
+                    "BP86/adz": -3.3868,
+                    "PBE0/adz": -4.1304,
+                    "B2PLYP/qzvp": -3.9679
+                }
+            },
+            "name": "FaOOFaON_1.4210526315789476",
+            "stoichiometry": {
+                "cp": {
+                    "d8d3f177116bb03caaf28b112168234eac06264e": -1.0,
+                    "8cef083e2f2531e6922ff0892d7bea8c027f0288": -1.0,
+                    "4778b1d8167b070dc9bc8846cf4236707e8ff955": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.5263157894736843
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -2.7781,
+                    "B97/adz": -2.6864,
+                    "B2PLYP/adz": -2.708,
+                    "PBE0/qzvp": -2.8204,
+                    "BLYP/adz": -2.4399,
+                    "B97/qzvp": -2.6776,
+                    "B3LYP/adz": -2.6269,
+                    "PBE/adz": -2.7788,
+                    "WPBE/adz": -2.7626,
+                    "PBE/qzvp": -2.7795,
+                    "B3LYP/qzvp": -2.6267,
+                    "BLYP/qzvp": -2.4464,
+                    "BP86/qzvp": -2.3601,
+                    "BP86/adz": -2.3484,
+                    "PBE0/adz": -2.8238,
+                    "B2PLYP/qzvp": -2.7005
+                }
+            },
+            "name": "FaOOFaON_1.5263157894736843",
+            "stoichiometry": {
+                "cp": {
+                    "3c2d5e35581b61b6c59634e4f50f56c5036d3b4c": -1.0,
+                    "e64137b3acdd1c5d140e1b8425124bbb301933cd": 1.0,
+                    "716efe1be00acbb6c39caa0e6cb0ba046b285e40": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.6842105263157896
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -1.7001,
+                    "B97/adz": -1.6396,
+                    "B2PLYP/adz": -1.6359,
+                    "PBE0/qzvp": -1.6975,
+                    "BLYP/adz": -1.4887,
+                    "B97/qzvp": -1.6423,
+                    "B3LYP/adz": -1.6005,
+                    "PBE/adz": -1.6521,
+                    "WPBE/adz": -1.6961,
+                    "PBE/qzvp": -1.6546,
+                    "B3LYP/qzvp": -1.6098,
+                    "BLYP/qzvp": -1.5077,
+                    "BP86/qzvp": -1.4806,
+                    "BP86/adz": -1.4675,
+                    "PBE0/adz": -1.6987,
+                    "B2PLYP/qzvp": -1.6382
+                }
+            },
+            "name": "FaOOFaON_1.6842105263157896",
+            "stoichiometry": {
+                "cp": {
+                    "964f7f7a901fd591dd2e2cfc857d5c98363adeba": -1.0,
+                    "1a6b5dcc45a23f43be258e561ab4def70be39463": 1.0,
+                    "2fabc119ca41ca0a3ed7f97f1390545ae608eef9": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.842105263157895
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -1.1087,
+                    "B97/adz": -1.0586,
+                    "B2PLYP/adz": -1.065,
+                    "PBE0/qzvp": -1.0935,
+                    "BLYP/adz": -0.9825,
+                    "B97/qzvp": -1.0589,
+                    "B3LYP/adz": -1.0511,
+                    "PBE/adz": -1.0563,
+                    "WPBE/adz": -1.1098,
+                    "PBE/qzvp": -1.0542,
+                    "B3LYP/qzvp": -1.0605,
+                    "BLYP/qzvp": -1.0011,
+                    "BP86/qzvp": -0.9968,
+                    "BP86/adz": -0.9814,
+                    "PBE0/adz": -1.097,
+                    "B2PLYP/qzvp": -1.068
+                }
+            },
+            "name": "FaOOFaON_1.842105263157895",
+            "stoichiometry": {
+                "cp": {
+                    "bc3a9f247221604cdfc9e46d8603071a45b0654d": -1.0,
+                    "00eea37c8000e2b3dbb6e013ac2c585a84609742": 1.0,
+                    "e3aee1f9ff55bb8946446938cad4c54fa4881e40": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 2.1052631578947367
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -0.6055,
+                    "B97/adz": -0.5717,
+                    "B2PLYP/adz": -0.5829,
+                    "PBE0/qzvp": -0.5919,
+                    "BLYP/adz": -0.551,
+                    "B97/qzvp": -0.5691,
+                    "B3LYP/adz": -0.5829,
+                    "PBE/adz": -0.5678,
+                    "WPBE/adz": -0.6073,
+                    "PBE/qzvp": -0.5642,
+                    "B3LYP/qzvp": -0.586,
+                    "BLYP/qzvp": -0.5582,
+                    "BP86/qzvp": -0.561,
+                    "BP86/adz": -0.554,
+                    "PBE0/adz": -0.595,
+                    "B2PLYP/qzvp": -0.5827
+                }
+            },
+            "name": "FaOOFaON_2.1052631578947367",
+            "stoichiometry": {
+                "cp": {
+                    "f5aa0a4c0481c4039eeba9860f8a059ee4fa68f1": -1.0,
+                    "af3086e84d88ca60bb58bf1d845c823ef525f3a6": 1.0,
+                    "596e5ec5466ee4c2cdce18d1d89cc499f92cad8d": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 2.6315789473684212
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -0.236,
+                    "B97/adz": -0.2212,
+                    "B2PLYP/adz": -0.2257,
+                    "PBE0/qzvp": -0.2306,
+                    "BLYP/adz": -0.2186,
+                    "B97/qzvp": -0.2215,
+                    "B3LYP/adz": -0.229,
+                    "PBE/adz": -0.2195,
+                    "WPBE/adz": -0.2361,
+                    "PBE/qzvp": -0.2194,
+                    "B3LYP/qzvp": -0.2294,
+                    "BLYP/qzvp": -0.2195,
+                    "BP86/qzvp": -0.221,
+                    "BP86/adz": -0.2202,
+                    "PBE0/adz": -0.2308,
+                    "B2PLYP/qzvp": -0.2256
+                }
+            },
+            "name": "FaOOFaON_2.6315789473684212",
+            "stoichiometry": {
+                "cp": {
+                    "d54edef8f8af730ac441e498f7e3d11253cdca34": -1.0,
+                    "990d2d0ea8f17255b2fc7a1ca06997f7047254c4": -1.0,
+                    "0bf4736c4ec446f22bf539e652a332767da95a05": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.85
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -6.5499,
+                    "B97/adz": -2.0872,
+                    "B2PLYP/adz": -5.0262,
+                    "PBE0/qzvp": -8.816,
+                    "BLYP/adz": -2.5978,
+                    "B97/qzvp": -2.4579,
+                    "B3LYP/adz": -5.0438,
+                    "PBE/adz": -7.44,
+                    "WPBE/adz": -6.2233,
+                    "PBE/qzvp": -7.7798,
+                    "B3LYP/qzvp": -5.362,
+                    "BLYP/qzvp": -2.859,
+                    "BP86/qzvp": -6.467,
+                    "BP86/adz": -6.1419,
+                    "PBE0/adz": -8.4236,
+                    "B2PLYP/qzvp": -6.3103
+                }
+            },
+            "name": "FaONFaNN_0.85",
+            "stoichiometry": {
+                "cp": {
+                    "3d52d63d800717747723790427c2e043d54b5c14": 1.0,
+                    "4d3811a720ff91873b4bd8d592d5a0889a3eb6b7": -1.0,
+                    "160b1b11a52b7a791f07d5d675dee5f4e47c65d2": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.875
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -9.2873,
+                    "B97/adz": -5.0993,
+                    "B2PLYP/adz": -7.9408,
+                    "PBE0/qzvp": -11.5184,
+                    "BLYP/adz": -5.6532,
+                    "B97/qzvp": -5.4463,
+                    "B3LYP/adz": -7.967,
+                    "PBE/adz": -10.2565,
+                    "WPBE/adz": -8.9875,
+                    "PBE/qzvp": -10.5755,
+                    "B3LYP/qzvp": -8.271,
+                    "BLYP/qzvp": -5.9079,
+                    "BP86/qzvp": -9.2878,
+                    "BP86/adz": -8.9744,
+                    "PBE0/adz": -11.1533,
+                    "B2PLYP/qzvp": -9.1386
+                }
+            },
+            "name": "FaONFaNN_0.875",
+            "stoichiometry": {
+                "cp": {
+                    "0f39d09f8bf38cee01f467c4bfadb1853455deeb": -1.0,
+                    "98dbeda0c3fe902925f0ad8f7e224d02f604783e": -1.0,
+                    "7f5cdab1e45a96941657f0935662b00f29c6ba2a": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.9
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -11.4072,
+                    "B97/adz": -7.5043,
+                    "B2PLYP/adz": -10.3097,
+                    "PBE0/qzvp": -13.5672,
+                    "BLYP/adz": -8.1511,
+                    "B97/qzvp": -7.8118,
+                    "B3LYP/adz": -10.3039,
+                    "PBE/adz": -12.4556,
+                    "WPBE/adz": -11.1437,
+                    "PBE/qzvp": -12.7408,
+                    "B3LYP/qzvp": -10.5809,
+                    "BLYP/qzvp": -8.387,
+                    "BP86/qzvp": -11.4798,
+                    "BP86/adz": -11.1914,
+                    "PBE0/adz": -13.2432,
+                    "B2PLYP/qzvp": -11.3935
+                }
+            },
+            "name": "FaONFaNN_0.9",
+            "stoichiometry": {
+                "cp": {
+                    "e2f037fd36993b255a15958a55e876a6a75240db": 1.0,
+                    "c55423681ed2a80ec0d8ffe056734e9d96d629d4": -1.0,
+                    "4878a44ee6b4b212315a5ecfda22ad3451a31664": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.925
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -13.0131,
+                    "B97/adz": -9.3977,
+                    "B2PLYP/adz": -12.1966,
+                    "PBE0/qzvp": -15.0751,
+                    "BLYP/adz": -10.1555,
+                    "B97/qzvp": -9.661,
+                    "B3LYP/adz": -12.135,
+                    "PBE/adz": -14.1259,
+                    "WPBE/adz": -12.7897,
+                    "PBE/qzvp": -14.3724,
+                    "B3LYP/qzvp": -12.3812,
+                    "BLYP/qzvp": -10.3695,
+                    "BP86/qzvp": -13.136,
+                    "BP86/adz": -12.8767,
+                    "PBE0/adz": -14.7979,
+                    "B2PLYP/qzvp": -13.1537
+                }
+            },
+            "name": "FaONFaNN_0.925",
+            "stoichiometry": {
+                "cp": {
+                    "896d9201918dd9c83afc566a39cd417fb832d282": 1.0,
+                    "7d2132f81adb2341dd63d116ae12de595400b964": -1.0,
+                    "0797626a53eca8f2e6e00b6a3c44364a170e6bd7": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.95
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -14.1496,
+                    "B97/adz": -10.8165,
+                    "B2PLYP/adz": -13.6161,
+                    "PBE0/qzvp": -16.0921,
+                    "BLYP/adz": -11.68,
+                    "B97/qzvp": -11.04,
+                    "B3LYP/adz": -13.485,
+                    "PBE/adz": -15.3003,
+                    "WPBE/adz": -13.966,
+                    "PBE/qzvp": -15.5103,
+                    "B3LYP/qzvp": -13.7041,
+                    "BLYP/qzvp": -11.8775,
+                    "BP86/qzvp": -14.2939,
+                    "BP86/adz": -14.0611,
+                    "PBE0/adz": -15.8609,
+                    "B2PLYP/qzvp": -14.4453
+                }
+            },
+            "name": "FaONFaNN_0.95",
+            "stoichiometry": {
+                "cp": {
+                    "77536a0e8d760b8ccc40aae2188dd8e16fbee70a": -1.0,
+                    "0594b000bb2b84843849eb8db168e5ffec2bac9c": 1.0,
+                    "9813053d6ad69936d8ea80247a65f67fba4b1b96": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 0.975
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -14.8395,
+                    "B97/adz": -11.7776,
+                    "B2PLYP/adz": -14.5665,
+                    "PBE0/qzvp": -16.645,
+                    "BLYP/adz": -12.7238,
+                    "B97/qzvp": -11.9722,
+                    "B3LYP/adz": -14.3601,
+                    "PBE/adz": -15.9944,
+                    "WPBE/adz": -14.692,
+                    "PBE/qzvp": -16.1755,
+                    "B3LYP/qzvp": -14.5613,
+                    "BLYP/qzvp": -12.9156,
+                    "BP86/qzvp": -14.9727,
+                    "BP86/adz": -14.758,
+                    "PBE0/adz": -16.4539,
+                    "B2PLYP/qzvp": -15.2754
+                }
+            },
+            "name": "FaONFaNN_0.975",
+            "stoichiometry": {
+                "cp": {
+                    "55350b094f81e87cd5b0a2ba1230b0df5d08e725": -1.0,
+                    "6c109e6148170ab5770f8b52924f3a6bffa182b5": 1.0,
+                    "a1049d84381a572717f478cccd3c162a84378299": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.0
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -15.1062,
+                    "B97/adz": -12.3033,
+                    "B2PLYP/adz": -15.0551,
+                    "PBE0/qzvp": -16.7622,
+                    "BLYP/adz": -13.2967,
+                    "B97/qzvp": -12.4826,
+                    "B3LYP/adz": -14.7744,
+                    "PBE/adz": -16.2313,
+                    "WPBE/adz": -14.9907,
+                    "PBE/qzvp": -16.3934,
+                    "B3LYP/qzvp": -14.9677,
+                    "BLYP/qzvp": -13.4945,
+                    "BP86/qzvp": -15.1975,
+                    "BP86/adz": -14.9908,
+                    "PBE0/adz": -16.6031,
+                    "B2PLYP/qzvp": -15.6553
+                }
+            },
+            "name": "FaONFaNN_1.0",
+            "stoichiometry": {
+                "cp": {
+                    "10d4fcf9e531fe2d7242813975d68a3fa380b0f1": 1.0,
+                    "ba6b9cdfa9e3660b7ea8d56aa390350e4fdd9a5c": -1.0,
+                    "5b7143afda66da6008c44c5c43756e3879601ae1": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.025
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -14.9891,
+                    "B97/adz": -12.4374,
+                    "B2PLYP/adz": -15.1131,
+                    "PBE0/qzvp": -16.4884,
+                    "BLYP/adz": -13.4345,
+                    "B97/qzvp": -12.611,
+                    "B3LYP/adz": -14.7657,
+                    "PBE/adz": -16.0569,
+                    "WPBE/adz": -14.9031,
+                    "PBE/qzvp": -16.2077,
+                    "B3LYP/qzvp": -14.9569,
+                    "BLYP/qzvp": -13.6452,
+                    "BP86/qzvp": -15.0117,
+                    "BP86/adz": -14.8063,
+                    "PBE0/adz": -16.3545,
+                    "B2PLYP/qzvp": -15.6162
+                }
+            },
+            "name": "FaONFaNN_1.025",
+            "stoichiometry": {
+                "cp": {
+                    "865477b0d6ca7af31f0dcc35b4d399f1523ac498": 1.0,
+                    "b488570cd9d957ed7fe56048ceb40a2b11ad82b4": -1.0,
+                    "84ae5713d5b203fc8df3afa15695db6fb2bc34ab": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.05
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -14.549,
+                    "B97/adz": -12.2466,
+                    "B2PLYP/adz": -14.8006,
+                    "PBE0/qzvp": -15.8891,
+                    "BLYP/adz": -13.2031,
+                    "B97/qzvp": -12.4164,
+                    "B3LYP/adz": -14.3997,
+                    "PBE/adz": -15.5426,
+                    "WPBE/adz": -14.4915,
+                    "PBE/qzvp": -15.6839,
+                    "B3LYP/qzvp": -14.5868,
+                    "BLYP/qzvp": -13.4237,
+                    "BP86/qzvp": -14.4835,
+                    "BP86/adz": -14.28,
+                    "PBE0/adz": -15.7776,
+                    "B2PLYP/qzvp": -15.215
+                }
+            },
+            "name": "FaONFaNN_1.05",
+            "stoichiometry": {
+                "cp": {
+                    "0fc7f7d07877a1d4fc464ea8b61bcb66a2f40d41": -1.0,
+                    "8b8fb192101eac05b4476fb5355e892a82eb0120": -1.0,
+                    "8fb7aba9709940339ce927063e90a564b1a946e8": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.075
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -13.8627,
+                    "B97/adz": -11.8114,
+                    "B2PLYP/adz": -14.1986,
+                    "PBE0/qzvp": -15.0465,
+                    "BLYP/adz": -12.6885,
+                    "B97/qzvp": -11.972,
+                    "B3LYP/adz": -13.7611,
+                    "PBE/adz": -14.7756,
+                    "WPBE/adz": -13.8321,
+                    "PBE/qzvp": -14.9045,
+                    "B3LYP/qzvp": -13.9361,
+                    "BLYP/qzvp": -12.9076,
+                    "BP86/qzvp": -13.6984,
+                    "BP86/adz": -13.5027,
+                    "PBE0/adz": -14.957,
+                    "B2PLYP/qzvp": -14.5298
+                }
+            },
+            "name": "FaONFaNN_1.075",
+            "stoichiometry": {
+                "cp": {
+                    "6b0bd59b236f302774de5c9c519e7f0cdb70d706": -1.0,
+                    "758fb15f163a4797f5ce715de62bc84f8449758b": 1.0,
+                    "7afae81f355e94c55df14cb1a5594db49cb03899": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.1
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -13.0116,
+                    "B97/adz": -11.2097,
+                    "B2PLYP/adz": -13.3938,
+                    "PBE0/qzvp": -14.046,
+                    "BLYP/adz": -11.9794,
+                    "B97/qzvp": -11.3533,
+                    "B3LYP/adz": -12.9371,
+                    "PBE/adz": -13.8437,
+                    "WPBE/adz": -13.0029,
+                    "PBE/qzvp": -13.9559,
+                    "B3LYP/qzvp": -13.0911,
+                    "BLYP/qzvp": -12.183,
+                    "BP86/qzvp": -12.7468,
+                    "BP86/adz": -12.5658,
+                    "PBE0/adz": -13.9783,
+                    "B2PLYP/qzvp": -13.6475
+                }
+            },
+            "name": "FaONFaNN_1.1",
+            "stoichiometry": {
+                "cp": {
+                    "52fe32fe9dc3c073468be66cd398696aa976ef9f": 1.0,
+                    "550fdb26f3628a99cab11415dfb4fc59343b99e0": -1.0,
+                    "e1efe4774915e921c410e9c3d2f25a77ea171356": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.15
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -11.0896,
+                    "B97/adz": -9.7568,
+                    "B2PLYP/adz": -11.4773,
+                    "PBE0/qzvp": -11.8605,
+                    "BLYP/adz": -10.2731,
+                    "B97/qzvp": -9.854,
+                    "B3LYP/adz": -11.0272,
+                    "PBE/adz": -11.7708,
+                    "WPBE/adz": -11.0995,
+                    "PBE/qzvp": -11.8446,
+                    "B3LYP/qzvp": -11.126,
+                    "BLYP/qzvp": -10.4192,
+                    "BP86/qzvp": -10.6483,
+                    "BP86/adz": -10.5079,
+                    "PBE0/adz": -11.8281,
+                    "B2PLYP/qzvp": -11.6038
+                }
+            },
+            "name": "FaONFaNN_1.15",
+            "stoichiometry": {
+                "cp": {
+                    "fe529127af4b1321a165d5fcf004ad9495467796": -1.0,
+                    "54059e98da540038d4bf485804c2cabaabef6da5": 1.0,
+                    "ee3a67e734b87d687818e306241be3a3ecbeef12": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.2
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -9.1835,
+                    "B97/adz": -8.255,
+                    "B2PLYP/adz": -9.5067,
+                    "PBE0/qzvp": -9.7488,
+                    "BLYP/adz": -8.5154,
+                    "B97/qzvp": -8.3101,
+                    "B3LYP/adz": -9.101,
+                    "PBE/adz": -9.7328,
+                    "WPBE/adz": -9.1829,
+                    "PBE/qzvp": -9.7762,
+                    "B3LYP/qzvp": -9.1522,
+                    "BLYP/qzvp": -8.6016,
+                    "BP86/qzvp": -8.628,
+                    "BP86/adz": -8.5212,
+                    "PBE0/adz": -9.7346,
+                    "B2PLYP/qzvp": -9.5509
+                }
+            },
+            "name": "FaONFaNN_1.2",
+            "stoichiometry": {
+                "cp": {
+                    "3831a3d0058865499d9651d079be470de6215528": -1.0,
+                    "cbc69d116c9cf5b89571f5742e5efdef1a627b00": -1.0,
+                    "80e736e829b418169b5300476aaea95c7ff05d9a": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.25
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -7.4929,
+                    "B97/adz": -6.8857,
+                    "B2PLYP/adz": -7.7258,
+                    "PBE0/qzvp": -7.9072,
+                    "BLYP/adz": -6.9276,
+                    "B97/qzvp": -6.9116,
+                    "B3LYP/adz": -7.38,
+                    "PBE/adz": -7.9317,
+                    "WPBE/adz": -7.475,
+                    "PBE/qzvp": -7.9552,
+                    "B3LYP/qzvp": -7.4019,
+                    "BLYP/qzvp": -6.9714,
+                    "BP86/qzvp": -6.8908,
+                    "BP86/adz": -6.8058,
+                    "PBE0/adz": -7.9006,
+                    "B2PLYP/qzvp": -7.7268
+                }
+            },
+            "name": "FaONFaNN_1.25",
+            "stoichiometry": {
+                "cp": {
+                    "3dbc9d1de96d485e4ae293dc7e0295ab53ce4acc": -1.0,
+                    "389e1e597eb12e99aea83e093e75cc756de0d2b2": -1.0,
+                    "febf1965b33a223c871284ca7e8481d9882523cb": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.35
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -4.9487,
+                    "B97/adz": -4.7535,
+                    "B2PLYP/adz": -5.0306,
+                    "PBE0/qzvp": -5.175,
+                    "BLYP/adz": -4.5287,
+                    "B97/qzvp": -4.7408,
+                    "B3LYP/adz": -4.8035,
+                    "PBE/adz": -5.2256,
+                    "WPBE/adz": -4.9199,
+                    "PBE/qzvp": -5.2241,
+                    "B3LYP/qzvp": -4.7987,
+                    "BLYP/qzvp": -4.5296,
+                    "BP86/qzvp": -4.4006,
+                    "BP86/adz": -4.3516,
+                    "PBE0/adz": -5.1786,
+                    "B2PLYP/qzvp": -5.0056
+                }
+            },
+            "name": "FaONFaNN_1.35",
+            "stoichiometry": {
+                "cp": {
+                    "307677d45f5ddd8c873399bb4183efa23921a6c7": -1.0,
+                    "30e5ad43fc80ff364d9386758c889e32a6cc8a4e": -1.0,
+                    "99b695c3c24ac11174e6e5efc5f21ae33666bdd1": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.45
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -3.3417,
+                    "B97/adz": -3.3169,
+                    "B2PLYP/adz": -3.3474,
+                    "PBE0/qzvp": -3.4638,
+                    "BLYP/adz": -3.0334,
+                    "B97/qzvp": -3.2914,
+                    "B3LYP/adz": -3.2081,
+                    "PBE/adz": -3.506,
+                    "WPBE/adz": -3.3261,
+                    "PBE/qzvp": -3.4939,
+                    "B3LYP/qzvp": -3.1971,
+                    "BLYP/qzvp": -3.0234,
+                    "BP86/qzvp": -2.9315,
+                    "BP86/adz": -2.9148,
+                    "PBE0/adz": -3.4739,
+                    "B2PLYP/qzvp": -3.3251
+                }
+            },
+            "name": "FaONFaNN_1.45",
+            "stoichiometry": {
+                "cp": {
+                    "82a522b1a366d1a3c9fdd441246a8ba2410f6598": -1.0,
+                    "82aa41dbf72e2736603b761f778e7da646ba1656": 1.0,
+                    "7760fcb3427b213ab84de4c8293e047225752afe": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.6
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -1.9759,
+                    "B97/adz": -1.9905,
+                    "B2PLYP/adz": -1.9516,
+                    "PBE0/qzvp": -2.0191,
+                    "BLYP/adz": -1.7901,
+                    "B97/qzvp": -1.9792,
+                    "B3LYP/adz": -1.8863,
+                    "PBE/adz": -2.0313,
+                    "WPBE/adz": -1.974,
+                    "PBE/qzvp": -2.024,
+                    "B3LYP/qzvp": -1.8844,
+                    "BLYP/qzvp": -1.7922,
+                    "BP86/qzvp": -1.76,
+                    "BP86/adz": -1.7558,
+                    "PBE0/adz": -2.0257,
+                    "B2PLYP/qzvp": -1.9431
+                }
+            },
+            "name": "FaONFaNN_1.6",
+            "stoichiometry": {
+                "cp": {
+                    "ce44af7839cdba08640ecc5552879f1d2cffcf94": -1.0,
+                    "55a81f7dfb2349df7e5594abfe1f96adc8f7d282": 1.0,
+                    "f74df819842f0b515fca02ad4718e63aee3532e7": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.75
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -1.2531,
+                    "B97/adz": -1.2565,
+                    "B2PLYP/adz": -1.234,
+                    "PBE0/qzvp": -1.2651,
+                    "BLYP/adz": -1.149,
+                    "B97/qzvp": -1.2525,
+                    "B3LYP/adz": -1.2037,
+                    "PBE/adz": -1.264,
+                    "WPBE/adz": -1.2561,
+                    "PBE/qzvp": -1.2581,
+                    "B3LYP/qzvp": -1.2081,
+                    "BLYP/qzvp": -1.16,
+                    "BP86/qzvp": -1.1559,
+                    "BP86/adz": -1.1469,
+                    "PBE0/adz": -1.2708,
+                    "B2PLYP/qzvp": -1.232
+                }
+            },
+            "name": "FaONFaNN_1.75",
+            "stoichiometry": {
+                "cp": {
+                    "89823e7da99d279c352a042cdf220bb4878e0618": 1.0,
+                    "cd9b3e56d436fa4a257a4deb3007ab85b3c54f1c": -1.0,
+                    "f255680d65921570c2f3902ec898db854ba81b23": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 2.0
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -0.66,
+                    "B97/adz": -0.6576,
+                    "B2PLYP/adz": -0.6534,
+                    "PBE0/qzvp": -0.6601,
+                    "BLYP/adz": -0.6263,
+                    "B97/qzvp": -0.6524,
+                    "B3LYP/adz": -0.6469,
+                    "PBE/adz": -0.657,
+                    "WPBE/adz": -0.6634,
+                    "PBE/qzvp": -0.6503,
+                    "B3LYP/qzvp": -0.6491,
+                    "BLYP/qzvp": -0.6329,
+                    "BP86/qzvp": -0.6392,
+                    "BP86/adz": -0.6321,
+                    "PBE0/adz": -0.6653,
+                    "B2PLYP/qzvp": -0.6517
+                }
+            },
+            "name": "FaONFaNN_2.0",
+            "stoichiometry": {
+                "cp": {
+                    "9976abeeead58752b196546a74ef04e59f3d2e58": 1.0,
+                    "2f75e92993fcca36f687e5ec39e663e898b4f2b4": -1.0,
+                    "2f3bcb18ef056ae3ef96d68f4be6bfb0e039c1fb": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 2.5
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -0.2442,
+                    "B97/adz": -0.2444,
+                    "B2PLYP/adz": -0.2423,
+                    "PBE0/qzvp": -0.2456,
+                    "BLYP/adz": -0.2407,
+                    "B97/qzvp": -0.2437,
+                    "B3LYP/adz": -0.2442,
+                    "PBE/adz": -0.2439,
+                    "WPBE/adz": -0.2451,
+                    "PBE/qzvp": -0.2427,
+                    "B3LYP/qzvp": -0.2439,
+                    "BLYP/qzvp": -0.2409,
+                    "BP86/qzvp": -0.2443,
+                    "BP86/adz": -0.244,
+                    "PBE0/adz": -0.2467,
+                    "B2PLYP/qzvp": -0.2411
+                }
+            },
+            "name": "FaONFaNN_2.5",
+            "stoichiometry": {
+                "cp": {
+                    "e5ae2556c02aabbf524e5184884072ee8fe8c2f4": -1.0,
+                    "02fb10435e71fdeb7423c300cdc1fb1ecec5e2d9": 1.0,
+                    "9f966e66ccac71af919bbfc6d1c300aa31f48d94": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.0
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -26.5802,
+                    "B97/adz": -21.0383,
+                    "B2PLYP/adz": -23.8658,
+                    "PBE0/qzvp": -27.9807,
+                    "BLYP/adz": -21.2985,
+                    "B97/qzvp": -21.5912,
+                    "B3LYP/adz": -24.1454,
+                    "PBE/adz": -25.9693,
+                    "WPBE/adz": -26.2018,
+                    "PBE/qzvp": -26.4247,
+                    "B3LYP/qzvp": -24.6231,
+                    "BLYP/qzvp": -21.7513,
+                    "BP86/qzvp": -25.1007,
+                    "BP86/adz": -24.6193,
+                    "PBE0/adz": -27.4968,
+                    "B2PLYP/qzvp": -25.2333
+                }
+            },
+            "name": "FaOOFaNN_1.0",
+            "stoichiometry": {
+                "cp": {
+                    "b3095790670fe0c0f57574231bd5e00bfc14498c": -1.0,
+                    "42aa5248818c2508a1db99a9679de4506956c533": -1.0,
+                    "85ccec96bf18c8b23f1623f77fa2d00c0aa85e72": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.027777777777778
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -23.8391,
+                    "B97/adz": -19.1278,
+                    "B2PLYP/adz": -21.901,
+                    "PBE0/qzvp": -25.2505,
+                    "BLYP/adz": -19.7318,
+                    "B97/qzvp": -19.5597,
+                    "B3LYP/adz": -22.0586,
+                    "PBE/adz": -23.8234,
+                    "WPBE/adz": -23.5515,
+                    "PBE/qzvp": -24.1852,
+                    "B3LYP/qzvp": -22.4385,
+                    "BLYP/qzvp": -20.0942,
+                    "BP86/qzvp": -22.9242,
+                    "BP86/adz": -22.5363,
+                    "PBE0/adz": -24.8683,
+                    "B2PLYP/qzvp": -23.0133
+                }
+            },
+            "name": "FaOOFaNN_1.027777777777778",
+            "stoichiometry": {
+                "cp": {
+                    "e62f0e748ba9b5c28f75cb953b88c6a7c0c68309": -1.0,
+                    "4cb80e5861d58b9613fe2c2b248d00c64ec2affe": -1.0,
+                    "14c3a7ece0673e19c3d24fc47fc9dd2193c50b8b": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.0555555555555556
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -22.482,
+                    "B97/adz": -18.3477,
+                    "B2PLYP/adz": -21.1053,
+                    "PBE0/qzvp": -23.8443,
+                    "BLYP/adz": -19.1676,
+                    "B97/qzvp": -18.7001,
+                    "B3LYP/adz": -21.1508,
+                    "PBE/adz": -22.7692,
+                    "WPBE/adz": -22.252,
+                    "PBE/qzvp": -23.0714,
+                    "B3LYP/qzvp": -21.4719,
+                    "BLYP/qzvp": -19.4806,
+                    "BP86/qzvp": -21.8502,
+                    "BP86/adz": -21.5179,
+                    "PBE0/adz": -23.5308,
+                    "B2PLYP/qzvp": -22.0262
+                }
+            },
+            "name": "FaOOFaNN_1.0555555555555556",
+            "stoichiometry": {
+                "cp": {
+                    "538d77921e64781b0e81cb8ec99f7affa51e88b7": -1.0,
+                    "159852ec2c3622488a5858aa0fe180401908249a": -1.0,
+                    "9d13b1211b2be7cfe942e3ca80662721976df936": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.0833333333333333
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -21.3377,
+                    "B97/adz": -17.6779,
+                    "B2PLYP/adz": -20.4076,
+                    "PBE0/qzvp": -22.6228,
+                    "BLYP/adz": -18.6335,
+                    "B97/qzvp": -17.9756,
+                    "B3LYP/adz": -20.3484,
+                    "PBE/adz": -21.7984,
+                    "WPBE/adz": -21.1503,
+                    "PBE/qzvp": -22.0583,
+                    "B3LYP/qzvp": -20.632,
+                    "BLYP/qzvp": -18.9198,
+                    "BP86/qzvp": -20.8609,
+                    "BP86/adz": -20.5644,
+                    "PBE0/adz": -22.3615,
+                    "B2PLYP/qzvp": -21.171
+                }
+            },
+            "name": "FaOOFaNN_1.0833333333333333",
+            "stoichiometry": {
+                "cp": {
+                    "bc92e97a069f4fc593faf5fb7680e0ae2934c947": -1.0,
+                    "6105823e87f6990ae5fd84d1875b9165c8a85f92": 1.0,
+                    "e99973df2452af1ce6f15f0698e5d0d13447966f": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.1111111111111112
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -20.1358,
+                    "B97/adz": -16.8877,
+                    "B2PLYP/adz": -19.5572,
+                    "PBE0/qzvp": -21.3262,
+                    "BLYP/adz": -17.909,
+                    "B97/qzvp": -17.152,
+                    "B3LYP/adz": -19.4037,
+                    "PBE/adz": -20.6871,
+                    "WPBE/adz": -19.9812,
+                    "PBE/qzvp": -20.9184,
+                    "B3LYP/qzvp": -19.6658,
+                    "BLYP/qzvp": -18.1857,
+                    "BP86/qzvp": -19.733,
+                    "BP86/adz": -19.4569,
+                    "PBE0/adz": -21.1043,
+                    "B2PLYP/qzvp": -20.1904
+                }
+            },
+            "name": "FaOOFaNN_1.1111111111111112",
+            "stoichiometry": {
+                "cp": {
+                    "7a736bb3641ab1b23f4e9b92a3243aaa0ec5ebd3": -1.0,
+                    "88571489dad363e67e15a5b3bc4c9ea57f539e7f": 1.0,
+                    "23acadb7e4b3fa4da84483c2fc02d3ea6f6654c8": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.1388888888888888
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -18.8077,
+                    "B97/adz": -15.9299,
+                    "B2PLYP/adz": -18.4969,
+                    "PBE0/qzvp": -19.8927,
+                    "BLYP/adz": -16.9524,
+                    "B97/qzvp": -16.1758,
+                    "B3LYP/adz": -18.2623,
+                    "PBE/adz": -19.3929,
+                    "WPBE/adz": -18.6796,
+                    "PBE/qzvp": -19.6055,
+                    "B3LYP/qzvp": -18.5127,
+                    "BLYP/qzvp": -17.2299,
+                    "BP86/qzvp": -18.4232,
+                    "BP86/adz": -18.1584,
+                    "PBE0/adz": -19.7009,
+                    "B2PLYP/qzvp": -19.0213
+                }
+            },
+            "name": "FaOOFaNN_1.1388888888888888",
+            "stoichiometry": {
+                "cp": {
+                    "db224f0d02c097d55da03ef68d0c0bf8a6946db6": 1.0,
+                    "b4ddbba901780d133f0b7c51d0fcb6f7bf4d89cb": -1.0,
+                    "38bb2302bcaf8c301e50d9b1712d3756a40b489a": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.1666666666666667
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -17.3681,
+                    "B97/adz": -14.8316,
+                    "B2PLYP/adz": -17.2523,
+                    "PBE0/qzvp": -18.3424,
+                    "BLYP/adz": -15.8011,
+                    "B97/qzvp": -15.0654,
+                    "B3LYP/adz": -16.9531,
+                    "PBE/adz": -17.9506,
+                    "WPBE/adz": -17.2635,
+                    "PBE/qzvp": -18.1488,
+                    "B3LYP/qzvp": -17.1934,
+                    "BLYP/qzvp": -16.0799,
+                    "BP86/qzvp": -16.9649,
+                    "BP86/adz": -16.7074,
+                    "PBE0/adz": -18.1754,
+                    "B2PLYP/qzvp": -17.6833
+                }
+            },
+            "name": "FaOOFaNN_1.1666666666666667",
+            "stoichiometry": {
+                "cp": {
+                    "93914f25537853d8bf1666cd33213443b0dc3a07": -1.0,
+                    "61a27685ff78f96438b1ad555be4a340511fcf57": 1.0,
+                    "4fef41042947d30b5597614b3e51581d88508bcd": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.1944444444444444
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -15.8694,
+                    "B97/adz": -13.6517,
+                    "B2PLYP/adz": -15.8878,
+                    "PBE0/qzvp": -16.7321,
+                    "BLYP/adz": -14.5274,
+                    "B97/qzvp": -13.8706,
+                    "B3LYP/adz": -15.5424,
+                    "PBE/adz": -16.4281,
+                    "WPBE/adz": -15.787,
+                    "PBE/qzvp": -16.6108,
+                    "B3LYP/qzvp": -15.7673,
+                    "BLYP/qzvp": -14.7994,
+                    "BP86/qzvp": -15.424,
+                    "BP86/adz": -15.178,
+                    "PBE0/adz": -16.5885,
+                    "B2PLYP/qzvp": -16.2355
+                }
+            },
+            "name": "FaOOFaNN_1.1944444444444444",
+            "stoichiometry": {
+                "cp": {
+                    "446c61b74f591a946645a93526f03415fe5bc251": -1.0,
+                    "6304ced59adc9f61ae5ee049c2f1d523b782edc7": 1.0,
+                    "3eeeee9f48647c65ecf2a7f51bd9ee8aaac52567": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.2222222222222223
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -14.3728,
+                    "B97/adz": -12.4534,
+                    "B2PLYP/adz": -14.477,
+                    "PBE0/qzvp": -15.1269,
+                    "BLYP/adz": -13.2091,
+                    "B97/qzvp": -12.6505,
+                    "B3LYP/adz": -14.1037,
+                    "PBE/adz": -14.8976,
+                    "WPBE/adz": -14.3108,
+                    "PBE/qzvp": -15.0607,
+                    "B3LYP/qzvp": -14.3047,
+                    "BLYP/qzvp": -13.4617,
+                    "BP86/qzvp": -13.8739,
+                    "BP86/adz": -13.6459,
+                    "PBE0/adz": -15.0073,
+                    "B2PLYP/qzvp": -14.7485
+                }
+            },
+            "name": "FaOOFaNN_1.2222222222222223",
+            "stoichiometry": {
+                "cp": {
+                    "9d4f10b3354f57222d3a739f29d7ae06d6f8ce64": -1.0,
+                    "42f9535a708a947456b43d1eccc9acf3ebd447b4": -1.0,
+                    "2d6e6832f2890d3144942b88cfd3e70e3810fe7b": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.2777777777777777
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -11.5785,
+                    "B97/adz": -10.1946,
+                    "B2PLYP/adz": -11.7497,
+                    "PBE0/qzvp": -12.137,
+                    "BLYP/adz": -10.6762,
+                    "B97/qzvp": -10.3338,
+                    "B3LYP/adz": -11.3684,
+                    "PBE/adz": -12.0253,
+                    "WPBE/adz": -11.5399,
+                    "PBE/qzvp": -12.1416,
+                    "B3LYP/qzvp": -11.506,
+                    "BLYP/qzvp": -10.8619,
+                    "BP86/qzvp": -10.9758,
+                    "BP86/adz": -10.7978,
+                    "PBE0/adz": -12.0613,
+                    "B2PLYP/qzvp": -11.8949
+                }
+            },
+            "name": "FaOOFaNN_1.2777777777777777",
+            "stoichiometry": {
+                "cp": {
+                    "ab4fac9bda855f574ad43f5589a36c3e2e74f390": -1.0,
+                    "200d91ee5ab2102e43d6f8cde6390c2765a9c574": -1.0,
+                    "c023253e7e5559394d6178818bd432906aa17f5b": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.3333333333333333
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -9.2177,
+                    "B97/adz": -8.271,
+                    "B2PLYP/adz": -9.3691,
+                    "PBE0/qzvp": -9.6223,
+                    "BLYP/adz": -8.4878,
+                    "B97/qzvp": -8.358,
+                    "B3LYP/adz": -9.0211,
+                    "PBE/adz": -9.5822,
+                    "WPBE/adz": -9.174,
+                    "PBE/qzvp": -9.6611,
+                    "B3LYP/qzvp": -9.1039,
+                    "BLYP/qzvp": -8.6055,
+                    "BP86/qzvp": -8.5542,
+                    "BP86/adz": -8.4188,
+                    "PBE0/adz": -9.5719,
+                    "B2PLYP/qzvp": -9.4339
+                }
+            },
+            "name": "FaOOFaNN_1.3333333333333333",
+            "stoichiometry": {
+                "cp": {
+                    "926144f6e6bafc9e73fe423502229f85afc58a67": -1.0,
+                    "0f07b37fac1817313c84176cd462e0c40fcf5b95": -1.0,
+                    "e70cd4e1c6777858133c027d80fbe63f705c0e9d": 1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.3888888888888888
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -7.331,
+                    "B97/adz": -6.7054,
+                    "B2PLYP/adz": -7.4226,
+                    "PBE0/qzvp": -7.6217,
+                    "BLYP/adz": -6.7111,
+                    "B97/qzvp": -6.7588,
+                    "B3LYP/adz": -7.124,
+                    "PBE/adz": -7.6161,
+                    "WPBE/adz": -7.2764,
+                    "PBE/qzvp": -7.6712,
+                    "B3LYP/qzvp": -7.1743,
+                    "BLYP/qzvp": -6.7833,
+                    "BP86/qzvp": -6.6572,
+                    "BP86/adz": -6.5488,
+                    "PBE0/adz": -7.5836,
+                    "B2PLYP/qzvp": -7.4477
+                }
+            },
+            "name": "FaOOFaNN_1.3888888888888888",
+            "stoichiometry": {
+                "cp": {
+                    "4f29d50c80c7340b9df85a1535673e973436260a": -1.0,
+                    "54bb5c555ccfb8438fbb1db07ac3beb3a13a4e32": 1.0,
+                    "b5ac201957a0926dce56c06337cac1ccf92d0ae2": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.5
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -4.7184,
+                    "B97/adz": -4.4816,
+                    "B2PLYP/adz": -4.7075,
+                    "PBE0/qzvp": -4.8673,
+                    "BLYP/adz": -4.2524,
+                    "B97/qzvp": -4.4947,
+                    "B3LYP/adz": -4.5089,
+                    "PBE/adz": -4.8819,
+                    "WPBE/adz": -4.6658,
+                    "PBE/qzvp": -4.9062,
+                    "B3LYP/qzvp": -4.5286,
+                    "BLYP/qzvp": -4.279,
+                    "BP86/qzvp": -4.1401,
+                    "BP86/adz": -4.0757,
+                    "PBE0/adz": -4.8469,
+                    "B2PLYP/qzvp": -4.7081
+                }
+            },
+            "name": "FaOOFaNN_1.5",
+            "stoichiometry": {
+                "cp": {
+                    "9c2a238478ab92bbc81864b417822bacf40dd6e0": -1.0,
+                    "8eeb663ca141ebfd82177c54f1b6b706acb18dae": 1.0,
+                    "dace770f2f72a8ea85ce6ff20a6250ede0161c96": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.611111111111111
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -3.1499,
+                    "B97/adz": -3.0696,
+                    "B2PLYP/adz": -3.0959,
+                    "PBE0/qzvp": -3.2199,
+                    "BLYP/adz": -2.8045,
+                    "B97/qzvp": -3.0691,
+                    "B3LYP/adz": -2.9724,
+                    "PBE/adz": -3.2279,
+                    "WPBE/adz": -3.1157,
+                    "PBE/qzvp": -3.2374,
+                    "B3LYP/qzvp": -2.9819,
+                    "BLYP/qzvp": -2.817,
+                    "BP86/qzvp": -2.7248,
+                    "BP86/adz": -2.6949,
+                    "PBE0/adz": -3.2101,
+                    "B2PLYP/qzvp": -3.0958
+                }
+            },
+            "name": "FaOOFaNN_1.611111111111111",
+            "stoichiometry": {
+                "cp": {
+                    "0560e66a05a82c787d7d6244ed2705fcf336f331": 1.0,
+                    "7f3bf9b925dc01e1c5aca03fff78b4753989cf6b": -1.0,
+                    "32c30196f89651783c4058453018160134602fd0": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.777777777777778
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -1.8418,
+                    "B97/adz": -1.8058,
+                    "B2PLYP/adz": -1.7825,
+                    "PBE0/qzvp": -1.8529,
+                    "BLYP/adz": -1.6259,
+                    "B97/qzvp": -1.8125,
+                    "B3LYP/adz": -1.722,
+                    "PBE/adz": -1.8403,
+                    "WPBE/adz": -1.8265,
+                    "PBE/qzvp": -1.8477,
+                    "B3LYP/qzvp": -1.7357,
+                    "BLYP/qzvp": -1.6458,
+                    "BP86/qzvp": -1.6137,
+                    "BP86/adz": -1.5954,
+                    "PBE0/adz": -1.846,
+                    "B2PLYP/qzvp": -1.7898
+                }
+            },
+            "name": "FaOOFaNN_1.777777777777778",
+            "stoichiometry": {
+                "cp": {
+                    "e456cc8168399f574740123060661a9ed5b96a2c": 1.0,
+                    "2d7540339ad28a5f881b0482f7beb98e5f3417ff": -1.0,
+                    "b0c960e661ba32507b211f7551033b6769a2cc65": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 1.9444444444444444
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -1.1543,
+                    "B97/adz": -1.1219,
+                    "B2PLYP/adz": -1.1127,
+                    "PBE0/qzvp": -1.1456,
+                    "BLYP/adz": -1.0266,
+                    "B97/qzvp": -1.1279,
+                    "B3LYP/adz": -1.0829,
+                    "PBE/adz": -1.1286,
+                    "WPBE/adz": -1.1482,
+                    "PBE/qzvp": -1.1314,
+                    "B3LYP/qzvp": -1.0976,
+                    "BLYP/qzvp": -1.0493,
+                    "BP86/qzvp": -1.0441,
+                    "BP86/adz": -1.0242,
+                    "PBE0/adz": -1.1428,
+                    "B2PLYP/qzvp": -1.1209
+                }
+            },
+            "name": "FaOOFaNN_1.9444444444444444",
+            "stoichiometry": {
+                "cp": {
+                    "b06ebafd2458ef66c0ec48f1caedfb0baae691fe": 1.0,
+                    "241cff3c2823242298b3b2d0eaba3ff36960b2a3": -1.0,
+                    "7b5b057ad7f409a8b27fe4b4c31be3877edae3af": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 2.2222222222222223
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -0.595,
+                    "B97/adz": -0.5721,
+                    "B2PLYP/adz": -0.5754,
+                    "PBE0/qzvp": -0.5836,
+                    "BLYP/adz": -0.5451,
+                    "B97/qzvp": -0.5717,
+                    "B3LYP/adz": -0.5676,
+                    "PBE/adz": -0.5719,
+                    "WPBE/adz": -0.5933,
+                    "PBE/qzvp": -0.5699,
+                    "B3LYP/qzvp": -0.5745,
+                    "BLYP/qzvp": -0.5565,
+                    "BP86/qzvp": -0.5613,
+                    "BP86/adz": -0.5494,
+                    "PBE0/adz": -0.5841,
+                    "B2PLYP/qzvp": -0.5787
+                }
+            },
+            "name": "FaOOFaNN_2.2222222222222223",
+            "stoichiometry": {
+                "cp": {
+                    "4def8b6ec1180f8637b598d820447a6fb8e2af56": 1.0,
+                    "77077a0f085d82745fb8ba99159a228620fa04fc": -1.0,
+                    "da750b277b849758c99e2239c6bb5989006d44dc": -1.0
+                }
+            }
+        },
+        {
+            "attributes": {
+                "R": 2.7777777777777777
+            },
+            "reaction_results": {
+                "cp": {
+                    "WPBE/qzvp": -0.211,
+                    "B97/adz": -0.202,
+                    "B2PLYP/adz": -0.2037,
+                    "PBE0/qzvp": -0.2072,
+                    "BLYP/adz": -0.1995,
+                    "B97/qzvp": -0.2033,
+                    "B3LYP/adz": -0.2043,
+                    "PBE/adz": -0.2019,
+                    "WPBE/adz": -0.21,
+                    "PBE/qzvp": -0.2025,
+                    "B3LYP/qzvp": -0.2056,
+                    "BLYP/qzvp": -0.2011,
+                    "BP86/qzvp": -0.2036,
+                    "BP86/adz": -0.2019,
+                    "PBE0/adz": -0.2064,
+                    "B2PLYP/qzvp": -0.2042
+                }
+            },
+            "name": "FaOOFaNN_2.7777777777777777",
+            "stoichiometry": {
+                "cp": {
+                    "3fd422be95270af1765c5fa43efa771b73234e09": -1.0,
+                    "5e421c12a402f7975e5d42a435c85aeadbe5acd3": 1.0,
+                    "b6eea32304c2bc1b99a15b2f43561156777f373e": -1.0
+                }
+            }
+        }
+    ]
+}
