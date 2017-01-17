@@ -41,7 +41,7 @@ temp_mass = [
     285.183698, 287.191186, 292.199786, 291.206564, 293.214670]
 
 hash_fields = {}
-hash_fields["molecules"] = ["symbols", "masses", "name", "charge", "multiplicity", "ghost", "geometry", "fragments",
+hash_fields["molecules"] = ["symbols", "masses", "name", "charge", "multiplicity", "real", "geometry", "fragments",
                             "fragment_charges", "fragment_multiplicities"]
 hash_fields["databases"] = ["name"]
 hash_fields["pages"] = ["molecule", "method"]
@@ -74,7 +74,7 @@ for idx, row in df.iterrows():
 
     molecule["name"] = row["Name"]
     molecule["charge"] = 0.0
-    molecule["multiplicity"] = 0.0
+    molecule["multiplicity"] = 1
 
     molecule["comment"] = row["System"]
 
@@ -82,18 +82,18 @@ for idx, row in df.iterrows():
     molecule["fragments"] = [list(range(0, row["MonA"])), list(range(row["MonA"], len(molecule["masses"])))] 
 
     molecule["fragment_charges"] = [0.0, 0.0]
-    molecule["fragment_multiplicities"] = [1.0, 1.0]
+    molecule["fragment_multiplicities"] = [1, 1]
 
     molecule["provenance"] = {"tag": "HBC Research"}
 
     # Make unique molecules
-    molecule["ghost"] = [False for x in range(len(molecule["masses"]))]
+    molecule["real"] = [True for x in range(len(molecule["masses"]))]
     dimer_hash = write_molecule(molecule) 
 
-    molecule["ghost"] = [True for x in range(row["MonA"])] + [False for x in range(row["MonA"], len(molecule["masses"]))]
+    molecule["real"] = [False for x in range(row["MonA"])] + [True for x in range(row["MonA"], len(molecule["masses"]))]
     monA_cp_hash = write_molecule(molecule) 
 
-    molecule["ghost"] = [False for x in range(row["MonA"])] + [True for x in range(row["MonA"], len(molecule["masses"]))]
+    molecule["real"] = [True for x in range(row["MonA"])] + [False for x in range(row["MonA"], len(molecule["masses"]))]
     monB_cp_hash = write_molecule(molecule) 
 
     # DATABASE 
