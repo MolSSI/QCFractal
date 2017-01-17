@@ -1,11 +1,11 @@
-from mongo_qcdb import uploader
+from mongo_qcdb import db_helper
 from collections import OrderedDict
 import sys
 import json
 import os
 
-uploader = uploader.uploader
-mongo = uploader("localhost", 27017, "local")
+db_helper = db_helper.db_helper
+mongo = db_helper("localhost", 27017, "local")
 print(mongo.setup)
 
 collections = ["molecules", "databases", "pages"]
@@ -27,3 +27,7 @@ for col in collections:
         if (col == "pages"):
                 inserted = mongo.add_page(data)
         print("[" + col + "] Added " + data[descriptor[col]] + " to " + col + ". Success=" + str(inserted) + ".")
+
+print(mongo.get_data_value("HBC6", "FaOOFaOO_0.9444444444444444", "cp", "WPBE/qzvp"))
+print(mongo.get_data_series("HBC6", "cp", "WPBE/qzvp"))
+### print(mongo.get_data_frame("HBC6", "FaOOFaOO_0.9444444444444444", "cp"))
