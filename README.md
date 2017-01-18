@@ -162,7 +162,7 @@ A collection of `page` documents, which is essentially a dual key to multiple va
   "modelchem": "MP2/aug-cc-pVDZ",
   "return_value": 1.34,
   "type": "energy",
-  "success": True,
+  "success": true,
   "error": "",
   "raw_output": "",
   "options": {
