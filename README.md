@@ -158,10 +158,13 @@ A collection of `page` documents, which is essentially a dual key to multiple va
 
 ```json
 {
-  "molecule": "dbbacd78247e7b39ee5cb8e78d74423e98639203",
-  "method": "MP2/aug-cc-pVDZ",
-  "value": [1.34],
-  "type": "gradient",
+  "molecule_hash": "dbbacd78247e7b39ee5cb8e78d74423e98639203",
+  "modelchem": "MP2/aug-cc-pVDZ",
+  "return_value": 1.34,
+  "type": "energy",
+  "success": "True",
+  "error": "",
+  "raw_output": "",
   "options": {
     "opt1": "val",
     "opt2": "val"
