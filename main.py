@@ -27,7 +27,3 @@ for col in collections:
         if (col == "pages"):
                 inserted = mongo.add_page(data)
         print("[" + col + "] Added " + data[descriptor[col]] + " to " + col + ". Success=" + str(inserted) + ".")
-
-print(mongo.get_data_value("HBC6", "FaOOFaOO_0.9444444444444444", "cp", "WPBE/qzvp"))
-print(mongo.get_data_series("HBC6", "cp", "WPBE/qzvp"))
-print(mongo.get_data_frame("HBC6", "FaOOFaOO_0.9444444444444444", "cp", ["WPBE/qzvp", "PBE0/qzvp", "B3LYP/aug-cc-pVDZ"]))

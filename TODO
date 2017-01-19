@@ -1,0 +1,7 @@
+- replace for loops with mongo queries
+- raise exceptions in getters, aggregates, map-reduce
+- test functions
+- Sereis call
+- Fix get_dataframe: have it go thru each reaction
+- Unit tests (pytest)
+

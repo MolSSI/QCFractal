@@ -66,7 +66,7 @@ class db_helper:
 
 
     # Returns a single data value from database
-    def get_data_value(self, db, rxn, stoich, method):
+    def get_value(self, db, rxn, stoich, method):
         database = self.db["databases"].find_one({"name": db})
 
         if (database == None):
@@ -110,7 +110,7 @@ class db_helper:
             return None
 
 
-    def get_data_series(self, db, stoich, method):
+    def get_series(self, db, stoich, method):
         database = self.db["databases"].find_one({"name": db})
         if (database == None):
             print("Invalid database")
@@ -118,12 +118,12 @@ class db_helper:
         res = []
         index = []
         for item in database["reactions"]:
-            res.append(self.get_data_value(db, item["name"], stoich, method))
+            res.append(self.get_value(db, item["name"], stoich, method))
             index.append(item["name"])
         return pd.DataFrame(data=res, index=index, columns=[method])
 
 
-    def get_data_frame(self, db, rxn, stoich, methods):
+    def get_dataframe(self, db, rxn, stoich, methods):
         database = self.db["databases"].find_one({"name": db})
 
         if (database == None):
@@ -144,7 +144,7 @@ class db_helper:
 
         res = [[]]
         for m in methods:
-            res[0].append([self.get_data_value(db, rxn, stoich, m)])
+            res[0].append([self.get_value(db, rxn, stoich, m)])
 
         return pd.DataFrame(data=res, index=[rxn], columns=methods)
 
