@@ -50,7 +50,7 @@ class db_helper:
 
     # Adds a page to the DB. Returns True on success.
     def add_page(self, data):
-        hash_fields = ["molecule", "modelchem"]
+        hash_fields = ["molecule_hash", "modelchem"]
         m = hashlib.sha1()
         concat = ""
         for field in hash_fields:
@@ -152,7 +152,7 @@ class db_helper:
 
     # Do a lookup on the pages collection using a <molecule, method> key.
     def get_page(self, molecule, method):
-        return self.db["pages"].find_one({"molecule": molecule, "modelchem": method})
+        return self.db["pages"].find_one({"molecule_hash": molecule, "modelchem": method})
 
 
     def init_db(self, db):
