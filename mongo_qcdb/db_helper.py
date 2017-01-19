@@ -14,7 +14,7 @@ class db_helper:
 
     # Adds a molecule to the DB. Returns True on success.
     def add_molecule(self, data):
-        hash_fields = ["symbols", "masses", "name", "charge", "multiplicity", "ghost", "geometry", "fragments",
+        hash_fields = ["symbols", "masses", "name", "charge", "multiplicity", "real", "geometry", "fragments",
                             "fragment_charges", "fragment_multiplicities"]
         m = hashlib.sha1()
         concat = ""
@@ -47,7 +47,7 @@ class db_helper:
 
     # Adds a page to the DB. Returns True on success.
     def add_page(self, data):
-        hash_fields = ["molecule", "method"]
+        hash_fields = ["modelchem", "method"]
         m = hashlib.sha1()
         concat = ""
         for field in hash_fields:
