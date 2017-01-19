@@ -26,7 +26,7 @@ Hashed fields for `molecules`
 "name": "Carbon Dioxide",
 "charge": 0.0,
 "multiplicity": 1,
-"ghost": [false, false, false],
+"real": [false, false, false],
 "geometry": [ .. ],
 "fragments":[[ .. ], ..],
 "fragment_charges": [3.1, 2.1, 1.1],
@@ -59,7 +59,7 @@ A collection of atomic documents. That is, they do not have an external referenc
   "name": "Carbon Dioxide",
   "charge": 0.0,
   "multiplicity": 1,
-  "ghost": [false, false, false],
+  "real": [false, false, false],
   "comment": "A test comment",
   "geometry": [
     [3.11, 5.12, 6.14],
