@@ -98,7 +98,7 @@ class db_helper:
             if (page == None or not page["success"]):
                 valid = False
                 break
-            sum += int(stoich_dict[entry]) * page["return_value"][0]
+            sum += int(stoich_dict[entry]) * page["return_value"]
         if (valid):
             return sum
 
