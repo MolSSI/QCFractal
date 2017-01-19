@@ -11,7 +11,7 @@ print(mongo.setup)
 collections = ["molecules", "databases", "pages"]
 
 # Define the descriptor field for each collection. Used for logging.
-descriptor = {"molecules": "name", "databases": "name", "pages": "method"}
+descriptor = {"molecules": "name", "databases": "name", "pages": "modelchem"}
 
 # Add all JSON
 for col in collections:
@@ -30,4 +30,4 @@ for col in collections:
 
 print(mongo.get_data_value("HBC6", "FaOOFaOO_0.9444444444444444", "cp", "WPBE/qzvp"))
 print(mongo.get_data_series("HBC6", "cp", "WPBE/qzvp"))
-### print(mongo.get_data_frame("HBC6", "FaOOFaOO_0.9444444444444444", "cp"))
+print(mongo.get_data_frame("HBC6", "FaOOFaOO_0.9444444444444444", "cp", ["WPBE/qzvp", "PBE0/qzvp", "B3LYP/aug-cc-pVDZ"]))

@@ -12,6 +12,7 @@ class db_helper:
         self.client = pymongo.MongoClient(url, port)
         self.setup = self.init_db(db)
 
+
     # Adds a molecule to the DB. Returns True on success.
     def add_molecule(self, data):
         hash_fields = ["symbols", "masses", "name", "charge", "multiplicity", "real", "geometry", "fragments",
@@ -29,6 +30,7 @@ class db_helper:
         except pymongo.errors.DuplicateKeyError:
             return False
 
+
     # Adds a database to the DB. Returns True on success.
     def add_database(self, data):
         hash_fields = ["name"]
@@ -45,9 +47,10 @@ class db_helper:
         except pymongo.errors.DuplicateKeyError:
             return False
 
+
     # Adds a page to the DB. Returns True on success.
     def add_page(self, data):
-        hash_fields = ["modelchem", "method"]
+        hash_fields = ["molecule", "modelchem"]
         m = hashlib.sha1()
         concat = ""
         for field in hash_fields:
@@ -60,6 +63,7 @@ class db_helper:
             return True
         except pymongo.errors.DuplicateKeyError:
             return False
+
 
     # Returns a single data value from database
     def get_data_value(self, db, rxn, stoich, method):
@@ -91,10 +95,10 @@ class db_helper:
         sum = 0
         for entry in stoich_dict:
             page = self.get_page(entry, method)
-            if (page == None):
+            if (page == None or not page["success"]):
                 valid = False
                 break
-            sum += int(stoich_dict[entry]) * page["value"][0]
+            sum += int(stoich_dict[entry]) * page["return_value"][0]
         if (valid):
             return sum
 
@@ -104,6 +108,7 @@ class db_helper:
             return rxn_dict[method]
         else:
             return None
+
 
     def get_data_series(self, db, stoich, method):
         database = self.db["databases"].find_one({"name": db})
@@ -117,31 +122,38 @@ class db_helper:
             index.append(item["name"])
         return pd.DataFrame(data=res, index=index, columns=[method])
 
-    '''
-        def get_data_frame(self, db, rxn, stoich):
-            database = self.db["databases"].find_one({"name": db})
 
-            if (database == None):
-                print("Invalid database")
+    def get_data_frame(self, db, rxn, stoich, methods):
+        database = self.db["databases"].find_one({"name": db})
+
+        if (database == None):
+            print("Invalid database")
+            return None
+
+        reaction = None
+        for item in database["reactions"]:
+            if (item["name"] == rxn and reaction == None):
+                reaction = item
+            elif (item["name"] == rxn and reaction != None):
+                print("Reaction is ambiguous (more than one reaction has this name).")
                 return None
 
-            reaction = None
-            for item in database["reactions"]:
-                if (item["name"] == rxn and reaction == None):
-                    reaction = item
-                elif (item["name"] == rxn and reaction != None):
-                    print("Reaction is ambiguous (more than one reaction has this name).")
-                    return None
+        if (reaction == None):
+            print("Specified reaction " + rxn + " does not exist.")
+            return None
 
-            if (reaction == None):
-                print("Specified reaction " + rxn + " does not exist.")
-                return None
-    '''
+        res = [[]]
+        for m in methods:
+            res[0].append([self.get_data_value(db, rxn, stoich, m)])
+
+        return pd.DataFrame(data=res, index=[rxn], columns=methods)
+
 
 
     # Do a lookup on the pages collection using a <molecule, method> key.
     def get_page(self, molecule, method):
-        return self.db["pages"].find_one({"molecule": molecule, "method": method})
+        return self.db["pages"].find_one({"molecule": molecule, "modelchem": method})
+
 
     def init_db(self, db):
         # Success dictionary and collections to create
