@@ -130,23 +130,21 @@ class db_helper:
             print("Invalid database")
             return None
 
-        reaction = None
+        names = []
         for item in database["reactions"]:
-            if (item["name"] == rxn and reaction == None):
-                reaction = item
-            elif (item["name"] == rxn and reaction != None):
-                print("Reaction is ambiguous (more than one reaction has this name).")
-                return None
+            names.append(item["name"])
 
-        if (reaction == None):
-            print("Specified reaction " + rxn + " does not exist.")
-            return None
+        count = 0
+        res = []
 
-        res = [[]]
-        for m in methods:
-            res[0].append([self.get_value(db, rxn, stoich, m)])
+        for name in names:
+            res.append([])
+            for m in methods:
+                val = self.get_value(db, name, stoich, m)
+                res[count].append(val)
+            count += 1
 
-        return pd.DataFrame(data=res, index=[rxn], columns=methods)
+        return pd.DataFrame(data=res, index=names, columns=methods)
 
 
 
