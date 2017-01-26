@@ -101,22 +101,43 @@ class db_helper:
 
         stoich_dict = reaction["stoichiometry"][stoich]
         valid = True
-        sum = 0
-        for entry in stoich_dict:
-            page = self.get_page(entry, method)
-            if (page == None or not page["success"]):
-                valid = False
-                break
-            sum += int(stoich_dict[entry]) * page["return_value"]
-        if (valid):
-            return sum
+        if (do_stoich):
+            sum = 0
+            for entry in stoich_dict:
+                page = self.get_page(entry, method)
+                if (page == None or not page["success"]):
+                    valid = False
+                    break
+                else:
+                    if (field in page):
+                        sum += int(stoich_dict[entry]) * page[field]
+                    elif (field in page["variables"]):
+                        sum += int(stoich_dict[entry]) * page["variables"][field]
+                    else:
+                        sum += 0
+            if (valid):
+                return sum
+        else:
+            arr = []
+            for entry in stoich_dict:
+                page = self.get_page(entry, method)
+                if (page == None):
+                    arr.append(None)
+                else:
+                    if (field in page):
+                        arr.append(page[field])
+                    elif (field in page["variables"]):
+                        arr.append(page["variables"][field])
+                    else:
+                        arr.append(None)
+            return arr
 
         # Fallback
-        rxn_dict = reaction["reaction_results"][stoich]
-        if (method in rxn_dict):
-            return rxn_dict[method]
-        else:
-            return None
+        if (field == "return_value"):
+            rxn_dict = reaction["reaction_results"][stoich]
+            if (method in rxn_dict):
+                return rxn_dict[method]
+        return None
 
 
     def get_series(self, field, db, stoich, method, do_stoich=True, debug_level=1):
@@ -132,7 +153,7 @@ class db_helper:
             res.append(self.get_value(field, db, item["name"], stoich, method,
             do_stoich, debug_level))
             index.append(item["name"])
-        return pd.DataFrame(data=res, index=index, columns=[method])
+        return pd.DataFrame(data={method:res}, index=index)
 
 
     def get_dataframe(self, field, db, rxn, stoich, methods, do_stoich=True, debug_level=1):
