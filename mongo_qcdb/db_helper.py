@@ -67,7 +67,13 @@ class db_helper:
 
 
     # Returns a single data value from database
-    def get_value(self, db, rxn, stoich, method, debug_level=1):
+    # Field: The name of the field in Page that you retrieve
+    # DB: The name of the DB you want to query
+    # rxn: The name of the reacition to query
+    # Method: Method to use to query a Page
+    # do_stoich: Flag whether or not to sum based on stoich
+    # debug_level: 0-2 verbosity
+    def get_value(self, field, db, rxn, stoich, method, do_stoich=True, debug_level=1):
         debug.log(debug_level, 2, "Running get_data for db=" + db + " rxn=" + rxn
         + " stoich=" + stoich + " method=" + method)
         database = self.db["databases"].find_one({"name": db})
@@ -113,7 +119,7 @@ class db_helper:
             return None
 
 
-    def get_series(self, db, stoich, method, debug_level=1):
+    def get_series(self, field, db, stoich, method, do_stoich=True, debug_level=1):
         debug.log(debug_level, 2, "Running get_series for db=" + db + " stoich="
          + stoich + " method=" + method)
         database = self.db["databases"].find_one({"name": db})
@@ -123,12 +129,13 @@ class db_helper:
         res = []
         index = []
         for item in database["reactions"]:
-            res.append(self.get_value(db, item["name"], stoich, method, debug_level))
+            res.append(self.get_value(field, db, item["name"], stoich, method,
+            do_stoich, debug_level))
             index.append(item["name"])
         return pd.DataFrame(data=res, index=index, columns=[method])
 
 
-    def get_dataframe(self, db, rxn, stoich, methods, debug_level=1):
+    def get_dataframe(self, field, db, rxn, stoich, methods, do_stoich=True, debug_level=1):
         debug.log(debug_level, 2, "Running get_dataframe for db=" + db + " rxn="
         + rxn + " stoich=" + stoich + " methods=" + str(methods))
         database = self.db["databases"].find_one({"name": db})
@@ -146,7 +153,7 @@ class db_helper:
         for name in names:
             res.append([])
             for m in methods:
-                val = self.get_value(db, name, stoich, m, debug_level)
+                val = self.get_value(field, db, name, stoich, m, do_stoich, debug_level)
                 res[count].append(val)
             count += 1
 
