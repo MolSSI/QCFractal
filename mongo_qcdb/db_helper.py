@@ -2,6 +2,7 @@ import pymongo
 import pandas as pd
 import hashlib
 import json
+import debug as debug
 
 class db_helper:
 
@@ -66,11 +67,13 @@ class db_helper:
 
 
     # Returns a single data value from database
-    def get_value(self, db, rxn, stoich, method):
+    def get_value(self, db, rxn, stoich, method, debug_level=1):
+        debug.log(debug_level, 2, "Running get_data for db=" + db + " rxn=" + rxn
+        + " stoich=" + stoich + " method=" + method)
         database = self.db["databases"].find_one({"name": db})
 
         if (database == None):
-            print("Invalid database")
+            debug.log(debug_level, 1, "Invalid database")
             return None
 
         reaction = None
@@ -78,16 +81,16 @@ class db_helper:
             if (item["name"] == rxn and reaction == None):
                 reaction = item
             elif (item["name"] == rxn and reaction != None):
-                print("Reaction is ambiguous (more than one reaction has this name).")
+                debug.log(debug_level, 1, "Reaction is ambiguous (more than one reaction has this name).")
                 return None
 
         if (reaction == None):
-            print("Specified reaction " + rxn + " does not exist.")
+            debug.log(debug_level, 1, "Specified reaction " + rxn + " does not exist.")
             return None
 
         # Go through each molecule in the stoich dictionary
         if (not stoich in reaction["stoichiometry"]):
-            print("Unknown stoichiometry " + stoich + ".")
+            debug.log(debug_level, 1, "Unknown stoichiometry " + stoich + ".")
             return None;
 
         stoich_dict = reaction["stoichiometry"][stoich]
@@ -110,24 +113,27 @@ class db_helper:
             return None
 
 
-    def get_series(self, db, stoich, method):
+    def get_series(self, db, stoich, method, debug_level=1):
+        debug.log(debug_level, 2, "Running get_series for db=" + db + " stoich="
+         + stoich + " method=" + method)
         database = self.db["databases"].find_one({"name": db})
         if (database == None):
-            print("Invalid database")
+            debug.log(debug_level, 1, "Invalid database")
             return None
         res = []
         index = []
         for item in database["reactions"]:
-            res.append(self.get_value(db, item["name"], stoich, method))
+            res.append(self.get_value(db, item["name"], stoich, method, debug_level))
             index.append(item["name"])
         return pd.DataFrame(data=res, index=index, columns=[method])
 
 
-    def get_dataframe(self, db, rxn, stoich, methods):
+    def get_dataframe(self, db, rxn, stoich, methods, debug_level=1):
+        debug.log(debug_level, 2, "Running get_dataframe for db=" + db + " rxn="
+        + rxn + " stoich=" + stoich + " methods=" + str(methods))
         database = self.db["databases"].find_one({"name": db})
-
         if (database == None):
-            print("Invalid database")
+            debug.log(debug_level, 1, "Invalid database.")
             return None
 
         names = []
@@ -140,7 +146,7 @@ class db_helper:
         for name in names:
             res.append([])
             for m in methods:
-                val = self.get_value(db, name, stoich, m)
+                val = self.get_value(db, name, stoich, m, debug_level)
                 res[count].append(val)
             count += 1
 
