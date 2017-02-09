@@ -3,6 +3,7 @@ import pandas as pd
 import hashlib
 import json
 import debug as debug
+import numpy as np
 
 class db_helper:
 
@@ -66,77 +67,65 @@ class db_helper:
             return False
 
 
-    # Returns a single data value from database
-    # Field: The name of the field in Page that you retrieve
-    # DB: The name of the DB you want to query
-    # rxn: The name of the reacition to query
-    # Method: Method to use to query a Page
-    # do_stoich: Flag whether or not to sum based on stoich
-    # debug_level: 0-2 verbosity
     def get_value(self, field, db, rxn, stoich, method, do_stoich=True, debug_level=1):
-        debug.log(debug_level, 2, "Running get_data for db=" + db + " rxn=" + rxn
-        + " stoich=" + stoich + " method=" + method)
-        database = self.db["databases"].find_one({"name": db})
 
-        if (database == None):
-            debug.log(debug_level, 1, "Invalid database")
-            return None
+        command = [
+        { "$match": { "name" : db } },
+        { "$project": { "reactions" : 1 } },
+        { "$unwind": "$reactions" },
+        { "$match": { "reactions.name" : rxn } },
+        { "$group": {
+            "_id" : {}, "stoich" : {"$push": "$reactions.stoichiometry." + stoich}
+        }}
+        ]
+        records = list(self.db["databases"].aggregate(command))
 
-        reaction = None
-        for item in database["reactions"]:
-            if (item["name"] == rxn and reaction == None):
-                reaction = item
-            elif (item["name"] == rxn and reaction != None):
-                debug.log(debug_level, 1, "Reaction is ambiguous (more than one reaction has this name).")
-                return None
+        if (len(records) > 0):
+            success = True
+            molecules = records[0]["stoich"][0]
+            res = []
+            stoich_encoding = []
 
-        if (reaction == None):
-            debug.log(debug_level, 1, "Specified reaction " + rxn + " does not exist.")
-            return None
-
-        # Go through each molecule in the stoich dictionary
-        if (not stoich in reaction["stoichiometry"]):
-            debug.log(debug_level, 1, "Unknown stoichiometry " + stoich + ".")
-            return None;
-
-        stoich_dict = reaction["stoichiometry"][stoich]
-        valid = True
-        if (do_stoich):
-            sum = 0
-            for entry in stoich_dict:
-                page = self.get_page(entry, method)
-                if (page == None or not page["success"]):
-                    valid = False
+            for mol in molecules:
+                stoich_encoding.append(molecules[mol])
+                command = [
+                {"$match" : {"molecule_hash": mol, "modelchem": method}},
+                {"$group" : {
+                    "_id" : {}, "outer" : {"$push" : "$" + field}, "inner" : {"$push" : "$variables." + field}
+                }},
+                {"$project" : {
+                    "value" : {"$setUnion" : ["$inner", "$outer"]}
+                }}
+                ]
+                page = list(self.db["pages"].aggregate(command))
+                if (len(page) == 0 or len(page[0]["value"]) == 0):
+                    success = False
                     break
-                else:
-                    if (field in page):
-                        sum += int(stoich_dict[entry]) * page[field]
-                    elif (field in page["variables"]):
-                        sum += int(stoich_dict[entry]) * page["variables"][field]
-                    else:
-                        sum += 0
-            if (valid):
-                return sum
-        else:
-            arr = []
-            for entry in stoich_dict:
-                page = self.get_page(entry, method)
-                if (page == None):
-                    arr.append(None)
-                else:
-                    if (field in page):
-                        arr.append(page[field])
-                    elif (field in page["variables"]):
-                        arr.append(page["variables"][field])
-                    else:
-                        arr.append(None)
-            return arr
+                res.append(page[0]["value"][0])
+                debug.log(debug_level, 2, (stoich_encoding))
 
-        # Fallback
+            if (success):
+                if (do_stoich):
+                    acc = 0
+                    for i in range(0, len(stoich_encoding)):
+                        acc += float(res[i] * stoich_encoding[i])
+                    return acc
+                return res
+
+        debug.log(debug_level, 2, ("Fallback attempt"))
         if (field == "return_value"):
-            rxn_dict = reaction["reaction_results"][stoich]
-            if (method in rxn_dict):
-                return rxn_dict[method]
+            command = [
+            { "$match": { "name" : db } },
+            { "$project": { "reactions" : 1 } },
+            { "$unwind": "$reactions" },
+            { "$match": { "reactions.name" : rxn } },
+            { "$group": {
+                "_id" : {}, "reaction_results" : {"$push": "$reactions.reaction_results." + stoich}
+            }}
+            ]
+            page = list(self.db["databases"].aggregate(command))
+            if (len(page) > 0 and method in page[0]["reaction_results"][0]):
+                return page[0]["reaction_results"][0][method]
         return None
 
 
