@@ -1,5 +1,6 @@
 import numpy as np
 from mongo_qcdb import molecule
+from mongo_qcdb import test_util 
 
 
 _water_dimer_minima = """
@@ -27,7 +28,7 @@ H   1.680398  -0.373741   10.758561
 """
 
 
-def test_water_minima():
+def test_water_minima_data():
     mol = molecule.Molecule(_water_dimer_minima, name="water dimer")
 
     assert len(str(mol)) == 660
@@ -41,4 +42,29 @@ def test_water_minima():
     assert np.allclose(mol.fragment_charges, [0, 0])
     assert np.allclose(mol.fragment_multiplicities, [1, 1])
     assert hasattr(mol, "provenance")
+
+
+def test_water_minima_fragment():
+
+    mol = molecule.Molecule(_water_dimer_minima, name="water dimer")
+    frag_0 = mol.get_fragment(0)
+    frag_1 = mol.get_fragment(1)
+    
+    frag_0_1 = mol.get_fragment(0, 1)
+    frag_1_0 = mol.get_fragment(1, 0)
+    
+    assert np.allclose(mol.geometry[:3], frag_0.geometry)
+    assert test_util.compare_lists(mol.symbols[:3], frag_0.symbols)
+    assert np.allclose(mol.masses[:3], frag_0.masses)
+    
+    assert np.allclose(mol.geometry[3:], frag_1.geometry)
+    assert np.allclose(mol.geometry, frag_0_1.geometry)
+    
+    assert np.allclose(np.vstack((mol.geometry[3:], mol.geometry[:3])), frag_1_0.geometry)
+    assert test_util.compare_lists(mol.symbols[3:] + mol.symbols[:3], frag_1_0.symbols)
+    assert np.allclose(mol.masses[3:] + mol.masses[:3], frag_1_0.masses)
+
+#def test_water_minima_ie_stoich():
+
+
 

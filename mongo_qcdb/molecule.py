@@ -1,4 +1,8 @@
+"""Mongo QCDB Molecule object and helpers
+"""
+
 import numpy as np
+import itertools as it
 import os
 import re
 
@@ -102,8 +106,8 @@ class Molecule(object):
             elif atom.match(line.split()[0].strip()):
                 glines.append(line)
             else:
-                raise ValidationError(
-                    'Molecule::create_molecule_from_string: Unidentifiable line in geometry specification: %s'
+                raise TypeError(
+                    'Molecule:create_molecule_from_string: Unidentifiable line in geometry specification: %s'
                     % (line))
 
         # catch last default fragment cgmp
@@ -145,8 +149,8 @@ class Molecule(object):
 
                 # Check that the atom symbol is valid
                 if not atomSym in constants.el2z:
-                    raise ValidationError(
-                        'Molecule::create_molecule_from_string: Illegal atom symbol in geometry specification: %s'
+                    raise TypeError(
+                        'Molecule:create_molecule_from_string: Illegal atom symbol in geometry specification: %s'
                         % (atomSym))
 
                 self.symbols.append(atomSym)
@@ -166,27 +170,27 @@ class Molecule(object):
                     if realNumber.match(entries[1]):
                         xval = float(entries[1])
                     else:
-                        raise ValidationError(
+                        raise TypeError(
                             "Molecule::create_molecule_from_string: Unidentifiable entry %s.",
                             entries[1])
 
                     if realNumber.match(entries[2]):
                         yval = float(entries[2])
                     else:
-                        raise ValidationError(
+                        raise TypeError(
                             "Molecule::create_molecule_from_string: Unidentifiable entry %s.",
                             entries[2])
 
                     if realNumber.match(entries[3]):
                         zval = float(entries[3])
                     else:
-                        raise ValidationError(
+                        raise TypeError(
                             "Molecule::create_molecule_from_string: Unidentifiable entry %s.",
                             entries[3])
 
                     self.geometry.append([xval, yval, zval])
                 else:
-                    raise ValidationError(
+                    raise TypeError(
                         'Molecule::create_molecule_from_string: Illegal geometry specification line : %s. \
                         You should provide either Z-Matrix or Cartesian input' % (line))
 
@@ -252,6 +256,102 @@ class Molecule(object):
         # Rotate into inertial frame
         evals, evecs = np.linalg.eigh(tensor)
         self.geometry = np.dot(self.geometry, evecs)
+
+
+
+    def get_fragment(self, real, ghost=None):
+        """
+        A list of real and ghost fragments:
+        """
+
+        if isinstance(real, int):
+            real = [real]
+
+        if isinstance(ghost, int):
+            ghost = [ghost]
+        elif ghost is None:
+            ghost = []
+
+        ret_name = self.name + " (" + str(real) + "," + str(ghost) + ")"
+        ret = Molecule(None, name=ret_name)
+
+
+        if len(set(real) & set(ghost)):
+            raise TypeError("Molecule:get_fragment: real and ghost sets are overlaping! (%s, %s).", (str(real), str(ghost)))
+
+        geom_blocks = []
+
+        # Loop through the real blocks
+        frag_start = 0
+        for frag in real:
+            frag_size = len(self.fragments[frag])
+            geom_blocks.append(self.geometry[self.fragments[frag]])
+
+            for idx in self.fragments[frag]:
+                ret.symbols.append(self.symbols[idx])
+                ret.masses.append(self.masses[idx])
+                ret.real.append(True)
+
+            ret.fragments.append(list(range(frag_start, frag_start + frag_size)))
+            frag_start += frag_size
+
+            ret.fragment_charges.append(self.fragment_charges[frag])
+            ret.fragment_multiplicities.append(self.fragment_multiplicities[frag])
+
+        # Set charge and multiplicity
+        ret.charge = sum(ret.fragment_charges)
+        ret.multiplicity = sum(x - 1 for x in ret.fragment_multiplicities)
+
+        # Loop through the ghost blocks
+        for frag in ghost:
+            frag_size = len(self.fragments[frag])
+            geom_blocks.append(self.geometry[self.fragments[frag]])
+
+            for idx in self.fragments[frag]:
+                ret.symbols.append(self.symbols[idx])
+                ret.masses.append(self.masses[idx])
+                ret.real.append(False)
+
+            ret.fragments.append(list(range(frag_start, frag_start + frag_size)))
+            frag_start += frag_size
+
+            ret.fragment_charges.append(self.fragment_charges[frag])
+            ret.fragment_multiplicities.append(self.fragment_multiplicities[frag])
+
+
+        ret.geometry = np.vstack(geom_blocks)
+
+        return ret
+
+
+    def build_fragments(do_cp=True, do_vmfc=False):
+
+        ret = {}
+
+        # Default nocp, everything in monomer basis
+        ret["default"] = {}
+        for nbody in nbody_range:
+            for x in it.combinations(fragment_range, nbody):
+                nocp_compute_list[nbody].add( (x, x) )
+
+        if do_cp:
+            # Everything is in dimer basis
+            basis_tuple = tuple(fragment_range)
+            for nbody in nbody_range:
+                for x in it.combinations(fragment_range, nbody):
+                    cp_compute_list[nbody].add( (x, basis_tuple) )
+
+
+        if do_vmfc:
+            # Like a CP for all combinations of pairs or greater
+            for nbody in nbody_range:
+                for cp_combos in it.combinations(fragment_range, nbody):
+                    basis_tuple = tuple(cp_combos)
+                    for interior_nbody in nbody_range:
+                        for x in it.combinations(cp_combos, interior_nbody):
+                            combo_tuple = (x, basis_tuple)
+                            vmfc_compute_list[interior_nbody].add( combo_tuple )
+                            vmfc_level_list[len(basis_tuple)].add( combo_tuple )
 
 
 
