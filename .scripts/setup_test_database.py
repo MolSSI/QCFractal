@@ -1,5 +1,6 @@
 from mongo_qcdb import db_helper
 from collections import OrderedDict
+import glob
 import sys
 import json
 import os
@@ -16,9 +17,9 @@ descriptor = {"molecules": "name", "databases": "name", "pages": "modelchem"}
 
 # Add all JSON
 for col in collections:
-    fn = os.path.dirname(os.path.abspath(__file__)) + "/../databases/DB_HBC6/" + col + "/"
-    for filename in os.listdir(fn):
-        json_data = open(fn + filename).read()
+    prefix = os.path.dirname(os.path.abspath(__file__)) + "/../databases/DB_HBC6/" + col + "/"
+    for filename in glob.glob(prefix + "*.json"):
+        json_data = open(filename).read()
         # Load JSON from file into OrderedDict
         data = json.loads(json_data, object_pairs_hook=OrderedDict)
         if (col == "molecules"):

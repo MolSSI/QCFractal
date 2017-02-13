@@ -56,3 +56,9 @@ docs/_build/
 
 # PyBuilder
 target/
+
+
+# Psi4 quantities
+timer.dat
+*.out
+iter.dat
