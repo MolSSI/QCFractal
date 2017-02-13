@@ -6,14 +6,15 @@ language: python
 # Run jobs on container-based infrastructure, can be overridden per job
 sudo: false
 
-
 services:
     - mongodb
 
 matrix:
   include:
     - python: 2.7
+      env: PYTHON_VER=2.7
     - python: 3.5
+      env: PYTHON_VER=3.5
 
 before_install:
     - uname -a
@@ -33,7 +34,7 @@ install:
     - conda config --set always_yes yes --set changeps1 no
     - conda update -q conda
     - conda info -a
-    - conda create -q -n mongo_qcdb python=$PYTHON_VER numpy pandas pymongo
+    - conda create -q -n mongo_qcdb python=$PYTHON_VER numpy pandas pymongo pytest
     - source activate mongo_qcdb
     - conda list
 
