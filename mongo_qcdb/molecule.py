@@ -5,9 +5,12 @@ import numpy as np
 import itertools as it
 import os
 import re
+import math
+import hashlib
+import json
 
 from . import constants
-
+from . import fields
 
 class Molecule(object):
     """
@@ -228,38 +231,72 @@ class Molecule(object):
         return self.pretty_print()
 
 
+    def _inertial_tensor(self, geom, weight):
+        """
+        Compute the moment inertia tensor for a given geometry.
+        """
+        # Build inertia tensor
+        tensor = np.zeros((3, 3))
+
+        # Diagonal
+        tensor[0][0] = np.sum(weight * (geom[:, 1] ** 2.0 + geom[:, 2] ** 2.0))
+        tensor[1][1] = np.sum(weight * (geom[:, 0] ** 2.0 + geom[:, 2] ** 2.0))
+        tensor[2][2] = np.sum(weight * (geom[:, 0] ** 2.0 + geom[:, 1] ** 2.0))
+
+        # I(alpha, beta)
+        # Off diagonal
+        tensor[0][1] = -1.0 * np.sum(weight * geom[:, 0] * geom[:, 1])
+        tensor[0][2] = -1.0 * np.sum(weight * geom[:, 0] * geom[:, 2])
+        tensor[1][2] = -1.0 * np.sum(weight * geom[:, 1] * geom[:, 2])
+
+        # Other half
+        tensor[1][0] = tensor[0][1]
+        tensor[2][0] = tensor[0][2]
+        tensor[2][1] = tensor[1][2]
+        return tensor
+
+
     def orient_molecule(self):
         """
         Centers the molecule and orients via inertia tensor.
         """
 
+        # Get the mass as an array
         np_mass = np.array(self.masses)
 
         # Center on Mass
-        self.geometry += np.average(self.geometry, axis=0, weights=np_mass)
-
-        # Build inertia tensor
-        tensor = np.zeros((3, 3))
-
-
-        # Diagonal
-        tensor[0][0] = np.sum(np_mass * (self.geometry[:, 1] * self.geometry[:, 1] + self.geometry[:, 2] * self.geometry[:, 2]))
-        tensor[1][1] = np.sum(np_mass * (self.geometry[:, 0] * self.geometry[:, 0] + self.geometry[:, 2] * self.geometry[:, 2]))
-        tensor[2][2] = np.sum(np_mass * (self.geometry[:, 0] * self.geometry[:, 0] + self.geometry[:, 1] * self.geometry[:, 1]))
-
-        # I(alpha, beta)
-        # Off diagonal
-        tensor[0][1] = np.sum(np_mass * self.geometry[:, 0] * self.geometry[:, 1])
-        tensor[0][2] = np.sum(np_mass * self.geometry[:, 0] * self.geometry[:, 2])
-        tensor[1][2] = np.sum(np_mass * self.geometry[:, 1] * self.geometry[:, 2])
+        self.geometry -= np.average(self.geometry, axis=0, weights=np_mass)
 
         # Rotate into inertial frame
+        tensor = self._inertial_tensor(self.geometry, np_mass)
         evals, evecs = np.linalg.eigh(tensor)
+
         self.geometry = np.dot(self.geometry, evecs)
 
+        # Phases? Fuck it, lets do the simplest thing and ensure the first atom in each column
+        # that is not on a plane is positve
+
+        phase_check = [False, False, False]
+
+        for num in range(self.geometry.shape[0]):
+
+            for x in range(3):
+                if phase_check[x]: continue
+
+                val = self.geometry[num, x]
+
+                if (abs(val) < 1.e-12): continue
+
+                phase_check[x] = True
+
+                if (val < 0):
+                    self.geometry[:, x] *= -1
+
+            if sum(phase_check) == 3:
+                break
 
 
-    def get_fragment(self, real, ghost=None):
+    def get_fragment(self, real, ghost=None, orient=True):
         """
         A list of real and ghost fragments:
         """
@@ -272,7 +309,8 @@ class Molecule(object):
         elif ghost is None:
             ghost = []
 
-        ret_name = self.name + " (" + str(real) + "," + str(ghost) + ")"
+        # ret_name = self.name + " (" + str(real) + "," + str(ghost) + ")"
+        ret_name = self.name
         ret = Molecule(None, name=ret_name)
 
 
@@ -321,37 +359,37 @@ class Molecule(object):
 
         ret.geometry = np.vstack(geom_blocks)
 
+        ret.orient_molecule()
+
+        return ret
+
+    def to_json(self):
+
+        ret = {}
+        for field in fields.valid_fields["molecule"]:
+            if field == "geometry":
+                tmp = np.around(getattr(self, field), 10)
+                tmp[np.abs(tmp) < 2.e-10] = 0
+                ret[field] = json.dumps(tmp.tolist())
+            else:
+                ret[field] = json.dumps(getattr(self, field))
+
         return ret
 
 
-    def build_fragments(do_cp=True, do_vmfc=False):
+    def get_hash(self):
+        """
+        Returns the hash of the molecule
+        """
 
-        ret = {}
+        m = hashlib.sha1()
+        concat = ""
 
-        # Default nocp, everything in monomer basis
-        ret["default"] = {}
-        for nbody in nbody_range:
-            for x in it.combinations(fragment_range, nbody):
-                nocp_compute_list[nbody].add( (x, x) )
+        tmp_json = self.to_json()
+        for field in fields.hash_fields["molecule"]:
+            concat += json.dumps(tmp_json[field])
 
-        if do_cp:
-            # Everything is in dimer basis
-            basis_tuple = tuple(fragment_range)
-            for nbody in nbody_range:
-                for x in it.combinations(fragment_range, nbody):
-                    cp_compute_list[nbody].add( (x, basis_tuple) )
-
-
-        if do_vmfc:
-            # Like a CP for all combinations of pairs or greater
-            for nbody in nbody_range:
-                for cp_combos in it.combinations(fragment_range, nbody):
-                    basis_tuple = tuple(cp_combos)
-                    for interior_nbody in nbody_range:
-                        for x in it.combinations(cp_combos, interior_nbody):
-                            combo_tuple = (x, basis_tuple)
-                            vmfc_compute_list[interior_nbody].add( combo_tuple )
-                            vmfc_level_list[len(basis_tuple)].add( combo_tuple )
-
+        m.update(concat.encode("utf-8"))
+        return m.hexdigest()
 
 

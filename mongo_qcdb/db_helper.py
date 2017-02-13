@@ -5,7 +5,7 @@ import json
 # import debug as debug
 import numpy as np
 
-from .hash_fields import hash_fields
+from . import fields
 
 class db_helper:
 
@@ -21,7 +21,7 @@ class db_helper:
     def add_molecule(self, data):
         m = hashlib.sha1()
         concat = ""
-        for field in hash_fields["molecule"]:
+        for field in fields.hash_fields["molecule"]:
             concat += json.dumps(data[field])
         m.update(concat.encode("utf-8"))
         sha1 = m.hexdigest()
@@ -37,7 +37,7 @@ class db_helper:
     def add_database(self, data):
         m = hashlib.sha1()
         concat = ""
-        for field in hash_fields["database"]:
+        for field in fields.hash_fields["database"]:
             concat += json.dumps(data[field])
         m.update(concat.encode("utf-8"))
         sha1 = m.hexdigest()
@@ -53,7 +53,7 @@ class db_helper:
     def add_page(self, data):
         m = hashlib.sha1()
         concat = ""
-        for field in hash_fields["page"]:
+        for field in fields.hash_fields["page"]:
             concat += json.dumps(data[field])
         m.update(concat.encode("utf-8"))
         sha1 = m.hexdigest()
