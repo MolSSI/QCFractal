@@ -9,12 +9,25 @@ sudo: false
 services:
     - mongodb
 
+
 matrix:
   include:
     - python: 2.7
       env: PYTHON_VER=2.7
+      addons: &1
+        apt:
+          sources:
+          - mongodb-3.0-precise
+          packages:
+          - mongodb-org-server
     - python: 3.5
       env: PYTHON_VER=3.5
+      addons: &2
+        apt:
+          sources:
+          - mongodb-3.0-precise
+          packages:
+          - mongodb-org-server
 
 before_install:
     - uname -a
@@ -39,6 +52,7 @@ install:
     - pip install codecov
     - pip install pytest-cov
     - conda list
+    - mongod --version
 
 before_script:
     - sleep 5
