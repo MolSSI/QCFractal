@@ -1,7 +1,0 @@
-- high performance interaction with Mongodb
-(X) - modify get function to get any field out of pages, not just return_values. Must search dictionaries for field. RV is default. Make apply stoich flag.
-- replace for loops with mongo queries
-(X) - debug levels
-(X) - Fix get_dataframe: have it go thru each reaction
-- Unit tests (pytest)
-   

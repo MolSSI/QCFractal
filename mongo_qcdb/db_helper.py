@@ -2,7 +2,7 @@ import pymongo
 import pandas as pd
 import hashlib
 import json
-import debug as debug
+# import debug as debug
 import numpy as np
 
 class db_helper:
@@ -102,7 +102,7 @@ class db_helper:
                     success = False
                     break
                 res.append(page[0]["value"][0])
-                debug.log(debug_level, 2, (stoich_encoding))
+                # debug.log(debug_level, 2, (stoich_encoding))
 
             if (success):
                 if (do_stoich):
@@ -112,7 +112,7 @@ class db_helper:
                     return acc
                 return res
 
-        debug.log(debug_level, 2, ("Fallback attempt"))
+        # debug.log(debug_level, 2, ("Fallback attempt"))
         if (field == "return_value"):
             command = [
             { "$match": { "name" : db } },
@@ -130,11 +130,11 @@ class db_helper:
 
 
     def get_series(self, field, db, stoich, method, do_stoich=True, debug_level=1):
-        debug.log(debug_level, 2, "Running get_series for db=" + db + " stoich="
-         + stoich + " method=" + method)
+        # debug.log(debug_level, 2, "Running get_series for db=" + db + " stoich="
+        #  + stoich + " method=" + method)
         database = self.db["databases"].find_one({"name": db})
         if (database == None):
-            debug.log(debug_level, 1, "Invalid database")
+            # debug.log(debug_level, 1, "Invalid database")
             return None
         res = []
         index = []
@@ -146,11 +146,11 @@ class db_helper:
 
 
     def get_dataframe(self, field, db, rxn, stoich, methods, do_stoich=True, debug_level=1):
-        debug.log(debug_level, 2, "Running get_dataframe for db=" + db + " rxn="
-        + rxn + " stoich=" + stoich + " methods=" + str(methods))
+        # debug.log(debug_level, 2, "Running get_dataframe for db=" + db + " rxn="
+        # + rxn + " stoich=" + stoich + " methods=" + str(methods))
         database = self.db["databases"].find_one({"name": db})
         if (database == None):
-            debug.log(debug_level, 1, "Invalid database.")
+            # debug.log(debug_level, 1, "Invalid database.")
             return None
 
         names = []

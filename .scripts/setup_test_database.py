@@ -16,7 +16,7 @@ descriptor = {"molecules": "name", "databases": "name", "pages": "modelchem"}
 
 # Add all JSON
 for col in collections:
-    fn = os.path.dirname(os.path.abspath(__file__)) + "/" + sys.argv[1] + "/" + col + "/"
+    fn = os.path.dirname(os.path.abspath(__file__)) + "/../databases/DB_HBC6/" + col + "/"
     for filename in os.listdir(fn):
         json_data = open(fn + filename).read()
         # Load JSON from file into OrderedDict
