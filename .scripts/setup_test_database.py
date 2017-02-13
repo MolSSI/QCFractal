@@ -5,7 +5,8 @@ import json
 import os
 
 db_helper = db_helper.db_helper
-mongo = db_helper("192.168.2.139", 27017, "local")
+#mongo = db_helper("192.168.2.139", 27017, "local")
+mongo = db_helper("127.0.0.1", 27017, "local")
 print(mongo.setup)
 
 collections = ["molecules", "databases", "pages"]
