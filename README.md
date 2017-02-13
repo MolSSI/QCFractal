@@ -183,3 +183,12 @@ A collection of `page` documents, which is essentially a dual key to multiple va
 }
 ```
 Again, molecule is the `_id` of the referenced molecule. Again, a manual reference.
+
+
+###testing
+To setup testing run the following:
+
+    - mongod
+    - pip install -e . (only needed once!)
+    - python .scripts/setup_test_database.py
+    - py.test -v
