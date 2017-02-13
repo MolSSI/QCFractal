@@ -46,7 +46,6 @@ before_script:
 
 script:
     - py.test -v --cov=./
-    - python ../.scripts/travis_print_failing.py
 
 notifications:
     email: false

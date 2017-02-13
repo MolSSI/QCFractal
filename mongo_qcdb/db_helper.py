@@ -5,6 +5,8 @@ import json
 # import debug as debug
 import numpy as np
 
+from .hash_fields import hash_fields
+
 class db_helper:
 
     # Constructor
@@ -17,11 +19,9 @@ class db_helper:
 
     # Adds a molecule to the DB. Returns True on success.
     def add_molecule(self, data):
-        hash_fields = ["symbols", "masses", "name", "charge", "multiplicity", "real", "geometry", "fragments",
-                            "fragment_charges", "fragment_multiplicities"]
         m = hashlib.sha1()
         concat = ""
-        for field in hash_fields:
+        for field in hash_fields["molecule"]:
             concat += json.dumps(data[field])
         m.update(concat.encode("utf-8"))
         sha1 = m.hexdigest()
@@ -35,10 +35,9 @@ class db_helper:
 
     # Adds a database to the DB. Returns True on success.
     def add_database(self, data):
-        hash_fields = ["name"]
         m = hashlib.sha1()
         concat = ""
-        for field in hash_fields:
+        for field in hash_fields["database"]:
             concat += json.dumps(data[field])
         m.update(concat.encode("utf-8"))
         sha1 = m.hexdigest()
@@ -52,10 +51,9 @@ class db_helper:
 
     # Adds a page to the DB. Returns True on success.
     def add_page(self, data):
-        hash_fields = ["molecule_hash", "modelchem"]
         m = hashlib.sha1()
         concat = ""
-        for field in hash_fields:
+        for field in hash_fields["page"]:
             concat += json.dumps(data[field])
         m.update(concat.encode("utf-8"))
         sha1 = m.hexdigest()
