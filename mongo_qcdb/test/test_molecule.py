@@ -31,6 +31,8 @@ def test_water_minima_data():
     mol = molecule.Molecule(_water_dimer_minima, name="water dimer")
 
     assert len(str(mol)) == 660
+    assert len(mol.to_string()) == 447
+
     assert sum(x == y for x, y in zip(mol.symbols, ['O', 'H', 'H', 'O', 'H', 'H'])) == mol.geometry.shape[0]
     assert np.allclose(mol.masses, [15.99491461956, 1.00782503207, 1.00782503207, 15.99491461956, 1.00782503207, 1.00782503207])
     assert mol.name == "water dimer"
@@ -48,6 +50,7 @@ def test_water_minima_data():
                                       [-3.27523824,  0.81341093,  1.43347255],
                                       [-3.27523824,  0.81341093, -1.43347255]]) 
     assert mol.get_hash() == "613ea243412104494787c5e54c71793e430de73f"
+
 
 
 def test_water_minima_fragment():

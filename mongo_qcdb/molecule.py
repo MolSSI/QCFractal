@@ -363,6 +363,43 @@ class Molecule(object):
 
         return ret
 
+    def to_string(self, dtype="psi4"):
+        if dtype == "psi4":
+            return self._to_psi4_string()
+        else:
+            raise KeyError("Molecule:to_string: dtype of '%s' not recognized." % dtype)
+
+
+    def _to_psi4_string(self):
+        """Regenerates a input file molecule specification string from the
+        current state of the Molecule. Contains geometry info,
+        fragmentation, charges and multiplicities, and any frame
+        restriction.
+        """
+        text = ""
+
+        # append atoms and coordentries and fragment separators with charge and multiplicity
+        Pfr = 0
+        for num, frag in enumerate(self.fragments):
+            text += "%s    \n    %d %d\n" % (
+                "    --",
+                self.fragment_charges[num], self.fragment_multiplicities[num])
+
+            for at in frag:
+                if self.real[at]:
+                    text += "    %-8s" % self.symbols[at]
+                else:
+                    text += "    %-8s" % ("Gh(" + self.symbols[at] + ")")
+                text += "    % 14.10f % 14.10f % 14.10f\n" % tuple(self.geometry[at])
+        text += "\n"
+
+        # append units and any other non-default molecule keywords
+        text += "    units bohr\n"
+        text += "    no_com\n"
+        text += "    no_reorient\n"
+
+        return text
+
     def to_json(self):
 
         ret = {}
