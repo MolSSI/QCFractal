@@ -379,7 +379,6 @@ class Molecule(object):
         text = ""
 
         # append atoms and coordentries and fragment separators with charge and multiplicity
-        Pfr = 0
         for num, frag in enumerate(self.fragments):
             text += "%s    \n    %d %d\n" % (
                 "    --",
@@ -416,7 +415,7 @@ class Molecule(object):
 
     def get_hash(self):
         """
-        Returns the hash of the molecule
+        Returns the hash of the molecule.
         """
 
         m = hashlib.sha1()

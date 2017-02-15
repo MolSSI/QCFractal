@@ -1,4 +1,3 @@
-
 """Mongo QCDB Database object and helpers
 """
 
@@ -7,8 +6,11 @@ import itertools as it
 import math
 import json
 import copy
+import pandas as pd
+
 
 from . import molecule
+
 
 def nCr(n, r):
     """
@@ -16,22 +18,22 @@ def nCr(n, r):
     """
     return math.factorial(n) / math.factorial(r) / math.factorial(n - r)
 
+
 class Database(object):
     """
     This is a Mongo QCDB database class.
     """
 
-
     def __init__(self, name, mongod=None):
 
-
         self.data = {}
-        self.data["reactions"] = []
+        self.data["reactions"] = {}
 
         if mongod is not None:
             raise KeyError("Database: Cannot yet intialize a database object from a Mongo server.")
         else:
 
+            self.df = pd.DataFrame()
             self.data["name"] = name
             self.data["provenence"] = {}
 
@@ -52,11 +54,15 @@ class Database(object):
 
         Returns
         -------
+        stoich : list
+            A list of formatted tuples describing the stoichiometry for use in a MongoDB.
 
         Notes
         -----
-        This function attempts to convert the molecule into its correspond hash. If a new molecule is present it will be
-        be stored in preperation to send back to the primary database.
+        This function attempts to convert the molecule into its correspond hash. The following will happen depending on the form of the Molecule.
+            - Molecule hash - Used directly in the stoichiometry.
+            - Molecule class - Hash is obtained and the molecule will be added to the databse upon saving.
+            - Molecule string - Molecule will be converted to a Molecule class and the same process as the above will occur.
 
 
         Examples
@@ -71,13 +77,15 @@ class Database(object):
 
         for line in stoichiometry:
             if len(line) != 2:
-                raise KeyError("Database: Parse stoichiometry: passed in as a list must of key : value type")
+                raise KeyError(
+                    "Database: Parse stoichiometry: passed in as a list must of key : value type")
 
             # Get the values
             try:
                 mol_values.append(float(line[1]))
             except:
-                raise TypeError("Database: Parse stoichiometry: second value must be convertable to a float.")
+                raise TypeError(
+                    "Database: Parse stoichiometry: second value must be convertable to a float.")
 
             # What kind of molecule is it?
             mol = line[0]
@@ -103,15 +111,21 @@ class Database(object):
                     self.new_molecule_jsons.append(mol.to_json())
 
             else:
-                raise TypeError("Database: Parse stoichiometry: first value must either be a molecule hash, a molecule str, or a Molecule class.")
+                raise TypeError(
+                    "Database: Parse stoichiometry: first value must either be a molecule hash, a molecule str, or a Molecule class."
+                )
 
             mol_hashes.append(molecule_hash)
 
-        return {mol : coef for mol, coef in zip(mol_hashes, mol_values)}
+        return {mol: coef for mol, coef in zip(mol_hashes, mol_values)}
 
+    def get_index(self):
+        return list(self.data["reactions"])
 
+    def get_rxn(self, name):
+        return self.data["reactions"][name]
 
-    def add_rxn(self, name, stoichiometry, attributes={}, other_fields={}):
+    def add_rxn(self, name, stoichiometry, return_values={}, attributes={}, other_fields={}):
         """
         Adds a reaction to a database object.
 
@@ -134,35 +148,44 @@ class Database(object):
         # Set name
         rxn["name"] = name
         if name in self.rxn_name_list:
-            raise KeyError("Database: Name '%s' already exists. Please either delete this entry or call the update function." % name)
-
+            raise KeyError(
+                "Database: Name '%s' already exists. Please either delete this entry or call the update function."
+                % name)
 
         # Set stoich
         if isinstance(stoichiometry, dict):
-            raise AttributeError("Database:add_rxn: Dict stoich yet implemented!")
+            rxn["stoichiometry"] = {}
+
+            if "default" not in list(stoichiometry):
+                raise KeyError("Database:add_rxn: Stoichiometry dict must have a 'default' key.")
+
+            for k, v in stoichiometry.items():
+                rxn["stoichiometry"][k] = self.parse_stoichiometry(v)
 
         elif isinstance(stoichiometry, (tuple, list)):
             rxn["stoichiometry"] = {}
             rxn["stoichiometry"]["default"] = self.parse_stoichiometry(stoichiometry)
         else:
-            raise TypeError("Database:add_rxn: Type of stoichiometry was not recognized '%s'", type(stoichiometry))
+            raise TypeError("Database:add_rxn: Type of stoichiometry input was not recognized '%s'",
+                            type(stoichiometry))
 
         # Set attributes
         if not isinstance(attributes, dict):
-            raise TypeError("Database:add_rxn: attributes must be a dictionary, not '%s'", type(attributes))
+            raise TypeError("Database:add_rxn: attributes must be a dictionary, not '%s'",
+                            type(attributes))
 
         rxn["attributes"] = attributes
 
         if not isinstance(other_fields, dict):
-            raise TypeError("Database:add_rxn: other_fields must be a dictionary, not '%s'", type(attributes))
+            raise TypeError("Database:add_rxn: other_fields must be a dictionary, not '%s'",
+                            type(attributes))
 
         for k, v in other_fields.items():
             rxn[k] = v
 
-        self.data["reactions"].append(rxn)
+        self.data["reactions"][name] = rxn
 
         return rxn
-
 
     def add_ie_rxn(self, name, molecule, attribute={}):
         raise AttributeError("Database:add_ie_rxn: Not yet implemented!")
@@ -177,7 +200,6 @@ class Database(object):
         else:
             return copy.deepcopy(self.data)
 
-
     def build_ie_fragments(self, do_cp=True, do_vmfc=False):
 
         ret = {}
@@ -186,12 +208,11 @@ class Database(object):
         ret["default"] = {}
         for nbody in nbody_range:
             for x in it.combinations(fragment_range, nbody):
-                nocp_compute_list[nbody].add( (x, x) )
-
+                nocp_compute_list[nbody].add((x, x))
 
             for k in range(1, n + 1):
-                take_nk =  nCr(max_frag - k - 1, n - k)
-                sign = ((-1) ** (n - k))
+                take_nk = nCr(max_frag - k - 1, n - k)
+                sign = ((-1)**(n - k))
                 value = nocp_energy_by_level[k]
                 nocp_energy_body_dict[n] += take_nk * sign * value
 
@@ -204,8 +225,7 @@ class Database(object):
             basis_tuple = tuple(fragment_range)
             for nbody in nbody_range:
                 for x in it.combinations(fragment_range, nbody):
-                    cp_compute_list[nbody].add( (x, basis_tuple) )
-
+                    cp_compute_list[nbody].add((x, basis_tuple))
 
         if do_vmfc:
             # Like a CP for all combinations of pairs or greater
@@ -215,7 +235,5 @@ class Database(object):
                     for interior_nbody in nbody_range:
                         for x in it.combinations(cp_combos, interior_nbody):
                             combo_tuple = (x, basis_tuple)
-                            vmfc_compute_list[interior_nbody].add( combo_tuple )
-                            vmfc_level_list[len(basis_tuple)].add( combo_tuple )
-
-
+                            vmfc_compute_list[interior_nbody].add(combo_tuple)
+                            vmfc_level_list[len(basis_tuple)].add(combo_tuple)
