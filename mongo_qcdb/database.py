@@ -43,6 +43,19 @@ class Database(object):
 
         self.rxn_name_list = []
 
+    def get_index(self):
+        """
+        Returns the current index of the database.
+        """
+        return list(self.data["reactions"])
+
+    def get_rxn(self, name):
+        """
+        Returns the JSON object of a specific reaction.
+        """
+        return self.data["reactions"][name]
+
+
     def parse_stoichiometry(self, stoichiometry):
         """
         Parses a stiochiometry list.
@@ -119,12 +132,6 @@ class Database(object):
 
         return {mol: coef for mol, coef in zip(mol_hashes, mol_values)}
 
-    def get_index(self):
-        return list(self.data["reactions"])
-
-    def get_rxn(self, name):
-        return self.data["reactions"][name]
-
     def add_rxn(self, name, stoichiometry, return_values={}, attributes={}, other_fields={}):
         """
         Adds a reaction to a database object.
@@ -187,8 +194,10 @@ class Database(object):
 
         return rxn
 
-    def add_ie_rxn(self, name, molecule, attribute={}):
-        raise AttributeError("Database:add_ie_rxn: Not yet implemented!")
+    def add_ie_rxn(self, name, mol, return_values={}, attributes={}, other_fields={}):
+
+        stoichiometry = self.build_ie_fragments(mol)
+        return self.add_rxn(name, stoichiometry, return_values=return_values, attributes=attributes, other_fields=other_fields)
 
     def to_json(self, filename=None):
         """
@@ -200,40 +209,25 @@ class Database(object):
         else:
             return copy.deepcopy(self.data)
 
-    def build_ie_fragments(self, do_cp=True, do_vmfc=False):
+    def build_ie_fragments(self, mol, do_cp=True, do_vmfc=False, max_nbody=0):
+
+        if isinstance(mol, str):
+                mol = molecule.Molecule(mol)
 
         ret = {}
 
+        if max_nbody == 0:
+            max_nbody = len(mol.fragments)
+
+        if max_nbody != 2:
+            raise AttributeError("Database:build_ie_fragments: Only capable of dimer ie fragments currently.")
+
         # Default nocp, everything in monomer basis
-        ret["default"] = {}
-        for nbody in nbody_range:
-            for x in it.combinations(fragment_range, nbody):
-                nocp_compute_list[nbody].add((x, x))
+        ret["default"] = [(mol, 1.0), (mol.get_fragment(0), -1.0), (mol.get_fragment(1), -1.0)]
+        ret["cp"] = [(mol, 1.0), (mol.get_fragment(0, 1), -1.0), (mol.get_fragment(1, 0), -1.0)]
 
-            for k in range(1, n + 1):
-                take_nk = nCr(max_frag - k - 1, n - k)
-                sign = ((-1)**(n - k))
-                value = nocp_energy_by_level[k]
-                nocp_energy_body_dict[n] += take_nk * sign * value
+        return ret
 
-                if ptype != 'energy':
-                    value = nocp_ptype_by_level[k]
-                    nocp_ptype_body_dict[n] += take_nk * sign * value
 
-        if do_cp:
-            # Everything is in dimer basis
-            basis_tuple = tuple(fragment_range)
-            for nbody in nbody_range:
-                for x in it.combinations(fragment_range, nbody):
-                    cp_compute_list[nbody].add((x, basis_tuple))
 
-        if do_vmfc:
-            # Like a CP for all combinations of pairs or greater
-            for nbody in nbody_range:
-                for cp_combos in it.combinations(fragment_range, nbody):
-                    basis_tuple = tuple(cp_combos)
-                    for interior_nbody in nbody_range:
-                        for x in it.combinations(cp_combos, interior_nbody):
-                            combo_tuple = (x, basis_tuple)
-                            vmfc_compute_list[interior_nbody].add(combo_tuple)
-                            vmfc_level_list[len(basis_tuple)].add(combo_tuple)
+
