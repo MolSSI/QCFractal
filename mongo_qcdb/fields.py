@@ -1,13 +1,21 @@
+"""A collection of fields which determine the fields that we hash, or are valid
+"""
 
+import copy
 
-# What fields do we hash?
+### Hash Fields
 hash_fields = {}
-hash_fields["molecule"] = ["symbols", "masses", "name", "charge", "multiplicity", "real", "geometry", "fragments",
-                            "fragment_charges", "fragment_multiplicities"]
-hash_fields["database"] = ["name"]
-hash_fields["page"] = ["modelchem", "molecule_hash"]
+hash_fields["molecule"] = (
+    "symbols", "masses", "name", "charge", "multiplicity", "real", "geometry", "fragments",
+    "fragment_charges", "fragment_multiplicities"
+)
+hash_fields["database"] = ("name")
+hash_fields["page"] = ("modelchem", "molecule_hash")
 
-# What fields are valid?
-valid_fields = {k : v[:] for k, v in hash_fields.items()}
+### Valid Fields
+valid_fields = []
+valid_fields["molecule"] = copy.deepcopy(hash_fields["molecule"])
+valid_fields = valid_fields["molecule"] + ("provenance", "comment")
 
-valid_fields["molecule"].extend(["provenance", "comment"])
+valid_fields["database"] = copy.deepcopy(hash_fields["database"])
+valid_fields["database"] = valid_fields["database"] + ("rxn_type")
