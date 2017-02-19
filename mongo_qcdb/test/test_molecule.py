@@ -1,8 +1,10 @@
 import numpy as np
+
+import mongo_qcdb as mdb
 from mongo_qcdb import molecule
 from mongo_qcdb import test_util
 
-
+# Build a few test molecules
 _water_dimer_minima = """
 0 1
 O  -1.551007  -0.114520   0.000000
@@ -15,6 +17,11 @@ H   1.680398  -0.373741  -0.758561
 H   1.680398  -0.373741   0.758561
 """
 
+_water_dimer_minima_np = np.array(
+    [[8, -1.551007, -0.114520, 0.000000], [1, -1.934259, 0.762503, 0.000000],
+     [1, -0.599677, 0.040712, 0.000000], [8, 1.350625, 0.111469, 0.000000],
+     [1, 1.680398, -0.373741, -0.758561], [1, 1.680398, -0.373741, 0.758561]])
+
 _water_dimer_stretch = """
 0 1
 O  -1.551007  -0.114520   0.000000
@@ -25,6 +32,51 @@ O  -0.114520  -1.551007  10.000000
 H   0.762503  -1.934259  10.000000
 H   0.040712  -0.599677  10.000000
 """
+
+_neon_tetramer = """
+0 1
+Ne 0.000000 0.000000 0.000000
+--
+Ne 3.000000 0.000000 0.000000
+--
+Ne 0.000000 3.000000 0.000000
+--
+Ne 0.000000 0.000000 3.000000
+units bohr
+"""
+
+_neon_tetramer_np = np.array(
+    [[10, 0.000000, 0.000000, 0.000000], [10, 3.000000, 0.000000, 0.000000],
+     [10, 0.000000, 3.000000, 0.000000], [10, 0.000000, 0.000000, 3.000000]])
+_neon_tetramer_np[:, 1:] *= mdb.constants.physconst["bohr2angstroms"]
+
+
+# Start tests
+def _compare_molecule(bench, other):
+    assert test_util.compare_lists(bench.symbols, other.symbols)
+    assert test_util.compare_lists(bench.masses, other.masses)
+    assert test_util.compare_lists(bench.real, other.real)
+    assert test_util.compare_lists(bench.fragments, other.fragments)
+    assert test_util.compare_lists(bench.fragment_charges, other.fragment_charges)
+    assert test_util.compare_lists(bench.fragment_multiplicities, other.fragment_multiplicities)
+
+    assert bench.charge == other.charge
+    assert bench.multiplicity == other.multiplicity
+    assert np.allclose(bench.geometry, other.geometry)
+    return True
+
+def test_molecule_constructors():
+    water_psi = molecule.Molecule(_water_dimer_minima, name="water dimer")
+    water_np = molecule.Molecule(_water_dimer_minima_np, name="water dimer", dtype="numpy", frags=[3])
+
+    assert _compare_molecule(water_psi, water_np)
+
+
+    neon_psi = molecule.Molecule(_neon_tetramer, name="neon tetramer")
+    neon_np = molecule.Molecule(
+        _neon_tetramer_np, name="neon tetramer", dtype="numpy", frags=[1, 2, 3])
+
+    assert _compare_molecule(neon_psi, neon_np)
 
 
 def test_water_minima_data():
@@ -48,7 +100,7 @@ def test_water_minima_data():
                                       [ 1.00578203, -0.1092573 ,  0.        ],
                                       [-2.6821528 , -0.12325075,  0.        ],
                                       [-3.27523824,  0.81341093,  1.43347255],
-                                      [-3.27523824,  0.81341093, -1.43347255]]) 
+                                      [-3.27523824,  0.81341093, -1.43347255]])
     assert mol.get_hash() == "613ea243412104494787c5e54c71793e430de73f"
 
 
@@ -84,7 +136,7 @@ def test_water_orient():
     # Make sure the fragments match
     assert frag_0.get_hash() == frag_1.get_hash()
 
-    # Make sure the complexes match 
+    # Make sure the complexes match
     frag_0_1 = mol.get_fragment(0, 1)
     frag_1_0 = mol.get_fragment(1, 0)
 

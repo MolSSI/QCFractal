@@ -17,14 +17,14 @@ class Molecule(object):
     This is a Mongo QCDB molecule class.
     """
 
-    def __init__(self, mol_str, dtype="psi4", orient=True, name=""):
+    def __init__(self, mol_str, **kwargs):
         """
         the Mongo QCDB molecule class which is capable of reading and writing many formats.
         """
 
         self.symbols = []
         self.masses = []
-        self.name = name
+        self.name = kwargs.pop("name", "")
         self.charge = 0.0
         self.multiplicity = 1
         self.real = []
@@ -35,17 +35,49 @@ class Molecule(object):
         self.fragment_multiplicities = []
         self.provenance = {}
 
-        if mol_str:
+        dtype = kwargs.pop("dtype", "psi4").lower()
+        if mol_str is not None:
             if dtype == "psi4":
                 self._molecule_from_string_psi4(mol_str)
+            elif dtype == "numpy":
+                frags = kwargs.pop("frags", [])
+                self._molecule_from_numpy(mol_str, frags)
             else:
                 raise KeyError("Molecule: dtype of %s not recognized.")
 
-            if orient:
+            if kwargs.pop("orient", True):
                 self.orient_molecule()
         else:
             # In case a user wants to build one themselves
             pass
+
+    def _molecule_from_numpy(self, arr, frags):
+        """Given a NumPy array of shape (N, 4) where each row is (Z_nuclear, X, Y, Z).
+
+        Frags represents the splitting pattern for molecular fragments. Geometry must be in
+        Angstroms.
+        """
+
+        arr = np.array(arr)
+
+        if arr.shape[1] != 4:
+            raise AttributeError("Molecule: Molecule should be shape (N, 4) not %d." % arr.shape[1])
+
+        print(arr[:, 0])
+        self.geometry = arr[:, 1:].copy() / constants.physconst["bohr2angstroms"]
+        self.symbols = [constants.z2el[x] for x in arr[:, 0]]
+        self.masses = [constants.z2masses[x] for x in arr[:, 0]]
+        self.real = [True for x in arr[:, 0]]
+
+        frags.append(arr.shape[0])
+        start = 0
+        for fsplit in frags:
+            self.fragments.append(list(range(start, fsplit)))
+            self.fragment_charges.append(0)
+            self.fragment_multiplicities.append(1)
+            start = fsplit
+
+
 
     def _molecule_from_string_psi4(self, text):
         """Given a string *text* of psi4-style geometry specification
@@ -84,6 +116,9 @@ class Molecule(object):
             # handle units
             elif bohr.match(line):
                 unit_conversion = 1.0
+
+            elif ang.match(line):
+                pass
 
             # handle charge and multiplicity
             elif cgmp.match(line):
