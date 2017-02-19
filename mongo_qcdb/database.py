@@ -8,11 +8,10 @@ import json
 import copy
 import pandas as pd
 
-
 from . import molecule
 
 
-def nCr(n, r):
+def _nCr(n, r):
     """
     Compute the binomial coefficient n! / (k! * (n-k)!)
     """
@@ -54,7 +53,6 @@ class Database(object):
         Returns the JSON object of a specific reaction.
         """
         return self.data["reactions"][name]
-
 
     def parse_stoichiometry(self, stoichiometry):
         """
@@ -130,7 +128,15 @@ class Database(object):
 
             mol_hashes.append(molecule_hash)
 
-        return {mol: coef for mol, coef in zip(mol_hashes, mol_values)}
+        # Sum together the coefficients of duplicates
+        ret = {}
+        for mol, coef in zip(mol_hashes, mol_values):
+            if mol in list(ret):
+                ret[mol] += coef
+            else:
+                ret[mol] = coef
+
+        return ret
 
     def add_rxn(self, name, stoichiometry, return_values={}, attributes={}, other_fields={}):
         """
@@ -197,7 +203,12 @@ class Database(object):
     def add_ie_rxn(self, name, mol, return_values={}, attributes={}, other_fields={}):
 
         stoichiometry = self.build_ie_fragments(mol)
-        return self.add_rxn(name, stoichiometry, return_values=return_values, attributes=attributes, other_fields=other_fields)
+        return self.add_rxn(
+            name,
+            stoichiometry,
+            return_values=return_values,
+            attributes=attributes,
+            other_fields=other_fields)
 
     def to_json(self, filename=None):
         """
@@ -209,25 +220,77 @@ class Database(object):
         else:
             return copy.deepcopy(self.data)
 
-    def build_ie_fragments(self, mol, do_cp=True, do_vmfc=False, max_nbody=0):
+    def build_ie_fragments(self, mol, do_default=True, do_cp=True, do_vmfc=False, max_nbody=0):
+        """
+        Build the stoichiometry for an Interaction Energy.
+
+        Parameters
+        ----------
+        mol : Molecule class or str
+            Molecule to fragment.
+        do_default : bool
+            Create the default (noCP) stoichiometry.
+        do_cp : bool
+            Create the counterpoise (CP) corrected stoichiometry.
+        do_vmfc : bool
+            Create the Valiron-Mayer Function Counterpoise (VMFC) corrected stoichiometry.
+        max_nbody : int
+            What is the maximum fragment level built, if zero defaults to the maximum number of fragments.
+
+        Notes
+        -----
+
+        Examples
+        --------
+
+        """
 
         if isinstance(mol, str):
-                mol = molecule.Molecule(mol)
+            mol = molecule.Molecule(mol)
 
         ret = {}
 
+        max_frag = len(mol.fragments)
         if max_nbody == 0:
-            max_nbody = len(mol.fragments)
+            max_nbody = max_frag
 
-        if max_nbody != 2:
-            raise AttributeError("Database:build_ie_fragments: Only capable of dimer ie fragments currently.")
+        if max_nbody < 2:
+            raise AttributeError(
+                "Database:build_ie_fragments: Molecule must have at least two fragments.")
 
-        # Default nocp, everything in monomer basis
-        ret["default"] = [(mol, 1.0), (mol.get_fragment(0), -1.0), (mol.get_fragment(1), -1.0)]
-        ret["cp"] = [(mol, 1.0), (mol.get_fragment(0, 1), -1.0), (mol.get_fragment(1, 0), -1.0)]
+        # Build some info
+        fragment_range = list(range(max_frag))
+
+        nocp_dict = {}
+        cp_dict = {}
+
+        # Loop over the bodis
+        for nbody in range(1, max_nbody):
+            nocp_tmp = []
+            cp_tmp = []
+            vmfc_tmp = []
+            for k in range(1, nbody + 1):
+                take_nk = _nCr(max_frag - k - 1, nbody - k)
+                sign = ((-1)**(nbody - k))
+                coef = take_nk * sign
+                for frag in it.combinations(fragment_range, k):
+                    if do_default:
+                        nocp_tmp.append((mol.get_fragment(frag), coef))
+                    if do_cp:
+                        ghost = list(set(fragment_range) - set(frag))
+                        cp_tmp.append((mol.get_fragment(frag, ghost), coef))
+
+            if do_default:
+                ret["default" + str(nbody)] = nocp_tmp
+
+            if do_cp:
+                ret["cp" + str(nbody)] = cp_tmp
+
+        # Add in the maximal position
+        if do_default:
+            ret["default"] = [(mol, 1.0)]
+
+        if do_cp:
+            ret["cp"] = [(mol, 1.0)]
 
         return ret
-
-
-
-
