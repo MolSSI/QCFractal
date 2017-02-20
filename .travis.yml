@@ -6,13 +6,8 @@ language: python
 # Run jobs on container-based infrastructure, can be overridden per job
 sudo: false
 
-cache:
-  directories:
-    - $HOME/virtualenv
-    - $HOME/miniconda
-
 services:
-    - mongodb
+  - mongodb
 
 
 matrix:
@@ -35,42 +30,42 @@ matrix:
           - mongodb-org-server
 
 before_install:
-    - uname -a
-    - free -m
-    - df -h
-    - ulimit -a
+  - uname -a
+  - free -m
+  - df -h
+  - ulimit -a
 
 install:
-    - if [[ "$PYTHON_VER" == "2.7" ]]; then
-        wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-      else
-        wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-      fi
-    - bash miniconda.sh -b -p $HOME/miniconda
-    - export PATH="$HOME/miniconda/bin:$PATH"
-    - hash -r
-    - conda config --set always_yes yes --set changeps1 no
-    - conda update -q conda
-    - conda info -a
-    - conda create -q -n mongo_qcdb python=$PYTHON_VER numpy pandas pymongo pytest
-    - source activate mongo_qcdb
-    - pip install codecov
-    - pip install pytest-cov
-    - conda list
-    - mongod --version
+  - if [[ "$PYTHON_VER" == "2.7" ]]; then
+      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
+    else
+      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
+    fi
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda info -a
+  - conda create -q -n mongo_qcdb python=$PYTHON_VER numpy pandas pymongo pytest matplotlib
+  - source activate mongo_qcdb
+  - pip install codecov
+  - pip install pytest-cov
+  - conda list
+  - mongod --version
 
 before_script:
-    - sleep 5
-    - python -V
-    - python -c 'import numpy; print(numpy.version.version)'
-    - pip install -e .
-    - python .scripts/setup_test_database.py
+  - sleep 5
+  - python -V
+  - python -c 'import numpy; print(numpy.version.version)'
+  - pip install -e .
+  - python .scripts/setup_test_database.py
 
 script:
-    - py.test -v --cov=./
+  - py.test -v --cov=./
 
 notifications:
-    email: false
+  email: false
 
 after_success:
-    - codecov
+  - codecov
