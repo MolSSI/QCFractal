@@ -12,6 +12,8 @@ import json
 from . import constants
 from . import fields
 
+# 8 decimal places
+GEOMETRY_NOISE = 8
 
 class Molecule(object):
     """
@@ -310,6 +312,7 @@ class Molecule(object):
 
         phase_check = [False, False, False]
 
+        geom_noise = 10 ** (-GEOMETRY_NOISE)
         for num in range(self.geometry.shape[0]):
 
             for x in range(3):
@@ -317,7 +320,7 @@ class Molecule(object):
 
                 val = self.geometry[num, x]
 
-                if (abs(val) < 1.e-12): continue
+                if (abs(val) < geom_noise): continue
 
                 phase_check[x] = True
 
@@ -434,7 +437,7 @@ class Molecule(object):
         ret = {}
         for field in fields.valid_fields["molecule"]:
             if field == "geometry":
-                tmp = np.around(getattr(self, field), 10)
+                tmp = np.around(getattr(self, field), GEOMETRY_NOISE)
                 tmp[np.abs(tmp) < 2.e-10] = 0
                 ret[field] = json.dumps(tmp.tolist())
             else:

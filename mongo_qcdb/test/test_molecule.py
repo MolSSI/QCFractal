@@ -102,7 +102,7 @@ def test_water_minima_data():
                                       [-2.6821528 , -0.12325075,  0.        ],
                                       [-3.27523824,  0.81341093,  1.43347255],
                                       [-3.27523824,  0.81341093, -1.43347255]])
-    assert mol.get_hash() == "613ea243412104494787c5e54c71793e430de73f"
+    assert mol.get_hash() == "02ff2734a29577981c830e630c157cbdc27e8fb1"
 
 
 
@@ -112,8 +112,8 @@ def test_water_minima_fragment():
 
     frag_0 = mol.get_fragment(0)
     frag_1 = mol.get_fragment(1)
-    assert frag_0.get_hash() == "f1df8f05102241dc9b68dc8d6e8dc3d14fe0874a"
-    assert frag_1.get_hash() == "6cabb9c555b470aa102269e4e98abea3b706e5d3"
+    assert frag_0.get_hash() == "c7da73e7184933bec6c796d7ed98c60950e5c976"
+    assert frag_1.get_hash() == "e1c68355f514b45d3d1e39739727f5fbe5180e04"
 
     frag_0_1 = mol.get_fragment(0, 1)
     frag_1_0 = mol.get_fragment(1, 0)

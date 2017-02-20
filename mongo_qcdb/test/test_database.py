@@ -39,6 +39,7 @@ def _compare_stoichs(stoich, stoich_other):
 
     return True
 
+
 def _compare_rxn_stoichs(ref, new):
     stoich = ref["stoichiometry"]
     stoich_other = new["stoichiometry"]
@@ -131,61 +132,65 @@ def nbody_db():
 
     # Ne Tetramer benchmark
     db.ne_stoich = {
-        'default2': {
-            '36f2143d90ae580e36557a7fc5143291c107eb97': 3.0,
-            '2d3cf1d504374fa9050a9a28c3ab4a72df0534e7': -8.0,
-            '1949decd4a49d09fee4327de6f1a3b855c90a5b5': 3.0
+        'stoichiometry': {
+            'cp3': {
+                'd189009ff65accb304fa062df7df876d208f0913': -1.0,
+                '475a207e912aaf6c2575e8a9c7181eb7efa17396': 1.0,
+                '4ce966e9eebce2badb2f224350a8856712faf1a7': 1.0,
+                'f275f61a4bc7f9937d93d70f15d79f308001db6a': -1.0,
+                'c441b65c480520f0cabc40fd02442f4c6c13ff65': -1.0,
+                '9d0727c508b512695916d191d2e70ff287500cd8': -1.0,
+                '621be25335fb2d707883c5e941279e5d52ccbfc0': 1.0,
+                '52bffbb5977ca91a7ed804e0113a8089327d125b': 1.0,
+                '7e4b34c6a7d5d336c74bf6396cbb488e2cafb1de': -1.0,
+                '3aa65cf961182a1d20b12edb5b44f9b63b5d5881': 1.0,
+                'cae082641e64bff597c76887e4283ce71f598b1c': 1.0,
+                '232edb147cbcc67b762f45af402ef28dba21024a': 1.0,
+                'e083d732a8049ac739d8cc0f8fa19964610a6819': -1.0,
+                'a6a4c85bc3b6f466442537eda3a9b895dc1dd4bd': 1.0
+            },
+            'default': {
+                'a61b76b5591909861d3f631dc406d0bd1f56ae54': 1.0
+            },
+            'default1': {
+                '2d3cf1d504374fa9050a9a28c3ab4a72df0534e7': 4.0
+            },
+            'default2': {
+                '2bf637d32f5d96630fd979fccadba6750537344c': 3.0,
+                '01a496b0dad9b88c5a99430823877dd964e928d4': 3.0,
+                '2d3cf1d504374fa9050a9a28c3ab4a72df0534e7': -8.0
+            },
+            'cp1': {
+                '52bffbb5977ca91a7ed804e0113a8089327d125b': 1.0,
+                '475a207e912aaf6c2575e8a9c7181eb7efa17396': 1.0,
+                'a6a4c85bc3b6f466442537eda3a9b895dc1dd4bd': 1.0,
+                'cae082641e64bff597c76887e4283ce71f598b1c': 1.0
+            },
+            'cp': {
+                'a61b76b5591909861d3f631dc406d0bd1f56ae54': 1.0
+            },
+            'cp2': {
+                '52bffbb5977ca91a7ed804e0113a8089327d125b': -2.0,
+                'd189009ff65accb304fa062df7df876d208f0913': 1.0,
+                '475a207e912aaf6c2575e8a9c7181eb7efa17396': -2.0,
+                'cae082641e64bff597c76887e4283ce71f598b1c': -2.0,
+                '9d0727c508b512695916d191d2e70ff287500cd8': 1.0,
+                'a6a4c85bc3b6f466442537eda3a9b895dc1dd4bd': -2.0,
+                'c441b65c480520f0cabc40fd02442f4c6c13ff65': 1.0,
+                'e083d732a8049ac739d8cc0f8fa19964610a6819': 1.0,
+                'f275f61a4bc7f9937d93d70f15d79f308001db6a': 1.0,
+                '7e4b34c6a7d5d336c74bf6396cbb488e2cafb1de': 1.0
+            },
+            'default3': {
+                '39b23b91449835038993f75242178f992e0ac0e3': 1.0,
+                '2bf637d32f5d96630fd979fccadba6750537344c': -3.0,
+                '345b26a6193fc8d19659d5290391f87295c11416': 3.0,
+                '01a496b0dad9b88c5a99430823877dd964e928d4': -3.0,
+                '2d3cf1d504374fa9050a9a28c3ab4a72df0534e7': 4.0
+            }
         },
-        'cp3': {
-            '9e3c887146748834ad617011b1d9fef2ec955ade': 1.0,
-            '3f5157e975c337a1a5df85c5b63df1e6dc05600b': 1.0,
-            'ea39591390e8b4482b190b666ebb79097020eb67': -1.0,
-            'b760612638045cd544ff3cc41f0d5984802d84fd': 1.0,
-            '394e88345c597385c61b3b14a89db7b40e7e70cf': 1.0,
-            'a6cabbaa3f2e16b35ac11d54c8ad8581af53c183': -1.0,
-            '3b08ee7157af42f3f92d5ad7524dc33b425181ae': -1.0,
-            '3f30654fdc0c88ce90e10134720d773196aaf53b': -1.0,
-            '7dfa7330f7c142974cc503ec1bac28f340c8c260': 1.0,
-            'b76f32238bc0d7c5d188a258059c3ad827e80003': -1.0,
-            '622bc2c6bfe57c87493fafec50fad5cc1227e10b': 1.0,
-            '369552f3f1e2a49ef557159d1833e36e6ab8fdda': 1.0,
-            '061fceb60603ae4de4abd72e3edec768c57b6619': -1.0,
-            'a6628d1d05f5ee820e6bcbc75bcc09f0a599ca7b': 1.0
-        },
-        'cp': {
-            'd5382fb286bdcc52fbb43c3cd355b5beba11436c': 1.0
-        },
-        'default3': {
-            '36f2143d90ae580e36557a7fc5143291c107eb97': -3.0,
-            '2d3cf1d504374fa9050a9a28c3ab4a72df0534e7': 4.0,
-            'c224127cb1b1b2657063cd5686622d6c472d7c5b': 3.0,
-            '1949decd4a49d09fee4327de6f1a3b855c90a5b5': -3.0,
-            'e7ff4b2ba7b22190911757ca8cd576c84e480b69': 1.0
-        },
-        'cp2': {
-            'b76f32238bc0d7c5d188a258059c3ad827e80003': 1.0,
-            '3f5157e975c337a1a5df85c5b63df1e6dc05600b': -2.0,
-            'a6cabbaa3f2e16b35ac11d54c8ad8581af53c183': 1.0,
-            'ea39591390e8b4482b190b666ebb79097020eb67': 1.0,
-            '622bc2c6bfe57c87493fafec50fad5cc1227e10b': -2.0,
-            '369552f3f1e2a49ef557159d1833e36e6ab8fdda': -2.0,
-            '061fceb60603ae4de4abd72e3edec768c57b6619': 1.0,
-            '9e3c887146748834ad617011b1d9fef2ec955ade': -2.0,
-            '3b08ee7157af42f3f92d5ad7524dc33b425181ae': 1.0,
-            '3f30654fdc0c88ce90e10134720d773196aaf53b': 1.0
-        },
-        'cp1': {
-            '3f5157e975c337a1a5df85c5b63df1e6dc05600b': 1.0,
-            '9e3c887146748834ad617011b1d9fef2ec955ade': 1.0,
-            '622bc2c6bfe57c87493fafec50fad5cc1227e10b': 1.0,
-            '369552f3f1e2a49ef557159d1833e36e6ab8fdda': 1.0
-        },
-        'default1': {
-            '2d3cf1d504374fa9050a9a28c3ab4a72df0534e7': 4.0
-        },
-        'default': {
-            'd5382fb286bdcc52fbb43c3cd355b5beba11436c': 1.0
-        }
+        'name': 'Ne Tetramer',
+        'attributes': {}
     }
 
     return db
@@ -264,7 +269,7 @@ def test_nbody_rxn(nbody_db):
 
     # Check the N-body
     ne_stoich = nbody_db.get_rxn("Ne Tetramer")
-    _compare_rxn_stoichs({"stoichiometry": nbody_db.ne_stoich}, ne_stoich)
+    _compare_rxn_stoichs(nbody_db.ne_stoich, ne_stoich)
 
 
 # Test dataframe
@@ -312,6 +317,7 @@ def test_dataframe_stats(hbc_from_df):
             "ME", db["B3LYP/aug-cc-pVDZ"], bench=np.asarray(db["B3LYP/def2-QZVP"])),
         atol=1.e-5)
 
+
 def test_dataframe_saving_loading(hbc_from_df):
 
     # Remap
@@ -319,8 +325,6 @@ def test_dataframe_saving_loading(hbc_from_df):
 
     mongo = mdb.db_helper.MongoDB("127.0.0.1", 27017, "HBC6_tmp")
     db.save(mongo, name_override=True)
-
-
 
 
 # Seg faults on travis
