@@ -39,7 +39,6 @@ def _compare_stoichs(stoich, stoich_other):
 
     return True
 
-
 def _compare_rxn_stoichs(ref, new):
     stoich = ref["stoichiometry"]
     stoich_other = new["stoichiometry"]
@@ -69,6 +68,14 @@ def water_db():
     # Add single stoich rxn via list
     db.add_rxn(
         "Water Dimer, nocp", [(dimer, 1.0), (frag_0, -1.0), (frag_1, -1.0)],
+        attributes={"R": "Minima"},
+        return_values={"Benchmark": -20.0,
+                       "DFT": -10.0})
+
+    # Add single stoich from strings, not a valid set
+    db.add_rxn(
+        "Water Dimer, dimer - str (invalid)",
+        [(_water_dimer_minima, 1.0), (_water_dimer_minima.splitlines()[-1], 0.0)],
         attributes={"R": "Minima"},
         return_values={"Benchmark": -20.0,
                        "DFT": -10.0})
@@ -118,6 +125,11 @@ def nbody_db():
     db.add_ie_rxn("Water Dimer", _water_dimer_minima)
     db.add_ie_rxn("Ne Tetramer", _neon_trimer)
 
+    # Nothing to fragment
+    # with pytest.raises(AttributeError):
+    #     db.add_ie_rxn("Water MonomerA", frag_0)
+
+    # Ne Tetramer benchmark
     db.ne_stoich = {
         'default2': {
             '36f2143d90ae580e36557a7fc5143291c107eb97': 3.0,
@@ -231,7 +243,7 @@ def hbc_from_df():
 def test_rxn_add(water_db):
 
     assert water_db.data["name"] == "Water Data"
-    assert len(water_db.get_index()) == 4
+    assert len(water_db.get_index()) == 5
 
     nocp_stoich_class = water_db.get_rxn("Water Dimer, nocp")["stoichiometry"]["default"]
     nocp_stoich_hash = water_db.get_rxn("Water Dimer, nocp - hash")["stoichiometry"]["default"]
@@ -246,12 +258,13 @@ def test_rxn_add(water_db):
 def test_nbody_rxn(nbody_db):
 
     # Check the Water Dimer
-    water_stoich_bench = nbody_db.get_rxn("Water Dimer, bench")["stoichiometry"]
-    water_stoich = nbody_db.get_rxn("Water Dimer")["stoichiometry"]
-    _compare_stoichs(water_stoich, water_stoich_bench)
+    water_stoich_bench = nbody_db.get_rxn("Water Dimer, bench")
+    water_stoich = nbody_db.get_rxn("Water Dimer")
+    _compare_rxn_stoichs(water_stoich, water_stoich_bench)
 
     # Check the N-body
-    ne_stoich = nbody_db.get_rxn("Ne Tetramer")["stoichiometry"]
+    ne_stoich = nbody_db.get_rxn("Ne Tetramer")
+    _compare_rxn_stoichs({"stoichiometry": nbody_db.ne_stoich}, ne_stoich)
 
 
 # Test dataframe
@@ -269,21 +282,34 @@ def test_dataframe_stats(hbc_from_df):
     # Remap
     db = hbc_from_df
 
-    # Check the stats
+    # Single value stats
     assert np.allclose(0.7462906, db.statistics("ME", "B3LYP/aug-cc-pVDZ"), atol=1.e-5)
     assert np.allclose(0.7467296, db.statistics("MUE", "B3LYP/aug-cc-pVDZ"), atol=1.e-5)
     assert np.allclose(6.8810951, db.statistics("MURE", "B3LYP/aug-cc-pVDZ"), atol=1.e-5)
+
+    # Series return
     assert np.allclose(
         [6.8810951, 8.878373],
         db.statistics("MURE", ["B3LYP/aug-cc-pVDZ", "B3LYP/def2-QZVP"]),
         atol=1.e-5)
     assert np.allclose(
+        [6.8810951, 8.878373],
+        db.statistics("MURE", db[["B3LYP/aug-cc-pVDZ", "B3LYP/def2-QZVP"]]),
+        atol=1.e-5)
+    assert np.allclose(
         -0.263942, db.statistics(
             "ME", "B3LYP/aug-cc-pVDZ", bench="B3LYP/def2-QZVP"), atol=1.e-5)
+
+    # Different benchmark
     assert np.allclose(
         -0.263942,
         db.statistics(
-            "ME", db["B3LYP/aug-cc-pVDZ"], bench="B3LYP/def2-QZVP"),
+            "ME", db["B3LYP/aug-cc-pVDZ"], bench=db["B3LYP/def2-QZVP"]),
+        atol=1.e-5)
+    assert np.allclose(
+        -0.263942,
+        db.statistics(
+            "ME", db["B3LYP/aug-cc-pVDZ"], bench=np.asarray(db["B3LYP/def2-QZVP"])),
         atol=1.e-5)
 
 # Seg faults on travis
