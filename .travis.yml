@@ -6,6 +6,11 @@ language: python
 # Run jobs on container-based infrastructure, can be overridden per job
 sudo: false
 
+cache:
+  directories:
+    - $HOME/virtualenv
+    - $HOME/miniconda
+
 services:
     - mongodb
 
