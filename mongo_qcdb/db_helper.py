@@ -7,10 +7,11 @@ import numpy as np
 
 from . import fields
 
-class db_helper:
+class MongoDB(object):
 
     # Constructor
     def __init__(self, url, port, db):
+        self.db_name = db
         self.url = url
         self.port = port
         self.client = pymongo.MongoClient(url, port)

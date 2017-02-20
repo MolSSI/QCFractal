@@ -1,13 +1,13 @@
-from mongo_qcdb import db_helper
 from collections import OrderedDict
 import glob
 import sys
 import json
 import os
 
-db_helper = db_helper.db_helper
+import mongo_qcdb as mdb
+
 #mongo = db_helper("192.168.2.139", 27017, "local")
-mongo = db_helper("127.0.0.1", 27017, "local")
+mongo = mdb.db_helper.MongoDB("127.0.0.1", 27017, "local")
 print(mongo.setup)
 
 collections = ["molecules", "databases", "pages"]
@@ -25,7 +25,8 @@ for col in collections:
         if (col == "molecules"):
                 inserted = mongo.add_molecule(data)
         if (col == "databases"):
+                print(data)
                 inserted = mongo.add_database(data)
         if (col == "pages"):
                 inserted = mongo.add_page(data)
-        print("[" + col + "] Added " + data[descriptor[col]] + " to " + col + ". Success=" + str(inserted) + ".")
+#        print("[" + col + "] Added " + data[descriptor[col]] + " to " + col + ". Success=" + str(inserted) + ".")

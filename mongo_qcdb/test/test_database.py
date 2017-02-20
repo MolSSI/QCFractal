@@ -192,13 +192,13 @@ def nbody_db():
 
 
 # Build HBC from dataframe
-@pytest.fixture
+@pytest.fixture(scope="module")
 def hbc_from_df():
 
     fn = os.path.abspath(os.path.dirname(__file__)) + "/../../databases/DB_HBC6/HBC6.pd_pkl"
     df = pd.read_pickle(fn)
 
-    db = mdb.Database("HBC 6", db_type="ie")
+    db = mdb.Database("HBC_6", db_type="ie")
 
     for idx, row in df.iterrows():
 
@@ -311,6 +311,17 @@ def test_dataframe_stats(hbc_from_df):
         db.statistics(
             "ME", db["B3LYP/aug-cc-pVDZ"], bench=np.asarray(db["B3LYP/def2-QZVP"])),
         atol=1.e-5)
+
+def test_dataframe_saving_loading(hbc_from_df):
+
+    # Remap
+    db = hbc_from_df
+
+    mongo = mdb.db_helper.MongoDB("127.0.0.1", 27017, "HBC6_tmp")
+    db.save(mongo, name_override=True)
+
+
+
 
 # Seg faults on travis
 # def test_dataframe_visualization(hbc_from_df):

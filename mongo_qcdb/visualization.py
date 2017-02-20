@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from matplotlib.path import Path
 import matplotlib.patches as patches
 
-def Ternary2D(db, cvals=None):
+def Ternary2D(db, cvals=None, show=False):
     # initialize plot
     fig, ax = plt.subplots(figsize=(6,3.6))
     plt.xlim([-0.75, 1.25])
@@ -63,7 +63,9 @@ def Ternary2D(db, cvals=None):
         cvals = 0.5 + (xvals - 0.5)/(1 - Ftop)
     sc = ax.scatter(xvals, yvals, c=cvals, s=15, marker="o", \
         cmap=mpl.cm.jet, edgecolor='none', vmin=0, vmax=1, zorder=10)
-    # plt.show()
+
+    if show:
+        plt.show()
 
     return fig, ax
 

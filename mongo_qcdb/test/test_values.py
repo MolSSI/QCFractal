@@ -1,9 +1,9 @@
 import pytest
-from mongo_qcdb.db_helper import db_helper
 import numpy as np
+import mongo_qcdb as mdb
 
 
-mongo = db_helper("127.0.0.1", 27017, "local")
+mongo = mdb.db_helper.MongoDB("127.0.0.1", 27017, "local")
 
 #print(mongo.get_value("ONE-ELECTRON ENERGY", "HBC6", "FaOOFaOO_0.9444444444444444", "cp", "B3LYP/aug-cc-pVDZ",do_stoich=False, debug_level=1))
 #

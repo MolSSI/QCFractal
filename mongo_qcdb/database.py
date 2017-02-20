@@ -11,6 +11,7 @@ import pandas as pd
 from . import molecule
 from . import statistics
 from . import visualization
+from . import db_helper
 
 
 def _nCr(n, r):
@@ -28,7 +29,7 @@ class Database(object):
     def __init__(self, name, mongod=None, db_type="rxn"):
 
         self.data = {}
-        self.data["reactions"] = {}
+        self.data["reactions"] = []
         self.db_type = db_type
 
         if mongod is not None:
@@ -38,6 +39,7 @@ class Database(object):
             self.df = pd.DataFrame()
             self.data["name"] = name
             self.data["provenence"] = {}
+            self.mongod = None
 
         # If we making a new database we may need new hashes and json objects
         self.new_molecule_hashes = []
@@ -59,7 +61,37 @@ class Database(object):
         """
         Returns the JSON object of a specific reaction.
         """
-        return self.data["reactions"][name]
+
+        found = []
+        for num, x in enumerate(self.data["reactions"]):
+            if x["name"] == name:
+                found.append(num)
+
+        if len(found) == 0:
+            raise KeyError("Database:get_rxn: Reaction name '%s' not found." % name)
+
+        if len(found) > 1:
+            raise KeyError("Database:get_rxn: Multiple reactions of name '%s' found. Database failure." % name)
+
+        return self.data["reactions"][found[0]]
+
+    # Setters
+    def save(self, mongo_db=None, name_override=False):
+        if self.data["name"] == "":
+            raise AttributeError("Database:save: Database must have a name!")
+
+        if mongo_db is None:
+            if self.mongod is None:
+                raise AttributeError("Database:save: Database does not own a MongoDB instance and one was not passed in.")
+            mongo_db = self.mongod
+        else:
+            if (not name_override) and (mongo_db.db_name != self.data["name"]):
+                raise AttributeError(
+                    "Database:save: Passed in client and Database have different names. You can override this error by setting name_override."
+                )
+
+        # Add the database
+        mongo_db.add_database(self.data)
 
     # Statistical quantities
     def statistics(self, stype, value, bench="Benchmark"):
@@ -212,7 +244,7 @@ class Database(object):
         for k, v in other_fields.items():
             rxn[k] = v
 
-        self.data["reactions"][name] = rxn
+        self.data["reactions"].append(rxn)
 
         if "default" in list(return_values):
             series = pd.Series(return_values["default"], name=rxn["name"])
