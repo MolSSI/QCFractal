@@ -15,9 +15,9 @@ hash_fields["page"] = ("modelchem", "molecule_hash")
 ### Valid Fields
 valid_fields = {}
 valid_fields["molecule"] = copy.deepcopy(hash_fields["molecule"])
-valid_fields["moleucle"] = valid_fields["molecule"] + ("provenance", "comment")
+valid_fields["molecule"] = valid_fields["molecule"] + ("provenance", "comment")
 
 valid_fields["database"] = copy.deepcopy(hash_fields["database"])
-valid_fields["database"] = valid_fields["database"] + ("rxn_type", )
+valid_fields["database"] = valid_fields["database"] + ("rxn_type", "provenance")
 
-valid_fields["page"] = copy.deepcopy(hash_fields["page"])
+valid_fields["page"] = copy.deepcopy(hash_fields["page"]) + ("provenance", )

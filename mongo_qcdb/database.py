@@ -91,6 +91,8 @@ class Database(object):
 
         # Add the database
         mongo_db.add_database(self.data)
+        
+        # Loop over new molecules
 
     # Statistical quantities
     def statistics(self, stype, value, bench="Benchmark"):
