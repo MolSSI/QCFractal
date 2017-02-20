@@ -23,9 +23,9 @@ Ne 0.000000 0.000000 0.000000
 --
 Ne 3.000000 0.000000 0.000000
 --
-Ne 0.000000 3.000000 0.000000
+Ne 0.000000 4.000000 0.000000
 --
-Ne 0.000000 0.000000 3.000000
+Ne 0.000000 0.000000 5.000000
 """
 
 
@@ -132,67 +132,74 @@ def nbody_db():
 
     # Ne Tetramer benchmark
     db.ne_stoich = {
+        'attributes': {},
         'stoichiometry': {
-            'cp3': {
-                'd189009ff65accb304fa062df7df876d208f0913': -1.0,
-                '475a207e912aaf6c2575e8a9c7181eb7efa17396': 1.0,
-                '4ce966e9eebce2badb2f224350a8856712faf1a7': 1.0,
-                'f275f61a4bc7f9937d93d70f15d79f308001db6a': -1.0,
-                'c441b65c480520f0cabc40fd02442f4c6c13ff65': -1.0,
-                '9d0727c508b512695916d191d2e70ff287500cd8': -1.0,
-                '621be25335fb2d707883c5e941279e5d52ccbfc0': 1.0,
-                '52bffbb5977ca91a7ed804e0113a8089327d125b': 1.0,
-                '7e4b34c6a7d5d336c74bf6396cbb488e2cafb1de': -1.0,
-                '3aa65cf961182a1d20b12edb5b44f9b63b5d5881': 1.0,
-                'cae082641e64bff597c76887e4283ce71f598b1c': 1.0,
-                '232edb147cbcc67b762f45af402ef28dba21024a': 1.0,
-                'e083d732a8049ac739d8cc0f8fa19964610a6819': -1.0,
-                'a6a4c85bc3b6f466442537eda3a9b895dc1dd4bd': 1.0
-            },
-            'default': {
-                'a61b76b5591909861d3f631dc406d0bd1f56ae54': 1.0
-            },
             'default1': {
                 '2d3cf1d504374fa9050a9a28c3ab4a72df0534e7': 4.0
             },
-            'default2': {
-                '2bf637d32f5d96630fd979fccadba6750537344c': 3.0,
-                '01a496b0dad9b88c5a99430823877dd964e928d4': 3.0,
-                '2d3cf1d504374fa9050a9a28c3ab4a72df0534e7': -8.0
-            },
-            'cp1': {
-                '52bffbb5977ca91a7ed804e0113a8089327d125b': 1.0,
-                '475a207e912aaf6c2575e8a9c7181eb7efa17396': 1.0,
-                'a6a4c85bc3b6f466442537eda3a9b895dc1dd4bd': 1.0,
-                'cae082641e64bff597c76887e4283ce71f598b1c': 1.0
-            },
-            'cp': {
-                'a61b76b5591909861d3f631dc406d0bd1f56ae54': 1.0
+            'cp3': {
+                'c809aab151bd9cbaa2750e764083fdbe6c1aabc9': -1.0,
+                '3a0fa0c60401faa0693985fb242c91499edd277d': -1.0,
+                'f291521beb55759ce0b2bb26591768a2ebfd5b37': 1.0,
+                'e6e7529e74bfd80c9a75295ea89e40ee9b14158e': -1.0,
+                'b45b5e2105344cb05124d220ab9c8dfa8c5e96be': 1.0,
+                '6672d0ba44c4c0667991d06a5f6c85a3aabf37d0': 1.0,
+                'b37cc789404c7da6055eee777750d9e03bd5e5c0': 1.0,
+                '961859dc5db0bebf52da368a19f8918afc3162bf': -1.0,
+                'a3e23dfff6751d4434dc358d50cfd23b78408dfc': 1.0,
+                '4397c59cf960939df79b46661ab3f7c9598ba47b': 1.0,
+                '2b1cd4c9b1081f904caabcca7f5d96b609adb3ae': 1.0,
+                'b06cc88f3eec0f8c96bcd99ac9b02af5d89c8cd6': -1.0,
+                '8d7a0111e3fd61565cafc5127605d903ecc97171': -1.0,
+                'a09b9a4f3184ef569bcec6cd7fa8a424ee2dc172': 1.0
             },
             'cp2': {
-                '52bffbb5977ca91a7ed804e0113a8089327d125b': -2.0,
-                'd189009ff65accb304fa062df7df876d208f0913': 1.0,
-                '475a207e912aaf6c2575e8a9c7181eb7efa17396': -2.0,
-                'cae082641e64bff597c76887e4283ce71f598b1c': -2.0,
-                '9d0727c508b512695916d191d2e70ff287500cd8': 1.0,
-                'a6a4c85bc3b6f466442537eda3a9b895dc1dd4bd': -2.0,
-                'c441b65c480520f0cabc40fd02442f4c6c13ff65': 1.0,
-                'e083d732a8049ac739d8cc0f8fa19964610a6819': 1.0,
-                'f275f61a4bc7f9937d93d70f15d79f308001db6a': 1.0,
-                '7e4b34c6a7d5d336c74bf6396cbb488e2cafb1de': 1.0
+                'c809aab151bd9cbaa2750e764083fdbe6c1aabc9': 1.0,
+                '8d7a0111e3fd61565cafc5127605d903ecc97171': 1.0,
+                '961859dc5db0bebf52da368a19f8918afc3162bf': 1.0,
+                'a3e23dfff6751d4434dc358d50cfd23b78408dfc': -2.0,
+                'f291521beb55759ce0b2bb26591768a2ebfd5b37': -2.0,
+                'e6e7529e74bfd80c9a75295ea89e40ee9b14158e': 1.0,
+                '3a0fa0c60401faa0693985fb242c91499edd277d': 1.0,
+                'b06cc88f3eec0f8c96bcd99ac9b02af5d89c8cd6': 1.0,
+                '2b1cd4c9b1081f904caabcca7f5d96b609adb3ae': -2.0,
+                'a09b9a4f3184ef569bcec6cd7fa8a424ee2dc172': -2.0
+            },
+            'default': {
+                '358e92f6323f88ed7385d2184c5564c012779bd7': 1.0
+            },
+            'default2': {
+                '910c2e5fe9418644c3f50fe9141db2f06b3bafe5': 1.0,
+                '0f617c87b2f4ff3c7b1076c6ec88ab59af0df360': 1.0,
+                '01a496b0dad9b88c5a99430823877dd964e928d4': 1.0,
+                '2d3cf1d504374fa9050a9a28c3ab4a72df0534e7': -8.0,
+                '72ef2f6d853e67e3fab3682544b810d5ba8d69ef': 1.0,
+                '3a767f68e03c3e58d8062d7105be2a358db0a9ea': 2.0
+            },
+            'cp1': {
+                '2b1cd4c9b1081f904caabcca7f5d96b609adb3ae': 1.0,
+                'a3e23dfff6751d4434dc358d50cfd23b78408dfc': 1.0,
+                'f291521beb55759ce0b2bb26591768a2ebfd5b37': 1.0,
+                'a09b9a4f3184ef569bcec6cd7fa8a424ee2dc172': 1.0
+            },
+            'cp': {
+                '358e92f6323f88ed7385d2184c5564c012779bd7': 1.0
             },
             'default3': {
-                '39b23b91449835038993f75242178f992e0ac0e3': 1.0,
-                '2bf637d32f5d96630fd979fccadba6750537344c': -3.0,
-                '345b26a6193fc8d19659d5290391f87295c11416': 3.0,
-                '01a496b0dad9b88c5a99430823877dd964e928d4': -3.0,
-                '2d3cf1d504374fa9050a9a28c3ab4a72df0534e7': 4.0
+                'c0be8c7edc89b032e1c77781d96df7dea61b91d7': 1.0,
+                '910c2e5fe9418644c3f50fe9141db2f06b3bafe5': -1.0,
+                '0f617c87b2f4ff3c7b1076c6ec88ab59af0df360': -1.0,
+                '01a496b0dad9b88c5a99430823877dd964e928d4': -1.0,
+                '2d3cf1d504374fa9050a9a28c3ab4a72df0534e7': 4.0,
+                '72ef2f6d853e67e3fab3682544b810d5ba8d69ef': -1.0,
+                '51fbba67ae64dd0c99baeaeca8d3209986a99cd6': 1.0,
+                '479812dafce9f952b897926dac26bd9a14d1a14d': 1.0,
+                '3a767f68e03c3e58d8062d7105be2a358db0a9ea': -2.0,
+                'c6edf571991f76bea288b4e155cfb0d07ed46f3a': 1.0
             }
         },
-        'name': 'Ne Tetramer',
-        'attributes': {}
+        'name': 'Ne Tetramer'
     }
-
     return db
 
 
@@ -270,7 +277,6 @@ def test_nbody_rxn(nbody_db):
     # Check the N-body
     ne_stoich = nbody_db.get_rxn("Ne Tetramer")
     mh = list(ne_stoich["stoichiometry"]["default"])[0]
-    print(nbody_db.new_molecule_jsons[mh])
     _compare_rxn_stoichs(nbody_db.ne_stoich, ne_stoich)
 
 
