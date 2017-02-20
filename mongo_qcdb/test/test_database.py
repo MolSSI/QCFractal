@@ -266,6 +266,9 @@ def test_dataframe_return_values(water_db):
 
 def test_dataframe_stats(hbc_from_df):
 
+    # Remap
+    db = hbc_from_df
+
     # Check the stats
     assert np.allclose(0.7462906, db.statistics("ME", "B3LYP/aug-cc-pVDZ"), atol=1.e-5)
     assert np.allclose(0.7467296, db.statistics("MUE", "B3LYP/aug-cc-pVDZ"), atol=1.e-5)
@@ -282,3 +285,11 @@ def test_dataframe_stats(hbc_from_df):
         db.statistics(
             "ME", db["B3LYP/aug-cc-pVDZ"], bench="B3LYP/def2-QZVP"),
         atol=1.e-5)
+
+def test_dataframe_visualization(hbc_from_df):
+
+    # Remap
+    db = hbc_from_df
+
+    # No return value to test
+    hbc_from_df.ternary()

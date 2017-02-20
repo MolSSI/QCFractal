@@ -10,6 +10,7 @@ import pandas as pd
 
 from . import molecule
 from . import statistics
+from . import visualization
 
 
 def _nCr(n, r):
@@ -65,6 +66,8 @@ class Database(object):
         return statistics.wrap_statistics(stype, self.df, value, bench)
 
     # Visualization
+    def ternary(self, cvals=None):
+        return visualization.Ternary2D(self.df, cvals=cvals)
 
     # Adders
     def parse_stoichiometry(self, stoichiometry):
@@ -214,7 +217,7 @@ class Database(object):
         if "default" in list(return_values):
             series = pd.Series(return_values["default"], name=rxn["name"])
         else:
-            series = pd.Series({}, name=rxn["name"])
+            series = pd.Series(return_values, name=rxn["name"])
         self.df = self.df.append(series)
 
         return rxn

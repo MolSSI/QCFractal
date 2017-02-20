@@ -4,6 +4,12 @@
 import numpy as np
 import pandas as pd
 
+# Matplotlib
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from matplotlib.path import Path
+import matplotlib.patches as patches
+
 def Ternary2D(db, cvals=None):
     # initialize plot
     fig, ax = plt.subplots(figsize=(6,3.6))
@@ -54,10 +60,10 @@ def Ternary2D(db, cvals=None):
     yvals[mask] = 0.866 * (Ftop[mask] + Fright[mask])
 
     if cvals is None:
-        cvals = 0.5 + (xvals - 0.5)/(1 - Ftop) 
+        cvals = 0.5 + (xvals - 0.5)/(1 - Ftop)
     sc = ax.scatter(xvals, yvals, c=cvals, s=15, marker="o", \
         cmap=mpl.cm.jet, edgecolor='none', vmin=0, vmax=1, zorder=10)
-    plt.show()
+    # plt.show()
 
     return fig, ax
 
