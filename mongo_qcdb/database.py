@@ -32,7 +32,7 @@ class Database(object):
             raise KeyError("Database: Cannot yet intialize a database object from a Mongo server.")
         else:
 
-            self.df = pd.DataFrame()
+            self.df = pd.DataFrame(index=["name"])
             self.data["name"] = name
             self.data["provenence"] = {}
 
@@ -197,6 +197,9 @@ class Database(object):
             rxn[k] = v
 
         self.data["reactions"][name] = rxn
+
+        series = pd.Series(return_values, name=rxn["name"])
+        self.df = self.df.append(series)
 
         return rxn
 

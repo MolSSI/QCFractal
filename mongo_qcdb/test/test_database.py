@@ -15,7 +15,6 @@ H   1.680398  -0.373741  -0.758561
 H   1.680398  -0.373741   0.758561
 """
 
-
 _neon_trimer = """
 Ne 0.000000 0.000000 0.000000
 --
@@ -63,10 +62,10 @@ def water_db():
     frag_1_0 = dimer.get_fragment(1, 0)
 
     # Add single stoich rxn via list
-    db.add_rxn("Water Dimer, nocp", [(dimer, 1.0), (frag_0, -1.0), (frag_1, -1.0)], attributes={"R": "Minima"})
+    db.add_rxn("Water Dimer, nocp", [(dimer, 1.0), (frag_0, -1.0), (frag_1, -1.0)], attributes={"R": "Minima"}, return_values={"Benchmark": -20.0, "DFT": -10.0})
 
     # Add single stoich rxn via hashes
-    db.add_rxn("Water Dimer, nocp - hash", [(dimer.get_hash(), 1.0), (frag_0.get_hash(), -1.0), (frag_1.get_hash(), -1.0)], attributes={"R": "Minima"})
+    db.add_rxn("Water Dimer, nocp - hash", [(dimer.get_hash(), 1.0), (frag_0.get_hash(), -1.0), (frag_1.get_hash(), -1.0)], attributes={"R": "Minima"}, return_values={"Benchmark": -5.0})
 
     # Add multi stoich reaction via dict
     with pytest.raises(KeyError):
@@ -183,7 +182,6 @@ def test_rxn_add(water_db):
     _compare_stoichs(nocp_stoich_class, nocp_stoich_hash)
     _compare_stoichs(nocp_stoich_class, nocp_stoich_dict)
 
-
 # Test IE add
 def test_nbody_rxn(nbody_db):
 
@@ -195,6 +193,15 @@ def test_nbody_rxn(nbody_db):
     # Check the N-body
     ne_stoich = nbody_db.get_rxn("Ne Tetramer")["stoichiometry"]
 
+# Test dataframe
+
+def test_dataframe_return_values(water_db):
+
+    assert water_db.df.ix["Water Dimer, nocp", "Benchmark"] == -20.0
+    assert water_db.df.ix["Water Dimer, nocp", "DFT"] == -10.0
+    assert water_db.df.ix["Water Dimer, nocp - hash", "Benchmark"] == -5.0
+
+    assert np.isnan(water_db.df.ix["Water dimer", "Benchmark"])
 
 
 

@@ -65,6 +65,7 @@ def _compare_molecule(bench, other):
     assert np.allclose(bench.geometry, other.geometry)
     return True
 
+
 def test_molecule_constructors():
     water_psi = molecule.Molecule(_water_dimer_minima, name="water dimer")
     water_np = molecule.Molecule(_water_dimer_minima_np, name="water dimer", dtype="numpy", frags=[3])
@@ -125,6 +126,7 @@ def test_water_minima_fragment():
 
     assert test_util.compare_lists(mol.symbols[3:] + mol.symbols[:3], frag_1_0.symbols)
     assert np.allclose(mol.masses[3:] + mol.masses[:3], frag_1_0.masses)
+
 
 def test_water_orient():
     # These are identical molecules, should find the correct results

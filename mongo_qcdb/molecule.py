@@ -12,6 +12,7 @@ import json
 from . import constants
 from . import fields
 
+
 class Molecule(object):
     """
     This is a Mongo QCDB molecule class.
@@ -35,6 +36,7 @@ class Molecule(object):
         self.fragment_multiplicities = []
         self.provenance = {}
 
+        # Figure out how and if we will parse the Molecule adata
         dtype = kwargs.pop("dtype", "psi4").lower()
         if mol_str is not None:
             if dtype == "psi4":
@@ -69,15 +71,15 @@ class Molecule(object):
         self.masses = [constants.z2masses[x] for x in arr[:, 0]]
         self.real = [True for x in arr[:, 0]]
 
-        frags.append(arr.shape[0])
+        if len(frags) and (frags[-1] != arr.shape[0]):
+            frags.append(arr.shape[0])
+
         start = 0
         for fsplit in frags:
             self.fragments.append(list(range(start, fsplit)))
             self.fragment_charges.append(0)
             self.fragment_multiplicities.append(1)
             start = fsplit
-
-
 
     def _molecule_from_string_psi4(self, text):
         """Given a string *text* of psi4-style geometry specification
@@ -182,8 +184,8 @@ class Molecule(object):
                 atomSym = atomm.group('symbol')
 
                 # We don't know whether the @C or Gh(C) notation matched. Do a quick check.
-                ghostAtom = False if (atomm.group('gh1') is None and
-                                      atomm.group('gh2') is None) else True
+                ghostAtom = False if (atomm.group('gh1') is None
+                                      and atomm.group('gh2') is None) else True
 
                 # Check that the atom symbol is valid
                 if not atomSym in constants.el2z:
@@ -238,7 +240,6 @@ class Molecule(object):
         self.fragments.append(list(range(tempfrag[0], tempfrag[-1] + 1)))
         self.real.extend([True for x in range(tempfrag[0], tempfrag[-1] + 1)])
 
-
     def pretty_print(self):
         """Print the molecule in Angstroms. Same as :py:func:`print_out` only always in Angstroms.
         (method name in libmints is print_in_angstrom)
@@ -261,10 +262,8 @@ class Molecule(object):
 
         return text
 
-
     def __repr__(self):
         return self.pretty_print()
-
 
     def _inertial_tensor(self, geom, weight):
         """
@@ -274,9 +273,9 @@ class Molecule(object):
         tensor = np.zeros((3, 3))
 
         # Diagonal
-        tensor[0][0] = np.sum(weight * (geom[:, 1] ** 2.0 + geom[:, 2] ** 2.0))
-        tensor[1][1] = np.sum(weight * (geom[:, 0] ** 2.0 + geom[:, 2] ** 2.0))
-        tensor[2][2] = np.sum(weight * (geom[:, 0] ** 2.0 + geom[:, 1] ** 2.0))
+        tensor[0][0] = np.sum(weight * (geom[:, 1]**2.0 + geom[:, 2]**2.0))
+        tensor[1][1] = np.sum(weight * (geom[:, 0]**2.0 + geom[:, 2]**2.0))
+        tensor[2][2] = np.sum(weight * (geom[:, 0]**2.0 + geom[:, 1]**2.0))
 
         # I(alpha, beta)
         # Off diagonal
@@ -289,7 +288,6 @@ class Molecule(object):
         tensor[2][0] = tensor[0][2]
         tensor[2][1] = tensor[1][2]
         return tensor
-
 
     def orient_molecule(self):
         """
@@ -330,7 +328,6 @@ class Molecule(object):
             if sum(phase_check) == 3:
                 break
 
-
     def get_fragment(self, real, ghost=None, orient=True):
         """
         A list of real and ghost fragments:
@@ -348,9 +345,9 @@ class Molecule(object):
         ret_name = self.name
         ret = Molecule(None, name=ret_name)
 
-
         if len(set(real) & set(ghost)):
-            raise TypeError("Molecule:get_fragment: real and ghost sets are overlaping! (%s, %s).", (str(real), str(ghost)))
+            raise TypeError("Molecule:get_fragment: real and ghost sets are overlaping! (%s, %s).",
+                            (str(real), str(ghost)))
 
         geom_blocks = []
 
@@ -391,7 +388,6 @@ class Molecule(object):
             ret.fragment_charges.append(self.fragment_charges[frag])
             ret.fragment_multiplicities.append(self.fragment_multiplicities[frag])
 
-
         ret.geometry = np.vstack(geom_blocks)
 
         ret.orient_molecule()
@@ -399,11 +395,12 @@ class Molecule(object):
         return ret
 
     def to_string(self, dtype="psi4"):
+        """Returns a string that can be used by a variety of programs.
+        """
         if dtype == "psi4":
             return self._to_psi4_string()
         else:
             raise KeyError("Molecule:to_string: dtype of '%s' not recognized." % dtype)
-
 
     def _to_psi4_string(self):
         """Regenerates a input file molecule specification string from the
@@ -415,9 +412,8 @@ class Molecule(object):
 
         # append atoms and coordentries and fragment separators with charge and multiplicity
         for num, frag in enumerate(self.fragments):
-            text += "%s    \n    %d %d\n" % (
-                "    --",
-                self.fragment_charges[num], self.fragment_multiplicities[num])
+            text += "%s    \n    %d %d\n" % ("    --", self.fragment_charges[num],
+                                             self.fragment_multiplicities[num])
 
             for at in frag:
                 if self.real[at]:
@@ -447,7 +443,6 @@ class Molecule(object):
 
         return ret
 
-
     def get_hash(self):
         """
         Returns the hash of the molecule.
@@ -462,5 +457,3 @@ class Molecule(object):
 
         m.update(concat.encode("utf-8"))
         return m.hexdigest()
-
-
