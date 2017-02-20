@@ -42,8 +42,7 @@ class Database(object):
             self.mongod = None
 
         # If we making a new database we may need new hashes and json objects
-        self.new_molecule_hashes = []
-        self.new_molecule_jsons = []
+        self.new_molecule_jsons = {}
 
         self.rxn_name_list = []
 
@@ -158,16 +157,14 @@ class Database(object):
 
                 molecule_hash = qcdb_mol.get_hash()
 
-                if molecule_hash not in self.new_molecule_hashes:
-                    self.new_molecule_hashes.append(molecule_hash)
-                    self.new_molecule_jsons.append(qcdb_mol.to_json())
+                if molecule_hash not in list(self.new_molecule_jsons):
+                    self.new_molecule_jsons[molecule_hash] = qcdb_mol.to_json()
 
             elif isinstance(mol, molecule.Molecule):
                 molecule_hash = mol.get_hash()
 
-                if molecule_hash not in self.new_molecule_hashes:
-                    self.new_molecule_hashes.append(molecule_hash)
-                    self.new_molecule_jsons.append(mol.to_json())
+                if molecule_hash not in list(self.new_molecule_jsons):
+                    self.new_molecule_jsons[molecule_hash] = mol.to_json()
 
             else:
                 raise TypeError(

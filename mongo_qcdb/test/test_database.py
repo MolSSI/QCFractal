@@ -269,6 +269,8 @@ def test_nbody_rxn(nbody_db):
 
     # Check the N-body
     ne_stoich = nbody_db.get_rxn("Ne Tetramer")
+    mh = list(ne_stoich["stoichiometry"]["default"])[0]
+    print(nbody_db.new_molecule_jsons[mh])
     _compare_rxn_stoichs(nbody_db.ne_stoich, ne_stoich)
 
 
