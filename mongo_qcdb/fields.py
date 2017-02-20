@@ -21,4 +21,3 @@ valid_fields["database"] = copy.deepcopy(hash_fields["database"])
 valid_fields["database"] = valid_fields["database"] + ("rxn_type", )
 
 valid_fields["page"] = copy.deepcopy(hash_fields["page"])
-print(hash_fields)

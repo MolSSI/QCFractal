@@ -65,7 +65,6 @@ class Molecule(object):
         if arr.shape[1] != 4:
             raise AttributeError("Molecule: Molecule should be shape (N, 4) not %d." % arr.shape[1])
 
-        print(arr[:, 0])
         self.geometry = arr[:, 1:].copy() / constants.physconst["bohr2angstroms"]
         self.symbols = [constants.z2el[x] for x in arr[:, 0]]
         self.masses = [constants.z2masses[x] for x in arr[:, 0]]

@@ -9,6 +9,7 @@ import copy
 import pandas as pd
 
 from . import molecule
+from . import statistics
 
 
 def _nCr(n, r):
@@ -23,16 +24,17 @@ class Database(object):
     This is a Mongo QCDB database class.
     """
 
-    def __init__(self, name, mongod=None):
+    def __init__(self, name, mongod=None, db_type="rxn"):
 
         self.data = {}
         self.data["reactions"] = {}
+        self.db_type = db_type
 
         if mongod is not None:
             raise KeyError("Database: Cannot yet intialize a database object from a Mongo server.")
         else:
 
-            self.df = pd.DataFrame(index=["name"])
+            self.df = pd.DataFrame()
             self.data["name"] = name
             self.data["provenence"] = {}
 
@@ -41,6 +43,10 @@ class Database(object):
         self.new_molecule_jsons = []
 
         self.rxn_name_list = []
+
+    # Getters
+    def __getitem__(self, args):
+        return self.df[args]
 
     def get_index(self):
         """
@@ -54,6 +60,13 @@ class Database(object):
         """
         return self.data["reactions"][name]
 
+    # Statistical quantities
+    def statistics(self, stype, value, bench="Benchmark"):
+        return statistics.wrap_statistics(stype, self.df, value, bench)
+
+    # Visualization
+
+    # Adders
     def parse_stoichiometry(self, stoichiometry):
         """
         Parses a stiochiometry list.
@@ -198,14 +211,21 @@ class Database(object):
 
         self.data["reactions"][name] = rxn
 
-        series = pd.Series(return_values, name=rxn["name"])
+        if "default" in list(return_values):
+            series = pd.Series(return_values["default"], name=rxn["name"])
+        else:
+            series = pd.Series({}, name=rxn["name"])
         self.df = self.df.append(series)
 
         return rxn
 
-    def add_ie_rxn(self, name, mol, return_values={}, attributes={}, other_fields={}):
+    def add_ie_rxn(self, name, mol, **kwargs):
 
-        stoichiometry = self.build_ie_fragments(mol)
+        return_values = kwargs.pop("return_values", {})
+        attributes = kwargs.pop("attributes", {})
+        other_fields = kwargs.pop("other_fields", {})
+
+        stoichiometry = self.build_ie_fragments(mol, **kwargs)
         return self.add_rxn(
             name,
             stoichiometry,
@@ -223,7 +243,7 @@ class Database(object):
         else:
             return copy.deepcopy(self.data)
 
-    def build_ie_fragments(self, mol, do_default=True, do_cp=True, do_vmfc=False, max_nbody=0):
+    def build_ie_fragments(self, mol, **kwargs):
         """
         Build the stoichiometry for an Interaction Energy.
 
@@ -248,8 +268,14 @@ class Database(object):
 
         """
 
-        if isinstance(mol, str):
-            mol = molecule.Molecule(mol)
+        do_default = kwargs.pop("do_default", True)
+        do_cp = kwargs.pop("do_cp", True)
+        do_vmfc = kwargs.pop("do_vmfc", True)
+        max_nbody = kwargs.pop("max_nbody", 0)
+
+        if not isinstance(mol, molecule.Molecule):
+
+            mol = molecule.Molecule(mol, **kwargs)
 
         ret = {}
 

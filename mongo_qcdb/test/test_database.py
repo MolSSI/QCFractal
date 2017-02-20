@@ -1,4 +1,7 @@
 import numpy as np
+import pandas as pd
+import os
+
 import mongo_qcdb as mdb
 from mongo_qcdb import test_util
 import pytest
@@ -25,6 +28,7 @@ Ne 0.000000 3.000000 0.000000
 Ne 0.000000 0.000000 3.000000
 """
 
+
 def _compare_stoichs(stoich, stoich_other):
     mols = list(stoich)
     mols_other = list(stoich_other)
@@ -35,8 +39,9 @@ def _compare_stoichs(stoich, stoich_other):
 
     return True
 
+
 def _compare_rxn_stoichs(ref, new):
-    stoich  = ref["stoichiometry"]
+    stoich = ref["stoichiometry"]
     stoich_other = new["stoichiometry"]
 
     keys = list(stoich)
@@ -62,17 +67,22 @@ def water_db():
     frag_1_0 = dimer.get_fragment(1, 0)
 
     # Add single stoich rxn via list
-    db.add_rxn("Water Dimer, nocp", [(dimer, 1.0), (frag_0, -1.0), (frag_1, -1.0)], attributes={"R": "Minima"}, return_values={"Benchmark": -20.0, "DFT": -10.0})
+    db.add_rxn(
+        "Water Dimer, nocp", [(dimer, 1.0), (frag_0, -1.0), (frag_1, -1.0)],
+        attributes={"R": "Minima"},
+        return_values={"Benchmark": -20.0,
+                       "DFT": -10.0})
 
     # Add single stoich rxn via hashes
-    db.add_rxn("Water Dimer, nocp - hash", [(dimer.get_hash(), 1.0), (frag_0.get_hash(), -1.0), (frag_1.get_hash(), -1.0)], attributes={"R": "Minima"}, return_values={"Benchmark": -5.0})
+    db.add_rxn(
+        "Water Dimer, nocp - hash",
+        [(dimer.get_hash(), 1.0), (frag_0.get_hash(), -1.0), (frag_1.get_hash(), -1.0)],
+        attributes={"R": "Minima"},
+        return_values={"Benchmark": -5.0})
 
     # Add multi stoich reaction via dict
     with pytest.raises(KeyError):
-        db.add_rxn(
-            "Null", {
-                "Null": [(dimer, 1.0)]
-            })
+        db.add_rxn("Null", {"Null": [(dimer, 1.0)]})
 
     # nocp and cp water dimer
     db.add_rxn(
@@ -86,6 +96,7 @@ def water_db():
 
     return db
 
+
 # Build a nbody database
 @pytest.fixture
 def nbody_db():
@@ -97,13 +108,12 @@ def nbody_db():
     frag_0_1 = dimer.get_fragment(0, 1)
     frag_1_0 = dimer.get_fragment(1, 0)
 
-    db.add_rxn(
-        "Water Dimer, bench", {
-            "cp1": [(frag_0_1, 1.0), (frag_1_0, 1.0)],
-            "default1": [(frag_0, 1.0), (frag_1, 1.0)],
-            "cp": [(dimer, 1.0)],
-            "default": [(dimer, 1.0)],
-        })
+    db.add_rxn("Water Dimer, bench", {
+        "cp1": [(frag_0_1, 1.0), (frag_1_0, 1.0)],
+        "default1": [(frag_0, 1.0), (frag_1, 1.0)],
+        "cp": [(dimer, 1.0)],
+        "default": [(dimer, 1.0)],
+    })
 
     db.add_ie_rxn("Water Dimer", _water_dimer_minima)
     db.add_ie_rxn("Ne Tetramer", _neon_trimer)
@@ -168,6 +178,55 @@ def nbody_db():
 
     return db
 
+
+# Build HBC from dataframe
+@pytest.fixture
+def hbc_from_df():
+
+    fn = os.path.abspath(os.path.dirname(__file__)) + "/../../databases/DB_HBC6/HBC6.pd_pkl"
+    df = pd.read_pickle(fn)
+
+    db = mdb.Database("HBC 6", db_type="ie")
+
+    for idx, row in df.iterrows():
+
+        rvals = {}
+        rvals["cp"] = {}
+        rvals["default"] = {}
+
+        datacols = [x for x in row.index if ("CP" in x) or ("noCP" in x)]
+        for col in datacols:
+            name = col.replace("-CP-", "/")
+            name = name.replace("-noCP-", "/")
+            name = name.replace("adz", "aug-cc-pVDZ")
+            name = name.replace("qzvp", "def2-QZVP")
+
+            if "-CP-" in col:
+                rvals["cp"][name] = row[col]
+            else:
+                rvals["default"][name] = row[col]
+
+        rvals["cp"]["Benchmark"] = row["Benchmark"]
+        rvals["default"]["Benchmark"] = row["Benchmark"]
+
+        for col in [
+                'SAPT DISP ENERGY', 'SAPT ELST ENERGY', 'SAPT EXCH ENERGY', 'SAPT IND ENERGY',
+                'SAPT TOTAL ENERGY'
+        ]:
+            rvals["default"][col] = row[col]
+
+        name = row["System"].strip() + " " + str(round(row["R"], 2))
+        db.add_ie_rxn(
+            name,
+            row["Geometry"],
+            dtype="numpy",
+            frags=[row["MonA"]],
+            attribute={"R": row["R"]},
+            return_values=rvals)
+
+    return db
+
+
 # Test conventional add
 def test_rxn_add(water_db):
 
@@ -182,6 +241,7 @@ def test_rxn_add(water_db):
     _compare_stoichs(nocp_stoich_class, nocp_stoich_hash)
     _compare_stoichs(nocp_stoich_class, nocp_stoich_dict)
 
+
 # Test IE add
 def test_nbody_rxn(nbody_db):
 
@@ -193,8 +253,8 @@ def test_nbody_rxn(nbody_db):
     # Check the N-body
     ne_stoich = nbody_db.get_rxn("Ne Tetramer")["stoichiometry"]
 
-# Test dataframe
 
+# Test dataframe
 def test_dataframe_return_values(water_db):
 
     assert water_db.df.ix["Water Dimer, nocp", "Benchmark"] == -20.0
@@ -204,6 +264,21 @@ def test_dataframe_return_values(water_db):
     assert np.isnan(water_db.df.ix["Water dimer", "Benchmark"])
 
 
+def test_dataframe_stats(hbc_from_df):
 
-
-
+    # Check the stats
+    assert np.allclose(0.7462906, db.statistics("ME", "B3LYP/aug-cc-pVDZ"), atol=1.e-5)
+    assert np.allclose(0.7467296, db.statistics("MUE", "B3LYP/aug-cc-pVDZ"), atol=1.e-5)
+    assert np.allclose(6.8810951, db.statistics("MURE", "B3LYP/aug-cc-pVDZ"), atol=1.e-5)
+    assert np.allclose(
+        [6.8810951, 8.878373],
+        db.statistics("MURE", ["B3LYP/aug-cc-pVDZ", "B3LYP/def2-QZVP"]),
+        atol=1.e-5)
+    assert np.allclose(
+        -0.263942, db.statistics(
+            "ME", "B3LYP/aug-cc-pVDZ", bench="B3LYP/def2-QZVP"), atol=1.e-5)
+    assert np.allclose(
+        -0.263942,
+        db.statistics(
+            "ME", db["B3LYP/aug-cc-pVDZ"], bench="B3LYP/def2-QZVP"),
+        atol=1.e-5)
