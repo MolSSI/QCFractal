@@ -33,6 +33,8 @@ class MongoSocket(object):
         except pymongo.errors.DuplicateKeyError:
             return False
 
+    def del_molecule(self, hash):
+        return (self.db["molecules"].delete_one(hash)).deleted_count == 1
 
     # Adds a database to the DB. Returns True on success.
     def add_database(self, data):
@@ -49,6 +51,8 @@ class MongoSocket(object):
         except pymongo.errors.DuplicateKeyError:
             return False
 
+    def del_database(self, hash):
+        return (self.db["databases"].delete_one(hash)).deleted_count == 1
 
     # Adds a page to the DB. Returns True on success.
     def add_page(self, data):
@@ -64,6 +68,9 @@ class MongoSocket(object):
             return True
         except pymongo.errors.DuplicateKeyError:
             return False
+
+    def del_page(self, hash):
+        return (self.db["pages"].delete_one(hash)).deleted_count == 1
 
 
     def get_value(self, field, db, rxn, stoich, method, do_stoich=True, debug_level=1):

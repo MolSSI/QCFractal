@@ -62,3 +62,6 @@ target/
 timer.dat
 *.out
 iter.dat
+
+# Sample
+mongo_qcdb/sample.py
