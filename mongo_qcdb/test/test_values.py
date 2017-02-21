@@ -33,13 +33,13 @@ def test_get_series_return_value():
 
 def test_get_dataframe_return_value():
     wpbe_val = mongo.get_dataframe("return_value", "HBC6", "cp", ["WPBE/qzvp", "B3LYP/aug-cc-pVDZ"], do_stoich=True, debug_level=1)
-    assert (np.isclose(wpbe_val["WPBE/qzvp"]["FaONFaON_1.075"], -13.0246, rtol=1.e-6, atol=1.e-6) and
-    np.isclose(wpbe_val["B3LYP/aug-cc-pVDZ"]["FaONFaON_1.075"], -0.020754, rtol=1.e-6, atol=1.e-6))
+    assert np.isclose(wpbe_val["WPBE/qzvp"]["FaONFaON_1.075"], -13.0246, rtol=1.e-6, atol=1.e-6)
+    assert np.isclose(wpbe_val["B3LYP/aug-cc-pVDZ"]["FaONFaON_1.075"], -0.020754, rtol=1.e-6, atol=1.e-6)
 
 def test_get_dataframe_variable():
     wpbe_val = mongo.get_dataframe("variables.CURRENT DIPOLE Y", "HBC6", "cp", ["WPBE/qzvp", "B3LYP/aug-cc-pVDZ"], do_stoich=True, debug_level=1)
-    assert ((wpbe_val["WPBE/qzvp"]["FaONFaON_1.05"] == None) and
-    (np.isclose(wpbe_val["B3LYP/aug-cc-pVDZ"]["FaONFaON_1.05"], 7.158318e-11, rtol=1.e-6, atol=1.e-6)))
+    assert (wpbe_val["WPBE/qzvp"]["FaONFaON_1.05"] == None)
+    assert np.isclose(wpbe_val["B3LYP/aug-cc-pVDZ"]["FaONFaON_1.05"], 7.158318e-11, rtol=1.e-6, atol=1.e-6)
 
 def test_add_molecule():
     data = {"_id":"NewMolecule", "symbols":"a", "masses":"b", "name":"c", "multiplicity":"d", "real":"e", "geometry":"f",
@@ -68,3 +68,26 @@ def test_add_page():
 def test_del_page():
     result = mongo.del_page("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
     assert result
+
+def test_list_methods():
+    data = {"_id":"NewPage", "modelchem":"a", "molecule_hash":"b"}
+    mongo.add_page(data)
+    data = {"_id":"NewPage", "modelchem":"b", "molecule_hash":"b"}
+    mongo.add_page(data)
+    data = {"_id":"NewPage", "modelchem":"c", "molecule_hash":"b"}
+    mongo.add_page(data)
+    data = {"_id":"NewPage", "modelchem":"d", "molecule_hash":"b"}
+    mongo.add_page(data)
+    result = mongo.list_methods(["92e8b7bebf5382d5056754e62e17993ef2b1b379",
+                            "8665e03700fd99259aa21c86fa2d2df11cb0dbef",
+                            "f9dec31ed1e51fbb850c6d113e3b4081eebf3792",
+                            "b"
+                            ])
+    mongo.del_page("c78d35375ca3397a1fb0db15ae559a0de839d59e")
+    mongo.del_page("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
+    mongo.del_page("de02aa0d01a917a426ca9b37541eb2e41af1dd6b")
+    mongo.del_page("be5a325825ffa06c47704d090e318088091e5cb8")
+    assert list(result.as_matrix()[0])[0] == 'B3LYP/aug-cc-pVDZ'
+    assert list(result.as_matrix()[1])[0] == 'B3LYP/aug-cc-pVDZ'
+    assert list(result.as_matrix()[2]) == ['a', 'b', 'c', 'd']
+    assert list(result.as_matrix()[3])[0] == 'B3LYP/aug-cc-pVDZ'

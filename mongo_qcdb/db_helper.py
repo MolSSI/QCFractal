@@ -33,6 +33,7 @@ class MongoSocket(object):
         except pymongo.errors.DuplicateKeyError:
             return False
 
+    # Given the hash ID of a molecule, delete it. Return true on success, otherwise false.
     def del_molecule(self, hash):
         return (self.db["molecules"].delete_one({"_id" : hash})).deleted_count == 1
 
@@ -51,6 +52,7 @@ class MongoSocket(object):
         except pymongo.errors.DuplicateKeyError:
             return False
 
+    # Given the hash ID of a database, delete it. Return true on success, otherwise false.
     def del_database(self, hash):
         return (self.db["databases"].delete_one({"_id" : hash})).deleted_count == 1
 
@@ -69,12 +71,23 @@ class MongoSocket(object):
         except pymongo.errors.DuplicateKeyError:
             return False
 
+    # Given the hash ID of a page, delete it. Return true on success, otherwise false.
     def del_page(self, hash):
         return (self.db["pages"].delete_one({"_id" : hash})).deleted_count == 1
 
+    # Displays all available model chems for the provided list of molecule hashes.
+    def list_methods(self, hashes):
+        d = {}
+        for mol in hashes:
+            records = list(self.db["pages"].find({"molecule_hash" : mol}))
+            d[mol] = []
+            for rec in records:
+                d[mol].append(rec["modelchem"])
+
+        df = pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in d.items() ])).transpose()
+        return df
 
     def get_value(self, field, db, rxn, stoich, method, do_stoich=True, debug_level=1):
-
         command = [
         { "$match": { "name" : db } },
         { "$project": { "reactions" : 1 } },
