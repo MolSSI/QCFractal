@@ -7,7 +7,7 @@ import numpy as np
 
 from . import fields
 
-class MongoDB(object):
+class MongoSocket(object):
 
     # Constructor
     def __init__(self, url, port, db):

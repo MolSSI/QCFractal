@@ -331,7 +331,7 @@ def test_dataframe_saving_loading(hbc_from_df):
     # Remap
     db = hbc_from_df
 
-    mongo = mdb.db_helper.MongoDB("127.0.0.1", 27017, "HBC6_tmp")
+    mongo = mdb.db_helper.MongoSocket("127.0.0.1", 27017, "HBC6_tmp")
     db.save(mongo, name_override=True)
 
 
