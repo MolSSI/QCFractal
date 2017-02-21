@@ -87,6 +87,23 @@ class MongoSocket(object):
         df = pd.DataFrame(dict([ (k,pd.Series(v)) for k,v in d.items() ])).transpose()
         return df
 
+    # Returns series containing the first match of field in a page for all hashes.
+    def search_qc_variable(self, hashes, field):
+        d = {}
+        for mol in hashes:
+            command = [
+            {"$match" : {"molecule_hash": mol}},
+            {"$group" : {
+                "_id" : {}, "value" : {"$push" : "$" + field}
+            }}
+            ]
+            pages = list(self.db["pages"].aggregate(command))
+            if (len(pages) == 0 or len(pages[0]["value"]) == 0):
+                d[mol] = None
+            else:
+                d[mol] = pages[0]["value"][0]
+        return pd.DataFrame(data=d, index=[field]).transpose()
+
     def get_value(self, field, db, rxn, stoich, method, do_stoich=True, debug_level=1):
         command = [
         { "$match": { "name" : db } },

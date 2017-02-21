@@ -91,3 +91,25 @@ def test_list_methods():
     assert list(result.as_matrix()[1])[0] == 'B3LYP/aug-cc-pVDZ'
     assert list(result.as_matrix()[2]) == ['a', 'b', 'c', 'd']
     assert list(result.as_matrix()[3])[0] == 'B3LYP/aug-cc-pVDZ'
+
+def test_list_methods_none():
+    result = mongo.list_methods(["Invalid", "92e8b7bebf5382d5056754e62e17993ef2b1b379"])
+    assert str(result.as_matrix()[0][0]) == "B3LYP/aug-cc-pVDZ"
+
+def test_search_qc_return_value():
+    result = mongo.search_qc_variable(["af4c153199d3386e8bb1ff4780df955d2adeee80", "d560eb7fe48db28eb57902e4469f2a9b8af45c71"], "return_value")
+    assert np.isclose(result.as_matrix()[0][0], -150.01784074, rtol=1.e-6, atol=1.e-6)
+    assert np.isclose(result.as_matrix()[1][0], -339.86866254, rtol=1.e-6, atol=1.e-6)
+
+def test_search_qc_variable():
+    result = mongo.search_qc_variable(["af4c153199d3386e8bb1ff4780df955d2adeee80", "d560eb7fe48db28eb57902e4469f2a9b8af45c71"], "variables.NUCLEAR REPULSION ENERGY")
+    assert np.isclose(result.as_matrix()[0][0], 71.0297063, rtol=1.e-6, atol=1.e-6)
+    assert np.isclose(result.as_matrix()[1][0], 221.90773477, rtol=1.e-6, atol=1.e-6)
+
+def test_search_qc_none():
+    result = mongo.search_qc_variable(["Nothing"], "variables.NUCLEAR REPULSION ENERGY")
+    assert result.as_matrix()[0][0] == None
+    result = mongo.search_qc_variable(["af4c153199d3386e8bb1ff4780df955d2adeee80"], "Wrong")
+    assert result.as_matrix()[0][0] == None
+    result = mongo.search_qc_variable(["Nothing"], "Wrong")
+    assert result.as_matrix()[0][0] == None
