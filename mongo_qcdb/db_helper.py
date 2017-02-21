@@ -90,10 +90,7 @@ class MongoDB(object):
                 command = [
                 {"$match" : {"molecule_hash": mol, "modelchem": method}},
                 {"$group" : {
-                    "_id" : {}, "outer" : {"$push" : "$" + field}, "inner" : {"$push" : "$variables." + field}
-                }},
-                {"$project" : {
-                    "value" : {"$setUnion" : ["$inner", "$outer"]}
+                    "_id" : {}, "value" : {"$push" : "$" + field}
                 }}
                 ]
                 page = list(self.db["pages"].aggregate(command))
@@ -144,7 +141,7 @@ class MongoDB(object):
         return pd.DataFrame(data={method:res}, index=index)
 
 
-    def get_dataframe(self, field, db, rxn, stoich, methods, do_stoich=True, debug_level=1):
+    def get_dataframe(self, field, db, stoich, methods, do_stoich=True, debug_level=1):
         # debug.log(debug_level, 2, "Running get_dataframe for db=" + db + " rxn="
         # + rxn + " stoich=" + stoich + " methods=" + str(methods))
         database = self.db["databases"].find_one({"name": db})
