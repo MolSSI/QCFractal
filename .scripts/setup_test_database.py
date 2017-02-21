@@ -7,7 +7,7 @@ import os
 import mongo_qcdb as mdb
 
 #mongo = db_helper("192.168.2.139", 27017, "local")
-mongo = mdb.db_helper.MongoDB("127.0.0.1", 27017, "local")
+mongo = mdb.db_helper.MongoSocket("127.0.0.1", 27017, "local")
 print(mongo.setup)
 
 collections = ["molecules", "databases", "pages"]
@@ -25,7 +25,6 @@ for col in collections:
         if (col == "molecules"):
                 inserted = mongo.add_molecule(data)
         if (col == "databases"):
-                print(data)
                 inserted = mongo.add_database(data)
         if (col == "pages"):
                 inserted = mongo.add_page(data)
