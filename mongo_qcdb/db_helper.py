@@ -33,7 +33,8 @@ class MongoSocket(object):
         except pymongo.errors.DuplicateKeyError:
             return False
 
-    # Given the hash ID of a molecule, delete it. Return true on success, otherwise false.
+    # Given the hash ID of a molecule, delete it. Return true on success,
+    # otherwise false.
     def del_molecule(self, hash):
         return (self.db["molecules"].delete_one({"_id" : hash})).deleted_count == 1
 
@@ -52,7 +53,8 @@ class MongoSocket(object):
         except pymongo.errors.DuplicateKeyError:
             return False
 
-    # Given the hash ID of a database, delete it. Return true on success, otherwise false.
+    # Given the hash ID of a database, delete it. Return true on success,
+    # otherwise false.
     def del_database(self, hash):
         return (self.db["databases"].delete_one({"_id" : hash})).deleted_count == 1
 
@@ -71,9 +73,51 @@ class MongoSocket(object):
         except pymongo.errors.DuplicateKeyError:
             return False
 
-    # Given the hash ID of a page, delete it. Return true on success, otherwise false.
+    # Given the hash ID of a page, delete it. Return true on success, otherwise
+    # false.
     def del_page(self, hash):
         return (self.db["pages"].delete_one({"_id" : hash})).deleted_count == 1
+
+    # Given mol hashes, methods, and a field, populate a mol by method matrix
+    # with respective fields
+    def evaluate(self, hashes, methods, field="return_value"):
+        d = {}
+        for mol in hashes:
+            d[mol] = []
+            for method in methods:
+                command = [
+                {"$match" : {"molecule_hash":mol, "modelchem":method}},
+                {"$group" : {
+                    "_id" : {}, "value" : {"$push" : "$" + field}
+                }}
+                ]
+                pages = list(self.db["pages"].aggregate(command))
+                if (len(pages) == 0 or len(pages[0]["value"]) == 0):
+                    d[mol].append(None)
+                else:
+                    d[mol].append(pages[0]["value"][0])
+        return pd.DataFrame(data=d, index=[methods]).transpose()
+
+    # Given mol hashes, fields, and a method, populate a mol by field matrix
+    # with the respective field values for that method
+    def evaluate_2(self, hashes, fields, method):
+        d = {}
+        for mol in hashes:
+            d[mol] = []
+            for field in fields:
+                command = [
+                {"$match" : {"molecule_hash":mol, "modelchem":method}},
+                {"$group" : {
+                    "_id" : {}, "value" : {"$push" : "$" + field}
+                }}
+                ]
+                pages = list(self.db["pages"].aggregate(command))
+                if (len(pages) == 0 or len(pages[0]["value"]) == 0):
+                    d[mol].append(None)
+                else:
+                    d[mol].append(pages[0]["value"][0])
+        return pd.DataFrame(data=d, index=[fields]).transpose()
+
 
     # Displays all available model chems for the provided list of molecule hashes.
     def list_methods(self, hashes):
@@ -163,11 +207,8 @@ class MongoSocket(object):
 
 
     def get_series(self, field, db, stoich, method, do_stoich=True, debug_level=1):
-        # debug.log(debug_level, 2, "Running get_series for db=" + db + " stoich="
-        #  + stoich + " method=" + method)
         database = self.db["databases"].find_one({"name": db})
         if (database == None):
-            # debug.log(debug_level, 1, "Invalid database")
             return None
         res = []
         index = []
@@ -179,11 +220,8 @@ class MongoSocket(object):
 
 
     def get_dataframe(self, field, db, stoich, methods, do_stoich=True, debug_level=1):
-        # debug.log(debug_level, 2, "Running get_dataframe for db=" + db + " rxn="
-        # + rxn + " stoich=" + stoich + " methods=" + str(methods))
         database = self.db["databases"].find_one({"name": db})
         if (database == None):
-            # debug.log(debug_level, 1, "Invalid database.")
             return None
 
         names = []

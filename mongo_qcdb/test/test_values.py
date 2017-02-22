@@ -1,6 +1,7 @@
 import pytest
 import numpy as np
 import mongo_qcdb as mdb
+import math
 
 
 mongo = mdb.db_helper.MongoSocket("127.0.0.1", 27017, "local")
@@ -113,3 +114,56 @@ def test_search_qc_none():
     assert result.as_matrix()[0][0] == None
     result = mongo.search_qc_variable(["Nothing"], "Wrong")
     assert result.as_matrix()[0][0] == None
+
+def test_evaluate_return_value():
+    result = mongo.evaluate(["efad0bae4a0bdf4aeea66b3c29ec505bdd61b2a1"], ["B3LYP/aug-cc-pVDZ", "Test"])
+    assert np.isclose(result.as_matrix()[0][0],-189.794388, rtol=1.e-6, atol=1.e-6)
+    assert math.isnan(result.as_matrix()[0][1])
+
+def test_evaluate_exhaustive_return_value():
+    data = {"_id":"NewPage", "modelchem":"a", "molecule_hash":"b", "return_value":"accessed"}
+    mongo.add_page(data)
+    result = mongo.evaluate(["efad0bae4a0bdf4aeea66b3c29ec505bdd61b2a1", "b", "und"], ["B3LYP/aug-cc-pVDZ", "a", "not available"])
+    mongo.del_page("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
+    assert result.as_matrix()[0][0] == None
+    assert result.as_matrix()[0][1] == "accessed"
+    assert result.as_matrix()[0][2] == None
+    assert np.isclose(result.as_matrix()[1][0],-189.794388, rtol=1.e-6, atol=1.e-6)
+    assert math.isnan(result.as_matrix()[1][1])
+    assert math.isnan(result.as_matrix()[1][2])
+    assert result.as_matrix()[2][0] == None
+    assert result.as_matrix()[2][1] == None
+    assert result.as_matrix()[2][2] == None
+
+def test_evaluate_exhaustive_variables():
+    data = {"_id":"NewPage", "modelchem":"a", "molecule_hash":"b", "return_value":"accessed"}
+    mongo.add_page(data)
+    result = mongo.evaluate(["efad0bae4a0bdf4aeea66b3c29ec505bdd61b2a1", "b", "und"], ["B3LYP/aug-cc-pVDZ", "a", "not available"], field="variables.NUCLEAR REPULSION ENERGY")
+    mongo.del_page("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
+    assert result.as_matrix()[0][0] == None
+    assert result.as_matrix()[0][1] == None
+    assert result.as_matrix()[0][2] == None
+    assert np.isclose(result.as_matrix()[1][0], 69.45752938798681, rtol=1.e-6, atol=1.e-6)
+    assert math.isnan(result.as_matrix()[1][1])
+    assert math.isnan(result.as_matrix()[1][2])
+    assert result.as_matrix()[2][0] == None
+    assert result.as_matrix()[2][1] == None
+    assert result.as_matrix()[2][2] == None
+
+def test_evaluate_exhaustive_2():
+    data = {"_id":"NewPage", "modelchem":"B3LYP/aug-cc-pVDZ", "molecule_hash":"b", "return_value":"accessed"}
+    mongo.add_page(data)
+    result = mongo.evaluate_2(["efad0bae4a0bdf4aeea66b3c29ec505bdd61b2a1", "6f34560054454808dbd49c407de31f08b58dcbbe", "b", "und"], ["return_value", "variables.NUCLEAR REPULSION ENERGY", "invalid"], "B3LYP/aug-cc-pVDZ")
+    mongo.del_page("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
+    assert np.isclose(result.as_matrix()[0][0], -189.79511532157892, rtol=1.e-6, atol=1.e-6)
+    assert np.isclose(result.as_matrix()[0][1], 69.42994763149548, rtol=1.e-6, atol=1.e-6)
+    assert math.isnan(result.as_matrix()[0][2])
+    assert result.as_matrix()[1][0] == "accessed"
+    assert result.as_matrix()[1][1] == None
+    assert result.as_matrix()[1][2] == None
+    assert np.isclose(result.as_matrix()[2][0], -189.79438817699523, rtol=1.e-6, atol=1.e-6)
+    assert np.isclose(result.as_matrix()[2][1], 69.45752938798681, rtol=1.e-6, atol=1.e-6)
+    assert math.isnan(result.as_matrix()[2][2])
+    assert result.as_matrix()[3][0] == None
+    assert result.as_matrix()[3][1] == None
+    assert result.as_matrix()[3][2] == None
