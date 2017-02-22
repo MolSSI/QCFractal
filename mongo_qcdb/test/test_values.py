@@ -150,7 +150,7 @@ def test_evaluate_exhaustive_variables():
     assert result.as_matrix()[2][1] == None
     assert result.as_matrix()[2][2] == None
 
-def test_evaluate_exhaustive_2():
+def test_evaluate_2_exhaustive():
     data = {"_id":"NewPage", "modelchem":"B3LYP/aug-cc-pVDZ", "molecule_hash":"b", "return_value":"accessed"}
     mongo.add_page(data)
     result = mongo.evaluate_2(["efad0bae4a0bdf4aeea66b3c29ec505bdd61b2a1", "6f34560054454808dbd49c407de31f08b58dcbbe", "b", "und"], ["return_value", "variables.NUCLEAR REPULSION ENERGY", "invalid"], "B3LYP/aug-cc-pVDZ")
