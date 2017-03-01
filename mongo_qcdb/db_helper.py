@@ -232,8 +232,10 @@ class MongoSocket(object):
         return self.db["pages"].find_one({"molecule_hash": molecule, "modelchem": method})
 
     def get_database(self, name):
+        return self.db["databases"].find_one({"name": name})
 
-        return self.db["pages"].find_one({"molecule_hash": molecule, "modelchem": method})
+    def get_molecule(self, molecule_hash):
+        return self.db["molecules"].find_one({"_id" : molecule_hash})
 
 
     def init_db(self, db):

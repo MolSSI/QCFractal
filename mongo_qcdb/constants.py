@@ -75,3 +75,21 @@ physconst = {
     "na"                       : 6.02214179E23,        # Avagadro's number
     "me"                       : 9.10938215E-31,       # Electron rest mass (in kg)
 }
+
+def get_scale(name):
+    """
+    Provide short cuts to get_scalar data
+    """
+    if isinstance(name, (float, int)):
+        return name
+    elif name in list(physconst):
+        return physconst[name]
+    elif name == "kcal":
+        return physconst["hartree2kcalmol"]
+    elif name == "ev":
+        return physconst["hartree2ev"]
+    elif name == "cm":
+        return physconst["hartree2wavenumbers"]
+    else:
+        raise KeyError("get_scale: Scale '%s' not recognized" % str(name))
+

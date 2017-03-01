@@ -12,6 +12,7 @@ from . import molecule
 from . import statistics
 from . import visualization
 from . import db_helper
+from . import constants
 
 
 def _nCr(n, r):
@@ -28,26 +29,37 @@ class Database(object):
 
     def __init__(self, name, mongod=None, db_type="rxn"):
 
-        self.data = {}
-        self.data["reactions"] = []
-        self.db_type = db_type
 
         if mongod is not None:
-            if isinstance(mongod, str):
-                tmp = mongo.split(":")
-                if len(tmp) != 2:
-                    raise KeyError("DataBase: mongod must be passed in as 'ip:port' if passed a string.")
-
-                self.mongod = db_helper.MongoSocket(tmp[0], int(tmp[1]), name)
-            elif isinstance(mongo, db_helper.MongoSocket):
-                self.mongod = mongo
+            if isinstance(mongod, db_helper.MongoSocket):
+                self.mongod = mongod
             else:
                 raise TypeError("Database: mongod argument of unrecognized type '%s'" % type(mongod))
+
+            self.data = self.mongod.get_database(name)
+            if self.data is None:
+                raise KeyError("Database: Database name '%s' was not found." % name)
+
+            self.df = pd.DataFrame(index=self.get_index())
+
+            tmp_index = []
+            for rxn in self.data["reactions"]:
+                name = rxn["name"]
+                for stoich_name in list(rxn["stoichiometry"]):
+                    for mol_hash, coef in rxn["stoichiometry"][stoich_name].items():
+                        tmp_index.append([name, stoich_name, mol_hash, coef])
+
+            self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule_hash", "coefficient"])
+
         else:
 
-            self.df = pd.DataFrame()
+            self.data = {}
+            self.data["reactions"] = []
             self.data["name"] = name
             self.data["provenence"] = {}
+            self.data["db_type"] = db_type
+            self.df = pd.DataFrame()
+
             self.mongod = None
 
         # If we making a new database we may need new hashes and json objects
@@ -59,11 +71,64 @@ class Database(object):
     def __getitem__(self, args):
         return self.df[args]
 
+
+    def query(self, keys, stoich="default", prefix="", postfix="", reaction_results=False, scale="kcal"):
+        if self.mongod is None:
+            raise AttributeError("DataBase: MongoSocket was not set.")
+
+        if isinstance(keys, str):
+            keys = [keys]
+
+        # If reaction results
+        if reaction_results:
+            tmp_idx = pd.DataFrame(index=self.df.index, columns=keys)
+            for rxn in self.data["reactions"]:
+                for col in keys:
+                    try:
+                        tmp_idx.ix[rxn["name"], col] = rxn["reaction_results"][stoich][col]
+                    except:
+                        pass
+
+            tmp_idx *= constants.get_scale(scale)
+            self.df[tmp_idx.columns] = tmp_idx
+            return True
+
+        # if self.data["db_type"].lower() == "ie":
+        #     _ie_helper(..)
+
+        tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
+        tmp_idx = tmp_idx.reset_index(drop=True)
+
+        # There could be duplicates so take the unique and save the map
+        umols, uidx = np.unique(tmp_idx["molecule_hash"], return_index=True)
+
+        # Evaluate the overall dataframe
+        values = self.mongod.evaluate(umols, keys)
+        values.columns = [prefix + x + postfix for x in values.columns]
+
+        # Join on molecule hash
+        tmp_idx = tmp_idx.join(values, on="molecule_hash")
+
+        # Apply stoich values
+        for col in values.columns:
+            tmp_idx[col] *= tmp_idx["coefficient"]
+        tmp_idx = tmp_idx.drop(['stoichiometry', 'molecule_hash', 'coefficient'], axis=1)
+
+        tmp_idx = tmp_idx.groupby(["name"]).sum()
+
+        # scale
+        tmp_idx *= constants.get_scale(scale)
+
+        # Apply to df
+        self.df[tmp_idx.columns] = tmp_idx
+
+        return True
+
     def get_index(self):
         """
         Returns the current index of the database.
         """
-        return list(self.data["reactions"])
+        return [x["name"] for x in self.data["reactions"]]
 
     def get_rxn(self, name):
         """

@@ -331,8 +331,20 @@ def test_dataframe_saving_loading(hbc_from_df):
     # Remap
     db = hbc_from_df
 
-    mongo = mdb.db_helper.MongoSocket("127.0.0.1", 27017, "HBC6_test")
+    mongo = mdb.db_helper.MongoSocket("127.0.0.1", 27017, "local_test")
     db.save(mongo, name_override=True)
+
+    db_from_save = mdb.Database(db.data["name"], mongo)
+
+def test_query():
+    mongod = mdb.db_helper.MongoSocket("127.0.0.1", 27017, "local")
+
+    db = mdb.Database("HBC6",  mongod=mongod)
+    db.query("B3LYP/aug-cc-pVDZ", stoich="cp", prefix="cp-")
+    db.query("B3LYP/adz", stoich="cp", prefix="cp-", reaction_results=True, scale=1.0)
+
+    mue = db.statistics("MUE", "cp-B3LYP/aug-cc-pVDZ", bench="B3LYP/adz")
+    assert np.allclose(0.0, mue, atol=1.e-4)
 
 
 
