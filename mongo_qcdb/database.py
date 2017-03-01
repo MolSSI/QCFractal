@@ -13,6 +13,7 @@ from . import statistics
 from . import visualization
 from . import db_helper
 from . import constants
+from . import fields
 
 
 def _nCr(n, r):
@@ -29,12 +30,12 @@ class Database(object):
 
     def __init__(self, name, mongod=None, db_type="rxn"):
 
-
         if mongod is not None:
             if isinstance(mongod, db_helper.MongoSocket):
                 self.mongod = mongod
             else:
-                raise TypeError("Database: mongod argument of unrecognized type '%s'" % type(mongod))
+                raise TypeError("Database: mongod argument of unrecognized type '%s'" %
+                                type(mongod))
 
             self.data = self.mongod.get_database(name)
             if self.data is None:
@@ -49,7 +50,8 @@ class Database(object):
                     for mol_hash, coef in rxn["stoichiometry"][stoich_name].items():
                         tmp_index.append([name, stoich_name, mol_hash, coef])
 
-            self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule_hash", "coefficient"])
+            self.rxn_index = pd.DataFrame(
+                tmp_index, columns=["name", "stoichiometry", "molecule_hash", "coefficient"])
 
         else:
 
@@ -63,24 +65,79 @@ class Database(object):
             self.mongod = None
 
         # If we making a new database we may need new hashes and json objects
-        self.new_molecule_jsons = {}
+        self._new_molecule_jsons = {}
 
-        self.rxn_name_list = []
+        # What queried data do we have?
+        self._queries = {}
 
     # Getters
     def __getitem__(self, args):
         return self.df[args]
 
+    def refresh(self):
+        """
+        Reruns the entire query history to rebuild the current database from saved pages.
+        """
 
-    def query(self, keys, stoich="default", prefix="", postfix="", reaction_results=False, scale="kcal"):
+        for k, q in self._queries.items():
+            self.query(q[0], **q[1])
+        return True
+
+
+    def query(self,
+              keys,
+              stoich="default",
+              prefix="",
+              postfix="",
+              reaction_results=False,
+              scale="kcal"):
+        """
+        Queries the local MongoSocket data for the requested keys and stoichiometry.
+
+        Parameters
+        ----------
+        keys : str, list
+            A list of model chemistry to query.
+
+
+        Returns
+        -------
+        success : bool
+            Returns True if the requested query was successful or not.
+
+        Notes
+        -----
+
+
+        Examples
+        --------
+
+        """
+
         if self.mongod is None:
             raise AttributeError("DataBase: MongoSocket was not set.")
 
+        # Keys should be iterable
         if isinstance(keys, str):
             keys = [keys]
 
+        # Save query to be repeated
+        query_packet = [
+            keys, {
+                "stoich": stoich,
+                "prefix": prefix,
+                "postfix": postfix,
+                "reaction_results": reaction_results,
+                "scale": scale
+            }
+        ]
+        query_packet_hash = fields.get_hash(query_packet, None)
+        if query_packet_hash not in self._queries:
+            self._queries[query_packet_hash] = query_packet
+
         # If reaction results
         if reaction_results:
+
             tmp_idx = pd.DataFrame(index=self.df.index, columns=keys)
             for rxn in self.data["reactions"]:
                 for col in keys:
@@ -92,6 +149,7 @@ class Database(object):
             tmp_idx *= constants.get_scale(scale)
             self.df[tmp_idx.columns] = tmp_idx
             return True
+
 
         # if self.data["db_type"].lower() == "ie":
         #     _ie_helper(..)
@@ -144,18 +202,21 @@ class Database(object):
             raise KeyError("Database:get_rxn: Reaction name '%s' not found." % name)
 
         if len(found) > 1:
-            raise KeyError("Database:get_rxn: Multiple reactions of name '%s' found. Database failure." % name)
+            raise KeyError(
+                "Database:get_rxn: Multiple reactions of name '%s' found. Database failure." % name)
 
         return self.data["reactions"][found[0]]
 
     # Setters
-    def save(self, mongo_db=None, name_override=False):
+    def save(self, mongo_db=None, name_override=False, overwrite=False):
         if self.data["name"] == "":
             raise AttributeError("Database:save: Database must have a name!")
 
         if mongo_db is None:
             if self.mongod is None:
-                raise AttributeError("Database:save: Database does not own a MongoDB instance and one was not passed in.")
+                raise AttributeError(
+                    "Database:save: Database does not own a MongoDB instance and one was not passed in."
+                )
             mongo_db = self.mongod
         else:
             if (not name_override) and (mongo_db.db_name != self.data["name"]):
@@ -167,6 +228,8 @@ class Database(object):
         mongo_db.add_database(self.data)
 
         # Loop over new molecules
+        for k, v in self._new_molecule_jsons.items():
+            mongo_db.add_molecule(v)
 
     # Statistical quantities
     def statistics(self, stype, value, bench="Benchmark"):
@@ -233,14 +296,14 @@ class Database(object):
 
                 molecule_hash = qcdb_mol.get_hash()
 
-                if molecule_hash not in list(self.new_molecule_jsons):
-                    self.new_molecule_jsons[molecule_hash] = qcdb_mol.to_json()
+                if molecule_hash not in list(self._new_molecule_jsons):
+                    self._new_molecule_jsons[molecule_hash] = qcdb_mol.to_json()
 
             elif isinstance(mol, molecule.Molecule):
                 molecule_hash = mol.get_hash()
 
-                if molecule_hash not in list(self.new_molecule_jsons):
-                    self.new_molecule_jsons[molecule_hash] = mol.to_json()
+                if molecule_hash not in list(self._new_molecule_jsons):
+                    self._new_molecule_jsons[molecule_hash] = mol.to_json()
 
             else:
                 raise TypeError(
@@ -281,7 +344,7 @@ class Database(object):
 
         # Set name
         rxn["name"] = name
-        if name in self.rxn_name_list:
+        if name in self.get_index():
             raise KeyError(
                 "Database: Name '%s' already exists. Please either delete this entry or call the update function."
                 % name)

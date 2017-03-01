@@ -24,11 +24,12 @@ valid_fields["database"] = valid_fields["database"] + ("rxn_type", "provenance")
 
 valid_fields["page"] = copy.deepcopy(hash_fields["page"]) + ("provenance", )
 
-
-
 def get_hash(data, field_type):
     m = hashlib.sha1()
     concat = ""
+    if field_type is None:
+        return hash(str(data))
+
     for field in hash_fields[field_type]:
         concat += json.dumps(data[field])
     m.update(concat.encode("utf-8"))
