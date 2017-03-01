@@ -33,7 +33,16 @@ class Database(object):
         self.db_type = db_type
 
         if mongod is not None:
-            raise KeyError("Database: Cannot yet intialize a database object from a Mongo server.")
+            if isinstance(mongod, str):
+                tmp = mongo.split(":")
+                if len(tmp) != 2:
+                    raise KeyError("DataBase: mongod must be passed in as 'ip:port' if passed a string.")
+
+                self.mongod = db_helper.MongoSocket(tmp[0], int(tmp[1]), name)
+            elif isinstance(mongo, db_helper.MongoSocket):
+                self.mongod = mongo
+            else:
+                raise TypeError("Database: mongod argument of unrecognized type '%s'" % type(mongod))
         else:
 
             self.df = pd.DataFrame()
@@ -91,7 +100,7 @@ class Database(object):
 
         # Add the database
         mongo_db.add_database(self.data)
-        
+
         # Loop over new molecules
 
     # Statistical quantities

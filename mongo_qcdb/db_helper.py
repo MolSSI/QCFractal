@@ -20,12 +20,7 @@ class MongoSocket(object):
 
     # Adds a molecule to the DB. Returns True on success.
     def add_molecule(self, data):
-        m = hashlib.sha1()
-        concat = ""
-        for field in fields.hash_fields["molecule"]:
-            concat += json.dumps(data[field])
-        m.update(concat.encode("utf-8"))
-        sha1 = m.hexdigest()
+        sha1 = fields.get_hash(data, "molecule")
         try:
             data["_id"] = sha1;
             self.db["molecules"].insert_one(data)
@@ -35,17 +30,12 @@ class MongoSocket(object):
 
     # Given the hash ID of a molecule, delete it. Return true on success,
     # otherwise false.
-    def del_molecule(self, hash):
-        return (self.db["molecules"].delete_one({"_id" : hash})).deleted_count == 1
+    def del_molecule(self, hash_val):
+        return (self.db["molecules"].delete_one({"_id" : hash_val})).deleted_count == 1
 
     # Adds a database to the DB. Returns True on success.
     def add_database(self, data):
-        m = hashlib.sha1()
-        concat = ""
-        for field in fields.hash_fields["database"]:
-            concat += json.dumps(data[field])
-        m.update(concat.encode("utf-8"))
-        sha1 = m.hexdigest()
+        sha1 = fields.get_hash(data, "database")
         try:
             data["_id"] = sha1;
             self.db["databases"].insert_one(data)
@@ -55,17 +45,12 @@ class MongoSocket(object):
 
     # Given the hash ID of a database, delete it. Return true on success,
     # otherwise false.
-    def del_database(self, hash):
-        return (self.db["databases"].delete_one({"_id" : hash})).deleted_count == 1
+    def del_database(self, hash_val):
+        return (self.db["databases"].delete_one({"_id" : hash_val})).deleted_count == 1
 
     # Adds a page to the DB. Returns True on success.
     def add_page(self, data):
-        m = hashlib.sha1()
-        concat = ""
-        for field in fields.hash_fields["page"]:
-            concat += json.dumps(data[field])
-        m.update(concat.encode("utf-8"))
-        sha1 = m.hexdigest()
+        sha1 = fields.get_hash(data, "page")
         try:
             data["_id"] = sha1;
             self.db["pages"].insert_one(data)
@@ -75,8 +60,8 @@ class MongoSocket(object):
 
     # Given the hash ID of a page, delete it. Return true on success, otherwise
     # false.
-    def del_page(self, hash):
-        return (self.db["pages"].delete_one({"_id" : hash})).deleted_count == 1
+    def del_page(self, hash_val):
+        return (self.db["pages"].delete_one({"_id" : hash_val})).deleted_count == 1
 
     # Given mol hashes, methods, and a field, populate a mol by method matrix
     # with respective fields
@@ -244,6 +229,10 @@ class MongoSocket(object):
 
     # Do a lookup on the pages collection using a <molecule, method> key.
     def get_page(self, molecule, method):
+        return self.db["pages"].find_one({"molecule_hash": molecule, "modelchem": method})
+
+    def get_database(self, name):
+
         return self.db["pages"].find_one({"molecule_hash": molecule, "modelchem": method})
 
 
