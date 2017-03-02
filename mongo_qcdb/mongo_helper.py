@@ -12,6 +12,11 @@ class MongoSocket(object):
 
     # Constructor
     def __init__(self, url, port, db):
+        """
+        Constructs a new socket where url and port points towards a Mongod instance.
+        db will either create a new Mongo Database or open a current Mongo Database.
+
+        """
         self.db_name = db
         self.url = url
         self.port = port
@@ -31,6 +36,9 @@ class MongoSocket(object):
     # Given the hash ID of a molecule, delete it. Return true on success,
     # otherwise false.
     def del_molecule(self, hash_val):
+        if isinstance(hash_val, dict):
+            hash_val = fields.get_hash(hash_val, "molecule")
+
         return (self.db["molecules"].delete_one({"_id": hash_val})).deleted_count == 1
 
     # Adds a database to the DB. Returns True on success.

@@ -1,5 +1,9 @@
 import numpy as np
 import pandas as pd
+from collections import OrderedDict
+import glob
+import sys
+import json
 import os
 
 import mongo_qcdb as mdb
@@ -250,6 +254,34 @@ def hbc_from_df():
 
     return db
 
+@pytest.fixture(scope="module")
+def mongo_socket():
+    db_name = "local_values_test"
+    mongo = mdb.mongo_helper.MongoSocket("127.0.0.1", 27017, db_name)
+    for db_name in mongo.client.database_names():
+        mongo.client.drop_database(db_name)
+
+    collections = ["molecules", "databases", "pages"]
+
+    # Define the descriptor field for each collection. Used for logging.
+    descriptor = {"molecules": "name", "databases": "name", "pages": "modelchem"}
+
+    # Add all JSON
+    for col in collections:
+        prefix = os.path.dirname(os.path.abspath(__file__)) + "/../../databases/DB_HBC6/" + col + "/"
+        for filename in glob.glob(prefix + "*.json"):
+            json_data = open(filename).read()
+            # Load JSON from file into OrderedDict
+            data = json.loads(json_data, object_pairs_hook=OrderedDict)
+            if (col == "molecules"):
+                    inserted = mongo.add_molecule(data)
+            if (col == "databases"):
+                    inserted = mongo.add_database(data)
+            if (col == "pages"):
+                    inserted = mongo.add_page(data)
+
+    return mongo
+
 
 # Test conventional add
 def test_rxn_add(water_db):
@@ -345,10 +377,10 @@ def test_dataframe_saving_loading(hbc_from_df):
 
 
 
-def test_query():
-    mongod = mdb.mongo_helper.MongoSocket("127.0.0.1", 27017, "local")
+def test_query(mongo_socket):
+    # mongod = mdb.mongo_helper.MongoSocket("127.0.0.1", 27017, "local")
 
-    db = mdb.Database("HBC6",  mongod=mongod)
+    db = mdb.Database("HBC6",  mongod=mongo_socket)
     db.query("B3LYP/aug-cc-pVDZ", stoich="cp", prefix="cp-")
     db.query("B3LYP/adz", stoich="cp", prefix="cp-", reaction_results=True, scale=1.0)
 
