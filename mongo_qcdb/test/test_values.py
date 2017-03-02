@@ -48,27 +48,27 @@ def test_add_molecule():
     result = mongo.add_molecule(data)
     assert result
 
-def test_del_molecule():
-    result = mongo.del_molecule("6504d1e5eb2d1e0a9e979029f9a8d55fbad06fac")
-    assert result
+# def test_del_molecule():
+#     result = mongo.del_molecule("6504d1e5eb2d1e0a9e979029f9a8d55fbad06fac")
+#     assert result
 
 def test_add_database():
     data = {"_id":"NewDatabase", "name":"a"}
     result = mongo.add_database(data)
     assert result
 
-def test_del_database():
-    result = mongo.del_database("7b3ce68b6c2f7d67dae4210eeb83be69f978e2a8")
-    assert result
+# def test_del_database():
+#     result = mongo.del_database("7b3ce68b6c2f7d67dae4210eeb83be69f978e2a8")
+#     assert result
 
 def test_add_page():
     data = {"_id":"NewPage", "modelchem":"a", "molecule_hash":"b"}
     result = mongo.add_page(data)
     assert result
 
-def test_del_page():
-    result = mongo.del_page("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
-    assert result
+# def test_del_page():
+#     result = mongo.del_page("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
+#     assert result
 
 def test_list_methods():
     data = {"_id":"NewPage", "modelchem":"a", "molecule_hash":"b"}
