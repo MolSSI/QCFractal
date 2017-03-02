@@ -11,7 +11,7 @@ import pandas as pd
 from . import molecule
 from . import statistics
 from . import visualization
-from . import db_helper
+from . import mongo_helper
 from . import constants
 from . import fields
 
@@ -31,7 +31,7 @@ class Database(object):
     def __init__(self, name, mongod=None, db_type="rxn"):
 
         if mongod is not None:
-            if isinstance(mongod, db_helper.MongoSocket):
+            if isinstance(mongod, mongo_helper.MongoSocket):
                 self.mongod = mongod
             else:
                 raise TypeError("Database: mongod argument of unrecognized type '%s'" %
@@ -83,7 +83,6 @@ class Database(object):
             self.query(q[0], **q[1])
         return True
 
-
     def query(self,
               keys,
               stoich="default",
@@ -121,7 +120,7 @@ class Database(object):
         if isinstance(keys, str):
             keys = [keys]
 
-        # Save query to be repeated
+        # Save query to be repeated by refresh
         query_packet = [
             keys, {
                 "stoich": stoich,
@@ -149,7 +148,6 @@ class Database(object):
             tmp_idx *= constants.get_scale(scale)
             self.df[tmp_idx.columns] = tmp_idx
             return True
-
 
         # if self.data["db_type"].lower() == "ie":
         #     _ie_helper(..)

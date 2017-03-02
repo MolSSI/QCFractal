@@ -6,8 +6,8 @@ import os
 
 import mongo_qcdb as mdb
 
-#mongo = db_helper("192.168.2.139", 27017, "local")
-mongo = mdb.db_helper.MongoSocket("127.0.0.1", 27017, "local")
+#mongo = mongo_helper("192.168.2.139", 27017, "local")
+mongo = mdb.mongo_helper.MongoSocket("127.0.0.1", 27017, "local")
 for db_name in mongo.client.database_names():
     mongo.client.drop_database(db_name)
 

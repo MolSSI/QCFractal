@@ -4,7 +4,7 @@ import mongo_qcdb as mdb
 import math
 
 
-mongo = mdb.db_helper.MongoSocket("127.0.0.1", 27017, "local")
+mongo = mdb.mongo_helper.MongoSocket("127.0.0.1", 27017, "local")
 
 def test_return_value():
     wpbe_val = mongo.get_value("return_value", "HBC6", "FaOOFaOO_0.9444444444444444", "cp", "B3LYP/aug-cc-pVDZ", do_stoich=True, debug_level=1)
