@@ -33,6 +33,17 @@ H   0.762503  -1.934259  10.000000
 H   0.040712  -0.599677  10.000000
 """
 
+_water_dimer_stretch_2 = """
+0 1
+O  -1.551007  -0.114520   0.000000
+H  -1.934259   0.762503   0.000000
+H  -0.599677   0.040712   0.000000
+--
+O  -11.551007  -0.114520   0.000000
+H  -11.934259   0.762503   0.000000
+H  -10.599677   0.040712   0.000000
+"""
+
 _neon_tetramer = """
 0 1
 Ne 0.000000 0.000000 0.000000
@@ -144,4 +155,17 @@ def test_water_orient():
 
     assert frag_0_1.get_hash() == frag_1_0.get_hash()
 
+    mol = molecule.Molecule(_water_dimer_stretch_2, name="water dimer stretch 2")
+    frag_0 = mol.get_fragment(0)
+    frag_1 = mol.get_fragment(1)
+
+    # Make sure the fragments match
+    assert frag_0.get_hash() == frag_1.get_hash()
+
+    # Make sure the complexes match
+    frag_0_1 = mol.get_fragment(0, 1)
+    frag_1_0 = mol.get_fragment(1, 0)
+
+    # Ghost fragments should prevent overlap
+    assert frag_0_1.get_hash() != frag_1_0.get_hash()
 
