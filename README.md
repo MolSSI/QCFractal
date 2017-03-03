@@ -190,5 +190,4 @@ To setup testing run the following:
 
     - mongod
     - pip install -e . (only needed once!)
-    - python .scripts/setup_test_database.py
     - py.test -v

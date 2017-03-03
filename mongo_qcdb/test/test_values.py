@@ -72,33 +72,38 @@ def test_get_dataframe_variable(mongo_socket):
     assert (wpbe_val["WPBE/qzvp"]["FaONFaON_1.05"] == None)
     assert np.isclose(wpbe_val["B3LYP/aug-cc-pVDZ"]["FaONFaON_1.05"], 7.158318e-11, rtol=1.e-6, atol=1.e-6)
 
-def test_add_molecule(mongo_socket):
+def test_add_remove_molecule(mongo_socket):
     data = {"_id":"NewMolecule", "symbols":"a", "masses":"b", "name":"c", "multiplicity":"d", "real":"e", "geometry":"f",
     "fragments":"e", "fragment_charges":"f", "fragment_multiplicities":"g", "provenance":"h", "comment":"i", "charge":"j"}
     result = mongo_socket.add_molecule(data)
     assert result
-
-def test_del_molecule(mongo_socket):
-    result = mongo_socket.del_molecule("6504d1e5eb2d1e0a9e979029f9a8d55fbad06fac")
+    result = mongo_socket.del_molecule_by_hash("6504d1e5eb2d1e0a9e979029f9a8d55fbad06fac")
+    assert result
+    result = mongo_socket.add_molecule(data)
+    assert result
+    result = mongo_socket.del_molecule_by_data(data)
     assert result
 
-def test_add_database(mongo_socket):
+def test_add_remove_database(mongo_socket):
     data = {"_id":"NewDatabase", "name":"a"}
     result = mongo_socket.add_database(data)
     assert result
-
-@pytest.mark.xfail(raises=TypeError)
-def test_del_database(mongo_socket):
-    result = mongo_socket.del_database("7b3ce68b6c2f7d67dae4210eeb83be69f978e2a8")
+    result = mongo_socket.del_database_by_hash("7b3ce68b6c2f7d67dae4210eeb83be69f978e2a8")
+    assert result
+    result = mongo_socket.add_database(data)
+    assert result
+    result = mongo_socket.del_database_by_data(data)
     assert result
 
-def test_add_page(mongo_socket):
+def test_add_remove_page(mongo_socket):
     data = {"_id":"NewPage", "modelchem":"a", "molecule_hash":"b"}
     result = mongo_socket.add_page(data)
     assert result
-
-def test_del_page(mongo_socket):
-    result = mongo_socket.del_page("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
+    result = mongo_socket.del_page_by_hash("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
+    assert result
+    result = mongo_socket.add_page(data)
+    assert result
+    result = mongo_socket.del_page_by_data(data)
     assert result
 
 def test_list_methods(mongo_socket):
@@ -115,10 +120,10 @@ def test_list_methods(mongo_socket):
                             "f9dec31ed1e51fbb850c6d113e3b4081eebf3792",
                             "b"
                             ])
-    mongo_socket.del_page("c78d35375ca3397a1fb0db15ae559a0de839d59e")
-    mongo_socket.del_page("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
-    mongo_socket.del_page("de02aa0d01a917a426ca9b37541eb2e41af1dd6b")
-    mongo_socket.del_page("be5a325825ffa06c47704d090e318088091e5cb8")
+    mongo_socket.del_page_by_hash("c78d35375ca3397a1fb0db15ae559a0de839d59e")
+    mongo_socket.del_page_by_hash("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
+    mongo_socket.del_page_by_hash("de02aa0d01a917a426ca9b37541eb2e41af1dd6b")
+    mongo_socket.del_page_by_hash("be5a325825ffa06c47704d090e318088091e5cb8")
     assert list(result.as_matrix()[0])[0] == 'B3LYP/aug-cc-pVDZ'
     assert list(result.as_matrix()[1])[0] == 'B3LYP/aug-cc-pVDZ'
     assert list(result.as_matrix()[2]) == ['a', 'b', 'c', 'd']
@@ -155,7 +160,7 @@ def test_evaluate_exhaustive_return_value(mongo_socket):
     data = {"_id":"NewPage", "modelchem":"a", "molecule_hash":"b", "return_value":"accessed"}
     mongo_socket.add_page(data)
     result = mongo_socket.evaluate(["efad0bae4a0bdf4aeea66b3c29ec505bdd61b2a1", "b", "und"], ["B3LYP/aug-cc-pVDZ", "a", "not available"])
-    mongo_socket.del_page("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
+    mongo_socket.del_page_by_hash("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
     assert result.as_matrix()[0][0] == None
     assert result.as_matrix()[0][1] == "accessed"
     assert result.as_matrix()[0][2] == None
@@ -170,7 +175,7 @@ def test_evaluate_exhaustive_variables(mongo_socket):
     data = {"_id":"NewPage", "modelchem":"a", "molecule_hash":"b", "return_value":"accessed"}
     mongo_socket.add_page(data)
     result = mongo_socket.evaluate(["efad0bae4a0bdf4aeea66b3c29ec505bdd61b2a1", "b", "und"], ["B3LYP/aug-cc-pVDZ", "a", "not available"], field="variables.NUCLEAR REPULSION ENERGY")
-    mongo_socket.del_page("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
+    mongo_socket.del_page_by_hash("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
     assert result.as_matrix()[0][0] == None
     assert result.as_matrix()[0][1] == None
     assert result.as_matrix()[0][2] == None
@@ -185,7 +190,7 @@ def test_evaluate_2_exhaustive(mongo_socket):
     data = {"_id":"NewPage", "modelchem":"B3LYP/aug-cc-pVDZ", "molecule_hash":"b", "return_value":"accessed"}
     mongo_socket.add_page(data)
     result = mongo_socket.evaluate_2(["efad0bae4a0bdf4aeea66b3c29ec505bdd61b2a1", "6f34560054454808dbd49c407de31f08b58dcbbe", "b", "und"], ["return_value", "variables.NUCLEAR REPULSION ENERGY", "invalid"], "B3LYP/aug-cc-pVDZ")
-    mongo_socket.del_page("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
+    mongo_socket.del_page_by_hash("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
     assert np.isclose(result.as_matrix()[0][0], -189.79511532157892, rtol=1.e-6, atol=1.e-6)
     assert np.isclose(result.as_matrix()[0][1], 69.42994763149548, rtol=1.e-6, atol=1.e-6)
     assert math.isnan(result.as_matrix()[0][2])

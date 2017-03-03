@@ -25,6 +25,12 @@ valid_fields["database"] = valid_fields["database"] + ("rxn_type", "provenance")
 valid_fields["page"] = copy.deepcopy(hash_fields["page"]) + ("provenance", )
 
 def get_hash(data, field_type):
+    if (field_type == "molecules"):
+        field_type = "molecule"
+    elif (field_type == "databases"):
+        field_type = "database"
+    elif (field_type == "pages"):
+        field_type = "page"
     m = hashlib.sha1()
     concat = ""
     if field_type is None:

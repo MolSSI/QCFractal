@@ -33,14 +33,6 @@ class MongoSocket(object):
         except pymongo.errors.DuplicateKeyError:
             return False
 
-    # Given the hash ID of a molecule, delete it. Return true on success,
-    # otherwise false.
-    def del_molecule(self, hash_val):
-        if isinstance(hash_val, dict):
-            hash_val = fields.get_hash(hash_val, "molecule")
-
-        return (self.db["molecules"].delete_one({"_id": hash_val})).deleted_count == 1
-
     # Adds a database to the DB. Returns True on success.
     def add_database(self, data):
         sha1 = fields.get_hash(data, "database")
@@ -50,10 +42,6 @@ class MongoSocket(object):
             return True
         except pymongo.errors.DuplicateKeyError:
             return False
-
-    def del_database(self, name):
-        hash_bal = fields.get_hash(name, "database")
-        return (self.db["databases"].delete_one({"_id": hash_val})).deleted_count == 1
 
     # Adds a page to the DB. Returns True on success.
     def add_page(self, data):
@@ -65,10 +53,29 @@ class MongoSocket(object):
         except pymongo.errors.DuplicateKeyError:
             return False
 
-    # Given the hash ID of a page, delete it. Return true on success, otherwise
-    # false.
-    def del_page(self, hash_val):
-        return (self.db["pages"].delete_one({"_id": hash_val})).deleted_count == 1
+    def del_by_hash(self, collection, hash_val):
+        return (self.db[collection].delete_one({"_id": hash_val})).deleted_count == 1
+
+    def del_by_data(self, collection, data):
+        return self.del_by_hash(collection, fields.get_hash(data, collection))
+
+    def del_molecule_by_data(self, data):
+        return self.del_by_data("molecules", data)
+
+    def del_molecule_by_hash(self, hash_val):
+        return self.del_by_hash("molecules", hash_val)
+
+    def del_database_by_data(self, data):
+        return self.del_by_data("databases", data)
+
+    def del_database_by_hash(self, hash_val):
+        return self.del_by_hash("databases", hash_val)
+
+    def del_page_by_data(self, data):
+        return self.del_by_data("pages", data)
+
+    def del_page_by_hash(self, hash_val):
+        return self.del_by_hash("pages", hash_val)
 
     # Given mol hashes, methods, and a field, populate a mol by method matrix
     # with respective fields
