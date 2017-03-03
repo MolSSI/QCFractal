@@ -59,7 +59,6 @@ before_script:
   - python -V
   - python -c 'import numpy; print(numpy.version.version)'
   - pip install -e .
-  - python .scripts/setup_test_database.py
 
 script:
   - py.test -v --cov=./
