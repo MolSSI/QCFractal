@@ -207,3 +207,29 @@ def test_project_list(mongo_socket):
     res = mongo_socket.list_projects()
     assert len(res) == 1
     assert res[0] == "local_values_test"
+
+def test_clone(mongo_socket):
+    res = mongo_socket.list_projects()
+    assert len(res) == 1
+    assert res[0] == "local_values_test"
+    mongo_socket.client["clone"]["dummy"].insert_one({"test":"record"})
+    assert len(mongo_socket.list_projects()) == 2
+    assert "dummy" in mongo_socket.client["clone"].collection_names()
+    mongo_socket.clone_to("127.0.0.1", 27017, "clone")
+    assert len(mongo_socket.list_projects()) == 2
+    assert "dummy" not in mongo_socket.client["clone"].collection_names()
+    mongo_socket.client.drop_database("clone")
+    assert len(mongo_socket.list_projects()) == 1
+
+def test_push(mongo_socket):
+    res = mongo_socket.list_projects()
+    assert len(res) == 1
+    assert res[0] == "local_values_test"
+    mongo_socket.client["push"]["dummy"].insert_one({"test":"record"})
+    assert len(mongo_socket.list_projects()) == 2
+    assert "dummy" in mongo_socket.client["push"].collection_names()
+    mongo_socket.push_to("127.0.0.1", 27017, "push")
+    assert len(mongo_socket.list_projects()) == 2
+    assert "dummy" in mongo_socket.client["push"].collection_names()
+    mongo_socket.client.drop_database("push")
+    assert len(res) == 1

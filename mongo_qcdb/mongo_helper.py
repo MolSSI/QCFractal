@@ -1,3 +1,8 @@
+"""
+Database connection class which directly calls the PyMongo API to capture
+cammon subroutines.
+"""
+
 import pymongo
 import pandas as pd
 import hashlib
@@ -5,13 +10,14 @@ import json
 import numpy as np
 from numpy import nan
 from math import isnan
-
 from . import fields
 
 
 class MongoSocket(object):
+    """
+    This is a Mongo QCDB socket class.
+    """
 
-    # Constructor
     def __init__(self, url, port, db):
         """
         Constructs a new socket where url and port points towards a Mongod instance.
@@ -24,63 +30,202 @@ class MongoSocket(object):
         self.client = pymongo.MongoClient(url, port)
         self.setup = self.init_db(db)
 
-    # Adds a molecule to the DB. Returns True on success.
     def add_molecule(self, data):
-        sha1 = fields.get_hash(data, "molecule")
-        try:
-            data["_id"] = sha1
-            self.db["molecules"].insert_one(data)
-            return True
-        except pymongo.errors.DuplicateKeyError:
-            return False
+        """
+        Adds a molecule to the database.
 
-    # Adds a database to the DB. Returns True on success.
+        Parameters
+        ----------
+        data : dict
+            Structured instance of the molecule.
+
+        Returns
+        -------
+        bool
+            Whether the operation was successful.
+        """
+        return self.add_generic(data, "molecules")
+
     def add_database(self, data):
-        sha1 = fields.get_hash(data, "database")
-        try:
-            data["_id"] = sha1
-            self.db["databases"].insert_one(data)
-            return True
-        except pymongo.errors.DuplicateKeyError:
-            return False
+        """
+        Adds a database to the database.
 
-    # Adds a page to the DB. Returns True on success.
+        Parameters
+        ----------
+        data : dict
+            Structured instance of the database.
+
+        Returns
+        -------
+        bool
+            Whether the operation was successful.
+        """
+        return self.add_generic(data, "databases")
+
     def add_page(self, data):
-        sha1 = fields.get_hash(data, "page")
+        """
+        Adds a page to the database.
+
+        Parameters
+        ----------
+        data : dict
+            Structured instance of the page.
+
+        Returns
+        -------
+        bool
+            Whether the operation was successful.
+        """
+        return self.add_generic(data, "pages")
+
+    def add_generic(self, data, collection):
+        """
+        Helper function that facilitates adding a record.
+        """
+        sha1 = fields.get_hash(data, collection)
         try:
             data["_id"] = sha1
-            self.db["pages"].insert_one(data)
+            self.db[collection].insert_one(data)
             return True
         except pymongo.errors.DuplicateKeyError:
             return False
 
     def del_by_hash(self, collection, hash_val):
+        """
+        Helper function that facilitates deletion based on hash.
+        """
         return (self.db[collection].delete_one({"_id": hash_val})).deleted_count == 1
 
     def del_by_data(self, collection, data):
+        """
+        Helper function that facilitates deletion based on structured dict.
+        """
         return self.del_by_hash(collection, fields.get_hash(data, collection))
 
     def del_molecule_by_data(self, data):
+        """
+        Removes a molecule from the database from its raw data.
+
+        Parameters
+        ----------
+        data : dict
+            Structured instance of the molecule.
+
+        Returns
+        -------
+        bool
+            Whether the operation was successful.
+        """
         return self.del_by_data("molecules", data)
 
     def del_molecule_by_hash(self, hash_val):
+        """
+        Removes a molecule from the database from its hash.
+
+        Parameters
+        ----------
+        hash_val : str
+            The hash of a molecule.
+
+        Returns
+        -------
+        bool
+            Whether the operation was successful.
+        """
         return self.del_by_hash("molecules", hash_val)
 
     def del_database_by_data(self, data):
+        """
+        Removes a database from the database from its raw data.
+
+        Parameters
+        ----------
+        data : dict
+            Structured instance of the database.
+
+        Returns
+        -------
+        bool
+            Whether the operation was successful.
+        """
         return self.del_by_data("databases", data)
 
     def del_database_by_hash(self, hash_val):
+        """
+        Removes a database from the database from its hash.
+
+        Parameters
+        ----------
+        hash_val : str
+            The hash of a database.
+
+        Returns
+        -------
+        bool
+            Whether the operation was successful.
+        """
         return self.del_by_hash("databases", hash_val)
 
     def del_page_by_data(self, data):
+        """
+        Removes a page from the database from its raw data.
+
+        Parameters
+        ----------
+        data : dict
+            Structured instance of the page.
+
+        Returns
+        -------
+        bool
+            Whether the operation was successful.
+        """
         return self.del_by_data("pages", data)
 
     def del_page_by_hash(self, hash_val):
+        """
+        Removes a page from the database from its hash.
+
+        Parameters
+        ----------
+        hash_val : str
+            The hash of a page.
+
+        Returns
+        -------
+        bool
+            Whether the operation was successful.
+        """
         return self.del_by_hash("pages", hash_val)
 
-    # Given mol hashes, methods, and a field, populate a mol by method matrix
-    # with respective fields
     def evaluate(self, hashes, methods, field="return_value"):
+        """
+        Queries monogod for all pages containing a molecule specified in
+        `hashes` and a method specified in `methods`. For all matches, finds
+        their `field` value and populates the relevant dataframe cell.
+
+        Parameters
+        ----------
+        hashes : list
+            A list of molecules hashes.
+        methods : list
+            A list of methods (modelchems).
+        field : "return_value", optional
+            A page field.
+
+        Returns
+        -------
+        dataframe
+            Returns a dataframe with your results. The rows will have the
+            molecule hashes and the columns will have the method names. Each
+            dataframe[molecule][method] cell contains the respective field
+            value.
+
+        Notes
+        -----
+        Empty cells will contain NaN.
+
+        """
         hashes = list(hashes)
         methods = list(methods)
         command = [{
@@ -105,35 +250,75 @@ class MongoSocket(object):
                 pass
         return pd.DataFrame(data=d, index=[methods]).transpose()
 
-    # Given mol hashes, fields, and a method, populate a mol by field matrix
-    # with the respective field values for that method
     def evaluate_2(self, hashes, fields, method):
+        """
+        Queries monogod for all pages containing a molecule specified in
+        `hashes` of method `method`. For all matches, finds the values in each
+        of their `fields` populates the relevant dataframe cell.
+
+        Parameters
+        ----------
+        hashes : list
+            A list of molecules hashes.
+        fields : list
+            A list of page fields.
+        method : str
+            A method (modelchem).
+
+        Returns
+        -------
+        dataframe
+            Returns a dataframe with your results. The rows will have the
+            molecule hashes and the columns will have the field names. Each
+            dataframe[molecule][field] cell contains the respective field
+            value.
+
+        Notes
+        -----
+        Empty cells will contain NaN.
+
+        """
+        hashes = list(hashes)
+        command = [{
+            "$match": {
+                "molecule_hash": {"$in": hashes},
+                "modelchem": method
+            }
+        }]
+        pages = list(self.db["pages"].aggregate(command))
         d = {}
         for mol in hashes:
-            d[mol] = []
             for field in fields:
-                command = [{
-                    "$match": {
-                        "molecule_hash": mol,
-                        "modelchem": method
-                    }
-                }, {
-                    "$group": {
-                        "_id": {},
-                        "value": {
-                            "$push": "$" + field
-                        }
-                    }
-                }]
-                pages = list(self.db["pages"].aggregate(command))
-                if (len(pages) == 0 or len(pages[0]["value"]) == 0):
-                    d[mol].append(nan)
-                else:
-                    d[mol].append(pages[0]["value"][0])
+                d[mol] = {}
+                d[mol][field] = nan
+        for item in pages:
+            for field in fields:
+                scope = item
+                try:
+                    for name in field.split("."):
+                        scope = scope[name]
+                    d[item["molecule_hash"]][field] = scope
+                except KeyError:
+                    pass
         return pd.DataFrame(data=d, index=[fields]).transpose()
 
-    # Displays all available model chems for the provided list of molecule hashes.
     def list_methods(self, hashes):
+        """
+        Displays all methods that are used by each molecule in `hashes`.
+
+        Parameters
+        ----------
+        hashes : list
+            A list of molecules hashes.
+
+        Returns
+        -------
+        dataframe
+            Returns a dataframe with your results. The rows will have the
+            molecule hashes and the columns will be numbered. Each cell contains
+            a method used by the molecule in that row.
+
+        """
         d = {}
         for mol in hashes:
             records = list(self.db["pages"].find({"molecule_hash": mol}))
@@ -144,8 +329,25 @@ class MongoSocket(object):
         df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in d.items()])).transpose()
         return df
 
-    # Returns series containing the first match of field in a page for all hashes.
     def search_qc_variable(self, hashes, field):
+        """
+        Displays the first `field` value for each molecule in `hashes`.
+
+        Parameters
+        ----------
+        hashes : list
+            A list of molecules hashes.
+        field : str
+            A page field.
+
+        Returns
+        -------
+        dataframe
+            Returns a dataframe with your results. The rows will have the
+            molecule hashes and the column will contain the name. Each cell
+            contains the field value for the molecule in that row.
+
+        """
         d = {}
         for mol in hashes:
             command = [{
@@ -168,10 +370,60 @@ class MongoSocket(object):
         return pd.DataFrame(data=d, index=[field]).transpose()
 
     def list_projects(self):
+        """
+        Lists the databases in this mongod instance
+
+        Returns
+        -------
+        projects : list
+            List of database names.
+        """
         projects = []
         for db_name in self.client.database_names():
             projects.append(db_name)
         return projects
+
+    def push_to(self, url, port, remote_db):
+        """
+        Inserts all documents from the local project into the remote one.
+
+        Parameters
+        ----------
+        url : str
+            Connection string.
+        port : str
+            Connection port.
+        remote_db : str
+            Name of remote project.
+        """
+        self.generic_copy(url, port, remote_db, False)
+
+    def clone_to(self, url, port, remote_db):
+        """
+        Replaces the remote project with the local one.
+
+        Parameters
+        ----------
+        url : str
+            Connection string.
+        port : str
+            Connection port.
+        remote_db : str
+            Name of remote project.
+        """
+        self.generic_copy(url, port, remote_db, True)
+
+    def generic_copy(self, url, port, remote_db, delete):
+        """
+            Helper function for facilitating syncing.
+        """
+        remote = MongoSocket(url, port, remote_db)
+        if (delete):
+            remote.client.drop_database(remote.db_name)
+        for col in ["molecules", "databases", "pages"]:
+            cursor = self.db[col].find({})
+            for item in cursor:
+                remote.add_generic(item, col)
 
     def get_value(self, field, db, rxn, stoich, method, do_stoich=True, debug_level=1):
         command = [{
