@@ -2,8 +2,9 @@ import pymongo
 import pandas as pd
 import hashlib
 import json
-# import debug as debug
 import numpy as np
+from numpy import nan
+from math import isnan
 
 from . import fields
 
@@ -80,28 +81,28 @@ class MongoSocket(object):
     # Given mol hashes, methods, and a field, populate a mol by method matrix
     # with respective fields
     def evaluate(self, hashes, methods, field="return_value"):
+        hashes = list(hashes)
+        methods = list(methods)
+        command = [{
+            "$match": {
+                "molecule_hash": {"$in": hashes},
+                "modelchem": {"$in": methods}
+            }
+        }]
+        pages = list(self.db["pages"].aggregate(command))
         d = {}
         for mol in hashes:
-            d[mol] = []
             for method in methods:
-                command = [{
-                    "$match": {
-                        "molecule_hash": mol,
-                        "modelchem": method
-                    }
-                }, {
-                    "$group": {
-                        "_id": {},
-                        "value": {
-                            "$push": "$" + field
-                        }
-                    }
-                }]
-                pages = list(self.db["pages"].aggregate(command))
-                if (len(pages) == 0 or len(pages[0]["value"]) == 0):
-                    d[mol].append(None)
-                else:
-                    d[mol].append(pages[0]["value"][0])
+                d[mol] = {}
+                d[mol][method] = nan
+        for item in pages:
+            scope = item
+            try:
+                for name in field.split("."):
+                    scope = scope[name]
+                d[item["molecule_hash"]][item["modelchem"]] = scope
+            except KeyError:
+                pass
         return pd.DataFrame(data=d, index=[methods]).transpose()
 
     # Given mol hashes, fields, and a method, populate a mol by field matrix
@@ -126,7 +127,7 @@ class MongoSocket(object):
                 }]
                 pages = list(self.db["pages"].aggregate(command))
                 if (len(pages) == 0 or len(pages[0]["value"]) == 0):
-                    d[mol].append(None)
+                    d[mol].append(nan)
                 else:
                     d[mol].append(pages[0]["value"][0])
         return pd.DataFrame(data=d, index=[fields]).transpose()
@@ -165,6 +166,12 @@ class MongoSocket(object):
             else:
                 d[mol] = pages[0]["value"][0]
         return pd.DataFrame(data=d, index=[field]).transpose()
+
+    def list_projects(self):
+        projects = []
+        for db_name in self.client.database_names():
+            projects.append(db_name)
+        return projects
 
     def get_value(self, field, db, rxn, stoich, method, do_stoich=True, debug_level=1):
         command = [{

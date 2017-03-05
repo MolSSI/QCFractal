@@ -7,7 +7,6 @@ import glob
 import json
 from collections import OrderedDict
 
-
 @pytest.fixture(scope="module")
 def mongo_socket():
     db_name = "local_values_test"
@@ -161,30 +160,30 @@ def test_evaluate_exhaustive_return_value(mongo_socket):
     mongo_socket.add_page(data)
     result = mongo_socket.evaluate(["efad0bae4a0bdf4aeea66b3c29ec505bdd61b2a1", "b", "und"], ["B3LYP/aug-cc-pVDZ", "a", "not available"])
     mongo_socket.del_page_by_hash("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
-    assert result.as_matrix()[0][0] == None
+    assert math.isnan(result.as_matrix()[0][0])
     assert result.as_matrix()[0][1] == "accessed"
-    assert result.as_matrix()[0][2] == None
+    assert math.isnan(result.as_matrix()[0][2])
     assert np.isclose(result.as_matrix()[1][0],-189.794388, rtol=1.e-6, atol=1.e-6)
     assert math.isnan(result.as_matrix()[1][1])
     assert math.isnan(result.as_matrix()[1][2])
-    assert result.as_matrix()[2][0] == None
-    assert result.as_matrix()[2][1] == None
-    assert result.as_matrix()[2][2] == None
+    assert math.isnan(result.as_matrix()[2][0])
+    assert math.isnan(result.as_matrix()[2][1])
+    assert math.isnan(result.as_matrix()[2][2])
 
 def test_evaluate_exhaustive_variables(mongo_socket):
     data = {"_id":"NewPage", "modelchem":"a", "molecule_hash":"b", "return_value":"accessed"}
     mongo_socket.add_page(data)
     result = mongo_socket.evaluate(["efad0bae4a0bdf4aeea66b3c29ec505bdd61b2a1", "b", "und"], ["B3LYP/aug-cc-pVDZ", "a", "not available"], field="variables.NUCLEAR REPULSION ENERGY")
     mongo_socket.del_page_by_hash("b8106d3072fd101cf33f937b0db5b73e670c1dd9")
-    assert result.as_matrix()[0][0] == None
-    assert result.as_matrix()[0][1] == None
-    assert result.as_matrix()[0][2] == None
+    assert math.isnan(result.as_matrix()[0][0])
+    assert math.isnan(result.as_matrix()[0][1])
+    assert math.isnan(result.as_matrix()[0][2])
     assert np.isclose(result.as_matrix()[1][0], 69.45752938798681, rtol=1.e-6, atol=1.e-6)
     assert math.isnan(result.as_matrix()[1][1])
     assert math.isnan(result.as_matrix()[1][2])
-    assert result.as_matrix()[2][0] == None
-    assert result.as_matrix()[2][1] == None
-    assert result.as_matrix()[2][2] == None
+    assert math.isnan(result.as_matrix()[2][0])
+    assert math.isnan(result.as_matrix()[2][1])
+    assert math.isnan(result.as_matrix()[2][2])
 
 def test_evaluate_2_exhaustive(mongo_socket):
     data = {"_id":"NewPage", "modelchem":"B3LYP/aug-cc-pVDZ", "molecule_hash":"b", "return_value":"accessed"}
@@ -195,11 +194,16 @@ def test_evaluate_2_exhaustive(mongo_socket):
     assert np.isclose(result.as_matrix()[0][1], 69.42994763149548, rtol=1.e-6, atol=1.e-6)
     assert math.isnan(result.as_matrix()[0][2])
     assert result.as_matrix()[1][0] == "accessed"
-    assert result.as_matrix()[1][1] == None
-    assert result.as_matrix()[1][2] == None
+    assert math.isnan(result.as_matrix()[1][1])
+    assert math.isnan(result.as_matrix()[1][2])
     assert np.isclose(result.as_matrix()[2][0], -189.79438817699523, rtol=1.e-6, atol=1.e-6)
     assert np.isclose(result.as_matrix()[2][1], 69.45752938798681, rtol=1.e-6, atol=1.e-6)
     assert math.isnan(result.as_matrix()[2][2])
-    assert result.as_matrix()[3][0] == None
-    assert result.as_matrix()[3][1] == None
-    assert result.as_matrix()[3][2] == None
+    assert math.isnan(result.as_matrix()[3][0])
+    assert math.isnan(result.as_matrix()[3][1])
+    assert math.isnan(result.as_matrix()[3][2])
+
+def test_project_list(mongo_socket):
+    res = mongo_socket.list_projects()
+    assert len(res) == 1
+    assert res[0] == "local_values_test"
