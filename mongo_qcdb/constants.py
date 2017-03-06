@@ -78,7 +78,8 @@ physconst = {
 
 def get_scale(name):
     """
-    Provide short cuts to get_scalar data
+    Provide short cuts to get_scalar data. If a float or int is passed in the
+    value is simply returned.
     """
     if isinstance(name, (float, int)):
         return name

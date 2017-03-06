@@ -52,8 +52,8 @@ class MongoSocket(object):
             return False
 
     def del_database(self, name):
-        hash_bal = fields.get_hash(name, "database")
-        return (self.db["databases"].delete_one({"_id": hash_val})).deleted_count == 1
+        # hash_bal = fields.get_hash(name, "database")
+        return (self.db["databases"].delete_one({"name": name})).deleted_count == 1
 
     # Adds a page to the DB. Returns True on success.
     def add_page(self, data):

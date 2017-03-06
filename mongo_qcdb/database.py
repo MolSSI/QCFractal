@@ -206,7 +206,7 @@ class Database(object):
         return self.data["reactions"][found[0]]
 
     # Setters
-    def save(self, mongo_db=None, name_override=False, overwrite=False):
+    def save(self, mongo_db=None, overwrite=False):
         if self.data["name"] == "":
             raise AttributeError("Database:save: Database must have a name!")
 
@@ -215,19 +215,16 @@ class Database(object):
                 raise AttributeError(
                     "Database:save: Database does not own a MongoDB instance and one was not passed in."
                 )
-            mongo_db = self.mongod
+            mongod = self.mongod
         else:
-            if (not name_override) and (mongo_db.db_name != self.data["name"]):
-                raise AttributeError(
-                    "Database:save: Passed in client and Database have different names. You can override this error by setting name_override."
-                )
+            mongod = mongo_db
 
         # Add the database
-        mongo_db.add_database(self.data)
+        mongod.add_database(self.data)
 
         # Loop over new molecules
         for k, v in self._new_molecule_jsons.items():
-            mongo_db.add_molecule(v)
+            mongod.add_molecule(v)
 
     # Statistical quantities
     def statistics(self, stype, value, bench="Benchmark"):
@@ -378,13 +375,20 @@ class Database(object):
         for k, v in other_fields.items():
             rxn[k] = v
 
-        self.data["reactions"].append(rxn)
 
         if "default" in list(return_values):
-            series = pd.Series(return_values["default"], name=rxn["name"])
+            rxn["reaction_results"] = return_values
         else:
-            series = pd.Series(return_values, name=rxn["name"])
-        self.df = self.df.append(series)
+            if isinstance(return_values, (dict)):
+                raise TypeError("Passed in return values must have a 'default' field.")
+
+
+            rxn["reaction_results"] = {}
+            rxn["reaction_results"]["default"] = return_values
+
+
+        self.data["reactions"].append(rxn)
+
 
         return rxn
 
