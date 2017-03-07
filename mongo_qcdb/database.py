@@ -113,7 +113,7 @@ class Database(object):
 
         """
 
-        if self.mongod is None:
+        if not reaction_results and (self.mongod is None):
             raise AttributeError("DataBase: MongoSocket was not set.")
 
         # Keys should be iterable
@@ -379,9 +379,8 @@ class Database(object):
         if "default" in list(return_values):
             rxn["reaction_results"] = return_values
         else:
-            if isinstance(return_values, (dict)):
-                raise TypeError("Passed in return values must have a 'default' field.")
-
+            # if isinstance(return_values, (dict)):
+            #     raise TypeError("Passed in return values must have a 'default' field.")
 
             rxn["reaction_results"] = {}
             rxn["reaction_results"]["default"] = return_values

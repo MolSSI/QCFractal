@@ -315,17 +315,24 @@ def test_nbody_rxn(nbody_db):
 # Test dataframe
 def test_dataframe_return_values(water_db):
 
+    water_db.query("Benchmark", reaction_results=True, scale=1.0)
+    water_db.query("DFT", reaction_results=True, scale=1)
+
     assert water_db.df.ix["Water Dimer, nocp", "Benchmark"] == -20.0
     assert water_db.df.ix["Water Dimer, nocp", "DFT"] == -10.0
     assert water_db.df.ix["Water Dimer, nocp - hash", "Benchmark"] == -5.0
 
-    assert np.isnan(water_db.df.ix["Water dimer", "Benchmark"])
+    assert np.isnan(water_db.df.ix["Water Dimer, nocp - hash", "DFT"])
 
 
 def test_dataframe_stats(hbc_from_df):
 
     # Remap
     db = hbc_from_df
+
+    db.query("Benchmark", reaction_results=True, scale=1.0)
+    db.query("B3LYP/aug-cc-pVDZ", reaction_results=True, scale=1.0)
+    db.query("B3LYP/def2-QZVP", reaction_results=True, scale=1.0)
 
     # Single value stats
     assert np.allclose(0.7462906, db.statistics("ME", "B3LYP/aug-cc-pVDZ"), atol=1.e-5)
@@ -370,7 +377,7 @@ def test_dataframe_saving_loading(hbc_from_df):
     if tmp_db_name in mongo.client.database_names():
         mongo.client.drop_database(tmp_db_name)
 
-    db.save(mongo, name_override=True)
+    db.save(mongo)
     db_from_save = mdb.Database(db.data["name"], mongod=mongo)
 
     assert db_from_save.rxn_index.shape[0] == 588
