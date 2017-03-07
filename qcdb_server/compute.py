@@ -8,7 +8,13 @@ import time
 # Make sure this looks like just a normal file
 #runner.run_task.__module__ = "runner"
 
-psi_run = "python /Users/daniel/Gits/psixc/psi4/run_psi4.py --inplace --json "
+try:
+    psi_location = os.environ["MONGO_PSI4"]
+except:
+    raise KeyError("Mongo Compute: MONGO_PSI4 psi variable was not set. Failing.")
+
+psi_run = "python " + psi_location + " --inplace --json "
+
 def psi_compute(json_data):
 
     filename = str(uuid.uuid4()) + ".json" 
