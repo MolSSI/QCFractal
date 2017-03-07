@@ -8,8 +8,6 @@ import pandas as pd
 import hashlib
 import json
 import numpy as np
-from numpy import nan
-from math import isnan
 from . import fields
 
 
@@ -239,7 +237,7 @@ class MongoSocket(object):
         for mol in hashes:
             for method in methods:
                 d[mol] = {}
-                d[mol][method] = nan
+                d[mol][method] = np.nan
         for item in pages:
             scope = item
             try:
@@ -290,7 +288,7 @@ class MongoSocket(object):
         for mol in hashes:
             for field in fields:
                 d[mol] = {}
-                d[mol][field] = nan
+                d[mol][field] = np.nan
         for item in pages:
             for field in fields:
                 scope = item
