@@ -19,8 +19,11 @@ import compute
 compute_file = os.path.abspath(os.path.dirname(__file__)) + os.path.sep + 'compute.py'
 
 define("port", default=8888, help="Run on the given port.", type=int)
-define("mongo_project", default="Playground", help="The Mongod Database instance to open.", type=str)
-
+define("mongo_project", default="default", help="The Mongod Database instance to open.", type=str)
+define("mongod_ip", default="127.0.0.1", help="The Mongod instances IP.", type=str)
+define("mongod_port", default=27017, help="The Mongod instances port.", type=int)
+define("dask_ip", default="127.0.0.1", help="The Dask instances IP.", type=str)
+define("dask_port", default=8786, help="The Dask instances port.", type=int)
 
 
 class DaskNanny(object):
@@ -32,7 +35,9 @@ class DaskNanny(object):
         self.errors = {}
 
     def add_future(self, future):
-        self.dask_queue[str(uuid.uuid4())] = future
+        uid = str(uuid.uuid4())
+        self.dask_queue[uid] = future
+        return uid
 
     def update(self):
         del_keys = []
@@ -40,7 +45,6 @@ class DaskNanny(object):
             if future.done():
                 try:
                     tmp_data = future.result()
-                    tmp_data["modelchem"] = tmp_data["method"]
                     self.mongod_socket.add_page(tmp_data)
                 except Exception as e:
                     ename = str( type(e).__name__) + ":" + str(e)
@@ -51,13 +55,14 @@ class DaskNanny(object):
                 del_keys.append(key)
 
         for key in del_keys:
+            print(self.dask_queue[key].result())
             del self.dask_queue[key]
 
 
-class POSTHandler(tornado.web.RequestHandler):
+class Scheduler(tornado.web.RequestHandler):
 
-    def initialize(self, **data):
-        self.data = data
+    def initialize(self, **objects):
+        self.objects = objects
 
     def post(self):
 
@@ -65,49 +70,48 @@ class POSTHandler(tornado.web.RequestHandler):
         data = json.loads(self.request.body.decode('utf-8'))
 
         # Grab objects
-        dask = self.data["dask_socket"]
-        dask_nanny = self.data["dask_nanny"]
+        dask = self.objects["dask_socket"]
+        dask_nanny = self.objects["dask_nanny"]
 
         # Submit
         fut = dask.submit(compute.psi_compute, data) 
-        self.data["dask_nanny"].add_future(fut)
+        uid = self.objects["dask_nanny"].add_future(fut)
 
-        self.write('OK')
+        # Return anything of interest
+        ret = {}
+        ret["success"] = True
+        ret["Nanny ID"] = uid
+        self.write(json.dumps(ret))
 
-from tornado import gen, httpclient, ioloop
-@gen.coroutine
-def post(json_data):
-    client = httpclient.AsyncHTTPClient()
-    data = json.dumps(json_data)
-    response = yield client.fetch('http://localhost:8888/post',
-                                  method='POST',
-                                  body=data)
+class Information(tornado.web.RequestHandler):
 
-    print(response)
+    def initialize(self, **objects):
+        self.objects = objects
 
+    def get(self):
 
+        dask = self.objects["dask_socket"]
+        mongod = self.objects["mongod_socket"]
 
-json_data = {}
-json_data["molecule"] = """He 0 0 0\n--\nHe 0 0 1"""
-json_data["driver"] = "energy"
-json_data["method"] = 'SCF'
-#json_data["kwargs"] = {"bsse_type": "cp"}
-json_data["options"] = {"BASIS": "STO-3G"}
-json_data["return_output"] = True
+        ret = {}
+        ret["mongo_data"] = (mongod.url, mongod.port, mongod.db_name) 
+        ret["dask_data"] = dask.scheduler.address
+        self.write(json.dumps(ret))
+
 
 if __name__ == "__main__":
     # Tornado configures logging.
     tornado.options.options.parse_command_line()
 
     # Build mongo socket 
-    mongod_socket = mdb.mongo_helper.MongoSocket("127.0.0.1", 27017, options.mongo_project)
+    mongod_socket = mdb.mongo_helper.MongoSocket(options.mongod_ip, options.mongod_port, options.mongo_project)
     print("Mongod Socket Info:")
     print(mongod_socket)
     print(" ")
 
     # Grab the Dask Scheduler
     loop = tornado.ioloop.IOLoop.current() 
-    dask_socket = distributed.Client("tcp://192.168.2.123:8786")
+    dask_socket = distributed.Client(options.dask_ip + ":" + str(options.dask_port))
     dask_socket.upload_file(compute_file)
     print("Dask Scheduler Info:")
     print(dask_socket)
@@ -118,7 +122,8 @@ if __name__ == "__main__":
 
     # Start up the app
     app = tornado.web.Application([
-        (r"/post", POSTHandler, {"mongod_socket": mongod_socket, "dask_socket": dask_socket, "dask_nanny": dask_nanny}),
+        (r"/information", Information, {"mongod_socket": mongod_socket, "dask_socket": dask_socket, "dask_nanny": dask_nanny}),
+        (r"/scheduler", Scheduler, {"mongod_socket": mongod_socket, "dask_socket": dask_socket, "dask_nanny": dask_nanny}),
         ],
     )
     app.listen(options.port)
@@ -127,9 +132,17 @@ if __name__ == "__main__":
     tornado.ioloop.PeriodicCallback(dask_nanny.update, 2000).start()
 
     # This is for testing
+    #loop.add_callback(get, "{data}")
     #loop.add_callback(post, json_data)
     #loop.run_sync(lambda: post(data))
 
     print("QCDB Client successfully started. Starting IOLoop.\n")
-    loop.start()
+
+    # Soft quit at the end of a loop
+    try:
+        loop.start()
+    except KeyboardInterrupt:
+        loop.stop()
+
+    print("QCDB Client stopping gracefully. Stoped IOLoop.\n")
     

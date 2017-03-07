@@ -13,7 +13,7 @@ try:
 except:
     raise KeyError("Mongo Compute: MONGO_PSI4 psi variable was not set. Failing.")
 
-psi_run = "python " + psi_location + " --inplace --json "
+psi_run = "python " + psi_location + " --json "
 
 def psi_compute(json_data):
 

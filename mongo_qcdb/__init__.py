@@ -8,3 +8,5 @@ from . import visualization
 
 from .molecule import Molecule
 from .database import Database
+from .client import Client
+from .mongo_helper import MongoSocket
