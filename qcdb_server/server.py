@@ -22,7 +22,7 @@ define("port", default=8888, help="Run on the given port.", type=int)
 define("mongo_project", default="default", help="The Mongod Database instance to open.", type=str)
 define("mongod_ip", default="127.0.0.1", help="The Mongod instances IP.", type=str)
 define("mongod_port", default=27017, help="The Mongod instances port.", type=int)
-define("dask_ip", default="127.0.0.1", help="The Dask instances IP.", type=str)
+define("dask_ip", default="", help="The Dask instances IP. If blank starts a local cluster.", type=str)
 define("dask_port", default=8786, help="The Dask instances port.", type=int)
 
 
@@ -86,6 +86,7 @@ class Scheduler(tornado.web.RequestHandler):
 class Information(tornado.web.RequestHandler):
 
     def initialize(self, **objects):
+        print("INFO " + repr(self.request))
         self.objects = objects
 
     def get(self):
@@ -98,51 +99,59 @@ class Information(tornado.web.RequestHandler):
         ret["dask_data"] = dask.scheduler.address
         self.write(json.dumps(ret))
 
+class QCDBServer(object):
+    def __init__(self):
+        # Tornado configures logging.
+        tornado.options.options.parse_command_line()
+
+        # Build mongo socket 
+        mongod_socket = mdb.mongo_helper.MongoSocket(options.mongod_ip, options.mongod_port, options.mongo_project)
+        print("Mongod Socket Info:")
+        print(mongod_socket)
+        print(" ")
+
+        # Grab the Dask Scheduler
+        loop = tornado.ioloop.IOLoop.current() 
+        dask_socket = distributed.Client(options.dask_ip + ":" + str(options.dask_port))
+        dask_socket.upload_file(compute_file)
+        print("Dask Scheduler Info:")
+        print(dask_socket)
+        print(" ")
+
+        # Dask Nanny
+        dask_nanny = DaskNanny(dask_socket, mongod_socket)
+
+        # Start up the app
+        app = tornado.web.Application([
+            (r"/information", Information, {"mongod_socket": mongod_socket, "dask_socket": dask_socket, "dask_nanny": dask_nanny}),
+            (r"/scheduler", Scheduler, {"mongod_socket": mongod_socket, "dask_socket": dask_socket, "dask_nanny": dask_nanny}),
+            ],
+        )
+        app.listen(options.port)
+
+        # Query Dask Nanny on loop
+        tornado.ioloop.PeriodicCallback(dask_nanny.update, 2000).start()
+
+        # This is for testing
+        #loop.add_callback(get, "{data}")
+        #loop.add_callback(post, json_data)
+        #loop.run_sync(lambda: post(data))
+
+        self.loop = loop
+        print("QCDB Client successfully initialized at https://localhost:%d.\n" % options.port)
+
+    def start(self):
+
+        print("QCDB Client successfully started. Starting IOLoop.\n")
+        # Soft quit at the end of a loop
+        try:
+            self.loop.start()
+        except KeyboardInterrupt:
+            self.loop.stop()
+
+        print("\nQCDB Client stopping gracefully. Stoped IOLoop.\n")
 
 if __name__ == "__main__":
-    # Tornado configures logging.
-    tornado.options.options.parse_command_line()
-
-    # Build mongo socket 
-    mongod_socket = mdb.mongo_helper.MongoSocket(options.mongod_ip, options.mongod_port, options.mongo_project)
-    print("Mongod Socket Info:")
-    print(mongod_socket)
-    print(" ")
-
-    # Grab the Dask Scheduler
-    loop = tornado.ioloop.IOLoop.current() 
-    dask_socket = distributed.Client(options.dask_ip + ":" + str(options.dask_port))
-    dask_socket.upload_file(compute_file)
-    print("Dask Scheduler Info:")
-    print(dask_socket)
-    print(" ")
-
-    # Dask Nanny
-    dask_nanny = DaskNanny(dask_socket, mongod_socket)
-
-    # Start up the app
-    app = tornado.web.Application([
-        (r"/information", Information, {"mongod_socket": mongod_socket, "dask_socket": dask_socket, "dask_nanny": dask_nanny}),
-        (r"/scheduler", Scheduler, {"mongod_socket": mongod_socket, "dask_socket": dask_socket, "dask_nanny": dask_nanny}),
-        ],
-    )
-    app.listen(options.port)
-
-    # Query Dask Nanny on loop
-    tornado.ioloop.PeriodicCallback(dask_nanny.update, 2000).start()
-
-    # This is for testing
-    #loop.add_callback(get, "{data}")
-    #loop.add_callback(post, json_data)
-    #loop.run_sync(lambda: post(data))
-
-    print("QCDB Client successfully started. Starting IOLoop.\n")
-
-    # Soft quit at the end of a loop
-    try:
-        loop.start()
-    except KeyboardInterrupt:
-        loop.stop()
-
-    print("QCDB Client stopping gracefully. Stoped IOLoop.\n")
-    
+   
+    server = QCDBServer()
+    server.start() 
