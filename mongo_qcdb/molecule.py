@@ -46,6 +46,8 @@ class Molecule(object):
             elif dtype == "numpy":
                 frags = kwargs.pop("frags", [])
                 self._molecule_from_numpy(mol_str, frags)
+            elif dtype == "json":
+                self._molecule_from_json(mol_str)
             else:
                 raise KeyError("Molecule: dtype of %s not recognized.")
 
@@ -54,6 +56,17 @@ class Molecule(object):
         else:
             # In case a user wants to build one themselves
             pass
+
+    def _molecule_from_json(self, json_data):
+        """From a given valid JSON molecule spec, rebuild the class.
+        """
+
+        for field, data in json_data.items():
+            if field == "geometry":
+                setattr(self, field, np.array(data, dtype=np.double))
+            else:
+                setattr(self, field, data)
+
 
     def _molecule_from_numpy(self, arr, frags):
         """Given a NumPy array of shape (N, 4) where each row is (Z_nuclear, X, Y, Z).
@@ -433,15 +446,18 @@ class Molecule(object):
         return text
 
     def to_json(self):
+        """
+        Returns a JSON form of the Molecule object.
+        """
 
         ret = {}
         for field in fields.valid_fields["molecule"]:
             if field == "geometry":
                 tmp = np.around(getattr(self, field), GEOMETRY_NOISE)
                 tmp[np.abs(tmp) < 2.e-10] = 0
-                ret[field] = json.dumps(tmp.tolist())
+                ret[field] = tmp.tolist()
             else:
-                ret[field] = json.dumps(getattr(self, field))
+                ret[field] = getattr(self, field)
 
         return ret
 

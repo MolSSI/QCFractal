@@ -48,17 +48,17 @@ _neon_tetramer = """
 0 1
 Ne 0.000000 0.000000 0.000000
 --
-Ne 3.000000 0.000000 0.000000
+Ne 3.100000 0.000000 0.000000
 --
-Ne 0.000000 3.000000 0.000000
+Ne 0.000000 3.200000 0.000000
 --
-Ne 0.000000 0.000000 3.000000
+Ne 0.000000 0.000000 3.300000
 units bohr
 """
 
 _neon_tetramer_np = np.array(
-    [[10, 0.000000, 0.000000, 0.000000], [10, 3.000000, 0.000000, 0.000000],
-     [10, 0.000000, 3.000000, 0.000000], [10, 0.000000, 0.000000, 3.000000]])
+    [[10, 0.000000, 0.000000, 0.000000], [10, 3.100000, 0.000000, 0.000000],
+     [10, 0.000000, 3.200000, 0.000000], [10, 0.000000, 0.000000, 3.300000]])
 _neon_tetramer_np[:, 1:] *= mdb.constants.physconst["bohr2angstroms"]
 
 
@@ -78,17 +78,30 @@ def _compare_molecule(bench, other):
 
 
 def test_molecule_constructors():
+
+    ### Water Dimer
     water_psi = molecule.Molecule(_water_dimer_minima, name="water dimer")
-    water_np = molecule.Molecule(_water_dimer_minima_np, name="water dimer", dtype="numpy", frags=[3])
+    water_np = molecule.Molecule(
+        _water_dimer_minima_np, name="water dimer", dtype="numpy", frags=[3])
 
     assert _compare_molecule(water_psi, water_np)
 
+    # Check the JSON construct/deconstruct
+    water_from_json = molecule.Molecule(water_psi.to_json(), dtype="json")
+    assert _compare_molecule(water_psi, water_from_json)
 
+
+    ### Neon Tetramer
     neon_psi = molecule.Molecule(_neon_tetramer, name="neon tetramer")
     neon_np = molecule.Molecule(
         _neon_tetramer_np, name="neon tetramer", dtype="numpy", frags=[1, 2, 3])
 
     assert _compare_molecule(neon_psi, neon_np)
+
+    # Check the JSON construct/deconstruct
+    neon_from_json = molecule.Molecule(neon_psi.to_json(), dtype="json")
+    assert _compare_molecule(neon_psi, neon_from_json)
+
 
 
 def test_water_minima_data():
@@ -97,8 +110,12 @@ def test_water_minima_data():
     assert len(str(mol)) == 660
     assert len(mol.to_string()) == 447
 
-    assert sum(x == y for x, y in zip(mol.symbols, ['O', 'H', 'H', 'O', 'H', 'H'])) == mol.geometry.shape[0]
-    assert np.allclose(mol.masses, [15.99491461956, 1.00782503207, 1.00782503207, 15.99491461956, 1.00782503207, 1.00782503207])
+    assert sum(
+        x == y
+        for x, y in zip(mol.symbols, ['O', 'H', 'H', 'O', 'H', 'H'])) == mol.geometry.shape[0]
+    assert np.allclose(mol.masses, [
+        15.99491461956, 1.00782503207, 1.00782503207, 15.99491461956, 1.00782503207, 1.00782503207
+    ])
     assert mol.name == "water dimer"
     assert mol.charge == 0
     assert mol.multiplicity == 1
@@ -107,14 +124,11 @@ def test_water_minima_data():
     assert np.allclose(mol.fragment_charges, [0, 0])
     assert np.allclose(mol.fragment_multiplicities, [1, 1])
     assert hasattr(mol, "provenance")
-    assert np.allclose(mol.geometry, [[ 2.81211080,  0.1255717 ,  0.        ],
-                                      [ 3.48216664, -1.55439981,  0.        ],
-                                      [ 1.00578203, -0.1092573 ,  0.        ],
-                                      [-2.6821528 , -0.12325075,  0.        ],
-                                      [-3.27523824,  0.81341093,  1.43347255],
-                                      [-3.27523824,  0.81341093, -1.43347255]])
-    assert mol.get_hash() == "02ff2734a29577981c830e630c157cbdc27e8fb1"
-
+    assert np.allclose(mol.geometry, [[2.81211080, 0.1255717, 0.], [3.48216664, -1.55439981, 0.],
+                                      [1.00578203, -0.1092573, 0.], [-2.6821528, -0.12325075, 0.],
+                                      [-3.27523824, 0.81341093, 1.43347255],
+                                      [-3.27523824, 0.81341093, -1.43347255]])
+    assert mol.get_hash() == "5969b6e880840d07c74696c80cf4f8dc0011cbd1"
 
 
 def test_water_minima_fragment():
@@ -123,8 +137,8 @@ def test_water_minima_fragment():
 
     frag_0 = mol.get_fragment(0)
     frag_1 = mol.get_fragment(1)
-    assert frag_0.get_hash() == "c7da73e7184933bec6c796d7ed98c60950e5c976"
-    assert frag_1.get_hash() == "e1c68355f514b45d3d1e39739727f5fbe5180e04"
+    assert frag_0.get_hash() == "adbf3250e600c63f567fd3ce9cd0d6b87b314534"
+    assert frag_1.get_hash() == "67a6f97e12479e4140e238151f9470108849b3bc"
 
     frag_0_1 = mol.get_fragment(0, 1)
     frag_1_0 = mol.get_fragment(1, 0)
@@ -168,4 +182,3 @@ def test_water_orient():
 
     # Ghost fragments should prevent overlap
     assert frag_0_1.get_hash() != frag_1_0.get_hash()
-
