@@ -137,73 +137,77 @@ def nbody_db():
     # Ne Tetramer benchmark
     db.ne_stoich = {
         'attributes': {},
+        'name': 'Ne Tetramer',
+        'reaction_results': {
+            'default': {}
+        },
         'stoichiometry': {
-            'default1': {
-                '2d3cf1d504374fa9050a9a28c3ab4a72df0534e7': 4.0
-            },
-            'cp3': {
-                'c809aab151bd9cbaa2750e764083fdbe6c1aabc9': -1.0,
-                '3a0fa0c60401faa0693985fb242c91499edd277d': -1.0,
-                'f291521beb55759ce0b2bb26591768a2ebfd5b37': 1.0,
-                'e6e7529e74bfd80c9a75295ea89e40ee9b14158e': -1.0,
-                'b45b5e2105344cb05124d220ab9c8dfa8c5e96be': 1.0,
-                '6672d0ba44c4c0667991d06a5f6c85a3aabf37d0': 1.0,
-                'b37cc789404c7da6055eee777750d9e03bd5e5c0': 1.0,
-                '961859dc5db0bebf52da368a19f8918afc3162bf': -1.0,
-                'a3e23dfff6751d4434dc358d50cfd23b78408dfc': 1.0,
-                '4397c59cf960939df79b46661ab3f7c9598ba47b': 1.0,
-                '2b1cd4c9b1081f904caabcca7f5d96b609adb3ae': 1.0,
-                'b06cc88f3eec0f8c96bcd99ac9b02af5d89c8cd6': -1.0,
-                '8d7a0111e3fd61565cafc5127605d903ecc97171': -1.0,
-                'a09b9a4f3184ef569bcec6cd7fa8a424ee2dc172': 1.0
-            },
-            'cp2': {
-                'c809aab151bd9cbaa2750e764083fdbe6c1aabc9': 1.0,
-                '8d7a0111e3fd61565cafc5127605d903ecc97171': 1.0,
-                '961859dc5db0bebf52da368a19f8918afc3162bf': 1.0,
-                'a3e23dfff6751d4434dc358d50cfd23b78408dfc': -2.0,
-                'f291521beb55759ce0b2bb26591768a2ebfd5b37': -2.0,
-                'e6e7529e74bfd80c9a75295ea89e40ee9b14158e': 1.0,
-                '3a0fa0c60401faa0693985fb242c91499edd277d': 1.0,
-                'b06cc88f3eec0f8c96bcd99ac9b02af5d89c8cd6': 1.0,
-                '2b1cd4c9b1081f904caabcca7f5d96b609adb3ae': -2.0,
-                'a09b9a4f3184ef569bcec6cd7fa8a424ee2dc172': -2.0
-            },
-            'default': {
-                '358e92f6323f88ed7385d2184c5564c012779bd7': 1.0
+            'cp': {
+                '41806e2d95255309b2b7f25149e073a37282e50b': 1.0
             },
             'default2': {
-                '910c2e5fe9418644c3f50fe9141db2f06b3bafe5': 1.0,
-                '0f617c87b2f4ff3c7b1076c6ec88ab59af0df360': 1.0,
-                '01a496b0dad9b88c5a99430823877dd964e928d4': 1.0,
-                '2d3cf1d504374fa9050a9a28c3ab4a72df0534e7': -8.0,
-                '72ef2f6d853e67e3fab3682544b810d5ba8d69ef': 1.0,
-                '3a767f68e03c3e58d8062d7105be2a358db0a9ea': 2.0
+                '5c295cf735e5200ef69f521c738fbfa1ad4fc8d6': 1.0,
+                '7d41a0004140b70ae29eb6dc9b729078848eda31': -8.0,
+                'ed43fa123f66c945660bcb1e0f158fcf71ff9089': 1.0,
+                '949f9082c959c3cb316fdb534002d47e84542a6d': 1.0,
+                '1360f433f6dd339e16da750d0a21f151242b6900': 2.0,
+                '57590ae0cdfaff83ea360d1c418787e9d4bbf5e4': 1.0
+            },
+            'cp2': {
+                '5fc6400a4a28657c4643f956ebe4f4e3a68aecfc': 1.0,
+                '115f82f0056f9540cc234e19ef1f81e313cc9a30': 1.0,
+                '064ecf3401e08c5055241adb212faedbf4d2d7e5': -2.0,
+                'b3ebb6bc5adba02f7e88abf7ff4a85060335fba3': -2.0,
+                'ae59c9f1e827e78d745fa925e88dd2d7aa80fb6d': -2.0,
+                '6af5906a998bc2e85aaaeefee2ad1fa5b682a460': 1.0,
+                '3242832baa23a02d0494eb81178bab89ef8a82bf': 1.0,
+                'e7b148ceca9e4128bb75d33e6269c9373aedac50': 1.0,
+                '63ff4c9fbfd7f57ade8ba0a3909cd50e4d3feb2d': -2.0,
+                '74ed8dfb65e067805c2c31464569335558e4401e': 1.0
             },
             'cp1': {
-                '2b1cd4c9b1081f904caabcca7f5d96b609adb3ae': 1.0,
-                'a3e23dfff6751d4434dc358d50cfd23b78408dfc': 1.0,
-                'f291521beb55759ce0b2bb26591768a2ebfd5b37': 1.0,
-                'a09b9a4f3184ef569bcec6cd7fa8a424ee2dc172': 1.0
+                'b3ebb6bc5adba02f7e88abf7ff4a85060335fba3': 1.0,
+                '064ecf3401e08c5055241adb212faedbf4d2d7e5': 1.0,
+                '63ff4c9fbfd7f57ade8ba0a3909cd50e4d3feb2d': 1.0,
+                'ae59c9f1e827e78d745fa925e88dd2d7aa80fb6d': 1.0
             },
-            'cp': {
-                '358e92f6323f88ed7385d2184c5564c012779bd7': 1.0
+            'cp3': {
+                '89d622be9221f7b2e2a921cd91de8a4f12d2bdbb': 1.0,
+                'b3ebb6bc5adba02f7e88abf7ff4a85060335fba3': 1.0,
+                'e2027c85c865f232e618a2c3f191591d6f44f8bb': 1.0,
+                '3242832baa23a02d0494eb81178bab89ef8a82bf': -1.0,
+                '145590a213ac1a8c25904443b8e69bc280f65995': 1.0,
+                '6af5906a998bc2e85aaaeefee2ad1fa5b682a460': -1.0,
+                '63ff4c9fbfd7f57ade8ba0a3909cd50e4d3feb2d': 1.0,
+                '115f82f0056f9540cc234e19ef1f81e313cc9a30': -1.0,
+                '064ecf3401e08c5055241adb212faedbf4d2d7e5': 1.0,
+                '06048a1bb6642e10b50240b5ecfaed69b3183822': 1.0,
+                'ae59c9f1e827e78d745fa925e88dd2d7aa80fb6d': 1.0,
+                'e7b148ceca9e4128bb75d33e6269c9373aedac50': -1.0,
+                '5fc6400a4a28657c4643f956ebe4f4e3a68aecfc': -1.0,
+                '74ed8dfb65e067805c2c31464569335558e4401e': -1.0
+            },
+            'default': {
+                '41806e2d95255309b2b7f25149e073a37282e50b': 1.0
+            },
+            'default1': {
+                '7d41a0004140b70ae29eb6dc9b729078848eda31': 4.0
             },
             'default3': {
-                'c0be8c7edc89b032e1c77781d96df7dea61b91d7': 1.0,
-                '910c2e5fe9418644c3f50fe9141db2f06b3bafe5': -1.0,
-                '0f617c87b2f4ff3c7b1076c6ec88ab59af0df360': -1.0,
-                '01a496b0dad9b88c5a99430823877dd964e928d4': -1.0,
-                '2d3cf1d504374fa9050a9a28c3ab4a72df0534e7': 4.0,
-                '72ef2f6d853e67e3fab3682544b810d5ba8d69ef': -1.0,
-                '51fbba67ae64dd0c99baeaeca8d3209986a99cd6': 1.0,
-                '479812dafce9f952b897926dac26bd9a14d1a14d': 1.0,
-                '3a767f68e03c3e58d8062d7105be2a358db0a9ea': -2.0,
-                'c6edf571991f76bea288b4e155cfb0d07ed46f3a': 1.0
+                '5c295cf735e5200ef69f521c738fbfa1ad4fc8d6': -1.0,
+                '74ad74e6388872a630f8fa3f9fa2e9ef86537742': 1.0,
+                '7d41a0004140b70ae29eb6dc9b729078848eda31': 4.0,
+                'ed43fa123f66c945660bcb1e0f158fcf71ff9089': -1.0,
+                '949f9082c959c3cb316fdb534002d47e84542a6d': -1.0,
+                '74ade2c691b8da35b4974ebfe12ae37af239a471': 1.0,
+                '16f0c5eeda0ed9466157d1728873b5538e759b12': 1.0,
+                '854379dd6bd4eb03bbe1f25f93a3ce91e92e8e81': 1.0,
+                '1360f433f6dd339e16da750d0a21f151242b6900': -2.0,
+                '57590ae0cdfaff83ea360d1c418787e9d4bbf5e4': -1.0
             }
-        },
-        'name': 'Ne Tetramer'
+        }
     }
+
     return db
 
 
@@ -254,12 +258,13 @@ def hbc_from_df():
 
     return db
 
+
 @pytest.fixture(scope="module")
 def mongo_socket():
     db_name = "local_values_test"
-    mongo = mdb.mongo_helper.MongoSocket("127.0.0.1", 27017, db_name)
-    for db_name in mongo.client.database_names():
-        mongo.client.drop_database(db_name)
+    ms = mdb.mongo_helper.MongoSocket("127.0.0.1", 27017, db_name)
+    for db_name in ms.client.database_names():
+        ms.client.drop_database(db_name)
 
     collections = ["molecules", "databases", "pages"]
 
@@ -268,19 +273,20 @@ def mongo_socket():
 
     # Add all JSON
     for col in collections:
-        prefix = os.path.dirname(os.path.abspath(__file__)) + "/../../databases/DB_HBC6/" + col + "/"
+        prefix = os.path.dirname(
+            os.path.abspath(__file__)) + "/../../databases/DB_HBC6/" + col + "/"
         for filename in glob.glob(prefix + "*.json"):
             json_data = open(filename).read()
             # Load JSON from file into OrderedDict
             data = json.loads(json_data, object_pairs_hook=OrderedDict)
             if (col == "molecules"):
-                    inserted = mongo.add_molecule(data)
+                inserted = ms.add_molecule(data)
             if (col == "databases"):
-                    inserted = mongo.add_database(data)
+                inserted = ms.add_database(data)
             if (col == "pages"):
-                    inserted = mongo.add_page(data)
+                inserted = ms.add_page(data)
 
-    return mongo
+    return ms
 
 
 # Test conventional add
@@ -309,6 +315,7 @@ def test_nbody_rxn(nbody_db):
     # Check the N-body
     ne_stoich = nbody_db.get_rxn("Ne Tetramer")
     mh = list(ne_stoich["stoichiometry"]["default"])[0]
+    print(ne_stoich)
     _compare_rxn_stoichs(nbody_db.ne_stoich, ne_stoich)
 
 
@@ -378,16 +385,14 @@ def test_dataframe_saving_loading(hbc_from_df):
         mongo.client.drop_database(tmp_db_name)
 
     db.save(mongo)
-    db_from_save = mdb.Database(db.data["name"], mongod=mongo)
+    db_from_save = mdb.Database(db.data["name"], socket=mongo)
 
     assert db_from_save.rxn_index.shape[0] == 588
 
 
-
 def test_query(mongo_socket):
-    # mongod = mdb.mongo_helper.MongoSocket("127.0.0.1", 27017, "local")
 
-    db = mdb.Database("HBC6",  mongod=mongo_socket)
+    db = mdb.Database("HBC6", socket=mongo_socket)
     db.query("B3LYP/aug-cc-pVDZ", stoich="cp", prefix="cp-")
     db.query("B3LYP/adz", stoich="cp", prefix="cp-", reaction_results=True, scale=1.0)
 
@@ -398,8 +403,6 @@ def test_query(mongo_socket):
     db.refresh()
     mue = db.statistics("MUE", "cp-B3LYP/aug-cc-pVDZ", bench="B3LYP/adz")
     assert np.allclose(0.0, mue, atol=1.e-4)
-
-
 
 
 # Seg faults on travis

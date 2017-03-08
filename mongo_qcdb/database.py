@@ -14,6 +14,7 @@ from . import visualization
 from . import mongo_helper
 from . import constants
 from . import fields
+from . import client
 
 
 def _nCr(n, r):
@@ -28,21 +29,45 @@ class Database(object):
     This is a Mongo QCDB database class.
     """
 
-    def __init__(self, name, mongod=None, db_type="rxn"):
+    def __init__(self, name, socket=None, db_type="rxn"):
 
-        if mongod is not None:
-            if isinstance(mongod, mongo_helper.MongoSocket):
-                self.mongod = mongod
+        # Client and mongod objects
+        self.client = None
+        self.mongod = None
+
+        # Blank data object
+        self.data = {}
+        self.data["reactions"] = []
+        self.data["name"] = name
+        self.data["provenence"] = {}
+        self.data["db_type"] = db_type
+
+        # Index and internal data
+        self.df = pd.DataFrame()
+        self.rxn_index = pd.DataFrame()
+
+        if socket is not None:
+
+            if isinstance(socket, client.Client):
+                self.client = socket
+                self.mongod = socket.get_MongoSocket()
+
+            elif isinstance(socket, mongo_helper.MongoSocket):
+                self.mongod = socket
+
             else:
-                raise TypeError("Database: mongod argument of unrecognized type '%s'" %
-                                type(mongod))
+                print(dir(socket))
+                raise TypeError("Database: client argument of unrecognized type '%s'" % type(socket))
 
-            self.data = self.mongod.get_database(name)
-            if self.data is None:
-                raise KeyError("Database: Database name '%s' was not found." % name)
+            tmp_data = self.mongod.get_database(name)
+            if tmp_data is None:
+                print("Warning! Name '%s' not found, creating blank database." % name)
+            else:
+                self.data = tmp_data
 
             self.df = pd.DataFrame(index=self.get_index())
 
+            # Unroll the index
             tmp_index = []
             for rxn in self.data["reactions"]:
                 name = rxn["name"]
@@ -53,16 +78,7 @@ class Database(object):
             self.rxn_index = pd.DataFrame(
                 tmp_index, columns=["name", "stoichiometry", "molecule_hash", "coefficient"])
 
-        else:
 
-            self.data = {}
-            self.data["reactions"] = []
-            self.data["name"] = name
-            self.data["provenence"] = {}
-            self.data["db_type"] = db_type
-            self.df = pd.DataFrame()
-
-            self.mongod = None
 
         # If we making a new database we may need new hashes and json objects
         self._new_molecule_jsons = {}
@@ -177,6 +193,38 @@ class Database(object):
 
         # Apply to df
         self.df[tmp_idx.columns] = tmp_idx
+
+        return True
+
+    def compute(self, keys, stoich="default", options={}):
+
+        if self.client is None:
+            raise AttributeError("DataBase: Compute: Client was not set.")
+
+        # Keys should be iterable
+        if isinstance(keys, str):
+            keys = [keys]
+
+        tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
+        tmp_idx = tmp_idx.reset_index(drop=True)
+
+        # There could be duplicates so take the unique and save the map
+        umols, uidx = np.unique(tmp_idx["molecule_hash"], return_index=True)
+        values = self.mongod.evaluate(umols, keys)
+
+        mask = pd.isnull(values)
+        compute_list = []
+        for idx, row in pd.isnull(values).iterrows():
+
+            if idx in list(self._new_molecule_jsons):
+                raise AttributeError("Database: Compute: Database (and new molecules) is not saved to the database.")
+
+            for method in values.columns[row]:
+                compute_list.append((idx, method))
+
+        print(compute_list)
+        print(mask)
+
 
         return True
 
