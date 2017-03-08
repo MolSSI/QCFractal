@@ -13,7 +13,6 @@ class Client(object):
 
         self.info = self.get_information()
 
-
     def get_MongoSocket(self):
         """
         Builds a new MongoSocket from the internal data.
@@ -29,10 +28,7 @@ class Client(object):
             body = json.dumps(body)
 
         client = httpclient.AsyncHTTPClient()
-        response = yield client.fetch(self.port + function,
-                                method=method)
-
-        return response
+        yield client.fetch(self.port + function, method=method)
 
     def query_server(self, function, method, body=None):
         """
@@ -42,8 +38,7 @@ class Client(object):
             body = json.dumps(body)
 
         client = httpclient.HTTPClient()
-        response = client.fetch(self.port + function,
-                                method=method)
+        response = client.fetch(self.port + function, method=method)
         return json.loads(response.body.decode('utf-8'))
 
     def get_information(self):
@@ -51,5 +46,3 @@ class Client(object):
 
     def submit_task(self, json_data):
         return self.query_server("scheduler", "POST", body=json_data)
-
-
