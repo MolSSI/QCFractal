@@ -196,7 +196,7 @@ class Database(object):
 
         return True
 
-    def compute(self, keys, stoich="default", options={}):
+    def compute(self, keys, stoich="default", options={}, program="psi4"):
 
         if self.client is None:
             raise AttributeError("DataBase: Compute: Client was not set.")
@@ -220,13 +220,19 @@ class Database(object):
                 raise AttributeError("Database: Compute: Database (and new molecules) is not saved to the database.")
 
             for method in values.columns[row]:
-                compute_list.append((idx, method))
+                tmp = {}
+                tmp["molecule_hash"] = idx
+                tmp["modelchem"] = method
+                compute_list.append(tmp)
 
-        print(compute_list)
-        print(mask)
 
+        submit_json = {}
+        submit_json["multi_header"] = "QCDB_batch" # Verifies that I am submitting
+        submit_json["options"] = options
+        submit_json["tasks"] = compute_list
+        submit_json["program"] = program
 
-        return True
+        return self.client.submit_task(submit_json)
 
     def get_index(self):
         """

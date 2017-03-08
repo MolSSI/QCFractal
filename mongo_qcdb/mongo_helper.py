@@ -28,6 +28,9 @@ class MongoSocket(object):
         self.client = pymongo.MongoClient(url, port)
         self.setup = self.init_db(db)
 
+    def __repr__(self):
+        return "<MongoSocket: address='%s:%d' project=%s>" % (self.url, self.port, self.db_name)
+
     def add_molecule(self, data):
         """
         Adds a molecule to the database.
@@ -226,12 +229,7 @@ class MongoSocket(object):
         """
         hashes = list(hashes)
         methods = list(methods)
-        command = [{
-            "$match": {
-                "molecule_hash": {"$in": hashes},
-                "modelchem": {"$in": methods}
-            }
-        }]
+        command = [{"$match": {"molecule_hash": {"$in": hashes}, "modelchem": {"$in": methods}}}]
         pages = list(self.db["pages"].aggregate(command))
         d = {}
         for mol in hashes:
@@ -277,12 +275,7 @@ class MongoSocket(object):
 
         """
         hashes = list(hashes)
-        command = [{
-            "$match": {
-                "molecule_hash": {"$in": hashes},
-                "modelchem": method
-            }
-        }]
+        command = [{"$match": {"molecule_hash": {"$in": hashes}, "modelchem": method}}]
         pages = list(self.db["pages"].aggregate(command))
         d = {}
         for mol in hashes:
@@ -547,8 +540,8 @@ class MongoSocket(object):
         return pd.DataFrame(data=res, index=names, columns=methods)
 
     # Do a lookup on the pages collection using a <molecule, method> key.
-    def get_page(self, molecule, method):
-        return self.db["pages"].find_one({"molecule_hash": molecule, "modelchem": method})
+    def get_page(self, molecule_hash, method):
+        return self.db["pages"].find_one({"molecule_hash": molecule_hash, "modelchem": method})
 
     def get_database(self, name):
         return self.db["databases"].find_one({"name": name})

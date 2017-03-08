@@ -22,7 +22,8 @@ define("port", default=8888, help="Run on the given port.", type=int)
 define("mongo_project", default="default", help="The Mongod Database instance to open.", type=str)
 define("mongod_ip", default="127.0.0.1", help="The Mongod instances IP.", type=str)
 define("mongod_port", default=27017, help="The Mongod instances port.", type=int)
-define("dask_ip", default="", help="The Dask instances IP. If blank starts a local cluster.", type=str)
+define(
+    "dask_ip", default="", help="The Dask instances IP. If blank starts a local cluster.", type=str)
 define("dask_port", default=8786, help="The Dask instances port.", type=int)
 
 
@@ -47,7 +48,7 @@ class DaskNanny(object):
                     tmp_data = future.result()
                     self.mongod_socket.add_page(tmp_data)
                 except Exception as e:
-                    ename = str( type(e).__name__) + ":" + str(e)
+                    ename = str(type(e).__name__) + ":" + str(e)
                     msg = "".join(traceback.format_tb(e.__traceback__))
                     msg += str(type(e).__name__) + ":" + str(e)
                     self.errors[key] = msg
@@ -60,9 +61,39 @@ class DaskNanny(object):
 
 
 class Scheduler(tornado.web.RequestHandler):
-
+    """
+    Takes in a data packet the contains the molecule_hash, modelchem and options objects.
+    """
     def initialize(self, **objects):
+        print("SCHEDULER " + repr(self.request))
         self.objects = objects
+
+    def _verify_input(self, data, options=None):
+        mongo = self.objects["mongo_socket"]
+
+        if options is not None:
+            data["options"] = options
+
+        # Check if the minimum is present
+        for req in ["molecule_hash", "modelchem", "options"]:
+            if req not in list(data):
+                data["error"] = "Missing required field '%s'" % req
+                return data
+
+        # Grab out molecule
+        molecule = mongo.get_molecule(data["molecule_hash"])
+        if molecule is None:
+            data["error"] = "Molecule hash '%s' was not found." % data["molecule_hash"]
+            return data
+
+        molecule_str = mdb.Molecule(molecule, dtype="json").to_string(dtype="psi4")
+
+        data["molecule"] = molecule_str
+        data["method"] = data["modelchem"]
+        data["driver"] = "energy"
+
+        return data
+
 
     def post(self):
 
@@ -73,18 +104,36 @@ class Scheduler(tornado.web.RequestHandler):
         dask = self.objects["dask_socket"]
         dask_nanny = self.objects["dask_nanny"]
 
+        # Parse out data
+        tasks = []
+        ret = {}
+        ret["error"] = []
+        ret["Nanny ID"] = []
+
+        # Multiple jobs
+        if ("multi_header" in list(data)) and (data["multi_header"] == "QCDB_batch"):
+            for data in data["tasks"]:
+                tasks.append(_verify_input(data, options=data["options"]))
+
+        # Single job
+        else:
+            tasks.append(_verify_input(data))
+
         # Submit
-        fut = dask.submit(compute.psi_compute, data) 
-        uid = self.objects["dask_nanny"].add_future(fut)
+        for task in tasks:
+            if "internal_error" in list(task):
+                ret["error"].append(task["internal_error"])
+                continue
+            fut = dask.submit(compute.psi_compute, task)
+            ret["Nanny ID"].append(self.objects["dask_nanny"].add_future(fut))
 
         # Return anything of interest
-        ret = {}
         ret["success"] = True
         ret["Nanny ID"] = uid
         self.write(json.dumps(ret))
 
-class Information(tornado.web.RequestHandler):
 
+class Information(tornado.web.RequestHandler):
     def initialize(self, **objects):
         print("INFO " + repr(self.request))
         self.objects = objects
@@ -95,42 +144,55 @@ class Information(tornado.web.RequestHandler):
         mongod = self.objects["mongod_socket"]
 
         ret = {}
-        ret["mongo_data"] = (mongod.url, mongod.port, mongod.db_name) 
+        ret["mongo_data"] = (mongod.url, mongod.port, mongod.db_name)
         ret["dask_data"] = dask.scheduler.address
         self.write(json.dumps(ret))
+
 
 class QCDBServer(object):
     def __init__(self):
         # Tornado configures logging.
         tornado.options.options.parse_command_line()
 
-        # Build mongo socket 
-        mongod_socket = mdb.mongo_helper.MongoSocket(options.mongod_ip, options.mongod_port, options.mongo_project)
+        # Build mongo socket
+        self.mongod_socket = mdb.mongo_helper.MongoSocket(options.mongod_ip, options.mongod_port,
+                                                     options.mongo_project)
         print("Mongod Socket Info:")
-        print(mongod_socket)
+        print(self.mongod_socket)
         print(" ")
 
         # Grab the Dask Scheduler
-        loop = tornado.ioloop.IOLoop.current() 
-        dask_socket = distributed.Client(options.dask_ip + ":" + str(options.dask_port))
-        dask_socket.upload_file(compute_file)
+        loop = tornado.ioloop.IOLoop.current()
+        if options.dask_ip == "":
+            self.local_cluster = distributed.LocalCluster(nanny=False)
+            self.dask_socket = distributed.Client(self.local_cluster)
+        else:
+            dask_socket = distributed.Client(options.dask_ip + ":" + str(options.dask_port))
+        self.dask_socket.upload_file(compute_file)
         print("Dask Scheduler Info:")
-        print(dask_socket)
+        print(self.dask_socket)
         print(" ")
 
         # Dask Nanny
-        dask_nanny = DaskNanny(dask_socket, mongod_socket)
+        self.dask_nanny = DaskNanny(self.dask_socket, self.mongod_socket)
 
         # Start up the app
         app = tornado.web.Application([
-            (r"/information", Information, {"mongod_socket": mongod_socket, "dask_socket": dask_socket, "dask_nanny": dask_nanny}),
-            (r"/scheduler", Scheduler, {"mongod_socket": mongod_socket, "dask_socket": dask_socket, "dask_nanny": dask_nanny}),
-            ],
-        )
+            (r"/information", Information, {
+                "mongod_socket": self.mongod_socket,
+                "dask_socket": self.dask_socket,
+                "dask_nanny": self.dask_nanny
+            }),
+            (r"/scheduler", Scheduler, {
+                "mongod_socket": self.mongod_socket,
+                "dask_socket": self.dask_socket,
+                "dask_nanny": self.dask_nanny
+            }),
+        ], )
         app.listen(options.port)
 
         # Query Dask Nanny on loop
-        tornado.ioloop.PeriodicCallback(dask_nanny.update, 2000).start()
+        tornado.ioloop.PeriodicCallback(self.dask_nanny.update, 2000).start()
 
         # This is for testing
         #loop.add_callback(get, "{data}")
@@ -143,15 +205,20 @@ class QCDBServer(object):
     def start(self):
 
         print("QCDB Client successfully started. Starting IOLoop.\n")
+
         # Soft quit at the end of a loop
         try:
             self.loop.start()
         except KeyboardInterrupt:
+            self.dask_socket.shutdown()
+            if options.dask_ip == "":
+                self.local_cluster.close()
             self.loop.stop()
 
         print("\nQCDB Client stopping gracefully. Stoped IOLoop.\n")
 
+
 if __name__ == "__main__":
-   
+
     server = QCDBServer()
-    server.start() 
+    server.start()

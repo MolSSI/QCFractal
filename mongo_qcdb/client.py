@@ -28,7 +28,7 @@ class Client(object):
             body = json.dumps(body)
 
         client = httpclient.AsyncHTTPClient()
-        yield client.fetch(self.port + function, method=method)
+        yield json.loads(client.fetch(self.port + function, method=method).body.decode('utf-8'))
 
     def query_server(self, function, method, body=None):
         """
