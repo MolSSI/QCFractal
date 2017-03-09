@@ -40,7 +40,10 @@ class Database(object):
         self.data["reactions"] = []
         self.data["name"] = name
         self.data["provenence"] = {}
-        self.data["db_type"] = db_type
+        self.data["db_type"] = db_type.upper()
+
+        if self.data["db_type"] not in ["RXN", "IE"]:
+            raise TypeError("Database: db_type must either be RXN or IE.")
 
         # Index and internal data
         self.df = pd.DataFrame()
@@ -56,8 +59,8 @@ class Database(object):
                 self.mongod = socket
 
             else:
-                print(dir(socket))
-                raise TypeError("Database: client argument of unrecognized type '%s'" % type(socket))
+                raise TypeError("Database: client argument of unrecognized type '%s'" %
+                                type(socket))
 
             tmp_data = self.mongod.get_database(name)
             if tmp_data is None:
@@ -78,8 +81,6 @@ class Database(object):
             self.rxn_index = pd.DataFrame(
                 tmp_index, columns=["name", "stoichiometry", "molecule_hash", "coefficient"])
 
-
-
         # If we making a new database we may need new hashes and json objects
         self._new_molecule_jsons = {}
 
@@ -99,13 +100,36 @@ class Database(object):
             self.query(q[0], **q[1])
         return True
 
+    def _unroll_query(self, keys, stoich):
+
+        tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
+        tmp_idx = tmp_idx.reset_index(drop=True)
+
+        # There could be duplicates so take the unique and save the map
+        umols, uidx = np.unique(tmp_idx["molecule_hash"], return_index=True)
+
+        # Evaluate the overall dataframe
+        values = self.mongod.evaluate(umols, keys)
+
+        # Join on molecule hash
+        tmp_idx = tmp_idx.join(values, on="molecule_hash")
+
+        # Apply stoich values
+        for col in values.columns:
+            tmp_idx[col] *= tmp_idx["coefficient"]
+        tmp_idx = tmp_idx.drop(['stoichiometry', 'molecule_hash', 'coefficient'], axis=1)
+
+        tmp_idx = tmp_idx.groupby(["name"]).sum()
+        return tmp_idx
+
     def query(self,
               keys,
               stoich="default",
               prefix="",
               postfix="",
               reaction_results=False,
-              scale="kcal"):
+              scale="kcal",
+              ignore_db_type=False):
         """
         Queries the local MongoSocket data for the requested keys and stoichiometry.
 
@@ -113,6 +137,18 @@ class Database(object):
         ----------
         keys : str, list
             A list of model chemistry to query.
+        stoich : str
+            The given stoichiometry to compute.
+        prefix : str
+            A prefix given to the resulting column names.
+        postfix : str
+            A postfix given to the resulting column names.
+        reaction_results : bool
+            Toggles a search between the Mongo Pages and the Databases's reaction_results field.
+        scale : str, double
+            All units are based in hartree, the default scaling is to kcal/mol.
+        ignore_db_type : bool
+            Override of IE for RXN db types.
 
 
         Returns
@@ -126,6 +162,8 @@ class Database(object):
 
         Examples
         --------
+
+        db.query(["B3LYP/aug-cc-pVDZ", "B3LYP/def2-QZVP"], stoich="cp", prefix="cp-")
 
         """
 
@@ -152,7 +190,6 @@ class Database(object):
 
         # If reaction results
         if reaction_results:
-
             tmp_idx = pd.DataFrame(index=self.df.index, columns=keys)
             for rxn in self.data["reactions"]:
                 for col in keys:
@@ -172,25 +209,17 @@ class Database(object):
         # if self.data["db_type"].lower() == "ie":
         #     _ie_helper(..)
 
-        tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
-        tmp_idx = tmp_idx.reset_index(drop=True)
+        if (not ignore_db_type) and (self.data["db_type"].lower() == "ie"):
+            monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
+            tmp_idx_complex = self._unroll_query(keys, stoich)
+            tmp_idx_monomers = self._unroll_query(keys, monomer_stoich)
 
-        # There could be duplicates so take the unique and save the map
-        umols, uidx = np.unique(tmp_idx["molecule_hash"], return_index=True)
+            # Combine
+            tmp_idx = tmp_idx_complex - tmp_idx_monomers
 
-        # Evaluate the overall dataframe
-        values = self.mongod.evaluate(umols, keys)
-        values.columns = [prefix + x + postfix for x in values.columns]
-
-        # Join on molecule hash
-        tmp_idx = tmp_idx.join(values, on="molecule_hash")
-
-        # Apply stoich values
-        for col in values.columns:
-            tmp_idx[col] *= tmp_idx["coefficient"]
-        tmp_idx = tmp_idx.drop(['stoichiometry', 'molecule_hash', 'coefficient'], axis=1)
-
-        tmp_idx = tmp_idx.groupby(["name"]).sum()
+        else:
+            tmp_idx = self._unroll_query(keys, stoich)
+        tmp_idx.columns = [prefix + x + postfix for x in tmp_idx.columns]
 
         # scale
         tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
@@ -201,7 +230,7 @@ class Database(object):
 
         return True
 
-    def compute(self, keys, stoich="default", options={}, program="psi4", other_fields={}):
+    def compute(self, keys, stoich="default", options={}, program="psi4", other_fields={}, ignore_db_type=False):
 
         if self.client is None:
             raise AttributeError("DataBase: Compute: Client was not set.")
@@ -210,7 +239,15 @@ class Database(object):
         if isinstance(keys, str):
             keys = [keys]
 
-        tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
+
+        if (not ignore_db_type) and (self.data["db_type"].lower() == "ie"):
+            monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
+            tmp_monomer = self.rxn_index[self.rxn_index["stoichiometry"] == monomer_stoich].copy()
+            tmp_complex = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
+            tmp_idx = pd.concat((tmp_monomer, tmp_complex), axis=0)
+        else:
+            tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
+
         tmp_idx = tmp_idx.reset_index(drop=True)
 
         # There could be duplicates so take the unique and save the map
@@ -222,7 +259,8 @@ class Database(object):
         for idx, row in pd.isnull(values).iterrows():
 
             if idx in list(self._new_molecule_jsons):
-                raise AttributeError("Database: Compute: Database (and new molecules) is not saved to the database.")
+                raise AttributeError(
+                    "Database: Compute: Database (and new molecules) is not saved to the database.")
 
             for method in values.columns[row]:
                 tmp = {}
@@ -232,9 +270,8 @@ class Database(object):
                     tmp[k] = v
                 compute_list.append(tmp)
 
-
         submit_json = {}
-        submit_json["multi_header"] = "QCDB_batch" # Verifies that I am submitting
+        submit_json["multi_header"] = "QCDB_batch"    # Verifies that I am submitting
         submit_json["options"] = options
         submit_json["tasks"] = compute_list
         submit_json["program"] = program
@@ -439,19 +476,15 @@ class Database(object):
         for k, v in other_fields.items():
             rxn[k] = v
 
-
         if "default" in list(reaction_results):
             rxn["reaction_results"] = reaction_results
-        else:
-            # if isinstance(reaction_results, (dict)):
-            #     raise TypeError("Passed in return values must have a 'default' field.")
-
+        elif isinstance(reaction_results, (dict)):
             rxn["reaction_results"] = {}
             rxn["reaction_results"]["default"] = reaction_results
-
+        else:
+            raise TypeError("Passed in reaction_results not understood.")
 
         self.data["reactions"].append(rxn)
-
 
         return rxn
 

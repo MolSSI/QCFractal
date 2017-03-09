@@ -75,7 +75,7 @@ def water_db():
         "Water Dimer, nocp", [(dimer, 1.0), (frag_0, -1.0), (frag_1, -1.0)],
         attributes={"R": "Minima"},
         reaction_results={"Benchmark": -20.0,
-                       "DFT": -10.0})
+                          "DFT": -10.0})
 
     # Add single stoich from strings, not a valid set
     db.add_rxn(
@@ -83,7 +83,7 @@ def water_db():
         [(_water_dimer_minima, 1.0), (_water_dimer_minima.splitlines()[-1], 0.0)],
         attributes={"R": "Minima"},
         reaction_results={"Benchmark": -20.0,
-                       "DFT": -10.0})
+                          "DFT": -10.0})
 
     # Add single stoich rxn via hashes
     db.add_rxn(
@@ -273,8 +273,7 @@ def mongo_socket():
 
     # Add all JSON
     for col in collections:
-        prefix = os.path.dirname(
-            os.path.abspath(__file__)) + "/../databases/DB_HBC6/" + col + "/"
+        prefix = os.path.dirname(os.path.abspath(__file__)) + "/../databases/DB_HBC6/" + col + "/"
         for filename in glob.glob(prefix + "*.json"):
             json_data = open(filename).read()
             # Load JSON from file into OrderedDict
