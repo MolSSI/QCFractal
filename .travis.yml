@@ -59,6 +59,7 @@ before_script:
   - python -V
   - python -c 'import numpy; print(numpy.version.version)'
   - pip install -e .
+  - export MONGO_PSI4=/tmp/
 
 script:
   - py.test -v --cov=./
