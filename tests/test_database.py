@@ -215,7 +215,7 @@ def nbody_db():
 @pytest.fixture(scope="module")
 def hbc_from_df():
 
-    fn = os.path.abspath(os.path.dirname(__file__)) + "/../../databases/DB_HBC6/HBC6.pd_pkl"
+    fn = os.path.abspath(os.path.dirname(__file__)) + "/../databases/DB_HBC6/HBC6.pd_pkl"
     df = pd.read_pickle(fn)
 
     db = mdb.Database("HBC_6", db_type="ie")
@@ -274,7 +274,7 @@ def mongo_socket():
     # Add all JSON
     for col in collections:
         prefix = os.path.dirname(
-            os.path.abspath(__file__)) + "/../../databases/DB_HBC6/" + col + "/"
+            os.path.abspath(__file__)) + "/../databases/DB_HBC6/" + col + "/"
         for filename in glob.glob(prefix + "*.json"):
             json_data = open(filename).read()
             # Load JSON from file into OrderedDict

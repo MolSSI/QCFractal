@@ -21,7 +21,7 @@ def mongo_socket():
 
     # Add all JSON
     for col in collections:
-        prefix = os.path.dirname(os.path.abspath(__file__)) + "/../../databases/DB_HBC6/" + col + "/"
+        prefix = os.path.dirname(os.path.abspath(__file__)) + "/../databases/DB_HBC6/" + col + "/"
         for filename in glob.glob(prefix + "*.json"):
             json_data = open(filename).read()
             # Load JSON from file into OrderedDict
