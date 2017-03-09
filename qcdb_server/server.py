@@ -46,7 +46,8 @@ class DaskNanny(object):
             if future.done():
                 try:
                     tmp_data = future.result()
-                    self.mongod_socket.add_page(tmp_data)
+                    res = self.mongod_socket.add_page(tmp_data)
+                    print("MONGO: ADD (%s, %s) - %s" % (tmp_data["molecule_hash"], tmp_data["modelchem"], str(res)) )
                 except Exception as e:
                     ename = str(type(e).__name__) + ":" + str(e)
                     msg = "".join(traceback.format_tb(e.__traceback__))
@@ -56,7 +57,7 @@ class DaskNanny(object):
                 del_keys.append(key)
 
         for key in del_keys:
-            print(self.dask_queue[key].result())
+            # print(self.dask_queue[key].result())
             del self.dask_queue[key]
 
 
@@ -64,12 +65,13 @@ class Scheduler(tornado.web.RequestHandler):
     """
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
     """
+
     def initialize(self, **objects):
-        print("SCHEDULER " + repr(self.request))
+        print("SCHEDULER: %s (%d bytes)" % (self.request.method, len(self.request.body)))
         self.objects = objects
 
     def _verify_input(self, data, options=None):
-        mongo = self.objects["mongo_socket"]
+        mongo = self.objects["mongod_socket"]
 
         if options is not None:
             data["options"] = options
@@ -94,7 +96,6 @@ class Scheduler(tornado.web.RequestHandler):
 
         return data
 
-
     def post(self):
 
         # Decode the data
@@ -105,6 +106,7 @@ class Scheduler(tornado.web.RequestHandler):
         dask_nanny = self.objects["dask_nanny"]
 
         # Parse out data
+        program = "psi4"
         tasks = []
         ret = {}
         ret["error"] = []
@@ -112,30 +114,41 @@ class Scheduler(tornado.web.RequestHandler):
 
         # Multiple jobs
         if ("multi_header" in list(data)) and (data["multi_header"] == "QCDB_batch"):
-            for data in data["tasks"]:
-                tasks.append(_verify_input(data, options=data["options"]))
+            for task in data["tasks"]:
+                tasks.append(self._verify_input(task, options=data["options"]))
+            program = data["program"]
 
         # Single job
         else:
-            tasks.append(_verify_input(data))
+            tasks.append(self._verify_input(data))
+            if "program" in list(data):
+                program = data["program"]
 
         # Submit
         for task in tasks:
             if "internal_error" in list(task):
                 ret["error"].append(task["internal_error"])
                 continue
-            fut = dask.submit(compute.psi_compute, task)
+            fut = dask.submit(compute.computers[program], task)
             ret["Nanny ID"].append(self.objects["dask_nanny"].add_future(fut))
 
         # Return anything of interest
         ret["success"] = True
-        ret["Nanny ID"] = uid
+        self.write(json.dumps(ret))
+
+    def get(self):
+
+        dask_nanny = self.objects["dask_nanny"]
+        ret = {}
+        ret["queue"] = dask_nanny.dask_queue
+        ret["error"] = dask_nanny.errors
         self.write(json.dumps(ret))
 
 
 class Information(tornado.web.RequestHandler):
     def initialize(self, **objects):
-        print("INFO " + repr(self.request))
+        # print("INFO " + repr(self.request))
+        print("INFO: " + self.request.method)
         self.objects = objects
 
     def get(self):
@@ -156,7 +169,7 @@ class QCDBServer(object):
 
         # Build mongo socket
         self.mongod_socket = mdb.mongo_helper.MongoSocket(options.mongod_ip, options.mongod_port,
-                                                     options.mongo_project)
+                                                          options.mongo_project)
         print("Mongod Socket Info:")
         print(self.mongod_socket)
         print(" ")

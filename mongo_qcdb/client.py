@@ -38,7 +38,7 @@ class Client(object):
             body = json.dumps(body)
 
         client = httpclient.HTTPClient()
-        response = client.fetch(self.port + function, method=method)
+        response = client.fetch(self.port + function, method=method, body=body)
         return json.loads(response.body.decode('utf-8'))
 
     def get_information(self):
@@ -46,3 +46,6 @@ class Client(object):
 
     def submit_task(self, json_data):
         return self.query_server("scheduler", "POST", body=json_data)
+
+    def get_queue(self):
+        return self.query_server("scheduler", "GET")

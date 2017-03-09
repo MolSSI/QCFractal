@@ -196,7 +196,7 @@ class Database(object):
 
         return True
 
-    def compute(self, keys, stoich="default", options={}, program="psi4"):
+    def compute(self, keys, stoich="default", options={}, program="psi4", other_fields={}):
 
         if self.client is None:
             raise AttributeError("DataBase: Compute: Client was not set.")
@@ -223,6 +223,8 @@ class Database(object):
                 tmp = {}
                 tmp["molecule_hash"] = idx
                 tmp["modelchem"] = method
+                for k, v in other_fields.items():
+                    tmp[k] = v
                 compute_list.append(tmp)
 
 
@@ -232,7 +234,10 @@ class Database(object):
         submit_json["tasks"] = compute_list
         submit_json["program"] = program
 
-        return self.client.submit_task(submit_json)
+        ret = {}
+        ret["submit"] = self.client.submit_task(submit_json)
+        ret["nsubmit"] = len(compute_list)
+        return ret
 
     def get_index(self):
         """
