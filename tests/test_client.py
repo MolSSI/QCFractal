@@ -3,26 +3,12 @@ import pandas as pd
 import numpy as np
 import os
 import time
-import contextlib
 import subprocess
+import pytest
 
 qcdb_test_name = "QCDB_TEST_DB"
 
-#@contextlib.contextmanager
-#def client_service():
-#    
-#    server_path = os.path.dirname(__file__) + "/../qcdb_server/server.py"
-#    run_string = "python " + server_path + " --mongo_project=" + qcdb_test_name
-#
-#    # Boot up the process and give it a second
-#    p = subprocess.Popen(run_string, shell=True)
-#    time.sleep(2.0)
-#
-#    # Kill on exit
-#    yield
-#    p.terminate()
-
-@contextlib.contextmanager
+@pytest.fixture(scope="module")
 def client_service():
     
     server_path = os.path.dirname(__file__) + "/../qcdb_server/server.py"
@@ -37,7 +23,7 @@ def client_service():
     p.terminate()
 
 
-def test_client1():
+def test_client1(client_service):
     client = mdb.Client("http://localhost:8888")
 
     # Clear out previous mongo
@@ -73,7 +59,7 @@ def test_client1():
     db.query("Benchmark", reaction_results=True)
     assert np.allclose(db.df["Benchmark"], db.df["BP/aug-cc-pVDZ"])
 
-def test_client_ie():
+def test_client_ie(client_service):
 
     client = mdb.Client("http://localhost:8888")
 
