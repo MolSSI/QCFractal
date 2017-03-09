@@ -381,7 +381,7 @@ class Database(object):
 
         return ret
 
-    def add_rxn(self, name, stoichiometry, return_values={}, attributes={}, other_fields={}):
+    def add_rxn(self, name, stoichiometry, reaction_results={}, attributes={}, other_fields={}):
         """
         Adds a reaction to a database object.
 
@@ -440,14 +440,14 @@ class Database(object):
             rxn[k] = v
 
 
-        if "default" in list(return_values):
-            rxn["reaction_results"] = return_values
+        if "default" in list(reaction_results):
+            rxn["reaction_results"] = reaction_results
         else:
-            # if isinstance(return_values, (dict)):
+            # if isinstance(reaction_results, (dict)):
             #     raise TypeError("Passed in return values must have a 'default' field.")
 
             rxn["reaction_results"] = {}
-            rxn["reaction_results"]["default"] = return_values
+            rxn["reaction_results"]["default"] = reaction_results
 
 
         self.data["reactions"].append(rxn)
@@ -457,7 +457,7 @@ class Database(object):
 
     def add_ie_rxn(self, name, mol, **kwargs):
 
-        return_values = kwargs.pop("return_values", {})
+        reaction_results = kwargs.pop("reaction_results", {})
         attributes = kwargs.pop("attributes", {})
         other_fields = kwargs.pop("other_fields", {})
 
@@ -465,7 +465,7 @@ class Database(object):
         return self.add_rxn(
             name,
             stoichiometry,
-            return_values=return_values,
+            reaction_results=reaction_results,
             attributes=attributes,
             other_fields=other_fields)
 

@@ -74,7 +74,7 @@ def water_db():
     db.add_rxn(
         "Water Dimer, nocp", [(dimer, 1.0), (frag_0, -1.0), (frag_1, -1.0)],
         attributes={"R": "Minima"},
-        return_values={"Benchmark": -20.0,
+        reaction_results={"Benchmark": -20.0,
                        "DFT": -10.0})
 
     # Add single stoich from strings, not a valid set
@@ -82,7 +82,7 @@ def water_db():
         "Water Dimer, dimer - str (invalid)",
         [(_water_dimer_minima, 1.0), (_water_dimer_minima.splitlines()[-1], 0.0)],
         attributes={"R": "Minima"},
-        return_values={"Benchmark": -20.0,
+        reaction_results={"Benchmark": -20.0,
                        "DFT": -10.0})
 
     # Add single stoich rxn via hashes
@@ -90,7 +90,7 @@ def water_db():
         "Water Dimer, nocp - hash",
         [(dimer.get_hash(), 1.0), (frag_0.get_hash(), -1.0), (frag_1.get_hash(), -1.0)],
         attributes={"R": "Minima"},
-        return_values={"Benchmark": -5.0})
+        reaction_results={"Benchmark": -5.0})
 
     # Add multi stoich reaction via dict
     with pytest.raises(KeyError):
@@ -254,7 +254,7 @@ def hbc_from_df():
             dtype="numpy",
             frags=[row["MonA"]],
             attribute={"R": row["R"]},
-            return_values=rvals)
+            reaction_results=rvals)
 
     return db
 
@@ -320,7 +320,7 @@ def test_nbody_rxn(nbody_db):
 
 
 # Test dataframe
-def test_dataframe_return_values(water_db):
+def test_dataframe_reaction_results(water_db):
 
     water_db.query("Benchmark", reaction_results=True, scale=1.0)
     water_db.query("DFT", reaction_results=True, scale=1)
