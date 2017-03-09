@@ -394,8 +394,9 @@ def test_query(mongo_socket):
 
     db = mdb.Database("HBC6", socket=mongo_socket)
     db.query("B3LYP/aug-cc-pVDZ", stoich="cp", prefix="cp-")
-    db.query("B3LYP/adz", stoich="cp", prefix="cp-", reaction_results=True, scale=1.0)
+    db.query("B3LYP/adz", stoich="cp", reaction_results=True, scale=1.0)
 
+    print(db.df)
     mue = db.statistics("MUE", "cp-B3LYP/aug-cc-pVDZ", bench="B3LYP/adz")
     assert np.allclose(0.0, mue, atol=1.e-4)
 

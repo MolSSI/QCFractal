@@ -161,7 +161,11 @@ class Database(object):
                     except:
                         pass
 
-            tmp_idx *= constants.get_scale(scale)
+            # Convert to numeric
+            tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
+            tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.get_scale(scale)
+
+            tmp_idx.columns = [prefix + x + postfix for x in tmp_idx.columns]
             self.df[tmp_idx.columns] = tmp_idx
             return True
 
@@ -189,7 +193,8 @@ class Database(object):
         tmp_idx = tmp_idx.groupby(["name"]).sum()
 
         # scale
-        tmp_idx *= constants.get_scale(scale)
+        tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
+        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.get_scale(scale)
 
         # Apply to df
         self.df[tmp_idx.columns] = tmp_idx
