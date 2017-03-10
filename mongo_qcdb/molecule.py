@@ -423,11 +423,15 @@ class Molecule(object):
         fragmentation, charges and multiplicities, and any frame
         restriction.
         """
-        text = ""
+        text = "\n"
 
         # append atoms and coordentries and fragment separators with charge and multiplicity
         for num, frag in enumerate(self.fragments):
-            text += "%s    \n    %d %d\n" % ("    --", self.fragment_charges[num],
+            divider = "    --"
+            if num == 0 :
+                divider = ""
+
+            text += "%s    \n    %d %d\n" % (divider, self.fragment_charges[num],
                                              self.fragment_multiplicities[num])
 
             for at in frag:
