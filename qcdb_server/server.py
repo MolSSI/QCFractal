@@ -45,7 +45,9 @@ class DaskNanny(object):
         for key, future in self.dask_queue.items():
             if future.done():
                 try:
+                    assert tmp_data["success"] == True
                     tmp_data = future.result()
+                    # res = self.mongod_socket.del_page_by_data(tmp_data)
                     res = self.mongod_socket.add_page(tmp_data)
                     print("MONGO: ADD (%s, %s) - %s" % (tmp_data["molecule_hash"], tmp_data["modelchem"], str(res)) )
                 except Exception as e:
@@ -180,7 +182,7 @@ class QCDBServer(object):
             self.local_cluster = distributed.LocalCluster(nanny=False)
             self.dask_socket = distributed.Client(self.local_cluster)
         else:
-            dask_socket = distributed.Client(options.dask_ip + ":" + str(options.dask_port))
+            self.dask_socket = distributed.Client(options.dask_ip + ":" + str(options.dask_port))
         self.dask_socket.upload_file(compute_file)
         print("Dask Scheduler Info:")
         print(self.dask_socket)
