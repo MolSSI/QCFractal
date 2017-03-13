@@ -17,19 +17,32 @@ psi_run = "python " + psi_location + " --json "
 
 def psi_compute(json_data, **kwargs):
 
+    # Change into the working dir if available
+    if "working_dir" in list(json_data):
+        os.chdir(json_data["working_dir"])
+
+    # Set memory to 50 GB if not present
+    if "memory" not in list(json_data):
+        json_data["memory"] = 50e9
+
+    # Set 6 cores
+    ncores = kwargs.pop("ncores", 6)
+
     filename = str(uuid.uuid4()) + ".json"
 
     with open(filename, "w") as outfile:
         json.dump(json_data, outfile)
 
-    ncores = kwargs.pop("ncores", 1)
+    run_script = psi_run + " " + filename
     run_script = psi_run + "-n" + str(ncores) + " " + filename
-    sp.call(run_script, shell=True)
+
+    output = sp.check_output(run_script, shell=True)
 
     with open(filename, "r") as outfile:
         ret = json.load(outfile)
 
     os.unlink(filename)
+    ret["subprocess error"] = output
 
     return ret
 
@@ -54,4 +67,8 @@ if __name__ == "__main__":
     json_data["options"] = {"BASIS": "STO-3G"}
     json_data["return_output"] = True
 
-    print(psi_compute(json_data))
+    ret = psi_compute(json_data)
+    print(ret)
+
+    print(ret["success"])
+    print(ret["memory"])

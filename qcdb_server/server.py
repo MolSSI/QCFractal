@@ -26,6 +26,10 @@ define(
     "dask_ip", default="", help="The Dask instances IP. If blank starts a local cluster.", type=str)
 define("dask_port", default=8786, help="The Dask instances port.", type=int)
 
+dask_dir_geuss = os.getcwd() + '/dask_scratch/' 
+define("dask_dir", default=dask_dir_geuss, help="The Dask workers working director", type=str)
+dask_working_dir = options.dask_dir
+
 
 class DaskNanny(object):
     def __init__(self, dask_socket, mongod_socket):
@@ -45,8 +49,9 @@ class DaskNanny(object):
         for key, future in self.dask_queue.items():
             if future.done():
                 try:
-                    assert tmp_data["success"] == True
                     tmp_data = future.result()
+                    #print(tmp_data)
+                    assert tmp_data["success"] == True
                     # res = self.mongod_socket.del_page_by_data(tmp_data)
                     res = self.mongod_socket.add_page(tmp_data)
                     print("MONGO: ADD (%s, %s) - %s" % (tmp_data["molecule_hash"], tmp_data["modelchem"], str(res)) )
@@ -68,9 +73,13 @@ class Scheduler(tornado.web.RequestHandler):
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
     """
 
+
     def initialize(self, **objects):
         print("SCHEDULER: %s (%d bytes)" % (self.request.method, len(self.request.body)))
         self.objects = objects
+
+        # Namespaced working dir
+        self.working_dir = dask_working_dir
 
     def _verify_input(self, data, options=None):
         mongo = self.objects["mongod_socket"]
@@ -95,6 +104,7 @@ class Scheduler(tornado.web.RequestHandler):
         data["molecule"] = molecule_str
         data["method"] = data["modelchem"]
         data["driver"] = "energy"
+        data["working_dir"] = self.working_dir
 
         return data
 
@@ -142,7 +152,7 @@ class Scheduler(tornado.web.RequestHandler):
 
         dask_nanny = self.objects["dask_nanny"]
         ret = {}
-        ret["queue"] = dask_nanny.dask_queue
+        ret["queue"] = list(dask_nanny.dask_queue)
         ret["error"] = dask_nanny.errors
         self.write(json.dumps(ret))
 
@@ -187,6 +197,10 @@ class QCDBServer(object):
         print("Dask Scheduler Info:")
         print(self.dask_socket)
         print(" ")
+
+        # Make sure the scratch is there
+        if not os.path.exists(dask_working_dir):
+            os.makedirs(dask_working_dir)
 
         # Dask Nanny
         self.dask_nanny = DaskNanny(self.dask_socket, self.mongod_socket)
