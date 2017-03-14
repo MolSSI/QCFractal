@@ -119,7 +119,15 @@ class Database(object):
             tmp_idx[col] *= tmp_idx["coefficient"]
         tmp_idx = tmp_idx.drop(['stoichiometry', 'molecule_hash', 'coefficient'], axis=1)
 
+
+        # If *any* value is null in the stoich sum, the whole thing should be Null. Pandas is being too clever
+        null_mask = tmp_idx.copy()
+        null_mask[keys] = null_mask[keys].isnull()
+        null_mask = null_mask.groupby(["name"]).sum() != False
+
         tmp_idx = tmp_idx.groupby(["name"]).sum()
+        tmp_idx[null_mask] = np.nan
+
         return tmp_idx
 
     def query(self,
