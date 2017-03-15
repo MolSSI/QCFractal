@@ -52,6 +52,7 @@ def pass_compute(json_data, **kwargs):
     This doesnt do anything with the json. Used for testing.
     """
 
+    json_data["success"] = True
     return json_data
 
 
