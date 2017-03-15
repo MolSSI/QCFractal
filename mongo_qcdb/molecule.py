@@ -91,7 +91,7 @@ class Molecule(object):
         start = 0
         for fsplit in frags:
             self.fragments.append(list(range(start, fsplit)))
-            self.fragment_charges.append(0)
+            self.fragment_charges.append(0.0)
             self.fragment_multiplicities.append(1)
             start = fsplit
 
@@ -142,9 +142,9 @@ class Molecule(object):
                 tempMultiplicity = int(cgmp.match(line).group(2))
 
                 if ifrag == 0:
-                    self.charge = tempCharge
+                    self.charge = float(tempCharge)
                     self.multiplicity = tempMultiplicity
-                self.fragment_charges.append(tempCharge)
+                self.fragment_charges.append(float(tempCharge))
                 self.fragment_multiplicities.append(tempMultiplicity)
 
             # handle fragment markers and default fragment cgmp
@@ -152,7 +152,7 @@ class Molecule(object):
                 try:
                     self.fragment_charges[ifrag]
                 except:
-                    self.fragment_charges.append(0)
+                    self.fragment_charges.append(0.0)
                     self.fragment_multiplicities.append(1)
                 ifrag += 1
                 glines.append(line)
@@ -168,7 +168,7 @@ class Molecule(object):
         try:
             self.fragment_charges[ifrag]
         except:
-            self.fragment_charges.append(0)
+            self.fragment_charges.append(0.0)
             self.fragment_multiplicities.append(1)
 
         # Now go through the rest of the lines looking for fragment markers
@@ -261,7 +261,7 @@ class Molecule(object):
         """
         text = ""
 
-        text += """    Geometry (in %s), charge = %d, multiplicity = %d:\n\n""" % \
+        text += """    Geometry (in %s), charge = %.1f, multiplicity = %d:\n\n""" % \
             ('Angstrom', self.charge, self.multiplicity)
         text += """       Center              X                  Y                   Z       \n"""
         text += """    ------------   -----------------  -----------------  -----------------\n"""
