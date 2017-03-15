@@ -3895,5 +3895,6 @@
             }
         }
     ],
-    "name": "HBC6"
+    "name": "HBC6",
+    "db_type": "RXN"
 }

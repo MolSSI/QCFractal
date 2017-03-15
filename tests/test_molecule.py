@@ -108,7 +108,7 @@ def test_water_minima_data():
     mol = molecule.Molecule(_water_dimer_minima, name="water dimer")
 
     assert len(str(mol)) == 660
-    assert len(mol.to_string()) == 447
+    assert len(mol.to_string()) == 442
 
     assert sum(
         x == y
