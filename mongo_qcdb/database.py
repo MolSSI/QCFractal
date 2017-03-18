@@ -501,7 +501,7 @@ class Database(object):
         attributes = kwargs.pop("attributes", {})
         other_fields = kwargs.pop("other_fields", {})
 
-        stoichiometry = self.build_ie_fragments(mol, **kwargs)
+        stoichiometry = self.build_ie_fragments(mol, name=name, **kwargs)
         return self.add_rxn(
             name,
             stoichiometry,
