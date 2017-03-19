@@ -106,6 +106,19 @@ def test_add_remove_page(mongo_socket):
     result = mongo_socket.del_page_by_data(data)
     assert result
 
+def test_batch_remove(mongo_socket):
+    batch = [{"_id":"NewDatabase", "name":"a"}, {"_id":"NewDatabase2", "name":"b"}]
+    for item in batch:
+        assert mongo_socket.add_database(item)
+    result = mongo_socket.del_database_by_hash(["7b3ce68b6c2f7d67dae4210eeb83be69f978e2a8", "205c97d9248d2cd12db1c55ba421eb8df84b22a7"])
+    assert result["7b3ce68b6c2f7d67dae4210eeb83be69f978e2a8"]
+    assert result["205c97d9248d2cd12db1c55ba421eb8df84b22a7"]
+    for item in batch:
+        assert mongo_socket.add_database(item)
+    result = mongo_socket.del_database_by_data(batch)
+    assert result["7b3ce68b6c2f7d67dae4210eeb83be69f978e2a8"]
+    assert result["205c97d9248d2cd12db1c55ba421eb8df84b22a7"]
+
 def test_list_methods(mongo_socket):
     data = {"_id":"NewPage", "modelchem":"a", "molecule_hash":"b"}
     mongo_socket.add_page(data)

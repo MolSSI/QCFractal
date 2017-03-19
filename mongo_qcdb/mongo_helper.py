@@ -134,7 +134,7 @@ class MongoSocket(object):
         elif isinstance(data, list):
             arr = []
             for item in data:
-                arr.append(fields.get_hash(item))
+                arr.append(fields.get_hash(item, collection))
             return self.del_by_hash(collection, arr)
 
     def del_molecule_by_data(self, data):
