@@ -19,14 +19,13 @@ import compute
 compute_file = os.path.abspath(os.path.dirname(__file__)) + os.path.sep + 'compute.py'
 
 define("port", default=8888, help="Run on the given port.", type=int)
-define("mongo_project", default="default", help="The Mongod Database instance to open.", type=str)
 define("mongod_ip", default="127.0.0.1", help="The Mongod instances IP.", type=str)
 define("mongod_port", default=27017, help="The Mongod instances port.", type=int)
 define(
     "dask_ip", default="", help="The Dask instances IP. If blank starts a local cluster.", type=str)
 define("dask_port", default=8786, help="The Dask instances port.", type=int)
 
-dask_dir_geuss = os.getcwd() + '/dask_scratch/' 
+dask_dir_geuss = os.getcwd() + '/dask_scratch/'
 define("dask_dir", default=dask_dir_geuss, help="The Dask workers working director", type=str)
 dask_working_dir = options.dask_dir
 
@@ -112,8 +111,10 @@ class Scheduler(tornado.web.RequestHandler):
 
         # Decode the data
         data = json.loads(self.request.body.decode('utf-8'))
+        header = self.request.headers
 
         # Grab objects
+        self.objects["mongod_socket"].set_project(header["project"])
         dask = self.objects["dask_socket"]
         dask_nanny = self.objects["dask_nanny"]
 
@@ -150,6 +151,8 @@ class Scheduler(tornado.web.RequestHandler):
 
     def get(self):
 
+        header = self.request.headers
+        self.objects["mongod_socket"].set_project(header["project"])
         dask_nanny = self.objects["dask_nanny"]
         ret = {}
         ret["queue"] = list(dask_nanny.dask_queue)
@@ -169,7 +172,7 @@ class Information(tornado.web.RequestHandler):
         mongod = self.objects["mongod_socket"]
 
         ret = {}
-        ret["mongo_data"] = (mongod.url, mongod.port, mongod.db_name)
+        ret["mongo_data"] = (mongod.url, mongod.port)
         ret["dask_data"] = dask.scheduler.address
         self.write(json.dumps(ret))
 
@@ -180,8 +183,8 @@ class QCDBServer(object):
         tornado.options.options.parse_command_line()
 
         # Build mongo socket
-        self.mongod_socket = mdb.mongo_helper.MongoSocket(options.mongod_ip, options.mongod_port,
-                                                          options.mongo_project)
+        self.mongod_socket = mdb.mongo_helper.MongoSocket(options.mongod_ip, options.mongod_port)
+
         print("Mongod Socket Info:")
         print(self.mongod_socket)
         print(" ")
@@ -244,7 +247,7 @@ class QCDBServer(object):
                 self.local_cluster.close()
             self.loop.stop()
 
-        print("\nQCDB Client stopping gracefully. Stoped IOLoop.\n")
+        print("\nQCDB Client stopping gracefully. Stopped IOLoop.\n")
 
 
 if __name__ == "__main__":

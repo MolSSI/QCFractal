@@ -16,20 +16,41 @@ class MongoSocket(object):
     This is a Mongo QCDB socket class.
     """
 
-    def __init__(self, url, port, db):
+    def __init__(self, url, port, project=None):
         """
         Constructs a new socket where url and port points towards a Mongod instance.
-        db will either create a new Mongo Database or open a current Mongo Database.
 
         """
-        self.db_name = db
         self.url = url
         self.port = port
         self.client = pymongo.MongoClient(url, port)
-        self.setup = self.init_db(db)
+        if (project != None):
+            self.set_project(project)
 
     def __repr__(self):
-        return "<MongoSocket: address='%s:%d' project=%s>" % (self.url, self.port, self.db_name)
+        return "<MongoSocket: address='%s:%d'>" % (self.url, self.port)
+
+    def set_project(self, project):
+        # Success dictionary and collections to create
+        success = {}
+        collection_creation = {}
+
+        # Create DB
+        self.project = self.client[project]
+        success["project"] = self.project
+
+        # Try to create a collection for each entry
+        collections = {"molecules", "databases", "pages"}
+        for stri in collections:
+            try:
+                self.project.create_collection(stri)
+                collection_creation[stri] = 1
+            except pymongo.errors.CollectionInvalid:
+                collection_creation[stri] = 0
+        success["collection_creation"] = collection_creation
+
+        # Return the success array, where a value of 1 means successful
+        return success
 
     def add_molecule(self, data):
         """
@@ -86,7 +107,7 @@ class MongoSocket(object):
         sha1 = fields.get_hash(data, collection)
         try:
             data["_id"] = sha1
-            self.db[collection].insert_one(data)
+            self.project[collection].insert_one(data)
             return True
         except pymongo.errors.DuplicateKeyError:
             return False
@@ -95,7 +116,7 @@ class MongoSocket(object):
         """
         Helper function that facilitates deletion based on hash.
         """
-        return (self.db[collection].delete_one({"_id": hash_val})).deleted_count == 1
+        return (self.project[collection].delete_one({"_id": hash_val})).deleted_count == 1
 
     def del_by_data(self, collection, data):
         """
@@ -230,7 +251,7 @@ class MongoSocket(object):
         hashes = list(hashes)
         methods = list(methods)
         command = [{"$match": {"molecule_hash": {"$in": hashes}, "modelchem": {"$in": methods}}}]
-        pages = list(self.db["pages"].aggregate(command))
+        pages = list(self.project["pages"].aggregate(command))
         d = {}
         for mol in hashes:
             for method in methods:
@@ -276,7 +297,7 @@ class MongoSocket(object):
         """
         hashes = list(hashes)
         command = [{"$match": {"molecule_hash": {"$in": hashes}, "modelchem": method}}]
-        pages = list(self.db["pages"].aggregate(command))
+        pages = list(self.project["pages"].aggregate(command))
         d = {}
         for mol in hashes:
             for field in fields:
@@ -312,7 +333,7 @@ class MongoSocket(object):
         """
         d = {}
         for mol in hashes:
-            records = list(self.db["pages"].find({"molecule_hash": mol}))
+            records = list(self.project["pages"].find({"molecule_hash": mol}))
             d[mol] = []
             for rec in records:
                 d[mol].append(rec["modelchem"])
@@ -353,7 +374,7 @@ class MongoSocket(object):
                     }
                 }
             }]
-            pages = list(self.db["pages"].aggregate(command))
+            pages = list(self.project["pages"].aggregate(command))
             if (len(pages) == 0 or len(pages[0]["value"]) == 0):
                 d[mol] = None
             else:
@@ -370,11 +391,11 @@ class MongoSocket(object):
             List of database names.
         """
         projects = []
-        for db_name in self.client.database_names():
-            projects.append(db_name)
+        for project_name in self.client.database_names():
+            projects.append(project_name)
         return projects
 
-    def push_to(self, url, port, remote_db):
+    def push_to(self, url, port, remote_project):
         """
         Inserts all documents from the local project into the remote one.
 
@@ -384,12 +405,12 @@ class MongoSocket(object):
             Connection string.
         port : str
             Connection port.
-        remote_db : str
+        remote_project : str
             Name of remote project.
         """
-        self.generic_copy(url, port, remote_db, False)
+        self.generic_copy(url, port, remote_project, False)
 
-    def clone_to(self, url, port, remote_db):
+    def clone_to(self, url, port, remote_project):
         """
         Replaces the remote project with the local one.
 
@@ -399,20 +420,21 @@ class MongoSocket(object):
             Connection string.
         port : str
             Connection port.
-        remote_db : str
+        remote_project : str
             Name of remote project.
         """
-        self.generic_copy(url, port, remote_db, True)
+        self.generic_copy(url, port, remote_project, True)
 
-    def generic_copy(self, url, port, remote_db, delete):
+    def generic_copy(self, url, port, remote_project, delete):
         """
             Helper function for facilitating syncing.
         """
-        remote = MongoSocket(url, port, remote_db)
+        remote = MongoSocket(url, port)
+        remote.set_project(remote_project)
         if (delete):
-            remote.client.drop_database(remote.db_name)
+            remote.client.drop_database(remote.project)
         for col in ["molecules", "databases", "pages"]:
-            cursor = self.db[col].find({})
+            cursor = self.project[col].find({})
             for item in cursor:
                 remote.add_generic(item, col)
 
@@ -439,7 +461,7 @@ class MongoSocket(object):
                 }
             }
         }]
-        records = list(self.db["databases"].aggregate(command))
+        records = list(self.project["databases"].aggregate(command))
 
         if (len(records) > 0):
             success = True
@@ -462,7 +484,7 @@ class MongoSocket(object):
                         }
                     }
                 }]
-                page = list(self.db["pages"].aggregate(command))
+                page = list(self.project["pages"].aggregate(command))
                 if (len(page) == 0 or len(page[0]["value"]) == 0):
                     success = False
                     break
@@ -501,13 +523,13 @@ class MongoSocket(object):
                     }
                 }
             }]
-            page = list(self.db["databases"].aggregate(command))
+            page = list(self.project["databases"].aggregate(command))
             if (len(page) > 0 and method in page[0]["reaction_results"][0]):
                 return page[0]["reaction_results"][0][method]
         return None
 
     def get_series(self, field, db, stoich, method, do_stoich=True, debug_level=1):
-        database = self.db["databases"].find_one({"name": db})
+        database = self.project["databases"].find_one({"name": db})
         if (database == None):
             return None
         res = []
@@ -519,7 +541,7 @@ class MongoSocket(object):
         return pd.DataFrame(data={method: res}, index=index)
 
     def get_dataframe(self, field, db, stoich, methods, do_stoich=True, debug_level=1):
-        database = self.db["databases"].find_one({"name": db})
+        database = self.project["databases"].find_one({"name": db})
         if (database == None):
             return None
 
@@ -541,32 +563,10 @@ class MongoSocket(object):
 
     # Do a lookup on the pages collection using a <molecule, method> key.
     def get_page(self, molecule_hash, method):
-        return self.db["pages"].find_one({"molecule_hash": molecule_hash, "modelchem": method})
+        return self.project["pages"].find_one({"molecule_hash": molecule_hash, "modelchem": method})
 
     def get_database(self, name):
-        return self.db["databases"].find_one({"name": name})
+        return self.project["databases"].find_one({"name": name})
 
     def get_molecule(self, molecule_hash):
-        return self.db["molecules"].find_one({"_id": molecule_hash})
-
-    def init_db(self, db):
-        # Success dictionary and collections to create
-        success = {}
-        collection_creation = {}
-
-        # Create DB
-        self.db = self.client[db]
-        success["db"] = self.db
-
-        # Try to create a collection for each entry
-        collections = {"molecules", "databases", "pages"}
-        for stri in collections:
-            try:
-                self.db.create_collection(stri)
-                collection_creation[stri] = 1
-            except pymongo.errors.CollectionInvalid:
-                collection_creation[stri] = 0
-        success["collection_creation"] = collection_creation
-
-        # Return the success array, where a value of 1 means successful
-        return success
+        return self.project["molecules"].find_one({"_id": molecule_hash})

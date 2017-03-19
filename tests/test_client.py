@@ -5,31 +5,30 @@ import os
 import time
 import subprocess
 import pytest
-
-qcdb_test_name = "QCDB_TEST_DB"
-
+import shlex
 
 @pytest.fixture(scope="module")
 def client_service():
 
     server_path = os.path.dirname(__file__) + "/../qcdb_server/server.py"
-    run_string = "python " + server_path + " --mongo_project=" + qcdb_test_name
+    run_string = "python \"" + server_path + "\""
 
     # Boot up the process and give it a second
-    p = subprocess.Popen(run_string, shell=True)
+    p = subprocess.Popen(shlex.split(run_string), shell=False)
     time.sleep(2.0)
 
     # Kill on exit
     yield
+    print("Exiting...")
     p.terminate()
 
 
 def test_client1(client_service):
-    client = mdb.Client("http://localhost:8888")
+    client = mdb.Client("http://localhost:8888", "client1_project")
 
     # Clear out previous mongo
     mongo = client.get_MongoSocket()
-    mongo.client.drop_database(qcdb_test_name)
+    mongo.client.drop_database("client1_project")
     mongo.del_database_by_data({"name": "H2"})
 
     # Add a new blank test set and submit
@@ -68,11 +67,11 @@ def test_client1(client_service):
 
 def test_client_ie(client_service):
 
-    client = mdb.Client("http://localhost:8888")
+    client = mdb.Client("http://localhost:8888", "client2_project")
 
     # Clear out previous mongo
     mongo = client.get_MongoSocket()
-    mongo.client.drop_database(qcdb_test_name)
+    mongo.client.drop_database("client2_project")
     mongo.del_database_by_data({"name": "H2_IE"})
 
     db = mdb.Database("H2_IE", client, db_type="IE")

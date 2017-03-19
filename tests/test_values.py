@@ -10,7 +10,8 @@ from collections import OrderedDict
 @pytest.fixture(scope="module")
 def mongo_socket():
     db_name = "local_values_test"
-    mongo = mdb.mongo_helper.MongoSocket("127.0.0.1", 27017, db_name)
+    mongo = mdb.mongo_helper.MongoSocket("127.0.0.1", 27017)
+    mongo.set_project(db_name)
     for db_name in mongo.client.database_names():
         mongo.client.drop_database(db_name)
 
