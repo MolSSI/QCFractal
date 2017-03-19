@@ -112,17 +112,30 @@ class MongoSocket(object):
         except pymongo.errors.DuplicateKeyError:
             return False
 
-    def del_by_hash(self, collection, hash_val):
+    def del_by_hash(self, collection, hashes):
         """
         Helper function that facilitates deletion based on hash.
         """
-        return (self.project[collection].delete_one({"_id": hash_val})).deleted_count == 1
+        if isinstance(hashes, str):
+            return (self.project[collection].delete_one({"_id": hashes})).deleted_count == 1
+        elif isinstance(hashes, list):
+            ret = {}
+            for item in hashes:
+                ret[item] = (self.project[collection].delete_one({"_id": item})).deleted_count == 1
+            return ret
+
 
     def del_by_data(self, collection, data):
         """
         Helper function that facilitates deletion based on structured dict.
         """
-        return self.del_by_hash(collection, fields.get_hash(data, collection))
+        if isinstance(data, dict):
+            return self.del_by_hash(collection, fields.get_hash(data, collection))
+        elif isinstance(data, list):
+            arr = []
+            for item in data:
+                arr.append(fields.get_hash(item))
+            return self.del_by_hash(collection, arr)
 
     def del_molecule_by_data(self, data):
         """
