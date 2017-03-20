@@ -53,6 +53,7 @@ def _compare_rxn_stoichs(ref, new):
     assert test_util.compare_lists(keys, keys_other)
 
     for k in keys:
+        print(k)
         _compare_stoichs(stoich[k], stoich_other[k])
 
     return True
@@ -114,7 +115,7 @@ def water_db():
 def nbody_db():
     db = mdb.Database("N-Body Data")
 
-    dimer = mdb.Molecule(_water_dimer_minima)
+    dimer = mdb.Molecule(_water_dimer_minima, name="Water Dimer")
     frag_0 = dimer.get_fragment(0)
     frag_1 = dimer.get_fragment(1)
     frag_0_1 = dimer.get_fragment(0, 1)
@@ -130,84 +131,20 @@ def nbody_db():
     db.add_ie_rxn("Water Dimer", _water_dimer_minima)
     db.add_ie_rxn("Ne Tetramer", _neon_trimer)
 
+    # Diagnositics
+    # key1 = list(db.get_rxn("Water Dimer, bench")["stoichiometry"]["default"])[0]
+    # key2 = list(db.get_rxn("Water Dimer")["stoichiometry"]["default"])[0]
+    # print(db._new_molecule_jsons[key1])
+    # print(db._new_molecule_jsons[key2])
+    # print(mdb.fields.get_hash(db._new_molecule_jsons[key1], "molecule"))
+    # print(mdb.fields.get_hash(db._new_molecule_jsons[key2], "molecule"))
+
     # Nothing to fragment
     # with pytest.raises(AttributeError):
     #     db.add_ie_rxn("Water MonomerA", frag_0)
 
     # Ne Tetramer benchmark
-    db.ne_stoich = {
-        'attributes': {},
-        'name': 'Ne Tetramer',
-        'reaction_results': {
-            'default': {}
-        },
-        'stoichiometry': {
-            'cp': {
-                '41806e2d95255309b2b7f25149e073a37282e50b': 1.0
-            },
-            'default2': {
-                '5c295cf735e5200ef69f521c738fbfa1ad4fc8d6': 1.0,
-                '7d41a0004140b70ae29eb6dc9b729078848eda31': -8.0,
-                'ed43fa123f66c945660bcb1e0f158fcf71ff9089': 1.0,
-                '949f9082c959c3cb316fdb534002d47e84542a6d': 1.0,
-                '1360f433f6dd339e16da750d0a21f151242b6900': 2.0,
-                '57590ae0cdfaff83ea360d1c418787e9d4bbf5e4': 1.0
-            },
-            'cp2': {
-                '5fc6400a4a28657c4643f956ebe4f4e3a68aecfc': 1.0,
-                '115f82f0056f9540cc234e19ef1f81e313cc9a30': 1.0,
-                '064ecf3401e08c5055241adb212faedbf4d2d7e5': -2.0,
-                'b3ebb6bc5adba02f7e88abf7ff4a85060335fba3': -2.0,
-                'ae59c9f1e827e78d745fa925e88dd2d7aa80fb6d': -2.0,
-                '6af5906a998bc2e85aaaeefee2ad1fa5b682a460': 1.0,
-                '3242832baa23a02d0494eb81178bab89ef8a82bf': 1.0,
-                'e7b148ceca9e4128bb75d33e6269c9373aedac50': 1.0,
-                '63ff4c9fbfd7f57ade8ba0a3909cd50e4d3feb2d': -2.0,
-                '74ed8dfb65e067805c2c31464569335558e4401e': 1.0
-            },
-            'cp1': {
-                'b3ebb6bc5adba02f7e88abf7ff4a85060335fba3': 1.0,
-                '064ecf3401e08c5055241adb212faedbf4d2d7e5': 1.0,
-                '63ff4c9fbfd7f57ade8ba0a3909cd50e4d3feb2d': 1.0,
-                'ae59c9f1e827e78d745fa925e88dd2d7aa80fb6d': 1.0
-            },
-            'cp3': {
-                '89d622be9221f7b2e2a921cd91de8a4f12d2bdbb': 1.0,
-                'b3ebb6bc5adba02f7e88abf7ff4a85060335fba3': 1.0,
-                'e2027c85c865f232e618a2c3f191591d6f44f8bb': 1.0,
-                '3242832baa23a02d0494eb81178bab89ef8a82bf': -1.0,
-                '145590a213ac1a8c25904443b8e69bc280f65995': 1.0,
-                '6af5906a998bc2e85aaaeefee2ad1fa5b682a460': -1.0,
-                '63ff4c9fbfd7f57ade8ba0a3909cd50e4d3feb2d': 1.0,
-                '115f82f0056f9540cc234e19ef1f81e313cc9a30': -1.0,
-                '064ecf3401e08c5055241adb212faedbf4d2d7e5': 1.0,
-                '06048a1bb6642e10b50240b5ecfaed69b3183822': 1.0,
-                'ae59c9f1e827e78d745fa925e88dd2d7aa80fb6d': 1.0,
-                'e7b148ceca9e4128bb75d33e6269c9373aedac50': -1.0,
-                '5fc6400a4a28657c4643f956ebe4f4e3a68aecfc': -1.0,
-                '74ed8dfb65e067805c2c31464569335558e4401e': -1.0
-            },
-            'default': {
-                '41806e2d95255309b2b7f25149e073a37282e50b': 1.0
-            },
-            'default1': {
-                '7d41a0004140b70ae29eb6dc9b729078848eda31': 4.0
-            },
-            'default3': {
-                '5c295cf735e5200ef69f521c738fbfa1ad4fc8d6': -1.0,
-                '74ad74e6388872a630f8fa3f9fa2e9ef86537742': 1.0,
-                '7d41a0004140b70ae29eb6dc9b729078848eda31': 4.0,
-                'ed43fa123f66c945660bcb1e0f158fcf71ff9089': -1.0,
-                '949f9082c959c3cb316fdb534002d47e84542a6d': -1.0,
-                '74ade2c691b8da35b4974ebfe12ae37af239a471': 1.0,
-                '16f0c5eeda0ed9466157d1728873b5538e759b12': 1.0,
-                '854379dd6bd4eb03bbe1f25f93a3ce91e92e8e81': 1.0,
-                '1360f433f6dd339e16da750d0a21f151242b6900': -2.0,
-                '57590ae0cdfaff83ea360d1c418787e9d4bbf5e4': -1.0
-            }
-        }
-    }
-
+    db.ne_stoich = {'stoichiometry': {'cp1': {'a88578f05682d3c5791e482fb37dea11d1e8813f': 1.0, 'c6a3f4a26b0273fb147ad36f976b064860e032ed': 1.0, '0df2386d614a378f984dac6c15ef8aa4e8d60daa': 1.0, '29572c3a40b94aeea066f67e8c104a9a992bb4fd': 1.0}, 'cp3': {'a88578f05682d3c5791e482fb37dea11d1e8813f': 1.0, 'c6a3f4a26b0273fb147ad36f976b064860e032ed': 1.0, '60aeab8c65af2361809dff8ecc1c26978ee10e97': 1.0, '9a3bc5cd98988fb306cb500f35823f438eb2dab6': -1.0, '3d3dbb632fbe1427ce26ae1664b0d3c0f74d5b12': -1.0, 'c81f24a85816ce42f67f641cf071aa1f6728c1fe': 1.0, '10cb76fc37fdd7824ad88110652f17dec0454228': -1.0, '0df2386d614a378f984dac6c15ef8aa4e8d60daa': 1.0, '608f2212cb1d976f8985ed8063ebe7a3a137997f': 1.0, '29572c3a40b94aeea066f67e8c104a9a992bb4fd': 1.0, '9ce1d375ad154bffc0448c9177395bcf191ea517': -1.0, 'c2cb626a1eb42c3dae0a9176a746ef32ac7a0864': 1.0, 'dc25c79a239743d2d885e419709bcf25f7d259cd': -1.0, 'c1ca595e29dfa9b1c071c77587a242979eea5a86': -1.0}, 'default': {'3f8425826b76f94a5e4208366f04fb28c393baa7': 1.0}, 'default2': {'b67bfd4d68aed0602f0ee439cfafe242ac97fee6': 1.0, '3e80fa18b77b2ae32e93a9e81175476dcd9cd1de': 1.0, '0eaa463b14924d7138ac330ade3169376493c457': -8.0, 'f5306d9eff58b6101e1cc6d9af271a21f01e9309': 1.0, '9850fee49a3105b99390ccc2548fd0ccaf733adb': 2.0, '2c5c9a90eb9eb665bd09e8ed04a5eae6015a0a55': 1.0}, 'cp2': {'10cb76fc37fdd7824ad88110652f17dec0454228': 1.0, 'a88578f05682d3c5791e482fb37dea11d1e8813f': -2.0, 'c6a3f4a26b0273fb147ad36f976b064860e032ed': -2.0, '0df2386d614a378f984dac6c15ef8aa4e8d60daa': -2.0, '29572c3a40b94aeea066f67e8c104a9a992bb4fd': -2.0, '9ce1d375ad154bffc0448c9177395bcf191ea517': 1.0, '9a3bc5cd98988fb306cb500f35823f438eb2dab6': 1.0, '3d3dbb632fbe1427ce26ae1664b0d3c0f74d5b12': 1.0, 'dc25c79a239743d2d885e419709bcf25f7d259cd': 1.0, 'c1ca595e29dfa9b1c071c77587a242979eea5a86': 1.0}, 'default3': {'b67bfd4d68aed0602f0ee439cfafe242ac97fee6': -1.0, '6a013d7f915c2ab2e94939fc425d509a984c5a82': 1.0, '3e80fa18b77b2ae32e93a9e81175476dcd9cd1de': -1.0, '10082952153bec30467290841283d8c4ca981d00': 1.0, '0eaa463b14924d7138ac330ade3169376493c457': 4.0, 'f5306d9eff58b6101e1cc6d9af271a21f01e9309': -1.0, '9850fee49a3105b99390ccc2548fd0ccaf733adb': -2.0, 'ebc7d371336efbe9e651357ade6c9bd6fdb78739': 1.0, '095be43cff2cd62f882fa99e65a66451829fd9e0': 1.0, '2c5c9a90eb9eb665bd09e8ed04a5eae6015a0a55': -1.0}, 'default1': {'0eaa463b14924d7138ac330ade3169376493c457': 4.0}, 'cp': {'3f8425826b76f94a5e4208366f04fb28c393baa7': 1.0}}, 'attributes': {}, 'name': 'Ne Tetramer', 'reaction_results': {'default': {}}}
     return db
 
 

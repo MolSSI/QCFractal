@@ -380,7 +380,7 @@ class Molecule(object):
             ret.fragments.append(list(range(frag_start, frag_start + frag_size)))
             frag_start += frag_size
 
-            ret.fragment_charges.append(self.fragment_charges[frag])
+            ret.fragment_charges.append(float(self.fragment_charges[frag]))
             ret.fragment_multiplicities.append(self.fragment_multiplicities[frag])
 
         # Set charge and multiplicity

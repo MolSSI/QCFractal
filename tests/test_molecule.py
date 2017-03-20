@@ -107,7 +107,7 @@ def test_molecule_constructors():
 def test_water_minima_data():
     mol = molecule.Molecule(_water_dimer_minima, name="water dimer")
 
-    assert len(str(mol)) == 660
+    assert len(str(mol)) == 662
     assert len(mol.to_string()) == 442
 
     assert sum(
@@ -128,7 +128,7 @@ def test_water_minima_data():
                                       [1.00578203, -0.1092573, 0.], [-2.6821528, -0.12325075, 0.],
                                       [-3.27523824, 0.81341093, 1.43347255],
                                       [-3.27523824, 0.81341093, -1.43347255]])
-    assert mol.get_hash() == "5969b6e880840d07c74696c80cf4f8dc0011cbd1"
+    assert mol.get_hash() == "46541b6905ff43fd6c0b9222709137584a02f7f7"
 
 
 def test_water_minima_fragment():
@@ -137,8 +137,8 @@ def test_water_minima_fragment():
 
     frag_0 = mol.get_fragment(0)
     frag_1 = mol.get_fragment(1)
-    assert frag_0.get_hash() == "adbf3250e600c63f567fd3ce9cd0d6b87b314534"
-    assert frag_1.get_hash() == "67a6f97e12479e4140e238151f9470108849b3bc"
+    assert frag_0.get_hash() == "a290235adfe412851429cd658fef0934b260977a"
+    assert frag_1.get_hash() == "851d6bca6ddbda87fa58dc105c3db94bab39139c"
 
     frag_0_1 = mol.get_fragment(0, 1)
     frag_1_0 = mol.get_fragment(1, 0)
