@@ -119,9 +119,7 @@ class MongoSocket(object):
         if isinstance(hashes, str):
             return (self.project[collection].delete_one({"_id": hashes})).deleted_count == 1
         elif isinstance(hashes, list):
-            ret = {}
-            for item in hashes:
-                ret[item] = (self.project[collection].delete_one({"_id": item})).deleted_count == 1
+            ret = (self.project[collection].delete_many({"_id": {"$in" : hashes}})).deleted_count
             return ret
 
 
