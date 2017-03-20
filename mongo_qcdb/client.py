@@ -17,38 +17,31 @@ class Client(object):
         """
         Builds a new MongoSocket from the internal data.
         """
-        print(self.info["mongo_data"])
         socket = mongo_helper.MongoSocket(*self.info["mongo_data"])
         socket.set_project(self.project)
         return socket
 
     @gen.coroutine
-    def _query_server(self, function, method, body=None, project=None):
+    def _query_server(self, function, method, body=None):
         """
         Basic non-blocking server query.
         """
         if body is not None:
             body = json.dumps(body)
 
-        if project is None:
-            project = self.project
-
         client = httpclient.AsyncHTTPClient()
-        http_header = {"project" : project}
+        http_header = {"project" : self.project}
         yield json.loads(client.fetch(self.port + function, method=method, headers=http_header).body.decode('utf-8'))
 
-    def query_server(self, function, method, body=None, project=None):
+    def query_server(self, function, method, body=None):
         """
         Basic blocking server query.
         """
         if body is not None:
             body = json.dumps(body)
 
-        if project is None:
-            project = self.project
-
         client = httpclient.HTTPClient()
-        http_header = {"project" : project}
+        http_header = {"project" : self.project}
         response = client.fetch(self.port + function, method=method, body=body, headers=http_header)
         return json.loads(response.body.decode('utf-8'))
 

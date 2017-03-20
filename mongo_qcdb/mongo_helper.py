@@ -112,17 +112,28 @@ class MongoSocket(object):
         except pymongo.errors.DuplicateKeyError:
             return False
 
-    def del_by_hash(self, collection, hash_val):
+    def del_by_hash(self, collection, hashes):
         """
         Helper function that facilitates deletion based on hash.
         """
-        return (self.project[collection].delete_one({"_id": hash_val})).deleted_count == 1
+        if isinstance(hashes, str):
+            return (self.project[collection].delete_one({"_id": hashes})).deleted_count == 1
+        elif isinstance(hashes, list):
+            ret = (self.project[collection].delete_many({"_id": {"$in" : hashes}})).deleted_count
+            return ret
+
 
     def del_by_data(self, collection, data):
         """
         Helper function that facilitates deletion based on structured dict.
         """
-        return self.del_by_hash(collection, fields.get_hash(data, collection))
+        if isinstance(data, dict):
+            return self.del_by_hash(collection, fields.get_hash(data, collection))
+        elif isinstance(data, list):
+            arr = []
+            for item in data:
+                arr.append(fields.get_hash(item, collection))
+            return self.del_by_hash(collection, arr)
 
     def del_molecule_by_data(self, data):
         """
@@ -130,7 +141,7 @@ class MongoSocket(object):
 
         Parameters
         ----------
-        data : dict
+        data : dict or list of dicts
             Structured instance of the molecule.
 
         Returns
@@ -146,7 +157,7 @@ class MongoSocket(object):
 
         Parameters
         ----------
-        hash_val : str
+        hash_val : str or list of strs
             The hash of a molecule.
 
         Returns
@@ -162,7 +173,7 @@ class MongoSocket(object):
 
         Parameters
         ----------
-        data : dict
+        data : dict or list of dicts
             Structured instance of the database.
 
         Returns
@@ -178,7 +189,7 @@ class MongoSocket(object):
 
         Parameters
         ----------
-        hash_val : str
+        hash_val : str or list of strs
             The hash of a database.
 
         Returns
@@ -194,7 +205,7 @@ class MongoSocket(object):
 
         Parameters
         ----------
-        data : dict
+        data : dict or list of dicts
             Structured instance of the page.
 
         Returns
@@ -210,7 +221,7 @@ class MongoSocket(object):
 
         Parameters
         ----------
-        hash_val : str
+        hash_val : str or list of strs
             The hash of a page.
 
         Returns
