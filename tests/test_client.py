@@ -15,7 +15,7 @@ def client_service():
 
     # Boot up the process and give it a second
     p = subprocess.Popen(shlex.split(run_string), shell=False)
-    time.sleep(2.0)
+    time.sleep(5.0)
 
     # Kill on exit
     yield
