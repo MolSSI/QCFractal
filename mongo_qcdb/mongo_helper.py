@@ -141,7 +141,7 @@ class MongoSocket(object):
 
         Parameters
         ----------
-        data : dict
+        data : dict or list of dicts
             Structured instance of the molecule.
 
         Returns
@@ -157,7 +157,7 @@ class MongoSocket(object):
 
         Parameters
         ----------
-        hash_val : str
+        hash_val : str or list of strs
             The hash of a molecule.
 
         Returns
@@ -173,7 +173,7 @@ class MongoSocket(object):
 
         Parameters
         ----------
-        data : dict
+        data : dict or list of dicts
             Structured instance of the database.
 
         Returns
@@ -189,7 +189,7 @@ class MongoSocket(object):
 
         Parameters
         ----------
-        hash_val : str
+        hash_val : str or list of strs
             The hash of a database.
 
         Returns
@@ -205,7 +205,7 @@ class MongoSocket(object):
 
         Parameters
         ----------
-        data : dict
+        data : dict or list of dicts
             Structured instance of the page.
 
         Returns
@@ -221,7 +221,7 @@ class MongoSocket(object):
 
         Parameters
         ----------
-        hash_val : str
+        hash_val : str or list of strs
             The hash of a page.
 
         Returns

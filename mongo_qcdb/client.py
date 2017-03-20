@@ -17,7 +17,6 @@ class Client(object):
         """
         Builds a new MongoSocket from the internal data.
         """
-        print(self.info["mongo_data"])
         socket = mongo_helper.MongoSocket(*self.info["mongo_data"])
         socket.set_project(self.project)
         return socket
