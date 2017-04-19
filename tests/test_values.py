@@ -84,6 +84,16 @@ def test_add_remove_molecule(mongo_socket):
     result = mongo_socket.del_molecule_by_data(data)
     assert result
 
+    result = mongo_socket.add_molecule(data, "some_project")
+    assert result
+    result = mongo_socket.del_molecule_by_hash("6504d1e5eb2d1e0a9e979029f9a8d55fbad06fac", "some_project")
+    assert result
+    result = mongo_socket.add_molecule(data, "some_project")
+    assert result
+    result = mongo_socket.del_molecule_by_data(data, "some_project")
+    assert result
+    mongo_socket.client.drop_database("some_project")
+
 def test_add_remove_database(mongo_socket):
     data = {"_id":"NewDatabase", "name":"a"}
     result = mongo_socket.add_database(data)
@@ -95,6 +105,16 @@ def test_add_remove_database(mongo_socket):
     result = mongo_socket.del_database_by_data(data)
     assert result
 
+    result = mongo_socket.add_database(data, "some_project")
+    assert result
+    result = mongo_socket.del_database_by_hash("7b3ce68b6c2f7d67dae4210eeb83be69f978e2a8", "some_project")
+    assert result
+    result = mongo_socket.add_database(data, "some_project")
+    assert result
+    result = mongo_socket.del_database_by_data(data, "some_project")
+    assert result
+    mongo_socket.client.drop_database("some_project")
+
 def test_add_remove_page(mongo_socket):
     data = {"_id":"NewPage", "modelchem":"a", "molecule_hash":"b"}
     result = mongo_socket.add_page(data)
@@ -105,6 +125,16 @@ def test_add_remove_page(mongo_socket):
     assert result
     result = mongo_socket.del_page_by_data(data)
     assert result
+
+    result = mongo_socket.add_page(data, "some_project")
+    assert result
+    result = mongo_socket.del_page_by_hash("b8106d3072fd101cf33f937b0db5b73e670c1dd9", "some_project")
+    assert result
+    result = mongo_socket.add_page(data, "some_project")
+    assert result
+    result = mongo_socket.del_page_by_data(data, "some_project")
+    assert result
+    mongo_socket.client.drop_database("some_project")
 
 def test_batch_remove(mongo_socket):
     batch = [{"_id":"NewDatabase", "name":"a"}, {"_id":"NewDatabase2", "name":"b"}]
