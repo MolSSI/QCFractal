@@ -266,7 +266,6 @@ def test_clone(mongo_socket):
 def test_push(mongo_socket):
     res = mongo_socket.list_projects()
     assert len(res) == 2
-    assert res[1] == "local_values_test"
     mongo_socket.client["push"]["dummy"].insert_one({"test":"record"})
     assert len(mongo_socket.list_projects()) == 3
     assert "dummy" in mongo_socket.client["push"].collection_names()
