@@ -261,17 +261,17 @@ def test_clone(mongo_socket):
     assert len(mongo_socket.list_projects()) == 2
     assert "dummy" not in mongo_socket.client["clone"].collection_names()
     mongo_socket.client.drop_database("clone")
-    assert len(mongo_socket.list_projects()) == 1
+    assert len(mongo_socket.list_projects()) == 2
 
 def test_push(mongo_socket):
     res = mongo_socket.list_projects()
-    assert len(res) == 1
-    assert res[0] == "local_values_test"
+    assert len(res) == 2
+    assert res[1] == "local_values_test"
     mongo_socket.client["push"]["dummy"].insert_one({"test":"record"})
-    assert len(mongo_socket.list_projects()) == 2
+    assert len(mongo_socket.list_projects()) == 3
     assert "dummy" in mongo_socket.client["push"].collection_names()
     mongo_socket.push_to("127.0.0.1", 27017, "push")
-    assert len(mongo_socket.list_projects()) == 2
+    assert len(mongo_socket.list_projects()) == 3
     assert "dummy" in mongo_socket.client["push"].collection_names()
     mongo_socket.client.drop_database("push")
-    assert len(res) == 1
+    assert len(res) == 2

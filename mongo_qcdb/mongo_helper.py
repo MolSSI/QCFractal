@@ -26,6 +26,8 @@ class MongoSocket(object):
         self.client = pymongo.MongoClient(url, port)
         if (project != None):
             self.set_project(project)
+        else:
+            self.set_project("default")
 
     def __repr__(self):
         return "<MongoSocket: address='%s:%d'>" % (self.url, self.port)
@@ -53,6 +55,7 @@ class MongoSocket(object):
         return success
 
     def get_project(self, project):
+        print(project)
         new_project = self.client[project]
         collections = {"molecules", "databases", "pages"}
         for stri in collections:
@@ -78,10 +81,8 @@ class MongoSocket(object):
         bool
             Whether the operation was successful.
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
-        return self.add_generic(data, "molecules", selected_project)
+
+        return self.add_generic(data, "molecules", project)
 
     def add_database(self, data, project=None):
         """
@@ -99,10 +100,8 @@ class MongoSocket(object):
         bool
             Whether the operation was successful.
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
-        return self.add_generic(data, "databases", selected_project)
+
+        return self.add_generic(data, "databases", project)
 
     def add_page(self, data, project=None):
         """
@@ -120,19 +119,20 @@ class MongoSocket(object):
         bool
             Whether the operation was successful.
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
-        return self.add_generic(data, "pages", selected_project)
+
+        return self.add_generic(data, "pages", project)
 
     def add_generic(self, data, collection, project):
         """
         Helper function that facilitates adding a record.
         """
+        selected_project = self.project
+        if (project != None):
+            selected_project = self.get_project(project)
         sha1 = fields.get_hash(data, collection)
         try:
             data["_id"] = sha1
-            project[collection].insert_one(data)
+            selected_project[collection].insert_one(data)
             return True
         except pymongo.errors.DuplicateKeyError:
             return False
@@ -141,10 +141,13 @@ class MongoSocket(object):
         """
         Helper function that facilitates deletion based on hash.
         """
+        selected_project = self.project
+        if (project != None):
+            selected_project = self.get_project(project)
         if isinstance(hashes, str):
-            return (project[collection].delete_one({"_id": hashes})).deleted_count == 1
+            return (selected_project[collection].delete_one({"_id": hashes})).deleted_count == 1
         elif isinstance(hashes, list):
-            ret = (project[collection].delete_many({"_id": {"$in" : hashes}})).deleted_count
+            ret = (selected_project[collection].delete_many({"_id": {"$in" : hashes}})).deleted_count
             return ret
 
 
@@ -152,6 +155,9 @@ class MongoSocket(object):
         """
         Helper function that facilitates deletion based on structured dict.
         """
+        selected_project = self.project
+        if (project != None):
+            selected_project = self.get_project(project)
         if isinstance(data, dict):
             return self.del_by_hash(collection, fields.get_hash(data, collection), project)
         elif isinstance(data, list):
@@ -174,10 +180,8 @@ class MongoSocket(object):
         bool
             Whether the operation was successful.
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
-        return self.del_by_data("molecules", data, selected_project)
+
+        return self.del_by_data("molecules", data, project)
 
     def del_molecule_by_hash(self, hash_val, project=None):
         """
@@ -193,10 +197,8 @@ class MongoSocket(object):
         bool
             Whether the operation was successful.
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
-        return self.del_by_hash("molecules", hash_val, selected_project)
+
+        return self.del_by_hash("molecules", hash_val, project)
 
     def del_database_by_data(self, data, project=None):
         """
@@ -212,10 +214,8 @@ class MongoSocket(object):
         bool
             Whether the operation was successful.
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
-        return self.del_by_data("databases", data, selected_project)
+
+        return self.del_by_data("databases", data, project)
 
     def del_database_by_hash(self, hash_val, project=None):
         """
@@ -231,10 +231,8 @@ class MongoSocket(object):
         bool
             Whether the operation was successful.
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
-        return self.del_by_hash("databases", hash_val, selected_project)
+
+        return self.del_by_hash("databases", hash_val, project)
 
     def del_page_by_data(self, data, project=None):
         """
@@ -250,10 +248,8 @@ class MongoSocket(object):
         bool
             Whether the operation was successful.
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
-        return self.del_by_data("pages", data, selected_project)
+
+        return self.del_by_data("pages", data, project)
 
     def del_page_by_hash(self, hash_val, project=None):
         """
@@ -269,10 +265,8 @@ class MongoSocket(object):
         bool
             Whether the operation was successful.
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
-        return self.del_by_hash("pages", hash_val, selected_project)
+
+        return self.del_by_hash("pages", hash_val, project)
 
     def evaluate(self, hashes, methods, field="return_value", project=None):
         """
@@ -474,10 +468,7 @@ class MongoSocket(object):
         remote_project : str
             Name of remote project.
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
-        self.generic_copy(url, port, remote_project, False, selected_project)
+        self.generic_copy(url, port, remote_project, False, project)
 
     def clone_to(self, url, port, remote_project, project=None):
         """
@@ -492,23 +483,22 @@ class MongoSocket(object):
         remote_project : str
             Name of remote project.
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
-        self.generic_copy(url, port, remote_project, True, selected_project)
+        self.generic_copy(url, port, remote_project, True, project)
 
     def generic_copy(self, url, port, remote_project, delete, local_project):
         """
             Helper function for facilitating syncing.
         """
+        selected_project = self.project
+        if (local_project != None):
+            selected_project = self.get_project(local_project)
         remote = MongoSocket(url, port)
-        remote_project_instance = remote.get_project(remote_project)
         if (delete):
             remote.client.drop_database(remote_project)
         for col in ["molecules", "databases", "pages"]:
-            cursor = local_project[col].find({})
+            cursor = selected_project[col].find({})
             for item in cursor:
-                remote.add_generic(item, col, remote_project_instance)
+                remote.add_generic(item, col, local_project)
 
     def get_value(self, field, db, rxn, stoich, method, do_stoich=True, debug_level=1):
         command = [{
