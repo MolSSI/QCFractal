@@ -1,6 +1,14 @@
 # mongo_qcdb
 MongoDB backend for storing quantum chemical databases
 
+At the highest level, mongo_qcdb is an environment from which you can run PSI4 computations. Parameters to these computations can be accessed from the underlying persistent database, and the results of these computations are dumped into the same database after completion. This opens the door for centralized computing in computational chemistry. mongo_qcdb is a python package.
+
+
+Now, with less abstraction. mongo_qcdb manages accesses and stores of PSI4 input and output data to and from an underlying Mongo database. It follows a client-server paradigm in which a client makes GET or POST requests to a remote qcdb_server to affect or access the database. These client functions wrap advanced queries which are useful to a computational chemistry researcher. Clients can also submit PSI4 jobs to a distributed computing cluster using Dask, so that users can turn off their computers as computations run on the server and have their results waiting in the database after completion.
+
+
+When using mongo_qcdb’s functions, clients must define a “project” in which they want to work by providing project name as a parameter. Project workspaces allow for researchers to isolate their work on a centralized system and to provide temporary environments for testing new ideas. For example, all of a server’s data can be stored in a “master” project, and clients can use their functions to copy this data to their own project for manipulation and experimenting. 
+
 # Introduction
 mongo_qcdb is a MongoDB database backend for quantum chemical activities, particularly for use with the Psi4 project (http://www.psicode.org/ or https://github.com/psi4). Currently, there is no open, standardized, and centralized repository for the outputs of computational chemistry calculations. Ease of access to such data is essential to progress, as individual calculations can take days or weeks to run. This backend is hopefully the answer to that problem.
 
@@ -153,7 +161,7 @@ Collection which is home to a number of database documents. The schema of a data
 
 Each entry in the `molecules` array is the `_id` of a molecule known in the `molecules` collection. This is known as a manual reference: https://docs.mongodb.com/v3.2/reference/database-references/#manual-references
 
-###pages
+### pages
 A collection of `page` documents, which is essentially a dual key to multiple value lookup entry. Each page is a separate entry. The keys needed to access a page are [`molecule`,`method`].
 
 ```json
@@ -185,7 +193,7 @@ A collection of `page` documents, which is essentially a dual key to multiple va
 Again, molecule is the `_id` of the referenced molecule. Again, a manual reference.
 
 
-###testing
+### testing
 To setup testing run the following:
 
     - mongod
