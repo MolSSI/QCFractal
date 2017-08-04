@@ -1,3 +1,15 @@
+<p align="center">
+
+<a href="https://travis-ci.org/psi4/mongo_qcdb">
+   <img src="https://travis-ci.org/psi4/mongo_qcdb.svg?branch=master" alt="Travis CI />
+<\a>
+
+<a href="https://codecov.io/gh/psi4/mongo_qcdb">
+  <img src="https://codecov.io/gh/psi4/mongo_qcdb/branch/master/graph/badge.svg" alt="Codecov" />
+</a>
+
+</p>
+
 # mongo_qcdb
 MongoDB backend for storing quantum chemical databases
 
