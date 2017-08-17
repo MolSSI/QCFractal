@@ -47,7 +47,7 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda create -q -n mongo_qcdb python=$PYTHON_VER numpy pandas pymongo pytest matplotlib distributed
+  - conda create -q -n mongo_qcdb python=$PYTHON_VER numpy pandas pymongo pytest matplotlib dask distributed
   - source activate mongo_qcdb
   - pip install codecov
   - pip install pytest-cov
