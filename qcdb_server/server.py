@@ -191,8 +191,9 @@ class QCDBServer(object):
 
         # Grab the Dask Scheduler
         loop = tornado.ioloop.IOLoop.current()
+        self.local_cluster = None
         if options.dask_ip == "":
-            self.local_cluster = distributed.LocalCluster(nanny=False)
+            self.local_cluster = distributed.LocalCluster(nanny=None)
             self.dask_socket = distributed.Client(self.local_cluster)
         else:
             self.dask_socket = distributed.Client(options.dask_ip + ":" + str(options.dask_port))
@@ -243,7 +244,7 @@ class QCDBServer(object):
             self.loop.start()
         except KeyboardInterrupt:
             self.dask_socket.shutdown()
-            if options.dask_ip == "":
+            if self.local_cluster:
                 self.local_cluster.close()
             self.loop.stop()
 

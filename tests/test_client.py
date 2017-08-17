@@ -6,6 +6,7 @@ import time
 import subprocess
 import pytest
 import shlex
+import signal
 
 @pytest.fixture(scope="module")
 def client_service():
@@ -15,12 +16,25 @@ def client_service():
 
     # Boot up the process and give it a second
     p = subprocess.Popen(shlex.split(run_string), shell=False)
-    time.sleep(5.0)
+    print("Waiting on client boot...")
+    stop = False
+    for x in range(15):
+        try:
+            tmp = mdb.Client("http://localhost:8888", "client1_project")
+            print("Client Booted!")
+            stop = True
+            del tmp
+        except ConnectionRefusedError:
+            time.sleep(1.0)
+
+        if stop:
+            break
+
 
     # Kill on exit
     yield
     print("Exiting...")
-    p.terminate()
+    p.send_signal(signal.SIGINT)
 
 
 def test_client1(client_service):
