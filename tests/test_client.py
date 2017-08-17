@@ -24,7 +24,9 @@ def client_service():
             print("Client Booted!")
             stop = True
             del tmp
-        except ConnectionRefusedError:
+        except:
+        # Only for Python3
+        # except ConnectionRefusedError:
             time.sleep(1.0)
 
         if stop:

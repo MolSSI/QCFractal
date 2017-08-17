@@ -9,25 +9,10 @@ sudo: false
 services:
   - mongodb
 
-
-matrix:
-  include:
-    - python: 2.7
-      env: PYTHON_VER=2.7
-      addons: &1
-        apt:
-          sources:
-          - mongodb-3.0-precise
-          packages:
-          - mongodb-org-server
-    - python: 3.5
-      env: PYTHON_VER=3.5
-      addons: &2
-        apt:
-          sources:
-          - mongodb-3.0-precise
-          packages:
-          - mongodb-org-server
+python:
+    - 2.7
+    - 3.5
+    - 3.6
 
 before_install:
   - uname -a
@@ -36,19 +21,23 @@ before_install:
   - ulimit -a
 
 install:
-  - if [[ "$PYTHON_VER" == "2.7" ]]; then
-      wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh -O miniconda.sh;
-    else
-      wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-    fi
+    # Cache Miniconda
+  - cd
+  - mkdir -p download
+  - cd download
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
+
+    # Build out the environment
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda create -q -n mongo_qcdb python=$PYTHON_VER numpy pandas pymongo pytest matplotlib dask distributed
+  - conda create -q -n mongo_qcdb python=$TRAVIS_PYTHON_VERSION numpy pandas pymongo pytest matplotlib dask distributed
   - source activate mongo_qcdb
+
+    # Install anything not in conda
   - pip install codecov
   - pip install pytest-cov
   - conda list
@@ -65,11 +54,11 @@ script:
   - py.test -v --cov=./
 
 cache:
+  apt: true
   directories:
     - $HOME/cache
-before_cache:
-  # Remove all untarred directories.
-  - find $CONDA_INSTALL_LOCN/pkgs/ -mindepth 1 -maxdepth 1 -type d -exec rm -r {} \;
+    - $HOME/.cache/pip
+    - $HOME/download
 
 notifications:
   email: false
