@@ -16,14 +16,40 @@ class MongoSocket(object):
     This is a Mongo QCDB socket class.
     """
 
-    def __init__(self, url, port, project=None):
+    def __init__(self, url, port, project=None, username=None, password=None, authMechanism="SCRAM-SHA-1"):
         """
         Constructs a new socket where url and port points towards a Mongod instance.
 
         """
         self.url = url
         self.port = port
+
+
+        # Are we authenticating?
+        # config_path = os.path.expanduser("~/.mdbconfig.json")
+        # if (username or password) or os.path.exists(config_path):
+
+        #     # Read from config file
+        #     if not (username or password):
+        #         with open(config_path) as json_file:
+        #             data = json.load(json_file)
+        #         username = data["username"]
+        #         password = data["password"]
+        #         if "authMechanism" in list(data):
+        #             authMechanism = data["authMechanism"]
+        #         print("Using authentication from ~/.mdbconfig.json %s with %s authentication" % (username, authMechanism))
+        #     else:
+        #         print("Using supplied authentication %s with %s authentication" % (username, authMechanism))
+
+        #     url = 'mongodb://%s:%s@%s:%s/?authMechanism=%s' % (username, password, url, port, authMechanism)
+        #     print(url)
+        #     self.client = pymongo.MongoClient(url)
+        #     #self.client = pymongo.MongoClient(url, port, user=username, password=password, authMechanism=authMechanism, authSource="admin")
+
+        # # No authentication required
+        # else:
         self.client = pymongo.MongoClient(url, port)
+
         if (project != None):
             self.set_project(project)
         else:
