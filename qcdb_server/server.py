@@ -5,6 +5,7 @@ import os
 import time
 import uuid
 import traceback
+import datetime
 
 import mongo_qcdb as mdb
 
@@ -21,8 +22,7 @@ compute_file = os.path.abspath(os.path.dirname(__file__)) + os.path.sep + 'compu
 define("port", default=8888, help="Run on the given port.", type=int)
 define("mongod_ip", default="127.0.0.1", help="The Mongod instances IP.", type=str)
 define("mongod_port", default=27017, help="The Mongod instances port.", type=int)
-define(
-    "dask_ip", default="", help="The Dask instances IP. If blank starts a local cluster.", type=str)
+define("dask_ip", default="", help="The Dask instances IP. If blank starts a local cluster.", type=str)
 define("dask_port", default=8786, help="The Dask instances port.", type=int)
 
 dask_dir_geuss = os.getcwd() + '/dask_scratch/'
@@ -30,7 +30,18 @@ define("dask_dir", default=dask_dir_geuss, help="The Dask workers working direct
 dask_working_dir = options.dask_dir
 
 
+def timestamp():
+    """
+    Returns a simple postfixed current timestamp.
+    """
+    return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S: ')
+
+
 class DaskNanny(object):
+    """
+    This object can add to the Dask queue and watches for finished jobs. Jobs that are finished
+    are automatically posted to the associated MongoDB and removed from the queue.
+    """
     def __init__(self, dask_socket, mongod_socket):
 
         self.dask_socket = dask_socket
@@ -41,6 +52,7 @@ class DaskNanny(object):
     def add_future(self, future):
         uid = str(uuid.uuid4())
         self.dask_queue[uid] = future
+        print("%s MONGO ADD: FUTURE %s" % (timestamp(), uid))
         return uid
 
     def update(self):
@@ -53,12 +65,14 @@ class DaskNanny(object):
                     assert tmp_data["success"] == True
                     # res = self.mongod_socket.del_page_by_data(tmp_data)
                     res = self.mongod_socket.add_page(tmp_data)
-                    print("MONGO: ADD (%s, %s) - %s" % (tmp_data["molecule_hash"], tmp_data["modelchem"], str(res)) )
+                    print("%s MONGO ADD: (%s, %s) - %s" % (timestamp(), tmp_data["molecule_hash"],
+                                                           tmp_data["modelchem"], str(res)))
                 except Exception as e:
                     ename = str(type(e).__name__) + ":" + str(e)
                     msg = "".join(traceback.format_tb(e.__traceback__))
                     msg += str(type(e).__name__) + ":" + str(e)
                     self.errors[key] = msg
+                    print("%s MONGO ADD: ERROR\n%s" % (timestamp(), msg))
 
                 del_keys.append(key)
 
@@ -72,9 +86,8 @@ class Scheduler(tornado.web.RequestHandler):
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
     """
 
-
     def initialize(self, **objects):
-        print("SCHEDULER: %s (%d bytes)" % (self.request.method, len(self.request.body)))
+        print("%s SCHEDULER: %s (%d bytes)" % (timestamp(), self.request.method, len(self.request.body)))
         self.objects = objects
 
         # Namespaced working dir
@@ -163,7 +176,7 @@ class Scheduler(tornado.web.RequestHandler):
 class Information(tornado.web.RequestHandler):
     def initialize(self, **objects):
         # print("INFO " + repr(self.request))
-        print("INFO: " + self.request.method)
+        print("%s INFO: %s" % (timestamp(), self.request.method))
         self.objects = objects
 
     def get(self):
@@ -210,18 +223,19 @@ class QCDBServer(object):
         self.dask_nanny = DaskNanny(self.dask_socket, self.mongod_socket)
 
         # Start up the app
-        app = tornado.web.Application([
-            (r"/information", Information, {
-                "mongod_socket": self.mongod_socket,
-                "dask_socket": self.dask_socket,
-                "dask_nanny": self.dask_nanny
-            }),
-            (r"/scheduler", Scheduler, {
-                "mongod_socket": self.mongod_socket,
-                "dask_socket": self.dask_socket,
-                "dask_nanny": self.dask_nanny
-            }),
-        ], )
+        app = tornado.web.Application(
+            [
+                (r"/information", Information, {
+                    "mongod_socket": self.mongod_socket,
+                    "dask_socket": self.dask_socket,
+                    "dask_nanny": self.dask_nanny
+                }),
+                (r"/scheduler", Scheduler, {
+                    "mongod_socket": self.mongod_socket,
+                    "dask_socket": self.dask_socket,
+                    "dask_nanny": self.dask_nanny
+                }),
+            ], )
         app.listen(options.port)
 
         # Query Dask Nanny on loop
