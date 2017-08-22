@@ -6,6 +6,7 @@ import time
 import uuid
 import traceback
 import datetime
+import logging
 
 import mongo_qcdb as mdb
 
@@ -24,17 +25,16 @@ define("mongod_ip", default="127.0.0.1", help="The Mongod instances IP.", type=s
 define("mongod_port", default=27017, help="The Mongod instances port.", type=int)
 define("dask_ip", default="", help="The Dask instances IP. If blank starts a local cluster.", type=str)
 define("dask_port", default=8786, help="The Dask instances port.", type=int)
+define("logfile", default="qcdb_server.log", help="The logfile to write to.", type=str)
 
 dask_dir_geuss = os.getcwd() + '/dask_scratch/'
 define("dask_dir", default=dask_dir_geuss, help="The Dask workers working director", type=str)
 dask_working_dir = options.dask_dir
 
+tornado.options.options.parse_command_line()
+tornado.options.parse_command_line()
 
-def timestamp():
-    """
-    Returns a simple postfixed current timestamp.
-    """
-    return datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S: ')
+logging.basicConfig(filename=options.logfile, level=logging.DEBUG, datefmt='%m/%d/%Y %I:%M:%S %p')
 
 
 class DaskNanny(object):
@@ -42,17 +42,23 @@ class DaskNanny(object):
     This object can add to the Dask queue and watches for finished jobs. Jobs that are finished
     are automatically posted to the associated MongoDB and removed from the queue.
     """
-    def __init__(self, dask_socket, mongod_socket):
+    def __init__(self, dask_socket, mongod_socket, logger=None):
+
 
         self.dask_socket = dask_socket
         self.mongod_socket = mongod_socket
         self.dask_queue = {}
         self.errors = {}
 
+        if logger:
+            self.logger = logger
+        else:
+            self.logger = logging.getLogger('DaskNanny')
+
     def add_future(self, future):
         uid = str(uuid.uuid4())
         self.dask_queue[uid] = future
-        print("%s MONGO ADD: FUTURE %s" % (timestamp(), uid))
+        self.logger.info("MONGO ADD: FUTURE %s" % uid)
         return uid
 
     def update(self):
@@ -61,23 +67,21 @@ class DaskNanny(object):
             if future.done():
                 try:
                     tmp_data = future.result()
-                    #print(tmp_data)
                     assert tmp_data["success"] == True
                     # res = self.mongod_socket.del_page_by_data(tmp_data)
                     res = self.mongod_socket.add_page(tmp_data)
-                    print("%s MONGO ADD: (%s, %s) - %s" % (timestamp(), tmp_data["molecule_hash"],
+                    self.logger.info("MONGO ADD: (%s, %s) - %s" % (tmp_data["molecule_hash"],
                                                            tmp_data["modelchem"], str(res)))
                 except Exception as e:
                     ename = str(type(e).__name__) + ":" + str(e)
                     msg = "".join(traceback.format_tb(e.__traceback__))
                     msg += str(type(e).__name__) + ":" + str(e)
                     self.errors[key] = msg
-                    print("%s MONGO ADD: ERROR\n%s" % (timestamp(), msg))
+                    self.logger.info("MONGO ADD: ERROR\n%s" % msg)
 
                 del_keys.append(key)
 
         for key in del_keys:
-            # print(self.dask_queue[key].result())
             del self.dask_queue[key]
 
 
@@ -87,8 +91,13 @@ class Scheduler(tornado.web.RequestHandler):
     """
 
     def initialize(self, **objects):
-        print("%s SCHEDULER: %s (%d bytes)" % (timestamp(), self.request.method, len(self.request.body)))
         self.objects = objects
+
+        if "logger" in list(self.objects):
+            self.logger = self.objects["logger"]
+            self.objects.pop("logger", None)
+        else:
+            self.logger = logging.getLogger('Scheduler')
 
         # Namespaced working dir
         self.working_dir = dask_working_dir
@@ -104,7 +113,7 @@ class Scheduler(tornado.web.RequestHandler):
             if req not in list(data):
                 err = "Missing required field '%s'" % req
                 data["error"] = err
-                print("SCHEDULER: %s" % err)
+                self.logger.info("SCHEDULER: %s" % err)
                 return data
 
         # Grab out molecule
@@ -112,7 +121,7 @@ class Scheduler(tornado.web.RequestHandler):
         if molecule is None:
             err = "Molecule hash '%s' was not found." % data["molecule_hash"]
             data["error"] = err
-            print("SCHEDULER: %s" % err)
+            self.logger.info("SCHEDULER: %s" % err)
             return data
 
         molecule_str = mdb.Molecule(molecule, dtype="json").to_string(dtype="psi4")
@@ -179,8 +188,8 @@ class Scheduler(tornado.web.RequestHandler):
 
 class Information(tornado.web.RequestHandler):
     def initialize(self, **objects):
-        # print("INFO " + repr(self.request))
-        print("%s INFO: %s" % (timestamp(), self.request.method))
+        logger = logging.getLogger(__name__)
+        logger.info("INFO: %s" % self.request.method)
         self.objects = objects
 
     def get(self):
@@ -199,12 +208,25 @@ class QCDBServer(object):
         # Tornado configures logging.
         tornado.options.options.parse_command_line()
 
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+
+        handler = logging.FileHandler(options.logfile)
+        handler.setLevel(logging.INFO)
+
+        myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+        handler.setFormatter(myFormatter)
+
+        self.logger.addHandler(handler)
+
+        self.logger.info("Logfile set to %s\n" % options.logfile)
+
+
         # Build mongo socket
         self.mongod_socket = mdb.mongo_helper.MongoSocket(options.mongod_ip, options.mongod_port)
 
-        print("Mongod Socket Info:")
-        print(self.mongod_socket)
-        print(" ")
+        self.logger.info("Mongod Socket Info:")
+        self.logger.info(str(self.mongod_socket) + "\n")
 
         # Grab the Dask Scheduler
         loop = tornado.ioloop.IOLoop.current()
@@ -215,16 +237,15 @@ class QCDBServer(object):
         else:
             self.dask_socket = distributed.Client(options.dask_ip + ":" + str(options.dask_port))
         self.dask_socket.upload_file(compute_file)
-        print("Dask Scheduler Info:")
-        print(self.dask_socket)
-        print(" ")
+        self.logger.info("Dask Scheduler Info:")
+        self.logger.info(str(self.dask_socket) + "\n")
 
         # Make sure the scratch is there
         if not os.path.exists(dask_working_dir):
             os.makedirs(dask_working_dir)
 
         # Dask Nanny
-        self.dask_nanny = DaskNanny(self.dask_socket, self.mongod_socket)
+        self.dask_nanny = DaskNanny(self.dask_socket, self.mongod_socket, logger=self.logger)
 
         # Start up the app
         app = tornado.web.Application(
@@ -232,12 +253,14 @@ class QCDBServer(object):
                 (r"/information", Information, {
                     "mongod_socket": self.mongod_socket,
                     "dask_socket": self.dask_socket,
-                    "dask_nanny": self.dask_nanny
+                    "dask_nanny": self.dask_nanny,
+                    "logger": self.logger,
                 }),
                 (r"/scheduler", Scheduler, {
                     "mongod_socket": self.mongod_socket,
                     "dask_socket": self.dask_socket,
-                    "dask_nanny": self.dask_nanny
+                    "dask_nanny": self.dask_nanny,
+                    "logger": self.logger,
                 }),
             ], )
         app.listen(options.port)
@@ -251,11 +274,11 @@ class QCDBServer(object):
         #loop.run_sync(lambda: post(data))
 
         self.loop = loop
-        print("QCDB Client successfully initialized at https://localhost:%d.\n" % options.port)
+        self.logger.info("QCDB Client successfully initialized at https://localhost:%d.\n" % options.port)
 
     def start(self):
 
-        print("QCDB Client successfully started. Starting IOLoop.\n")
+        self.logger.info("QCDB Client successfully started. Starting IOLoop.\n")
 
         # Soft quit at the end of a loop
         try:
@@ -266,7 +289,7 @@ class QCDBServer(object):
                 self.local_cluster.close()
             self.loop.stop()
 
-        print("\nQCDB Client stopping gracefully. Stopped IOLoop.\n")
+        self.logger.info("QCDB Client stopping gracefully. Stopped IOLoop.\n")
 
 
 if __name__ == "__main__":
