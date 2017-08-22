@@ -26,7 +26,7 @@ def psi_compute(json_data, **kwargs):
         json_data["memory"] = 50e9
 
     # Set 6 cores
-    ncores = kwargs.pop("ncores", 6)
+    ncores = kwargs.pop("ncores", 10)
 
     filename = str(uuid.uuid4()) + ".json"
 

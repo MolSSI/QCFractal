@@ -102,13 +102,17 @@ class Scheduler(tornado.web.RequestHandler):
         # Check if the minimum is present
         for req in ["molecule_hash", "modelchem", "options"]:
             if req not in list(data):
-                data["error"] = "Missing required field '%s'" % req
+                err = "Missing required field '%s'" % req
+                data["error"] = err
+                print("SCHEDULER: %s" % err)
                 return data
 
         # Grab out molecule
         molecule = mongo.get_molecule(data["molecule_hash"])
         if molecule is None:
-            data["error"] = "Molecule hash '%s' was not found." % data["molecule_hash"]
+            err = "Molecule hash '%s' was not found." % data["molecule_hash"]
+            data["error"] = err
+            print("SCHEDULER: %s" % err)
             return data
 
         molecule_str = mdb.Molecule(molecule, dtype="json").to_string(dtype="psi4")
