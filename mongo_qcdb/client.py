@@ -42,7 +42,7 @@ class Client(object):
 
         client = httpclient.HTTPClient()
         http_header = {"project" : self.project}
-        response = client.fetch(self.port + function, method=method, body=body, headers=http_header)
+        response = client.fetch(self.port + function, method=method, body=body, headers=http_header, request_timeout=30.0)
         return json.loads(response.body.decode('utf-8'))
 
     def get_information(self):
