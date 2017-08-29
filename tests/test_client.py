@@ -1,4 +1,4 @@
-import mongo_qcdb as mdb
+import datenqm as dqm
 import pandas as pd
 import numpy as np
 import os
@@ -11,7 +11,7 @@ import signal
 @pytest.fixture(scope="module")
 def client_service():
 
-    server_path = os.path.dirname(__file__) + "/../qcdb_server/server.py"
+    server_path = os.path.dirname(__file__) + "/../datenqm/cli/dqm_server.py"
     run_string = "python \"" + server_path + "\""
 
     # Boot up the process and give it a second
@@ -20,7 +20,7 @@ def client_service():
     stop = False
     for x in range(15):
         try:
-            tmp = mdb.Client("http://localhost:8888", "client1_project")
+            tmp = dqm.Client("http://localhost:8888", "client1_project")
             print("Client Booted!")
             stop = True
             del tmp
@@ -40,7 +40,7 @@ def client_service():
 
 
 def test_client1(client_service):
-    client = mdb.Client("http://localhost:8888", "client1_project")
+    client = dqm.Client("http://localhost:8888", "client1_project")
 
     # Clear out previous mongo
     mongo = client.get_MongoSocket()
@@ -48,7 +48,7 @@ def test_client1(client_service):
     mongo.del_database_by_data({"name": "H2"})
 
     # Add a new blank test set and submit
-    db = mdb.Database("H2", client)
+    db = dqm.Database("H2", client)
     db.add_rxn(
         "He 2 - 5", [("""He 0 0 5\n--\nHe 0 0 -5""", 1.0), ("He 0 0 0", -2.0)],
         reaction_results={"Benchmark": -1.0})
@@ -59,7 +59,7 @@ def test_client1(client_service):
     db.save()
 
     # Re initialize the DB from JSON
-    db = mdb.Database("H2", client)
+    db = dqm.Database("H2", client)
     assert db.data["name"] == "H2"
     assert len(db.data["reactions"]) == 2
 
@@ -83,14 +83,14 @@ def test_client1(client_service):
 
 def test_client_ie(client_service):
 
-    client = mdb.Client("http://localhost:8888", "client2_project")
+    client = dqm.Client("http://localhost:8888", "client2_project")
 
     # Clear out previous mongo
     mongo = client.get_MongoSocket()
     mongo.client.drop_database("client2_project")
     mongo.del_database_by_data({"name": "H2_IE"})
 
-    db = mdb.Database("H2_IE", client, db_type="IE")
+    db = dqm.Database("H2_IE", client, db_type="IE")
     db.add_ie_rxn("he 2 - 5", """he 0 0 5\n--\nhe 0 0 -5""", reaction_results={"Benchmark": -1.0})
     db.add_ie_rxn(
         "CHNO",
@@ -99,7 +99,7 @@ def test_client_ie(client_service):
     db.save()
 
     # Re initialize the DB from JSON
-    db = mdb.Database("H2_IE", client)
+    db = dqm.Database("H2_IE", client)
     assert db.data["name"] == "H2_IE"
     assert len(db.data["reactions"]) == 2
     assert db.data["db_type"] == "IE"

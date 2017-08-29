@@ -5,10 +5,10 @@ import uuid
 import traceback
 import datetime
 import logging
-
-import mongo_qcdb as mdb
-
 import distributed
+
+from . import molecule
+from . import compute
 
 from tornado.options import options, define
 import tornado.ioloop
@@ -77,9 +77,6 @@ class Scheduler(tornado.web.RequestHandler):
         else:
             self.logger = logging.getLogger('Scheduler')
 
-        # Namespaced working dir
-        self.working_dir = dask_working_dir
-
     def _verify_input(self, data, options=None):
         mongo = self.objects["mongod_socket"]
 
@@ -95,19 +92,18 @@ class Scheduler(tornado.web.RequestHandler):
                 return data
 
         # Grab out molecule
-        molecule = mongo.get_molecule(data["molecule_hash"])
+        mol = mongo.get_molecule(data["molecule_hash"])
         if molecule is None:
             err = "Molecule hash '%s' was not found." % data["molecule_hash"]
             data["error"] = err
             self.logger.info("SCHEDULER: %s" % err)
             return data
 
-        molecule_str = mdb.Molecule(molecule, dtype="json").to_string(dtype="psi4")
+        molecule_str = molecule.Molecule(mol, dtype="json").to_string(dtype="psi4")
 
         data["molecule"] = molecule_str
         data["method"] = data["modelchem"]
         data["driver"] = "energy"
-        data["working_dir"] = self.working_dir
 
         return data
 

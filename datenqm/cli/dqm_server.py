@@ -8,15 +8,13 @@ import traceback
 import datetime
 import logging
 
-import mongo_qcdb as mdb
+import datenqm as dqm
 
 import distributed
 
 from tornado.options import options, define
 import tornado.ioloop
 import tornado.web
-
-compute_file = os.path.abspath(os.path.dirname(__file__)) + os.path.sep + 'compute.py'
 
 define("port", default=8888, help="Run on the given port.", type=int)
 define("mongod_ip", default="127.0.0.1", help="The Mongod instances IP.", type=str)
@@ -55,7 +53,7 @@ class QCDBServer(object):
 
 
         # Build mongo socket
-        self.mongod_socket = mdb.mongo_helper.MongoSocket(options.mongod_ip, options.mongod_port)
+        self.mongod_socket = dqm.mongo_helper.MongoSocket(options.mongod_ip, options.mongod_port)
 
         self.logger.info("Mongod Socket Info:")
         self.logger.info(str(self.mongod_socket) + "\n")
@@ -68,7 +66,7 @@ class QCDBServer(object):
             self.dask_socket = distributed.Client(self.local_cluster)
         else:
             self.dask_socket = distributed.Client(options.dask_ip + ":" + str(options.dask_port))
-        self.dask_socket.upload_file(compute_file)
+
         self.logger.info("Dask Scheduler Info:")
         self.logger.info(str(self.dask_socket) + "\n")
 
@@ -77,18 +75,18 @@ class QCDBServer(object):
             os.makedirs(dask_working_dir)
 
         # Dask Nanny
-        self.dask_nanny = DaskNanny(self.dask_socket, self.mongod_socket, logger=self.logger)
+        self.dask_nanny = dqm.sockets.DaskNanny(self.dask_socket, self.mongod_socket, logger=self.logger)
 
         # Start up the app
         app = tornado.web.Application(
             [
-                (r"/information", Information, {
+                (r"/information", dqm.sockets.Information, {
                     "mongod_socket": self.mongod_socket,
                     "dask_socket": self.dask_socket,
                     "dask_nanny": self.dask_nanny,
                     "logger": self.logger,
                 }),
-                (r"/scheduler", Scheduler, {
+                (r"/scheduler", dqm.sockets.Scheduler, {
                     "mongod_socket": self.mongod_socket,
                     "dask_socket": self.dask_socket,
                     "dask_nanny": self.dask_nanny,

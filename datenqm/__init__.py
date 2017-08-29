@@ -10,6 +10,7 @@ from . import test_util
 from . import constants
 from . import visualization
 from . import sockets
+from . import compute
 
 # Move classes up a level
 from .molecule import Molecule

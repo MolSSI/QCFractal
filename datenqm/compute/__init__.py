@@ -2,4 +2,4 @@
 Compute class for DatenQM
 """
 
-from computers import copmuters
+from .computers import computers

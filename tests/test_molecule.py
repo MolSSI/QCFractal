@@ -1,8 +1,8 @@
 import numpy as np
 
-import mongo_qcdb as mdb
-from mongo_qcdb import molecule
-from mongo_qcdb import test_util
+import datenqm as dqm
+from datenqm import molecule
+from datenqm import test_util
 
 # Build a few test molecules
 _water_dimer_minima = """
@@ -59,7 +59,7 @@ units bohr
 _neon_tetramer_np = np.array(
     [[10, 0.000000, 0.000000, 0.000000], [10, 3.100000, 0.000000, 0.000000],
      [10, 0.000000, 3.200000, 0.000000], [10, 0.000000, 0.000000, 3.300000]])
-_neon_tetramer_np[:, 1:] *= mdb.constants.physconst["bohr2angstroms"]
+_neon_tetramer_np[:, 1:] *= dqm.constants.physconst["bohr2angstroms"]
 
 
 # Start tests
