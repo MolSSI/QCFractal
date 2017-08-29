@@ -16,6 +16,24 @@ from tornado.options import options, define
 import tornado.ioloop
 import tornado.web
 
+compute_file = os.path.abspath(os.path.dirname(__file__)) + os.path.sep + 'compute.py'
+
+define("port", default=8888, help="Run on the given port.", type=int)
+define("mongod_ip", default="127.0.0.1", help="The Mongod instances IP.", type=str)
+define("mongod_port", default=27017, help="The Mongod instances port.", type=int)
+define("dask_ip", default="", help="The Dask instances IP. If blank starts a local cluster.", type=str)
+define("dask_port", default=8786, help="The Dask instances port.", type=int)
+define("logfile", default="qcdb_server.log", help="The logfile to write to.", type=str)
+
+dask_dir_geuss = os.getcwd() + '/dask_scratch/'
+define("dask_dir", default=dask_dir_geuss, help="The Dask workers working director", type=str)
+dask_working_dir = options.dask_dir
+
+tornado.options.options.parse_command_line()
+tornado.options.parse_command_line()
+
+logging.basicConfig(filename=options.logfile, level=logging.DEBUG, datefmt='%m/%d/%Y %I:%M:%S %p')
+
 
 class QCDBServer(object):
     def __init__(self):
