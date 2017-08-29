@@ -6,6 +6,7 @@ import traceback
 import datetime
 import logging
 import distributed
+import pandas as pd
 
 from . import molecule
 from . import compute
@@ -161,6 +162,10 @@ class Scheduler(tornado.web.RequestHandler):
 
 
 class Information(tornado.web.RequestHandler):
+    """
+    Obtains generic information about the Application Objects
+    """
+
     def initialize(self, **objects):
         logger = logging.getLogger(__name__)
         logger.info("INFO: %s" % self.request.method)
@@ -175,3 +180,30 @@ class Information(tornado.web.RequestHandler):
         ret["mongo_data"] = (mongod.url, mongod.port)
         ret["dask_data"] = dask.scheduler.address
         self.write(json.dumps(ret))
+
+class Mongod(tornado.web.RequestHandler):
+    def initialize(self, **objects):
+        logger = logging.getLogger(__name__)
+        logger.info("MONGOD: %s" % self.request.method)
+        self.objects = objects
+
+    def post(self):
+
+        # Decode the data
+        data = json.loads(self.request.body.decode('utf-8'))
+        header = self.request.headers
+
+        # Grab objects
+        mongod = self.objects["mongod_socket"]
+        mongod.set_project(header["project"])
+
+        ret = mongod.json_query(data)
+        logger = logging.getLogger(__name__)
+        # logger.info("MONGOD: %s" % str(ret))
+        if isinstance(ret, (pd.Series, pd.DataFrame)):
+            tmp = {}
+            tmp["data"] = ret.to_json()
+            tmp["pandas_msgpack"] = True
+            self.write(json.dumps(tmp))
+        else:
+            self.write(json.dumps(ret))

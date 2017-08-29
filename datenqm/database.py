@@ -53,7 +53,7 @@ class Database(object):
 
             if isinstance(socket, client.Client):
                 self.client = socket
-                self.mongod = socket.get_MongoSocket()
+                self.mongod = socket # This is overloaded
 
             elif isinstance(socket, mongo_helper.MongoSocket):
                 self.mongod = socket
@@ -62,7 +62,7 @@ class Database(object):
                 raise TypeError("Database: client argument of unrecognized type '%s'" %
                                 type(socket))
 
-            tmp_data = self.mongod.get_database(name)
+            tmp_data = self.mongod.mongod_query("get_database", name)
             if tmp_data is None:
                 print("Warning! Name '%s' not found, creating blank database." % name)
             else:
@@ -109,7 +109,7 @@ class Database(object):
         umols, uidx = np.unique(tmp_idx["molecule_hash"], return_index=True)
 
         # Evaluate the overall dataframe
-        values = self.mongod.evaluate(umols, keys)
+        values = self.mongod.mongod_query("evaluate", list(umols), list(keys))
 
         # Join on molecule hash
         tmp_idx = tmp_idx.join(values, on="molecule_hash")
@@ -259,7 +259,7 @@ class Database(object):
 
         # There could be duplicates so take the unique and save the map
         umols, uidx = np.unique(tmp_idx["molecule_hash"], return_index=True)
-        values = self.mongod.evaluate(umols, keys)
+        values = self.mongod.mongod_query("evaluate", list(umols), list(keys))
 
         mask = pd.isnull(values)
         compute_list = []
@@ -323,16 +323,16 @@ class Database(object):
                 raise AttributeError(
                     "Database:save: Database does not own a MongoDB instance and one was not passed in."
                 )
-            mongod = self.mongod
+            socket = self.mongod
         else:
-            mongod = mongo_db
+            socket = mongo_db
 
         # Add the database
-        mongod.add_database(self.data)
+        socket.mongod_query("add_database", self.data)
 
         # Loop over new molecules
         for k, v in self._new_molecule_jsons.items():
-            mongod.add_molecule(v)
+            socket.mongod_query("add_molecule", v)
 
     # Statistical quantities
     def statistics(self, stype, value, bench="Benchmark"):

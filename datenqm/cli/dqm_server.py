@@ -77,21 +77,19 @@ class QCDBServer(object):
         # Dask Nanny
         self.dask_nanny = dqm.sockets.DaskNanny(self.dask_socket, self.mongod_socket, logger=self.logger)
 
+        tornado_args = {
+            "mongod_socket": self.mongod_socket,
+            "dask_socket": self.dask_socket,
+            "dask_nanny": self.dask_nanny,
+            "logger": self.logger,
+        }
+
         # Start up the app
         app = tornado.web.Application(
             [
-                (r"/information", dqm.sockets.Information, {
-                    "mongod_socket": self.mongod_socket,
-                    "dask_socket": self.dask_socket,
-                    "dask_nanny": self.dask_nanny,
-                    "logger": self.logger,
-                }),
-                (r"/scheduler", dqm.sockets.Scheduler, {
-                    "mongod_socket": self.mongod_socket,
-                    "dask_socket": self.dask_socket,
-                    "dask_nanny": self.dask_nanny,
-                    "logger": self.logger,
-                }),
+                (r"/information", dqm.sockets.Information, tornado_args),
+                (r"/scheduler", dqm.sockets.Scheduler, tornado_args),
+                (r"/mongod", dqm.sockets.Mongod, tornado_args),
             ], )
         app.listen(options.port)
 

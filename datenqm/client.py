@@ -2,6 +2,8 @@
 
 import json
 from tornado import gen, httpclient, ioloop
+import pandas as pd
+
 from . import mongo_helper
 
 
@@ -33,7 +35,7 @@ class Client(object):
         http_header = {"project" : self.project}
         yield json.loads(client.fetch(self.port + function, method=method, headers=http_header).body.decode('utf-8'))
 
-    def query_server(self, function, method, body=None):
+    def query_server(self, function, method, body=None, json_load=True):
         """
         Basic blocking server query.
         """
@@ -53,3 +55,15 @@ class Client(object):
 
     def get_queue(self):
         return self.query_server("scheduler", "GET")
+
+    def mongod_query(self, *args, **kwargs):
+        json_data = {}
+
+        json_data["function"] = args[0]
+        json_data["args"] = args[1:]
+        json_data["kwargs"] = kwargs
+        ret = self.query_server("mongod", "POST", body=json_data)
+        if isinstance(ret, dict) and ("pandas_msgpack" in list(ret)):
+            ret = pd.read_json(ret["data"])
+
+        return ret

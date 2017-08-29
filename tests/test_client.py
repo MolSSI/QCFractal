@@ -45,7 +45,8 @@ def test_client1(client_service):
     # Clear out previous mongo
     mongo = client.get_MongoSocket()
     mongo.client.drop_database("client1_project")
-    mongo.del_database_by_data({"name": "H2"})
+
+    client.mongod_query("del_database_by_data", {"name": "H2"})
 
     # Add a new blank test set and submit
     db = dqm.Database("H2", client)
@@ -88,7 +89,8 @@ def test_client_ie(client_service):
     # Clear out previous mongo
     mongo = client.get_MongoSocket()
     mongo.client.drop_database("client2_project")
-    mongo.del_database_by_data({"name": "H2_IE"})
+
+    client.mongod_query("del_database_by_data", {"name": "H2_IE"})
 
     db = dqm.Database("H2_IE", client, db_type="IE")
     db.add_ie_rxn("he 2 - 5", """he 0 0 5\n--\nhe 0 0 -5""", reaction_results={"Benchmark": -1.0})

@@ -81,7 +81,6 @@ class MongoSocket(object):
         return success
 
     def get_project(self, project):
-        print(project)
         new_project = self.client[project]
         collections = {"molecules", "databases", "pages"}
         for stri in collections:
@@ -659,3 +658,50 @@ class MongoSocket(object):
 
     def get_molecule(self, molecule_hash):
         return self.project["molecules"].find_one({"_id": molecule_hash})
+
+    def json_query(self, json_data):
+        """
+        Wraps the MongoSocket in a JSON query.
+
+        Parameters
+        ----------
+        json_data : dict
+            Dictionary of data has function, args, and kwargs arguments
+
+        Returns
+        -------
+        result : anytime
+            Return the requested MongoSocket call.
+
+        """
+
+        keys = list(json_data)
+        if "function" not in keys:
+            raise KeyError("MongoSocket:json_query: 'funciton' are not found in keys")
+
+        function = getattr(self, json_data["function"])
+
+        if "args" in keys:
+            args = json_data["args"]
+        else:
+            args = []
+
+        if "kwargs" in keys:
+            kwargs = json_data["kwargs"]
+        else:
+            kwargs = {}
+
+        return function(*args, **kwargs)
+
+    def mongod_query(self, *args, **kwargs):
+        """
+        Bad hack to make inserting a MongoSocket or Client transparent.
+        Should revisit this!
+        """
+
+        json_data = {}
+        json_data["function"] = args[0]
+        json_data["args"] = args[1:]
+        json_data["kwargs"] = kwargs
+
+        return self.json_query(json_data)
