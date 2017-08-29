@@ -9,7 +9,7 @@ from . import database
 from . import test_util
 from . import constants
 from . import visualization
-from . import sockets
+from . import handlers
 from . import compute
 
 # Move classes up a level
