@@ -167,9 +167,14 @@ class Information(tornado.web.RequestHandler):
     """
 
     def initialize(self, **objects):
-        logger = logging.getLogger(__name__)
-        logger.info("INFO: %s" % self.request.method)
         self.objects = objects
+
+        if "logger" in list(self.objects):
+            self.logger = self.objects["logger"]
+            self.objects.pop("logger", None)
+        else:
+            self.logger = logging.getLogger('Information')
+        self.logger.info("INFO: %s" % self.request.method)
 
     def get(self):
 
@@ -183,9 +188,12 @@ class Information(tornado.web.RequestHandler):
 
 class Mongod(tornado.web.RequestHandler):
     def initialize(self, **objects):
-        logger = logging.getLogger(__name__)
-        logger.info("MONGOD: %s" % self.request.method)
         self.objects = objects
+        if "logger" in list(self.objects):
+            self.logger = self.objects["logger"]
+            self.objects.pop("logger", None)
+        else:
+            self.logger = logging.getLogger('Mongod')
 
     def post(self):
 
@@ -196,6 +204,8 @@ class Mongod(tornado.web.RequestHandler):
         # Grab objects
         mongod = self.objects["mongod_socket"]
         mongod.set_project(header["project"])
+
+        self.logger.info("MONGOD: %s - %s" % (self.request.method, data["function"]))
 
         ret = mongod.json_query(data)
         logger = logging.getLogger(__name__)
