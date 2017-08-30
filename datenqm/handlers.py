@@ -46,7 +46,9 @@ class DaskNanny(object):
             if future.done():
                 try:
                     tmp_data = future.result()
-                    assert tmp_data["success"] == True
+                    if not tmp_data["success"]:
+                        raise ValueError("Computation (%s, %s) did not complete successfully!:\n%s\n" %
+                                         (tmp_data["molecule_hash"], tmp_data["modelchem"], tmp_data["error"]))
                     # res = self.mongod_socket.del_page_by_data(tmp_data)
                     res = self.mongod_socket.add_page(tmp_data)
                     self.logger.info("MONGO ADD: (%s, %s) - %s" % (tmp_data["molecule_hash"], tmp_data["modelchem"],
@@ -185,6 +187,7 @@ class Information(tornado.web.RequestHandler):
         ret["mongo_data"] = (mongod.url, mongod.port)
         ret["dask_data"] = dask.scheduler.address
         self.write(json.dumps(ret))
+
 
 class Mongod(tornado.web.RequestHandler):
     def initialize(self, **objects):
