@@ -10,19 +10,18 @@
 
 </p>
 
-# mongo_qcdb
-MongoDB backend for storing quantum chemical databases
+# DatenQM
 
-At the highest level, mongo_qcdb is an environment from which you can run PSI4 computations. Parameters to these computations can be accessed from the underlying persistent database, and the results of these computations are dumped into the same database after completion. This opens the door for centralized computing in computational chemistry. mongo_qcdb is a python package.
-
-
-Now, with less abstraction. mongo_qcdb manages accesses and stores of PSI4 input and output data to and from an underlying Mongo database. It follows a client-server paradigm in which a client makes GET or POST requests to a remote qcdb_server to affect or access the database. These client functions wrap advanced queries which are useful to a computational chemistry researcher. Clients can also submit PSI4 jobs to a distributed computing cluster using Dask, so that users can turn off their computers as computations run on the server and have their results waiting in the database after completion.
+At the highest level, DatenQM is an environment from which you can run PSI4 (and hopefully other) computations. Parameters to these computations can be accessed from the underlying persistent database, and the results of these computations are dumped into the same database after completion. This opens the door for centralized computing in computational chemistry. DatenQM is a python package.
 
 
-When using mongo_qcdb’s functions, clients must define a “project” in which they want to work by providing project name as a parameter. Project workspaces allow for researchers to isolate their work on a centralized system and to provide temporary environments for testing new ideas. For example, all of a server’s data can be stored in a “master” project, and clients can use their functions to copy this data to their own project for manipulation and experimenting. 
+Now, with less abstraction. DatenQM manages accesses and stores of PSI4 input and output data to and from an underlying Mongo database. It follows a client-server paradigm in which a client makes GET or POST requests to a remote qcdb_server to affect or access the database. These client functions wrap advanced queries which are useful to a computational chemistry researcher. Clients can also submit PSI4 jobs to a distributed computing cluster using Dask, so that users can turn off their computers as computations run on the server and have their results waiting in the database after completion.
+
+
+When using DatenQM’s functions, clients must define a “project” in which they want to work by providing project name as a parameter. Project workspaces allow for researchers to isolate their work on a centralized system and to provide temporary environments for testing new ideas. For example, all of a server’s data can be stored in a “master” project, and clients can use their functions to copy this data to their own project for manipulation and experimenting. 
 
 # Introduction
-mongo_qcdb is a MongoDB database backend for quantum chemical activities, particularly for use with the Psi4 project (http://www.psicode.org/ or https://github.com/psi4). Currently, there is no open, standardized, and centralized repository for the outputs of computational chemistry calculations. Ease of access to such data is essential to progress, as individual calculations can take days or weeks to run. This backend is hopefully the answer to that problem.
+DatenQM is a MongoDB database backend for quantum chemical activities, particularly for use with the Psi4 project (http://www.psicode.org/ or https://github.com/psi4/psi4). Currently, there is no open, standardized, and centralized repository for the outputs of computational chemistry calculations. Ease of access to such data is essential to progress, as individual calculations can take days or weeks to run. This backend is hopefully the answer to that problem.
 
 # Schema Guide
 This MongoDB database has 3 collections: `databases`, `molecules`, and `pages`. All documents are imported from JSON files.
