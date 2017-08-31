@@ -53,7 +53,7 @@ def _compare_rxn_stoichs(ref, new):
     assert test_util.compare_lists(keys, keys_other)
 
     for k in keys:
-        print(k)
+        # print(k)
         _compare_stoichs(stoich[k], stoich_other[k])
 
     return True
@@ -80,16 +80,16 @@ def water_db():
 
     # Add single stoich from strings, not a valid set
     db.add_rxn(
-        "Water Dimer, dimer - str (invalid)",
-        [(_water_dimer_minima, 1.0), (_water_dimer_minima.splitlines()[-1], 0.0)],
+        "Water Dimer, dimer - str (invalid)", [(_water_dimer_minima, 1.0),
+                                               (_water_dimer_minima.splitlines()[-1], 0.0)],
         attributes={"R": "Minima"},
         reaction_results={"Benchmark": -20.0,
                           "DFT": -10.0})
 
     # Add single stoich rxn via hashes
     db.add_rxn(
-        "Water Dimer, nocp - hash",
-        [(dimer.get_hash(), 1.0), (frag_0.get_hash(), -1.0), (frag_1.get_hash(), -1.0)],
+        "Water Dimer, nocp - hash", [(dimer.get_hash(), 1.0), (frag_0.get_hash(), -1.0),
+                                     (frag_1.get_hash(), -1.0)],
         attributes={"R": "Minima"},
         reaction_results={"Benchmark": -5.0})
 
@@ -131,20 +131,79 @@ def nbody_db():
     db.add_ie_rxn("Water Dimer", _water_dimer_minima)
     db.add_ie_rxn("Ne Tetramer", _neon_trimer)
 
-    # Diagnositics
-    # key1 = list(db.get_rxn("Water Dimer, bench")["stoichiometry"]["default"])[0]
-    # key2 = list(db.get_rxn("Water Dimer")["stoichiometry"]["default"])[0]
-    # print(db._new_molecule_jsons[key1])
-    # print(db._new_molecule_jsons[key2])
-    # print(dqm.fields.get_hash(db._new_molecule_jsons[key1], "molecule"))
-    # print(dqm.fields.get_hash(db._new_molecule_jsons[key2], "molecule"))
-
-    # Nothing to fragment
-    # with pytest.raises(AttributeError):
-    #     db.add_ie_rxn("Water MonomerA", frag_0)
-
     # Ne Tetramer benchmark
-    db.ne_stoich = {'stoichiometry': {'cp1': {'a88578f05682d3c5791e482fb37dea11d1e8813f': 1.0, 'c6a3f4a26b0273fb147ad36f976b064860e032ed': 1.0, '0df2386d614a378f984dac6c15ef8aa4e8d60daa': 1.0, '29572c3a40b94aeea066f67e8c104a9a992bb4fd': 1.0}, 'cp3': {'a88578f05682d3c5791e482fb37dea11d1e8813f': 1.0, 'c6a3f4a26b0273fb147ad36f976b064860e032ed': 1.0, '60aeab8c65af2361809dff8ecc1c26978ee10e97': 1.0, '9a3bc5cd98988fb306cb500f35823f438eb2dab6': -1.0, '3d3dbb632fbe1427ce26ae1664b0d3c0f74d5b12': -1.0, 'c81f24a85816ce42f67f641cf071aa1f6728c1fe': 1.0, '10cb76fc37fdd7824ad88110652f17dec0454228': -1.0, '0df2386d614a378f984dac6c15ef8aa4e8d60daa': 1.0, '608f2212cb1d976f8985ed8063ebe7a3a137997f': 1.0, '29572c3a40b94aeea066f67e8c104a9a992bb4fd': 1.0, '9ce1d375ad154bffc0448c9177395bcf191ea517': -1.0, 'c2cb626a1eb42c3dae0a9176a746ef32ac7a0864': 1.0, 'dc25c79a239743d2d885e419709bcf25f7d259cd': -1.0, 'c1ca595e29dfa9b1c071c77587a242979eea5a86': -1.0}, 'default': {'3f8425826b76f94a5e4208366f04fb28c393baa7': 1.0}, 'default2': {'b67bfd4d68aed0602f0ee439cfafe242ac97fee6': 1.0, '3e80fa18b77b2ae32e93a9e81175476dcd9cd1de': 1.0, '0eaa463b14924d7138ac330ade3169376493c457': -8.0, 'f5306d9eff58b6101e1cc6d9af271a21f01e9309': 1.0, '9850fee49a3105b99390ccc2548fd0ccaf733adb': 2.0, '2c5c9a90eb9eb665bd09e8ed04a5eae6015a0a55': 1.0}, 'cp2': {'10cb76fc37fdd7824ad88110652f17dec0454228': 1.0, 'a88578f05682d3c5791e482fb37dea11d1e8813f': -2.0, 'c6a3f4a26b0273fb147ad36f976b064860e032ed': -2.0, '0df2386d614a378f984dac6c15ef8aa4e8d60daa': -2.0, '29572c3a40b94aeea066f67e8c104a9a992bb4fd': -2.0, '9ce1d375ad154bffc0448c9177395bcf191ea517': 1.0, '9a3bc5cd98988fb306cb500f35823f438eb2dab6': 1.0, '3d3dbb632fbe1427ce26ae1664b0d3c0f74d5b12': 1.0, 'dc25c79a239743d2d885e419709bcf25f7d259cd': 1.0, 'c1ca595e29dfa9b1c071c77587a242979eea5a86': 1.0}, 'default3': {'b67bfd4d68aed0602f0ee439cfafe242ac97fee6': -1.0, '6a013d7f915c2ab2e94939fc425d509a984c5a82': 1.0, '3e80fa18b77b2ae32e93a9e81175476dcd9cd1de': -1.0, '10082952153bec30467290841283d8c4ca981d00': 1.0, '0eaa463b14924d7138ac330ade3169376493c457': 4.0, 'f5306d9eff58b6101e1cc6d9af271a21f01e9309': -1.0, '9850fee49a3105b99390ccc2548fd0ccaf733adb': -2.0, 'ebc7d371336efbe9e651357ade6c9bd6fdb78739': 1.0, '095be43cff2cd62f882fa99e65a66451829fd9e0': 1.0, '2c5c9a90eb9eb665bd09e8ed04a5eae6015a0a55': -1.0}, 'default1': {'0eaa463b14924d7138ac330ade3169376493c457': 4.0}, 'cp': {'3f8425826b76f94a5e4208366f04fb28c393baa7': 1.0}}, 'attributes': {}, 'name': 'Ne Tetramer', 'reaction_results': {'default': {}}}
+    db.ne_stoich = {
+        'name': 'Ne Tetramer',
+        'stoichiometry': {
+            'default1': {
+                'acfce0c62cac57640d221a545998711853606bc9': 4.0
+            },
+            'cp1': {
+                '532ae1b0fab346aeaa2167972b5b61079081209f': 1.0,
+                'f89a033c52c527b0a85f271193f3515b0aec190b': 1.0,
+                '43fafa29d4d3197738e741051aff71ffe98264b3': 1.0,
+                'cf36366bf4d5a2f96cf0669425c49bd929d7f081': 1.0
+            },
+            'default2': {
+                'acfce0c62cac57640d221a545998711853606bc9': -8.0,
+                'e643e8f4e8668793165339e98f4f314cdac6e909': 1.0,
+                '0768204c7ddc575a77574b49598b89eb04d4522b': 1.0,
+                '05cb2410011128a45b5c3479e7724c60b91bfbee': 2.0,
+                '444dba64349a093f8da2c5c6594b128f54619d92': 1.0,
+                '75608da1aad0be8f353cab54e2674a138c5d04e7': 1.0
+            },
+            'cp2': {
+                '532ae1b0fab346aeaa2167972b5b61079081209f': -2.0,
+                'f89a033c52c527b0a85f271193f3515b0aec190b': -2.0,
+                '43fafa29d4d3197738e741051aff71ffe98264b3': -2.0,
+                'cf36366bf4d5a2f96cf0669425c49bd929d7f081': -2.0,
+                'f08a3ea572f4a371c18b99be63545a23f9cf17d2': 1.0,
+                'eb6efb5f6a7238c0582517eeba0c5b940d84c51d': 1.0,
+                '75a23e5e6f995aaee9a049226701f543f0ee9a82': 1.0,
+                '8d5280d9aa82243a12b319b24bd19506bae77853': 1.0,
+                'b7f73f0957f1f14469dde2000605061fbbe4939e': 1.0,
+                'bee9dfe443c016283ef2a4d98959a736b0d0b591': 1.0
+            },
+            'default3': {
+                'acfce0c62cac57640d221a545998711853606bc9': 4.0,
+                'e643e8f4e8668793165339e98f4f314cdac6e909': -1.0,
+                '0768204c7ddc575a77574b49598b89eb04d4522b': -1.0,
+                '05cb2410011128a45b5c3479e7724c60b91bfbee': -2.0,
+                '444dba64349a093f8da2c5c6594b128f54619d92': -1.0,
+                '75608da1aad0be8f353cab54e2674a138c5d04e7': -1.0,
+                'da4d287f648d33203652cd5a8fc621e331c16fab': 1.0,
+                'd7914b7213eff227af8228f64c26187eec343c21': 1.0,
+                'efcfd9e9ae9f33dcfb2780367690dcfff8bcb397': 1.0,
+                '4e3e461ab1439dc360a4b001ac885a8240b27640': 1.0
+            },
+            'cp3': {
+                '532ae1b0fab346aeaa2167972b5b61079081209f': 1.0,
+                'f89a033c52c527b0a85f271193f3515b0aec190b': 1.0,
+                '43fafa29d4d3197738e741051aff71ffe98264b3': 1.0,
+                'cf36366bf4d5a2f96cf0669425c49bd929d7f081': 1.0,
+                'f08a3ea572f4a371c18b99be63545a23f9cf17d2': -1.0,
+                'eb6efb5f6a7238c0582517eeba0c5b940d84c51d': -1.0,
+                '75a23e5e6f995aaee9a049226701f543f0ee9a82': -1.0,
+                '8d5280d9aa82243a12b319b24bd19506bae77853': -1.0,
+                'b7f73f0957f1f14469dde2000605061fbbe4939e': -1.0,
+                'bee9dfe443c016283ef2a4d98959a736b0d0b591': -1.0,
+                '32b290f24926d5ce6ca7ed4eb31d034bcc18a784': 1.0,
+                '214a0c4469f1ea514e0ee7a256dc601f39a90498': 1.0,
+                'fb3eeb93515fac8bb807af999bddd883c27af7fa': 1.0,
+                '3e4f560822d53d4fd53520d354eb4fa6632c745a': 1.0
+            },
+            'default': {
+                'c0e6a8225f1eb3ab5f7e81a755a91dd800869f23': 1.0
+            },
+            'cp': {
+                'c0e6a8225f1eb3ab5f7e81a755a91dd800869f23': 1.0
+            }
+        },
+        'attributes': {},
+        'reaction_results': {
+            'default': {}
+        }
+    }
     return db
 
 
@@ -248,10 +307,24 @@ def test_nbody_rxn(nbody_db):
     water_stoich = nbody_db.get_rxn("Water Dimer")
     _compare_rxn_stoichs(water_stoich, water_stoich_bench)
 
+    bench_vals = {
+        "default1": 1,
+        "cp1": 4,
+        "default2": 6,
+        "cp2": 10,
+        "default3": 10,
+        "cp3": 14,
+        "default": 1,
+        "cp": 1
+    }
+    # Check some basics
+    for key in list(nbody_db.ne_stoich["stoichiometry"]):
+        assert bench_vals[key] == len(nbody_db.ne_stoich["stoichiometry"][key])
+
     # Check the N-body
     ne_stoich = nbody_db.get_rxn("Ne Tetramer")
     mh = list(ne_stoich["stoichiometry"]["default"])[0]
-    print(ne_stoich)
+    # print(ne_stoich)
     _compare_rxn_stoichs(nbody_db.ne_stoich, ne_stoich)
 
 
@@ -292,19 +365,16 @@ def test_dataframe_stats(hbc_from_df):
         db.statistics("MURE", db[["B3LYP/aug-cc-pVDZ", "B3LYP/def2-QZVP"]]),
         atol=1.e-5)
     assert np.allclose(
-        -0.263942, db.statistics(
-            "ME", "B3LYP/aug-cc-pVDZ", bench="B3LYP/def2-QZVP"), atol=1.e-5)
+        -0.263942, db.statistics("ME", "B3LYP/aug-cc-pVDZ", bench="B3LYP/def2-QZVP"), atol=1.e-5)
 
     # Different benchmark
     assert np.allclose(
         -0.263942,
-        db.statistics(
-            "ME", db["B3LYP/aug-cc-pVDZ"], bench=db["B3LYP/def2-QZVP"]),
+        db.statistics("ME", db["B3LYP/aug-cc-pVDZ"], bench=db["B3LYP/def2-QZVP"]),
         atol=1.e-5)
     assert np.allclose(
         -0.263942,
-        db.statistics(
-            "ME", db["B3LYP/aug-cc-pVDZ"], bench=np.asarray(db["B3LYP/def2-QZVP"])),
+        db.statistics("ME", db["B3LYP/aug-cc-pVDZ"], bench=np.asarray(db["B3LYP/def2-QZVP"])),
         atol=1.e-5)
 
 

@@ -56,9 +56,10 @@ Ne 0.000000 0.000000 3.300000
 units bohr
 """
 
-_neon_tetramer_np = np.array(
-    [[10, 0.000000, 0.000000, 0.000000], [10, 3.100000, 0.000000, 0.000000],
-     [10, 0.000000, 3.200000, 0.000000], [10, 0.000000, 0.000000, 3.300000]])
+_neon_tetramer_np = np.array([[10, 0.000000, 0.000000,
+                               0.000000], [10, 3.100000, 0.000000,
+                                           0.000000], [10, 0.000000, 3.200000, 0.000000],
+                              [10, 0.000000, 0.000000, 3.300000]])
 _neon_tetramer_np[:, 1:] *= dqm.constants.physconst["bohr2angstroms"]
 
 
@@ -90,7 +91,6 @@ def test_molecule_constructors():
     water_from_json = molecule.Molecule(water_psi.to_json(), dtype="json")
     assert _compare_molecule(water_psi, water_from_json)
 
-
     ### Neon Tetramer
     neon_psi = molecule.Molecule(_neon_tetramer, name="neon tetramer")
     neon_np = molecule.Molecule(
@@ -101,7 +101,6 @@ def test_molecule_constructors():
     # Check the JSON construct/deconstruct
     neon_from_json = molecule.Molecule(neon_psi.to_json(), dtype="json")
     assert _compare_molecule(neon_psi, neon_from_json)
-
 
 
 def test_water_minima_data():
@@ -126,9 +125,9 @@ def test_water_minima_data():
     assert hasattr(mol, "provenance")
     assert np.allclose(mol.geometry, [[2.81211080, 0.1255717, 0.], [3.48216664, -1.55439981, 0.],
                                       [1.00578203, -0.1092573, 0.], [-2.6821528, -0.12325075, 0.],
-                                      [-3.27523824, 0.81341093, 1.43347255],
-                                      [-3.27523824, 0.81341093, -1.43347255]])
-    assert mol.get_hash() == "46541b6905ff43fd6c0b9222709137584a02f7f7"
+                                      [-3.27523824, 0.81341093,
+                                       1.43347255], [-3.27523824, 0.81341093, -1.43347255]])
+    assert mol.get_hash() == "476ae9e1023d6e4aed7b01b36a3a9e8b5651d0f6"
 
 
 def test_water_minima_fragment():
@@ -137,8 +136,8 @@ def test_water_minima_fragment():
 
     frag_0 = mol.get_fragment(0)
     frag_1 = mol.get_fragment(1)
-    assert frag_0.get_hash() == "a290235adfe412851429cd658fef0934b260977a"
-    assert frag_1.get_hash() == "851d6bca6ddbda87fa58dc105c3db94bab39139c"
+    assert frag_0.get_hash() == "b7852644b6f6909c7748c5b53b45a782497715d9"
+    assert frag_1.get_hash() == "55dcb95d08fa42c80035fcf3ee4926778a60a549"
 
     frag_0_1 = mol.get_fragment(0, 1)
     frag_1_0 = mol.get_fragment(1, 0)
