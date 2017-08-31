@@ -76,7 +76,6 @@ class Scheduler(tornado.web.RequestHandler):
 
         if "logger" in list(self.objects):
             self.logger = self.objects["logger"]
-            self.objects.pop("logger", None)
         else:
             self.logger = logging.getLogger('Scheduler')
 
@@ -173,7 +172,6 @@ class Information(tornado.web.RequestHandler):
 
         if "logger" in list(self.objects):
             self.logger = self.objects["logger"]
-            self.objects.pop("logger", None)
         else:
             self.logger = logging.getLogger('Information')
         self.logger.info("INFO: %s" % self.request.method)
@@ -194,7 +192,6 @@ class Mongod(tornado.web.RequestHandler):
         self.objects = objects
         if "logger" in list(self.objects):
             self.logger = self.objects["logger"]
-            self.objects.pop("logger", None)
         else:
             self.logger = logging.getLogger('Mongod')
 
