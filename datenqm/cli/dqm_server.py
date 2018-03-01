@@ -88,7 +88,7 @@ class QCDBServer(object):
         app = tornado.web.Application(
             [
                 (r"/information", dqm.handlers.Information, tornado_args),
-                (r"/scheduler", dqm.handlers.Scheduler, tornado_args),
+                (r"/scheduler", dqm.handlers.DaskScheduler, tornado_args),
                 (r"/mongod", dqm.handlers.Mongod, tornado_args),
             ], )
         app.listen(options.port)

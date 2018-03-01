@@ -66,7 +66,7 @@ class DaskNanny(object):
             del self.dask_queue[key]
 
 
-class Scheduler(tornado.web.RequestHandler):
+class DaskScheduler(tornado.web.RequestHandler):
     """
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
     """
