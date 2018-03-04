@@ -23,6 +23,8 @@ class MongoSocket(object):
         """
         self.url = url
         self.port = port
+        self.username = username
+        self.password = password
 
 
         # Are we authenticating?
@@ -58,13 +60,17 @@ class MongoSocket(object):
     def __repr__(self):
         return "<MongoSocket: address='%s:%d'>" % (self.url, self.port)
 
-    def set_project(self, project):
+    def set_project(self, project, username=None, password=None):
         # Success dictionary and collections to create
         success = {}
         collection_creation = {}
 
         # Create DB
         self.project = self.client[project]
+        if username:
+            self.project.authenticate(username, password)
+        elif self.username is not None:
+            self.project.authenticate(self.username, self.password)
         success["project"] = self.project
 
         # Try to create a collection for each entry

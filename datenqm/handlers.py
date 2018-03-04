@@ -231,7 +231,7 @@ class Mongod(tornado.web.RequestHandler):
 
         # Grab objects
         mongod = self.objects["mongod_socket"]
-        mongod.set_project(header["project"])
+        mongod.set_project(header["project"], username=header["username"], password=header["password"])
 
         self.logger.info("MONGOD: %s - %s" % (self.request.method, data["function"]))
 
