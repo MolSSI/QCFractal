@@ -8,11 +8,12 @@ from . import mongo_helper
 
 
 class Client(object):
-    def __init__(self, port, project="default"):
+    def __init__(self, port, project="default", username="", password=""):
         if "http" not in port:
             port = "http://" + port
         self.port = port + '/'
         self.project = project
+        self.http_header = {"project": self.project, "username": username, "password": password}
         self.info = self.get_information()
 
     def get_MongoSocket(self):
@@ -32,8 +33,8 @@ class Client(object):
             body = json.dumps(body)
 
         client = httpclient.AsyncHTTPClient()
-        http_header = {"project" : self.project}
-        yield json.loads(client.fetch(self.port + function, method=method, headers=http_header).body.decode('utf-8'))
+        yield json.loads(
+            client.fetch(self.port + function, method=method, headers=self.http_header).body.decode('utf-8'))
 
     def query_server(self, function, method, body=None, json_load=True):
         """
@@ -43,8 +44,8 @@ class Client(object):
             body = json.dumps(body)
 
         client = httpclient.HTTPClient()
-        http_header = {"project" : self.project}
-        response = client.fetch(self.port + function, method=method, body=body, headers=http_header, request_timeout=30.0)
+        response = client.fetch(
+            self.port + function, method=method, body=body, headers=self.http_header, request_timeout=30.0)
         return json.loads(response.body.decode('utf-8'))
 
     def get_information(self):

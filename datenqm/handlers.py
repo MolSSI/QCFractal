@@ -14,6 +14,7 @@ from . import compute
 from tornado.options import options, define
 import tornado.ioloop
 import tornado.web
+import pymongo
 
 
 class DaskNanny(object):
@@ -66,6 +67,26 @@ class DaskNanny(object):
             del self.dask_queue[key]
 
 
+def _check_auth(objects, header):
+    auth = False
+    try:
+        objects["mongod_socket"].client.database_names()
+        username = "default"
+        auth = True
+    except pymongo.errors.OperationFailure:
+
+        # The authenticate method should match a username and password
+        # to a username and password hash in the database users table.
+        db = self.objects["mongod_socket"][header["project"]]
+        try:
+            auth = db.authenticate(header["username"], header["password"])
+        except pymongo.errors.OperationFailure:
+            auth = False
+
+    if auth is not True:
+        raise KeyError("Could not authenticate user.")
+
+
 class DaskScheduler(tornado.web.RequestHandler):
     """
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
@@ -115,6 +136,7 @@ class DaskScheduler(tornado.web.RequestHandler):
         # Decode the data
         data = json.loads(self.request.body.decode('utf-8'))
         header = self.request.headers
+        _check_auth(self.objects, self.request.headers)
 
         # Grab objects
         self.objects["mongod_socket"].set_project(header["project"])
@@ -178,7 +200,9 @@ class Information(tornado.web.RequestHandler):
             self.logger = logging.getLogger('Information')
         self.logger.info("INFO: %s" % self.request.method)
 
+    # @tornado.web.authenticated
     def get(self):
+        _check_auth(self.objects, self.request.headers)
 
         dask = self.objects["dask_socket"]
         mongod = self.objects["mongod_socket"]
@@ -203,6 +227,7 @@ class Mongod(tornado.web.RequestHandler):
         # Decode the data
         data = json.loads(self.request.body.decode('utf-8'))
         header = self.request.headers
+        _check_auth(self.objects, self.request.headers)
 
         # Grab objects
         mongod = self.objects["mongod_socket"]

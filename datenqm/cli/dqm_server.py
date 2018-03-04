@@ -51,7 +51,6 @@ class QCDBServer(object):
 
         self.logger.info("Logfile set to %s\n" % options.logfile)
 
-
         # Build mongo socket
         self.mongod_socket = dqm.mongo_helper.MongoSocket(options.mongod_ip, options.mongod_port)
 
@@ -85,12 +84,11 @@ class QCDBServer(object):
         }
 
         # Start up the app
-        app = tornado.web.Application(
-            [
-                (r"/information", dqm.handlers.Information, tornado_args),
-                (r"/scheduler", dqm.handlers.DaskScheduler, tornado_args),
-                (r"/mongod", dqm.handlers.Mongod, tornado_args),
-            ], )
+        app = tornado.web.Application([
+            (r"/information", dqm.handlers.Information, tornado_args),
+            (r"/scheduler", dqm.handlers.DaskScheduler, tornado_args),
+            (r"/mongod", dqm.handlers.Mongod, tornado_args),
+        ])
         app.listen(options.port)
 
         # Query Dask Nanny on loop
