@@ -38,6 +38,23 @@ def client_service():
     print("Exiting...")
     p.send_signal(signal.SIGINT)
 
+def test_client_auth(client_service):
+    local_db = "test_client_auth"
+    db_user = "TestUser"
+    db_password = "Test1234"
+
+    client = dqm.Client("http://localhost:8888")
+    mongo = client.get_MongoSocket()
+    mongo.client.drop_database(local_db)
+    mongo.client[local_db].add_user(db_user, db_password, roles=[{'role':'readWrite','db':local_db}])
+
+    mongo.set_project("test_client_auth", username=db_user, password=db_password)
+
+    del client
+    client = dqm.Client("http://localhost:8888", username=db_user, password=db_password)
+    mongo = client.get_MongoSocket()
+    mongo.set_project("test_client_auth")
+
 
 def test_client1(client_service):
     client = dqm.Client("http://localhost:8888", "client1_project")
