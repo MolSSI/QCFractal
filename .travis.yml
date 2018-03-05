@@ -42,6 +42,7 @@ install:
   - source activate mongo_qcdb
 
     # Install anything not in conda
+  - pip install fireworks
   - pip install codecov
   - pip install pytest-cov
   - conda list
