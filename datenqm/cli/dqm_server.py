@@ -78,8 +78,8 @@ class QCDBServer(object):
 
         tornado_args = {
             "mongod_socket": self.mongod_socket,
-            "dask_socket": self.dask_socket,
-            "dask_nanny": self.dask_nanny,
+            "queue_socket": self.dask_socket,
+            "queue_nanny": self.dask_nanny,
             "logger": self.logger,
         }
 

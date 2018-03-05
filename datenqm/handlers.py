@@ -5,7 +5,6 @@ import uuid
 import traceback
 import datetime
 import logging
-import distributed
 import pandas as pd
 
 from . import molecule
@@ -23,9 +22,9 @@ class DaskNanny(object):
     are automatically posted to the associated MongoDB and removed from the queue.
     """
 
-    def __init__(self, dask_socket, mongod_socket, logger=None):
+    def __init__(self, queue_socket, mongod_socket, logger=None):
 
-        self.dask_socket = dask_socket
+        self.queue_socket = queue_socket
         self.mongod_socket = mongod_socket
         self.dask_queue = {}
         self.errors = {}
@@ -87,6 +86,58 @@ def _check_auth(objects, header):
         raise KeyError("Could not authenticate user.")
 
 
+def _verify_input(data, mongo, logger=None, options=None):
+
+    if options is not None:
+        data["options"] = options
+
+    # Check if the minimum is present
+    for req in ["molecule_hash", "modelchem", "options"]:
+        if req not in list(data):
+            err = "Missing required field '%s'" % req
+            data["error"] = err
+            if logger:
+                logger.info("SCHEDULER: %s" % err)
+            return data
+
+    # Grab out molecule
+    mol = mongo.get_molecule(data["molecule_hash"])
+    if molecule is None:
+        err = "Molecule hash '%s' was not found." % data["molecule_hash"]
+        data["error"] = err
+        if logger:
+            logger.info("SCHEDULER: %s" % err)
+        return data
+
+    molecule_str = molecule.Molecule(mol, dtype="json").to_string(dtype="psi4")
+
+    data["molecule"] = molecule_str
+    data["method"] = data["modelchem"]
+    data["driver"] = "energy"
+
+    return data
+
+
+def _unpack_tasks(data, mongo, logger):
+    # Parse out data
+    program = "psi4"
+    tasks = []
+
+    # Multiple jobs
+    if ("multi_header" in list(data)) and (data["multi_header"] == "QCDB_batch"):
+        for task in data["tasks"]:
+            tasks.append(_verify_input(task, mongo, options=data["options"], logger=logger))
+        program = data["program"]
+
+    # Single job
+    else:
+        tasks.append(_verify_input(data, mongo, logger=logger))
+        if "program" in list(data):
+            program = data["program"]
+
+    return tasks, program
+
+
 class DaskScheduler(tornado.web.RequestHandler):
     """
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
@@ -101,36 +152,6 @@ class DaskScheduler(tornado.web.RequestHandler):
         else:
             self.logger = logging.getLogger('Scheduler')
 
-    def _verify_input(self, data, options=None):
-        mongo = self.objects["mongod_socket"]
-
-        if options is not None:
-            data["options"] = options
-
-        # Check if the minimum is present
-        for req in ["molecule_hash", "modelchem", "options"]:
-            if req not in list(data):
-                err = "Missing required field '%s'" % req
-                data["error"] = err
-                self.logger.info("SCHEDULER: %s" % err)
-                return data
-
-        # Grab out molecule
-        mol = mongo.get_molecule(data["molecule_hash"])
-        if molecule is None:
-            err = "Molecule hash '%s' was not found." % data["molecule_hash"]
-            data["error"] = err
-            self.logger.info("SCHEDULER: %s" % err)
-            return data
-
-        molecule_str = molecule.Molecule(mol, dtype="json").to_string(dtype="psi4")
-
-        data["molecule"] = molecule_str
-        data["method"] = data["modelchem"]
-        data["driver"] = "energy"
-
-        return data
-
     def post(self):
 
         # Decode the data
@@ -140,35 +161,21 @@ class DaskScheduler(tornado.web.RequestHandler):
 
         # Grab objects
         self.objects["mongod_socket"].set_project(header["project"])
-        dask = self.objects["dask_socket"]
-        dask_nanny = self.objects["dask_nanny"]
+        dask = self.objects["queue_socket"]
+        queue_nanny = self.objects["queue_nanny"]
 
-        # Parse out data
-        program = "psi4"
-        tasks = []
+        tasks, program = _unpack_tasks(data, self.objects["mongod_socket"], self.logger)
+
+        # Submit
         ret = {}
         ret["error"] = []
         ret["Nanny ID"] = []
-
-        # Multiple jobs
-        if ("multi_header" in list(data)) and (data["multi_header"] == "QCDB_batch"):
-            for task in data["tasks"]:
-                tasks.append(self._verify_input(task, options=data["options"]))
-            program = data["program"]
-
-        # Single job
-        else:
-            tasks.append(self._verify_input(data))
-            if "program" in list(data):
-                program = data["program"]
-
-        # Submit
         for task in tasks:
             if "internal_error" in list(task):
                 ret["error"].append(task["internal_error"])
                 continue
             fut = dask.submit(compute.computers[program], task)
-            ret["Nanny ID"].append(self.objects["dask_nanny"].add_future(fut))
+            ret["Nanny ID"].append(self.objects["queue_nanny"].add_future(fut))
 
         # Return anything of interest
         ret["success"] = True
@@ -177,11 +184,13 @@ class DaskScheduler(tornado.web.RequestHandler):
     def get(self):
 
         header = self.request.headers
+        _check_auth(self.objects, self.request.headers)
+
         self.objects["mongod_socket"].set_project(header["project"])
-        dask_nanny = self.objects["dask_nanny"]
+        queue_nanny = self.objects["queue_nanny"]
         ret = {}
-        ret["queue"] = list(dask_nanny.dask_queue)
-        ret["error"] = dask_nanny.errors
+        ret["queue"] = list(queue_nanny.dask_queue)
+        ret["error"] = queue_nanny.errors
         self.write(json.dumps(ret))
 
 
@@ -200,11 +209,10 @@ class Information(tornado.web.RequestHandler):
             self.logger = logging.getLogger('Information')
         self.logger.info("INFO: %s" % self.request.method)
 
-    # @tornado.web.authenticated
     def get(self):
         _check_auth(self.objects, self.request.headers)
 
-        dask = self.objects["dask_socket"]
+        dask = self.objects["queue_socket"]
         mongod = self.objects["mongod_socket"]
 
         ret = {}
