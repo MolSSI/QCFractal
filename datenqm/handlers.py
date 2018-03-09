@@ -15,9 +15,6 @@ import tornado.ioloop
 import tornado.web
 import pymongo
 
-# Fireworks
-import fireworks
-
 
 class DaskNanny(object):
     """
@@ -88,14 +85,17 @@ class FireworksNanny(object):
             self.logger = logging.getLogger('FireworksNanny')
 
     def add_future(self, future):
-        self.queue.append(future) # Should be unique via fireworks
+        self.queue.append(future)  # Should be unique via fireworks
         self.logger.info("MONGO ADD: FUTURE %s" % future)
-        return uid
+        return future
 
     def update(self):
+        # Fireworks
+        import fireworks
 
         # Find completed projects
-        cursor = self.mongod_socket.fireworks.launches.find({
+        fireworks_db = self.mongod_socket.client.fireworks
+        cursor = fireworks_db.launches.find({
             "fw_id": {
                 "$in": self.queue
             },
@@ -105,10 +105,9 @@ class FireworksNanny(object):
             "fw_id": True})
 
         for data in cursor:
-            self.queue.remove(data["fw_id"])
 
             try:
-                result_page = data["stored_data"]["results"]
+                result_page = data["action"]["stored_data"]["results"]
                 if not result_page["success"]:
                     raise ValueError("Computation (%s, %s) did not complete successfully!:\n%s\n" %
                                      (result_page["molecule_hash"], result_page["modelchem"], result_page["error"]))
@@ -117,13 +116,14 @@ class FireworksNanny(object):
                 self.logger.info("MONGO ADD: (%s, %s) - %s" % (result_page["molecule_hash"], result_page["modelchem"],
                                                                str(res)))
 
-
             except Exception as e:
                 ename = str(type(e).__name__) + ":" + str(e)
                 msg = "".join(traceback.format_tb(e.__traceback__))
                 msg += str(type(e).__name__) + ":" + str(e)
                 self.errors.append(msg)
                 self.logger.info("MONGO ADD: ERROR\n%s" % msg)
+
+            self.queue.remove(data["fw_id"])
 
 
 def _check_auth(objects, header):
@@ -267,6 +267,8 @@ class FireworksScheduler(tornado.web.RequestHandler):
             self.logger = logging.getLogger('Scheduler')
 
     def post(self):
+        # Fireworks
+        import fireworks
 
         # Decode the data
         data = json.loads(self.request.body.decode('utf-8'))
@@ -275,7 +277,7 @@ class FireworksScheduler(tornado.web.RequestHandler):
 
         # Grab objects
         self.objects["mongod_socket"].set_project(header["project"])
-        dask = self.objects["queue_socket"]
+        lpad = self.objects["queue_socket"]
         queue_nanny = self.objects["queue_nanny"]
 
         tasks, program = _unpack_tasks(data, self.objects["mongod_socket"], self.logger)
@@ -290,7 +292,9 @@ class FireworksScheduler(tornado.web.RequestHandler):
                 continue
             fw = fireworks.Firework(
                 fireworks.PyTask(func="dqm_compute.run_psi4", args=[task], stored_data_varname="results"))
-            fws_id = lpad.add_wf(fw)[-1]
+            launches = lpad.add_wf(fw)
+            fws_id = list(launches.values())[0]
+
             ret["Nanny ID"].append(self.objects["queue_nanny"].add_future(fws_id))
 
         # Return anything of interest
@@ -327,12 +331,12 @@ class Information(tornado.web.RequestHandler):
     def get(self):
         _check_auth(self.objects, self.request.headers)
 
-        dask = self.objects["queue_socket"]
+        queue = self.objects["queue_socket"]
         mongod = self.objects["mongod_socket"]
 
         ret = {}
         ret["mongo_data"] = (mongod.url, mongod.port)
-        ret["dask_data"] = dask.scheduler.address
+        ret["dask_data"] = str(queue.host) + ":" + str(queue.port)
         self.write(json.dumps(ret))
 
 

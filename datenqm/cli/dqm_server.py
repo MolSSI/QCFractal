@@ -10,8 +10,6 @@ import logging
 
 import datenqm as dqm
 
-import distributed
-
 from tornado.options import options, define
 import tornado.ioloop
 import tornado.web
@@ -21,11 +19,22 @@ define("mongod_ip", default="127.0.0.1", help="The Mongod instances IP.", type=s
 define("mongod_port", default=27017, help="The Mongod instances port.", type=int)
 define("dask_ip", default="", help="The Dask instances IP. If blank starts a local cluster.", type=str)
 define("dask_port", default=8786, help="The Dask instances port.", type=int)
+# define("fireworks_ip", default="", help="The Fireworks instances IP. If blank starts a local cluster.", type=str)
+# define("fireworks_port", default=None, help="The Fireworks instances port.", type=int)
 define("logfile", default="qcdb_server.log", help="The logfile to write to.", type=str)
+define("queue", default="fireworks", help="The type of queue to use dask or fireworks", type=str)
 
-dask_dir_geuss = os.getcwd() + '/dask_scratch/'
-define("dask_dir", default=dask_dir_geuss, help="The Dask workers working director", type=str)
-dask_working_dir = options.dask_dir
+queues = ["fireworks", "dask"]
+if options.queue not in queues:
+    raise KeyError("Queue of type %s not understood" % options.queue)
+
+if options.queue == "dask":
+    import distributed
+    dask_dir_geuss = os.getcwd() + '/dask_scratch/'
+    define("dask_dir", default=dask_dir_geuss, help="The Dask workers working director", type=str)
+    dask_working_dir = options.dask_dir
+elif options.queue == "fireworks":
+    import fireworks
 
 tornado.options.options.parse_command_line()
 tornado.options.parse_command_line()
@@ -57,42 +66,53 @@ class QCDBServer(object):
         self.logger.info("Mongod Socket Info:")
         self.logger.info(str(self.mongod_socket) + "\n")
 
-        # Grab the Dask Scheduler
         loop = tornado.ioloop.IOLoop.current()
         self.local_cluster = None
-        if options.dask_ip == "":
-            self.local_cluster = distributed.LocalCluster(nanny=None)
-            self.dask_socket = distributed.Client(self.local_cluster)
+        if options.queue == "dask":
+            # Grab the Dask Scheduler
+            if options.dask_ip == "":
+                self.local_cluster = distributed.LocalCluster(nanny=None)
+                self.queue_socket = distributed.Client(self.local_cluster)
+            else:
+                self.queue_socket = distributed.Client(options.dask_ip + ":" + str(options.dask_port))
+
+            self.logger.info("Dask Scheduler Info:")
+            self.logger.info(str(self.queue_socket) + "\n")
+
+            # Make sure the scratch is there
+            if not os.path.exists(dask_working_dir):
+                os.makedirs(dask_working_dir)
+
+            # Dask Nanny
+            self.queue_nanny = dqm.handlers.DaskNanny(self.queue_socket, self.mongod_socket, logger=self.logger)
+
+            scheduler = dqm.handlers.DaskScheduler
         else:
-            self.dask_socket = distributed.Client(options.dask_ip + ":" + str(options.dask_port))
+            self.queue_socket = fireworks.LaunchPad.auto_load()
+            self.queue_nanny = dqm.handlers.FireworksNanny(self.queue_socket, self.mongod_socket, logger=self.logger)
 
-        self.logger.info("Dask Scheduler Info:")
-        self.logger.info(str(self.dask_socket) + "\n")
+            self.logger.info("Fireworks Scheduler Info:")
+            self.logger.info(str(self.queue_socket.host) + ":" + str(self.queue_socket.port) + "\n")
 
-        # Make sure the scratch is there
-        if not os.path.exists(dask_working_dir):
-            os.makedirs(dask_working_dir)
-
-        # Dask Nanny
-        self.dask_nanny = dqm.handlers.DaskNanny(self.dask_socket, self.mongod_socket, logger=self.logger)
+            scheduler = dqm.handlers.FireworksScheduler
 
         tornado_args = {
             "mongod_socket": self.mongod_socket,
-            "queue_socket": self.dask_socket,
-            "queue_nanny": self.dask_nanny,
+            "queue_socket": self.queue_socket,
+            "queue_nanny": self.queue_nanny,
             "logger": self.logger,
         }
 
         # Start up the app
         app = tornado.web.Application([
             (r"/information", dqm.handlers.Information, tornado_args),
-            (r"/scheduler", dqm.handlers.DaskScheduler, tornado_args),
+            (r"/scheduler", scheduler, tornado_args),
             (r"/mongod", dqm.handlers.Mongod, tornado_args),
         ])
         app.listen(options.port)
 
         # Query Dask Nanny on loop
-        tornado.ioloop.PeriodicCallback(self.dask_nanny.update, 2000).start()
+        tornado.ioloop.PeriodicCallback(self.queue_nanny.update, 2000).start()
 
         # This is for testing
         #loop.add_callback(get, "{data}")
@@ -110,7 +130,8 @@ class QCDBServer(object):
         try:
             self.loop.start()
         except KeyboardInterrupt:
-            self.dask_socket.shutdown()
+            if options.queue == "dask":
+                self.queue_socket.shutdown()
             if self.local_cluster:
                 self.local_cluster.close()
             self.loop.stop()
