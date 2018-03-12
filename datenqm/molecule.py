@@ -29,7 +29,7 @@ class Molecule(object):
         self.masses = []
         self.name = kwargs.pop("name", "")
         self.charge = 0.0
-        self.multiplicity = 1.0
+        self.multiplicity = 1
         self.real = []
         self.comment = ""
         self.geometry = None
@@ -443,11 +443,6 @@ class Molecule(object):
         ret.geometry = np.vstack(geom_blocks)
 
         ret.orient_molecule()
-        print ret.fragment_charges
-        print ret.fragment_multiplicities
-        print ret.charge
-        print ret.multiplicity
-        
 
         return ret
 
