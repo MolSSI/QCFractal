@@ -17,6 +17,8 @@ import tornado.web
 define("port", default=8888, help="Run on the given port.", type=int)
 define("mongod_ip", default="127.0.0.1", help="The Mongod instances IP.", type=str)
 define("mongod_port", default=27017, help="The Mongod instances port.", type=int)
+define("mongod_username", default="", help="The Mongod instance username.", type=str)
+define("mongod_password", default="", help="The Mongod instances password.", type=str)
 define("dask_ip", default="", help="The Dask instances IP. If blank starts a local cluster.", type=str)
 define("dask_port", default=8786, help="The Dask instances port.", type=int)
 # define("fireworks_ip", default="", help="The Fireworks instances IP. If blank starts a local cluster.", type=str)
@@ -60,8 +62,14 @@ class QCDBServer(object):
 
         self.logger.info("Logfile set to %s\n" % options.logfile)
 
+        mongo_username = None
+        mongo_password = None
+        if options.mongod_username:
+            mongo_username = options.mongod_username
+        if options.mongod_password:
+            mongo_password = options.mongod_password
         # Build mongo socket
-        self.mongod_socket = dqm.mongo_helper.MongoSocket(options.mongod_ip, options.mongod_port)
+        self.mongod_socket = dqm.mongo_helper.MongoSocket(options.mongod_ip, options.mongod_port, username=mongo_username, password=mongo_password, globalAuth=True)
 
         self.logger.info("Mongod Socket Info:")
         self.logger.info(str(self.mongod_socket) + "\n")

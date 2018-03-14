@@ -366,6 +366,7 @@ class Mongod(tornado.web.RequestHandler):
         # logger.info("MONGOD: %s" % str(ret))
         if isinstance(ret, (pd.Series, pd.DataFrame)):
             tmp = {}
+            ret.columns = [str(x) for x in ret.columns]
             tmp["data"] = ret.to_json()
             tmp["pandas_msgpack"] = True
             self.write(json.dumps(tmp))

@@ -16,7 +16,7 @@ class MongoSocket(object):
     This is a Mongo QCDB socket class.
     """
 
-    def __init__(self, url, port, project=None, username=None, password=None, authMechanism="SCRAM-SHA-1"):
+    def __init__(self, url, port, project=None, username=None, password=None, authMechanism="SCRAM-SHA-1", authSource=None, globalAuth=False):
         """
         Constructs a new socket where url and port points towards a Mongod instance.
 
@@ -50,7 +50,13 @@ class MongoSocket(object):
 
         # # No authentication required
         # else:
-        self.client = pymongo.MongoClient(url, port)
+        self.globalAuth = False
+        if username:
+            if globalAuth:
+                self.globalAuth = True
+            self.client = pymongo.MongoClient(url, port, username=username, password=password, authMechanism=authMechanism, authSource="admin")
+        else:
+            self.client = pymongo.MongoClient(url, port)
 
         if (project != None):
             self.set_project(project)
@@ -67,10 +73,12 @@ class MongoSocket(object):
 
         # Create DB
         self.project = self.client[project]
-        if username:
+        if self.globalAuth:
+            pass
+        elif username:
             self.project.authenticate(username, password)
         elif self.username is not None:
-            self.project.authenticate(self.username, self.password)
+            self.project.authenticate("admin." + self.username, self.password)
         success["project"] = self.project
 
         # Try to create a collection for each entry
@@ -347,7 +355,9 @@ class MongoSocket(object):
                 d[item["molecule_hash"]][item["modelchem"]] = scope
             except KeyError:
                 pass
-        return pd.DataFrame(data=d, index=[methods]).transpose()
+        if isinstance(methods, str):
+            methods = [methods]
+        return pd.DataFrame(data=d, index=methods).transpose()
 
     def evaluate_2(self, hashes, fields, method, project=None):
         """
@@ -631,6 +641,7 @@ class MongoSocket(object):
             res.append(
                 self.get_value(field, db, item["name"], stoich, method, do_stoich, debug_level))
             index.append(item["name"])
+        print("I am getting methods", method)
         return pd.DataFrame(data={method: res}, index=index)
 
     def get_dataframe(self, field, db, stoich, methods, do_stoich=True, debug_level=1):

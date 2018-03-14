@@ -7,12 +7,12 @@ import time
 # Make sure this looks like just a normal file
 #runner.run_task.__module__ = "runner"
 
-try:
-    psi_location = os.environ["MONGO_PSI4"]
-except:
-    raise KeyError("Mongo Compute: MONGO_PSI4 psi variable was not set. Failing.")
+#try:
+#    psi_location = os.environ["MONGO_PSI4"]
+#except:
+#    raise KeyError("Mongo Compute: MONGO_PSI4 psi variable was not set. Failing.")
 
-psi_run = "python " + psi_location + " --json "
+# psi_run = "python " + psi_location + " --json "
 
 
 def psi_compute(json_data, **kwargs):
