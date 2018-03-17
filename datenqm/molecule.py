@@ -431,8 +431,9 @@ class Molecule(object):
             if num == 0 :
                 divider = ""
 
-            text += "%s    \n    %d %d\n" % (divider, self.fragment_charges[num],
-                                             self.fragment_multiplicities[num])
+            if any(self.real[at] for at in frag):
+                text += "%s    \n    %d %d\n" % (divider, self.fragment_charges[num],
+                                                 self.fragment_multiplicities[num])
 
             for at in frag:
                 if self.real[at]:
