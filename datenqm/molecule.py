@@ -361,7 +361,7 @@ class Molecule(object):
         ret = Molecule(None, name=ret_name)
 
         if len(set(real) & set(ghost)):
-            raise TypeError("Molecule:get_fragment: real and ghost sets are overlaping! (%s, %s).",
+            raise TypeError("Molecule:get_fragment: real and ghost sets are overlaping! (%s, %s)." %
                             (str(real), str(ghost)))
 
         geom_blocks = []

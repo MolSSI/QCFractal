@@ -566,14 +566,10 @@ class Database(object):
         # Build some info
         fragment_range = list(range(max_frag))
 
-        nocp_dict = {}
-        cp_dict = {}
-
         # Loop over the bodis
         for nbody in range(1, max_nbody):
             nocp_tmp = []
             cp_tmp = []
-            vmfc_tmp = []
             for k in range(1, nbody + 1):
                 take_nk = _nCr(max_frag - k - 1, nbody - k)
                 sign = ((-1)**(nbody - k))
@@ -591,11 +587,28 @@ class Database(object):
             if do_cp:
                 ret["cp" + str(nbody)] = cp_tmp
 
+        # VMFC is a special beast
+        if do_vmfc:
+            raise KeyError("VMFC isnt quite ready for primetime!")
+        ret.update({"vmfc" + str(nbody): [] for nbody in range(1, max_nbody)})
+        nbody_range = list(range(1, max_nbody))
+        for nbody in nbody_range:
+            for cp_combos in it.combinations(fragment_range, nbody):
+                basis_tuple = tuple(cp_combos)
+                for interior_nbody in nbody_range:
+                    for x in it.combinations(cp_combos, interior_nbody):
+                        ghost = list(set(basis_tuple) - set(x))
+                        ret["vmfc" + str(interior_nbody)].append((mol.get_fragment(x, ghost), 1.0))
+
+
         # Add in the maximal position
         if do_default:
             ret["default"] = [(mol, 1.0)]
 
         if do_cp:
             ret["cp"] = [(mol, 1.0)]
+
+        if do_vmfc:
+            ret["vmfc"] = [(mol, 1.0)]
 
         return ret
