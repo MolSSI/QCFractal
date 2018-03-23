@@ -48,6 +48,8 @@ class Molecule(object):
                 self._molecule_from_numpy(mol_str, frags)
             elif dtype == "json":
                 self._molecule_from_json(mol_str)
+            elif dtype == "json_lori":
+                self._molecule_from_json_lori(mol_str)
             else:
                 raise KeyError("Molecule: dtype of %s not recognized.")
 
@@ -66,6 +68,41 @@ class Molecule(object):
                 setattr(self, field, np.array(data, dtype=np.double))
             else:
                 setattr(self, field, data)
+
+
+
+    def _molecule_from_json_lori(self, json_data):
+        """From a given valid JSON molecule spec, within Lori's format,
+           rebuild the class.
+        """
+        for field, data in json_data.items():
+            if field == "elem":
+               self.symbols = data
+            elif field == "fragment_charges":
+               self.fragment_charges = data
+            elif field == "fragment_multiplicities":
+               self.fragment_multiplicities = data
+            elif field == "fragment_separators":
+               sep = data[0]
+               A = []
+               B = [] 
+               for n in range(0,sep):
+                  A.append(n)
+               for n in range(sep,len(self.symbols)):
+                  B.append(n)
+               self.fragments = [A,B]
+            elif field == "geom":
+               G = np.array(data, dtype=np.double)
+               self.geometry = np.reshape(G, (-1,3))
+            elif field == "mass":
+               self.masses = data
+            elif field == "molecular_charge":
+               self.charge = data
+            elif field == "molecular_multiplicity":
+               self.multiplicity = data
+            elif field == "real":
+               self.real = data
+             
 
 
     def _molecule_from_numpy(self, arr, frags):
@@ -382,7 +419,7 @@ class Molecule(object):
 
             ret.fragment_charges.append(float(self.fragment_charges[frag]))
             ret.fragment_multiplicities.append(self.fragment_multiplicities[frag])
-
+ 
         # Set charge and multiplicity
         ret.charge = sum(ret.fragment_charges)
         ret.multiplicity = sum(x - 1 for x in ret.fragment_multiplicities)
