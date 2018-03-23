@@ -100,7 +100,7 @@ class Database(object):
             self.query(q[0], **q[1])
         return True
 
-    def _unroll_query(self, keys, stoich):
+    def _unroll_query(self, keys, stoich, **kwargs):
 
         tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
         tmp_idx = tmp_idx.reset_index(drop=True)
@@ -109,7 +109,9 @@ class Database(object):
         umols, uidx = np.unique(tmp_idx["molecule_hash"], return_index=True)
 
         # Evaluate the overall dataframe
-        values = self.mongod.mongod_query("evaluate", list(umols), list(keys))
+        if "field" in kwargs and kwargs["field"] is None:
+            del kwargs["field"]
+        values = self.mongod.mongod_query("evaluate", list(umols), list(keys), **kwargs)
 
         # Join on molecule hash
         tmp_idx = tmp_idx.join(values, on="molecule_hash")
@@ -136,6 +138,7 @@ class Database(object):
               postfix="",
               reaction_results=False,
               scale="kcal",
+              field=None,
               ignore_db_type=False):
         """
         Queries the local MongoSocket data for the requested keys and stoichiometry.
@@ -218,14 +221,14 @@ class Database(object):
 
         if (not ignore_db_type) and (self.data["db_type"].lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
-            tmp_idx_complex = self._unroll_query(keys, stoich)
-            tmp_idx_monomers = self._unroll_query(keys, monomer_stoich)
+            tmp_idx_complex = self._unroll_query(keys, stoich, field=field)
+            tmp_idx_monomers = self._unroll_query(keys, monomer_stoich, field=field)
 
             # Combine
             tmp_idx = tmp_idx_complex - tmp_idx_monomers
 
         else:
-            tmp_idx = self._unroll_query(keys, stoich)
+            tmp_idx = self._unroll_query(keys, stoich, field=field)
         tmp_idx.columns = [prefix + x + postfix for x in tmp_idx.columns]
 
         # scale
