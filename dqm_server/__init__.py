@@ -1,10 +1,9 @@
 """
-Main init function for Daten QM
+Main init function for dqm_server
 """
 
 # Import modules
 from . import mongo_helper
-from . import molecule
 from . import database
 from . import test_util
 from . import constants
@@ -17,3 +16,7 @@ from .molecule import Molecule
 from .database import Database
 from .client import Client
 from .mongo_helper import MongoSocket
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
