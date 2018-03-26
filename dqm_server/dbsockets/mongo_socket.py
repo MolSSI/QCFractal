@@ -8,7 +8,7 @@ import pandas as pd
 import hashlib
 import json
 import numpy as np
-from . import fields
+from dqm_client import fields
 
 
 class MongoSocket(object):
