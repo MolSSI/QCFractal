@@ -6,9 +6,11 @@ import sys
 import json
 import os
 
-import datenqm as dqm
+import datenqm as ds
 from datenqm import test_util
 import pytest
+
+import ds_server as ds
 
 _water_dimer_minima = """
 0 1
@@ -62,10 +64,10 @@ def _compare_rxn_stoichs(ref, new):
 # Build a interesting database
 @pytest.fixture
 def water_db():
-    db = dqm.Database("Water Data")
+    db = ds.Database("Water Data")
 
     # Build the water dimer.
-    dimer = dqm.Molecule(_water_dimer_minima)
+    dimer = ds.Molecule(_water_dimer_minima)
     frag_0 = dimer.get_fragment(0)
     frag_1 = dimer.get_fragment(1)
     frag_0_1 = dimer.get_fragment(0, 1)
@@ -113,9 +115,9 @@ def water_db():
 # Build a nbody database
 @pytest.fixture
 def nbody_db():
-    db = dqm.Database("N-Body Data")
+    db = ds.Database("N-Body Data")
 
-    dimer = dqm.Molecule(_water_dimer_minima, name="Water Dimer")
+    dimer = ds.Molecule(_water_dimer_minima, name="Water Dimer")
     frag_0 = dimer.get_fragment(0)
     frag_1 = dimer.get_fragment(1)
     frag_0_1 = dimer.get_fragment(0, 1)
@@ -214,7 +216,7 @@ def hbc_from_df():
     fn = os.path.abspath(os.path.dirname(__file__)) + "/../databases/DB_HBC6/HBC6.pd_pkl"
     df = pd.read_pickle(fn)
 
-    db = dqm.Database("HBC_6", db_type="ie")
+    db = ds.Database("HBC_6", db_type="ie")
 
     for idx, row in df.iterrows():
 
@@ -258,7 +260,7 @@ def hbc_from_df():
 @pytest.fixture(scope="module")
 def mongo_socket():
     db_name = "local_values_test"
-    ms = dqm.mongo_helper.MongoSocket("127.0.0.1", 27017, db_name)
+    ms = ds.mongo_helper.MongoSocket("127.0.0.1", 27017, db_name)
     for db_name in ms.client.database_names():
         ms.client.drop_database(db_name)
 
@@ -384,21 +386,21 @@ def test_dataframe_saving_loading(hbc_from_df):
     db = hbc_from_df
 
     tmp_db_name = "local_test_save_load"
-    mongo = dqm.mongo_helper.MongoSocket("127.0.0.1", 27017, tmp_db_name)
+    mongo = ds.mongo_helper.MongoSocket("127.0.0.1", 27017, tmp_db_name)
 
     # Dangerous, probably do not want a function that does this
     if tmp_db_name in mongo.client.database_names():
         mongo.client.drop_database(tmp_db_name)
 
     db.save(mongo)
-    db_from_save = dqm.Database(db.data["name"], socket=mongo)
+    db_from_save = ds.Database(db.data["name"], socket=mongo)
 
     assert db_from_save.rxn_index.shape[0] == 588
 
 
 def test_query(mongo_socket):
 
-    db = dqm.Database("HBC6", socket=mongo_socket)
+    db = ds.Database("HBC6", socket=mongo_socket)
     db.query("B3LYP/aug-cc-pVDZ", stoich="cp", prefix="cp-")
     db.query("B3LYP/adz", stoich="cp", reaction_results=True, scale=1.0)
 

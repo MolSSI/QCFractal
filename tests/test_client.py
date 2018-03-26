@@ -1,4 +1,3 @@
-import datenqm as dqm
 import pandas as pd
 import numpy as np
 import os
@@ -8,10 +7,12 @@ import pytest
 import shlex
 import signal
 
+import ds_server as ds
+
 @pytest.fixture(scope="module")
 def client_service():
 
-    server_path = os.path.dirname(__file__) + "/../datenqm/cli/dqm_server.py"
+    server_path = os.path.dirname(__file__) + "/../datenqm/cli/ds_server.py"
     run_string = "python \"" + server_path + "\""
 
     # Boot up the process and give it a second
@@ -20,7 +21,7 @@ def client_service():
     stop = False
     for x in range(15):
         try:
-            tmp = dqm.Client("http://localhost:8888", "client1_project")
+            tmp = ds.Client("http://localhost:8888", "client1_project")
             print("Client Booted!")
             stop = True
             del tmp
@@ -43,7 +44,7 @@ def test_client_auth(client_service):
     db_user = "TestUser"
     db_password = "Test1234"
 
-    client = dqm.Client("http://localhost:8888")
+    client = ds.Client("http://localhost:8888")
     mongo = client.get_MongoSocket()
     mongo.client.drop_database(local_db)
     mongo.client[local_db].add_user(db_user, db_password, roles=[{'role':'readWrite','db':local_db}])
@@ -51,14 +52,14 @@ def test_client_auth(client_service):
     mongo.set_project("test_client_auth", username=db_user, password=db_password)
 
     del client
-    client = dqm.Client("http://localhost:8888", username=db_user, password=db_password)
+    client = ds.Client("http://localhost:8888", username=db_user, password=db_password)
     mongo = client.get_MongoSocket()
     mongo.set_project("test_client_auth")
 
 
 @pytest.mark.skip(reason="Rigged for Dask not Fireworks")
 def test_client1(client_service):
-    client = dqm.Client("http://localhost:8888", "client1_project")
+    client = ds.Client("http://localhost:8888", "client1_project")
 
     # Clear out previous mongo
     mongo = client.get_MongoSocket()
@@ -67,7 +68,7 @@ def test_client1(client_service):
     client.mongod_query("del_database_by_data", {"name": "H2"})
 
     # Add a new blank test set and submit
-    db = dqm.Database("H2", client)
+    db = ds.Database("H2", client)
     db.add_rxn(
         "He 2 - 5", [("""He 0 0 5\n--\nHe 0 0 -5""", 1.0), ("He 0 0 0", -2.0)],
         reaction_results={"Benchmark": -1.0})
@@ -78,7 +79,7 @@ def test_client1(client_service):
     db.save()
 
     # Re initialize the DB from JSON
-    db = dqm.Database("H2", client)
+    db = ds.Database("H2", client)
     assert db.data["name"] == "H2"
     assert len(db.data["reactions"]) == 2
 
@@ -103,7 +104,7 @@ def test_client1(client_service):
 @pytest.mark.skip(reason="Rigged for Dask not Fireworks")
 def test_client_ie(client_service):
 
-    client = dqm.Client("http://localhost:8888", "client2_project")
+    client = ds.Client("http://localhost:8888", "client2_project")
 
     # Clear out previous mongo
     mongo = client.get_MongoSocket()
@@ -111,7 +112,7 @@ def test_client_ie(client_service):
 
     client.mongod_query("del_database_by_data", {"name": "H2_IE"})
 
-    db = dqm.Database("H2_IE", client, db_type="IE")
+    db = ds.Database("H2_IE", client, db_type="IE")
     db.add_ie_rxn("he 2 - 5", """he 0 0 5\n--\nhe 0 0 -5""", reaction_results={"Benchmark": -1.0})
     db.add_ie_rxn(
         "CHNO",
@@ -120,7 +121,7 @@ def test_client_ie(client_service):
     db.save()
 
     # Re initialize the DB from JSON
-    db = dqm.Database("H2_IE", client)
+    db = ds.Database("H2_IE", client)
     assert db.data["name"] == "H2_IE"
     assert len(db.data["reactions"]) == 2
     assert db.data["db_type"] == "IE"

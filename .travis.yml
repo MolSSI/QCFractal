@@ -16,10 +16,14 @@ addons:
     packages:
     - mongodb-org-server
 
-python:
-    - 2.7
-    - 3.5
-    - 3.6
+matrix:
+  include:
+
+  - env:
+    - PYTHON_VER='3.5'
+
+  - env:
+    - PYTHON_VER='3.6'
 
 before_install:
   - uname -a
@@ -38,22 +42,19 @@ install:
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
   - conda info -a
-  - conda create -q -n mongo_qcdb python=$TRAVIS_PYTHON_VERSION numpy pandas pymongo pytest matplotlib dask distributed
-  - source activate mongo_qcdb
+  - conda create -q -n dqm_env python=$PYTHON_VER numpy pandas pymongo pytest
+  - source activate dqm_env
 
     # Install anything not in conda
   - pip install fireworks
-  - pip install codecov
-  - pip install pytest-cov
+  - pip install codecov pytest-cov
   - conda list
   - mongod --version
 
 before_script:
   - sleep 5
   - python -V
-  - python -c 'import numpy; print(numpy.version.version)'
   - pip install -e .
-  - export MONGO_PSI4=/tmp/
 
 script:
   - py.test -v --cov=./
