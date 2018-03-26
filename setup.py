@@ -2,12 +2,12 @@ import setuptools
 
 if __name__ == "__main__":
     setuptools.setup(
-        name='DatenQM',
+        name='dqm_server',
         version="alpha",
-        description='A MongoDB backend for QCDB',
+        description='A MongoDB backend for DQM',
         author='Daniel Smith',
-        author_email='dgasmith@gatech.edu',
-        url="https://github.com/psi4/mongo_qcdb",
+        author_email='dgasmith@vt.edu',
+        url="https://github.com/molssi/dqm_server",
         license='BSD-3C',
         packages=setuptools.find_packages(),
         install_requires=[
@@ -28,16 +28,12 @@ if __name__ == "__main__":
             'tests': [
                 'pytest',
                 'pytest-cov',
-                'pytest-pep8',
-                'tox',
             ],
         },
 
         tests_require=[
             'pytest',
             'pytest-cov',
-            'pytest-pep8',
-            'tox',
         ],
 
         classifiers=[
