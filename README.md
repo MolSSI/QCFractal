@@ -1,21 +1,21 @@
 <p align="center">
 
-<a href="https://travis-ci.org/psi4/DatenQM">
-   <img src="https://travis-ci.org/psi4/DatenQM.svg?branch=master" alt="Travis CI />
+<a href="https://travis-ci.org/MolSSI/dqm_server">
+   <img src="https://travis-ci.org/MolSSI/dqm_server.svg?branch=master" alt="Travis CI />
 <\a>
 
-<a href="https://codecov.io/gh/psi4/DatenQM">
-  <img src="https://codecov.io/gh/psi4/DatenQM/branch/master/graph/badge.svg" alt="Codecov" />
+<a href="https://codecov.io/gh/MolSSI/dqm_server">
+  <img src="https://codecov.io/gh/MolSSI/dqm_server/branch/master/graph/badge.svg" alt="Codecov" />
 </a>
 
 </p>
 
 # DatenQM
 
-At the highest level, DatenQM is an environment from which you can run PSI4 (and hopefully other) computations. Parameters to these computations can be accessed from the underlying persistent database, and the results of these computations are dumped into the same database after completion. This opens the door for centralized computing in computational chemistry. DatenQM is a python package.
+At the highest level, DatenQM is an environment from which you can run quantum chemistry computations. Parameters to these computations can be accessed from the underlying persistent database, and the results of these computations are dumped into the same database after completion. This opens the door for centralized computing in computational chemistry. DatenQM is a python package.
 
 
-Now, with less abstraction. DatenQM manages accesses and stores of PSI4 input and output data to and from an underlying Mongo database. It follows a client-server paradigm in which a client makes GET or POST requests to a remote qcdb_server to affect or access the database. These client functions wrap advanced queries which are useful to a computational chemistry researcher. Clients can also submit PSI4 jobs to a distributed computing cluster using Dask, so that users can turn off their computers as computations run on the server and have their results waiting in the database after completion.
+Now, with less abstraction. DatenQM manages accesses and stores of QC JSON input and output data to and from an underlying Mongo database. It follows a client-server paradigm in which a client makes GET or POST requests to a remote qcdb_server to affect or access the database. These client functions wrap advanced queries which are useful to a computational chemistry researcher. Clients can also submit QC jobs to a distributed computing cluster using Dask, so that users can turn off their computers as computations run on the server and have their results waiting in the database after completion.
 
 
 When using DatenQM’s functions, clients must define a “project” in which they want to work by providing project name as a parameter. Project workspaces allow for researchers to isolate their work on a centralized system and to provide temporary environments for testing new ideas. For example, all of a server’s data can be stored in a “master” project, and clients can use their functions to copy this data to their own project for manipulation and experimenting. 
