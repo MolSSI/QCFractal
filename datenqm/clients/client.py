@@ -4,9 +4,6 @@ import json
 from tornado import gen, httpclient, ioloop
 import pandas as pd
 
-from . import mongo_helper
-
-
 class Client(object):
     def __init__(self, port, project="default", username="", password=""):
         if "http" not in port:
@@ -15,14 +12,6 @@ class Client(object):
         self.project = project
         self.http_header = {"project": self.project, "username": username, "password": password}
         self.info = self.get_information()
-
-    def get_MongoSocket(self):
-        """
-        Builds a new MongoSocket from the internal data.
-        """
-        socket = mongo_helper.MongoSocket(*self.info["mongo_data"])
-        socket.set_project(self.project)
-        return socket
 
     @gen.coroutine
     def _query_server(self, function, method, body=None):
