@@ -15,49 +15,53 @@ addons:
     - mongodb-3.0-precise
     packages:
     - mongodb-org-server
+ 
+dist: trusty
 
 matrix:
   include:
-
-  - env:
-    - PYTHON_VER='3.5'
-
-  - env:
-    - PYTHON_VER='3.6'
+    - os: linux
+      python: 3.5
+      env: PYTHON_VER=3.5
+    - os: linux
+      python: 3.6
+      env: PYTHON_VER=3.6
 
 before_install:
+  # Additional info about the build
   - uname -a
   - free -m
   - df -h
   - ulimit -a
 
-install:
-    # Pull down a miniconda
-  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
+  # Setup python environment
+  - source devtools/travis-ci/install.sh
+  - python -V
 
-    # Build out the environment
-  - hash -r
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  - conda info -a
+install:
+    # Create test environment for package
   - conda create -q -n dqm_env python=$PYTHON_VER numpy pandas pymongo pytest
   - source activate dqm_env
+
+    # Install dqm_client from a tagged version
+  - pip install git+https://github.com/MolSSI/dqm_client
 
     # Install anything not in conda
   - pip install fireworks
   - pip install codecov pytest-cov
-  - conda list
-  - mongod --version
+
+    # Build and install package
+  - conda build --python=$PYTHON_VER devtools/conda-recipe
+  - conda install --yes --use-local project_name
 
 before_script:
   - sleep 5
   - python -V
-  - pip install -e .
+  - mongod --version
+  - conda list
 
 script:
-  - py.test -v --cov=./
+  - py.test -v --cov=dqm_server tests/
 
 notifications:
   email: false
