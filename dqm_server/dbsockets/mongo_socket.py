@@ -3,12 +3,16 @@ Database connection class which directly calls the PyMongo API to capture
 cammon subroutines.
 """
 
-import pymongo
 import pandas as pd
-import hashlib
-import json
 import numpy as np
-from dqm_client import fields
+
+try:
+    import pymongo
+except ImportError:
+    raise ImportError("Mongo db_socket requires pymongo, please install this python module or try a different db_socket.")
+
+# Pull in the hashing algorithms from the client
+from dqm_client import fields as dqm_fields
 
 
 class MongoSocket:
@@ -16,95 +20,51 @@ class MongoSocket:
     This is a Mongo QCDB socket class.
     """
 
-    def __init__(self, url, port, project=None, username=None, password=None, authMechanism="SCRAM-SHA-1", authSource=None, globalAuth=False):
+    def __init__(self, url, port, project="molssidb", username=None, password=None, authMechanism="SCRAM-SHA-1", authSource=None):
         """
         Constructs a new socket where url and port points towards a Mongod instance.
 
         """
         self.url = url
         self.port = port
-        self.username = username
-        self.password = password
-
 
         # Are we authenticating?
-        # config_path = os.path.expanduser("~/.mdbconfig.json")
-        # if (username or password) or os.path.exists(config_path):
-
-        #     # Read from config file
-        #     if not (username or password):
-        #         with open(config_path) as json_file:
-        #             data = json.load(json_file)
-        #         username = data["username"]
-        #         password = data["password"]
-        #         if "authMechanism" in list(data):
-        #             authMechanism = data["authMechanism"]
-        #         print("Using authentication from ~/.mdbconfig.json %s with %s authentication" % (username, authMechanism))
-        #     else:
-        #         print("Using supplied authentication %s with %s authentication" % (username, authMechanism))
-
-        #     url = 'mongodb://%s:%s@%s:%s/?authMechanism=%s' % (username, password, url, port, authMechanism)
-        #     print(url)
-        #     self.client = pymongo.MongoClient(url)
-        #     #self.client = pymongo.MongoClient(url, port, user=username, password=password, authMechanism=authMechanism, authSource="admin")
-
-        # # No authentication required
-        # else:
-        self.globalAuth = False
         if username:
-            if globalAuth:
-                self.globalAuth = True
-            self.client = pymongo.MongoClient(url, port, username=username, password=password, authMechanism=authMechanism, authSource="admin")
+            client = pymongo.MongoClient(url, port, username=username, password=password, authMechanism=authMechanism, authSource=authSource)
         else:
-            self.client = pymongo.MongoClient(url, port)
+            client = pymongo.MongoClient(url, port)
 
-        if (project != None):
-            self.set_project(project)
-        else:
-            self.set_project("default")
+        # Isolate objects to this singel project DB
+        self.project_name = project
+        self.project = self.client[project]
+        new_collections = self.init_database()
+        for k, v in new_collections:
+            if v:
+                print("New collection '%s' for database!" % k)
 
     def __repr__(self):
-        return "<MongoSocket: address='%s:%d'>" % (self.url, self.port)
+        return "<MongoSocket: address='%s:%d:%s'>" % (self.url, self.port, self.project_name)
 
-    def set_project(self, project, username=None, password=None):
-        # Success dictionary and collections to create
-        success = {}
-        collection_creation = {}
-
-        # Create DB
-        self.project = self.client[project]
-        if self.globalAuth:
-            pass
-        elif username:
-            self.project.authenticate(username, password)
-        elif self.username is not None:
-            self.project.authenticate("admin." + self.username, self.password)
-        success["project"] = self.project
-
+    def init_database(self):
+        """
+        Builds out the initial project structure.
+        """
         # Try to create a collection for each entry
-        collections = {"molecules", "databases", "pages"}
+        collections = {"molecules", "databases", "pages", "options"}
         for stri in collections:
             try:
                 self.project.create_collection(stri)
                 collection_creation[stri] = 1
             except pymongo.errors.CollectionInvalid:
                 collection_creation[stri] = 0
-        success["collection_creation"] = collection_creation
 
         # Return the success array, where a value of 1 means successful
-        return success
+        return collection_creation
 
-    def get_project(self, project):
-        new_project = self.client[project]
-        collections = {"molecules", "databases", "pages"}
-        for stri in collections:
-            try:
-                new_project.create_collection(stri)
-            except pymongo.errors.CollectionInvalid:
-                pass
-        return new_project
+    def get_project_name(self):
+        return self.project_name
 
-    def add_molecule(self, data, project=None):
+    def add_molecule(self, data):
         """
         Adds a molecule to the database.
 
@@ -123,7 +83,7 @@ class MongoSocket:
 
         return self.add_generic(data, "molecules", project)
 
-    def add_database(self, data, project=None):
+    def add_database(self, data):
         """
         Adds a database to the database.
 
@@ -142,7 +102,7 @@ class MongoSocket:
 
         return self.add_generic(data, "databases", project)
 
-    def add_page(self, data, project=None):
+    def add_page(self, data):
         """
         Adds a page to the database.
 
@@ -161,17 +121,14 @@ class MongoSocket:
 
         return self.add_generic(data, "pages", project)
 
-    def add_generic(self, data, collection, project):
+    def add_generic(self, data, collection):
         """
         Helper function that facilitates adding a record.
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
-        sha1 = fields.get_hash(data, collection)
+        sha1 = dqm_fields.get_hash(data, collection)
         try:
             data["_id"] = sha1
-            selected_project[collection].insert_one(data)
+            self.project[collection].insert_one(data)
             return True
         except pymongo.errors.DuplicateKeyError:
             return False
@@ -180,32 +137,30 @@ class MongoSocket:
         """
         Helper function that facilitates deletion based on hash.
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
         if isinstance(hashes, str):
-            return (selected_project[collection].delete_one({"_id": hashes})).deleted_count == 1
+            return (self.project[collection].delete_one({"_id": hashes})).deleted_count == 1
         elif isinstance(hashes, list):
-            ret = (selected_project[collection].delete_many({"_id": {"$in" : hashes}})).deleted_count
-            return ret
+            return (self.project[collection].delete_many({"_id": {"$in" : hashes}})).deleted_count
+        else:
+            raise TypeError("Hashes type not recognized")
 
 
     def del_by_data(self, collection, data, project):
         """
         Helper function that facilitates deletion based on structured dict.
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
+        self.project = self.project
         if isinstance(data, dict):
-            return self.del_by_hash(collection, fields.get_hash(data, collection), project)
+            return self.del_by_hash(collection, dqm_fields.get_hash(data, collection), self.project)
         elif isinstance(data, list):
             arr = []
             for item in data:
-                arr.append(fields.get_hash(item, collection))
+                arr.append(dqm_fields.get_hash(item, collection))
             return self.del_by_hash(collection, arr, project)
+        else:
+            raise TypeError("Data type not recognized")
 
-    def del_molecule_by_data(self, data, project=None):
+    def del_molecule_by_data(self, data):
         """
         Removes a molecule from the database from its raw data.
 
@@ -220,9 +175,9 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.del_by_data("molecules", data, project)
+        return self.del_by_data("molecules", data)
 
-    def del_molecule_by_hash(self, hash_val, project=None):
+    def del_molecule_by_hash(self, hash_val):
         """
         Removes a molecule from the database from its hash.
 
@@ -237,9 +192,9 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.del_by_hash("molecules", hash_val, project)
+        return self.del_by_hash("molecules", hash_val)
 
-    def del_database_by_data(self, data, project=None):
+    def del_database_by_data(self, data):
         """
         Removes a database from the database from its raw data.
 
@@ -254,9 +209,9 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.del_by_data("databases", data, project)
+        return self.del_by_data("databases", data)
 
-    def del_database_by_hash(self, hash_val, project=None):
+    def del_database_by_hash(self, hash_val):
         """
         Removes a database from the database from its hash.
 
@@ -271,9 +226,9 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.del_by_hash("databases", hash_val, project)
+        return self.del_by_hash("databases", hash_val)
 
-    def del_page_by_data(self, data, project=None):
+    def del_page_by_data(self, data):
         """
         Removes a page from the database from its raw data.
 
@@ -288,9 +243,9 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.del_by_data("pages", data, project)
+        return self.del_by_data("pages")
 
-    def del_page_by_hash(self, hash_val, project=None):
+    def del_page_by_hash(self, hash_val):
         """
         Removes a page from the database from its hash.
 
@@ -305,9 +260,9 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.del_by_hash("pages", hash_val, project)
+        return self.del_by_hash("pages", hash_val)
 
-    def evaluate(self, hashes, methods, field="return_value", project=None):
+    def evaluate(self, hashes, methods, field="return_value"):
         """
         Queries monogod for all pages containing a molecule specified in
         `hashes` and a method specified in `methods`. For all matches, finds
@@ -335,13 +290,10 @@ class MongoSocket:
         Empty cells will contain NaN.
 
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
         hashes = list(hashes)
         methods = list(methods)
         command = [{"$match": {"molecule_hash": {"$in": hashes}, "modelchem": {"$in": methods}}}]
-        pages = list(selected_project["pages"].aggregate(command))
+        pages = list(self.project["pages"].aggregate(command))
         d = {}
         for mol in hashes:
             for method in methods:
@@ -359,7 +311,7 @@ class MongoSocket:
             methods = [methods]
         return pd.DataFrame(data=d, index=methods).transpose()
 
-    def evaluate_2(self, hashes, fields, method, project=None):
+    def evaluate_2(self, hashes, fields, method):
         """
         Queries monogod for all pages containing a molecule specified in
         `hashes` of method `method`. For all matches, finds the values in each
@@ -387,12 +339,9 @@ class MongoSocket:
         Empty cells will contain NaN.
 
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
         hashes = list(hashes)
         command = [{"$match": {"molecule_hash": {"$in": hashes}, "modelchem": method}}]
-        pages = list(selected_project["pages"].aggregate(command))
+        pages = list(self.project["pages"].aggregate(command))
         d = {}
         for mol in hashes:
             for field in fields:
@@ -409,7 +358,7 @@ class MongoSocket:
                     pass
         return pd.DataFrame(data=d, index=[fields]).transpose()
 
-    def list_methods(self, hashes, project=None):
+    def list_methods(self, hashes):
         """
         Displays all methods that are used by each molecule in `hashes`.
 
@@ -426,12 +375,9 @@ class MongoSocket:
             a method used by the molecule in that row.
 
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
         d = {}
         for mol in hashes:
-            records = list(selected_project["pages"].find({"molecule_hash": mol}))
+            records = list(self.project["pages"].find({"molecule_hash": mol}))
             d[mol] = []
             for rec in records:
                 d[mol].append(rec["modelchem"])
@@ -439,7 +385,7 @@ class MongoSocket:
         df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in d.items()])).transpose()
         return df
 
-    def search_qc_variable(self, hashes, field, project=None):
+    def search_qc_variable(self, hashes, field):
         """
         Displays the first `field` value for each molecule in `hashes`.
 
@@ -458,9 +404,6 @@ class MongoSocket:
             contains the field value for the molecule in that row.
 
         """
-        selected_project = self.project
-        if (project != None):
-            selected_project = self.get_project(project)
         d = {}
         for mol in hashes:
             command = [{
@@ -475,71 +418,13 @@ class MongoSocket:
                     }
                 }
             }]
-            pages = list(selected_project["pages"].aggregate(command))
+            pages = list(self.project["pages"].aggregate(command))
             if (len(pages) == 0 or len(pages[0]["value"]) == 0):
                 d[mol] = None
             else:
                 d[mol] = pages[0]["value"][0]
         return pd.DataFrame(data=d, index=[field]).transpose()
 
-    def list_projects(self):
-        """
-        Lists the databases in this mongod instance
-
-        Returns
-        -------
-        projects : list
-            List of database names.
-        """
-        projects = []
-        for project_name in self.client.database_names():
-            projects.append(project_name)
-        return projects
-
-    def push_to(self, url, port, remote_project, project=None):
-        """
-        Inserts all documents from the local project into the remote one.
-
-        Parameters
-        ----------
-        url : str
-            Connection string.
-        port : str
-            Connection port.
-        remote_project : str
-            Name of remote project.
-        """
-        self.generic_copy(url, port, remote_project, False, project)
-
-    def clone_to(self, url, port, remote_project, project=None):
-        """
-        Replaces the remote project with the local one.
-
-        Parameters
-        ----------
-        url : str
-            Connection string.
-        port : str
-            Connection port.
-        remote_project : str
-            Name of remote project.
-        """
-        self.generic_copy(url, port, remote_project, True, project)
-
-    def generic_copy(self, url, port, remote_project, delete, local_project):
-        """
-            Helper function for facilitating syncing.
-        """
-        selected_project = self.project
-        if (local_project != None):
-            selected_project = self.get_project(local_project)
-        remote = MongoSocket(url, port)
-        if (delete):
-            remote.client.drop_database(remote_project)
-        for col in ["molecules", "databases", "pages"]:
-            cursor = selected_project[col].find({})
-            for item in cursor:
-                remote.add_generic(item, col, local_project)
 
     def get_value(self, field, db, rxn, stoich, method, do_stoich=True, debug_level=1):
         command = [{
