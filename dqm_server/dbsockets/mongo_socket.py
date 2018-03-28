@@ -11,7 +11,7 @@ import numpy as np
 from dqm_client import fields
 
 
-class MongoSocket(object):
+class MongoSocket:
     """
     This is a Mongo QCDB socket class.
     """

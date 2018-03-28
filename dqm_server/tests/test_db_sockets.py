@@ -1,3 +1,7 @@
+"""
+Tests the database wrappers
+"""
+
 import pytest
 import numpy as np
 import datenqm as dqm
