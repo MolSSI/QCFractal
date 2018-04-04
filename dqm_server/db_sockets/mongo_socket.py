@@ -163,44 +163,12 @@ class MongoSocket:
         Helper function that facilitates deletion based on hash.
         """
         if isinstance(hashes, str):
-            return (self.project[collection].delete_one({"_id": hashes})).deleted_count == 1
+            return (self._project[collection].delete_one({"_id": hashes})).deleted_count == 1
         elif isinstance(hashes, list):
-            return (self.project[collection].delete_many({"_id": {"$in" : hashes}})).deleted_count
+            return (self._project[collection].delete_many({"_id": {"$in" : hashes}})).deleted_count
         else:
             raise TypeError("Hashes type not recognized")
 
-
-    def del_by_data(self, collection, data):
-        """
-        Helper function that facilitates deletion based on structured dict.
-        """
-        self.project = self.project
-        if isinstance(data, dict):
-            return self.del_by_hash(collection, dqm_fields.get_hash(data, collection), self.project)
-        elif isinstance(data, list):
-            arr = []
-            for item in data:
-                arr.append(dqm_fields.get_hash(item, collection))
-            return self.del_by_hash(collection, arr)
-        else:
-            raise TypeError("Data type not recognized")
-
-    def del_molecule_by_data(self, data):
-        """
-        Removes a molecule from the database from its raw data.
-
-        Parameters
-        ----------
-        data : dict or list of dicts
-            Structured instance of the molecule.
-
-        Returns
-        -------
-        bool
-            Whether the operation was successful.
-        """
-
-        return self.del_by_data("molecules", data)
 
     def del_molecule_by_hash(self, hash_val):
         """
@@ -219,23 +187,6 @@ class MongoSocket:
 
         return self.del_by_hash("molecules", hash_val)
 
-    def del_database_by_data(self, data):
-        """
-        Removes a database from the database from its raw data.
-
-        Parameters
-        ----------
-        data : dict or list of dicts
-            Structured instance of the database.
-
-        Returns
-        -------
-        bool
-            Whether the operation was successful.
-        """
-
-        return self.del_by_data("databases", data)
-
     def del_database_by_hash(self, hash_val):
         """
         Removes a database from the database from its hash.
@@ -253,22 +204,6 @@ class MongoSocket:
 
         return self.del_by_hash("databases", hash_val)
 
-    def del_page_by_data(self, data):
-        """
-        Removes a page from the database from its raw data.
-
-        Parameters
-        ----------
-        data : dict or list of dicts
-            Structured instance of the page.
-
-        Returns
-        -------
-        bool
-            Whether the operation was successful.
-        """
-
-        return self.del_by_data("pages")
 
     def del_page_by_hash(self, hash_val):
         """

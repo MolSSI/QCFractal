@@ -40,7 +40,7 @@ before_install:
 
 install:
     # Create test environment for package
-  - conda create -q -n dqm_env python=$PYTHON_VER numpy pandas pymongo pytest
+  - conda create -q -n --yes dqm_env python=$PYTHON_VER numpy pandas pymongo pytest
   - source activate dqm_env
 
     # Install dqm_client from a tagged version

@@ -41,6 +41,10 @@ def test_molecule_add(db_socket):
     water_db = dclient.Molecule.from_json(db_json)
     water_db.compare(water)
 
+    # Cleanup adds
+    ret = db_socket.del_molecule_by_hash(water.get_hash())
+    assert ret == 1
+
 
 def test_molecule_add_many(db_socket):
     water = dclient.data.get_molecule("water_dimer_minima.psimol")
@@ -48,3 +52,7 @@ def test_molecule_add_many(db_socket):
 
     ret = db_socket.add_molecules([water.to_json(), water2.to_json()])
     assert ret["nInserted"] == 2
+
+    # Cleanup adds
+    ret = db_socket.del_molecule_by_hash([water.get_hash(), water2.get_hash()])
+    assert ret == 2
