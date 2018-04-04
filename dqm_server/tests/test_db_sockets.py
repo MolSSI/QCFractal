@@ -26,12 +26,25 @@ def db_socket(request):
 
 
 def test_molecule_add(db_socket):
-    
+
     water = dclient.data.get_molecule("water_dimer_minima.psimol")
-    water2 = dclient.data.get_molecule("water_dimer_stretch.psimol")
-    
-    ret = db_socket.add_molecules(water.to_json()) 
+
+    # Try duplicate adds
+    ret = db_socket.add_molecules(water.to_json())
     assert ret["nInserted"] == 1
-    ret = db_socket.add_molecules(water.to_json()) 
+    ret = db_socket.add_molecules(water.to_json())
     assert ret["nInserted"] == 0
     assert ret["errors"][0] == (water.get_hash(), 11000)
+
+    # Pull molecule from the DB for tests
+    db_json = db_socket.get_molecule(water.get_hash())
+    water_db = dclient.Molecule.from_json(db_json)
+    water_db.compare(water)
+
+
+def test_molecule_add_many(db_socket):
+    water = dclient.data.get_molecule("water_dimer_minima.psimol")
+    water2 = dclient.data.get_molecule("water_dimer_stretch.psimol")
+
+    ret = db_socket.add_molecules([water.to_json(), water2.to_json()])
+    assert ret["nInserted"] == 2

@@ -578,13 +578,13 @@ class MongoSocket:
 
     # Do a lookup on the pages collection using a <molecule, method> key.
     def get_page(self, molecule_hash, method):
-        return self.project["pages"].find_one({"molecule_hash": molecule_hash, "modelchem": method})
+        return self._project["pages"].find_one({"molecule_hash": molecule_hash, "modelchem": method})
 
     def get_database(self, name):
-        return self.project["databases"].find_one({"name": name})
+        return self._project["databases"].find_one({"name": name})
 
     def get_molecule(self, molecule_hash):
-        return self.project["molecules"].find_one({"_id": molecule_hash})
+        return self._project["molecules"].find_one({"_id": molecule_hash})
 
     def json_query(self, json_data):
         """
