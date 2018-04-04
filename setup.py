@@ -4,7 +4,6 @@ import versioneer
 if __name__ == "__main__":
     setuptools.setup(
         name='dqm_server',
-        version="alpha",
         description='A MongoDB backend for DQM',
         author='Daniel Smith',
         author_email='dgasmith@vt.edu',
@@ -16,8 +15,6 @@ if __name__ == "__main__":
         install_requires=[
             'numpy>=1.7',
             'pymongo>=3.0',
-            'dask>=0.15',
-            'distributed>=1.18',
             'matplotlib>=2.0',
             'pymongo>=3.0',
         ],
