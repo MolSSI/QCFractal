@@ -12,7 +12,7 @@ except ImportError:
     raise ImportError("Mongo db_socket requires pymongo, please install this python module or try a different db_socket.")
 
 # Pull in the hashing algorithms from the client
-from dqm_client import fields as dqm_fields
+import dqm_client as dc
 
 
 class MongoSocket:
@@ -25,55 +25,59 @@ class MongoSocket:
         Constructs a new socket where url and port points towards a Mongod instance.
 
         """
-        self.url = url
-        self.port = port
+
+        # Static data
+        self._valid_collections = {"molecules", "databases", "pages", "options"}
+
+        self._url = url
+        self._port = port
 
         # Are we authenticating?
         if username:
-            client = pymongo.MongoClient(url, port, username=username, password=password, authMechanism=authMechanism, authSource=authSource)
+            self.client = pymongo.MongoClient(url, port, username=username, password=password, authMechanism=authMechanism, authSource=authSource)
         else:
-            client = pymongo.MongoClient(url, port)
+            self.client = pymongo.MongoClient(url, port)
 
-        # Isolate objects to this singel project DB
-        self.project_name = project
-        self.project = self.client[project]
+        # Isolate objects to this single project DB
+        self._project_name = project
+        self._project = self.client[project]
+
         new_collections = self.init_database()
-        for k, v in new_collections:
+        for k, v in new_collections.items():
             if v:
                 print("New collection '%s' for database!" % k)
 
+
     def __repr__(self):
-        return "<MongoSocket: address='%s:%d:%s'>" % (self.url, self.port, self.project_name)
+        return "<MongoSocket: address='%s:%d:%s'>" % (self._url, self._port, self._project_name)
 
     def init_database(self):
         """
         Builds out the initial project structure.
         """
         # Try to create a collection for each entry
-        collections = {"molecules", "databases", "pages", "options"}
-        for stri in collections:
+        collection_creation = {}
+        for col in self._valid_collections:
             try:
-                self.project.create_collection(stri)
-                collection_creation[stri] = 1
+                self._project.create_collection(col)
+                collection_creation[col] = True
             except pymongo.errors.CollectionInvalid:
-                collection_creation[stri] = 0
+                collection_creation[col] = False
 
-        # Return the success array, where a value of 1 means successful
+        # Return the success array
         return collection_creation
 
     def get_project_name(self):
-        return self.project_name
+        return self._project_name
 
-    def add_molecule(self, data):
+    def add_molecules(self, data):
         """
         Adds a molecule to the database.
 
         Parameters
         ----------
-        data : dict
+        data : dict or list of dict
             Structured instance of the molecule.
-        project : str
-            Name of project to write to.
 
         Returns
         -------
@@ -81,7 +85,27 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.add_generic(data, "molecules", project)
+        # If only a single promote it to a list
+        if isinstance(data, dict):
+            data = [data]
+
+        new_mols = []
+        for dmol in data:
+            # Verifies and correctly computes json
+            mol = dc.Molecule(dmol, dtype="json")
+
+            dmol = mol.to_json()
+            dmol["_id"] = mol.get_hash()
+
+            new_mols.append(dmol)
+#-        try:
+#-            data["_id"] = sha1
+#-            self.project[collection].insert_one(data)
+#-            return True
+#-        except pymongo.errors.DuplicateKeyError:
+#-            return False
+            
+        return self._add_generic(new_mols, "molecules")
 
     def add_database(self, data):
         """
@@ -91,8 +115,6 @@ class MongoSocket:
         ----------
         data : dict
             Structured instance of the database.
-        project : str
-            Name of project to write to.
 
         Returns
         -------
@@ -100,7 +122,7 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.add_generic(data, "databases", project)
+        return self.add_generic(data, "databases")
 
     def add_page(self, data):
         """
@@ -110,8 +132,6 @@ class MongoSocket:
         ----------
         data : dict
             Structured instance of the page.
-        project : str
-            Name of project to write to.
 
         Returns
         -------
@@ -119,21 +139,26 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.add_generic(data, "pages", project)
+        return self.add_generic(data, "pages")
 
-    def add_generic(self, data, collection):
+    def _add_generic(self, data, collection):
         """
         Helper function that facilitates adding a record.
         """
-        sha1 = dqm_fields.get_hash(data, collection)
-        try:
-            data["_id"] = sha1
-            self.project[collection].insert_one(data)
-            return True
-        except pymongo.errors.DuplicateKeyError:
-            return False
 
-    def del_by_hash(self, collection, hashes, project):
+        ret = {}
+        try:
+            tmp = self._project[collection].insert_many(data, ordered=False)
+            ret["success"] = tmp.acknowledged
+            ret["nInserted"] = len(tmp.inserted_ids)
+            ret["errors"] = []
+        except pymongo.errors.BulkWriteError as tmp:
+            ret["success"] = False
+            ret["nInserted"] = tmp.details["nInserted"]
+            ret["errors"] = [(x["op"]["_id"], x["code"]) for x in tmp.details["writeErrors"]]
+        return ret
+
+    def del_by_hash(self, collection, hashes):
         """
         Helper function that facilitates deletion based on hash.
         """
@@ -145,7 +170,7 @@ class MongoSocket:
             raise TypeError("Hashes type not recognized")
 
 
-    def del_by_data(self, collection, data, project):
+    def del_by_data(self, collection, data):
         """
         Helper function that facilitates deletion based on structured dict.
         """
@@ -156,7 +181,7 @@ class MongoSocket:
             arr = []
             for item in data:
                 arr.append(dqm_fields.get_hash(item, collection))
-            return self.del_by_hash(collection, arr, project)
+            return self.del_by_hash(collection, arr)
         else:
             raise TypeError("Data type not recognized")
 

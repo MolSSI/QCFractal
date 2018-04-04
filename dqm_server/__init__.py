@@ -3,7 +3,7 @@ Main init function for dqm_server
 """
 
 # Import modules
-from .dbsockets import db_socket_factory 
+from .db_sockets import db_socket_factory 
 # from . import mongo_helper
 # from . import database
 # from . import test_util
