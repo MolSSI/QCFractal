@@ -35,7 +35,7 @@ before_install:
   - ulimit -a
 
   # Setup python environment
-  - source devtools/travis-ci/install.sh
+  - source devtools/travis-ci/before_install.sh
   - python -V
 
 install:
@@ -47,12 +47,13 @@ install:
   - pip install git+https://github.com/MolSSI/dqm_client
 
     # Install anything not in conda
-  - pip install fireworks
+#  - pip install fireworks
   - pip install codecov pytest-cov
 
     # Build and install package
-  - conda build --python=$PYTHON_VER devtools/conda-recipe
-  - conda install --yes --use-local project_name
+   - pip install -e .
+#  - conda build --python=$PYTHON_VER devtools/conda-recipe
+#  - conda install --yes --use-local project_name
 
 before_script:
   - sleep 5
