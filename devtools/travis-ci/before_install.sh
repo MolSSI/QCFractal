@@ -27,6 +27,7 @@ export PIP_ARGS="-U"
 export PATH=$MINICONDA_HOME/bin:$PATH
     
 conda config --add channels conda-forge
+conda config --set always_yes yes
     
 conda install --yes conda conda-build jinja2 anaconda-client
 conda update --quiet --yes --all

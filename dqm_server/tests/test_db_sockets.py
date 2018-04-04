@@ -29,9 +29,11 @@ def test_molecule_add(db_socket):
 
     water = dclient.data.get_molecule("water_dimer_minima.psimol")
 
-    # Try duplicate adds
+    # Add once
     ret = db_socket.add_molecules(water.to_json())
     assert ret["nInserted"] == 1
+
+    # Try duplicate adds
     ret = db_socket.add_molecules(water.to_json())
     assert ret["nInserted"] == 0
     assert ret["errors"][0] == (water.get_hash(), 11000)
