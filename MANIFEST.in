@@ -1,0 +1,9 @@
+recursive-include dqm_server *.py
+
+include setup.py
+include README.md
+include LICENSE
+include MANIFEST.in
+
+include versioneer.py
+include dqm_server/_version.py
