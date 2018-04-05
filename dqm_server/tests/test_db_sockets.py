@@ -58,3 +58,17 @@ def test_molecule_add_many(db_socket):
     # Cleanup adds
     ret = db_socket.del_molecule_by_hash([water.get_hash(), water2.get_hash()])
     assert ret == 2
+
+
+def test_options_add(db_socket):
+
+    opts = dclient.data.get_options("psi_default")
+
+    ret = db_socket.add_options(opts)
+    assert ret["nInserted"] == 1
+
+    ret = db_socket.add_options(opts)
+    assert ret["nInserted"] == 0
+
+
+    assert opts == db_socket.get_option(opts["name"], opts["program"])

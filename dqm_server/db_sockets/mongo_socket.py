@@ -6,6 +6,8 @@ cammon subroutines.
 import pandas as pd
 import numpy as np
 
+import dqm_client as dc
+
 try:
     import pymongo
 except ImportError:
@@ -28,6 +30,11 @@ class MongoSocket:
 
         # Static data
         self._valid_collections = {"molecules", "databases", "pages", "options"}
+        self._collection_indices = {
+            "databases": ["name"],
+            "options": ["name", "program"],
+            "pages": ["molecule_hash", "method", "program", "option"]
+        }
 
         self._url = url
         self._port = port
@@ -61,8 +68,13 @@ class MongoSocket:
             try:
                 self._project.create_collection(col)
                 collection_creation[col] = True
+                if col in self._collection_indices:
+                    idx = [(x, pymongo.ASCENDING) for x in self._collection_indices[col]]
+                    self._project[col].create_index(idx)
+
             except pymongo.errors.CollectionInvalid:
                 collection_creation[col] = False
+
 
         # Return the success array
         return collection_creation
@@ -72,7 +84,7 @@ class MongoSocket:
 
     def add_molecules(self, data):
         """
-        Adds a molecule to the database.
+        Adds molecules to the database.
 
         Parameters
         ----------
@@ -91,21 +103,47 @@ class MongoSocket:
 
         new_mols = []
         for dmol in data:
-            # Verifies and correctly computes json
-            mol = dc.Molecule(dmol, dtype="json")
+            mol = dc.Molecule(dmol, dtype="json", orient=False)
 
-            dmol = mol.to_json()
+            dmol = mol.to_json() # To JSON runs the validator
             dmol["_id"] = mol.get_hash()
 
             new_mols.append(dmol)
-#-        try:
-#-            data["_id"] = sha1
-#-            self.project[collection].insert_one(data)
-#-            return True
-#-        except pymongo.errors.DuplicateKeyError:
-#-            return False
-            
+
         return self._add_generic(new_mols, "molecules")
+
+    def add_options(self, data):
+        """
+        Adds options to the database.
+
+        Parameters
+        ----------
+        data : dict or list of dict
+            Structured instance of the options.
+
+        Returns
+        -------
+        bool
+            Whether the operation was successful.
+        """
+
+        # If only a single promote it to a list
+        if isinstance(data, dict):
+            data = [data]
+
+        new_options = []
+        validation_errors = []
+        for dopt in data:
+
+            error = dc.schema.validate(dopt, "options", return_errors=True)
+            if error is True:
+                new_options.append(dopt)
+            else:
+                validation_errors.append((dopt, error))
+
+        ret = self._add_generic(new_options, "options")
+        ret["validation_errors"] = validation_errors
+        return ret
 
     def add_database(self, data):
         """
@@ -517,6 +555,9 @@ class MongoSocket:
 
     def get_database(self, name):
         return self._project["databases"].find_one({"name": name})
+
+    def get_option(self, name, program):
+        return self._project["options"].find_one({"name": name, "program": program})
 
     def get_molecule(self, molecule_hash):
         return self._project["molecules"].find_one({"_id": molecule_hash})
