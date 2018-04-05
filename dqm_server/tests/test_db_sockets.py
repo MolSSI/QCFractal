@@ -12,17 +12,21 @@ import dqm_client as dclient
 
 @pytest.fixture(scope="module", params=["mongo"])
 def db_socket(request):
+    print("")
     db_name = "dqm_local_values_test"
-    db = dserver.db_socket_factory("127.0.0.1", 27017, db_name, db_type=request.param)
 
     # IP/port/drop table is specific to build
     if request.param == "mongo":
-        if db_name in db.client.database_names():
-            db.client.drop_database(db_name)
+        db = dserver.db_socket_factory("127.0.0.1", 27017, db_name, db_type=request.param)
     else:
         raise KeyError("DB type %s not understood" % request.param)
 
-    return db
+    yield db
+
+    if request.param == "mongo":
+        db.client.drop_database(db_name)
+    else:
+        raise KeyError("DB type %s not understood" % request.param)
 
 
 def test_molecule_add(db_socket):
@@ -55,9 +59,14 @@ def test_molecule_add_many(db_socket):
     ret = db_socket.add_molecules([water.to_json(), water2.to_json()])
     assert ret["nInserted"] == 2
 
+    ret = db_socket.get_molecules([water.get_hash(), water2.get_hash(), "something"])
+    assert len(ret) == 2
+
     # Cleanup adds
     ret = db_socket.del_molecule_by_hash([water.get_hash(), water2.get_hash()])
     assert ret == 2
+
+
 
 
 def test_options_add(db_socket):
@@ -70,5 +79,14 @@ def test_options_add(db_socket):
     ret = db_socket.add_options(opts)
     assert ret["nInserted"] == 0
 
-
     assert opts == db_socket.get_option(opts["name"], opts["program"])
+
+def test_options_error(db_socket):
+    opts = dclient.data.get_options("psi_default")
+
+    del opts["name"]
+    ret = db_socket.add_options(opts)
+    assert ret["nInserted"] == 0
+    assert len(ret["validation_errors"]) == 1
+
+

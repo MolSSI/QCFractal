@@ -68,13 +68,14 @@ class MongoSocket:
             try:
                 self._project.create_collection(col)
                 collection_creation[col] = True
-                if col in self._collection_indices:
-                    idx = [(x, pymongo.ASCENDING) for x in self._collection_indices[col]]
-                    self._project[col].create_index(idx)
 
             except pymongo.errors.CollectionInvalid:
                 collection_creation[col] = False
 
+        # Build the indices
+        for col, indices in self._collection_indices.items():
+            idx = [(x, pymongo.ASCENDING) for x in indices]
+            self._project[col].create_index(idx)
 
         # Return the success array
         return collection_creation
@@ -184,7 +185,10 @@ class MongoSocket:
         Helper function that facilitates adding a record.
         """
 
-        ret = {}
+        ret = {"errors": [], "nInserted": 0, "success": False}
+        if len(data) == 0:
+            return ret
+
         try:
             tmp = self._project[collection].insert_many(data, ordered=False)
             ret["success"] = tmp.acknowledged
@@ -561,6 +565,9 @@ class MongoSocket:
 
     def get_molecule(self, molecule_hash):
         return self._project["molecules"].find_one({"_id": molecule_hash})
+
+    def get_molecules(self, molecule_hash):
+        return self._project["molecules"].find({"_id": {"$in": molecule_hash}})
 
     def json_query(self, json_data):
         """
