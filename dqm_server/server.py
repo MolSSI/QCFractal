@@ -2,28 +2,32 @@ import logging
 
 import tornado.ioloop
 import tornado.web
+from tornado import gen
 
 from . import web_handlers
 from . import db_sockets
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
+
 class DQMServer(object):
-    def __init__(self,
+    def __init__(
+            self,
 
-        # Server info options
-        port=8888,
+            # Server info options
+            port=8888,
+            io_loop=None,
 
-        # Mongo options
-        db_ip="127.0.0.1",
-        db_port=27017,
-        db_username = None,
-        db_password=None,
-        db_type="mongo",
-        db_project_name="molssidb",
+            # Mongo options
+            db_ip="127.0.0.1",
+            db_port=27017,
+            db_username=None,
+            db_password=None,
+            db_type="mongo",
+            db_project_name="molssidb",
 
-        # Log options
-        logfile_name=None):
+            # Log options
+            logfile_name=None):
 
         # Save local options
         self.port = port
@@ -43,10 +47,14 @@ class DQMServer(object):
         self.logger.info("Logfile set to %s\n" % logfile_name)
 
         # Setup the database connection
-        self.db = db_sockets.db_socket_factory(db_ip, db_port, project_name=db_project_name, username=db_username, password=db_password, db_type=db_type)
+        self.db = db_sockets.db_socket_factory(
+            db_ip, db_port, project_name=db_project_name, username=db_username, password=db_password, db_type=db_type)
 
         # Pull the loop if we need it
-        self.loop = tornado.ioloop.IOLoop.current()
+        if io_loop is None:
+            self.loop = tornado.ioloop.IOLoop.current()
+        else:
+            self.loop = io_loop
 
         # Secure args
 
@@ -87,6 +95,7 @@ class DQMServer(object):
         """
         Shuts down all IOLoops
         """
+        print("Shutting down")
         self.loop.stop()
 
 
