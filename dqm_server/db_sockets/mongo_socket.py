@@ -421,7 +421,7 @@ class MongoSocket:
                 }
             }]
             pages = list(self.project["pages"].aggregate(command))
-            if (len(pages) == 0 or len(pages[0]["value"]) == 0):
+            if len(pages) == 0 or len(pages[0]["value"]) == 0:
                 d[mol] = None
             else:
                 d[mol] = pages[0]["value"][0]
@@ -453,7 +453,7 @@ class MongoSocket:
         }]
         records = list(self.project["databases"].aggregate(command))
 
-        if (len(records) > 0):
+        if len(records) > 0:
             success = True
             molecules = records[0]["stoich"][0]
             res = []
@@ -475,14 +475,14 @@ class MongoSocket:
                     }
                 }]
                 page = list(self.project["pages"].aggregate(command))
-                if (len(page) == 0 or len(page[0]["value"]) == 0):
+                if len(page) == 0 or len(page[0]["value"]) == 0:
                     success = False
                     break
                 res.append(page[0]["value"][0])
                 # debug.log(debug_level, 2, (stoich_encoding))
 
-            if (success):
-                if (do_stoich):
+            if success:
+                if do_stoich:
                     acc = 0
                     for i in range(0, len(stoich_encoding)):
                         acc += float(res[i] * stoich_encoding[i])
@@ -490,7 +490,7 @@ class MongoSocket:
                 return res
 
         # debug.log(debug_level, 2, ("Fallback attempt"))
-        if (field == "return_value"):
+        if field == "return_value":
             command = [{
                 "$match": {
                     "name": db
@@ -514,13 +514,13 @@ class MongoSocket:
                 }
             }]
             page = list(self.project["databases"].aggregate(command))
-            if (len(page) > 0 and method in page[0]["reaction_results"][0]):
+            if len(page) > 0 and method in page[0]["reaction_results"][0]:
                 return page[0]["reaction_results"][0][method]
         return None
 
     def get_series(self, field, db, stoich, method, do_stoich=True, debug_level=1):
         database = self.project["databases"].find_one({"name": db})
-        if (database == None):
+        if database == None:
             return None
         res = []
         index = []
@@ -533,7 +533,7 @@ class MongoSocket:
 
     def get_dataframe(self, field, db, stoich, methods, do_stoich=True, debug_level=1):
         database = self.project["databases"].find_one({"name": db})
-        if (database == None):
+        if database == None:
             return None
 
         names = []
