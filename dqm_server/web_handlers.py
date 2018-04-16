@@ -18,7 +18,7 @@ class APIHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", "application/json")
         self.objects = objects
 
-        print(self.request.headers["Content-Type"])
+        #print(self.request.headers["Content-Type"])
         self.json = json.loads(self.request.body.decode("UTF-8"))
 
         # Set logging

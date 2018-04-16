@@ -42,13 +42,13 @@ install:
     # Create test environment for package
   - conda create -q -n dqm_env python=$PYTHON_VER numpy pandas pymongo pytest tornado
   - source activate dqm_env
+  - conda install codecov pytest-cov jsonschema -c conda-forge
 
     # Install dqm_client from a tagged version
-  - pip install git+https://github.com/MolSSI/dqm_client
+  - pip install -e git+https://github.com/MolSSI/dqm_client.git#egg=dqm_client
 
     # Install anything not in conda
 #  - pip install fireworks
-  - pip install codecov pytest-cov
 
     # Build and install package
   - pip install -e .

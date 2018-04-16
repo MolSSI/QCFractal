@@ -69,5 +69,5 @@ def server(request):
 def test_molecule(server):
 
 
-    ret = requests.get(server_address + "molecule" )
+    ret = requests.get(server_address + "molecule", json={})
 
