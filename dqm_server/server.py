@@ -33,7 +33,7 @@ class DQMServer(object):
         self.port = port
 
         # Setup logging.
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger("DQMServer")
         self.logger.setLevel(logging.INFO)
 
         if logfile_name is not None:
@@ -44,7 +44,7 @@ class DQMServer(object):
 
             self.logger.addHandler(handler)
 
-        self.logger.info("Logfile set to %s\n" % logfile_name)
+            self.logger.info("Logfile set to %s\n" % logfile_name)
 
         # Setup the database connection
         self.db = db_sockets.db_socket_factory(
@@ -68,7 +68,7 @@ class DQMServer(object):
             # (r"/information", dqm.handlers.Information, tornado_args),
             (r"/molecule", web_handlers.Molecule, tornado_args),
             # (r"/mongod", dqm.handlers.Mongod, tornado_args),
-        ])
+        ], compress_response=True)
         self.app.listen(self.port)
 
         # Add in periodic callbacks

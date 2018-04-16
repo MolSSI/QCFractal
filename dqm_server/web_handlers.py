@@ -3,6 +3,7 @@ from tornado.options import options, define
 import tornado.ioloop
 import tornado.web
 import pymongo
+import json
 
 class APIHandler(tornado.web.RequestHandler):
     """
@@ -17,16 +18,31 @@ class APIHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", "application/json")
         self.objects = objects
 
+        print(self.request.headers["Content-Type"])
+        self.json = json.loads(self.request.body.decode("UTF-8"))
+
         # Set logging
-        self.objects["logger"].info("INFO: %s" % self.request.method)
+        # print(self.request.method)
+        # self.objects["logger"].info("%s" % __api_name__)
 
 
 class Molecule(APIHandler):
+    """
+    A handler to push and get molecules.
+    """
 
+    # __api_name__ = "Molecule"
     def get(self):
 
         query = self.request.body
-        print(query)
+        print(self.json)
+        self.write({"Hello": "echo"})
+
+    # def get(self):
+
+    #     query = self.request.body
+    #     print(query)
+    #     self.write({"Hello": "echo"})
         # db = self.objects["db"]
 
 

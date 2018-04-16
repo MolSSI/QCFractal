@@ -8,6 +8,10 @@ import pymongo
 import threading
 from contextlib import contextmanager
 from tornado.ioloop import IOLoop
+import requests
+
+server_port = 8888
+server_address = "http://localhost:" + str(server_port) + "/"
 
 @contextmanager
 def pristine_loop():
@@ -41,10 +45,12 @@ def server(request):
 
     with pristine_loop() as loop:
         # Clean and re-init the databse
-        server = ds.DQMServer(db_project_name=db_name, io_loop=loop)
+        print("")
+        server = ds.DQMServer(port=server_port, db_project_name=db_name, io_loop=loop)
         server.db.client.drop_database(server.db._project_name)
         server.db.init_database()
 
+        # Add the IOloop to a thread daemon
         thread = threading.Thread(target=loop.start,
                                   name="test IOLoop")
         thread.daemon = True
@@ -53,16 +59,15 @@ def server(request):
         loop.add_callback(loop_started.set)
         loop_started.wait()
 
+        # Yield the server instance
         yield server
 
-        # yield loop
+        # Cleanup
         loop.add_callback(loop.stop)
         thread.join(timeout=5)
 
 def test_molecule(server):
 
-    #print(dir(server))
-    #server.start()
-    assert 5 == 5
-    #server.stop()
+
+    ret = requests.get(server_address + "molecule" )
 
