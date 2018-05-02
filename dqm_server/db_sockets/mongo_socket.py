@@ -3,18 +3,18 @@ Database connection class which directly calls the PyMongo API to capture
 cammon subroutines.
 """
 
-import pandas as pd
-import numpy as np
 
-import dqm_client as dc
 
 try:
     import pymongo
 except ImportError:
     raise ImportError("Mongo db_socket requires pymongo, please install this python module or try a different db_socket.")
 
+import pandas as pd
+import numpy as np
+
 # Pull in the hashing algorithms from the client
-import dqm_client as dc
+import ..interface
 
 
 class MongoSocket:
@@ -104,7 +104,7 @@ class MongoSocket:
 
         new_mols = []
         for dmol in data:
-            mol = dc.Molecule(dmol, dtype="json", orient=False)
+            mol = interface.Molecule(dmol, dtype="json", orient=False)
 
             dmol = mol.to_json() # To JSON runs the validator
             dmol["_id"] = mol.get_hash()
@@ -136,7 +136,7 @@ class MongoSocket:
         validation_errors = []
         for dopt in data:
 
-            error = dc.schema.validate(dopt, "options", return_errors=True)
+            error = interface.schema.validate(dopt, "options", return_errors=True)
             if error is True:
                 new_options.append(dopt)
             else:
