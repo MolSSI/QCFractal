@@ -7,7 +7,7 @@ import numpy as np
 
 # Import the DQM collection
 import dqm_server as dserver
-import dqm_client as dclient
+import dqm_server.interface as dclient
 
 
 @pytest.fixture(scope="module", params=["mongo"])
