@@ -28,6 +28,12 @@ def _translate_molecule_index(index):
     else:
         raise KeyError("Molecule Index '{}' not understood".format(index))
 
+def _translate_id_index(index):
+    if index in ["id", "ids"]:
+        return "_id"
+    else:
+        raise KeyError("Id Index alias '{}' not understood".format(index))
+
 def _str_to_indices(ids):
     for num, x in enumerate(ids):
         if isinstance(x, str):
@@ -289,7 +295,7 @@ class MongoSocket:
         return (self._project["databases"].delete_one({"category": category, "name": name})).deleted_count
 
 
-    def del_page_by_index(self, hash_val):
+    def del_results(self, values, index="id"):
         """
         Removes a page from the database from its hash.
 
@@ -303,8 +309,9 @@ class MongoSocket:
         bool
             Whether the operation was successful.
         """
+        index = _translate_id_index(index)
 
-        return self.del_by_index("results", hash_val)
+        return self.del_by_index("results", values, index=index)
 
     def evaluate(self, hashes, methods, field="return_value"):
         """
