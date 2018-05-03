@@ -4,7 +4,7 @@ Tets the inports and exports of the Molecule object.
 import numpy as np
 import pytest
 
-import dqm_client as dqm
+from ... import interface as dqm
 
 
 def test_molecule_constructors():

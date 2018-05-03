@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from . import test_helper as th
-import dqm_client as dqm
+from ... import interface as dqm
 import pytest
 
 
