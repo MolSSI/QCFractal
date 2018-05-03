@@ -13,6 +13,7 @@ except ImportError:
 import pandas as pd
 import numpy as np
 from bson.objectid import ObjectId
+import copy
 
 # Pull in the hashing algorithms from the client
 from .. import interface
@@ -45,11 +46,11 @@ class MongoSocket:
         """
 
         # Static data
-        self._valid_collections = {"molecules", "databases", "pages", "options"}
+        self._valid_collections = {"molecules", "databases", "results", "options"}
         self._collection_indices = {
-            "databases": ["name"],
+            "databases": ["category", "name"],
             "options": ["name", "program"],
-            "pages": ["molecule_id", "method", "program", "option"],
+            "results": ["molecule_id", "method", "basis", "option", "program"],
             "molecules": ["molecule_hash"]
         }
 
@@ -196,9 +197,9 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.add_generic(data, "databases")
+        return self._add_generic([data], "databases")
 
-    def add_page(self, data):
+    def add_results(self, data):
         """
         Adds a page to the database.
 
@@ -213,14 +214,14 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.add_generic(data, "pages")
+        return self._add_generic(data, "results")
 
     def _add_generic(self, data, collection):
         """
         Helper function that facilitates adding a record.
         """
 
-        ret = {"errors": [], "nInserted": 0, "success": False}
+        ret = {"errors": [], "ids":[], "nInserted": 0, "success": False}
         if len(data) == 0:
             return ret
 
@@ -270,7 +271,7 @@ class MongoSocket:
 
         return self.del_by_index("molecules", values, index=index)
 
-    def del_database_by_index(self, hash_val):
+    def del_database(self, category, name):
         """
         Removes a database from the database from its hash.
 
@@ -285,7 +286,7 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.del_by_index("databases", hash_val)
+        return (self._project["databases"].delete_one({"category": category, "name": name})).deleted_count
 
 
     def del_page_by_index(self, hash_val):
@@ -303,11 +304,11 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.del_by_index("pages", hash_val)
+        return self.del_by_index("results", hash_val)
 
     def evaluate(self, hashes, methods, field="return_value"):
         """
-        Queries monogod for all pages containing a molecule specified in
+        Queries monogod for all results containing a molecule specified in
         `hashes` and a method specified in `methods`. For all matches, finds
         their `field` value and populates the relevant dataframe cell.
 
@@ -336,13 +337,13 @@ class MongoSocket:
         hashes = list(hashes)
         methods = list(methods)
         command = [{"$match": {"molecule_hash": {"$in": hashes}, "modelchem": {"$in": methods}}}]
-        pages = list(self.project["pages"].aggregate(command))
+        results = list(self.project["results"].aggregate(command))
         d = {}
         for mol in hashes:
             for method in methods:
                 d[mol] = {}
                 d[mol][method] = np.nan
-        for item in pages:
+        for item in results:
             scope = item
             try:
                 for name in field.split("."):
@@ -374,7 +375,7 @@ class MongoSocket:
         """
         d = {}
         for mol in hashes:
-            records = list(self.project["pages"].find({"molecule_hash": mol}))
+            records = list(self.project["results"].find({"molecule_hash": mol}))
             d[mol] = []
             for rec in records:
                 d[mol].append(rec["modelchem"])
@@ -415,11 +416,11 @@ class MongoSocket:
                     }
                 }
             }]
-            pages = list(self.project["pages"].aggregate(command))
-            if len(pages) == 0 or len(pages[0]["value"]) == 0:
+            results = list(self.project["results"].aggregate(command))
+            if len(results) == 0 or len(results[0]["value"]) == 0:
                 d[mol] = None
             else:
-                d[mol] = pages[0]["value"][0]
+                d[mol] = results[0]["value"][0]
         return pd.DataFrame(data=d, index=[field]).transpose()
 
 
@@ -469,7 +470,7 @@ class MongoSocket:
                         }
                     }
                 }]
-                page = list(self.project["pages"].aggregate(command))
+                page = list(self.project["results"].aggregate(command))
                 if len(page) == 0 or len(page[0]["value"]) == 0:
                     success = False
                     break
@@ -548,12 +549,45 @@ class MongoSocket:
         return pd.DataFrame(data=res, index=names, columns=methods)
 
 
-    # Do a lookup on the pages collection using a <molecule, method> key.
-    def get_page(self, molecule_hash, method):
-        return self._project["pages"].find_one({"molecule_hash": molecule_hash, "modelchem": method})
+    # Do a lookup on the results collection using a <molecule, method> key.
+    def get_results(self, query, projection={}):
 
-    def get_database(self, name):
-        return self._project["databases"].find_one({"name": name})
+        parsed_query = {}
+
+        # We are querying via id
+        if "_id" in query:
+            if len(query) > 1:
+                raise KeyError("ID was provided, cannot use other indices")
+
+            if not isinstance(parsed_query, (list, tuple)):
+                parsed_query["_id"] = [query["_id"]]
+            else:
+                parsed_query["_id"] = query["_id"]
+
+            _str_to_indices(parsed_query["_id"])
+
+        else:
+            # Check if there are unknown keys
+            remain = set(query) - set(self._collection_indices["results"])
+            if remain:
+                raise KeyError("Results query found unkown keys {}".format(list(remain)))
+
+            for key, value in query:
+                if isinstance(value, (list, tuple)):
+                    parsed_query[key] = {"$in": value}
+                else:
+                    parsed_query[key] = value
+
+        proj = copy.deepcopy(projection)
+        proj["_id"] = False
+        ret = self._project["results"].find_one(query, projection=proj)
+        if ret is None:
+            ret = []
+
+        return list(ret)
+
+    def get_database(self, category, name):
+        return self._project["databases"].find_one({"category": category, "name": name}, projection={"_id": False})
 
     def get_options(self, data):
 
@@ -562,7 +596,11 @@ class MongoSocket:
 
         ret = []
         for d in data:
-            tmp = self._project["options"].find_one({"name": d["name"], "program": d["program"]})
+            tmp = self._project["options"].find_one(
+                {
+                    "name": d["name"],
+                    "program": d["program"]
+                }, projection={"_id": False})
             ret.append(tmp)
 
         return ret
@@ -576,7 +614,11 @@ class MongoSocket:
         if index == "_id":
             _str_to_indices(molecule_ids)
 
-        return list(self._project["molecules"].find({index: {"$in": molecule_ids}}))
+        ret = self._project["molecules"].find({index: {"$in": molecule_ids}})
+        if ret is None:
+            ret = []
+
+        return list(ret)
 
     def json_query(self, json_data):
         """

@@ -40,7 +40,7 @@ before_install:
 
 install:
     # Create test environment for package
-  - conda create -q -n dqm_env python=$PYTHON_VER numpy pandas pymongo pytest tornado requests
+  - conda create -q -n dqm_env python=$PYTHON_VER numpy nomkl pandas pymongo pytest tornado requests
   - source activate dqm_env
   - conda install codecov pytest-cov jsonschema -c conda-forge
 

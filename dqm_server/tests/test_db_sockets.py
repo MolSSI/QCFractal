@@ -33,7 +33,7 @@ def db_socket(request):
         raise KeyError("DB type %s not understood" % request.param)
 
 
-def test_molecule_add(db_socket):
+def test_molecules_add(db_socket):
 
     water = dclient.data.get_molecule("water_dimer_minima.psimol")
 
@@ -56,7 +56,7 @@ def test_molecule_add(db_socket):
     assert ret == 1
 
 
-def test_molecule_add_many(db_socket):
+def test_molecules_add_many(db_socket):
     water = dclient.data.get_molecule("water_dimer_minima.psimol")
     water2 = dclient.data.get_molecule("water_dimer_stretch.psimol")
 
@@ -75,7 +75,7 @@ def test_molecule_add_many(db_socket):
     assert ret == 2
 
 
-def test_molecule_get(db_socket):
+def test_molecules_get(db_socket):
 
     water = dclient.data.get_molecule("water_dimer_minima.psimol")
 
@@ -104,6 +104,7 @@ def test_options_add(db_socket):
     ret = db_socket.add_options(opts)
     assert ret["nInserted"] == 0
 
+    del opts["_id"]
     assert opts == db_socket.get_options({"name": opts["name"], "program": opts["program"]})[0]
 
 
@@ -114,3 +115,53 @@ def test_options_error(db_socket):
     ret = db_socket.add_options(opts)
     assert ret["nInserted"] == 0
     assert len(ret["validation_errors"]) == 1
+
+
+def test_databases_add(db_socket):
+
+    db = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
+
+    ret = db_socket.add_database(db)
+    del db["_id"]
+    assert ret["nInserted"] == 1
+
+    new_db = db_socket.get_database(db["category"], db["name"])
+    assert db == new_db
+
+    ret = db_socket.del_database(db["category"], db["name"])
+    assert ret == 1
+
+
+def test_results_add(db_socket):
+
+    # Add two waters
+    water = dclient.data.get_molecule("water_dimer_minima.psimol")
+    water2 = dclient.data.get_molecule("water_dimer_stretch.psimol")
+    mol_insert = db_socket.add_molecules([water.to_json(), water2.to_json()])
+
+    page1 = {
+        "molecule_id": mol_insert["ids"][0],
+        "method": "M1",
+        "basis": "B1",
+        "option": "default",
+        "program": "P1",
+        "other_data": 5
+    }
+
+    page2 = {
+        "molecule_id": mol_insert["ids"][1],
+        "method": "M1",
+        "basis": "B1",
+        "option": "default",
+        "program": "P1",
+        "other_data": 10
+    }
+
+    ret = db_socket.add_results([page1, page2])
+    assert ret["nInserted"] == 2
+
+    # assert page1 == db_socket.get_results({"_id": ret["ids"][0]})
+
+    ret = db_socket.del_molecules(mol_insert["ids"], index="id")
+    assert ret == 2
+
