@@ -104,7 +104,7 @@ def test_options_add(db_socket):
     ret = db_socket.add_options(opts)
     assert ret["nInserted"] == 0
 
-    assert opts == db_socket.get_option(opts["name"], opts["program"])
+    assert opts == db_socket.get_options({"name": opts["name"], "program": opts["program"]})[0]
 
 
 def test_options_error(db_socket):

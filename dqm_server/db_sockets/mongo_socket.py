@@ -354,52 +354,6 @@ class MongoSocket:
             methods = [methods]
         return pd.DataFrame(data=d, index=methods).transpose()
 
-    def evaluate_2(self, hashes, fields, method):
-        """
-        Queries monogod for all pages containing a molecule specified in
-        `hashes` of method `method`. For all matches, finds the values in each
-        of their `fields` populates the relevant dataframe cell.
-
-        Parameters
-        ----------
-        hashes : list
-            A list of molecules hashes.
-        fields : list
-            A list of page fields.
-        method : str
-            A method (modelchem).
-
-        Returns
-        -------
-        dataframe
-            Returns a dataframe with your results. The rows will have the
-            molecule hashes and the columns will have the field names. Each
-            dataframe[molecule][field] cell contains the respective field
-            value.
-
-        Notes
-        -----
-        Empty cells will contain NaN.
-
-        """
-        hashes = list(hashes)
-        command = [{"$match": {"molecule_hash": {"$in": hashes}, "modelchem": method}}]
-        pages = list(self.project["pages"].aggregate(command))
-        d = {}
-        for mol in hashes:
-            for field in fields:
-                d[mol] = {}
-                d[mol][field] = np.nan
-        for item in pages:
-            for field in fields:
-                scope = item
-                try:
-                    for name in field.split("."):
-                        scope = scope[name]
-                    d[item["molecule_hash"]][field] = scope
-                except KeyError:
-                    pass
-        return pd.DataFrame(data=d, index=[fields]).transpose()
 
     def list_methods(self, hashes):
         """
@@ -601,8 +555,17 @@ class MongoSocket:
     def get_database(self, name):
         return self._project["databases"].find_one({"name": name})
 
-    def get_option(self, name, program):
-        return self._project["options"].find_one({"name": name, "program": program})
+    def get_options(self, data):
+
+        if isinstance(data, dict):
+            data = [data]
+
+        ret = []
+        for d in data:
+            tmp = self._project["options"].find_one({"name": d["name"], "program": d["program"]})
+            ret.append(tmp)
+
+        return ret
 
     def get_molecules(self, molecule_ids, index="id"):
         index = _translate_molecule_index(index)
