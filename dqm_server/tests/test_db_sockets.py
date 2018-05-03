@@ -56,20 +56,24 @@ def test_molecule_add(db_socket):
     assert ret == 1
 
 
+def test_molecule_add_many(db_socket):
+    water = dclient.data.get_molecule("water_dimer_minima.psimol")
+    water2 = dclient.data.get_molecule("water_dimer_stretch.psimol")
 
-# def test_molecule_add_many(db_socket):
-#     water = dclient.data.get_molecule("water_dimer_minima.psimol")
-#     water2 = dclient.data.get_molecule("water_dimer_stretch.psimol")
+    ret = db_socket.add_molecules([water.to_json(), water2.to_json()])
+    assert ret["nInserted"] == 2
 
-#     ret = db_socket.add_molecules([water.to_json(), water2.to_json()])
-#     assert ret["nInserted"] == 2
+    # Cleanup adds
+    ret = db_socket.del_molecules([water.get_hash(), water2.get_hash()], index="hash")
+    assert ret == 2
 
-#     ret = db_socket.get_molecules([water.get_hash(), water2.get_hash(), "something"])
-#     assert len(list(ret)) == 2
+    ret = db_socket.add_molecules([water.to_json(), water2.to_json()])
+    assert ret["nInserted"] == 2
 
-#     # Cleanup adds
-#     ret = db_socket.del_molecule_by_hash([water.get_hash(), water2.get_hash()])
-#     assert ret == 2
+    # Cleanup adds
+    ret = db_socket.del_molecules(ret["ids"], index="id")
+    assert ret == 2
+
 
 def test_molecule_get(db_socket):
 
