@@ -47,28 +47,47 @@ def test_molecule_add(db_socket):
     assert ret["errors"][0] == (water.get_hash(), 11000)
 
     # Pull molecule from the DB for tests
-    db_json = db_socket.get_molecule(water.get_hash())
+    db_json = db_socket.get_molecules(water.get_hash(), index="hash")[0]
     water_db = dclient.Molecule.from_json(db_json)
     water_db.compare(water)
 
     # Cleanup adds
-    ret = db_socket.del_molecule_by_hash(water.get_hash())
+    ret = db_socket.del_molecules(water.get_hash(), index="hash")
     assert ret == 1
 
 
-def test_molecule_add_many(db_socket):
+
+# def test_molecule_add_many(db_socket):
+#     water = dclient.data.get_molecule("water_dimer_minima.psimol")
+#     water2 = dclient.data.get_molecule("water_dimer_stretch.psimol")
+
+#     ret = db_socket.add_molecules([water.to_json(), water2.to_json()])
+#     assert ret["nInserted"] == 2
+
+#     ret = db_socket.get_molecules([water.get_hash(), water2.get_hash(), "something"])
+#     assert len(list(ret)) == 2
+
+#     # Cleanup adds
+#     ret = db_socket.del_molecule_by_hash([water.get_hash(), water2.get_hash()])
+#     assert ret == 2
+
+def test_molecule_get(db_socket):
+
     water = dclient.data.get_molecule("water_dimer_minima.psimol")
-    water2 = dclient.data.get_molecule("water_dimer_stretch.psimol")
 
-    ret = db_socket.add_molecules([water.to_json(), water2.to_json()])
-    assert ret["nInserted"] == 2
+    # Add once
+    ret = db_socket.add_molecules(water.to_json())
+    assert ret["nInserted"] == 1
+    water_id = ret["ids"][0]
 
-    ret = db_socket.get_molecules([water.get_hash(), water2.get_hash(), "something"])
-    assert len(list(ret)) == 2
+    # Pull molecule from the DB for tests
+    db_json = db_socket.get_molecules(water_id, index="id")[0]
+    water_db = dclient.Molecule.from_json(db_json)
+    water_db.compare(water)
 
     # Cleanup adds
-    ret = db_socket.del_molecule_by_hash([water.get_hash(), water2.get_hash()])
-    assert ret == 2
+    ret = db_socket.del_molecules(water_id, index="id")
+    assert ret == 1
 
 
 def test_options_add(db_socket):

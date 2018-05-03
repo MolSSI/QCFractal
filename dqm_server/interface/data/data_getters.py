@@ -8,7 +8,6 @@ import glob
 import os
 
 from ..molecule import Molecule
-print("hr")
 
 __all__ = ["list_directories", "get_file_name", "get_file", "get_molecule", "get_options"]
 

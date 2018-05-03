@@ -15,8 +15,6 @@ if __name__ == "__main__":
         install_requires=[
             'numpy>=1.7',
             'pymongo>=3.0',
-            'matplotlib>=2.0',
-            'pymongo>=3.0',
         ],
         extras_require={
             'docs': [

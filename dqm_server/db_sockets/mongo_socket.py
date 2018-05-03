@@ -12,9 +12,25 @@ except ImportError:
 
 import pandas as pd
 import numpy as np
+from bson.objectid import ObjectId
 
 # Pull in the hashing algorithms from the client
 from .. import interface
+
+def _translate_molecule_index(index):
+    if index in ["id", "ids"]:
+        return "_id"
+    elif index == "hash":
+        return "molecule_hash"
+    elif index in ["_id", "molecule_hash"]:
+        return index
+    else:
+        raise KeyError("Molecule Index '{}' not understood".format(index))
+
+def _str_to_indices(ids):
+    for num, x in enumerate(ids):
+        if isinstance(x, str):
+            ids[num] = ObjectId(x)
 
 
 class MongoSocket:
@@ -33,7 +49,8 @@ class MongoSocket:
         self._collection_indices = {
             "databases": ["name"],
             "options": ["name", "program"],
-            "pages": ["molecule_hash", "method", "program", "option"]
+            "pages": ["molecule_id", "method", "program", "option"],
+            "molecules": ["molecule_hash"]
         }
 
         self._url = url
@@ -102,16 +119,34 @@ class MongoSocket:
         if isinstance(data, dict):
             data = [data]
 
-        new_mols = []
+        # Build a dictionary of new molecules
+        new_mols = {}
         for dmol in data:
             mol = interface.Molecule(dmol, dtype="json", orient=False)
+            new_mols[mol.get_hash()] = mol
 
-            dmol = mol.to_json() # To JSON runs the validator
-            dmol["_id"] = mol.get_hash()
+        # We need to filter out what is already in the database
+        old_mols = self.get_molecules(list(new_mols.keys()), index="hash")
 
-            new_mols.append(dmol)
+        # Run a comparison against hash collisions, can be sped up
+        errors = []
+        for old_mol in old_mols:
+            old_hash = old_mol["molecule_hash"]
+            old_mol = interface.Molecule(old_mol, dtype="json", orient=False)
 
-        return self._add_generic(new_mols, "molecules")
+            if old_mol.compare(new_mols[old_hash]):
+                del new_mols[old_hash]
+                errors.append((old_hash, 11000))
+
+        new_inserts = []
+        for new_hash, new_mol in new_mols.items():
+            data = new_mol.to_json()
+            data["molecule_hash"] = new_hash
+            new_inserts.append(data)
+
+        ret = self._add_generic(new_inserts, "molecules")
+        ret["errors"].extend(errors)
+        return ret
 
     def add_options(self, data):
         """
@@ -192,27 +227,31 @@ class MongoSocket:
         try:
             tmp = self._project[collection].insert_many(data, ordered=False)
             ret["success"] = tmp.acknowledged
+            ret["ids"] = [str(x) for x in tmp.inserted_ids]
             ret["nInserted"] = len(tmp.inserted_ids)
             ret["errors"] = []
         except pymongo.errors.BulkWriteError as tmp:
             ret["success"] = False
+            # ret["ids"] = [str(x) for x in tmp.inserted_ids]
             ret["nInserted"] = tmp.details["nInserted"]
             ret["errors"] = [(x["op"]["_id"], x["code"]) for x in tmp.details["writeErrors"]]
         return ret
 
-    def del_by_hash(self, collection, hashes):
+    def del_by_index(self, collection, hashes, index="_id"):
         """
         Helper function that facilitates deletion based on hash.
         """
+
         if isinstance(hashes, str):
-            return (self._project[collection].delete_one({"_id": hashes})).deleted_count == 1
-        elif isinstance(hashes, list):
-            return (self._project[collection].delete_many({"_id": {"$in" : hashes}})).deleted_count
-        else:
-            raise TypeError("Hashes type not recognized")
+            hashes = [hashes]
+
+        if index == "_id":
+            _str_to_indices(hashes)
+
+        return (self._project[collection].delete_many({index: {"$in" : hashes}})).deleted_count
 
 
-    def del_molecule_by_hash(self, hash_val):
+    def del_molecules(self, values, index="id"):
         """
         Removes a molecule from the database from its hash.
 
@@ -227,9 +266,11 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.del_by_hash("molecules", hash_val)
+        index = _translate_molecule_index(index)
 
-    def del_database_by_hash(self, hash_val):
+        return self.del_by_index("molecules", values, index=index)
+
+    def del_database_by_index(self, hash_val):
         """
         Removes a database from the database from its hash.
 
@@ -244,10 +285,10 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.del_by_hash("databases", hash_val)
+        return self.del_by_index("databases", hash_val)
 
 
-    def del_page_by_hash(self, hash_val):
+    def del_page_by_index(self, hash_val):
         """
         Removes a page from the database from its hash.
 
@@ -262,7 +303,7 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self.del_by_hash("pages", hash_val)
+        return self.del_by_index("pages", hash_val)
 
     def evaluate(self, hashes, methods, field="return_value"):
         """
@@ -563,11 +604,16 @@ class MongoSocket:
     def get_option(self, name, program):
         return self._project["options"].find_one({"name": name, "program": program})
 
-    def get_molecule(self, molecule_hash):
-        return self._project["molecules"].find_one({"_id": molecule_hash})
+    def get_molecules(self, molecule_ids, index="id"):
+        index = _translate_molecule_index(index)
 
-    def get_molecules(self, molecule_hash):
-        return self._project["molecules"].find({"_id": {"$in": molecule_hash}})
+        if not isinstance(molecule_ids, (list, tuple)):
+            molecule_ids = [molecule_ids]
+
+        if index == "_id":
+            _str_to_indices(molecule_ids)
+
+        return list(self._project["molecules"].find({index: {"$in": molecule_ids}}))
 
     def json_query(self, json_data):
         """
