@@ -1,5 +1,7 @@
 """
 Tests the database wrappers
+
+All tests should be atomic, that is create and cleanup their data
 """
 
 import pytest
@@ -31,6 +33,7 @@ def db_socket(request):
         db.client.drop_database(db_name)
     else:
         raise KeyError("DB type %s not understood" % request.param)
+
 
 
 def test_molecules_add(db_socket):
@@ -160,8 +163,100 @@ def test_results_add(db_socket):
     ret = db_socket.add_results([page1, page2])
     assert ret["nInserted"] == 2
 
-    # assert page1 == db_socket.get_results({"_id": ret["ids"][0]})
+    ret = db_socket.del_results(ret["ids"], index="id")
+    assert ret == 2
 
     ret = db_socket.del_molecules(mol_insert["ids"], index="id")
     assert ret == 2
+
+### Build out a set of query tests
+
+@pytest.fixture(scope="module")
+def db_results(db_socket):
+    # Add two waters
+    water = dclient.data.get_molecule("water_dimer_minima.psimol")
+    water2 = dclient.data.get_molecule("water_dimer_stretch.psimol")
+    mol_insert = db_socket.add_molecules([water.to_json(), water2.to_json()])
+
+    page1 = {
+        "molecule_id": mol_insert["ids"][0],
+        "method": "M1",
+        "basis": "B1",
+        "option": "default",
+        "program": "P1",
+        "return_result": 5
+    }
+
+    page2 = {
+        "molecule_id": mol_insert["ids"][1],
+        "method": "M1",
+        "basis": "B1",
+        "option": "default",
+        "program": "P1",
+        "return_result": 10
+    }
+
+    page3 = {
+        "molecule_id": mol_insert["ids"][0],
+        "method": "M1",
+        "basis": "B1",
+        "option": "default",
+        "program": "P2",
+        "return_result": 15
+    }
+
+    page4 = {
+        "molecule_id": mol_insert["ids"][0],
+        "method": "M2",
+        "basis": "B1",
+        "option": "default",
+        "program": "P2",
+        "return_result": 15
+    }
+
+    page5 = {
+        "molecule_id": mol_insert["ids"][1],
+        "method": "M2",
+        "basis": "B1",
+        "option": "default",
+        "program": "P1",
+        "return_result": 20
+    }
+
+    pages_insert = db_socket.add_results([page1, page2, page3, page4, page5])
+
+    yield db_socket
+
+    # Cleanup
+    ret = db_socket.del_results(pages_insert["ids"], index="id")
+    assert ret == pages_insert["nInserted"]
+
+    ret = db_socket.del_molecules(mol_insert["ids"], index="id")
+    assert ret == mol_insert["nInserted"]
+
+
+def test_results_query_total(db_results):
+
+    assert 5 == len(db_results.get_results({}))
+
+
+def test_results_query_method(db_results):
+
+    assert 5 == len(db_results.get_results({"method": ["M2", "M1"]}))
+    assert 2 == len(db_results.get_results({"method": ["M2"]}))
+    assert 2 == len(db_results.get_results({"method": "M2"}))
+
+
+def test_results_query_dual(db_results):
+
+    assert 5 == len(db_results.get_results({"method": ["M2", "M1"], "program": ["P1", "P2"]}))
+    assert 1 == len(db_results.get_results({"method": ["M2"], "program": "P2"}))
+    assert 1 == len(db_results.get_results({"method": "M2", "program": "P2"}))
+
+
+def test_results_query_project(db_results):
+    tmp = db_results.get_results({"method": "M2", "program": "P2"}, projection={"return_result": True})[0]
+    assert set(tmp.keys()) == {"return_result"}
+    assert tmp["return_result"] == 15
+
 

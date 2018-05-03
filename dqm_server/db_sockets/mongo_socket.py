@@ -567,11 +567,11 @@ class MongoSocket:
                 raise KeyError("ID was provided, cannot use other indices")
 
             if not isinstance(parsed_query, (list, tuple)):
-                parsed_query["_id"] = [query["_id"]]
+                parsed_query["_id"] = {"$in": query["_id"]}
+                _str_to_indices(parsed_query["_id"]["$in"])
             else:
-                parsed_query["_id"] = query["_id"]
-
-            _str_to_indices(parsed_query["_id"])
+                parsed_query["_id"] = [query["_id"]]
+                _str_to_indices(parsed_query["_id"])
 
         else:
             # Check if there are unknown keys
@@ -579,15 +579,17 @@ class MongoSocket:
             if remain:
                 raise KeyError("Results query found unkown keys {}".format(list(remain)))
 
-            for key, value in query:
+            for key, value in query.items():
                 if isinstance(value, (list, tuple)):
                     parsed_query[key] = {"$in": value}
                 else:
                     parsed_query[key] = value
 
+        # Manipulate the
         proj = copy.deepcopy(projection)
         proj["_id"] = False
-        ret = self._project["results"].find_one(query, projection=proj)
+
+        ret = self._project["results"].find(parsed_query, projection=proj)
         if ret is None:
             ret = []
 
