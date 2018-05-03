@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 
 # Pull in the hashing algorithms from the client
-import ..interface
+from .. import interface
 
 
 class MongoSocket:

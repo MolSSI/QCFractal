@@ -603,8 +603,14 @@ class Molecule:
 
         np.set_printoptions(precision=16)
         ret = {}
-        for field in schema.get_schema("molecule").keys():
-            data = getattr(self, field)
+        for field in schema.get_schema_keys("molecule"):
+
+            if field == "fix_com":
+                data = self._fix_com
+            elif field == "fix_orientation":
+                data = self._fix_orientation
+            else:
+                data = getattr(self, field)
 
             # Do we add this data?
             if isinstance(data, (np.ndarray, list, tuple, dict, str)) and (len(data) == 0): continue

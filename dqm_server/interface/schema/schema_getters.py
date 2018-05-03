@@ -12,7 +12,7 @@ from .definitions_schema import get_definition
 from .molecule_schema import molecule_schema
 from .options_schema import options_schema
 
-__all__ = ["get_schema", "validate", "get_hash_fields"]
+__all__ = ["get_schema", "get_schema_keys", "validate", "get_hash_fields"]
 
 _schemas = {}
 
@@ -36,6 +36,11 @@ def get_schema(name):
     if name not in _schemas:
         raise KeyError("Schema name %s not found." % name)
     return copy.deepcopy(_schemas)
+
+def get_schema_keys(name):
+    if name not in _schemas:
+        raise KeyError("Schema name %s not found." % name)
+    return _schemas[name]["properties"].keys()
 
 
 def validate(data, schema_name, return_errors=False):

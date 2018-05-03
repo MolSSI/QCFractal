@@ -10,11 +10,7 @@ import pandas as pd
 
 from . import molecule
 from . import statistics
-# from . import visualization
-# from . import mongo_helper
 from . import constants
-from . import fields
-# from . import client
 
 
 def _nCr(n, r):
