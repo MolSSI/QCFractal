@@ -17,16 +17,7 @@ import copy
 
 # Pull in the hashing algorithms from the client
 from .. import interface
-
-def _translate_molecule_index(index):
-    if index in ["id", "ids"]:
-        return "_id"
-    elif index == "hash":
-        return "molecule_hash"
-    elif index in ["_id", "molecule_hash"]:
-        return index
-    else:
-        raise KeyError("Molecule Index '{}' not understood".format(index))
+from . import db_utils
 
 def _translate_id_index(index):
     if index in ["id", "ids"]:
@@ -273,7 +264,7 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        index = _translate_molecule_index(index)
+        index = db_utils.translate_molecule_index(index)
 
         return self.del_by_index("molecules", values, index=index)
 
@@ -615,7 +606,7 @@ class MongoSocket:
         return ret
 
     def get_molecules(self, molecule_ids, index="id"):
-        index = _translate_molecule_index(index)
+        index = db_utils.translate_molecule_index(index)
 
         if not isinstance(molecule_ids, (list, tuple)):
             molecule_ids = [molecule_ids]
