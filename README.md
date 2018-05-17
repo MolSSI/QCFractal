@@ -1,11 +1,11 @@
 <p align="center">
 
-<a href="https://travis-ci.org/MolSSI/dqm_server">
-   <img src="https://travis-ci.org/MolSSI/dqm_server.svg?branch=master" alt="Travis CI />
+<a href="https://travis-ci.org/MolSSI/qcfractal">
+   <img src="https://travis-ci.org/MolSSI/qcfractal.svg?branch=master" alt="Travis CI />
 <\a>
 
-<a href="https://codecov.io/gh/MolSSI/dqm_server">
-  <img src="https://codecov.io/gh/MolSSI/dqm_server/branch/master/graph/badge.svg" alt="Codecov" />
+<a href="https://codecov.io/gh/MolSSI/qcfractal">
+  <img src="https://codecov.io/gh/MolSSI/qcfractal/branch/master/graph/badge.svg" alt="Codecov" />
 </a>
 
 </p>

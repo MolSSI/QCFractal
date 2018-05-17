@@ -7,7 +7,7 @@ import pytest
 import shlex
 import signal
 
-import dqm_server as ds
+import qcfractal as ds
 
 #@pytest.fixture(scope="module")
 #def client_service():

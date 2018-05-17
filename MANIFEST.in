@@ -1,4 +1,4 @@
-recursive-include dqm_server *.py
+recursive-include qcfractal *.py
 
 include setup.py
 include README.md
@@ -6,4 +6,4 @@ include LICENSE
 include MANIFEST.in
 
 include versioneer.py
-include dqm_server/_version.py
+include qcfractal/_version.py

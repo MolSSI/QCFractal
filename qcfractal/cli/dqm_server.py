@@ -1,5 +1,5 @@
 """
-A command line interface to the dqm_server.
+A command line interface to the qcfractal.
 """
 
 from tornado.options import options, define
@@ -35,7 +35,7 @@ import tornado.web
 # tornado.options.options.parse_command_line()
 # tornado.options.parse_command_line()
 # class DQMServer(object):
-#     def __init__(self, logfile_name="dqm_server.log"):
+#     def __init__(self, logfile_name="qcfractal.log"):
 
 #         self.logger = logging.getLogger(__name__)
 #         self.logger.setLevel(logging.INFO)
@@ -145,7 +145,7 @@ if __name__ == "__main__":
 
 def main():
 
-    server = dqm_server.server()
+    server = qcfractal.server()
     server.start()
 
 

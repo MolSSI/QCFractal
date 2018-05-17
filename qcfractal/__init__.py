@@ -1,5 +1,5 @@
 """
-Main init function for dqm_server
+Main init function for qcfractal
 """
 
 # Import modules

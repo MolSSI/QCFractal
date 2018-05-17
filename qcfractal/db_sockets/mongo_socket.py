@@ -638,7 +638,7 @@ class MongoSocket:
 
         keys = list(json_data)
         if "function" not in keys:
-            raise KeyError("MongoSocket:json_query: 'funciton' are not found in keys")
+            raise KeyError("MongoSocket:json_query: 'function' are not found in keys")
 
         function = getattr(self, json_data["function"])
 

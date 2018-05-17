@@ -52,5 +52,5 @@ is installed by looking at the `git` tags and how many commits ahead this versio
 \d+.\d+.\d+(?\+\d+-[a-z0-9]+)
 ```
 If the version of this commit is the same as a `git` tag, the installed version is the same as the tag, 
-e.g. `dqm_server-0.1.2`, otherwise it will be appended with `+X` where `X` is the number of commits 
+e.g. `qcfractal-0.1.2`, otherwise it will be appended with `+X` where `X` is the number of commits 
 ahead from the last tag, and then `-YYYYYY` where the `Y`'s are replaced with the `git` commit hash.

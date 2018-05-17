@@ -3,11 +3,11 @@ import versioneer
 
 if __name__ == "__main__":
     setuptools.setup(
-        name='dqm_server',
-        description='A MongoDB backend for DQM',
+        name='qcfractal',
+        description='A high throughput computing and database tool for quantum chemsitry.',
         author='Daniel Smith',
         author_email='dgasmith@vt.edu',
-        url="https://github.com/molssi/dqm_server",
+        url="https://github.com/molssi/qcfractal",
         license='BSD-3C',
         version=versioneer.get_version(),
         cmdclass=versioneer.get_cmdclass(),

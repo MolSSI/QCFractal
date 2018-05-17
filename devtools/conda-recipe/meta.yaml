@@ -1,5 +1,5 @@
 package:
-  name: dqm_server
+  name: qcfractal
   version: "0.0.0"
 
 source:
@@ -20,7 +20,7 @@ test:
   requires:
     - pytest
   imports:
-    - dqm_server
+    - qcfractal
 
 about:
   home: add_url_here

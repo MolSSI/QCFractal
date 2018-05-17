@@ -3,7 +3,7 @@ Tests the DQM Server class
 """
 
 import pytest
-import dqm_server as ds
+import qcfractal as ds
 import pymongo
 import threading
 from contextlib import contextmanager
