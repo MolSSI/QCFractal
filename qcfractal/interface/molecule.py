@@ -364,6 +364,13 @@ class Molecule:
         Checks if two molecules are identical
         """
 
+        if isinstance(other, dict):
+            other = Molecule.from_json(other)
+        elif isinstance(other, Molecule):
+            pass
+        else:
+            raise TypeError("Comparison molecule not understood of type '{}'.".format(type(other)))
+
         if bench is None:
             bench = self
 

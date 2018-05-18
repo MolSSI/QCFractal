@@ -15,6 +15,8 @@ import requests
 server_port = 8888
 server_address = "http://localhost:" + str(server_port) + "/"
 
+mol_api_addr = server_address + "molecule"
+
 @contextmanager
 def pristine_loop():
     """
@@ -71,7 +73,21 @@ def server(request):
 def test_molecule_socket(server):
 
 
-    ret = requests.get(server_address + "molecule", json={})
-    print(ret.status_code)
-    print(ret.json())
+    water = qp.data.get_molecule("water_dimer_minima.psimol")
+
+    # Add a molecule
+    r = requests.post(mol_api_addr, json=water.to_json())
+    assert r.status_code == 200
+
+    pdata = r.json()
+    assert pdata.keys() == {"errors", "ids", "nInserted", "success"}
+
+    # Retrieve said molecule
+    r = requests.get(mol_api_addr, json={"ids": pdata["ids"], "index": "id"})
+    assert r.status_code == 200
+
+    gdata = r.json()
+    assert isinstance(gdata["data"], list)
+
+    assert water.compare(gdata["data"][0])
 

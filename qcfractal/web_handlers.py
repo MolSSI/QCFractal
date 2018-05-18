@@ -34,16 +34,25 @@ class Molecule(APIHandler):
     # __api_name__ = "Molecule"
     def get(self):
 
-        query = self.request.body
-        print(self.json)
-        self.write({"Hello": "echo"})
+        db = self.objects["db_socket"]
 
-    # def get(self):
+        kwargs = {}
+        if "index" in self.json:
+            kwargs["index"] = self.json["index"]
 
-    #     query = self.request.body
-    #     print(query)
-    #     self.write({"Hello": "echo"})
-        # db = self.objects["db"]
+        ret = {}
+        ret["data"] = db.get_molecules(self.json["ids"], **kwargs)
+        for mol in ret["data"]:
+            mol["_id"] = str(mol["_id"])
+
+        self.write(ret)
+
+    def post(self):
+
+        db = self.objects["db_socket"]
+
+        ret = db.add_molecules(self.json)
+        self.write(ret)
 
 
 # def _check_auth(objects, header):
