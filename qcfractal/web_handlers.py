@@ -43,7 +43,8 @@ class Molecule(APIHandler):
         ret = {}
         ret["data"] = db.get_molecules(self.json["ids"], **kwargs)
         for mol in ret["data"]:
-            mol["_id"] = str(mol["_id"])
+            mol["id"] = str(mol["_id"])
+            del mol["_id"]
 
         self.write(ret)
 

@@ -30,7 +30,6 @@ def _str_to_indices(ids):
         if isinstance(x, str):
             ids[num] = ObjectId(x)
 
-
 class MongoSocket:
     """
     This is a Mongo QCDB socket class.
@@ -50,6 +49,8 @@ class MongoSocket:
             "results": ["molecule_id", "method", "basis", "option", "program"],
             "molecules": ["molecule_hash"]
         }
+
+        self._lower_results_index = ["method", "basis", "option", "program"]
 
         self._url = url
         self._port = port
@@ -210,6 +211,10 @@ class MongoSocket:
         bool
             Whether the operation was successful.
         """
+
+        for d in data:
+            for i in self._lower_results_index:
+                d[i] = d[i].lower()
 
         return self._add_generic(data, "results")
 
@@ -572,9 +577,11 @@ class MongoSocket:
 
             for key, value in query.items():
                 if isinstance(value, (list, tuple)):
+                    if key in self._lower_results_index:
+                        value = [v.lower() for v in value]
                     parsed_query[key] = {"$in": value}
                 else:
-                    parsed_query[key] = value
+                    parsed_query[key] = value.lower()
 
         # Manipulate the
         proj = copy.deepcopy(projection)

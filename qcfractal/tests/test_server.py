@@ -72,7 +72,6 @@ def server(request):
 
 def test_molecule_socket(server):
 
-
     water = qp.data.get_molecule("water_dimer_minima.psimol")
 
     # Add a molecule
