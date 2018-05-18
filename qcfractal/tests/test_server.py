@@ -91,3 +91,11 @@ def test_molecule_socket(server):
 
     assert water.compare(gdata["data"][0])
 
+    # Retrieve said molecule via hash
+    r = requests.get(mol_api_addr, json={"ids": water.get_hash(), "index": "hash"})
+    assert r.status_code == 200
+
+    gdata = r.json()
+    assert isinstance(gdata["data"], list)
+
+    assert water.compare(gdata["data"][0])
