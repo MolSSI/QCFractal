@@ -2,8 +2,10 @@
 Tests the DQM Server class
 """
 
-import pytest
 import qcfractal as ds
+import qcfractal.interface as qp
+
+import pytest
 import pymongo
 import threading
 from contextlib import contextmanager
@@ -44,7 +46,7 @@ def server(request):
     db_name = "dqm_local_values_test"
 
     with pristine_loop() as loop:
-        # Clean and re-init the databse
+        # Clean and re-init the databse, manually handle IOLoop (no start/stop needed)
         print("")
         server = ds.DQMServer(port=server_port, db_project_name=db_name, io_loop=loop)
         server.db.client.drop_database(server.db._project_name)
@@ -66,8 +68,10 @@ def server(request):
         loop.add_callback(loop.stop)
         thread.join(timeout=5)
 
-def test_molecule(server):
+def test_molecule_socket(server):
 
 
     ret = requests.get(server_address + "molecule", json={})
+    print(ret.status_code)
+    print(ret.json())
 

@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 from . import test_helper as th
-from ... import interface as dqm
+from ... import interface as qp
 import pytest
 
 
@@ -39,10 +39,10 @@ def _compare_rxn_stoichs(ref, new):
 # Build a interesting database
 @pytest.fixture
 def water_db():
-    db = dqm.Database("Water Data")
+    db = qp.Database("Water Data")
 
     # Build the water dimer.
-    dimer = dqm.data.get_molecule("water_dimer_minima.psimol")
+    dimer = qp.data.get_molecule("water_dimer_minima.psimol")
     frag_0 = dimer.get_fragment(0)
     frag_1 = dimer.get_fragment(1)
     frag_0_1 = dimer.get_fragment(0, 1)
@@ -90,9 +90,9 @@ def water_db():
 # Build a nbody database
 @pytest.fixture
 def nbody_db():
-    db = dqm.Database("N-Body Data")
+    db = qp.Database("N-Body Data")
 
-    dimer = dqm.data.get_molecule("water_dimer_minima.psimol")
+    dimer = qp.data.get_molecule("water_dimer_minima.psimol")
     frag_0 = dimer.get_fragment(0)
     frag_1 = dimer.get_fragment(1)
     frag_0_1 = dimer.get_fragment(0, 1)
@@ -106,7 +106,7 @@ def nbody_db():
     })
 
     db.add_ie_rxn("Water Dimer", dimer.to_string())
-    db.add_ie_rxn("Ne Tetramer", dqm.data.get_molecule("neon_tetramer.psimol"))
+    db.add_ie_rxn("Ne Tetramer", qp.data.get_molecule("neon_tetramer.psimol"))
 
     # Ne Tetramer benchmark
     db.ne_stoich = {

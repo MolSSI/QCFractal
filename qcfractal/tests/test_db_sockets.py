@@ -9,7 +9,7 @@ import numpy as np
 
 # Import the DQM collection
 import qcfractal as dserver
-import qcfractal.interface as dclient
+import qcfractal.interface as qp
 
 
 @pytest.fixture(scope="module", params=["mongo"])
@@ -38,7 +38,7 @@ def db_socket(request):
 
 def test_molecules_add(db_socket):
 
-    water = dclient.data.get_molecule("water_dimer_minima.psimol")
+    water = qp.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
     ret = db_socket.add_molecules(water.to_json())
@@ -51,7 +51,7 @@ def test_molecules_add(db_socket):
 
     # Pull molecule from the DB for tests
     db_json = db_socket.get_molecules(water.get_hash(), index="hash")[0]
-    water_db = dclient.Molecule.from_json(db_json)
+    water_db = qp.Molecule.from_json(db_json)
     water_db.compare(water)
 
     # Cleanup adds
@@ -60,8 +60,8 @@ def test_molecules_add(db_socket):
 
 
 def test_molecules_add_many(db_socket):
-    water = dclient.data.get_molecule("water_dimer_minima.psimol")
-    water2 = dclient.data.get_molecule("water_dimer_stretch.psimol")
+    water = qp.data.get_molecule("water_dimer_minima.psimol")
+    water2 = qp.data.get_molecule("water_dimer_stretch.psimol")
 
     ret = db_socket.add_molecules([water.to_json(), water2.to_json()])
     assert ret["nInserted"] == 2
@@ -80,7 +80,7 @@ def test_molecules_add_many(db_socket):
 
 def test_molecules_get(db_socket):
 
-    water = dclient.data.get_molecule("water_dimer_minima.psimol")
+    water = qp.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
     ret = db_socket.add_molecules(water.to_json())
@@ -89,7 +89,7 @@ def test_molecules_get(db_socket):
 
     # Pull molecule from the DB for tests
     db_json = db_socket.get_molecules(water_id, index="id")[0]
-    water_db = dclient.Molecule.from_json(db_json)
+    water_db = qp.Molecule.from_json(db_json)
     water_db.compare(water)
 
     # Cleanup adds
@@ -99,7 +99,7 @@ def test_molecules_get(db_socket):
 
 def test_options_add(db_socket):
 
-    opts = dclient.data.get_options("psi_default")
+    opts = qp.data.get_options("psi_default")
 
     ret = db_socket.add_options(opts)
     assert ret["nInserted"] == 1
@@ -112,7 +112,7 @@ def test_options_add(db_socket):
 
 
 def test_options_error(db_socket):
-    opts = dclient.data.get_options("psi_default")
+    opts = qp.data.get_options("psi_default")
 
     del opts["name"]
     ret = db_socket.add_options(opts)
@@ -138,8 +138,8 @@ def test_databases_add(db_socket):
 def test_results_add(db_socket):
 
     # Add two waters
-    water = dclient.data.get_molecule("water_dimer_minima.psimol")
-    water2 = dclient.data.get_molecule("water_dimer_stretch.psimol")
+    water = qp.data.get_molecule("water_dimer_minima.psimol")
+    water2 = qp.data.get_molecule("water_dimer_stretch.psimol")
     mol_insert = db_socket.add_molecules([water.to_json(), water2.to_json()])
 
     page1 = {
@@ -174,8 +174,8 @@ def test_results_add(db_socket):
 @pytest.fixture(scope="module")
 def db_results(db_socket):
     # Add two waters
-    water = dclient.data.get_molecule("water_dimer_minima.psimol")
-    water2 = dclient.data.get_molecule("water_dimer_stretch.psimol")
+    water = qp.data.get_molecule("water_dimer_minima.psimol")
+    water2 = qp.data.get_molecule("water_dimer_stretch.psimol")
     mol_insert = db_socket.add_molecules([water.to_json(), water2.to_json()])
 
     page1 = {
