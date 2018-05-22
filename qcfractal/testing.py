@@ -37,7 +37,7 @@ def pristine_loop():
     db_name = "dqm_local_values_test"
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def test_server(request):
     """
     Builds a server instance with the event loop running in a thread.
