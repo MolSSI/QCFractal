@@ -37,11 +37,11 @@ class Molecule(APIHandler):
         db = self.objects["db_socket"]
 
         kwargs = {}
-        if "index" in self.json:
-            kwargs["index"] = self.json["index"]
+        if "index" in self.json["data"]:
+            kwargs["index"] = self.json["data"]["index"]
 
         ret = {}
-        ret["data"] = db.get_molecules(self.json["ids"], **kwargs)
+        ret["data"] = db.get_molecules(self.json["data"]["ids"], **kwargs)
         for mol in ret["data"]:
             mol["id"] = str(mol["_id"])
             del mol["_id"]
@@ -52,7 +52,7 @@ class Molecule(APIHandler):
 
         db = self.objects["db_socket"]
 
-        ret = db.add_molecules(self.json)
+        ret = db.add_molecules(self.json["data"]["molecules"])
         self.write(ret)
 
 
