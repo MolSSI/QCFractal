@@ -7,6 +7,7 @@ from .db_sockets import db_socket_factory
 from .server import FractalServer
 
 from . import interface
+from . import testing
 # from . import mongo_helper
 # from . import database
 # from . import test_util
