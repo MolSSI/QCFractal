@@ -4,7 +4,7 @@ Main init function for qcfractal
 
 # Import modules
 from .db_sockets import db_socket_factory 
-from .server import DQMServer
+from .server import FractalServer
 
 from . import interface
 # from . import mongo_helper

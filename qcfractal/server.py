@@ -10,7 +10,7 @@ from . import db_sockets
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
 
-class DQMServer(object):
+class FractalServer(object):
     def __init__(
             self,
 
@@ -33,7 +33,7 @@ class DQMServer(object):
         self.port = port
 
         # Setup logging.
-        self.logger = logging.getLogger("DQMServer")
+        self.logger = logging.getLogger("FractalServer")
         self.logger.setLevel(logging.INFO)
 
         if logfile_name is not None:
@@ -101,5 +101,5 @@ class DQMServer(object):
 
 if __name__ == "__main__":
 
-    server = DQMServer()
+    server = FractalServer()
     server.start()

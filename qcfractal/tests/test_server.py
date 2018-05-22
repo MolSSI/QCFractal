@@ -50,7 +50,7 @@ def server(request):
     with pristine_loop() as loop:
         # Clean and re-init the databse, manually handle IOLoop (no start/stop needed)
         print("")
-        server = ds.DQMServer(port=server_port, db_project_name=db_name, io_loop=loop)
+        server = ds.FractalServer(port=server_port, db_project_name=db_name, io_loop=loop)
         server.db.client.drop_database(server.db._project_name)
         server.db.init_database()
 
