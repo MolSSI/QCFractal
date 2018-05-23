@@ -39,11 +39,9 @@ class QCPortal(object):
     def add_molecules(self, mol_list):
 
         # Can take in either molecule or lists
-        if not isinstance(mol_list, (tuple, list)):
-            mol_list = [mol_list]
 
-        mol_submission = []
-        for mol in mol_list:
+        mol_submission = {}
+        for key, mol in mol_list.items():
             if isinstance(mol, molecule.Molecule):
                 mol = mol.to_json()
             elif isinstance(mol, dict):
@@ -51,7 +49,7 @@ class QCPortal(object):
             else:
                 raise TypeError("Input molecule type '{}' not recognized".format(type(mol)))
 
-            mol_submission.append(mol)
+            mol_submission[key] = mol
 
         payload = {"meta": {}, "data": {}}
         payload["data"]["molecules"] = mol_submission

@@ -16,14 +16,14 @@ def test_molecule_socket(test_server):
     water = qp.data.get_molecule("water_dimer_minima.psimol")
 
     # Add a molecule
-    r = requests.post(mol_api_addr, json={"meta": {}, "data": {"molecules": [water.to_json()]}})
+    r = requests.post(mol_api_addr, json={"meta": {}, "data": {"molecules": {"water": water.to_json()}}})
     assert r.status_code == 200
 
     pdata = r.json()
-    assert pdata.keys() == {"errors", "ids", "nInserted", "success"}
+    assert pdata["meta"].keys() == {"error", "n_inserted", "success", "duplicates"}
 
     # Retrieve said molecule
-    r = requests.get(mol_api_addr, json={"meta": {}, "data": {"ids": pdata["ids"], "index": "id"}})
+    r = requests.get(mol_api_addr, json={"meta": {}, "data": {"ids": pdata["data"]["water"], "index": "id"}})
     assert r.status_code == 200
 
     gdata = r.json()

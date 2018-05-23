@@ -19,9 +19,9 @@ def test_molecule_portal(test_server):
     water = qp.data.get_molecule("water_dimer_minima.psimol")
 
     # Test add
-    ret = portal.add_molecules(water)
+    ret = portal.add_molecules({"water": water})
 
     # Test get
-    get_mol = portal.get_molecules(ret["ids"], index="id")
+    get_mol = portal.get_molecules(ret["data"]["water"], index="id")
 
     assert water.compare(get_mol[0])

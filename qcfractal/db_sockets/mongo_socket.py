@@ -174,6 +174,7 @@ class MongoSocket:
         }
 
         # If something went wrong, we cannot generate the full key map
+        # Success should always be True as we are parsing duplicate above and *not* here.
         length_match = len(new_keys) == len(add_return["ids"])
         if (add_return["success"] is False) or (length_match is False):
             ret["meta"]["error"] = "Major insert error."
