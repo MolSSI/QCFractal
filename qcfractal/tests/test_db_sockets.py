@@ -165,9 +165,9 @@ def test_results_add(db_socket):
     }
 
     ret = db_socket.add_results([page1, page2])
-    assert ret["n_inserted"] == 2
+    assert ret["meta"]["n_inserted"] == 2
 
-    ret = db_socket.del_results(ret["ids"], index="id")
+    ret = db_socket.del_results(list(ret["data"].values()), index="id")
     assert ret == 2
 
     ret = db_socket.del_molecules(list(mol_insert["data"].values()), index="id")
