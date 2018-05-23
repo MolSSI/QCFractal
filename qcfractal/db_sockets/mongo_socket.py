@@ -30,6 +30,12 @@ def _str_to_indices(ids):
         if isinstance(x, str):
             ids[num] = ObjectId(x)
 
+def _strip_mongo_ids(data):
+    for d in data:
+        if "_id" in d:
+            d["id"] = str(d["_id"])
+            del d["_id"]
+
 class MongoSocket:
     """
     This is a Mongo QCDB socket class.
@@ -114,37 +120,72 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        # If only a single promote it to a list
-        if isinstance(data, dict):
-            data = [data]
-
         # Build a dictionary of new molecules
         new_mols = {}
-        for dmol in data:
+        for key, dmol in data.items():
             mol = interface.Molecule(dmol, dtype="json", orient=False)
-            new_mols[mol.get_hash()] = mol
+            new_mols[key] = mol
+
+        new_kv_hash = {k: v.get_hash() for k, v in new_mols.items()}
 
         # We need to filter out what is already in the database
-        old_mols = self.get_molecules(list(new_mols.keys()), index="hash")
+        old_mols = self.get_molecules(list(new_kv_hash.values()), index="hash")
 
-        # Run a comparison against hash collisions, can be sped up
-        errors = []
-        for old_mol in old_mols:
-            old_hash = old_mol["molecule_hash"]
-            old_mol = interface.Molecule(old_mol, dtype="json", orient=False)
+        # If we have hash matches check to for duplicates
+        key_mapper = {}
+        if old_mols:
+            new_vk_hash = {v: k for k, v in new_kv_hash.items()}
 
-            if old_mol.compare(new_mols[old_hash]):
-                del new_mols[old_hash]
-                errors.append((old_hash, 11000))
+            for old_mol in old_mols:
 
+                # This is the user provided key
+                new_mol_key = new_vk_hash[old_mol["molecule_hash"]]
+
+                new_mol = new_mols[new_mol_key]
+
+                if new_mol.compare(old_mol):
+                    del new_mols[new_mol_key]
+                    key_mapper[new_mol_key] = old_mol["id"]
+                else:
+                    # If this happens, we need to think a bit about what to do
+                    # Effectively our molecule hash index now has duplicates.
+                    # This is *sort of* ok as we use uuid's for all internal projects.
+                    raise KeyError("!!! WARNING !!!: Hash collision detected")
+
+        # Carefully make this flat
         new_inserts = []
-        for new_hash, new_mol in new_mols.items():
+        new_keys = []
+        for new_key, new_mol in new_mols.items():
             data = new_mol.to_json()
-            data["molecule_hash"] = new_hash
-            new_inserts.append(data)
+            data["molecule_hash"] = new_mol.get_hash()
 
-        ret = self._add_generic(new_inserts, "molecules")
-        ret["errors"].extend(errors)
+            new_inserts.append(data)
+            new_keys.append(new_key)
+
+        add_return = self._add_generic(new_inserts, "molecules")
+
+        ret = {
+            "meta": {
+                "error": False,
+                "n_inserted": add_return["nInserted"],
+                "success": add_return["success"],
+                "duplicates": list(key_mapper.keys())
+            },
+        }
+
+        # If something went wrong, we cannot generate the full key map
+        length_match = len(new_keys) == len(add_return["ids"])
+        if (add_return["success"] is False) or (length_match is False):
+            ret["meta"]["error"] = "Major insert error."
+            ret["data"] = key_mapper
+            return ret
+
+        # Adds the new keys to the key map
+        for new_key, mol_id in zip(new_keys, add_return["ids"]):
+            key_mapper[new_key] = mol_id
+
+        ret["data"] = key_mapper
+
         return ret
 
     def add_options(self, data):
@@ -225,6 +266,7 @@ class MongoSocket:
 
         ret = {"errors": [], "ids":[], "nInserted": 0, "success": False}
         if len(data) == 0:
+            ret["success"] = True
             return ret
 
         try:
@@ -235,7 +277,7 @@ class MongoSocket:
             ret["errors"] = []
         except pymongo.errors.BulkWriteError as tmp:
             ret["success"] = False
-            # ret["ids"] = [str(x) for x in tmp.inserted_ids]
+            ret["ids"] = [str(x) for x in tmp.inserted_ids]
             ret["nInserted"] = tmp.details["nInserted"]
             ret["errors"] = [(x["op"]["_id"], x["code"]) for x in tmp.details["writeErrors"]]
         return ret
@@ -624,8 +666,12 @@ class MongoSocket:
         ret = self._project["molecules"].find({index: {"$in": molecule_ids}})
         if ret is None:
             ret = []
+        else:
+            ret = list(ret)
 
-        return list(ret)
+        _strip_mongo_ids(ret)
+
+        return ret
 
     def json_query(self, json_data):
         """

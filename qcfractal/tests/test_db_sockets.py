@@ -41,18 +41,21 @@ def test_molecules_add(db_socket):
     water = qp.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
-    ret = db_socket.add_molecules(water.to_json())
-    assert ret["nInserted"] == 1
+    ret1 = db_socket.add_molecules({"new_water": water.to_json()})
+    assert ret1["meta"]["success"] is True
+    assert ret1["meta"]["n_inserted"] == 1
 
     # Try duplicate adds
-    ret = db_socket.add_molecules(water.to_json())
-    assert ret["nInserted"] == 0
-    assert ret["errors"][0] == (water.get_hash(), 11000)
+    ret2 = db_socket.add_molecules({"new_water2": water.to_json()})
+    assert ret2["meta"]["n_inserted"] == 0
+    assert ret2["meta"]["duplicates"][0] == "new_water2"
+
+    # Assert the ids match
+    assert ret1["data"]["new_water"] == ret2["data"]["new_water2"]
 
     # Pull molecule from the DB for tests
     db_json = db_socket.get_molecules(water.get_hash(), index="hash")[0]
-    water_db = qp.Molecule.from_json(db_json)
-    water_db.compare(water)
+    water.compare(db_json)
 
     # Cleanup adds
     ret = db_socket.del_molecules(water.get_hash(), index="hash")
