@@ -51,7 +51,7 @@ def test_option_socket(test_server):
     assert r.status_code == 200
 
     pdata = r.json()
-    assert pdata.keys() == meta_set
+    assert pdata["meta"].keys() == meta_set
 
     # ret = db_socket.add_options(opts)
     # assert ret["n_inserted"] == 1

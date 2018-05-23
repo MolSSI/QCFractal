@@ -106,10 +106,10 @@ def test_options_add(db_socket):
     opts = qp.data.get_options("psi_default")
 
     ret = db_socket.add_options([opts, opts])
-    assert ret["n_inserted"] == 1
+    assert ret["meta"]["n_inserted"] == 1
 
     ret = db_socket.add_options(opts)
-    assert ret["n_inserted"] == 0
+    assert ret["meta"]["n_inserted"] == 0
 
     del opts["_id"]
     assert opts == db_socket.get_options({"name": opts["name"], "program": opts["program"]})[0]
@@ -121,8 +121,8 @@ def test_options_error(db_socket):
 
     del opts["name"]
     ret = db_socket.add_options(opts)
-    assert ret["n_inserted"] == 0
-    assert len(ret["validation_errors"]) == 1
+    assert ret["meta"]["n_inserted"] == 0
+    assert len(ret["meta"]["validation_errors"]) == 1
 
 def test_databases_add(db_socket):
 
@@ -130,7 +130,7 @@ def test_databases_add(db_socket):
 
     ret = db_socket.add_database(db)
     del db["_id"]
-    assert ret["n_inserted"] == 1
+    assert ret["meta"]["n_inserted"] == 1
 
     new_db = db_socket.get_database(db["category"], db["name"])
     assert db == new_db
@@ -167,7 +167,8 @@ def test_results_add(db_socket):
     ret = db_socket.add_results([page1, page2])
     assert ret["meta"]["n_inserted"] == 2
 
-    ret = db_socket.del_results(list(ret["data"].values()), index="id")
+    result_ids = [x[1] for x in ret["data"]]
+    ret = db_socket.del_results(result_ids, index="id")
     assert ret == 2
 
     ret = db_socket.del_molecules(list(mol_insert["data"].values()), index="id")
@@ -227,13 +228,14 @@ def db_results(db_socket):
         "return_result": 20
     }
 
-    pages_insert = db_socket.add_results([page1, page2, page3, page4, page5])
+    results_insert = db_socket.add_results([page1, page2, page3, page4, page5])
 
     yield db_socket
 
     # Cleanup
-    ret = db_socket.del_results(list(pages_insert["data"].values()), index="id")
-    assert ret == pages_insert["meta"]["n_inserted"]
+    result_ids = [x[1] for x in results_insert["data"]]
+    ret = db_socket.del_results(result_ids, index="id")
+    assert ret == results_insert["meta"]["n_inserted"]
 
     ret = db_socket.del_molecules(list(mol_insert["data"].values()), index="id")
     assert ret == mol_insert["meta"]["n_inserted"]

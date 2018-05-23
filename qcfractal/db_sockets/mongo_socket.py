@@ -162,8 +162,7 @@ class MongoSocket:
             new_inserts.append(data)
             new_keys.append(new_key)
 
-        ret = {}
-        ret["meta"] = self._add_generic(new_inserts, "molecules")
+        ret = self._add_generic(new_inserts, "molecules")
         ret["meta"]["duplicates"].extend(list(key_mapper.keys()))
         ret["meta"]["validation_errors"] = []
 
@@ -212,7 +211,7 @@ class MongoSocket:
                 validation_errors.append((dopt, error))
 
         ret = self._add_generic(new_options, "options")
-        ret["validation_errors"] = validation_errors
+        ret["meta"]["validation_errors"] = validation_errors
         return ret
 
     def add_database(self, data):
@@ -251,15 +250,7 @@ class MongoSocket:
             for i in self._lower_results_index:
                 d[i] = d[i].lower()
 
-        ret = {}
-        ret["meta"] = self._add_generic(data, "results")
-
-        ret_data = {}
-        for d in data:
-            key = tuple(d[x] for x in self._collection_indices["results"])
-            ret_data[key] = str(d["_id"])
-
-        ret["data"] = ret_data
+        ret = self._add_generic(data, "results")
 
         return ret
 
@@ -268,31 +259,45 @@ class MongoSocket:
         Helper function that facilitates adding a record.
         """
 
-        ret = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
+        meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
+
         if len(data) == 0:
-            ret["success"] = True
+            ret = {}
+            meta["success"] = True
+            ret["meta"] = meta
+            ret["data"] = {}
             return ret
 
         try:
             tmp = self._project[collection].insert_many(data, ordered=False)
-            ret["success"] = tmp.acknowledged
-            ret["n_inserted"] = len(tmp.inserted_ids)
+            meta["success"] = tmp.acknowledged
+            meta["n_inserted"] = len(tmp.inserted_ids)
         except pymongo.errors.BulkWriteError as tmp:
-            ret["success"] = False
-            ret["n_inserted"] = tmp.details["nInserted"]
+            meta["success"] = False
+            meta["n_inserted"] = tmp.details["nInserted"]
             for error in tmp.details["writeErrors"]:
                 ukey = tuple(data[error["index"]][key] for key in self._collection_indices[collection])
                 # Duplicate key errors, add to meta
                 if error["code"] == 11000:
-                    ret["duplicates"].append(ukey)
+                    meta["duplicates"].append(ukey)
                 else:
-                    ret["errors"].append({"id": str(x["op"]["_id"]), "code": x["code"], "key": ukey})
+                    meta["errors"].append({"id": str(x["op"]["_id"]), "code": x["code"], "key": ukey})
 
-                ret["error_description"] = "unknown"
+                meta["error_description"] = "unknown"
 
             # Only duplicates, no true errors
-            if len(ret["errors"]) == 0:
-                ret["success"] = True
+            if len(meta["errors"]) == 0:
+                meta["success"] = True
+
+        # Add id's of new keys
+        rdata = []
+        for d in data:
+            ukey = tuple(d[key] for key in self._collection_indices[collection])
+            rdata.append((ukey, str(d["_id"])))
+
+        ret = {}
+        ret["data"] = rdata
+        ret["meta"] = meta
 
         return ret
 

@@ -61,7 +61,7 @@ class Option(APIHandler):
 
         db = self.objects["db_socket"]
 
-        ret["data"] = db.get_options(self.json["data"])
+        ret = db.get_options(self.json["data"])
 
         self.write(ret)
 
@@ -70,6 +70,7 @@ class Option(APIHandler):
         db = self.objects["db_socket"]
 
         ret = db.add_options(self.json["data"])
+        print(ret)
         self.write(ret)
 
 
