@@ -47,6 +47,7 @@ def test_molecules_add(db_socket):
 
     # Try duplicate adds
     ret2 = db_socket.add_molecules({"new_water2": water.to_json()})
+    assert ret1["meta"]["success"] is True
     assert ret2["meta"]["n_inserted"] == 0
     assert ret2["meta"]["duplicates"][0] == "new_water2"
 
@@ -104,14 +105,15 @@ def test_options_add(db_socket):
 
     opts = qp.data.get_options("psi_default")
 
-    ret = db_socket.add_options(opts)
+    ret = db_socket.add_options([opts, opts])
     assert ret["n_inserted"] == 1
 
-    ret = db_socket.add_options(opts)
-    assert ret["n_inserted"] == 0
+    # ret = db_socket.add_options(opts)
+    # assert ret["n_inserted"] == 0
 
-    del opts["_id"]
-    assert opts == db_socket.get_options({"name": opts["name"], "program": opts["program"]})[0]
+    # del opts["_id"]
+    # assert opts == db_socket.get_options({"name": opts["name"], "program": opts["program"]})[0]
+    # opts = qp.data.get_options("psi_default")
 
 
 def test_options_error(db_socket):

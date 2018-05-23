@@ -9,7 +9,9 @@ import pytest
 import requests
 
 mol_api_addr = test_server_address + "molecule"
+opt_api_addr = test_server_address + "option"
 
+meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description'}
 
 def test_molecule_socket(test_server):
 
@@ -20,7 +22,7 @@ def test_molecule_socket(test_server):
     assert r.status_code == 200
 
     pdata = r.json()
-    assert pdata["meta"].keys() == {"error", "n_inserted", "success", "duplicates"}
+    assert pdata["meta"].keys() == meta_set
 
     # Retrieve said molecule
     r = requests.get(mol_api_addr, json={"meta": {}, "data": {"ids": pdata["data"]["water"], "index": "id"}})
@@ -39,3 +41,25 @@ def test_molecule_socket(test_server):
     assert isinstance(gdata["data"], list)
 
     assert water.compare(gdata["data"][0])
+
+
+def test_option_socket(test_server):
+
+    opts = qp.data.get_options("psi_default")
+    # Add a molecule
+    r = requests.post(opt_api_addr, json={"meta": {}, "data": [opts]})
+    assert r.status_code == 200
+
+    pdata = r.json()
+    assert pdata["meta"].keys() == meta_set
+
+    # ret = db_socket.add_options(opts)
+    # assert ret["n_inserted"] == 1
+
+    # ret = db_socket.add_options(opts)
+    # assert ret["n_inserted"] == 0
+
+    # del opts["_id"]
+    # assert opts == db_socket.get_options({"name": opts["name"], "program": opts["program"]})[0]
+
+

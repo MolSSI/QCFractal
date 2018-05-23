@@ -51,7 +51,7 @@ class MongoSocket:
         self._valid_collections = {"molecules", "databases", "results", "options"}
         self._collection_indices = {
             "databases": ["category", "name"],
-            "options": ["name", "program"],
+            "options": ["program", "name"],
             "results": ["molecule_id", "method", "basis", "option", "program"],
             "molecules": ["molecule_hash"]
         }
@@ -127,6 +127,7 @@ class MongoSocket:
             new_mols[key] = mol
 
         new_kv_hash = {k: v.get_hash() for k, v in new_mols.items()}
+        new_vk_hash = {v: k for k, v in new_kv_hash.items()}
 
         # We need to filter out what is already in the database
         old_mols = self.get_molecules(list(new_kv_hash.values()), index="hash")
@@ -134,7 +135,6 @@ class MongoSocket:
         # If we have hash matches check to for duplicates
         key_mapper = {}
         if old_mols:
-            new_vk_hash = {v: k for k, v in new_kv_hash.items()}
 
             for old_mol in old_mols:
 
@@ -162,28 +162,20 @@ class MongoSocket:
             new_inserts.append(data)
             new_keys.append(new_key)
 
-        add_return = self._add_generic(new_inserts, "molecules")
-
-        ret = {
-            "meta": {
-                "error": False,
-                "n_inserted": add_return["n_inserted"],
-                "success": add_return["success"],
-                "duplicates": list(key_mapper.keys())
-            },
-        }
+        ret = {}
+        ret["meta"] = self._add_generic(new_inserts, "molecules")
+        ret["meta"]["duplicates"].extend(list(key_mapper.keys()))
 
         # If something went wrong, we cannot generate the full key map
         # Success should always be True as we are parsing duplicate above and *not* here.
-        length_match = len(new_keys) == len(add_return["ids"])
-        if (add_return["success"] is False) or (length_match is False):
-            ret["meta"]["error"] = "Major insert error."
+        if (ret["meta"]["success"] is False):
+            ret["meta"]["error_description"] = "Major insert error."
             ret["data"] = key_mapper
             return ret
 
         # Adds the new keys to the key map
-        for new_key, mol_id in zip(new_keys, add_return["ids"]):
-            key_mapper[new_key] = mol_id
+        for mol in new_inserts:
+            key_mapper[new_vk_hash[mol["molecule_hash"]]] = str(mol["_id"])
 
         ret["data"] = key_mapper
 
@@ -265,7 +257,7 @@ class MongoSocket:
         Helper function that facilitates adding a record.
         """
 
-        ret = {"errors": [], "ids":[], "n_inserted": 0, "success": False}
+        ret = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
         if len(data) == 0:
             ret["success"] = True
             return ret
@@ -273,14 +265,24 @@ class MongoSocket:
         try:
             tmp = self._project[collection].insert_many(data, ordered=False)
             ret["success"] = tmp.acknowledged
-            ret["ids"] = [str(x) for x in tmp.inserted_ids]
             ret["n_inserted"] = len(tmp.inserted_ids)
-            ret["errors"] = []
         except pymongo.errors.BulkWriteError as tmp:
             ret["success"] = False
-            # ret["ids"] = [str(x) for x in tmp.inserted_ids]
             ret["n_inserted"] = tmp.details["nInserted"]
-            ret["errors"] = [(x["op"]["_id"], x["code"]) for x in tmp.details["writeErrors"]]
+            for error in tmp.details["writeErrors"]:
+                ukey = tuple(data[error["index"]][key] for key in self._collection_indices[collection])
+                # Duplicate key errors, add to meta
+                if error["code"] == 11000:
+                    ret["duplicates"].append(ukey)
+                else:
+                    ret["errors"].append({"id": str(x["op"]["_id"]), "code": x["code"], "key": ukey})
+
+                ret["error_description"] = "unknown"
+
+            # Only duplicates, no true errors
+            if len(ret["errors"]) == 0:
+                ret["success"] = True
+
         return ret
 
     def del_by_index(self, collection, hashes, index="_id"):
