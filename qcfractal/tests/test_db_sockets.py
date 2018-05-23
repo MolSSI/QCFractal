@@ -66,18 +66,18 @@ def test_molecules_add_many(db_socket):
     water = qp.data.get_molecule("water_dimer_minima.psimol")
     water2 = qp.data.get_molecule("water_dimer_stretch.psimol")
 
-    ret = db_socket.add_molecules([water.to_json(), water2.to_json()])
-    assert ret["nInserted"] == 2
+    ret = db_socket.add_molecules({"water1": water.to_json(), "water2": water2.to_json()})
+    assert ret["meta"]["n_inserted"] == 2
 
     # Cleanup adds
     ret = db_socket.del_molecules([water.get_hash(), water2.get_hash()], index="hash")
     assert ret == 2
 
-    ret = db_socket.add_molecules([water.to_json(), water2.to_json()])
-    assert ret["nInserted"] == 2
+    ret = db_socket.add_molecules({"water1": water.to_json(), "water2": water2.to_json()})
+    assert ret["meta"]["n_inserted"] == 2
 
     # Cleanup adds
-    ret = db_socket.del_molecules(ret["ids"], index="id")
+    ret = db_socket.del_molecules(list(ret["data"].values()), index="id")
     assert ret == 2
 
 
@@ -86,9 +86,9 @@ def test_molecules_get(db_socket):
     water = qp.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
-    ret = db_socket.add_molecules(water.to_json())
-    assert ret["nInserted"] == 1
-    water_id = ret["ids"][0]
+    ret = db_socket.add_molecules({"water": water.to_json()})
+    assert ret["meta"]["n_inserted"] == 1
+    water_id = ret["data"]["water"]
 
     # Pull molecule from the DB for tests
     db_json = db_socket.get_molecules(water_id, index="id")[0]
@@ -105,10 +105,10 @@ def test_options_add(db_socket):
     opts = qp.data.get_options("psi_default")
 
     ret = db_socket.add_options(opts)
-    assert ret["nInserted"] == 1
+    assert ret["n_inserted"] == 1
 
     ret = db_socket.add_options(opts)
-    assert ret["nInserted"] == 0
+    assert ret["n_inserted"] == 0
 
     del opts["_id"]
     assert opts == db_socket.get_options({"name": opts["name"], "program": opts["program"]})[0]
@@ -119,7 +119,7 @@ def test_options_error(db_socket):
 
     del opts["name"]
     ret = db_socket.add_options(opts)
-    assert ret["nInserted"] == 0
+    assert ret["n_inserted"] == 0
     assert len(ret["validation_errors"]) == 1
 
 
@@ -129,7 +129,7 @@ def test_databases_add(db_socket):
 
     ret = db_socket.add_database(db)
     del db["_id"]
-    assert ret["nInserted"] == 1
+    assert ret["n_inserted"] == 1
 
     new_db = db_socket.get_database(db["category"], db["name"])
     assert db == new_db
@@ -143,10 +143,10 @@ def test_results_add(db_socket):
     # Add two waters
     water = qp.data.get_molecule("water_dimer_minima.psimol")
     water2 = qp.data.get_molecule("water_dimer_stretch.psimol")
-    mol_insert = db_socket.add_molecules([water.to_json(), water2.to_json()])
+    mol_insert = db_socket.add_molecules({"water1": water.to_json(), "water2": water2.to_json()})
 
     page1 = {
-        "molecule_id": mol_insert["ids"][0],
+        "molecule_id": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
         "option": "default",
@@ -155,7 +155,7 @@ def test_results_add(db_socket):
     }
 
     page2 = {
-        "molecule_id": mol_insert["ids"][1],
+        "molecule_id": mol_insert["data"]["water2"],
         "method": "M1",
         "basis": "B1",
         "option": "default",
@@ -164,12 +164,12 @@ def test_results_add(db_socket):
     }
 
     ret = db_socket.add_results([page1, page2])
-    assert ret["nInserted"] == 2
+    assert ret["n_inserted"] == 2
 
     ret = db_socket.del_results(ret["ids"], index="id")
     assert ret == 2
 
-    ret = db_socket.del_molecules(mol_insert["ids"], index="id")
+    ret = db_socket.del_molecules(list(mol_insert["data"].values()), index="id")
     assert ret == 2
 
 ### Build out a set of query tests
@@ -179,10 +179,10 @@ def db_results(db_socket):
     # Add two waters
     water = qp.data.get_molecule("water_dimer_minima.psimol")
     water2 = qp.data.get_molecule("water_dimer_stretch.psimol")
-    mol_insert = db_socket.add_molecules([water.to_json(), water2.to_json()])
+    mol_insert = db_socket.add_molecules({"water1": water.to_json(), "water2": water2.to_json()})
 
     page1 = {
-        "molecule_id": mol_insert["ids"][0],
+        "molecule_id": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
         "option": "default",
@@ -191,7 +191,7 @@ def db_results(db_socket):
     }
 
     page2 = {
-        "molecule_id": mol_insert["ids"][1],
+        "molecule_id": mol_insert["data"]["water2"],
         "method": "M1",
         "basis": "B1",
         "option": "default",
@@ -200,7 +200,7 @@ def db_results(db_socket):
     }
 
     page3 = {
-        "molecule_id": mol_insert["ids"][0],
+        "molecule_id": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
         "option": "default",
@@ -209,7 +209,7 @@ def db_results(db_socket):
     }
 
     page4 = {
-        "molecule_id": mol_insert["ids"][0],
+        "molecule_id": mol_insert["data"]["water1"],
         "method": "M2",
         "basis": "B1",
         "option": "default",
@@ -218,7 +218,7 @@ def db_results(db_socket):
     }
 
     page5 = {
-        "molecule_id": mol_insert["ids"][1],
+        "molecule_id": mol_insert["data"]["water2"],
         "method": "M2",
         "basis": "B1",
         "option": "default",
@@ -232,10 +232,10 @@ def db_results(db_socket):
 
     # Cleanup
     ret = db_socket.del_results(pages_insert["ids"], index="id")
-    assert ret == pages_insert["nInserted"]
+    assert ret == pages_insert["n_inserted"]
 
-    ret = db_socket.del_molecules(mol_insert["ids"], index="id")
-    assert ret == mol_insert["nInserted"]
+    ret = db_socket.del_molecules(list(mol_insert["data"].values()), index="id")
+    assert ret == mol_insert["meta"]["n_inserted"]
 
 
 def test_results_query_total(db_results):

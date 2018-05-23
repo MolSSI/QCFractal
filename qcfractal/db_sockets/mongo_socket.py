@@ -167,7 +167,7 @@ class MongoSocket:
         ret = {
             "meta": {
                 "error": False,
-                "n_inserted": add_return["nInserted"],
+                "n_inserted": add_return["n_inserted"],
                 "success": add_return["success"],
                 "duplicates": list(key_mapper.keys())
             },
@@ -264,7 +264,7 @@ class MongoSocket:
         Helper function that facilitates adding a record.
         """
 
-        ret = {"errors": [], "ids":[], "nInserted": 0, "success": False}
+        ret = {"errors": [], "ids":[], "n_inserted": 0, "success": False}
         if len(data) == 0:
             ret["success"] = True
             return ret
@@ -273,12 +273,12 @@ class MongoSocket:
             tmp = self._project[collection].insert_many(data, ordered=False)
             ret["success"] = tmp.acknowledged
             ret["ids"] = [str(x) for x in tmp.inserted_ids]
-            ret["nInserted"] = len(tmp.inserted_ids)
+            ret["n_inserted"] = len(tmp.inserted_ids)
             ret["errors"] = []
         except pymongo.errors.BulkWriteError as tmp:
             ret["success"] = False
-            ret["ids"] = [str(x) for x in tmp.inserted_ids]
-            ret["nInserted"] = tmp.details["nInserted"]
+            # ret["ids"] = [str(x) for x in tmp.inserted_ids]
+            ret["n_inserted"] = tmp.details["nInserted"]
             ret["errors"] = [(x["op"]["_id"], x["code"]) for x in tmp.details["writeErrors"]]
         return ret
 
