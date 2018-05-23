@@ -6,6 +6,7 @@ import pandas as pd
 
 from . import molecule
 
+
 class QCPortal(object):
     def __init__(self, port, username="", password=""):
         if "http" not in port:
@@ -20,26 +21,26 @@ class QCPortal(object):
         self._mol_addr = self.port + "molecule"
         # self.info = self.get_information()
 
-
     ### Molecule section
 
-    def get_molcules(self, mol_list, index="id"):
+    def get_molecules(self, mol_list, index="id"):
 
         # Can take in either molecule or lists
         if not isinstance(mol_list, (tuple, list)):
             mol_list = [mol_list]
 
-
-        r = requests.get(self._mol_addr, json={"ids": mol_list, "index": index})
+        payload = {"meta": {}, "data": {}}
+        payload["data"] = {"ids": mol_list, "index": index}
+        r = requests.get(self._mol_addr, json=payload)
         assert r.status_code == 200
+
+        return r.json()["data"]
 
     def add_molecules(self, mol_list):
 
-
         # Can take in either molecule or lists
         if not isinstance(mol_list, (tuple, list)):
             mol_list = [mol_list]
-
 
         mol_submission = []
         for mol in mol_list:
@@ -57,5 +58,5 @@ class QCPortal(object):
 
         r = requests.post(self._mol_addr, json=payload)
         assert r.status_code == 200
-        # print(r.json())
 
+        return r.json()

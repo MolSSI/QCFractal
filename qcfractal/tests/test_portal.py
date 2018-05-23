@@ -11,11 +11,17 @@ import pytest
 # All tests should import test_server, but not use it
 # Make PyTest aware that this module needs the server
 
-def test_molecule_portal(test_server):
 
+def test_molecule_portal(test_server):
 
     portal = qp.QCPortal(test_server_address)
 
     water = qp.data.get_molecule("water_dimer_minima.psimol")
 
-    portal.add_molecules(water)
+    # Test add
+    ret = portal.add_molecules(water)
+
+    # Test get
+    get_mol = portal.get_molecules(ret["ids"], index="id")
+
+    assert water.compare(get_mol[0])
