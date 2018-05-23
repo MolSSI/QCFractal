@@ -11,7 +11,7 @@ import requests
 mol_api_addr = test_server_address + "molecule"
 opt_api_addr = test_server_address + "option"
 
-meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description'}
+meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
 
 def test_molecule_socket(test_server):
 
@@ -51,7 +51,7 @@ def test_option_socket(test_server):
     assert r.status_code == 200
 
     pdata = r.json()
-    assert pdata["meta"].keys() == meta_set
+    assert pdata.keys() == meta_set
 
     # ret = db_socket.add_options(opts)
     # assert ret["n_inserted"] == 1

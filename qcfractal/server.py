@@ -67,6 +67,7 @@ class FractalServer(object):
         self.app = tornado.web.Application([
             # (r"/information", dqm.handlers.Information, tornado_args),
             (r"/molecule", web_handlers.Molecule, tornado_args),
+            (r"/option", web_handlers.Option, tornado_args),
             # (r"/mongod", dqm.handlers.Mongod, tornado_args),
         ], compress_response=True)
         self.app.listen(self.port)

@@ -52,6 +52,26 @@ class Molecule(APIHandler):
         ret = db.add_molecules(self.json["data"]["molecules"])
         self.write(ret)
 
+class Option(APIHandler):
+    """
+    A handler to push and get molecules.
+    """
+
+    def get(self):
+
+        db = self.objects["db_socket"]
+
+        ret["data"] = db.get_options(self.json["data"])
+
+        self.write(ret)
+
+    def post(self):
+
+        db = self.objects["db_socket"]
+
+        ret = db.add_options(self.json["data"])
+        self.write(ret)
+
 
 # def _check_auth(objects, header):
 #     auth = False

@@ -165,6 +165,7 @@ class MongoSocket:
         ret = {}
         ret["meta"] = self._add_generic(new_inserts, "molecules")
         ret["meta"]["duplicates"].extend(list(key_mapper.keys()))
+        ret["meta"]["validation_errors"] = []
 
         # If something went wrong, we cannot generate the full key map
         # Success should always be True as we are parsing duplicate above and *not* here.
@@ -317,6 +318,23 @@ class MongoSocket:
         index = db_utils.translate_molecule_index(index)
 
         return self.del_by_index("molecules", values, index=index)
+
+    def del_option(self, program, name):
+        """
+        Removes a database from the database from its hash.
+
+        Parameters
+        ----------
+        hash_val : str or list of strs
+            The hash of a database.
+
+        Returns
+        -------
+        bool
+            Whether the operation was successful.
+        """
+
+        return (self._project["options"].delete_one({"program": program, "name": name})).deleted_count
 
     def del_database(self, category, name):
         """

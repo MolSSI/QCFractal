@@ -36,7 +36,7 @@ class QCPortal(object):
 
         return r.json()["data"]
 
-    def add_molecules(self, mol_list):
+    def add_molecules(self, mol_list, full_return=False):
 
         # Can take in either molecule or lists
 
@@ -57,4 +57,7 @@ class QCPortal(object):
         r = requests.post(self._mol_addr, json=payload)
         assert r.status_code == 200
 
-        return r.json()
+        if full_return:
+            return r.json()
+        else:
+            return r.json()["data"]

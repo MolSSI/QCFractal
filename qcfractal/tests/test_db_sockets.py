@@ -108,13 +108,13 @@ def test_options_add(db_socket):
     ret = db_socket.add_options([opts, opts])
     assert ret["n_inserted"] == 1
 
-    # ret = db_socket.add_options(opts)
-    # assert ret["n_inserted"] == 0
+    ret = db_socket.add_options(opts)
+    assert ret["n_inserted"] == 0
 
-    # del opts["_id"]
-    # assert opts == db_socket.get_options({"name": opts["name"], "program": opts["program"]})[0]
-    # opts = qp.data.get_options("psi_default")
+    del opts["_id"]
+    assert opts == db_socket.get_options({"name": opts["name"], "program": opts["program"]})[0]
 
+    assert 1 == db_socket.del_option(opts["program"], opts["name"])
 
 def test_options_error(db_socket):
     opts = qp.data.get_options("psi_default")
@@ -123,7 +123,6 @@ def test_options_error(db_socket):
     ret = db_socket.add_options(opts)
     assert ret["n_inserted"] == 0
     assert len(ret["validation_errors"]) == 1
-
 
 def test_databases_add(db_socket):
 
