@@ -251,7 +251,17 @@ class MongoSocket:
             for i in self._lower_results_index:
                 d[i] = d[i].lower()
 
-        return self._add_generic(data, "results")
+        ret = {}
+        ret["meta"] = self._add_generic(data, "results")
+
+        ret_data = {}
+        for d in data:
+            key = tuple(d[x] for x in self._collection_indices["results"])
+            ret_data[key] = str(d["_id"])
+
+        ret["data"] = ret_data
+
+        return ret
 
     def _add_generic(self, data, collection):
         """

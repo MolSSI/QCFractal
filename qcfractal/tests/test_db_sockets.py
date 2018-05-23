@@ -232,8 +232,8 @@ def db_results(db_socket):
     yield db_socket
 
     # Cleanup
-    ret = db_socket.del_results(pages_insert["ids"], index="id")
-    assert ret == pages_insert["n_inserted"]
+    ret = db_socket.del_results(list(pages_insert["data"].values()), index="id")
+    assert ret == pages_insert["meta"]["n_inserted"]
 
     ret = db_socket.del_molecules(list(mol_insert["data"].values()), index="id")
     assert ret == mol_insert["meta"]["n_inserted"]
