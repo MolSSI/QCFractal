@@ -82,6 +82,7 @@ class MongoSocket:
             if v:
                 print("New collection '%s' for database!" % k)
 
+### Mongo meta functions
 
     def __repr__(self):
         return "<MongoSocket: address='%s:%d:%s'>" % (self._url, self._port, self._project_name)
@@ -110,6 +111,67 @@ class MongoSocket:
 
     def get_project_name(self):
         return self._project_name
+
+### Mongo add functions
+
+    def _add_generic(self, data, collection, keep_id=False):
+        """
+        Helper function that facilitates adding a record.
+        """
+
+        meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
+
+        if len(data) == 0:
+            ret = {}
+            meta["success"] = True
+            ret["meta"] = meta
+            ret["data"] = {}
+            return ret
+
+        # Try/except for fully successful/partially unsuccessful adds
+        error_skips = []
+        try:
+            tmp = self._project[collection].insert_many(data, ordered=False)
+            meta["success"] = tmp.acknowledged
+            meta["n_inserted"] = len(tmp.inserted_ids)
+        except pymongo.errors.BulkWriteError as tmp:
+            meta["success"] = False
+            meta["n_inserted"] = tmp.details["nInserted"]
+            for error in tmp.details["writeErrors"]:
+                ukey = tuple(data[error["index"]][key] for key in self._collection_indices[collection])
+                # Duplicate key errors, add to meta
+                if error["code"] == 11000:
+                    meta["duplicates"].append(ukey)
+                else:
+                    meta["errors"].append({"id": str(x["op"]["_id"]), "code": x["code"], "key": ukey})
+
+                error_skips.append(error["index"])
+
+
+            # Only duplicates, no true errors
+            if len(meta["errors"]) == 0:
+                meta["success"] = True
+                meta["error_description"] = "Found duplicates"
+            else:
+                meta["error_description"] = "unknown"
+
+        # Add id's of new keys
+        rdata = []
+        if keep_id is False:
+            for x in (set(range(len(data))) - set(error_skips)):
+                d = data[x]
+                ukey = tuple(d[key] for key in self._collection_indices[collection])
+                rdata.append((ukey, str(d["_id"])))
+                del d["_id"]
+
+            for x in error_skips:
+                del data[x]["_id"]
+
+        ret = {}
+        ret["data"] = rdata
+        ret["meta"] = meta
+
+        return ret
 
     def add_molecules(self, data):
         """
@@ -261,65 +323,9 @@ class MongoSocket:
 
         return ret
 
-    def _add_generic(self, data, collection, keep_id=False):
-        """
-        Helper function that facilitates adding a record.
-        """
+### Mongo Delete Functions
 
-        meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
-
-        if len(data) == 0:
-            ret = {}
-            meta["success"] = True
-            ret["meta"] = meta
-            ret["data"] = {}
-            return ret
-
-        error_skips = []
-        try:
-            tmp = self._project[collection].insert_many(data, ordered=False)
-            meta["success"] = tmp.acknowledged
-            meta["n_inserted"] = len(tmp.inserted_ids)
-        except pymongo.errors.BulkWriteError as tmp:
-            meta["success"] = False
-            meta["n_inserted"] = tmp.details["nInserted"]
-            for error in tmp.details["writeErrors"]:
-                ukey = tuple(data[error["index"]][key] for key in self._collection_indices[collection])
-                # Duplicate key errors, add to meta
-                if error["code"] == 11000:
-                    meta["duplicates"].append(ukey)
-                else:
-                    meta["errors"].append({"id": str(x["op"]["_id"]), "code": x["code"], "key": ukey})
-
-                error_skips.append(error["index"])
-
-
-            # Only duplicates, no true errors
-            if len(meta["errors"]) == 0:
-                meta["success"] = True
-                meta["error_description"] = "Found duplicates"
-            else:
-                meta["error_description"] = "unknown"
-
-        # Add id's of new keys
-        rdata = []
-        if keep_id is False:
-            for x in (set(range(len(data))) - set(error_skips)):
-                d = data[x]
-                ukey = tuple(d[key] for key in self._collection_indices[collection])
-                rdata.append((ukey, str(d["_id"])))
-                del d["_id"]
-
-            for x in error_skips:
-                del data[x]["_id"]
-
-        ret = {}
-        ret["data"] = rdata
-        ret["meta"] = meta
-
-        return ret
-
-    def del_by_index(self, collection, hashes, index="_id"):
+    def _del_by_index(self, collection, hashes, index="_id"):
         """
         Helper function that facilitates deletion based on hash.
         """
@@ -350,7 +356,7 @@ class MongoSocket:
 
         index = db_utils.translate_molecule_index(index)
 
-        return self.del_by_index("molecules", values, index=index)
+        return self._del_by_index("molecules", values, index=index)
 
     def del_option(self, program, name):
         """
@@ -403,7 +409,90 @@ class MongoSocket:
         """
         index = _translate_id_index(index)
 
-        return self.del_by_index("results", values, index=index)
+        return self._del_by_index("results", values, index=index)
+
+### Mongo get functions
+
+    # Do a lookup on the results collection using a <molecule, method> key.
+    def get_results(self, query, projection={}):
+
+        parsed_query = {}
+
+        # We are querying via id
+        if "_id" in query:
+            if len(query) > 1:
+                raise KeyError("ID was provided, cannot use other indices")
+
+            if not isinstance(parsed_query, (list, tuple)):
+                parsed_query["_id"] = {"$in": query["_id"]}
+                _str_to_indices(parsed_query["_id"]["$in"])
+            else:
+                parsed_query["_id"] = [query["_id"]]
+                _str_to_indices(parsed_query["_id"])
+
+        else:
+            # Check if there are unknown keys
+            remain = set(query) - set(self._collection_indices["results"])
+            if remain:
+                raise KeyError("Results query found unkown keys {}".format(list(remain)))
+
+            for key, value in query.items():
+                if isinstance(value, (list, tuple)):
+                    if key in self._lower_results_index:
+                        value = [v.lower() for v in value]
+                    parsed_query[key] = {"$in": value}
+                else:
+                    parsed_query[key] = value.lower()
+
+        # Manipulate the projection
+        proj = copy.deepcopy(projection)
+        proj["_id"] = False
+
+        ret = self._project["results"].find(parsed_query, projection=proj)
+        if ret is None:
+            ret = []
+
+        return list(ret)
+
+    def get_database(self, category, name):
+        return self._project["databases"].find_one({"category": category, "name": name}, projection={"_id": False})
+
+    def get_options(self, data):
+
+        if isinstance(data, dict):
+            data = [data]
+
+        ret = []
+        for d in data:
+            tmp = self._project["options"].find_one(
+                {
+                    "name": d["name"],
+                    "program": d["program"]
+                }, projection={"_id": False})
+            ret.append(tmp)
+
+        return ret
+
+    def get_molecules(self, molecule_ids, index="id"):
+        index = db_utils.translate_molecule_index(index)
+
+        if not isinstance(molecule_ids, (list, tuple)):
+            molecule_ids = [molecule_ids]
+
+        if index == "_id":
+            _str_to_indices(molecule_ids)
+
+        ret = self._project["molecules"].find({index: {"$in": molecule_ids}})
+        if ret is None:
+            ret = []
+        else:
+            ret = list(ret)
+
+        _strip_mongo_ids(ret)
+
+        return ret
+
+### Complex parsers
 
     def evaluate(self, hashes, methods, field="return_value"):
         """
@@ -623,7 +712,7 @@ class MongoSocket:
             res.append(
                 self.get_value(field, db, item["name"], stoich, method, do_stoich, debug_level))
             index.append(item["name"])
-        print("I am getting methods", method)
+        # print("I am getting methods", method)
         return pd.DataFrame(data={method: res}, index=index)
 
     def get_dataframe(self, field, db, stoich, methods, do_stoich=True, debug_level=1):
@@ -648,84 +737,7 @@ class MongoSocket:
         return pd.DataFrame(data=res, index=names, columns=methods)
 
 
-    # Do a lookup on the results collection using a <molecule, method> key.
-    def get_results(self, query, projection={}):
 
-        parsed_query = {}
-
-        # We are querying via id
-        if "_id" in query:
-            if len(query) > 1:
-                raise KeyError("ID was provided, cannot use other indices")
-
-            if not isinstance(parsed_query, (list, tuple)):
-                parsed_query["_id"] = {"$in": query["_id"]}
-                _str_to_indices(parsed_query["_id"]["$in"])
-            else:
-                parsed_query["_id"] = [query["_id"]]
-                _str_to_indices(parsed_query["_id"])
-
-        else:
-            # Check if there are unknown keys
-            remain = set(query) - set(self._collection_indices["results"])
-            if remain:
-                raise KeyError("Results query found unkown keys {}".format(list(remain)))
-
-            for key, value in query.items():
-                if isinstance(value, (list, tuple)):
-                    if key in self._lower_results_index:
-                        value = [v.lower() for v in value]
-                    parsed_query[key] = {"$in": value}
-                else:
-                    parsed_query[key] = value.lower()
-
-        # Manipulate the
-        proj = copy.deepcopy(projection)
-        proj["_id"] = False
-
-        ret = self._project["results"].find(parsed_query, projection=proj)
-        if ret is None:
-            ret = []
-
-        return list(ret)
-
-    def get_database(self, category, name):
-        return self._project["databases"].find_one({"category": category, "name": name}, projection={"_id": False})
-
-    def get_options(self, data):
-
-        if isinstance(data, dict):
-            data = [data]
-
-        ret = []
-        for d in data:
-            tmp = self._project["options"].find_one(
-                {
-                    "name": d["name"],
-                    "program": d["program"]
-                }, projection={"_id": False})
-            ret.append(tmp)
-
-        return ret
-
-    def get_molecules(self, molecule_ids, index="id"):
-        index = db_utils.translate_molecule_index(index)
-
-        if not isinstance(molecule_ids, (list, tuple)):
-            molecule_ids = [molecule_ids]
-
-        if index == "_id":
-            _str_to_indices(molecule_ids)
-
-        ret = self._project["molecules"].find({index: {"$in": molecule_ids}})
-        if ret is None:
-            ret = []
-        else:
-            ret = list(ret)
-
-        _strip_mongo_ids(ret)
-
-        return ret
 
     def json_query(self, json_data):
         """
