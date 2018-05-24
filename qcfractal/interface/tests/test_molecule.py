@@ -79,6 +79,16 @@ def test_water_minima_fragment():
     assert mol.symbols[3:] + mol.symbols[:3] == frag_1_0.symbols
     assert np.allclose(mol.masses[3:] + mol.masses[:3], frag_1_0.masses)
 
+def test_pretty_print():
+
+    mol = dqm.data.get_molecule("water_dimer_minima.psimol")
+    assert isinstance(mol.pretty_print(), str)
+
+def test_to_string():
+
+    mol = dqm.data.get_molecule("water_dimer_minima.psimol")
+    assert isinstance(mol.to_string(), str)
+
 
 def test_water_orient():
     # These are identical molecules, should find the correct results
