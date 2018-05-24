@@ -55,6 +55,12 @@ class MongoSocket:
             "results": ["molecule_id", "method", "basis", "option", "program"],
             "molecules": ["molecule_hash"]
         }
+        self._collection_unique_indices = {
+            "databases": True,
+            "options": True,
+            "results": True,
+            "molecules": False
+        }
 
         self._lower_results_index = ["method", "basis", "option", "program"]
 
@@ -97,7 +103,7 @@ class MongoSocket:
         # Build the indices
         for col, indices in self._collection_indices.items():
             idx = [(x, pymongo.ASCENDING) for x in indices]
-            self._project[col].create_index(idx)
+            self._project[col].create_index(idx, unique=self._collection_unique_indices[col])
 
         # Return the success array
         return collection_creation
@@ -162,7 +168,7 @@ class MongoSocket:
             new_inserts.append(data)
             new_keys.append(new_key)
 
-        ret = self._add_generic(new_inserts, "molecules")
+        ret = self._add_generic(new_inserts, "molecules", keep_id=True)
         ret["meta"]["duplicates"].extend(list(key_mapper.keys()))
         ret["meta"]["validation_errors"] = []
 
@@ -173,9 +179,10 @@ class MongoSocket:
             ret["data"] = key_mapper
             return ret
 
-        # Adds the new keys to the key map
+        # Add the new keys to the key map
         for mol in new_inserts:
             key_mapper[new_vk_hash[mol["molecule_hash"]]] = str(mol["_id"])
+            del mol["_id"]
 
         ret["data"] = key_mapper
 
@@ -254,7 +261,7 @@ class MongoSocket:
 
         return ret
 
-    def _add_generic(self, data, collection):
+    def _add_generic(self, data, collection, keep_id=False):
         """
         Helper function that facilitates adding a record.
         """
@@ -268,6 +275,7 @@ class MongoSocket:
             ret["data"] = {}
             return ret
 
+        error_skips = []
         try:
             tmp = self._project[collection].insert_many(data, ordered=False)
             meta["success"] = tmp.acknowledged
@@ -283,17 +291,27 @@ class MongoSocket:
                 else:
                     meta["errors"].append({"id": str(x["op"]["_id"]), "code": x["code"], "key": ukey})
 
-                meta["error_description"] = "unknown"
+                error_skips.append(error["index"])
+
 
             # Only duplicates, no true errors
             if len(meta["errors"]) == 0:
                 meta["success"] = True
+                meta["error_description"] = "Found duplicates"
+            else:
+                meta["error_description"] = "unknown"
 
         # Add id's of new keys
         rdata = []
-        for d in data:
-            ukey = tuple(d[key] for key in self._collection_indices[collection])
-            rdata.append((ukey, str(d["_id"])))
+        if keep_id is False:
+            for x in (set(range(len(data))) - set(error_skips)):
+                d = data[x]
+                ukey = tuple(d[key] for key in self._collection_indices[collection])
+                rdata.append((ukey, str(d["_id"])))
+                del d["_id"]
+
+            for x in error_skips:
+                del data[x]["_id"]
 
         ret = {}
         ret["data"] = rdata

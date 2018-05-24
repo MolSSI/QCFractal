@@ -105,13 +105,12 @@ def test_options_add(db_socket):
 
     opts = qp.data.get_options("psi_default")
 
-    ret = db_socket.add_options([opts, opts])
+    ret = db_socket.add_options([opts, opts.copy()])
     assert ret["meta"]["n_inserted"] == 1
 
     ret = db_socket.add_options(opts)
     assert ret["meta"]["n_inserted"] == 0
 
-    del opts["_id"]
     assert opts == db_socket.get_options({"name": opts["name"], "program": opts["program"]})[0]
 
     assert 1 == db_socket.del_option(opts["program"], opts["name"])
@@ -129,7 +128,6 @@ def test_databases_add(db_socket):
     db = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
 
     ret = db_socket.add_database(db)
-    del db["_id"]
     assert ret["meta"]["n_inserted"] == 1
 
     new_db = db_socket.get_database(db["category"], db["name"])
