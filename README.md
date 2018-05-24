@@ -1,11 +1,11 @@
 <p align="center">
 
 <a href="https://travis-ci.org/MolSSI/QCFractal">
-   <img src="https://travis-ci.org/MolSSI/QCFractal.svg?branch=master" alt="Travis CI />
-<\a>
+  <img src="https://travis-ci.org/MolSSI/QCFractal.svg?branch=master"/>
+</a>
 
 <a href="https://codecov.io/gh/MolSSI/QCFractal">
-  <img src="https://codecov.io/gh/MolSSI/QCFractal/branch/master/graph/badge.svg" alt="Codecov" />
+  <img src="https://codecov.io/gh/MolSSI/QCFractal/branch/master/graph/badge.svg" />
 </a>
 
 </p>
