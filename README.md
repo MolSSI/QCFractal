@@ -1,13 +1,10 @@
 <p align="center">
-
 <a href="https://travis-ci.org/MolSSI/QCFractal">
-  <img src="https://travis-ci.org/MolSSI/QCFractal.svg?branch=master"/>
+  <img src="https://travis-ci.org/MolSSI/QCFractal.svg?branch=master" alt="Travis CI"/>
 </a>
-
 <a href="https://codecov.io/gh/MolSSI/QCFractal">
-  <img src="https://codecov.io/gh/MolSSI/QCFractal/branch/master/graph/badge.svg" />
+  <img src="https://codecov.io/gh/MolSSI/QCFractal/branch/master/graph/badge.svg" alt="Codecov" />
 </a>
-
 </p>
 
 # DatenQM
