@@ -30,12 +30,12 @@ def test_options_portal(test_server):
 
     portal = qp.QCPortal(test_server_address)
 
-    water = qp.data.get_molecule("water_dimer_minima.psimol")
+    opts = qp.data.get_options("psi_default")
 
     # Test add
-    ret = portal.add_molecules({"water": water})
+    ret = portal.add_options(opts)
 
     # Test get
-    get_mol = portal.get_molecules(ret["water"], index="id")
+    get_opt = portal.get_options({"program": opts["program"], "name": opts["name"]})
 
-    assert water.compare(get_mol[0])
+    assert opts == get_opt[0]

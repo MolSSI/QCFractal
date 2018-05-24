@@ -19,6 +19,7 @@ class QCPortal(object):
         # self.http_header = {"project": self.project, "username": username, "password": password}
 
         self._mol_addr = self.port + "molecule"
+        self._option_addr = self.port + "option"
         # self.info = self.get_information()
 
     ### Molecule section
@@ -61,3 +62,35 @@ class QCPortal(object):
             return r.json()
         else:
             return r.json()["data"]
+
+    ### Options section
+
+    def get_options(self, opt_list):
+
+        # Can take in either molecule or lists
+        if not isinstance(opt_list, (tuple, list)):
+            opt_list = [opt_list]
+
+        payload = {"meta": {}, "data": {}}
+        payload["data"] = opt_list
+        r = requests.get(self._option_addr, json=payload)
+        assert r.status_code == 200
+
+        return r.json()["data"]
+
+    def add_options(self, opt_list, full_return=False):
+
+        # Can take in either molecule or lists
+
+        payload = {"meta": {}, "data": {}}
+        payload["data"] = opt_list
+
+        r = requests.post(self._option_addr, json=payload)
+        assert r.status_code == 200
+
+        if full_return:
+            return r.json()
+        else:
+            return r.json()["data"]
+
+

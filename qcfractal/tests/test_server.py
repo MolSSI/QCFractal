@@ -13,6 +13,7 @@ opt_api_addr = test_server_address + "option"
 
 meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
 
+
 def test_molecule_socket(test_server):
 
     water = qp.data.get_molecule("water_dimer_minima.psimol")
@@ -53,6 +54,11 @@ def test_option_socket(test_server):
     pdata = r.json()
     assert pdata["meta"].keys() == meta_set
 
+    r = requests.get(opt_api_addr, json={"meta": {}, "data": [{"program": opts["program"], "name": opts["name"]}]})
+    assert r.status_code == 200
+
+    assert r.json()["data"][0] == opts
+
     # ret = db_socket.add_options(opts)
     # assert ret["n_inserted"] == 1
 
@@ -61,5 +67,3 @@ def test_option_socket(test_server):
 
     # del opts["_id"]
     # assert opts == db_socket.get_options({"name": opts["name"], "program": opts["program"]})[0]
-
-
