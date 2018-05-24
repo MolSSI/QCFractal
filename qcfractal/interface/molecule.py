@@ -154,7 +154,6 @@ class Molecule:
         Angstroms.
         """
 
-        print("I am here")
         arr = np.array(arr)
 
         if arr.shape[1] != 4:

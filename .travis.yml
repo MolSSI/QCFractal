@@ -48,7 +48,7 @@ install:
 #  - pip install fireworks
 
     # Build and install package
-  - pip install -e .
+  - python setup.py develop --no-deps
 #  - conda build --python=$PYTHON_VER devtools/conda-recipe
 #  - conda install --yes --use-local project_name
 
@@ -59,7 +59,7 @@ before_script:
   - conda list
 
 script:
-  - py.test -v --cov=qcfractal qcfractal/tests/
+  - py.test -v --cov=qcfractal qcfractal/
 
 notifications:
   email: false
