@@ -130,11 +130,17 @@ def test_databases_add(db_socket):
     ret = db_socket.add_database(db)
     assert ret["meta"]["n_inserted"] == 1
 
-    new_db = db_socket.get_database(db["category"], db["name"])
-    assert db == new_db
+    ret = db_socket.get_databases([(db["category"], db["name"])])
+    assert ret["meta"]["success"] == True
+    assert ret["meta"]["n_found"] == 1
+    assert db == ret["data"][0]
 
     ret = db_socket.del_database(db["category"], db["name"])
     assert ret == 1
+
+    ret = db_socket.get_databases([(db["category"], "bleh")])
+    assert len(ret["meta"]["missing"]) == 1
+    assert ret["meta"]["n_found"] == 0
 
 
 def test_results_add(db_socket):

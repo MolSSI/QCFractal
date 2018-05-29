@@ -30,12 +30,6 @@ def _str_to_indices(ids):
         if isinstance(x, str):
             ids[num] = ObjectId(x)
 
-def _strip_mongo_ids(data):
-    for d in data:
-        if "_id" in d:
-            d["id"] = str(d["_id"])
-            del d["_id"]
-
 class MongoSocket:
     """
     This is a Mongo QCDB socket class.
@@ -413,8 +407,40 @@ class MongoSocket:
 
 ### Mongo get functions
 
+    def _get_generic(self, query, collection, projection=None):
+
+        # TODO parse duplicates
+        meta = {"errors": [], "n_found": 0, "success": False, "error_description": False, "missing": []}
+
+        if projection is None:
+            projection = {"_id": False}
+
+        keys = self._collection_indices[collection]
+        len_key = len(keys)
+
+        data = []
+        for q in query:
+            if (len(q) == len_key) and isinstance(q, (list, tuple)):
+                q = {k : v for k, v in zip(keys, q)}
+            else:
+                meta["errors"].append({"query": q, "error": "Malformed query"})
+                continue
+
+            d = self._project[collection].find_one(q, projection=projection)
+            if d is None:
+                meta["missing"].append(q)
+            else:
+                data.append(d)
+
+        meta["n_found"] = len(data)
+        if len(meta["errors"]) == 0:
+            meta["success"] = True
+
+        ret = {"meta": meta, "data": data}
+        return ret
+
     # Do a lookup on the results collection using a <molecule, method> key.
-    def get_results(self, query, projection={}):
+    def get_results(self, query, projection=None):
 
         parsed_query = {}
 
@@ -445,7 +471,11 @@ class MongoSocket:
                     parsed_query[key] = value.lower()
 
         # Manipulate the projection
-        proj = copy.deepcopy(projection)
+        if projection is None:
+            proj = {}
+        else:
+            proj = copy.deepcopy(projection)
+
         proj["_id"] = False
 
         ret = self._project["results"].find(parsed_query, projection=proj)
@@ -454,10 +484,13 @@ class MongoSocket:
 
         return list(ret)
 
-    def get_database(self, category, name):
-        return self._project["databases"].find_one({"category": category, "name": name}, projection={"_id": False})
+    def get_databases(self, keys):
+
+        return self._get_generic(keys, "databases")
 
     def get_options(self, data):
+
+        # if (len(data) == 2) and isinstance(data[0], str):
 
         if isinstance(data, dict):
             data = [data]
@@ -483,12 +516,15 @@ class MongoSocket:
             _str_to_indices(molecule_ids)
 
         ret = self._project["molecules"].find({index: {"$in": molecule_ids}})
+
         if ret is None:
             ret = []
         else:
             ret = list(ret)
 
-        _strip_mongo_ids(ret)
+        # Translate ID's back
+        for r in ret:
+            r["id"] = str(r["id"])
 
         return ret
 
