@@ -111,7 +111,9 @@ def test_options_add(db_socket):
     ret = db_socket.add_options(opts)
     assert ret["meta"]["n_inserted"] == 0
 
-    assert opts == db_socket.get_options({"name": opts["name"], "program": opts["program"]})[0]
+    ret = db_socket.get_options([(opts["program"], opts["name"])])
+    assert ret["meta"]["n_found"] == 1
+    assert ret["data"][0] == opts
 
     assert 1 == db_socket.del_option(opts["program"], opts["name"])
 

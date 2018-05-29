@@ -488,23 +488,10 @@ class MongoSocket:
 
         return self._get_generic(keys, "databases")
 
-    def get_options(self, data):
+    def get_options(self, keys):
 
         # if (len(data) == 2) and isinstance(data[0], str):
-
-        if isinstance(data, dict):
-            data = [data]
-
-        ret = []
-        for d in data:
-            tmp = self._project["options"].find_one(
-                {
-                    "name": d["name"],
-                    "program": d["program"]
-                }, projection={"_id": False})
-            ret.append(tmp)
-
-        return ret
+        return self._get_generic(keys, "options")
 
     def get_molecules(self, molecule_ids, index="id"):
         index = db_utils.translate_molecule_index(index)
@@ -524,7 +511,8 @@ class MongoSocket:
 
         # Translate ID's back
         for r in ret:
-            r["id"] = str(r["id"])
+            r["id"] = str(r["_id"])
+            del r["_id"]
 
         return ret
 

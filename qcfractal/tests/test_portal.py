@@ -36,6 +36,6 @@ def test_options_portal(test_server):
     ret = portal.add_options(opts)
 
     # Test get
-    get_opt = portal.get_options({"program": opts["program"], "name": opts["name"]})
+    get_opt = portal.get_options([(opts["program"], opts["name"])])
 
     assert opts == get_opt[0]
