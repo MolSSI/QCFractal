@@ -30,6 +30,10 @@ def _str_to_indices(ids):
         if isinstance(x, str):
             ids[num] = ObjectId(x)
 
+def _get_metadata():
+    ret = {"errors": [], "n_found": 0, "success": False, "error_description": False, "missing": []}
+    return copy.deepcopy(ret)
+
 class MongoSocket:
     """
     This is a Mongo QCDB socket class.
@@ -192,7 +196,7 @@ class MongoSocket:
         new_vk_hash = {v: k for k, v in new_kv_hash.items()}
 
         # We need to filter out what is already in the database
-        old_mols = self.get_molecules(list(new_kv_hash.values()), index="hash")
+        old_mols = self.get_molecules(list(new_kv_hash.values()), index="hash")["data"]
 
         # If we have hash matches check to for duplicates
         key_mapper = {}
@@ -410,7 +414,7 @@ class MongoSocket:
     def _get_generic(self, query, collection, projection=None):
 
         # TODO parse duplicates
-        meta = {"errors": [], "n_found": 0, "success": False, "error_description": False, "missing": []}
+        meta = _get_metadata()
 
         if projection is None:
             projection = {"_id": False}
@@ -443,11 +447,15 @@ class MongoSocket:
     def get_results(self, query, projection=None):
 
         parsed_query = {}
+        ret = {}
+        ret["meta"] = _get_metadata()
+        ret["data"] = []
 
         # We are querying via id
         if "_id" in query:
             if len(query) > 1:
-                raise KeyError("ID was provided, cannot use other indices")
+                ret["error_description"] = "ID index was provided, cannot use other indices"
+                return ret
 
             if not isinstance(parsed_query, (list, tuple)):
                 parsed_query["_id"] = {"$in": query["_id"]}
@@ -460,7 +468,8 @@ class MongoSocket:
             # Check if there are unknown keys
             remain = set(query) - set(self._collection_indices["results"])
             if remain:
-                raise KeyError("Results query found unkown keys {}".format(list(remain)))
+                ret["error_description"] = "Results query found unkown keys {}".format(list(remain))
+                return ret
 
             for key, value in query.items():
                 if isinstance(value, (list, tuple)):
@@ -478,11 +487,18 @@ class MongoSocket:
 
         proj["_id"] = False
 
-        ret = self._project["results"].find(parsed_query, projection=proj)
-        if ret is None:
-            ret = []
+        data = self._project["results"].find(parsed_query, projection=proj)
+        if data is None:
+            data = []
+        else:
+            data = list(data)
 
-        return list(ret)
+        ret["meta"]["n_found"] = len(data)
+        ret["meta"]["success"] = True
+
+        ret["data"] = data
+
+        return ret
 
     def get_databases(self, keys):
 
@@ -494,7 +510,16 @@ class MongoSocket:
         return self._get_generic(keys, "options")
 
     def get_molecules(self, molecule_ids, index="id"):
-        index = db_utils.translate_molecule_index(index)
+
+        ret = {}
+        ret["meta"] = _get_metadata()
+        ret["data"] = []
+
+        try:
+            index = db_utils.translate_molecule_index(index)
+        except KeyError as e:
+            ret["meta"]["error_description"] = repr(e)
+            return ret
 
         if not isinstance(molecule_ids, (list, tuple)):
             molecule_ids = [molecule_ids]
@@ -502,17 +527,22 @@ class MongoSocket:
         if index == "_id":
             _str_to_indices(molecule_ids)
 
-        ret = self._project["molecules"].find({index: {"$in": molecule_ids}})
+        data = self._project["molecules"].find({index: {"$in": molecule_ids}})
 
-        if ret is None:
-            ret = []
+        if data is None:
+            data = []
         else:
-            ret = list(ret)
+            data = list(data)
+
+        ret["meta"]["success"] = True
+        ret["meta"]["n_found"] = len(data)
 
         # Translate ID's back
-        for r in ret:
+        for r in data:
             r["id"] = str(r["_id"])
             del r["_id"]
+
+        ret["data"] = data
 
         return ret
 

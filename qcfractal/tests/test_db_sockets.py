@@ -55,7 +55,7 @@ def test_molecules_add(db_socket):
     assert ret1["data"]["new_water"] == ret2["data"]["new_water2"]
 
     # Pull molecule from the DB for tests
-    db_json = db_socket.get_molecules(water.get_hash(), index="hash")[0]
+    db_json = db_socket.get_molecules(water.get_hash(), index="hash")["data"][0]
     water.compare(db_json)
 
     # Cleanup adds
@@ -92,7 +92,7 @@ def test_molecules_get(db_socket):
     water_id = ret["data"]["water"]
 
     # Pull molecule from the DB for tests
-    db_json = db_socket.get_molecules(water_id, index="id")[0]
+    db_json = db_socket.get_molecules(water_id, index="id")["data"][0]
     water_db = qp.Molecule.from_json(db_json)
     water_db.compare(water)
 
@@ -249,25 +249,35 @@ def db_results(db_socket):
 
 def test_results_query_total(db_results):
 
-    assert 5 == len(db_results.get_results({}))
+    assert 5 == len(db_results.get_results({})["data"])
 
 
 def test_results_query_method(db_results):
 
-    assert 5 == len(db_results.get_results({"method": ["M2", "M1"]}))
-    assert 2 == len(db_results.get_results({"method": ["M2"]}))
-    assert 2 == len(db_results.get_results({"method": "M2"}))
+    ret = db_results.get_results({"method": ["M2", "M1"]})
+    assert ret["meta"]["n_found"] == 5
+
+    ret = db_results.get_results({"method": ["M2"]})
+    assert ret["meta"]["n_found"] == 2
+
+    ret = db_results.get_results({"method": "M2"})
+    assert ret["meta"]["n_found"] == 2
 
 
 def test_results_query_dual(db_results):
 
-    assert 5 == len(db_results.get_results({"method": ["M2", "M1"], "program": ["P1", "P2"]}))
-    assert 1 == len(db_results.get_results({"method": ["M2"], "program": "P2"}))
-    assert 1 == len(db_results.get_results({"method": "M2", "program": "P2"}))
+    ret = db_results.get_results({"method": ["M2", "M1"], "program": ["P1", "P2"]})
+    assert ret["meta"]["n_found"] == 5
+
+    ret = db_results.get_results({"method": ["M2"], "program": "P2"})
+    assert ret["meta"]["n_found"] == 1
+
+    ret = db_results.get_results({"method": "M2", "program": "P2"})
+    assert ret["meta"]["n_found"] == 1
 
 
 def test_results_query_project(db_results):
-    tmp = db_results.get_results({"method": "M2", "program": "P2"}, projection={"return_result": True})[0]
+    tmp = db_results.get_results({"method": "M2", "program": "P2"}, projection={"return_result": True})["data"][0]
     assert set(tmp.keys()) == {"return_result"}
     assert tmp["return_result"] == 15
 

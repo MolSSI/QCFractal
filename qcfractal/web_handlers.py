@@ -40,8 +40,7 @@ class Molecule(APIHandler):
         if "index" in self.json["data"]:
             kwargs["index"] = self.json["data"]["index"]
 
-        ret = {}
-        ret["data"] = db.get_molecules(self.json["data"]["ids"], **kwargs)
+        ret = db.get_molecules(self.json["data"]["ids"], **kwargs)
 
         self.write(ret)
 
