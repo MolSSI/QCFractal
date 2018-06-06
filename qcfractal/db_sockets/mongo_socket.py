@@ -296,7 +296,9 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return self._add_generic([data], "databases")
+        ret = self._add_generic([data], "databases")
+        ret["meta"]["validation_errors"] = [] # TODO
+        return ret
 
     def add_results(self, data):
         """

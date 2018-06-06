@@ -26,7 +26,7 @@ class APIHandler(tornado.web.RequestHandler):
         # self.objects["logger"].info("%s" % __api_name__)
 
 
-class Molecule(APIHandler):
+class MoleculeHandler(APIHandler):
     """
     A handler to push and get molecules.
     """
@@ -51,7 +51,7 @@ class Molecule(APIHandler):
         ret = db.add_molecules(self.json["data"]["molecules"])
         self.write(ret)
 
-class Option(APIHandler):
+class OptionHandler(APIHandler):
     """
     A handler to push and get molecules.
     """
@@ -69,6 +69,26 @@ class Option(APIHandler):
         db = self.objects["db_socket"]
 
         ret = db.add_options(self.json["data"])
+        self.write(ret)
+
+class DatabaseHandler(APIHandler):
+    """
+    A handler to push and get molecules.
+    """
+
+    def get(self):
+
+        db = self.objects["db_socket"]
+
+        ret = db.get_databases(self.json["data"])
+
+        self.write(ret)
+
+    def post(self):
+
+        db = self.objects["db_socket"]
+
+        ret = db.add_database(self.json["data"])
         self.write(ret)
 
 

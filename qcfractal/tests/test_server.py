@@ -10,6 +10,7 @@ import requests
 
 mol_api_addr = test_server_address + "molecule"
 opt_api_addr = test_server_address + "option"
+db_api_addr = test_server_address + "database"
 
 meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
 
@@ -53,17 +54,29 @@ def test_option_socket(test_server):
 
     pdata = r.json()
     assert pdata["meta"].keys() == meta_set
+    assert pdata["meta"]["n_inserted"] == 1
 
     r = requests.get(opt_api_addr, json={"meta": {}, "data": [(opts["program"], opts["name"])]})
     assert r.status_code == 200
 
     assert r.json()["data"][0] == opts
 
-    # ret = db_socket.add_options(opts)
-    # assert ret["n_inserted"] == 1
 
-    # ret = db_socket.add_options(opts)
-    # assert ret["n_inserted"] == 0
+def test_database_socket(test_server):
 
-    # del opts["_id"]
-    # assert opts == db_socket.get_options({"name": opts["name"], "program": opts["program"]})[0]
+    db = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
+
+    r = requests.post(db_api_addr, json={"meta": {}, "data": db})
+    assert r.status_code == 200
+
+    pdata = r.json()
+    assert pdata["meta"].keys() == meta_set
+    assert pdata["meta"]["n_inserted"] == 1
+
+    r = requests.get(db_api_addr, json={"meta": {}, "data": [(db["category"], db["name"])]})
+    assert r.status_code == 200
+
+    pdata = r.json()
+    assert pdata["data"][0] == db
+
+
