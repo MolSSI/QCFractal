@@ -158,6 +158,7 @@ def test_results_add(db_socket):
         "basis": "B1",
         "option": "default",
         "program": "P1",
+        "driver": "energy",
         "other_data": 5
     }
 
@@ -167,6 +168,7 @@ def test_results_add(db_socket):
         "basis": "B1",
         "option": "default",
         "program": "P1",
+        "driver": "energy",
         "other_data": 10
     }
 
@@ -195,6 +197,7 @@ def db_results(db_socket):
         "basis": "B1",
         "option": "default",
         "program": "P1",
+        "driver": "energy",
         "return_result": 5
     }
 
@@ -204,6 +207,7 @@ def db_results(db_socket):
         "basis": "B1",
         "option": "default",
         "program": "P1",
+        "driver": "energy",
         "return_result": 10
     }
 
@@ -213,6 +217,7 @@ def db_results(db_socket):
         "basis": "B1",
         "option": "default",
         "program": "P2",
+        "driver": "gradient",
         "return_result": 15
     }
 
@@ -222,6 +227,7 @@ def db_results(db_socket):
         "basis": "B1",
         "option": "default",
         "program": "P2",
+        "driver": "gradient",
         "return_result": 15
     }
 
@@ -231,6 +237,7 @@ def db_results(db_socket):
         "basis": "B1",
         "option": "default",
         "program": "P1",
+        "driver": "gradient",
         "return_result": 20
     }
 
@@ -277,8 +284,12 @@ def test_results_query_dual(db_results):
 
 
 def test_results_query_project(db_results):
-    tmp = db_results.get_results({"method": "M2", "program": "P2"}, projection={"return_result": True})["data"][0]
-    assert set(tmp.keys()) == {"return_result"}
-    assert tmp["return_result"] == 15
+    ret = db_results.get_results({"method": "M2", "program": "P2"}, projection={"return_result": True})["data"][0]
+    assert set(ret.keys()) == {"return_result"}
+    assert ret["return_result"] == 15
+
+def test_results_query_driver(db_results):
+    ret = db_results.get_results({"driver": "energy"})
+    assert ret["meta"]["n_found"] == 2
 
 

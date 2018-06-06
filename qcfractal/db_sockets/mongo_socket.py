@@ -50,7 +50,7 @@ class MongoSocket:
         self._collection_indices = {
             "databases": ["category", "name"],
             "options": ["program", "name"],
-            "results": ["molecule_id", "method", "basis", "option", "program"],
+            "results": ["molecule_id", "method", "basis", "option", "program", "driver"],
             "molecules": ["molecule_hash"]
         }
         self._collection_unique_indices = {
