@@ -48,7 +48,7 @@ class MoleculeHandler(APIHandler):
 
         db = self.objects["db_socket"]
 
-        ret = db.add_molecules(self.json["data"]["molecules"])
+        ret = db.add_molecules(self.json["data"])
         self.write(ret)
 
 class OptionHandler(APIHandler):
@@ -89,6 +89,26 @@ class DatabaseHandler(APIHandler):
         db = self.objects["db_socket"]
 
         ret = db.add_database(self.json["data"])
+        self.write(ret)
+
+class ResultHandler(APIHandler):
+    """
+    A handler to push and get molecules.
+    """
+
+    def get(self):
+
+        db = self.objects["db_socket"]
+
+        ret = db.get_results(self.json["data"])
+
+        self.write(ret)
+
+    def post(self):
+
+        db = self.objects["db_socket"]
+
+        ret = db.add_results(self.json["data"])
         self.write(ret)
 
 

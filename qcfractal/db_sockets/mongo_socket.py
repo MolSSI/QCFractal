@@ -320,6 +320,7 @@ class MongoSocket:
                 d[i] = d[i].lower()
 
         ret = self._add_generic(data, "results")
+        ret["meta"]["validation_errors"] = [] # TODO
 
         return ret
 

@@ -69,8 +69,10 @@ class FractalServer(object):
             (r"/molecule", web_handlers.MoleculeHandler, tornado_args),
             (r"/option", web_handlers.OptionHandler, tornado_args),
             (r"/database", web_handlers.DatabaseHandler, tornado_args),
+            (r"/result", web_handlers.ResultHandler, tornado_args),
             # (r"/mongod", dqm.handlers.Mongod, tornado_args),
         ], compress_response=True)
+
         self.app.listen(self.port)
 
         # Add in periodic callbacks
