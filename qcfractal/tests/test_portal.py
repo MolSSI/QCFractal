@@ -26,6 +26,7 @@ def test_molecule_portal(test_server):
 
     assert water.compare(get_mol[0])
 
+
 def test_options_portal(test_server):
 
     portal = qp.QCPortal(test_server_address)
@@ -39,3 +40,18 @@ def test_options_portal(test_server):
     get_opt = portal.get_options([(opts["program"], opts["name"])])
 
     assert opts == get_opt[0]
+
+
+def test_database_portal(test_server):
+
+    db = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
+
+    portal = qp.QCPortal(test_server_address)
+
+    # Test add
+    ret = portal.add_database(db)
+
+    # Test get
+    get_opt = portal.get_databases([(db["category"], db["name"])])
+
+    assert db == get_opt[0]
