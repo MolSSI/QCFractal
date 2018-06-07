@@ -4,7 +4,7 @@ Contains testing infrastructure for QCFractal
 
 import pytest
 import threading
-        import pkgutil
+import pkgutil
 from contextlib import contextmanager
 from tornado.ioloop import IOLoop
 from .server import FractalServer
@@ -22,7 +22,7 @@ def _plugin_import(plug):
     else:
         return True
 
-_imp_message = "Not detecting module {}. Install package if necessary and add to envvar PYTHONPATH"
+_import_message = "Not detecting module {}. Install package if necessary and add to envvar PYTHONPATH"
 
 # Add a number of module testing options
 using_fireworks = pytest.mark.skipif(_plugin_import('fireworks') is False, _import_message.format('fireworks'))

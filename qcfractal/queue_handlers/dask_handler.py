@@ -1,4 +1,10 @@
-class DaskNanny(object):
+"""
+Handlers for Dask
+"""
+
+from ..web_handlers import APIHandler
+
+class DaskNanny:
     """
     This object can add to the Dask queue and watches for finished jobs. Jobs that are finished
     are automatically posted to the associated MongoDB and removed from the queue.
@@ -47,32 +53,19 @@ class DaskNanny(object):
         for key in del_keys:
             del self.queue[key]
 
-class DaskScheduler(tornado.web.RequestHandler):
+class DaskScheduler(APIHandler):
     """
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
     """
 
-    def initialize(self, **objects):
-        self.objects = objects
-
-        if "logger" in list(self.objects):
-            self.logger = self.objects["logger"]
-        else:
-            self.logger = logging.getLogger('Scheduler')
-
     def post(self):
 
-        # Decode the data
-        data = json.loads(self.request.body.decode('utf-8'))
-        header = self.request.headers
-        _check_auth(self.objects, self.request.headers)
+        # _check_auth(self.objects, self.request.headers)
 
         # Grab objects
         self.objects["mongod_socket"].set_project(header["project"])
         dask = self.objects["queue_socket"]
         queue_nanny = self.objects["queue_nanny"]
-
-        tasks, program = _unpack_tasks(data, self.objects["mongod_socket"], self.logger)
 
         # Submit
         ret = {}
@@ -87,76 +80,17 @@ class DaskScheduler(tornado.web.RequestHandler):
 
         # Return anything of interest
         ret["success"] = True
-        self.write(json.dumps(ret))
+
+
+        self.write(ret)
 
     def get(self):
 
-        header = self.request.headers
-        _check_auth(self.objects, self.request.headers)
+        # _check_auth(self.objects, self.request.headers)
 
         self.objects["mongod_socket"].set_project(header["project"])
         queue_nanny = self.objects["queue_nanny"]
         ret = {}
         ret["queue"] = list(queue_nanny.queue)
         ret["error"] = queue_nanny.errors
-        self.write(json.dumps(ret))
-
-class FireworksScheduler(tornado.web.RequestHandler):
-    """
-    Takes in a data packet the contains the molecule_hash, modelchem and options objects.
-    """
-
-    def initialize(self, **objects):
-        self.objects = objects
-
-        if "logger" in list(self.objects):
-            self.logger = self.objects["logger"]
-        else:
-            self.logger = logging.getLogger('Scheduler')
-
-    def post(self):
-        # Fireworks
-        import fireworks
-
-        # Decode the data
-        data = json.loads(self.request.body.decode('utf-8'))
-        header = self.request.headers
-        _check_auth(self.objects, self.request.headers)
-
-        # Grab objects
-        self.objects["mongod_socket"].set_project(header["project"])
-        lpad = self.objects["queue_socket"]
-        queue_nanny = self.objects["queue_nanny"]
-
-        tasks, program = _unpack_tasks(data, self.objects["mongod_socket"], self.logger)
-
-        # Submit
-        ret = {}
-        ret["error"] = []
-        ret["Nanny ID"] = []
-        for task in tasks:
-            if "internal_error" in list(task):
-                ret["error"].append(task["internal_error"])
-                continue
-            fw = fireworks.Firework(
-                fireworks.PyTask(func="dqm_compute.run_psi4", args=[task], stored_data_varname="results"))
-            launches = lpad.add_wf(fw)
-            fws_id = list(launches.values())[0]
-
-            ret["Nanny ID"].append(self.objects["queue_nanny"].add_future(fws_id))
-
-        # Return anything of interest
-        ret["success"] = True
-        self.write(json.dumps(ret))
-
-    def get(self):
-
-        header = self.request.headers
-        _check_auth(self.objects, self.request.headers)
-
-        self.objects["mongod_socket"].set_project(header["project"])
-        queue_nanny = self.objects["queue_nanny"]
-        ret = {}
-        ret["queue"] = list(queue_nanny.queue)
-        ret["error"] = queue_nanny.errors
-        self.write(json.dumps(ret))
+        self.write(ret)

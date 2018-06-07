@@ -1,51 +1,33 @@
-
-def _verify_input(data, mongo, logger=None, options=None):
-
-    if options is not None:
-        data["options"] = options
-
-    # Check if the minimum is present
-    for req in ["molecule_hash", "modelchem", "options"]:
-        if req not in list(data):
-            err = "Missing required field '%s'" % req
-            data["error"] = err
-            if logger:
-                logger.info("SCHEDULER: %s" % err)
-            return data
-
-    # Grab out molecule
-    mol = mongo.get_molecule(data["molecule_hash"])
-    if molecule is None:
-        err = "Molecule hash '%s' was not found." % data["molecule_hash"]
-        data["error"] = err
-        if logger:
-            logger.info("SCHEDULER: %s" % err)
-        return data
-
-    molecule_str = molecule.Molecule(mol, dtype="json").to_string(dtype="psi4")
-
-    data["molecule"] = molecule_str
-    data["method"] = data["modelchem"]
-    data["driver"] = "energy"
-
-    return data
+"""
+Queue backend abstraction manager.
+"""
 
 
-def _unpack_tasks(data, mongo, logger):
-    # Parse out data
-    program = "psi4"
-    tasks = []
+def build_queue(queue_type, queue_socket, db_socket, **kwargs):
 
-    # Multiple jobs
-    if ("multi_header" in list(data)) and (data["multi_header"] == "QCDB_batch"):
-        for task in data["tasks"]:
-            tasks.append(_verify_input(task, mongo, options=data["options"], logger=logger))
-        program = data["program"]
+    if queue_type == "dask":
+        try:
+            import dask.distributed
+        except ImportError:
+            raise ImportError("Dask.distributed not installed, please install dask.distributed for the dask queue client.")
 
-    # Single job
+        from . import dask_handler
+
+        nanny = dask_handler.DaskNanny(queue_socket, db_socket, **kwargs)
+        scheduler = dask_handler.DaskScheduler
+
+    elif queue_type == "fireworks":
+        try:
+            import fireworks
+        except ImportError:
+            raise ImportError("Fireworks not installed, please install fireworks for the fireworks queue client.")
+
+        from . import fireworks_handler
+
+        nanny = fireworks_handler.FireworksNanny(queue_socket, db_socket, **kwargs)
+        scheduler = fireworks_handler.FireworksScheduler
+
     else:
-        tasks.append(_verify_input(data, mongo, logger=logger))
-        if "program" in list(data):
-            program = data["program"]
+        raise KeyError("Queue type '{}' not understood".format(queue_type))
 
-    return tasks, program
+    return (nanny, scheduler)
