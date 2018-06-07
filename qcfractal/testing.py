@@ -4,6 +4,7 @@ Contains testing infrastructure for QCFractal
 
 import pytest
 import threading
+        import pkgutil
 from contextlib import contextmanager
 from tornado.ioloop import IOLoop
 from .server import FractalServer
@@ -11,6 +12,25 @@ from .server import FractalServer
 _server_port = 8888
 test_server_address = "http://localhost:" + str(_server_port) + "/"
 
+
+### Addon testing capabilities
+
+def _plugin_import(plug):
+    plug_spec = pkgutil.find_loader(plug)
+    if plug_spec is None:
+        return False
+    else:
+        return True
+
+_imp_message = "Not detecting module {}. Install package if necessary and add to envvar PYTHONPATH"
+
+# Add a number of module testing options
+using_fireworks = pytest.mark.skipif(_plugin_import('fireworks') is False, _import_message.format('fireworks'))
+using_dask = pytest.mark.skipif(_plugin_import('dask.distributed') is False, _import_message.format('dask.distributed'))
+using_psi4 = pytest.mark.skipif(_plugin_import('psi4') is False, _import_message.format('psi4'))
+using_rdkit = pytest.mark.skipif(_plugin_import('rdkit') is False, _import_message.format('rdkit'))
+
+### Server testing mechanics
 
 @contextmanager
 def pristine_loop():
@@ -65,3 +85,4 @@ def test_server(request):
         # Cleanup
         loop.add_callback(loop.stop)
         thread.join(timeout=5)
+
