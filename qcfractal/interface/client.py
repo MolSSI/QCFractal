@@ -122,4 +122,32 @@ class QCPortal(object):
         else:
             return r.json()["data"]
 
+    ### Results section
 
+    def get_results(self, db_list):
+
+        payload = {"meta": {}, "data": {}}
+        payload["data"] = db_list
+        r = requests.get(self._database_addr, json=payload)
+        assert r.status_code == 200
+
+        return r.json()["data"]
+
+    # Must compute results?
+    # def add_results(self, db, full_return=False):
+
+    #     # Can take in either molecule or lists
+
+    #     payload = {"meta": {}, "data": {}}
+    #     payload["data"] = db
+
+    #     r = requests.post(self._database_addr, json=payload)
+    #     assert r.status_code == 200
+
+    #     if full_return:
+    #         return r.json()
+    #     else:
+    #         return r.json()["data"]
+
+
+    ### Compute section
