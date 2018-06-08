@@ -26,12 +26,28 @@ def _plugin_import(plug):
 
 _import_message = "Not detecting module {}. Install package if necessary and add to envvar PYTHONPATH"
 
+# Figure out what is imported
+_programs = {}
+_programs["fireworks"] = _plugin_import("fireworks")
+_programs["rdkit"] = _plugin_import("rdkit")
+_programs["psi4"] = _plugin_import("psi4")
+_programs["dask"] = _plugin_import("dask")
+if _programs["dask"]:
+    _programs["dask.distributed"] = _plugin_import("dask.distributed")
+else:
+    _programs["dask.distributed"] = False
+
+
+def has_module(name):
+    return _programs[name]
+
+
 # Add a number of module testing options
-using_fireworks = pytest.mark.skipif(_plugin_import('fireworks') is False, reason=_import_message.format('fireworks'))
+using_fireworks = pytest.mark.skipif(has_module('fireworks') is False, reason=_import_message.format('fireworks'))
 using_dask = pytest.mark.skipif(
-    _plugin_import('dask.distributed') is False, reason=_import_message.format('dask.distributed'))
-using_psi4 = pytest.mark.skipif(_plugin_import('psi4') is False, reason=_import_message.format('psi4'))
-using_rdkit = pytest.mark.skipif(_plugin_import('rdkit') is False, reason=_import_message.format('rdkit'))
+    has_module('dask.distributed') is False, reason=_import_message.format('dask.distributed'))
+using_psi4 = pytest.mark.skipif(has_module('psi4') is False, reason=_import_message.format('psi4'))
+using_rdkit = pytest.mark.skipif(has_module('rdkit') is False, reason=_import_message.format('rdkit'))
 
 ### Server testing mechanics
 
