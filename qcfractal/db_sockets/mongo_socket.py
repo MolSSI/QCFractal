@@ -10,6 +10,7 @@ try:
 except ImportError:
     raise ImportError("Mongo db_socket requires pymongo, please install this python module or try a different db_socket.")
 
+import logging
 import pandas as pd
 import numpy as np
 from bson.objectid import ObjectId
@@ -54,10 +55,10 @@ class MongoSocket:
         # Static data
         self._valid_collections = {"molecules", "databases", "results", "options"}
         self._collection_indices = {
-            "databases": ["category", "name"],
-            "options": ["program", "name"],
-            "results": ["molecule_id", "method", "basis", "option", "program", "driver"],
-            "molecules": ["molecule_hash"]
+            "databases": interface.schema.get_indices("database"),
+            "options": interface.schema.get_indices("option"),
+            "results": interface.schema.get_indices("result"),
+            "molecules": interface.schema.get_indices("molecule")
         }
         self._collection_unique_indices = {
             "databases": True,

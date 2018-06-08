@@ -12,7 +12,7 @@ from .definitions_schema import get_definition
 from .molecule_schema import molecule_schema
 from .options_schema import options_schema
 
-__all__ = ["get_schema", "get_schema_keys", "validate", "get_hash_fields"]
+__all__ = ["get_schema", "get_indices", "get_schema_keys", "validate", "get_hash_fields"]
 
 _schemas = {}
 
@@ -25,6 +25,14 @@ _schemas["options"] = options_schema
 
 # Load molecule schema
 
+# Collection and hash indices
+_collection_indices = {
+    "database": ("category", "name"),
+    "option": ("program", "name"),
+    "result": ("molecule_id", "method", "basis", "option", "program", "driver"),
+    "molecule": ("molecule_hash", )
+}
+
 
 def get_hash_fields(name):
     if name not in _schemas:
@@ -32,10 +40,17 @@ def get_hash_fields(name):
     return copy.deepcopy(_schemas[name]["hash_fields"])
 
 
+def get_indices(name):
+    if name not in _collection_indices:
+        raise KeyError("Indices for %s not found." % name)
+    return _collection_indices[name]
+
+
 def get_schema(name):
     if name not in _schemas:
         raise KeyError("Schema name %s not found." % name)
     return copy.deepcopy(_schemas)
+
 
 def get_schema_keys(name):
     if name not in _schemas:
