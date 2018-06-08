@@ -28,7 +28,7 @@ def test_molecule_socket(test_server):
     assert pdata["meta"].keys() == meta_set
 
     # Retrieve said molecule
-    r = requests.get(mol_api_addr, json={"meta": {}, "data": {"ids": pdata["data"]["water"], "index": "id"}})
+    r = requests.get(mol_api_addr, json={"meta": {"index": "id"}, "data": [pdata["data"]["water"]]})
     assert r.status_code == 200
 
     gdata = r.json()
@@ -122,6 +122,6 @@ def test_result_socket(test_server):
 
     pdata = r.json()
     assert len(pdata["data"]) == 1
-    assert pdata["data"][0]["other_data"] == 10
+    assert pdata[0]["other_data"] == 10
 
 
