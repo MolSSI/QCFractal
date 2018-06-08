@@ -10,12 +10,11 @@ from tornado.ioloop import IOLoop
 from .server import FractalServer
 from .db_sockets import db_socket_factory
 
-
 _server_port = 8888
 test_server_address = "http://localhost:" + str(_server_port) + "/"
 
-
 ### Addon testing capabilities
+
 
 def _plugin_import(plug):
     plug_spec = pkgutil.find_loader(plug)
@@ -24,15 +23,18 @@ def _plugin_import(plug):
     else:
         return True
 
+
 _import_message = "Not detecting module {}. Install package if necessary and add to envvar PYTHONPATH"
 
 # Add a number of module testing options
 using_fireworks = pytest.mark.skipif(_plugin_import('fireworks') is False, reason=_import_message.format('fireworks'))
-using_dask = pytest.mark.skipif(_plugin_import('dask.distributed') is False, reason=_import_message.format('dask.distributed'))
+using_dask = pytest.mark.skipif(
+    _plugin_import('dask.distributed') is False, reason=_import_message.format('dask.distributed'))
 using_psi4 = pytest.mark.skipif(_plugin_import('psi4') is False, reason=_import_message.format('psi4'))
 using_rdkit = pytest.mark.skipif(_plugin_import('rdkit') is False, reason=_import_message.format('rdkit'))
 
 ### Server testing mechanics
+
 
 @contextmanager
 def pristine_loop():
@@ -51,12 +53,10 @@ def pristine_loop():
     finally:
         try:
             loop.close(all_fds=True)
-        except ValueError:
+        except (ValueError, KeyError):
             pass
         IOLoop.clear_instance()
         IOLoop.clear_current()
-
-    db_name = "dqm_local_values_test"
 
 
 @pytest.fixture(scope="module")
@@ -68,8 +68,11 @@ def test_server(request):
     db_name = "dqm_local_server_test"
 
     with pristine_loop() as loop:
-        # Clean and re-init the databse, manually handle IOLoop (no start/stop needed)
+
+        # Build server, manually handle IOLoop (no start/stop needed)
         server = FractalServer(port=_server_port, db_project_name=db_name, io_loop=loop)
+
+        # Clean and re-init the databse
         server.db.client.drop_database(server.db._project_name)
         server.db.init_database()
 
@@ -88,6 +91,40 @@ def test_server(request):
         loop.add_callback(loop.stop)
         thread.join(timeout=5)
 
+
+@using_dask
+@pytest.fixture(scope="module")
+def test_dask_server(request):
+    """
+    Builds a server instance with the event loop running in a thread.
+    """
+    from dask.distributed import Client, LocalCluster
+
+    db_name = "dqm_dask_server_test"
+
+    with pristine_loop() as loop:
+        with LocalCluster(n_workers=1, threads_per_worker=1, loop=loop) as cluster:
+            # Build a Dask Client
+            client = Client(cluster)
+
+            # Build server, manually handle IOLoop (no start/stop needed)
+            server = FractalServer(
+                port=_server_port,
+                db_project_name=db_name,
+                io_loop=cluster.loop,
+                queue_socket=client,
+                queue_type="dask")
+
+            # Clean and re-init the databse
+            server.db.client.drop_database(server.db._project_name)
+            server.db.init_database()
+
+            # Yield the server instance
+            yield server
+
+            client.close()
+
+
 @pytest.fixture(scope="module")
 def test_database(request):
     db_name = "dqm_local_database_test"
@@ -99,4 +136,3 @@ def test_database(request):
     yield db
 
     db.client.drop_database(db._project_name)
-
