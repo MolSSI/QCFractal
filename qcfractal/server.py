@@ -93,7 +93,6 @@ class FractalServer(object):
             # self.loop.PeriodicCallback(self.queue_nanny.update, 2000).start()
 
             # Add the endpoint
-            print(queue_scheduler)
             endpoints.append((r"/scheduler", queue_scheduler, self.objects))
 
         # Build the app

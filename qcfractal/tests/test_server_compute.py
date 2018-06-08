@@ -23,27 +23,31 @@ def test_queue_stack_dask(dask_server):
     db = dask_server.objects["db_socket"]
     mol_ret = db.add_molecules({"hydrogen": hydrogen.to_json()})
 
+    option = qp.data.get_options("psi_default")
+    opt_ret = db.add_options([option])
+    opt_key = option["name"]
+
     # Add compute
     compute = {
         "schema_name": "qc_schema_input",
         "schema_version": 1,
-        "molecule": mol_ret["data"]["hydrogen"],
+        "molecule_id": mol_ret["data"]["hydrogen"],
         "driver": "energy",
-        "model": {"method": "HF", "basis":"sto-3g"},
-        "keywords": {"scf_type": "df"}
+        "method": "HF",
+        "basis": "sto-3g",
+        "options": opt_key
     }
 
-    print("here")
-    r = requests.get(testing.test_server_address + "molecule", json={"meta":{}, "data": [mol_ret["data"]["hydrogen"]]})
-    # r = requests.post(scheduler_api_addr, json={"meta": {}, "data":[compute]})
-    print("here")
+    r = requests.post(scheduler_api_addr, json={"meta": {"program": "psi4"}, "data":[compute]})
     assert r.status_code == 200
+    compute_key = tuple(r.json()["data"][0])
+
 
 
     # # Manually handle the compute
-    # client = self.objects["queue_socket"]
-    # ret = client.futures[0].results()
-    # print(ret)
+    nanny = dask_server.objects["queue_nanny"]
+    ret = nanny.queue[compute_key].result()
+    print(ret)
 
 
 

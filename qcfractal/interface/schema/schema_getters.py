@@ -29,7 +29,7 @@ _schemas["options"] = options_schema
 _collection_indices = {
     "database": ("category", "name"),
     "option": ("program", "name"),
-    "result": ("program", "molecule_id", "driver", "method", "basis", "option"),
+    "result": ("program", "molecule_id", "driver", "method", "basis", "options"),
     "molecule": ("molecule_hash", )
 }
 
@@ -46,8 +46,10 @@ def get_indices(name):
     return _collection_indices[name]
 
 
-def format_result_indices(data):
-    return (data["molecule_id"], data["model"]["method"])
+def format_result_indices(data, program=None):
+    if program is None:
+        program = data["program"]
+    return (program, data["molecule_id"], data["driver"], data["method"], data["basis"], data["options"])
 
 
 def get_schema(name):

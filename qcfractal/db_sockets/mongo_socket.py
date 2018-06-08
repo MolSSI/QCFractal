@@ -514,10 +514,10 @@ class MongoSocket:
 
         return self._get_generic(keys, "databases")
 
-    def get_options(self, keys):
+    def get_options(self, keys, projection=None):
 
         # if (len(data) == 2) and isinstance(data[0], str):
-        return self._get_generic(keys, "options")
+        return self._get_generic(keys, "options", projection=projection)
 
     def get_molecules(self, molecule_ids, index="id"):
 
