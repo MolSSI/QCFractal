@@ -47,6 +47,9 @@ install:
     # Install anything not in conda
 #  - pip install fireworks
 
+    # Install the latest qcengine for testing
+  - pip install git+git://github.com/MolSSI/QCEngine#egg=qcengine
+
     # Build and install package
   - python setup.py develop --no-deps
 #  - conda build --python=$PYTHON_VER devtools/conda-recipe

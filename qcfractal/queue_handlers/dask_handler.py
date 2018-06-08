@@ -2,7 +2,13 @@
 Handlers for Dask
 """
 
+import logging
+import qcengine
+
 from ..web_handlers import APIHandler
+from ..interface import schema
+
+
 
 class DaskNanny:
     """
@@ -22,14 +28,14 @@ class DaskNanny:
         else:
             self.logger = logging.getLogger('DaskNanny')
 
-    def add_future(self, future):
-        uid = str(uuid.uuid4())
-        self.queue[uid] = future
-        self.logger.info("MONGO ADD: FUTURE %s" % uid)
-        return uid
+    def add_future(self, tag, future):
+        self.queue[tag] = future
+        self.logger.info("MONGO ADD: FUTURE %s" % tag)
+        return tag
 
     def update(self):
         del_keys = []
+        new_results = []
         for key, future in self.queue.items():
             if future.done():
                 try:
@@ -38,9 +44,9 @@ class DaskNanny:
                         raise ValueError("Computation (%s, %s) did not complete successfully!:\n%s\n" %
                                          (tmp_data["molecule_hash"], tmp_data["modelchem"], tmp_data["error"]))
                     # res = self.mongod_socket.del_page_by_data(tmp_data)
-                    res = self.mongod_socket.add_page(tmp_data)
-                    self.logger.info("MONGO ADD: (%s, %s) - %s" % (tmp_data["molecule_hash"], tmp_data["modelchem"],
-                                                                   str(res)))
+                    new_result.append(tmp_data)
+                    tag = (task[k] for k in result_indices)
+                    self.logger.info("MONGO ADD: %s" % (tag))
                 except Exception as e:
                     ename = str(type(e).__name__) + ":" + str(e)
                     msg = "".join(traceback.format_tb(e.__traceback__))
@@ -50,8 +56,11 @@ class DaskNanny:
 
                 del_keys.append(key)
 
+        res = self.mongod_socket.add_results(new_results)
+
         for key in del_keys:
             del self.queue[key]
+
 
 class DaskScheduler(APIHandler):
     """
@@ -70,27 +79,30 @@ class DaskScheduler(APIHandler):
         # Submit
         ret = {}
         ret["error"] = []
-        ret["Nanny ID"] = []
+        ret["submitted"] = []
+
+        result_indices = schema.get_indices("result")
+
+        # Loop over the tasks
         for task in tasks:
-            if "internal_error" in list(task):
-                ret["error"].append(task["internal_error"])
-                continue
+            tag = (task[k] for k in result_indices)
             fut = dask.submit(compute.computers[program], task)
-            ret["Nanny ID"].append(self.objects["queue_nanny"].add_future(fut))
+
+            ret["submitted"].append(tag)
+            queue_nanny.add_future(tag, fut)
 
         # Return anything of interest
         ret["success"] = True
 
-
         self.write(ret)
 
-    def get(self):
+    # def get(self):
 
-        # _check_auth(self.objects, self.request.headers)
+    #     # _check_auth(self.objects, self.request.headers)
 
-        self.objects["mongod_socket"].set_project(header["project"])
-        queue_nanny = self.objects["queue_nanny"]
-        ret = {}
-        ret["queue"] = list(queue_nanny.queue)
-        ret["error"] = queue_nanny.errors
-        self.write(ret)
+    #     self.objects["mongod_socket"].set_project(header["project"])
+    #     queue_nanny = self.objects["queue_nanny"]
+    #     ret = {}
+    #     ret["queue"] = list(queue_nanny.queue)
+    #     ret["error"] = queue_nanny.errors
+    #     self.write(ret)
