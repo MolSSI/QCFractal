@@ -6,6 +6,7 @@ from tornado import gen
 
 from . import web_handlers
 from . import db_sockets
+from . import queue_handlers
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -18,13 +19,17 @@ class FractalServer(object):
             port=8888,
             io_loop=None,
 
-            # Mongo options
+            # Database options
             db_ip="127.0.0.1",
             db_port=27017,
             db_username=None,
             db_password=None,
             db_type="mongo",
             db_project_name="molssidb",
+
+            # Queue options
+            queue_socket=None,
+            queue_type=None,
 
             # Log options
             logfile_name=None):
@@ -50,7 +55,7 @@ class FractalServer(object):
         self.db = db_sockets.db_socket_factory(
             db_ip, db_port, project_name=db_project_name, username=db_username, password=db_password, db_type=db_type)
 
-        # Pull the loop if we need it
+        # Pull the current loop if we need it
         if io_loop is None:
             self.loop = tornado.ioloop.IOLoop.current()
         else:
@@ -59,19 +64,40 @@ class FractalServer(object):
         # Secure args
 
         # Build up the application
-        tornado_args = {
+        self.objects = {
             "db_socket": self.db,
             "logger": self.logger,
         }
 
-        self.app = tornado.web.Application([
-            # (r"/information", dqm.handlers.Information, tornado_args),
-            (r"/molecule", web_handlers.MoleculeHandler, tornado_args),
-            (r"/option", web_handlers.OptionHandler, tornado_args),
-            (r"/database", web_handlers.DatabaseHandler, tornado_args),
-            (r"/result", web_handlers.ResultHandler, tornado_args),
-            # (r"/mongod", dqm.handlers.Mongod, tornado_args),
-        ], compress_response=True)
+        endpoints = [
+            # (r"/information", dqm.handlers.Information, self.objects),
+            (r"/molecule", web_handlers.MoleculeHandler, self.objects),
+            (r"/option", web_handlers.OptionHandler, self.objects),
+            (r"/database", web_handlers.DatabaseHandler, self.objects),
+            (r"/result", web_handlers.ResultHandler, self.objects),
+        ]
+
+        # Queue handlers
+        if (queue_socket is not None) or (queue_type is not None):
+            if (queue_socket is None) or (queue_type is None):
+                raise KeyError("If either either queue_socket or queue_type is supplied, both must be.")
+
+            queue_nanny, queue_scheduler = queue_handlers.build_queue(queue_type, queue_socket,
+                                                                                self.objects["db_socket"])
+
+            # Add the socket to passed args
+            self.objects["queue_socket"] = queue_socket
+            self.objects["queue_nanny"] = queue_nanny
+
+            # Add the callback to check results
+            # self.loop.PeriodicCallback(self.queue_nanny.update, 2000).start()
+
+            # Add the endpoint
+            print(queue_scheduler)
+            endpoints.append((r"/scheduler", queue_scheduler, self.objects))
+
+        # Build the app
+        self.app = tornado.web.Application(endpoints, compress_response=True)
 
         self.app.listen(self.port)
 

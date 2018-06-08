@@ -9,7 +9,6 @@ from ..web_handlers import APIHandler
 from ..interface import schema
 
 
-
 class DaskNanny:
     """
     This object can add to the Dask queue and watches for finished jobs. Jobs that are finished
@@ -72,27 +71,51 @@ class DaskScheduler(APIHandler):
         # _check_auth(self.objects, self.request.headers)
 
         # Grab objects
-        self.objects["mongod_socket"].set_project(header["project"])
-        dask = self.objects["queue_socket"]
+        db = self.objects["db_socket"]
+        dask_client = self.objects["queue_socket"]
         queue_nanny = self.objects["queue_nanny"]
-
-        # Submit
-        ret = {}
-        ret["error"] = []
-        ret["submitted"] = []
-
         result_indices = schema.get_indices("result")
 
-        # Loop over the tasks
-        for task in tasks:
-            tag = (task[k] for k in result_indices)
-            fut = dask.submit(compute.computers[program], task)
+        # Build metadata
+        meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
+        submitted = []
 
+        # Check for errors or duplicates
+        tasks = {(t[k] for k in result_indices): t for t in self.json["data"]}
+        print(tasks)
+
+        for t in tasks.keys():
+            # We should also check for previously computed
+            if t in queue_nanny.queue:
+                meta["duplicates"].append(t)
+                del tasks[t]
+
+        # Pull out the needed molecules
+        needed_mols = {x["molecule_id"] for x in tasks.items()}
+        molecules = {x["id"]: x for x in db.get_molecules(needed_mols, index="id")}
+
+        # Add molecules back into tasks
+        for k, v in tasks.items():
+            if v["molecule_id"] in molecules:
+                v["molecule"] = molecules[v["molecule_id"]]
+            else:
+                meta["errors"].append((k, "Molecule not found"))
+                del tasks[k]
+
+        print("here")
+        # Adds tasks to futures and Nanny
+        for k, v in tasks.items():
+            f = dask.submit(qcengine.compute, v)
+
+            tag = queue_nanny.add_future(k, f)
             ret["submitted"].append(tag)
-            queue_nanny.add_future(tag, fut)
 
         # Return anything of interest
-        ret["success"] = True
+        meta["success"] = True
+        meta["n_inserted"] = len(tasks)
+        ret = {"meta": meta,
+               "data": list(tasks.keys())}
+
 
         self.write(ret)
 

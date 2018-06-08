@@ -4,43 +4,48 @@ Tests the server compute capabilities.
 
 import qcfractal.interface as qp
 import qcfractal as qf
-import qcfractal.testing as testing
+
 from qcfractal.queue_handlers import build_queue
-
+from qcfractal import testing
 import qcengine
+import requests
 
-test_db = testing.test_database
+dask_server = testing.test_dask_server
+scheduler_api_addr = testing.test_server_address + "scheduler"
 
 @testing.using_psi4
 @testing.using_dask
-def test_queue_stack_dask(test_db):
-
-    from dask.distributed import Client, LocalCluster
-
-    cluster = LocalCluster(n_workers=1, threads_per_worker=1)
-    client = Client(cluster)
+def test_queue_stack_dask(dask_server):
 
 
     # Add a hydrogen molecule
     hydrogen = qp.Molecule([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
-    mol_ret = test_db.add_molecules({"hydrogen": hydrogen.to_json()})
+    db = dask_server.objects["db_socket"]
+    mol_ret = db.add_molecules({"hydrogen": hydrogen.to_json()})
 
-    nanny, scheduler = build_queue("dask", client, test_db)
-
+    # Add compute
     compute = {
         "schema_name": "qc_schema_input",
         "schema_version": 1,
-        # "molecule": mol_ret["data"]["hydrogen"],
-        "molecule": hydrogen.to_json(),
+        "molecule": mol_ret["data"]["hydrogen"],
         "driver": "energy",
         "model": {"method": "HF", "basis":"sto-3g"},
         "keywords": {"scf_type": "df"}
     }
-    # help(client.submit)
-    fut = client.submit(qcengine.compute, compute, "psi4")
 
-    print(fut)
+    print("here")
+    r = requests.get(testing.test_server_address + "molecule", json={"meta":{}, "data": [mol_ret["data"]["hydrogen"]]})
+    # r = requests.post(scheduler_api_addr, json={"meta": {}, "data":[compute]})
+    print("here")
+    assert r.status_code == 200
 
-    print(fut.result())
 
-    client.close()
+    # # Manually handle the compute
+    # client = self.objects["queue_socket"]
+    # ret = client.futures[0].results()
+    # print(ret)
+
+
+
+
+
