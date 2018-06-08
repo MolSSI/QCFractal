@@ -67,3 +67,6 @@ iter.dat
 # Sample
 mongo_qcdb/sample.py
 test.py
+
+# Dask
+dask-worker-space/

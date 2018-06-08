@@ -39,11 +39,17 @@ class MongoSocket:
     This is a Mongo QCDB socket class.
     """
 
-    def __init__(self, url, port, project="molssidb", username=None, password=None, authMechanism="SCRAM-SHA-1", authSource=None):
+    def __init__(self, url, port, project="molssidb", username=None, password=None, authMechanism="SCRAM-SHA-1", authSource=None, logger=None):
         """
         Constructs a new socket where url and port points towards a Mongod instance.
 
         """
+
+        # Logging data
+        if logger:
+            self.logger = logger
+        else:
+            self.logger = logging.getLogger('MongoSocket')
 
         # Static data
         self._valid_collections = {"molecules", "databases", "results", "options"}
@@ -78,7 +84,7 @@ class MongoSocket:
         new_collections = self.init_database()
         for k, v in new_collections.items():
             if v:
-                print("New collection '%s' for database!" % k)
+                self.logger.info("New collection '%s' for database!" % k)
 
 ### Mongo meta functions
 

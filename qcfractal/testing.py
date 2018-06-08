@@ -8,6 +8,8 @@ import pkgutil
 from contextlib import contextmanager
 from tornado.ioloop import IOLoop
 from .server import FractalServer
+from .db_sockets import db_socket_factory
+
 
 _server_port = 8888
 test_server_address = "http://localhost:" + str(_server_port) + "/"
@@ -25,10 +27,10 @@ def _plugin_import(plug):
 _import_message = "Not detecting module {}. Install package if necessary and add to envvar PYTHONPATH"
 
 # Add a number of module testing options
-using_fireworks = pytest.mark.skipif(_plugin_import('fireworks') is False, _import_message.format('fireworks'))
-using_dask = pytest.mark.skipif(_plugin_import('dask.distributed') is False, _import_message.format('dask.distributed'))
-using_psi4 = pytest.mark.skipif(_plugin_import('psi4') is False, _import_message.format('psi4'))
-using_rdkit = pytest.mark.skipif(_plugin_import('rdkit') is False, _import_message.format('rdkit'))
+using_fireworks = pytest.mark.skipif(_plugin_import('fireworks') is False, reason=_import_message.format('fireworks'))
+using_dask = pytest.mark.skipif(_plugin_import('dask.distributed') is False, reason=_import_message.format('dask.distributed'))
+using_psi4 = pytest.mark.skipif(_plugin_import('psi4') is False, reason=_import_message.format('psi4'))
+using_rdkit = pytest.mark.skipif(_plugin_import('rdkit') is False, reason=_import_message.format('rdkit'))
 
 ### Server testing mechanics
 
@@ -63,7 +65,7 @@ def test_server(request):
     Builds a server instance with the event loop running in a thread.
     """
 
-    db_name = "dqm_local_values_test"
+    db_name = "dqm_local_server_test"
 
     with pristine_loop() as loop:
         # Clean and re-init the databse, manually handle IOLoop (no start/stop needed)
@@ -85,4 +87,16 @@ def test_server(request):
         # Cleanup
         loop.add_callback(loop.stop)
         thread.join(timeout=5)
+
+@pytest.fixture(scope="module")
+def test_database(request):
+    db_name = "dqm_local_database_test"
+
+    db = db_socket_factory("127.0.0.1", 27017, db_name)
+    db.client.drop_database(db._project_name)
+    db.init_database()
+
+    yield db
+
+    db.client.drop_database(db._project_name)
 
