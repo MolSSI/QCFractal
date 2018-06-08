@@ -32,8 +32,7 @@ class QCPortal(object):
         if not isinstance(mol_list, (tuple, list)):
             mol_list = [mol_list]
 
-        payload = {"meta": {}, "data": {}}
-        payload["data"] = {"ids": mol_list, "index": index}
+        payload = {"meta": {"index": index}, "data": mol_list}
         r = requests.get(self._mol_addr, json=payload)
         assert r.status_code == 200
 

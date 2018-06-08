@@ -56,7 +56,7 @@ class MongoSocket:
         self._valid_collections = {"molecules", "databases", "results", "options"}
         self._collection_indices = {
             "databases": interface.schema.get_indices("database"),
-            "options": interface.schema.get_indices("option"),
+            "options": interface.schema.get_indices("options"),
             "results": interface.schema.get_indices("result"),
             "molecules": interface.schema.get_indices("molecule")
         }
@@ -67,7 +67,7 @@ class MongoSocket:
             "molecules": False
         }
 
-        self._lower_results_index = ["method", "basis", "option", "program"]
+        self._lower_results_index = ["method", "basis", "options", "program"]
 
         self._url = url
         self._port = port

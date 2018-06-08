@@ -37,7 +37,7 @@ def test_molecule_socket(test_server):
     assert water.compare(gdata["data"][0])
 
     # Retrieve said molecule via hash
-    r = requests.get(mol_api_addr, json={"meta": {}, "data": {"ids": water.get_hash(), "index": "hash"}})
+    r = requests.get(mol_api_addr, json={"meta": {"index": "hash"}, "data": [water.get_hash()]})
     assert r.status_code == 200
 
     gdata = r.json()
@@ -94,7 +94,7 @@ def test_result_socket(test_server):
         "molecule_id": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
-        "option": "default",
+        "options": "default",
         "program": "P1",
         "driver": "energy",
         "other_data": 5
@@ -104,7 +104,7 @@ def test_result_socket(test_server):
         "molecule_id": mol_insert["data"]["water2"],
         "method": "M1",
         "basis": "B1",
-        "option": "default",
+        "options": "default",
         "program": "P1",
         "driver": "energy",
         "other_data": 10
@@ -122,6 +122,6 @@ def test_result_socket(test_server):
 
     pdata = r.json()
     assert len(pdata["data"]) == 1
-    assert pdata[0]["other_data"] == 10
+    assert pdata["data"][0]["other_data"] == 10
 
 

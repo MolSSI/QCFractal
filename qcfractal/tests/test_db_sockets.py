@@ -156,7 +156,7 @@ def test_results_add(db_socket):
         "molecule_id": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
-        "option": "default",
+        "options": "default",
         "program": "P1",
         "driver": "energy",
         "other_data": 5
@@ -166,7 +166,7 @@ def test_results_add(db_socket):
         "molecule_id": mol_insert["data"]["water2"],
         "method": "M1",
         "basis": "B1",
-        "option": "default",
+        "options": "default",
         "program": "P1",
         "driver": "energy",
         "other_data": 10
@@ -195,7 +195,7 @@ def db_results(db_socket):
         "molecule_id": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
-        "option": "default",
+        "options": "default",
         "program": "P1",
         "driver": "energy",
         "return_result": 5
@@ -205,7 +205,7 @@ def db_results(db_socket):
         "molecule_id": mol_insert["data"]["water2"],
         "method": "M1",
         "basis": "B1",
-        "option": "default",
+        "options": "default",
         "program": "P1",
         "driver": "energy",
         "return_result": 10
@@ -215,7 +215,7 @@ def db_results(db_socket):
         "molecule_id": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
-        "option": "default",
+        "options": "default",
         "program": "P2",
         "driver": "gradient",
         "return_result": 15
@@ -225,7 +225,7 @@ def db_results(db_socket):
         "molecule_id": mol_insert["data"]["water1"],
         "method": "M2",
         "basis": "B1",
-        "option": "default",
+        "options": "default",
         "program": "P2",
         "driver": "gradient",
         "return_result": 15
@@ -235,7 +235,7 @@ def db_results(db_socket):
         "molecule_id": mol_insert["data"]["water2"],
         "method": "M2",
         "basis": "B1",
-        "option": "default",
+        "options": "default",
         "program": "P1",
         "driver": "gradient",
         "return_result": 20
