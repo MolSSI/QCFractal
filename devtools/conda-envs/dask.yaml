@@ -3,6 +3,10 @@ channels:
   - conda-forge
   - psi4/label/dev
 dependencies:
+    # Dask testing environment
+  - psi4=1.2rc2
+  - dask
+  - distributed
 
     # Base depends
   - numpy
@@ -12,15 +16,11 @@ dependencies:
   - requests
   - jsonschema
 
-    # Compute testing
-  - psi4=1.2rc2
-  - dask
-  - distributed
-
     # Testing
   - pytest
   - codecov
   - pytest-cov
+
     # Pip depends
   - pip:
     - git+git://github.com/MolSSI/QCEngine#egg=qcengine
