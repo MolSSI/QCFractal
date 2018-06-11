@@ -40,7 +40,7 @@ before_install:
 
 install:
     # Create test environment for package
-  - conda create -q -n test_env python=$PYTHON_VER numpy nomkl pandas pymongo pytest tornado requests
+  - conda create -q -n test_env python=$PYTHON_VER numpy nomkl pandas pymongo pytest tornado requests psi4=1.2rc2 -c psi4/label/dev
   - source activate test_env
   - conda install codecov pytest-cov jsonschema -c conda-forge
 
