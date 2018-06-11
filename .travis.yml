@@ -40,20 +40,17 @@ before_install:
 
 install:
     # Create test environment for package
-  - conda create -q -n test_env python=$PYTHON_VER numpy nomkl pandas pymongo pytest tornado requests psi4=1.2rc2 -c psi4/label/dev
-  - source activate test_env
-  - conda install codecov pytest-cov jsonschema -c conda-forge
+  - conda env create -n test python=$PYTHON_VER -f devtools/conda-envs/rdkit.yaml
+  - source activate test
 
     # Install anything not in conda
 #  - pip install fireworks
 
     # Install the latest qcengine for testing
-  - pip install git+git://github.com/MolSSI/QCEngine#egg=qcengine
+#  - pip install git+git://github.com/MolSSI/QCEngine#egg=qcengine
 
     # Build and install package
   - python setup.py develop --no-deps
-#  - conda build --python=$PYTHON_VER devtools/conda-recipe
-#  - conda install --yes --use-local project_name
 
 before_script:
   - sleep 5
