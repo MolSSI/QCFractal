@@ -5,6 +5,7 @@ Handlers for Dask
 import logging
 import qcengine
 import dask
+import traceback
 
 from ..web_handlers import APIHandler
 from ..interface import schema
@@ -35,7 +36,7 @@ class DaskNanny:
 
     def update(self):
         del_keys = []
-        new_results = []
+        new_results = {}
         for key, future in self.queue.items():
             if future.done():
                 try:
@@ -44,9 +45,9 @@ class DaskNanny:
                         raise ValueError("Computation (%s, %s) did not complete successfully!:\n%s\n" %
                                          (tmp_data["molecule_hash"], tmp_data["modelchem"], tmp_data["error"]))
                     # res = self.mongod_socket.del_page_by_data(tmp_data)
-                    new_result.append(tmp_data)
-                    tag = (task[k] for k in result_indices)
-                    self.logger.info("MONGO ADD: %s" % (tag))
+
+                    self.logger.info("MONGO ADD: {}".format(key))
+                    new_results[key] = tmp_data
                 except Exception as e:
                     ename = str(type(e).__name__) + ":" + str(e)
                     msg = "".join(traceback.format_tb(e.__traceback__))
@@ -56,7 +57,25 @@ class DaskNanny:
 
                 del_keys.append(key)
 
-        res = self.mongod_socket.add_results(new_results)
+        # Get molecule ID's
+        mols = {k : v["molecule"] for k, v in new_results.items()}
+        mol_ret = self.mongod_socket.add_molecules(mols)["data"]
+
+        for k, v in new_results.items():
+
+            # Flatten data back out
+            tmp_data["method"] = tmp_data["model"]["method"]
+            tmp_data["basis"] = tmp_data["model"]["basis"]
+
+            tmp_data["options"] = k[-1]
+            del tmp_data["keywords"]
+
+            tmp_data["molecule_id"] = mol_ret[k]
+            del tmp_data["molecule"]
+
+            tmp_data["program"] = k[0]
+
+        res = self.mongod_socket.add_results(list(new_results.values()))
 
         for key in del_keys:
             del self.queue[key]
@@ -127,6 +146,8 @@ class DaskScheduler(APIHandler):
         for k, v in tasks.items():
 
             # Reformat model syntax
+            v["schema_name"] = "qc_schema_input"
+            v["schema_version"] = 1
             v["model"] = {"method": v["method"], "basis": v["basis"]}
             del v["method"]
             del v["basis"]

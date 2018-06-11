@@ -119,7 +119,10 @@ def test_dask_server(request):
     db_name = "dqm_dask_server_test"
 
     with pristine_loop() as loop:
+
+        # LocalCluster will start the loop in a background thread.
         with LocalCluster(n_workers=1, threads_per_worker=1, loop=loop) as cluster:
+
             # Build a Dask Client
             client = Client(cluster)
 
