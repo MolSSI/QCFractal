@@ -6,6 +6,7 @@ import logging
 import qcengine
 import dask
 import traceback
+import json
 
 from ..web_handlers import APIHandler
 from ..interface import schema
@@ -99,10 +100,18 @@ class DaskScheduler(APIHandler):
         # Build return metadata
         meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
 
-        # Check for errors or duplicates
-        program = self.json["meta"]["program"]
-        tasks = {schema.format_result_indices(t, program=program): t for t in self.json["data"]}
+        # Dumps is faster than copy
+        task_meta = json.dumps({k: self.json["meta"][k] for k in ["program", "driver", "method", "basis", "options"]})
 
+        # Form runs
+        tasks = {}
+        for mol in self.json["data"]:
+            data = json.loads(task_meta)
+            data["molecule_id"] = mol
+
+            tasks[schema.format_result_indices(data)] = data
+
+        # Check for duplicates in queue or server
         for t in tasks.keys():
             # We should also check for previously computed
             if t in queue_nanny.queue:
@@ -124,21 +133,14 @@ class DaskScheduler(APIHandler):
                 del tasks[k]
 
         # Pull out the needed options
-        needed_options = list({(program, x["options"]) for x in tasks.values()})
-        raw_options = db.get_options(needed_options)
-        options = {x["name"]: x for x in raw_options["data"]}
-        for k, v in options.items():
-            del v["name"]
-            del v["program"]
+        option_set = db.get_options([(self.json["meta"]["program"], self.json["meta"]["options"])])["data"][0]
+        del option_set["name"]
+        del option_set["program"]
 
         # Add options back into tasks
         for k, v in tasks.items():
-            if v["options"] in options:
-                v["keywords"] = options[v["options"]]
-                del v["options"]
-            else:
-                meta["errors"].append((k, "Option not found"))
-                del tasks[k]
+            v["keywords"] = option_set
+            del v["options"]
 
 
         submitted = []
@@ -152,7 +154,7 @@ class DaskScheduler(APIHandler):
             del v["method"]
             del v["basis"]
 
-            f = dask_client.submit(qcengine.compute, v, program)
+            f = dask_client.submit(qcengine.compute, v, self.json["meta"]["program"])
 
             tag = queue_nanny.add_future(k, f)
             submitted.append(tag)
