@@ -123,10 +123,17 @@ class QCPortal(object):
 
     ### Results section
 
-    def get_results(self, db_list):
+    def get_results(self, **kwargs):
 
-        payload = {"meta": {}, "data": {}}
-        payload["data"] = db_list
+        query = {}
+        for key in ["program", "molecule_id", "driver", "method", "basis", "options"]:
+            if key in kwargs:
+                query[key] = kwargs[key]
+
+        payload = {"meta": {}, "data": query}
+        if "projection" in kwargs:
+            payload["meta"]["projection"] = kwargs["projection"]
+
         r = requests.get(self._database_addr, json=payload)
         assert r.status_code == 200
 

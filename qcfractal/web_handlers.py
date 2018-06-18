@@ -98,8 +98,11 @@ class ResultHandler(APIHandler):
     def get(self):
 
         db = self.objects["db_socket"]
+        proj = None
+        if "projection" in self.json["meta"]:
+            proj = self.json["projection"]
 
-        ret = db.get_results(self.json["data"])
+        ret = db.get_results(self.json["data"], projection=projection)
 
         self.write(ret)
 
