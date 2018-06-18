@@ -11,6 +11,8 @@ import pandas as pd
 from . import molecule
 from . import statistics
 from . import constants
+from . import client
+from . import dict_utils
 
 
 def _nCr(n, r):
@@ -25,16 +27,17 @@ class Database(object):
     This is a Mongo QCDB database class.
     """
 
-    def __init__(self, name, socket=None, db_type="rxn"):
+    def __init__(self, name, portal=None, category="default", db_type="rxn"):
 
         # Client and mongod objects
-        self.client = None
-        self.mongod = None
+        self.client = portal
 
         # Blank data object
         self.data = {}
         self.data["reactions"] = []
         self.data["name"] = name
+        self.data["category"] = category
+        self.data["db_index"] = (category, name)
         self.data["provenence"] = {}
         self.data["db_type"] = db_type.upper()
 
@@ -45,24 +48,20 @@ class Database(object):
         self.df = pd.DataFrame()
         self.rxn_index = pd.DataFrame()
 
-        if socket is not None:
+        if portal is not None:
 
-            if isinstance(socket, client.Client):
-                self.client = socket
-                self.mongod = socket # This is overloaded
-
-            elif isinstance(socket, mongo_helper.MongoSocket):
-                self.mongod = socket
+            if isinstance(portal, client.QCPortal):
+                self.portal = portal
 
             else:
                 raise TypeError("Database: client argument of unrecognized type '%s'" %
                                 type(socket))
 
-            tmp_data = self.mongod.mongod_query("get_database", name)
-            if tmp_data is None:
-                print("Warning! Name '%s' not found, creating blank database." % name)
+            tmp_data = self.portal.get_databases([self.data["db_index"]])
+            if len(tmp_data) == 0:
+                print("Warning! Database `{}: {}` not found, creating blank database.".format(*self.data["db_index"]))
             else:
-                self.data = tmp_data
+                self.data = tmp_data[0]
 
             self.df = pd.DataFrame(index=self.get_index())
 
@@ -317,25 +316,27 @@ class Database(object):
         return self.data["reactions"][found[0]]
 
     # Setters
-    def save(self, mongo_db=None, overwrite=False):
+    def save(self, client=None, overwrite=False):
         if self.data["name"] == "":
             raise AttributeError("Database:save: Database must have a name!")
 
-        if mongo_db is None:
-            if self.mongod is None:
+        if client is None:
+            if self.client is None:
                 raise AttributeError(
                     "Database:save: Database does not own a MongoDB instance and one was not passed in."
                 )
-            socket = self.mongod
-        else:
-            socket = mongo_db
+            client = self.client
+
+        # Add new molecules
+
+        mol_ret = client.add_molecules(self._new_molecule_jsons)
+
+        # Update internal molecule UUID's to servers UUID's
+        self.data["reactions"] = dict_utils.replace_dict_keys(self.data["reactions"], mol_ret)
+        self._new_molecule_jsons = {}
 
         # Add the database
-        socket.mongod_query("add_database", self.data)
-
-        # Loop over new molecules
-        for k, v in self._new_molecule_jsons.items():
-            socket.mongod_query("add_molecule", v)
+        client.add_database(self.data)
 
     # Statistical quantities
     def statistics(self, stype, value, bench="Benchmark"):

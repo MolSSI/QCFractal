@@ -63,8 +63,24 @@ def test_queue_stack_dask(dask_server):
     assert len(results) == 1
     assert pytest.approx(ret["properties"]["scf_total_energy"], 1e-6) == -1.0660263371078127
 
-# @testing.using_psi4
-# @testing.using_dask
-# def test_dask_server_database(dask_server):
+@testing.using_psi4
+@testing.using_dask
+def test_dask_server_database(dask_server):
 
-#     db = qp =
+    portal = qp.QCPortal(testing.test_server_address)
+    db = qp.Database("He_PES", portal)
+
+    # Add two helium dimers to the DB at 2 and 4 bohr
+    He1 = qp.Molecule([[2, 0, 0, -1], [2, 0, 0, 1]], dtype="numpy", units="bohr", frags=[1])
+    db.add_ie_rxn("He1", He1, attributes={"r": 4})
+
+    He2 = qp.Molecule([[2, 0, 0, -2], [2, 0, 0, 2]], dtype="numpy", units="bohr", frags=[1])
+    db.add_ie_rxn("He2", He2, attributes={"r": 4})
+
+    db.save()
+    print()
+
+
+
+
+
