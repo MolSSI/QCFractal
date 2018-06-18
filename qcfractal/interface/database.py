@@ -178,22 +178,20 @@ class Database(object):
             "program": program.lower(),
         }
         # # If reaction results
-        # if reaction_results:
-        #     tmp_idx = pd.DataFrame(index=self.df.index, columns=keys)
-        #     for rxn in self.data["reactions"]:
-        #         for col in keys:
-        #             try:
-        #                 tmp_idx.ix[rxn["name"], col] = rxn["reaction_results"][stoich][col]
-        #             except:
-        #                 pass
+        if reaction_results:
+            tmp_idx = pd.Series(index=self.df.index)
+            for rxn in self.data["reactions"]:
+                try:
+                    tmp_idx.ix[rxn["name"]] = rxn["reaction_results"][stoich][method]
+                except:
+                    pass
 
-        #     # Convert to numeric
-        #     tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
-        #     tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.get_scale(scale)
+            # Convert to numeric
+            tmp_idx = pd.to_numeric(tmp_idx, errors='ignore')
+            tmp_idx *= constants.get_scale(scale)
 
-        #     tmp_idx.columns = [prefix + x + postfix for x in tmp_idx.columns]
-        #     self.df[tmp_idx.columns] = tmp_idx
-        #     return True
+            self.df[prefix + method + postfix] = tmp_idx
+            return True
 
         # if self.data["db_type"].lower() == "ie":
         #     _ie_helper(..)
