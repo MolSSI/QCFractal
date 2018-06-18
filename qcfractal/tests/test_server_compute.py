@@ -94,10 +94,12 @@ def test_dask_server_database(dask_server):
     ret = db.compute("SCF", "STO-3G")
     dask_server.objects["queue_nanny"].await_compute()
 
+    # Query computed results
     assert db.query("SCF", "STO-3G")
-
     assert pytest.approx(0.6024530476071095, 1.e-6) == db.df.ix["He1", "SCF/STO-3G"]
     assert pytest.approx(-0.006895035942673289, 1.e-6) == db.df.ix["He2", "SCF/STO-3G"]
+
+    # Check results
     assert db.query("Benchmark", "", reaction_results=True)
     assert pytest.approx(0.00024477933196125805, 1.e-4) == db.statistics("MUE", "SCF/STO-3G")
 
