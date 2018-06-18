@@ -68,17 +68,36 @@ def test_queue_stack_dask(dask_server):
 def test_dask_server_database(dask_server):
 
     portal = qp.QCPortal(testing.test_server_address)
-    db = qp.Database("He_PES", portal)
+    db_name = "He_PES"
+    db = qp.Database(db_name, portal, db_type="ie")
 
-    # Add two helium dimers to the DB at 2 and 4 bohr
-    He1 = qp.Molecule([[2, 0, 0, -1], [2, 0, 0, 1]], dtype="numpy", units="bohr", frags=[1])
+    # Adds options
+    option = qp.data.get_options("psi_default")
+
+    opt_ret = portal.add_options([option])
+    opt_key = option["name"]
+
+    # Add two helium dimers to the DB at 4 and 8 bohr
+    He1 = qp.Molecule([[2, 0, 0, -2], [2, 0, 0, 2]], dtype="numpy", units="bohr", frags=[1])
     db.add_ie_rxn("He1", He1, attributes={"r": 4})
 
-    He2 = qp.Molecule([[2, 0, 0, -2], [2, 0, 0, 2]], dtype="numpy", units="bohr", frags=[1])
+    He2 = qp.Molecule([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
     db.add_ie_rxn("He2", He2, attributes={"r": 4})
 
+    # Save the DB
     db.save()
-    print()
+
+    # Open a new database
+    db = qp.Database(db_name, portal)
+
+    # Compute SCF/sto-3g
+    ret = db.compute("SCF", "STO-3G")
+    dask_server.objects["queue_nanny"].await_compute()
+
+    assert db.query("SCF", "STO-3G")
+
+    assert pytest.approx(db.df.ix["He1", "SCF/STO-3G"], 1.e-6) == 0.6024530476071095
+    assert pytest.approx(db.df.ix["He2", "SCF/STO-3G"], 1.e-6) == -0.006895035942673289
 
 
 

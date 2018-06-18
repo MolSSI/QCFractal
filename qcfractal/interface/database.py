@@ -74,51 +74,42 @@ class Database(object):
                         tmp_index.append([name, stoich_name, mol_hash, coef])
 
             self.rxn_index = pd.DataFrame(
-                tmp_index, columns=["name", "stoichiometry", "molecule_hash", "coefficient"])
+                tmp_index, columns=["name", "stoichiometry", "molecule_id", "coefficient"])
 
         # If we making a new database we may need new hashes and json objects
         self._new_molecule_jsons = {}
-
-        # What queried data do we have?
-        self._queries = {}
 
     # Getters
     def __getitem__(self, args):
         return self.df[args]
 
-    def refresh(self):
-        """
-        Reruns the entire query history to rebuild the current database from saved pages.
-        """
 
-        for k, q in self._queries.items():
-            self.query(q[0], **q[1])
-        return True
-
-    def _unroll_query(self, keys, stoich, **kwargs):
+    def _unroll_query(self, keys, stoich, field="result_result", **kwargs):
 
         tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
         tmp_idx = tmp_idx.reset_index(drop=True)
 
         # There could be duplicates so take the unique and save the map
-        umols, uidx = np.unique(tmp_idx["molecule_hash"], return_index=True)
+        umols, uidx = np.unique(tmp_idx["molecule_id"], return_index=True)
 
         # Evaluate the overall dataframe
-        if "field" in kwargs and kwargs["field"] is None:
-            del kwargs["field"]
-        values = self.mongod.mongod_query("evaluate", list(umols), list(keys), **kwargs)
+        query_keys = {k:v for k, v in keys.items()}
+        query_keys["molecule_id"] = list(umols)
+        query_keys["projection"] = {field: True, "molecule_id": True}
+        values = pd.DataFrame(self.client.get_results(**query_keys))
 
         # Join on molecule hash
-        tmp_idx = tmp_idx.join(values, on="molecule_hash")
+        tmp_idx = tmp_idx.merge(values, how="left", on="molecule_id")
 
         # Apply stoich values
         for col in values.columns:
+            if col == "molecule_id": continue
             tmp_idx[col] *= tmp_idx["coefficient"]
-        tmp_idx = tmp_idx.drop(['stoichiometry', 'molecule_hash', 'coefficient'], axis=1)
+        tmp_idx = tmp_idx.drop(['stoichiometry', 'molecule_id', 'coefficient'], axis=1)
 
         # If *any* value is null in the stoich sum, the whole thing should be Null. Pandas is being too clever
         null_mask = tmp_idx.copy()
-        null_mask[keys] = null_mask[keys].isnull()
+        null_mask[field] = null_mask[field].isnull()
         null_mask = null_mask.groupby(["name"]).sum() != False
 
         tmp_idx = tmp_idx.groupby(["name"]).sum()
@@ -127,13 +118,17 @@ class Database(object):
         return tmp_idx
 
     def query(self,
-              keys,
+              method,
+              basis,
+              driver="energy",
+              options="default",
+              program="psi4",
               stoich="default",
               prefix="",
               postfix="",
               reaction_results=False,
               scale="kcal",
-              field=None,
+              field="return_result",
               ignore_db_type=False):
         """
         Queries the local MongoSocket data for the requested keys and stoichiometry.
@@ -172,59 +167,48 @@ class Database(object):
 
         """
 
-        if not reaction_results and (self.mongod is None):
-            raise AttributeError("DataBase: MongoSocket was not set.")
+        if not reaction_results and (self.client is None):
+            raise AttributeError("DataBase: QCPortal was not set.")
 
-        # Keys should be iterable
-        if isinstance(keys, str):
-            keys = [keys]
+        query_keys = {
+            "method": method.lower(),
+            "basis": basis.lower(),
+            "driver": driver.lower(),
+            "options": options.lower(),
+            "program": program.lower(),
+        }
+        # # If reaction results
+        # if reaction_results:
+        #     tmp_idx = pd.DataFrame(index=self.df.index, columns=keys)
+        #     for rxn in self.data["reactions"]:
+        #         for col in keys:
+        #             try:
+        #                 tmp_idx.ix[rxn["name"], col] = rxn["reaction_results"][stoich][col]
+        #             except:
+        #                 pass
 
-        # Save query to be repeated by refresh
-        query_packet = [
-            keys, {
-                "stoich": stoich,
-                "prefix": prefix,
-                "postfix": postfix,
-                "reaction_results": reaction_results,
-                "scale": scale
-            }
-        ]
-        query_packet_hash = fields.get_hash(query_packet, None)
-        if query_packet_hash not in self._queries:
-            self._queries[query_packet_hash] = query_packet
+        #     # Convert to numeric
+        #     tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
+        #     tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.get_scale(scale)
 
-        # If reaction results
-        if reaction_results:
-            tmp_idx = pd.DataFrame(index=self.df.index, columns=keys)
-            for rxn in self.data["reactions"]:
-                for col in keys:
-                    try:
-                        tmp_idx.ix[rxn["name"], col] = rxn["reaction_results"][stoich][col]
-                    except:
-                        pass
-
-            # Convert to numeric
-            tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
-            tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.get_scale(scale)
-
-            tmp_idx.columns = [prefix + x + postfix for x in tmp_idx.columns]
-            self.df[tmp_idx.columns] = tmp_idx
-            return True
+        #     tmp_idx.columns = [prefix + x + postfix for x in tmp_idx.columns]
+        #     self.df[tmp_idx.columns] = tmp_idx
+        #     return True
 
         # if self.data["db_type"].lower() == "ie":
         #     _ie_helper(..)
 
         if (not ignore_db_type) and (self.data["db_type"].lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
-            tmp_idx_complex = self._unroll_query(keys, stoich, field=field)
-            tmp_idx_monomers = self._unroll_query(keys, monomer_stoich, field=field)
+            tmp_idx_complex = self._unroll_query(query_keys, stoich, field=field)
+            tmp_idx_monomers = self._unroll_query(query_keys, monomer_stoich, field=field)
 
             # Combine
             tmp_idx = tmp_idx_complex - tmp_idx_monomers
 
         else:
-            tmp_idx = self._unroll_query(keys, stoich, field=field)
-        tmp_idx.columns = [prefix + x + postfix for x in tmp_idx.columns]
+            tmp_idx = self._unroll_query(query_keys, stoich, field=field)
+        tmp_idx.columns = [prefix + method + '/' + basis + postfix for x in tmp_idx.columns]
 
         # scale
         tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
@@ -235,20 +219,12 @@ class Database(object):
 
         return True
 
-    def compute(self, keys, stoich="default", options=None, program="psi4", other_fields=None, ignore_db_type=False):
+    def compute(self, method, basis, driver="energy", stoich="default", options="default", program="psi4", other_fields=None, ignore_db_type=False):
 
-        if options is None:
-            options = {}
-        if other_fields is None:
-            other_fields = {}
         if self.client is None:
             raise AttributeError("DataBase: Compute: Client was not set.")
 
-        # Keys should be iterable
-        if isinstance(keys, str):
-            keys = [keys]
-
-
+        # Figure out molecules that we need
         if (not ignore_db_type) and (self.data["db_type"].lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
             tmp_monomer = self.rxn_index[self.rxn_index["stoichiometry"] == monomer_stoich].copy()
@@ -260,34 +236,28 @@ class Database(object):
         tmp_idx = tmp_idx.reset_index(drop=True)
 
         # There could be duplicates so take the unique and save the map
-        umols, uidx = np.unique(tmp_idx["molecule_hash"], return_index=True)
-        values = self.mongod.mongod_query("evaluate", list(umols), list(keys))
+        umols, uidx = np.unique(tmp_idx["molecule_id"], return_index=True)
 
-        mask = pd.isnull(values)
-        compute_list = []
-        for idx, row in pd.isnull(values).iterrows():
+        complete_values = self.client.get_results(molecule_id=list(umols), driver=driver, options=options, program=program, method=method, basis=basis)
 
-            if idx in list(self._new_molecule_jsons):
-                raise AttributeError(
-                    "Database: Compute: Database (and new molecules) is not saved to the database.")
 
-            for method in values.columns[row]:
-                tmp = {}
-                tmp["molecule_hash"] = idx
-                tmp["modelchem"] = method
-                for k, v in other_fields.items():
-                    tmp[k] = v
-                compute_list.append(tmp)
+        if len(complete_values):
+            raise KeyError("Completed expressions not yet implemented")
+        # mask = pd.isnull(values)
+        # compute_list = []
+        # for idx, row in pd.isnull(values).iterrows():
 
-        submit_json = {}
-        submit_json["multi_header"] = "QCDB_batch"    # Verifies that I am submitting
-        submit_json["options"] = options
-        submit_json["tasks"] = compute_list
-        submit_json["program"] = program
+        #     for method in values.columns[row]:
+        #         tmp = {}
+        #         tmp["molecule_id"] = idx
+        #         tmp["modelchem"] = method
+        #         for k, v in other_fields.items():
+        #             tmp[k] = v
+        #         compute_list.append(tmp)
+        compute_list = list(umols)
 
-        ret = {}
-        ret["submit"] = self.client.submit_task(submit_json)
-        ret["nsubmit"] = len(compute_list)
+        ret = self.client.add_compute(program, method.lower(), basis.lower(), driver, options, compute_list)
+
         return ret
 
     def get_index(self):

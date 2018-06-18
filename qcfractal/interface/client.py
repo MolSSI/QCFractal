@@ -22,6 +22,7 @@ class QCPortal(object):
         self._option_addr = self.port + "option"
         self._database_addr = self.port + "database"
         self._result_addr = self.port + "result"
+        self._scheduler_addr = self.port + "scheduler"
         # self.info = self.get_information()
 
     ### Molecule section
@@ -134,10 +135,13 @@ class QCPortal(object):
         if "projection" in kwargs:
             payload["meta"]["projection"] = kwargs["projection"]
 
-        r = requests.get(self._database_addr, json=payload)
+        r = requests.get(self._result_addr, json=payload)
         assert r.status_code == 200
 
-        return r.json()["data"]
+        if kwargs.get("return_full", False):
+            return r.json()
+        else:
+            return r.json()["data"]
 
     # Must compute results?
     # def add_results(self, db, full_return=False):
@@ -147,7 +151,7 @@ class QCPortal(object):
     #     payload = {"meta": {}, "data": {}}
     #     payload["data"] = db
 
-    #     r = requests.post(self._database_addr, json=payload)
+    #     r = requests.post(self._result_addr, json=payload)
     #     assert r.status_code == 200
 
     #     if full_return:
@@ -155,5 +159,29 @@ class QCPortal(object):
     #     else:
     #         return r.json()["data"]
 
-
     ### Compute section
+
+    def add_compute(self, program, method, basis, driver, options, molecule_id, return_full=False):
+
+        # Always a list
+        if isinstance(molecule_id, str):
+            molecule_id = [molecule_id]
+
+        payload = {
+            "meta": {
+                "driver": driver,
+                "program": program,
+                "method": method,
+                "basis": basis,
+                "options": options
+            },
+            "data": molecule_id
+        }
+
+        r = requests.post(self._scheduler_addr, json=payload)
+        assert r.status_code == 200
+
+        if return_full:
+            return r.json()
+        else:
+            return r.json()["data"]
