@@ -154,7 +154,7 @@ class Molecule:
         Angstroms.
         """
 
-        arr = np.array(arr)
+        arr = np.array(arr, dtype=np.double)
 
         if arr.shape[1] != 4:
             raise AttributeError("Molecule: Molecule should be shape (N, 4) not %d." % arr.shape[1])
