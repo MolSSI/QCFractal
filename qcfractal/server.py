@@ -118,14 +118,12 @@ class FractalServer(object):
         except KeyboardInterrupt:
             self.stop()
 
-        self.logger.info("DQM Server stopping gracefully. Stopped IOLoop.\n")
-
     def stop(self):
         """
         Shuts down all IOLoops
         """
-        print("Shutting down")
         self.loop.stop()
+        self.logger.info("DQM Server stopping gracefully. Stopped IOLoop.\n")
 
 
 if __name__ == "__main__":

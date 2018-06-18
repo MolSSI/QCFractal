@@ -65,21 +65,27 @@ class DaskNanny:
         for k, v in new_results.items():
 
             # Flatten data back out
-            tmp_data["method"] = tmp_data["model"]["method"]
-            tmp_data["basis"] = tmp_data["model"]["basis"]
+            v["method"] = v["model"]["method"]
+            v["basis"] = v["model"]["basis"]
 
-            tmp_data["options"] = k[-1]
-            del tmp_data["keywords"]
+            v["options"] = k[-1]
+            del v["keywords"]
 
-            tmp_data["molecule_id"] = mol_ret[k]
-            del tmp_data["molecule"]
+            v["molecule_id"] = mol_ret[k]
+            del v["molecule"]
 
-            tmp_data["program"] = k[0]
+            v["program"] = k[0]
 
         res = self.mongod_socket.add_results(list(new_results.values()))
 
         for key in del_keys:
             del self.queue[key]
+
+    def await_compute(self):
+
+        # Try to get each results
+        ret = [v.result() for k, v in self.queue.items()]
+        self.update()
 
 
 class DaskScheduler(APIHandler):
