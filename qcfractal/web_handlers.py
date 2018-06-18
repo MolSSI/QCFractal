@@ -100,9 +100,9 @@ class ResultHandler(APIHandler):
         db = self.objects["db_socket"]
         proj = None
         if "projection" in self.json["meta"]:
-            proj = self.json["projection"]
+            proj = self.json["meta"]["projection"]
 
-        ret = db.get_results(self.json["data"], projection=projection)
+        ret = db.get_results(self.json["data"], projection=proj)
 
         self.write(ret)
 

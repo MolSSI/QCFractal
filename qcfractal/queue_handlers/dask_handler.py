@@ -67,6 +67,7 @@ class DaskNanny:
             # Flatten data back out
             v["method"] = v["model"]["method"]
             v["basis"] = v["model"]["basis"]
+            del v["model"]
 
             v["options"] = k[-1]
             del v["keywords"]
@@ -76,7 +77,7 @@ class DaskNanny:
 
             v["program"] = k[0]
 
-        res = self.mongod_socket.add_results(list(new_results.values()))
+        ret = self.mongod_socket.add_results(list(new_results.values()))
 
         for key in del_keys:
             del self.queue[key]
