@@ -33,8 +33,16 @@ def test_molecule_constructors():
     neon_from_json = dqm.Molecule(neon_from_psi.to_json(), dtype="json")
     assert water_psi.compare(neon_from_psi, neon_from_json)
 
-
     assert water_psi.compare(dqm.Molecule(water_psi.to_string()))
+
+def test_molecule_file_constructors():
+
+    mol_psi = dqm.data.get_molecule("helium_dimer.psimol")
+    mol_json = dqm.data.get_molecule("helium_dimer.json")
+    mol_np = dqm.data.get_molecule("helium_dimer.npy")
+
+    assert mol_psi.compare(mol_json)
+    assert mol_psi.compare(mol_np)
 
 def test_water_minima_data():
     mol = dqm.data.get_molecule("water_dimer_minima.psimol")

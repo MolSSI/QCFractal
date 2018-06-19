@@ -59,9 +59,11 @@ def get_molecule(name, orient=True):
     """
     Returns a Molecule object from the available stored objects.
     """
-    folder = _get_folder_path("molecules")
+    fname = get_file_name("molecules", name)
+    if fname == []:
+        raise OSError("File: {}/{} not found".format("molecules", name))
 
-    return Molecule.from_file(os.path.join(folder, name), orient=orient)
+    return Molecule.from_file(fname, orient=orient)
 
 
 def get_options(name):

@@ -64,6 +64,16 @@ class Molecule:
             if kwargs.pop("orient", True):
                 self.orient_molecule()
 
+            # Cleanup un-initialized variables
+            if len(self.real) == 0:
+                self.real = [True for x in range(self._geometry.shape[0])]
+
+            if self.fragments == []:
+                natoms = self._geometry.shape[0]
+                self.fragments = [list(range(natoms))]
+                self.fragment_charges = [self.charge]
+                self.fragment_multiplicities = [self.multiplicity]
+
             # Validate
             self.validate()
         else:
@@ -124,10 +134,10 @@ class Molecule:
             with open(filename, "r") as infile:
                 data = infile.read()
         elif dtype == "numpy":
-            data = numpy.fromfile(filename)
+            data = np.load(filename)
         elif dtype == "json":
             with open(filename, "r") as infile:
-                data = json.loads(infile)
+                data = json.load(infile)
         else:
             raise KeyError("Dtype not understood '%s'." % dtype)
 
