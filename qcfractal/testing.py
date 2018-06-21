@@ -75,6 +75,26 @@ def pristine_loop():
         IOLoop.clear_current()
 
 
+@contextmanager
+def active_loop(loop):
+    # Add the IOloop to a thread daemon
+    thread = threading.Thread(target=loop.start, name="test IOLoop")
+    thread.daemon = True
+    thread.start()
+    loop_started = threading.Event()
+    loop.add_callback(loop_started.set)
+    loop_started.wait()
+
+    try:
+        yield loop
+    finally:
+        try:
+            loop.add_callback(loop.stop)
+            thread.join(timeout=5)
+        except:
+            pass
+
+
 @pytest.fixture(scope="module")
 def test_server(request):
     """
@@ -92,20 +112,8 @@ def test_server(request):
         server.db.client.drop_database(server.db._project_name)
         server.db.init_database()
 
-        # Add the IOloop to a thread daemon
-        thread = threading.Thread(target=loop.start, name="test IOLoop")
-        thread.daemon = True
-        thread.start()
-        loop_started = threading.Event()
-        loop.add_callback(loop_started.set)
-        loop_started.wait()
-
-        # Yield the server instance
-        yield server
-
-        # Cleanup
-        loop.add_callback(loop.stop)
-        thread.join(timeout=5)
+        with active_loop(loop) as act:
+            yield server
 
 
 @using_dask
@@ -142,6 +150,40 @@ def test_dask_server(request):
             yield server
 
             client.close()
+
+
+@using_fireworks
+@pytest.fixture(scope="module")
+def test_fireworks_server(request):
+    """
+    Builds a server instance with the event loop running in a thread.
+    """
+    import fireworks
+
+    lpad = fireworks.LaunchPad(name="fw_testing_server", logdir="/tmp", strm_lvl="CRITICAL")
+    lpad.reset(None, require_password=False)
+
+    db_name = "dqm_fireworks_server_test"
+
+    with pristine_loop() as loop:
+
+        # Build server, manually handle IOLoop (no start/stop needed)
+        server = FractalServer(
+            port=_server_port,
+            db_project_name=db_name,
+            io_loop=loop,
+            queue_socket=lpad,
+            queue_type="fireworks")
+
+        # Clean and re-init the databse
+        server.db.client.drop_database(server.db._project_name)
+        server.db.init_database()
+
+        # Yield the server instance
+        with active_loop(loop) as act:
+            yield server
+
+    lpad.reset(None, require_password=False)
 
 
 @pytest.fixture(scope="module")
