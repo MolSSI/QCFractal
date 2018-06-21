@@ -70,3 +70,6 @@ test.py
 
 # Dask
 dask-worker-space/
+
+# Fireworks
+launcher_*
