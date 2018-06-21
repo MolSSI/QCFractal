@@ -47,7 +47,7 @@ def test_queue_stack_dask(dask_server):
 
     # Manually handle the compute
     nanny = dask_server.objects["queue_nanny"]
-    nanny.await_compute()
+    nanny.await_results()
     assert len(nanny.list_current_tasks()) == 0
 
     # Query result and check against out manual pul
@@ -91,7 +91,7 @@ def test_dask_server_database(dask_server):
 
     # Compute SCF/sto-3g
     ret = db.compute("SCF", "STO-3G")
-    dask_server.objects["queue_nanny"].await_compute()
+    dask_server.objects["queue_nanny"].await_results()
 
     # Query computed results
     assert db.query("SCF", "STO-3G")
