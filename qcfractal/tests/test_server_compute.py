@@ -47,9 +47,8 @@ def test_queue_stack_dask(dask_server):
 
     # Manually handle the compute
     nanny = dask_server.objects["queue_nanny"]
-    ret = nanny.queue[compute_key].result()
-    nanny.update()
-    assert len(nanny.queue) == 0
+    nanny.await_compute()
+    assert len(nanny.list_current_tasks()) == 0
 
     # Query result and check against out manual pul
     results_query = {
@@ -61,7 +60,7 @@ def test_queue_stack_dask(dask_server):
     results = db.get_results(results_query)["data"]
 
     assert len(results) == 1
-    assert pytest.approx(-1.0660263371078127, 1e-6) == ret["properties"]["scf_total_energy"]
+    assert pytest.approx(-1.0660263371078127, 1e-6) == results[0]["properties"]["scf_total_energy"]
 
 @testing.using_psi4
 @testing.using_dask

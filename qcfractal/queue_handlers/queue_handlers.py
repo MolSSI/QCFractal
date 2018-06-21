@@ -2,6 +2,7 @@
 Queue backend abstraction manager.
 """
 
+from . import dask_handler
 
 def build_queue(queue_type, queue_socket, db_socket, **kwargs):
 
@@ -13,8 +14,7 @@ def build_queue(queue_type, queue_socket, db_socket, **kwargs):
 
         from . import dask_handler
 
-        nanny = dask_handler.DaskNanny(queue_socket, db_socket, **kwargs)
-        scheduler = dask_handler.DaskScheduler
+        adapter = dask_handler.DaskAdapter(queue_socket)
 
     elif queue_type == "fireworks":
         try:
@@ -29,5 +29,8 @@ def build_queue(queue_type, queue_socket, db_socket, **kwargs):
 
     else:
         raise KeyError("Queue type '{}' not understood".format(queue_type))
+
+    nanny = dask_handler.QueueNanny(adapter, db_socket, **kwargs)
+    scheduler = dask_handler.QueueScheduler
 
     return (nanny, scheduler)

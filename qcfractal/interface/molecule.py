@@ -166,8 +166,8 @@ class Molecule:
 
         arr = np.array(arr, dtype=np.double)
 
-        if arr.shape[1] != 4:
-            raise AttributeError("Molecule: Molecule should be shape (N, 4) not %d." % arr.shape[1])
+        if (len(arr.shape) != 2) or (arr.shape[1] != 4):
+            raise AttributeError("Molecule: Molecule should be shape (N, 4) not {}." % arr.shape)
 
         if units == "bohr":
             const = 1
