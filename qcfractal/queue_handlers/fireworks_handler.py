@@ -5,6 +5,7 @@ Schedulers and Nanny's for Fireworks
 import logging
 import qcengine
 import fireworks
+import fireworks.core.rocket_launcher
 
 class FireworksAdapter:
     def __init__(self, lpad, logger=None):
@@ -24,9 +25,7 @@ class FireworksAdapter:
             if isinstance(args[0], str):
                 func_string = args[0]
             elif callable(args[0]):
-                module = args[0].__module__
-                func = args[0].__name__
-                func_string = module + "." +
+                func_string = args[0].__module__ + "." + args[0].__name__
             else:
                 self.logger.critical("Adapter: Input callabe of type '{}' not understood for key '{}'".format(type(args[0]), tag))
                 continue
@@ -49,7 +48,7 @@ class FireworksAdapter:
                 "$in": list(self.queue.keys())
             },
             "state": "COMPLETED"
-        }, {"action.stored_data.results": True,
+        }, {"action.stored_data.fw_results": True,
             "_id": False,
             "fw_id": True})
 

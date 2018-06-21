@@ -196,8 +196,7 @@ def build_queue(queue_type, queue_socket, db_socket, **kwargs):
 
         from . import fireworks_handler
 
-        nanny = fireworks_handler.FireworksNanny(queue_socket, db_socket, **kwargs)
-        scheduler = fireworks_handler.FireworksScheduler
+        adapter = fireworks_handler.FireworksAdapter(queue_socket)
 
     else:
         raise KeyError("Queue type '{}' not understood".format(queue_type))
