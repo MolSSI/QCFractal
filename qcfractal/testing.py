@@ -196,6 +196,16 @@ def fireworks_server_fixture(request):
     logging.basicConfig(level=None, filename=None)
 
 
+@pytest.fixture(scope="module", params=["dask", "fireworks"])
+def fractal_compute_server(request):
+    if request.param == "dask":
+        yield from dask_server_fixture(request)
+    elif request.param == "fireworks":
+        yield from fireworks_server_fixture(request)
+    else:
+        raise TypeError("fractal_compute_server: internal parametrize error")
+
+
 @pytest.fixture(scope="module")
 def test_database(request):
     db_name = "dqm_local_database_test"

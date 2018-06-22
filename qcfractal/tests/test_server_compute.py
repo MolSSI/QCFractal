@@ -9,18 +9,18 @@ import qcfractal as qf
 
 from qcfractal.queue_handlers import build_queue
 from qcfractal import testing
-from qcfractal.testing import fireworks_server_fixture, dask_server_fixture
+from qcfractal.testing import fractal_compute_server
 import qcengine
 import requests
 import pytest
 
 
 ### Tests the copmute queue stack
-def _test_queue_stack(server):
+def test_compute_queue_stack(fractal_compute_server):
 
     # Add a hydrogen molecule
     hydrogen = qp.Molecule([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
-    db = server.objects["db_socket"]
+    db = fractal_compute_server.objects["db_socket"]
     mol_ret = db.add_molecules({"hydrogen": hydrogen.to_json()})
 
     option = qp.data.get_options("psi_default")
@@ -40,12 +40,12 @@ def _test_queue_stack(server):
     }
 
     # Ask the server to compute a new computation
-    r = requests.post(server.get_address("scheduler"), json=compute)
+    r = requests.post(fractal_compute_server.get_address("scheduler"), json=compute)
     assert r.status_code == 200
     compute_key = tuple(r.json()["data"][0])
 
     # Manually handle the compute
-    nanny = server.objects["queue_nanny"]
+    nanny = fractal_compute_server.objects["queue_nanny"]
     nanny.await_results()
     assert len(nanny.list_current_tasks()) == 0
 
@@ -62,18 +62,12 @@ def _test_queue_stack(server):
     assert pytest.approx(-1.0660263371078127, 1e-6) == results[0]["properties"]["scf_total_energy"]
 
 
-def test_fireworks_queue_stack(fireworks_server_fixture):
-    _test_queue_stack(fireworks_server_fixture)
-
-
-def test_dask_queue_stack(dask_server_fixture):
-    _test_queue_stack(dask_server_fixture)
-
-
 ### Tests an entire server and interaction energy database run
-def _test_server_database(server):
 
-    portal = qp.QCPortal(server.get_address(""))
+
+def test_compute_database(fractal_compute_server):
+
+    portal = qp.QCPortal(fractal_compute_server.get_address(""))
     db_name = "He_PES"
     db = qp.Database(db_name, portal, db_type="ie")
 
@@ -98,7 +92,7 @@ def _test_server_database(server):
 
     # Compute SCF/sto-3g
     ret = db.compute("SCF", "STO-3G")
-    server.objects["queue_nanny"].await_results()
+    fractal_compute_server.objects["queue_nanny"].await_results()
 
     # Query computed results
     assert db.query("SCF", "STO-3G")
@@ -108,11 +102,3 @@ def _test_server_database(server):
     # Check results
     assert db.query("Benchmark", "", reaction_results=True)
     assert pytest.approx(0.00024477933196125805, 1.e-4) == db.statistics("MUE", "SCF/STO-3G")
-
-
-def test_fireworks_database(fireworks_server_fixture):
-    _test_server_database(fireworks_server_fixture)
-
-
-def test_dask_database(dask_server_fixture):
-    _test_server_database(dask_server_fixture)
