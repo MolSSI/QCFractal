@@ -13,6 +13,7 @@ from .db_sockets import db_socket_factory
 
 ### Addon testing capabilities
 
+
 def _plugin_import(plug):
     plug_spec = pkgutil.find_loader(plug)
     if plug_spec is None:
@@ -59,6 +60,7 @@ def find_open_port():
     host, port = sock.getsockname()
 
     return port
+
 
 @contextmanager
 def pristine_loop():
@@ -126,7 +128,7 @@ def test_server(request):
 
 @using_dask
 @pytest.fixture(scope="module")
-def test_dask_server(request):
+def dask_server_fixture(request):
     """
     Builds a server instance with the event loop running in a thread.
     """
@@ -162,7 +164,7 @@ def test_dask_server(request):
 
 @using_fireworks
 @pytest.fixture(scope="module")
-def test_fireworks_server(request):
+def fireworks_server_fixture(request):
     """
     Builds a server instance with the event loop running in a thread.
     """
@@ -172,7 +174,6 @@ def test_fireworks_server(request):
 
     lpad = fireworks.LaunchPad(name="fw_testing_server", logdir="/tmp/", strm_lvl="CRITICAL")
     lpad.reset(None, require_password=False)
-    print("") # Fireworks will print, skipline in
 
     db_name = "dqm_fireworks_server_test"
 
@@ -180,11 +181,7 @@ def test_fireworks_server(request):
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = FractalServer(
-            port=find_open_port(),
-            db_project_name=db_name,
-            io_loop=loop,
-            queue_socket=lpad,
-            queue_type="fireworks")
+            port=find_open_port(), db_project_name=db_name, io_loop=loop, queue_socket=lpad, queue_type="fireworks")
 
         # Clean and re-init the databse
         server.db.client.drop_database(server.db._project_name)

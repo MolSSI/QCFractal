@@ -1,5 +1,7 @@
 """
 Tests the server compute capabilities.
+
+Apparently cannot parametrize fixtures, this is a workaround
 """
 
 import qcfractal.interface as qp
@@ -7,17 +9,13 @@ import qcfractal as qf
 
 from qcfractal.queue_handlers import build_queue
 from qcfractal import testing
+from qcfractal.testing import fireworks_server_fixture, dask_server_fixture
 import qcengine
 import requests
 import pytest
 
-fireworks_server = testing.test_fireworks_server
+def _test_queue_stack(server):
 
-
-@testing.using_psi4
-def test_queue_stack(fireworks_server):
-
-    server = fireworks_server
     # Add a hydrogen molecule
     hydrogen = qp.Molecule([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
     db = server.objects["db_socket"]
@@ -62,10 +60,15 @@ def test_queue_stack(fireworks_server):
     assert pytest.approx(-1.0660263371078127, 1e-6) == results[0]["properties"]["scf_total_energy"]
 
 
-@testing.using_psi4
-def test_server_database(fireworks_server):
+def test_fireworks_queue_stack(fireworks_server_fixture):
+    _test_queue_stack(fireworks_server_fixture)
 
-    server = fireworks_server
+def test_dask_queue_stack(dask_server_fixture):
+    _test_queue_stack(dask_server_fixture)
+
+
+def _test_server_database(server):
+
     portal = qp.QCPortal(server.get_address(""))
     db_name = "He_PES"
     db = qp.Database(db_name, portal, db_type="ie")
@@ -101,3 +104,9 @@ def test_server_database(fireworks_server):
     # Check results
     assert db.query("Benchmark", "", reaction_results=True)
     assert pytest.approx(0.00024477933196125805, 1.e-4) == db.statistics("MUE", "SCF/STO-3G")
+
+def test_fireworks_database(fireworks_server_fixture):
+    _test_server_database(fireworks_server_fixture)
+
+def test_dask_database(dask_server_fixture):
+    _test_server_database(dask_server_fixture)
