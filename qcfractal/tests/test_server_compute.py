@@ -11,9 +11,7 @@ import qcengine
 import requests
 import pytest
 
-dask_server = testing.test_dask_server
 fireworks_server = testing.test_fireworks_server
-scheduler_api_addr = testing.test_server_address + "scheduler"
 
 
 @testing.using_psi4
@@ -42,7 +40,7 @@ def test_queue_stack(fireworks_server):
     }
 
     # Ask the server to compute a new computation
-    r = requests.post(scheduler_api_addr, json=compute)
+    r = requests.post(server.get_address("scheduler"), json=compute)
     assert r.status_code == 200
     compute_key = tuple(r.json()["data"][0])
 
@@ -68,7 +66,7 @@ def test_queue_stack(fireworks_server):
 def test_server_database(fireworks_server):
 
     server = fireworks_server
-    portal = qp.QCPortal(testing.test_server_address)
+    portal = qp.QCPortal(server.get_address(""))
     db_name = "He_PES"
     db = qp.Database(db_name, portal, db_type="ie")
 

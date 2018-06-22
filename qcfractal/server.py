@@ -36,6 +36,7 @@ class FractalServer(object):
 
         # Save local options
         self.port = port
+        self._address = "http://localhost:" + str(self.port) + "/"
 
         # Setup logging.
         self.logger = logging.getLogger("FractalServer")
@@ -124,6 +125,9 @@ class FractalServer(object):
         """
         self.loop.stop()
         self.logger.info("DQM Server stopping gracefully. Stopped IOLoop.\n")
+
+    def get_address(self, function):
+        return self._address + function
 
 
 if __name__ == "__main__":

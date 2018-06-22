@@ -3,21 +3,17 @@ Tests the DQM Server class
 """
 
 import qcfractal.interface as qp
-from qcfractal.testing import test_server, test_server_address
+from qcfractal.testing import test_server
 
 import pytest
 import requests
-
-mol_api_addr = test_server_address + "molecule"
-opt_api_addr = test_server_address + "option"
-db_api_addr = test_server_address + "database"
-result_api_addr = test_server_address + "result"
 
 meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
 
 
 def test_molecule_socket(test_server):
 
+    mol_api_addr = test_server.get_address("molecule")
     water = qp.data.get_molecule("water_dimer_minima.psimol")
 
     # Add a molecule
@@ -48,6 +44,7 @@ def test_molecule_socket(test_server):
 
 def test_option_socket(test_server):
 
+    opt_api_addr = test_server.get_address("option")
     opts = qp.data.get_options("psi_default")
     # Add a molecule
     r = requests.post(opt_api_addr, json={"meta": {}, "data": [opts]})
@@ -65,6 +62,7 @@ def test_option_socket(test_server):
 
 def test_database_socket(test_server):
 
+    db_api_addr = test_server.get_address("database")
     db = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
 
     r = requests.post(db_api_addr, json={"meta": {}, "data": db})
@@ -80,11 +78,19 @@ def test_database_socket(test_server):
     pdata = r.json()
     assert pdata["data"][0] == db
 
+
 def test_result_socket(test_server):
 
+    result_api_addr = test_server.get_address("result")
     water = qp.data.get_molecule("water_dimer_minima.psimol")
     water2 = qp.data.get_molecule("water_dimer_stretch.psimol")
-    r = requests.post(mol_api_addr, json={"meta": {}, "data": {"water1": water.to_json(), "water2": water2.to_json()}})
+    r = requests.post(
+        test_server.get_address("molecule"),
+        json={"meta": {},
+              "data": {
+                  "water1": water.to_json(),
+                  "water2": water2.to_json()
+              }})
     assert r.status_code == 200
 
     mol_insert = r.json()
@@ -123,5 +129,3 @@ def test_result_socket(test_server):
     pdata = r.json()
     assert len(pdata["data"]) == 1
     assert pdata["data"][0]["other_data"] == 10
-
-

@@ -5,16 +5,13 @@ Contains testing infrastructure for QCFractal
 import pytest
 import threading
 import pkgutil
+import socket
 from contextlib import contextmanager
 from tornado.ioloop import IOLoop
 from .server import FractalServer
 from .db_sockets import db_socket_factory
 
-_server_port = 8888
-test_server_address = "http://localhost:" + str(_server_port) + "/"
-
 ### Addon testing capabilities
-
 
 def _plugin_import(plug):
     plug_spec = pkgutil.find_loader(plug)
@@ -51,6 +48,17 @@ using_rdkit = pytest.mark.skipif(has_module('rdkit') is False, reason=_import_me
 
 ### Server testing mechanics
 
+
+def find_open_port():
+    """
+    Use socket's built in ability to find an open port.
+    """
+    sock = socket.socket()
+    sock.bind(('', 0))
+
+    host, port = sock.getsockname()
+
+    return port
 
 @contextmanager
 def pristine_loop():
@@ -106,7 +114,7 @@ def test_server(request):
     with pristine_loop() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(port=_server_port, db_project_name=db_name, io_loop=loop)
+        server = FractalServer(port=find_open_port(), db_project_name=db_name, io_loop=loop)
 
         # Clean and re-init the databse
         server.db.client.drop_database(server.db._project_name)
@@ -136,7 +144,7 @@ def test_dask_server(request):
 
             # Build server, manually handle IOLoop (no start/stop needed)
             server = FractalServer(
-                port=_server_port,
+                port=find_open_port(),
                 db_project_name=db_name,
                 io_loop=cluster.loop,
                 queue_socket=client,
@@ -164,7 +172,7 @@ def test_fireworks_server(request):
 
     lpad = fireworks.LaunchPad(name="fw_testing_server", logdir="/tmp/", strm_lvl="CRITICAL")
     lpad.reset(None, require_password=False)
-    print("")
+    print("") # Fireworks will print, skipline in
 
     db_name = "dqm_fireworks_server_test"
 
@@ -172,7 +180,7 @@ def test_fireworks_server(request):
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = FractalServer(
-            port=_server_port,
+            port=find_open_port(),
             db_project_name=db_name,
             io_loop=loop,
             queue_socket=lpad,
