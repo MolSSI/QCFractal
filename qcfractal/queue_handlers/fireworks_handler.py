@@ -27,11 +27,13 @@ class FireworksAdapter:
             elif callable(args[0]):
                 func_string = args[0].__module__ + "." + args[0].__name__
             else:
-                self.logger.critical("Adapter: Input callabe of type '{}' not understood for key '{}'".format(type(args[0]), tag))
+                self.logger.critical(
+                    "Adapter: Input callabe of type '{}' not understood for key '{}'".format(type(args[0]), tag))
                 continue
 
             fw = fireworks.Firework(
-                fireworks.PyTask(func=func_string, args=args[1:], stored_data_varname="fw_results"))
+                fireworks.PyTask(func=func_string, args=args[1:], stored_data_varname="fw_results"),
+                spec={"_launch_dir": "/tmp/"})
             launches = self.lpad.add_wf(fw)
 
             self.queue[list(launches.values())[0]] = tag
@@ -60,8 +62,9 @@ class FireworksAdapter:
         return ret
 
     def await_results(self):
+
         # Try to get each results
-        fireworks.core.rocket_launcher.rapidfire(self.lpad)
+        fireworks.core.rocket_launcher.rapidfire(self.lpad, strm_lvl="CRITICAL")
 
     def list_tasks(self):
         return list(self.queue.values())

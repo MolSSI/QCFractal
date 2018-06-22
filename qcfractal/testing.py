@@ -159,9 +159,12 @@ def test_fireworks_server(request):
     Builds a server instance with the event loop running in a thread.
     """
     import fireworks
+    import logging
+    logging.basicConfig(level=logging.CRITICAL, filename="/tmp/fireworks_logfile.txt")
 
-    lpad = fireworks.LaunchPad(name="fw_testing_server", logdir="/tmp", strm_lvl="CRITICAL")
+    lpad = fireworks.LaunchPad(name="fw_testing_server", logdir="/tmp/", strm_lvl="CRITICAL")
     lpad.reset(None, require_password=False)
+    print("")
 
     db_name = "dqm_fireworks_server_test"
 
@@ -184,6 +187,7 @@ def test_fireworks_server(request):
             yield server
 
     lpad.reset(None, require_password=False)
+    logging.basicConfig(level=None, filename=None)
 
 
 @pytest.fixture(scope="module")

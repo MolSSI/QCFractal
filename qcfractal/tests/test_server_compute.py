@@ -12,16 +12,17 @@ import requests
 import pytest
 
 dask_server = testing.test_dask_server
+fireworks_server = testing.test_fireworks_server
 scheduler_api_addr = testing.test_server_address + "scheduler"
 
 
 @testing.using_psi4
-@testing.using_dask
-def test_queue_stack_dask(dask_server):
+def test_queue_stack(fireworks_server):
 
+    server = fireworks_server
     # Add a hydrogen molecule
     hydrogen = qp.Molecule([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
-    db = dask_server.objects["db_socket"]
+    db = server.objects["db_socket"]
     mol_ret = db.add_molecules({"hydrogen": hydrogen.to_json()})
 
     option = qp.data.get_options("psi_default")
@@ -46,7 +47,7 @@ def test_queue_stack_dask(dask_server):
     compute_key = tuple(r.json()["data"][0])
 
     # Manually handle the compute
-    nanny = dask_server.objects["queue_nanny"]
+    nanny = server.objects["queue_nanny"]
     nanny.await_results()
     assert len(nanny.list_current_tasks()) == 0
 
@@ -62,10 +63,11 @@ def test_queue_stack_dask(dask_server):
     assert len(results) == 1
     assert pytest.approx(-1.0660263371078127, 1e-6) == results[0]["properties"]["scf_total_energy"]
 
-@testing.using_psi4
-@testing.using_dask
-def test_dask_server_database(dask_server):
 
+@testing.using_psi4
+def test_server_database(fireworks_server):
+
+    server = fireworks_server
     portal = qp.QCPortal(testing.test_server_address)
     db_name = "He_PES"
     db = qp.Database(db_name, portal, db_type="ie")
@@ -91,7 +93,7 @@ def test_dask_server_database(dask_server):
 
     # Compute SCF/sto-3g
     ret = db.compute("SCF", "STO-3G")
-    dask_server.objects["queue_nanny"].await_results()
+    server.objects["queue_nanny"].await_results()
 
     # Query computed results
     assert db.query("SCF", "STO-3G")
@@ -101,7 +103,3 @@ def test_dask_server_database(dask_server):
     # Check results
     assert db.query("Benchmark", "", reaction_results=True)
     assert pytest.approx(0.00024477933196125805, 1.e-4) == db.statistics("MUE", "SCF/STO-3G")
-
-
-
-
