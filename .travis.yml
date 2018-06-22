@@ -22,10 +22,21 @@ matrix:
   include:
     - os: linux
       python: 3.5
-      env: PYTHON_VER=3.5
+      env:
+        - PYTHON_VER=3.5
+        - QUEUE=DASK
+
     - os: linux
       python: 3.6
-      env: PYTHON_VER=3.6
+      env:
+        - PYTHON_VER=3.6
+        - QUEUE=DASK
+
+    - os: linux
+      python: 3.6
+      env:
+        - PYTHON_VER=3.6
+        - QUEUE=FIREWORKS
 
 before_install:
   # Additional info about the build
@@ -40,14 +51,16 @@ before_install:
 
 install:
     # Create test environment for package
-  - conda env create -n test python=$PYTHON_VER -f devtools/conda-envs/dask.yaml
+  - |
+    if [ $QUEUE == "RDKIT" ]; then
+      conda env create -n test python=$PYTHON_VER -f devtools/conda-envs/dask.yaml
+    elif [ $QUEUE == "FIREWORKS" ]; then
+      conda env create -n test python=$PYTHON_VER -f devtools/conda-envs/fireworks.yaml
+    else
+      echo "ERROR: No match for QUEUE ($QUEUE)."
+      exit 1
+    fi
   - source activate test
-
-    # Install anything not in conda
-#  - pip install fireworks
-
-    # Install the latest qcengine for testing
-#  - pip install git+git://github.com/MolSSI/QCEngine#egg=qcengine
 
     # Build and install package
   - python setup.py develop --no-deps

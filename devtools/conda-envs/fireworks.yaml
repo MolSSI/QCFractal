@@ -1,0 +1,25 @@
+name: test
+channels:
+  - conda-forge
+  - psi4/label/dev
+dependencies:
+    # Fireworks
+  - psi4=1.2rc2
+
+    # Base depends
+  - numpy
+  - pandas
+  - pymongo
+  - tornado
+  - requests
+  - jsonschema
+
+    # Testing
+  - pytest
+  - codecov
+  - pytest-cov
+
+    # Pip depends
+  - pip:
+    - git+git://github.com/MolSSI/QCEngine#egg=qcengine
+    - fireworks

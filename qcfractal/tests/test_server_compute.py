@@ -14,6 +14,7 @@ import qcengine
 import requests
 import pytest
 
+
 def _test_queue_stack(server):
 
     # Add a hydrogen molecule
@@ -63,6 +64,7 @@ def _test_queue_stack(server):
 def test_fireworks_queue_stack(fireworks_server_fixture):
     _test_queue_stack(fireworks_server_fixture)
 
+
 def test_dask_queue_stack(dask_server_fixture):
     _test_queue_stack(dask_server_fixture)
 
@@ -105,8 +107,10 @@ def _test_server_database(server):
     assert db.query("Benchmark", "", reaction_results=True)
     assert pytest.approx(0.00024477933196125805, 1.e-4) == db.statistics("MUE", "SCF/STO-3G")
 
+
 def test_fireworks_database(fireworks_server_fixture):
     _test_server_database(fireworks_server_fixture)
+
 
 def test_dask_database(dask_server_fixture):
     _test_server_database(dask_server_fixture)
