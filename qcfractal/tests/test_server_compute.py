@@ -15,6 +15,7 @@ import requests
 import pytest
 
 
+### Tests the copmute queue stack
 def _test_queue_stack(server):
 
     # Add a hydrogen molecule
@@ -69,6 +70,7 @@ def test_dask_queue_stack(dask_server_fixture):
     _test_queue_stack(dask_server_fixture)
 
 
+### Tests an entire server and interaction energy database run
 def _test_server_database(server):
 
     portal = qp.QCPortal(server.get_address(""))

@@ -52,7 +52,7 @@ before_install:
 install:
     # Create test environment for package
   - |
-    if [ $QUEUE == "RDKIT" ]; then
+    if [ $QUEUE == "DASK" ]; then
       conda env create -n test python=$PYTHON_VER -f devtools/conda-envs/dask.yaml
     elif [ $QUEUE == "FIREWORKS" ]; then
       conda env create -n test python=$PYTHON_VER -f devtools/conda-envs/fireworks.yaml

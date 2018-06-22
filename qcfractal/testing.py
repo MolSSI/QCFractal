@@ -132,17 +132,18 @@ def dask_server_fixture(request):
     """
     Builds a server instance with the event loop running in a thread.
     """
-    from dask.distributed import Client, LocalCluster
+
+    dd = pytest.importorskip("dask.distributed")
 
     db_name = "dqm_dask_server_test"
 
     with pristine_loop() as loop:
 
         # LocalCluster will start the loop in a background thread.
-        with LocalCluster(n_workers=1, threads_per_worker=1, loop=loop) as cluster:
+        with dd.LocalCluster(n_workers=1, threads_per_worker=1, loop=loop) as cluster:
 
             # Build a Dask Client
-            client = Client(cluster)
+            client = dd.Client(cluster)
 
             # Build server, manually handle IOLoop (no start/stop needed)
             server = FractalServer(
@@ -168,7 +169,7 @@ def fireworks_server_fixture(request):
     """
     Builds a server instance with the event loop running in a thread.
     """
-    import fireworks
+    fireworks = pytest.importorskip("fireworks")
     import logging
     logging.basicConfig(level=logging.CRITICAL, filename="/tmp/fireworks_logfile.txt")
 
