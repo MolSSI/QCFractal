@@ -171,9 +171,7 @@ class MongoSocket:
             for x in error_skips:
                 del data[x]["_id"]
 
-        ret = {}
-        ret["data"] = rdata
-        ret["meta"] = meta
+        ret = {"data": rdata, "meta": meta}
 
         return ret
 
@@ -240,7 +238,7 @@ class MongoSocket:
 
         # If something went wrong, we cannot generate the full key map
         # Success should always be True as we are parsing duplicate above and *not* here.
-        if (ret["meta"]["success"] is False):
+        if ret["meta"]["success"] is False:
             ret["meta"]["error_description"] = "Major insert error."
             ret["data"] = key_mapper
             return ret
@@ -456,9 +454,7 @@ class MongoSocket:
     def get_results(self, query, projection=None):
 
         parsed_query = {}
-        ret = {}
-        ret["meta"] = _get_metadata()
-        ret["data"] = []
+        ret = {"meta": _get_metadata(), "data": []}
 
         # We are querying via id
         if "_id" in query:
@@ -520,9 +516,7 @@ class MongoSocket:
 
     def get_molecules(self, molecule_ids, index="id"):
 
-        ret = {}
-        ret["meta"] = _get_metadata()
-        ret["data"] = []
+        ret = {"meta": _get_metadata(), "data": []}
 
         try:
             index = db_utils.translate_molecule_index(index)

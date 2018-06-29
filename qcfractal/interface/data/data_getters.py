@@ -60,7 +60,7 @@ def get_molecule(name, orient=True):
     Returns a Molecule object from the available stored objects.
     """
     fname = get_file_name("molecules", name)
-    if fname == []:
+    if not fname:
         raise OSError("File: {}/{} not found".format("molecules", name))
 
     return Molecule.from_file(fname, orient=orient)

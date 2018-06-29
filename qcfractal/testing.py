@@ -25,11 +25,12 @@ def _plugin_import(plug):
 _import_message = "Not detecting module {}. Install package if necessary and add to envvar PYTHONPATH"
 
 # Figure out what is imported
-_programs = {}
-_programs["fireworks"] = _plugin_import("fireworks")
-_programs["rdkit"] = _plugin_import("rdkit")
-_programs["psi4"] = _plugin_import("psi4")
-_programs["dask"] = _plugin_import("dask")
+_programs = {
+    "fireworks": _plugin_import("fireworks"),
+    "rdkit": _plugin_import("rdkit"),
+    "psi4": _plugin_import("psi4"),
+    "dask": _plugin_import("dask")
+}
 if _programs["dask"]:
     _programs["dask.distributed"] = _plugin_import("dask.distributed")
 else:

@@ -68,7 +68,7 @@ class Molecule:
             if len(self.real) == 0:
                 self.real = [True for x in range(self._geometry.shape[0])]
 
-            if self.fragments == []:
+            if not self.fragments:
                 natoms = self._geometry.shape[0]
                 self.fragments = [list(range(natoms))]
                 self.fragment_charges = [self.charge]

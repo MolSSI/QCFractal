@@ -202,4 +202,4 @@ def build_queue(queue_type, queue_socket, db_socket, **kwargs):
     nanny = QueueNanny(adapter, db_socket, **kwargs)
     scheduler = QueueScheduler
 
-    return (nanny, scheduler)
+    return nanny, scheduler

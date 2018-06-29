@@ -33,13 +33,14 @@ class Database(object):
         self.client = portal
 
         # Blank data object
-        self.data = {}
-        self.data["reactions"] = []
-        self.data["name"] = name
-        self.data["category"] = category
-        self.data["db_index"] = (category, name)
-        self.data["provenence"] = {}
-        self.data["db_type"] = db_type.upper()
+        self.data = {
+            "reactions": [],
+            "name": name,
+            "category": category,
+            "db_index": (category, name),
+            "provenence": {},
+            "db_type": db_type.upper()
+        }
 
         if self.data["db_type"] not in ["RXN", "IE"]:
             raise TypeError("Database: db_type must either be RXN or IE.")
@@ -422,10 +423,9 @@ class Database(object):
             attributes = {}
         if other_fields is None:
             other_fields = {}
-        rxn = {}
+        rxn = {"name": name}
 
         # Set name
-        rxn["name"] = name
         if name in self.get_index():
             raise KeyError(
                 "Database: Name '%s' already exists. Please either delete this entry or call the update function."

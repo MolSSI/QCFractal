@@ -47,7 +47,7 @@ def get_indices(name):
 def format_result_indices(data, program=None):
     if program is None:
         program = data["program"]
-    return (program, data["molecule_id"], data["driver"], data["method"], data["basis"], data["options"])
+    return program, data["molecule_id"], data["driver"], data["method"], data["basis"], data["options"]
 
 
 def get_schema(name):
