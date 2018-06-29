@@ -206,14 +206,24 @@ def fractal_compute_server(request):
         raise TypeError("fractal_compute_server: internal parametrize error")
 
 
-@pytest.fixture(scope="module")
-def test_database(request):
-    db_name = "dqm_local_database_test"
+@pytest.fixture(scope="module", params=["mongo"])
+def db_socket_fixture(request):
+    print("")
+    db_name = "dqm_local_values_test"
 
-    db = db_socket_factory("127.0.0.1", 27017, db_name)
-    db.client.drop_database(db._project_name)
-    db.init_database()
+    # IP/port/drop table is specific to build
+    if request.param == "mongo":
+        db = db_socket_factory("127.0.0.1", 27017, db_name, db_type=request.param)
+
+        # Clean and re-init the databse
+        db.client.drop_database(db._project_name)
+        db.init_database()
+    else:
+        raise KeyError("DB type %s not understood" % request.param)
 
     yield db
 
-    db.client.drop_database(db._project_name)
+    if request.param == "mongo":
+        db.client.drop_database(db_name)
+    else:
+        raise KeyError("DB type %s not understood" % request.param)

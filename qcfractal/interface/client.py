@@ -46,13 +46,11 @@ class QCPortal(object):
         mol_submission = {}
         for key, mol in mol_list.items():
             if isinstance(mol, molecule.Molecule):
-                mol = mol.to_json()
+                mol_submission[key] = mol.to_json()
             elif isinstance(mol, dict):
-                mol = mol
+                mol_submission[key] = mol
             else:
                 raise TypeError("Input molecule type '{}' not recognized".format(type(mol)))
-
-            mol_submission[key] = mol
 
         payload = {"meta": {}, "data": {}}
         payload["data"] = mol_submission

@@ -183,7 +183,7 @@ class Database(object):
             for rxn in self.data["reactions"]:
                 try:
                     tmp_idx.ix[rxn["name"]] = rxn["reaction_results"][stoich][method]
-                except:
+                except KeyError:
                     pass
 
             # Convert to numeric

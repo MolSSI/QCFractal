@@ -10,30 +10,7 @@ import numpy as np
 # Import the DQM collection
 import qcfractal as dserver
 import qcfractal.interface as qp
-
-
-@pytest.fixture(scope="module", params=["mongo"])
-def db_socket(request):
-    print("")
-    db_name = "dqm_local_values_test"
-
-    # IP/port/drop table is specific to build
-    if request.param == "mongo":
-        db = dserver.db_socket_factory("127.0.0.1", 27017, db_name, db_type=request.param)
-
-        # Clean and re-init the databse
-        db.client.drop_database(db._project_name)
-        db.init_database()
-    else:
-        raise KeyError("DB type %s not understood" % request.param)
-
-    yield db
-
-    if request.param == "mongo":
-        db.client.drop_database(db_name)
-    else:
-        raise KeyError("DB type %s not understood" % request.param)
-
+from qcfractal.testing import db_socket_fixture as db_socket
 
 
 def test_molecules_add(db_socket):
@@ -117,6 +94,7 @@ def test_options_add(db_socket):
 
     assert 1 == db_socket.del_option(opts["program"], opts["name"])
 
+
 def test_options_error(db_socket):
     opts = qp.data.get_options("psi_default")
 
@@ -124,6 +102,7 @@ def test_options_error(db_socket):
     ret = db_socket.add_options(opts)
     assert ret["meta"]["n_inserted"] == 0
     assert len(ret["meta"]["validation_errors"]) == 1
+
 
 def test_databases_add(db_socket):
 
@@ -182,7 +161,9 @@ def test_results_add(db_socket):
     ret = db_socket.del_molecules(list(mol_insert["data"].values()), index="id")
     assert ret == 2
 
+
 ### Build out a set of query tests
+
 
 @pytest.fixture(scope="module")
 def db_results(db_socket):
@@ -287,6 +268,7 @@ def test_results_query_project(db_results):
     ret = db_results.get_results({"method": "M2", "program": "P2"}, projection={"return_result": True})["data"][0]
     assert set(ret.keys()) == {"return_result"}
     assert ret["return_result"] == 15
+
 
 def test_results_query_driver(db_results):
     ret = db_results.get_results({"driver": "energy"})

@@ -12,7 +12,6 @@ except ImportError:
 
 import logging
 import pandas as pd
-import numpy as np
 from bson.objectid import ObjectId
 import copy
 

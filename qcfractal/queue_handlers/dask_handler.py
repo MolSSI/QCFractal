@@ -3,8 +3,6 @@ Handlers for Dask
 """
 
 import logging
-import qcengine
-import dask
 
 
 class DaskAdapter:
@@ -43,7 +41,8 @@ class DaskAdapter:
 
     def await_results(self):
         # Try to get each results
-        ret = [v.result() for k, v in self.queue.items()]
+        [v.result() for k, v in self.queue.items()]
+        return True
 
     def list_tasks(self):
         return list(self.queue.keys())
