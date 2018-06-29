@@ -3,8 +3,6 @@ Assists in grabbing the requisite schema
 """
 
 import copy
-import glob
-import os
 import jsonschema
 import json
 

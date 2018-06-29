@@ -51,7 +51,7 @@ def wrap_statistics(description, df, value, bench):
         rbench = df[bench]
     elif isinstance(bench, (np.ndarray, pd.Series)):
         if len(bench.shape) != 1:
-            ValueError('Only 1D numpy arrays can be passed to statistical quantities.')
+            raise ValueError('Only 1D numpy arrays can be passed to statistical quantities.')
         rbench = bench
     else:
         raise TypeError('Benchmark must a column of the dataframe or a 1D numpy array.')

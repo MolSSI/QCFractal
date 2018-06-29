@@ -1,8 +1,6 @@
 
-from tornado.options import options, define
 import tornado.ioloop
 import tornado.web
-import pymongo
 import json
 
 class APIHandler(tornado.web.RequestHandler):

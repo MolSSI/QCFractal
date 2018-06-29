@@ -1,8 +1,6 @@
 """Provides an interface the QCDB Server instance"""
 
-import json
 import requests
-import pandas as pd
 
 from . import molecule
 

@@ -2,9 +2,9 @@
 A command line interface to the qcfractal.
 """
 
-from tornado.options import options, define
-import tornado.ioloop
-import tornado.web
+# from tornado.options import options, define
+# import tornado.ioloop
+# import tornado.web
 
 # define("port", default=8888, help="Run on the given port.", type=int)
 # define("mongod_ip", default="127.0.0.1", help="The Mongod instances IP.", type=str)

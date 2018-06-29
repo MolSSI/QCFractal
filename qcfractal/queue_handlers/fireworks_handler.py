@@ -3,7 +3,6 @@ Schedulers and Nanny's for Fireworks
 """
 
 import logging
-import qcengine
 import fireworks
 import fireworks.core.rocket_launcher
 
@@ -54,7 +53,6 @@ class FireworksAdapter:
             "_id": False,
             "fw_id": True})
 
-        del_keys = []
         for tmp_data in cursor:
             key = self.queue.pop(tmp_data["fw_id"])
             ret[key] = tmp_data["action"]["stored_data"]["fw_results"]

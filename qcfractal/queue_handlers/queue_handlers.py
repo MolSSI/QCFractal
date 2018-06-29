@@ -33,7 +33,6 @@ class QueueNanny:
         return self.queue_adapter.submit_tasks(tasks)
 
     def update(self):
-        del_keys = []
         new_results = {}
 
         for key, tmp_data in self.queue_adapter.aquire_complete().items():
@@ -46,7 +45,6 @@ class QueueNanny:
                 self.logger.info("MONGO ADD: {}".format(key))
                 new_results[key] = tmp_data
             except Exception as e:
-                ename = str(type(e).__name__) + ":" + str(e)
                 msg = "".join(traceback.format_tb(e.__traceback__))
                 msg += str(type(e).__name__) + ":" + str(e)
                 self.errors[key] = msg
@@ -71,7 +69,7 @@ class QueueNanny:
 
             v["program"] = k[0]
 
-        ret = self.db_socket.add_results(list(new_results.values()))
+        self.db_socket.add_results(list(new_results.values()))
 
     def await_results(self):
         self.queue_adapter.await_results()
@@ -94,7 +92,7 @@ class QueueScheduler(APIHandler):
         # Grab objects
         db = self.objects["db_socket"]
         queue_nanny = self.objects["queue_nanny"]
-        result_indices = schema.get_indices("result")
+        # result_indices = schema.get_indices("result")
 
         # Build return metadata
         meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}

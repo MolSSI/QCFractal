@@ -207,7 +207,7 @@ class Molecule:
             re.IGNORECASE)
         cgmp = re.compile(r'^\s*(-?\d+)\s+(\d+)\s*$')
         frag = re.compile(r'^\s*--\s*$')
-        ghost = re.compile(r'@(.*)|Gh\((.*)\)', re.IGNORECASE)
+        # ghost = re.compile(r'@(.*)|Gh\((.*)\)', re.IGNORECASE)
         realNumber = re.compile(r"""[-+]?(?:(?:\d*\.\d+)|(?:\d+\.?))(?:[Ee][+-]?\d+)?""", re.VERBOSE)
 
         lines = re.split('\n', text)
@@ -268,7 +268,7 @@ class Molecule:
         # catch last default fragment cgmp
         try:
             self.fragment_charges[ifrag]
-        except:
+        except IndexError:
             self.fragment_charges.append(0.0)
             self.fragment_multiplicities.append(1)
 
@@ -298,7 +298,7 @@ class Molecule:
             else:
                 entries = re.split(r'\s+|\s*,\s*', line.strip())
                 atomm = atom.match(line.split()[0].strip().upper())
-                atomLabel = atomm.group('label')
+                # atomLabel = atomm.group('label')
                 atomSym = atomm.group('symbol')
 
                 # We don't know whether the @C or Gh(C) notation matched. Do a quick check.

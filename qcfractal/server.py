@@ -2,7 +2,6 @@ import logging
 
 import tornado.ioloop
 import tornado.web
-from tornado import gen
 
 from . import web_handlers
 from . import db_sockets
