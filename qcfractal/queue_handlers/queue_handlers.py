@@ -13,15 +13,35 @@ from ..interface import schema
 
 class QueueNanny:
     """
-    This object can add to the Dask queue and watches for finished jobs. Jobs that are finished
-    are automatically posted to the associated MongoDB and removed from the queue.
+    This object maintains a computational queue and watches for finished jobs for different
+    queue backends. Finished jobs are added to the database and removed from the queue.
+
+    Attributes
+    ----------
+    db_socket : DBSocket
+        A socket for the backend database
+    queue_adapter : QueueAdapter
+        The DBAdapter class for queue abstraction
+    errors : dict
+        A dictionary of current errors
+    logger : logging.logger
+        A logger for the QueueNanny
     """
 
     def __init__(self, queue_adapter, db_socket, logger=None):
+        """Summary
 
+        Parameters
+        ----------
+        queue_adapter : QueueAdapter
+            The DBAdapter class for queue abstraction
+        db_socket : DBSocket
+            A socket for the backend database
+        logger : None, optional
+            A logger for the QueueNanny
+        """
         self.queue_adapter = queue_adapter
         self.db_socket = db_socket
-        self.queue = {}
         self.errors = {}
 
         if logger:
@@ -30,9 +50,25 @@ class QueueNanny:
             self.logger = logging.getLogger('QueueNanny')
 
     def submit_tasks(self, tasks):
+        """Submits tasks to the queue for the Nanny to manage and watch for completion
+
+        Parameters
+        ----------
+        tasks : dict
+            A dictionary of key : JSON job representations
+
+        Returns
+        -------
+        ret : str
+            A list of jobs added to the queue
+        """
         return self.queue_adapter.submit_tasks(tasks)
 
     def update(self):
+        """Examines the queue for completed jobs and adds successful completions to the database
+        while unsucessful are logged for future inspection
+
+        """
         new_results = {}
 
         for key, tmp_data in self.queue_adapter.aquire_complete().items():
@@ -42,13 +78,13 @@ class QueueNanny:
                                      (tmp_data["molecule_hash"], tmp_data["modelchem"], tmp_data["error"]))
                 # res = self.db_socket.del_page_by_data(tmp_data)
 
-                self.logger.info("MONGO ADD: {}".format(key))
+                self.logger.info("update: {}".format(key))
                 new_results[key] = tmp_data
             except Exception as e:
                 msg = "".join(traceback.format_tb(e.__traceback__))
                 msg += str(type(e).__name__) + ":" + str(e)
                 self.errors[key] = msg
-                self.logger.info("MONGO ADD: ERROR\n%s" % msg)
+                self.logger.info("update: ERROR\n%s" % msg)
 
         # Get molecule ID's
         mols = {k: v["molecule"] for k, v in new_results.items()}
@@ -72,11 +108,28 @@ class QueueNanny:
         self.db_socket.add_results(list(new_results.values()))
 
     def await_results(self):
+        """A synchronus method for testing or small launches
+        that awaits job completion before adding all queued results
+        to the database and returning.
+
+        Returns
+        -------
+        TYPE
+            Description
+        """
         self.queue_adapter.await_results()
         self.update()
         return True
 
     def list_current_tasks(self):
+        """Provides a list of tasks currently in the queue along
+        with the associated keys
+
+        Returns
+        -------
+        ret : list of tuples
+            All jobs currently still in the database
+        """
         return self.queue_adapter.list_tasks()
 
 
@@ -86,7 +139,8 @@ class QueueScheduler(APIHandler):
     """
 
     def post(self):
-
+        """Summary
+        """
         # _check_auth(self.objects, self.request.headers)
 
         # Grab objects
@@ -174,7 +228,25 @@ class QueueScheduler(APIHandler):
 
 
 def build_queue(queue_type, queue_socket, db_socket, **kwargs):
+    """Constructs a queue and nanny based off the incoming queue socket type.
 
+    Parameters
+    ----------
+    queue_type : str ("dask", "fireworks")
+        The name of the incoming queue manager.
+    queue_socket : object ("distributed.Client", "fireworks.lpad")
+        A object wrapper for different queue types
+    db_socket : DBSocket
+        A socket to the underlying database
+    **kwargs
+        Additional kwargs for the QueueNanny
+
+    Returns
+    -------
+    ret : (Nanny, Scheduler)
+        Returns a valid Nanny and Scheduler for the selected computational queue
+
+    """
     if queue_type == "dask":
         try:
             import dask.distributed
