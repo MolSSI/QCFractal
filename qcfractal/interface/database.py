@@ -94,8 +94,7 @@ class Database(object):
                 self.client = portal
 
             else:
-                raise TypeError("Database: client argument of unrecognized type '%s'" %
-                                type(socket))
+                raise TypeError("Database: client argument of unrecognized type '%s'" % type(socket))
 
             tmp_data = self.client.get_databases([self.data["db_index"]])
             if len(tmp_data) == 0:
@@ -113,8 +112,7 @@ class Database(object):
                     for mol_hash, coef in rxn["stoichiometry"][stoich_name].items():
                         tmp_index.append([name, stoich_name, mol_hash, coef])
 
-            self.rxn_index = pd.DataFrame(
-                tmp_index, columns=["name", "stoichiometry", "molecule_id", "coefficient"])
+            self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule_id", "coefficient"])
 
         # If we making a new database we may need new hashes and json objects
         self._new_molecule_jsons = {}
@@ -134,7 +132,6 @@ class Database(object):
             A view of the underlying dataframe data
         """
         return self.df[args]
-
 
     def _unroll_query(self, keys, stoich, field="result_result"):
         """Unrolls a complex query into a "flat" query for the server object
@@ -160,7 +157,7 @@ class Database(object):
         umols, uidx = np.unique(tmp_idx["molecule_id"], return_index=True)
 
         # Evaluate the overall dataframe
-        query_keys = {k:v for k, v in keys.items()}
+        query_keys = {k: v for k, v in keys.items()}
         query_keys["molecule_id"] = list(umols)
         query_keys["projection"] = {field: True, "molecule_id": True}
         values = pd.DataFrame(self.client.get_results(**query_keys))
@@ -294,7 +291,14 @@ class Database(object):
 
         return True
 
-    def compute(self, method, basis, driver="energy", stoich="default", options="default", program="psi4", ignore_db_type=False):
+    def compute(self,
+                method,
+                basis,
+                driver="energy",
+                stoich="default",
+                options="default",
+                program="psi4",
+                ignore_db_type=False):
         """Executes a computational method for all reactions in the Database.
         Previously completed computations are not repeated.
 
@@ -337,8 +341,8 @@ class Database(object):
         # There could be duplicates so take the unique and save the map
         umols, uidx = np.unique(tmp_idx["molecule_id"], return_index=True)
 
-        complete_values = self.client.get_results(molecule_id=list(umols), driver=driver, options=options, program=program, method=method, basis=basis)
-
+        complete_values = self.client.get_results(
+            molecule_id=list(umols), driver=driver, options=options, program=program, method=method, basis=basis)
 
         if len(complete_values):
             raise KeyError("Completed expressions not yet implemented")
@@ -395,8 +399,7 @@ class Database(object):
             raise KeyError("Database:get_rxn: Reaction name '%s' not found." % name)
 
         if len(found) > 1:
-            raise KeyError(
-                "Database:get_rxn: Multiple reactions of name '%s' found. Database failure." % name)
+            raise KeyError("Database:get_rxn: Multiple reactions of name '%s' found. Database failure." % name)
 
         return self.data["reactions"][found[0]]
 
@@ -419,8 +422,7 @@ class Database(object):
         if client is None:
             if self.client is None:
                 raise AttributeError(
-                    "Database:save: Database does not own a MongoDB instance and one was not passed in."
-                )
+                    "Database:save: Database does not own a MongoDB instance and one was not passed in.")
             client = self.client
 
         # Add new molecules
@@ -465,9 +467,11 @@ class Database(object):
 
         """
         raise Exception("MPL not avail")
+
 #        return visualization.Ternary2D(self.df, cvals=cvals)
 
-    # Adders
+# Adders
+
     def parse_stoichiometry(self, stoichiometry):
         """
         Parses a stiochiometry list.
@@ -503,15 +507,13 @@ class Database(object):
 
         for line in stoichiometry:
             if len(line) != 2:
-                raise KeyError(
-                    "Database: Parse stoichiometry: passed in as a list must of key : value type")
+                raise KeyError("Database: Parse stoichiometry: passed in as a list must of key : value type")
 
             # Get the values
             try:
                 mol_values.append(float(line[1]))
             except:
-                raise TypeError(
-                    "Database: Parse stoichiometry: second value must be convertable to a float.")
+                raise TypeError("Database: Parse stoichiometry: second value must be convertable to a float.")
 
             # What kind of molecule is it?
             mol = line[0]
@@ -592,8 +594,8 @@ class Database(object):
         # Set name
         if name in self.get_index():
             raise KeyError(
-                "Database: Name '%s' already exists. Please either delete this entry or call the update function."
-                % name)
+                "Database: Name '%s' already exists. Please either delete this entry or call the update function." %
+                name)
 
         # Set stoich
         if isinstance(stoichiometry, dict):
@@ -614,14 +616,12 @@ class Database(object):
 
         # Set attributes
         if not isinstance(attributes, dict):
-            raise TypeError("Database:add_rxn: attributes must be a dictionary, not '%s'",
-                            type(attributes))
+            raise TypeError("Database:add_rxn: attributes must be a dictionary, not '%s'", type(attributes))
 
         rxn["attributes"] = attributes
 
         if not isinstance(other_fields, dict):
-            raise TypeError("Database:add_rxn: other_fields must be a dictionary, not '%s'",
-                            type(attributes))
+            raise TypeError("Database:add_rxn: other_fields must be a dictionary, not '%s'", type(attributes))
 
         for k, v in other_fields.items():
             rxn[k] = v
@@ -662,11 +662,7 @@ class Database(object):
 
         stoichiometry = self.build_ie_fragments(mol, name=name, **kwargs)
         return self.add_rxn(
-            name,
-            stoichiometry,
-            reaction_results=reaction_results,
-            attributes=attributes,
-            other_fields=other_fields)
+            name, stoichiometry, reaction_results=reaction_results, attributes=attributes, other_fields=other_fields)
 
     def to_json(self, filename=None):
         """
@@ -734,8 +730,7 @@ class Database(object):
             max_nbody = max_frag
 
         if max_nbody < 2:
-            raise AttributeError(
-                "Database:build_ie_fragments: Molecule must have at least two fragments.")
+            raise AttributeError("Database:build_ie_fragments: Molecule must have at least two fragments.")
 
         # Build some info
         fragment_range = list(range(max_frag))
@@ -774,7 +769,6 @@ class Database(object):
             #             for x in it.combinations(cp_combos, interior_nbody):
             #                 ghost = list(set(basis_tuple) - set(x))
             #                 ret["vmfc" + str(interior_nbody)].append((mol.get_fragment(x, ghost), 1.0))
-
 
         # Add in the maximal position
         if do_default:
