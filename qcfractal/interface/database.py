@@ -18,16 +18,55 @@ from . import dict_utils
 def _nCr(n, r):
     """
     Compute the binomial coefficient n! / (k! * (n-k)!)
+
+    Parameters
+    ----------
+    n : int
+        Number of samples
+    r : int
+        Denominator
+
+    Returns
+    -------
+    ret : int
+        Value
     """
     return math.factorial(n) / math.factorial(r) / math.factorial(n - r)
 
 
 class Database(object):
     """
-    This is a Mongo QCDB database class.
+    This is a QCA database class.
+
+    Attributes
+    ----------
+    client : client.QCPortal
+        A optional server portal to connect the database
+    data : dict
+        JSON representation of the database backbone
+    df : pd.DataFrame
+        The underlying dataframe for the Database object
+    rxn_index : pd.Index
+        The unrolled reaction index for all reactions in the Database
     """
 
     def __init__(self, name, portal=None, category="default", db_type="rxn"):
+        """Initializer for the Database object. If no Portal is supplied or the database name
+        is not present on the server that the Portal is connected to a blank database will be
+        created.
+
+        Parameters
+        ----------
+        name : str
+            The name of the database
+        portal : client.QCPortal, optional
+            A Portal client to connect to a server
+        category : str, optional
+            The overall category of the database
+        db_type : str, optional
+            The type of database involved
+
+        """
 
         # Client and mongod objects
         self.client = portal
@@ -52,13 +91,13 @@ class Database(object):
         if portal is not None:
 
             if isinstance(portal, client.QCPortal):
-                self.portal = portal
+                self.client = portal
 
             else:
                 raise TypeError("Database: client argument of unrecognized type '%s'" %
                                 type(socket))
 
-            tmp_data = self.portal.get_databases([self.data["db_index"]])
+            tmp_data = self.client.get_databases([self.data["db_index"]])
             if len(tmp_data) == 0:
                 print("Warning! Database `{}: {}` not found, creating blank database.".format(*self.data["db_index"]))
             else:
@@ -82,11 +121,38 @@ class Database(object):
 
     # Getters
     def __getitem__(self, args):
+        """A wrapped to the underlying pd.DataFrame to access columnar data
+
+        Parameters
+        ----------
+        args : str
+            The column to access
+
+        Returns
+        -------
+        ret : pd.Series, pd.DataFrame
+            A view of the underlying dataframe data
+        """
         return self.df[args]
 
 
-    def _unroll_query(self, keys, stoich, field="result_result", **kwargs):
+    def _unroll_query(self, keys, stoich, field="result_result"):
+        """Unrolls a complex query into a "flat" query for the server object
 
+        Parameters
+        ----------
+        keys : dict
+            Server query fields
+        stoich : str
+            The stoichiometry to access for the query (default/cp/cp3/etc)
+        field : str, optional
+            The results field to query on
+
+        Returns
+        -------
+        ret : pd.DataFrame
+            A DataFrame representation of the unrolled query
+        """
         tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
         tmp_idx = tmp_idx.reset_index(drop=True)
 
@@ -132,12 +198,20 @@ class Database(object):
               field="return_result",
               ignore_db_type=False):
         """
-        Queries the local MongoSocket data for the requested keys and stoichiometry.
+        Queries the local Portal for the requested keys and stoichiometry.
 
         Parameters
         ----------
-        keys : str, list
-            A list of model chemistry to query.
+        method : str
+            The computational method to query on (B3LYP)
+        basis : str
+            The computational basis query on (6-31G)
+        driver : str, optional
+            Search within energy, gradient, etc computations
+        options : str, optional
+            The option token desired
+        program : str, optional
+            The program to query on
         stoich : str
             The given stoichiometry to compute.
         prefix : str
@@ -148,6 +222,8 @@ class Database(object):
             Toggles a search between the Mongo Pages and the Databases's reaction_results field.
         scale : str, double
             All units are based in hartree, the default scaling is to kcal/mol.
+        field : str, optional
+            The result field to query on
         ignore_db_type : bool
             Override of IE for RXN db types.
 
@@ -164,7 +240,7 @@ class Database(object):
         Examples
         --------
 
-        db.query(["B3LYP/aug-cc-pVDZ", "B3LYP/def2-QZVP"], stoich="cp", prefix="cp-")
+        db.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
 
         """
 
@@ -218,8 +294,32 @@ class Database(object):
 
         return True
 
-    def compute(self, method, basis, driver="energy", stoich="default", options="default", program="psi4", other_fields=None, ignore_db_type=False):
+    def compute(self, method, basis, driver="energy", stoich="default", options="default", program="psi4", ignore_db_type=False):
+        """Executes a computational method for all reactions in the Database.
+        Previously completed computations are not repeated.
 
+        Parameters
+        ----------
+        method : str
+            The computational method to compute (B3LYP)
+        basis : str
+            The computational basis to compute (6-31G)
+        driver : str, optional
+            The type of computation to run (energy, gradient, etc)
+        stoich : str, optional
+            The stoichiometry of the requested compute (cp/nocp/etc)
+        options : str, optional
+            The options token for the requested compute
+        program : str, optional
+            The underlying QC program
+        ignore_db_type : bool, optional
+            Optionally only compute the "default" geometry
+
+        Returns
+        -------
+        ret : dict
+            A dictionary of the keys for all requested computations
+        """
         if self.client is None:
             raise AttributeError("DataBase: Compute: Client was not set.")
 
@@ -262,12 +362,28 @@ class Database(object):
     def get_index(self):
         """
         Returns the current index of the database.
+
+        Returns
+        -------
+        ret : list of str
+            The names of all reactions in the database
         """
         return [x["name"] for x in self.data["reactions"]]
 
     def get_rxn(self, name):
         """
         Returns the JSON object of a specific reaction.
+
+        Parameters
+        ----------
+        name : str
+            The name of the reaction to query
+
+        Returns
+        -------
+        ret : dict
+            The JSON representation of the reaction
+
         """
 
         found = []
@@ -286,6 +402,17 @@ class Database(object):
 
     # Setters
     def save(self, client=None, overwrite=False):
+        """Uploads the overall structure of the Database (reactions, names, new molecules, etc)
+        to the server.
+
+        Parameters
+        ----------
+        client : None, optional
+            A Portal object to the server to upload to
+        overwrite : bool, optional
+            Overwrite the data in the server on not #FIXME
+
+        """
         if self.data["name"] == "":
             raise AttributeError("Database:save: Database must have a name!")
 
@@ -309,10 +436,34 @@ class Database(object):
 
     # Statistical quantities
     def statistics(self, stype, value, bench="Benchmark"):
+        """Summary
+
+        Parameters
+        ----------
+        stype : str
+            The type of statistic in question
+        value : str
+            The method string to compare
+        bench : str, optional
+            The benchmark method for the comparison
+
+        Returns
+        -------
+        ret : pd.DataFrame, pd.Series, float
+            Returns a DataFrame, Series, or float with the requested statistics depending on input.
+        """
         return statistics.wrap_statistics(stype, self.df, value, bench)
 
     # Visualization
     def ternary(self, cvals=None):
+        """Plots a ternary diagram of the DataBase if available
+
+        Parameters
+        ----------
+        cvals : None, optional
+            Description
+
+        """
         raise Exception("MPL not avail")
 #        return visualization.Ternary2D(self.df, cvals=cvals)
 
@@ -341,6 +492,7 @@ class Database(object):
 
         Examples
         --------
+
 
         """
 
@@ -409,12 +561,24 @@ class Database(object):
             Name of the reaction.
         stoichiometry : list or dict
             Either a list or dictionary of lists
+        reaction_results : None, optional
+            A dictionary of the computed total interaction energy results
+        attributes : None, optional
+            A dictionary of attributes to assign to the reaction
+        other_fields : None, optional
+            A dictionary of additional user defined fields to add to the reaction entry
 
         Notes
         -----
 
         Examples
         --------
+
+        Returns
+        -------
+        ret : dict
+            A complete JSON specification of the reaction
+
 
         """
         if reaction_results is None:
@@ -475,7 +639,23 @@ class Database(object):
         return rxn
 
     def add_ie_rxn(self, name, mol, **kwargs):
+        """Add a interaction energy reaction entry to the database. Automatically
+        builds CP and no-CP reactions for the fragmented molecule.
 
+        Parameters
+        ----------
+        name : str
+            The name of the reaction
+        mol : Molecule
+            A molecule with multiple fragments
+        **kwargs
+            Additional kwargs to pass into `build_id_fragments`.
+
+        Returns
+        -------
+        ret : dict
+            A JSON representation of the new reaction.
+        """
         reaction_results = kwargs.pop("reaction_results", {})
         attributes = kwargs.pop("attributes", {})
         other_fields = kwargs.pop("other_fields", {})
@@ -491,6 +671,16 @@ class Database(object):
     def to_json(self, filename=None):
         """
         If a filename is provided, dumps the file to disk. Otherwise returns a copy of the current data.
+
+        Parameters
+        ----------
+        filename : None, optional
+            The filename to drop the data to.
+
+        Returns
+        -------
+        ret : dict
+            A JSON representation of the Database
         """
         if filename:
             json.dumps(filename, self.data)
@@ -520,6 +710,11 @@ class Database(object):
 
         Examples
         --------
+
+        Returns
+        -------
+        ret : dict
+            A JSON representation of the fragmented molecule.
 
         """
 
