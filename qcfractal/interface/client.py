@@ -152,7 +152,7 @@ class QCPortal(object):
 
     ### Compute section
 
-    def add_compute(self, program, method, basis, driver, options, molecule_id, return_full=False):
+    def add_compute(self, program, method, basis, driver, options, molecule_id, return_full=False, procedure="single"):
 
         # Always a list
         if isinstance(molecule_id, str):
@@ -160,6 +160,7 @@ class QCPortal(object):
 
         payload = {
             "meta": {
+                "procedure": procedure,
                 "driver": driver,
                 "program": program,
                 "method": method,
