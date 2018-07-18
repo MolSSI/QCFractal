@@ -2,29 +2,49 @@
 A base for all procedures involved in on-node computation.
 """
 
+import qcengine
+
+from . import procedures_util
+
 _input_parsers = {}
 _output_parsers = {}
 
-def add_new_procedures(name, creator, unpacker):
+
+def add_new_procedure(name, creator, unpacker):
 
     _input_parsers[name] = creator
     _output_parsers[name] = unpacker
     return True
 
 
-def procedure_qce():
+def get_procedure_input_parser(name):
 
-    # compute = {
-    #     "meta": {
-    #         "procedure": "single",
-    #         "driver": "energy",
-    #         "method": "HF",
-    #         "basis": "sto-3g",
-    #         "options": "default",
-    #         "program": "psi4",
-    #     },
-    #     "data": [mol_ret["data"]["hydrogen"]],
-    # }
+    return _input_parsers[name]
+
+
+def get_procedure_output_parser(name):
+
+    return _output_parsers[name]
+
+
+### Add in the "standard procedures"
+def procedure_single_input_parser(db, data):
+
+    runs, errors = procedures_util.unpack_single_run_meta(db, data["meta"], data["data"])
+    full_tasks = {}
+    for k, v in runs.items():
+        key = ("single", ) + k
+        full_tasks[key] = (qcengine.compute, v, data["meta"]["program"])
+
+    return (full_tasks, errors)
+
+
+def procedure_single_output_parser(db, data):
+    results = procedures_util.parse_single_runs(db, data)
+    ret = db.add_results(list(results.values()))
+    return ret
+
+add_new_procedure("single", procedure_single_input_parser, procedure_single_output_parser)
 
 def procedure_optimization():
 
@@ -66,7 +86,7 @@ def procedure_optimization():
                 "driver": "energy",
                 "method": "HF",
                 "basis": "sto-3g",
-                "options": "default,
+                "options": "default",
             },
         },
         "data": [mol_ret["data"]["hydrogen"]],

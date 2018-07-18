@@ -15,7 +15,7 @@ import requests
 import pytest
 
 
-### Tests the copmute queue stack
+### Tests the compute queue stack
 def test_compute_queue_stack(fractal_compute_server):
 
     # Add a hydrogen molecule
@@ -30,6 +30,7 @@ def test_compute_queue_stack(fractal_compute_server):
     # Add compute
     compute = {
         "meta": {
+            "procedure": "single",
             "driver": "energy",
             "method": "HF",
             "basis": "sto-3g",
@@ -63,8 +64,6 @@ def test_compute_queue_stack(fractal_compute_server):
 
 
 ### Tests an entire server and interaction energy database run
-
-
 def test_compute_database(fractal_compute_server):
 
     portal = qp.QCPortal(fractal_compute_server.get_address(""))

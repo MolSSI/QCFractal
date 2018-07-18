@@ -3,6 +3,7 @@ Utility functions for on-node procedures.
 """
 
 import json
+from .. import interface
 
 def unpack_single_run_meta(db, meta, molecules):
     """Transforms a metadata compute packet into an expanded
@@ -41,17 +42,6 @@ def unpack_single_run_meta(db, meta, molecules):
 
     """
 
-    compute = {
-        "meta": {
-            "procedure": "single",
-            "driver": "energy",
-            "method": "HF",
-            "basis": "sto-3g",
-            "options": "default",
-            "program": "psi4",
-        },
-        "data": [mol_ret["data"]["hydrogen"]],
-    }
     # Dumps is faster than copy
     task_meta = json.dumps({k: meta[k] for k in ["program", "driver", "method", "basis", "options"]})
 
@@ -61,7 +51,7 @@ def unpack_single_run_meta(db, meta, molecules):
         data = json.loads(task_meta)
         data["molecule_id"] = mol
 
-        tasks[schema.format_result_indices(data)] = data
+        tasks[interface.schema.format_result_indices(data)] = data
 
     # Pull out the needed molecules
     needed_mols = list({x["molecule_id"] for x in tasks.values()})
@@ -78,7 +68,7 @@ def unpack_single_run_meta(db, meta, molecules):
             del tasks[k]
 
     # Pull out the needed options
-    option_set = db.get_options([(self.json["meta"]["program"], self.json["meta"]["options"])])["data"][0]
+    option_set = db.get_options([(meta["program"], meta["options"])])["data"][0]
     del option_set["name"]
     del option_set["program"]
 
@@ -88,7 +78,6 @@ def unpack_single_run_meta(db, meta, molecules):
         del v["options"]
 
     # Build out full and complete task list
-    full_tasks = {}
     for k, v in tasks.items():
         # Reformat model syntax
         v["schema_name"] = "qc_schema_input"
@@ -97,8 +86,6 @@ def unpack_single_run_meta(db, meta, molecules):
         del v["method"]
         del v["basis"]
 
-        full_tasks[k] = (qcengine.compute, v, self.json["meta"]["program"])
-
     return (tasks, errors)
 
 def parse_single_runs(db, results):
@@ -106,10 +93,10 @@ def parse_single_runs(db, results):
 
     Parameters
     ----------
-    db : TYPE
-        Description
-    results : TYPE
-        Description
+    db : DBSocket
+        A live connection to the current database.
+    results : dict
+        A (key, result) dictionary of the single return results.
 
     Returns
     -------
@@ -121,7 +108,7 @@ def parse_single_runs(db, results):
 
     # Get molecule ID's
     mols = {k: v["molecule"] for k, v in results.items()}
-    mol_ret = self.db_socket.add_molecules(mols)["data"]
+    mol_ret = db.add_molecules(mols)["data"]
 
     for k, v in results.items():
 
@@ -136,6 +123,6 @@ def parse_single_runs(db, results):
         v["molecule_id"] = mol_ret[k]
         del v["molecule"]
 
-        v["program"] = k[0]
+        v["program"] = k[1]
 
     return results
