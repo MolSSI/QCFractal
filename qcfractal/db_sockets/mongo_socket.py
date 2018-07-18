@@ -52,18 +52,20 @@ class MongoSocket:
             self.logger = logging.getLogger('MongoSocket')
 
         # Static data
-        self._valid_collections = {"molecules", "databases", "results", "options"}
+        self._valid_collections = {"molecules", "databases", "results", "options", "procedures"}
         self._collection_indices = {
             "databases": interface.schema.get_indices("database"),
             "options": interface.schema.get_indices("options"),
             "results": interface.schema.get_indices("result"),
-            "molecules": interface.schema.get_indices("molecule")
+            "molecules": interface.schema.get_indices("molecule"),
+            "procedures": interface.schema.get_indices("procedure"),
         }
         self._collection_unique_indices = {
             "databases": True,
             "options": True,
             "results": True,
-            "molecules": False
+            "molecules": False,
+            "procedures": False,
         }
 
         self._lower_results_index = ["method", "basis", "options", "program"]
@@ -328,6 +330,13 @@ class MongoSocket:
 
         return ret
 
+    def add_procedures(self, data):
+
+        ret = self._add_generic(data, "procedures")
+        ret["meta"]["validation_errors"] = [] # TODO
+
+        return ret
+
 ### Mongo Delete Functions
 
     def _del_by_index(self, collection, hashes, index="_id"):
@@ -418,7 +427,7 @@ class MongoSocket:
 
 ### Mongo get functions
 
-    def _get_generic(self, query, collection, projection=None):
+    def _get_generic(self, query, collection, projection=None, allow_generic=False):
 
         # TODO parse duplicates
         meta = _get_metadata()
@@ -431,7 +440,9 @@ class MongoSocket:
 
         data = []
         for q in query:
-            if (len(q) == len_key) and isinstance(q, (list, tuple)):
+            if allow_generic and isinstance(q, dict):
+                pass
+            elif (len(q) == len_key) and isinstance(q, (list, tuple)):
                 q = {k : v for k, v in zip(keys, q)}
             else:
                 meta["errors"].append({"query": q, "error": "Malformed query"})
@@ -563,6 +574,10 @@ class MongoSocket:
         ret["data"] = data
 
         return ret
+
+    def get_procedures(self, keys):
+
+        return self._get_generic(keys, "procedures", allow_generic=True)
 
 ### Complex parsers
 

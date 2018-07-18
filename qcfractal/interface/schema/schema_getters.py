@@ -28,7 +28,8 @@ _collection_indices = {
     "database": ("category", "name"),
     "options": ("program", "name"),
     "result": ("program", "molecule_id", "driver", "method", "basis", "options"),
-    "molecule": ("molecule_hash", )
+    "molecule": ("molecule_hash", ),
+    "procedure": ("procedure", "options", "program"),
 }
 
 

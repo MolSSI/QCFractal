@@ -1,7 +1,5 @@
 """
 Tests the server compute capabilities.
-
-Apparently cannot parametrize fixtures, this is a workaround
 """
 
 import qcfractal.interface as qp
