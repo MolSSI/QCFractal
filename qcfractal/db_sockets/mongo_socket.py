@@ -511,8 +511,23 @@ class MongoSocket:
 
     def get_options(self, keys, projection=None):
 
+        # Check for None'si
+        blanks = []
+        add_keys = []
+        for num, (program, name) in enumerate(keys):
+            if name.lower() == "none"
+                blanks.append((num, {"program": program, "name": name}))
+            else:
+                add_keys.append((program, name))
+
         # if (len(data) == 2) and isinstance(data[0], str):
-        return self._get_generic(keys, "options", projection=projection)
+        ret = self._get_generic(keys, "options", projection=projection)
+
+        for pos, options in blanks:
+            ret.insert(pos, options)
+
+        return ret
+
 
     def get_molecules(self, molecule_ids, index="id"):
 
