@@ -22,8 +22,8 @@ def unpack_single_run_meta(db, meta, molecules):
     ret : tuple(dict, list)
         A dictionary of JSON representations with keys built in.
 
-    Example
-    -------
+    Examples
+    --------
 
     >>> meta = {
         "procedure": "single",
@@ -100,3 +100,42 @@ def unpack_single_run_meta(db, meta, molecules):
         full_tasks[k] = (qcengine.compute, v, self.json["meta"]["program"])
 
     return (tasks, errors)
+
+def parse_single_runs(db, results):
+    """Summary
+
+    Parameters
+    ----------
+    db : TYPE
+        Description
+    results : TYPE
+        Description
+
+    Returns
+    -------
+
+    Examples
+    --------
+
+    """
+
+    # Get molecule ID's
+    mols = {k: v["molecule"] for k, v in results.items()}
+    mol_ret = self.db_socket.add_molecules(mols)["data"]
+
+    for k, v in results.items():
+
+        # Flatten data back out
+        v["method"] = v["model"]["method"]
+        v["basis"] = v["model"]["basis"]
+        del v["model"]
+
+        v["options"] = k[-1]
+        del v["keywords"]
+
+        v["molecule_id"] = mol_ret[k]
+        del v["molecule"]
+
+        v["program"] = k[0]
+
+    return results
