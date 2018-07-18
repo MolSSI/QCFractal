@@ -74,3 +74,6 @@ dask-worker-space/
 # Fireworks
 launcher_*
 fireworks_logfile.txt
+
+# Geometric
+energy.txt
