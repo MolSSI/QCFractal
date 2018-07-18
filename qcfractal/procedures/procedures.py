@@ -143,6 +143,8 @@ def procedure_optimization_input_parser(db, data):
 
 def procedure_optimization_output_parser(db, data):
 
+    new_procedures = []
+
     # Each optimization is a unique entry:
     for k, v in data.items():
 
@@ -164,10 +166,11 @@ def procedure_optimization_output_parser(db, data):
         del v["input_specification"]
         del v["keywords"]
         del v["qcfractal_tags"]
-        print(json.dumps(v, indent=2))
+        # print(json.dumps(v, indent=2))
+        new_procedures.append(v)
 
-
-    return None
+    ret = db.add_procedures(new_procedures)
+    return ret
 
 add_new_procedure("single", procedure_single_input_parser, procedure_single_output_parser)
 add_new_procedure("optimization", procedure_optimization_input_parser, procedure_optimization_output_parser)

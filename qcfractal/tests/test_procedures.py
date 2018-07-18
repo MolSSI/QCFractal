@@ -53,13 +53,12 @@ def test_procedure_optimization(dask_server_fixture):
     assert len(nanny.list_current_tasks()) == 0
 
     # # Query result and check against out manual pul
-    # results_query = {
-    #     "program": "psi4",
-    #     "molecule_id": compute["data"][0],
-    #     "method": compute["meta"]["method"],
-    #     "basis": compute["meta"]["basis"]
-    # }
-    # results = db.get_results(results_query)["data"]
+    query = {
+        "program": "geometric",
+        "options": "none",
+        "initial_molecule": mol_ret["data"]["hydrogen"]
+    }
+    results = db.get_procedures([query])["data"]
 
-    # assert len(results) == 1
-    # assert pytest.approx(-1.0660263371078127, 1e-6) == results[0]["properties"]["scf_total_energy"]
+    assert len(results) == 1
+    assert pytest.approx(-1.117530188962681, 1e-6) == results[0]["energies"][-1]

@@ -29,7 +29,8 @@ _programs = {
     "fireworks": _plugin_import("fireworks"),
     "rdkit": _plugin_import("rdkit"),
     "psi4": _plugin_import("psi4"),
-    "dask": _plugin_import("dask")
+    "dask": _plugin_import("dask"),
+    "geometric": _plugin_import("geometric"),
 }
 if _programs["dask"]:
     _programs["dask.distributed"] = _plugin_import("dask.distributed")
