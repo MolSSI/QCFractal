@@ -83,6 +83,7 @@ def unpack_single_run_meta(db, meta, molecules):
         v["schema_name"] = "qc_schema_input"
         v["schema_version"] = 1
         v["model"] = {"method": v["method"], "basis": v["basis"]}
+        v["qcfractal_tags"] = {"program": meta["program"], "options": meta["options"]}
         del v["method"]
         del v["basis"]
 
@@ -117,12 +118,14 @@ def parse_single_runs(db, results):
         v["basis"] = v["model"]["basis"]
         del v["model"]
 
-        v["options"] = k[-1]
+        v["options"] = v["qcfractal_tags"]["options"]
         del v["keywords"]
 
         v["molecule_id"] = mol_ret[k]
         del v["molecule"]
 
-        v["program"] = k[1]
+        v["program"] = v["qcfractal_tags"]["program"]
+
+        del v["qcfractal_tags"]
 
     return results

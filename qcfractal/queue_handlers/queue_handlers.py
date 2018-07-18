@@ -135,9 +135,7 @@ class QueueScheduler(APIHandler):
         # Build return metadata
         meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
 
-        print("here")
-        full_tasks, errors = procedures.get_procedure_input_parser("single")(db, self.json)
-        print("here")
+        full_tasks, errors = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])(db, self.json)
 
         # Add tasks to Nanny
         submitted = queue_nanny.submit_tasks(full_tasks)

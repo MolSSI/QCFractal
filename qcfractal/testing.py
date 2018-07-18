@@ -197,6 +197,8 @@ def fireworks_server_fixture(request):
     logging.basicConfig(level=None, filename=None)
 
 
+# @pytest.fixture(scope="module", params=["dask"])
+# @pytest.fixture(scope="module", params=["fireworks"])
 @pytest.fixture(scope="module", params=["dask", "fireworks"])
 def fractal_compute_server(request):
     if request.param == "dask":
