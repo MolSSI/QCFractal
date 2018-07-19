@@ -52,13 +52,14 @@ class MongoSocket:
             self.logger = logging.getLogger('MongoSocket')
 
         # Static data
-        self._valid_collections = {"molecules", "databases", "results", "options", "procedures"}
+        self._valid_collections = {"molecules", "databases", "results", "options", "procedures", "services"}
         self._collection_indices = {
             "databases": interface.schema.get_indices("database"),
             "options": interface.schema.get_indices("options"),
             "results": interface.schema.get_indices("result"),
             "molecules": interface.schema.get_indices("molecule"),
             "procedures": interface.schema.get_indices("procedure"),
+            "services": interface.schema.get_indices("service"),
         }
         self._collection_unique_indices = {
             "databases": True,
@@ -66,6 +67,7 @@ class MongoSocket:
             "results": True,
             "molecules": False,
             "procedures": False,
+            "service": False,
         }
 
         self._lower_results_index = ["method", "basis", "options", "program"]
@@ -337,6 +339,13 @@ class MongoSocket:
 
         return ret
 
+    def add_services(self, data):
+
+        ret = self._add_generic(data, "services")
+        ret["meta"]["validation_errors"] = [] # TODO
+
+        return ret
+
 ### Mongo Delete Functions
 
     def _del_by_index(self, collection, hashes, index="_id"):
@@ -578,6 +587,10 @@ class MongoSocket:
     def get_procedures(self, keys):
 
         return self._get_generic(keys, "procedures", allow_generic=True)
+
+    def get_services(self, keys):
+
+        return self._get_generic(keys, "services", allow_generic=True)
 
 ### Complex parsers
 

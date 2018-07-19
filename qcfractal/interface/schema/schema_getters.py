@@ -30,6 +30,7 @@ _collection_indices = {
     "result": ("program", "molecule_id", "driver", "method", "basis", "options"),
     "molecule": ("molecule_hash", ),
     "procedure": ("procedure", "options", "program"),
+    "service": ("service", "options", "program"),
 }
 
 
