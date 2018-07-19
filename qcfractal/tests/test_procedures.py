@@ -61,4 +61,5 @@ def test_procedure_optimization(dask_server_fixture):
     results = db.get_procedures([query])["data"]
 
     assert len(results) == 1
-    assert pytest.approx(-1.117530188962681, 1e-6) == results[0]["energies"][-1]
+    assert pytest.approx(-1.117530188962681, 1e-5) == results[0]["energies"][-1]
+

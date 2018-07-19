@@ -58,7 +58,7 @@ def test_compute_queue_stack(fractal_compute_server):
     results = db.get_results(results_query)["data"]
 
     assert len(results) == 1
-    assert pytest.approx(-1.0660263371078127, 1e-6) == results[0]["properties"]["scf_total_energy"]
+    assert pytest.approx(-1.0660263371078127, 1e-5) == results[0]["properties"]["scf_total_energy"]
 
 
 ### Tests an entire server and interaction energy database run
@@ -93,9 +93,9 @@ def test_compute_database(fractal_compute_server):
 
     # Query computed results
     assert db.query("SCF", "STO-3G")
-    assert pytest.approx(0.6024530476071095, 1.e-6) == db.df.ix["He1", "SCF/STO-3G"]
-    assert pytest.approx(-0.006895035942673289, 1.e-6) == db.df.ix["He2", "SCF/STO-3G"]
+    assert pytest.approx(0.6024530476071095, 1.e-5) == db.df.ix["He1", "SCF/STO-3G"]
+    assert pytest.approx(-0.006895035942673289, 1.e-5) == db.df.ix["He2", "SCF/STO-3G"]
 
     # Check results
     assert db.query("Benchmark", "", reaction_results=True)
-    assert pytest.approx(0.00024477933196125805, 1.e-4) == db.statistics("MUE", "SCF/STO-3G")
+    assert pytest.approx(0.00024477933196125805, 1.e-3) == db.statistics("MUE", "SCF/STO-3G")
