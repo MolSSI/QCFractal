@@ -11,6 +11,7 @@ import collections
 from ..web_handlers import APIHandler
 from ..interface import schema
 from .. import procedures
+from .. import services
 
 
 class QueueNanny:
@@ -91,6 +92,12 @@ class QueueNanny:
         for k, v in new_results.items():
             procedures.get_procedure_output_parser(k)(self.db_socket, v)
 
+    def iterate_services(self):
+        """Runs through all active services and examines their current status.
+        """
+
+        pass
+
     def await_results(self):
         """A synchronus method for testing or small launches
         that awaits job completion before adding all queued results
@@ -103,6 +110,25 @@ class QueueNanny:
         """
         self.queue_adapter.await_results()
         self.update()
+        return True
+
+    def await_services(self, max_iter=10):
+        """A synchronus method for testing or small launches
+        that awaits all service completion before adding all service results
+        to the database and returning.
+
+        Returns
+        -------
+        TYPE
+            Description
+        """
+
+        for x in range(max_iter):
+            nanny.iterate_services()
+            if len(nanny.list_current_tasks()) == 0:
+                break
+            self.await_results()
+
         return True
 
     def list_current_tasks(self):
@@ -148,6 +174,37 @@ class QueueScheduler(APIHandler):
 
         self.write(ret)
 
+class QueueScheduler(APIHandler):
+    """
+    Takes in a data packet the contains the molecule_hash, modelchem and options objects.
+    """
+
+    def post(self):
+        """Summary
+        """
+        # _check_auth(self.objects, self.request.headers)
+
+        # Grab objects
+        db = self.objects["db_socket"]
+        queue_nanny = self.objects["queue_nanny"]
+        # result_indices = schema.get_indices("result")
+
+        # Build return metadata
+        meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
+
+        full_tasks, errors = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])(db, self.json)
+
+        # Add tasks to Nanny
+        submitted = queue_nanny.submit_tasks(full_tasks)
+
+        # Return anything of interest
+        meta["success"] = True
+        meta["n_inserted"] = len(submitted)
+        meta["errors"] = errors
+        ret = {"meta": meta, "data": submitted}
+
+        self.write(ret)
+
     # def get(self):
 
     #     # _check_auth(self.objects, self.request.headers)
@@ -158,6 +215,40 @@ class QueueScheduler(APIHandler):
     #     ret["queue"] = list(queue_nanny.queue)
     #     ret["error"] = queue_nanny.errors
     #     self.write(ret)
+
+class ServiceScheduler(APIHandler):
+    """
+    Takes in a data packet the contains the molecule_hash, modelchem and options objects.
+    """
+
+    def post(self):
+        """Summary
+        """
+        # _check_auth(self.objects, self.request.headers)
+
+        # Grab objects
+        db = self.objects["db_socket"]
+        queue_nanny = self.objects["queue_nanny"]
+        # result_indices = schema.get_indices("result")
+
+        # Build return metadata
+        meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
+
+        new_services = []
+        for mol in self.json["data"]:
+            tmp = services.builder(db, queue_nanny, self.json["meta"], molecule)
+            new_services.append(tmp)
+
+        # Add tasks to Nanny
+        # submitted = queue_nanny.submit_tasks(full_tasks)
+
+        # Return anything of interest
+        meta["success"] = True
+        meta["n_inserted"] = len(submitted)
+        meta["errors"] = errors
+        ret = {"meta": meta, "data": submitted}
+
+        self.write(ret)
 
 
 def build_queue(queue_type, queue_socket, db_socket, **kwargs):
@@ -205,6 +296,7 @@ def build_queue(queue_type, queue_socket, db_socket, **kwargs):
         raise KeyError("Queue type '{}' not understood".format(queue_type))
 
     nanny = QueueNanny(adapter, db_socket, **kwargs)
-    scheduler = QueueScheduler
+    queue = QueueScheduler
+    service = ServiceScheduler
 
-    return nanny, scheduler
+    return nanny, queue, service
