@@ -3,6 +3,7 @@ Wraps geometric procedures
 """
 
 import copy
+import json
 
 from crank import crankAPI
 
@@ -20,6 +21,9 @@ class Crank:
     @classmethod
     def initialize_from_api(cls, db_socket, queue_socket, meta, molecule):
 
+        # Grab initial molecule
+        meta["initial_molecule"] = molecule["id"]
+
         # Copy initial intial input and build out a crank_state
         meta = copy.deepcopy(meta)
         molecule = copy.deepcopy(molecule)
@@ -30,20 +34,23 @@ class Crank:
             init_coords=molecule["geometry"])
 
         # Save initial molecule and add hash
-        meta["initial_molecule"] = self.db_socket.add_molecules({"ret": molecule})["data"]["ret"]
         meta["state"] = "READY"
-
-
 
         return cls(db_socket, queue_socket, meta)
 
-    def iterate():
+    def get_json(self):
+        return self.data
+
+    def iterate(self):
+
+        self.data["state"] = "WORKING"
+        return
+        # Create new jobs from the current state
         next_jobs = crankAPI.next_jobs_from_state(self.crank_state, verbose=True)
 
-        # step 3
+
         if len(next_jobs) == 0:
-            print("Crank Scan Finished")
-            return crankAPI.collect_lowest_energies(self.crank_state)
+            return self.finalize()
 
         # step 4
         job_results = collections.defaultdict(list)
@@ -68,11 +75,14 @@ class Crank:
 
         # Save crank state
 
-    def submit
+    # def submit
 
 
     def finalize():
         # Add finalize state
         # Parse remaining procedures
         # Create a map of "jobs" so that procedures does not have to followed
+        self.data["state"] = "FINISHED"
+        print("Crank Scan Finished")
+        return crankAPI.collect_lowest_energies(self.crank_state)
         pass
