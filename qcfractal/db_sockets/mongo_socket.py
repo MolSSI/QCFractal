@@ -605,9 +605,12 @@ class MongoSocket:
 
         return ret
 
-    def get_procedures(self, keys):
+    def get_procedures(self, keys, by_id=False, projection=None):
 
-        return self._get_generic(keys, "procedures", allow_generic=True)
+        if by_id:
+            return self._get_generic_by_id(query, "procedures", projection=projection)
+        else:
+            return self._get_generic(keys, "procedures", allow_generic=True)
 
     def get_services(self, query, by_id=False, projection=None):
 
@@ -619,7 +622,9 @@ class MongoSocket:
     def update_services(self, updates):
 
         for uid, data in updates:
-            d = self._project["services"].replace_one({"_id": ObjectId(uid)}, data)
+            result = self._project["services"].replace_one({"_id": ObjectId(uid)}, data)
+            # result.matched_count
+            # result.modified_count
         return
 
 ### Complex parsers

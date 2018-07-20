@@ -131,7 +131,7 @@ class QueueNanny:
             print(obj.get_json())
 
             if finished:
-                self.services -= data["id"]
+                self.services -= set(data["id"])
 
 
     def await_results(self):
