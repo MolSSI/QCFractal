@@ -30,10 +30,6 @@ def _str_to_indices(ids):
         if isinstance(x, str):
             ids[num] = ObjectId(x)
 
-def _get_metadata():
-    ret = {"errors": [], "n_found": 0, "success": False, "error_description": False, "missing": []}
-    return copy.deepcopy(ret)
-
 class MongoSocket:
     """
     This is a Mongo QCDB socket class.
@@ -67,7 +63,7 @@ class MongoSocket:
             "results": True,
             "molecules": False,
             "procedures": False,
-            "service": False,
+            "services": False,
         }
 
         self._lower_results_index = ["method", "basis", "options", "program"]
@@ -119,6 +115,9 @@ class MongoSocket:
 
     def get_project_name(self):
         return self._project_name
+
+    def mixed_molecule_get(self, data):
+        return db_utils.mixed_molecule_get(self, data)
 
 ### Mongo add functions
 
@@ -439,7 +438,7 @@ class MongoSocket:
     def _get_generic(self, query, collection, projection=None, allow_generic=False):
 
         # TODO parse duplicates
-        meta = _get_metadata()
+        meta = db_utils.get_metadata()
 
         if projection is None:
             projection = {"_id": False}
@@ -474,7 +473,7 @@ class MongoSocket:
     def get_results(self, query, projection=None):
 
         parsed_query = {}
-        ret = {"meta": _get_metadata(), "data": []}
+        ret = {"meta": db_utils.get_metadata(), "data": []}
 
         # We are querying via id
         if "_id" in query:
@@ -551,7 +550,7 @@ class MongoSocket:
 
     def get_molecules(self, molecule_ids, index="id"):
 
-        ret = {"meta": _get_metadata(), "data": []}
+        ret = {"meta": db_utils.get_metadata(), "data": []}
 
         try:
             index = db_utils.translate_molecule_index(index)
