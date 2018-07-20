@@ -94,7 +94,7 @@ class FractalServer(object):
 
             # Add the endpoint
             endpoints.append((r"/scheduler", queue_scheduler, self.objects))
-            endpoints.append((r"/service", service_schedule, self.objects))
+            endpoints.append((r"/service", service_scheduler, self.objects))
 
         # Build the app
         self.app = tornado.web.Application(endpoints, compress_response=True)

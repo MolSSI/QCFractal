@@ -46,6 +46,7 @@ class QueueNanny:
         self.queue_adapter = queue_adapter
         self.db_socket = db_socket
         self.errors = {}
+        self.services = set()
 
         if logger:
             self.logger = logger
@@ -66,6 +67,32 @@ class QueueNanny:
             A list of jobs added to the queue
         """
         return self.queue_adapter.submit_tasks(tasks)
+
+    def submit_services(self, tasks):
+        """Submits tasks to the queue for the Nanny to manage and watch for completion
+
+        Parameters
+        ----------
+        tasks : dict
+            A dictionary of key : JSON job representations
+
+        Returns
+        -------
+        ret : str
+            A list of jobs added to the queue
+        """
+
+        new_tasks = []
+        for task in tasks:
+            task.iterate()
+            new_tasks.append(task.get_json())
+
+        task_ids = self.db_socket.add_services(new_tasks)["data"]
+        task_ids = [x[1] for x in task_ids]
+
+        self.services |= set(task_ids)
+
+        return task_ids
 
     def update(self):
         """Examines the queue for completed jobs and adds successful completions to the database
@@ -92,11 +119,20 @@ class QueueNanny:
         for k, v in new_results.items():
             procedures.get_procedure_output_parser(k)(self.db_socket, v)
 
-    def iterate_services(self):
+    def update_services(self):
         """Runs through all active services and examines their current status.
         """
 
-        pass
+        for data in self.db_socket.get_services(list(self.services), by_id=True)["data"]:
+            obj = services.build(data["service"], self.db_socket, self, data)
+
+            finished = obj.iterate()
+            self.db_socket.update_services([(data["id"], obj.get_json())])
+            print(obj.get_json())
+
+            if finished:
+                self.services -= data["id"]
+
 
     def await_results(self):
         """A synchronus method for testing or small launches
@@ -124,8 +160,9 @@ class QueueNanny:
         """
 
         for x in range(max_iter):
-            nanny.iterate_services()
-            if len(nanny.list_current_tasks()) == 0:
+            print(str(x) + "\n")
+            self.update_services()
+            if len(self.services) == 0:
                 break
             self.await_results()
 
@@ -224,28 +261,29 @@ class ServiceScheduler(APIHandler):
     def post(self):
         """Summary
         """
-        # _check_auth(self.objects, self.request.headers)
 
         # Grab objects
         db = self.objects["db_socket"]
         queue_nanny = self.objects["queue_nanny"]
-        # result_indices = schema.get_indices("result")
 
         # Build return metadata
         meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
 
+        ordered_mol_dict = {x: mol for x, mol in enumerate(self.json["data"])}
+        mol_query = db.mixed_molecule_get(ordered_mol_dict)
+
         new_services = []
-        for mol in self.json["data"]:
-            tmp = services.builder(db, queue_nanny, self.json["meta"], molecule)
+        for idx, mol in mol_query["data"].items():
+            tmp = services.initializer(self.json["meta"]["service"], db, queue_nanny, self.json["meta"], mol)
             new_services.append(tmp)
 
         # Add tasks to Nanny
-        # submitted = queue_nanny.submit_tasks(full_tasks)
+        submitted = queue_nanny.submit_services(new_services)
 
         # Return anything of interest
         meta["success"] = True
         meta["n_inserted"] = len(submitted)
-        meta["errors"] = errors
+        meta["errors"] = [] #TODO
         ret = {"meta": meta, "data": submitted}
 
         self.write(ret)
