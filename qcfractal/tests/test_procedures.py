@@ -14,12 +14,18 @@ import pytest
 
 
 ### Tests the compute queue stack
+@testing.using_psi4
 def test_compute_queue_stack(fractal_compute_server):
 
-    # Add a hydrogen molecule
+    # Add a hydrogen and helium molecule
     hydrogen = qp.Molecule([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
+    helium = qp.Molecule([[2, 0, 0, 0.0]], dtype="numpy", units="bohr")
+
     db = fractal_compute_server.objects["db_socket"]
-    mol_ret = db.add_molecules({"hydrogen": hydrogen.to_json()})
+    mol_ret = db.add_molecules({"hydrogen": hydrogen.to_json(), "helium": helium.to_json()})
+
+    hydrogen_mol_id = mol_ret["data"]["hydrogen"]
+    helium_mol_id = mol_ret["data"]["helium"]
 
     option = qp.data.get_options("psi_default")
     opt_ret = db.add_options([option])
@@ -35,7 +41,7 @@ def test_compute_queue_stack(fractal_compute_server):
             "options": opt_key,
             "program": "psi4",
         },
-        "data": [mol_ret["data"]["hydrogen"]],
+        "data": [hydrogen_mol_id, helium.to_json()],
     }
 
     # Ask the server to compute a new computation
@@ -51,17 +57,72 @@ def test_compute_queue_stack(fractal_compute_server):
     # Query result and check against out manual pul
     results_query = {
         "program": "psi4",
-        "molecule_id": compute["data"][0],
+        "molecule_id": [hydrogen_mol_id, helium_mol_id],
         "method": compute["meta"]["method"],
         "basis": compute["meta"]["basis"]
     }
     results = db.get_results(results_query)["data"]
 
+    assert len(results) == 2
+    for r in results:
+        if r["molecule_id"] == hydrogen_mol_id:
+            assert pytest.approx(-1.0660263371078127, 1e-5) == r["properties"]["scf_total_energy"]
+        elif r["molecule_id"] == helium_mol_id:
+            assert pytest.approx(-2.807913354492941, 1e-5) == r["properties"]["scf_total_energy"]
+        else:
+            raise KeyError("Returned unexpected Molecule ID.")
+
+### Tests the compute queue stack
+@testing.using_geometric
+@testing.using_psi4
+def test_procedure_optimization(fractal_compute_server):
+
+    # Add a hydrogen molecule
+    hydrogen = qp.Molecule([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
+    db = fractal_compute_server.objects["db_socket"]
+    mol_ret = db.add_molecules({"hydrogen": hydrogen.to_json()})
+
+    # Add compute
+    compute = {
+        "meta": {
+            "procedure": "optimization",
+            "options": "none",
+            "program": "geometric",
+            "qc_meta": {
+                "driver": "gradient",
+                "method": "HF",
+                "basis": "sto-3g",
+                "options": "none",
+                "program": "psi4"
+            },
+        },
+        "data": [mol_ret["data"]["hydrogen"]],
+    }
+
+    # Ask the server to compute a new computation
+    r = requests.post(fractal_compute_server.get_address("scheduler"), json=compute)
+    assert r.status_code == 200
+    compute_key = tuple(r.json()["data"][0])
+
+    # Manually handle the compute
+    nanny = fractal_compute_server.objects["queue_nanny"]
+    nanny.await_results()
+    assert len(nanny.list_current_tasks()) == 0
+
+    # # Query result and check against out manual pul
+    query = {
+        "program": "geometric",
+        "options": "none",
+        "initial_molecule": mol_ret["data"]["hydrogen"]
+    }
+    results = db.get_procedures([query])["data"]
+
     assert len(results) == 1
-    assert pytest.approx(-1.0660263371078127, 1e-5) == results[0]["properties"]["scf_total_energy"]
+    assert pytest.approx(-1.117530188962681, 1e-5) == results[0]["energies"][-1]
 
 
 ### Tests an entire server and interaction energy database run
+@testing.using_psi4
 def test_compute_database(fractal_compute_server):
 
     portal = qp.QCPortal(fractal_compute_server.get_address(""))
