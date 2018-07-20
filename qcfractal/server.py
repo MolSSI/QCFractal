@@ -82,8 +82,8 @@ class FractalServer(object):
             if (queue_socket is None) or (queue_type is None):
                 raise KeyError("If either either queue_socket or queue_type is supplied, both must be.")
 
-            queue_nanny, queue_scheduler = queue_handlers.build_queue(queue_type, queue_socket,
-                                                                                self.objects["db_socket"])
+            queue_nanny, queue_scheduler, service_scheduler = queue_handlers.build_queue(queue_type, queue_socket,
+                                                                                         self.objects["db_socket"])
 
             # Add the socket to passed args
             self.objects["queue_socket"] = queue_socket
@@ -94,6 +94,7 @@ class FractalServer(object):
 
             # Add the endpoint
             endpoints.append((r"/scheduler", queue_scheduler, self.objects))
+            endpoints.append((r"/service", service_schedule, self.objects))
 
         # Build the app
         self.app = tornado.web.Application(endpoints, compress_response=True)
