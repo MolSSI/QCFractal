@@ -169,7 +169,8 @@ class MongoSocket:
                 d = data[x]
                 ukey = tuple(d[key] for key in self._collection_indices[collection])
                 rdata.append((ukey, str(d["_id"])))
-                del d["_id"]
+                if keep_id is False:
+                    del d["_id"]
 
             for x in error_skips:
                 del data[x]["_id"]
@@ -338,9 +339,9 @@ class MongoSocket:
 
         return ret
 
-    def add_services(self, data):
+    def add_services(self, data, keep_id=False):
 
-        ret = self._add_generic(data, "services")
+        ret = self._add_generic(data, "services", keep_id=keep_id)
         ret["meta"]["validation_errors"] = [] # TODO
 
         return ret
@@ -434,6 +435,27 @@ class MongoSocket:
         return self._del_by_index("results", values, index=index)
 
 ### Mongo get functions
+
+    def _get_generic_by_id(self, ids, collection, projection=None):
+
+        # TODO parse duplicates
+        meta = db_utils.get_metadata()
+        _str_to_indices(ids)
+
+        # if projection is None:
+        #     projection = {}
+
+        _str_to_indices(ids)
+        data = list(self._project[collection].find({"_id": {"$in": ids}}, projection=projection))
+        for d in data:
+            d["id"] = str(d["_id"])
+            del d["_id"]
+
+        meta["n_found"] = len(data)
+        meta["success"] = True
+
+        return {"meta": meta, "data": data}
+
 
     def _get_generic(self, query, collection, projection=None, allow_generic=False):
 
@@ -587,9 +609,18 @@ class MongoSocket:
 
         return self._get_generic(keys, "procedures", allow_generic=True)
 
-    def get_services(self, keys):
+    def get_services(self, query, by_id=False, projection=None):
 
-        return self._get_generic(keys, "services", allow_generic=True)
+        if by_id:
+            return self._get_generic_by_id(query, "services", projection=projection)
+        else:
+            return self._get_generic(query, "services", projection=projection, allow_generic=True)
+
+    def update_services(self, updates):
+
+        for uid, data in updates:
+            d = self._project["services"].replace_one({"_id": ObjectId(uid)}, data)
+        return
 
 ### Complex parsers
 
