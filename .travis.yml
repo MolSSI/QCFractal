@@ -24,25 +24,33 @@ matrix:
       python: 3.5
       env:
         - PYTHON_VER=3.5
-        - QUEUE=DASK
+        - ENVIRON=DASK
 
     - os: linux
       python: 3.6
       env:
         - PYTHON_VER=3.6
-        - QUEUE=DASK
+        - ENVIRON=DASK
 
     - os: linux
       python: 3.6
       env:
         - PYTHON_VER=3.6
-        - QUEUE=FIREWORKS
+        - ENVIRON=FIREWORKS
 
     - os: linux
       python: 3.6
       env:
         - PYTHON_VER=3.7
-        - QUEUE=FIREWORKS
+        - ENVIRON=FIREWORKS
+
+  allow_failures:
+    - os: linux
+      python: 3.6
+      env:
+        - PYTHON_VER=3.6
+        - ENVIRON=OPENFF
+
 
 before_install:
   # Additional info about the build
@@ -58,12 +66,14 @@ before_install:
 install:
     # Create test environment for package
   - |
-    if [ $QUEUE == "DASK" ]; then
+    if [ $ENVIRON == "DASK" ]; then
       conda env create -n test python=$PYTHON_VER -f devtools/conda-envs/dask.yaml
-    elif [ $QUEUE == "FIREWORKS" ]; then
+    elif [ $ENVIRON == "FIREWORKS" ]; then
       conda env create -n test python=$PYTHON_VER -f devtools/conda-envs/fireworks.yaml
+    elif [ $ENVIRON == "OPENFF" ]; then
+      conda env create -n test python=$PYTHON_VER -f devtools/conda-envs/openff.yaml
     else
-      echo "ERROR: No match for QUEUE ($QUEUE)."
+      echo "ERROR: No match for ENVIRON ($ENVIRON)."
       exit 1
     fi
   - source activate test
