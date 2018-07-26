@@ -6,6 +6,7 @@ import pytest
 import threading
 import pkgutil
 import socket
+import logging
 from contextlib import contextmanager
 from tornado.ioloop import IOLoop
 from .server import FractalServer
@@ -175,7 +176,6 @@ def fireworks_server_fixture(request):
     Builds a server instance with the event loop running in a thread.
     """
     fireworks = pytest.importorskip("fireworks")
-    import logging
     logging.basicConfig(level=logging.CRITICAL, filename="/tmp/fireworks_logfile.txt")
 
     lpad = fireworks.LaunchPad(name="fw_testing_server", logdir="/tmp/", strm_lvl="CRITICAL")
