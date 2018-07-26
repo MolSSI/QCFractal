@@ -128,10 +128,10 @@ class QueueNanny:
 
             finished = obj.iterate()
             self.db_socket.update_services([(data["id"], obj.get_json())])
-            print(obj.get_json())
+            # print(obj.get_json())
 
             if finished:
-                self.services -= set(data["id"])
+                self.services -= {data["id"], }
 
 
     def await_results(self):
@@ -160,11 +160,11 @@ class QueueNanny:
         """
 
         for x in range(max_iter):
-            print(str(x) + "\n")
+            print("\nIteration %d : %s\n" % (x, self.services))
             self.update_services()
+            self.await_results()
             if len(self.services) == 0:
                 break
-            self.await_results()
 
         return True
 
