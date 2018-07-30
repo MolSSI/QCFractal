@@ -5,6 +5,7 @@ Wraps geometric procedures
 import copy
 import collections
 import json
+import uuid
 
 from crank import crankAPI
 
@@ -41,6 +42,8 @@ class Crank:
         meta["state"] = "READY"
         meta["required_jobs"] = False
         meta["molecule_template"] = molecule
+        meta["crank_meta"]["dihedral_template"] = [('dihedral', ) + tuple(map(str, x))
+                                                           for x in meta["crank_meta"]["dihedrals"]]
 
         return cls(db_socket, queue_socket, meta)
 
@@ -50,34 +53,36 @@ class Crank:
     def iterate(self):
 
         self.data["state"] = "RUNNING"
-        print("\nCrank State:")
-        print(json.dumps(self.data["crank_state"], indent=2))
+        # print("\nCrank State:")
+        # print(json.dumps(self.data["crank_state"], indent=2))
 
         # Required jobs is false on first iteration
         if self.data["required_jobs"] is not False:
-            query = copy.deepcopy(self.data["required_jobs"])
-            query["initial_molecule"] = {"$in": self.data["required_jobs"]["initial_molecules"]}
-            del query["initial_molecules"]
-            print("\nQuery")
-            print(query)
-            ret = self.db_socket.get_procedures([query])
-            print("\nReturned")
-            print(ret)
 
-            print('\n------\n')
+            nquery = len(self.data["required_jobs"])
+            job_results = {k: [None] * v for k, v in self.data["update_structure"].items()}
 
-            if len(self.data["molecule_map"]) > ret["meta"]["n_found"]:
+            job_query = self.db_socket.get_procedures([{"crank_uuid": uid} for key, uid in self.data["required_jobs"]])
+
+            # We are not yet done
+            # print(self.data["required_jobs"])
+            # print(job_query)
+            if job_query["meta"]["n_found"] != nquery:
                 return False
 
-            print(self.data["molecule_map"])
-            sizing = collections.defaultdict([])
-            skeleton
+            lookup = {x[1]: x[0] for x in self.data["required_jobs"]}
+            for ret in job_query["data"]:
+                value, pos = lookup[ret["crank_uuid"]]
+                mol_keys = self.db_socket.get_molecules([ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
+                job_results[value][int(pos)] = (mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1])
+                # print(value, pos, ret["energies"][-1])
 
-            # inv_molecule_map = {v : k for k, v in self.data["molecule_map"]}
-            # for result in ret["data"]:
+            # print("Job Results:", json.dumps(job_results, indent=2))
 
-            return False
-            # crankAPI.update_state(self.crank_state, job_results)
+            crankAPI.update_state(self.data["crank_state"], job_results)
+
+            # print("\nCrank State Updated:")
+            # print(json.dumps(self.data["crank_state"], indent=2))
 
 
         # Figure out if we are still waiting on jobs
@@ -85,25 +90,13 @@ class Crank:
         # Create new jobs from the current state
         next_jobs = crankAPI.next_jobs_from_state(self.data["crank_state"], verbose=True)
 
+        # All done
+        if len(next_jobs) == 0:
+            self.finalize()
+            return True
+
         self.submit_geometric_tasks(next_jobs)
 
-        # step 4
-        # job_results = collections.defaultdict(list)
-        # for grid_id_str, job_geo_list in next_jobs.items():
-        #     for job_geo in job_geo_list:
-        #         dihedral_values = crankAPI.grid_id_from_string(grid_id_str)
-
-        #         # Run geometric
-        #         geometric_input_dict = self.make_geomeTRIC_input(dihedral_values, job_geo)
-        #         geometric_output_dict = geometric.run_json.geometric_run_json(geometric_input_dict)
-
-        #         # Pull out relevevant data
-        #         final_geo = geometric_output_dict['final_molecule']['molecule']['geometry']
-        #         final_energy = geometric_output_dict['final_molecule']['properties']['return_energy']
-
-        #         # Note: the results should be appended in the same order as in the inputs
-        #         # It's not a problem here when running serial for loop
-        #         job_results[grid_id_str].append((job_geo, final_geo, final_energy))
         return False
         # if len(next_jobs) == 0:
         #     return self.finalize()
@@ -121,40 +114,58 @@ class Crank:
             for num, geom in enumerate(k):
                 mol = json.loads(initial_molecule)
                 mol["geometry"] = geom
-                flat_map[(v, num)] = mol
+                flat_map[(v, str(num))] = mol
 
         # Add molecules and grab hashes
-        ret = self.db_socket.add_molecules(flat_map)
+        mol_add = self.db_socket.add_molecules(flat_map)
 
         # Check if everything was successful
 
         # Prepare optimization runs
-        packet = {
+        meta_packet = json.dumps({
             "meta": {
                 "procedure": "optimization",
-                "options": "none",
+                "keywords": self.data["geometric_meta"],
                 "program": "geometric",
                 "qc_meta": self.data["qc_meta"]
             },
-            "data": list(ret["data"].values()),
-        }
-        print("\nPacket input")
-        print(json.dumps(packet, indent=2))
-        full_tasks, errors = procedures.get_procedure_input_parser("optimization")(self.db_socket, packet)
+        })
+
+        required_jobs = []
+        full_tasks = {}
+        for key, mol in flat_map.items():
+            uid = str(uuid.uuid4())
+            packet = json.loads(meta_packet)
+
+            containts = [
+                tuple(x) + (str(y), )
+                for x, y in zip(self.data["crank_meta"]["dihedral_template"], crankAPI.grid_id_from_string(key[0]))
+            ]
+            packet["meta"]["keywords"]["constraints"] = {"set": containts}
+            packet["data"] = [mol]
+
+            tasks, errors = procedures.get_procedure_input_parser("optimization")(self.db_socket, packet)
+
+            # Unpack 1 element dict and add
+            [(task_key, task)] = tasks.items()
+            task[1]["crank_uuid"] = uid
+
+            full_tasks[task_key + (uid, )] = task
+            required_jobs.append((key, uid))
 
         # Create data for next round
-        self.data["molecule_map"] = {v: k for k, v in ret["data"].items()}
-        self.data["required_jobs"] = packet["meta"]
-        self.data["required_jobs"]["initial_molecules"] = list(ret["data"].values())
+        self.data["update_structure"] = {k: len(v) for k, v in job_dict.items()}
+        self.data["required_jobs"] = required_jobs
+        # print(json.dumps(required_jobs, indent=2))
 
         # Add tasks to Nanny
         submitted = self.queue_socket.submit_tasks(full_tasks)
 
 
-    def finalize():
+    def finalize(self):
         # Add finalize state
         # Parse remaining procedures
         # Create a map of "jobs" so that procedures does not have to followed
         self.data["state"] = "FINISHED"
         print("Crank Scan Finished")
-        return crankAPI.collect_lowest_energies(self.crank_state)
+        return crankAPI.collect_lowest_energies(self.data["crank_state"])

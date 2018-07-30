@@ -32,11 +32,10 @@ def test_service_crank(dask_server_fixture):
             "service": "crank",
             "crank_meta": {
                "dihedrals": [[1, 2, 3, 4]],
-               "grid_spacing": [180]
+               "grid_spacing": [90]
             },
             "geometric_meta": {
-                # "coordsys": "tric"
-                "options": "none"
+                "coordsys": "tric"
             },
             "qc_meta": {
                 "driver": "gradient",
@@ -56,7 +55,7 @@ def test_service_crank(dask_server_fixture):
 
     # Manually handle the compute
     nanny = dask_server_fixture.objects["queue_nanny"]
-    nanny.await_services(max_iter=2)
+    nanny.await_services(max_iter=5)
     assert len(nanny.list_current_tasks()) == 0
 
     # # # Query result and check against out manual pul

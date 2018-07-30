@@ -63,6 +63,7 @@ target/
 timer.dat
 *.out
 iter.dat
+psi*clean
 
 # Sample
 mongo_qcdb/sample.py
