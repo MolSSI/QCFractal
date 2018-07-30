@@ -215,7 +215,6 @@ class MongoSocket:
 
             # This is the user provided key
             new_mol_keys = new_vk_hash[old_mol["molecule_hash"]]
-
             new_mol = new_mols[new_mol_keys[0]]
 
             if new_mol.compare(old_mol):
@@ -229,12 +228,17 @@ class MongoSocket:
                 raise KeyError("!!! WARNING !!!: Hash collision detected")
 
         # Carefully make this flat
+        new_hashes = set()
         new_inserts = []
         new_keys = []
         for new_key, new_mol in new_mols.items():
             data = new_mol.to_json()
             data["molecule_hash"] = new_mol.get_hash()
 
+            if data["molecule_hash"] in new_hashes:
+                continue
+
+            new_hashes |= set([data["molecule_hash"]])
             new_inserts.append(data)
             new_keys.append(new_key)
 

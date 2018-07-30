@@ -46,13 +46,18 @@ def test_identical_mol_insert(db_socket):
 
     water = qp.data.get_molecule("water_dimer_minima.psimol")
 
-    # Add once
+    # Add two idential molecules
     ret1 = db_socket.add_molecules({"w1": water.to_json(), "w2": water.to_json()})
-
     assert ret1["meta"]["success"] is True
-    assert ret1["meta"]["n_inserted"] == 2
+    assert ret1["meta"]["n_inserted"] == 1
     assert ret1["data"]["w1"] == ret1["data"]["w2"]
 
+    # Should only find one molecule
+    ret2 = db_socket.get_molecules([water.get_hash()], index="hash")
+    assert ret2["meta"]["n_found"] == 1
+
+    ret = db_socket.del_molecules(water.get_hash(), index="hash")
+    assert ret == 1
 
 def test_molecules_add_many(db_socket):
     water = qp.data.get_molecule("water_dimer_minima.psimol")
