@@ -67,7 +67,7 @@ def procedure_optimization_input_parser(db, data):
     json_data = {
         "meta": {
             "procedure": "optimization",
-            "options": "default",
+            "option": "default",
             "program": "geometric",
             "qc_meta": {
                 "driver": "energy",
@@ -114,9 +114,14 @@ def procedure_optimization_input_parser(db, data):
     # Unpack individual QC jobs
     runs, errors = procedures_util.unpack_single_run_meta(db, data["meta"]["qc_meta"], data["data"])
 
-    keywords = db.get_options([(data["meta"]["program"], data["meta"]["options"])])["data"][0]
-    del keywords["program"]
-    del keywords["name"]
+    if "options" in data["meta"]:
+        keywords = db.get_options([(data["meta"]["program"], data["meta"]["options"])])["data"][0]
+        del keywords["program"]
+        del keywords["name"]
+    elif "keywords" in data["meta"]:
+        keywords = data["meta"]["keywords"]
+    else:
+        keywords = {}
 
     keywords["program"] = data["meta"]["qc_meta"]["program"]
     template = json.dumps({
@@ -128,6 +133,7 @@ def procedure_optimization_input_parser(db, data):
 
     full_tasks = {}
     for k, v in runs.items():
+        # Warning, may not be unique
         key = ("optimization", ) + k
 
         # Coerce qc_template information
@@ -164,8 +170,8 @@ def procedure_optimization_output_parser(db, data):
         # Coerce tags
         v.update(v["qcfractal_tags"])
         del v["input_specification"]
-        del v["keywords"]
         del v["qcfractal_tags"]
+        # print("Adding optimization result")
         # print(json.dumps(v, indent=2))
         new_procedures.append(v)
 
