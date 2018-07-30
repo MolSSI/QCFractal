@@ -24,7 +24,7 @@ def test_molecules_add(db_socket):
 
     # Try duplicate adds
     ret2 = db_socket.add_molecules({"new_water2": water.to_json()})
-    assert ret1["meta"]["success"] is True
+    assert ret2["meta"]["success"] is True
     assert ret2["meta"]["n_inserted"] == 0
     assert ret2["meta"]["duplicates"][0] == "new_water2"
 
@@ -38,6 +38,20 @@ def test_molecules_add(db_socket):
     # Cleanup adds
     ret = db_socket.del_molecules(water.get_hash(), index="hash")
     assert ret == 1
+
+def test_identical_mol_insert(db_socket):
+    """
+    Tests as edge case where to identical molecules are added under different tags.
+    """
+
+    water = qp.data.get_molecule("water_dimer_minima.psimol")
+
+    # Add once
+    ret1 = db_socket.add_molecules({"w1": water.to_json(), "w2": water.to_json()})
+
+    assert ret1["meta"]["success"] is True
+    assert ret1["meta"]["n_inserted"] == 2
+    assert ret1["data"]["w1"] == ret1["data"]["w2"]
 
 
 def test_molecules_add_many(db_socket):

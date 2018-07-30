@@ -14,6 +14,7 @@ import logging
 import pandas as pd
 from bson.objectid import ObjectId
 import copy
+import collections
 
 # Pull in the hashing algorithms from the client
 from .. import interface
@@ -201,30 +202,31 @@ class MongoSocket:
             new_mols[key] = mol
 
         new_kv_hash = {k: v.get_hash() for k, v in new_mols.items()}
-        new_vk_hash = {v: k for k, v in new_kv_hash.items()}
+        new_vk_hash = collections.defaultdict(list)
+        for k, v in new_kv_hash.items():
+            new_vk_hash[v].append(k)
 
         # We need to filter out what is already in the database
         old_mols = self.get_molecules(list(new_kv_hash.values()), index="hash")["data"]
 
         # If we have hash matches check to for duplicates
         key_mapper = {}
-        if old_mols:
+        for old_mol in old_mols:
 
-            for old_mol in old_mols:
+            # This is the user provided key
+            new_mol_keys = new_vk_hash[old_mol["molecule_hash"]]
 
-                # This is the user provided key
-                new_mol_key = new_vk_hash[old_mol["molecule_hash"]]
+            new_mol = new_mols[new_mol_keys[0]]
 
-                new_mol = new_mols[new_mol_key]
-
-                if new_mol.compare(old_mol):
-                    del new_mols[new_mol_key]
-                    key_mapper[new_mol_key] = old_mol["id"]
-                else:
-                    # If this happens, we need to think a bit about what to do
-                    # Effectively our molecule hash index now has duplicates.
-                    # This is *sort of* ok as we use uuid's for all internal projects.
-                    raise KeyError("!!! WARNING !!!: Hash collision detected")
+            if new_mol.compare(old_mol):
+                for x in new_mol_keys:
+                    del new_mols[x]
+                    key_mapper[x] = old_mol["id"]
+            else:
+                # If this happens, we need to think a bit about what to do
+                # Effectively our molecule hash index now has duplicates.
+                # This is *sort of* ok as we use uuid's for all internal projects.
+                raise KeyError("!!! WARNING !!!: Hash collision detected")
 
         # Carefully make this flat
         new_inserts = []
@@ -249,7 +251,8 @@ class MongoSocket:
 
         # Add the new keys to the key map
         for mol in new_inserts:
-            key_mapper[new_vk_hash[mol["molecule_hash"]]] = str(mol["_id"])
+            for x in new_vk_hash[mol["molecule_hash"]]:
+                key_mapper[x] = str(mol["_id"])
             del mol["_id"]
 
         ret["data"] = key_mapper
