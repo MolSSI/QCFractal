@@ -29,7 +29,7 @@ _collection_indices = {
     "options": ("program", "name"),
     "result": ("program", "molecule_id", "driver", "method", "basis", "options"),
     "molecule": ("molecule_hash", ),
-    "procedure": ("procedure", "options", "program"),
+    "procedure": ("procedure", "program"),
     "service": ("service", ),
 }
 
