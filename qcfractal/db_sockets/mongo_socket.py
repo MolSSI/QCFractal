@@ -628,11 +628,13 @@ class MongoSocket:
 
     def update_services(self, updates):
 
+        match_count = 0
+        modified_count = 0
         for uid, data in updates:
             result = self._project["services"].replace_one({"_id": ObjectId(uid)}, data)
-            # result.matched_count
-            # result.modified_count
-        return
+            match_count += result.matched_count
+            modified_count += result.modified_count
+        return (match_count, modified_count)
 
 ### Complex parsers
 

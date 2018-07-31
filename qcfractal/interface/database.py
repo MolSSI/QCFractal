@@ -777,7 +777,7 @@ class Database(object):
         if do_cp:
             ret["cp"] = [(mol, 1.0)]
 
-        if do_vmfc:
-            ret["vmfc"] = [(mol, 1.0)]
+        # if do_vmfc:
+        #     ret["vmfc"] = [(mol, 1.0)]
 
         return ret

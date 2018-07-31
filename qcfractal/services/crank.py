@@ -3,7 +3,6 @@ Wraps geometric procedures
 """
 
 import copy
-import collections
 import json
 import uuid
 
@@ -163,7 +162,7 @@ class Crank:
         # print(json.dumps(required_jobs, indent=2))
 
         # Add tasks to Nanny
-        submitted = self.queue_socket.submit_tasks(full_tasks)
+        self.queue_socket.submit_tasks(full_tasks)
 
 
     def finalize(self):

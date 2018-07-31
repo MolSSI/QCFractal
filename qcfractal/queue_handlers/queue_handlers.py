@@ -3,13 +3,10 @@ Queue backend abstraction manager.
 """
 
 import logging
-import qcengine
 import traceback
-import json
 import collections
 
 from ..web_handlers import APIHandler
-from ..interface import schema
 from .. import procedures
 from .. import services
 
