@@ -31,7 +31,7 @@ def test_service_crank(dask_server_fixture):
         "meta": {
             "service": "crank",
             "crank_meta": {
-               "dihedrals": [[1, 2, 3, 4]],
+               "dihedrals": [[0, 1, 2, 3]],
                "grid_spacing": [90]
             },
             "geometric_meta": {

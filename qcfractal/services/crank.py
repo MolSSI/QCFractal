@@ -42,8 +42,12 @@ class Crank:
         meta["state"] = "READY"
         meta["required_jobs"] = False
         meta["molecule_template"] = molecule
-        meta["crank_meta"]["dihedral_template"] = [('dihedral', ) + tuple(map(str, x))
-                                                           for x in meta["crank_meta"]["dihedrals"]]
+
+        dihedral_template = []
+        for idx in meta["crank_meta"]["dihedrals"]:
+            tmp =  ('dihedral', ) + tuple(str(z+1) for z in idx)
+            dihedral_template.append(tmp)
+        meta["crank_meta"]["dihedral_template"] = dihedral_template
 
         return cls(db_socket, queue_socket, meta)
 
