@@ -94,7 +94,7 @@ before_script:
   - conda list
 
 script:
-  - py.test -v --cov=qcfractal qcfractal/
+  - py.test -v --runslow --cov=qcfractal qcfractal/
 
 notifications:
   email: false

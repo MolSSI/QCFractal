@@ -19,6 +19,7 @@ import qcfractal.interface as portal
 @testing.using_crank
 @testing.using_geometric
 @testing.using_psi4
+@pytest.mark.slow
 def test_service_crank(dask_server_fixture):
 
     # Add a HOOH
