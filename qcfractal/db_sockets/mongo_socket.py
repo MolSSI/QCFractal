@@ -3,12 +3,11 @@ Database connection class which directly calls the PyMongo API to capture
 cammon subroutines.
 """
 
-
-
 try:
     import pymongo
 except ImportError:
-    raise ImportError("Mongo db_socket requires pymongo, please install this python module or try a different db_socket.")
+    raise ImportError(
+        "Mongo db_socket requires pymongo, please install this python module or try a different db_socket.")
 
 import logging
 import pandas as pd
@@ -20,23 +19,34 @@ import collections
 from .. import interface
 from . import db_utils
 
+
 def _translate_id_index(index):
     if index in ["id", "ids"]:
         return "_id"
     else:
         raise KeyError("Id Index alias '{}' not understood".format(index))
 
+
 def _str_to_indices(ids):
     for num, x in enumerate(ids):
         if isinstance(x, str):
             ids[num] = ObjectId(x)
+
 
 class MongoSocket:
     """
     This is a Mongo QCDB socket class.
     """
 
-    def __init__(self, url, port, project="molssidb", username=None, password=None, authMechanism="SCRAM-SHA-1", authSource=None, logger=None):
+    def __init__(self,
+                 url,
+                 port,
+                 project="molssidb",
+                 username=None,
+                 password=None,
+                 authMechanism="SCRAM-SHA-1",
+                 authSource=None,
+                 logger=None):
         """
         Constructs a new socket where url and port points towards a Mongod instance.
 
@@ -74,7 +84,8 @@ class MongoSocket:
 
         # Are we authenticating?
         if username:
-            self.client = pymongo.MongoClient(url, port, username=username, password=password, authMechanism=authMechanism, authSource=authSource)
+            self.client = pymongo.MongoClient(
+                url, port, username=username, password=password, authMechanism=authMechanism, authSource=authSource)
         else:
             self.client = pymongo.MongoClient(url, port)
 
@@ -120,8 +131,6 @@ class MongoSocket:
     def mixed_molecule_get(self, data):
         return db_utils.mixed_molecule_get(self, data)
 
-### Mongo add functions
-
     def _add_generic(self, data, collection, keep_id=False):
         """
         Helper function that facilitates adding a record.
@@ -155,7 +164,6 @@ class MongoSocket:
 
                 error_skips.append(error["index"])
 
-
             # Only duplicates, no true errors
             if len(meta["errors"]) == 0:
                 meta["success"] = True
@@ -179,6 +187,75 @@ class MongoSocket:
         ret = {"data": rdata, "meta": meta}
 
         return ret
+
+    def _del_by_index(self, collection, hashes, index="_id"):
+        """
+        Helper function that facilitates deletion based on hash.
+        """
+
+        if isinstance(hashes, str):
+            hashes = [hashes]
+
+        if index == "_id":
+            _str_to_indices(hashes)
+
+        return (self._project[collection].delete_many({index: {"$in": hashes}})).deleted_count
+
+    def _get_generic_by_id(self, ids, collection, projection=None):
+
+        # TODO parse duplicates
+        meta = db_utils.get_metadata()
+        _str_to_indices(ids)
+
+        # if projection is None:
+        #     projection = {}
+
+        _str_to_indices(ids)
+        data = list(self._project[collection].find({"_id": {"$in": ids}}, projection=projection))
+        for d in data:
+            d["id"] = str(d["_id"])
+            del d["_id"]
+
+        meta["n_found"] = len(data)
+        meta["success"] = True
+
+        return {"meta": meta, "data": data}
+
+    def _get_generic(self, query, collection, projection=None, allow_generic=False):
+
+        # TODO parse duplicates
+        meta = db_utils.get_metadata()
+
+        if projection is None:
+            projection = {"_id": False}
+
+        keys = self._collection_indices[collection]
+        len_key = len(keys)
+
+        data = []
+        for q in query:
+            if allow_generic and isinstance(q, dict):
+                pass
+            elif (len(q) == len_key) and isinstance(q, (list, tuple)):
+                q = {k: v for k, v in zip(keys, q)}
+            else:
+                meta["errors"].append({"query": q, "error": "Malformed query"})
+                continue
+
+            d = self._project[collection].find_one(q, projection=projection)
+            if d is None:
+                meta["missing"].append(q)
+            else:
+                data.append(d)
+
+        meta["n_found"] = len(data)
+        if len(meta["errors"]) == 0:
+            meta["success"] = True
+
+        ret = {"meta": meta, "data": data}
+        return ret
+
+### Mongo molecule functions
 
     def add_molecules(self, data):
         """
@@ -263,6 +340,62 @@ class MongoSocket:
 
         return ret
 
+    def get_molecules(self, molecule_ids, index="id"):
+
+        ret = {"meta": db_utils.get_metadata(), "data": []}
+
+        try:
+            index = db_utils.translate_molecule_index(index)
+        except KeyError as e:
+            ret["meta"]["error_description"] = repr(e)
+            return ret
+
+        if not isinstance(molecule_ids, (list, tuple)):
+            molecule_ids = [molecule_ids]
+
+        if index == "_id":
+            _str_to_indices(molecule_ids)
+
+        data = self._project["molecules"].find({index: {"$in": molecule_ids}})
+
+        if data is None:
+            data = []
+        else:
+            data = list(data)
+
+        ret["meta"]["success"] = True
+        ret["meta"]["n_found"] = len(data)
+
+        # Translate ID's back
+        for r in data:
+            r["id"] = str(r["_id"])
+            del r["_id"]
+
+        ret["data"] = data
+
+        return ret
+
+    def del_molecules(self, values, index="id"):
+        """
+        Removes a molecule from the database from its hash.
+
+        Parameters
+        ----------
+        hash_val : str or list of strs
+            The hash of a molecule.
+
+        Returns
+        -------
+        bool
+            Whether the operation was successful.
+        """
+
+        index = db_utils.translate_molecule_index(index)
+
+        return self._del_by_index("molecules", values, index=index)
+
+### Mongo options functions
+
     def add_options(self, data):
         """
         Adds options to the database.
@@ -296,6 +429,44 @@ class MongoSocket:
         ret["meta"]["validation_errors"] = validation_errors
         return ret
 
+    def get_options(self, keys, projection=None):
+
+        # Check for Nones
+        blanks = []
+        add_keys = []
+        for num, (program, name) in enumerate(keys):
+            if name.lower() == "none":
+                blanks.append((num, {"program": program, "name": name}))
+            else:
+                add_keys.append((program, name))
+
+        # if (len(data) == 2) and isinstance(data[0], str):
+        ret = self._get_generic(add_keys, "options", projection=projection)
+
+        for pos, options in blanks:
+            ret["data"].insert(pos, options)
+
+        return ret
+
+    def del_option(self, program, name):
+        """
+        Removes a database from the database from its hash.
+
+        Parameters
+        ----------
+        hash_val : str or list of strs
+            The hash of a database.
+
+        Returns
+        -------
+        bool
+            Whether the operation was successful.
+        """
+
+        return (self._project["options"].delete_one({"program": program, "name": name})).deleted_count
+
+### Mongo database functions
+
     def add_database(self, data):
         """
         Adds a database to the database.
@@ -312,8 +483,31 @@ class MongoSocket:
         """
 
         ret = self._add_generic([data], "databases")
-        ret["meta"]["validation_errors"] = [] # TODO
+        ret["meta"]["validation_errors"] = []  # TODO
         return ret
+
+    def get_databases(self, keys):
+
+        return self._get_generic(keys, "databases")
+
+    def del_database(self, category, name):
+        """
+        Removes a database from the database from its hash.
+
+        Parameters
+        ----------
+        hash_val : str or list of strs
+            The hash of a database.
+
+        Returns
+        -------
+        bool
+            Whether the operation was successful.
+        """
+
+        return (self._project["databases"].delete_one({"category": category, "name": name})).deleted_count
+
+### Mongo database functions
 
     def add_results(self, data):
         """
@@ -335,167 +529,8 @@ class MongoSocket:
                 d[i] = d[i].lower()
 
         ret = self._add_generic(data, "results")
-        ret["meta"]["validation_errors"] = [] # TODO
+        ret["meta"]["validation_errors"] = []  # TODO
 
-        return ret
-
-    def add_procedures(self, data):
-
-        ret = self._add_generic(data, "procedures")
-        ret["meta"]["validation_errors"] = [] # TODO
-
-        return ret
-
-    def add_services(self, data, keep_id=False):
-
-        ret = self._add_generic(data, "services", keep_id=keep_id)
-        ret["meta"]["validation_errors"] = [] # TODO
-
-        return ret
-
-### Mongo Delete Functions
-
-    def _del_by_index(self, collection, hashes, index="_id"):
-        """
-        Helper function that facilitates deletion based on hash.
-        """
-
-        if isinstance(hashes, str):
-            hashes = [hashes]
-
-        if index == "_id":
-            _str_to_indices(hashes)
-
-        return (self._project[collection].delete_many({index: {"$in" : hashes}})).deleted_count
-
-
-    def del_molecules(self, values, index="id"):
-        """
-        Removes a molecule from the database from its hash.
-
-        Parameters
-        ----------
-        hash_val : str or list of strs
-            The hash of a molecule.
-
-        Returns
-        -------
-        bool
-            Whether the operation was successful.
-        """
-
-        index = db_utils.translate_molecule_index(index)
-
-        return self._del_by_index("molecules", values, index=index)
-
-    def del_option(self, program, name):
-        """
-        Removes a database from the database from its hash.
-
-        Parameters
-        ----------
-        hash_val : str or list of strs
-            The hash of a database.
-
-        Returns
-        -------
-        bool
-            Whether the operation was successful.
-        """
-
-        return (self._project["options"].delete_one({"program": program, "name": name})).deleted_count
-
-    def del_database(self, category, name):
-        """
-        Removes a database from the database from its hash.
-
-        Parameters
-        ----------
-        hash_val : str or list of strs
-            The hash of a database.
-
-        Returns
-        -------
-        bool
-            Whether the operation was successful.
-        """
-
-        return (self._project["databases"].delete_one({"category": category, "name": name})).deleted_count
-
-
-    def del_results(self, values, index="id"):
-        """
-        Removes a page from the database from its hash.
-
-        Parameters
-        ----------
-        hash_val : str or list of strs
-            The hash of a page.
-
-        Returns
-        -------
-        bool
-            Whether the operation was successful.
-        """
-        index = _translate_id_index(index)
-
-        return self._del_by_index("results", values, index=index)
-
-### Mongo get functions
-
-    def _get_generic_by_id(self, ids, collection, projection=None):
-
-        # TODO parse duplicates
-        meta = db_utils.get_metadata()
-        _str_to_indices(ids)
-
-        # if projection is None:
-        #     projection = {}
-
-        _str_to_indices(ids)
-        data = list(self._project[collection].find({"_id": {"$in": ids}}, projection=projection))
-        for d in data:
-            d["id"] = str(d["_id"])
-            del d["_id"]
-
-        meta["n_found"] = len(data)
-        meta["success"] = True
-
-        return {"meta": meta, "data": data}
-
-
-    def _get_generic(self, query, collection, projection=None, allow_generic=False):
-
-        # TODO parse duplicates
-        meta = db_utils.get_metadata()
-
-        if projection is None:
-            projection = {"_id": False}
-
-        keys = self._collection_indices[collection]
-        len_key = len(keys)
-
-        data = []
-        for q in query:
-            if allow_generic and isinstance(q, dict):
-                pass
-            elif (len(q) == len_key) and isinstance(q, (list, tuple)):
-                q = {k : v for k, v in zip(keys, q)}
-            else:
-                meta["errors"].append({"query": q, "error": "Malformed query"})
-                continue
-
-            d = self._project[collection].find_one(q, projection=projection)
-            if d is None:
-                meta["missing"].append(q)
-            else:
-                data.append(d)
-
-        meta["n_found"] = len(data)
-        if len(meta["errors"]) == 0:
-            meta["success"] = True
-
-        ret = {"meta": meta, "data": data}
         return ret
 
     # Do a lookup on the results collection using a <molecule, method> key.
@@ -553,62 +588,30 @@ class MongoSocket:
 
         return ret
 
-    def get_databases(self, keys):
+    def del_results(self, values, index="id"):
+        """
+        Removes a page from the database from its hash.
 
-        return self._get_generic(keys, "databases")
+        Parameters
+        ----------
+        hash_val : str or list of strs
+            The hash of a page.
 
-    def get_options(self, keys, projection=None):
+        Returns
+        -------
+        bool
+            Whether the operation was successful.
+        """
+        index = _translate_id_index(index)
 
-        # Check for Nones
-        blanks = []
-        add_keys = []
-        for num, (program, name) in enumerate(keys):
-            if name.lower() == "none":
-                blanks.append((num, {"program": program, "name": name}))
-            else:
-                add_keys.append((program, name))
+        return self._del_by_index("results", values, index=index)
 
-        # if (len(data) == 2) and isinstance(data[0], str):
-        ret = self._get_generic(add_keys, "options", projection=projection)
+### Mongo procedure/service functions
 
-        for pos, options in blanks:
-            ret["data"].insert(pos, options)
+    def add_procedures(self, data):
 
-        return ret
-
-
-    def get_molecules(self, molecule_ids, index="id"):
-
-        ret = {"meta": db_utils.get_metadata(), "data": []}
-
-        try:
-            index = db_utils.translate_molecule_index(index)
-        except KeyError as e:
-            ret["meta"]["error_description"] = repr(e)
-            return ret
-
-        if not isinstance(molecule_ids, (list, tuple)):
-            molecule_ids = [molecule_ids]
-
-        if index == "_id":
-            _str_to_indices(molecule_ids)
-
-        data = self._project["molecules"].find({index: {"$in": molecule_ids}})
-
-        if data is None:
-            data = []
-        else:
-            data = list(data)
-
-        ret["meta"]["success"] = True
-        ret["meta"]["n_found"] = len(data)
-
-        # Translate ID's back
-        for r in data:
-            r["id"] = str(r["_id"])
-            del r["_id"]
-
-        ret["data"] = data
+        ret = self._add_generic(data, "procedures")
+        ret["meta"]["validation_errors"] = []  # TODO
 
         return ret
 
@@ -618,6 +621,13 @@ class MongoSocket:
             return self._get_generic_by_id(query, "procedures", projection=projection)
         else:
             return self._get_generic(keys, "procedures", allow_generic=True)
+
+    def add_services(self, data, keep_id=False):
+
+        ret = self._add_generic(data, "services", keep_id=keep_id)
+        ret["meta"]["validation_errors"] = []  # TODO
+
+        return ret
 
     def get_services(self, query, by_id=False, projection=None):
 
@@ -659,18 +669,7 @@ class MongoSocket:
         """
         d = {}
         for mol in hashes:
-            command = [{
-                "$match": {
-                    "molecule_hash": mol
-                }
-            }, {
-                "$group": {
-                    "_id": {},
-                    "value": {
-                        "$push": "$" + field
-                    }
-                }
-            }]
+            command = [{"$match": {"molecule_hash": mol}}, {"$group": {"_id": {}, "value": {"$push": "$" + field}}}]
             results = list(self.project["results"].aggregate(command))
             if len(results) == 0 or len(results[0]["value"]) == 0:
                 d[mol] = None
