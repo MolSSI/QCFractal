@@ -36,7 +36,6 @@ if __name__ == "__main__":
         tests_require=[
             'pytest',
             'pytest-cov',
-
         ],
 
         classifiers=[
