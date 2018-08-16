@@ -15,6 +15,10 @@ if __name__ == "__main__":
         install_requires=[
             'numpy>=1.7',
             'pymongo>=3.0',
+            'requests',
+            'jsonschema',
+            'pyyaml',
+            'py-cpuinfo',
         ],
         extras_require={
             'docs': [
@@ -32,6 +36,7 @@ if __name__ == "__main__":
         tests_require=[
             'pytest',
             'pytest-cov',
+
         ],
 
         classifiers=[
