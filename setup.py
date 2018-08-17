@@ -18,6 +18,7 @@ if __name__ == "__main__":
             'requests',
             'tornado',
             'jsonschema',
+            'qcengine',
         ],
         extras_require={
             'docs': [
