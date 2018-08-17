@@ -31,5 +31,5 @@ dependencies:
     - fireworks
     
       # OpenFF Flows
-    - git+git://github.com/lpwgroup/crank#egg=crank
-    - git+git://github.com/leeping/geomeTRIC#egg=geometric
+    - git+git://github.com/lpwgroup/crank.git@v0.8.1#egg=crank
+    - git+git://github.com/leeping/geomeTRIC@v0.8.8#egg=geometric
