@@ -31,6 +31,7 @@ _collection_indices = {
     "molecule": ("molecule_hash", ),
     "procedure": ("procedure", "program"),
     "service": ("service", ),
+    "queue": ("status", "hash_index", "tag"),
 }
 
 

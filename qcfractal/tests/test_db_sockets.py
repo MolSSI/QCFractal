@@ -293,4 +293,31 @@ def test_results_query_driver(db_results):
     ret = db_results.get_results({"driver": "energy"})
     assert ret["meta"]["n_found"] == 2
 
+# Builds tests for the queue
 
+def test_queue_manipulation(db_socket):
+
+   idx = "unique_hash_idx123"
+   task1 = {
+       "hash_index": idx,
+       "spec": {
+           "function": "qcengine.compute_procedure",
+           "args": [{
+               "json_blob": "data"
+           }],
+           "kwargs": {},
+       },
+       "hooks": [("service", "")],
+       "tag": None,
+   }
+
+   #r = db_socket.queue_submit([task1])
+   #print(r)
+
+
+   #print("\n--\n")
+   #r = db_socket.queue_get_next()
+   #print(r)
+
+   #print(db_socket.queue_get_by_status("WAITING"))
+   #print(db_socket.queue_get_by_status("RUNNING"))

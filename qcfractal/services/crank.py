@@ -170,5 +170,6 @@ class Crank:
         # Parse remaining procedures
         # Create a map of "jobs" so that procedures does not have to followed
         self.data["state"] = "FINISHED"
-        print("Crank Scan Finished")
+        #print("Crank Scan Finished")
+        #print(json.dumps(self.data, indent=2))
         return crankAPI.collect_lowest_energies(self.data["crank_state"])

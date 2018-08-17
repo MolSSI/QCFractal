@@ -14,6 +14,7 @@ import pandas as pd
 from bson.objectid import ObjectId
 import copy
 import collections
+import datetime
 
 # Pull in the hashing algorithms from the client
 from .. import interface
@@ -59,7 +60,6 @@ class MongoSocket:
             self.logger = logging.getLogger('MongoSocket')
 
         # Static data
-        self._valid_collections = {"molecules", "databases", "results", "options", "procedures", "services"}
         self._collection_indices = {
             "databases": interface.schema.get_indices("database"),
             "options": interface.schema.get_indices("options"),
@@ -67,7 +67,9 @@ class MongoSocket:
             "molecules": interface.schema.get_indices("molecule"),
             "procedures": interface.schema.get_indices("procedure"),
             "services": interface.schema.get_indices("service"),
+            "queue": interface.schema.get_indices("queue"),
         }
+        self._valid_collections = set(self._collection_indices.keys())
         self._collection_unique_indices = {
             "databases": True,
             "options": True,
@@ -75,6 +77,7 @@ class MongoSocket:
             "molecules": False,
             "procedures": False,
             "services": False,
+            "queue": True,
         }
 
         self._lower_results_index = ["method", "basis", "options", "program"]
@@ -254,6 +257,16 @@ class MongoSocket:
 
         ret = {"meta": meta, "data": data}
         return ret
+
+    def _find_many_generic(self, query, collection, projection=None):
+        meta = db_utils.get_metadata()
+
+        data = self._project[collection].find(query, projection=projection)
+        meta["success"] = True
+        meta["n_found"] = len(data)
+        ret = {"meta": meta, "data": data}
+        return ret
+
 
 ### Mongo molecule functions
 
@@ -645,6 +658,42 @@ class MongoSocket:
             match_count += result.matched_count
             modified_count += result.modified_count
         return (match_count, modified_count)
+
+### Mongo queue handling functions
+
+    def queue_submit(self, data, tag=None):
+
+        dt = datetime.datetime.utcnow()
+        for x in data:
+            x["status"] = "WAITING"
+            x["tag"] = tag
+            x["created_on"] = dt
+            x["modified_on"] = dt
+
+        ret = self._add_generic(data, "queue", keep_id=False)
+        ret["meta"]["validation_errors"] = []
+        return ret
+
+    def queue_get_next(self, n=100, tag=None):
+
+        found = list(self._project["queue"].find({"status": "WAITING"}, limit=n))
+
+        query = {"_id": {"$in": [x["_id"] for x in found]}}
+        if tag is not None:
+            query["tag"] = tag
+
+        upd = self._project["queue"].update_many(
+            query, {"$set": {
+                "status": "RUNNING",
+                "modified_on": datetime.datetime.utcnow()
+            }})
+        assert upd.modified_count == len(ids)
+        return found
+
+
+    def queue_get_by_status(self, status, n=100):
+
+        return list(self._project["queue"].find({"status": status}, limit=n))
 
 ### Complex parsers
 
