@@ -20,6 +20,7 @@ if __name__ == "__main__":
             'jsonschema',
             'pandas',
             'qcengine',
+            'pytest',
         ],
         extras_require={
             'docs': [
