@@ -16,9 +16,8 @@ if __name__ == "__main__":
             'numpy>=1.7',
             'pymongo>=3.0',
             'requests',
+            'tornado',
             'jsonschema',
-            'pyyaml',
-            'py-cpuinfo',
         ],
         extras_require={
             'docs': [

@@ -1,5 +1,5 @@
-Install QCFractal
-==================
+Installing QCFractal
+====================
 
 You can install qcfractal with ``conda``, with ``pip``, or by installing from source.
 
