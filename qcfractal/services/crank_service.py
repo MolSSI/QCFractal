@@ -120,7 +120,7 @@ class Crank:
                 flat_map[(v, str(num))] = mol
 
         # Add molecules and grab hashes
-        mol_add = self.db_socket.add_molecules(flat_map)
+        self.db_socket.add_molecules(flat_map)
 
         # Check if everything was successful
 
