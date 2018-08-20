@@ -684,7 +684,10 @@ class MongoSocket:
                 "status": "RUNNING",
                 "modified_on": datetime.datetime.utcnow()
             }})
-        assert upd.modified_count == len(found)
+
+        if upd.modified_count != len(found):
+            self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
+
         return found
 
     def queue_get_by_status(self, status, n=100):
