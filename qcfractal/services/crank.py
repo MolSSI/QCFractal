@@ -12,7 +12,6 @@ from .. import procedures
 
 __all__ = ["Crank"]
 
-
 class Crank:
     def __init__(self, db_socket, queue_socket, data):
 
@@ -45,7 +44,7 @@ class Crank:
 
         dihedral_template = []
         for idx in meta["crank_meta"]["dihedrals"]:
-            tmp = ('dihedral', ) + tuple(str(z + 1) for z in idx)
+            tmp =  ('dihedral', ) + tuple(str(z+1) for z in idx)
             dihedral_template.append(tmp)
         meta["crank_meta"]["dihedral_template"] = dihedral_template
 
@@ -77,8 +76,7 @@ class Crank:
             lookup = {x[1]: x[0] for x in self.data["required_jobs"]}
             for ret in job_query["data"]:
                 value, pos = lookup[ret["crank_uuid"]]
-                mol_keys = self.db_socket.get_molecules(
-                    [ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
+                mol_keys = self.db_socket.get_molecules([ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
                 job_results[value][int(pos)] = (mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1])
                 # print(value, pos, ret["energies"][-1])
 
@@ -88,6 +86,7 @@ class Crank:
 
             # print("\nCrank State Updated:")
             # print(json.dumps(self.data["crank_state"], indent=2))
+
 
         # Figure out if we are still waiting on jobs
 
@@ -121,7 +120,7 @@ class Crank:
                 flat_map[(v, str(num))] = mol
 
         # Add molecules and grab hashes
-        self.db_socket.add_molecules(flat_map)
+        mol_add = self.db_socket.add_molecules(flat_map)
 
         # Check if everything was successful
 
@@ -165,11 +164,12 @@ class Crank:
         # Add tasks to Nanny
         self.queue_socket.submit_tasks(full_tasks)
 
+
     def finalize(self):
         # Add finalize state
         # Parse remaining procedures
         # Create a map of "jobs" so that procedures does not have to followed
         self.data["state"] = "FINISHED"
-        #print("Crank Scan Finished")
-        #print(json.dumps(self.data, indent=2))
+        print("Crank Scan Finished")
+        print(json.dumps(self.data, indent=2))
         return crankAPI.collect_lowest_energies(self.data["crank_state"])

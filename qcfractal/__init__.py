@@ -3,7 +3,7 @@ Main init function for qcfractal
 """
 
 # Import modules
-from .db_sockets import db_socket_factory 
+from .db_sockets import db_socket_factory
 from .server import FractalServer
 
 from . import interface
@@ -15,7 +15,7 @@ from . import testing
 # from . import visualization
 # from . import handlers
 # from . import compute
-# 
+#
 # # Move classes up a level
 # from .molecule import Molecule
 # from .database import Database

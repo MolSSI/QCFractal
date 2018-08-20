@@ -101,8 +101,8 @@ class QueueNanny:
         for key, tmp_data in self.queue_adapter.aquire_complete().items():
             try:
                 if not tmp_data["success"]:
-                    raise ValueError("Computation key did not complete successfully!:\n%s\n" %
-                                     (str(key), tmp_data["error"]))
+                    raise ValueError("Computation key did not complete successfully!:\n%s\n" % (str(key),
+                                                                                                tmp_data["error"]))
                 # res = self.db_socket.del_page_by_data(tmp_data)
 
                 self.logger.info("update: {}".format(key))
@@ -128,8 +128,9 @@ class QueueNanny:
             # print(obj.get_json())
 
             if finished:
-                self.services -= {data["id"], }
-
+                self.services -= {
+                    data["id"],
+                }
 
     def await_results(self):
         """A synchronus method for testing or small launches
@@ -208,6 +209,7 @@ class QueueScheduler(APIHandler):
 
         self.write(ret)
 
+
 class QueueScheduler(APIHandler):
     """
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
@@ -250,6 +252,7 @@ class QueueScheduler(APIHandler):
     #     ret["error"] = queue_nanny.errors
     #     self.write(ret)
 
+
 class ServiceScheduler(APIHandler):
     """
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
@@ -280,7 +283,7 @@ class ServiceScheduler(APIHandler):
         # Return anything of interest
         meta["success"] = True
         meta["n_inserted"] = len(submitted)
-        meta["errors"] = [] #TODO
+        meta["errors"] = []  # TODO
         ret = {"meta": meta, "data": submitted}
 
         self.write(ret)

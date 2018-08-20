@@ -2,6 +2,7 @@
 Maniuplates available services.
 """
 
+
 def initializer(name, db_socket, queue_socket, meta, molecule):
 
     name = name.lower()
@@ -11,6 +12,7 @@ def initializer(name, db_socket, queue_socket, meta, molecule):
         return Crank.initialize_from_api(db_socket, queue_socket, meta, molecule)
     else:
         raise KeyError("Name {} not recognized.".format(name.title()))
+
 
 def build(name, db_socket, queue_socket, data):
     name = name.lower()

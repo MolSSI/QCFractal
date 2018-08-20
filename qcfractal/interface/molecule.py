@@ -478,11 +478,13 @@ class Molecule:
         for num in range(self.geometry.shape[0]):
 
             for x in range(3):
-                if phase_check[x]: continue
+                if phase_check[x]:
+                    continue
 
                 val = self.geometry[num, x]
 
-                if abs(val) < geom_noise: continue
+                if abs(val) < geom_noise:
+                    continue
 
                 phase_check[x] = True
 

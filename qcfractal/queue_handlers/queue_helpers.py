@@ -15,7 +15,7 @@ def _verify_input(data, mongo, logger=None, options=None):
 
     # Grab out molecule
     mol = mongo.get_molecule(data["molecule_hash"])
-    if molecule is None:
+    if mol is None:
         err = "Molecule hash '%s' was not found." % data["molecule_hash"]
         data["error"] = err
         if logger:

@@ -6,6 +6,7 @@ import logging
 import fireworks
 import fireworks.core.rocket_launcher
 
+
 class FireworksAdapter:
     def __init__(self, lpad, logger=None):
 
@@ -67,6 +68,7 @@ class FireworksAdapter:
     def list_tasks(self):
         return list(self.queue.values())
 
+
 # class FireworksScheduler(tornado.web.RequestHandler):
 #     """
 #     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
@@ -126,7 +128,6 @@ class FireworksAdapter:
 #         ret["queue"] = list(queue_nanny.queue)
 #         ret["error"] = queue_nanny.errors
 #         self.write(json.dumps(ret))
-
 
 # class FireworksNanny(object):
 #     """

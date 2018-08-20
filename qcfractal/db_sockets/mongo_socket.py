@@ -267,7 +267,6 @@ class MongoSocket:
         ret = {"meta": meta, "data": data}
         return ret
 
-
 ### Mongo molecule functions
 
     def add_molecules(self, data):
@@ -676,20 +675,17 @@ class MongoSocket:
 
     def queue_get_next(self, n=100, tag=None):
 
-        found = list(self._project["queue"].find({"status": "WAITING"}, limit=n))
+        found = list(self._project["queue"].find({"status": "WAITING", "tag": tag}, limit=n))
 
         query = {"_id": {"$in": [x["_id"] for x in found]}}
-        if tag is not None:
-            query["tag"] = tag
 
         upd = self._project["queue"].update_many(
             query, {"$set": {
                 "status": "RUNNING",
                 "modified_on": datetime.datetime.utcnow()
             }})
-        assert upd.modified_count == len(ids)
+        assert upd.modified_count == len(found)
         return found
-
 
     def queue_get_by_status(self, status, n=100):
 
