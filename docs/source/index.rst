@@ -28,7 +28,7 @@ Table of Contents
    install
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Developer Documentation
 
    changelog
