@@ -159,4 +159,4 @@ def test_compute_database(fractal_compute_server):
 
     # Check results
     assert db.query("Benchmark", "", reaction_results=True)
-    assert pytest.approx(0.00024477933196125805, 1.e-3) == db.statistics("MUE", "SCF/STO-3G")
+    assert pytest.approx(0.00024477933196125805, 1.e-5) == db.statistics("MUE", "SCF/STO-3G")
