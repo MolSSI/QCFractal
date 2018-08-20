@@ -4,6 +4,7 @@ Utility functions for on-node procedures.
 
 import json
 import copy
+import hashlib
 from .. import interface
 
 
@@ -124,3 +125,8 @@ def parse_single_runs(db, results):
         del v["qcfractal_tags"]
 
     return results
+
+def hash_procedure_keys(keys):
+    m = hashlib.sha1()
+    m.update(json.dumps(keys, sort_keys=True).encode("UTF-8"))
+    return m.hexdigest()

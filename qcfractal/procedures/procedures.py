@@ -52,15 +52,12 @@ def procedure_single_input_parser(db, data):
     full_tasks = []
     for k, v in runs.items():
 
-        key = ("single", ) + k
-
-        m = hashlib.sha1()
-        for k in key:
-            m.update(k.encode("UTF-8"))
+        keys = {"procedure_type": "single",
+                "single_key": k}
 
         task = {
-            "hash_index": m.hexdigest(),
-            "hash_keys": key,
+            "hash_index": procedures_util.hash_procedure_keys(keys),
+            "hash_keys": keys,
             "spec": {
                 "function": "qcengine.compute",
                 "args": [v, data["meta"]["program"]],
@@ -152,10 +149,8 @@ def procedure_optimization_input_parser(db, data):
         "qcfractal_tags": data["meta"]
     })
 
-    full_tasks = {}
+    full_tasks = []
     for k, v in runs.items():
-        # Warning, may not be unique
-        key = ("optimization", ) + k
 
         # Coerce qc_template information
         packet = json.loads(template)
@@ -163,14 +158,34 @@ def procedure_optimization_input_parser(db, data):
         del v["molecule"]
         packet["input_specification"] = v
 
+        # Unique nesting of args
+        keys = {
+            "procedure_type": "optimization",
+            "single_key": k,
+            "optimization_program": data["meta"]["program"],
+            "optimization_kwargs": packet["keywords"]
+        }
 
-        full_tasks[key] = (qcengine.compute_procedure, packet, data["meta"]["program"])
+        task = {
+            "hash_index": procedures_util.hash_procedure_keys(keys),
+            "hash_keys": keys,
+            "spec": {
+                "function": "qcengine.compute_procedure",
+                "args": [packet, data["meta"]["program"]],
+                "kwargs": {}
+            },
+            "hooks": [],
+            "tag": None,
+            "parser": "optimization"
+        }
+
+        full_tasks.append(task)
 
     return (full_tasks, errors)
 
 def procedure_optimization_output_parser(db, data):
 
-    data = {k: v[1] for k, v in data}
+    data = {k: v[0] for k, v in data.items()}
     new_procedures = []
 
     # Each optimization is a unique entry:
