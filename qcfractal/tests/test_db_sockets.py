@@ -313,12 +313,17 @@ def test_queue_manipulation(db_socket):
         "tag": None,
     }
 
+    # Submit a job
     r = db_socket.queue_submit([task1])
-    print(r)
+    assert len(r["data"]) == 1
 
-    print("\n--\n")
+    # Query for next jobs
     r = db_socket.queue_get_next()
-    print(r)
+    assert r[0]["spec"]["function"] == task1["spec"]["function"]
 
-    #print(db_socket.queue_get_by_status("WAITING"))
-    #print(db_socket.queue_get_by_status("RUNNING"))
+    # Mark job as done
+    r  = db_socket.queue_mark_complete([r[0]["id"]])
+    assert r == 1
+
+    r = db_socket.queue_get_next()
+    assert len(r) == 0

@@ -675,7 +675,12 @@ class MongoSocket:
 
     def queue_get_next(self, n=100, tag=None):
 
-        found = list(self._project["queue"].find({"status": "WAITING", "tag": tag}, limit=n))
+        found = list(self._project["queue"].find(
+            {
+                "status": "WAITING",
+                "tag": tag
+            }, sort=[("created_on", -1)], limit=n, projection={"_id": True,
+                                                               "spec": True}))
 
         query = {"_id": {"$in": [x["_id"] for x in found]}}
 
@@ -685,6 +690,10 @@ class MongoSocket:
                 "modified_on": datetime.datetime.utcnow()
             }})
 
+        for f in found:
+            f["id"] = str(f["_id"])
+            del f["_id"]
+
         if upd.modified_count != len(found):
             self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
 
@@ -693,6 +702,18 @@ class MongoSocket:
     def queue_get_by_status(self, status, n=100):
 
         return list(self._project["queue"].find({"status": status}, limit=n))
+
+    def queue_mark_complete(self, ids):
+        query = {"_id": {"$in": [ObjectId(x) for x in ids]}}
+
+        rm = self._project["queue"].delete_many(query)
+        if rm.deleted_count != len(ids):
+            self.logger.warning("QUEUE: Number of complete projects does not match the number of removed projects.")
+
+        # We need to log these for history
+
+        return rm.deleted_count
+
 
 ### Complex parsers
 
