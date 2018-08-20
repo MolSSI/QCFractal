@@ -297,7 +297,7 @@ def test_results_query_driver(db_results):
 # Builds tests for the queue
 
 
-def test_queue_manipulation(db_socket):
+def test_queue_roundtrip(db_socket):
 
     idx = "unique_hash_idx123"
     task1 = {
@@ -327,3 +327,39 @@ def test_queue_manipulation(db_socket):
 
     r = db_socket.queue_get_next()
     assert len(r) == 0
+
+def test_queue_duplicate(db_socket):
+
+    idx = "unique_hash_idx123"
+    task1 = {
+        "hash_index": idx,
+        "spec": {},
+        "hooks": [("service", "123")],
+        "tag": None,
+    }
+    r = db_socket.queue_submit([task1])
+    uid = r["data"][0][-1]
+    assert len(r["data"]) == 1
+
+    # Put the first job in a waiting state
+    r = db_socket.queue_get_next()
+    assert len(r) == 1
+
+    # Change hooks
+    task1["hooks"] = [("service", "456")]
+    r = db_socket.queue_submit([task1])
+    assert len(r["data"]) == 0
+
+    # Pull out the data and check the hooks
+    r = db_socket.get_queue([uid], by_id=True)
+    hooks = r["data"][0]["hooks"]
+    assert len(hooks) == 2
+    assert hooks[0][0] == "service"
+    assert hooks[1][0] == "service"
+    assert {"123", "456"} == {hooks[0][1], hooks[1][1]}
+
+    # Cleanup
+    r = db_socket.queue_mark_complete([uid])
+    assert r == 1
+
+

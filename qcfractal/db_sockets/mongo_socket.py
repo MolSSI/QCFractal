@@ -125,6 +125,9 @@ class MongoSocket:
             idx = [(x, pymongo.ASCENDING) for x in indices]
             self._project[col].create_index(idx, unique=self._collection_unique_indices[col])
 
+        # Special queue index, hash_index should be unique
+        self._project[col].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
+
         # Return the success array
         return collection_creation
 
@@ -627,12 +630,12 @@ class MongoSocket:
 
         return ret
 
-    def get_procedures(self, keys, by_id=False, projection=None):
+    def get_procedures(self, query, by_id=False, projection=None):
 
         if by_id:
             return self._get_generic_by_id(query, "procedures", projection=projection)
         else:
-            return self._get_generic(keys, "procedures", allow_generic=True)
+            return self._get_generic(query, "procedures", allow_generic=True)
 
     def add_services(self, data, keep_id=False):
 
@@ -670,6 +673,21 @@ class MongoSocket:
             x["modified_on"] = dt
 
         ret = self._add_generic(data, "queue", keep_id=False)
+
+        # Update hooks on duplicates
+        dup_inds = set(x[1] for x in ret["meta"]["duplicates"])
+        if dup_inds:
+            hook_updates = []
+
+            for x in data:
+                if x["hash_index"] in dup_inds:
+                    upd = pymongo.UpdateOne({"hash_index": x["hash_index"]}, {"$push": {"hooks": {"$each": x["hooks"]}}})
+                    hook_updates.append(upd)
+
+            tmp = self._project["queue"].bulk_write(hook_updates)
+            if tmp.modified_count != len(dup_inds):
+                self.logger.warning("QUEUE: Hook duplicate found does not match hook triggers")
+
         ret["meta"]["validation_errors"] = []
         return ret
 
@@ -679,11 +697,14 @@ class MongoSocket:
             {
                 "status": "WAITING",
                 "tag": tag
-            }, sort=[("created_on", -1)], limit=n, projection={"_id": True,
-                                                               "spec": True,
-                                                               "hash_index": True,
-                                                               "parser": True,
-                                                               "hooks": True}))
+            },
+            sort=[("created_on", -1)],
+            limit=n,
+            projection={"_id": True,
+                        "spec": True,
+                        "hash_index": True,
+                        "parser": True,
+                        "hooks": True}))
 
         query = {"_id": {"$in": [x["_id"] for x in found]}}
 
@@ -702,9 +723,16 @@ class MongoSocket:
 
         return found
 
-    def queue_get_by_status(self, status, n=100):
+    def get_queue(self, query, by_id=False, projection=None):
 
-        return list(self._project["queue"].find({"status": status}, limit=n))
+        if by_id:
+            return self._get_generic_by_id(query, "queue", projection=projection)
+        else:
+            return self._get_generic(query, "procedures", allow_generic=True)
+
+    def queue_get_by_id(self, ids, n=100):
+
+        return list(self._project["queue"].find({"_id": status}, limit=n))
 
     def queue_mark_complete(self, ids):
         query = {"_id": {"$in": [ObjectId(x) for x in ids]}}
