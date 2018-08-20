@@ -52,8 +52,7 @@ def procedure_single_input_parser(db, data):
     full_tasks = []
     for k, v in runs.items():
 
-        keys = {"procedure_type": "single",
-                "single_key": k}
+        keys = {"procedure_type": "single", "single_key": k}
 
         task = {
             "hash_index": procedures_util.hash_procedure_keys(keys),
@@ -78,6 +77,7 @@ def procedure_single_output_parser(db, data):
     results = procedures_util.parse_single_runs(db, data)
     ret = db.add_results(list(results.values()))
     return ret
+
 
 def procedure_optimization_input_parser(db, data):
     """
@@ -183,6 +183,7 @@ def procedure_optimization_input_parser(db, data):
 
     return (full_tasks, errors)
 
+
 def procedure_optimization_output_parser(db, data):
 
     data = {k: v[0] for k, v in data.items()}
@@ -198,7 +199,7 @@ def procedure_optimization_output_parser(db, data):
         v["final_molecule"] = mol_keys["final"]
 
         # Add individual computations
-        traj_dict = {k : v for k, v in enumerate(v["trajectory"])}
+        traj_dict = {k: v for k, v in enumerate(v["trajectory"])}
         results = procedures_util.parse_single_runs(db, traj_dict)
 
         ret = db.add_results(list(results.values()))
@@ -214,6 +215,7 @@ def procedure_optimization_output_parser(db, data):
 
     ret = db.add_procedures(new_procedures)
     return ret
+
 
 add_new_procedure("single", procedure_single_input_parser, procedure_single_output_parser)
 add_new_procedure("optimization", procedure_optimization_input_parser, procedure_optimization_output_parser)
