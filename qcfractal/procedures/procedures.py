@@ -4,6 +4,7 @@ A base for all procedures involved in on-node computation.
 
 import qcengine
 import json
+import hashlib
 
 from . import procedures_util
 
@@ -48,15 +49,35 @@ def procedure_single_input_parser(db, data):
     """
 
     runs, errors = procedures_util.unpack_single_run_meta(db, data["meta"], data["data"])
-    full_tasks = {}
+    full_tasks = []
     for k, v in runs.items():
+
         key = ("single", ) + k
-        full_tasks[key] = (qcengine.compute, v, data["meta"]["program"])
+
+        m = hashlib.sha1()
+        for k in key:
+            m.update(k.encode("UTF-8"))
+
+        task = {
+            "hash_index": m.hexdigest(),
+            "hash_keys": key,
+            "spec": {
+                "function": "qcengine.compute",
+                "args": [v, data["meta"]["program"]],
+                "kwargs": {}
+            },
+            "hooks": [],
+            "tag": None,
+            "parser": "single"
+        }
+
+        full_tasks.append(task)
 
     return (full_tasks, errors)
 
 
 def procedure_single_output_parser(db, data):
+    data = {k: v[0] for k, v in data.items()}
     results = procedures_util.parse_single_runs(db, data)
     ret = db.add_results(list(results.values()))
     return ret
@@ -149,6 +170,7 @@ def procedure_optimization_input_parser(db, data):
 
 def procedure_optimization_output_parser(db, data):
 
+    data = {k: v[1] for k, v in data}
     new_procedures = []
 
     # Each optimization is a unique entry:

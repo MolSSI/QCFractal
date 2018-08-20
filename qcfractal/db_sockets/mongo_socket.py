@@ -680,7 +680,10 @@ class MongoSocket:
                 "status": "WAITING",
                 "tag": tag
             }, sort=[("created_on", -1)], limit=n, projection={"_id": True,
-                                                               "spec": True}))
+                                                               "spec": True,
+                                                               "hash_index": True,
+                                                               "parser": True,
+                                                               "hooks": True}))
 
         query = {"_id": {"$in": [x["_id"] for x in found]}}
 
