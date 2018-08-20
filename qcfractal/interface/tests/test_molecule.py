@@ -35,6 +35,7 @@ def test_molecule_constructors():
 
     assert water_psi.compare(dqm.Molecule(water_psi.to_string()))
 
+
 def test_molecule_file_constructors():
 
     mol_psi = dqm.data.get_molecule("helium_dimer.psimol")
@@ -43,6 +44,7 @@ def test_molecule_file_constructors():
 
     assert mol_psi.compare(mol_json)
     assert mol_psi.compare(mol_np)
+
 
 def test_water_minima_data():
     mol = dqm.data.get_molecule("water_dimer_minima.psimol")
@@ -87,10 +89,12 @@ def test_water_minima_fragment():
     assert mol.symbols[3:] + mol.symbols[:3] == frag_1_0.symbols
     assert np.allclose(mol.masses[3:] + mol.masses[:3], frag_1_0.masses)
 
+
 def test_pretty_print():
 
     mol = dqm.data.get_molecule("water_dimer_minima.psimol")
     assert isinstance(mol.pretty_print(), str)
+
 
 def test_to_string():
 
@@ -127,6 +131,7 @@ def test_water_orient():
 
     # Ghost fragments should prevent overlap
     assert frag_0_1.get_hash() != frag_1_0.get_hash()
+
 
 def test_molecule_errors():
     mol = dqm.data.get_molecule("water_dimer_stretch.psimol")

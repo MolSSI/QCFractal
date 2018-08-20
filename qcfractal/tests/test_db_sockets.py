@@ -5,10 +5,8 @@ All tests should be atomic, that is create and cleanup their data
 """
 
 import pytest
-import numpy as np
 
 # Import the DQM collection
-import qcfractal as dserver
 import qcfractal.interface as qp
 from qcfractal.testing import db_socket_fixture as db_socket
 
@@ -39,6 +37,7 @@ def test_molecules_add(db_socket):
     ret = db_socket.del_molecules(water.get_hash(), index="hash")
     assert ret == 1
 
+
 def test_identical_mol_insert(db_socket):
     """
     Tests as edge case where to identical molecules are added under different tags.
@@ -58,6 +57,7 @@ def test_identical_mol_insert(db_socket):
 
     ret = db_socket.del_molecules(water.get_hash(), index="hash")
     assert ret == 1
+
 
 def test_molecules_add_many(db_socket):
     water = qp.data.get_molecule("water_dimer_minima.psimol")
@@ -293,31 +293,32 @@ def test_results_query_driver(db_results):
     ret = db_results.get_results({"driver": "energy"})
     assert ret["meta"]["n_found"] == 2
 
+
 # Builds tests for the queue
+
 
 def test_queue_manipulation(db_socket):
 
-   idx = "unique_hash_idx123"
-   task1 = {
-       "hash_index": idx,
-       "spec": {
-           "function": "qcengine.compute_procedure",
-           "args": [{
-               "json_blob": "data"
-           }],
-           "kwargs": {},
-       },
-       "hooks": [("service", "")],
-       "tag": None,
-   }
+    idx = "unique_hash_idx123"
+    task1 = {
+        "hash_index": idx,
+        "spec": {
+            "function": "qcengine.compute_procedure",
+            "args": [{
+                "json_blob": "data"
+            }],
+            "kwargs": {},
+        },
+        "hooks": [("service", "")],
+        "tag": None,
+    }
 
-   #r = db_socket.queue_submit([task1])
-   #print(r)
+    r = db_socket.queue_submit([task1])
+    print(r)
 
+    print("\n--\n")
+    r = db_socket.queue_get_next()
+    print(r)
 
-   #print("\n--\n")
-   #r = db_socket.queue_get_next()
-   #print(r)
-
-   #print(db_socket.queue_get_by_status("WAITING"))
-   #print(db_socket.queue_get_by_status("RUNNING"))
+    #print(db_socket.queue_get_by_status("WAITING"))
+    #print(db_socket.queue_get_by_status("RUNNING"))

@@ -2,13 +2,9 @@
 Tests the on-node procedures compute capabilities.
 """
 
-import qcfractal.interface as qp
-import qcfractal as qf
-
 from qcfractal.queue_handlers import build_queue
 from qcfractal import testing
 from qcfractal.testing import dask_server_fixture
-import qcengine
 import requests
 import pytest
 

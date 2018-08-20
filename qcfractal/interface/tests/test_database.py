@@ -2,9 +2,6 @@
 Tests the dqm_client database object
 """
 
-import numpy as np
-import pandas as pd
-
 from . import test_helper as th
 from ... import interface as qp
 import pytest

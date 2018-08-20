@@ -115,7 +115,6 @@ def test_result_socket(test_server):
         "driver": "energy",
         "other_data": 10
     }
-
     r = requests.post(result_api_addr, json={"meta": {}, "data": [page1, page2]})
     assert r.status_code == 200
 

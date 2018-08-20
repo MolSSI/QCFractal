@@ -1,7 +1,7 @@
 """
 Tests the various schema involved in the project that are not tested elsewhere.
 """
-import numpy as np
+
 import pytest
 
 from ... import interface as dqm
