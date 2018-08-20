@@ -50,6 +50,9 @@ class FractalServer(object):
             self.logger.addHandler(handler)
 
             self.logger.info("Logfile set to %s\n" % logfile_name)
+        else:
+            self.logger.addHandler(logging.StreamHandler())
+            self.logger.info("No logfile given, setting output to stdout")
 
         # Setup the database connection
         self.db = db_sockets.db_socket_factory(
@@ -102,9 +105,9 @@ class FractalServer(object):
         self.app.listen(self.port)
 
         # Add in periodic callbacks
-        # tornado.ioloop.PeriodicCallback(self.queue_nanny.update, 2000).start()
 
         self.logger.info("DQM Server successfully initialized at https://localhost:%d.\n" % self.port)
+        self.periodic = {}
 
     def start(self):
         """
@@ -112,6 +115,10 @@ class FractalServer(object):
         """
 
         self.logger.info("DQM Server successfully started. Starting IOLoop.\n")
+        cb = tornado.ioloop.PeriodicCallback(self.objects["queue_nanny"].update, 2000)
+        self.periodic["queue_nanny"] = cb
+
+        cb.start()
 
         # Soft quit at the end of a loop
         try:
@@ -124,6 +131,7 @@ class FractalServer(object):
         Shuts down all IOLoops
         """
         self.loop.stop()
+        self.periodic["queue_nanny"].stop()
         self.logger.info("DQM Server stopping gracefully. Stopped IOLoop.\n")
 
     def get_address(self, function):
