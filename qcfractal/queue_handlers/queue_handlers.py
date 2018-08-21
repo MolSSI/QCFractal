@@ -85,13 +85,14 @@ class QueueNanny:
 
         new_tasks = []
         for task in tasks:
-            task.iterate()
             new_tasks.append(task.get_json())
 
         task_ids = self.db_socket.add_services(new_tasks)["data"]
         task_ids = [x[1] for x in task_ids]
 
         self.services |= set(task_ids)
+
+        self.update_services()
 
         return task_ids
 
@@ -120,8 +121,12 @@ class QueueNanny:
                 self.logger.info("update: ERROR\n%s" % msg)
 
         # Run output parsers
+        hooks = []
         for k, v in new_results.items():
-            procedures.get_procedure_output_parser(k)(self.db_socket, v)
+            ret, h = procedures.get_procedure_output_parser(k)(self.db_socket, v)
+            hooks.extend(h)
+
+        self.db_socket.handle_hooks(hooks)
 
         # Get new jobs
         open_slots = max(0, self.max_tasks - self.queue_adapter.task_count())
