@@ -69,8 +69,10 @@ class Molecule:
             else:
                 raise KeyError("Molecule: dtype of %s not recognized.")
 
+            self.geometry = hash_helpers.float_prep(self.geometry, GEOMETRY_NOISE)
             if kwargs.pop("orient", True):
                 self.orient_molecule()
+                self.geometry = hash_helpers.float_prep(self.geometry, GEOMETRY_NOISE)
 
             # Cleanup un-initialized variables
             if len(self.real) == 0:
