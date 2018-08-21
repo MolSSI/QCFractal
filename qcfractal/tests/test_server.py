@@ -76,6 +76,7 @@ def test_database_socket(test_server):
     assert r.status_code == 200
 
     pdata = r.json()
+    del pdata["data"][0]["id"]
     assert pdata["data"][0] == db
 
 

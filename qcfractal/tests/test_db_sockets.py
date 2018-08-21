@@ -108,6 +108,7 @@ def test_options_add(db_socket):
     assert ret["meta"]["n_inserted"] == 0
 
     ret = db_socket.get_options([(opts["program"], opts["name"])])
+    del opts["id"]
     assert ret["meta"]["n_found"] == 1
     assert ret["data"][0] == opts
 
@@ -345,7 +346,7 @@ def test_queue_duplicate(db_socket):
     r = db_socket.queue_get_next()
     assert len(r) == 1
 
-    # Change hooks
+    # Change hooks, only one submission due to hash_index conflict
     task1["hooks"] = [("service", "456")]
     r = db_socket.queue_submit([task1])
     assert len(r["data"]) == 0
@@ -361,5 +362,3 @@ def test_queue_duplicate(db_socket):
     # Cleanup
     r = db_socket.queue_mark_complete([uid])
     assert r == 1
-
-

@@ -137,7 +137,7 @@ class MongoSocket:
     def mixed_molecule_get(self, data):
         return db_utils.mixed_molecule_get(self, data)
 
-    def _add_generic(self, data, collection, keep_id=False):
+    def _add_generic(self, data, collection, return_map=True):
         """
         Helper function that facilitates adding a record.
         """
@@ -154,7 +154,10 @@ class MongoSocket:
         # Try/except for fully successful/partially unsuccessful adds
         error_skips = []
         try:
+            # print(data[0])
+            # print([id(x) for x in data])
             tmp = self._project[collection].insert_many(data, ordered=False)
+            # print(data[0])
             meta["success"] = tmp.acknowledged
             meta["n_inserted"] = len(tmp.inserted_ids)
         except pymongo.errors.BulkWriteError as tmp:
@@ -177,18 +180,18 @@ class MongoSocket:
             else:
                 meta["error_description"] = "unknown"
 
+        # Convert id in-place
+        for d in data:
+            d["id"] = str(d["_id"])
+            del d["_id"]
+
         # Add id's of new keys
         rdata = []
-        if keep_id is False:
+        if return_map:
             for x in (set(range(len(data))) - set(error_skips)):
                 d = data[x]
                 ukey = tuple(d[key] for key in self._collection_indices[collection])
-                rdata.append((ukey, str(d["_id"])))
-                if keep_id is False:
-                    del d["_id"]
-
-            for x in error_skips:
-                del data[x]["_id"]
+                rdata.append((ukey, d["id"]))
 
         ret = {"data": rdata, "meta": meta}
 
@@ -218,6 +221,7 @@ class MongoSocket:
 
         _str_to_indices(ids)
         data = list(self._project[collection].find({"_id": {"$in": ids}}, projection=projection))
+
         for d in data:
             d["id"] = str(d["_id"])
             del d["_id"]
@@ -231,9 +235,6 @@ class MongoSocket:
 
         # TODO parse duplicates
         meta = db_utils.get_metadata()
-
-        if projection is None:
-            projection = {"_id": False}
 
         keys = self._collection_indices[collection]
         len_key = len(keys)
@@ -257,6 +258,10 @@ class MongoSocket:
         meta["n_found"] = len(data)
         if len(meta["errors"]) == 0:
             meta["success"] = True
+
+        for d in data:
+            d["id"] = str(d["_id"])
+            del d["_id"]
 
         ret = {"meta": meta, "data": data}
         return ret
@@ -334,7 +339,7 @@ class MongoSocket:
             new_inserts.append(data)
             new_keys.append(new_key)
 
-        ret = self._add_generic(new_inserts, "molecules", keep_id=True)
+        ret = self._add_generic(new_inserts, "molecules", return_map=True)
         ret["meta"]["duplicates"].extend(list(key_mapper.keys()))
         ret["meta"]["validation_errors"] = []
 
@@ -348,8 +353,7 @@ class MongoSocket:
         # Add the new keys to the key map
         for mol in new_inserts:
             for x in new_vk_hash[mol["molecule_hash"]]:
-                key_mapper[x] = str(mol["_id"])
-            del mol["_id"]
+                key_mapper[x] = mol["id"]
 
         ret["data"] = key_mapper
 
@@ -457,6 +461,8 @@ class MongoSocket:
 
         # if (len(data) == 2) and isinstance(data[0], str):
         ret = self._get_generic(add_keys, "options", projection=projection)
+        for d in ret["data"]:
+            del d["id"]
 
         for pos, options in blanks:
             ret["data"].insert(pos, options)
@@ -543,7 +549,7 @@ class MongoSocket:
             for i in self._lower_results_index:
                 d[i] = d[i].lower()
 
-        ret = self._add_generic(data, "results")
+        ret = self._add_generic(data, "results", return_map=True)
         ret["meta"]["validation_errors"] = []  # TODO
 
         return ret
@@ -637,9 +643,9 @@ class MongoSocket:
         else:
             return self._get_generic(query, "procedures", allow_generic=True)
 
-    def add_services(self, data, keep_id=False):
+    def add_services(self, data):
 
-        ret = self._add_generic(data, "services", keep_id=keep_id)
+        ret = self._add_generic(data, "services", return_map=True)
         ret["meta"]["validation_errors"] = []  # TODO
 
         return ret
@@ -672,7 +678,7 @@ class MongoSocket:
             x["created_on"] = dt
             x["modified_on"] = dt
 
-        ret = self._add_generic(data, "queue", keep_id=False)
+        ret = self._add_generic(data, "queue", return_map=True)
 
         # Update hooks on duplicates
         dup_inds = set(x[1] for x in ret["meta"]["duplicates"])
