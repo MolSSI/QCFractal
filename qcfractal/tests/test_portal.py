@@ -49,6 +49,7 @@ def test_database_portal(test_server):
     ret = portal.add_database(db)
 
     # Test get
-    get_opt = portal.get_databases([(db["category"], db["name"])])
+    get_db = portal.get_databases([(db["category"], db["name"])])
+    del get_db[0]["id"]
 
-    assert db == get_opt[0]
+    assert db == get_db[0]

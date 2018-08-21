@@ -20,23 +20,20 @@ class FireworksAdapter:
     def submit_tasks(self, tasks):
         ret = []
 
-        for tag, args in tasks.items():
-
-            if isinstance(args[0], str):
-                func_string = args[0]
-            elif callable(args[0]):
-                func_string = args[0].__module__ + "." + args[0].__name__
-            else:
-                self.logger.critical(
-                    "Adapter: Input callabe of type '{}' not understood for key '{}'".format(type(args[0]), tag))
-                continue
+        print(tasks)
+        for task in tasks:
+            tag = task["id"]
 
             fw = fireworks.Firework(
-                fireworks.PyTask(func=func_string, args=args[1:], stored_data_varname="fw_results"),
+                fireworks.PyTask(
+                    func=task["spec"]["function"],
+                    args=task["spec"]["args"],
+                    kwargs=task["spec"]["kwargs"],
+                    stored_data_varname="fw_results"),
                 spec={"_launch_dir": "/tmp/"})
             launches = self.lpad.add_wf(fw)
 
-            self.queue[list(launches.values())[0]] = tag
+            self.queue[list(launches.values())[0]] = (tag, task["parser"], task["hooks"])
             ret.append(tag)
 
         return ret
@@ -55,8 +52,11 @@ class FireworksAdapter:
             "fw_id": True})
 
         for tmp_data in cursor:
-            key = self.queue.pop(tmp_data["fw_id"])
-            ret[key] = tmp_data["action"]["stored_data"]["fw_results"]
+            key, parser, hooks = self.queue.pop(tmp_data["fw_id"])
+            ret[key] = (tmp_data["action"]["stored_data"]["fw_results"], parser, hooks)
+
+        # Should remove complete from queue
+        # self.lpad.launches.delete_many
 
         return ret
 
@@ -67,6 +67,9 @@ class FireworksAdapter:
 
     def list_tasks(self):
         return list(self.queue.values())
+
+    def task_count(self):
+        return len(self.queue)
 
 
 # class FireworksScheduler(tornado.web.RequestHandler):

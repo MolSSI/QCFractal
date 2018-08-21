@@ -125,6 +125,9 @@ class MongoSocket:
             idx = [(x, pymongo.ASCENDING) for x in indices]
             self._project[col].create_index(idx, unique=self._collection_unique_indices[col])
 
+        # Special queue index, hash_index should be unique
+        self._project[col].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
+
         # Return the success array
         return collection_creation
 
@@ -134,7 +137,7 @@ class MongoSocket:
     def mixed_molecule_get(self, data):
         return db_utils.mixed_molecule_get(self, data)
 
-    def _add_generic(self, data, collection, keep_id=False):
+    def _add_generic(self, data, collection, return_map=True):
         """
         Helper function that facilitates adding a record.
         """
@@ -151,7 +154,10 @@ class MongoSocket:
         # Try/except for fully successful/partially unsuccessful adds
         error_skips = []
         try:
+            # print(data[0])
+            # print([id(x) for x in data])
             tmp = self._project[collection].insert_many(data, ordered=False)
+            # print(data[0])
             meta["success"] = tmp.acknowledged
             meta["n_inserted"] = len(tmp.inserted_ids)
         except pymongo.errors.BulkWriteError as tmp:
@@ -174,18 +180,18 @@ class MongoSocket:
             else:
                 meta["error_description"] = "unknown"
 
+        # Convert id in-place
+        for d in data:
+            d["id"] = str(d["_id"])
+            del d["_id"]
+
         # Add id's of new keys
         rdata = []
-        if keep_id is False:
+        if return_map:
             for x in (set(range(len(data))) - set(error_skips)):
                 d = data[x]
                 ukey = tuple(d[key] for key in self._collection_indices[collection])
-                rdata.append((ukey, str(d["_id"])))
-                if keep_id is False:
-                    del d["_id"]
-
-            for x in error_skips:
-                del data[x]["_id"]
+                rdata.append((ukey, d["id"]))
 
         ret = {"data": rdata, "meta": meta}
 
@@ -210,11 +216,9 @@ class MongoSocket:
         meta = db_utils.get_metadata()
         _str_to_indices(ids)
 
-        # if projection is None:
-        #     projection = {}
-
         _str_to_indices(ids)
         data = list(self._project[collection].find({"_id": {"$in": ids}}, projection=projection))
+
         for d in data:
             d["id"] = str(d["_id"])
             del d["_id"]
@@ -228,9 +232,6 @@ class MongoSocket:
 
         # TODO parse duplicates
         meta = db_utils.get_metadata()
-
-        if projection is None:
-            projection = {"_id": False}
 
         keys = self._collection_indices[collection]
         len_key = len(keys)
@@ -254,6 +255,10 @@ class MongoSocket:
         meta["n_found"] = len(data)
         if len(meta["errors"]) == 0:
             meta["success"] = True
+
+        for d in data:
+            d["id"] = str(d["_id"])
+            del d["_id"]
 
         ret = {"meta": meta, "data": data}
         return ret
@@ -331,7 +336,7 @@ class MongoSocket:
             new_inserts.append(data)
             new_keys.append(new_key)
 
-        ret = self._add_generic(new_inserts, "molecules", keep_id=True)
+        ret = self._add_generic(new_inserts, "molecules", return_map=True)
         ret["meta"]["duplicates"].extend(list(key_mapper.keys()))
         ret["meta"]["validation_errors"] = []
 
@@ -345,8 +350,7 @@ class MongoSocket:
         # Add the new keys to the key map
         for mol in new_inserts:
             for x in new_vk_hash[mol["molecule_hash"]]:
-                key_mapper[x] = str(mol["_id"])
-            del mol["_id"]
+                key_mapper[x] = mol["id"]
 
         ret["data"] = key_mapper
 
@@ -454,6 +458,8 @@ class MongoSocket:
 
         # if (len(data) == 2) and isinstance(data[0], str):
         ret = self._get_generic(add_keys, "options", projection=projection)
+        for d in ret["data"]:
+            del d["id"]
 
         for pos, options in blanks:
             ret["data"].insert(pos, options)
@@ -540,7 +546,7 @@ class MongoSocket:
             for i in self._lower_results_index:
                 d[i] = d[i].lower()
 
-        ret = self._add_generic(data, "results")
+        ret = self._add_generic(data, "results", return_map=True)
         ret["meta"]["validation_errors"] = []  # TODO
 
         return ret
@@ -627,16 +633,16 @@ class MongoSocket:
 
         return ret
 
-    def get_procedures(self, keys, by_id=False, projection=None):
+    def get_procedures(self, query, by_id=False, projection=None):
 
         if by_id:
             return self._get_generic_by_id(query, "procedures", projection=projection)
         else:
-            return self._get_generic(keys, "procedures", allow_generic=True)
+            return self._get_generic(query, "procedures", allow_generic=True)
 
-    def add_services(self, data, keep_id=False):
+    def add_services(self, data):
 
-        ret = self._add_generic(data, "services", keep_id=keep_id)
+        ret = self._add_generic(data, "services", return_map=True)
         ret["meta"]["validation_errors"] = []  # TODO
 
         return ret
@@ -669,13 +675,39 @@ class MongoSocket:
             x["created_on"] = dt
             x["modified_on"] = dt
 
-        ret = self._add_generic(data, "queue", keep_id=False)
+        ret = self._add_generic(data, "queue", return_map=True)
+
+        # Update hooks on duplicates
+        dup_inds = set(x[1] for x in ret["meta"]["duplicates"])
+        if dup_inds:
+            hook_updates = []
+
+            for x in data:
+                if x["hash_index"] in dup_inds:
+                    upd = pymongo.UpdateOne({"hash_index": x["hash_index"]}, {"$push": {"hooks": {"$each": x["hooks"]}}})
+                    hook_updates.append(upd)
+
+            tmp = self._project["queue"].bulk_write(hook_updates)
+            if tmp.modified_count != len(dup_inds):
+                self.logger.warning("QUEUE: Hook duplicate found does not match hook triggers")
+
         ret["meta"]["validation_errors"] = []
         return ret
 
     def queue_get_next(self, n=100, tag=None):
 
-        found = list(self._project["queue"].find({"status": "WAITING", "tag": tag}, limit=n))
+        found = list(self._project["queue"].find(
+            {
+                "status": "WAITING",
+                "tag": tag
+            },
+            sort=[("created_on", -1)],
+            limit=n,
+            projection={"_id": True,
+                        "spec": True,
+                        "hash_index": True,
+                        "parser": True,
+                        "hooks": True}))
 
         query = {"_id": {"$in": [x["_id"] for x in found]}}
 
@@ -685,14 +717,59 @@ class MongoSocket:
                 "modified_on": datetime.datetime.utcnow()
             }})
 
+        for f in found:
+            f["id"] = str(f["_id"])
+            del f["_id"]
+
         if upd.modified_count != len(found):
             self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
 
         return found
 
-    def queue_get_by_status(self, status, n=100):
+    def get_queue(self, query, by_id=False, projection=None):
 
-        return list(self._project["queue"].find({"status": status}, limit=n))
+        if by_id:
+            return self._get_generic_by_id(query, "queue", projection=projection)
+        else:
+            return self._get_generic(query, "procedures", allow_generic=True)
+
+    def queue_get_by_id(self, ids, n=100):
+
+        return list(self._project["queue"].find({"_id": status}, limit=n))
+
+    def queue_mark_complete(self, ids):
+        query = {"_id": {"$in": [ObjectId(x) for x in ids]}}
+
+        rm = self._project["queue"].delete_many(query)
+        if rm.deleted_count != len(ids):
+            self.logger.warning("QUEUE: Number of complete projects does not match the number of removed projects.")
+
+        # We need to log these for history
+
+        return rm.deleted_count
+
+    def handle_hooks(self, hooks):
+
+        # Very dangerous, we need to modify this substatially
+        # Does not currently handle multiple identical commands
+        # Only handles service updates
+
+        bulk_commands = []
+        for hook_list in hooks:
+            for hook in hook_list:
+                commands = {}
+                for com in hook["updates"]:
+                    commands["$" + com[0]] = {com[1]: com[2]}
+
+                upd = pymongo.UpdateOne({"_id": ObjectId(hook["document"][1])}, commands)
+                bulk_commands.append(upd)
+
+        if len(bulk_commands) == 0:
+            return
+
+        ret = self._project["services"].bulk_write(bulk_commands, ordered=False)
+        return ret
+
 
 ### Complex parsers
 

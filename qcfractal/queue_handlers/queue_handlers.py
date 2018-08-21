@@ -28,7 +28,7 @@ class QueueNanny:
         A logger for the QueueNanny
     """
 
-    def __init__(self, queue_adapter, db_socket, logger=None):
+    def __init__(self, queue_adapter, db_socket, logger=None, max_tasks=1000):
         """Summary
 
         Parameters
@@ -44,6 +44,7 @@ class QueueNanny:
         self.db_socket = db_socket
         self.errors = {}
         self.services = set()
+        self.max_tasks = max_tasks
 
         if logger:
             self.logger = logger
@@ -63,7 +64,10 @@ class QueueNanny:
         ret : str
             A list of jobs added to the queue
         """
-        return self.queue_adapter.submit_tasks(tasks)
+        tmp = self.db_socket.queue_submit(tasks)
+        self.update()
+        return tmp
+        # return self.queue_adapter.submit_tasks(tasks)
 
     def submit_services(self, tasks):
         """Submits tasks to the queue for the Nanny to manage and watch for completion
@@ -81,13 +85,14 @@ class QueueNanny:
 
         new_tasks = []
         for task in tasks:
-            task.iterate()
             new_tasks.append(task.get_json())
 
         task_ids = self.db_socket.add_services(new_tasks)["data"]
         task_ids = [x[1] for x in task_ids]
 
         self.services |= set(task_ids)
+
+        self.update_services()
 
         return task_ids
 
@@ -96,25 +101,42 @@ class QueueNanny:
         while unsucessful are logged for future inspection
 
         """
+
+        # Pivot data so that we group all results in categories
         new_results = collections.defaultdict(dict)
 
-        for key, tmp_data in self.queue_adapter.aquire_complete().items():
+        for key, (result, parser, hooks) in self.queue_adapter.aquire_complete().items():
             try:
-                if not tmp_data["success"]:
-                    raise ValueError("Computation key did not complete successfully!:\n%s\n" % (str(key),
-                                                                                                tmp_data["error"]))
+                if not result["success"]:
+                    raise self.logger.info("Computation key did not complete successfully!:\n%s\n" % (str(key),
+                                                                                                result["error"]))
                 # res = self.db_socket.del_page_by_data(tmp_data)
 
                 self.logger.info("update: {}".format(key))
-                new_results[key[0]][key] = tmp_data
+                new_results[parser][key] = (result, hooks)
             except Exception as e:
                 msg = "".join(traceback.format_tb(e.__traceback__))
                 msg += str(type(e).__name__) + ":" + str(e)
                 self.errors[key] = msg
                 self.logger.info("update: ERROR\n%s" % msg)
 
+        # Run output parsers
+        hooks = []
         for k, v in new_results.items():
-            procedures.get_procedure_output_parser(k)(self.db_socket, v)
+            ret, h = procedures.get_procedure_output_parser(k)(self.db_socket, v)
+            hooks.extend(h)
+
+        self.db_socket.handle_hooks(hooks)
+
+        # Get new jobs
+        open_slots = max(0, self.max_tasks - self.queue_adapter.task_count())
+        if open_slots == 0:
+            return
+
+        # Submit new jobs
+        new_jobs = self.db_socket.queue_get_next(n=open_slots)
+        self.queue_adapter.submit_tasks(new_jobs)
+
 
     def update_services(self):
         """Runs through all active services and examines their current status.
@@ -223,21 +245,13 @@ class QueueScheduler(APIHandler):
         # Grab objects
         db = self.objects["db_socket"]
         queue_nanny = self.objects["queue_nanny"]
-        # result_indices = schema.get_indices("result")
 
-        # Build return metadata
-        meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
-
+        # Format tasks
         full_tasks, errors = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])(db, self.json)
 
         # Add tasks to Nanny
-        submitted = queue_nanny.submit_tasks(full_tasks)
-
-        # Return anything of interest
-        meta["success"] = True
-        meta["n_inserted"] = len(submitted)
-        meta["errors"] = errors
-        ret = {"meta": meta, "data": submitted}
+        ret = queue_nanny.submit_tasks(full_tasks)
+        ret["meta"]["errors"].extend(errors)
 
         self.write(ret)
 

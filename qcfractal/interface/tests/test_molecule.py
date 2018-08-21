@@ -65,7 +65,7 @@ def test_water_minima_data():
     assert np.allclose(mol.geometry, [[2.81211080, 0.1255717, 0.], [3.48216664, -1.55439981, 0.],
                                       [1.00578203, -0.1092573, 0.], [-2.6821528, -0.12325075, 0.],
                                       [-3.27523824, 0.81341093, 1.43347255], [-3.27523824, 0.81341093, -1.43347255]])
-    assert mol.get_hash() == "5fdac490807a00b1b9c49d7afd679f72b0f83a43"
+    assert mol.get_hash() == "358ad4bb4620e35cec79b17ec0f40acae1a548cb"
 
 
 def test_water_minima_fragment():
@@ -74,7 +74,7 @@ def test_water_minima_fragment():
 
     frag_0 = mol.get_fragment(0)
     frag_1 = mol.get_fragment(1)
-    assert frag_0.get_hash() == "93e3da37b9e906b20d2fa61e6872c0b9009add0d"
+    assert frag_0.get_hash() == "69f1f686fa49d2be4c97be44e53ccc5e9cfa4aaf"
     assert frag_1.get_hash() == "8aca8ccba1d145470cfa7725c9a7e05f3c2c6992"
 
     frag_0_1 = mol.get_fragment(0, 1)
@@ -140,3 +140,23 @@ def test_molecule_errors():
     data["whatever"] = 5
     with pytest.raises(ValueError):
         dqm.schema.validate(data, "molecule")
+
+def test_molecule_repeated_hashing():
+
+    mol = dqm.Molecule({
+        'symbols': ['H', 'O', 'O', 'H'],
+        'geometry': [
+            1.73178198, 1.29095807, 1.03716028, 1.31566305, -0.007440200000000001, -0.28074722, -1.3143081, 0.00849608,
+            -0.27416914, -1.7241109, -1.30793432, 1.02770172
+        ]
+    })
+
+
+    h1 = mol.get_hash()
+
+    mol2 = dqm.Molecule(mol.to_json(), orient=False)
+    assert h1 == mol2.get_hash()
+
+    mol3 = dqm.Molecule(mol2.to_json(), orient=False)
+    assert h1 ==  mol3.get_hash()
+

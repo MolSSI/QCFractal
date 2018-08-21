@@ -2,7 +2,6 @@
 A base for all procedures involved in on-node computation.
 """
 
-import qcengine
 import json
 
 from . import procedures_util
@@ -48,18 +47,54 @@ def procedure_single_input_parser(db, data):
     """
 
     runs, errors = procedures_util.unpack_single_run_meta(db, data["meta"], data["data"])
-    full_tasks = {}
+    full_tasks = []
     for k, v in runs.items():
-        key = ("single", ) + k
-        full_tasks[key] = (qcengine.compute, v, data["meta"]["program"])
+
+        keys = {"procedure_type": "single", "single_key": k}
+
+        task = {
+            "hash_index": procedures_util.hash_procedure_keys(keys),
+            "hash_keys": keys,
+            "spec": {
+                "function": "qcengine.compute",
+                "args": [v, data["meta"]["program"]],
+                "kwargs": {}
+            },
+            "hooks": [],
+            "tag": None,
+            "parser": "single"
+        }
+
+        full_tasks.append(task)
 
     return (full_tasks, errors)
 
 
 def procedure_single_output_parser(db, data):
-    results = procedures_util.parse_single_runs(db, data)
+
+    # Add new runs to database
+    rdata = {k: v[0] for k, v in data.items()}
+    results = procedures_util.parse_single_runs(db, rdata)
     ret = db.add_results(list(results.values()))
-    return ret
+
+    hook_data = []
+    for k, (data, hook) in data.items():
+
+        # If no hooks skip it
+        if len(hook) == 0:
+            continue
+
+        # Loop over hooks
+        for h in hook:
+            # Loop over individual commands
+            for command in h["updates"]:
+                if command[-1] == "$task_id":
+                    command[-1] = results[k]["id"]
+
+        hook_data.append(hook)
+
+    return (ret, hook_data)
+
 
 def procedure_optimization_input_parser(db, data):
     """
@@ -131,10 +166,8 @@ def procedure_optimization_input_parser(db, data):
         "qcfractal_tags": data["meta"]
     })
 
-    full_tasks = {}
+    full_tasks = []
     for k, v in runs.items():
-        # Warning, may not be unique
-        key = ("optimization", ) + k
 
         # Coerce qc_template information
         packet = json.loads(template)
@@ -142,17 +175,38 @@ def procedure_optimization_input_parser(db, data):
         del v["molecule"]
         packet["input_specification"] = v
 
+        # Unique nesting of args
+        keys = {
+            "procedure_type": "optimization",
+            "single_key": k,
+            "optimization_program": data["meta"]["program"],
+            "optimization_kwargs": packet["keywords"]
+        }
 
-        full_tasks[key] = (qcengine.compute_procedure, packet, data["meta"]["program"])
+        task = {
+            "hash_index": procedures_util.hash_procedure_keys(keys),
+            "hash_keys": keys,
+            "spec": {
+                "function": "qcengine.compute_procedure",
+                "args": [packet, data["meta"]["program"]],
+                "kwargs": {}
+            },
+            "hooks": [],
+            "tag": None,
+            "parser": "optimization"
+        }
+
+        full_tasks.append(task)
 
     return (full_tasks, errors)
 
+
 def procedure_optimization_output_parser(db, data):
 
-    new_procedures = []
+    new_procedures = {}
 
     # Each optimization is a unique entry:
-    for k, v in data.items():
+    for k, (v, hooks) in data.items():
 
         # Convert start/stop molecules to hash
         mols = {"initial": v["initial_molecule"], "final": v["final_molecule"]}
@@ -161,7 +215,7 @@ def procedure_optimization_output_parser(db, data):
         v["final_molecule"] = mol_keys["final"]
 
         # Add individual computations
-        traj_dict = {k : v for k, v in enumerate(v["trajectory"])}
+        traj_dict = {k: v for k, v in enumerate(v["trajectory"])}
         results = procedures_util.parse_single_runs(db, traj_dict)
 
         ret = db.add_results(list(results.values()))
@@ -173,10 +227,29 @@ def procedure_optimization_output_parser(db, data):
         del v["qcfractal_tags"]
         # print("Adding optimization result")
         # print(json.dumps(v, indent=2))
-        new_procedures.append(v)
+        new_procedures[k] = v
 
-    ret = db.add_procedures(new_procedures)
-    return ret
+    ret = db.add_procedures(list(new_procedures.values()))
+
+    hook_data = []
+    for k, (data, hook) in data.items():
+
+        # If no hooks skip it
+        if len(hook) == 0:
+            continue
+
+
+        # Loop over hooks
+        for h in hook:
+            # Loop over individual commands
+            for command in h["updates"]:
+                if command[-1] == "$task_id":
+                    command[-1] = new_procedures[k]["id"]
+
+        hook_data.append(hook)
+
+    return (ret, hook_data)
+
 
 add_new_procedure("single", procedure_single_input_parser, procedure_single_output_parser)
 add_new_procedure("optimization", procedure_optimization_input_parser, procedure_optimization_output_parser)

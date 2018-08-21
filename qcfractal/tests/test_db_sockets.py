@@ -108,6 +108,7 @@ def test_options_add(db_socket):
     assert ret["meta"]["n_inserted"] == 0
 
     ret = db_socket.get_options([(opts["program"], opts["name"])])
+    del opts["id"]
     assert ret["meta"]["n_found"] == 1
     assert ret["data"][0] == opts
 
@@ -297,7 +298,7 @@ def test_results_query_driver(db_results):
 # Builds tests for the queue
 
 
-def test_queue_manipulation(db_socket):
+def test_queue_roundtrip(db_socket):
 
     idx = "unique_hash_idx123"
     task1 = {
@@ -313,12 +314,51 @@ def test_queue_manipulation(db_socket):
         "tag": None,
     }
 
+    # Submit a job
     r = db_socket.queue_submit([task1])
-    print(r)
+    assert len(r["data"]) == 1
 
-    print("\n--\n")
+    # Query for next jobs
     r = db_socket.queue_get_next()
-    print(r)
+    assert r[0]["spec"]["function"] == task1["spec"]["function"]
 
-    #print(db_socket.queue_get_by_status("WAITING"))
-    #print(db_socket.queue_get_by_status("RUNNING"))
+    # Mark job as done
+    r  = db_socket.queue_mark_complete([r[0]["id"]])
+    assert r == 1
+
+    r = db_socket.queue_get_next()
+    assert len(r) == 0
+
+def test_queue_duplicate(db_socket):
+
+    idx = "unique_hash_idx123"
+    task1 = {
+        "hash_index": idx,
+        "spec": {},
+        "hooks": [("service", "123")],
+        "tag": None,
+    }
+    r = db_socket.queue_submit([task1])
+    uid = r["data"][0][-1]
+    assert len(r["data"]) == 1
+
+    # Put the first job in a waiting state
+    r = db_socket.queue_get_next()
+    assert len(r) == 1
+
+    # Change hooks, only one submission due to hash_index conflict
+    task1["hooks"] = [("service", "456")]
+    r = db_socket.queue_submit([task1])
+    assert len(r["data"]) == 0
+
+    # Pull out the data and check the hooks
+    r = db_socket.get_queue([uid], by_id=True)
+    hooks = r["data"][0]["hooks"]
+    assert len(hooks) == 2
+    assert hooks[0][0] == "service"
+    assert hooks[1][0] == "service"
+    assert {"123", "456"} == {hooks[0][1], hooks[1][1]}
+
+    # Cleanup
+    r = db_socket.queue_mark_complete([uid])
+    assert r == 1
