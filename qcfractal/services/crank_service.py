@@ -32,6 +32,9 @@ class Crank:
         # Copy initial intial input and build out a crank_state
         meta = copy.deepcopy(meta)
         molecule = copy.deepcopy(molecule)
+        del molecule["id"]
+        del molecule["molecule_hash"]
+
         meta["crank_state"] = crankAPI.create_initial_state(
             dihedrals=meta["crank_meta"]["dihedrals"],
             grid_spacing=meta["crank_meta"]["grid_spacing"],
@@ -41,7 +44,9 @@ class Crank:
         # Save initial molecule and add hash
         meta["state"] = "READY"
         meta["required_jobs"] = False
+        meta["remaining_jobs"] = False
         meta["molecule_template"] = molecule
+        meta["complete_jobs"] = []
 
         dihedral_template = []
         for idx in meta["crank_meta"]["dihedrals"]:
@@ -59,28 +64,31 @@ class Crank:
         self.data["state"] = "RUNNING"
         # print("\nCrank State:")
         # print(json.dumps(self.data["crank_state"], indent=2))
+        # print("Iterate")
+        if (self.data["remaining_jobs"] > 0):
+            # print("Iterate: not yet done", self.data["remaining_jobs"])
+            # print("Complete jobs", self.data["complete_jobs"])
+            return False
+
+        # print(self.data["remaining_jobs"])
 
         # Required jobs is false on first iteration
-        if self.data["required_jobs"] is not False:
+        if (self.data["remaining_jobs"] is not False) and (self.data["remaining_jobs"] == 0):
 
-            nquery = len(self.data["required_jobs"])
+            # Query the jobs
+            job_query = self.db_socket.get_procedures(list(self.data["complete_jobs"].values()), by_id=True)
+
+            # Figure out the structure
             job_results = {k: [None] * v for k, v in self.data["update_structure"].items()}
 
-            job_query = self.db_socket.get_procedures([{"crank_uuid": uid} for key, uid in self.data["required_jobs"]])
+            inv_job_lookup = {v : k for k, v in self.data["complete_jobs"].items()}
 
-            # We are not yet done
-            # print(self.data["required_jobs"])
-            # print(job_query)
-            if job_query["meta"]["n_found"] != nquery:
-                return False
-
-            lookup = {x[1]: x[0] for x in self.data["required_jobs"]}
             for ret in job_query["data"]:
-                value, pos = lookup[ret["crank_uuid"]]
+                job_uid = inv_job_lookup[ret["id"]]
+                value, pos = self.data["job_map"][job_uid]
                 mol_keys = self.db_socket.get_molecules(
                     [ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
                 job_results[value][int(pos)] = (mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1])
-                # print(value, pos, ret["energies"][-1])
 
             # print("Job Results:", json.dumps(job_results, indent=2))
 
@@ -121,7 +129,13 @@ class Crank:
                 flat_map[(v, str(num))] = mol
 
         # Add molecules and grab hashes
-        self.db_socket.add_molecules(flat_map)
+        # print("\n--------")
+        # for k, v in flat_map.items():
+        #     print(k, v["id"], v["molecule_hash"])
+        ret = self.db_socket.add_molecules(flat_map)
+        # print(ret["data"])
+
+        # print("--------\n")
 
         # Check if everything was successful
 
@@ -135,12 +149,18 @@ class Crank:
             },
         })
 
-        required_jobs = []
-        full_tasks = {}
+        hook_template = json.dumps({
+            "document": ("services", self.data["id"]),
+            "updates": [["inc", "remaining_jobs", -1], ["set", "complete_jobs", "$task_id"]]
+        })
+
+        job_map = {}
+        full_tasks = []
         for key, mol in flat_map.items():
             uid = str(uuid.uuid4())
             packet = json.loads(meta_packet)
 
+            # Construct constraints
             containts = [
                 tuple(x) + (str(y), )
                 for x, y in zip(self.data["crank_meta"]["dihedral_template"], crankAPI.grid_id_from_string(key[0]))
@@ -148,22 +168,28 @@ class Crank:
             packet["meta"]["keywords"]["constraints"] = {"set": containts}
             packet["data"] = [mol]
 
-            tasks, errors = procedures.get_procedure_input_parser("optimization")(self.db_socket, packet)
+            # Turn packet into a full task
+            task, errors = procedures.get_procedure_input_parser("optimization")(self.db_socket, packet)
 
-            # Unpack 1 element dict and add
-            [(task_key, task)] = tasks.items()
-            task[1]["crank_uuid"] = uid
+            uid = str(uuid.uuid4())
+            hook = json.loads(hook_template)
+            hook["updates"][-1][1] = "complete_jobs." + uid
 
-            full_tasks[task_key + (uid, )] = task
-            required_jobs.append((key, uid))
+            task[0]["hooks"].append(hook)
+            full_tasks.append(task[0])
+            job_map[uid] = key
+
 
         # Create data for next round
         self.data["update_structure"] = {k: len(v) for k, v in job_dict.items()}
-        self.data["required_jobs"] = required_jobs
+        self.data["job_map"] = job_map
+        self.data["remaining_jobs"] = len(job_map)
+        self.data["complete_jobs"] = {}
         # print(json.dumps(required_jobs, indent=2))
 
         # Add tasks to Nanny
-        self.queue_socket.submit_tasks(full_tasks)
+        ret = self.queue_socket.submit_tasks(full_tasks)
+        self.data["queue_keys"] = [x[1] for x in ret["data"]]
 
     def finalize(self):
         # Add finalize state
