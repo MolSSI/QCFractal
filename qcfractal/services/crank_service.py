@@ -132,7 +132,7 @@ class Crank:
         # print("\n--------")
         # for k, v in flat_map.items():
         #     print(k, v["id"], v["molecule_hash"])
-        ret = self.db_socket.add_molecules(flat_map)
+        self.db_socket.add_molecules(flat_map)
         # print(ret["data"])
 
         # print("--------\n")
@@ -157,7 +157,6 @@ class Crank:
         job_map = {}
         full_tasks = []
         for key, mol in flat_map.items():
-            uid = str(uuid.uuid4())
             packet = json.loads(meta_packet)
 
             # Construct constraints

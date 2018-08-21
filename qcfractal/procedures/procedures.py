@@ -2,9 +2,7 @@
 A base for all procedures involved in on-node computation.
 """
 
-import qcengine
 import json
-import hashlib
 
 from . import procedures_util
 

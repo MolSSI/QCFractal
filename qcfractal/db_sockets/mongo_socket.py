@@ -768,6 +768,7 @@ class MongoSocket:
             return
 
         ret = self._project["services"].bulk_write(bulk_commands, ordered=False)
+        return ret
 
 
 ### Complex parsers
