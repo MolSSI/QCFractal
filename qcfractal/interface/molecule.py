@@ -49,8 +49,16 @@ class Molecule:
         self._fix_orientation = True
 
         # Figure out how and if we will parse the Molecule adata
-        dtype = kwargs.pop("dtype", "psi4").lower()
         if mol_str is not None:
+            dtype = kwargs.pop("dtype", "none").lower()
+            if dtype == "none":
+                if isinstance(mol_str, str):
+                    dtype = "psi4"
+                elif isinstance(mol_str, dict):
+                    dtype = "json"
+                else:
+                    raise TypeError("Unable to infer dtype.")
+
             if dtype == "psi4":
                 self._molecule_from_string_psi4(mol_str)
             elif dtype == "numpy":
