@@ -1,7 +1,6 @@
 name: test
 channels:
-  - conda-forge
-  - psi4/label/dev
+  - psi4
 dependencies:
     # Computers
   - psi4=1.2
@@ -20,12 +19,12 @@ dependencies:
 
     # Testing
   - pytest
-  - codecov
   - pytest-cov
 
     # Pip depends
   - pip:
     - git+git://github.com/MolSSI/QCEngine#egg=qcengine
+    - codecov
 
       # Fireworks
     - fireworks
