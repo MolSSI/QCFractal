@@ -216,9 +216,6 @@ class MongoSocket:
         meta = db_utils.get_metadata()
         _str_to_indices(ids)
 
-        # if projection is None:
-        #     projection = {}
-
         _str_to_indices(ids)
         data = list(self._project[collection].find({"_id": {"$in": ids}}, projection=projection))
 
@@ -750,6 +747,27 @@ class MongoSocket:
         # We need to log these for history
 
         return rm.deleted_count
+
+    def handle_hooks(self, hooks):
+
+        # Very dangerous, we need to modify this substatially
+        # Does not currently handle multiple identical commands
+        # Only handles service updates
+
+        bulk_commands = []
+        for hook_list in hooks:
+            for hook in hook_list:
+                commands = {}
+                for com in hook["updates"]:
+                    commands["$" + com[0]] = {com[1]: com[2]}
+
+                upd = pymongo.UpdateOne({"_id": ObjectId(hook["document"][1])}, commands)
+                bulk_commands.append(upd)
+
+        if len(bulk_commands) == 0:
+            return
+
+        ret = self._project["services"].bulk_write(bulk_commands, ordered=False)
 
 
 ### Complex parsers

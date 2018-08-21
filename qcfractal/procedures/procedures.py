@@ -73,10 +73,29 @@ def procedure_single_input_parser(db, data):
 
 
 def procedure_single_output_parser(db, data):
-    data = {k: v[0] for k, v in data.items()}
-    results = procedures_util.parse_single_runs(db, data)
+
+    # Add new runs to database
+    rdata = {k: v[0] for k, v in data.items()}
+    results = procedures_util.parse_single_runs(db, rdata)
     ret = db.add_results(list(results.values()))
-    return ret
+
+    hook_data = []
+    for k, (data, hook) in data.items():
+
+        # If no hooks skip it
+        if len(hook) == 0:
+            continue
+
+        # Loop over hooks
+        for h in hook:
+            # Loop over individual commands
+            for command in h["updates"]:
+                if command[-1] == "$task_id":
+                    command[-1] = results[k]["id"]
+
+        hook_data.append(hook)
+
+    return (ret, hook_data)
 
 
 def procedure_optimization_input_parser(db, data):
@@ -186,11 +205,10 @@ def procedure_optimization_input_parser(db, data):
 
 def procedure_optimization_output_parser(db, data):
 
-    data = {k: v[0] for k, v in data.items()}
-    new_procedures = []
+    new_procedures = {}
 
     # Each optimization is a unique entry:
-    for k, v in data.items():
+    for k, (v, hooks) in data.items():
 
         # Convert start/stop molecules to hash
         mols = {"initial": v["initial_molecule"], "final": v["final_molecule"]}
@@ -211,10 +229,28 @@ def procedure_optimization_output_parser(db, data):
         del v["qcfractal_tags"]
         # print("Adding optimization result")
         # print(json.dumps(v, indent=2))
-        new_procedures.append(v)
+        new_procedures[k] = v
 
-    ret = db.add_procedures(new_procedures)
-    return ret
+    ret = db.add_procedures(list(new_procedures.values()))
+
+    hook_data = []
+    for k, (data, hook) in data.items():
+
+        # If no hooks skip it
+        if len(hook) == 0:
+            continue
+
+
+        # Loop over hooks
+        for h in hook:
+            # Loop over individual commands
+            for command in h["updates"]:
+                if command[-1] == "$task_id":
+                    command[-1] = new_procedures[k]["id"]
+
+        hook_data.append(hook)
+
+    return (ret, hook_data)
 
 
 add_new_procedure("single", procedure_single_input_parser, procedure_single_output_parser)
