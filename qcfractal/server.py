@@ -41,6 +41,7 @@ class FractalServer(object):
         self.logger = logging.getLogger("FractalServer")
         self.logger.setLevel(logging.INFO)
 
+        app_logger = logging.getLogger("tornado.application")
         if logfile_name is not None:
             handler = logging.FileHandler(logfile_name.logfile)
             handler.setLevel(logging.INFO)
@@ -48,9 +49,11 @@ class FractalServer(object):
             handler.setFormatter(myFormatter)
 
             self.logger.addHandler(handler)
+            app_logger.addHandler(handler)
 
             self.logger.info("Logfile set to %s\n" % logfile_name)
         else:
+            app_logger.addHandler(logging.StreamHandler())
             self.logger.addHandler(logging.StreamHandler())
             self.logger.info("No logfile given, setting output to stdout")
 
@@ -100,7 +103,12 @@ class FractalServer(object):
             endpoints.append((r"/service", service_scheduler, self.objects))
 
         # Build the app
-        self.app = tornado.web.Application(endpoints, compress_response=True)
+        app_settings = {
+            "compress_response": True,
+            "serve_traceback": True,
+            "debug": True,
+        }
+        self.app = tornado.web.Application(endpoints, **app_settings)
 
         self.app.listen(self.port)
 
