@@ -20,7 +20,6 @@ class FireworksAdapter:
     def submit_tasks(self, tasks):
         ret = []
 
-        print(tasks)
         for task in tasks:
             tag = task["id"]
 
