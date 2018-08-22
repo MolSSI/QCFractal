@@ -46,7 +46,7 @@ def test_service_crank(dask_server_fixture):
     }
 
     # Ask the server to compute a new computation
-    r = requests.post(dask_server_fixture.get_address("service"), json=compute)
+    r = requests.post(dask_server_fixture.get_address("service_scheduler"), json=compute)
     assert r.status_code == 200
     compute_key = tuple(r.json()["data"][0])
 

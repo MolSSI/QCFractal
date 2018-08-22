@@ -86,7 +86,6 @@ class QueueNanny:
 
         new_tasks = []
         for task in tasks:
-            task.iterate()
             new_tasks.append(task.get_json())
 
         task_ids = self.db_socket.add_services(new_tasks)["data"]
@@ -94,7 +93,8 @@ class QueueNanny:
 
         self.services |= set(task_ids)
 
-        self.logger.info("Queue: Added {} services.".format(len(new_tasks)))
+        self.logger.info("Queue: Added {} services.\n".format(len(new_tasks)))
+        self.update()
 
         return task_ids
 

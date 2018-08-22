@@ -100,7 +100,7 @@ class FractalServer(object):
 
             # Add the endpoint
             endpoints.append((r"/scheduler", queue_scheduler, self.objects))
-            endpoints.append((r"/service", service_scheduler, self.objects))
+            endpoints.append((r"/service_scheduler", service_scheduler, self.objects))
 
         # Build the app
         app_settings = {
