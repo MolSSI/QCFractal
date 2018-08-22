@@ -114,14 +114,38 @@ class ResultHandler(APIHandler):
 
         self.write(ret)
 
-    def post(self):
+    # def post(self):
+
+    #     db = self.objects["db_socket"]
+
+    #     ret = db.add_results(self.json["data"])
+    #     self.logger.info("POST: Results - {} inserted.".format(ret["meta"]["n_inserted"]))
+
+    #     self.write(ret)
+
+class ServiceHandler(APIHandler):
+    """
+    A handler to push and get molecules.
+    """
+
+    def get(self):
 
         db = self.objects["db_socket"]
 
-        ret = db.add_results(self.json["data"])
-        self.logger.info("POST: Results - {} inserted.".format(ret["meta"]["n_inserted"]))
+        ret = db.get_services(self.json["data"], by_id=True)
+        self.logger.info("GET: Services - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
+
+    # def post(self):
+
+    #     db = self.objects["db_socket"]
+
+    #     ret = db.add_results(self.json["data"])
+    #     self.logger.info("POST: Results - {} inserted.".format(ret["meta"]["n_inserted"]))
+
+    #     self.write(ret)
+
 
 
 # def _check_auth(objects, header):

@@ -134,6 +134,20 @@ class QCPortal(object):
         else:
             return r.json()["data"]
 
+    def get_service(self, service_id):
+
+        payload = {"meta": {}, "data": [service_id]}
+        if "projection" in kwargs:
+            payload["meta"]["projection"] = kwargs["projection"]
+
+        r = requests.get(self._result_addr, json=payload)
+        assert r.status_code == 200
+
+        if kwargs.get("return_full", False):
+            return r.json()
+        else:
+            return r.json()["data"]
+
     # Must compute results?
     # def add_results(self, db, full_return=False):
 
@@ -177,3 +191,5 @@ class QCPortal(object):
             return r.json()
         else:
             return r.json()["data"]
+
+    # Def add_service

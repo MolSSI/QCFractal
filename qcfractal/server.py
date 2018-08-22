@@ -81,6 +81,7 @@ class FractalServer(object):
             (r"/option", web_handlers.OptionHandler, self.objects),
             (r"/database", web_handlers.DatabaseHandler, self.objects),
             (r"/result", web_handlers.ResultHandler, self.objects),
+            (r"/service", web_handlers.ServiceHandler, self.objects),
         ]
 
         # Queue handlers
