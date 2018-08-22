@@ -123,10 +123,16 @@ class FractalServer(object):
         """
 
         self.logger.info("DQM Server successfully started. Starting IOLoop.\n")
-        cb = tornado.ioloop.PeriodicCallback(self.objects["queue_nanny"].update, 2000)
-        self.periodic["queue_nanny"] = cb
 
-        cb.start()
+        # Add canonical queue callback
+        upd = tornado.ioloop.PeriodicCallback(self.objects["queue_nanny"].update, 2000)
+        self.periodic["queue_nanny_update"] = upd
+        upd.start()
+
+        # Add services callback
+        upd_services = tornado.ioloop.PeriodicCallback(self.objects["queue_nanny"].update_services, 2000)
+        self.periodic["queue_nanny_services"] = upd_services
+        upd_services.start()
 
         # Soft quit at the end of a loop
         try:
@@ -139,7 +145,9 @@ class FractalServer(object):
         Shuts down all IOLoops
         """
         self.loop.stop()
-        self.periodic["queue_nanny"].stop()
+        for k, v in self.periodic.items():
+            v.stop()
+        # self.periodic["queue_nanny"].stop()
         self.logger.info("DQM Server stopping gracefully. Stopped IOLoop.\n")
 
     def get_address(self, function):
