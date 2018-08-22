@@ -15,6 +15,7 @@ class APIHandler(tornado.web.RequestHandler):
 
         self.set_header("Content-Type", "application/json")
         self.objects = objects
+        self.logger = objects["logger"]
 
         #print(self.request.headers["Content-Type"])
         self.json = json.loads(self.request.body.decode("UTF-8"))
@@ -38,6 +39,7 @@ class MoleculeHandler(APIHandler):
             kwargs["index"] = self.json["meta"]["index"]
 
         ret = db.get_molecules(self.json["data"], **kwargs)
+        self.logger.info("GET: Molecule - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
 
@@ -46,6 +48,7 @@ class MoleculeHandler(APIHandler):
         db = self.objects["db_socket"]
 
         ret = db.add_molecules(self.json["data"])
+        self.logger.info("POST: Molecule - {} inserted.".format(ret["meta"]["n_inserted"]))
         self.write(ret)
 
 class OptionHandler(APIHandler):
@@ -58,6 +61,7 @@ class OptionHandler(APIHandler):
         db = self.objects["db_socket"]
 
         ret = db.get_options(self.json["data"])
+        self.logger.info("GET: Options - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
 
@@ -66,6 +70,8 @@ class OptionHandler(APIHandler):
         db = self.objects["db_socket"]
 
         ret = db.add_options(self.json["data"])
+        self.logger.info("POST: Options - {} inserted.".format(ret["meta"]["n_inserted"]))
+
         self.write(ret)
 
 class DatabaseHandler(APIHandler):
@@ -78,6 +84,7 @@ class DatabaseHandler(APIHandler):
         db = self.objects["db_socket"]
 
         ret = db.get_databases(self.json["data"])
+        self.logger.info("GET: Databases - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
 
@@ -86,6 +93,8 @@ class DatabaseHandler(APIHandler):
         db = self.objects["db_socket"]
 
         ret = db.add_database(self.json["data"])
+        self.logger.info("POST: Databases - {} inserted.".format(ret["meta"]["n_inserted"]))
+
         self.write(ret)
 
 class ResultHandler(APIHandler):
@@ -101,6 +110,7 @@ class ResultHandler(APIHandler):
             proj = self.json["meta"]["projection"]
 
         ret = db.get_results(self.json["data"], projection=proj)
+        self.logger.info("GET: Results - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
 
@@ -109,6 +119,8 @@ class ResultHandler(APIHandler):
         db = self.objects["db_socket"]
 
         ret = db.add_results(self.json["data"])
+        self.logger.info("POST: Results - {} inserted.".format(ret["meta"]["n_inserted"]))
+
         self.write(ret)
 
 
