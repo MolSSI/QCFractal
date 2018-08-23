@@ -6,7 +6,7 @@ from . import molecule
 from . import orm
 
 
-class QCPortal(object):
+class FractalClient(object):
     def __init__(self, port, username="", password=""):
         if "http" not in port:
             port = "http://" + port

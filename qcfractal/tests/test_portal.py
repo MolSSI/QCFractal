@@ -11,7 +11,7 @@ from qcfractal.testing import test_server
 
 def test_molecule_portal(test_server):
 
-    portal = qp.QCPortal(test_server.get_address(""))
+    portal = qp.FractalClient(test_server.get_address(""))
 
     water = qp.data.get_molecule("water_dimer_minima.psimol")
 
@@ -26,7 +26,7 @@ def test_molecule_portal(test_server):
 
 def test_options_portal(test_server):
 
-    portal = qp.QCPortal(test_server.get_address(""))
+    portal = qp.FractalClient(test_server.get_address(""))
 
     opts = qp.data.get_options("psi_default")
 
@@ -43,7 +43,7 @@ def test_database_portal(test_server):
 
     db = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
 
-    portal = qp.QCPortal(test_server.get_address(""))
+    portal = qp.FractalClient(test_server.get_address(""))
 
     # Test add
     ret = portal.add_database(db)

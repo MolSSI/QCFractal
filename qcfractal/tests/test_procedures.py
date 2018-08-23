@@ -125,7 +125,7 @@ def test_procedure_optimization(fractal_compute_server):
 @testing.using_psi4
 def test_compute_database(fractal_compute_server):
 
-    portal = qp.QCPortal(fractal_compute_server.get_address(""))
+    portal = qp.FractalClient(fractal_compute_server.get_address(""))
     db_name = "He_PES"
     db = qp.Database(db_name, portal, db_type="ie")
 

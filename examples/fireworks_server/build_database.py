@@ -22,7 +22,7 @@ db.add_ie_rxn("Helium Dimer", helium_dimer)
 #print(json.dumps(db.data["reactions"][2], indent=2))
 
 # Build a interface to the server 
-p = portal.QCPortal("localhost:7777")
+p = portal.FractalClient("localhost:7777")
 
 # Add the database to the server
 db.save(p)
