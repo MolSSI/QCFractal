@@ -3,6 +3,7 @@
 import requests
 
 from . import molecule
+from . import orm
 
 
 class QCPortal(object):
@@ -142,10 +143,14 @@ class QCPortal(object):
         r = requests.get(self._service_addr, json=payload)
         assert r.status_code == 200
 
-        if kwargs.get("return_full", False):
-            return r.json()
+        if kwargs.get("return_objects", True):
+            ret = []
+            for packet in r.json()["data"]:
+                tmp = orm.build_orm(packet)
+                ret.append(tmp)
+            return ret
         else:
-            return r.json()["data"]
+            return r.json()
 
     # Must compute results?
     # def add_results(self, db, full_return=False):

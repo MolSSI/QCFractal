@@ -114,14 +114,14 @@ class ResultHandler(APIHandler):
 
         self.write(ret)
 
-    # def post(self):
+    def post(self):
 
-    #     db = self.objects["db_socket"]
+        db = self.objects["db_socket"]
 
-    #     ret = db.add_results(self.json["data"])
-    #     self.logger.info("POST: Results - {} inserted.".format(ret["meta"]["n_inserted"]))
+        ret = db.add_results(self.json["data"])
+        self.logger.info("POST: Results - {} inserted.".format(ret["meta"]["n_inserted"]))
 
-    #     self.write(ret)
+        self.write(ret)
 
 class ServiceHandler(APIHandler):
     """
