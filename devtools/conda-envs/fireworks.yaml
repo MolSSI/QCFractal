@@ -3,12 +3,13 @@ channels:
   - conda-forge
   - psi4/label/dev
 dependencies:
-    # Fireworks
+    # Compute
   - psi4=1.2
 
     # Base depends
   - numpy
   - pandas
+  - mongodb
   - pymongo
   - tornado
   - requests
@@ -22,4 +23,6 @@ dependencies:
     # Pip depends
   - pip:
     - git+git://github.com/MolSSI/QCEngine#egg=qcengine
+
+    # Fireworks
     - fireworks

@@ -1,4 +1,7 @@
 recursive-include qcfractal *.py
+recursive-include qcfractal/interface/data *.npy
+recursive-include qcfractal/interface/data *.psimol
+recursive-include qcfractal/interface/data *.json
 
 include setup.py
 include README.md

@@ -3,16 +3,17 @@ channels:
   - conda-forge
   - psi4/label/dev
 dependencies:
-    # Computers
+    # Compute
   - psi4=1.2
 
-    # Dask
+    # Dask testing environment
   - dask
   - distributed
 
     # Base depends
   - numpy
   - pandas
+  - mongodb
   - pymongo
   - tornado
   - requests
