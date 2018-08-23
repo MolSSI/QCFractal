@@ -23,5 +23,5 @@ test:
     - qcfractal
 
 about:
-  home: add_url_here
+  home: https://github.com/MolSSI/QCFractal
   license: BSD-3-Clause License

@@ -4,7 +4,7 @@
 [![Language grade: Python](https://img.shields.io/lgtm/grade/python/g/MolSSI/QCFractal.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/MolSSI/QCFractal/context:python)
 [![Documentation Status](https://readthedocs.org/projects/qcfractal/badge/?version=latest)](https://qcfractal.readthedocs.io/en/latest/?badge=latest)
 
-A distributed compute and database platform for quantum chemistry. See the [documentation](qcfractal.readthedocs.io) for more information.
+A distributed compute and database platform for quantum chemistry. See the [documentation](https://qcfractal.readthedocs.io) for more information.
 
 # License
 
