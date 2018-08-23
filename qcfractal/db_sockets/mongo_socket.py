@@ -216,7 +216,6 @@ class MongoSocket:
         meta = db_utils.get_metadata()
         _str_to_indices(ids)
 
-        _str_to_indices(ids)
         data = list(self._project[collection].find({"_id": {"$in": ids}}, projection=projection))
 
         for d in data:

@@ -20,6 +20,7 @@ class QCPortal(object):
         self._option_addr = self.port + "option"
         self._database_addr = self.port + "database"
         self._result_addr = self.port + "result"
+        self._service_addr = self.port + "service"
         self._scheduler_addr = self.port + "scheduler"
         # self.info = self.get_information()
 
@@ -134,13 +135,11 @@ class QCPortal(object):
         else:
             return r.json()["data"]
 
-    def get_service(self, service_id):
+    def get_service(self, service_id, **kwargs):
 
         payload = {"meta": {}, "data": [service_id]}
-        if "projection" in kwargs:
-            payload["meta"]["projection"] = kwargs["projection"]
 
-        r = requests.get(self._result_addr, json=payload)
+        r = requests.get(self._service_addr, json=payload)
         assert r.status_code == 200
 
         if kwargs.get("return_full", False):
