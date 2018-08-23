@@ -26,6 +26,7 @@ Table of Contents
    :caption: Getting Started
 
    install
+   roadmap
 
 .. toctree::
    :maxdepth: 1
