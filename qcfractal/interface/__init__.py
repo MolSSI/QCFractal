@@ -10,3 +10,4 @@ from .client import QCPortal
 from . import data
 from . import schema
 from . import dict_utils
+from . import orm
