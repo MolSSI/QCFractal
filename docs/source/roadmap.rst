@@ -1,5 +1,5 @@
-QCArchive Roadmap
-=================
+Development Roadmap
+===================
 
 Mission Statement
 -----------------
@@ -16,14 +16,14 @@ The QCArchive project is made up of three primary tools:
  - `QCFractal <https://github.com/MolSSI/QCFractal>`_ - A computational middleware to provide IO to a variety of quantum chemistry programs.
 
 The tools aim to provide an environment to facilitate the following goals:
-- Assist the computational molecular sciences (CMS) community in becoming more data-driven and statistical in nature.
-- Provide community-driven, multi-use quantum chemistry databases that the CMS community can access free of charge.
-- Support QC data requirements of the Open Force Field Consortium.
-- Support the upcoming machine learning initiatives.
-- Provide all current major QC databases in a universal format (S22, GMTMKN55).
-- Provide container-based programs whereby community members can contribute computational time toward chosen portions of the database.
-- Work directly with popular database manipulation front ends to provide their data backend requirements.
-- To the extent possible, build tools in reusable pieces that can be reappropriated for general use.
+ - Assist the computational molecular sciences (CMS) community in becoming more data-driven and statistical in nature.
+ - Provide community-driven, multi-use quantum chemistry databases that the CMS community can access free of charge.
+ - Support QC data requirements of the Open Force Field Consortium.
+ - Support the upcoming machine learning initiatives.
+ - Provide all current major QC databases in a universal format (S22, GMTMKN55).
+ - Provide container-based programs whereby community members can contribute computational time toward chosen portions of the database.
+ - Work directly with popular database manipulation front ends to provide their data backend requirements.
+ - To the extent possible, build tools in reusable pieces that can be reappropriated for general use.
 
 An initial design document can be found `here <https://docs.google.com/document/d/1jG9BGIaDswkm03kiNdAGUE4FUDFGtYp_axV5J-Dg8OM/edit?usp=sharing>`_.
 
@@ -52,13 +52,18 @@ Use Case: OpenFF Torsion Scans
 
 Collaborators: `Open Force Field Consortium <http://openforcefield.org>`_
 
+Document: `UC: Torsion Scans <https://docs.google.com/document/d/1OmIeMISfrxBVyVXYYj5jn2eVzaPRbuZbNtRPgenFOrQ/edit?usp=sharing>`_.
+
+The Open Force Field Group Consortium aims to democratize the fitting and
+generation of data within the force field community by providing open source
+toolkits and open datasets. The QCArchive project aims to support this effort
+by creating tools that can support the following workflow:
 
 .. image:: media/openff_torsion_workflow.jpg
    :width: 800px
    :alt: OpenFF Torsion Workflow example
    :align: center
 
-Document: `UC: Torsion Scans <https://docs.google.com/document/d/1OmIeMISfrxBVyVXYYj5jn2eVzaPRbuZbNtRPgenFOrQ/edit?usp=sharing>`_.
 
 Use Case: Reference Databases
 +++++++++++++++++++++++++++++
@@ -92,32 +97,10 @@ the reproducibility of these datasets.
 Release Schedule
 ++++++++++++++++
 To facilitate the rapid evolution of features and release will be created on
-the first of every months.
+the first of every month. The next five releases will have the following foci:
 
-**Release 2018-09-01**
-
-- *Primary focus*: Rapid evolution of feature set and overall structure
-- Initial service portal-side interface handlers.
-- Server logging overhaul.
-- Initial PyPi and Conda alpha release.
-- Handles long-term queues in the database layer with additional hooks to trigger upon job completion.
-
-
-**Release 2018-10-01**
-
-- *Primary focus*: Working examples that facilitate use cases.
-- Enhancement of the Database class to correclty track citations, reference data, subsets, etc.
-- Enhancement of the service classes to include better searching, data handling, and error messages.
-
-**Release 2018-11-01**
-
-- *Primary focus*: Backend optimization and cleanup.
-- PyPi and Conda beta release.
-
-**Release 2018-12-01**
-
-- *Primary focus*: Security, database optimization, and documentation.
-
-**Release 2019-01-15**
-
- - *Primary focus*: Remaining issues for a first release.
+- **Release 2018-09-01**: Rapid evolution of feature set and overall structure
+- **Release 2018-10-01**: Working examples that facilitate use cases.
+- **Release 2018-11-01**: Backend optimization and cleanup.
+- **Release 2018-12-01**: Security, database optimization, and documentation.
+- **Release 2019-01-15**: Remaining issues for a first release.
