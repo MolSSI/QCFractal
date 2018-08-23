@@ -190,7 +190,8 @@ class CrankService:
         # Parse remaining procedures
         # Create a map of "jobs" so that procedures does not have to followed
         self.data["state"] = "FINISHED"
-        self.data["final_energies"] = crankAPI.collect_lowest_energies(self.data["crank_state"])
+        final_energies = crankAPI.collect_lowest_energies(self.data["crank_state"])
+        self.data["final_energies"] = {json.dumps(k): v for k, v in final_energies.items()}
 
         # Pop temporaries
         del self.data["update_structure"]

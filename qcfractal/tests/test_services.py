@@ -48,16 +48,18 @@ def test_service_crank(dask_server_fixture):
     # Ask the server to compute a new computation
     r = requests.post(dask_server_fixture.get_address("service_scheduler"), json=compute)
     assert r.status_code == 200
-    compute_key = tuple(r.json()["data"][0])
+    compute_key = r.json()["data"][0]
 
     # Manually handle the compute
     nanny = dask_server_fixture.objects["queue_nanny"]
     nanny.await_services(max_iter=5)
     assert len(nanny.list_current_tasks()) == 0
 
-    # # # Query result and check against out manual pul
-    # query = {"program": "geometric", "options": "none", "initial_molecule": mol_ret["data"]["hydrogen"]}
-    # results = db.get_procedures([query])["data"]
+    raw_result = db.get_services([compute_key], by_id=True)["data"][0]
 
-    # assert len(results) == 1
-    # assert pytest.approx(-1.117530188962681, 1e-5) == results[0]["energies"][-1]
+    result = portal.orm.CrankORM.from_json(raw_result)
+
+    assert pytest.approx(-148.7505629010982, 1e-5) == result.final_energies(0)
+    assert pytest.approx(-148.76416544463615, 1e-5) == result.final_energies(90)
+    assert pytest.approx(-148.76501336999286, 1e-5) == result.final_energies(180)
+    assert pytest.approx(-148.7641654446591, 1e-5) == result.final_energies(-90)

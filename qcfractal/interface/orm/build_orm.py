@@ -14,6 +14,6 @@ def build_orm(data, service=None):
         raise KeyError("There is not a service tag and service is none. Unable to determine service type")
 
     if data["service"].lower() == "crank":
-        return CrankORM.from_data(data)
+        return CrankORM.from_json(data)
     else:
         raise KeyError("Service names {} not recognized.".format(data["service"]))
