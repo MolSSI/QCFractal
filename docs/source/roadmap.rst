@@ -11,19 +11,21 @@ supporting the incredible data needs of machine learning for computational
 molecular science?"
 
 The QCArchive project is made up of three primary tools:
- - `QCSchema <https://github.com/MolSSI/QC_JSON_Schema>`_ - A key/value schema for quantum chemistry.
- - `QCEngine <https://github.com/MolSSI/QCEngine>`_ - A computational middleware to provide IO to a variety of quantum chemistry programs.
- - `QCFractal <https://github.com/MolSSI/QCFractal>`_ - A computational middleware to provide IO to a variety of quantum chemistry programs.
+
+- `QCSchema <https://github.com/MolSSI/QC_JSON_Schema>`_ - A key/value schema for quantum chemistry.
+- `QCEngine <https://github.com/MolSSI/QCEngine>`_ - A computational middleware to provide IO to a variety of quantum chemistry programs.
+- `QCFractal <https://github.com/MolSSI/QCFractal>`_ - A computational middleware to provide IO to a variety of quantum chemistry programs.
 
 The tools aim to provide an environment to facilitate the following goals:
- - Assist the computational molecular sciences (CMS) community in becoming more data-driven and statistical in nature.
- - Provide community-driven, multi-use quantum chemistry databases that the CMS community can access free of charge.
- - Support QC data requirements of the Open Force Field Consortium.
- - Support the upcoming machine learning initiatives.
- - Provide all current major QC databases in a universal format (S22, GMTMKN55).
- - Provide container-based programs whereby community members can contribute computational time toward chosen portions of the database.
- - Work directly with popular database manipulation front ends to provide their data backend requirements.
- - To the extent possible, build tools in reusable pieces that can be reappropriated for general use.
+
+- Assist the computational molecular sciences (CMS) community in becoming more data-driven and statistical in nature.
+- Provide community-driven, multi-use quantum chemistry databases that the CMS community can access free of charge.
+- Support QC data requirements of the Open Force Field Consortium.
+- Support the upcoming machine learning initiatives.
+- Provide all current major QC databases in a universal format (S22, GMTMKN55).
+- Provide container-based programs whereby community members can contribute computational time toward chosen portions of the database.
+- Work directly with popular database manipulation front ends to provide their data backend requirements.
+- To the extent possible, build tools in reusable pieces that can be reappropriated for general use.
 
 An initial design document can be found `here <https://docs.google.com/document/d/1jG9BGIaDswkm03kiNdAGUE4FUDFGtYp_axV5J-Dg8OM/edit?usp=sharing>`_.
 

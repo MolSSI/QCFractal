@@ -30,8 +30,8 @@ dozens of different supercomputers. QCFractal provides a central location to
 marshal and distribute data or computation. QCFractal can switch between a
 variety of computational queue backends such as:
 
- - `Dask <http://dask.pydata.org/en/latest/docs.html>`_ - A graph-based workflow engine for laptops and small clusters.
- - `Fireworks <https://materialsproject.github.io/fireworks/>`_ - A asynchronous Mongo-based distributed queuing system.
+- `Dask <http://dask.pydata.org/en/latest/docs.html>`_ - A graph-based workflow engine for laptops and small clusters.
+- `Fireworks <https://materialsproject.github.io/fireworks/>`_ - A asynchronous Mongo-based distributed queuing system.
 
 Additional backends such as BOINC, Radical Pilot, and Balsam are under active
 consideration.
@@ -46,9 +46,10 @@ fitting of novel force fields, and supporting the incredible data needs of
 machine learning for computational molecular science?"
 
 The QCArchive project is made up of three primary modules:
- - `QCSchema <https://github.com/MolSSI/QC_JSON_Schema>`_ - A key/value schema for quantum chemistry.
- - `QCEngine <https://github.com/MolSSI/QCEngine>`_ - A computational middleware to provide IO to a variety of quantum chemistry programs.
- - `QCFractal <https://github.com/MolSSI/QCFractal>`_ - A distributed compute and database platform powered by QCEngine and QCSchema.
+
+- `QCSchema <https://github.com/MolSSI/QC_JSON_Schema>`_ - A key/value schema for quantum chemistry.
+- `QCEngine <https://github.com/MolSSI/QCEngine>`_ - A computational middleware to provide IO to a variety of quantum chemistry programs.
+- `QCFractal <https://github.com/MolSSI/QCFractal>`_ - A distributed compute and database platform powered by QCEngine and QCSchema.
 
 The QCArchive project's primary support comes from `The Molecular Sciences Software Institute <https://molssi.org>`_.
 
