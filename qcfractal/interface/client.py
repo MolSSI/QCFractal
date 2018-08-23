@@ -23,6 +23,7 @@ class FractalClient(object):
         self._result_addr = self.port + "result"
         self._service_addr = self.port + "service"
         self._scheduler_addr = self.port + "scheduler"
+        self._service_scheduler_addr = self.port + "service_scheduler"
         # self.info = self.get_information()
 
     ### Molecule section
@@ -189,6 +190,28 @@ class FractalClient(object):
         }
 
         r = requests.post(self._scheduler_addr, json=payload)
+        assert r.status_code == 200
+
+        if return_full:
+            return r.json()
+        else:
+            return r.json()["data"]
+
+    def add_service(self, service, data, options, return_full=False):
+
+        # Always a list
+        if isinstance(data, str):
+            data = [data]
+
+        payload = {
+            "meta": {
+                "service": service,
+            },
+            "data": data
+        }
+        payload["meta"].update(options)
+
+        r = requests.post(self._service_scheduler_addr, json=payload)
         assert r.status_code == 200
 
         if return_full:

@@ -107,7 +107,7 @@ class FractalServer(object):
         app_settings = {
             "compress_response": True,
             "serve_traceback": True,
-            "debug": True,
+            # "debug": True,
         }
         self.app = tornado.web.Application(endpoints, **app_settings)
 
@@ -151,7 +151,7 @@ class FractalServer(object):
 
         self.logger.info("DQM Server stopping gracefully. Stopped IOLoop.\n")
 
-    def get_address(self, function):
+    def get_address(self, function=""):
         return self._address + function
 
 

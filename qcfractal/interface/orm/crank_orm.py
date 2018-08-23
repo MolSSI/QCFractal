@@ -36,7 +36,7 @@ class CrankORM:
             if v in data:
                 kwargs[k[1:]] = data[v]
 
-        if "final_energies" in kwargs:
+        if ("final_energies" in kwargs) and (kwargs["final_energies"] is not None):
             kwargs["final_energies"] = {tuple(json.loads(k)): v for k, v in kwargs["final_energies"].items()}
 
         return cls(None, **kwargs)
@@ -59,6 +59,10 @@ class CrankORM:
         return ret
 
     def final_energies(self, key=None):
+
+        if self._state != "FINISHED":
+            raise KeyError("{} has not completed. Unable to show final energies.".format(self))
+
         if key is None:
             return self._final_energies.copy()
         else:
