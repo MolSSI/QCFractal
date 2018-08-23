@@ -1,18 +1,19 @@
 """Mongo QCDB Database object and helpers
 """
 
-import numpy as np
-import itertools as it
-import math
-import json
 import copy
+import itertools as it
+import json
+import math
+
+import numpy as np
 import pandas as pd
 
+from . import client
+from . import constants
+from . import dict_utils
 from . import molecule
 from . import statistics
-from . import constants
-from . import client
-from . import dict_utils
 
 
 def _nCr(n, r):

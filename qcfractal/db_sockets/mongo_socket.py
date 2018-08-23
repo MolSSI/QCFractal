@@ -9,16 +9,17 @@ except ImportError:
     raise ImportError(
         "Mongo db_socket requires pymongo, please install this python module or try a different db_socket.")
 
+import collections
+import copy
+import datetime
 import logging
+
 import pandas as pd
 from bson.objectid import ObjectId
-import copy
-import collections
-import datetime
 
+from . import db_utils
 # Pull in the hashing algorithms from the client
 from .. import interface
-from . import db_utils
 
 
 def _translate_id_index(index):

@@ -3,9 +3,9 @@ import logging
 import tornado.ioloop
 import tornado.web
 
-from . import web_handlers
 from . import db_sockets
 from . import queue_handlers
+from . import web_handlers
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 

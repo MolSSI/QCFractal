@@ -2,15 +2,16 @@
 DQM Molecule object and helpers
 """
 
-import numpy as np
-import re
-import os
 import hashlib
 import json
+import os
+import re
+
+import numpy as np
 
 from . import constants
-from . import schema
 from . import hash_helpers
+from . import schema
 
 # Rounding quantities for hashing
 GEOMETRY_NOISE = 8

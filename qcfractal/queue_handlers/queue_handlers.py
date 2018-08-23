@@ -2,13 +2,13 @@
 Queue backend abstraction manager.
 """
 
+import collections
 import logging
 import traceback
-import collections
 
-from ..web_handlers import APIHandler
 from .. import procedures
 from .. import services
+from ..web_handlers import APIHandler
 
 
 class QueueNanny:

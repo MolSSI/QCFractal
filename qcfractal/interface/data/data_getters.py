@@ -3,8 +3,8 @@ Assists in grabbing the requisite data
 """
 
 import copy
-import json
 import glob
+import json
 import os
 
 from ..molecule import Molecule

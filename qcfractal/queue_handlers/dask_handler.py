@@ -2,8 +2,8 @@
 Handlers for Dask
 """
 
-import logging
 import importlib
+import logging
 import operator
 
 

@@ -3,8 +3,9 @@ Assists in grabbing the requisite schema
 """
 
 import copy
-import jsonschema
 import json
+
+import jsonschema
 
 from .definitions_schema import get_definition
 from .molecule_schema import molecule_schema
