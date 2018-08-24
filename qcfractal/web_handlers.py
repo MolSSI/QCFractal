@@ -1,7 +1,7 @@
-import tornado.web
+"""
+Web handlers for the FractalServer
+"""
 import json
-import json
-
 import tornado.web
 
 
