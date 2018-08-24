@@ -31,9 +31,26 @@ class MoleculeHandler(APIHandler):
     A handler to push and get molecules.
     """
 
-    # __api_name__ = "Molecule"
     def get(self):
+        """
 
+        Experimental documentation, need to find a decent format.
+
+        Request:
+            "meta" - Overall options to the Molecule pull request
+                - "index" - What kind of index used to find the data ("id", "molecule_hash")
+            "data" - A dictionary of {key : index} requests
+
+        Returns:
+            "meta" - Metadata associated with the query
+                - "errors" - A list of errors in (index, error_id) format.
+                - "n_found" - The number of molecule found.
+                - "success" - If the query was successful or not.
+                - "error_description" - A string based description of the error or False
+                - "missing" - A list of keys that were not found.
+            "data" - A dictionary of {key : molecule JSON} results
+
+        """
         db = self.objects["db_socket"]
 
         kwargs = {}
@@ -46,6 +63,23 @@ class MoleculeHandler(APIHandler):
         self.write(ret)
 
     def post(self):
+        """
+            Experimental documentation, need to find a decent format.
+
+        Request:
+            "meta" - Overall options to the Molecule pull request
+                - No current options
+            "data" - A dictionary of {key : molecule JSON} requests
+
+        Returns:
+            "meta" - Metadata associated with the query
+                - "errors" - A list of errors in (index, error_id) format.
+                - "n_inserted" - The number of molecule inserted.
+                - "success" - If the query was successful or not.
+                - "error_description" - A string based description of the error or False
+                - "duplicates" - A list of keys that were already inserted.
+            "data" - A dictionary of {key : id} results
+        """
 
         db = self.objects["db_socket"]
 
