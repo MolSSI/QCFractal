@@ -2,13 +2,13 @@
 Queue backend abstraction manager.
 """
 
+import collections
 import logging
 import traceback
-import collections
 
-from ..web_handlers import APIHandler
 from .. import procedures
 from .. import services
+from ..web_handlers import APIHandler
 
 
 class QueueNanny:
@@ -66,6 +66,7 @@ class QueueNanny:
         """
         tmp = self.db_socket.queue_submit(tasks)
         self.update()
+        self.logger.info("Queue: Added {} tasks.".format(len(tmp)))
         return tmp
         # return self.queue_adapter.submit_tasks(tasks)
 
@@ -92,7 +93,8 @@ class QueueNanny:
 
         self.services |= set(task_ids)
 
-        self.update_services()
+        self.logger.info("Queue: Added {} services.\n".format(len(new_tasks)))
+        self.update()
 
         return task_ids
 
@@ -108,8 +110,13 @@ class QueueNanny:
         for key, (result, parser, hooks) in self.queue_adapter.aquire_complete().items():
             try:
                 if not result["success"]:
+                    if "error" in result:
+                        error = result["error"]
+                    else:
+                        error = "No error supplied"
+
                     raise self.logger.info("Computation key did not complete successfully!:\n%s\n" % (str(key),
-                                                                                                result["error"]))
+                                                                                                error))
                 # res = self.db_socket.del_page_by_data(tmp_data)
 
                 self.logger.info("update: {}".format(key))
@@ -180,7 +187,7 @@ class QueueNanny:
         """
 
         for x in range(max_iter):
-            print("\nIteration %d : %s\n" % (x, self.services))
+            self.logger.info("\nAwait services %d : %s\n" % (x + 1, self.services))
             self.update_services()
             self.await_results()
             if len(self.services) == 0:
@@ -303,7 +310,7 @@ class ServiceScheduler(APIHandler):
         self.write(ret)
 
 
-def build_queue(queue_type, queue_socket, db_socket, **kwargs):
+def build_queue(queue_type, queue_socket, db_socket, logger=None, **kwargs):
     """Constructs a queue and nanny based off the incoming queue socket type.
 
     Parameters
@@ -347,7 +354,7 @@ def build_queue(queue_type, queue_socket, db_socket, **kwargs):
     else:
         raise KeyError("Queue type '{}' not understood".format(queue_type))
 
-    nanny = QueueNanny(adapter, db_socket, **kwargs)
+    nanny = QueueNanny(adapter, db_socket, logger=logger, **kwargs)
     queue = QueueScheduler
     service = ServiceScheduler
 

@@ -1,18 +1,19 @@
 """Mongo QCDB Database object and helpers
 """
 
-import numpy as np
-import itertools as it
-import math
-import json
 import copy
+import itertools as it
+import json
+import math
+
+import numpy as np
 import pandas as pd
 
+from . import client
+from . import constants
+from . import dict_utils
 from . import molecule
 from . import statistics
-from . import constants
-from . import client
-from . import dict_utils
 
 
 def _nCr(n, r):
@@ -40,7 +41,7 @@ class Database(object):
 
     Attributes
     ----------
-    client : client.QCPortal
+    client : client.FractalClient
         A optional server portal to connect the database
     data : dict
         JSON representation of the database backbone
@@ -59,7 +60,7 @@ class Database(object):
         ----------
         name : str
             The name of the database
-        portal : client.QCPortal, optional
+        portal : client.FractalClient, optional
             A Portal client to connect to a server
         category : str, optional
             The overall category of the database
@@ -90,7 +91,7 @@ class Database(object):
 
         if portal is not None:
 
-            if isinstance(portal, client.QCPortal):
+            if isinstance(portal, client.FractalClient):
                 self.client = portal
 
             else:
@@ -242,7 +243,7 @@ class Database(object):
         """
 
         if not reaction_results and (self.client is None):
-            raise AttributeError("DataBase: QCPortal was not set.")
+            raise AttributeError("DataBase: FractalClient was not set.")
 
         query_keys = {
             "method": method.lower(),

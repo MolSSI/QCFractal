@@ -10,10 +10,10 @@ from crank import crankAPI
 
 from .. import procedures
 
-__all__ = ["Crank"]
+__all__ = ["CrankService"]
 
 
-class Crank:
+class CrankService:
     def __init__(self, db_socket, queue_socket, data):
 
         # Server interaction
@@ -31,21 +31,24 @@ class Crank:
 
         # Copy initial intial input and build out a crank_state
         meta = copy.deepcopy(meta)
-        molecule = copy.deepcopy(molecule)
-        del molecule["id"]
-        del molecule["molecule_hash"]
 
+        # Remove identity info from template
+        molecule_template = copy.deepcopy(molecule)
+        del molecule_template["id"]
+        del molecule_template["molecule_hash"]
+
+        # Iniate crank meta
         meta["crank_state"] = crankAPI.create_initial_state(
             dihedrals=meta["crank_meta"]["dihedrals"],
             grid_spacing=meta["crank_meta"]["grid_spacing"],
-            elements=molecule["symbols"],
-            init_coords=[molecule["geometry"]])
+            elements=molecule_template["symbols"],
+            init_coords=[molecule_template["geometry"]])
 
         # Save initial molecule and add hash
         meta["state"] = "READY"
         meta["required_jobs"] = False
         meta["remaining_jobs"] = False
-        meta["molecule_template"] = molecule
+        meta["molecule_template"] = molecule_template
         meta["complete_jobs"] = []
 
         dihedral_template = []
@@ -128,18 +131,10 @@ class Crank:
                 mol["geometry"] = geom
                 flat_map[(v, str(num))] = mol
 
-        # Add molecules and grab hashes
-        # print("\n--------")
-        # for k, v in flat_map.items():
-        #     print(k, v["id"], v["molecule_hash"])
+        # Add new molecules
         self.db_socket.add_molecules(flat_map)
-        # print(ret["data"])
 
-        # print("--------\n")
-
-        # Check if everything was successful
-
-        # Prepare optimization runs
+        # Prepare optimization
         meta_packet = json.dumps({
             "meta": {
                 "procedure": "optimization",
@@ -195,6 +190,15 @@ class Crank:
         # Parse remaining procedures
         # Create a map of "jobs" so that procedures does not have to followed
         self.data["state"] = "FINISHED"
-        #print("Crank Scan Finished")
-        #print(json.dumps(self.data, indent=2))
-        return crankAPI.collect_lowest_energies(self.data["crank_state"])
+        final_energies = crankAPI.collect_lowest_energies(self.data["crank_state"])
+        self.data["final_energies"] = {json.dumps(k): v for k, v in final_energies.items()}
+
+        # Pop temporaries
+        del self.data["update_structure"]
+        del self.data["job_map"]
+        del self.data["remaining_jobs"]
+        del self.data["complete_jobs"]
+        del self.data["molecule_template"]
+        del self.data["queue_keys"]
+
+

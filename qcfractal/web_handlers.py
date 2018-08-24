@@ -1,7 +1,9 @@
-
-import tornado.ioloop
-import tornado.web
+"""
+Web handlers for the FractalServer
+"""
 import json
+import tornado.web
+
 
 class APIHandler(tornado.web.RequestHandler):
     """
@@ -15,6 +17,7 @@ class APIHandler(tornado.web.RequestHandler):
 
         self.set_header("Content-Type", "application/json")
         self.objects = objects
+        self.logger = objects["logger"]
 
         #print(self.request.headers["Content-Type"])
         self.json = json.loads(self.request.body.decode("UTF-8"))
@@ -28,9 +31,26 @@ class MoleculeHandler(APIHandler):
     A handler to push and get molecules.
     """
 
-    # __api_name__ = "Molecule"
     def get(self):
+        """
 
+        Experimental documentation, need to find a decent format.
+
+        Request:
+            "meta" - Overall options to the Molecule pull request
+                - "index" - What kind of index used to find the data ("id", "molecule_hash")
+            "data" - A dictionary of {key : index} requests
+
+        Returns:
+            "meta" - Metadata associated with the query
+                - "errors" - A list of errors in (index, error_id) format.
+                - "n_found" - The number of molecule found.
+                - "success" - If the query was successful or not.
+                - "error_description" - A string based description of the error or False
+                - "missing" - A list of keys that were not found.
+            "data" - A dictionary of {key : molecule JSON} results
+
+        """
         db = self.objects["db_socket"]
 
         kwargs = {}
@@ -38,14 +58,33 @@ class MoleculeHandler(APIHandler):
             kwargs["index"] = self.json["meta"]["index"]
 
         ret = db.get_molecules(self.json["data"], **kwargs)
+        self.logger.info("GET: Molecule - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
 
     def post(self):
+        """
+            Experimental documentation, need to find a decent format.
+
+        Request:
+            "meta" - Overall options to the Molecule pull request
+                - No current options
+            "data" - A dictionary of {key : molecule JSON} requests
+
+        Returns:
+            "meta" - Metadata associated with the query
+                - "errors" - A list of errors in (index, error_id) format.
+                - "n_inserted" - The number of molecule inserted.
+                - "success" - If the query was successful or not.
+                - "error_description" - A string based description of the error or False
+                - "duplicates" - A list of keys that were already inserted.
+            "data" - A dictionary of {key : id} results
+        """
 
         db = self.objects["db_socket"]
 
         ret = db.add_molecules(self.json["data"])
+        self.logger.info("POST: Molecule - {} inserted.".format(ret["meta"]["n_inserted"]))
         self.write(ret)
 
 class OptionHandler(APIHandler):
@@ -58,6 +97,7 @@ class OptionHandler(APIHandler):
         db = self.objects["db_socket"]
 
         ret = db.get_options(self.json["data"])
+        self.logger.info("GET: Options - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
 
@@ -66,6 +106,8 @@ class OptionHandler(APIHandler):
         db = self.objects["db_socket"]
 
         ret = db.add_options(self.json["data"])
+        self.logger.info("POST: Options - {} inserted.".format(ret["meta"]["n_inserted"]))
+
         self.write(ret)
 
 class DatabaseHandler(APIHandler):
@@ -78,6 +120,7 @@ class DatabaseHandler(APIHandler):
         db = self.objects["db_socket"]
 
         ret = db.get_databases(self.json["data"])
+        self.logger.info("GET: Databases - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
 
@@ -86,6 +129,8 @@ class DatabaseHandler(APIHandler):
         db = self.objects["db_socket"]
 
         ret = db.add_database(self.json["data"])
+        self.logger.info("POST: Databases - {} inserted.".format(ret["meta"]["n_inserted"]))
+
         self.write(ret)
 
 class ResultHandler(APIHandler):
@@ -101,6 +146,7 @@ class ResultHandler(APIHandler):
             proj = self.json["meta"]["projection"]
 
         ret = db.get_results(self.json["data"], projection=proj)
+        self.logger.info("GET: Results - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
 
@@ -109,7 +155,33 @@ class ResultHandler(APIHandler):
         db = self.objects["db_socket"]
 
         ret = db.add_results(self.json["data"])
+        self.logger.info("POST: Results - {} inserted.".format(ret["meta"]["n_inserted"]))
+
         self.write(ret)
+
+class ServiceHandler(APIHandler):
+    """
+    A handler to push and get molecules.
+    """
+
+    def get(self):
+
+        db = self.objects["db_socket"]
+
+        ret = db.get_services(self.json["data"], by_id=True)
+        self.logger.info("GET: Services - {} pulls.".format(len(ret["data"])))
+
+        self.write(ret)
+
+    # def post(self):
+
+    #     db = self.objects["db_socket"]
+
+    #     ret = db.add_results(self.json["data"])
+    #     self.logger.info("POST: Results - {} inserted.".format(ret["meta"]["n_inserted"]))
+
+    #     self.write(ret)
+
 
 
 # def _check_auth(objects, header):

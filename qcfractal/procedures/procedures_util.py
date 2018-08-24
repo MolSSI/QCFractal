@@ -2,9 +2,10 @@
 Utility functions for on-node procedures.
 """
 
-import json
 import copy
 import hashlib
+import json
+
 from .. import interface
 
 

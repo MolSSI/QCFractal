@@ -3,9 +3,9 @@ import logging
 import tornado.ioloop
 import tornado.web
 
-from . import web_handlers
 from . import db_sockets
 from . import queue_handlers
+from . import web_handlers
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -41,6 +41,7 @@ class FractalServer(object):
         self.logger = logging.getLogger("FractalServer")
         self.logger.setLevel(logging.INFO)
 
+        app_logger = logging.getLogger("tornado.application")
         if logfile_name is not None:
             handler = logging.FileHandler(logfile_name.logfile)
             handler.setLevel(logging.INFO)
@@ -48,9 +49,11 @@ class FractalServer(object):
             handler.setFormatter(myFormatter)
 
             self.logger.addHandler(handler)
+            app_logger.addHandler(handler)
 
             self.logger.info("Logfile set to %s\n" % logfile_name)
         else:
+            app_logger.addHandler(logging.StreamHandler())
             self.logger.addHandler(logging.StreamHandler())
             self.logger.info("No logfile given, setting output to stdout")
 
@@ -78,6 +81,7 @@ class FractalServer(object):
             (r"/option", web_handlers.OptionHandler, self.objects),
             (r"/database", web_handlers.DatabaseHandler, self.objects),
             (r"/result", web_handlers.ResultHandler, self.objects),
+            (r"/service", web_handlers.ServiceHandler, self.objects),
         ]
 
         # Queue handlers
@@ -97,10 +101,15 @@ class FractalServer(object):
 
             # Add the endpoint
             endpoints.append((r"/scheduler", queue_scheduler, self.objects))
-            endpoints.append((r"/service", service_scheduler, self.objects))
+            endpoints.append((r"/service_scheduler", service_scheduler, self.objects))
 
         # Build the app
-        self.app = tornado.web.Application(endpoints, compress_response=True)
+        app_settings = {
+            "compress_response": True,
+            "serve_traceback": True,
+            # "debug": True,
+        }
+        self.app = tornado.web.Application(endpoints, **app_settings)
 
         self.app.listen(self.port)
 
@@ -115,12 +124,18 @@ class FractalServer(object):
         """
 
         self.logger.info("DQM Server successfully started. Starting IOLoop.\n")
-        cb = tornado.ioloop.PeriodicCallback(self.objects["queue_nanny"].update, 2000)
-        self.periodic["queue_nanny"] = cb
 
-        cb.start()
+        # Add canonical queue callback
+        nanny = tornado.ioloop.PeriodicCallback(self.objects["queue_nanny"].update, 2000)
+        nanny.start()
+        self.periodic["queue_nanny_update"] = nanny
 
-        # Soft quit at the end of a loop
+        # Add services callback
+        nanny_services = tornado.ioloop.PeriodicCallback(self.objects["queue_nanny"].update_services, 2000)
+        nanny_services.start()
+        self.periodic["queue_nanny_services"] = nanny_services
+
+        # Soft quit with a keyboard interupt
         try:
             self.loop.start()
         except KeyboardInterrupt:
@@ -131,10 +146,12 @@ class FractalServer(object):
         Shuts down all IOLoops
         """
         self.loop.stop()
-        self.periodic["queue_nanny"].stop()
+        for cb in self.periodic.values():
+            cb.stop()
+
         self.logger.info("DQM Server stopping gracefully. Stopped IOLoop.\n")
 
-    def get_address(self, function):
+    def get_address(self, function=""):
         return self._address + function
 
 

@@ -2,7 +2,7 @@ import qcfractal.interface as portal
 import json
 
 # Build a interface to the server 
-p = portal.QCPortal("localhost:7777")
+p = portal.FractalClient("localhost:7777")
 
 # Add "default" options
 option = portal.data.get_options("psi_default")

@@ -3,6 +3,7 @@ Schedulers and Nanny's for Fireworks
 """
 
 import logging
+
 import fireworks
 import fireworks.core.rocket_launcher
 
@@ -20,7 +21,6 @@ class FireworksAdapter:
     def submit_tasks(self, tasks):
         ret = []
 
-        print(tasks)
         for task in tasks:
             tag = task["id"]
 

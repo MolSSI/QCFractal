@@ -3,9 +3,10 @@
 import requests
 
 from . import molecule
+from . import orm
 
 
-class QCPortal(object):
+class FractalClient(object):
     def __init__(self, port, username="", password=""):
         if "http" not in port:
             port = "http://" + port
@@ -20,7 +21,9 @@ class QCPortal(object):
         self._option_addr = self.port + "option"
         self._database_addr = self.port + "database"
         self._result_addr = self.port + "result"
+        self._service_addr = self.port + "service"
         self._scheduler_addr = self.port + "scheduler"
+        self._service_scheduler_addr = self.port + "service_scheduler"
         # self.info = self.get_information()
 
     ### Molecule section
@@ -134,6 +137,22 @@ class QCPortal(object):
         else:
             return r.json()["data"]
 
+    def get_service(self, service_id, **kwargs):
+
+        payload = {"meta": {}, "data": [service_id]}
+
+        r = requests.get(self._service_addr, json=payload)
+        assert r.status_code == 200
+
+        if kwargs.get("return_objects", True):
+            ret = []
+            for packet in r.json()["data"]:
+                tmp = orm.build_orm(packet)
+                ret.append(tmp)
+            return ret
+        else:
+            return r.json()
+
     # Must compute results?
     # def add_results(self, db, full_return=False):
 
@@ -177,3 +196,27 @@ class QCPortal(object):
             return r.json()
         else:
             return r.json()["data"]
+
+    def add_service(self, service, data, options, return_full=False):
+
+        # Always a list
+        if isinstance(data, str):
+            data = [data]
+
+        payload = {
+            "meta": {
+                "service": service,
+            },
+            "data": data
+        }
+        payload["meta"].update(options)
+
+        r = requests.post(self._service_scheduler_addr, json=payload)
+        assert r.status_code == 200
+
+        if return_full:
+            return r.json()
+        else:
+            return r.json()["data"]
+
+    # Def add_service
