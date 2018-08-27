@@ -2,13 +2,13 @@
 Queue backend abstraction manager.
 """
 
-import collections
 import logging
 import traceback
+import collections
 
+from ..web_handlers import APIHandler
 from .. import procedures
 from .. import services
-from ..web_handlers import APIHandler
 
 
 class QueueNanny:
@@ -310,14 +310,12 @@ class ServiceScheduler(APIHandler):
         self.write(ret)
 
 
-def build_queue(queue_type, queue_socket, db_socket, logger=None, **kwargs):
+def build_queue(queue_socket, db_socket, logger=None, **kwargs):
     """Constructs a queue and nanny based off the incoming queue socket type.
 
     Parameters
     ----------
-    queue_type : str ("dask", "fireworks")
-        The name of the incoming queue manager.
-    queue_socket : object ("distributed.Client", "fireworks.lpad")
+    queue_socket : object ("distributed.Client", "fireworks.LaunchPad")
         A object wrapper for different queue types
     db_socket : DBSocket
         A socket to the underlying database
@@ -330,7 +328,10 @@ def build_queue(queue_type, queue_socket, db_socket, logger=None, **kwargs):
         Returns a valid Nanny and Scheduler for the selected computational queue
 
     """
-    if queue_type == "dask":
+
+    queue_type = type(queue_socket).__module__ + "." + type(queue_socket).__name__
+
+    if queue_type == "distributed.client.Client":
         try:
             import dask.distributed
         except ImportError:
@@ -341,7 +342,7 @@ def build_queue(queue_type, queue_socket, db_socket, logger=None, **kwargs):
 
         adapter = dask_handler.DaskAdapter(queue_socket)
 
-    elif queue_type == "fireworks":
+    elif queue_type == "fireworks.core.launchpad.LaunchPad":
         try:
             import fireworks
         except ImportError:

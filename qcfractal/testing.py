@@ -155,12 +155,7 @@ def dask_server_fixture(request):
             client = dd.Client(cluster)
 
             # Build server, manually handle IOLoop (no start/stop needed)
-            server = FractalServer(
-                port=find_open_port(),
-                db_project_name=db_name,
-                io_loop=cluster.loop,
-                queue_socket=client,
-                queue_type="dask")
+            server = FractalServer(port=find_open_port(), db_project_name=db_name, io_loop=cluster.loop, queue_socket=client)
 
             # Clean and re-init the databse
             server.db.client.drop_database(server.db._project_name)
@@ -190,7 +185,7 @@ def fireworks_server_fixture(request):
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = FractalServer(
-            port=find_open_port(), db_project_name=db_name, io_loop=loop, queue_socket=lpad, queue_type="fireworks")
+            port=find_open_port(), db_project_name=db_name, io_loop=loop, queue_socket=lpad)
 
         # Clean and re-init the databse
         server.db.client.drop_database(server.db._project_name)

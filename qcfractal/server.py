@@ -28,7 +28,6 @@ class FractalServer(object):
 
             # Queue options
             queue_socket=None,
-            queue_type=None,
 
             # Log options
             logfile_name=None):
@@ -85,11 +84,9 @@ class FractalServer(object):
         ]
 
         # Queue handlers
-        if (queue_socket is not None) or (queue_type is not None):
-            if (queue_socket is None) or (queue_type is None):
-                raise KeyError("If either either queue_socket or queue_type is supplied, both must be.")
+        if queue_socket is not None:
 
-            queue_nanny, queue_scheduler, service_scheduler = queue_handlers.build_queue(queue_type, queue_socket,
+            queue_nanny, queue_scheduler, service_scheduler = queue_handlers.build_queue(queue_socket,
                                                                                          self.objects["db_socket"])
 
             # Add the socket to passed args
