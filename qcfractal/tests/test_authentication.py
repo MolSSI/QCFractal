@@ -15,7 +15,7 @@ _users = {
         "pw": "hello",
         "perm": ["read"]
     },
-    "john": {
+    "write": {
         "pw": "something",
         "perm": ["read", "write"]
     },
@@ -75,7 +75,7 @@ def test_security_auth_decline_bad_user(sec_server):
 
 def test_security_auth_accept(sec_server):
 
-    client = portal.FractalClient(sec_server.get_address(), username="john", password=_users["john"]["pw"])
+    client = portal.FractalClient(sec_server.get_address(), username="write", password=_users["write"]["pw"])
 
     r = client.add_molecules({})
     r = client.get_molecules([])

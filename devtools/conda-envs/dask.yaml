@@ -17,6 +17,7 @@ dependencies:
   - tornado
   - requests
   - jsonschema
+  - bcrypt
 
     # Testing
   - pytest
