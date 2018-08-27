@@ -362,3 +362,45 @@ def test_queue_duplicate(db_socket):
     # Cleanup
     r = db_socket.queue_mark_complete([uid])
     assert r == 1
+
+# User testing
+
+def test_user_duplicates(db_socket):
+
+    r = db_socket.add_user("george", "shortpw")
+    assert r is True
+
+    # Duplicate should bounce
+    r = db_socket.add_user("george", "shortpw")
+    assert r is False
+
+    assert db_socket.remove_user("george") is True
+
+    assert db_socket.remove_user("george") is False
+
+def test_user_permissions_default(db_socket):
+
+    r = db_socket.add_user("george", "shortpw")
+    assert r is True
+
+    # Verify correct permission
+    assert db_socket.verify_user("george", "shortpw", "read")[0] is True
+
+    # Verify incorrect permission
+    assert db_socket.verify_user("george", "shortpw", "admin")[0] is False
+
+    assert db_socket.remove_user("george") is True
+
+def test_user_permissions_admin(db_socket):
+
+    import time
+    r = db_socket.add_user("george", "shortpw", permissions=["read", "write", "compute", "admin"])
+    assert r is True
+
+    # Verify correct permissions
+    assert db_socket.verify_user("george", "shortpw", "read")[0] is True
+    assert db_socket.verify_user("george", "shortpw", "write")[0] is True
+    assert db_socket.verify_user("george", "shortpw", "compute")[0] is True
+    assert db_socket.verify_user("george", "shortpw", "admin")[0] is True
+
+    assert db_socket.remove_user("george") is True

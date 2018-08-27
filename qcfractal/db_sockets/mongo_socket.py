@@ -13,6 +13,7 @@ import collections
 import copy
 import datetime
 import logging
+import bcrypt
 
 import pandas as pd
 from bson.objectid import ObjectId
@@ -46,6 +47,7 @@ class MongoSocket:
                  project="molssidb",
                  username=None,
                  password=None,
+                 authentication=None,
                  authMechanism="SCRAM-SHA-1",
                  authSource=None,
                  logger=None):
@@ -69,6 +71,7 @@ class MongoSocket:
             "procedures": interface.schema.get_indices("procedure"),
             "services": interface.schema.get_indices("service"),
             "queue": interface.schema.get_indices("queue"),
+            "users": ("user", )
         }
         self._valid_collections = set(self._collection_indices.keys())
         self._collection_unique_indices = {
@@ -79,6 +82,7 @@ class MongoSocket:
             "procedures": False,
             "services": False,
             "queue": True,
+            "users": True,
         }
 
         self._lower_results_index = ["method", "basis", "options", "program"]
@@ -769,6 +773,98 @@ class MongoSocket:
 
         ret = self._project["services"].bulk_write(bulk_commands, ordered=False)
         return ret
+
+
+### Users
+
+    def add_user(self, username, password, permissions=["read"]):
+        """
+        Adds a new user and associated permissions.
+
+        Passwords are stored using bcrypt.
+
+        Parameters
+        ----------
+        username : str
+            New user's username
+        password : str
+            The user's password
+        permissions : list of str, optional
+            The associated permissions of a user ['read', 'write', 'compute', 'admin']
+
+        Returns
+        -------
+        tuple
+            Successful insert or not
+        """
+
+        hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
+        try:
+            self._project["users"].insert_one({"username": username, "password": hashed, "permissions": permissions})
+            return True
+        except pymongo.errors.DuplicateKeyError:
+            return False
+
+    def verify_user(self, username, password, permission):
+        """
+        Verifies if a user has the requested permissions or not.
+
+        Passwords are store and verified using bcrypt.
+
+        Parameters
+        ----------
+        username : str
+            The username to verify
+        password : str
+            The password associated with the username
+        permission : str
+            The associated permissions of a user ['read', 'write', 'compute', 'admin']
+
+        Returns
+        -------
+        tuple
+            A tuple of (success flag, failure string)
+
+        Examples
+        --------
+
+        >>> db.add_user("george", "shortpw")
+
+        >>> db.verify_user("george", "shortpw", "read")
+        True
+
+        >>> db.verify_user("george", "shortpw", "admin")
+        False
+
+        """
+
+        data = self._project["users"].find_one({"username": username})
+        if data is None:
+            return (False, "User not found.")
+
+        pwcheck = bcrypt.checkpw(password.encode("UTF-8"), data["password"])
+        if pwcheck is False:
+            return (False, "Incorrect password.")
+
+        if permission.lower() not in data["permissions"]:
+            return (False, "User has insufficient permissions.")
+
+        return (True, "Success")
+
+    def remove_user(self, username):
+        """Removes a user from the database
+
+        Parameters
+        ----------
+        username : str
+            The username to remove
+
+        Returns
+        -------
+        bool
+            If the operation was successful or not.
+        """
+        return self._project["users"].delete_one({"username": username}).deleted_count == 1
 
 
 ### Complex parsers
