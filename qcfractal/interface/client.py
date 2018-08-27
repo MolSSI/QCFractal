@@ -17,14 +17,22 @@ class FractalClient(object):
         self.port = port
         self._api_key = (username, password)
 
-        self._mol_addr = self.port + "molecule"
-        self._option_addr = self.port + "option"
-        self._database_addr = self.port + "database"
-        self._result_addr = self.port + "result"
-        self._service_addr = self.port + "service"
-        self._scheduler_addr = self.port + "scheduler"
-        self._service_scheduler_addr = self.port + "service_scheduler"
         # self.info = self.get_information()
+
+    def _request(self, method, service, payload):
+
+        addr = self.port + service
+        if method == "get":
+            r = requests.get(addr, json=payload, auth=self._api_key)
+        elif method == "post":
+            r = requests.post(addr, json=payload, auth=self._api_key)
+        else:
+            raise KeyError("Method not understood: {}".format(method))
+
+        if r.status_code != 200:
+            raise requests.exceptions.HTTPError("Server communication failure. Reason: {}".format(r.reason))
+
+        return r
 
     ### Molecule section
 
@@ -35,9 +43,7 @@ class FractalClient(object):
             mol_list = [mol_list]
 
         payload = {"meta": {"index": index}, "data": mol_list}
-        r = requests.get(self._mol_addr, json=payload, auth=self._api_key)
-        if r.status_code != 200:
-            raise requests.exceptions.HTTPError("Failed query. Reason: {}".format(r.reason))
+        r = self._request("get", "molecule", payload)
 
         return r.json()["data"]
 
@@ -55,10 +61,7 @@ class FractalClient(object):
                 raise TypeError("Input molecule type '{}' not recognized".format(type(mol)))
 
         payload = {"meta": {}, "data": mol_submission}
-
-        r = requests.post(self._mol_addr, json=payload, auth=self._api_key)
-        if r.status_code != 200:
-            raise requests.exceptions.HTTPError("Failed query. Reason: {}".format(r.reason))
+        r = self._request("post", "molecule", payload)
 
         if full_return:
             return r.json()
@@ -75,8 +78,7 @@ class FractalClient(object):
         #     opt_list = [opt_list]
 
         payload = {"meta": {}, "data": opt_list}
-        r = requests.get(self._option_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("get", "option", payload)
 
         return r.json()["data"]
 
@@ -85,9 +87,7 @@ class FractalClient(object):
         # Can take in either molecule or lists
 
         payload = {"meta": {}, "data": opt_list}
-
-        r = requests.post(self._option_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("post", "option", payload)
 
         if full_return:
             return r.json()
@@ -99,8 +99,7 @@ class FractalClient(object):
     def get_databases(self, db_list):
 
         payload = {"meta": {}, "data": db_list}
-        r = requests.get(self._database_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("get", "database", payload)
 
         return r.json()["data"]
 
@@ -109,9 +108,7 @@ class FractalClient(object):
         # Can take in either molecule or lists
 
         payload = {"meta": {}, "data": db}
-
-        r = requests.post(self._database_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("post", "database", payload)
 
         if full_return:
             return r.json()
@@ -131,8 +128,7 @@ class FractalClient(object):
         if "projection" in kwargs:
             payload["meta"]["projection"] = kwargs["projection"]
 
-        r = requests.get(self._result_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("get", "result", payload)
 
         if kwargs.get("return_full", False):
             return r.json()
@@ -142,9 +138,7 @@ class FractalClient(object):
     def get_service(self, service_id, **kwargs):
 
         payload = {"meta": {}, "data": [service_id]}
-
-        r = requests.get(self._service_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("get", "service", payload)
 
         if kwargs.get("return_objects", True):
             ret = []
@@ -191,8 +185,7 @@ class FractalClient(object):
             "data": molecule_id
         }
 
-        r = requests.post(self._scheduler_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("post", "scheduler", payload)
 
         if return_full:
             return r.json()
@@ -213,8 +206,7 @@ class FractalClient(object):
         }
         payload["meta"].update(options)
 
-        r = requests.post(self._service_scheduler_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("post", "service_scheduler", payload)
 
         if return_full:
             return r.json()

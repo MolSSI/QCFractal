@@ -33,8 +33,12 @@ class APIHandler(tornado.web.RequestHandler):
         #print(self.request.headers["Content-Type"])
         self.json = json.loads(self.request.body.decode("UTF-8"))
 
-        split = self.request.headers["Authorization"].strip().split(' ')
-        self.username, self.password = b64decode(split[1]).decode().split(':', 1)
+        if "Authorization" in self.request.headers:
+            split = self.request.headers["Authorization"].strip().split(' ')
+            self.username, self.password = b64decode(split[1]).decode().split(':', 1)
+        else:
+            self.username = None
+            self.password = None
 
     def authenticate(self, permission):
         """Authenticates request with a given permission setting
