@@ -3,7 +3,18 @@ Web handlers for the FractalServer
 """
 import json
 import tornado.web
+import functools
+from base64 import b64decode, b64encode
 
+def authenticate(permissions):
+    def decorator(function):
+        def wrapper(*args, **kwargs):
+            handler = args[0]
+
+            result = function(*args, **kwargs)
+            return result
+        return wrapper
+    return decorator
 
 class APIHandler(tornado.web.RequestHandler):
     """
@@ -21,9 +32,22 @@ class APIHandler(tornado.web.RequestHandler):
 
         #print(self.request.headers["Content-Type"])
         self.json = json.loads(self.request.body.decode("UTF-8"))
-        # Set logging
-        # print(self.request.method)
-        # self.objects["logger"].info("%s" % __api_name__)
+
+        split = self.request.headers["Authorization"].strip().split(' ')
+        self.username, self.password = b64decode(split[1]).decode().split(':', 1)
+
+    def authenticate(self, permission):
+        """Authenticates request with a given permission setting
+
+        Parameters
+        ----------
+        permission : str
+            The required permission ["read", "write", "compute", "admin"]
+
+        """
+        verified, msg = self.objects["db_socket"].verify_user(self.username, self.password, permission)
+        if verified is False:
+            raise tornado.web.HTTPError(status_code=401, reason=msg)
 
 
 class MoleculeHandler(APIHandler):
@@ -51,6 +75,8 @@ class MoleculeHandler(APIHandler):
             "data" - A dictionary of {key : molecule JSON} results
 
         """
+        self.authenticate("read")
+
         db = self.objects["db_socket"]
 
         kwargs = {}
@@ -80,6 +106,8 @@ class MoleculeHandler(APIHandler):
                 - "duplicates" - A list of keys that were already inserted.
             "data" - A dictionary of {key : id} results
         """
+
+        self.authenticate("write")
 
         db = self.objects["db_socket"]
 

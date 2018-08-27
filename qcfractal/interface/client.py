@@ -7,7 +7,7 @@ from . import orm
 
 
 class FractalClient(object):
-    def __init__(self, port, username="", password=""):
+    def __init__(self, port, username=None, password=None, shared_secret=None):
         if "http" not in port:
             port = "http://" + port
 
@@ -15,7 +15,7 @@ class FractalClient(object):
             port += "/"
 
         self.port = port
-        # self.http_header = {"project": self.project, "username": username, "password": password}
+        self._api_key = (username, password)
 
         self._mol_addr = self.port + "molecule"
         self._option_addr = self.port + "option"
@@ -35,8 +35,9 @@ class FractalClient(object):
             mol_list = [mol_list]
 
         payload = {"meta": {"index": index}, "data": mol_list}
-        r = requests.get(self._mol_addr, json=payload)
-        assert r.status_code == 200
+        r = requests.get(self._mol_addr, json=payload, auth=self._api_key)
+        if r.status_code != 200:
+            raise requests.exceptions.HTTPError("Failed query. Reason: {}".format(r.reason))
 
         return r.json()["data"]
 
@@ -55,8 +56,9 @@ class FractalClient(object):
 
         payload = {"meta": {}, "data": mol_submission}
 
-        r = requests.post(self._mol_addr, json=payload)
-        assert r.status_code == 200
+        r = requests.post(self._mol_addr, json=payload, auth=self._api_key)
+        if r.status_code != 200:
+            raise requests.exceptions.HTTPError("Failed query. Reason: {}".format(r.reason))
 
         if full_return:
             return r.json()
