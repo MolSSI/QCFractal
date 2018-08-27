@@ -130,6 +130,7 @@ class OptionHandler(APIHandler):
     """
 
     def get(self):
+        self.authenticate("read")
 
         db = self.objects["db_socket"]
 
@@ -139,6 +140,7 @@ class OptionHandler(APIHandler):
         self.write(ret)
 
     def post(self):
+        self.authenticate("write")
 
         db = self.objects["db_socket"]
 
@@ -154,6 +156,7 @@ class DatabaseHandler(APIHandler):
     """
 
     def get(self):
+        self.authenticate("read")
 
         db = self.objects["db_socket"]
 
@@ -163,6 +166,7 @@ class DatabaseHandler(APIHandler):
         self.write(ret)
 
     def post(self):
+        self.authenticate("write")
 
         db = self.objects["db_socket"]
 
@@ -178,6 +182,7 @@ class ResultHandler(APIHandler):
     """
 
     def get(self):
+        self.authenticate("read")
 
         db = self.objects["db_socket"]
         proj = None
@@ -190,6 +195,7 @@ class ResultHandler(APIHandler):
         self.write(ret)
 
     def post(self):
+        self.authenticate("write")
 
         db = self.objects["db_socket"]
 
@@ -205,6 +211,7 @@ class ServiceHandler(APIHandler):
     """
 
     def get(self):
+        self.authenticate("read")
 
         db = self.objects["db_socket"]
 
