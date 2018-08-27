@@ -14,7 +14,6 @@ from tornado.ioloop import IOLoop
 from .db_sockets import db_socket_factory
 from .server import FractalServer
 
-
 ### Addon testing capabilities
 
 
@@ -120,7 +119,7 @@ def test_server(request):
     Builds a server instance with the event loop running in a thread.
     """
 
-    db_name = "dqm_local_server_test"
+    db_name = "qcf_local_server_test"
 
     with pristine_loop() as loop:
 
@@ -144,7 +143,7 @@ def dask_server_fixture(request):
 
     dd = pytest.importorskip("dask.distributed")
 
-    db_name = "dqm_dask_server_test"
+    db_name = "qcf_dask_server_test"
 
     with pristine_loop() as loop:
 
@@ -155,7 +154,8 @@ def dask_server_fixture(request):
             client = dd.Client(cluster)
 
             # Build server, manually handle IOLoop (no start/stop needed)
-            server = FractalServer(port=find_open_port(), db_project_name=db_name, io_loop=cluster.loop, queue_socket=client)
+            server = FractalServer(
+                port=find_open_port(), db_project_name=db_name, io_loop=cluster.loop, queue_socket=client)
 
             # Clean and re-init the databse
             server.db.client.drop_database(server.db._project_name)
@@ -179,13 +179,12 @@ def fireworks_server_fixture(request):
     lpad = fireworks.LaunchPad(name="fw_testing_server", logdir="/tmp/", strm_lvl="CRITICAL")
     lpad.reset(None, require_password=False)
 
-    db_name = "dqm_fireworks_server_test"
+    db_name = "qcf_fireworks_server_test"
 
     with pristine_loop() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(
-            port=find_open_port(), db_project_name=db_name, io_loop=loop, queue_socket=lpad)
+        server = FractalServer(port=find_open_port(), db_project_name=db_name, io_loop=loop, queue_socket=lpad)
 
         # Clean and re-init the databse
         server.db.client.drop_database(server.db._project_name)
@@ -214,7 +213,7 @@ def fractal_compute_server(request):
 @pytest.fixture(scope="module", params=["mongo"])
 def db_socket_fixture(request):
     print("")
-    db_name = "dqm_local_values_test"
+    db_name = "qcf_local_values_test"
 
     # IP/port/drop table is specific to build
     if request.param == "mongo":

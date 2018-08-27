@@ -238,7 +238,6 @@ def procedure_optimization_output_parser(db, data):
         if len(hook) == 0:
             continue
 
-
         # Loop over hooks
         for h in hook:
             # Loop over individual commands

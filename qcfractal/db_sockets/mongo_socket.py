@@ -691,7 +691,13 @@ class MongoSocket:
 
             for x in data:
                 if x["hash_index"] in dup_inds:
-                    upd = pymongo.UpdateOne({"hash_index": x["hash_index"]}, {"$push": {"hooks": {"$each": x["hooks"]}}})
+                    upd = pymongo.UpdateOne({
+                        "hash_index": x["hash_index"]
+                    }, {"$push": {
+                        "hooks": {
+                            "$each": x["hooks"]
+                        }
+                    }})
                     hook_updates.append(upd)
 
             tmp = self._project["queue"].bulk_write(hook_updates)
@@ -710,11 +716,13 @@ class MongoSocket:
             },
             sort=[("created_on", -1)],
             limit=n,
-            projection={"_id": True,
-                        "spec": True,
-                        "hash_index": True,
-                        "parser": True,
-                        "hooks": True}))
+            projection={
+                "_id": True,
+                "spec": True,
+                "hash_index": True,
+                "parser": True,
+                "hooks": True
+            }))
 
         query = {"_id": {"$in": [x["_id"] for x in found]}}
 
@@ -776,7 +784,6 @@ class MongoSocket:
 
         ret = self._project["services"].bulk_write(bulk_commands, ordered=False)
         return ret
-
 
 ### Users
 

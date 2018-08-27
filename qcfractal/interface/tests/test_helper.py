@@ -1,6 +1,7 @@
 """
-A file containing utility functions for testing dqm_client
+A file containing utility functions for testing portal
 """
+
 
 def compare_lists(bench, val):
     """

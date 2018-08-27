@@ -115,8 +115,7 @@ class QueueNanny:
                     else:
                         error = "No error supplied"
 
-                    raise self.logger.info("Computation key did not complete successfully!:\n%s\n" % (str(key),
-                                                                                                error))
+                    raise self.logger.info("Computation key did not complete successfully!:\n%s\n" % (str(key), error))
                 # res = self.db_socket.del_page_by_data(tmp_data)
 
                 self.logger.info("update: {}".format(key))
@@ -143,7 +142,6 @@ class QueueNanny:
         # Submit new jobs
         new_jobs = self.db_socket.queue_get_next(n=open_slots)
         self.queue_adapter.submit_tasks(new_jobs)
-
 
     def update_services(self):
         """Runs through all active services and examines their current status.

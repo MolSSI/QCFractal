@@ -2,7 +2,7 @@
 Tests the server compute capabilities.
 """
 
-import qcfractal.interface as qp
+import qcfractal.interface as portal
 import qcfractal as qf
 
 from qcfractal.queue_handlers import build_queue
@@ -18,8 +18,8 @@ import pytest
 def test_compute_queue_stack(fractal_compute_server):
 
     # Add a hydrogen and helium molecule
-    hydrogen = qp.Molecule([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
-    helium = qp.Molecule([[2, 0, 0, 0.0]], dtype="numpy", units="bohr")
+    hydrogen = portal.Molecule([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
+    helium = portal.Molecule([[2, 0, 0, 0.0]], dtype="numpy", units="bohr")
 
     db = fractal_compute_server.objects["db_socket"]
     mol_ret = db.add_molecules({"hydrogen": hydrogen.to_json(), "helium": helium.to_json()})
@@ -27,7 +27,7 @@ def test_compute_queue_stack(fractal_compute_server):
     hydrogen_mol_id = mol_ret["data"]["hydrogen"]
     helium_mol_id = mol_ret["data"]["helium"]
 
-    option = qp.data.get_options("psi_default")
+    option = portal.data.get_options("psi_default")
     opt_ret = db.add_options([option])
     opt_key = option["name"]
 
@@ -72,13 +72,14 @@ def test_compute_queue_stack(fractal_compute_server):
         else:
             raise KeyError("Returned unexpected Molecule ID.")
 
+
 ### Tests the compute queue stack
 @testing.using_geometric
 @testing.using_psi4
 def test_procedure_optimization(fractal_compute_server):
 
     # Add a hydrogen molecule
-    hydrogen = qp.Molecule([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
+    hydrogen = portal.Molecule([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
     db = fractal_compute_server.objects["db_socket"]
     mol_ret = db.add_molecules({"hydrogen": hydrogen.to_json()})
 
@@ -110,11 +111,7 @@ def test_procedure_optimization(fractal_compute_server):
     assert len(nanny.list_current_tasks()) == 0
 
     # # Query result and check against out manual pul
-    query = {
-        "program": "geometric",
-        "options": "none",
-        "initial_molecule": mol_ret["data"]["hydrogen"]
-    }
+    query = {"program": "geometric", "options": "none", "initial_molecule": mol_ret["data"]["hydrogen"]}
     results = db.get_procedures([query])["data"]
 
     assert len(results) == 1
@@ -125,28 +122,28 @@ def test_procedure_optimization(fractal_compute_server):
 @testing.using_psi4
 def test_compute_database(fractal_compute_server):
 
-    portal = qp.FractalClient(fractal_compute_server.get_address(""))
+    client = portal.FractalClient(fractal_compute_server.get_address(""))
     db_name = "He_PES"
-    db = qp.Database(db_name, portal, db_type="ie")
+    db = portal.Database(db_name, client, db_type="ie")
 
     # Adds options
-    option = qp.data.get_options("psi_default")
+    option = portal.data.get_options("psi_default")
 
-    opt_ret = portal.add_options([option])
+    opt_ret = client.add_options([option])
     opt_key = option["name"]
 
     # Add two helium dimers to the DB at 4 and 8 bohr
-    He1 = qp.Molecule([[2, 0, 0, -2], [2, 0, 0, 2]], dtype="numpy", units="bohr", frags=[1])
+    He1 = portal.Molecule([[2, 0, 0, -2], [2, 0, 0, 2]], dtype="numpy", units="bohr", frags=[1])
     db.add_ie_rxn("He1", He1, attributes={"r": 4}, reaction_results={"default": {"Benchmark": 0.0009608501557}})
 
-    He2 = qp.Molecule([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
+    He2 = portal.Molecule([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
     db.add_ie_rxn("He2", He2, attributes={"r": 4}, reaction_results={"default": {"Benchmark": -0.00001098794749}})
 
     # Save the DB
     db.save()
 
     # Open a new database
-    db = qp.Database(db_name, portal)
+    db = portal.Database(db_name, client)
 
     # Compute SCF/sto-3g
     ret = db.compute("SCF", "STO-3G")

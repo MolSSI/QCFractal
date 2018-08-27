@@ -6,6 +6,7 @@ import tornado.web
 import functools
 from base64 import b64decode, b64encode
 
+
 def authenticate(permissions):
     def decorator(function):
         def wrapper(*args, **kwargs):
@@ -13,8 +14,11 @@ def authenticate(permissions):
 
             result = function(*args, **kwargs)
             return result
+
         return wrapper
+
     return decorator
+
 
 class APIHandler(tornado.web.RequestHandler):
     """
@@ -119,6 +123,7 @@ class MoleculeHandler(APIHandler):
         self.logger.info("POST: Molecule - {} inserted.".format(ret["meta"]["n_inserted"]))
         self.write(ret)
 
+
 class OptionHandler(APIHandler):
     """
     A handler to push and get molecules.
@@ -142,6 +147,7 @@ class OptionHandler(APIHandler):
 
         self.write(ret)
 
+
 class DatabaseHandler(APIHandler):
     """
     A handler to push and get molecules.
@@ -164,6 +170,7 @@ class DatabaseHandler(APIHandler):
         self.logger.info("POST: Databases - {} inserted.".format(ret["meta"]["n_inserted"]))
 
         self.write(ret)
+
 
 class ResultHandler(APIHandler):
     """
@@ -191,6 +198,7 @@ class ResultHandler(APIHandler):
 
         self.write(ret)
 
+
 class ServiceHandler(APIHandler):
     """
     A handler to push and get molecules.
@@ -215,7 +223,6 @@ class ServiceHandler(APIHandler):
     #     self.write(ret)
 
 
-
 # def _check_auth(objects, header):
 #     auth = False
 #     try:
@@ -234,7 +241,6 @@ class ServiceHandler(APIHandler):
 
 #     if auth is not True:
 #         raise KeyError("Could not authenticate user.")
-
 
 # class Information(tornado.web.RequestHandler):
 #     """
@@ -260,5 +266,3 @@ class ServiceHandler(APIHandler):
 #         ret["mongo_data"] = (mongod.url, mongod.port)
 #         ret["dask_data"] = str(queue.host) + ":" + str(queue.port)
 #         self.write(json.dumps(ret))
-
-

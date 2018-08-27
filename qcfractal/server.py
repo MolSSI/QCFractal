@@ -67,14 +67,19 @@ class FractalServer(object):
 
         # Setup the database connection
         self.db = db_sockets.db_socket_factory(
-            db_ip, db_port, project_name=db_project_name, username=db_username, password=db_password, db_type=db_type, bypass_security=db_bypass_security)
+            db_ip,
+            db_port,
+            project_name=db_project_name,
+            username=db_username,
+            password=db_password,
+            db_type=db_type,
+            bypass_security=db_bypass_security)
 
         # Pull the current loop if we need it
         if io_loop is None:
             self.loop = tornado.ioloop.IOLoop.current()
         else:
             self.loop = io_loop
-
 
         # Build up the application
         self.objects = {
@@ -83,7 +88,6 @@ class FractalServer(object):
         }
 
         endpoints = [
-            # (r"/information", dqm.handlers.Information, self.objects),
             (r"/molecule", web_handlers.MoleculeHandler, self.objects),
             (r"/option", web_handlers.OptionHandler, self.objects),
             (r"/database", web_handlers.DatabaseHandler, self.objects),
@@ -94,8 +98,8 @@ class FractalServer(object):
         # Queue handlers
         if queue_socket is not None:
 
-            queue_nanny, queue_scheduler, service_scheduler = queue_handlers.build_queue(queue_socket,
-                                                                                         self.objects["db_socket"])
+            queue_nanny, queue_scheduler, service_scheduler = queue_handlers.build_queue(
+                queue_socket, self.objects["db_socket"])
 
             # Add the socket to passed args
             self.objects["queue_socket"] = queue_socket

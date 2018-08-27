@@ -432,6 +432,7 @@ class Molecule:
     def __repr__(self):
         return self.pretty_print()
 
+
 ### Orientation methods
 
     def _inertial_tensor(self, geom, weight):
@@ -522,8 +523,8 @@ class Molecule:
         ret = Molecule(None, name=ret_name)
 
         if len(set(real) & set(ghost)):
-            raise TypeError("Molecule:get_fragment: real and ghost sets are overlaping! (%s, %s)." % (str(real),
-                                                                                                      str(ghost)))
+            raise TypeError(
+                "Molecule:get_fragment: real and ghost sets are overlaping! (%s, %s)." % (str(real), str(ghost)))
 
         geom_blocks = []
         symbols = []

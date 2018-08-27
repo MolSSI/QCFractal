@@ -27,8 +27,8 @@ def test_service_crank(dask_server_fixture):
     # Geometric options
     crank_options = {
         "crank_meta": {
-           "dihedrals": [[0, 1, 2, 3]],
-           "grid_spacing": [90]
+            "dihedrals": [[0, 1, 2, 3]],
+            "grid_spacing": [90]
         },
         "geometric_meta": {
             "coordsys": "tric"

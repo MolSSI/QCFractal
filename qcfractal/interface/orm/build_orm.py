@@ -4,6 +4,7 @@ Constructs ORMs from raw JSON
 
 from .crank_orm import CrankORM
 
+
 def build_orm(data, service=None):
     """
     Constructs a Service ORM from incoming JSON data.

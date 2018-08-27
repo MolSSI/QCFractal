@@ -4,9 +4,10 @@ Tests the various schema involved in the project that are not tested elsewhere.
 
 import pytest
 
-from ... import interface as dqm
+from ... import interface as portal
+
 
 def test_options():
-    opts = dqm.data.get_options("psi_default")
+    opts = portal.data.get_options("psi_default")
 
-    dqm.schema.validate(opts, "options")
+    portal.schema.validate(opts, "options")

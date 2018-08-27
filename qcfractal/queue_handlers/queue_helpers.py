@@ -1,4 +1,3 @@
-
 def _verify_input(data, mongo, logger=None, options=None):
 
     if options is not None:

@@ -3,7 +3,6 @@
 import numpy as np
 import pandas as pd
 
-
 # Need to use specifically with the fitting_database class
 
 # def signed_error(value, bench):
@@ -12,17 +11,22 @@ import pandas as pd
 # def unsigned_error(value, bench):
 #     return np.abs(value - bench)
 
+
 def mean_signed_error(value, bench):
     return np.mean(value - bench)
+
 
 def mean_unsigned_error(value, bench):
     return np.mean(np.abs(value - bench))
 
+
 # def unsigned_relative_error(value, bench):
 #     return np.abs((value - bench) / bench) * 100
 
+
 def mean_unsigned_relative_error(value, bench):
     return np.mean(np.abs((value - bench) / bench)) * 100
+
 
 # def weighted_unsigned_relative_error(value, bench, weight):
 #     return np.abs((value - bench) / weight) * 100
@@ -42,7 +46,9 @@ _stats_dict['MURE'] = mean_unsigned_relative_error
 # _stats_dict['WMURE'] = weighted_mean_unsigned_relative_error
 
 _return_series = ['ME', 'MUE', 'MURE', 'WMURE']
+
 # _needs_weight = ["WURE", "WMURE"]
+
 
 def wrap_statistics(description, df, value, bench):
 
@@ -67,7 +73,7 @@ def wrap_statistics(description, df, value, bench):
     elif isinstance(value, pd.DataFrame):
         return value.apply(lambda x: _stats_dict[description](x, rbench))
 
-    elif isinstance(value, (list, tuple)) :
+    elif isinstance(value, (list, tuple)):
         if description in _return_series:
             ret = pd.Series(index=value)
         else:
@@ -80,7 +86,3 @@ def wrap_statistics(description, df, value, bench):
 
     else:
         raise TypeError('Type %s is not understood for statistical quanities' % str(type(value)))
-
-
-
-
