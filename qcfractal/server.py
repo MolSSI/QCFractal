@@ -17,6 +17,7 @@ class FractalServer(object):
             # Server info options
             port=8888,
             io_loop=None,
+            security=None,
 
             # Database options
             db_ip="127.0.0.1",
@@ -56,9 +57,17 @@ class FractalServer(object):
             self.logger.addHandler(logging.StreamHandler())
             self.logger.info("No logfile given, setting output to stdout")
 
+        # Secure args
+        if security is None:
+            db_bypass_security = True
+        elif security == "local":
+            db_bypass_security = False
+        else:
+            raise KeyError("Security option '{}' not recognized.".format(security))
+
         # Setup the database connection
         self.db = db_sockets.db_socket_factory(
-            db_ip, db_port, project_name=db_project_name, username=db_username, password=db_password, db_type=db_type)
+            db_ip, db_port, project_name=db_project_name, username=db_username, password=db_password, db_type=db_type, bypass_security=db_bypass_security)
 
         # Pull the current loop if we need it
         if io_loop is None:
@@ -66,7 +75,6 @@ class FractalServer(object):
         else:
             self.loop = io_loop
 
-        # Secure args
 
         # Build up the application
         self.objects = {
@@ -92,9 +100,6 @@ class FractalServer(object):
             # Add the socket to passed args
             self.objects["queue_socket"] = queue_socket
             self.objects["queue_nanny"] = queue_nanny
-
-            # Add the callback to check results
-            # self.loop.PeriodicCallback(self.queue_nanny.update, 2000).start()
 
             # Add the endpoint
             endpoints.append((r"/scheduler", queue_scheduler, self.objects))

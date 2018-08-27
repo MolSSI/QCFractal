@@ -47,7 +47,7 @@ class MongoSocket:
                  project="molssidb",
                  username=None,
                  password=None,
-                 authentication=None,
+                 bypass_security=False,
                  authMechanism="SCRAM-SHA-1",
                  authSource=None,
                  logger=None):
@@ -62,6 +62,9 @@ class MongoSocket:
         else:
             self.logger = logging.getLogger('MongoSocket')
 
+        # Secuity
+        self._bypass_security = bypass_security
+
         # Static data
         self._collection_indices = {
             "databases": interface.schema.get_indices("database"),
@@ -71,7 +74,7 @@ class MongoSocket:
             "procedures": interface.schema.get_indices("procedure"),
             "services": interface.schema.get_indices("service"),
             "queue": interface.schema.get_indices("queue"),
-            "users": ("user", )
+            "users": ("username", )
         }
         self._valid_collections = set(self._collection_indices.keys())
         self._collection_unique_indices = {
@@ -131,7 +134,7 @@ class MongoSocket:
             self._project[col].create_index(idx, unique=self._collection_unique_indices[col])
 
         # Special queue index, hash_index should be unique
-        self._project[col].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
+        self._project["queue"].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
 
         # Return the success array
         return collection_creation
@@ -837,6 +840,9 @@ class MongoSocket:
         False
 
         """
+
+        if self._bypass_security:
+            return (True, "Success")
 
         data = self._project["users"].find_one({"username": username})
         if data is None:
