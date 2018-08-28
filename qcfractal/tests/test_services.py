@@ -14,8 +14,7 @@ import qcfractal.interface as portal
 ### Tests the compute queue stack
 @testing.using_crank
 @testing.using_geometric
-@testing.using_psi4
-@pytest.mark.slow
+@testing.using_rdkit
 def test_service_crank(dask_server_fixture):
 
     client = portal.FractalClient(dask_server_fixture.get_address())
@@ -35,10 +34,10 @@ def test_service_crank(dask_server_fixture):
         },
         "qc_meta": {
             "driver": "gradient",
-            "method": "HF",
-            "basis": "sto-3g",
+            "method": "UFF",
+            "basis": "",
             "options": "none",
-            "program": "psi4"
+            "program": "rdkit",
         },
     }
 
@@ -52,7 +51,7 @@ def test_service_crank(dask_server_fixture):
 
     # Get a CrankORM result and check data
     result = client.get_service(compute_key)[0]
-    assert pytest.approx(-148.7505629010982, 1e-5) == result.final_energies(0)
-    assert pytest.approx(-148.76416544463615, 1e-5) == result.final_energies(90)
-    assert pytest.approx(-148.76501336999286, 1e-5) == result.final_energies(180)
-    assert pytest.approx(-148.7641654446591, 1e-5) == result.final_energies(-90)
+    assert pytest.approx(0.002597541340221565, 1e-5) == result.final_energies(0)
+    assert pytest.approx(0.000156553761859276, 1e-5) == result.final_energies(90)
+    assert pytest.approx(0.000156553761859271, 1e-5) == result.final_energies(-90)
+    assert pytest.approx(0.000753492556057886, 1e-5) == result.final_energies(180)
