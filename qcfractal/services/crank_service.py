@@ -5,6 +5,7 @@ Wraps geometric procedures
 import copy
 import json
 import uuid
+import numpy as np
 
 from crank import crankAPI
 
@@ -43,13 +44,14 @@ class CrankService:
             grid_spacing=meta["crank_meta"]["grid_spacing"],
             elements=molecule_template["symbols"],
             init_coords=[molecule_template["geometry"]])
+        meta["crank_history"] = {}
 
         # Save initial molecule and add hash
         meta["state"] = "READY"
         meta["required_jobs"] = False
         meta["remaining_jobs"] = False
         meta["molecule_template"] = molecule_template
-        meta["complete_jobs"] = []
+        meta["optimization_history"] = {}
 
         dihedral_template = []
         for idx in meta["crank_meta"]["dihedrals"]:
@@ -83,6 +85,7 @@ class CrankService:
 
             # Figure out the structure
             job_results = {k: [None] * v for k, v in self.data["update_structure"].items()}
+            job_ids = {k: [None] * v for k, v in self.data["update_structure"].items()}
 
             inv_job_lookup = {v: k for k, v in self.data["complete_jobs"].items()}
 
@@ -91,9 +94,15 @@ class CrankService:
                 value, pos = self.data["job_map"][job_uid]
                 mol_keys = self.db_socket.get_molecules(
                     [ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
-                job_results[value][int(pos)] = (mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1])
 
-            # print("Job Results:", json.dumps(job_results, indent=2))
+                job_results[value][int(pos)] = (mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1])
+                job_ids[value][int(pos)] = ret["id"]
+
+            # Update the complete_jobs in order
+            for k, v in job_ids.items():
+                if k not in self.data["optimization_history"]:
+                    self.data["optimization_history"][k] = []
+                self.data["optimization_history"][k].extend(v)
 
             crankAPI.update_state(self.data["crank_state"], job_results)
 
@@ -189,9 +198,20 @@ class CrankService:
         # Parse remaining procedures
         # Create a map of "jobs" so that procedures does not have to followed
         self.data["state"] = "FINISHED"
-        final_energies = crankAPI.collect_lowest_energies(self.data["crank_state"])
-        self.data["final_energies"] = {json.dumps(k): v for k, v in final_energies.items()}
 
+        self.data["final_energies"] = {}
+        self.data["minimum_positions"] = {}
+
+        # # Get lowest energies and positions
+        for k, v in self.data["crank_state"]["grid_status"].items():
+            min_pos = int(np.argmin([x[2] for x in v]))
+            key = json.dumps(crankAPI.grid_id_from_string(k))
+            self.data["minimum_positions"][key] = min_pos
+            self.data["final_energies"][key] = v[min_pos][2]
+
+        # print(self.data["optimization_history"])
+        # print(self.data["minimum_positions"])
+        # print(self.data["final_energies"])
         # Pop temporaries
         del self.data["update_structure"]
         del self.data["job_map"]
@@ -199,3 +219,6 @@ class CrankService:
         del self.data["complete_jobs"]
         del self.data["molecule_template"]
         del self.data["queue_keys"]
+        del self.data["crank_state"]
+
+

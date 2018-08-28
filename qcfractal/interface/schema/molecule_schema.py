@@ -65,7 +65,6 @@ molecule_schema = {
                 "items": {
                     "type": "number",
                     "minimum": 0,
-                    # "maximum": 5
                 }
             }
         },

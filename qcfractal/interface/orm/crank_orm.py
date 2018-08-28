@@ -16,6 +16,7 @@ class CrankORM:
         "_state": "state",
 
         # Options
+        "_optimization_history": "optimization_history",
         "_initial_molecule_id": "initial_molecule",
         "_crank_options": "crank_meta",
         "_geometric_options": "geometric_meta",
