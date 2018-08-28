@@ -99,7 +99,7 @@ class CrankORM:
         ret = "Crank("
         ret += "id='{}', ".format(self._id)
         ret += "state='{}', ".format(self._state)
-        ret += "molecule_id='{}', ".format(self._state)
+        ret += "molecule_id='{}', ".format(self._initial_molecule_id)
 
         name = None
         if self._initial_molecule:

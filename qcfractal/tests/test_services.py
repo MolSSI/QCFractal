@@ -51,6 +51,8 @@ def test_service_crank(dask_server_fixture):
 
     # Get a CrankORM result and check data
     result = client.get_service(compute_key)[0]
+    assert isinstance(str(result), str) # Check that repr runs
+
     assert pytest.approx(0.002597541340221565, 1e-5) == result.final_energies(0)
     assert pytest.approx(0.000156553761859276, 1e-5) == result.final_energies(90)
     assert pytest.approx(0.000156553761859271, 1e-5) == result.final_energies(-90)
