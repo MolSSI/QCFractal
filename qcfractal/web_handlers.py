@@ -3,21 +3,7 @@ Web handlers for the FractalServer
 """
 import json
 import tornado.web
-import functools
-from base64 import b64decode, b64encode
-
-
-def authenticate(permissions):
-    def decorator(function):
-        def wrapper(*args, **kwargs):
-            handler = args[0]
-
-            result = function(*args, **kwargs)
-            return result
-
-        return wrapper
-
-    return decorator
+from base64 import b64decode
 
 
 class APIHandler(tornado.web.RequestHandler):
