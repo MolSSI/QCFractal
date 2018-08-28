@@ -46,7 +46,7 @@ def sec_server(request):
 
         # Add local users
         for k, v in _users.items():
-            r = server.db.add_user(k, _users[k]["pw"], _users[k]["perm"])
+            assert server.db.add_user(k, _users[k]["pw"], _users[k]["perm"])
 
         with testing.active_loop(loop) as act:
             yield server
@@ -64,7 +64,11 @@ def test_security_auth_decline_none(sec_server):
 
 
 def test_security_auth_decline_bad_user(sec_server):
-    client = portal.FractalClient(sec_server.get_address(), username="hello", password="something")
+    client = portal.FractalClient.from_file({
+        "address": sec_server.get_address(),
+        "username": "hello",
+        "password": "something"
+    })
 
     with pytest.raises(requests.exceptions.HTTPError):
         r = client.get_molecules([])

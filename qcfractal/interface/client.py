@@ -1,27 +1,27 @@
 """Provides an interface the QCDB Server instance"""
 
 import requests
+import yaml
 
 from . import molecule
 from . import orm
 
 
 class FractalClient(object):
-    def __init__(self, port, username=None, password=None, shared_secret=None):
-        if "http" not in port:
-            port = "http://" + port
+    def __init__(self, address, username=None, password=None, shared_secret=None):
+        if "http" not in address:
+            address = "http://" + address
 
-        if not port.endswith("/"):
-            port += "/"
+        if not address.endswith("/"):
+            address += "/"
 
-        self.port = port
+        self.address = address
         self._api_key = (username, password)
 
         # self.info = self.get_information()
-
     def _request(self, method, service, payload):
 
-        addr = self.port + service
+        addr = self.address + service
         if method == "get":
             r = requests.get(addr, json=payload, auth=self._api_key)
         elif method == "post":
@@ -33,6 +33,58 @@ class FractalClient(object):
             raise requests.exceptions.HTTPError("Server communication failure. Reason: {}".format(r.reason))
 
         return r
+
+    @classmethod
+    def from_file(cls, load_path=None):
+        """Creates a new FractalClient from file. If no path is passed in searches
+        current working directory and ~.qca/ for "qcportal_config.yaml"
+
+        Parameters
+        ----------
+        load_path : str, dict, optional
+            Path to find "qcportal_config.yaml", the filename, or a dictionary containing keys
+            ["address", "username", "password", "shared_secret"]
+
+        """
+
+        # Search canonical paths
+        if load_path is None:
+            test_paths = [os.getcwd(), os.path.join(os.path.expanduser('~'), ".qca")]
+
+            for path in test_paths:
+                local_path = os.path.join(path, "qcportal_config.yaml")
+                if os.path.exists(path):
+                    load_path = local_path
+                    break
+
+            raise FileNotFoundError(
+                "Could not find `qcportal_config.yaml` in the following paths:\n    {}".format(", ".join(test_paths)))
+
+        # Load if string, or use if dict
+        if isinstance(load_path, str):
+            load_path = os.path.join(os.path.expanduser(load_path))
+
+            # Gave folder, not file
+            if os.path.isdir(load_path):
+                load_path = os.path.join(load_path, "qcportal_config.yaml")
+
+            with open(load_path, "r") as handle:
+                data = yaml.load(handle)
+
+        elif isinstance(load_path, dict):
+            data = load_path
+        else:
+            raise TypeError("Could not infer data from load_path of type {}".format(type(load_path)))
+
+        if "address" not in data:
+            raise KeyError("Config file must at least contain a address field.")
+
+        address = data["address"]
+        username = data.get("username", None)
+        password = data.get("password", None)
+        shared_secret = data.get("shared_secret", None)
+
+        return cls(address, username=username, password=password, shared_secret=shared_secret)
 
     ### Molecule section
 
