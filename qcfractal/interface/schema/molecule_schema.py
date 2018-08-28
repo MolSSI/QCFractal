@@ -53,6 +53,22 @@ molecule_schema = {
                 "type": "boolean"
             }
         },
+        "connectivity": {
+            "description":
+            "(nat, ) list describing bonds within a molecule. Each element is a (atom1, atom2, order) tuple.",
+            "type":
+            "array",
+            "items": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                    "type": "number",
+                    "minimum": 0,
+                    # "maximum": 5
+                }
+            }
+        },
         "fragments": {
             "description": "A list of indices (0-indexed) for molecular fragments within the topology.",
             "type": "array",
@@ -104,7 +120,7 @@ molecule_schema = {
     # Custom components
     "hash_fields": [
         "symbols", "masses", "charge", "multiplicity", "real", "geometry", "fragments", "fragment_charges",
-        "fragment_multiplicities"
+        "fragment_multiplicities", "connectivity"
     ],
     "requied_definitions": ["provenance"]
 }
