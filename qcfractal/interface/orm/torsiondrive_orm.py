@@ -1,13 +1,13 @@
 """
-A ORM for Crank
+A ORM for TorsionDrive
 """
 
 import json
 
 
-class CrankORM:
+class TorsionDriveORM:
     """
-    A interface to the raw JSON data of a Crank torsion scan run.
+    A interface to the raw JSON data of a TorsionDrive torsion scan run.
     """
 
     # Maps {internal_state : FractalServer state}
@@ -18,7 +18,7 @@ class CrankORM:
         # Options
         "_optimization_history": "optimization_history",
         "_initial_molecule_id": "initial_molecule",
-        "_crank_options": "crank_meta",
+        "_torsiondrive_options": "torsiondrive_meta",
         "_geometric_options": "geometric_meta",
         "_qc_options": "qc_meta",
 
@@ -27,7 +27,7 @@ class CrankORM:
     }
 
     def __init__(self, initial_molecule, **kwargs):
-        """Initializes a CrankORM object, from local data.
+        """Initializes a TorsionDriveORM object, from local data.
 
         This object may be able to submit jobs to the server in the future.
 
@@ -38,7 +38,7 @@ class CrankORM:
         initial_molecule : TYPE
             Description
         kwargs:
-            See CrankORM.from_json
+            See TorsionDriveORM.from_json
 
         """
         self._initial_molecule = initial_molecule
@@ -50,7 +50,7 @@ class CrankORM:
     @classmethod
     def from_json(cls, data):
         """
-        Creates a CrankORM object from FractalServer data.
+        Creates a TorsionDriveORM object from FractalServer data.
 
         Parameters
         ----------
@@ -59,19 +59,19 @@ class CrankORM:
                 - "id": The service id of the blob
                 - "state": The current state of the job ("WAITING", "RUNNING", "FINISHED")
                 - "initial_molecule": The id of the submitted molecule
-                - "crank_meta": The option submitted to the Crank method
-                - "geometric_meta": The options submitted to the Geometric method called by Crank
+                - "torsiondrive_meta": The option submitted to the TorsionDrive method
+                - "geometric_meta": The options submitted to the Geometric method called by TorsionDrive
                 - "qc_meta": The program, options, method, and basis to be run by Geometric.
-                - "final_energies": A dictionary of final energies if the Crank service is finished
+                - "final_energies": A dictionary of final energies if the TorsionDrive service is finished
 
         Returns
         -------
-        crank_obj : CrankORM
-            A CrankORM object from the specified JSON.
+        torsiondrive_obj : TorsionDriveORM
+            A TorsionDriveORM object from the specified JSON.
 
         """
         kwargs = {}
-        for k, v in CrankORM.__json_mapper.items():
+        for k, v in TorsionDriveORM.__json_mapper.items():
             if v in data:
                 kwargs[k[1:]] = data[v]
 
@@ -82,21 +82,21 @@ class CrankORM:
 
     def __repr__(self):
         """
-        Simplified crank string representation.
+        Simplified torsiondrive string representation.
 
         Returns
         -------
         ret : str
-            A representation of the current Crank state.
+            A representation of the current TorsionDrive state.
 
         Examples
         --------
 
-        >>> repr(crank_obj)
-        Crank(id='5b7f1fd57b87872d2c5d0a6d', state='FINISHED', molecule_id='5b7f1fd57b87872d2c5d0a6c', molecule_name='HOOH')
+        >>> repr(torsiondrive_obj)
+        TorsionDrive(id='5b7f1fd57b87872d2c5d0a6d', state='FINISHED', molecule_id='5b7f1fd57b87872d2c5d0a6c', molecule_name='HOOH')
         """
 
-        ret = "Crank("
+        ret = "TorsionDrive("
         ret += "id='{}', ".format(self._id)
         ret += "state='{}', ".format(self._state)
         ret += "molecule_id='{}', ".format(self._initial_molecule_id)
@@ -128,7 +128,7 @@ class CrankORM:
         Examples
         --------
 
-        >>> crank_obj.final_energies()
+        >>> torsiondrive_obj.final_energies()
         {(-90,): -148.7641654446243, (180,): -148.76501336993732, (0,): -148.75056290106735, (90,): -148.7641654446148}
         """
 

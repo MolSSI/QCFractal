@@ -7,14 +7,14 @@ import json
 import uuid
 import numpy as np
 
-from crank import crankAPI
+from torsiondrive import td_api
 
 from .. import procedures
 
-__all__ = ["CrankService"]
+__all__ = ["TorsionDriveService"]
 
 
-class CrankService:
+class TorsionDriveService:
     def __init__(self, db_socket, queue_socket, data):
 
         # Server interaction
@@ -30,7 +30,7 @@ class CrankService:
         # Grab initial molecule
         meta["initial_molecule"] = molecule["id"]
 
-        # Copy initial intial input and build out a crank_state
+        # Copy initial intial input and build out a torsiondrive_state
         meta = copy.deepcopy(meta)
 
         # Remove identity info from template
@@ -38,13 +38,13 @@ class CrankService:
         del molecule_template["id"]
         del molecule_template["molecule_hash"]
 
-        # Iniate crank meta
-        meta["crank_state"] = crankAPI.create_initial_state(
-            dihedrals=meta["crank_meta"]["dihedrals"],
-            grid_spacing=meta["crank_meta"]["grid_spacing"],
+        # Iniate torsiondrive meta
+        meta["torsiondrive_state"] = td_api.create_initial_state(
+            dihedrals=meta["torsiondrive_meta"]["dihedrals"],
+            grid_spacing=meta["torsiondrive_meta"]["grid_spacing"],
             elements=molecule_template["symbols"],
             init_coords=[molecule_template["geometry"]])
-        meta["crank_history"] = {}
+        meta["torsiondrive_history"] = {}
 
         # Save initial molecule and add hash
         meta["state"] = "READY"
@@ -54,10 +54,10 @@ class CrankService:
         meta["optimization_history"] = {}
 
         dihedral_template = []
-        for idx in meta["crank_meta"]["dihedrals"]:
+        for idx in meta["torsiondrive_meta"]["dihedrals"]:
             tmp = ('dihedral', ) + tuple(str(z + 1) for z in idx)
             dihedral_template.append(tmp)
-        meta["crank_meta"]["dihedral_template"] = dihedral_template
+        meta["torsiondrive_meta"]["dihedral_template"] = dihedral_template
 
         return cls(db_socket, queue_socket, meta)
 
@@ -67,8 +67,8 @@ class CrankService:
     def iterate(self):
 
         self.data["state"] = "RUNNING"
-        # print("\nCrank State:")
-        # print(json.dumps(self.data["crank_state"], indent=2))
+        # print("\nTorsionDrive State:")
+        # print(json.dumps(self.data["torsiondrive_state"], indent=2))
         # print("Iterate")
         if (self.data["remaining_jobs"] > 0):
             # print("Iterate: not yet done", self.data["remaining_jobs"])
@@ -104,15 +104,15 @@ class CrankService:
                     self.data["optimization_history"][k] = []
                 self.data["optimization_history"][k].extend(v)
 
-            crankAPI.update_state(self.data["crank_state"], job_results)
+            td_api.update_state(self.data["torsiondrive_state"], job_results)
 
-            # print("\nCrank State Updated:")
-            # print(json.dumps(self.data["crank_state"], indent=2))
+            # print("\nTorsionDrive State Updated:")
+            # print(json.dumps(self.data["torsiondrive_state"], indent=2))
 
         # Figure out if we are still waiting on jobs
 
         # Create new jobs from the current state
-        next_jobs = crankAPI.next_jobs_from_state(self.data["crank_state"], verbose=True)
+        next_jobs = td_api.next_jobs_from_state(self.data["torsiondrive_state"], verbose=True)
 
         # All done
         if len(next_jobs) == 0:
@@ -127,7 +127,7 @@ class CrankService:
 
         # step 5
 
-        # Save crank state
+        # Save torsiondrive state
 
     def submit_geometric_tasks(self, job_dict):
 
@@ -166,7 +166,7 @@ class CrankService:
             # Construct constraints
             containts = [
                 tuple(x) + (str(y), )
-                for x, y in zip(self.data["crank_meta"]["dihedral_template"], crankAPI.grid_id_from_string(key[0]))
+                for x, y in zip(self.data["torsiondrive_meta"]["dihedral_template"], td_api.grid_id_from_string(key[0]))
             ]
             packet["meta"]["keywords"]["constraints"] = {"set": containts}
             packet["data"] = [mol]
@@ -203,9 +203,9 @@ class CrankService:
         self.data["minimum_positions"] = {}
 
         # # Get lowest energies and positions
-        for k, v in self.data["crank_state"]["grid_status"].items():
+        for k, v in self.data["torsiondrive_state"]["grid_status"].items():
             min_pos = int(np.argmin([x[2] for x in v]))
-            key = json.dumps(crankAPI.grid_id_from_string(k))
+            key = json.dumps(td_api.grid_id_from_string(k))
             self.data["minimum_positions"][key] = min_pos
             self.data["final_energies"][key] = v[min_pos][2]
 
@@ -219,6 +219,6 @@ class CrankService:
         del self.data["complete_jobs"]
         del self.data["molecule_template"]
         del self.data["queue_keys"]
-        del self.data["crank_state"]
+        del self.data["torsiondrive_state"]
 
 

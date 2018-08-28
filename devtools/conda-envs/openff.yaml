@@ -35,5 +35,5 @@ dependencies:
     - fireworks
     
       # OpenFF Flows
-    - git+git://github.com/lpwgroup/crank.git@v0.8.1#egg=crank
+    - git+git://github.com/lpwgroup/torsiondrive.git@v0.8.2#egg=torsiondrive
     - git+git://github.com/leeping/geomeTRIC@0.8.8#egg=geometric
