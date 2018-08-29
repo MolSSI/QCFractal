@@ -5,15 +5,16 @@ Wraps geometric procedures
 import copy
 import json
 import uuid
+import numpy as np
 
-from crank import crankAPI
+from torsiondrive import td_api
 
 from .. import procedures
 
-__all__ = ["CrankService"]
+__all__ = ["TorsionDriveService"]
 
 
-class CrankService:
+class TorsionDriveService:
     def __init__(self, db_socket, queue_socket, data):
 
         # Server interaction
@@ -29,7 +30,7 @@ class CrankService:
         # Grab initial molecule
         meta["initial_molecule"] = molecule["id"]
 
-        # Copy initial intial input and build out a crank_state
+        # Copy initial intial input and build out a torsiondrive_state
         meta = copy.deepcopy(meta)
 
         # Remove identity info from template
@@ -37,25 +38,26 @@ class CrankService:
         del molecule_template["id"]
         del molecule_template["molecule_hash"]
 
-        # Iniate crank meta
-        meta["crank_state"] = crankAPI.create_initial_state(
-            dihedrals=meta["crank_meta"]["dihedrals"],
-            grid_spacing=meta["crank_meta"]["grid_spacing"],
+        # Iniate torsiondrive meta
+        meta["torsiondrive_state"] = td_api.create_initial_state(
+            dihedrals=meta["torsiondrive_meta"]["dihedrals"],
+            grid_spacing=meta["torsiondrive_meta"]["grid_spacing"],
             elements=molecule_template["symbols"],
             init_coords=[molecule_template["geometry"]])
+        meta["torsiondrive_history"] = {}
 
         # Save initial molecule and add hash
         meta["state"] = "READY"
         meta["required_jobs"] = False
         meta["remaining_jobs"] = False
         meta["molecule_template"] = molecule_template
-        meta["complete_jobs"] = []
+        meta["optimization_history"] = {}
 
         dihedral_template = []
-        for idx in meta["crank_meta"]["dihedrals"]:
+        for idx in meta["torsiondrive_meta"]["dihedrals"]:
             tmp = ('dihedral', ) + tuple(str(z + 1) for z in idx)
             dihedral_template.append(tmp)
-        meta["crank_meta"]["dihedral_template"] = dihedral_template
+        meta["torsiondrive_meta"]["dihedral_template"] = dihedral_template
 
         return cls(db_socket, queue_socket, meta)
 
@@ -65,8 +67,8 @@ class CrankService:
     def iterate(self):
 
         self.data["state"] = "RUNNING"
-        # print("\nCrank State:")
-        # print(json.dumps(self.data["crank_state"], indent=2))
+        # print("\nTorsionDrive State:")
+        # print(json.dumps(self.data["torsiondrive_state"], indent=2))
         # print("Iterate")
         if (self.data["remaining_jobs"] > 0):
             # print("Iterate: not yet done", self.data["remaining_jobs"])
@@ -83,6 +85,7 @@ class CrankService:
 
             # Figure out the structure
             job_results = {k: [None] * v for k, v in self.data["update_structure"].items()}
+            job_ids = {k: [None] * v for k, v in self.data["update_structure"].items()}
 
             inv_job_lookup = {v: k for k, v in self.data["complete_jobs"].items()}
 
@@ -91,19 +94,25 @@ class CrankService:
                 value, pos = self.data["job_map"][job_uid]
                 mol_keys = self.db_socket.get_molecules(
                     [ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
+
                 job_results[value][int(pos)] = (mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1])
+                job_ids[value][int(pos)] = ret["id"]
 
-            # print("Job Results:", json.dumps(job_results, indent=2))
+            # Update the complete_jobs in order
+            for k, v in job_ids.items():
+                if k not in self.data["optimization_history"]:
+                    self.data["optimization_history"][k] = []
+                self.data["optimization_history"][k].extend(v)
 
-            crankAPI.update_state(self.data["crank_state"], job_results)
+            td_api.update_state(self.data["torsiondrive_state"], job_results)
 
-            # print("\nCrank State Updated:")
-            # print(json.dumps(self.data["crank_state"], indent=2))
+            # print("\nTorsionDrive State Updated:")
+            # print(json.dumps(self.data["torsiondrive_state"], indent=2))
 
         # Figure out if we are still waiting on jobs
 
         # Create new jobs from the current state
-        next_jobs = crankAPI.next_jobs_from_state(self.data["crank_state"], verbose=True)
+        next_jobs = td_api.next_jobs_from_state(self.data["torsiondrive_state"], verbose=True)
 
         # All done
         if len(next_jobs) == 0:
@@ -118,7 +127,7 @@ class CrankService:
 
         # step 5
 
-        # Save crank state
+        # Save torsiondrive state
 
     def submit_geometric_tasks(self, job_dict):
 
@@ -157,7 +166,7 @@ class CrankService:
             # Construct constraints
             containts = [
                 tuple(x) + (str(y), )
-                for x, y in zip(self.data["crank_meta"]["dihedral_template"], crankAPI.grid_id_from_string(key[0]))
+                for x, y in zip(self.data["torsiondrive_meta"]["dihedral_template"], td_api.grid_id_from_string(key[0]))
             ]
             packet["meta"]["keywords"]["constraints"] = {"set": containts}
             packet["data"] = [mol]
@@ -189,9 +198,20 @@ class CrankService:
         # Parse remaining procedures
         # Create a map of "jobs" so that procedures does not have to followed
         self.data["state"] = "FINISHED"
-        final_energies = crankAPI.collect_lowest_energies(self.data["crank_state"])
-        self.data["final_energies"] = {json.dumps(k): v for k, v in final_energies.items()}
 
+        self.data["final_energies"] = {}
+        self.data["minimum_positions"] = {}
+
+        # # Get lowest energies and positions
+        for k, v in self.data["torsiondrive_state"]["grid_status"].items():
+            min_pos = int(np.argmin([x[2] for x in v]))
+            key = json.dumps(td_api.grid_id_from_string(k))
+            self.data["minimum_positions"][key] = min_pos
+            self.data["final_energies"][key] = v[min_pos][2]
+
+        # print(self.data["optimization_history"])
+        # print(self.data["minimum_positions"])
+        # print(self.data["final_energies"])
         # Pop temporaries
         del self.data["update_structure"]
         del self.data["job_map"]
@@ -199,3 +219,6 @@ class CrankService:
         del self.data["complete_jobs"]
         del self.data["molecule_template"]
         del self.data["queue_keys"]
+        del self.data["torsiondrive_state"]
+
+

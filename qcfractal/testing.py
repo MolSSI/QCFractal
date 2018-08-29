@@ -34,7 +34,7 @@ _programs = {
     "psi4": _plugin_import("psi4"),
     "dask": _plugin_import("dask"),
     "geometric": _plugin_import("geometric"),
-    "crank": _plugin_import("crank"),
+    "torsiondrive": _plugin_import("torsiondrive"),
 }
 if _programs["dask"]:
     _programs["dask.distributed"] = _plugin_import("dask.distributed")
@@ -53,7 +53,7 @@ using_dask = pytest.mark.skipif(
 using_psi4 = pytest.mark.skipif(has_module('psi4') is False, reason=_import_message.format('psi4'))
 using_rdkit = pytest.mark.skipif(has_module('rdkit') is False, reason=_import_message.format('rdkit'))
 using_geometric = pytest.mark.skipif(has_module('geometric') is False, reason=_import_message.format('geometric'))
-using_crank = pytest.mark.skipif(has_module('crank') is False, reason=_import_message.format('crank'))
+using_torsiondrive = pytest.mark.skipif(has_module('torsiondrive') is False, reason=_import_message.format('torsiondrive'))
 
 ### Server testing mechanics
 

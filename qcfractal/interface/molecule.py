@@ -43,6 +43,7 @@ class Molecule:
         self.fragment_charges = []
         self.fragment_multiplicities = []
         self.provenance = {}
+        self.connectivity = []
 
         # List any flags
         self._custom_masses = False
