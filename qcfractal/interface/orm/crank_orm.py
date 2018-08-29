@@ -4,6 +4,7 @@ A ORM for Crank
 
 import json
 
+
 class CrankORM:
     """
     A interface to the raw JSON data of a Crank torsion scan run.

@@ -3,8 +3,7 @@ The json-schema for the Options definition
 """
 
 options_schema = {
-    "$schema":
-    "http://json-schema.org/draft-04/schema#",
+    "$schema": "http://json-schema.org/draft-04/schema#",
     "properties": {
         "name": {
             "description": "The name of the options definition.",
@@ -16,9 +15,7 @@ options_schema = {
         },
     },
     "required": ["program", "name"],
-    "description":
-    "The physical cartesian representation of the molecular system",
+    "description": "The physical cartesian representation of the molecular system",
     "definitions": {},
-    "additionalProperties":
-    True,
+    "additionalProperties": True,
 }

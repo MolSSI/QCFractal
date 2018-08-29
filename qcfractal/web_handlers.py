@@ -3,6 +3,8 @@ Web handlers for the FractalServer
 """
 import json
 import tornado.web
+from base64 import b64decode
+import cryptography
 
 
 class APIHandler(tornado.web.RequestHandler):
@@ -21,9 +23,33 @@ class APIHandler(tornado.web.RequestHandler):
 
         #print(self.request.headers["Content-Type"])
         self.json = json.loads(self.request.body.decode("UTF-8"))
-        # Set logging
-        # print(self.request.method)
-        # self.objects["logger"].info("%s" % __api_name__)
+
+
+    def authenticate(self, permission):
+        """Authenticates request with a given permission setting
+
+        Parameters
+        ----------
+        permission : str
+            The required permission ["read", "write", "compute", "admin"]
+
+        """
+        if "Authorization" in self.request.headers:
+            bytes_token = self.request.headers["Authorization"].encode("UTF-8")
+            try:
+                data = json.loads(self.objects["fernet"].decrypt(bytes_token))
+            except cryptography.fernet.InvalidToken:
+                raise tornado.web.HTTPError(status_code=401, reason="Invalid shared secret.")
+
+            username = data["username"]
+            password = data["password"]
+        else:
+            username = None
+            password = None
+
+        verified, msg = self.objects["db_socket"].verify_user(username, password, permission)
+        if verified is False:
+            raise tornado.web.HTTPError(status_code=401, reason=msg)
 
 
 class MoleculeHandler(APIHandler):
@@ -51,6 +77,8 @@ class MoleculeHandler(APIHandler):
             "data" - A dictionary of {key : molecule JSON} results
 
         """
+        self.authenticate("read")
+
         db = self.objects["db_socket"]
 
         kwargs = {}
@@ -81,11 +109,14 @@ class MoleculeHandler(APIHandler):
             "data" - A dictionary of {key : id} results
         """
 
+        self.authenticate("write")
+
         db = self.objects["db_socket"]
 
         ret = db.add_molecules(self.json["data"])
         self.logger.info("POST: Molecule - {} inserted.".format(ret["meta"]["n_inserted"]))
         self.write(ret)
+
 
 class OptionHandler(APIHandler):
     """
@@ -93,6 +124,7 @@ class OptionHandler(APIHandler):
     """
 
     def get(self):
+        self.authenticate("read")
 
         db = self.objects["db_socket"]
 
@@ -102,6 +134,7 @@ class OptionHandler(APIHandler):
         self.write(ret)
 
     def post(self):
+        self.authenticate("write")
 
         db = self.objects["db_socket"]
 
@@ -110,12 +143,14 @@ class OptionHandler(APIHandler):
 
         self.write(ret)
 
+
 class DatabaseHandler(APIHandler):
     """
     A handler to push and get molecules.
     """
 
     def get(self):
+        self.authenticate("read")
 
         db = self.objects["db_socket"]
 
@@ -125,6 +160,7 @@ class DatabaseHandler(APIHandler):
         self.write(ret)
 
     def post(self):
+        self.authenticate("write")
 
         db = self.objects["db_socket"]
 
@@ -133,12 +169,14 @@ class DatabaseHandler(APIHandler):
 
         self.write(ret)
 
+
 class ResultHandler(APIHandler):
     """
     A handler to push and get molecules.
     """
 
     def get(self):
+        self.authenticate("read")
 
         db = self.objects["db_socket"]
         proj = None
@@ -151,6 +189,7 @@ class ResultHandler(APIHandler):
         self.write(ret)
 
     def post(self):
+        self.authenticate("write")
 
         db = self.objects["db_socket"]
 
@@ -159,12 +198,14 @@ class ResultHandler(APIHandler):
 
         self.write(ret)
 
+
 class ServiceHandler(APIHandler):
     """
     A handler to push and get molecules.
     """
 
     def get(self):
+        self.authenticate("read")
 
         db = self.objects["db_socket"]
 
@@ -181,7 +222,6 @@ class ServiceHandler(APIHandler):
     #     self.logger.info("POST: Results - {} inserted.".format(ret["meta"]["n_inserted"]))
 
     #     self.write(ret)
-
 
 
 # def _check_auth(objects, header):
@@ -202,7 +242,6 @@ class ServiceHandler(APIHandler):
 
 #     if auth is not True:
 #         raise KeyError("Could not authenticate user.")
-
 
 # class Information(tornado.web.RequestHandler):
 #     """
@@ -228,5 +267,3 @@ class ServiceHandler(APIHandler):
 #         ret["mongo_data"] = (mongod.url, mongod.port)
 #         ret["dask_data"] = str(queue.host) + ":" + str(queue.port)
 #         self.write(json.dumps(ret))
-
-

@@ -21,6 +21,8 @@ if __name__ == "__main__":
             'pandas',
             'qcengine',
             'pytest',
+            'bcrypt',
+            'cryptography',
         ],
         extras_require={
             'docs': [

@@ -84,7 +84,7 @@ class CrankService:
             # Figure out the structure
             job_results = {k: [None] * v for k, v in self.data["update_structure"].items()}
 
-            inv_job_lookup = {v : k for k, v in self.data["complete_jobs"].items()}
+            inv_job_lookup = {v: k for k, v in self.data["complete_jobs"].items()}
 
             for ret in job_query["data"]:
                 job_uid = inv_job_lookup[ret["id"]]
@@ -173,7 +173,6 @@ class CrankService:
             full_tasks.append(task[0])
             job_map[uid] = key
 
-
         # Create data for next round
         self.data["update_structure"] = {k: len(v) for k, v in job_dict.items()}
         self.data["job_map"] = job_map
@@ -200,5 +199,3 @@ class CrankService:
         del self.data["complete_jobs"]
         del self.data["molecule_template"]
         del self.data["queue_keys"]
-
-

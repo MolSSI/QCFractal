@@ -136,7 +136,6 @@ A command line interface to the qcfractal.
 
 #     def stop(self):
 
-
 if __name__ == "__main__":
 
     server = QCDBServer()

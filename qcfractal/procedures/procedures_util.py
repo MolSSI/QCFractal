@@ -68,9 +68,8 @@ def unpack_single_run_meta(db, meta, molecules):
         }
     })
 
-
     # Get the required molecules
-    indexed_molecules = {k : v for k, v in enumerate(molecules)}
+    indexed_molecules = {k: v for k, v in enumerate(molecules)}
     raw_molecules_query = db.mixed_molecule_get(indexed_molecules)
 
     tasks = {}
@@ -81,7 +80,6 @@ def unpack_single_run_meta(db, meta, molecules):
 
         indexer["molecule_id"] = mol["id"]
         tasks[interface.schema.format_result_indices(indexer)] = data
-
 
     return (tasks, [])
 
@@ -126,6 +124,7 @@ def parse_single_runs(db, results):
         del v["qcfractal_tags"]
 
     return results
+
 
 def hash_procedure_keys(keys):
     m = hashlib.sha1()

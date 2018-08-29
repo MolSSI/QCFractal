@@ -13,6 +13,7 @@ import collections
 import copy
 import datetime
 import logging
+import bcrypt
 
 import pandas as pd
 from bson.objectid import ObjectId
@@ -46,6 +47,7 @@ class MongoSocket:
                  project="molssidb",
                  username=None,
                  password=None,
+                 bypass_security=False,
                  authMechanism="SCRAM-SHA-1",
                  authSource=None,
                  logger=None):
@@ -60,6 +62,9 @@ class MongoSocket:
         else:
             self.logger = logging.getLogger('MongoSocket')
 
+        # Secuity
+        self._bypass_security = bypass_security
+
         # Static data
         self._collection_indices = {
             "databases": interface.schema.get_indices("database"),
@@ -69,6 +74,7 @@ class MongoSocket:
             "procedures": interface.schema.get_indices("procedure"),
             "services": interface.schema.get_indices("service"),
             "queue": interface.schema.get_indices("queue"),
+            "users": ("username", )
         }
         self._valid_collections = set(self._collection_indices.keys())
         self._collection_unique_indices = {
@@ -79,6 +85,7 @@ class MongoSocket:
             "procedures": False,
             "services": False,
             "queue": True,
+            "users": True,
         }
 
         self._lower_results_index = ["method", "basis", "options", "program"]
@@ -127,7 +134,7 @@ class MongoSocket:
             self._project[col].create_index(idx, unique=self._collection_unique_indices[col])
 
         # Special queue index, hash_index should be unique
-        self._project[col].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
+        self._project["queue"].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
 
         # Return the success array
         return collection_creation
@@ -684,7 +691,13 @@ class MongoSocket:
 
             for x in data:
                 if x["hash_index"] in dup_inds:
-                    upd = pymongo.UpdateOne({"hash_index": x["hash_index"]}, {"$push": {"hooks": {"$each": x["hooks"]}}})
+                    upd = pymongo.UpdateOne({
+                        "hash_index": x["hash_index"]
+                    }, {"$push": {
+                        "hooks": {
+                            "$each": x["hooks"]
+                        }
+                    }})
                     hook_updates.append(upd)
 
             tmp = self._project["queue"].bulk_write(hook_updates)
@@ -703,11 +716,13 @@ class MongoSocket:
             },
             sort=[("created_on", -1)],
             limit=n,
-            projection={"_id": True,
-                        "spec": True,
-                        "hash_index": True,
-                        "parser": True,
-                        "hooks": True}))
+            projection={
+                "_id": True,
+                "spec": True,
+                "hash_index": True,
+                "parser": True,
+                "hooks": True
+            }))
 
         query = {"_id": {"$in": [x["_id"] for x in found]}}
 
@@ -769,6 +784,100 @@ class MongoSocket:
 
         ret = self._project["services"].bulk_write(bulk_commands, ordered=False)
         return ret
+
+### Users
+
+    def add_user(self, username, password, permissions=["read"]):
+        """
+        Adds a new user and associated permissions.
+
+        Passwords are stored using bcrypt.
+
+        Parameters
+        ----------
+        username : str
+            New user's username
+        password : str
+            The user's password
+        permissions : list of str, optional
+            The associated permissions of a user ['read', 'write', 'compute', 'admin']
+
+        Returns
+        -------
+        tuple
+            Successful insert or not
+        """
+
+        hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
+        try:
+            self._project["users"].insert_one({"username": username, "password": hashed, "permissions": permissions})
+            return True
+        except pymongo.errors.DuplicateKeyError:
+            return False
+
+    def verify_user(self, username, password, permission):
+        """
+        Verifies if a user has the requested permissions or not.
+
+        Passwords are store and verified using bcrypt.
+
+        Parameters
+        ----------
+        username : str
+            The username to verify
+        password : str
+            The password associated with the username
+        permission : str
+            The associated permissions of a user ['read', 'write', 'compute', 'admin']
+
+        Returns
+        -------
+        tuple
+            A tuple of (success flag, failure string)
+
+        Examples
+        --------
+
+        >>> db.add_user("george", "shortpw")
+
+        >>> db.verify_user("george", "shortpw", "read")
+        True
+
+        >>> db.verify_user("george", "shortpw", "admin")
+        False
+
+        """
+
+        if self._bypass_security:
+            return (True, "Success")
+
+        data = self._project["users"].find_one({"username": username})
+        if data is None:
+            return (False, "User not found.")
+
+        pwcheck = bcrypt.checkpw(password.encode("UTF-8"), data["password"])
+        if pwcheck is False:
+            return (False, "Incorrect password.")
+
+        if permission.lower() not in data["permissions"]:
+            return (False, "User has insufficient permissions.")
+
+        return (True, "Success")
+
+    def remove_user(self, username):
+        """Removes a user from the database
+
+        Parameters
+        ----------
+        username : str
+            The username to remove
+
+        Returns
+        -------
+        bool
+            If the operation was successful or not.
+        """
+        return self._project["users"].delete_one({"username": username}).deleted_count == 1
 
 
 ### Complex parsers

@@ -2,13 +2,13 @@
 Queue backend abstraction manager.
 """
 
-import collections
 import logging
 import traceback
+import collections
 
+from ..web_handlers import APIHandler
 from .. import procedures
 from .. import services
-from ..web_handlers import APIHandler
 
 
 class QueueNanny:
@@ -115,8 +115,7 @@ class QueueNanny:
                     else:
                         error = "No error supplied"
 
-                    raise self.logger.info("Computation key did not complete successfully!:\n%s\n" % (str(key),
-                                                                                                error))
+                    raise self.logger.info("Computation key did not complete successfully!:\n%s\n" % (str(key), error))
                 # res = self.db_socket.del_page_by_data(tmp_data)
 
                 self.logger.info("update: {}".format(key))
@@ -143,7 +142,6 @@ class QueueNanny:
         # Submit new jobs
         new_jobs = self.db_socket.queue_get_next(n=open_slots)
         self.queue_adapter.submit_tasks(new_jobs)
-
 
     def update_services(self):
         """Runs through all active services and examines their current status.
@@ -215,39 +213,7 @@ class QueueScheduler(APIHandler):
     def post(self):
         """Summary
         """
-        # _check_auth(self.objects, self.request.headers)
-
-        # Grab objects
-        db = self.objects["db_socket"]
-        queue_nanny = self.objects["queue_nanny"]
-        # result_indices = schema.get_indices("result")
-
-        # Build return metadata
-        meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
-
-        full_tasks, errors = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])(db, self.json)
-
-        # Add tasks to Nanny
-        submitted = queue_nanny.submit_tasks(full_tasks)
-
-        # Return anything of interest
-        meta["success"] = True
-        meta["n_inserted"] = len(submitted)
-        meta["errors"] = errors
-        ret = {"meta": meta, "data": submitted}
-
-        self.write(ret)
-
-
-class QueueScheduler(APIHandler):
-    """
-    Takes in a data packet the contains the molecule_hash, modelchem and options objects.
-    """
-
-    def post(self):
-        """Summary
-        """
-        # _check_auth(self.objects, self.request.headers)
+        self.authenticate("compute")
 
         # Grab objects
         db = self.objects["db_socket"]
@@ -282,6 +248,7 @@ class ServiceScheduler(APIHandler):
     def post(self):
         """Summary
         """
+        self.authenticate("compute")
 
         # Grab objects
         db = self.objects["db_socket"]
@@ -310,14 +277,12 @@ class ServiceScheduler(APIHandler):
         self.write(ret)
 
 
-def build_queue(queue_type, queue_socket, db_socket, logger=None, **kwargs):
+def build_queue(queue_socket, db_socket, logger=None, **kwargs):
     """Constructs a queue and nanny based off the incoming queue socket type.
 
     Parameters
     ----------
-    queue_type : str ("dask", "fireworks")
-        The name of the incoming queue manager.
-    queue_socket : object ("distributed.Client", "fireworks.lpad")
+    queue_socket : object ("distributed.Client", "fireworks.LaunchPad")
         A object wrapper for different queue types
     db_socket : DBSocket
         A socket to the underlying database
@@ -330,7 +295,10 @@ def build_queue(queue_type, queue_socket, db_socket, logger=None, **kwargs):
         Returns a valid Nanny and Scheduler for the selected computational queue
 
     """
-    if queue_type == "dask":
+
+    queue_type = type(queue_socket).__module__ + "." + type(queue_socket).__name__
+
+    if queue_type == "distributed.client.Client":
         try:
             import dask.distributed
         except ImportError:
@@ -341,7 +309,7 @@ def build_queue(queue_type, queue_socket, db_socket, logger=None, **kwargs):
 
         adapter = dask_handler.DaskAdapter(queue_socket)
 
-    elif queue_type == "fireworks":
+    elif queue_type == "fireworks.core.launchpad.LaunchPad":
         try:
             import fireworks
         except ImportError:

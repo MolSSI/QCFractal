@@ -2,7 +2,7 @@
 Tests the DQM Server class
 """
 
-import qcfractal.interface as qp
+import qcfractal.interface as portal
 from qcfractal.testing import test_server
 
 import pytest
@@ -14,7 +14,7 @@ meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description'
 def test_molecule_socket(test_server):
 
     mol_api_addr = test_server.get_address("molecule")
-    water = qp.data.get_molecule("water_dimer_minima.psimol")
+    water = portal.data.get_molecule("water_dimer_minima.psimol")
 
     # Add a molecule
     r = requests.post(mol_api_addr, json={"meta": {}, "data": {"water": water.to_json()}})
@@ -45,7 +45,7 @@ def test_molecule_socket(test_server):
 def test_option_socket(test_server):
 
     opt_api_addr = test_server.get_address("option")
-    opts = qp.data.get_options("psi_default")
+    opts = portal.data.get_options("psi_default")
     # Add a molecule
     r = requests.post(opt_api_addr, json={"meta": {}, "data": [opts]})
     assert r.status_code == 200
@@ -83,15 +83,17 @@ def test_database_socket(test_server):
 def test_result_socket(test_server):
 
     result_api_addr = test_server.get_address("result")
-    water = qp.data.get_molecule("water_dimer_minima.psimol")
-    water2 = qp.data.get_molecule("water_dimer_stretch.psimol")
+    water = portal.data.get_molecule("water_dimer_minima.psimol")
+    water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
     r = requests.post(
         test_server.get_address("molecule"),
-        json={"meta": {},
-              "data": {
-                  "water1": water.to_json(),
-                  "water2": water2.to_json()
-              }})
+        json={
+            "meta": {},
+            "data": {
+                "water1": water.to_json(),
+                "water2": water2.to_json()
+            }
+        })
     assert r.status_code == 200
 
     mol_insert = r.json()

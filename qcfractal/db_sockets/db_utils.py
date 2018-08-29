@@ -7,6 +7,7 @@ import json
 # Constants
 _get_metadata = json.dumps({"errors": [], "n_found": 0, "success": False, "error_description": False, "missing": []})
 
+
 def translate_molecule_index(index):
     if index in ["id", "ids"]:
         return "_id"
@@ -17,6 +18,7 @@ def translate_molecule_index(index):
     else:
         raise KeyError("Molecule Index '{}' not understood".format(index))
 
+
 def translate_generic_index(index):
     if index in ["id", "ids"]:
         return "_id"
@@ -24,7 +26,6 @@ def translate_generic_index(index):
         return "key"
     else:
         raise KeyError("Generic Index '{}' not understood".format(index))
-
 
 
 def get_metadata():

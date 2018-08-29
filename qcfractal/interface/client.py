@@ -1,30 +1,103 @@
 """Provides an interface the QCDB Server instance"""
 
+import cryptography.fernet
+import json
 import requests
+import yaml
+import base64
 
 from . import molecule
 from . import orm
 
 
 class FractalClient(object):
-    def __init__(self, port, username="", password=""):
-        if "http" not in port:
-            port = "http://" + port
+    def __init__(self, address, username=None, password=None, shared_secret=None):
+        if "http" not in address:
+            address = "http://" + address
 
-        if not port.endswith("/"):
-            port += "/"
+        if not address.endswith("/"):
+            address += "/"
 
-        self.port = port
-        # self.http_header = {"project": self.project, "username": username, "password": password}
+        self.address = address
 
-        self._mol_addr = self.port + "molecule"
-        self._option_addr = self.port + "option"
-        self._database_addr = self.port + "database"
-        self._result_addr = self.port + "result"
-        self._service_addr = self.port + "service"
-        self._scheduler_addr = self.port + "scheduler"
-        self._service_scheduler_addr = self.port + "service_scheduler"
+        # Default shared secret, not really better than in the clear for non-SSL communication
+
+        if shared_secret:
+            shared_secret = base64.urlsafe_b64encode((shared_secret + " " * (32 - len(shared_secret))).encode("UTF-8"))
+
+            f = cryptography.fernet.Fernet(shared_secret)
+            key = f.encrypt(json.dumps({"username": username, "password": password}).encode("UTF-8"))
+            self._auth = {"Authorization": key}
+        else:
+            self._auth = {}
+
         # self.info = self.get_information()
+    def _request(self, method, service, payload):
+
+        addr = self.address + service
+        if method == "get":
+            r = requests.get(addr, json=payload, headers=self._auth)
+        elif method == "post":
+            r = requests.post(addr, json=payload, headers=self._auth)
+        else:
+            raise KeyError("Method not understood: {}".format(method))
+
+        if r.status_code != 200:
+            raise requests.exceptions.HTTPError("Server communication failure. Reason: {}".format(r.reason))
+
+        return r
+
+    @classmethod
+    def from_file(cls, load_path=None):
+        """Creates a new FractalClient from file. If no path is passed in searches
+        current working directory and ~.qca/ for "qcportal_config.yaml"
+
+        Parameters
+        ----------
+        load_path : str, dict, optional
+            Path to find "qcportal_config.yaml", the filename, or a dictionary containing keys
+            ["address", "username", "password", "shared_secret"]
+
+        """
+
+        # Search canonical paths
+        if load_path is None:
+            test_paths = [os.getcwd(), os.path.join(os.path.expanduser('~'), ".qca")]
+
+            for path in test_paths:
+                local_path = os.path.join(path, "qcportal_config.yaml")
+                if os.path.exists(path):
+                    load_path = local_path
+                    break
+
+            raise FileNotFoundError(
+                "Could not find `qcportal_config.yaml` in the following paths:\n    {}".format(", ".join(test_paths)))
+
+        # Load if string, or use if dict
+        if isinstance(load_path, str):
+            load_path = os.path.join(os.path.expanduser(load_path))
+
+            # Gave folder, not file
+            if os.path.isdir(load_path):
+                load_path = os.path.join(load_path, "qcportal_config.yaml")
+
+            with open(load_path, "r") as handle:
+                data = yaml.load(handle)
+
+        elif isinstance(load_path, dict):
+            data = load_path
+        else:
+            raise TypeError("Could not infer data from load_path of type {}".format(type(load_path)))
+
+        if "address" not in data:
+            raise KeyError("Config file must at least contain a address field.")
+
+        address = data["address"]
+        username = data.get("username", None)
+        password = data.get("password", None)
+        shared_secret = data.get("shared_secret", None)
+
+        return cls(address, username=username, password=password, shared_secret=shared_secret)
 
     ### Molecule section
 
@@ -35,8 +108,7 @@ class FractalClient(object):
             mol_list = [mol_list]
 
         payload = {"meta": {"index": index}, "data": mol_list}
-        r = requests.get(self._mol_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("get", "molecule", payload)
 
         return r.json()["data"]
 
@@ -54,9 +126,7 @@ class FractalClient(object):
                 raise TypeError("Input molecule type '{}' not recognized".format(type(mol)))
 
         payload = {"meta": {}, "data": mol_submission}
-
-        r = requests.post(self._mol_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("post", "molecule", payload)
 
         if full_return:
             return r.json()
@@ -73,8 +143,7 @@ class FractalClient(object):
         #     opt_list = [opt_list]
 
         payload = {"meta": {}, "data": opt_list}
-        r = requests.get(self._option_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("get", "option", payload)
 
         return r.json()["data"]
 
@@ -83,9 +152,7 @@ class FractalClient(object):
         # Can take in either molecule or lists
 
         payload = {"meta": {}, "data": opt_list}
-
-        r = requests.post(self._option_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("post", "option", payload)
 
         if full_return:
             return r.json()
@@ -97,8 +164,7 @@ class FractalClient(object):
     def get_databases(self, db_list):
 
         payload = {"meta": {}, "data": db_list}
-        r = requests.get(self._database_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("get", "database", payload)
 
         return r.json()["data"]
 
@@ -107,9 +173,7 @@ class FractalClient(object):
         # Can take in either molecule or lists
 
         payload = {"meta": {}, "data": db}
-
-        r = requests.post(self._database_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("post", "database", payload)
 
         if full_return:
             return r.json()
@@ -129,8 +193,7 @@ class FractalClient(object):
         if "projection" in kwargs:
             payload["meta"]["projection"] = kwargs["projection"]
 
-        r = requests.get(self._result_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("get", "result", payload)
 
         if kwargs.get("return_full", False):
             return r.json()
@@ -140,9 +203,7 @@ class FractalClient(object):
     def get_service(self, service_id, **kwargs):
 
         payload = {"meta": {}, "data": [service_id]}
-
-        r = requests.get(self._service_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("get", "service", payload)
 
         if kwargs.get("return_objects", True):
             ret = []
@@ -189,8 +250,7 @@ class FractalClient(object):
             "data": molecule_id
         }
 
-        r = requests.post(self._scheduler_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("post", "scheduler", payload)
 
         if return_full:
             return r.json()
@@ -211,8 +271,7 @@ class FractalClient(object):
         }
         payload["meta"].update(options)
 
-        r = requests.post(self._service_scheduler_addr, json=payload)
-        assert r.status_code == 200
+        r = self._request("post", "service_scheduler", payload)
 
         if return_full:
             return r.json()

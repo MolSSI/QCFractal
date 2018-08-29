@@ -1,9 +1,9 @@
 """
-Tests the dqm_client database object
+Tests the QCPortal database object
 """
 
 from . import test_helper as th
-from ... import interface as qp
+from ... import interface as portal
 import pytest
 
 
@@ -36,10 +36,10 @@ def _compare_rxn_stoichs(ref, new):
 # Build a interesting database
 @pytest.fixture
 def water_db():
-    db = qp.Database("Water Data")
+    db = portal.Database("Water Data")
 
     # Build the water dimer.
-    dimer = qp.data.get_molecule("water_dimer_minima.psimol")
+    dimer = portal.data.get_molecule("water_dimer_minima.psimol")
     frag_0 = dimer.get_fragment(0)
     frag_1 = dimer.get_fragment(1)
     frag_0_1 = dimer.get_fragment(0, 1)
@@ -49,17 +49,20 @@ def water_db():
     db.add_rxn(
         "Water Dimer, nocp", [(dimer, 1.0), (frag_0, -1.0), (frag_1, -1.0)],
         attributes={"R": "Minima"},
-        reaction_results={"Benchmark": -20.0,
-                          "DFT": -10.0})
+        reaction_results={
+            "Benchmark": -20.0,
+            "DFT": -10.0
+        })
 
     dimer_string = dimer.to_string()
     # Add single stoich from strings, not a valid set
     db.add_rxn(
-        "Water Dimer, dimer - str (invalid)", [(dimer_string, 1.0), (dimer_string.splitlines()[-5],
-                                                                            0.0)],
+        "Water Dimer, dimer - str (invalid)", [(dimer_string, 1.0), (dimer_string.splitlines()[-5], 0.0)],
         attributes={"R": "Minima"},
-        reaction_results={"Benchmark": -20.0,
-                          "DFT": -10.0})
+        reaction_results={
+            "Benchmark": -20.0,
+            "DFT": -10.0
+        })
 
     # Add single stoich rxn via hashes
     db.add_rxn(
@@ -87,23 +90,24 @@ def water_db():
 # Build a nbody database
 @pytest.fixture
 def nbody_db():
-    db = qp.Database("N-Body Data")
+    db = portal.Database("N-Body Data")
 
-    dimer = qp.data.get_molecule("water_dimer_minima.psimol")
+    dimer = portal.data.get_molecule("water_dimer_minima.psimol")
     frag_0 = dimer.get_fragment(0)
     frag_1 = dimer.get_fragment(1)
     frag_0_1 = dimer.get_fragment(0, 1)
     frag_1_0 = dimer.get_fragment(1, 0)
 
-    db.add_rxn("Water Dimer, bench", {
-        "cp1": [(frag_0_1, 1.0), (frag_1_0, 1.0)],
-        "default1": [(frag_0, 1.0), (frag_1, 1.0)],
-        "cp": [(dimer, 1.0)],
-        "default": [(dimer, 1.0)],
-    })
+    db.add_rxn(
+        "Water Dimer, bench", {
+            "cp1": [(frag_0_1, 1.0), (frag_1_0, 1.0)],
+            "default1": [(frag_0, 1.0), (frag_1, 1.0)],
+            "cp": [(dimer, 1.0)],
+            "default": [(dimer, 1.0)],
+        })
 
     db.add_ie_rxn("Water Dimer", dimer.to_string())
-    db.add_ie_rxn("Ne Tetramer", qp.data.get_molecule("neon_tetramer.psimol"))
+    db.add_ie_rxn("Ne Tetramer", portal.data.get_molecule("neon_tetramer.psimol"))
 
     # Ne Tetramer benchmark
     db.ne_stoich = {
