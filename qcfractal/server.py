@@ -1,3 +1,9 @@
+"""
+The FractalServer class
+"""
+
+import base64
+import cryptography.fernet
 import logging
 
 import tornado.ioloop
@@ -18,6 +24,7 @@ class FractalServer(object):
             port=8888,
             io_loop=None,
             security=None,
+            shared_secret=None,
 
             # Database options
             db_ip="127.0.0.1",
@@ -57,10 +64,16 @@ class FractalServer(object):
             self.logger.addHandler(logging.StreamHandler())
             self.logger.info("No logfile given, setting output to stdout")
 
-        # Secure args
+        # Build security layers
+        fernet = None
         if security is None:
             db_bypass_security = True
         elif security == "local":
+            if shared_secret is None:
+                raise KeyError("Security is set to local, but no shared_secret was added.")
+
+            shared_secret = base64.urlsafe_b64encode((shared_secret + " " * (32 - len(shared_secret))).encode("UTF-8"))
+            fernet = cryptography.fernet.Fernet(shared_secret)
             db_bypass_security = False
         else:
             raise KeyError("Security option '{}' not recognized.".format(security))
@@ -85,6 +98,7 @@ class FractalServer(object):
         self.objects = {
             "db_socket": self.db,
             "logger": self.logger,
+            "fernet": fernet
         }
 
         endpoints = [

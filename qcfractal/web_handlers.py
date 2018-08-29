@@ -4,6 +4,7 @@ Web handlers for the FractalServer
 import json
 import tornado.web
 from base64 import b64decode
+import cryptography
 
 
 class APIHandler(tornado.web.RequestHandler):
@@ -23,12 +24,6 @@ class APIHandler(tornado.web.RequestHandler):
         #print(self.request.headers["Content-Type"])
         self.json = json.loads(self.request.body.decode("UTF-8"))
 
-        if "Authorization" in self.request.headers:
-            split = self.request.headers["Authorization"].strip().split(' ')
-            self.username, self.password = b64decode(split[1]).decode().split(':', 1)
-        else:
-            self.username = None
-            self.password = None
 
     def authenticate(self, permission):
         """Authenticates request with a given permission setting
@@ -39,7 +34,20 @@ class APIHandler(tornado.web.RequestHandler):
             The required permission ["read", "write", "compute", "admin"]
 
         """
-        verified, msg = self.objects["db_socket"].verify_user(self.username, self.password, permission)
+        if "Authorization" in self.request.headers:
+            bytes_token = self.request.headers["Authorization"].encode("UTF-8")
+            try:
+                data = json.loads(self.objects["fernet"].decrypt(bytes_token))
+            except cryptography.fernet.InvalidToken:
+                raise tornado.web.HTTPError(status_code=401, reason="Invalid shared secret.")
+
+            username = data["username"]
+            password = data["password"]
+        else:
+            username = None
+            password = None
+
+        verified, msg = self.objects["db_socket"].verify_user(username, password, permission)
         if verified is False:
             raise tornado.web.HTTPError(status_code=401, reason=msg)
 

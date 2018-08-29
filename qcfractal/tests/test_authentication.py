@@ -4,6 +4,7 @@ Tests the on-node procedures compute capabilities.
 
 import qcfractal
 from qcfractal import testing
+import cryptography
 
 import requests
 import pytest
@@ -24,6 +25,7 @@ _users = {
         "perm": ["read", "write", "compute", "admin"]
     }
 }
+_shared_secret = "watermelon"
 
 
 @pytest.fixture(scope="module")
@@ -38,7 +40,11 @@ def sec_server(request):
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = qcfractal.FractalServer(
-            port=testing.find_open_port(), db_project_name=db_name, io_loop=loop, security="local")
+            port=testing.find_open_port(),
+            db_project_name=db_name,
+            io_loop=loop,
+            security="local",
+            shared_secret=_shared_secret)
 
         # Clean and re-init the databse
         server.db.client.drop_database(server.db._project_name)
@@ -62,12 +68,23 @@ def test_security_auth_decline_none(sec_server):
     with pytest.raises(requests.exceptions.HTTPError):
         r = client.add_molecules({})
 
+def test_security_auth_bad_secret(sec_server):
+    client = portal.FractalClient.from_file({
+        "address": sec_server.get_address(),
+        "username": "read",
+        "password": _users["write"]["pw"],
+        "shared_secret": "orange"
+    })
+
+    with pytest.raises(requests.exceptions.HTTPError):
+        r = client.get_molecules([])
 
 def test_security_auth_decline_bad_user(sec_server):
     client = portal.FractalClient.from_file({
         "address": sec_server.get_address(),
         "username": "hello",
-        "password": "something"
+        "password": "something",
+        "shared_secret": _shared_secret
     })
 
     with pytest.raises(requests.exceptions.HTTPError):
@@ -79,7 +96,8 @@ def test_security_auth_decline_bad_user(sec_server):
 
 def test_security_auth_accept(sec_server):
 
-    client = portal.FractalClient(sec_server.get_address(), username="write", password=_users["write"]["pw"])
+    client = portal.FractalClient(
+        sec_server.get_address(), username="write", password=_users["write"]["pw"], shared_secret=_shared_secret)
 
     r = client.add_molecules({})
     r = client.get_molecules([])

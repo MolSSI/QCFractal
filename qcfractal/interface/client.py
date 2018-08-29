@@ -1,7 +1,10 @@
 """Provides an interface the QCDB Server instance"""
 
+import cryptography.fernet
+import json
 import requests
 import yaml
+import base64
 
 from . import molecule
 from . import orm
@@ -16,16 +19,26 @@ class FractalClient(object):
             address += "/"
 
         self.address = address
-        self._api_key = (username, password)
+
+        # Default shared secret, not really better than in the clear for non-SSL communication
+
+        if shared_secret:
+            shared_secret = base64.urlsafe_b64encode((shared_secret + " " * (32 - len(shared_secret))).encode("UTF-8"))
+
+            f = cryptography.fernet.Fernet(shared_secret)
+            key = f.encrypt(json.dumps({"username": username, "password": password}).encode("UTF-8"))
+            self._auth = {"Authorization": key}
+        else:
+            self._auth = {}
 
         # self.info = self.get_information()
     def _request(self, method, service, payload):
 
         addr = self.address + service
         if method == "get":
-            r = requests.get(addr, json=payload, auth=self._api_key)
+            r = requests.get(addr, json=payload, headers=self._auth)
         elif method == "post":
-            r = requests.post(addr, json=payload, auth=self._api_key)
+            r = requests.post(addr, json=payload, headers=self._auth)
         else:
             raise KeyError("Method not understood: {}".format(method))
 
