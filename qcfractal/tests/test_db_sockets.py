@@ -143,6 +143,30 @@ def test_databases_add(db_socket):
     assert len(ret["meta"]["missing"]) == 1
     assert ret["meta"]["n_found"] == 0
 
+def test_databases_overwrite(db_socket):
+
+    db = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
+
+    ret = db_socket.add_database(db)
+    assert ret["meta"]["n_inserted"] == 1
+
+    ret = db_socket.get_databases([(db["category"], db["name"])])
+    assert ret["meta"]["n_found"] == 1
+
+    db_update = {"id": ret["data"][0]["id"], "category": "OpenFF", "name": "Torsion123", "something2": "else", "array2": ["54321"]}
+    ret = db_socket.add_database(db_update, overwrite=True)
+    assert ret["meta"]["success"] == True
+
+    ret = db_socket.get_databases([(db["category"], db["name"])])
+    assert ret["meta"]["n_found"] == 1
+
+    # Check to make sure the field were replaced and not updated
+    db_result = ret["data"][0]
+    assert "something" not in db_result
+    assert "something2" in db_result
+
+    ret = db_socket.del_database(db["category"], db["name"])
+    assert ret == 1
 
 def test_results_add(db_socket):
 
