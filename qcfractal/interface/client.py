@@ -12,6 +12,19 @@ from . import orm
 
 class FractalClient(object):
     def __init__(self, address, username=None, password=None, shared_secret=None):
+        """Constructs a FractalClient
+
+        Parameters
+        ----------
+        address : str
+            The address of the FractalServer to connect to.
+        username : str, optional
+            The username to authenticate the connection with.
+        password : str, optional
+            The password to authenticate the connection with.
+        shared_secret : str, optional
+            The shared secret to use to encrypt the username and password.
+        """
         if "http" not in address:
             address = "http://" + address
 
@@ -19,6 +32,7 @@ class FractalClient(object):
             address += "/"
 
         self.address = address
+        self.username = username
 
         # Default shared secret, not really better than in the clear for non-SSL communication
 
@@ -30,6 +44,19 @@ class FractalClient(object):
             self._auth = {"Authorization": key}
         else:
             self._auth = {}
+
+    def __repr__(self):
+        """A short short representation of the current FractalClient.
+
+        Returns
+        -------
+        str
+            The desired representation.
+        """
+        ret = "FractalClient("
+        ret += "server='{}', ".format(self.address)
+        ret += "username='{}')".format(self.username)
+        return ret
 
         # self.info = self.get_information()
     def _request(self, method, service, payload):
@@ -101,19 +128,56 @@ class FractalClient(object):
 
     ### Molecule section
 
-    def get_molecules(self, mol_list, index="id"):
+    def get_molecules(self, mol_list, index="id", full_return=False):
+        """Get molecules from the Server.
 
+        Parameters
+        ----------
+        mol_list : list of str
+            Either molecule Id's or molecule hashes to query.
+        index : str, ("id", "hash")
+            The index to search on
+        full_return : bool, optional
+            Flags to return all metadata or only the query.
+
+        Returns
+        -------
+        list of molecule JSON
+            Returns all found molecules.
+        """
         # Can take in either molecule or lists
         if not isinstance(mol_list, (tuple, list)):
             mol_list = [mol_list]
 
+        index = index.lower()
+        if index not in ["id", "index"]:
+            raise KeyError("Search index must either be 'id' or hash, found: {}".format(index))
+
         payload = {"meta": {"index": index}, "data": mol_list}
         r = self._request("get", "molecule", payload)
 
-        return r.json()["data"]
+        if full_return:
+            return r.json()
+        else:
+            return r.json()["data"]
 
     def add_molecules(self, mol_list, full_return=False):
+        """Adds molecules to the Server
 
+        Parameters
+        ----------
+        mol_list : dict
+            A (key: molecule) dictionary for the molecules to be added. The molecules can either be a
+            Molecule class or a JSON Molecule representation.
+        full_return : bool, optional
+            Flags to return all metadata or only the submitted ids.
+
+        Returns
+        -------
+        dict
+            A (key: molecule id) dictionary of added molecules.
+
+        """
         # Can take in either molecule or lists
 
         mol_submission = {}

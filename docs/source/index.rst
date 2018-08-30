@@ -11,10 +11,10 @@ QCFractal
 
 Workflows
 ---------
-QCFractal supports a number of workflow types such:
+QCFractal supports several high-throughput contexts:
  - Ensembles of single point quantum chemistry comptuations.
  - Procedures such as geometry optimization, finite different gradients and Hessians, and complete basis set extrapolations.
- - Complex workflows such as the `OpenFF <http://openforcefield.org>`_ torsion scan workflow as shown below:
+ - Complex scenarios such as the `OpenFF <http://openforcefield.org>`_ torsion scan workflow:
 
 .. image:: media/openff_torsion_workflow.jpg
    :width: 800px
