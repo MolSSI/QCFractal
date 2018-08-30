@@ -26,7 +26,22 @@ class Molecule:
 
     def __init__(self, mol_str, **kwargs):
         """
-        the Mongo QCDB molecule class which is capable of reading and writing many formats.
+        __init__(self, mol_str, name="", dtype=None, orient=False)
+
+        A molecule class which supports many different IO formats, provides unique molecule hashes, and
+        other molecular maniuplations.
+
+        Parameters
+        ----------
+        mol_str : str, dict
+            A string or dictionary representation of the molecule.
+        name : {"", str}, optional
+            The name of the molecule, defaults to "".
+        dtype : {None, "numpy", "json", "psi4"}, optional
+            Determines how the input is parsed.
+        orient : bool, optional
+            Orientate the molecule to a standard frame or not.
+
         """
 
         # Layout all known attributes
@@ -72,7 +87,7 @@ class Molecule:
                 raise KeyError("Molecule: dtype of {} not recognized.".format(dtype))
 
             self.geometry = hash_helpers.float_prep(self.geometry, GEOMETRY_NOISE)
-            if kwargs.pop("orient", True):
+            if kwargs.pop("orient", False):
                 self.orient_molecule()
                 self.geometry = hash_helpers.float_prep(self.geometry, GEOMETRY_NOISE)
 
@@ -85,6 +100,19 @@ class Molecule:
                 self.fragments = [list(range(natoms))]
                 self.fragment_charges = [self.charge]
                 self.fragment_multiplicities = [self.multiplicity]
+            else:
+                if not self.fragment_charges:
+                    if np.isclose(self.charge, 0.0):
+                        self.fragment_charges = [0 for _ in self.fragments]
+                    else:
+                        raise KeyError("Fragments passed in, but not fragment charges for a charged molecule.")
+
+                if not self.fragment_multiplicities:
+                    if self.multiplicity == 1:
+                        self.fragment_multiplicities = [1 for _ in self.fragments]
+                    else:
+                        raise KeyError("Fragments passed in, but not fragment multiplicities for a non-singlet molecule.")
+
 
             # Validate
             self.validate()
@@ -125,9 +153,23 @@ class Molecule:
 ### Classmethods
 
     @classmethod
-    def from_file(cls, filename, dtype=None, orient=True):
+    def from_file(cls, filename, dtype=None, orient=False):
         """
         Constructs a molecule object from a file.
+
+        Parameters
+        ----------
+        filename : str
+            The filename to build
+        dtype : {None, "psi4", "numpy", "json"}, optional
+            The type of file to interpret.
+        orient: bool, optional
+            Orientates the molecule to a standard frame or not.
+
+        Returns
+        -------
+        Molecule
+            A constructed molecule class.
         """
 
         ext = os.path.splitext(filename)[1]
@@ -473,7 +515,7 @@ class Molecule:
 
         # Masses are needed for orientation
         if self._custom_masses is False:
-            np_mass = np.array([constants.el2masses[x] for x in self.symbols])
+            np_mass = np.array([constants.el2masses[x.upper()] for x in self.symbols])
         else:
             np_mass = np.array(self.masses)
 
