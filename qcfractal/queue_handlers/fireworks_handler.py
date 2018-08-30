@@ -57,8 +57,7 @@ class FireworksAdapter:
             key, parser, hooks = self.queue.pop(tmp_data["fw_id"])
             ret[key] = (tmp_data["action"]["stored_data"]["fw_results"], parser, hooks)
 
-        # Should remove complete from queue
-        # self.lpad.launches.delete_many
+            self.lpad.delete_wf(tmp_data["fw_id"])
 
         return ret
 
