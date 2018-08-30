@@ -223,11 +223,11 @@ def db_socket_fixture(request):
         db.client.drop_database(db._project_name)
         db.init_database()
     else:
-        raise KeyError("DB type %s not understood" % request.param)
+        raise KeyError("DB type {} not understood".format(request.param))
 
     yield db
 
     if request.param == "mongo":
         db.client.drop_database(db_name)
     else:
-        raise KeyError("DB type %s not understood" % request.param)
+        raise KeyError("DB type {} not understood".format(request.param))

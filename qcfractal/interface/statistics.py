@@ -85,4 +85,4 @@ def wrap_statistics(description, df, value, bench):
         return ret
 
     else:
-        raise TypeError('Type %s is not understood for statistical quanities' % str(type(value)))
+        raise TypeError('Type {} is not understood for statistical quantities'.format(str(type(value))))

@@ -95,7 +95,7 @@ class Database(object):
                 self.client = portal
 
             else:
-                raise TypeError("Database: client argument of unrecognized type '%s'" % type(portal))
+                raise TypeError("Database: client argument of unrecognized type '{}'".format(type(portal)))
 
             tmp_data = self.client.get_databases([self.data["db_index"]])
             if len(tmp_data) == 0:
@@ -397,10 +397,10 @@ class Database(object):
                 found.append(num)
 
         if len(found) == 0:
-            raise KeyError("Database:get_rxn: Reaction name '%s' not found." % name)
+            raise KeyError("Database:get_rxn: Reaction name '{}' not found.".format(name))
 
         if len(found) > 1:
-            raise KeyError("Database:get_rxn: Multiple reactions of name '%s' found. Database failure." % name)
+            raise KeyError("Database:get_rxn: Multiple reactions of name '{}' found. Database failure.".format(name))
 
         return self.data["reactions"][found[0]]
 
@@ -599,8 +599,8 @@ class Database(object):
         # Set name
         if name in self.get_index():
             raise KeyError(
-                "Database: Name '%s' already exists. Please either delete this entry or call the update function." %
-                name)
+                "Database: Name '{}' already exists. "
+                "Please either delete this entry or call the update function.".format(name))
 
         # Set stoich
         if isinstance(stoichiometry, dict):
@@ -616,17 +616,17 @@ class Database(object):
             rxn["stoichiometry"] = {}
             rxn["stoichiometry"]["default"] = self.parse_stoichiometry(stoichiometry)
         else:
-            raise TypeError("Database:add_rxn: Type of stoichiometry input was not recognized '%s'",
+            raise TypeError("Database:add_rxn: Type of stoichiometry input was not recognized:",
                             type(stoichiometry))
 
         # Set attributes
         if not isinstance(attributes, dict):
-            raise TypeError("Database:add_rxn: attributes must be a dictionary, not '%s'", type(attributes))
+            raise TypeError("Database:add_rxn: attributes must be a dictionary, not '{}'".format(type(attributes)))
 
         rxn["attributes"] = attributes
 
         if not isinstance(other_fields, dict):
-            raise TypeError("Database:add_rxn: other_fields must be a dictionary, not '%s'", type(attributes))
+            raise TypeError("Database:add_rxn: other_fields must be a dictionary, not '{}'".format(type(attributes)))
 
         for k, v in other_fields.items():
             rxn[k] = v
@@ -683,8 +683,9 @@ class Database(object):
         ret : dict
             A JSON representation of the Database
         """
-        if filename:
-            json.dumps(filename, self.data)
+        if filename is not None:
+            with open(filename, 'w') as open_file:
+                json.dump(self.data, open_file)
 
         else:
             return copy.deepcopy(self.data)

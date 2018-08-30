@@ -107,12 +107,12 @@ class MongoSocket:
         new_collections = self.init_database()
         for k, v in new_collections.items():
             if v:
-                self.logger.info("New collection '%s' for database!" % k)
+                self.logger.info("New collection '{}' for database!".format(k))
 
 ### Mongo meta functions
 
     def __repr__(self):
-        return "<MongoSocket: address='%s:%d:%s'>" % (self._url, self._port, self._project_name)
+        return "<MongoSocket: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._project_name))
 
     def init_database(self):
         """
@@ -177,7 +177,7 @@ class MongoSocket:
                 if error["code"] == 11000:
                     meta["duplicates"].append(ukey)
                 else:
-                    meta["errors"].append({"id": str(x["op"]["_id"]), "code": x["code"], "key": ukey})
+                    meta["errors"].append({"id": str(error["op"]["_id"]), "code": error["code"], "key": ukey})
 
                 error_skips.append(error["index"])
 
@@ -767,7 +767,7 @@ class MongoSocket:
 
     def queue_get_by_id(self, ids, n=100):
 
-        return list(self._project["queue"].find({"_id": status}, limit=n))
+        return list(self._project["queue"].find({"_id": ids}, limit=n))
 
     def queue_mark_complete(self, ids):
         query = {"_id": {"$in": [ObjectId(x) for x in ids]}}

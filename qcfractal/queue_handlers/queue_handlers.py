@@ -115,7 +115,8 @@ class QueueNanny:
                     else:
                         error = "No error supplied"
 
-                    raise self.logger.info("Computation key did not complete successfully!:\n%s\n" % (str(key), error))
+                    raise self.logger.info("Computation key did not complete successfully:\n\t{}\n"
+                                           "Because: {}".format(str(key), error))
                 # res = self.db_socket.del_page_by_data(tmp_data)
 
                 self.logger.info("update: {}".format(key))
@@ -124,7 +125,7 @@ class QueueNanny:
                 msg = "".join(traceback.format_tb(e.__traceback__))
                 msg += str(type(e).__name__) + ":" + str(e)
                 self.errors[key] = msg
-                self.logger.info("update: ERROR\n%s" % msg)
+                self.logger.info("update: ERROR\n{}".format(msg))
 
         # Run output parsers
         hooks = []
@@ -185,7 +186,7 @@ class QueueNanny:
         """
 
         for x in range(max_iter):
-            self.logger.info("\nAwait services %d : %s\n" % (x + 1, self.services))
+            self.logger.info("\nAwait services {0:d} : {1:s}\n".format(x + 1, self.services))
             self.update_services()
             self.await_results()
             if len(self.services) == 0:

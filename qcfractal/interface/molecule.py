@@ -69,7 +69,7 @@ class Molecule:
             elif dtype == "json":
                 self._molecule_from_json(mol_str)
             else:
-                raise KeyError("Molecule: dtype of %s not recognized.")
+                raise KeyError("Molecule: dtype of {} not recognized.".format(dtype))
 
             self.geometry = hash_helpers.float_prep(self.geometry, GEOMETRY_NOISE)
             if kwargs.pop("orient", True):
@@ -78,7 +78,7 @@ class Molecule:
 
             # Cleanup un-initialized variables
             if len(self.real) == 0:
-                self.real = [True for x in range(self._geometry.shape[0])]
+                self.real = [True for _ in range(self._geometry.shape[0])]
 
             if not self.fragments:
                 natoms = self._geometry.shape[0]
@@ -93,7 +93,7 @@ class Molecule:
             pass
 
         if len(kwargs):
-            raise KeyError("Not all kwargs were correctly parsed, remaining: %s" % ", ".join(kwargs.keys()))
+            raise KeyError("Not all kwargs were correctly parsed, remaining: {}".format(", ".join(kwargs.keys())))
 
 ### Any needed setters and getters
 
@@ -140,7 +140,7 @@ class Molecule:
             elif ext in [".json"]:
                 dtype = "json"
             else:
-                raise KeyError("No dtype provided and ext '%s' not understood." % ext)
+                raise KeyError("No dtype provided and ext '{}' not understood.".format(ext))
 
         if dtype == "psi4":
             with open(filename, "r") as infile:
@@ -151,7 +151,7 @@ class Molecule:
             with open(filename, "r") as infile:
                 data = json.load(infile)
         else:
-            raise KeyError("Dtype not understood '%s'." % dtype)
+            raise KeyError("Dtype not understood '{}'.".format(dtype))
 
         return cls(data, dtype=dtype, orient=orient)
 
@@ -179,14 +179,14 @@ class Molecule:
         arr = np.array(arr, dtype=np.double)
 
         if (len(arr.shape) != 2) or (arr.shape[1] != 4):
-            raise AttributeError("Molecule: Molecule should be shape (N, 4) not {}." % arr.shape)
+            raise AttributeError("Molecule: Molecule should be shape (N, 4) not {}.".format(arr.shape))
 
         if units == "bohr":
             const = 1
         elif units == "angstrom":
             const = 1 / constants.physconst["bohr2angstroms"]
         else:
-            raise KeyError("Unit '%s' not understood" % units)
+            raise KeyError("Unit '{}' not understood".format(units))
 
         self.geometry = arr[:, 1:].copy() * const
         self.real = [True for x in arr[:, 0]]
@@ -275,7 +275,8 @@ class Molecule:
                 glines.append(line)
             else:
                 raise TypeError(
-                    'Molecule:create_molecule_from_string: Unidentifiable line in geometry specification: %s' % line)
+                    'Molecule:create_molecule_from_string: '
+                    'Unidentifiable line in geometry specification: {}'.format(line))
 
         # catch last default fragment cgmp
         try:
@@ -315,10 +316,10 @@ class Molecule:
                 ghostAtom = False if (atomm.group('gh1') is None and atomm.group('gh2') is None) else True
 
                 # Check that the atom symbol is valid
-                if not atomSym in constants.el2z:
+                if atomSym not in constants.el2z:
                     raise TypeError(
-                        'Molecule:create_molecule_from_string: Illegal atom symbol in geometry specification: %s' %
-                        atomSym)
+                        'Molecule:create_molecule_from_string: '
+                        'Illegal atom symbol in geometry specification: {}'.format(atomSym))
 
                 symbols.append(atomSym)
                 zVal = constants.el2z[atomSym]
@@ -341,22 +342,25 @@ class Molecule:
                     if realNumber.match(entries[1]):
                         xval = float(entries[1])
                     else:
-                        raise TypeError("Molecule::create_molecule_from_string: Unidentifiable entry %s.", entries[1])
+                        raise TypeError("Molecule::create_molecule_from_string: "
+                                        "Unidentifiable entry: {}.".format(entries[1]))
 
                     if realNumber.match(entries[2]):
                         yval = float(entries[2])
                     else:
-                        raise TypeError("Molecule::create_molecule_from_string: Unidentifiable entry %s.", entries[2])
+                        raise TypeError("Molecule::create_molecule_from_string: "
+                                        "Unidentifiable entry {}.".format(entries[2]))
 
                     if realNumber.match(entries[3]):
                         zval = float(entries[3])
                     else:
-                        raise TypeError("Molecule::create_molecule_from_string: Unidentifiable entry %s.", entries[3])
+                        raise TypeError("Molecule::create_molecule_from_string: "
+                                        "Unidentifiable entry {}.".format(entries[3]))
 
                     geometry.append([xval, yval, zval])
                 else:
-                    raise TypeError('Molecule::create_molecule_from_string: Illegal geometry specification line : %s. \
-                        You should provide either Z-Matrix or Cartesian input' % line)
+                    raise TypeError('Molecule::create_molecule_from_string: Illegal geometry specification line : {}.'
+                                    'You should provide either Z-Matrix or Cartesian input'.format(line))
 
                 iatom += 1
 
@@ -416,15 +420,15 @@ class Molecule:
         """
         text = ""
 
-        text += """    Geometry (in %s), charge = %.1f, multiplicity = %d:\n\n""" % \
-            ('Angstrom', self.charge, self.multiplicity)
+        text += """    Geometry (in {0:s}), charge = {1:.1f}, multiplicity = {2:d}:\n\n""".format(
+            'Angstrom', self.charge, self.multiplicity)
         text += """       Center              X                  Y                   Z       \n"""
         text += """    ------------   -----------------  -----------------  -----------------\n"""
 
         for i in range(len(self.geometry)):
-            text += """    %8s%4s """ % (self.symbols[i], "" if self.real[i] else "(Gh)")
+            text += """    {0:8s}{1:4s} """.format(self.symbols[i], "" if self.real[i] else "(Gh)")
             for j in range(3):
-                text += """  %17.12f""" % (self.geometry[i][j] * constants.physconst["bohr2angstroms"])
+                text += """  {0:17.12f}""".format(self.geometry[i][j] * constants.physconst["bohr2angstroms"])
             text += "\n"
         text += "\n"
 
@@ -525,7 +529,7 @@ class Molecule:
 
         if len(set(real) & set(ghost)):
             raise TypeError(
-                "Molecule:get_fragment: real and ghost sets are overlaping! (%s, %s)." % (str(real), str(ghost)))
+                "Molecule:get_fragment: real and ghost sets are overlapping! ({0}, {1}).".format(str(real), str(ghost)))
 
         geom_blocks = []
         symbols = []
@@ -588,7 +592,7 @@ class Molecule:
         if dtype == "psi4":
             return self._to_psi4_string()
         else:
-            raise KeyError("Molecule:to_string: dtype of '%s' not recognized." % dtype)
+            raise KeyError("Molecule:to_string: dtype of '{}' not recognized.".format(dtype))
 
     def _to_psi4_string(self):
         """Regenerates a input file molecule specification string from the
@@ -598,22 +602,22 @@ class Molecule:
         """
         text = "\n"
 
-        # append atoms and coordentries and fragment separators with charge and multiplicity
+        # append atoms and coordinates and fragment separators with charge and multiplicity
         for num, frag in enumerate(self.fragments):
             divider = "    --"
             if num == 0:
                 divider = ""
 
             if any(self.real[at] for at in frag):
-                text += "%s    \n    %d %d\n" % (divider, self.fragment_charges[num],
-                                                 self.fragment_multiplicities[num])
+                text += "{0:s}    \n    {1:d} {1:d}\n".format(divider, int(self.fragment_charges[num]),
+                                                              self.fragment_multiplicities[num])
 
             for at in frag:
                 if self.real[at]:
-                    text += "    %-8s" % self.symbols[at]
+                    text += "    {0:<8s}".format(str(self.symbols[at]))
                 else:
-                    text += "    %-8s" % ("Gh(" + self.symbols[at] + ")")
-                text += "    % 14.10f % 14.10f % 14.10f\n" % tuple(self.geometry[at])
+                    text += "    {0:<8s}".format("Gh(" + self.symbols[at] + ")")
+                text += "    {0: 14.10f} {1: 14.10f} {2: 14.10f}\n".format(*tuple(self.geometry[at]))
         text += "\n"
 
         # append units and any other non-default molecule keywords
