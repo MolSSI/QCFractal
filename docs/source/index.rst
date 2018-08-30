@@ -55,20 +55,62 @@ The QCArchive project's primary support comes from `The Molecular Sciences Softw
 
 ========
 
-Table of Contents
-=================
+Index
+-----
+
+
+**Getting Started**
+
+* :doc:`install`
+* :doc:`community`
+* :doc:`roadmap`
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+   :hidden:
    :caption: Getting Started
 
    install
    community
    roadmap
 
+**Portal Documentation**
+
+Portal is the primary user interface to a Fractal server instance.
+
 .. toctree::
    :maxdepth: 1
+   :hidden:
+   :caption: Portal Documentation
+
+   portal-client
+
+**Fractal Documentation**
+
+Fractal contains the sever instance, database, and distributed compute queue.
+
+* :doc:`fractal-results`
+* :doc:`fractal-procedures`
+* :doc:`fractal-services`
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Fractal Documentation
+
+   fractal-results
+   fractal-procedures
+   fractal-services
+
+**Developer Documentation**
+
+Contains in-depth developer documentation.
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
    :caption: Developer Documentation
 
    changelog
    dev_guidelines
+
