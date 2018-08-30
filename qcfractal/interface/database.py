@@ -95,7 +95,7 @@ class Database(object):
                 self.client = portal
 
             else:
-                raise TypeError("Database: client argument of unrecognized type '%s'" % type(socket))
+                raise TypeError("Database: client argument of unrecognized type '%s'" % type(portal))
 
             tmp_data = self.client.get_databases([self.data["db_index"]])
             if len(tmp_data) == 0:
@@ -414,7 +414,7 @@ class Database(object):
         client : None, optional
             A Portal object to the server to upload to
         overwrite : bool, optional
-            Overwrite the data in the server on not #FIXME
+            Overwrite the data in the server on not
 
         """
         if self.data["name"] == "":
@@ -426,6 +426,9 @@ class Database(object):
                     "Database:save: Database does not own a MongoDB instance and one was not passed in.")
             client = self.client
 
+        if overwrite and ("id" not in self.data):
+            raise KeyError("Attempting to overwrite the Database class on the server, but no ID found.")
+
         # Add new molecules
 
         mol_ret = client.add_molecules(self._new_molecule_jsons)
@@ -435,7 +438,7 @@ class Database(object):
         self._new_molecule_jsons = {}
 
         # Add the database
-        client.add_database(self.data)
+        return client.add_database(self.data, overwrite=overwrite)
 
     # Statistical quantities
     def statistics(self, stype, value, bench="Benchmark"):

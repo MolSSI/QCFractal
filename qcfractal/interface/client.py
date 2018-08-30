@@ -168,12 +168,17 @@ class FractalClient(object):
 
         return r.json()["data"]
 
-    def add_database(self, db, full_return=False):
+    def add_database(self, db, overwrite=False, full_return=False):
 
         # Can take in either molecule or lists
 
-        payload = {"meta": {}, "data": db}
+        if overwrite and ("id" not in db):
+            raise KeyError("Attempting to overwrite database, but no server ID found.")
+
+        payload = {"meta": {"overwrite": overwrite}, "data": db}
+
         r = self._request("post", "database", payload)
+        assert r.status_code == 200
 
         if full_return:
             return r.json()

@@ -492,7 +492,7 @@ class MongoSocket:
 
 ### Mongo database functions
 
-    def add_database(self, data):
+    def add_database(self, data, overwrite=False):
         """
         Adds a database to the database.
 
@@ -507,7 +507,24 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        ret = self._add_generic([data], "databases")
+        if overwrite:
+            ret = {
+                "meta": {
+                    "errors": [],
+                    "n_inserted": 0,
+                    "success": False,
+                    "duplicates": [],
+                    "error_description": False
+                },
+                "data": [((data["category"], data["name"]), data["id"])]
+            }
+            r = self._project["databases"].replace_one({"_id": ObjectId(data["id"])}, data)
+            if r.modified_count == 1:
+                ret["meta"]["success"] = True
+                ret["meta"]["n_inserted"] = 1
+
+        else:
+            ret = self._add_generic([data], "databases")
         ret["meta"]["validation_errors"] = []  # TODO
         return ret
 

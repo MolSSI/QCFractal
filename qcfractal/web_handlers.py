@@ -164,7 +164,8 @@ class DatabaseHandler(APIHandler):
 
         db = self.objects["db_socket"]
 
-        ret = db.add_database(self.json["data"])
+        overwrite = self.json["meta"].get("overwrite", False)
+        ret = db.add_database(self.json["data"], overwrite=overwrite)
         self.logger.info("POST: Databases - {} inserted.".format(ret["meta"]["n_inserted"]))
 
         self.write(ret)
@@ -179,9 +180,7 @@ class ResultHandler(APIHandler):
         self.authenticate("read")
 
         db = self.objects["db_socket"]
-        proj = None
-        if "projection" in self.json["meta"]:
-            proj = self.json["meta"]["projection"]
+        proj = self.json["meta"].get("projection", None)
 
         ret = db.get_results(self.json["data"], projection=proj)
         self.logger.info("GET: Results - {} pulls.".format(len(ret["data"])))

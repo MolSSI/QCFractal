@@ -136,11 +136,15 @@ def test_compute_database(fractal_compute_server):
     He1 = portal.Molecule([[2, 0, 0, -2], [2, 0, 0, 2]], dtype="numpy", units="bohr", frags=[1])
     db.add_ie_rxn("He1", He1, attributes={"r": 4}, reaction_results={"default": {"Benchmark": 0.0009608501557}})
 
+    # Save the DB and reaquire
+    r = db.save()
+    db = portal.Database(db_name, client)
+
     He2 = portal.Molecule([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
     db.add_ie_rxn("He2", He2, attributes={"r": 4}, reaction_results={"default": {"Benchmark": -0.00001098794749}})
 
-    # Save the DB
-    db.save()
+    # Save the DB and overwrite the result
+    r = db.save(overwrite=True)
 
     # Open a new database
     db = portal.Database(db_name, client)
