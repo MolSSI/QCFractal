@@ -111,6 +111,7 @@ Contains in-depth developer documentation.
    :hidden:
    :caption: Developer Documentation
 
+   glossary
    changelog
    dev_guidelines
 

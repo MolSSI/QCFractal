@@ -1,0 +1,23 @@
+Glossary
+========
+
+.. glossary::
+
+    Procedures
+      On-node computations, these can either be a single computation (energy, gradient, property, etc.) or a series of calculations such as a geometry optimization.
+
+    Services
+      Iterative workflows where the required computations are distributed via the queue and then are processed on the server to acquire the next iteration of calculations.
+
+    Queue Handlers
+      The interface between QCFractal's internal queue representation and other queueing systems such as Dask or Fireworks.
+
+    Molecule
+      A unique 3D representation of a molecule. Any changes to the protonation state, multiplicity, charge, fragments, coordinates, connectivity, or
+      ghost atoms represent a change in the molecule.
+
+    DB Socket
+      A DB Socket (or Database Socket) is the interface layer between standard Python queries and raw SQL or MongoDB query language.
+
+    DB Index
+      A DB Index (or Database Index) is a unique ID for a given row (a document or entry) in the database that uniquely defines that particular row. These rows are automatically generated and will be different for every database, but outlines ways to reference other rows in the database quickly. A DB Index is unique to a DB Table.

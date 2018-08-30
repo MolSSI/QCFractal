@@ -15,13 +15,13 @@ the setting up a server (NYI) section.
 
 The ``FractalClient`` handles all communication to the server from the Python API layer. This core communication access the fundamental structure of the server is often not used in favor of more general handlers. See (Database/TorsionDriveORM/etc).
 
-The ``FractalClient`` can also be initialized from a file which is useful so that addresses and username do not have to be retyped for every line and reduces the chance that a username and password could accidentally be added to a version control system. This can be accessed by creating a new object by ``FractalClient.from_file()`` where by default the server searches for a ``qcportal_config.yaml`` file in either the current working directory or from the canonical ``~/.qca/`` folder.
+The ``FractalClient`` can also be initialized from a file which is useful so that addresses and username do not have to be retyped for every line and reduces the chance that a username and password could accidentally be added to a version control system. This can be accessed by creating a new object by ``FractalClient.from_file()`` whereby default the server searches for a ``qcportal_config.yaml`` file in either the current working directory or from the canonical ``~/.qca/`` folder.
 
 Molecule Handling
 -----------------
 
-As an example we can use a molecule that comes with QCPortal and add it to the
-database as shown. Please note that the Molecule ID shown below will not be
+As an example, we can use a molecule that comes with QCPortal and adds it to the
+database as shown. Please note that the Molecule ID (a :term:`DB Index`) shown below will not be
 the same as your result and is unique to every database.
 
 .. code-block:: python
