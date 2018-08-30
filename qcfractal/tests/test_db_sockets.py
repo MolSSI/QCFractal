@@ -97,6 +97,27 @@ def test_molecules_get(db_socket):
     assert ret == 1
 
 
+def test_molecules_bad_get(db_socket):
+
+    water = portal.data.get_molecule("water_dimer_minima.psimol")
+
+    # Add once
+    ret = db_socket.add_molecules({"water": water.to_json()})
+    assert ret["meta"]["n_inserted"] == 1
+    water_id = ret["data"]["water"]
+
+    # Pull molecule from the DB for tests
+    ret = db_socket.get_molecules([water_id, "something", 5, (3, 2)], index="id")
+    assert len(ret["meta"]["errors"]) == 1
+    assert ret["meta"]["errors"][0][0] == "Bad Ids"
+    assert len(ret["meta"]["errors"][0][1]) == 3
+    assert ret["meta"]["n_found"] == 1
+
+    # Cleanup adds
+    ret = db_socket.del_molecules(water_id, index="id")
+    assert ret == 1
+
+
 def test_options_add(db_socket):
 
     opts = portal.data.get_options("psi_default")
@@ -143,6 +164,7 @@ def test_databases_add(db_socket):
     assert len(ret["meta"]["missing"]) == 1
     assert ret["meta"]["n_found"] == 0
 
+
 def test_databases_overwrite(db_socket):
 
     db = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
@@ -153,7 +175,13 @@ def test_databases_overwrite(db_socket):
     ret = db_socket.get_databases([(db["category"], db["name"])])
     assert ret["meta"]["n_found"] == 1
 
-    db_update = {"id": ret["data"][0]["id"], "category": "OpenFF", "name": "Torsion123", "something2": "else", "array2": ["54321"]}
+    db_update = {
+        "id": ret["data"][0]["id"],
+        "category": "OpenFF",
+        "name": "Torsion123",
+        "something2": "else",
+        "array2": ["54321"]
+    }
     ret = db_socket.add_database(db_update, overwrite=True)
     assert ret["meta"]["success"] == True
 
@@ -167,6 +195,7 @@ def test_databases_overwrite(db_socket):
 
     ret = db_socket.del_database(db["category"], db["name"])
     assert ret == 1
+
 
 def test_results_add(db_socket):
 
