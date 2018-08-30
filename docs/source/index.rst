@@ -84,6 +84,7 @@ Portal is the primary user interface to a Fractal server instance.
    :caption: Portal Documentation
 
    portal-client
+   portal-molecule
 
 **Fractal Documentation**
 
