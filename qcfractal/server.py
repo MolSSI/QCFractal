@@ -58,7 +58,7 @@ class FractalServer(object):
             self.logger.addHandler(handler)
             app_logger.addHandler(handler)
 
-            self.logger.info("Logfile set to %s\n" % logfile_name)
+            self.logger.info("Logfile set to {}\n".format(logfile_name))
         else:
             app_logger.addHandler(logging.StreamHandler())
             self.logger.addHandler(logging.StreamHandler())
@@ -135,7 +135,7 @@ class FractalServer(object):
 
         # Add in periodic callbacks
 
-        self.logger.info("DQM Server successfully initialized at https://localhost:%d.\n" % self.port)
+        self.logger.info("DQM Server successfully initialized at https://localhost:{0:d}.\n".format(self.port))
         self.periodic = {}
 
     def start(self):

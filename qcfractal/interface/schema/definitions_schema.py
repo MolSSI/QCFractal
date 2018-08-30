@@ -31,6 +31,6 @@ _definitions = {
 
 def get_definition(definition):
     if definition not in _definitions:
-        raise KeyError("Definition '%s' not present.")
+        raise KeyError("Definition '{}' not present.".format(definition))
 
     return copy.deepcopy(_definitions[definition])

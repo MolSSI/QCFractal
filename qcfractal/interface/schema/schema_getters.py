@@ -38,13 +38,13 @@ _collection_indices = {
 
 def get_hash_fields(name):
     if name not in _schemas:
-        raise KeyError("Schema name %s not found." % name)
+        raise KeyError("Schema name {} not found.".format(name))
     return copy.deepcopy(_schemas[name]["hash_fields"])
 
 
 def get_indices(name):
     if name not in _collection_indices:
-        raise KeyError("Indices for %s not found." % name)
+        raise KeyError("Indices for {} not found.".format(name))
     return _collection_indices[name]
 
 
@@ -56,19 +56,19 @@ def format_result_indices(data, program=None):
 
 def get_schema(name):
     if name not in _schemas:
-        raise KeyError("Schema name %s not found." % name)
+        raise KeyError("Schema name {} not found.".format(name))
     return copy.deepcopy(_schemas)
 
 
 def get_schema_keys(name):
     if name not in _schemas:
-        raise KeyError("Schema name %s not found." % name)
+        raise KeyError("Schema name {} not found.".format(name))
     return _schemas[name]["properties"].keys()
 
 
 def validate(data, schema_name, return_errors=False):
     if schema_name not in _schemas:
-        raise KeyError("Schema name %s not found." % name)
+        raise KeyError("Schema name {} not found.".format(schema_name))
 
     error_gen = jsonschema.Draft4Validator(_schemas[schema_name]).iter_errors(data)
     errors = [x for x in error_gen]
@@ -76,7 +76,7 @@ def validate(data, schema_name, return_errors=False):
         if return_errors:
             return errors
         else:
-            error_msg = "Error validating schema '%s'!\n" % schema_name
+            error_msg = "Error validating schema '{}'!\n".format(schema_name)
             error_msg += "Data: \n" + json.dumps(data, indent=2)
             error_msg += "\n\nJSON Schema errors as follow:\n"
             error_msg += "\r".join(x.message for x in errors)

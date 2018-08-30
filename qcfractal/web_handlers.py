@@ -254,7 +254,7 @@ class ServiceHandler(APIHandler):
 #             self.logger = self.objects["logger"]
 #         else:
 #             self.logger = logging.getLogger('Information')
-#         self.logger.info("INFO: %s" % self.request.method)
+#         self.logger.info("INFO: {}".format(self.request.method))
 
 #     def get(self):
 #         _check_auth(self.objects, self.request.headers)

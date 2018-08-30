@@ -19,7 +19,7 @@ _data_folders = {x: os.path.join(_data_dir, x) for x in _folders}
 
 def _get_folder_path(folder):
     if folder not in _data_folders:
-        raise KeyError("Folder '%s' not recognized" % folder)
+        raise KeyError("Folder '{}' not recognized".format(folder))
 
     return _data_folders[folder]
 
@@ -47,7 +47,7 @@ def get_file(folder, *args):
     folder = _get_folder_path(folder)
     filename = os.path.join(folder, *args)
     if not os.path.isfile(filename):
-        raise OSError("Path '%s' not found." % filename)
+        raise OSError("Path '{}' not found.".format(filename))
 
     with open(filename, "r") as infile:
         ret = infile.read()

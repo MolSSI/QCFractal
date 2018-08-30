@@ -22,7 +22,7 @@ A command line interface to the qcfractal.
 #
 # queues = ["fireworks", "dask"]
 # if options.queue not in queues:
-#     raise KeyError("Queue of type %s not understood" % options.queue)
+#     raise KeyError("Queue of type {} not understood".format(options.queue))
 #
 # if options.queue == "dask":
 #     import distributed
@@ -48,7 +48,7 @@ A command line interface to the qcfractal.
 
 #         self.logger.addHandler(handler)
 
-#         self.logger.info("Logfile set to %s\n" % options.logfile)
+#         self.logger.info("Logfile set to {}\n".format(options.logfile))
 
 #         mongo_username = None
 #         mongo_password = None
@@ -116,7 +116,7 @@ A command line interface to the qcfractal.
 #         #loop.run_sync(lambda: post(data))
 
 #         self.loop = loop
-#         self.logger.info("QCDB Client successfully initialized at https://localhost:%d.\n" % options.port)
+#         self.logger.info("QCDB Client successfully initialized at https://localhost:{0:d}.\n".format(options.port))
 
 #     def start(self):
 

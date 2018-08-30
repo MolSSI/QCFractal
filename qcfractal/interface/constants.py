@@ -85,4 +85,4 @@ def get_scale(name):
     elif name == "cm":
         return physconst["hartree2wavenumbers"]
     else:
-        raise KeyError("get_scale: Scale '%s' not recognized" % str(name))
+        raise KeyError("get_scale: Scale '{}' not recognized".format(str(name)))

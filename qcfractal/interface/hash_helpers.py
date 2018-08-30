@@ -21,6 +21,6 @@ def float_prep(array, around):
         if array == -0.0:
             array = 0.0
     else:
-        raise TypeError("Type '%s' not recognized" % type(array))
+        raise TypeError("Type '{}' not recognized".format(type(array).__name__))
 
     return array
