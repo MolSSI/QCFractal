@@ -609,7 +609,7 @@ class Molecule:
                 divider = ""
 
             if any(self.real[at] for at in frag):
-                text += "{0:s}    \n    {1:d} {1:d}\n".format(divider, int(self.fragment_charges[num]),
+                text += "{0:s}    \n    {1:d} {2:d}\n".format(divider, int(self.fragment_charges[num]),
                                                               self.fragment_multiplicities[num])
 
             for at in frag:

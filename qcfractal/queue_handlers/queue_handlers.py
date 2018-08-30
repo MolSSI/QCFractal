@@ -186,7 +186,7 @@ class QueueNanny:
         """
 
         for x in range(max_iter):
-            self.logger.info("\nAwait services {0:d} : {1:s}\n".format(x + 1, self.services))
+            self.logger.info("\nAwait services {0:d} : {1:s}\n".format(x + 1, str(self.services)))
             self.update_services()
             self.await_results()
             if len(self.services) == 0:
