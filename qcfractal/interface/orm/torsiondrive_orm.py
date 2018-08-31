@@ -80,7 +80,7 @@ class TorsionDriveORM:
 
         return cls(None, **kwargs)
 
-    def __repr__(self):
+    def __str__(self):
         """
         Simplified torsiondrive string representation.
 

@@ -476,7 +476,7 @@ class Molecule:
 
         return text
 
-    def __repr__(self):
+    def __str__(self):
         return self.pretty_print()
 
 

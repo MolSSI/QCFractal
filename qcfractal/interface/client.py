@@ -45,7 +45,7 @@ class FractalClient(object):
         else:
             self._auth = {}
 
-    def __repr__(self):
+    def __str__(self):
         """A short short representation of the current FractalClient.
 
         Returns

@@ -1,8 +1,8 @@
 Results
 ========
 
-Results are a single quantum chemistry method evaluation including energy,
-gradient, Hessian, and property evaluations. Collections of evaluations such
+A result is a single quantum chemistry method evaluation, which might be an energy, an analytic gradient or Hessian, or a property evaluation.
+Collections of evaluations such
 as finite-difference gradients, complete basis set extrapolation, or geometry
 optimizations belong under the "Procedures" heading.
 
@@ -26,7 +26,7 @@ All results are stored using the `QCSchema <https://molssi-qc-schema.readthedocs
 
     {
       "schema_name": "qc_json_input",
-      "schema_version": 0,
+      "schema_version": 1,
       "molecule": {
         "geometry": [
           0.0,  0.0,    -0.1294,
@@ -49,7 +49,7 @@ This input would correspond to the following output:
 
     {
       "schema_name": "qc_json_output",
-      "schema_version": 0,
+      "schema_version": 1,
       "molecule": {
         "geometry": [
           0.0,  0.0,    -0.1294,

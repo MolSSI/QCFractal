@@ -126,7 +126,7 @@ class MongoSocket:
 
 ### Mongo meta functions
 
-    def __repr__(self):
+    def __str__(self):
         return "<MongoSocket: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._project_name))
 
     def init_database(self):
