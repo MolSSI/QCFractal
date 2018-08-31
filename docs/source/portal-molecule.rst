@@ -64,7 +64,7 @@ The molecule class natively supports fragments. If a molecule is built with frag
     dimer = portal.Molecule({"symbols": ["He", "He"], "geometry": [0, 0, -3, 0, 0, 3], "fragments": [[0], [1]]})
 
     >>> dimer.get_fragment(0)
-        Geometry (in Angstrom), charge = 0.0, multiplicity = 0:
+        Geometry (in Angstrom), charge = 0.0, multiplicity = 1:
 
            Center              X                  Y                   Z
         ------------   -----------------  -----------------  -----------------
@@ -76,7 +76,7 @@ many fragments at once a list can be passed in instead of a number.
 .. code-block:: python
 
     >>> dimer.get_fragment([0], [1])
-        Geometry (in Angstrom), charge = 0.0, multiplicity = 0:
+        Geometry (in Angstrom), charge = 0.0, multiplicity = 1:
 
            Center              X                  Y                   Z
         ------------   -----------------  -----------------  -----------------

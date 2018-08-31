@@ -598,7 +598,7 @@ class Molecule:
 
         # Set charge and multiplicity
         ret.charge = sum(ret.fragment_charges)
-        ret.multiplicity = sum(x - 1 for x in ret.fragment_multiplicities)
+        ret.multiplicity = sum(x - 1 for x in ret.fragment_multiplicities) + 1
 
         # Loop through the ghost blocks
         for frag in ghost:

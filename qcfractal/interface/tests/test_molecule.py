@@ -75,8 +75,8 @@ def test_water_minima_fragment():
 
     frag_0 = mol.get_fragment(0)
     frag_1 = mol.get_fragment(1)
-    assert frag_0.get_hash() == "69f1f686fa49d2be4c97be44e53ccc5e9cfa4aaf"
-    assert frag_1.get_hash() == "8aca8ccba1d145470cfa7725c9a7e05f3c2c6992"
+    assert frag_0.get_hash() == "4cd68e5dde15c19fc2f5101d5fc5f19ac8afbc9c"
+    assert frag_1.get_hash() == "da635a2e012a9ea876ea54422256bd93124e4271"
 
     frag_0_1 = mol.get_fragment(0, 1)
     frag_1_0 = mol.get_fragment(1, 0)
@@ -123,12 +123,16 @@ def test_water_orient():
     frag_0 = mol.get_fragment(0)
     frag_1 = mol.get_fragment(1)
 
+    assert frag_0.multiplicity == 1
+
     # Make sure the fragments match
     assert frag_0.get_hash() == frag_1.get_hash()
 
     # Make sure the complexes match
     frag_0_1 = mol.get_fragment(0, 1)
     frag_1_0 = mol.get_fragment(1, 0)
+
+    assert frag_0_1.multiplicity == 1
 
     # Ghost fragments should prevent overlap
     assert frag_0_1.get_hash() != frag_1_0.get_hash()
