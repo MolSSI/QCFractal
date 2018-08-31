@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 import re
+import collections
 
 import numpy as np
 
@@ -725,3 +726,42 @@ class Molecule:
 
         m.update(concat.encode("utf-8"))
         return m.hexdigest()
+
+    def get_molecular_formula(self):
+        """
+        Returns the molecular formula for a molecule. Atom symbols are sorted from
+        A-Z.
+
+        Examples
+        --------
+
+        >>> methane = portal.Molecule('''
+          H      0.5288      0.1610      0.9359
+          C      0.0000      0.0000      0.0000
+          H      0.2051      0.8240     -0.6786
+          H      0.3345     -0.9314     -0.4496
+          H     -1.0685     -0.0537      0.1921
+        ''')
+
+        >>> methane.get_molecular_formula()
+        CH4
+
+        >>> hcl = portal.Molecule('''
+          H      0.0000      0.0000      0.0000
+          Cl     0.0000      0.0000      1.2000
+        ''')
+
+        >>> hcl.get_molecular_formula()
+        ClH
+
+        """
+        count = collections.Counter(x.title() for x in self.symbols)
+
+        ret = []
+        for k in sorted(count.keys()):
+            c = count[k]
+            ret.append(k)
+            if c > 1:
+                ret.append(str(c))
+
+        return "".join(ret)

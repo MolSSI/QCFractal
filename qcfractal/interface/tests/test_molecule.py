@@ -16,6 +16,7 @@ def test_molecule_constructors():
     water_from_np = portal.Molecule(npwater, name="water dimer", dtype="numpy", frags=[3])
 
     assert water_psi.compare(water_psi, water_from_np)
+    assert water_psi.get_molecular_formula() == "H4O2"
 
     # Check the JSON construct/deconstruct
     water_from_json = portal.Molecule(water_psi.to_json(), dtype="json")
@@ -27,11 +28,12 @@ def test_molecule_constructors():
     npneon = np.hstack((ele, neon_from_psi.geometry))
     neon_from_np = portal.Molecule(npneon, name="neon tetramer", dtype="numpy", frags=[1, 2, 3], units="bohr")
 
-    assert water_psi.compare(neon_from_psi, neon_from_np)
+    assert neon_from_psi.compare(neon_from_psi, neon_from_np)
 
     # Check the JSON construct/deconstruct
     neon_from_json = portal.Molecule(neon_from_psi.to_json(), dtype="json")
-    assert water_psi.compare(neon_from_psi, neon_from_json)
+    assert neon_from_psi.compare(neon_from_psi, neon_from_json)
+    assert neon_from_json.get_molecular_formula() == "Ne4"
 
     assert water_psi.compare(portal.Molecule(water_psi.to_string()))
 
@@ -44,6 +46,7 @@ def test_molecule_file_constructors():
 
     assert mol_psi.compare(mol_json)
     assert mol_psi.compare(mol_np)
+    assert mol_psi.get_molecular_formula() == "He2"
 
 
 def test_water_minima_data():
@@ -158,6 +161,7 @@ def test_molecule_repeated_hashing():
     })
 
     h1 = mol.get_hash()
+    assert mol.get_molecular_formula() == "H2O2"
 
     mol2 = portal.Molecule(mol.to_json(), orient=False)
     assert h1 == mol2.get_hash()
