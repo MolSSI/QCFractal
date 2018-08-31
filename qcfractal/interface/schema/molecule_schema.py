@@ -31,6 +31,28 @@ molecule_schema = {
             "description": "The name of the molecule.",
             "type": "string"
         },
+        "identifiers": {
+            "description": "Canonical chemical identifiers.",
+            "type": "object",
+            "properties": {
+                "molecular_formula": {
+                    "description": "A string giving the symbol and symbol count for the molecule.",
+                    "type": "string"
+                },
+                "smiles": {
+                    "description": "Simplified Molecular Input Line Entry System line notation.",
+                    "type": "string"
+                },
+                "inchi": {
+                    "description": "IUPAC International Chemical Identifier line notation.",
+                    "type": "string"
+                },
+                "inchikey": {
+                    "description": "A SHA1 hash of the inichi description.",
+                    "type": "string"
+                },
+            }
+        },
         "comment": {
             "description": "Any additional comment one would attach to the molecule.",
             "type": "string"
