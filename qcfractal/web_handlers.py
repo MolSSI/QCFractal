@@ -35,12 +35,8 @@ class APIHandler(tornado.web.RequestHandler):
 
         """
         if "Authorization" in self.request.headers:
-            bytes_token = self.request.headers["Authorization"].encode("UTF-8")
-            try:
-                data = json.loads(self.objects["fernet"].decrypt(bytes_token))
-            except cryptography.fernet.InvalidToken:
-                raise tornado.web.HTTPError(status_code=401, reason="Invalid shared secret.")
 
+            data = json.loads(self.request.headers["Authorization"])
             username = data["username"]
             password = data["password"]
         else:
