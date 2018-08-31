@@ -9,9 +9,8 @@ import base64
 from . import molecule
 from . import orm
 
-
 class FractalClient(object):
-    def __init__(self, address, username=None, password=None, shared_secret=None):
+    def __init__(self, address, username=None, password=None, verify=True):
         """Constructs a FractalClient
 
         Parameters
@@ -22,8 +21,8 @@ class FractalClient(object):
             The username to authenticate the connection with.
         password : str, optional
             The password to authenticate the connection with.
-        shared_secret : str, optional
-            The shared secret to use to encrypt the username and password.
+        verify : bool, optional
+            Verifies the SSL connection with a third party. 
         """
         if "http" not in address:
             address = "http://" + address
@@ -32,18 +31,16 @@ class FractalClient(object):
             address += "/"
 
         self.address = address
-        self.username = username
+        self._verify = verify
+        self._headers = {}
 
         # Default shared secret, not really better than in the clear for non-SSL communication
+        if self._verify is False:
+            from urllib3.exceptions import InsecureRequestWarning
+            requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
-        if shared_secret:
-            shared_secret = base64.urlsafe_b64encode((shared_secret + " " * (32 - len(shared_secret))).encode("UTF-8"))
-
-            f = cryptography.fernet.Fernet(shared_secret)
-            key = f.encrypt(json.dumps({"username": username, "password": password}).encode("UTF-8"))
-            self._auth = {"Authorization": key}
-        else:
-            self._auth = {}
+        if (username is not None) or (password is not None):
+            self._headers["Authorization"] = json.dumps({"username": username, "password": password})
 
     def __str__(self):
         """A short short representation of the current FractalClient.
@@ -63,9 +60,9 @@ class FractalClient(object):
 
         addr = self.address + service
         if method == "get":
-            r = requests.get(addr, json=payload, headers=self._auth)
+            r = requests.get(addr, json=payload, headers=self._headers, verify=self._verify)
         elif method == "post":
-            r = requests.post(addr, json=payload, headers=self._auth)
+            r = requests.post(addr, json=payload, headers=self._headers, verify=self._verify)
         else:
             raise KeyError("Method not understood: {}".format(method))
 
@@ -83,7 +80,7 @@ class FractalClient(object):
         ----------
         load_path : str, dict, optional
             Path to find "qcportal_config.yaml", the filename, or a dictionary containing keys
-            ["address", "username", "password", "shared_secret"]
+            ["address", "username", "password", "verify"]
 
         """
 
@@ -122,9 +119,9 @@ class FractalClient(object):
         address = data["address"]
         username = data.get("username", None)
         password = data.get("password", None)
-        shared_secret = data.get("shared_secret", None)
+        verify = data.get("verify", True)
 
-        return cls(address, username=username, password=password, shared_secret=shared_secret)
+        return cls(address, username=username, password=password, verify=verify)
 
     ### Molecule section
 
