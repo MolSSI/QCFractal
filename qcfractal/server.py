@@ -2,7 +2,6 @@
 The FractalServer class
 """
 
-import base64
 import logging
 import ssl
 

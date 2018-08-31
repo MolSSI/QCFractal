@@ -1,31 +1,36 @@
 """Provides an interface the QCDB Server instance"""
 
-import cryptography.fernet
 import json
 import requests
 import yaml
-import base64
 
 from . import molecule
 from . import orm
 
+
 class FractalClient(object):
     def __init__(self, address, username=None, password=None, verify=True):
-        """Constructs a FractalClient
+        """Initializes a FractalClient instance from an address and verification information.
 
         Parameters
         ----------
         address : str
-            The address of the FractalServer to connect to.
-        username : str, optional
-            The username to authenticate the connection with.
-        password : str, optional
-            The password to authenticate the connection with.
+            The IP and port of the FractalServer instance ("192.168.1.1:8888")
+        username : None, optional
+            The username to authenticate with.
+        password : None, optional
+            The password to authenticate with.
         verify : bool, optional
-            Verifies the SSL connection with a third party. 
+            Verifies the SSL connection with a third party server. This may be False if a
+            FractalServer was not provided a SSL certificate and defaults back to self-signed
+            SSL keys.
         """
         if "http" not in address:
-            address = "http://" + address
+            address = "https://" + address
+
+        # If we are `http`, ignore all SSL directives
+        if not address.startswith("https"):
+            self._verify = True
 
         if not address.endswith("/"):
             address += "/"
@@ -55,7 +60,6 @@ class FractalClient(object):
         ret += "username='{}')".format(self.username)
         return ret
 
-        # self.info = self.get_information()
     def _request(self, method, service, payload):
 
         addr = self.address + service
