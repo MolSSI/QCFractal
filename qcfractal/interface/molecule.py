@@ -372,11 +372,10 @@ class Molecule:
                     atomMass = float(atomm.group('mass'))
                 tmpMass.append(atomMass)
 
+                charge = float(zVal)
                 if ghostAtom:
                     zVal = 0
                     charge = 0.0
-                else:
-                    charge = float(zVal)
 
                 # handle cartesians
                 if len(entries) == 4:
