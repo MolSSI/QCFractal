@@ -5,7 +5,7 @@
 This example assumes you have a install configure to the setup in the
 [fireworks.yaml or openff.yaml conda env](../../devtools/conda-envs).
 
-You effectivley need MongoDB and Fireworks installed
+You effectively need MongoDB and Fireworks installed
 
 You will also need to configure your MongoDB to write to location 
 you have write access to. The example sets one but you can change 
@@ -40,7 +40,7 @@ python server.py
 Add a new Database of several intermolecular reactions. 
 
 This step and following ones should be run in the same window and/or 
-as foreground processes sparate from the MongoDB and Fireworks servers.
+as foreground processes separate from the MongoDB and Fireworks servers.
 
 ```bash
 python build_database.py
@@ -60,7 +60,7 @@ rlaunch -l fw_lpad.yaml rapidfire
 
 ### Step 5
 Query data
-```
+```bash
 python query_database.py
 ``` 
 

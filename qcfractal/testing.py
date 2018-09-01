@@ -2,6 +2,7 @@
 Contains testing infrastructure for QCFractal
 """
 
+import os
 import logging
 import pkgutil
 import socket
@@ -54,6 +55,8 @@ using_psi4 = pytest.mark.skipif(has_module('psi4') is False, reason=_import_mess
 using_rdkit = pytest.mark.skipif(has_module('rdkit') is False, reason=_import_message.format('rdkit'))
 using_geometric = pytest.mark.skipif(has_module('geometric') is False, reason=_import_message.format('geometric'))
 using_torsiondrive = pytest.mark.skipif(has_module('torsiondrive') is False, reason=_import_message.format('torsiondrive'))
+using_unix = pytest.mark.skipif(os.name.lower() != 'posix', reason='Not on Unix operating system, '
+                                                                   'assuming Bash is not present')
 
 ### Server testing mechanics
 
