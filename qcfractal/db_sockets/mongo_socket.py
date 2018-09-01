@@ -330,7 +330,7 @@ class MongoSocket:
         for old_mol in old_mols:
 
             # This is the user provided key
-            new_mol_keys = new_vk_hash[old_mol["molecule_hash"]]
+            new_mol_keys = new_vk_hash[old_mol["identifiers"]["molecule_hash"]]
             new_mol = new_mols[new_mol_keys[0]]
 
             if new_mol.compare(old_mol):
@@ -349,10 +349,18 @@ class MongoSocket:
         new_keys = []
         for new_key, new_mol in new_mols.items():
             data = new_mol.to_json()
+            data["identifiers"] = {}
+
+            # Build new molecule hash
             data["molecule_hash"] = new_mol.get_hash()
+            data["identifiers"]["molecule_hash"] = data["molecule_hash"]
 
             if data["molecule_hash"] in new_hashes:
                 continue
+
+            # Build chemical identifiers
+            data["identifiers"]["molecular_formula"] = new_mol.get_molecular_formula()
+            data["molecular_formula"] = data["identifiers"]["molecular_formula"]
 
             new_hashes |= set([data["molecule_hash"]])
             new_inserts.append(data)
@@ -395,7 +403,11 @@ class MongoSocket:
         if index == "_id":
             molecule_ids, bad_ids = _str_to_indices_with_errors(molecule_ids)
 
-        data = self._project["molecules"].find({index: {"$in": molecule_ids}})
+        # Project out the duplicates we use for top level keys
+        proj = {"molecule_hash": False, "molecular_formula": False}
+
+        # Make the query
+        data = self._project["molecules"].find({index: {"$in": molecule_ids}}, projection=proj)
 
         if data is None:
             data = []

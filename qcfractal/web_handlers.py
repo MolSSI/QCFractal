@@ -57,7 +57,7 @@ class MoleculeHandler(APIHandler):
 
         Request:
             "meta" - Overall options to the Molecule pull request
-                - "index" - What kind of index used to find the data ("id", "molecule_hash")
+                - "index" - What kind of index used to find the data ("id", "molecule_hash", "molecular_formula")
             "data" - A dictionary of {key : index} requests
 
         Returns:

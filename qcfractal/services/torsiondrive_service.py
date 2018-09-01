@@ -36,7 +36,7 @@ class TorsionDriveService:
         # Remove identity info from template
         molecule_template = copy.deepcopy(molecule)
         del molecule_template["id"]
-        del molecule_template["molecule_hash"]
+        del molecule_template["identifiers"]
 
         # Iniate torsiondrive meta
         meta["torsiondrive_state"] = td_api.create_initial_state(

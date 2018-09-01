@@ -35,6 +35,10 @@ molecule_schema = {
             "description": "Canonical chemical identifiers.",
             "type": "object",
             "properties": {
+                "molecule_hash": {
+                    "description": "A unique hash for molecules specific to QCFractal.",
+                    "type": "string"
+                },
                 "molecular_formula": {
                     "description": "A string giving the symbol and symbol count for the molecule.",
                     "type": "string"
@@ -48,7 +52,7 @@ molecule_schema = {
                     "type": "string"
                 },
                 "inchikey": {
-                    "description": "A SHA1 hash of the inichi description.",
+                    "description": "A SHA1 hash of the inchi description.",
                     "type": "string"
                 },
             }
