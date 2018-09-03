@@ -79,3 +79,8 @@ fireworks_logfile.txt
 
 # Geometric
 energy.txt
+
+# SSl certs
+*.pem
+*.crt
+*.key

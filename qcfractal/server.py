@@ -2,9 +2,8 @@
 The FractalServer class
 """
 
-import base64
-import cryptography.fernet
 import logging
+import ssl
 
 import tornado.ioloop
 import tornado.web
@@ -15,6 +14,54 @@ from . import web_handlers
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
+def _build_ssl():
+    from cryptography import x509
+    from cryptography.x509.oid import NameOID
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.backends import default_backend
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import rsa
+
+    import sys
+    import socket
+    import datetime
+    import ipaddress
+    import random
+
+    hostname = socket.gethostname()
+    public_ip = ipaddress.ip_address(socket.gethostbyname(hostname))
+
+    key = rsa.generate_private_key(public_exponent=65537, key_size=1024, backend=default_backend())
+
+    alt_name_list = [x509.DNSName(hostname), x509.IPAddress(ipaddress.ip_address(public_ip))]
+    alt_names = x509.SubjectAlternativeName(alt_name_list)
+
+    # Basic data
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, hostname)])
+    basic_contraints = x509.BasicConstraints(ca=True, path_length=0)
+    now = datetime.datetime.utcnow()
+
+    # Build cert
+    cert = (x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(key.public_key())
+        .serial_number(int(random.random() * sys.maxsize))
+        .not_valid_before(now)
+        .not_valid_after(now + datetime.timedelta(days=10*365))
+        .add_extension(basic_contraints, False)
+        .add_extension(alt_names, False)
+        .sign(key, hashes.SHA256(), default_backend())) # yapf: disable
+
+    # Build and return keys
+    cert_pem = cert.public_bytes(encoding=serialization.Encoding.PEM)
+    key_pem = key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.TraditionalOpenSSL,
+        encryption_algorithm=serialization.NoEncryption(),
+    ) # yapf: disable
+
+    return (cert_pem, key_pem)
 
 class FractalServer(object):
     def __init__(
@@ -23,8 +70,9 @@ class FractalServer(object):
             # Server info options
             port=8888,
             io_loop=None,
+
             security=None,
-            shared_secret=None,
+            ssl_options=None,
 
             # Database options
             db_ip="127.0.0.1",
@@ -42,7 +90,10 @@ class FractalServer(object):
 
         # Save local options
         self.port = port
-        self._address = "http://localhost:" + str(self.port) + "/"
+        if ssl_options is False:
+            self._address = "http://localhost:" + str(self.port) + "/"
+        else:
+            self._address = "https://localhost:" + str(self.port) + "/"
 
         # Setup logging.
         self.logger = logging.getLogger("FractalServer")
@@ -65,18 +116,51 @@ class FractalServer(object):
             self.logger.info("No logfile given, setting output to stdout")
 
         # Build security layers
-        fernet = None
         if security is None:
             db_bypass_security = True
         elif security == "local":
-            if shared_secret is None:
-                raise KeyError("Security is set to local, but no shared_secret was added.")
-
-            shared_secret = base64.urlsafe_b64encode((shared_secret + " " * (32 - len(shared_secret))).encode("UTF-8"))
-            fernet = cryptography.fernet.Fernet(shared_secret)
             db_bypass_security = False
         else:
             raise KeyError("Security option '{}' not recognized.".format(security))
+
+        # Handle SSL
+        ssl_ctx = None
+        if ssl_options is None:
+            self.logger.warning("No SSL files passed in, generating self-signed SSL certificate.")
+            self.logger.warning("Clients must use `verify=False` when connects.")
+
+            cert, key = _build_ssl()
+
+            # Add quick names
+            cert_name = db_project_name + "_ssl.crt"
+            key_name = db_project_name + "_ssl.key"
+
+            ssl_options = {"crt": cert_name, "key": key_name}
+
+            with open(cert_name, "wb") as handle:
+                handle.write(cert)
+
+            with open(key_name, "wb") as handle:
+                handle.write(key)
+
+            ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            ssl_ctx.load_cert_chain(ssl_options["crt"], ssl_options["key"])
+
+            # Destroy keyfiles upon close
+            import atexit
+            import os
+            atexit.register(os.remove, cert_name)
+            atexit.register(os.remove, key_name)
+        elif ssl_options is False:
+            ssl_ctx = None
+        elif isinstance(ssl_options, dict):
+            if ("crt" not in ssl_options) or ("key" not in ssl_options):
+                raise KeyError("'crt' (SSL Certificate) and 'key' (SSL Key) fields are required for `ssl_options`.")
+
+            ssl_ctx = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            ssl_ctx.load_cert_chain(ssl_options["crt"], ssl_options["key"])
+        else:
+            raise KeyError("ssl_options not understood")
 
         # Setup the database connection
         self.db = db_sockets.db_socket_factory(
@@ -98,7 +182,6 @@ class FractalServer(object):
         self.objects = {
             "db_socket": self.db,
             "logger": self.logger,
-            "fernet": fernet
         }
 
         endpoints = [
@@ -131,7 +214,9 @@ class FractalServer(object):
         }
         self.app = tornado.web.Application(endpoints, **app_settings)
 
-        self.app.listen(self.port)
+        self.http_server = tornado.httpserver.HTTPServer(self.app, ssl_options=ssl_ctx)
+
+        self.http_server.listen(self.port)
 
         # Add in periodic callbacks
 

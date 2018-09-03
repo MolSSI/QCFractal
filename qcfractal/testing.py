@@ -127,7 +127,7 @@ def test_server(request):
     with pristine_loop() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(port=find_open_port(), db_project_name=db_name, io_loop=loop)
+        server = FractalServer(port=find_open_port(), db_project_name=db_name, io_loop=loop, ssl_options=False)
 
         # Clean and re-init the databse
         server.db.client.drop_database(server.db._project_name)
@@ -158,7 +158,11 @@ def dask_server_fixture(request):
 
             # Build server, manually handle IOLoop (no start/stop needed)
             server = FractalServer(
-                port=find_open_port(), db_project_name=db_name, io_loop=cluster.loop, queue_socket=client)
+                port=find_open_port(),
+                db_project_name=db_name,
+                io_loop=cluster.loop,
+                queue_socket=client,
+                ssl_options=False)
 
             # Clean and re-init the databse
             server.db.client.drop_database(server.db._project_name)
@@ -187,7 +191,8 @@ def fireworks_server_fixture(request):
     with pristine_loop() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(port=find_open_port(), db_project_name=db_name, io_loop=loop, queue_socket=lpad)
+        server = FractalServer(
+            port=find_open_port(), db_project_name=db_name, io_loop=loop, queue_socket=lpad, ssl_options=False)
 
         # Clean and re-init the databse
         server.db.client.drop_database(server.db._project_name)
