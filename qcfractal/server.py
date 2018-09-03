@@ -113,7 +113,7 @@ class FractalServer(object):
         else:
             app_logger.addHandler(logging.StreamHandler())
             self.logger.addHandler(logging.StreamHandler())
-            self.logger.info("No logfile given, setting output to stdout")
+            self.logger.info("No logfile given, setting output to stdout\n")
 
         # Build security layers
         if security is None:
@@ -127,7 +127,7 @@ class FractalServer(object):
         ssl_ctx = None
         if ssl_options is None:
             self.logger.warning("No SSL files passed in, generating self-signed SSL certificate.")
-            self.logger.warning("Clients must use `verify=False` when connects.")
+            self.logger.warning("Clients must use `verify=False` when connecting.\n")
 
             cert, key = _build_ssl()
 
@@ -220,7 +220,8 @@ class FractalServer(object):
 
         # Add in periodic callbacks
 
-        self.logger.info("DQM Server successfully initialized at https://localhost:{0:d}.\n".format(self.port))
+        self.logger.info("DQM Server successfully initialized at {}\n".format(self._address))
+
         self.periodic = {}
 
     def start(self):
