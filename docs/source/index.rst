@@ -11,10 +11,10 @@ QCFractal
 
 Workflows
 ---------
-QCFractal supports a number of workflow types such:
+QCFractal supports several high-throughput contexts:
  - Ensembles of single point quantum chemistry comptuations.
  - Procedures such as geometry optimization, finite different gradients and Hessians, and complete basis set extrapolations.
- - Complex workflows such as the `OpenFF <http://openforcefield.org>`_ torsion scan workflow as shown below:
+ - Complex scenarios such as the `OpenFF <http://openforcefield.org>`_ torsion scan workflow:
 
 .. image:: media/openff_torsion_workflow.jpg
    :width: 800px
@@ -55,20 +55,64 @@ The QCArchive project's primary support comes from `The Molecular Sciences Softw
 
 ========
 
-Table of Contents
-=================
+Index
+-----
+
+
+**Getting Started**
+
+* :doc:`install`
+* :doc:`community`
+* :doc:`roadmap`
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+   :hidden:
    :caption: Getting Started
 
    install
    community
    roadmap
 
+**Portal Documentation**
+
+Portal is the primary user interface to a Fractal server instance.
+
 .. toctree::
    :maxdepth: 1
+   :hidden:
+   :caption: Portal Documentation
+
+   portal-client
+   portal-molecule
+
+**Fractal Documentation**
+
+Fractal contains the sever instance, database, and distributed compute queue.
+
+* :doc:`fractal-results`
+* :doc:`fractal-procedures`
+* :doc:`fractal-services`
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Fractal Documentation
+
+   fractal-results
+   fractal-procedures
+   fractal-services
+
+**Developer Documentation**
+
+Contains in-depth developer documentation.
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
    :caption: Developer Documentation
 
+   glossary
    changelog
    dev_guidelines
+

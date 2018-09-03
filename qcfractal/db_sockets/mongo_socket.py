@@ -17,6 +17,7 @@ import bcrypt
 
 import pandas as pd
 from bson.objectid import ObjectId
+import bson.errors
 
 from . import db_utils
 # Pull in the hashing algorithms from the client
@@ -35,6 +36,20 @@ def _str_to_indices(ids):
         if isinstance(x, str):
             ids[num] = ObjectId(x)
 
+def _str_to_indices_with_errors(ids):
+    good = []
+    bad = []
+    for x in ids:
+        if isinstance(x, str):
+            try:
+                good.append(ObjectId(x))
+            except bson.errors.InvalidId:
+                bad.append(x)
+        elif isinstance(x, ObjectId):
+            good.append(x)
+        else:
+            bad.append(x)
+    return good, bad
 
 class MongoSocket:
     """
@@ -111,7 +126,7 @@ class MongoSocket:
 
 ### Mongo meta functions
 
-    def __repr__(self):
+    def __str__(self):
         return "<MongoSocket: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._project_name))
 
     def init_database(self):
@@ -376,8 +391,9 @@ class MongoSocket:
         if not isinstance(molecule_ids, (list, tuple)):
             molecule_ids = [molecule_ids]
 
+        bad_ids = []
         if index == "_id":
-            _str_to_indices(molecule_ids)
+            molecule_ids, bad_ids = _str_to_indices_with_errors(molecule_ids)
 
         data = self._project["molecules"].find({index: {"$in": molecule_ids}})
 
@@ -388,6 +404,8 @@ class MongoSocket:
 
         ret["meta"]["success"] = True
         ret["meta"]["n_found"] = len(data)
+        if len(bad_ids):
+            ret["meta"]["errors"].append(("Bad Ids", bad_ids))
 
         # Translate ID's back
         for r in data:
