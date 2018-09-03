@@ -15,6 +15,8 @@ def translate_molecule_index(index):
         return "molecule_hash"
     elif index in ["_id", "molecule_hash"]:
         return index
+    elif index == "molecular_formula":
+        return index
     else:
         raise KeyError("Molecule Index '{}' not understood".format(index))
 

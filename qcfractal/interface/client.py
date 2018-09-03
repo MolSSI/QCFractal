@@ -151,7 +151,7 @@ class FractalClient(object):
             mol_list = [mol_list]
 
         index = index.lower()
-        if index not in ["id", "index"]:
+        if index not in ["id", "index", "molecular_formula"]:
             raise KeyError("Search index must either be 'id' or hash, found: {}".format(index))
 
         payload = {"meta": {"index": index}, "data": mol_list}

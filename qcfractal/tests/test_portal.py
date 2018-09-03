@@ -20,7 +20,10 @@ def test_molecule_portal(test_server):
 
     # Test get
     get_mol = client.get_molecules(ret["water"], index="id")
+    assert water.compare(get_mol[0])
 
+    # Test molecular_formula get
+    get_mol = client.get_molecules(["H4O2"], index="molecular_formula")
     assert water.compare(get_mol[0])
 
 
