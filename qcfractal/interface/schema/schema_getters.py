@@ -26,12 +26,14 @@ _schemas["options"] = options_schema
 
 # Collection and hash indices
 _collection_indices = {
-    "database": ("category", "name"),
-    "options": ("program", "name"),
-    "result": ("molecule_id", "program", "driver", "method", "basis", "options"),
-    "molecule": ("molecule_hash", "molecular_formula"),
+    "collection": ("collection", "category", "name"),
     "procedure": ("procedure", "program"),
     "service": ("service", ),
+
+    "molecule": ("molecule_hash", "molecular_formula"),
+    "result": ("molecule_id", "program", "driver", "method", "basis", "options"),
+    "options": ("program", "name"),
+
     "queue": ("status", "hash_index", "tag"),
 }
 

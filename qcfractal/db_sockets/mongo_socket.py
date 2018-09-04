@@ -82,7 +82,7 @@ class MongoSocket:
 
         # Static data
         self._collection_indices = {
-            "databases": interface.schema.get_indices("database"),
+            "collections": interface.schema.get_indices("collection"),
             "options": interface.schema.get_indices("options"),
             "results": interface.schema.get_indices("result"),
             "molecules": interface.schema.get_indices("molecule"),
@@ -93,7 +93,7 @@ class MongoSocket:
         }
         self._valid_collections = set(self._collection_indices.keys())
         self._collection_unique_indices = {
-            "databases": True,
+            "collections": True,
             "options": True,
             "results": True,
             "molecules": False,
@@ -505,12 +505,14 @@ class MongoSocket:
 
     def del_option(self, program, name):
         """
-        Removes a database from the database from its hash.
+        Removes a option set from the database based on its keys.
 
         Parameters
         ----------
-        hash_val : str or list of strs
-            The hash of a database.
+        program : str
+            The program of the option set
+        name : str
+            The name of the option set
 
         Returns
         -------
