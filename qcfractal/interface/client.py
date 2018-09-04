@@ -270,10 +270,10 @@ class FractalClient(object):
         else:
             return r.json()["data"]
 
-    def get_service(self, service_id, **kwargs):
+    def get_procedure(self, procedure_id, **kwargs):
 
-        payload = {"meta": {}, "data": [service_id]}
-        r = self._request("get", "service", payload)
+        payload = {"meta": {}, "data": [procedure_id]}
+        r = self._request("get", "procedure", payload)
 
         if kwargs.get("return_objects", True):
             ret = []
@@ -320,7 +320,7 @@ class FractalClient(object):
             "data": molecule_id
         }
 
-        r = self._request("post", "scheduler", payload)
+        r = self._request("post", "task_scheduler", payload)
 
         if return_full:
             return r.json()

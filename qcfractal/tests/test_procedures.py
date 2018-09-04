@@ -45,7 +45,7 @@ def test_compute_queue_stack(fractal_compute_server):
     }
 
     # Ask the server to compute a new computation
-    r = requests.post(fractal_compute_server.get_address("scheduler"), json=compute)
+    r = requests.post(fractal_compute_server.get_address("task_scheduler"), json=compute)
     assert r.status_code == 200
     compute_key = tuple(r.json()["data"][0])
 
@@ -101,7 +101,7 @@ def test_procedure_optimization(fractal_compute_server):
     }
 
     # Ask the server to compute a new computation
-    r = requests.post(fractal_compute_server.get_address("scheduler"), json=compute)
+    r = requests.post(fractal_compute_server.get_address("task_scheduler"), json=compute)
     assert r.status_code == 200
     compute_key = tuple(r.json()["data"][0])
 
