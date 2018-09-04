@@ -1,6 +1,7 @@
 """Provides an interface the QCDB Server instance"""
 
 import json
+import os
 import requests
 import yaml
 
@@ -36,10 +37,11 @@ class FractalClient(object):
             address += "/"
 
         self.address = address
+        self.username = username
         self._verify = verify
         self._headers = {}
 
-        # Default shared secret, not really better than in the clear for non-SSL communication
+        # If no 3rd party verification, quiet urllib
         if self._verify is False:
             from urllib3.exceptions import InsecureRequestWarning
             requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
@@ -94,12 +96,13 @@ class FractalClient(object):
 
             for path in test_paths:
                 local_path = os.path.join(path, "qcportal_config.yaml")
-                if os.path.exists(path):
+                if os.path.exists(local_path):
                     load_path = local_path
                     break
 
-            raise FileNotFoundError(
-                "Could not find `qcportal_config.yaml` in the following paths:\n    {}".format(", ".join(test_paths)))
+            if load_path is None:
+                raise FileNotFoundError("Could not find `qcportal_config.yaml` in the following paths:\n    {}".format(
+                    ", ".join(test_paths)))
 
         # Load if string, or use if dict
         if isinstance(load_path, str):
