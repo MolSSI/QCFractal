@@ -1,13 +1,27 @@
 """
 Database connection class which directly calls the PyMongo API to capture
-cammon subroutines.
+common subroutines.
 """
 
 try:
     import pymongo
+    pymongo_version = pymongo.version_tuple
+    if pymongo_version[0]*10 + pymongo_version[1] < 32:
+        raise RuntimeError
 except ImportError:
     raise ImportError(
-        "Mongo db_socket requires pymongo, please install this python module or try a different db_socket.")
+        "Mongostorage_socket requires pymongo, please install this python module or try a different db_socket.")
+except RuntimeError:
+    # Trap both low version
+    raise ImportError(
+        "MongoDB needs to be at least version 3.2, found version {}.".format(pymongo.version)
+    )
+except AttributeError:
+    raise ImportError(
+        "Could not detect MongoDB version. It may be a very old version or installed incorrectly. Choosing to stop "
+        "instead of assuming version is at least 3.2."
+    )
+
 
 import collections
 import copy
@@ -19,7 +33,7 @@ import pandas as pd
 from bson.objectid import ObjectId
 import bson.errors
 
-from . import db_utils
+from . import storage_utils
 # Pull in the hashing algorithms from the client
 from .. import interface
 
@@ -36,6 +50,7 @@ def _str_to_indices(ids):
         if isinstance(x, str):
             ids[num] = ObjectId(x)
 
+
 def _str_to_indices_with_errors(ids):
     good = []
     bad = []
@@ -51,9 +66,10 @@ def _str_to_indices_with_errors(ids):
             bad.append(x)
     return good, bad
 
+
 class MongoSocket:
     """
-    This is a Mongo QCDB socket class.
+    This is a Mongo QCStorage socket class.
     """
 
     def __init__(self,
@@ -158,7 +174,7 @@ class MongoSocket:
         return self._tables_name
 
     def mixed_molecule_get(self, data):
-        return db_utils.mixed_molecule_get(self, data)
+        return storage_utils.mixed_molecule_get(self, data)
 
     def _add_generic(self, data, table, return_map=True):
         """
@@ -236,7 +252,7 @@ class MongoSocket:
     def _get_generic_by_id(self, ids, table, projection=None):
 
         # TODO parse duplicates
-        meta = db_utils.get_metadata()
+        meta = storage_utils.get_metadata()
         _str_to_indices(ids)
 
         data = list(self._tables[table].find({"_id": {"$in": ids}}, projection=projection))
@@ -253,7 +269,7 @@ class MongoSocket:
     def _get_generic(self, query, table, projection=None, allow_generic=False):
 
         # TODO parse duplicates
-        meta = db_utils.get_metadata()
+        meta = storage_utils.get_metadata()
 
         keys = self._table_indices[table]
         len_key = len(keys)
@@ -286,7 +302,7 @@ class MongoSocket:
         return ret
 
     def _find_many_generic(self, query, table, projection=None):
-        meta = db_utils.get_metadata()
+        meta = storage_utils.get_metadata()
 
         data = self._tables[table].find(query, projection=projection)
         meta["success"] = True
@@ -388,10 +404,10 @@ class MongoSocket:
 
     def get_molecules(self, molecule_ids, index="id"):
 
-        ret = {"meta": db_utils.get_metadata(), "data": []}
+        ret = {"meta": storage_utils.get_metadata(), "data": []}
 
         try:
-            index = db_utils.translate_molecule_index(index)
+            index = storage_utils.translate_molecule_index(index)
         except KeyError as e:
             ret["meta"]["error_description"] = repr(e)
             return ret
@@ -434,7 +450,7 @@ class MongoSocket:
 
         Parameters
         ----------
-        hash_val : str or list of strs
+        values : str or list of strs
             The hash of a molecule.
 
         Returns
@@ -443,7 +459,7 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        index = db_utils.translate_molecule_index(index)
+        index = storage_utils.translate_molecule_index(index)
 
         return self._del_by_index("molecules", values, index=index)
 
@@ -611,7 +627,7 @@ class MongoSocket:
     def get_results(self, query, projection=None):
 
         parsed_query = {}
-        ret = {"meta": db_utils.get_metadata(), "data": []}
+        ret = {"meta": storage_utils.get_metadata(), "data": []}
 
         # We are querying via id
         if "_id" in query:

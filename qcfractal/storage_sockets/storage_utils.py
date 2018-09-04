@@ -1,5 +1,5 @@
 """
-Contains a number of utility functions for database sockets
+Contains a number of utility functions for storage sockets
 """
 
 import json
@@ -32,12 +32,12 @@ def translate_generic_index(index):
 
 def get_metadata():
     """
-    Returns a copy of the metadata for databaes getters
+    Returns a copy of the metadata for database getters
     """
     return json.loads(_get_metadata)
 
 
-def mixed_molecule_get(db, data):
+def mixed_molecule_get(socket, data):
     """
     Creates a mixed molecule getter so both molecule_id's and/or molecules can be supplied.
 
@@ -58,10 +58,10 @@ def mixed_molecule_get(db, data):
     ret_mols = {}
 
     # Add all new molecules
-    id_mols.update(db.add_molecules(dict_mols)["data"])
+    id_mols.update(socket.add_molecules(dict_mols)["data"])
 
     # Get molecules by index and translate back to dict
-    tmp = db.get_molecules(list(id_mols.values()), index="id")
+    tmp = socket.get_molecules(list(id_mols.values()), index="id")
     id_mols_list = tmp["data"]
     meta["errors"].append(tmp["meta"]["errors"])
 

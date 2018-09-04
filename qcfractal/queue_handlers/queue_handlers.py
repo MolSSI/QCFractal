@@ -24,7 +24,7 @@ class QueueNanny:
         The DBAdapter class for queue abstraction
     errors : dict
         A dictionary of current errors
-    logger : logging.logger
+    logger : logging.logger. Optional, Default: None
         A logger for the QueueNanny
     """
 
@@ -287,6 +287,8 @@ def build_queue(queue_socket, db_socket, logger=None, **kwargs):
         A object wrapper for different queue types
     db_socket : DBSocket
         A socket to the underlying database
+    logger : logging.Logger, Optional. Default: None
+        Logger to report to
     **kwargs
         Additional kwargs for the QueueNanny
 

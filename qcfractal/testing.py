@@ -12,7 +12,7 @@ from contextlib import contextmanager
 import pytest
 from tornado.ioloop import IOLoop
 
-from .db_sockets import db_socket_factory
+from .storage_sockets import storage_socket_factory
 from .server import FractalServer
 
 ### Addon testing capabilities
@@ -127,11 +127,11 @@ def test_server(request):
     with pristine_loop() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(port=find_open_port(), db_project_name=db_name, io_loop=loop, ssl_options=False)
+        server = FractalServer(port=find_open_port(), storage_project_name=db_name, io_loop=loop, ssl_options=False)
 
         # Clean and re-init the databse
-        server.db.client.drop_database(server.db._project_name)
-        server.db.init_database()
+        server.storage.client.drop_database(server.storage._project_name)
+        server.storage.init_database()
 
         with active_loop(loop) as act:
             yield server
@@ -159,14 +159,14 @@ def dask_server_fixture(request):
             # Build server, manually handle IOLoop (no start/stop needed)
             server = FractalServer(
                 port=find_open_port(),
-                db_project_name=db_name,
+                storage_project_name=db_name,
                 io_loop=cluster.loop,
                 queue_socket=client,
                 ssl_options=False)
 
             # Clean and re-init the databse
-            server.db.client.drop_database(server.db._project_name)
-            server.db.init_database()
+            server.storage.client.drop_database(server.storage._project_name)
+            server.storage.init_database()
 
             # Yield the server instance
             yield server
@@ -192,11 +192,11 @@ def fireworks_server_fixture(request):
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = FractalServer(
-            port=find_open_port(), db_project_name=db_name, io_loop=loop, queue_socket=lpad, ssl_options=False)
+            port=find_open_port(), storage_project_name=db_name, io_loop=loop, queue_socket=lpad, ssl_options=False)
 
         # Clean and re-init the databse
-        server.db.client.drop_database(server.db._project_name)
-        server.db.init_database()
+        server.storage.client.drop_database(server.storage._project_name)
+        server.storage.init_database()
 
         # Yield the server instance
         with active_loop(loop) as act:
@@ -225,7 +225,7 @@ def db_socket_fixture(request):
 
     # IP/port/drop table is specific to build
     if request.param == "mongo":
-        db = db_socket_factory("127.0.0.1", 27017, db_name, db_type=request.param)
+        db = storage_socket_factory("127.0.0.1", 27017, db_name, db_type=request.param)
 
         # Clean and re-init the databse
         db.client.drop_database(db._project_name)

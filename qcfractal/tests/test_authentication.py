@@ -40,17 +40,17 @@ def sec_server(request):
         # Build server, manually handle IOLoop (no start/stop needed)
         server = qcfractal.FractalServer(
             port=testing.find_open_port(),
-            db_project_name=db_name,
+            storage_project_name=db_name,
             io_loop=loop,
             security="local")
 
         # Clean and re-init the databse
-        server.db.client.drop_database(server.db._project_name)
-        server.db.init_database()
+        server.storage.client.drop_database(server.storage._project_name)
+        server.storage.init_database()
 
         # Add local users
         for k, v in _users.items():
-            assert server.db.add_user(k, _users[k]["pw"], _users[k]["perm"])
+            assert server.storage.add_user(k, _users[k]["pw"], _users[k]["perm"])
 
         with testing.active_loop(loop) as act:
             yield server
