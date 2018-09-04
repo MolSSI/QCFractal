@@ -113,6 +113,6 @@ Contains in-depth developer documentation.
    :caption: Developer Documentation
 
    glossary
-   changelog
    dev_guidelines
+   changelog
 
