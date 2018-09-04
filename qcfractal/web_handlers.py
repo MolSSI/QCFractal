@@ -201,7 +201,7 @@ class ProcedureHandler(APIHandler):
 
         db = self.objects["db_socket"]
 
-        ret = db.get_procedures(self.json["data"], by_id=True)
+        ret = db.get_procedures(self.json["data"], by_id=self.json.get("by_idx", False))
         self.logger.info("GET: Procedures - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)

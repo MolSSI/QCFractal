@@ -177,10 +177,10 @@ def procedure_optimization_input_parser(db, data):
 
         # Unique nesting of args
         keys = {
-            "procedure_type": "optimization",
+            "type": "optimization",
+            "program": data["meta"]["program"],
+            "keywords": packet["keywords"],
             "single_key": k,
-            "optimization_program": data["meta"]["program"],
-            "optimization_kwargs": packet["keywords"]
         }
 
         task = {
