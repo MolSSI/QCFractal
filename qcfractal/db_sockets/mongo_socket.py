@@ -87,8 +87,8 @@ class MongoSocket:
             "results": interface.schema.get_indices("result"),
             "molecules": interface.schema.get_indices("molecule"),
             "procedures": interface.schema.get_indices("procedure"),
-            "services": interface.schema.get_indices("service"),
-            "queue": interface.schema.get_indices("queue"),
+            "service_queue": interface.schema.get_indices("service_queue"),
+            "task_queue": interface.schema.get_indices("task_queue"),
             "users": ("username", )
         }
         self._valid_collections = set(self._collection_indices.keys())
@@ -98,8 +98,8 @@ class MongoSocket:
             "results": True,
             "molecules": False,
             "procedures": False,
-            "services": False,
-            "queue": True,
+            "service_queue": False,
+            "task_queue": True,
             "users": True,
         }
 
@@ -149,7 +149,7 @@ class MongoSocket:
             self._project[col].create_index(idx, unique=self._collection_unique_indices[col])
 
         # Special queue index, hash_index should be unique
-        self._project["queue"].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
+        self._project["task_queue"].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
 
         # Return the success array
         return collection_creation
@@ -696,7 +696,7 @@ class MongoSocket:
 
     def add_services(self, data):
 
-        ret = self._add_generic(data, "services", return_map=True)
+        ret = self._add_generic(data, "service_queue", return_map=True)
         ret["meta"]["validation_errors"] = []  # TODO
 
         return ret
@@ -704,16 +704,16 @@ class MongoSocket:
     def get_services(self, query, by_id=False, projection=None):
 
         if by_id:
-            return self._get_generic_by_id(query, "services", projection=projection)
+            return self._get_generic_by_id(query, "service_queue", projection=projection)
         else:
-            return self._get_generic(query, "services", projection=projection, allow_generic=True)
+            return self._get_generic(query, "service_queue", projection=projection, allow_generic=True)
 
     def update_services(self, updates):
 
         match_count = 0
         modified_count = 0
         for uid, data in updates:
-            result = self._project["services"].replace_one({"_id": ObjectId(uid)}, data)
+            result = self._project["service_queue"].replace_one({"_id": ObjectId(uid)}, data)
             match_count += result.matched_count
             modified_count += result.modified_count
         return (match_count, modified_count)
@@ -729,7 +729,7 @@ class MongoSocket:
             x["created_on"] = dt
             x["modified_on"] = dt
 
-        ret = self._add_generic(data, "queue", return_map=True)
+        ret = self._add_generic(data, "task_queue", return_map=True)
 
         # Update hooks on duplicates
         dup_inds = set(x[1] for x in ret["meta"]["duplicates"])
@@ -747,7 +747,7 @@ class MongoSocket:
                     }})
                     hook_updates.append(upd)
 
-            tmp = self._project["queue"].bulk_write(hook_updates)
+            tmp = self._project["task_queue"].bulk_write(hook_updates)
             if tmp.modified_count != len(dup_inds):
                 self.logger.warning("QUEUE: Hook duplicate found does not match hook triggers")
 
@@ -756,7 +756,7 @@ class MongoSocket:
 
     def queue_get_next(self, n=100, tag=None):
 
-        found = list(self._project["queue"].find(
+        found = list(self._project["task_queue"].find(
             {
                 "status": "WAITING",
                 "tag": tag
@@ -773,7 +773,7 @@ class MongoSocket:
 
         query = {"_id": {"$in": [x["_id"] for x in found]}}
 
-        upd = self._project["queue"].update_many(
+        upd = self._project["task_queue"].update_many(
             query, {"$set": {
                 "status": "RUNNING",
                 "modified_on": datetime.datetime.utcnow()
@@ -791,18 +791,18 @@ class MongoSocket:
     def get_queue(self, query, by_id=False, projection=None):
 
         if by_id:
-            return self._get_generic_by_id(query, "queue", projection=projection)
+            return self._get_generic_by_id(query, "task_queue", projection=projection)
         else:
-            return self._get_generic(query, "procedures", allow_generic=True)
+            return self._get_generic(query, "task_queue", allow_generic=True)
 
     def queue_get_by_id(self, ids, n=100):
 
-        return list(self._project["queue"].find({"_id": ids}, limit=n))
+        return list(self._project["task_queue"].find({"_id": ids}, limit=n))
 
     def queue_mark_complete(self, ids):
         query = {"_id": {"$in": [ObjectId(x) for x in ids]}}
 
-        rm = self._project["queue"].delete_many(query)
+        rm = self._project["task_queue"].delete_many(query)
         if rm.deleted_count != len(ids):
             self.logger.warning("QUEUE: Number of complete projects does not match the number of removed projects.")
 
@@ -829,7 +829,7 @@ class MongoSocket:
         if len(bulk_commands) == 0:
             return
 
-        ret = self._project["services"].bulk_write(bulk_commands, ordered=False)
+        ret = self._project["service_queue"].bulk_write(bulk_commands, ordered=False)
         return ret
 
 ### Users

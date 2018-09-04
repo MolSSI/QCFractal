@@ -47,7 +47,7 @@ class TorsionDriveService:
         meta["torsiondrive_history"] = {}
 
         # Save initial molecule and add hash
-        meta["state"] = "READY"
+        meta["status"] = "READY"
         meta["required_jobs"] = False
         meta["remaining_jobs"] = False
         meta["molecule_template"] = molecule_template
@@ -59,6 +59,10 @@ class TorsionDriveService:
             dihedral_template.append(tmp)
         meta["torsiondrive_meta"]["dihedral_template"] = dihedral_template
 
+        # Temporary hash index
+        meta["hash_index"] = str(uuid.uuid4())
+        meta["tag"] = None
+
         return cls(db_socket, queue_socket, meta)
 
     def get_json(self):
@@ -66,7 +70,7 @@ class TorsionDriveService:
 
     def iterate(self):
 
-        self.data["state"] = "RUNNING"
+        self.data["status"] = "RUNNING"
         # print("\nTorsionDrive State:")
         # print(json.dumps(self.data["torsiondrive_state"], indent=2))
         # print("Iterate")
@@ -197,7 +201,7 @@ class TorsionDriveService:
         # Add finalize state
         # Parse remaining procedures
         # Create a map of "jobs" so that procedures does not have to followed
-        self.data["state"] = "FINISHED"
+        self.data["status"] = "FINISHED"
 
         self.data["final_energies"] = {}
         self.data["minimum_positions"] = {}
