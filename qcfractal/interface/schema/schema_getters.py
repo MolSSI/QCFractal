@@ -11,7 +11,7 @@ from .definitions_schema import get_definition
 from .molecule_schema import molecule_schema
 from .options_schema import options_schema
 
-__all__ = ["get_schema", "get_indices", "get_schema_keys", "validate", "get_hash_fields", "format_result_indices"]
+__all__ = ["get_schema", "get_table_indices", "get_schema_keys", "validate", "get_hash_fields", "format_result_indices"]
 
 _schemas = {}
 

@@ -6,7 +6,6 @@ All tests should be atomic, that is create and cleanup their data
 
 import pytest
 
-# Import the DQM collection
 import qcfractal.interface as portal
 from qcfractal.testing import db_socket_fixture as db_socket
 
@@ -145,34 +144,34 @@ def test_options_error(db_socket):
     assert len(ret["meta"]["validation_errors"]) == 1
 
 
-def test_databases_add(db_socket):
+def test_collections_add(db_socket):
 
     db = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
 
-    ret = db_socket.add_database(db)
+    ret = db_socket.add_collection(db)
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = db_socket.get_databases([(db["category"], db["name"])])
+    ret = db_socket.get_collections([(db["category"], db["name"])])
     assert ret["meta"]["success"] == True
     assert ret["meta"]["n_found"] == 1
     assert db == ret["data"][0]
 
-    ret = db_socket.del_database(db["category"], db["name"])
+    ret = db_socket.del_collection(db["category"], db["name"])
     assert ret == 1
 
-    ret = db_socket.get_databases([(db["category"], "bleh")])
+    ret = db_socket.get_collections([(db["category"], "bleh")])
     assert len(ret["meta"]["missing"]) == 1
     assert ret["meta"]["n_found"] == 0
 
 
-def test_databases_overwrite(db_socket):
+def test_collections_overwrite(db_socket):
 
     db = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
 
-    ret = db_socket.add_database(db)
+    ret = db_socket.add_collection(db)
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = db_socket.get_databases([(db["category"], db["name"])])
+    ret = db_socket.get_collections([(db["category"], db["name"])])
     assert ret["meta"]["n_found"] == 1
 
     db_update = {
@@ -182,10 +181,10 @@ def test_databases_overwrite(db_socket):
         "something2": "else",
         "array2": ["54321"]
     }
-    ret = db_socket.add_database(db_update, overwrite=True)
+    ret = db_socket.add_collection(db_update, overwrite=True)
     assert ret["meta"]["success"] == True
 
-    ret = db_socket.get_databases([(db["category"], db["name"])])
+    ret = db_socket.get_collections([(db["category"], db["name"])])
     assert ret["meta"]["n_found"] == 1
 
     # Check to make sure the field were replaced and not updated
@@ -193,7 +192,7 @@ def test_databases_overwrite(db_socket):
     assert "something" not in db_result
     assert "something2" in db_result
 
-    ret = db_socket.del_database(db["category"], db["name"])
+    ret = db_socket.del_collection(db["category"], db["name"])
     assert ret == 1
 
 

@@ -137,7 +137,7 @@ class OptionHandler(APIHandler):
         self.write(ret)
 
 
-class DatabaseHandler(APIHandler):
+class CollectionHandler(APIHandler):
     """
     A handler to push and get molecules.
     """
@@ -147,8 +147,8 @@ class DatabaseHandler(APIHandler):
 
         db = self.objects["db_socket"]
 
-        ret = db.get_databases(self.json["data"])
-        self.logger.info("GET: Databases - {} pulls.".format(len(ret["data"])))
+        ret = db.get_collections(self.json["data"])
+        self.logger.info("GET: Collections - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
 
@@ -158,8 +158,8 @@ class DatabaseHandler(APIHandler):
         db = self.objects["db_socket"]
 
         overwrite = self.json["meta"].get("overwrite", False)
-        ret = db.add_database(self.json["data"], overwrite=overwrite)
-        self.logger.info("POST: Databases - {} inserted.".format(ret["meta"]["n_inserted"]))
+        ret = db.add_collection(self.json["data"], overwrite=overwrite)
+        self.logger.info("POST: Collections - {} inserted.".format(ret["meta"]["n_inserted"]))
 
         self.write(ret)
 

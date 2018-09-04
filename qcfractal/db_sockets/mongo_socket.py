@@ -82,13 +82,13 @@ class MongoSocket:
 
         # Static data
         self._table_indices = {
-            "collections": interface.schema.get_indices("collection"),
-            "options": interface.schema.get_indices("options"),
-            "results": interface.schema.get_indices("result"),
-            "molecules": interface.schema.get_indices("molecule"),
-            "procedures": interface.schema.get_indices("procedure"),
-            "services": interface.schema.get_indices("service"),
-            "queue": interface.schema.get_indices("queue"),
+            "collections": interface.schema.get_table_indices("collection"),
+            "options": interface.schema.get_table_indices("options"),
+            "results": interface.schema.get_table_indices("result"),
+            "molecules": interface.schema.get_table_indices("molecule"),
+            "procedures": interface.schema.get_table_indices("procedure"),
+            "services": interface.schema.get_table_indices("service"),
+            "queue": interface.schema.get_table_indices("queue"),
             "users": ("username", )
         }
         self._valid_tables = set(self._table_indices.keys())
@@ -116,7 +116,7 @@ class MongoSocket:
             self.client = pymongo.MongoClient(url, port)
 
         # Isolate objects to this single project DB
-        self._tables_name = project
+        self._project_name = project
         self._tables = self.client[project]
 
         new_table = self.init_database()
