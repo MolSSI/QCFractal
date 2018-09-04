@@ -718,6 +718,12 @@ class MongoSocket:
             modified_count += result.modified_count
         return (match_count, modified_count)
 
+    def del_services(self, values, index="id"):
+
+        index = _translate_id_index(index)
+
+        return self._del_by_index("service_queue", values, index=index)
+
 ### Mongo queue handling functions
 
     def queue_submit(self, data, tag=None):
