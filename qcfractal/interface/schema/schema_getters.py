@@ -25,8 +25,9 @@ _schemas["options"] = options_schema
 # Load molecule schema
 
 # Collection and hash indices
-_collection_indices = {
-    "collection": ("collection", "category", "name"),
+_table_indices = {
+
+    "collection": ("collection", "category", "name", "index1", "index2", "index3"),
     "procedure": ("procedure", "program"),
     "service": ("service", ),
 
@@ -35,7 +36,7 @@ _collection_indices = {
     "options": ("program", "name"),
 
     "queue": ("status", "hash_index", "tag"),
-}
+}  # yapf: disable
 
 
 def get_hash_fields(name):
@@ -44,10 +45,10 @@ def get_hash_fields(name):
     return copy.deepcopy(_schemas[name]["hash_fields"])
 
 
-def get_indices(name):
-    if name not in _collection_indices:
+def get_table_indices(name):
+    if name not in _table_indices:
         raise KeyError("Indices for {} not found.".format(name))
-    return _collection_indices[name]
+    return _table_indices[name]
 
 
 def format_result_indices(data, program=None):
