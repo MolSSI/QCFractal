@@ -77,6 +77,7 @@ class TorsionDriveService:
             "single_keys": schema.format_result_indices(single_keys)
         }
 
+        meta["success"] = False
         meta["procedure"] = "torsiondrive"
         meta["program"] = "torsiondrive"
         meta["hash_index"] = procedures.procedures_util.hash_procedure_keys(keys),
@@ -221,7 +222,7 @@ class TorsionDriveService:
         # Add finalize state
         # Parse remaining procedures
         # Create a map of "jobs" so that procedures does not have to followed
-        self.data["status"] = "FINISHED"
+        self.data["success"] = True
 
         self.data["final_energies"] = {}
         self.data["minimum_positions"] = {}
@@ -245,6 +246,7 @@ class TorsionDriveService:
         del self.data["molecule_template"]
         del self.data["queue_keys"]
         del self.data["torsiondrive_state"]
+        del self.data["status"]
 
         return self.data
 

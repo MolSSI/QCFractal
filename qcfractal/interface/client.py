@@ -270,7 +270,7 @@ class FractalClient(object):
         else:
             return r.json()["data"]
 
-    def get_procedure(self, procedure_id, **kwargs):
+    def get_procedures(self, procedure_id, **kwargs):
 
         payload = {"meta": {}, "data": [procedure_id]}
         r = self._request("get", "procedure", payload)

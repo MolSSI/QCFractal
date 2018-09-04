@@ -51,7 +51,7 @@ def test_service_torsiondrive(dask_server_fixture):
     assert len(nanny.list_current_tasks()) == 0
 
     # Get a TorsionDriveORM result and check data
-    result = client.get_procedure({"procedure": "torsiondrive"})[0]
+    result = client.get_procedures({"procedure": "torsiondrive"})[0]
     assert isinstance(str(result), str) # Check that repr runs
 
     assert pytest.approx(0.002597541340221565, 1e-5) == result.final_energies(0)

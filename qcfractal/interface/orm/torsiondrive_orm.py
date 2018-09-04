@@ -13,7 +13,7 @@ class TorsionDriveORM:
     # Maps {internal_status : FractalServer status}
     __json_mapper = {
         "_id": "id",
-        "_status": "status",
+        "_success": "success",
 
         # Options
         "_optimization_history": "optimization_history",
@@ -57,7 +57,7 @@ class TorsionDriveORM:
         data : dict
             A JSON blob from FractalServer:
                 - "id": The service id of the blob
-                - "status": The current status of the job ("WAITING", "RUNNING", "FINISHED")
+                - "success": If the procedure was successful or not.
                 - "initial_molecule": The id of the submitted molecule
                 - "torsiondrive_meta": The option submitted to the TorsionDrive method
                 - "geometric_meta": The options submitted to the Geometric method called by TorsionDrive
@@ -93,12 +93,12 @@ class TorsionDriveORM:
         --------
 
         >>> repr(torsiondrive_obj)
-        TorsionDrive(id='5b7f1fd57b87872d2c5d0a6d', status='FINISHED', molecule_id='5b7f1fd57b87872d2c5d0a6c', molecule_name='HOOH')
+        TorsionDrive(id='5b7f1fd57b87872d2c5d0a6d', success=True, molecule_id='5b7f1fd57b87872d2c5d0a6c', molecule_name='HOOH')
         """
 
         ret = "TorsionDrive("
         ret += "id='{}', ".format(self._id)
-        ret += "status='{}', ".format(self._status)
+        ret += "success='{}', ".format(self._success)
         ret += "molecule_id='{}', ".format(self._initial_molecule_id)
 
         name = None
@@ -132,8 +132,8 @@ class TorsionDriveORM:
         {(-90,): -148.7641654446243, (180,): -148.76501336993732, (0,): -148.75056290106735, (90,): -148.7641654446148}
         """
 
-        if self._status != "FINISHED":
-            raise KeyError("{} has not completed. Unable to show final energies.".format(self))
+        if not self._success:
+            raise KeyError("{} has not completed or failed. Unable to show final energies.".format(self))
 
         if key is None:
             return self._final_energies.copy()

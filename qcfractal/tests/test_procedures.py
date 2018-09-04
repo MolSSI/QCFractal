@@ -80,8 +80,9 @@ def test_procedure_optimization(fractal_compute_server):
 
     # Add a hydrogen molecule
     hydrogen = portal.Molecule([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
+    client = portal.FractalClient(fractal_compute_server.get_address(""))
+    mol_ret = client.add_molecules({"hydrogen": hydrogen.to_json()})
     db = fractal_compute_server.objects["db_socket"]
-    mol_ret = db.add_molecules({"hydrogen": hydrogen.to_json()})
 
     # Add compute
     compute = {
@@ -97,7 +98,7 @@ def test_procedure_optimization(fractal_compute_server):
                 "program": "psi4"
             },
         },
-        "data": [mol_ret["data"]["hydrogen"]],
+        "data": [mol_ret["hydrogen"]],
     }
 
     # Ask the server to compute a new computation
@@ -111,11 +112,11 @@ def test_procedure_optimization(fractal_compute_server):
     assert len(nanny.list_current_tasks()) == 0
 
     # # Query result and check against out manual pul
-    query = {"program": "geometric", "options": "none", "initial_molecule": mol_ret["data"]["hydrogen"]}
-    results = db.get_procedures([query])["data"]
+    results = client.get_procedures({"program": "geometric"})
 
     assert len(results) == 1
-    assert pytest.approx(-1.117530188962681, 1e-5) == results[0]["energies"][-1]
+    assert isinstance(str(results[0]), str) # Check that repr runs
+    assert pytest.approx(-1.117530188962681, 1e-5) == results[0].final_energy()
 
 
 ### Tests an entire server and interaction energy database run
