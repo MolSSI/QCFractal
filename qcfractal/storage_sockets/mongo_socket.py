@@ -69,7 +69,7 @@ def _str_to_indices_with_errors(ids):
 
 class MongoSocket:
     """
-    This is a Mongo QCStorage socket class.
+    This is a Mongo QCDB socket class.
     """
 
     def __init__(self,
@@ -151,18 +151,19 @@ class MongoSocket:
         """
         # Try to create a collection for each entry
         table_creation = {}
-        for col in self._valid_tables:
+        for tbl in self._valid_tables:
             try:
-                self._tables.create_collection(col)
-                table_creation[col] = True
+                # MongoDB "Collection" -> QCFractal "Table"
+                self._tables.create_collection(tbl)
+                table_creation[tbl] = True
 
             except pymongo.errors.CollectionInvalid:
-                table_creation[col] = False
+                table_creation[tbl] = False
 
         # Build the indices
-        for col, indices in self._table_indices.items():
+        for tbl, indices in self._table_indices.items():
             idx = [(x, pymongo.ASCENDING) for x in indices]
-            self._tables[col].create_index(idx, unique=self._table_unique_indices[col])
+            self._tables[tbl].create_index(idx, unique=self._table_unique_indices[tbl])
 
         # Special queue index, hash_index should be unique
         self._tables["queue"].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
@@ -226,6 +227,7 @@ class MongoSocket:
 
         # Add id's of new keys
         rdata = []
+        import pdb; pdb.set_trace()
         if return_map:
             for x in (set(range(len(data))) - set(error_skips)):
                 d = data[x]
@@ -566,19 +568,19 @@ class MongoSocket:
                 },
                 "data": [((data["category"], data["name"]), data["id"])]
             }
-            r = self._tables["databases"].replace_one({"_id": ObjectId(data["id"])}, data)
+            r = self._tables["collections"].replace_one({"_id": ObjectId(data["id"])}, data)
             if r.modified_count == 1:
                 ret["meta"]["success"] = True
                 ret["meta"]["n_inserted"] = 1
 
         else:
-            ret = self._add_generic([data], "databases")
+            ret = self._add_generic([data], "collections")
         ret["meta"]["validation_errors"] = []  # TODO
         return ret
 
     def get_collections(self, keys):
 
-        return self._get_generic(keys, "databases")
+        return self._get_generic(keys, "collections")
 
     def del_collection(self, category, name):
         """
@@ -595,7 +597,7 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return (self._tables["databases"].delete_one({"category": category, "name": name})).deleted_count
+        return (self._tables["collections"].delete_one({"category": category, "name": name})).deleted_count
 
 ### Mongo database functions
 
@@ -635,7 +637,8 @@ class MongoSocket:
                 ret["error_description"] = "ID index was provided, cannot use other indices"
                 return ret
 
-            if not isinstance(parsed_query, (list, tuple)):
+            # TODO: Validate this change actually fixes a bug
+            if not isinstance(query, (list, tuple)):
                 parsed_query["_id"] = {"$in": query["_id"]}
                 _str_to_indices(parsed_query["_id"]["$in"])
             else:
@@ -646,7 +649,7 @@ class MongoSocket:
             # Check if there are unknown keys
             remain = set(query) - set(self._table_indices["results"])
             if remain:
-                ret["error_description"] = "Results query found unkown keys {}".format(list(remain))
+                ret["error_description"] = "Results query found unknown keys {}".format(list(remain))
                 return ret
 
             for key, value in query.items():
@@ -930,7 +933,7 @@ class MongoSocket:
         return (True, "Success")
 
     def remove_user(self, username):
-        """Removes a user from the database
+        """Removes a user from the MongoDB Tables
 
         Parameters
         ----------

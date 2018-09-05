@@ -3,9 +3,8 @@ Tests the DQM Server class
 """
 
 import qcfractal.interface as portal
+# Pytest Fixture
 from qcfractal.testing import test_server
-
-import pytest
 import requests
 
 meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
@@ -62,22 +61,22 @@ def test_option_socket(test_server):
 
 def test_database_socket(test_server):
 
-    db_api_addr = test_server.get_address("database")
-    db = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
+    storage_api_addr = test_server.get_address("storage")
+    storage = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
 
-    r = requests.post(db_api_addr, json={"meta": {}, "data": db})
+    r = requests.post(storage_api_addr, json={"meta": {}, "data": storage})
     assert r.status_code == 200
 
     pdata = r.json()
     assert pdata["meta"].keys() == meta_set
     assert pdata["meta"]["n_inserted"] == 1
 
-    r = requests.get(db_api_addr, json={"meta": {}, "data": [(db["category"], db["name"])]})
+    r = requests.get(storage_api_addr, json={"meta": {}, "data": [(storage["category"], storage["name"])]})
     assert r.status_code == 200
 
     pdata = r.json()
     del pdata["data"][0]["id"]
-    assert pdata["data"][0] == db
+    assert pdata["data"][0] == storage
 
 
 def test_result_socket(test_server):

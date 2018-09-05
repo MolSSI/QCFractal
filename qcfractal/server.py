@@ -82,7 +82,7 @@ class FractalServer(object):
             storage_username=None,
             storage_password=None,
             storage_type="mongo",
-            storage_project_name="molssidb",
+            storage_project_name="molssistorage",
 
             # Queue options
             queue_socket=None,

@@ -3,12 +3,8 @@ Tests the server compute capabilities.
 """
 
 import qcfractal.interface as portal
-import qcfractal as qf
-
-from qcfractal.queue_handlers import build_queue
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
-import qcengine
 import requests
 import pytest
 
@@ -21,14 +17,14 @@ def test_compute_queue_stack(fractal_compute_server):
     hydrogen = portal.Molecule([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
     helium = portal.Molecule([[2, 0, 0, 0.0]], dtype="numpy", units="bohr")
 
-    db = fractal_compute_server.objects["db_socket"]
-    mol_ret = db.add_molecules({"hydrogen": hydrogen.to_json(), "helium": helium.to_json()})
+    storage = fractal_compute_server.objects["storage_socket"]
+    mol_ret = storage.add_molecules({"hydrogen": hydrogen.to_json(), "helium": helium.to_json()})
 
     hydrogen_mol_id = mol_ret["data"]["hydrogen"]
     helium_mol_id = mol_ret["data"]["helium"]
 
     option = portal.data.get_options("psi_default")
-    opt_ret = db.add_options([option])
+    opt_ret = storage.add_options([option])
     opt_key = option["name"]
 
     # Add compute
@@ -61,7 +57,7 @@ def test_compute_queue_stack(fractal_compute_server):
         "method": compute["meta"]["method"],
         "basis": compute["meta"]["basis"]
     }
-    results = db.get_results(results_query)["data"]
+    results = storage.get_results(results_query)["data"]
 
     assert len(results) == 2
     for r in results:
@@ -80,8 +76,8 @@ def test_procedure_optimization(fractal_compute_server):
 
     # Add a hydrogen molecule
     hydrogen = portal.Molecule([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
-    db = fractal_compute_server.objects["db_socket"]
-    mol_ret = db.add_molecules({"hydrogen": hydrogen.to_json()})
+    storage = fractal_compute_server.objects["storage_socket"]
+    mol_ret = storage.add_molecules({"hydrogen": hydrogen.to_json()})
 
     # Add compute
     compute = {
@@ -112,7 +108,7 @@ def test_procedure_optimization(fractal_compute_server):
 
     # # Query result and check against out manual pul
     query = {"program": "geometric", "options": "none", "initial_molecule": mol_ret["data"]["hydrogen"]}
-    results = db.get_procedures([query])["data"]
+    results = storage.get_procedures([query])["data"]
 
     assert len(results) == 1
     assert pytest.approx(-1.117530188962681, 1e-5) == results[0]["energies"][-1]

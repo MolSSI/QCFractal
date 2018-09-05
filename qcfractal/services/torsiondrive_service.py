@@ -15,17 +15,17 @@ __all__ = ["TorsionDriveService"]
 
 
 class TorsionDriveService:
-    def __init__(self, db_socket, queue_socket, data):
+    def __init__(self, storage_socket, queue_socket, data):
 
         # Server interaction
-        self.db_socket = db_socket
+        self.storage_socket = storage_socket
         self.queue_socket = queue_socket
 
         # Unpack data
         self.data = data
 
     @classmethod
-    def initialize_from_api(cls, db_socket, queue_socket, meta, molecule):
+    def initialize_from_api(cls, storage_socket, queue_socket, meta, molecule):
 
         # Grab initial molecule
         meta["initial_molecule"] = molecule["id"]
@@ -38,7 +38,7 @@ class TorsionDriveService:
         del molecule_template["id"]
         del molecule_template["identifiers"]
 
-        # Iniate torsiondrive meta
+        # Initiate torsiondrive meta
         meta["torsiondrive_state"] = td_api.create_initial_state(
             dihedrals=meta["torsiondrive_meta"]["dihedrals"],
             grid_spacing=meta["torsiondrive_meta"]["grid_spacing"],
@@ -59,7 +59,7 @@ class TorsionDriveService:
             dihedral_template.append(tmp)
         meta["torsiondrive_meta"]["dihedral_template"] = dihedral_template
 
-        return cls(db_socket, queue_socket, meta)
+        return cls(storage_socket, queue_socket, meta)
 
     def get_json(self):
         return self.data
@@ -81,7 +81,7 @@ class TorsionDriveService:
         if (self.data["remaining_jobs"] is not False) and (self.data["remaining_jobs"] == 0):
 
             # Query the jobs
-            job_query = self.db_socket.get_procedures(list(self.data["complete_jobs"].values()), by_id=True)
+            job_query = self.storage_socket.get_procedures(list(self.data["complete_jobs"].values()), by_id=True)
 
             # Figure out the structure
             job_results = {k: [None] * v for k, v in self.data["update_structure"].items()}
@@ -92,7 +92,7 @@ class TorsionDriveService:
             for ret in job_query["data"]:
                 job_uid = inv_job_lookup[ret["id"]]
                 value, pos = self.data["job_map"][job_uid]
-                mol_keys = self.db_socket.get_molecules(
+                mol_keys = self.storage_socket.get_molecules(
                     [ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
 
                 job_results[value][int(pos)] = (mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1])
@@ -141,7 +141,7 @@ class TorsionDriveService:
                 flat_map[(v, str(num))] = mol
 
         # Add new molecules
-        self.db_socket.add_molecules(flat_map)
+        self.storage_socket.add_molecules(flat_map)
 
         # Prepare optimization
         meta_packet = json.dumps({
@@ -172,7 +172,7 @@ class TorsionDriveService:
             packet["data"] = [mol]
 
             # Turn packet into a full task
-            task, errors = procedures.get_procedure_input_parser("optimization")(self.db_socket, packet)
+            task, errors = procedures.get_procedure_input_parser("optimization")(self.storage_socket, packet)
 
             uid = str(uuid.uuid4())
             hook = json.loads(hook_template)

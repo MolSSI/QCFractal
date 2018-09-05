@@ -40,7 +40,7 @@ class APIHandler(tornado.web.RequestHandler):
             username = None
             password = None
 
-        verified, msg = self.objects["db_socket"].verify_user(username, password, permission)
+        verified, msg = self.objects["storage_socket"].verify_user(username, password, permission)
         if verified is False:
             raise tornado.web.HTTPError(status_code=401, reason=msg)
 
@@ -72,13 +72,13 @@ class MoleculeHandler(APIHandler):
         """
         self.authenticate("read")
 
-        db = self.objects["db_socket"]
+        storage = self.objects["storage_socket"]
 
         kwargs = {}
         if "index" in self.json["meta"]:
             kwargs["index"] = self.json["meta"]["index"]
 
-        ret = db.get_molecules(self.json["data"], **kwargs)
+        ret = storage.get_molecules(self.json["data"], **kwargs)
         self.logger.info("GET: Molecule - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
@@ -104,9 +104,9 @@ class MoleculeHandler(APIHandler):
 
         self.authenticate("write")
 
-        db = self.objects["db_socket"]
+        storage = self.objects["storage_socket"]
 
-        ret = db.add_molecules(self.json["data"])
+        ret = storage.add_molecules(self.json["data"])
         self.logger.info("POST: Molecule - {} inserted.".format(ret["meta"]["n_inserted"]))
         self.write(ret)
 
@@ -119,9 +119,9 @@ class OptionHandler(APIHandler):
     def get(self):
         self.authenticate("read")
 
-        db = self.objects["db_socket"]
+        storage = self.objects["storage_socket"]
 
-        ret = db.get_options(self.json["data"])
+        ret = storage.get_options(self.json["data"])
         self.logger.info("GET: Options - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
@@ -129,9 +129,9 @@ class OptionHandler(APIHandler):
     def post(self):
         self.authenticate("write")
 
-        db = self.objects["db_socket"]
+        storage = self.objects["storage_socket"]
 
-        ret = db.add_options(self.json["data"])
+        ret = storage.add_options(self.json["data"])
         self.logger.info("POST: Options - {} inserted.".format(ret["meta"]["n_inserted"]))
 
         self.write(ret)
@@ -145,9 +145,9 @@ class CollectionHandler(APIHandler):
     def get(self):
         self.authenticate("read")
 
-        db = self.objects["db_socket"]
+        storage = self.objects["storage_socket"]
 
-        ret = db.get_collections(self.json["data"])
+        ret = storage.get_collections(self.json["data"])
         self.logger.info("GET: Collections - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
@@ -155,10 +155,10 @@ class CollectionHandler(APIHandler):
     def post(self):
         self.authenticate("write")
 
-        db = self.objects["db_socket"]
+        storage = self.objects["storage_socket"]
 
         overwrite = self.json["meta"].get("overwrite", False)
-        ret = db.add_collection(self.json["data"], overwrite=overwrite)
+        ret = storage.add_collection(self.json["data"], overwrite=overwrite)
         self.logger.info("POST: Collections - {} inserted.".format(ret["meta"]["n_inserted"]))
 
         self.write(ret)
@@ -172,10 +172,10 @@ class ResultHandler(APIHandler):
     def get(self):
         self.authenticate("read")
 
-        db = self.objects["db_socket"]
+        storage = self.objects["storage_socket"]
         proj = self.json["meta"].get("projection", None)
 
-        ret = db.get_results(self.json["data"], projection=proj)
+        ret = storage.get_results(self.json["data"], projection=proj)
         self.logger.info("GET: Results - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
@@ -183,9 +183,9 @@ class ResultHandler(APIHandler):
     def post(self):
         self.authenticate("write")
 
-        db = self.objects["db_socket"]
+        storage = self.objects["storage_socket"]
 
-        ret = db.add_results(self.json["data"])
+        ret = storage.add_results(self.json["data"])
         self.logger.info("POST: Results - {} inserted.".format(ret["meta"]["n_inserted"]))
 
         self.write(ret)
@@ -199,9 +199,9 @@ class ServiceHandler(APIHandler):
     def get(self):
         self.authenticate("read")
 
-        db = self.objects["db_socket"]
+        storage = self.objects["storage_socket"]
 
-        ret = db.get_services(self.json["data"], by_id=True)
+        ret = storage.get_services(self.json["data"], by_id=True)
         self.logger.info("GET: Services - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)

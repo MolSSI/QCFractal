@@ -122,14 +122,17 @@ def test_server(request):
     Builds a server instance with the event loop running in a thread.
     """
 
-    db_name = "qcf_local_server_test"
+    storage_name = "qcf_local_server_test"
 
     with pristine_loop() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(port=find_open_port(), storage_project_name=db_name, io_loop=loop, ssl_options=False)
+        server = FractalServer(port=find_open_port(),
+                               storage_project_name=storage_name,
+                               io_loop=loop,
+                               ssl_options=False)
 
-        # Clean and re-init the databse
+        # Clean and re-init the database
         server.storage.client.drop_database(server.storage._project_name)
         server.storage.init_database()
 
@@ -146,7 +149,7 @@ def dask_server_fixture(request):
 
     dd = pytest.importorskip("dask.distributed")
 
-    db_name = "qcf_dask_server_test"
+    storage_name = "qcf_dask_server_test"
 
     with pristine_loop() as loop:
 
@@ -159,7 +162,7 @@ def dask_server_fixture(request):
             # Build server, manually handle IOLoop (no start/stop needed)
             server = FractalServer(
                 port=find_open_port(),
-                storage_project_name=db_name,
+                storage_project_name=storage_name,
                 io_loop=cluster.loop,
                 queue_socket=client,
                 ssl_options=False)
@@ -186,13 +189,14 @@ def fireworks_server_fixture(request):
     lpad = fireworks.LaunchPad(name="fw_testing_server", logdir="/tmp/", strm_lvl="CRITICAL")
     lpad.reset(None, require_password=False)
 
-    db_name = "qcf_fireworks_server_test"
+    storage_name = "qcf_fireworks_server_test"
 
     with pristine_loop() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = FractalServer(
-            port=find_open_port(), storage_project_name=db_name, io_loop=loop, queue_socket=lpad, ssl_options=False)
+            port=find_open_port(), storage_project_name=storage_name,
+            io_loop=loop, queue_socket=lpad, ssl_options=False)
 
         # Clean and re-init the databse
         server.storage.client.drop_database(server.storage._project_name)
@@ -219,23 +223,23 @@ def fractal_compute_server(request):
 
 
 @pytest.fixture(scope="module", params=["mongo"])
-def db_socket_fixture(request):
+def storage_socket_fixture(request):
     print("")
-    db_name = "qcf_local_values_test"
+    storage_name = "qcf_local_values_test"
 
     # IP/port/drop table is specific to build
     if request.param == "mongo":
-        db = storage_socket_factory("127.0.0.1", 27017, db_name, db_type=request.param)
+        storage = storage_socket_factory("127.0.0.1", 27017, storage_name, storage_type=request.param)
 
-        # Clean and re-init the databse
-        db.client.drop_database(db._project_name)
-        db.init_database()
+        # Clean and re-init the database
+        storage.client.drop_database(storage._project_name)
+        storage.init_database()
     else:
-        raise KeyError("DB type {} not understood".format(request.param))
+        raise KeyError("Storage type {} not understood".format(request.param))
 
-    yield db
+    yield storage
 
     if request.param == "mongo":
-        db.client.drop_database(db_name)
+        storage.client.drop_database(storage_name)
     else:
-        raise KeyError("DB type {} not understood".format(request.param))
+        raise KeyError("Storage type {} not understood".format(request.param))

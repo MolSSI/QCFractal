@@ -33,14 +33,14 @@ def sec_server(request):
     Builds a server instance with the event loop running in a thread.
     """
 
-    db_name = "qcf_local_server_auth_test"
+    storage_name = "qcf_local_server_auth_test"
 
     with testing.pristine_loop() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = qcfractal.FractalServer(
             port=testing.find_open_port(),
-            storage_project_name=db_name,
+            storage_project_name=storage_name,
             io_loop=loop,
             security="local")
 
