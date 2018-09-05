@@ -6,22 +6,9 @@ common subroutines.
 try:
     import pymongo
     pymongo_version = pymongo.version_tuple
-    if pymongo_version[0]*10 + pymongo_version[1] < 32:
-        raise RuntimeError
 except ImportError:
     raise ImportError(
         "Mongostorage_socket requires pymongo, please install this python module or try a different db_socket.")
-except RuntimeError:
-    # Trap both low version
-    raise ImportError(
-        "MongoDB needs to be at least version 3.2, found version {}.".format(pymongo.version)
-    )
-except AttributeError:
-    raise ImportError(
-        "Could not detect MongoDB version. It may be a very old version or installed incorrectly. Choosing to stop "
-        "instead of assuming version is at least 3.2."
-    )
-
 
 import collections
 import copy
@@ -130,6 +117,24 @@ class MongoSocket:
                 url, port, username=username, password=password, authMechanism=authMechanism, authSource=authSource)
         else:
             self.client = pymongo.MongoClient(url, port)
+
+        try:
+            version_array = self.client.server_info()['versionArray']
+            if version_array[0] * 10 + version_array[1] < 32:
+                raise RuntimeError
+        except AttributeError:
+            raise RuntimeError(
+                "Could not detect MongoDB version at URL {}. It may be a very old version or installed incorrectly. "
+                "Choosing to stop instead of assuming version is at least 3.2.".format(url)
+            )
+        except RuntimeError:
+            # Trap low version
+            raise RuntimeError(
+                "Connected MongoDB at URL {} needs to be at least version 3.2, found version {}.".format(
+                    url,
+                    self.client.server_info()['version']
+                )
+            )
 
         # Isolate objects to this single project DB
         self._project_name = project
