@@ -3,30 +3,31 @@ Constructs ORMs from raw JSON
 """
 
 from .torsiondrive_orm import TorsionDriveORM
+from .optimization_orm import OptimizationORM
 
 
-def build_orm(data, service=None):
+def build_orm(data, procedure=None):
     """
     Constructs a Service ORM from incoming JSON data.
 
     Parameters
     ----------
     data : dict
-        A JSON representation of the service.
-    service : None, optional
-        The name of the service. If blank the service name is pulled from the `data["service"]` field.
+        A JSON representation of the procedure.
+    procedure : None, optional
+        The name of the procedure. If blank the procedure name is pulled from the `data["procedure"]` field.
 
     Returns
     -------
     ret : a ORM-like object
-        Returns an interface object of the appropriate service.
+        Returns an interface object of the appropriate procedure.
 
     Examples
     --------
 
     # A partial example of torsiondrive metadata
     >>> data = {
-        "service": "torsiondrive",
+        "procedure": "torsiondrive",
         "initial_molecule": "5b7f1fd57b87872d2c5d0a6c",
         "state": "RUNNING",
         "id": "5b7f1fd57b87872d2c5d0a6d",
@@ -37,10 +38,14 @@ def build_orm(data, service=None):
     TorsionDrive(id='5b7f1fd57b87872d2c5d0a6c', state='RUNNING', molecule_id='5b7f1fd57b87872d2c5d0a6c', molecule_name='HOOH')
     """
 
-    if ("service" not in data) and (service is None):
-        raise KeyError("There is not a service tag and service is none. Unable to determine service type")
+    if ("procedure" not in data) and (procedure is None):
+        raise KeyError("There is not a procedure tag and procedure is none. Unable to determine procedure type")
 
-    if data["service"].lower() == "torsiondrive":
+    # import json
+    # print(json.dumps(data, indent=2))
+    if data["procedure"].lower() == "torsiondrive":
         return TorsionDriveORM.from_json(data)
+    elif data["procedure"].lower() == "optimization":
+        return OptimizationORM.from_json(data)
     else:
-        raise KeyError("Service names {} not recognized.".format(data["service"]))
+        raise KeyError("Service names {} not recognized.".format(data["procedure"]))

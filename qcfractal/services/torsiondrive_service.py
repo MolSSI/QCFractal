@@ -9,7 +9,8 @@ import numpy as np
 
 from torsiondrive import td_api
 
-from .. import procedures
+from qcfractal import procedures
+from qcfractal.interface import schema
 
 __all__ = ["TorsionDriveService"]
 
@@ -44,10 +45,9 @@ class TorsionDriveService:
             grid_spacing=meta["torsiondrive_meta"]["grid_spacing"],
             elements=molecule_template["symbols"],
             init_coords=[molecule_template["geometry"]])
-        meta["torsiondrive_history"] = {}
 
         # Save initial molecule and add hash
-        meta["state"] = "READY"
+        meta["status"] = "READY"
         meta["required_jobs"] = False
         meta["remaining_jobs"] = False
         meta["molecule_template"] = molecule_template
@@ -57,7 +57,32 @@ class TorsionDriveService:
         for idx in meta["torsiondrive_meta"]["dihedrals"]:
             tmp = ('dihedral', ) + tuple(str(z + 1) for z in idx)
             dihedral_template.append(tmp)
+
         meta["torsiondrive_meta"]["dihedral_template"] = dihedral_template
+
+        # Move around geometric data
+        meta["optimization_program"] = meta["optimization_meta"].pop("program")
+
+        # Temporary hash index
+        single_keys = copy.deepcopy(meta["qc_meta"])
+        single_keys["molecule_id"] = meta["initial_molecule"]
+        keys = {
+            "type": "torsiondrive",
+            "program": "torsiondrive",
+            "keywords": meta["torsiondrive_meta"],
+            "optimization_keys": {
+                "procedure": meta["optimization_program"],
+                "keywords": meta["optimization_meta"],
+            },
+            "single_keys": schema.format_result_indices(single_keys)
+        }
+
+        meta["success"] = False
+        meta["procedure"] = "torsiondrive"
+        meta["program"] = "torsiondrive"
+        meta["hash_index"] = procedures.procedures_util.hash_procedure_keys(keys),
+        meta["hash_keys"] = keys
+        meta["tag"] = None
 
         return cls(storage_socket, queue_socket, meta)
 
@@ -66,7 +91,7 @@ class TorsionDriveService:
 
     def iterate(self):
 
-        self.data["state"] = "RUNNING"
+        self.data["status"] = "RUNNING"
         # print("\nTorsionDrive State:")
         # print(json.dumps(self.data["torsiondrive_state"], indent=2))
         # print("Iterate")
@@ -117,9 +142,9 @@ class TorsionDriveService:
         # All done
         if len(next_jobs) == 0:
             self.finalize()
-            return True
+            return self.data
 
-        self.submit_geometric_tasks(next_jobs)
+        self.submit_optimization_tasks(next_jobs)
 
         return False
         # if len(next_jobs) == 0:
@@ -129,7 +154,7 @@ class TorsionDriveService:
 
         # Save torsiondrive state
 
-    def submit_geometric_tasks(self, job_dict):
+    def submit_optimization_tasks(self, job_dict):
 
         # Build out all of the new molecules in a flat dictionary
         flat_map = {}
@@ -147,14 +172,14 @@ class TorsionDriveService:
         meta_packet = json.dumps({
             "meta": {
                 "procedure": "optimization",
-                "keywords": self.data["geometric_meta"],
-                "program": "geometric",
+                "keywords": self.data["optimization_meta"],
+                "program": self.data["optimization_program"],
                 "qc_meta": self.data["qc_meta"]
             },
         })
 
         hook_template = json.dumps({
-            "document": ("services", self.data["id"]),
+            "document": ("service_queue", self.data["id"]),
             "updates": [["inc", "remaining_jobs", -1], ["set", "complete_jobs", "$task_id"]]
         })
 
@@ -197,7 +222,7 @@ class TorsionDriveService:
         # Add finalize state
         # Parse remaining procedures
         # Create a map of "jobs" so that procedures does not have to followed
-        self.data["state"] = "FINISHED"
+        self.data["success"] = True
 
         self.data["final_energies"] = {}
         self.data["minimum_positions"] = {}
@@ -212,6 +237,7 @@ class TorsionDriveService:
         # print(self.data["optimization_history"])
         # print(self.data["minimum_positions"])
         # print(self.data["final_energies"])
+
         # Pop temporaries
         del self.data["update_structure"]
         del self.data["job_map"]
@@ -220,5 +246,7 @@ class TorsionDriveService:
         del self.data["molecule_template"]
         del self.data["queue_keys"]
         del self.data["torsiondrive_state"]
+        del self.data["status"]
 
+        return self.data
 

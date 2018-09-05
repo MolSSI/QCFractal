@@ -191,7 +191,7 @@ class ResultHandler(APIHandler):
         self.write(ret)
 
 
-class ServiceHandler(APIHandler):
+class ProcedureHandler(APIHandler):
     """
     A handler to push and get molecules.
     """
@@ -201,8 +201,8 @@ class ServiceHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        ret = storage.get_services(self.json["data"], by_id=True)
-        self.logger.info("GET: Services - {} pulls.".format(len(ret["data"])))
+        ret = storage.get_procedures(self.json["data"], by_id=self.json.get("by_idx", False))
+        self.logger.info("GET: Procedures - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
 

@@ -54,6 +54,7 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.extlinks',
 ]
 
 napoleon_google_docstring = False
@@ -190,10 +191,20 @@ texinfo_documents = [
 
 # -- Extension configuration -------------------------------------------------
 
+extlinks = {
+    'issue': ('https://github.com/MolSSI/QCFractal/issues/%s', 'GH#'),
+    'pr': ('https://github.com/MolSSI/QCFractal/pull/%s', 'GH#')
+}
+
+
+
 # -- Options for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'https://docs.python.org/': None}
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/', None),
+    'numpy': ('http://docs.scipy.org/doc/numpy/', None),
+}
 
 # -- Options for todo extension ----------------------------------------------
 

@@ -41,7 +41,7 @@ def test_compute_queue_stack(fractal_compute_server):
     }
 
     # Ask the server to compute a new computation
-    r = requests.post(fractal_compute_server.get_address("scheduler"), json=compute)
+    r = requests.post(fractal_compute_server.get_address("task_scheduler"), json=compute)
     assert r.status_code == 200
     compute_key = tuple(r.json()["data"][0])
 
@@ -76,8 +76,8 @@ def test_procedure_optimization(fractal_compute_server):
 
     # Add a hydrogen molecule
     hydrogen = portal.Molecule([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
-    storage = fractal_compute_server.objects["storage_socket"]
-    mol_ret = storage.add_molecules({"hydrogen": hydrogen.to_json()})
+    client = portal.FractalClient(fractal_compute_server.get_address(""))
+    mol_ret = client.add_molecules({"hydrogen": hydrogen.to_json()})
 
     # Add compute
     compute = {
@@ -93,11 +93,11 @@ def test_procedure_optimization(fractal_compute_server):
                 "program": "psi4"
             },
         },
-        "data": [mol_ret["data"]["hydrogen"]],
+        "data": [mol_ret["hydrogen"]],
     }
 
     # Ask the server to compute a new computation
-    r = requests.post(fractal_compute_server.get_address("scheduler"), json=compute)
+    r = requests.post(fractal_compute_server.get_address("task_scheduler"), json=compute)
     assert r.status_code == 200
     compute_key = tuple(r.json()["data"][0])
 
@@ -107,11 +107,11 @@ def test_procedure_optimization(fractal_compute_server):
     assert len(nanny.list_current_tasks()) == 0
 
     # # Query result and check against out manual pul
-    query = {"program": "geometric", "options": "none", "initial_molecule": mol_ret["data"]["hydrogen"]}
-    results = storage.get_procedures([query])["data"]
+    results = client.get_procedures({"program": "geometric"})
 
     assert len(results) == 1
-    assert pytest.approx(-1.117530188962681, 1e-5) == results[0]["energies"][-1]
+    assert isinstance(str(results[0]), str)  # Check that repr runs
+    assert pytest.approx(-1.117530188962681, 1e-5) == results[0].final_energy()
 
 
 ### Tests an entire server and interaction energy database run
