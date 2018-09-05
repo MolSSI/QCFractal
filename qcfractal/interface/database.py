@@ -77,7 +77,8 @@ class Database(object):
             "reactions": [],
             "name": name,
             "category": category,
-            "db_index": (category, name),
+            "collection": "Database",
+            "db_index": ("Database", name),
             "provenence": {},
             "db_type": db_type.upper()
         }
@@ -97,9 +98,10 @@ class Database(object):
             else:
                 raise TypeError("Database: client argument of unrecognized type '{}'".format(type(portal)))
 
-            tmp_data = self.client.get_databases([self.data["db_index"]])
+            tmp_data = self.client.get_collections([self.data["db_index"]])
             if len(tmp_data) == 0:
-                print("Warning! Database `{}: {}` not found, creating blank database.".format(*self.data["db_index"]))
+                print("Warning! Database `{}: {}` not found, creating blank database.".format(
+                    *self.data["db_index"]))
             else:
                 self.data = tmp_data[0]
 
@@ -438,7 +440,7 @@ class Database(object):
         self._new_molecule_jsons = {}
 
         # Add the database
-        return client.add_database(self.data, overwrite=overwrite)
+        return client.add_collection(self.data, overwrite=overwrite)
 
     # Statistical quantities
     def statistics(self, stype, value, bench="Benchmark"):

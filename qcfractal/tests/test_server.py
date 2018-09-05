@@ -59,11 +59,12 @@ def test_option_socket(test_server):
     assert r.json()["data"][0] == opts
 
 
-def test_database_socket(test_server):
+def test_storage_socket(test_server):
 
     storage_api_addr = test_server.get_address("storage")
-    storage = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
+    storage = {"collection": "TorsionDrive", "name": "Torsion123", "something": "else", "array": ["54321"]}
 
+    import pdb; pdb.set_trace()
     r = requests.post(storage_api_addr, json={"meta": {}, "data": storage})
     assert r.status_code == 200
 
@@ -71,7 +72,7 @@ def test_database_socket(test_server):
     assert pdata["meta"].keys() == meta_set
     assert pdata["meta"]["n_inserted"] == 1
 
-    r = requests.get(storage_api_addr, json={"meta": {}, "data": [(storage["category"], storage["name"])]})
+    r = requests.get(storage_api_addr, json={"meta": {}, "data": [(storage["collection"], storage["name"])]})
     assert r.status_code == 200
 
     pdata = r.json()

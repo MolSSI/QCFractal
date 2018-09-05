@@ -27,7 +27,7 @@ _schemas["options"] = options_schema
 # Collection and hash indices
 _table_indices = {
 
-    "collection": ("collection", "category", "name", "index1", "index2", "index3"),
+    "collection": ("collection", "name"),
     "procedure": ("procedure", "program"),
     "service": ("service", ),
 

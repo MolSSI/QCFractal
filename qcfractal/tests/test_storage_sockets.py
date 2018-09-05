@@ -146,37 +146,37 @@ def test_options_error(storage_socket):
 
 def test_collections_add(storage_socket):
 
-    db = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
+    db = {"collection": "TorsionDrive", "name": "Torsion123", "something": "else", "array": ["54321"]}
 
     ret = storage_socket.add_collection(db)
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.get_collections([(db["category"], db["name"])])
+    ret = storage_socket.get_collections([(db["collection"], db["name"])])
     assert ret["meta"]["success"] == True
     assert ret["meta"]["n_found"] == 1
     assert db == ret["data"][0]
 
-    ret = storage_socket.del_collection(db["category"], db["name"])
+    ret = storage_socket.del_collection(db["collection"], db["name"])
     assert ret == 1
 
-    ret = storage_socket.get_collections([(db["category"], "bleh")])
+    ret = storage_socket.get_collections([(db["collection"], "bleh")])
     assert len(ret["meta"]["missing"]) == 1
     assert ret["meta"]["n_found"] == 0
 
 
 def test_collections_overwrite(storage_socket):
 
-    db = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
+    db = {"collection": "TorsionDrive", "name": "Torsion123", "something": "else", "array": ["54321"]}
 
     ret = storage_socket.add_collection(db)
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.get_collections([(db["category"], db["name"])])
+    ret = storage_socket.get_collections([(db["collection"], db["name"])])
     assert ret["meta"]["n_found"] == 1
 
     db_update = {
         "id": ret["data"][0]["id"],
-        "category": "OpenFF",
+        "collection": "TorsionDrive",
         "name": "Torsion123",
         "something2": "else",
         "array2": ["54321"]
@@ -184,7 +184,7 @@ def test_collections_overwrite(storage_socket):
     ret = storage_socket.add_collection(db_update, overwrite=True)
     assert ret["meta"]["success"] == True
 
-    ret = storage_socket.get_collections([(db["category"], db["name"])])
+    ret = storage_socket.get_collections([(db["collection"], db["name"])])
     assert ret["meta"]["n_found"] == 1
 
     # Check to make sure the field were replaced and not updated
@@ -192,7 +192,7 @@ def test_collections_overwrite(storage_socket):
     assert "something" not in db_result
     assert "something2" in db_result
 
-    ret = storage_socket.del_collection(db["category"], db["name"])
+    ret = storage_socket.del_collection(db["collection"], db["name"])
     assert ret == 1
 
 

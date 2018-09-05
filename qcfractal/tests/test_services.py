@@ -3,6 +3,8 @@ Tests the on-node procedures compute capabilities.
 """
 
 from qcfractal import testing
+# Pytest Fixture import
+from qcfractal.testing import dask_server_fixture
 import pytest
 
 import qcfractal.interface as portal

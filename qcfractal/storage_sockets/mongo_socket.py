@@ -227,7 +227,6 @@ class MongoSocket:
 
         # Add id's of new keys
         rdata = []
-        import pdb; pdb.set_trace()
         if return_map:
             for x in (set(range(len(data))) - set(error_skips)):
                 d = data[x]
@@ -556,7 +555,6 @@ class MongoSocket:
         bool
             Whether the operation was successful.
         """
-
         if overwrite:
             ret = {
                 "meta": {
@@ -566,7 +564,7 @@ class MongoSocket:
                     "duplicates": [],
                     "error_description": False
                 },
-                "data": [((data["category"], data["name"]), data["id"])]
+                "data": [((data["collection"], data["name"]), data["id"])]
             }
             r = self._tables["collections"].replace_one({"_id": ObjectId(data["id"])}, data)
             if r.modified_count == 1:
@@ -582,7 +580,7 @@ class MongoSocket:
 
         return self._get_generic(keys, "collections")
 
-    def del_collection(self, category, name):
+    def del_collection(self, collection, name):
         """
         Removes a database from the database from its hash.
 
@@ -597,7 +595,7 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return (self._tables["collections"].delete_one({"category": category, "name": name})).deleted_count
+        return (self._tables["collections"].delete_one({"collection": collection, "name": name})).deleted_count
 
 ### Mongo database functions
 
