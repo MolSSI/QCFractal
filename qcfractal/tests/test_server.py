@@ -61,10 +61,9 @@ def test_option_socket(test_server):
 
 def test_storage_socket(test_server):
 
-    storage_api_addr = test_server.get_address("storage")
+    storage_api_addr = test_server.get_address("collection")  # Targets and endpoint in the FractalServer
     storage = {"collection": "TorsionDrive", "name": "Torsion123", "something": "else", "array": ["54321"]}
 
-    import pdb; pdb.set_trace()
     r = requests.post(storage_api_addr, json={"meta": {}, "data": storage})
     assert r.status_code == 200
 
