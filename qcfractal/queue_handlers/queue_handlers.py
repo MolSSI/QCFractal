@@ -148,6 +148,8 @@ class QueueNanny:
         """Runs through all active services and examines their current status.
         """
 
+        new_procedures = []
+        complete_ids = []
         for data in self.db_socket.get_services(list(self.services), by_id=True)["data"]:
             obj = services.build(data["service"], self.db_socket, self, data)
 
@@ -155,10 +157,19 @@ class QueueNanny:
             self.db_socket.update_services([(data["id"], obj.get_json())])
             # print(obj.get_json())
 
-            if finished:
+            if finished is not False:
+                # Decrement service lookup
                 self.services -= {
                     data["id"],
                 }
+
+                # Add results to procedures, remove complete_ids
+                new_procedures.append(finished)
+                complete_ids.append(data["id"])
+
+
+        self.db_socket.add_procedures(new_procedures)
+        self.db_socket.del_services(complete_ids)
 
     def await_results(self):
         """A synchronus method for testing or small launches

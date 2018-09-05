@@ -189,7 +189,7 @@ class FractalServer(object):
             (r"/option", web_handlers.OptionHandler, self.objects),
             (r"/database", web_handlers.DatabaseHandler, self.objects),
             (r"/result", web_handlers.ResultHandler, self.objects),
-            (r"/service", web_handlers.ServiceHandler, self.objects),
+            (r"/procedure", web_handlers.ProcedureHandler, self.objects),
         ]
 
         # Queue handlers
@@ -203,7 +203,7 @@ class FractalServer(object):
             self.objects["queue_nanny"] = queue_nanny
 
             # Add the endpoint
-            endpoints.append((r"/scheduler", queue_scheduler, self.objects))
+            endpoints.append((r"/task_scheduler", queue_scheduler, self.objects))
             endpoints.append((r"/service_scheduler", service_scheduler, self.objects))
 
         # Build the app

@@ -31,8 +31,8 @@ _collection_indices = {
     "result": ("molecule_id", "program", "driver", "method", "basis", "options"),
     "molecule": ("molecule_hash", "molecular_formula"),
     "procedure": ("procedure", "program"),
-    "service": ("service", ),
-    "queue": ("status", "hash_index", "tag"),
+    "service_queue": ("status", "hash_index", "status", "tag"),
+    "task_queue": ("status", "hash_index", "tag"),
 }
 
 
