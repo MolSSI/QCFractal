@@ -1,6 +1,7 @@
 coverage:
   ignore:
-    - qcfractal/test/.*
+    - */tests/*
+    - qcfractal/_version.py
     - setup.py
   status:
     patch: false
