@@ -7,6 +7,7 @@ import logging
 import pkgutil
 import socket
 import threading
+import pymongo
 from contextlib import contextmanager
 
 import pytest
@@ -46,7 +47,6 @@ else:
 def has_module(name):
     return _programs[name]
 
-
 # Add a number of module testing options
 using_fireworks = pytest.mark.skipif(has_module('fireworks') is False, reason=_import_message.format('fireworks'))
 using_dask = pytest.mark.skipif(
@@ -57,6 +57,15 @@ using_geometric = pytest.mark.skipif(has_module('geometric') is False, reason=_i
 using_torsiondrive = pytest.mark.skipif(has_module('torsiondrive') is False, reason=_import_message.format('torsiondrive'))
 using_unix = pytest.mark.skipif(os.name.lower() != 'posix', reason='Not on Unix operating system, '
                                                                    'assuming Bash is not present')
+
+# Check for MongoDB connection
+def check_active_mongo_server():
+
+    client = pymongo.MongoClient("localhost:27017", serverSelectionTimeoutMS=100)
+    try:
+        client.server_info()
+    except:
+        pytest.skip("Could not find an activate mongo test instance at 'localhost:27017'.")
 
 ### Server testing mechanics
 
@@ -115,12 +124,14 @@ def active_loop(loop):
         except:
             pass
 
-
 @pytest.fixture(scope="module")
 def test_server(request):
     """
     Builds a server instance with the event loop running in a thread.
     """
+
+    # Check mongo
+    check_active_mongo_server()
 
     storage_name = "qcf_local_server_test"
 
@@ -146,6 +157,9 @@ def dask_server_fixture(request):
     """
     Builds a server instance with the event loop running in a thread.
     """
+
+    # Check mongo
+    check_active_mongo_server()
 
     dd = pytest.importorskip("dask.distributed")
 
@@ -183,6 +197,10 @@ def fireworks_server_fixture(request):
     """
     Builds a server instance with the event loop running in a thread.
     """
+
+    # Check mongo
+    check_active_mongo_server()
+
     fireworks = pytest.importorskip("fireworks")
     logging.basicConfig(level=logging.CRITICAL, filename="/tmp/fireworks_logfile.txt")
 
@@ -225,6 +243,9 @@ def fractal_compute_server(request):
 @pytest.fixture(scope="module", params=["mongo"])
 def storage_socket_fixture(request):
     print("")
+
+    # Check mongo
+    check_active_mongo_server()
     storage_name = "qcf_local_values_test"
 
     # IP/port/drop table is specific to build
