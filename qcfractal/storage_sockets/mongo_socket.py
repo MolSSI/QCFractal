@@ -119,7 +119,8 @@ class MongoSocket:
 
         try:
             version_array = self.client.server_info()['versionArray']
-            if version_array[0] * 10 + version_array[1] < 32:
+
+            if tuple(version_array) < (3, 2):
                 raise RuntimeError
         except AttributeError:
             raise RuntimeError(
@@ -640,7 +641,6 @@ class MongoSocket:
                 ret["error_description"] = "ID index was provided, cannot use other indices"
                 return ret
 
-            # TODO: Validate this change actually fixes a bug
             if not isinstance(query, (list, tuple)):
                 parsed_query["_id"] = {"$in": query["_id"]}
                 _str_to_indices(parsed_query["_id"]["$in"])
