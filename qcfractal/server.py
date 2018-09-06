@@ -8,11 +8,12 @@ import ssl
 import tornado.ioloop
 import tornado.web
 
-from . import db_sockets
+from . import storage_sockets
 from . import queue_handlers
 from . import web_handlers
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+
 
 def _build_ssl():
     from cryptography import x509
@@ -63,6 +64,7 @@ def _build_ssl():
 
     return (cert_pem, key_pem)
 
+
 class FractalServer(object):
     def __init__(
             self,
@@ -75,12 +77,12 @@ class FractalServer(object):
             ssl_options=None,
 
             # Database options
-            db_ip="127.0.0.1",
-            db_port=27017,
-            db_username=None,
-            db_password=None,
-            db_type="mongo",
-            db_project_name="molssidb",
+            storage_ip="127.0.0.1",
+            storage_port=27017,
+            storage_username=None,
+            storage_password=None,
+            storage_type="mongo",
+            storage_project_name="molssistorage",
 
             # Queue options
             queue_socket=None,
@@ -117,9 +119,9 @@ class FractalServer(object):
 
         # Build security layers
         if security is None:
-            db_bypass_security = True
+            storage_bypass_security = True
         elif security == "local":
-            db_bypass_security = False
+            storage_bypass_security = False
         else:
             raise KeyError("Security option '{}' not recognized.".format(security))
 
@@ -132,8 +134,8 @@ class FractalServer(object):
             cert, key = _build_ssl()
 
             # Add quick names
-            cert_name = db_project_name + "_ssl.crt"
-            key_name = db_project_name + "_ssl.key"
+            cert_name = storage_project_name + "_ssl.crt"
+            key_name = storage_project_name + "_ssl.key"
 
             ssl_options = {"crt": cert_name, "key": key_name}
 
@@ -163,14 +165,14 @@ class FractalServer(object):
             raise KeyError("ssl_options not understood")
 
         # Setup the database connection
-        self.db = db_sockets.db_socket_factory(
-            db_ip,
-            db_port,
-            project_name=db_project_name,
-            username=db_username,
-            password=db_password,
-            db_type=db_type,
-            bypass_security=db_bypass_security)
+        self.storage = storage_sockets.storage_socket_factory(
+            storage_ip,
+            storage_port,
+            project_name=storage_project_name,
+            username=storage_username,
+            password=storage_password,
+            storage_type=storage_type,
+            bypass_security=storage_bypass_security)
 
         # Pull the current loop if we need it
         if io_loop is None:
@@ -180,14 +182,14 @@ class FractalServer(object):
 
         # Build up the application
         self.objects = {
-            "db_socket": self.db,
+            "storage_socket": self.storage,
             "logger": self.logger,
         }
 
         endpoints = [
             (r"/molecule", web_handlers.MoleculeHandler, self.objects),
             (r"/option", web_handlers.OptionHandler, self.objects),
-            (r"/database", web_handlers.DatabaseHandler, self.objects),
+            (r"/collection", web_handlers.CollectionHandler, self.objects),
             (r"/result", web_handlers.ResultHandler, self.objects),
             (r"/procedure", web_handlers.ProcedureHandler, self.objects),
         ]
@@ -196,7 +198,7 @@ class FractalServer(object):
         if queue_socket is not None:
 
             queue_nanny, queue_scheduler, service_scheduler = queue_handlers.build_queue(
-                queue_socket, self.objects["db_socket"])
+                queue_socket, self.objects["storage_socket"])
 
             # Add the socket to passed args
             self.objects["queue_socket"] = queue_socket

@@ -11,7 +11,7 @@ from .definitions_schema import get_definition
 from .molecule_schema import molecule_schema
 from .options_schema import options_schema
 
-__all__ = ["get_schema", "get_indices", "get_schema_keys", "validate", "get_hash_fields", "format_result_indices"]
+__all__ = ["get_schema", "get_table_indices", "get_schema_keys", "validate", "get_hash_fields", "format_result_indices"]
 
 _schemas = {}
 
@@ -25,15 +25,18 @@ _schemas["options"] = options_schema
 # Load molecule schema
 
 # Collection and hash indices
-_collection_indices = {
-    "database": ("category", "name"),
-    "options": ("program", "name"),
-    "result": ("molecule_id", "program", "driver", "method", "basis", "options"),
-    "molecule": ("molecule_hash", "molecular_formula"),
+_table_indices = {
+
+    "collection": ("collection", "name"),
     "procedure": ("procedure", "program"),
     "service_queue": ("status", "hash_index", "status", "tag"),
+
+    "molecule": ("molecule_hash", "molecular_formula"),
+    "result": ("molecule_id", "program", "driver", "method", "basis", "options"),
+    "options": ("program", "name"),
+
     "task_queue": ("status", "hash_index", "tag"),
-}
+}  # yapf: disable
 
 
 def get_hash_fields(name):
@@ -42,10 +45,10 @@ def get_hash_fields(name):
     return copy.deepcopy(_schemas[name]["hash_fields"])
 
 
-def get_indices(name):
-    if name not in _collection_indices:
+def get_table_indices(name):
+    if name not in _table_indices:
         raise KeyError("Indices for {} not found.".format(name))
-    return _collection_indices[name]
+    return _table_indices[name]
 
 
 def format_result_indices(data, program=None):

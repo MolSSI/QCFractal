@@ -7,7 +7,7 @@ from . import testing
 # Handle versioneer
 from ._version import get_versions
 # Import modules
-from .db_sockets import db_socket_factory
+from .storage_sockets import storage_socket_factory
 from .server import FractalServer
 
 # from . import mongo_helper

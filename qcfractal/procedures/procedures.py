@@ -28,7 +28,7 @@ def get_procedure_output_parser(name):
 
 
 ### Add in the "standard procedures"
-def procedure_single_input_parser(db, data):
+def procedure_single_input_parser(storage, data):
     """
 
     json_data = {
@@ -46,7 +46,7 @@ def procedure_single_input_parser(db, data):
 
     """
 
-    runs, errors = procedures_util.unpack_single_run_meta(db, data["meta"], data["data"])
+    runs, errors = procedures_util.unpack_single_run_meta(storage, data["meta"], data["data"])
     full_tasks = []
     for k, v in runs.items():
 
@@ -70,12 +70,12 @@ def procedure_single_input_parser(db, data):
     return (full_tasks, errors)
 
 
-def procedure_single_output_parser(db, data):
+def procedure_single_output_parser(storage, data):
 
     # Add new runs to database
     rdata = {k: v[0] for k, v in data.items()}
-    results = procedures_util.parse_single_runs(db, rdata)
-    ret = db.add_results(list(results.values()))
+    results = procedures_util.parse_single_runs(storage, rdata)
+    ret = storage.add_results(list(results.values()))
 
     hook_data = []
     for k, (data, hook) in data.items():
@@ -96,7 +96,7 @@ def procedure_single_output_parser(db, data):
     return (ret, hook_data)
 
 
-def procedure_optimization_input_parser(db, data):
+def procedure_optimization_input_parser(storage, data):
     """
 
     json_data = {
@@ -147,10 +147,10 @@ def procedure_optimization_input_parser(db, data):
     """
 
     # Unpack individual QC jobs
-    runs, errors = procedures_util.unpack_single_run_meta(db, data["meta"]["qc_meta"], data["data"])
+    runs, errors = procedures_util.unpack_single_run_meta(storage, data["meta"]["qc_meta"], data["data"])
 
     if "options" in data["meta"]:
-        keywords = db.get_options([(data["meta"]["program"], data["meta"]["options"])])["data"][0]
+        keywords = storage.get_options([(data["meta"]["program"], data["meta"]["options"])])["data"][0]
         del keywords["program"]
         del keywords["name"]
     elif "keywords" in data["meta"]:
@@ -201,7 +201,7 @@ def procedure_optimization_input_parser(db, data):
     return (full_tasks, errors)
 
 
-def procedure_optimization_output_parser(db, data):
+def procedure_optimization_output_parser(storage, data):
 
     new_procedures = {}
 
@@ -210,15 +210,15 @@ def procedure_optimization_output_parser(db, data):
 
         # Convert start/stop molecules to hash
         mols = {"initial": v["initial_molecule"], "final": v["final_molecule"]}
-        mol_keys = db.add_molecules(mols)["data"]
+        mol_keys = storage.add_molecules(mols)["data"]
         v["initial_molecule"] = mol_keys["initial"]
         v["final_molecule"] = mol_keys["final"]
 
         # Add individual computations
         traj_dict = {k: v for k, v in enumerate(v["trajectory"])}
-        results = procedures_util.parse_single_runs(db, traj_dict)
+        results = procedures_util.parse_single_runs(storage, traj_dict)
 
-        ret = db.add_results(list(results.values()))
+        ret = storage.add_results(list(results.values()))
         v["trajectory"] = [x[1] for x in ret["data"]]
 
         # Coerce tags
@@ -229,7 +229,7 @@ def procedure_optimization_output_parser(db, data):
         # print(json.dumps(v, indent=2))
         new_procedures[k] = v
 
-    ret = db.add_procedures(list(new_procedures.values()))
+    ret = storage.add_procedures(list(new_procedures.values()))
 
     hook_data = []
     for k, (data, hook) in data.items():

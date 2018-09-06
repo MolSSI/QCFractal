@@ -42,17 +42,17 @@ def test_options_portal(test_server):
     assert opts == get_opt[0]
 
 
-def test_database_portal(test_server):
+def test_collection_portal(test_server):
 
-    db = {"category": "OpenFF", "name": "Torsion123", "something": "else", "array": ["54321"]}
+    db = {"collection": "TorsionDrive", "name": "Torsion123", "something": "else", "array": ["54321"]}
 
     client = portal.FractalClient(test_server.get_address(""))
 
     # Test add
-    ret = client.add_database(db)
+    ret = client.add_collection(db)
 
     # Test get
-    get_db = client.get_databases([(db["category"], db["name"])])
+    get_db = client.get_collections([(db["collection"], db["name"])])
     del get_db[0]["id"]
 
     assert db == get_db[0]

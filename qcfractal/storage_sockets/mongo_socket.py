@@ -1,13 +1,13 @@
 """
 Database connection class which directly calls the PyMongo API to capture
-cammon subroutines.
+common subroutines.
 """
 
 try:
     import pymongo
 except ImportError:
     raise ImportError(
-        "Mongo db_socket requires pymongo, please install this python module or try a different db_socket.")
+        "Mongostorage_socket requires pymongo, please install this python module or try a different db_socket.")
 
 import collections
 import copy
@@ -19,7 +19,7 @@ import pandas as pd
 from bson.objectid import ObjectId
 import bson.errors
 
-from . import db_utils
+from . import storage_utils
 # Pull in the hashing algorithms from the client
 from .. import interface
 
@@ -36,6 +36,7 @@ def _str_to_indices(ids):
         if isinstance(x, str):
             ids[num] = ObjectId(x)
 
+
 def _str_to_indices_with_errors(ids):
     good = []
     bad = []
@@ -50,6 +51,7 @@ def _str_to_indices_with_errors(ids):
         else:
             bad.append(x)
     return good, bad
+
 
 class MongoSocket:
     """
@@ -81,19 +83,19 @@ class MongoSocket:
         self._bypass_security = bypass_security
 
         # Static data
-        self._collection_indices = {
-            "databases": interface.schema.get_indices("database"),
-            "options": interface.schema.get_indices("options"),
-            "results": interface.schema.get_indices("result"),
-            "molecules": interface.schema.get_indices("molecule"),
-            "procedures": interface.schema.get_indices("procedure"),
-            "service_queue": interface.schema.get_indices("service_queue"),
-            "task_queue": interface.schema.get_indices("task_queue"),
+        self._table_indices = {
+            "collections": interface.schema.get_table_indices("collection"),
+            "options": interface.schema.get_table_indices("options"),
+            "results": interface.schema.get_table_indices("result"),
+            "molecules": interface.schema.get_table_indices("molecule"),
+            "procedures": interface.schema.get_table_indices("procedure"),
+            "service_queue": interface.schema.get_table_indices("service_queue"),
+            "task_queue": interface.schema.get_table_indices("task_queue"),
             "users": ("username", )
         }
-        self._valid_collections = set(self._collection_indices.keys())
-        self._collection_unique_indices = {
-            "databases": True,
+        self._valid_tables = set(self._table_indices.keys())
+        self._table_unique_indices = {
+            "collections": True,
             "options": True,
             "results": True,
             "molecules": False,
@@ -115,52 +117,72 @@ class MongoSocket:
         else:
             self.client = pymongo.MongoClient(url, port)
 
+        try:
+            version_array = self.client.server_info()['versionArray']
+
+            if tuple(version_array) < (3, 2):
+                raise RuntimeError
+        except AttributeError:
+            raise RuntimeError(
+                "Could not detect MongoDB version at URL {}. It may be a very old version or installed incorrectly. "
+                "Choosing to stop instead of assuming version is at least 3.2.".format(url)
+            )
+        except RuntimeError:
+            # Trap low version
+            raise RuntimeError(
+                "Connected MongoDB at URL {} needs to be at least version 3.2, found version {}.".format(
+                    url,
+                    self.client.server_info()['version']
+                )
+            )
+
         # Isolate objects to this single project DB
         self._project_name = project
-        self._project = self.client[project]
+        self._tables = self.client[project]
 
-        new_collections = self.init_database()
-        for k, v in new_collections.items():
+        new_table = self.init_database()
+        for k, v in new_table.items():
             if v:
-                self.logger.info("New collection '{}' for database!".format(k))
+                self.logger.info("Add '{}' table to the database!".format(k))
 
 ### Mongo meta functions
 
     def __str__(self):
-        return "<MongoSocket: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._project_name))
+        return "<MongoSocket: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._tables_name))
 
     def init_database(self):
         """
         Builds out the initial project structure.
         """
         # Try to create a collection for each entry
-        collection_creation = {}
-        for col in self._valid_collections:
+        table_creation = {}
+        for tbl in self._valid_tables:
             try:
-                self._project.create_collection(col)
-                collection_creation[col] = True
+                # MongoDB "Collection" -> QCFractal "Table"
+                self._tables.create_collection(tbl)
+                table_creation[tbl] = True
 
             except pymongo.errors.CollectionInvalid:
-                collection_creation[col] = False
+                table_creation[tbl] = False
 
         # Build the indices
-        for col, indices in self._collection_indices.items():
+        for tbl, indices in self._table_indices.items():
             idx = [(x, pymongo.ASCENDING) for x in indices]
-            self._project[col].create_index(idx, unique=self._collection_unique_indices[col])
+            self._tables[tbl].create_index(idx, unique=self._table_unique_indices[tbl])
 
         # Special queue index, hash_index should be unique
-        self._project["task_queue"].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
+        self._tables["task_queue"].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
 
         # Return the success array
-        return collection_creation
+        return table_creation
 
     def get_project_name(self):
-        return self._project_name
+        return self._tables_name
 
     def mixed_molecule_get(self, data):
-        return db_utils.mixed_molecule_get(self, data)
+        return storage_utils.mixed_molecule_get(self, data)
 
-    def _add_generic(self, data, collection, return_map=True):
+    def _add_generic(self, data, table, return_map=True):
         """
         Helper function that facilitates adding a record.
         """
@@ -179,7 +201,7 @@ class MongoSocket:
         try:
             # print(data[0])
             # print([id(x) for x in data])
-            tmp = self._project[collection].insert_many(data, ordered=False)
+            tmp = self._tables[table].insert_many(data, ordered=False)
             # print(data[0])
             meta["success"] = tmp.acknowledged
             meta["n_inserted"] = len(tmp.inserted_ids)
@@ -187,7 +209,7 @@ class MongoSocket:
             meta["success"] = False
             meta["n_inserted"] = tmp.details["nInserted"]
             for error in tmp.details["writeErrors"]:
-                ukey = tuple(data[error["index"]][key] for key in self._collection_indices[collection])
+                ukey = tuple(data[error["index"]][key] for key in self._table_indices[table])
                 # Duplicate key errors, add to meta
                 if error["code"] == 11000:
                     meta["duplicates"].append(ukey)
@@ -213,14 +235,14 @@ class MongoSocket:
         if return_map:
             for x in (set(range(len(data))) - set(error_skips)):
                 d = data[x]
-                ukey = tuple(d[key] for key in self._collection_indices[collection])
+                ukey = tuple(d[key] for key in self._table_indices[table])
                 rdata.append((ukey, d["id"]))
 
         ret = {"data": rdata, "meta": meta}
 
         return ret
 
-    def _del_by_index(self, collection, hashes, index="_id"):
+    def _del_by_index(self, table, hashes, index="_id"):
         """
         Helper function that facilitates deletion based on hash.
         """
@@ -231,15 +253,15 @@ class MongoSocket:
         if index == "_id":
             _str_to_indices(hashes)
 
-        return (self._project[collection].delete_many({index: {"$in": hashes}})).deleted_count
+        return (self._tables[table].delete_many({index: {"$in": hashes}})).deleted_count
 
-    def _get_generic_by_id(self, ids, collection, projection=None):
+    def _get_generic_by_id(self, ids, table, projection=None):
 
         # TODO parse duplicates
-        meta = db_utils.get_metadata()
+        meta = storage_utils.get_metadata()
         _str_to_indices(ids)
 
-        data = list(self._project[collection].find({"_id": {"$in": ids}}, projection=projection))
+        data = list(self._tables[table].find({"_id": {"$in": ids}}, projection=projection))
 
         for d in data:
             d["id"] = str(d["_id"])
@@ -250,12 +272,12 @@ class MongoSocket:
 
         return {"meta": meta, "data": data}
 
-    def _get_generic(self, query, collection, projection=None, allow_generic=False):
+    def _get_generic(self, query, table, projection=None, allow_generic=False):
 
         # TODO parse duplicates
-        meta = db_utils.get_metadata()
+        meta = storage_utils.get_metadata()
 
-        keys = self._collection_indices[collection]
+        keys = self._table_indices[table]
         len_key = len(keys)
 
         data = []
@@ -268,7 +290,7 @@ class MongoSocket:
                 meta["errors"].append({"query": q, "error": "Malformed query"})
                 continue
 
-            d = self._project[collection].find_one(q, projection=projection)
+            d = self._tables[table].find_one(q, projection=projection)
             if d is None:
                 meta["missing"].append(q)
             else:
@@ -285,10 +307,10 @@ class MongoSocket:
         ret = {"meta": meta, "data": data}
         return ret
 
-    def _find_many_generic(self, query, collection, projection=None):
-        meta = db_utils.get_metadata()
+    def _find_many_generic(self, query, table, projection=None):
+        meta = storage_utils.get_metadata()
 
-        data = self._project[collection].find(query, projection=projection)
+        data = self._tables[table].find(query, projection=projection)
         meta["success"] = True
         meta["n_found"] = len(data)
         ret = {"meta": meta, "data": data}
@@ -388,10 +410,10 @@ class MongoSocket:
 
     def get_molecules(self, molecule_ids, index="id"):
 
-        ret = {"meta": db_utils.get_metadata(), "data": []}
+        ret = {"meta": storage_utils.get_metadata(), "data": []}
 
         try:
-            index = db_utils.translate_molecule_index(index)
+            index = storage_utils.translate_molecule_index(index)
         except KeyError as e:
             ret["meta"]["error_description"] = repr(e)
             return ret
@@ -407,7 +429,7 @@ class MongoSocket:
         proj = {"molecule_hash": False, "molecular_formula": False}
 
         # Make the query
-        data = self._project["molecules"].find({index: {"$in": molecule_ids}}, projection=proj)
+        data = self._tables["molecules"].find({index: {"$in": molecule_ids}}, projection=proj)
 
         if data is None:
             data = []
@@ -434,7 +456,7 @@ class MongoSocket:
 
         Parameters
         ----------
-        hash_val : str or list of strs
+        values : str or list of strs
             The hash of a molecule.
 
         Returns
@@ -443,7 +465,7 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        index = db_utils.translate_molecule_index(index)
+        index = storage_utils.translate_molecule_index(index)
 
         return self._del_by_index("molecules", values, index=index)
 
@@ -505,12 +527,14 @@ class MongoSocket:
 
     def del_option(self, program, name):
         """
-        Removes a database from the database from its hash.
+        Removes a option set from the database based on its keys.
 
         Parameters
         ----------
-        hash_val : str or list of strs
-            The hash of a database.
+        program : str
+            The program of the option set
+        name : str
+            The name of the option set
 
         Returns
         -------
@@ -518,11 +542,11 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return (self._project["options"].delete_one({"program": program, "name": name})).deleted_count
+        return (self._tables["options"].delete_one({"program": program, "name": name})).deleted_count
 
 ### Mongo database functions
 
-    def add_database(self, data, overwrite=False):
+    def add_collection(self, data, overwrite=False):
         """
         Adds a database to the database.
 
@@ -546,23 +570,23 @@ class MongoSocket:
                     "duplicates": [],
                     "error_description": False
                 },
-                "data": [((data["category"], data["name"]), data["id"])]
+                "data": [((data["collection"], data["name"]), data["id"])]
             }
-            r = self._project["databases"].replace_one({"_id": ObjectId(data["id"])}, data)
+            r = self._tables["collections"].replace_one({"_id": ObjectId(data["id"])}, data)
             if r.modified_count == 1:
                 ret["meta"]["success"] = True
                 ret["meta"]["n_inserted"] = 1
 
         else:
-            ret = self._add_generic([data], "databases")
+            ret = self._add_generic([data], "collections")
         ret["meta"]["validation_errors"] = []  # TODO
         return ret
 
-    def get_databases(self, keys):
+    def get_collections(self, keys):
 
-        return self._get_generic(keys, "databases")
+        return self._get_generic(keys, "collections")
 
-    def del_database(self, category, name):
+    def del_collection(self, collection, name):
         """
         Removes a database from the database from its hash.
 
@@ -577,7 +601,7 @@ class MongoSocket:
             Whether the operation was successful.
         """
 
-        return (self._project["databases"].delete_one({"category": category, "name": name})).deleted_count
+        return (self._tables["collections"].delete_one({"collection": collection, "name": name})).deleted_count
 
 ### Mongo database functions
 
@@ -609,7 +633,7 @@ class MongoSocket:
     def get_results(self, query, projection=None):
 
         parsed_query = {}
-        ret = {"meta": db_utils.get_metadata(), "data": []}
+        ret = {"meta": storage_utils.get_metadata(), "data": []}
 
         # We are querying via id
         if "_id" in query:
@@ -617,7 +641,7 @@ class MongoSocket:
                 ret["error_description"] = "ID index was provided, cannot use other indices"
                 return ret
 
-            if not isinstance(parsed_query, (list, tuple)):
+            if not isinstance(query, (list, tuple)):
                 parsed_query["_id"] = {"$in": query["_id"]}
                 _str_to_indices(parsed_query["_id"]["$in"])
             else:
@@ -626,9 +650,9 @@ class MongoSocket:
 
         else:
             # Check if there are unknown keys
-            remain = set(query) - set(self._collection_indices["results"])
+            remain = set(query) - set(self._table_indices["results"])
             if remain:
-                ret["error_description"] = "Results query found unkown keys {}".format(list(remain))
+                ret["error_description"] = "Results query found unknown keys {}".format(list(remain))
                 return ret
 
             for key, value in query.items():
@@ -647,7 +671,7 @@ class MongoSocket:
 
         proj["_id"] = False
 
-        data = self._project["results"].find(parsed_query, projection=proj)
+        data = self._tables["results"].find(parsed_query, projection=proj)
         if data is None:
             data = []
         else:
@@ -713,7 +737,7 @@ class MongoSocket:
         match_count = 0
         modified_count = 0
         for uid, data in updates:
-            result = self._project["service_queue"].replace_one({"_id": ObjectId(uid)}, data)
+            result = self._tables["service_queue"].replace_one({"_id": ObjectId(uid)}, data)
             match_count += result.matched_count
             modified_count += result.modified_count
         return (match_count, modified_count)
@@ -753,7 +777,7 @@ class MongoSocket:
                     }})
                     hook_updates.append(upd)
 
-            tmp = self._project["task_queue"].bulk_write(hook_updates)
+            tmp = self._tables["task_queue"].bulk_write(hook_updates)
             if tmp.modified_count != len(dup_inds):
                 self.logger.warning("QUEUE: Hook duplicate found does not match hook triggers")
 
@@ -762,7 +786,7 @@ class MongoSocket:
 
     def queue_get_next(self, n=100, tag=None):
 
-        found = list(self._project["task_queue"].find(
+        found = list(self._tables["task_queue"].find(
             {
                 "status": "WAITING",
                 "tag": tag
@@ -779,7 +803,7 @@ class MongoSocket:
 
         query = {"_id": {"$in": [x["_id"] for x in found]}}
 
-        upd = self._project["task_queue"].update_many(
+        upd = self._tables["task_queue"].update_many(
             query, {"$set": {
                 "status": "RUNNING",
                 "modified_on": datetime.datetime.utcnow()
@@ -803,12 +827,12 @@ class MongoSocket:
 
     def queue_get_by_id(self, ids, n=100):
 
-        return list(self._project["task_queue"].find({"_id": ids}, limit=n))
+        return list(self._tables["task_queue"].find({"_id": ids}, limit=n))
 
     def queue_mark_complete(self, ids):
         query = {"_id": {"$in": [ObjectId(x) for x in ids]}}
 
-        rm = self._project["task_queue"].delete_many(query)
+        rm = self._tables["task_queue"].delete_many(query)
         if rm.deleted_count != len(ids):
             self.logger.warning("QUEUE: Number of complete projects does not match the number of removed projects.")
 
@@ -835,7 +859,7 @@ class MongoSocket:
         if len(bulk_commands) == 0:
             return
 
-        ret = self._project["service_queue"].bulk_write(bulk_commands, ordered=False)
+        ret = self._tables["service_queue"].bulk_write(bulk_commands, ordered=False)
         return ret
 
 ### Users
@@ -863,7 +887,7 @@ class MongoSocket:
 
         hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
         try:
-            self._project["users"].insert_one({"username": username, "password": hashed, "permissions": permissions})
+            self._tables["users"].insert_one({"username": username, "password": hashed, "permissions": permissions})
             return True
         except pymongo.errors.DuplicateKeyError:
             return False
@@ -904,7 +928,7 @@ class MongoSocket:
         if self._bypass_security:
             return (True, "Success")
 
-        data = self._project["users"].find_one({"username": username})
+        data = self._tables["users"].find_one({"username": username})
         if data is None:
             return (False, "User not found.")
 
@@ -918,7 +942,7 @@ class MongoSocket:
         return (True, "Success")
 
     def remove_user(self, username):
-        """Removes a user from the database
+        """Removes a user from the MongoDB Tables
 
         Parameters
         ----------
@@ -930,7 +954,7 @@ class MongoSocket:
         bool
             If the operation was successful or not.
         """
-        return self._project["users"].delete_one({"username": username}).deleted_count == 1
+        return self._tables["users"].delete_one({"username": username}).deleted_count == 1
 
 
 ### Complex parsers

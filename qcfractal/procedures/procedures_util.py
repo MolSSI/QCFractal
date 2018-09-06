@@ -9,7 +9,7 @@ import json
 from .. import interface
 
 
-def unpack_single_run_meta(db, meta, molecules):
+def unpack_single_run_meta(storage, meta, molecules):
     """Transforms a metadata compute packet into an expanded
     QC Schema for multiple runs.
 
@@ -41,13 +41,13 @@ def unpack_single_run_meta(db, meta, molecules):
 
     >>> molecules = [{"geometry": [0, 0, 0], "symbols" : ["He"]}]
 
-    >>> unpack_single_run_meta(db, meta, molecules)
+    >>> unpack_single_run_meta(storage, meta, molecules)
 
 
     """
 
     # Pull out the needed options
-    option_set = db.get_options([(meta["program"], meta["options"])])["data"][0]
+    option_set = storage.get_options([(meta["program"], meta["options"])])["data"][0]
     del option_set["name"]
     del option_set["program"]
 
@@ -70,7 +70,7 @@ def unpack_single_run_meta(db, meta, molecules):
 
     # Get the required molecules
     indexed_molecules = {k: v for k, v in enumerate(molecules)}
-    raw_molecules_query = db.mixed_molecule_get(indexed_molecules)
+    raw_molecules_query = storage.mixed_molecule_get(indexed_molecules)
 
     tasks = {}
     indexer = copy.deepcopy(meta)
@@ -84,12 +84,12 @@ def unpack_single_run_meta(db, meta, molecules):
     return (tasks, [])
 
 
-def parse_single_runs(db, results):
+def parse_single_runs(storage, results):
     """Summary
 
     Parameters
     ----------
-    db : DBSocket
+    storage : DBSocket
         A live connection to the current database.
     results : dict
         A (key, result) dictionary of the single return results.
@@ -104,7 +104,7 @@ def parse_single_runs(db, results):
 
     # Get molecule ID's
     mols = {k: v["molecule"] for k, v in results.items()}
-    mol_ret = db.add_molecules(mols)["data"]
+    mol_ret = storage.add_molecules(mols)["data"]
 
     for k, v in results.items():
 

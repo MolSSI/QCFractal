@@ -6,7 +6,6 @@ Explicit tests for queue manipulation.
 import qcfractal.interface as portal
 from qcfractal.testing import fireworks_server_fixture as fw_server
 from qcfractal import testing
-import pytest
 
 @testing.using_rdkit
 @testing.using_fireworks

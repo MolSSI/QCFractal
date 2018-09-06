@@ -3,12 +3,8 @@ Tests the server compute capabilities.
 """
 
 import qcfractal.interface as portal
-import qcfractal as qf
-
-from qcfractal.queue_handlers import build_queue
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
-import qcengine
 import requests
 import pytest
 
@@ -21,14 +17,14 @@ def test_compute_queue_stack(fractal_compute_server):
     hydrogen = portal.Molecule([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
     helium = portal.Molecule([[2, 0, 0, 0.0]], dtype="numpy", units="bohr")
 
-    db = fractal_compute_server.objects["db_socket"]
-    mol_ret = db.add_molecules({"hydrogen": hydrogen.to_json(), "helium": helium.to_json()})
+    storage = fractal_compute_server.objects["storage_socket"]
+    mol_ret = storage.add_molecules({"hydrogen": hydrogen.to_json(), "helium": helium.to_json()})
 
     hydrogen_mol_id = mol_ret["data"]["hydrogen"]
     helium_mol_id = mol_ret["data"]["helium"]
 
     option = portal.data.get_options("psi_default")
-    opt_ret = db.add_options([option])
+    opt_ret = storage.add_options([option])
     opt_key = option["name"]
 
     # Add compute
@@ -61,7 +57,7 @@ def test_compute_queue_stack(fractal_compute_server):
         "method": compute["meta"]["method"],
         "basis": compute["meta"]["basis"]
     }
-    results = db.get_results(results_query)["data"]
+    results = storage.get_results(results_query)["data"]
 
     assert len(results) == 2
     for r in results:
@@ -82,7 +78,6 @@ def test_procedure_optimization(fractal_compute_server):
     hydrogen = portal.Molecule([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
     client = portal.FractalClient(fractal_compute_server.get_address(""))
     mol_ret = client.add_molecules({"hydrogen": hydrogen.to_json()})
-    db = fractal_compute_server.objects["db_socket"]
 
     # Add compute
     compute = {
@@ -115,7 +110,7 @@ def test_procedure_optimization(fractal_compute_server):
     results = client.get_procedures({"program": "geometric"})
 
     assert len(results) == 1
-    assert isinstance(str(results[0]), str) # Check that repr runs
+    assert isinstance(str(results[0]), str)  # Check that repr runs
     assert pytest.approx(-1.117530188962681, 1e-5) == results[0].final_energy()
 
 
@@ -137,7 +132,7 @@ def test_compute_database(fractal_compute_server):
     He1 = portal.Molecule([[2, 0, 0, -2], [2, 0, 0, 2]], dtype="numpy", units="bohr", frags=[1])
     db.add_ie_rxn("He1", He1, attributes={"r": 4}, reaction_results={"default": {"Benchmark": 0.0009608501557}})
 
-    # Save the DB and reaquire
+    # Save the DB and re-acquire
     r = db.save()
     db = portal.Database(db_name, client)
 
