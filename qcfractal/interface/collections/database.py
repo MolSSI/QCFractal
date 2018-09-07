@@ -1,7 +1,6 @@
 """Mongo QCDB Database object and helpers
 """
 import itertools as it
-import math
 
 import numpy as np
 import pandas as pd
@@ -31,7 +30,7 @@ class Database(Collection):
         The unrolled reaction index for all reactions in the Database
     """
 
-    def __init__(self, name, client=None, category="default", db_type="rxn"):
+    def __init__(self, name, client=None, db_type="rxn"):
         """
         Initializer for the Database object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -40,16 +39,14 @@ class Database(Collection):
         Parameters
         ----------
         name : str
-            The name of the database
+            The name of the Database
         client : client.FractalClient, optional
             A Portal client to connect to a server
-        category : str, optional
-            The overall category of the database
         db_type : str, optional
-            The type of database involved
+            The type of Database involved
 
         """
-        super().__init__(name, client=client, category=category, db_type=db_type)
+        super().__init__(name, client=client, db_type=db_type)
 
         if self.data["db_type"] not in ["RXN", "IE"]:
             raise TypeError("Database: db_type must either be RXN or IE.")

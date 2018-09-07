@@ -14,7 +14,7 @@ from .. import FractalClient
 
 class Collection(abc.ABC):
 
-    def __init__(self, name, client=None, category="default", **kwargs):
+    def __init__(self, name, client=None, **kwargs):
         """
         Initializer for the Collections objects. If no Portal is supplied or the Collection name
         is not present on the server that the Portal is connected to a blank Collection will be
@@ -26,8 +26,6 @@ class Collection(abc.ABC):
             The name of the Collection object as ID'ed on the storage backend@
         client : client.FractalClient, optional
             A Portal client to connect to a server
-        category : str, optional
-            The overall category of the database
         **kwargs
             Additional keywords which are passed to the Collection and the initial data constructor
             It is up to the individual implementations of the Collection to do things with that data
@@ -39,7 +37,6 @@ class Collection(abc.ABC):
         # Blank data object
         self.data = {
             "name": name,
-            "category": category,
             "collection": self.__class__.__name__,
             "collection_index": (self.__class__.__name__, name),
             "provenance": {},
