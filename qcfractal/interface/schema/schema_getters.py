@@ -16,7 +16,7 @@ __all__ = ["get_schema", "get_table_indices", "get_schema_keys", "validate", "ge
 _schemas = {}
 
 # Add in molecule
-for req in molecule_schema["requied_definitions"]:
+for req in molecule_schema["required_definitions"]:
     molecule_schema["definitions"][req] = get_definition(req)
 
 _schemas["molecule"] = molecule_schema

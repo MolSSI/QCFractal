@@ -1,43 +1,23 @@
 """Mongo QCDB Database object and helpers
 """
-
-import copy
 import itertools as it
-import json
 import math
 
 import numpy as np
 import pandas as pd
 
-from . import client
-from . import constants
-from . import dict_utils
-from . import molecule
-from . import statistics
+# from .. import client
+from .. import constants
+from .. import dict_utils
+from .. import molecule
+from .. import statistics
+from .collection import Collection
+from .collection_utils import nCr
 
 
-def _nCr(n, r):
+class Database(Collection):
     """
-    Compute the binomial coefficient n! / (k! * (n-k)!)
-
-    Parameters
-    ----------
-    n : int
-        Number of samples
-    r : int
-        Denominator
-
-    Returns
-    -------
-    ret : int
-        Value
-    """
-    return math.factorial(n) / math.factorial(r) / math.factorial(n - r)
-
-
-class Database(object):
-    """
-    This is a QCA database class.
+    This is a QCA Database class.
 
     Attributes
     ----------
@@ -51,8 +31,9 @@ class Database(object):
         The unrolled reaction index for all reactions in the Database
     """
 
-    def __init__(self, name, portal=None, category="default", db_type="rxn"):
-        """Initializer for the Database object. If no Portal is supplied or the database name
+    def __init__(self, name, client=None, category="default", db_type="rxn"):
+        """
+        Initializer for the Database object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
         created.
 
@@ -60,7 +41,7 @@ class Database(object):
         ----------
         name : str
             The name of the database
-        portal : client.FractalClient, optional
+        client : client.FractalClient, optional
             A Portal client to connect to a server
         category : str, optional
             The overall category of the database
@@ -68,42 +49,16 @@ class Database(object):
             The type of database involved
 
         """
-
-        # Client and mongod objects
-        self.client = portal
-
-        # Blank data object
-        self.data = {
-            "reactions": [],
-            "name": name,
-            "category": category,
-            "collection": "Database",
-            "db_index": ("Database", name),
-            "provenence": {},
-            "db_type": db_type.upper()
-        }
+        super().__init__(name, client=client, category=category, db_type=db_type)
 
         if self.data["db_type"] not in ["RXN", "IE"]:
             raise TypeError("Database: db_type must either be RXN or IE.")
 
-        # Index and internal data
-        self.df = pd.DataFrame()
+        # Internal data
         self.rxn_index = pd.DataFrame()
 
-        if portal is not None:
-
-            if isinstance(portal, client.FractalClient):
-                self.client = portal
-
-            else:
-                raise TypeError("Database: client argument of unrecognized type '{}'".format(type(portal)))
-
-            tmp_data = self.client.get_collections([self.data["db_index"]])
-            if len(tmp_data) == 0:
-                print("Warning! Database `{}: {}` not found, creating blank database.".format(
-                    *self.data["db_index"]))
-            else:
-                self.data = tmp_data[0]
+        # Needs to be input client, not self.client
+        if client is not None:
 
             self.df = pd.DataFrame(index=self.get_index())
 
@@ -120,21 +75,16 @@ class Database(object):
         # If we making a new database we may need new hashes and json objects
         self._new_molecule_jsons = {}
 
-    # Getters
-    def __getitem__(self, args):
-        """A wrapped to the underlying pd.DataFrame to access columnar data
+    def _init_collection_data(self, additional_args):
+        return {"reactions": [], "db_type": additional_args['db_type'].upper()}
 
-        Parameters
-        ----------
-        args : str
-            The column to access
+    def _pre_save_prep(self, client):
 
-        Returns
-        -------
-        ret : pd.Series, pd.DataFrame
-            A view of the underlying dataframe data
-        """
-        return self.df[args]
+        mol_ret = client.add_molecules(self._new_molecule_jsons)
+
+        # Update internal molecule UUID's to servers UUID's
+        self.data["reactions"] = dict_utils.replace_dict_keys(self.data["reactions"], mol_ret)
+        self._new_molecule_jsons = {}
 
     def _unroll_query(self, keys, stoich, field="result_result"):
         """Unrolls a complex query into a "flat" query for the server object
@@ -406,42 +356,6 @@ class Database(object):
 
         return self.data["reactions"][found[0]]
 
-    # Setters
-    def save(self, client=None, overwrite=False):
-        """Uploads the overall structure of the Database (reactions, names, new molecules, etc)
-        to the server.
-
-        Parameters
-        ----------
-        client : None, optional
-            A Portal object to the server to upload to
-        overwrite : bool, optional
-            Overwrite the data in the server on not
-
-        """
-        if self.data["name"] == "":
-            raise AttributeError("Database:save: Database must have a name!")
-
-        if client is None:
-            if self.client is None:
-                raise AttributeError(
-                    "Database:save: Database does not own a MongoDB instance and one was not passed in.")
-            client = self.client
-
-        if overwrite and ("id" not in self.data):
-            raise KeyError("Attempting to overwrite the Database class on the server, but no ID found.")
-
-        # Add new molecules
-
-        mol_ret = client.add_molecules(self._new_molecule_jsons)
-
-        # Update internal molecule UUID's to servers UUID's
-        self.data["reactions"] = dict_utils.replace_dict_keys(self.data["reactions"], mol_ret)
-        self._new_molecule_jsons = {}
-
-        # Add the database
-        return client.add_collection(self.data, overwrite=overwrite)
-
     # Statistical quantities
     def statistics(self, stype, value, bench="Benchmark"):
         """Summary
@@ -497,7 +411,7 @@ class Database(object):
         -----
         This function attempts to convert the molecule into its correspond hash. The following will happen depending on the form of the Molecule.
             - Molecule hash - Used directly in the stoichiometry.
-            - Molecule class - Hash is obtained and the molecule will be added to the databse upon saving.
+            - Molecule class - Hash is obtained and the molecule will be added to the database upon saving.
             - Molecule string - Molecule will be converted to a Molecule class and the same process as the above will occur.
 
 
@@ -520,7 +434,7 @@ class Database(object):
             try:
                 mol_values.append(float(line[1]))
             except:
-                raise TypeError("Database: Parse stoichiometry: second value must be convertable to a float.")
+                raise TypeError("Database: Parse stoichiometry: must be able to cast second value must be as float.")
 
             # What kind of molecule is it?
             mol = line[0]
@@ -545,7 +459,8 @@ class Database(object):
 
             else:
                 raise TypeError(
-                    "Database: Parse stoichiometry: first value must either be a molecule hash, a molecule str, or a Molecule class."
+                    "Database: Parse stoichiometry: first value must either be a molecule hash, "
+                    "a molecule str, or a Molecule class."
                 )
 
             mol_hashes.append(molecule_hash)
@@ -671,28 +586,8 @@ class Database(object):
         return self.add_rxn(
             name, stoichiometry, reaction_results=reaction_results, attributes=attributes, other_fields=other_fields)
 
-    def to_json(self, filename=None):
-        """
-        If a filename is provided, dumps the file to disk. Otherwise returns a copy of the current data.
-
-        Parameters
-        ----------
-        filename : None, optional
-            The filename to drop the data to.
-
-        Returns
-        -------
-        ret : dict
-            A JSON representation of the Database
-        """
-        if filename is not None:
-            with open(filename, 'w') as open_file:
-                json.dump(self.data, open_file)
-
-        else:
-            return copy.deepcopy(self.data)
-
-    def build_ie_fragments(self, mol, **kwargs):
+    @staticmethod
+    def build_ie_fragments(mol, **kwargs):
         """
         Build the stoichiometry for an Interaction Energy.
 
@@ -748,7 +643,7 @@ class Database(object):
             nocp_tmp = []
             cp_tmp = []
             for k in range(1, nbody + 1):
-                take_nk = _nCr(max_frag - k - 1, nbody - k)
+                take_nk = nCr(max_frag - k - 1, nbody - k)
                 sign = ((-1)**(nbody - k))
                 coef = take_nk * sign
                 for frag in it.combinations(fragment_range, k):
