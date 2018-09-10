@@ -3,7 +3,7 @@ A ORM for Optimization results
 """
 
 import json
-import copy
+
 
 class OptimizationORM:
     """

@@ -7,7 +7,6 @@ Helper
 import abc
 import json
 import copy
-import pandas as pd
 
 from .. import FractalClient
 
