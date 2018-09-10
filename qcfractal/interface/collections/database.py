@@ -30,7 +30,9 @@ class Database(Collection):
         The unrolled reaction index for all reactions in the Database
     """
 
-    def __init__(self, name, client=None, db_type="rxn"):
+    __required_fields = {"reactions", "db_type"}
+
+    def __init__(self, name, client=None, db_type="rxn", **kwargs):
         """
         Initializer for the Database object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -41,13 +43,13 @@ class Database(Collection):
         name : str
             The name of the Database
         client : client.FractalClient, optional
-            A Portal client to connect to a server
+            A Portal client to connected to a server
         db_type : str, optional
             The type of Database involved
 
         """
         db_type = db_type.lower()
-        super().__init__(name, client=client, db_type=db_type)
+        super().__init__(name, client=client, db_type=db_type, **kwargs)
 
         if self.data["db_type"] not in ["rxn", "ie"]:
             raise TypeError('Database: db_type must either be "rxn" or "ie".')
@@ -56,20 +58,18 @@ class Database(Collection):
         self.rxn_index = pd.DataFrame()
         self.df = pd.DataFrame()
 
-        # Needs to be input client, not self.client
-        if client is not None:
+        # Initialize internal dataframes
+        self.df = pd.DataFrame(index=self.get_index())
 
-            self.df = pd.DataFrame(index=self.get_index())
+        # Unroll the index
+        tmp_index = []
+        for rxn in self.data["reactions"]:
+            name = rxn["name"]
+            for stoich_name in list(rxn["stoichiometry"]):
+                for mol_hash, coef in rxn["stoichiometry"][stoich_name].items():
+                    tmp_index.append([name, stoich_name, mol_hash, coef])
 
-            # Unroll the index
-            tmp_index = []
-            for rxn in self.data["reactions"]:
-                name = rxn["name"]
-                for stoich_name in list(rxn["stoichiometry"]):
-                    for mol_hash, coef in rxn["stoichiometry"][stoich_name].items():
-                        tmp_index.append([name, stoich_name, mol_hash, coef])
-
-            self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule_id", "coefficient"])
+        self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule_id", "coefficient"])
 
         # If we making a new database we may need new hashes and json objects
         self._new_molecule_jsons = {}

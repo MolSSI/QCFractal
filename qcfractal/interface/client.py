@@ -229,12 +229,15 @@ class FractalClient(object):
 
     ### Database section
 
-    def get_collections(self, db_list):
+    def get_collections(self, db_list, full_return=False):
 
         payload = {"meta": {}, "data": db_list}
         r = self._request("get", "collection", payload)
 
-        return r.json()["data"]
+        if full_return:
+            return r.json()
+        else:
+            return r.json()["data"]
 
     def add_collection(self, db, overwrite=False, full_return=False):
 

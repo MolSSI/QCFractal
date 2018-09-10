@@ -13,7 +13,9 @@ from .. import FractalClient
 
 class Collection(abc.ABC):
 
-    def __init__(self, name, client=None, **kwargs):
+    __base_fields = {"name", "collection", "provenance"}
+
+    def __init__(self, name, **kwargs):
         """
         Initializer for the Collections objects. If no Portal is supplied or the Collection name
         is not present on the server that the Portal is connected to a blank Collection will be
@@ -30,31 +32,81 @@ class Collection(abc.ABC):
             It is up to the individual implementations of the Collection to do things with that data
         """
 
-        # Client and mongod objects
-        self.client = client
+        self.client = kwargs.pop("client", None)
 
-        # Blank data object
-        class_name = self.__class__.__name__.lower()
-        self.data = {
-            "name": name,
-            "collection": class_name,
-            "collection_index": (class_name, name),
-            "provenance": {},
-            **self._init_collection_data(kwargs)
-        }
+        # Init from raw json blob, ignore everything else
+        if kwargs.get("json_data", False):
+            self.data = kwargs["json_data"]
 
-        if self.client is not None:
+        # Base init
+        else:
+            class_name = self.__class__.__name__.lower()
+            self.data = {
+                "name": name.lower(),
+                "collection": class_name,
+                "provenance": {},
+                **self._init_collection_data(kwargs)
+            }
 
-            if not isinstance(client, FractalClient):
-                raise TypeError("Storage: client argument of unrecognized type '{}'".format(type(client)))
+    @classmethod
+    def from_server(cls, client, name):
+        """Creates a new class from a server
 
-            tmp_data = self.client.get_collections([self.data["collection_index"]])
-            if len(tmp_data) == 0:
-                print("Warning! {} `{}: {}` not found, creating blank database.".format(
-                    class_name, *self.data["collection_index"]))
-            else:
-                # Augment data with extra fields which may have come from the Collection itself
-                self.data = {**self.data, **tmp_data[0]}
+        Parameters
+        ----------
+        client : client.FractalClient
+            A Portal client to connected to a server
+        name : str
+            The name of the collection to pull from.
+
+        Returns
+        -------
+        Collection
+            A ODM of the data.
+        """
+        class_name = cls.__name__.lower()
+        tmp_data = client.get_collections([(class_name, name.lower())])
+        if len(tmp_data) == 0:
+            raise KeyError("Warning! `{}: {}` not found.".format(class_name, name))
+
+        return cls.from_json(tmp_data[0], client=client)
+
+    @classmethod
+    def from_json(cls, data, client=None):
+        """Creates a new class from a JSON blob
+
+        Parameters
+        ----------
+        data : dict
+            The JSON blob to create a new class from.
+        client : client.FractalClient
+            A Portal client to connected to a server
+
+        Returns
+        -------
+        Collection
+            A ODM of the data.
+
+        """
+        # Check we are building the correct object
+        class_name = cls.__name__.lower()
+        if "collection" not in data:
+            raise KeyError("Attempted to create Collection from JSON, but no `collection` field found.")
+
+        if data["collection"] != class_name:
+            raise KeyError("Attempted to create Collection from JSON with class {}, but found collection type of {}.".
+                           format(class_name, data["collection"]))
+
+        # Ensure all required fields are found.
+        req_fields = cls.__base_fields | getattr(cls, "_" + cls.__name__ + "__required_fields")
+        if len(req_fields - data.keys()):
+            missing = req_fields - data.keys()
+            raise KeyError("For class {} the following fields are missing {}.".format(class_name, missing))
+
+        # Build and return object
+        ret = cls(data["name"], json_data=data, client=client)
+
+        return ret
 
     @abc.abstractmethod
     def _init_collection_data(self, additional_data_dict):
@@ -132,9 +184,8 @@ class Collection(abc.ABC):
 
         if client is None:
             if self.client is None:
-                raise AttributeError(
-                    "Collection:save: {} does not own a MongoDB "
-                    "instance and one was not passed in.".format(class_name))
+                raise AttributeError("Collection:save: {} does not own a MongoDB "
+                                     "instance and one was not passed in.".format(class_name))
             client = self.client
 
         if overwrite and ("id" not in self.data):
@@ -144,5 +195,3 @@ class Collection(abc.ABC):
 
         # Add the database
         return client.add_collection(self.data, overwrite=overwrite)
-
-
