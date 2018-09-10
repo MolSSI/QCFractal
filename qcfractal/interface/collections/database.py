@@ -79,6 +79,7 @@ class Database(Collection):
 
     def _pre_save_prep(self, client):
 
+        # Preps any new molecules introduced to the Database before storing data.
         mol_ret = client.add_molecules(self._new_molecule_jsons)
 
         # Update internal molecule UUID's to servers UUID's

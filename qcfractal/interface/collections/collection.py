@@ -98,11 +98,14 @@ class Collection(abc.ABC):
         else:
             return copy.deepcopy(self.data)
 
+    @abc.abstractmethod
     def _pre_save_prep(self, client):
         """
         Additional actions to take before saving, done as the last step before data is written.
 
-        This is not a required implementation, and as such does nothing at the moment
+        This does not return anything but can prep the `self.data` field before storing it.
+
+        Has access to the `client` in case its needed to do pre-conditioning.
 
         Parameters
         ----------
