@@ -147,5 +147,5 @@ molecule_schema = {
         "symbols", "masses", "charge", "multiplicity", "real", "geometry", "fragments", "fragment_charges",
         "fragment_multiplicities", "connectivity"
     ],
-    "requied_definitions": ["provenance"]
+    "required_definitions": ["provenance"]
 }

@@ -7,6 +7,6 @@ from . import dict_utils
 from . import orm
 from . import schema
 from .client import FractalClient
-from .database import Database
+from . import collections
 # Add imports here
 from .molecule import Molecule

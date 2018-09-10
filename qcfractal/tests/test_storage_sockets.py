@@ -460,3 +460,7 @@ def test_user_permissions_admin(storage_socket):
     assert storage_socket.verify_user("george", "shortpw", "admin")[0] is True
 
     assert storage_socket.remove_user("george") is True
+
+
+def test_project_name(storage_socket):
+    assert 'qcf_local_values_test' == storage_socket.get_project_name()

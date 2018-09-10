@@ -153,6 +153,8 @@ class MongoSocket:
     def init_database(self):
         """
         Builds out the initial project structure.
+
+        This is the Mongo definition of "Database"
         """
         # Try to create a collection for each entry
         table_creation = {}
@@ -177,7 +179,7 @@ class MongoSocket:
         return table_creation
 
     def get_project_name(self):
-        return self._tables_name
+        return self._project_name
 
     def mixed_molecule_get(self, data):
         return storage_utils.mixed_molecule_get(self, data)

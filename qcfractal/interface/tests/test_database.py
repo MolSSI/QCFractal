@@ -36,7 +36,8 @@ def _compare_rxn_stoichs(ref, new):
 # Build a interesting database
 @pytest.fixture
 def water_db():
-    db = portal.Database("Water Data")
+    # Create water Database, also tests that db_type is case insensitive
+    db = portal.collections.Database("Water Data", db_type='RxN')
 
     # Build the water dimer.
     dimer = portal.data.get_molecule("water_dimer_minima.psimol")
@@ -90,7 +91,7 @@ def water_db():
 # Build a nbody database
 @pytest.fixture
 def nbody_db():
-    db = portal.Database("N-Body Data")
+    db = portal.collections.Database("N-Body Data")
 
     dimer = portal.data.get_molecule("water_dimer_minima.psimol")
     frag_0 = dimer.get_fragment(0)

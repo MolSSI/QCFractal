@@ -11,7 +11,7 @@ database_schema = {
         },
         "options": {
             "type": "string",
-            "descrption": "The name of the options set to use."
+            "description": "The name of the options set to use."
         },
         "model": {
             "type": "object",
