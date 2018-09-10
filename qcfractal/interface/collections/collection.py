@@ -35,16 +35,14 @@ class Collection(abc.ABC):
         self.client = client
 
         # Blank data object
+        class_name = self.__class__.__name__.lower()
         self.data = {
             "name": name,
-            "collection": self.__class__.__name__,
-            "collection_index": (self.__class__.__name__, name),
+            "collection": class_name,
+            "collection_index": (class_name, name),
             "provenance": {},
             **self._init_collection_data(kwargs)
         }
-
-        # Index and internal data
-        self.df = pd.DataFrame()
 
         if self.client is not None:
 
@@ -54,7 +52,7 @@ class Collection(abc.ABC):
             tmp_data = self.client.get_collections([self.data["collection_index"]])
             if len(tmp_data) == 0:
                 print("Warning! {} `{}: {}` not found, creating blank database.".format(
-                    self.__class__.__name__, *self.data["collection_index"]))
+                    class_name, *self.data["collection_index"]))
             else:
                 # Augment data with extra fields which may have come from the Collection itself
                 self.data = {**self.data, **tmp_data[0]}
@@ -126,7 +124,7 @@ class Collection(abc.ABC):
             Overwrite the data in the server on not
 
         """
-        class_name = self.__class__.__name__
+        class_name = self.__class__.__name__.lower()
         if self.data["name"] == "":
             raise AttributeError("Collection:save: {} must have a name!".format(class_name))
 
@@ -144,21 +142,5 @@ class Collection(abc.ABC):
 
         # Add the database
         return client.add_collection(self.data, overwrite=overwrite)
-
-    # Getters
-    def __getitem__(self, args):
-        """A wrapped to the underlying pd.DataFrame to access columnar data
-
-        Parameters
-        ----------
-        args : str
-            The column to access
-
-        Returns
-        -------
-        ret : pd.Series, pd.DataFrame
-            A view of the underlying dataframe data
-        """
-        return self.df[args]
 
 

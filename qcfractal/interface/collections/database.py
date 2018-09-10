@@ -46,13 +46,15 @@ class Database(Collection):
             The type of Database involved
 
         """
+        db_type = db_type.lower()
         super().__init__(name, client=client, db_type=db_type)
 
-        if self.data["db_type"] not in ["RXN", "IE"]:
-            raise TypeError("Database: db_type must either be RXN or IE.")
+        if self.data["db_type"] not in ["rxn", "ie"]:
+            raise TypeError('Database: db_type must either be "rxn" or "ie".')
 
         # Internal data
         self.rxn_index = pd.DataFrame()
+        self.df = pd.DataFrame()
 
         # Needs to be input client, not self.client
         if client is not None:
@@ -73,7 +75,7 @@ class Database(Collection):
         self._new_molecule_jsons = {}
 
     def _init_collection_data(self, additional_args):
-        return {"reactions": [], "db_type": additional_args['db_type'].upper()}
+        return {"reactions": [], "db_type": additional_args['db_type'].lower()}
 
     def _pre_save_prep(self, client):
 
@@ -168,11 +170,11 @@ class Database(Collection):
         reaction_results : bool
             Toggles a search between the Mongo Pages and the Databases's reaction_results field.
         scale : str, double
-            All units are based in hartree, the default scaling is to kcal/mol.
+            All units are based in Hartree, the default scaling is to kcal/mol.
         field : str, optional
             The result field to query on
         ignore_db_type : bool
-            Override of IE for RXN db types.
+            Override of "ie" for "rxn" db types.
 
 
         Returns
@@ -482,11 +484,11 @@ class Database(Collection):
             Name of the reaction.
         stoichiometry : list or dict
             Either a list or dictionary of lists
-        reaction_results : None, optional
+        reaction_results :  dict or None, Optional, Default: None
             A dictionary of the computed total interaction energy results
-        attributes : None, optional
+        attributes :  dict or None, Optional, Default: None
             A dictionary of attributes to assign to the reaction
-        other_fields : None, optional
+        other_fields : dict or None, Optional, Default: None
             A dictionary of additional user defined fields to add to the reaction entry
 
         Notes
@@ -681,3 +683,19 @@ class Database(Collection):
         #     ret["vmfc"] = [(mol, 1.0)]
 
         return ret
+
+    # Getters
+    def __getitem__(self, args):
+        """A wrapped to the underlying pd.DataFrame to access columnar data
+
+        Parameters
+        ----------
+        args : str
+            The column to access
+
+        Returns
+        -------
+        ret : pd.Series, pd.DataFrame
+            A view of the underlying dataframe data
+        """
+        return self.df[args]
