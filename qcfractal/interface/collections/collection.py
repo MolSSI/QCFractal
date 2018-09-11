@@ -42,7 +42,7 @@ class Collection(abc.ABC):
         else:
             class_name = self.__class__.__name__.lower()
             self.data = {
-                "name": name.lower(),
+                "name": name,
                 "collection": class_name,
                 "provenance": {},
                 **self._init_collection_data(kwargs)
@@ -65,7 +65,7 @@ class Collection(abc.ABC):
             A ODM of the data.
         """
         class_name = cls.__name__.lower()
-        tmp_data = client.get_collections([(class_name, name.lower())])
+        tmp_data = client.get_collections([(class_name, name)])
         if len(tmp_data) == 0:
             raise KeyError("Warning! `{}: {}` not found.".format(class_name, name))
 
