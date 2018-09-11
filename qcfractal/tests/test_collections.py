@@ -59,10 +59,47 @@ def test_compute_database(fractal_compute_server):
 @testing.using_rdkit
 def test_compute_biofragment(fractal_compute_server):
 
+    # Obtain a client and build a BioFragment
     client = portal.FractalClient(fractal_compute_server.get_address(""))
 
     butane = portal.data.get_molecule("butane.json")
-    frag = portal.collections.BioFragment("CCC", butane, client=client)
+    frag = portal.collections.BioFragment("CCCC", butane, client=client)
 
+    # Options
+    torsiondrive_options = {
+        "torsiondrive_meta": {
+            "internal_grid_spacing": [90],
+            "terminal_grid_spacing": [90],
+        },
+        "optimization_meta": {
+            "program": "geometric",
+            "coordsys": "tric",
+        },
+        "qc_meta": {
+            "driver": "gradient",
+            "method": "UFF",
+            "basis": "",
+            "options": "none",
+            "program": "rdkit",
+        },
+    }
+    frag.add_options_set("torsiondrive", "v1", torsiondrive_options)
 
-    # fractal_compute_server.objects["queue_nanny"].await_results()
+    # Required torsions
+    needed_torsions = {
+      "internal": [
+        [[0, 2, 3, 1]],
+      ],
+      "terminal": [
+        [[3, 2, 0, 4]],
+        [[2, 3, 1, 7]],
+      ]
+    } # yapf: disable
+
+    frag.submit_torsion_drives("v1", needed_torsions)
+
+    # Compute!
+    # nanny = fractal_compute_server.objects["queue_nanny"]
+    # nanny.await_services(max_iter=5)
+    # assert len(nanny.list_current_tasks()) == 0
+
