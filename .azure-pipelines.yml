@@ -28,31 +28,30 @@ jobs:
 
     # Additional info about the build
   - script: |
-    - uname -a
-    - free -m
-    - df -h
-    - ulimit -a
+      uname -a
+      free -m
+      df -h
+      ulimit -a
 
   # Setup python environment
   - script: |
-    # Create test environment for package
-    - conda env create -n test python=$PYTHON_VER -f devtools/conda-envs/openff.yaml
-    - source activate test
-    # Build and install package
-    - python setup.py develop --no-deps
+      # Create test environment for package
+      conda env create -n test python=$PYTHON_VER -f devtools/conda-envs/openff.yaml
+      source activate test
+      # Build and install package
+      python setup.py develop --no-deps
     displayname: "Conda Env Creation"
 
   # Display MongoDB, Conda Environment, Python version
   - script: |
-    - sleep 5
-    - python -V
-    - mongod --version
-    - conda list
+      sleep 5
+      python -V
+      mongod --version
+      conda list
     displayName: 'Display'
     
 
   # Run tests
-  - script: |
-    - py.test -v --runslow --cov=qcfractal qcfractal/
+  - script: py.test -v --runslow --cov=qcfractal qcfractal/
     displayName: 'pytest'
 
