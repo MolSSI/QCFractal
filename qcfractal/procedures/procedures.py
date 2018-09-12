@@ -46,9 +46,20 @@ def procedure_single_input_parser(storage, data):
 
     """
 
-    runs, completed, errors = procedures_util.unpack_single_run_meta(storage, data["meta"], data["data"])
+    runs, errors = procedures_util.unpack_single_run_meta(storage, data["meta"], data["data"])
+
+    # Remove duplicates
+    query = {k : data["meta"][k] for k in ["driver", "method", "basis", "options", "program"]}
+    query["molecule_id"] = [x["molecule"]["id"] for x in runs.values()]
+
+    search = storage.get_results(query, projection={"molecule_id": True})
+    completed = set(x["molecule_id"] for x in search["data"])
+
+    # Construct full tasks
     full_tasks = []
     for k, v in runs.items():
+        if v["molecule"]["id"] in completed:
+            continue
 
         keys = {"procedure_type": "single", "single_key": k}
 
@@ -133,7 +144,8 @@ def procedure_optimization_input_parser(storage, data):
     """
 
     # Unpack individual QC jobs
-    runs, errors = procedures_util.unpack_single_run_meta(storage, data["meta"]["qc_meta"], data["data"])
+    runs, errors = procedures_util.unpack_single_run_meta(
+        storage, data["meta"]["qc_meta"], data["data"], remove_duplicates=False)
 
     if "options" in data["meta"]:
         keywords = storage.get_options([(data["meta"]["program"], data["meta"]["options"])])["data"][0]
@@ -222,5 +234,6 @@ def procedure_optimization_output_parser(storage, data):
     return (ret, hook_data)
 
 
+# Add in all registered procedures
 add_new_procedure("single", procedure_single_input_parser, procedure_single_output_parser)
 add_new_procedure("optimization", procedure_optimization_input_parser, procedure_optimization_output_parser)

@@ -1,5 +1,5 @@
 """
-Schedulers and Nanny's for Fireworks
+Queue adapter for Fireworks
 """
 
 import logging

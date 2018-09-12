@@ -9,7 +9,7 @@ import json
 from .. import interface
 
 
-def unpack_single_run_meta(storage, meta, molecules, remove_duplicates=True):
+def unpack_single_run_meta(storage, meta, molecules):
     """Transforms a metadata compute packet into an expanded
     QC Schema for multiple runs.
 
@@ -51,15 +51,6 @@ def unpack_single_run_meta(storage, meta, molecules, remove_duplicates=True):
     raw_molecules_query = storage.mixed_molecule_get(indexed_molecules)
 
     # Pull out the needed options
-    completed = set()
-    if remove_duplicates:
-        query = copy.deepcopy(meta)
-        query["molecule_id"] = [x["id"] for x in raw_molecules_query["data"].values()]
-        del query["procedure"]
-
-        search = storage.get_results(query, projection={"molecule_id": True})
-        completed = set(x["molecule_id"] for x in search["data"])
-
     option_set = storage.get_options([(meta["program"], meta["options"])])["data"][0]
     del option_set["name"]
     del option_set["program"]
@@ -85,8 +76,6 @@ def unpack_single_run_meta(storage, meta, molecules, remove_duplicates=True):
     tasks = {}
     indexer = copy.deepcopy(meta)
     for idx, mol in raw_molecules_query["data"].items():
-        if mol["id"] in completed:
-            continue
 
         data = json.loads(task_meta)
         data["molecule"] = mol
@@ -94,7 +83,7 @@ def unpack_single_run_meta(storage, meta, molecules, remove_duplicates=True):
         indexer["molecule_id"] = mol["id"]
         tasks[interface.schema.format_result_indices(indexer)] = data
 
-    return (tasks, completed, [])
+    return (tasks, [])
 
 
 def parse_single_runs(storage, results):
