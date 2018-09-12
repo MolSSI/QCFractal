@@ -238,10 +238,12 @@ class QueueScheduler(APIHandler):
         queue_nanny = self.objects["queue_nanny"]
 
         # Format tasks
-        full_tasks, errors = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])(storage, self.json)
+        func = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])
+        full_tasks, complete_jobs, errors = func(storage, self.json)
 
         # Add tasks to Nanny
         ret = queue_nanny.submit_tasks(full_tasks)
+        ret["data"] = {"submitted": ret["data"], "duplicates": list(complete_jobs)}
         ret["meta"]["errors"].extend(errors)
 
         self.write(ret)

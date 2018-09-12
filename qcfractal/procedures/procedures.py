@@ -46,7 +46,7 @@ def procedure_single_input_parser(storage, data):
 
     """
 
-    runs, errors = procedures_util.unpack_single_run_meta(storage, data["meta"], data["data"])
+    runs, completed, errors = procedures_util.unpack_single_run_meta(storage, data["meta"], data["data"])
     full_tasks = []
     for k, v in runs.items():
 
@@ -67,7 +67,7 @@ def procedure_single_input_parser(storage, data):
 
         full_tasks.append(task)
 
-    return (full_tasks, errors)
+    return (full_tasks, completed, errors)
 
 
 def procedure_single_output_parser(storage, data):
