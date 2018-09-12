@@ -308,7 +308,7 @@ class FractalClient(object):
 
     ### Compute section
 
-    def add_compute(self, program, method, basis, driver, options, molecule_id, return_full=False, procedure="single"):
+    def add_compute(self, program, method, basis, driver, options, molecule_id, return_full=False):
 
         # Always a list
         if isinstance(molecule_id, str):
@@ -316,7 +316,7 @@ class FractalClient(object):
 
         payload = {
             "meta": {
-                "procedure": procedure,
+                "procedure": "single",
                 "driver": driver,
                 "program": program,
                 "method": method,
@@ -325,6 +325,28 @@ class FractalClient(object):
             },
             "data": molecule_id
         }
+
+        r = self._request("post", "task_scheduler", payload)
+
+        if return_full:
+            return r.json()
+        else:
+            return r.json()["data"]
+
+    def add_procedure(self, procedure, program, program_options, molecule_id, return_full=False):
+
+        # Always a list
+        if isinstance(molecule_id, str):
+            molecule_id = [molecule_id]
+
+        payload = {
+            "meta": {
+                "procedure": procedure,
+                "program": program,
+            },
+            "data": molecule_id
+        }
+        payload["meta"].update(program_options)
 
         r = self._request("post", "task_scheduler", payload)
 
