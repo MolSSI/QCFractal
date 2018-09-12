@@ -1,0 +1,50 @@
+# Python package
+# Create and test a Python package on multiple Python versions.
+# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
+# https://docs.microsoft.com/vsts/pipelines/languages/python
+
+jobs:
+
+- job: 'Test'
+  pool:
+    vmImage: 'Ubuntu 16.04'
+  strategy:
+    matrix:
+      Python35:
+        python.version: '3.5'
+      Python36:
+        python.version: '3.6'
+      Python37:
+        python.version: '3.7'
+    maxParallel: 4
+
+  steps:
+  - script: |
+      # Additional info about the build
+    - uname -a
+    - free -m
+    - df -h
+    - ulimit -a
+
+  # Setup python environment
+  steps:
+  - script: |
+    # Create test environment for package
+    - conda env create -n test python=$PYTHON_VER -f devtools/conda-envs/openff.yaml
+    - source activate test
+
+    # Build and install package
+  - python setup.py develop --no-deps
+
+  - script: |
+    - sleep 5
+    - python -V
+    - mongod --version
+    - conda list
+    displayName: 'Display'
+    
+
+  - script: |
+    - py.test -v --runslow --cov=qcfractal qcfractal/
+    displayName: 'pytest'
+
