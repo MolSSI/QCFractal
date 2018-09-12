@@ -40,7 +40,7 @@ jobs:
       source activate test
       # Build and install package
       python setup.py develop --no-deps
-    displayname: "Conda Env Creation"
+    displayName: "Conda Env Creation"
 
   # Display MongoDB, Conda Environment, Python version
   - script: |
