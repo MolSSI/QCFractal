@@ -1,5 +1,5 @@
 """
-Handlers for Dask
+Queue adapter for Dask
 """
 
 import importlib

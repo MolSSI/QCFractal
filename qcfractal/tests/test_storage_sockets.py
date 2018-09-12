@@ -392,7 +392,7 @@ def test_queue_duplicate(storage_socket):
         "tag": None,
     }
     r = storage_socket.queue_submit([task1])
-    uid = r["data"][0][-1]
+    uid = r["data"][0][0]
     assert len(r["data"]) == 1
 
     # Put the first job in a waiting state

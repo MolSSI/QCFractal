@@ -4,7 +4,7 @@ Explicit tests for queue manipulation.
 
 import qcfractal.interface as portal
 from qcfractal.testing import fireworks_server_fixture as fw_server
-from qcfractal.testing import dask_server_fixture as fractal_compute_server
+from qcfractal.testing import fractal_compute_server
 from qcfractal import testing
 
 
@@ -120,15 +120,21 @@ def test_queue_duplicate_submissions(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server.get_address())
 
-    hooh = portal.data.get_molecule("hooh.json").to_json()
-    mol_ret = client.add_molecules({"hooh": hooh})
+    he2 = portal.data.get_molecule("helium_dimer.json").to_json()
+    mol_ret = client.add_molecules({"he2": he2})
 
-    ret = client.add_compute("rdkit", "UFF", "", "energy", "none", mol_ret["hooh"])
+    ret = client.add_compute("rdkit", "UFF", "", "energy", "none", mol_ret["he2"])
     assert len(ret["submitted"]) == 1
     assert len(ret["completed"]) == 0
     assert len(ret["queue"]) == 0
+    queue_id = ret["submitted"][0][0]
 
-    ret = client.add_compute("rdkit", "UFF", "", "energy", "none", mol_ret["hooh"])
+    ret = client.add_compute("rdkit", "UFF", "", "energy", "none", mol_ret["he2"])
     assert len(ret["submitted"]) == 0
     assert len(ret["completed"]) == 0
     assert len(ret["queue"]) == 1
+    assert ret["queue"][0][0] == queue_id
+
+    # Cleanup
+    fractal_compute_server.objects["storage_socket"].queue_mark_complete([queue_id])
+

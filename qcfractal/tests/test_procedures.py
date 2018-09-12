@@ -43,7 +43,6 @@ def test_compute_queue_stack(fractal_compute_server):
     # Ask the server to compute a new computation
     r = requests.post(fractal_compute_server.get_address("task_scheduler"), json=compute)
     assert r.status_code == 200
-    compute_key = tuple(r.json()["data"][0])
 
     # Manually handle the compute
     nanny = fractal_compute_server.objects["queue_nanny"]
@@ -99,7 +98,10 @@ def test_procedure_optimization(fractal_compute_server):
     # Ask the server to compute a new computation
     r = requests.post(fractal_compute_server.get_address("task_scheduler"), json=compute)
     assert r.status_code == 200
-    compute_key = tuple(r.json()["data"][0])
+
+    # Get the first submitted job, the second index will be a hash_index
+    submitted = r.json()["data"]["submitted"]
+    compute_key = submitted[0][1]
 
     # Manually handle the compute
     nanny = fractal_compute_server.objects["queue_nanny"]
@@ -107,9 +109,11 @@ def test_procedure_optimization(fractal_compute_server):
     assert len(nanny.list_current_tasks()) == 0
 
     # # Query result and check against out manual pul
-    results = client.get_procedures({"program": "geometric"})
+    results1 = client.get_procedures({"program": "geometric"})
+    results2 = client.get_procedures({"hash_index": compute_key})
 
-    assert len(results) == 1
-    assert isinstance(str(results[0]), str)  # Check that repr runs
-    assert pytest.approx(-1.117530188962681, 1e-5) == results[0].final_energy()
+    for results in [results1, results2]:
+        assert len(results) == 1
+        assert isinstance(str(results[0]), str)  # Check that repr runs
+        assert pytest.approx(-1.117530188962681, 1e-5) == results[0].final_energy()
 
