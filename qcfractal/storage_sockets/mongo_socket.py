@@ -285,7 +285,9 @@ class MongoSocket:
         data = []
         for q in query:
             if allow_generic and isinstance(q, dict):
-                pass
+                for k, v in q.items():
+                    if isinstance(v, (list, tuple)):
+                        q[k] = {"$in": v}
             elif (len(q) == len_key) and isinstance(q, (list, tuple)):
                 q = {k: v for k, v in zip(keys, q)}
             else:
