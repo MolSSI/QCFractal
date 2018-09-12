@@ -77,21 +77,7 @@ def procedure_single_output_parser(storage, data):
     results = procedures_util.parse_single_runs(storage, rdata)
     ret = storage.add_results(list(results.values()))
 
-    hook_data = []
-    for k, (data, hook) in data.items():
-
-        # If no hooks skip it
-        if len(hook) == 0:
-            continue
-
-        # Loop over hooks
-        for h in hook:
-            # Loop over individual commands
-            for command in h["updates"]:
-                if command[-1] == "$task_id":
-                    command[-1] = results[k]["id"]
-
-        hook_data.append(hook)
+    hook_data = procedures_util.parse_hooks(data, results)
 
     return (ret, hook_data)
 
@@ -231,21 +217,7 @@ def procedure_optimization_output_parser(storage, data):
 
     ret = storage.add_procedures(list(new_procedures.values()))
 
-    hook_data = []
-    for k, (data, hook) in data.items():
-
-        # If no hooks skip it
-        if len(hook) == 0:
-            continue
-
-        # Loop over hooks
-        for h in hook:
-            # Loop over individual commands
-            for command in h["updates"]:
-                if command[-1] == "$task_id":
-                    command[-1] = new_procedures[k]["id"]
-
-        hook_data.append(hook)
+    hook_data = procedures_util.parse_hooks(data, new_procedures)
 
     return (ret, hook_data)
 
