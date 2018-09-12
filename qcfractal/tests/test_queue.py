@@ -2,11 +2,11 @@
 Explicit tests for queue manipulation.
 """
 
-
 import qcfractal.interface as portal
 from qcfractal.testing import fireworks_server_fixture as fw_server
 from qcfractal.testing import fractal_compute_server
 from qcfractal import testing
+
 
 @testing.using_rdkit
 @testing.using_fireworks
@@ -28,6 +28,7 @@ def test_queue_fireworks_cleanup(fw_server):
     nanny.await_results()
 
     assert len(lpad.get_fw_ids()) == 0
+
 
 @testing.using_rdkit
 @testing.using_fireworks
@@ -52,6 +53,6 @@ def test_queue_error(fractal_compute_server):
     db = fractal_compute_server.objects["storage_socket"]
     ret = db.get_queue([{"status": "ERROR"}])["data"]
 
-    print(ret[0]["error"])
+    # print(ret[0]["error"])
     assert len(ret) == 1
-    assert len(ret[0]["error"]) > 20
+    assert "Distributed Worker Error" in ret[0]["error"]

@@ -118,7 +118,7 @@ class QueueNanny:
                         error = "No error supplied"
 
                     self.logger.info("Computation key did not complete successfully:\n\t{}\n"
-                                           "Because: {}".format(str(key), error))
+                                     "Because: {}".format(str(key), error))
 
                     error_data.append((key, error))
                 else:
@@ -126,9 +126,7 @@ class QueueNanny:
                     new_results[parser][key] = (result, hooks)
                     complete_ids.append(key)
             except Exception as e:
-                msg = "Internal Server Error:\n"
-                msg = "".join(traceback.format_tb(e.__traceback__))
-                msg += str(type(e).__name__) + ":" + str(e)
+                msg = "Internal FractalServer Error:\n" + traceback.format_exc()
                 self.errors[key] = msg
                 self.logger.info("update: ERROR\n{}".format(msg))
                 error_data.append((key, msg))
@@ -175,7 +173,6 @@ class QueueNanny:
                 # Add results to procedures, remove complete_ids
                 new_procedures.append(finished)
                 complete_ids.append(data["id"])
-
 
         self.storage_socket.add_procedures(new_procedures)
         self.storage_socket.del_services(complete_ids)

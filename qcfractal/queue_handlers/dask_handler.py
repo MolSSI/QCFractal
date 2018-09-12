@@ -4,13 +4,25 @@ Handlers for Dask
 
 import importlib
 import logging
+import traceback
 import operator
 
 
-class DaskAdapter:
-    def __init__(self, dask_server, logger=None):
+def _get_future(future):
+    if future.exception() is None:
+        return future.result()
+    else:
+        e = future.exception()
+        msg = "Distributed Worker Error\n"
+        msg += "".join(traceback.format_exception(TypeError, future.exception(), future.traceback()))
+        ret = {"success": False, "error": msg}
+        return ret
 
-        self.dask_server = dask_server
+
+class DaskAdapter:
+    def __init__(self, dask_client, logger=None):
+
+        self.dask_client = dask_client
         self.queue = {}
         self.function_map = {}
 
@@ -39,7 +51,7 @@ class DaskAdapter:
 
             # Form run tuple
             func = self.get_function(task["spec"]["function"])
-            job = self.dask_server.submit(func, *task["spec"]["args"], **task["spec"]["kwargs"])
+            job = self.dask_client.submit(func, *task["spec"]["args"], **task["spec"]["kwargs"])
 
             self.queue[tag] = (job, task["parser"], task["hooks"])
             self.logger.info("Adapter: Task submitted {}".format(tag))
@@ -51,7 +63,7 @@ class DaskAdapter:
         del_keys = []
         for key, (future, parser, hooks) in self.queue.items():
             if future.done():
-                ret[key] = (future.result(), parser, hooks)
+                ret[key] = (_get_future(future), parser, hooks)
                 del_keys.append(key)
 
         for key in del_keys:
@@ -60,8 +72,11 @@ class DaskAdapter:
         return ret
 
     def await_results(self):
-        # Try to get each results
-        [v[0].result() for k, v in self.queue.items()]
+
+        from dask.distributed import wait
+        futures = [v[0] for k, v in self.queue.items()]
+        wait(futures)
+
         return True
 
     def list_tasks(self):
