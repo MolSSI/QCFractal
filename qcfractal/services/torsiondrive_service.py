@@ -185,6 +185,7 @@ class TorsionDriveService:
 
         job_map = {}
         full_tasks = []
+        complete_jobs = {}
         for key, mol in flat_map.items():
             packet = json.loads(meta_packet)
 
@@ -197,21 +198,27 @@ class TorsionDriveService:
             packet["data"] = [mol]
 
             # Turn packet into a full task
-            task, errors = procedures.get_procedure_input_parser("optimization")(self.storage_socket, packet)
+            task, complete, errors = procedures.get_procedure_input_parser("optimization")(
+                self.storage_socket, packet, duplicate_id="id")
 
             uid = str(uuid.uuid4())
-            hook = json.loads(hook_template)
-            hook["updates"][-1][1] = "complete_jobs." + uid
+            if len(complete):
+                # Job is already complete
+                complete_jobs[uid] = complete[0]
+            else:
+                # Create a hook which will update the complete jobs uid
+                hook = json.loads(hook_template)
+                hook["updates"][-1][1] = "complete_jobs." + uid
 
-            task[0]["hooks"].append(hook)
-            full_tasks.append(task[0])
+                task[0]["hooks"].append(hook)
+                full_tasks.append(task[0])
             job_map[uid] = key
 
         # Create data for next round
         self.data["update_structure"] = {k: len(v) for k, v in job_dict.items()}
         self.data["job_map"] = job_map
         self.data["remaining_jobs"] = len(job_map)
-        self.data["complete_jobs"] = {}
+        self.data["complete_jobs"] = complete_jobs
         # print(json.dumps(required_jobs, indent=2))
 
         # Add tasks to Nanny

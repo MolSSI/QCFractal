@@ -93,7 +93,7 @@ def procedure_single_output_parser(storage, data):
     return (ret, hook_data)
 
 
-def procedure_optimization_input_parser(storage, data):
+def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"):
     """
 
     json_data = {
@@ -201,19 +201,26 @@ def procedure_optimization_input_parser(storage, data):
 
         full_tasks.append(task)
 
-    query = storage.get_procedures([{"hash_index": duplicate_lookup}], projection={"hash_index": True})["data"]
+    query = storage.get_procedures([{"hash_index": duplicate_lookup}], projection={"hash_index": True, "id": True})["data"]
     if len(query):
-        duplicates = set(x["hash_index"] for x in query)
+        found_hashes = set(x["hash_index"] for x in query)
 
         # Filter out tasks
         new_tasks = []
         for task in full_tasks:
-            if task["hash_index"] in duplicates:
+            if task["hash_index"] in found_hashes:
                 continue
             else:
                 new_tasks.append(task)
 
-        return (new_tasks, list(duplicates), errors)
+        if duplicate_id == "hash_index":
+            duplicates = list(found_hashes)
+        elif duplicate_id == "id":
+            duplicates = [x["id"] for x in query]
+        else:
+            raise KeyError("Duplicate id '{}' not understood".format(duplicate_id))
+
+        return (new_tasks, duplicates, errors)
 
     else:
         return (full_tasks, [], errors)
