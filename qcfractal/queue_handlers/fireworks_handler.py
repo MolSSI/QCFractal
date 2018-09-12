@@ -46,16 +46,26 @@ class FireworksAdapter:
             "fw_id": {
                 "$in": list(self.queue.keys())
             },
-            "state": "COMPLETED"
+            "state": {"$in": ["COMPLETED", "FIZZLED"]},
         }, {
             "action.stored_data.fw_results": True,
+            "action.stored_data._task.args": True,
+            "action.stored_data._exception": True,
             "_id": False,
-            "fw_id": True
+            "fw_id": True,
+            "state": True
         })
 
         for tmp_data in cursor:
             key, parser, hooks = self.queue.pop(tmp_data["fw_id"])
-            ret[key] = (tmp_data["action"]["stored_data"]["fw_results"], parser, hooks)
+            if tmp_data["state"] == "COMPLETED":
+                ret[key] = (tmp_data["action"]["stored_data"]["fw_results"], parser, hooks)
+            else:
+                blob = tmp_data["action"]["stored_data"]["_task"]["args"][0]
+                blob["error"] = tmp_data["action"]["stored_data"]["_exception"]["_stacktrace"]
+                blob["success"] = False
+                ret[key] = (blob, parser, hooks)
+
 
             self.lpad.delete_wf(tmp_data["fw_id"])
 

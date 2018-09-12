@@ -117,19 +117,21 @@ class QueueNanny:
                     else:
                         error = "No error supplied"
 
-                    raise self.logger.info("Computation key did not complete successfully:\n\t{}\n"
+                    self.logger.info("Computation key did not complete successfully:\n\t{}\n"
                                            "Because: {}".format(str(key), error))
-                # res = self.db_socket.del_page_by_data(tmp_data)
 
-                self.logger.info("update: {}".format(key))
-                new_results[parser][key] = (result, hooks)
-                complete_ids.append(key)
+                    error_data.append((key, error))
+                else:
+                    self.logger.info("update: {}".format(key))
+                    new_results[parser][key] = (result, hooks)
+                    complete_ids.append(key)
             except Exception as e:
+                msg = "Internal Server Error:\n"
                 msg = "".join(traceback.format_tb(e.__traceback__))
                 msg += str(type(e).__name__) + ":" + str(e)
                 self.errors[key] = msg
                 self.logger.info("update: ERROR\n{}".format(msg))
-                error_ids.append((key, msg))
+                error_data.append((key, msg))
 
         # Run output parsers
         hooks = []
