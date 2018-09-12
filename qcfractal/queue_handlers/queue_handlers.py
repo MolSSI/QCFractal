@@ -106,6 +106,8 @@ class QueueNanny:
 
         # Pivot data so that we group all results in categories
         new_results = collections.defaultdict(dict)
+        complete_ids = []
+        error_data = []
 
         for key, (result, parser, hooks) in self.queue_adapter.aquire_complete().items():
             try:
@@ -121,11 +123,13 @@ class QueueNanny:
 
                 self.logger.info("update: {}".format(key))
                 new_results[parser][key] = (result, hooks)
+                complete_ids.append(key)
             except Exception as e:
                 msg = "".join(traceback.format_tb(e.__traceback__))
                 msg += str(type(e).__name__) + ":" + str(e)
                 self.errors[key] = msg
                 self.logger.info("update: ERROR\n{}".format(msg))
+                error_ids.append((key, msg))
 
         # Run output parsers
         hooks = []
@@ -133,7 +137,10 @@ class QueueNanny:
             ret, h = procedures.get_procedure_output_parser(k)(self.storage_socket, v)
             hooks.extend(h)
 
+        # Handle hooks and complete jobs
         self.storage_socket.handle_hooks(hooks)
+        self.storage_socket.queue_mark_complete(complete_ids)
+        self.storage_socket.queue_mark_error(error_data)
 
         # Get new jobs
         open_slots = max(0, self.max_tasks - self.queue_adapter.task_count())

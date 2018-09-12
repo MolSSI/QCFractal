@@ -29,13 +29,13 @@ _table_indices = {
 
     "collection": ("collection", "name"),
     "procedure": ("procedure", "program"),
-    "service_queue": ("status", "hash_index", "status", "tag"),
 
     "molecule": ("molecule_hash", "molecular_formula"),
     "result": ("molecule_id", "program", "driver", "method", "basis", "options"),
     "options": ("program", "name"),
 
     "task_queue": ("status", "hash_index", "tag"),
+    "service_queue": ("status", "hash_index", "tag"),
 }  # yapf: disable
 
 

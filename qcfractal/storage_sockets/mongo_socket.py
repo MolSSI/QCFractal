@@ -842,6 +842,25 @@ class MongoSocket:
 
         return rm.deleted_count
 
+    def queue_mark_error(self, data):
+        bulk_commands = []
+        for oid, msg in data:
+            update = {
+                "$set": {
+                    "status": "ERROR",
+                    "error": msg,
+                    "modified_on": datetime.datetime.utcnow(),
+                }
+            }
+            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(oid)}, update))
+
+        if len(bulk_commands) == 0:
+            return
+
+        ret = self._tables["task_queue"].bulk_write(bulk_commands, ordered=False)
+        return ret
+
+
     def handle_hooks(self, hooks):
 
         # Very dangerous, we need to modify this substatially
