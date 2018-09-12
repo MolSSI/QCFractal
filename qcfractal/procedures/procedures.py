@@ -144,8 +144,7 @@ def procedure_optimization_input_parser(storage, data):
     """
 
     # Unpack individual QC jobs
-    runs, errors = procedures_util.unpack_single_run_meta(
-        storage, data["meta"]["qc_meta"], data["data"], remove_duplicates=False)
+    runs, errors = procedures_util.unpack_single_run_meta(storage, data["meta"]["qc_meta"], data["data"])
 
     if "options" in data["meta"]:
         keywords = storage.get_options([(data["meta"]["program"], data["meta"]["options"])])["data"][0]
@@ -165,6 +164,7 @@ def procedure_optimization_input_parser(storage, data):
     })
 
     full_tasks = []
+    duplicate_lookup = []
     for k, v in runs.items():
 
         # Coerce qc_template information
@@ -181,8 +181,13 @@ def procedure_optimization_input_parser(storage, data):
             "single_key": k,
         }
 
+        # Add to args document to carry through to storage
+        hash_index = procedures_util.hash_procedure_keys(keys)
+        packet["hash_index"] = hash_index
+        duplicate_lookup.append(hash_index)
+
         task = {
-            "hash_index": procedures_util.hash_procedure_keys(keys),
+            "hash_index": hash_index,
             "hash_keys": keys,
             "spec": {
                 "function": "qcengine.compute_procedure",
@@ -196,7 +201,22 @@ def procedure_optimization_input_parser(storage, data):
 
         full_tasks.append(task)
 
-    return (full_tasks, errors)
+    query = storage.get_procedures([{"hash_index": duplicate_lookup}], projection={"hash_index": True})["data"]
+    if len(query):
+        duplicates = set(x["hash_index"] for x in query)
+
+        # Filter out tasks
+        new_tasks = []
+        for task in full_tasks:
+            if task["hash_index"] in duplicates:
+                continue
+            else:
+                new_tasks.append(task)
+
+        return (new_tasks, list(duplicates), errors)
+
+    else:
+        return (full_tasks, [], errors)
 
 
 def procedure_optimization_output_parser(storage, data):

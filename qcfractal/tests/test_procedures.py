@@ -83,8 +83,8 @@ def test_procedure_optimization(fractal_compute_server):
     compute = {
         "meta": {
             "procedure": "optimization",
-            "options": "none",
             "program": "geometric",
+            "options": "none",
             "qc_meta": {
                 "driver": "gradient",
                 "method": "HF",
