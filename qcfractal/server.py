@@ -198,7 +198,7 @@ class FractalServer(object):
         if queue_socket is not None:
 
             queue_nanny, queue_scheduler, service_scheduler = queue_handlers.build_queue(
-                queue_socket, self.objects["storage_socket"])
+                queue_socket, self.objects["storage_socket"], logger=self.logger)
 
             # Add the socket to passed args
             self.objects["queue_socket"] = queue_socket

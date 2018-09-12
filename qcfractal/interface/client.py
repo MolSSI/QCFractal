@@ -276,12 +276,12 @@ class FractalClient(object):
         else:
             return r.json()["data"]
 
-    def get_procedures(self, procedure_id, **kwargs):
+    def get_procedures(self, procedure_id, return_objects=True):
 
         payload = {"meta": {}, "data": [procedure_id]}
         r = self._request("get", "procedure", payload)
 
-        if kwargs.get("return_objects", True):
+        if return_objects:
             ret = []
             for packet in r.json()["data"]:
                 tmp = orm.build_orm(packet)

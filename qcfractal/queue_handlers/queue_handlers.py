@@ -66,9 +66,8 @@ class QueueNanny:
         """
         tmp = self.storage_socket.queue_submit(tasks)
         self.update()
-        self.logger.info("Queue: Added {} tasks.".format(len(tmp)))
+        self.logger.info("QUEUE: Added {} tasks.".format(tmp["meta"]["n_inserted"]))
         return tmp
-        # return self.queue_adapter.submit_tasks(tasks)
 
     def submit_services(self, tasks):
         """Submits tasks to the queue for the Nanny to manage and watch for completion
@@ -93,7 +92,7 @@ class QueueNanny:
 
         self.services |= set(task_ids)
 
-        self.logger.info("Queue: Added {} services.\n".format(len(new_tasks)))
+        self.logger.info("QUEUE: Added {} services.\n".format(len(new_tasks)))
         self.update()
 
         return task_ids
@@ -243,7 +242,8 @@ class QueueScheduler(APIHandler):
 
         # Add tasks to Nanny
         ret = queue_nanny.submit_tasks(full_tasks)
-        ret["data"] = {"submitted": ret["data"], "duplicates": list(complete_jobs)}
+        ret["data"] = {"submitted": ret["data"], "completed": list(complete_jobs), "queue": ret["meta"]["duplicates"]}
+        ret["meta"]["duplicates"] = []
         ret["meta"]["errors"].extend(errors)
 
         self.write(ret)

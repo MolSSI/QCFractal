@@ -785,6 +785,18 @@ class MongoSocket:
             if tmp.modified_count != len(dup_inds):
                 self.logger.warning("QUEUE: Hook duplicate found does not match hook triggers")
 
+        # Since we did an add generic we get ((status, hashindex, tag), queue_id)
+        # Move this to (queue_id, hash_index)
+        ret["data"] = [(x[1], x[0][1]) for x in ret["data"]]
+
+        # Means we have duplicates in the queue, massage results
+        if len(ret["meta"]["duplicates"]):
+            indices = [x[1] for x in ret["meta"]["duplicates"]]
+
+            results = self.get_queue([{"hash_index": indices}], projection={"id": True, "hash_index": True})
+            ret["meta"]["duplicates"] = [(x["id"], x["hash_index"]) for x in results["data"]]
+            ret["meta"]["error_description"] = False
+
         ret["meta"]["validation_errors"] = []
         return ret
 
@@ -827,7 +839,7 @@ class MongoSocket:
         if by_id:
             return self._get_generic_by_id(query, "task_queue", projection=projection)
         else:
-            return self._get_generic(query, "task_queue", allow_generic=True)
+            return self._get_generic(query, "task_queue", allow_generic=True, projection=projection)
 
     def queue_get_by_id(self, ids, n=100):
 

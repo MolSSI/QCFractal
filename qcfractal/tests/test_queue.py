@@ -59,7 +59,7 @@ def test_queue_error(fractal_compute_server):
 
 
 @testing.using_rdkit
-def test_queue_duplicate_single(fractal_compute_server):
+def test_queue_duplicate_compute(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server.get_address())
 
@@ -68,7 +68,7 @@ def test_queue_duplicate_single(fractal_compute_server):
 
     ret = client.add_compute("rdkit", "UFF", "", "energy", "none", mol_ret["hooh"])
     assert len(ret["submitted"]) == 1
-    assert len(ret["duplicates"]) == 0
+    assert len(ret["completed"]) == 0
 
     # Pull out fireworks launchpad and queue nanny
     nanny = fractal_compute_server.objects["queue_nanny"]
@@ -78,7 +78,7 @@ def test_queue_duplicate_single(fractal_compute_server):
 
     ret = client.add_compute("rdkit", "UFF", "", "energy", "none", mol_ret["hooh"])
     assert len(ret["submitted"]) == 0
-    assert len(ret["duplicates"]) == 1
+    assert len(ret["completed"]) == 1
 
 @testing.using_rdkit
 @testing.using_geometric
@@ -102,7 +102,7 @@ def test_queue_duplicate_procedure(fractal_compute_server):
 
     ret = client.add_procedure("optimization", "geometric", geometric_options, mol_ret["hooh"])
     assert len(ret["submitted"]) == 1
-    assert len(ret["duplicates"]) == 0
+    assert len(ret["completed"]) == 0
 
     # Pull out fireworks launchpad and queue nanny
     nanny = fractal_compute_server.objects["queue_nanny"]
@@ -112,4 +112,23 @@ def test_queue_duplicate_procedure(fractal_compute_server):
 
     ret = client.add_procedure("optimization", "geometric", geometric_options, mol_ret["hooh"])
     assert len(ret["submitted"]) == 0
-    assert len(ret["duplicates"]) == 1
+    assert len(ret["completed"]) == 1
+
+
+@testing.using_rdkit
+def test_queue_duplicate_submissions(fractal_compute_server):
+
+    client = portal.FractalClient(fractal_compute_server.get_address())
+
+    hooh = portal.data.get_molecule("hooh.json").to_json()
+    mol_ret = client.add_molecules({"hooh": hooh})
+
+    ret = client.add_compute("rdkit", "UFF", "", "energy", "none", mol_ret["hooh"])
+    assert len(ret["submitted"]) == 1
+    assert len(ret["completed"]) == 0
+    assert len(ret["queue"]) == 0
+
+    ret = client.add_compute("rdkit", "UFF", "", "energy", "none", mol_ret["hooh"])
+    assert len(ret["submitted"]) == 0
+    assert len(ret["completed"]) == 0
+    assert len(ret["queue"]) == 1
