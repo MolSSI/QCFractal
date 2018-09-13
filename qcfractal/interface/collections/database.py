@@ -209,7 +209,7 @@ class Database(Collection):
             tmp_idx = pd.Series(index=self.df.index)
             for rxn in self.data["reactions"]:
                 try:
-                    tmp_idx.ix[rxn["name"]] = rxn["reaction_results"][stoich][method]
+                    tmp_idx.loc[rxn["name"]] = rxn["reaction_results"][stoich][method]
                 except KeyError:
                     pass
 

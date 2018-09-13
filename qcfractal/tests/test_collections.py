@@ -45,8 +45,8 @@ def test_compute_database(fractal_compute_server):
 
     # Query computed results
     assert db.query("SCF", "STO-3G")
-    assert pytest.approx(0.6024530476071095, 1.e-5) == db.df.ix["He1", "SCF/STO-3G"]
-    assert pytest.approx(-0.006895035942673289, 1.e-5) == db.df.ix["He2", "SCF/STO-3G"]
+    assert pytest.approx(0.6024530476071095, 1.e-5) == db.df.loc["He1", "SCF/STO-3G"]
+    assert pytest.approx(-0.006895035942673289, 1.e-5) == db.df.loc["He2", "SCF/STO-3G"]
 
     # Check results
     assert db.query("Benchmark", "", reaction_results=True)

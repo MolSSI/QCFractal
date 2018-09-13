@@ -33,6 +33,8 @@ class Collection(abc.ABC):
         """
 
         self.client = kwargs.pop("client", None)
+        if (self.client is not None) and (not isinstance(self.client, FractalClient)):
+            raise TypeError("Expected FractalClient as `client` kwarg, found {}.".format(type(self.client)))
 
         # Init from raw json blob, ignore everything else
         if kwargs.get("json_data", False):

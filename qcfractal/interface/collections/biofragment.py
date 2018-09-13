@@ -4,7 +4,6 @@
 import json
 import copy
 
-from .. import molecule
 from .collection import Collection
 
 
@@ -111,4 +110,6 @@ class BioFragment(Collection):
                 tmp_options["torsiondrive_meta"]["dihedrals"] = t
 
                 ret = self.client.add_service("torsiondrive", [self.data["initial_molecule_id"]], tmp_options)
+                submissions.append(ret)
+        return submissions
 

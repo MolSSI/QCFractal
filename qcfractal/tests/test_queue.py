@@ -42,6 +42,7 @@ def test_queue_error(fractal_compute_server):
     mol_ret = client.add_molecules({"hooh": hooh})
 
     ret = client.add_compute("rdkit", "UFF", "", "energy", "none", mol_ret["hooh"])
+    queue_id = ret["submitted"][0][0]
 
     # Pull out fireworks launchpad and queue nanny
     nanny = fractal_compute_server.objects["queue_nanny"]
@@ -53,9 +54,9 @@ def test_queue_error(fractal_compute_server):
     db = fractal_compute_server.objects["storage_socket"]
     ret = db.get_queue([{"status": "ERROR"}])["data"]
 
-    # print(ret[0]["error"])
     assert len(ret) == 1
-    assert "Distributed Worker Error" in ret[0]["error"]
+    assert "connectivity graph" in ret[0]["error"]
+    fractal_compute_server.objects["storage_socket"].queue_mark_complete([queue_id])
 
 
 @testing.using_rdkit
@@ -129,6 +130,7 @@ def test_queue_duplicate_submissions(fractal_compute_server):
     assert len(ret["queue"]) == 0
     queue_id = ret["submitted"][0][0]
 
+    # Do not compute, add duplicate
     ret = client.add_compute("rdkit", "UFF", "", "energy", "none", mol_ret["he2"])
     assert len(ret["submitted"]) == 0
     assert len(ret["completed"]) == 0

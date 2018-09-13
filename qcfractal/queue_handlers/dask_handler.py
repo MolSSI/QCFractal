@@ -12,9 +12,7 @@ def _get_future(future):
     if future.exception() is None:
         return future.result()
     else:
-        e = future.exception()
-        msg = "Distributed Worker Error\n"
-        msg += "".join(traceback.format_exception(TypeError, future.exception(), future.traceback()))
+        msg = "".join(traceback.format_exception(TypeError, future.exception(), future.traceback()))
         ret = {"success": False, "error": msg}
         return ret
 

@@ -64,8 +64,7 @@ class FireworksAdapter:
                 ret[key] = (tmp_data["action"]["stored_data"]["fw_results"], parser, hooks)
             else:
                 blob = tmp_data["action"]["stored_data"]["_task"]["args"][0]
-                msg = "Distributed Worker Error\n"
-                msg += tmp_data["action"]["stored_data"]["_exception"]["_stacktrace"]
+                msg = tmp_data["action"]["stored_data"]["_exception"]["_stacktrace"]
                 blob["error"] = msg
                 blob["success"] = False
                 ret[key] = (blob, parser, hooks)
