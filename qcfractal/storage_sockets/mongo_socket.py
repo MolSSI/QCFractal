@@ -173,7 +173,8 @@ class MongoSocket:
             self._tables[tbl].create_index(idx, unique=self._table_unique_indices[tbl])
 
         # Special queue index, hash_index should be unique
-        self._tables["task_queue"].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
+        for table in ["result", "procedure", "task_queue", "service_queue"]:
+            self._tables[table].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
 
         # Return the success array
         return table_creation

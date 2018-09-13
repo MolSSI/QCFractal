@@ -62,6 +62,8 @@ def procedure_single_input_parser(storage, data):
             continue
 
         keys = {"procedure_type": "single", "single_key": k}
+        hash_index = procedures_util.hash_procedure_keys(keys)
+        v["hash_index"] = hash_index
 
         task = {
             "hash_index": procedures_util.hash_procedure_keys(keys),
