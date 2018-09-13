@@ -285,7 +285,9 @@ class MongoSocket:
         data = []
         for q in query:
             if allow_generic and isinstance(q, dict):
-                pass
+                for k, v in q.items():
+                    if isinstance(v, (list, tuple)):
+                        q[k] = {"$in": v}
             elif (len(q) == len_key) and isinstance(q, (list, tuple)):
                 q = {k: v for k, v in zip(keys, q)}
             else:
@@ -783,6 +785,18 @@ class MongoSocket:
             if tmp.modified_count != len(dup_inds):
                 self.logger.warning("QUEUE: Hook duplicate found does not match hook triggers")
 
+        # Since we did an add generic we get ((status, hashindex, tag), queue_id)
+        # Move this to (queue_id, hash_index)
+        ret["data"] = [(x[1], x[0][1]) for x in ret["data"]]
+
+        # Means we have duplicates in the queue, massage results
+        if len(ret["meta"]["duplicates"]):
+            indices = [x[1] for x in ret["meta"]["duplicates"]]
+
+            results = self.get_queue([{"hash_index": indices}], projection={"id": True, "hash_index": True})
+            ret["meta"]["duplicates"] = [(x["id"], x["hash_index"]) for x in results["data"]]
+            ret["meta"]["error_description"] = False
+
         ret["meta"]["validation_errors"] = []
         return ret
 
@@ -825,7 +839,7 @@ class MongoSocket:
         if by_id:
             return self._get_generic_by_id(query, "task_queue", projection=projection)
         else:
-            return self._get_generic(query, "task_queue", allow_generic=True)
+            return self._get_generic(query, "task_queue", allow_generic=True, projection=projection)
 
     def queue_get_by_id(self, ids, n=100):
 
@@ -841,6 +855,25 @@ class MongoSocket:
         # We need to log these for history
 
         return rm.deleted_count
+
+    def queue_mark_error(self, data):
+        bulk_commands = []
+        for oid, msg in data:
+            update = {
+                "$set": {
+                    "status": "ERROR",
+                    "error": msg,
+                    "modified_on": datetime.datetime.utcnow(),
+                }
+            }
+            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(oid)}, update))
+
+        if len(bulk_commands) == 0:
+            return
+
+        ret = self._tables["task_queue"].bulk_write(bulk_commands, ordered=False)
+        return ret
+
 
     def handle_hooks(self, hooks):
 

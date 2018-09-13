@@ -46,6 +46,10 @@ def unpack_single_run_meta(storage, meta, molecules):
 
     """
 
+    # Get the required molecules
+    indexed_molecules = {k: v for k, v in enumerate(molecules)}
+    raw_molecules_query = storage.mixed_molecule_get(indexed_molecules)
+
     # Pull out the needed options
     option_set = storage.get_options([(meta["program"], meta["options"])])["data"][0]
     del option_set["name"]
@@ -68,13 +72,11 @@ def unpack_single_run_meta(storage, meta, molecules):
         }
     })
 
-    # Get the required molecules
-    indexed_molecules = {k: v for k, v in enumerate(molecules)}
-    raw_molecules_query = storage.mixed_molecule_get(indexed_molecules)
 
     tasks = {}
     indexer = copy.deepcopy(meta)
     for idx, mol in raw_molecules_query["data"].items():
+
         data = json.loads(task_meta)
         data["molecule"] = mol
 
@@ -130,3 +132,38 @@ def hash_procedure_keys(keys):
     m = hashlib.sha1()
     m.update(json.dumps(keys, sort_keys=True).encode("UTF-8"))
     return m.hexdigest()
+
+def parse_hooks(data, results):
+    """Parses the hook data in a list of hooks
+
+    Parameters
+    ----------
+    data : dict
+        Dictionary of key/value results from a queue adapter. key : (data blob, hook)
+    results : dict
+        Parsed versions of results inserted with ID's attached.
+
+    Returns
+    -------
+    TYPE
+        Description
+    """
+    hook_data = []
+    for k, (data, hook) in data.items():
+
+        # If no hooks skip it
+        if len(hook) == 0:
+            continue
+
+        # Loop over hooks
+        for h in hook:
+            # Loop over individual commands
+            for command in h["updates"]:
+                # Custom commands
+                if command[-1] == "$task_id":
+                    command[-1] = results[k]["id"]
+                # else:
+                #     raise KeyError("Hook command `{}` not understood.".format(command))
+
+        hook_data.append(hook)
+    return hook_data

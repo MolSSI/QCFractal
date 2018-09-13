@@ -66,9 +66,8 @@ class QueueNanny:
         """
         tmp = self.storage_socket.queue_submit(tasks)
         self.update()
-        self.logger.info("Queue: Added {} tasks.".format(len(tmp)))
+        self.logger.info("QUEUE: Added {} tasks.".format(tmp["meta"]["n_inserted"]))
         return tmp
-        # return self.queue_adapter.submit_tasks(tasks)
 
     def submit_services(self, tasks):
         """Submits tasks to the queue for the Nanny to manage and watch for completion
@@ -93,7 +92,7 @@ class QueueNanny:
 
         self.services |= set(task_ids)
 
-        self.logger.info("Queue: Added {} services.\n".format(len(new_tasks)))
+        self.logger.info("QUEUE: Added {} services.\n".format(len(new_tasks)))
         self.update()
 
         return task_ids
@@ -106,6 +105,8 @@ class QueueNanny:
 
         # Pivot data so that we group all results in categories
         new_results = collections.defaultdict(dict)
+        complete_ids = []
+        error_data = []
 
         for key, (result, parser, hooks) in self.queue_adapter.aquire_complete().items():
             try:
@@ -115,17 +116,19 @@ class QueueNanny:
                     else:
                         error = "No error supplied"
 
-                    raise self.logger.info("Computation key did not complete successfully:\n\t{}\n"
-                                           "Because: {}".format(str(key), error))
-                # res = self.db_socket.del_page_by_data(tmp_data)
+                    self.logger.info("Computation key did not complete successfully:\n\t{}\n"
+                                     "Because: {}".format(str(key), error))
 
-                self.logger.info("update: {}".format(key))
-                new_results[parser][key] = (result, hooks)
+                    error_data.append((key, error))
+                else:
+                    self.logger.info("update: {}".format(key))
+                    new_results[parser][key] = (result, hooks)
+                    complete_ids.append(key)
             except Exception as e:
-                msg = "".join(traceback.format_tb(e.__traceback__))
-                msg += str(type(e).__name__) + ":" + str(e)
+                msg = "Internal FractalServer Error:\n" + traceback.format_exc()
                 self.errors[key] = msg
                 self.logger.info("update: ERROR\n{}".format(msg))
+                error_data.append((key, msg))
 
         # Run output parsers
         hooks = []
@@ -133,7 +136,10 @@ class QueueNanny:
             ret, h = procedures.get_procedure_output_parser(k)(self.storage_socket, v)
             hooks.extend(h)
 
+        # Handle hooks and complete jobs
         self.storage_socket.handle_hooks(hooks)
+        self.storage_socket.queue_mark_complete(complete_ids)
+        self.storage_socket.queue_mark_error(error_data)
 
         # Get new jobs
         open_slots = max(0, self.max_tasks - self.queue_adapter.task_count())
@@ -166,7 +172,6 @@ class QueueNanny:
                 # Add results to procedures, remove complete_ids
                 new_procedures.append(finished)
                 complete_ids.append(data["id"])
-
 
         self.storage_socket.add_procedures(new_procedures)
         self.storage_socket.del_services(complete_ids)
@@ -232,10 +237,13 @@ class QueueScheduler(APIHandler):
         queue_nanny = self.objects["queue_nanny"]
 
         # Format tasks
-        full_tasks, errors = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])(storage, self.json)
+        func = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])
+        full_tasks, complete_jobs, errors = func(storage, self.json)
 
         # Add tasks to Nanny
         ret = queue_nanny.submit_tasks(full_tasks)
+        ret["data"] = {"submitted": ret["data"], "completed": list(complete_jobs), "queue": ret["meta"]["duplicates"]}
+        ret["meta"]["duplicates"] = []
         ret["meta"]["errors"].extend(errors)
 
         self.write(ret)

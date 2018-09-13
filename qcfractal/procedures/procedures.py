@@ -47,8 +47,19 @@ def procedure_single_input_parser(storage, data):
     """
 
     runs, errors = procedures_util.unpack_single_run_meta(storage, data["meta"], data["data"])
+
+    # Remove duplicates
+    query = {k : data["meta"][k] for k in ["driver", "method", "basis", "options", "program"]}
+    query["molecule_id"] = [x["molecule"]["id"] for x in runs.values()]
+
+    search = storage.get_results(query, projection={"molecule_id": True})
+    completed = set(x["molecule_id"] for x in search["data"])
+
+    # Construct full tasks
     full_tasks = []
     for k, v in runs.items():
+        if v["molecule"]["id"] in completed:
+            continue
 
         keys = {"procedure_type": "single", "single_key": k}
 
@@ -67,7 +78,7 @@ def procedure_single_input_parser(storage, data):
 
         full_tasks.append(task)
 
-    return (full_tasks, errors)
+    return (full_tasks, completed, errors)
 
 
 def procedure_single_output_parser(storage, data):
@@ -77,26 +88,12 @@ def procedure_single_output_parser(storage, data):
     results = procedures_util.parse_single_runs(storage, rdata)
     ret = storage.add_results(list(results.values()))
 
-    hook_data = []
-    for k, (data, hook) in data.items():
-
-        # If no hooks skip it
-        if len(hook) == 0:
-            continue
-
-        # Loop over hooks
-        for h in hook:
-            # Loop over individual commands
-            for command in h["updates"]:
-                if command[-1] == "$task_id":
-                    command[-1] = results[k]["id"]
-
-        hook_data.append(hook)
+    hook_data = procedures_util.parse_hooks(data, results)
 
     return (ret, hook_data)
 
 
-def procedure_optimization_input_parser(storage, data):
+def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"):
     """
 
     json_data = {
@@ -167,6 +164,7 @@ def procedure_optimization_input_parser(storage, data):
     })
 
     full_tasks = []
+    duplicate_lookup = []
     for k, v in runs.items():
 
         # Coerce qc_template information
@@ -183,8 +181,13 @@ def procedure_optimization_input_parser(storage, data):
             "single_key": k,
         }
 
+        # Add to args document to carry through to storage
+        hash_index = procedures_util.hash_procedure_keys(keys)
+        packet["hash_index"] = hash_index
+        duplicate_lookup.append(hash_index)
+
         task = {
-            "hash_index": procedures_util.hash_procedure_keys(keys),
+            "hash_index": hash_index,
             "hash_keys": keys,
             "spec": {
                 "function": "qcengine.compute_procedure",
@@ -198,7 +201,29 @@ def procedure_optimization_input_parser(storage, data):
 
         full_tasks.append(task)
 
-    return (full_tasks, errors)
+    query = storage.get_procedures([{"hash_index": duplicate_lookup}], projection={"hash_index": True, "id": True})["data"]
+    if len(query):
+        found_hashes = set(x["hash_index"] for x in query)
+
+        # Filter out tasks
+        new_tasks = []
+        for task in full_tasks:
+            if task["hash_index"] in found_hashes:
+                continue
+            else:
+                new_tasks.append(task)
+
+        if duplicate_id == "hash_index":
+            duplicates = list(found_hashes)
+        elif duplicate_id == "id":
+            duplicates = [x["id"] for x in query]
+        else:
+            raise KeyError("Duplicate id '{}' not understood".format(duplicate_id))
+
+        return (new_tasks, duplicates, errors)
+
+    else:
+        return (full_tasks, [], errors)
 
 
 def procedure_optimization_output_parser(storage, data):
@@ -231,24 +256,11 @@ def procedure_optimization_output_parser(storage, data):
 
     ret = storage.add_procedures(list(new_procedures.values()))
 
-    hook_data = []
-    for k, (data, hook) in data.items():
-
-        # If no hooks skip it
-        if len(hook) == 0:
-            continue
-
-        # Loop over hooks
-        for h in hook:
-            # Loop over individual commands
-            for command in h["updates"]:
-                if command[-1] == "$task_id":
-                    command[-1] = new_procedures[k]["id"]
-
-        hook_data.append(hook)
+    hook_data = procedures_util.parse_hooks(data, new_procedures)
 
     return (ret, hook_data)
 
 
+# Add in all registered procedures
 add_new_procedure("single", procedure_single_input_parser, procedure_single_output_parser)
 add_new_procedure("optimization", procedure_optimization_input_parser, procedure_optimization_output_parser)

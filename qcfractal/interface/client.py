@@ -229,12 +229,15 @@ class FractalClient(object):
 
     ### Database section
 
-    def get_collections(self, db_list):
+    def get_collections(self, db_list, full_return=False):
 
         payload = {"meta": {}, "data": db_list}
         r = self._request("get", "collection", payload)
 
-        return r.json()["data"]
+        if full_return:
+            return r.json()
+        else:
+            return r.json()["data"]
 
     def add_collection(self, db, overwrite=False, full_return=False):
 
@@ -273,12 +276,12 @@ class FractalClient(object):
         else:
             return r.json()["data"]
 
-    def get_procedures(self, procedure_id, **kwargs):
+    def get_procedures(self, procedure_id, return_objects=True):
 
         payload = {"meta": {}, "data": [procedure_id]}
         r = self._request("get", "procedure", payload)
 
-        if kwargs.get("return_objects", True):
+        if return_objects:
             ret = []
             for packet in r.json()["data"]:
                 tmp = orm.build_orm(packet)
@@ -305,7 +308,7 @@ class FractalClient(object):
 
     ### Compute section
 
-    def add_compute(self, program, method, basis, driver, options, molecule_id, return_full=False, procedure="single"):
+    def add_compute(self, program, method, basis, driver, options, molecule_id, return_full=False):
 
         # Always a list
         if isinstance(molecule_id, str):
@@ -313,7 +316,7 @@ class FractalClient(object):
 
         payload = {
             "meta": {
-                "procedure": procedure,
+                "procedure": "single",
                 "driver": driver,
                 "program": program,
                 "method": method,
@@ -322,6 +325,28 @@ class FractalClient(object):
             },
             "data": molecule_id
         }
+
+        r = self._request("post", "task_scheduler", payload)
+
+        if return_full:
+            return r.json()
+        else:
+            return r.json()["data"]
+
+    def add_procedure(self, procedure, program, program_options, molecule_id, return_full=False):
+
+        # Always a list
+        if isinstance(molecule_id, str):
+            molecule_id = [molecule_id]
+
+        payload = {
+            "meta": {
+                "procedure": procedure,
+                "program": program,
+            },
+            "data": molecule_id
+        }
+        payload["meta"].update(program_options)
 
         r = self._request("post", "task_scheduler", payload)
 
