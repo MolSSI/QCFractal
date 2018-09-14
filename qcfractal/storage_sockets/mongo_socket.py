@@ -38,6 +38,9 @@ def _str_to_indices(ids):
 
 
 def _str_to_indices_with_errors(ids):
+    if isinstance(ids, str):
+        ids = [ids]
+
     good = []
     bad = []
     for x in ids:
@@ -125,16 +128,11 @@ class MongoSocket:
         except AttributeError:
             raise RuntimeError(
                 "Could not detect MongoDB version at URL {}. It may be a very old version or installed incorrectly. "
-                "Choosing to stop instead of assuming version is at least 3.2.".format(url)
-            )
+                "Choosing to stop instead of assuming version is at least 3.2.".format(url))
         except RuntimeError:
             # Trap low version
-            raise RuntimeError(
-                "Connected MongoDB at URL {} needs to be at least version 3.2, found version {}.".format(
-                    url,
-                    self.client.server_info()['version']
-                )
-            )
+            raise RuntimeError("Connected MongoDB at URL {} needs to be at least version 3.2, found version {}.".
+                               format(url, self.client.server_info()['version']))
 
         # Isolate objects to this single project DB
         self._project_name = project
@@ -258,66 +256,58 @@ class MongoSocket:
 
         return (self._tables[table].delete_many({index: {"$in": hashes}})).deleted_count
 
-    def _get_generic_by_id(self, ids, table, projection=None):
-
-        # TODO parse duplicates
-        meta = storage_utils.get_metadata()
-        _str_to_indices(ids)
-
-        data = list(self._tables[table].find({"_id": {"$in": ids}}, projection=projection))
-
-        for d in data:
-            d["id"] = str(d["_id"])
-            del d["_id"]
-
-        meta["n_found"] = len(data)
-        meta["success"] = True
-
-        return {"meta": meta, "data": data}
-
     def _get_generic(self, query, table, projection=None, allow_generic=False):
 
         # TODO parse duplicates
         meta = storage_utils.get_metadata()
 
-        keys = self._table_indices[table]
-        len_key = len(keys)
-
         data = []
-        for q in query:
-            if allow_generic and isinstance(q, dict):
-                for k, v in q.items():
-                    if isinstance(v, (list, tuple)):
-                        q[k] = {"$in": v}
-            elif (len(q) == len_key) and isinstance(q, (list, tuple)):
-                q = {k: v for k, v in zip(keys, q)}
-            else:
-                meta["errors"].append({"query": q, "error": "Malformed query"})
-                continue
 
-            d = self._tables[table].find_one(q, projection=projection)
-            if d is None:
-                meta["missing"].append(q)
-            else:
-                data.append(d)
+        # Assume we want to lookup via unique key tuple
+        if isinstance(query, (tuple, list)):
+            keys = self._table_indices[table]
+            len_key = len(keys)
+
+            for q in query:
+                if (len(q) == len_key) and isinstance(q, (list, tuple)):
+                    q = {k: v for k, v in zip(keys, q)}
+                else:
+                    meta["errors"].append({"query": q, "error": "Malformed query"})
+                    continue
+
+                d = self._tables[table].find_one(q, projection=projection)
+                if d is None:
+                    meta["missing"].append(q)
+                else:
+                    data.append(d)
+
+        elif isinstance(query, dict):
+
+            # Handle specific ID query
+            if "id" in query:
+                ids, bad_ids = _str_to_indices_with_errors(query["id"])
+                if bad_ids:
+                    ret["meta"]["errors"].append(("Bad Ids", bad_ids))
+
+                query["_id"] = ids
+                del query["id"]
+
+            for k, v in query.items():
+                if isinstance(v, (list, tuple)):
+                    query[k] = {"$in": v}
+
+            data = list(self._tables[table].find(query))
+        else:
+            meta["errors"] = "Malformed query"
 
         meta["n_found"] = len(data)
         if len(meta["errors"]) == 0:
             meta["success"] = True
 
+        # Convert ID
         for d in data:
-            d["id"] = str(d["_id"])
-            del d["_id"]
+            d["id"] = str(d.pop("_id"))
 
-        ret = {"meta": meta, "data": data}
-        return ret
-
-    def _find_many_generic(self, query, table, projection=None):
-        meta = storage_utils.get_metadata()
-
-        data = self._tables[table].find(query, projection=projection)
-        meta["success"] = True
-        meta["n_found"] = len(data)
         ret = {"meta": meta, "data": data}
         return ret
 
@@ -329,8 +319,8 @@ class MongoSocket:
 
         Parameters
         ----------
-        data : dict or list of dict
-            Structured instance of the molecule.
+        data : dict of molecule-like JSON objects
+            A {key: molecule} dictionary of molecules to input.
 
         Returns
         -------
@@ -716,12 +706,9 @@ class MongoSocket:
 
         return ret
 
-    def get_procedures(self, query, by_id=False, projection=None):
+    def get_procedures(self, query, projection=None):
 
-        if by_id:
-            return self._get_generic_by_id(query, "procedures", projection=projection)
-        else:
-            return self._get_generic(query, "procedures", allow_generic=True)
+        return self._get_generic(query, "procedures", allow_generic=True)
 
     def add_services(self, data):
 
@@ -730,12 +717,9 @@ class MongoSocket:
 
         return ret
 
-    def get_services(self, query, by_id=False, projection=None):
+    def get_services(self, query, projection=None):
 
-        if by_id:
-            return self._get_generic_by_id(query, "service_queue", projection=projection)
-        else:
-            return self._get_generic(query, "service_queue", projection=projection, allow_generic=True)
+        return self._get_generic(query, "service_queue", projection=projection, allow_generic=True)
 
     def update_services(self, updates):
 
@@ -764,6 +748,7 @@ class MongoSocket:
             x["created_on"] = dt
             x["modified_on"] = dt
 
+        # Find duplicates
         ret = self._add_generic(data, "task_queue", return_map=True)
 
         # Update hooks on duplicates
@@ -772,6 +757,10 @@ class MongoSocket:
             hook_updates = []
 
             for x in data:
+                # No hooks, skip
+                if len(x["hooks"]) == 0:
+                    continue
+
                 if x["hash_index"] in dup_inds:
                     upd = pymongo.UpdateOne({
                         "hash_index": x["hash_index"]
@@ -782,9 +771,11 @@ class MongoSocket:
                     }})
                     hook_updates.append(upd)
 
-            tmp = self._tables["task_queue"].bulk_write(hook_updates)
-            if tmp.modified_count != len(dup_inds):
-                self.logger.warning("QUEUE: Hook duplicate found does not match hook triggers")
+            # If no hook updates, continue
+            if hook_updates:
+                tmp = self._tables["task_queue"].bulk_write(hook_updates)
+                if tmp.modified_count != len(hook_updates):
+                    self.logger.warning("QUEUE: Hook duplicate found does not match hook triggers")
 
         # Since we did an add generic we get ((status, hashindex, tag), queue_id)
         # Move this to (queue_id, hash_index)
@@ -794,7 +785,7 @@ class MongoSocket:
         if len(ret["meta"]["duplicates"]):
             indices = [x[1] for x in ret["meta"]["duplicates"]]
 
-            results = self.get_queue([{"hash_index": indices}], projection={"id": True, "hash_index": True})
+            results = self.get_queue({"hash_index": indices}, projection={"id": True, "hash_index": True})
             ret["meta"]["duplicates"] = [(x["id"], x["hash_index"]) for x in results["data"]]
             ret["meta"]["error_description"] = False
 
@@ -810,13 +801,11 @@ class MongoSocket:
             },
             sort=[("created_on", -1)],
             limit=n,
-            projection={
-                "_id": True,
-                "spec": True,
-                "hash_index": True,
-                "parser": True,
-                "hooks": True
-            }))
+            projection={"_id": True,
+                        "spec": True,
+                        "hash_index": True,
+                        "parser": True,
+                        "hooks": True}))
 
         query = {"_id": {"$in": [x["_id"] for x in found]}}
 
@@ -835,12 +824,9 @@ class MongoSocket:
 
         return found
 
-    def get_queue(self, query, by_id=False, projection=None):
+    def get_queue(self, query, projection=None):
 
-        if by_id:
-            return self._get_generic_by_id(query, "task_queue", projection=projection)
-        else:
-            return self._get_generic(query, "task_queue", allow_generic=True, projection=projection)
+        return self._get_generic(query, "task_queue", allow_generic=True, projection=projection)
 
     def queue_get_by_id(self, ids, n=100):
 
@@ -874,7 +860,6 @@ class MongoSocket:
 
         ret = self._tables["task_queue"].bulk_write(bulk_commands, ordered=False)
         return ret
-
 
     def handle_hooks(self, hooks):
 
@@ -991,7 +976,6 @@ class MongoSocket:
             If the operation was successful or not.
         """
         return self._tables["users"].delete_one({"username": username}).deleted_count == 1
-
 
 ### Complex parsers
 
