@@ -106,7 +106,7 @@ class TorsionDriveService:
         if (self.data["remaining_jobs"] is not False) and (self.data["remaining_jobs"] == 0):
 
             # Query the jobs
-            job_query = self.storage_socket.get_procedures(list(self.data["complete_jobs"].values()), by_id=True)
+            job_query = self.storage_socket.get_procedures({"id": list(self.data["complete_jobs"].values())})
 
             # Figure out the structure
             job_results = {k: [None] * v for k, v in self.data["update_structure"].items()}

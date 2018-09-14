@@ -203,7 +203,7 @@ def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"
 
         full_tasks.append(task)
 
-    query = storage.get_procedures([{"hash_index": duplicate_lookup}], projection={"hash_index": True, "id": True})["data"]
+    query = storage.get_procedures({"hash_index": duplicate_lookup}, projection={"hash_index": True, "id": True})["data"]
     if len(query):
         found_hashes = set(x["hash_index"] for x in query)
 
