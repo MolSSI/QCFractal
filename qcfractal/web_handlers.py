@@ -201,7 +201,7 @@ class ProcedureHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        ret = storage.get_procedures(self.json["data"], by_id=self.json.get("by_idx", False))
+        ret = storage.get_procedures(self.json["data"])
         self.logger.info("GET: Procedures - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)

@@ -22,7 +22,7 @@ def translate_molecule_index(index):
 
 
 def translate_generic_index(index):
-    if index in ["id", "ids"]:
+    if index in ["_id", "id", "ids"]:
         return "_id"
     elif index in ["key"]:
         return "key"

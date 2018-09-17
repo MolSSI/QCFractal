@@ -62,6 +62,8 @@ def procedure_single_input_parser(storage, data):
             continue
 
         keys = {"procedure_type": "single", "single_key": k}
+        hash_index = procedures_util.hash_procedure_keys(keys)
+        v["hash_index"] = hash_index
 
         task = {
             "hash_index": procedures_util.hash_procedure_keys(keys),
@@ -201,7 +203,7 @@ def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"
 
         full_tasks.append(task)
 
-    query = storage.get_procedures([{"hash_index": duplicate_lookup}], projection={"hash_index": True, "id": True})["data"]
+    query = storage.get_procedures({"hash_index": duplicate_lookup}, projection={"hash_index": True, "id": True})["data"]
     if len(query):
         found_hashes = set(x["hash_index"] for x in query)
 

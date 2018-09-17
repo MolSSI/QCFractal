@@ -405,7 +405,7 @@ def test_queue_duplicate(storage_socket):
     assert len(r["data"]) == 0
 
     # Pull out the data and check the hooks
-    r = storage_socket.get_queue([uid], by_id=True)
+    r = storage_socket.get_queue({"id": uid})
     hooks = r["data"][0]["hooks"]
     assert len(hooks) == 2
     assert hooks[0][0] == "service"

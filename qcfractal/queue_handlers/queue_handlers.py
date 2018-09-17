@@ -156,7 +156,7 @@ class QueueNanny:
 
         new_procedures = []
         complete_ids = []
-        for data in self.storage_socket.get_services(list(self.services), by_id=True)["data"]:
+        for data in self.storage_socket.get_services({"id": list(self.services)})["data"]:
             obj = services.build(data["service"], self.storage_socket, self, data)
 
             finished = obj.iterate()

@@ -52,7 +52,7 @@ def test_queue_error(fractal_compute_server):
     assert len(nanny.list_current_tasks()) == 0
 
     db = fractal_compute_server.objects["storage_socket"]
-    ret = db.get_queue([{"status": "ERROR"}])["data"]
+    ret = db.get_queue({"status": "ERROR"})["data"]
 
     assert len(ret) == 1
     assert "connectivity graph" in ret[0]["error"]
