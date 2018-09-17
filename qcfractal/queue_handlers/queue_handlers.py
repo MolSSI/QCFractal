@@ -88,7 +88,7 @@ class QueueNanny:
             new_tasks.append(task.get_json())
 
         tmp = self.storage_socket.add_services(new_tasks)
-        task_ids = [x[0] for x in tmp["data"]]
+        task_ids = [x["id"] for x in new_tasks]
 
         self.services |= set(task_ids)
 
@@ -289,7 +289,6 @@ class ServiceScheduler(APIHandler):
         service_hashes = [x.data["hash_index"] for x in submitted_services]
         found_hashes = storage.get_procedures({"hash_index": service_hashes}, projection={"hash_index": True})
         found_hashes = set(x["hash_index"] for x in found_hashes["data"])
-        print("complete jobs", found_hashes)
 
         new_services = []
         complete_jobs = []

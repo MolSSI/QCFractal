@@ -34,8 +34,8 @@ _table_indices = {
     "result": ("molecule_id", "program", "driver", "method", "basis", "options"),
     "options": ("program", "name"),
 
-    "task_queue": ("status", "hash_index", "tag"),
-    "service_queue": ("status", "hash_index", "tag"),
+    "task_queue": ("status", "tag", "hash_index"),
+    "service_queue": ("status", "tag", "hash_index"),
 }  # yapf: disable
 
 
