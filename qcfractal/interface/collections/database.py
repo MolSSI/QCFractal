@@ -1,4 +1,5 @@
-"""Mongo QCDB Database object and helpers
+"""
+QCPortal Database ODM
 """
 import itertools as it
 
