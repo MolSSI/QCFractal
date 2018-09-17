@@ -101,7 +101,7 @@ def test_procedure_optimization(fractal_compute_server):
 
     # Get the first submitted job, the second index will be a hash_index
     submitted = r.json()["data"]["submitted"]
-    compute_key = submitted[0][1]
+    compute_key = submitted[0]
 
     # Manually handle the compute
     nanny = fractal_compute_server.objects["queue_nanny"]

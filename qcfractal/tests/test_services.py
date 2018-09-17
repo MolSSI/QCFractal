@@ -42,7 +42,7 @@ def test_service_torsiondrive(dask_server_fixture):
     }
 
     ret = client.add_service("torsiondrive", [mol_ret["hooh"]], torsiondrive_options)
-    compute_key = ret[0]
+    compute_key = ret["submitted"][0]
 
     # Manually handle the compute
     nanny = dask_server_fixture.objects["queue_nanny"]

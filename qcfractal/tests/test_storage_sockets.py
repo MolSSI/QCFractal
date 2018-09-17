@@ -210,7 +210,8 @@ def test_results_add(storage_socket):
         "options": "default",
         "program": "P1",
         "driver": "energy",
-        "other_data": 5
+        "other_data": 5,
+        "hash_index": 0,
     }
 
     page2 = {
@@ -220,7 +221,8 @@ def test_results_add(storage_socket):
         "options": "default",
         "program": "P1",
         "driver": "energy",
-        "other_data": 10
+        "other_data": 10,
+        "hash_index": 1,
     }
 
     ret = storage_socket.add_results([page1, page2])
@@ -251,7 +253,9 @@ def storage_results(storage_socket):
         "options": "default",
         "program": "P1",
         "driver": "energy",
-        "return_result": 5
+        "return_result": 5,
+        "hash_index": 0,
+
     }
 
     page2 = {
@@ -261,7 +265,8 @@ def storage_results(storage_socket):
         "options": "default",
         "program": "P1",
         "driver": "energy",
-        "return_result": 10
+        "return_result": 10,
+        "hash_index": 1,
     }
 
     page3 = {
@@ -271,7 +276,8 @@ def storage_results(storage_socket):
         "options": "default",
         "program": "P2",
         "driver": "gradient",
-        "return_result": 15
+        "return_result": 15,
+        "hash_index": 2,
     }
 
     page4 = {
@@ -281,7 +287,8 @@ def storage_results(storage_socket):
         "options": "default",
         "program": "P2",
         "driver": "gradient",
-        "return_result": 15
+        "return_result": 15,
+        "hash_index": 3,
     }
 
     page5 = {
@@ -291,10 +298,12 @@ def storage_results(storage_socket):
         "options": "default",
         "program": "P1",
         "driver": "gradient",
-        "return_result": 20
+        "return_result": 20,
+        "hash_index": 4,
     }
 
     results_insert = storage_socket.add_results([page1, page2, page3, page4, page5])
+    assert results_insert["meta"]["n_inserted"] == 5
 
     yield storage_socket
 
@@ -350,7 +359,7 @@ def test_results_query_driver(storage_results):
 # Builds tests for the queue
 
 
-def test_queue_roundtrip(storage_socket):
+def test_storage_queue_roundtrip(storage_socket):
 
     idx = "unique_hash_idx123"
     task1 = {
@@ -382,7 +391,7 @@ def test_queue_roundtrip(storage_socket):
     assert len(r) == 0
 
 
-def test_queue_duplicate(storage_socket):
+def test_storage_queue_duplicate(storage_socket):
 
     idx = "unique_hash_idx123"
     task1 = {
@@ -392,7 +401,7 @@ def test_queue_duplicate(storage_socket):
         "tag": None,
     }
     r = storage_socket.queue_submit([task1])
-    uid = r["data"][0][0]
+    hash_index = r["data"][0]
     assert len(r["data"]) == 1
 
     # Put the first job in a waiting state
@@ -405,7 +414,7 @@ def test_queue_duplicate(storage_socket):
     assert len(r["data"]) == 0
 
     # Pull out the data and check the hooks
-    r = storage_socket.get_queue({"id": uid})
+    r = storage_socket.get_queue({"hash_index": hash_index})
     hooks = r["data"][0]["hooks"]
     assert len(hooks) == 2
     assert hooks[0][0] == "service"
@@ -413,7 +422,7 @@ def test_queue_duplicate(storage_socket):
     assert {"123", "456"} == {hooks[0][1], hooks[1][1]}
 
     # Cleanup
-    r = storage_socket.queue_mark_complete([uid])
+    r = storage_socket.queue_mark_complete([hash_index], index="hash_index")
     assert r == 1
 
 
