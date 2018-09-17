@@ -80,7 +80,7 @@ class TorsionDriveService:
         meta["success"] = False
         meta["procedure"] = "torsiondrive"
         meta["program"] = "torsiondrive"
-        meta["hash_index"] = procedures.procedures_util.hash_procedure_keys(keys),
+        meta["hash_index"] = procedures.procedures_util.hash_procedure_keys(keys)
         meta["hash_keys"] = keys
         meta["tag"] = None
 
