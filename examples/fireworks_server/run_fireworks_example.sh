@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# Exit on error
+set -e
+
 # Check if MongoDB is running, filter grep itself
 STOPMONGOD=false
 if [[ $(ps -ax | grep mongo | grep -v grep) == "" ]]
