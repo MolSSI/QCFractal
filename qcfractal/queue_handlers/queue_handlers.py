@@ -87,15 +87,15 @@ class QueueNanny:
         for task in tasks:
             new_tasks.append(task.get_json())
 
-        task_ids = self.storage_socket.add_services(new_tasks)["data"]
-        task_ids = [x[1] for x in task_ids]
+        tmp = self.storage_socket.add_services(new_tasks)
+        task_ids = [x[0] for x in tmp["data"]]
 
         self.services |= set(task_ids)
 
         self.logger.info("QUEUE: Added {} services.\n".format(len(new_tasks)))
         self.update()
 
-        return task_ids
+        return tmp
 
     def update(self):
         """Examines the queue for completed jobs and adds successful completions to the database
@@ -274,25 +274,44 @@ class ServiceScheduler(APIHandler):
         storage = self.objects["storage_socket"]
         queue_nanny = self.objects["queue_nanny"]
 
-        # Build return metadata
-        meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
-
+        # Figure out initial molecules
+        errors = []
         ordered_mol_dict = {x: mol for x, mol in enumerate(self.json["data"])}
         mol_query = storage.mixed_molecule_get(ordered_mol_dict)
 
-        new_services = []
+        # Build out services
+        submitted_services = []
         for idx, mol in mol_query["data"].items():
             tmp = services.initializer(self.json["meta"]["service"], storage, queue_nanny, self.json["meta"], mol)
-            new_services.append(tmp)
+            submitted_services.append(tmp)
+
+        # Figure out complete services
+        service_hashes = [x.data["hash_index"] for x in submitted_services]
+        found_hashes = storage.get_procedures({"hash_index": service_hashes}, projection={"hash_index": True})
+        found_hashes = set(x["hash_index"] for x in found_hashes["data"])
+        print("complete jobs", found_hashes)
+
+        new_services = []
+        complete_jobs = []
+        for x in submitted_services:
+            hash_index = x.data["hash_index"]
+
+            if hash_index in found_hashes:
+                complete_jobs.append(hash_index)
+            else:
+                new_services.append(x)
 
         # Add tasks to Nanny
-        submitted = queue_nanny.submit_services(new_services)
+        ret = queue_nanny.submit_services(new_services)
+        ret["data"] = {"submitted": ret["data"], "completed": list(complete_jobs), "queue": ret["meta"]["duplicates"]}
+        ret["meta"]["duplicates"] = []
+        ret["meta"]["errors"].extend(errors)
 
         # Return anything of interest
-        meta["success"] = True
-        meta["n_inserted"] = len(submitted)
-        meta["errors"] = []  # TODO
-        ret = {"meta": meta, "data": submitted}
+        # meta["success"] = True
+        # meta["n_inserted"] = len(submitted)
+        # meta["errors"] = []  # TODO
+        # ret = {"meta": meta, "data": submitted}
 
         self.write(ret)
 

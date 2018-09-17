@@ -171,7 +171,7 @@ class MongoSocket:
             self._tables[tbl].create_index(idx, unique=self._table_unique_indices[tbl])
 
         # Special queue index, hash_index should be unique
-        for table in ["result", "procedure", "task_queue", "service_queue"]:
+        for table in ["results", "procedures", "task_queue", "service_queue"]:
             self._tables[table].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
 
         # Return the success array
@@ -287,7 +287,7 @@ class MongoSocket:
             if "id" in query:
                 ids, bad_ids = _str_to_indices_with_errors(query["id"])
                 if bad_ids:
-                    ret["meta"]["errors"].append(("Bad Ids", bad_ids))
+                    meta["errors"].append(("Bad Ids", bad_ids))
 
                 query["_id"] = ids
                 del query["id"]
@@ -714,6 +714,15 @@ class MongoSocket:
 
         ret = self._add_generic(data, "service_queue", return_map=True)
         ret["meta"]["validation_errors"] = []  # TODO
+
+        # Since we did an add generic we get ((status, hashindex, tag), queue_id)
+        # Move this to (queue_id, hash_index)
+        ret["data"] = [(x[1], x[0][1]) for x in ret["data"]]
+
+        # Means we have duplicates in the queue, massage results
+        if len(ret["meta"]["duplicates"]):
+            ret["meta"]["duplicates"] = [x[1] for x in ret["meta"]["duplicates"]]
+            ret["meta"]["error_description"] = False
 
         return ret
 
