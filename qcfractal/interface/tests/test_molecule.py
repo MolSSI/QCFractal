@@ -76,8 +76,8 @@ def test_water_minima_fragment():
 
     mol = portal.data.get_molecule("water_dimer_minima.psimol")
 
-    frag_0 = mol.get_fragment(0)
-    frag_1 = mol.get_fragment(1)
+    frag_0 = mol.get_fragment(0, orient=True)
+    frag_1 = mol.get_fragment(1, orient=True)
     assert frag_0.get_hash() == "4cd68e5dde15c19fc2f5101d5fc5f19ac8afbc9c"
     assert frag_1.get_hash() == "da635a2e012a9ea876ea54422256bd93124e4271"
 
@@ -110,34 +110,32 @@ def test_water_orient():
     # These are identical molecules, should find the correct results
 
     mol = portal.data.get_molecule("water_dimer_stretch.psimol")
-    frag_0 = mol.get_fragment(0)
-    frag_1 = mol.get_fragment(1)
+    frag_0 = mol.get_fragment(0, orient=True)
+    frag_1 = mol.get_fragment(1, orient=True)
 
     # Make sure the fragments match
     assert frag_0.get_hash() == frag_1.get_hash()
 
     # Make sure the complexes match
-    frag_0_1 = mol.get_fragment(0, 1)
-    frag_1_0 = mol.get_fragment(1, 0)
+    frag_0_1 = mol.get_fragment(0, 1, orient=True)
+    frag_1_0 = mol.get_fragment(1, 0, orient=True)
 
     assert frag_0_1.get_hash() == frag_1_0.get_hash()
 
     mol = portal.data.get_molecule("water_dimer_stretch2.psimol")
-    frag_0 = mol.get_fragment(0)
-    frag_1 = mol.get_fragment(1)
-
-    assert frag_0.multiplicity == 1
+    frag_0 = mol.get_fragment(0, orient=True)
+    frag_1 = mol.get_fragment(1, orient=True)
 
     # Make sure the fragments match
+    assert frag_0.multiplicity == 1
     assert frag_0.get_hash() == frag_1.get_hash()
 
     # Make sure the complexes match
-    frag_0_1 = mol.get_fragment(0, 1)
-    frag_1_0 = mol.get_fragment(1, 0)
-
-    assert frag_0_1.multiplicity == 1
+    frag_0_1 = mol.get_fragment(0, 1, orient=True)
+    frag_1_0 = mol.get_fragment(1, 0, orient=True)
 
     # Ghost fragments should prevent overlap
+    assert frag_0_1.multiplicity == 1
     assert frag_0_1.get_hash() != frag_1_0.get_hash()
 
 

@@ -433,7 +433,7 @@ class Molecule:
         """
 
         if isinstance(other, dict):
-            other = Molecule.from_json(other)
+            other = Molecule.from_json(other, orient=False)
         elif isinstance(other, Molecule):
             pass
         else:
@@ -441,6 +441,7 @@ class Molecule:
 
         if bench is None:
             bench = self
+
 
         match = True
         match &= bench.symbols == other.symbols
@@ -554,7 +555,7 @@ class Molecule:
             if sum(phase_check) == 3:
                 break
 
-    def get_fragment(self, real, ghost=None, orient=True):
+    def get_fragment(self, real, ghost=None, orient=False):
         """
         A list of real and ghost fragments:
         """
@@ -671,7 +672,7 @@ class Molecule:
         return text
 
     @classmethod
-    def from_json(cls, data, orient=True):
+    def from_json(cls, data, orient=False):
         return cls(data, dtype="json", orient=orient)
 
     def to_json(self):

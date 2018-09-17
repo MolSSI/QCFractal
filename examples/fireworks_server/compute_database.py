@@ -2,14 +2,15 @@ import qcfractal.interface as portal
 import json
 
 # Build a interface to the server 
-p = portal.FractalClient("localhost:7777")
+p = portal.FractalClient("localhost:7777", verify=False)
 
-# Add "default" options
+# Add a default options set
 option = portal.data.get_options("psi_default")
 opt_ret = p.add_options([option])
 
 # Pull data from the server
-db = portal.collections.Database("Water", p)
+db = portal.collections.Database.from_server(p, "Water")
+print(db.data)
 
 # Print the current data
 # Should be blank, except for an index

@@ -66,6 +66,10 @@ class Collection(abc.ABC):
         Collection
             A ODM of the data.
         """
+
+        if not isinstance(client, FractalClient):
+            raise TypeError("Expected a FractalClient as first arguement, found {}.".format(type(self.client)))
+
         class_name = cls.__name__.lower()
         tmp_data = client.get_collections([(class_name, name)])
         if len(tmp_data) == 0:

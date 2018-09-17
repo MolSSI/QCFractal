@@ -41,10 +41,10 @@ def water_db():
 
     # Build the water dimer.
     dimer = portal.data.get_molecule("water_dimer_minima.psimol")
-    frag_0 = dimer.get_fragment(0)
-    frag_1 = dimer.get_fragment(1)
-    frag_0_1 = dimer.get_fragment(0, 1)
-    frag_1_0 = dimer.get_fragment(1, 0)
+    frag_0 = dimer.get_fragment(0, orient=True)
+    frag_1 = dimer.get_fragment(1, orient=True)
+    frag_0_1 = dimer.get_fragment(0, 1, orient=True)
+    frag_1_0 = dimer.get_fragment(1, 0, orient=True)
 
     # Add single stoich rxn via list
     db.add_rxn(
@@ -94,10 +94,10 @@ def nbody_db():
     db = portal.collections.Database("N-Body Data")
 
     dimer = portal.data.get_molecule("water_dimer_minima.psimol")
-    frag_0 = dimer.get_fragment(0)
-    frag_1 = dimer.get_fragment(1)
-    frag_0_1 = dimer.get_fragment(0, 1)
-    frag_1_0 = dimer.get_fragment(1, 0)
+    frag_0 = dimer.get_fragment(0, orient=True)
+    frag_1 = dimer.get_fragment(1, orient=True)
+    frag_0_1 = dimer.get_fragment(0, 1, orient=True)
+    frag_1_0 = dimer.get_fragment(1, 0, orient=True)
 
     db.add_rxn(
         "Water Dimer, bench", {

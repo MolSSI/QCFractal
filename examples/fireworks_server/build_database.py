@@ -17,12 +17,8 @@ db.add_ie_rxn("Water Dimer", water_dimer)
 db.add_ie_rxn("Water Dimer Stretch", water_dimer_stretch)
 db.add_ie_rxn("Helium Dimer", helium_dimer)
 
-#print(helium_dimer)
-#import json
-#print(json.dumps(db.data["reactions"][2], indent=2))
-
 # Build a interface to the server 
-p = portal.FractalClient("localhost:7777")
+p = portal.FractalClient("localhost:7777", verify=False)
 
 # Add the database to the server
 db.save(p)
