@@ -95,7 +95,7 @@ before_script:
 
 script:
   - py.test -v --runslow --cov=qcfractal qcfractal/
-  - py.test -v --runexamples --cov=qcfractal examples/
+  - py.test -v --runexamples examples/
 
 notifications:
   email: false
