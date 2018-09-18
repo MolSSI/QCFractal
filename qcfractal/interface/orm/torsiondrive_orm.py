@@ -14,6 +14,7 @@ class TorsionDriveORM:
     __json_mapper = {
         "_id": "id",
         "_success": "success",
+        "_hash_index": "hash_index",
 
         # Options
         "_optimization_history": "optimization_history",
