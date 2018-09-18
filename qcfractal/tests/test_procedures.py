@@ -117,3 +117,12 @@ def test_procedure_optimization(fractal_compute_server):
         assert isinstance(str(results[0]), str)  # Check that repr runs
         assert pytest.approx(-1.117530188962681, 1e-5) == results[0].final_energy()
 
+        # Check pulls
+        traj = results[0].get_trajectory(client, projection={"properties": True})
+        energies = results[0].energies()
+        assert len(traj) == len(energies)
+
+        # Check individual elements
+        for ind in range(len(results[0]._trajectory)):
+            raw_energy = traj[ind]["properties"]["return_energy"]
+            assert pytest.approx(raw_energy, 1.e-5) == energies[ind]

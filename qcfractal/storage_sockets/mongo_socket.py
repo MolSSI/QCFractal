@@ -628,10 +628,13 @@ class MongoSocket:
         ret = {"meta": storage_utils.get_metadata(), "data": []}
 
         # We are querying via id
-        if "_id" in query:
+        if ("_id" in query) or ("id" in query):
             if len(query) > 1:
                 ret["error_description"] = "ID index was provided, cannot use other indices"
                 return ret
+
+            if "id" in query:
+                query["_id"] = query["id"]
 
             if not isinstance(query, (list, tuple)):
                 parsed_query["_id"] = {"$in": query["_id"]}

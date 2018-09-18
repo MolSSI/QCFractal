@@ -110,6 +110,16 @@ class OptimizationORM:
 
         return ret
 
+    def energies(self):
+        """A list of energies along the trajectory path.
+
+        Returns
+        -------
+        list of float
+            The energy of each point in [Eh]
+        """
+        return self._energies[:]
+
     def final_energy(self):
         """The final energy of the geometry optimization.
 
@@ -119,3 +129,22 @@ class OptimizationORM:
             The optimization molecular energy.
         """
         return self._energies[-1]
+
+    def get_trajectory(self, client, projection=None):
+        """Returns the raw documents for each gradient evaluation in the trajectory.
+
+        Parameters
+        ----------
+        client : qcportal.FractalClient
+            A active client connected to a server.
+        projection : None, optional
+            A dictionary of the project to apply to the document
+
+        Returns
+        -------
+        list of dict
+            A list of results documents
+        """
+        return client.get_results(id=self._trajectory, projection=projection)
+
+
