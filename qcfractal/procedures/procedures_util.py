@@ -162,6 +162,8 @@ def parse_hooks(data, results):
                 # Custom commands
                 if command[-1] == "$task_id":
                     command[-1] = results[k]["id"]
+                elif command[-1] == "$hash_index":
+                    command[-1] = results[k]["hash_index"]
                 # else:
                 #     raise KeyError("Hook command `{}` not understood.".format(command))
 

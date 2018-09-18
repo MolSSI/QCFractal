@@ -233,15 +233,17 @@ class FractalServer(object):
 
         self.logger.info("DQM Server successfully started. Starting IOLoop.\n")
 
-        # Add canonical queue callback
-        nanny = tornado.ioloop.PeriodicCallback(self.objects["queue_nanny"].update, 2000)
-        nanny.start()
-        self.periodic["queue_nanny_update"] = nanny
+        # If we have a queue socket start up the nanny
+        if "queue_socket" in self.objects:
+            # Add canonical queue callback
+            nanny = tornado.ioloop.PeriodicCallback(self.objects["queue_nanny"].update, 2000)
+            nanny.start()
+            self.periodic["queue_nanny_update"] = nanny
 
-        # Add services callback
-        nanny_services = tornado.ioloop.PeriodicCallback(self.objects["queue_nanny"].update_services, 2000)
-        nanny_services.start()
-        self.periodic["queue_nanny_services"] = nanny_services
+            # Add services callback
+            nanny_services = tornado.ioloop.PeriodicCallback(self.objects["queue_nanny"].update_services, 2000)
+            nanny_services.start()
+            self.periodic["queue_nanny_services"] = nanny_services
 
         # Soft quit with a keyboard interupt
         try:

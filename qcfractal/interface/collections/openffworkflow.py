@@ -68,11 +68,15 @@ class OpenFFWorkflow(Collection):
 
     def add_fragment(self, fragment_id, data, provenance={}):
 
-        if fragment_id in self.data["fragments"]:
-            raise KeyError("Fragment ID {} already used.".format(fragment_id))
+        if fragment_id not in self.data["fragments"]:
+            self.data["fragments"][fragment_id] = {}
 
-        frag_data = {}
+        frag_data = self.data["fragments"][fragment_id]
         for name, packet in data.items():
+            if name in frag_data:
+                print("Already found label {} for fragment_ID {}, skipping.".format(name, fragment_id))
+                continue
+
             torsion_meta = copy.deepcopy(
                 {k: self.data[k]
                  for k in ("torsiondrive_meta", "optimization_meta", "qc_meta")})
@@ -106,7 +110,11 @@ class OpenFFWorkflow(Collection):
         for frag, reqs in self.data["fragments"].items():
             ret[frag] = {}
             for label, hash_index in reqs.items():
-                ret[frag][label] = {json.dumps(k):v for k, v in data[hash_index].final_energies().items()}
+                try:
+                    ret[frag][label] = {json.dumps(k):v for k, v in data[hash_index].final_energies().items()}
+                except KeyError:
+                    ret[frag][label] = None
+
 
         return ret
 
