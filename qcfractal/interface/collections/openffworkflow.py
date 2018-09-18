@@ -81,4 +81,32 @@ class OpenFFWorkflow(Collection):
                 torsion_meta["torsiondrive_meta"][k] = packet[k]
 
             ret = self.client.add_service("torsiondrive", [packet["initial_molecule"]], torsion_meta)
-            print(ret)
+
+            hash_lists = []
+            [hash_lists.extend(x) for x in ret.values()]
+
+            if len(hash_lists) != 1:
+                raise KeyError("Something went very wrong.")
+
+            hash_index = hash_lists[0]
+            frag_data[name] = hash_index
+
+        self.data["fragments"][fragment_id] = frag_data
+
+    def get_data(self):
+
+        lookup = []
+        for k, v in self.data["fragments"].items():
+            lookup.extend(list(v.values()))
+
+        data = self.client.get_procedures({"hash_index": lookup})
+        data = {x._hash_index: x for x in data}
+
+        ret = {}
+        for frag, reqs in self.data["fragments"].items():
+            ret[frag] = {}
+            for label, hash_index in reqs.items():
+                ret[frag][label] = {json.dumps(k):v for k, v in data[hash_index].final_energies().items()}
+
+        return ret
+

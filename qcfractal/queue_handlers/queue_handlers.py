@@ -92,7 +92,7 @@ class QueueNanny:
 
         self.services |= set(task_ids)
 
-        self.logger.info("QUEUE: Added {} services.\n".format(len(new_tasks)))
+        self.logger.info("QUEUE: Added {} services.\n".format(tmp["meta"]["n_inserted"]))
         self.update()
 
         return tmp
