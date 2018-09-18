@@ -2,7 +2,7 @@
 Tests for the interface utility functions.
 """
 
-from ... import interface as portal
+from . import portal
 
 
 def test_replace_dict_keys():
