@@ -61,12 +61,11 @@ def procedure_single_input_parser(storage, data):
         if v["molecule"]["id"] in completed:
             continue
 
-        keys = {"procedure_type": "single", "single_key": k}
-        hash_index = procedures_util.hash_procedure_keys(keys)
+        keys, hash_index = procedures_util.single_run_hash(v)
         v["hash_index"] = hash_index
 
         task = {
-            "hash_index": procedures_util.hash_procedure_keys(keys),
+            "hash_index": hash_index,
             "hash_keys": keys,
             "spec": {
                 "function": "qcengine.compute",

@@ -125,7 +125,17 @@ def parse_single_runs(storage, results):
 
         del v["qcfractal_tags"]
 
+        if "hash_index" not in v:
+            v["hash_index"] = single_run_hash(v)
+
     return results
+
+def single_run_hash(data, program=None):
+
+    single_keys = interface.schema.format_result_indices(data, program=program)
+    keys = {"procedure_type": "single", "single_key": single_keys}
+    hash_index =hash_procedure_keys(keys)
+    return (keys, hash_index)
 
 
 def hash_procedure_keys(keys):

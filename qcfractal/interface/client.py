@@ -261,7 +261,7 @@ class FractalClient(object):
     def get_results(self, **kwargs):
 
         query = {}
-        for key in ["program", "molecule_id", "driver", "method", "basis", "options"]:
+        for key in ["program", "molecule_id", "driver", "method", "basis", "options", "hash_index", "id"]:
             if key in kwargs:
                 query[key] = kwargs[key]
 
