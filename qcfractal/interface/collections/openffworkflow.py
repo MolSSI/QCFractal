@@ -55,10 +55,10 @@ class OpenFFWorkflow(Collection):
         pass
 
     def get_options(self, key):
-        if key not in self._option_sets:
-            raise KeyError("Key `{}` not understood, key must be in {}.".format(self._option_sets))
+        if key not in self.__required_fields:
+            raise KeyError("Key `{}` not understood.".format(key))
 
-        return copy.deepcopy(self._option_sets[key])
+        return copy.deepcopy(self.data[key])
 
     def list_fragments(self):
         return copy.deepcopy(list(self.data["fragments"]))
