@@ -61,7 +61,8 @@ def procedure_single_input_parser(storage, data):
         if v["molecule"]["id"] in completed:
             continue
 
-        keys, hash_index = procedures_util.single_run_hash(v)
+        query["molecule_id"] = v["molecule"]["id"]
+        keys, hash_index = procedures_util.single_run_hash(query)
         v["hash_index"] = hash_index
 
         task = {
@@ -85,13 +86,31 @@ def procedure_single_input_parser(storage, data):
 def procedure_single_output_parser(storage, data):
 
     # Add new runs to database
-    rdata = {k: v[0] for k, v in data.items()}
+    # Parse out hooks and data to same key/value
+    rdata = {}
+    rhooks = {}
+    for data, hooks in data:
+        key = data["queue_id"]
+        rdata[key] = data
+        if len(hooks):
+            rhooks[key] = hooks
+
+    # Add results to database
     results = procedures_util.parse_single_runs(storage, rdata)
     ret = storage.add_results(list(results.values()))
 
-    hook_data = procedures_util.parse_hooks(data, results)
+    # Sort out hook data
+    hook_data = procedures_util.parse_hooks(results, rhooks)
 
-    return (ret, hook_data)
+    # Create a list of (queue_id, located) to update the queue with
+    completed = [(k, {"table": "results", "index": "id", "data": v["id"]}) for k, v in results.items()]
+
+    errors = []
+    if len(ret["meta"]["errors"]):
+        # errors = [(k, "Duplicate results found")]
+        raise ValueError("TODO: Cannot yet handle queue result duplicates.")
+
+    return (completed, errors, hook_data)
 
 
 def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"):

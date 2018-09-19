@@ -171,7 +171,7 @@ class MongoSocket:
             self._tables[table].create_index(idx, unique=self._table_unique_indices[table])
 
         # Special queue index, hash_index should be unique
-        for table in ["results", "procedures", "task_queue", "service_queue"]:
+        for table in ["task_queue", "service_queue"]:
             self._tables[table].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
 
         # Return the success array
@@ -838,25 +838,32 @@ class MongoSocket:
 
         return list(self._tables["task_queue"].find({"_id": ids}, limit=n))
 
-    def queue_mark_complete(self, ids, index="id"):
-        if index == "id":
-            query = {"_id": {"$in": [ObjectId(x) for x in ids]}}
-        elif index == "hash_index":
-            query = {"hash_index": {"$in": ids}}
-        else:
-            raise KeyError("Index of name '{}' not understood.".format(index))
+    def queue_mark_complete(self, updates):
 
-        rm = self._tables["task_queue"].delete_many(query)
-        if rm.deleted_count != len(ids):
-            self.logger.warning("QUEUE: Number of complete projects does not match the number of removed projects.")
+        bulk_commands = []
 
-        # We need to log these for history
+        now = datetime.datetime.utcnow()
+        for queue_id, result_location in updates:
+            update = {
+                "$set": {
+                    "status": "COMPLETE",
+                    "modified_on": now,
+                    "result_location": result_location
+                }
+            }
+            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(queue_id)}, update))
+
+        if len(bulk_commands) == 0:
+            return
+
+        ret = self._tables["task_queue"].bulk_write(bulk_commands, ordered=False)
+        return ret
 
         return rm.deleted_count
 
     def queue_mark_error(self, data):
         bulk_commands = []
-        for oid, msg in data:
+        for queue_id, msg in data:
             update = {
                 "$set": {
                     "status": "ERROR",
@@ -864,7 +871,7 @@ class MongoSocket:
                     "modified_on": datetime.datetime.utcnow(),
                 }
             }
-            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(oid)}, update))
+            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(queue_id)}, update))
 
         if len(bulk_commands) == 0:
             return

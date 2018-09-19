@@ -104,13 +104,20 @@ class QueueNanny:
         """
 
         # Pivot data so that we group all results in categories
-        new_results = collections.defaultdict(dict)
-        complete_ids = []
+        new_results = collections.defaultdict(list)
         error_data = []
 
         for key, (result, parser, hooks) in self.queue_adapter.aquire_complete().items():
             try:
-                if not result["success"]:
+
+                # Successful job
+                if result["success"] is True:
+                    self.logger.info("Update: {}".format(key))
+                    result["queue_id"] = key
+                    new_results[parser].append((result, hooks))
+
+                # Failed job
+                else:
                     if "error" in result:
                         error = result["error"]
                     else:
@@ -120,10 +127,6 @@ class QueueNanny:
                                      "Because: {}".format(str(key), error))
 
                     error_data.append((key, error))
-                else:
-                    self.logger.info("update: {}".format(key))
-                    new_results[parser][key] = (result, hooks)
-                    complete_ids.append(key)
             except Exception as e:
                 msg = "Internal FractalServer Error:\n" + traceback.format_exc()
                 self.errors[key] = msg
@@ -131,14 +134,17 @@ class QueueNanny:
                 error_data.append((key, msg))
 
         # Run output parsers
+        completed = []
         hooks = []
         for k, v in new_results.items():
-            ret, h = procedures.get_procedure_output_parser(k)(self.storage_socket, v)
-            hooks.extend(h)
+            ret = procedures.get_procedure_output_parser(k)(self.storage_socket, v)
+            completed.extend(ret[0])
+            error_data.extend(ret[1])
+            hooks.extend(ret[2])
 
         # Handle hooks and complete jobs
         self.storage_socket.handle_hooks(hooks)
-        self.storage_socket.queue_mark_complete(complete_ids)
+        self.storage_socket.queue_mark_complete(completed)
         self.storage_socket.queue_mark_error(error_data)
 
         # Get new jobs
@@ -146,7 +152,7 @@ class QueueNanny:
         if open_slots == 0:
             return
 
-        # Submit new jobs
+        # Add new jobs to queue
         new_jobs = self.storage_socket.queue_get_next(n=open_slots)
         self.queue_adapter.submit_tasks(new_jobs)
 
