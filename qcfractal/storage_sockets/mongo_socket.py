@@ -308,6 +308,26 @@ class MongoSocket:
         ret = {"meta": meta, "data": data}
         return ret
 
+    def locator(self, locator):
+        """Simple query by locator object
+
+        Parameters
+        ----------
+        locator : dict
+            A dictionary with the following fields:
+                - table: The table to query on
+                - index: The index to query on
+                - data: The queries to search for
+                - projection: optional, the projection to apply
+
+        Returns
+        -------
+        dict
+            The requested location
+        """
+        projection = locator.get("projection", None)
+        return self._get_generic({locator["index"]: locator["data"]}, locator["table"], projection=projection)
+
 ### Mongo molecule functions
 
     def add_molecules(self, data):
@@ -844,13 +864,7 @@ class MongoSocket:
 
         now = datetime.datetime.utcnow()
         for queue_id, result_location in updates:
-            update = {
-                "$set": {
-                    "status": "COMPLETE",
-                    "modified_on": now,
-                    "result_location": result_location
-                }
-            }
+            update = {"$set": {"status": "COMPLETE", "modified_on": now, "result_location": result_location}}
             bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(queue_id)}, update))
 
         if len(bulk_commands) == 0:

@@ -192,6 +192,7 @@ class FractalServer(object):
             (r"/collection", web_handlers.CollectionHandler, self.objects),
             (r"/result", web_handlers.ResultHandler, self.objects),
             (r"/procedure", web_handlers.ProcedureHandler, self.objects),
+            (r"/locator", web_handlers.LocatorHandler, self.objects),
         ]
 
         # Queue handlers

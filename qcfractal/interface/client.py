@@ -130,6 +130,18 @@ class FractalClient(object):
 
         return cls(address, username=username, password=password, verify=verify)
 
+    ### Generics
+
+    def locator(self, data, return_full=False):
+
+        payload = {"meta": {}, "data": data}
+        r = self._request("get", "locator", payload)
+
+        if return_full:
+            return r.json()
+        else:
+            return r.json()["data"]
+
     ### Molecule section
 
     def get_molecules(self, mol_list, index="id", full_return=False):
