@@ -49,7 +49,7 @@ def procedure_single_input_parser(storage, data):
     runs, errors = procedures_util.unpack_single_run_meta(storage, data["meta"], data["data"])
 
     # Remove duplicates
-    query = {k : data["meta"][k] for k in ["driver", "method", "basis", "options", "program"]}
+    query = {k: data["meta"][k] for k in ["driver", "method", "basis", "options", "program"]}
     query["molecule_id"] = [x["molecule"]["id"] for x in runs.values()]
 
     search = storage.get_results(query, projection={"molecule_id": True})
@@ -221,7 +221,11 @@ def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"
 
         full_tasks.append(task)
 
-    query = storage.get_procedures({"hash_index": duplicate_lookup}, projection={"hash_index": True, "id": True})["data"]
+    query = storage.get_procedures(
+        {
+            "hash_index": duplicate_lookup
+        }, projection={"hash_index": True,
+                       "id": True})["data"]
     if len(query):
         found_hashes = set(x["hash_index"] for x in query)
 
@@ -249,36 +253,52 @@ def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"
 def procedure_optimization_output_parser(storage, data):
 
     new_procedures = {}
+    new_hooks = {}
 
     # Each optimization is a unique entry:
-    for k, (v, hooks) in data.items():
+    for result, hooks in data:
+        key = result["queue_id"]
 
         # Convert start/stop molecules to hash
-        mols = {"initial": v["initial_molecule"], "final": v["final_molecule"]}
+        mols = {"initial": result["initial_molecule"], "final": result["final_molecule"]}
         mol_keys = storage.add_molecules(mols)["data"]
-        v["initial_molecule"] = mol_keys["initial"]
-        v["final_molecule"] = mol_keys["final"]
+        result["initial_molecule"] = mol_keys["initial"]
+        result["final_molecule"] = mol_keys["final"]
 
-        # Add individual computations
-        traj_dict = {k: v for k, v in enumerate(v["trajectory"])}
+        # Parse trajectory computations and add queue_id
+        traj_dict = {k: v for k, v in enumerate(result["trajectory"])}
         results = procedures_util.parse_single_runs(storage, traj_dict)
+        for k, v in results.items():
+            v["queue_id"] = key
 
+        # Add trajectory results and return locator object
         ret = storage.add_results(list(results.values()))
-        v["trajectory"] = [x[1] for x in ret["data"]]
+        result["trajectory"] = {"table": "results", "index": "id", "data": [x[1] for x in ret["data"]]}
 
         # Coerce tags
-        v.update(v["qcfractal_tags"])
-        del v["input_specification"]
-        del v["qcfractal_tags"]
+        result.update(result["qcfractal_tags"])
+        del result["input_specification"]
+        del result["qcfractal_tags"]
         # print("Adding optimization result")
         # print(json.dumps(v, indent=2))
-        new_procedures[k] = v
+        new_procedures[key] = result
+        if len(hooks):
+            new_hooks[key] = hooks
 
     ret = storage.add_procedures(list(new_procedures.values()))
 
-    hook_data = procedures_util.parse_hooks(data, new_procedures)
+    # Create a list of (queue_id, located) to update the queue with
+    completed = [(k, {"table": "procedures", "index": "id", "data": v["id"]}) for k, v in new_procedures.items()]
 
-    return (ret, hook_data)
+    errors = []
+    if len(ret["meta"]["errors"]):
+        # errors = [(k, "Duplicate results found")]
+        raise ValueError("TODO: Cannot yet handle queue result duplicates.")
+
+    hook_data = procedures_util.parse_hooks(new_procedures, new_hooks)
+
+    # return (ret, hook_data)
+    return (completed, errors, hook_data)
 
 
 # Add in all registered procedures

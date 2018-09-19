@@ -3,6 +3,7 @@ A ORM for Optimization results
 """
 
 import json
+import copy
 
 
 class OptimizationORM:
@@ -145,6 +146,8 @@ class OptimizationORM:
         list of dict
             A list of results documents
         """
-        return client.get_results(id=self._trajectory, projection=projection)
+        payload = copy.deepcopy(self._trajectory)
+        payload["projections"] = projection
+        return client.locator(payload)
 
 
