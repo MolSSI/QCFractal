@@ -3,8 +3,8 @@ Init file for tests, blank to avoid automatic imports.
 """
 
 try:
-    # QCFractal based import
+    # QCFractal based imports
     from ... import interface as portal
-except ImportError:
+except (ImportError, ValueError):  # Catches not importable, and importing too high
     # QCPortal based import
-    from ... import qcportal as portal
+    import qcportal as portal
