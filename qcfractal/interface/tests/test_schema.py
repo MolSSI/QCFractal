@@ -2,9 +2,7 @@
 Tests the various schema involved in the project that are not tested elsewhere.
 """
 
-import pytest
-
-from ... import interface as portal
+from . import portal
 
 
 def test_options():

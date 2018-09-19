@@ -5,7 +5,7 @@ Utilities for dictionary and JSON handeling.
 
 def replace_dict_keys(data, replacement):
     """
-    Recurisvely replaces the keys in data from a dictionary `replacement`.
+    Recursively replaces the keys in data from a dictionary `replacement`.
     """
 
     if isinstance(data, dict):

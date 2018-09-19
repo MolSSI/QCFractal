@@ -4,7 +4,7 @@ import versioneer
 if __name__ == "__main__":
     setuptools.setup(
         name='qcfractal',
-        description='A high throughput computing and database tool for quantum chemsitry.',
+        description='A high throughput computing and database tool for quantum chemistry.',
         author='Daniel Smith',
         author_email='dgasmith@vt.edu',
         url="https://github.com/molssi/qcfractal",
@@ -45,7 +45,6 @@ if __name__ == "__main__":
         classifiers=[
             'Development Status :: 4 - Beta',
             'Intended Audience :: Science/Research',
-            'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3',
         ],
         zip_safe=True,

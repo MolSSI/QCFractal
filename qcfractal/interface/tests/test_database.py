@@ -2,8 +2,8 @@
 Tests the QCPortal database object
 """
 
+from . import portal
 from . import test_helper as th
-from ... import interface as portal
 import pytest
 
 

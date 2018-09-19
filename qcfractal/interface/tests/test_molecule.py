@@ -1,10 +1,10 @@
 """
-Tets the inports and exports of the Molecule object.
+Tests the imports and exports of the Molecule object.
 """
+
 import numpy as np
 import pytest
-
-from ... import interface as portal
+from . import portal
 
 
 def test_molecule_constructors():
