@@ -56,7 +56,7 @@ def test_queue_error(fractal_compute_server):
 
     assert len(ret) == 1
     assert "connectivity graph" in ret[0]["error"]
-    fractal_compute_server.objects["storage_socket"].queue_mark_complete([queue_id], index="hash_index")
+    fractal_compute_server.objects["storage_socket"].queue_mark_complete([(queue_id, "completed_pointer")])
 
 
 @testing.using_rdkit
@@ -138,5 +138,5 @@ def test_queue_duplicate_submissions(fractal_compute_server):
     assert ret["queue"][0] == queue_id
 
     # Cleanup
-    fractal_compute_server.objects["storage_socket"].queue_mark_complete([queue_id], index="hash_index")
+    fractal_compute_server.objects["storage_socket"].queue_mark_complete([(queue_id, "output")])
 

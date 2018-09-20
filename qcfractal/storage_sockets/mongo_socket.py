@@ -317,7 +317,7 @@ class MongoSocket:
             A dictionary with the following fields:
                 - table: The table to query on
                 - index: The index to query on
-                - data: The queries to search for
+                - data: The queries to search fo
                 - projection: optional, the projection to apply
 
         Returns
@@ -806,13 +806,17 @@ class MongoSocket:
                 if tmp.modified_count != len(hook_updates):
                     self.logger.warning("QUEUE: Hook duplicate found does not match hook triggers")
 
-        # Since we did an add generic we get ((status, tag, hashinde), queue_id)
-        # Move this to (hash_index)
-        ret["data"] = [(x[0][2]) for x in ret["data"]]
+        # Since we did an add generic we get ((status, tag, hashindex), queue_id)
+        # Move this to (queue_id)
+        ret["data"] = [x[1] for x in ret["data"]]
 
         # Means we have duplicates in the queue, massage results
         if len(ret["meta"]["duplicates"]):
-            ret["meta"]["duplicates"] = [x[2] for x in ret["meta"]["duplicates"]]
+            # print(ret["meta"]["duplicates"])
+            # queue
+            hash_indices = [x[2] for x in ret["meta"]["duplicates"]]
+            ids = self._get_generic({"hash_index": hash_indices}, "task_queue")
+            ret["meta"]["duplicates"] = [x["id"] for x in ids["data"]] 
             ret["meta"]["error_description"] = False
 
         ret["meta"]["validation_errors"] = []
@@ -871,9 +875,7 @@ class MongoSocket:
             return
 
         ret = self._tables["task_queue"].bulk_write(bulk_commands, ordered=False)
-        return ret
-
-        return rm.deleted_count
+        return ret.modified_count
 
     def queue_mark_error(self, data):
         bulk_commands = []

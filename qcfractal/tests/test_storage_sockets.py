@@ -382,18 +382,26 @@ def test_storage_queue_roundtrip(storage_socket):
     # Query for next jobs
     r = storage_socket.queue_get_next()
     assert r[0]["spec"]["function"] == task1["spec"]["function"]
+    queue_id = r[0]["id"]
 
     # Mark job as done
-    r = storage_socket.queue_mark_complete([r[0]["id"]])
+    r = storage_socket.queue_mark_complete([(queue_id, "results_id")])
     assert r == 1
 
+    # Check results
+    r = storage_socket.get_queue({"id": queue_id})
+    assert r["meta"]["n_found"] == 1
+    assert r["data"][0]["status"] == "COMPLETE"
+    assert r["data"][0]["result_location"] == "results_id"
+
+    # Check queue is empty
     r = storage_socket.queue_get_next()
     assert len(r) == 0
 
 
 def test_storage_queue_duplicate(storage_socket):
 
-    idx = "unique_hash_idx123"
+    idx = "unique_hash_idx124"
     task1 = {
         "hash_index": idx,
         "spec": {},
@@ -401,8 +409,8 @@ def test_storage_queue_duplicate(storage_socket):
         "tag": None,
     }
     r = storage_socket.queue_submit([task1])
-    hash_index = r["data"][0]
     assert len(r["data"]) == 1
+    queue_id = r["data"][0]
 
     # Put the first job in a waiting state
     r = storage_socket.queue_get_next()
@@ -414,7 +422,7 @@ def test_storage_queue_duplicate(storage_socket):
     assert len(r["data"]) == 0
 
     # Pull out the data and check the hooks
-    r = storage_socket.get_queue({"hash_index": hash_index})
+    r = storage_socket.get_queue({"id": queue_id})
     hooks = r["data"][0]["hooks"]
     assert len(hooks) == 2
     assert hooks[0][0] == "service"
@@ -422,7 +430,7 @@ def test_storage_queue_duplicate(storage_socket):
     assert {"123", "456"} == {hooks[0][1], hooks[1][1]}
 
     # Cleanup
-    r = storage_socket.queue_mark_complete([hash_index], index="hash_index")
+    r = storage_socket.queue_mark_complete([(queue_id, "result_location")])
     assert r == 1
 
 

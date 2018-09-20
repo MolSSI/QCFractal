@@ -110,7 +110,7 @@ def test_procedure_optimization(fractal_compute_server):
 
     # # Query result and check against out manual pul
     results1 = client.get_procedures({"program": "geometric"})
-    results2 = client.get_procedures({"hash_index": compute_key})
+    results2 = client.get_procedures({"queue_id": compute_key})
 
     for results in [results1, results2]:
         assert len(results) == 1

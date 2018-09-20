@@ -147,7 +147,7 @@ class OptimizationORM:
             A list of results documents
         """
         payload = copy.deepcopy(self._trajectory)
-        payload["projections"] = projection
+        payload["projection"] = projection
         return client.locator(payload)
 
 

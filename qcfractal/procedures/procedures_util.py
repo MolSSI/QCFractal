@@ -167,7 +167,9 @@ def parse_hooks(rdata, rhooks):
             # Loop over individual commands
             for command in h["updates"]:
                 # Custom commands
-                if "$" not in command[-1]:
+                if not isinstance(command[-1], str):
+                    continue
+                elif "$" not in command[-1]:
                     continue
                 elif command[-1] == "$task_id":
                     command[-1] = results[k]["id"]

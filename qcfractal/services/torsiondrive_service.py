@@ -121,8 +121,6 @@ class TorsionDriveService:
 
         if next_iter:
 
-            print("NEXT ITER\n\n")
-
             # Query the jobs
             job_query = self.storage_socket.get_procedures({"hash_index": self.data["required_jobs"]})["data"]
             inv_job_lookup = {v["hash_index"]: v for v in job_query}
