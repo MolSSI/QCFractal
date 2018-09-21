@@ -105,7 +105,8 @@ def test_result_socket(test_server):
         "options": "default",
         "program": "P1",
         "driver": "energy",
-        "other_data": 5
+        "other_data": 5,
+        "hash_index": 2,
     }
 
     page2 = {
@@ -115,7 +116,8 @@ def test_result_socket(test_server):
         "options": "default",
         "program": "P1",
         "driver": "energy",
-        "other_data": 10
+        "other_data": 10,
+        "hash_index": 4,
     }
     r = requests.post(result_api_addr, json={"meta": {}, "data": [page1, page2]})
     assert r.status_code == 200

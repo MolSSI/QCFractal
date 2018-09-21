@@ -104,7 +104,7 @@ class MongoSocket:
             "molecules": False,
             "procedures": False,
             "service_queue": False,
-            "task_queue": True,
+            "task_queue": False,
             "users": True,
         }
 
@@ -156,22 +156,22 @@ class MongoSocket:
         """
         # Try to create a collection for each entry
         table_creation = {}
-        for tbl in self._valid_tables:
+        for table in self._valid_tables:
             try:
                 # MongoDB "Collection" -> QCFractal "Table"
-                self._tables.create_collection(tbl)
-                table_creation[tbl] = True
+                self._tables.create_collection(table)
+                table_creation[table] = True
 
             except pymongo.errors.CollectionInvalid:
-                table_creation[tbl] = False
+                table_creation[table] = False
 
         # Build the indices
-        for tbl, indices in self._table_indices.items():
-            idx = [(x, pymongo.ASCENDING) for x in indices]
-            self._tables[tbl].create_index(idx, unique=self._table_unique_indices[tbl])
+        for table, indices in self._table_indices.items():
+            idx = [(x, pymongo.ASCENDING) for x in indices if x != "hash_index"]
+            self._tables[table].create_index(idx, unique=self._table_unique_indices[table])
 
         # Special queue index, hash_index should be unique
-        for table in ["result", "procedure", "task_queue", "service_queue"]:
+        for table in ["task_queue", "service_queue"]:
             self._tables[table].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
 
         # Return the success array
@@ -200,10 +200,7 @@ class MongoSocket:
         # Try/except for fully successful/partially unsuccessful adds
         error_skips = []
         try:
-            # print(data[0])
-            # print([id(x) for x in data])
             tmp = self._tables[table].insert_many(data, ordered=False)
-            # print(data[0])
             meta["success"] = tmp.acknowledged
             meta["n_inserted"] = len(tmp.inserted_ids)
         except pymongo.errors.BulkWriteError as tmp:
@@ -287,7 +284,7 @@ class MongoSocket:
             if "id" in query:
                 ids, bad_ids = _str_to_indices_with_errors(query["id"])
                 if bad_ids:
-                    ret["meta"]["errors"].append(("Bad Ids", bad_ids))
+                    meta["errors"].append(("Bad Ids", bad_ids))
 
                 query["_id"] = ids
                 del query["id"]
@@ -310,6 +307,26 @@ class MongoSocket:
 
         ret = {"meta": meta, "data": data}
         return ret
+
+    def locator(self, locator):
+        """Simple query by locator object
+
+        Parameters
+        ----------
+        locator : dict
+            A dictionary with the following fields:
+                - table: The table to query on
+                - index: The index to query on
+                - data: The queries to search fo
+                - projection: optional, the projection to apply
+
+        Returns
+        -------
+        dict
+            The requested location
+        """
+        projection = locator.get("projection", None)
+        return self._get_generic({locator["index"]: locator["data"]}, locator["table"], projection=projection)
 
 ### Mongo molecule functions
 
@@ -631,10 +648,13 @@ class MongoSocket:
         ret = {"meta": storage_utils.get_metadata(), "data": []}
 
         # We are querying via id
-        if "_id" in query:
+        if ("_id" in query) or ("id" in query):
             if len(query) > 1:
                 ret["error_description"] = "ID index was provided, cannot use other indices"
                 return ret
+
+            if "id" in query:
+                query["_id"] = query["id"]
 
             if not isinstance(query, (list, tuple)):
                 parsed_query["_id"] = {"$in": query["_id"]}
@@ -715,6 +735,15 @@ class MongoSocket:
         ret = self._add_generic(data, "service_queue", return_map=True)
         ret["meta"]["validation_errors"] = []  # TODO
 
+        # Since we did an add generic we get ((status, tag, hashindex), queue_id)
+        # Move this to (hash_index)
+        ret["data"] = [x[0][2] for x in ret["data"]]
+
+        # Means we have duplicates in the queue, massage results
+        if len(ret["meta"]["duplicates"]):
+            ret["meta"]["duplicates"] = [x[2] for x in ret["meta"]["duplicates"]]
+            ret["meta"]["error_description"] = False
+
         return ret
 
     def get_services(self, query, projection=None):
@@ -752,7 +781,7 @@ class MongoSocket:
         ret = self._add_generic(data, "task_queue", return_map=True)
 
         # Update hooks on duplicates
-        dup_inds = set(x[1] for x in ret["meta"]["duplicates"])
+        dup_inds = set(x[2] for x in ret["meta"]["duplicates"])
         if dup_inds:
             hook_updates = []
 
@@ -777,16 +806,17 @@ class MongoSocket:
                 if tmp.modified_count != len(hook_updates):
                     self.logger.warning("QUEUE: Hook duplicate found does not match hook triggers")
 
-        # Since we did an add generic we get ((status, hashindex, tag), queue_id)
-        # Move this to (queue_id, hash_index)
-        ret["data"] = [(x[1], x[0][1]) for x in ret["data"]]
+        # Since we did an add generic we get ((status, tag, hashindex), queue_id)
+        # Move this to (queue_id)
+        ret["data"] = [x[1] for x in ret["data"]]
 
         # Means we have duplicates in the queue, massage results
         if len(ret["meta"]["duplicates"]):
-            indices = [x[1] for x in ret["meta"]["duplicates"]]
-
-            results = self.get_queue({"hash_index": indices}, projection={"id": True, "hash_index": True})
-            ret["meta"]["duplicates"] = [(x["id"], x["hash_index"]) for x in results["data"]]
+            # print(ret["meta"]["duplicates"])
+            # queue
+            hash_indices = [x[2] for x in ret["meta"]["duplicates"]]
+            ids = self._get_generic({"hash_index": hash_indices}, "task_queue")
+            ret["meta"]["duplicates"] = [x["id"] for x in ids["data"]] 
             ret["meta"]["error_description"] = False
 
         ret["meta"]["validation_errors"] = []
@@ -832,20 +862,24 @@ class MongoSocket:
 
         return list(self._tables["task_queue"].find({"_id": ids}, limit=n))
 
-    def queue_mark_complete(self, ids):
-        query = {"_id": {"$in": [ObjectId(x) for x in ids]}}
+    def queue_mark_complete(self, updates):
 
-        rm = self._tables["task_queue"].delete_many(query)
-        if rm.deleted_count != len(ids):
-            self.logger.warning("QUEUE: Number of complete projects does not match the number of removed projects.")
+        bulk_commands = []
 
-        # We need to log these for history
+        now = datetime.datetime.utcnow()
+        for queue_id, result_location in updates:
+            update = {"$set": {"status": "COMPLETE", "modified_on": now, "result_location": result_location}}
+            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(queue_id)}, update))
 
-        return rm.deleted_count
+        if len(bulk_commands) == 0:
+            return
+
+        ret = self._tables["task_queue"].bulk_write(bulk_commands, ordered=False)
+        return ret.modified_count
 
     def queue_mark_error(self, data):
         bulk_commands = []
-        for oid, msg in data:
+        for queue_id, msg in data:
             update = {
                 "$set": {
                     "status": "ERROR",
@@ -853,7 +887,7 @@ class MongoSocket:
                     "modified_on": datetime.datetime.utcnow(),
                 }
             }
-            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(oid)}, update))
+            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(queue_id)}, update))
 
         if len(bulk_commands) == 0:
             return

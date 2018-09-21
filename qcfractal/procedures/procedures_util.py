@@ -127,21 +127,28 @@ def parse_single_runs(storage, results):
 
     return results
 
+def single_run_hash(data, program=None):
+
+    single_keys = interface.schema.format_result_indices(data, program=program)
+    keys = {"procedure_type": "single", "single_key": single_keys}
+    hash_index =hash_procedure_keys(keys)
+    return (keys, hash_index)
+
 
 def hash_procedure_keys(keys):
     m = hashlib.sha1()
     m.update(json.dumps(keys, sort_keys=True).encode("UTF-8"))
     return m.hexdigest()
 
-def parse_hooks(data, results):
+def parse_hooks(rdata, rhooks):
     """Parses the hook data in a list of hooks
 
     Parameters
     ----------
-    data : dict
-        Dictionary of key/value results from a queue adapter. key : (data blob, hook)
-    results : dict
-        Parsed versions of results inserted with ID's attached.
+    rdata : dict
+        A {uid : results} dictionary of results to pull id's from
+    rhooks : dict
+        A {uid : hook} dictionary to apply the hooks too
 
     Returns
     -------
@@ -149,7 +156,7 @@ def parse_hooks(data, results):
         Description
     """
     hook_data = []
-    for k, (data, hook) in data.items():
+    for k, hook in rhooks.items():
 
         # If no hooks skip it
         if len(hook) == 0:
@@ -160,10 +167,16 @@ def parse_hooks(data, results):
             # Loop over individual commands
             for command in h["updates"]:
                 # Custom commands
-                if command[-1] == "$task_id":
+                if not isinstance(command[-1], str):
+                    continue
+                elif "$" not in command[-1]:
+                    continue
+                elif command[-1] == "$task_id":
                     command[-1] = results[k]["id"]
-                # else:
-                #     raise KeyError("Hook command `{}` not understood.".format(command))
+                elif command[-1] == "$hash_index":
+                    command[-1] = results[k]["hash_index"]
+                else:
+                    raise KeyError("Hook command `{}` not understood.".format(command))
 
         hook_data.append(hook)
     return hook_data

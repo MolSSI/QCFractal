@@ -101,7 +101,7 @@ def test_procedure_optimization(fractal_compute_server):
 
     # Get the first submitted job, the second index will be a hash_index
     submitted = r.json()["data"]["submitted"]
-    compute_key = submitted[0][1]
+    compute_key = submitted[0]
 
     # Manually handle the compute
     nanny = fractal_compute_server.objects["queue_nanny"]
@@ -110,10 +110,19 @@ def test_procedure_optimization(fractal_compute_server):
 
     # # Query result and check against out manual pul
     results1 = client.get_procedures({"program": "geometric"})
-    results2 = client.get_procedures({"hash_index": compute_key})
+    results2 = client.get_procedures({"queue_id": compute_key})
 
     for results in [results1, results2]:
         assert len(results) == 1
         assert isinstance(str(results[0]), str)  # Check that repr runs
         assert pytest.approx(-1.117530188962681, 1e-5) == results[0].final_energy()
 
+        # Check pulls
+        traj = results[0].get_trajectory(client, projection={"properties": True})
+        energies = results[0].energies()
+        assert len(traj) == len(energies)
+
+        # Check individual elements
+        for ind in range(len(results[0]._trajectory)):
+            raw_energy = traj[ind]["properties"]["return_energy"]
+            assert pytest.approx(raw_energy, 1.e-5) == energies[ind]

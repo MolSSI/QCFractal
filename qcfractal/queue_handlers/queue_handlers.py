@@ -87,15 +87,15 @@ class QueueNanny:
         for task in tasks:
             new_tasks.append(task.get_json())
 
-        task_ids = self.storage_socket.add_services(new_tasks)["data"]
-        task_ids = [x[1] for x in task_ids]
+        tmp = self.storage_socket.add_services(new_tasks)
+        task_ids = [x["id"] for x in new_tasks]
 
         self.services |= set(task_ids)
 
-        self.logger.info("QUEUE: Added {} services.\n".format(len(new_tasks)))
+        self.logger.info("QUEUE: Added {} services.\n".format(tmp["meta"]["n_inserted"]))
         self.update()
 
-        return task_ids
+        return tmp
 
     def update(self):
         """Examines the queue for completed jobs and adds successful completions to the database
@@ -104,13 +104,20 @@ class QueueNanny:
         """
 
         # Pivot data so that we group all results in categories
-        new_results = collections.defaultdict(dict)
-        complete_ids = []
+        new_results = collections.defaultdict(list)
         error_data = []
 
         for key, (result, parser, hooks) in self.queue_adapter.aquire_complete().items():
             try:
-                if not result["success"]:
+
+                # Successful job
+                if result["success"] is True:
+                    self.logger.info("Update: {}".format(key))
+                    result["queue_id"] = key
+                    new_results[parser].append((result, hooks))
+
+                # Failed job
+                else:
                     if "error" in result:
                         error = result["error"]
                     else:
@@ -120,10 +127,6 @@ class QueueNanny:
                                      "Because: {}".format(str(key), error))
 
                     error_data.append((key, error))
-                else:
-                    self.logger.info("update: {}".format(key))
-                    new_results[parser][key] = (result, hooks)
-                    complete_ids.append(key)
             except Exception as e:
                 msg = "Internal FractalServer Error:\n" + traceback.format_exc()
                 self.errors[key] = msg
@@ -131,14 +134,17 @@ class QueueNanny:
                 error_data.append((key, msg))
 
         # Run output parsers
+        completed = []
         hooks = []
         for k, v in new_results.items():
-            ret, h = procedures.get_procedure_output_parser(k)(self.storage_socket, v)
-            hooks.extend(h)
+            ret = procedures.get_procedure_output_parser(k)(self.storage_socket, v)
+            completed.extend(ret[0])
+            error_data.extend(ret[1])
+            hooks.extend(ret[2])
 
         # Handle hooks and complete jobs
         self.storage_socket.handle_hooks(hooks)
-        self.storage_socket.queue_mark_complete(complete_ids)
+        self.storage_socket.queue_mark_complete(completed)
         self.storage_socket.queue_mark_error(error_data)
 
         # Get new jobs
@@ -146,7 +152,7 @@ class QueueNanny:
         if open_slots == 0:
             return
 
-        # Submit new jobs
+        # Add new jobs to queue
         new_jobs = self.storage_socket.queue_get_next(n=open_slots)
         self.queue_adapter.submit_tasks(new_jobs)
 
@@ -274,25 +280,43 @@ class ServiceScheduler(APIHandler):
         storage = self.objects["storage_socket"]
         queue_nanny = self.objects["queue_nanny"]
 
-        # Build return metadata
-        meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
-
+        # Figure out initial molecules
+        errors = []
         ordered_mol_dict = {x: mol for x, mol in enumerate(self.json["data"])}
         mol_query = storage.mixed_molecule_get(ordered_mol_dict)
 
-        new_services = []
+        # Build out services
+        submitted_services = []
         for idx, mol in mol_query["data"].items():
             tmp = services.initializer(self.json["meta"]["service"], storage, queue_nanny, self.json["meta"], mol)
-            new_services.append(tmp)
+            submitted_services.append(tmp)
+
+        # Figure out complete services
+        service_hashes = [x.data["hash_index"] for x in submitted_services]
+        found_hashes = storage.get_procedures({"hash_index": service_hashes}, projection={"hash_index": True})
+        found_hashes = set(x["hash_index"] for x in found_hashes["data"])
+
+        new_services = []
+        complete_jobs = []
+        for x in submitted_services:
+            hash_index = x.data["hash_index"]
+
+            if hash_index in found_hashes:
+                complete_jobs.append(hash_index)
+            else:
+                new_services.append(x)
 
         # Add tasks to Nanny
-        submitted = queue_nanny.submit_services(new_services)
+        ret = queue_nanny.submit_services(new_services)
+        ret["data"] = {"submitted": ret["data"], "completed": list(complete_jobs), "queue": ret["meta"]["duplicates"]}
+        ret["meta"]["duplicates"] = []
+        ret["meta"]["errors"].extend(errors)
 
         # Return anything of interest
-        meta["success"] = True
-        meta["n_inserted"] = len(submitted)
-        meta["errors"] = []  # TODO
-        ret = {"meta": meta, "data": submitted}
+        # meta["success"] = True
+        # meta["n_inserted"] = len(submitted)
+        # meta["errors"] = []  # TODO
+        # ret = {"meta": meta, "data": submitted}
 
         self.write(ret)
 

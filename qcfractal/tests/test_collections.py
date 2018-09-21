@@ -41,6 +41,7 @@ def test_compute_database(fractal_compute_server):
 
     # Compute SCF/sto-3g
     ret = db.compute("SCF", "STO-3G")
+    assert len(ret["submitted"]) == 3
     fractal_compute_server.objects["queue_nanny"].await_results()
 
     # Query computed results

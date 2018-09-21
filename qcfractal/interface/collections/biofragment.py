@@ -1,4 +1,5 @@
-"""Mongo QCDB Fragment object and helpers
+"""
+OpenFF BioFragment ODM
 """
 
 import json
@@ -9,7 +10,7 @@ from .collection import Collection
 
 class BioFragment(Collection):
     """
-    This is a QCA Fragment class.
+    This is a QCA BioFragment class.
 
     Attributes
     ----------
@@ -21,14 +22,14 @@ class BioFragment(Collection):
 
     def __init__(self, name, initial_molecule=None, client=None, **kwargs):
         """
-        Initializer for the Database object. If no Portal is supplied or the database name
+        Initializer for the BioFragment object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
         created.
 
         Parameters
         ----------
         name : str
-            The name of the Database
+            The name of the BioFragment
         client : client.FractalClient, optional
             A Portal client to connect to a server
 

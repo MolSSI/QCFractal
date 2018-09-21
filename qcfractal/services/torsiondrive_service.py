@@ -4,7 +4,6 @@ Wraps geometric procedures
 
 import copy
 import json
-import uuid
 import numpy as np
 
 from torsiondrive import td_api
@@ -80,7 +79,7 @@ class TorsionDriveService:
         meta["success"] = False
         meta["procedure"] = "torsiondrive"
         meta["program"] = "torsiondrive"
-        meta["hash_index"] = procedures.procedures_util.hash_procedure_keys(keys),
+        meta["hash_index"] = procedures.procedures_util.hash_procedure_keys(keys)
         meta["hash_keys"] = keys
         meta["tag"] = None
 
@@ -95,39 +94,56 @@ class TorsionDriveService:
         # print("\nTorsionDrive State:")
         # print(json.dumps(self.data["torsiondrive_state"], indent=2))
         # print("Iterate")
-        if (self.data["remaining_jobs"] > 0):
+        #if (self.data["remaining_jobs"] > 0):
             # print("Iterate: not yet done", self.data["remaining_jobs"])
             # print("Complete jobs", self.data["complete_jobs"])
-            return False
+        #    return False
+        # if self.data["success"] is True:
+        #     return False
+
 
         # print(self.data["remaining_jobs"])
 
         # Required jobs is false on first iteration
-        if (self.data["remaining_jobs"] is not False) and (self.data["remaining_jobs"] == 0):
+        # next_iter = (self.data["remaining_jobs"] is not False) and (self.data["remaining_jobs"] == 0):
+        next_iter = False
+        # print("ID {} : REMAINING JOBS {}".format(self.data["hash_index"], self.data["queue_keys"]))
+        # print("rem job", self.data["remaining_jobs"])
+        if (self.data["remaining_jobs"] is not False):
+
+            # if (self.data["remaining_jobs"] == 0):
+            #     nex_iter = True
+            jq = self.storage_socket.get_procedures({"hash_index": self.data["required_jobs"]})
+            if len(jq["data"]) == len(self.data["required_jobs"]):
+                next_iter = True
+            else:
+                return False
+
+        if next_iter:
 
             # Query the jobs
-            job_query = self.storage_socket.get_procedures({"id": list(self.data["complete_jobs"].values())})
+            job_query = self.storage_socket.get_procedures({"hash_index": self.data["required_jobs"]})["data"]
+            inv_job_lookup = {v["hash_index"]: v for v in job_query}
 
-            # Figure out the structure
-            job_results = {k: [None] * v for k, v in self.data["update_structure"].items()}
-            job_ids = {k: [None] * v for k, v in self.data["update_structure"].items()}
+            job_results = {}
+            for key, hashes in self.data["job_map"].items():
+                job_results[key] = []
 
-            inv_job_lookup = {v: k for k, v in self.data["complete_jobs"].items()}
+                # Check for history key
+                if key not in self.data["optimization_history"]:
+                    self.data["optimization_history"][key] = []
 
-            for ret in job_query["data"]:
-                job_uid = inv_job_lookup[ret["id"]]
-                value, pos = self.data["job_map"][job_uid]
-                mol_keys = self.storage_socket.get_molecules(
-                    [ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
+                for hash_index in hashes:
+                    ret = inv_job_lookup[hash_index]
 
-                job_results[value][int(pos)] = (mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1])
-                job_ids[value][int(pos)] = ret["id"]
+                    # Lookup molecules
+                    mol_keys = self.storage_socket.get_molecules(
+                        [ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
 
-            # Update the complete_jobs in order
-            for k, v in job_ids.items():
-                if k not in self.data["optimization_history"]:
-                    self.data["optimization_history"][k] = []
-                self.data["optimization_history"][k].extend(v)
+                    job_results[key].append((mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1]))
+
+                    # Update history
+                    self.data["optimization_history"][key].append(hash_index)
 
             td_api.update_state(self.data["torsiondrive_state"], job_results)
 
@@ -138,6 +154,7 @@ class TorsionDriveService:
 
         # Create new jobs from the current state
         next_jobs = td_api.next_jobs_from_state(self.data["torsiondrive_state"], verbose=True)
+        # print("\n\nNext Jobs:\n" + str(next_jobs))
 
         # All done
         if len(next_jobs) == 0:
@@ -156,19 +173,8 @@ class TorsionDriveService:
 
     def submit_optimization_tasks(self, job_dict):
 
-        # Build out all of the new molecules in a flat dictionary
-        flat_map = {}
-        initial_molecule = json.dumps(self.data["molecule_template"])
-        for v, k in job_dict.items():
-            for num, geom in enumerate(k):
-                mol = json.loads(initial_molecule)
-                mol["geometry"] = geom
-                flat_map[(v, str(num))] = mol
-
-        # Add new molecules
-        self.storage_socket.add_molecules(flat_map)
-
         # Prepare optimization
+        initial_molecule = json.dumps(self.data["molecule_template"])
         meta_packet = json.dumps({
             "meta": {
                 "procedure": "optimization",
@@ -180,50 +186,53 @@ class TorsionDriveService:
 
         hook_template = json.dumps({
             "document": ("service_queue", self.data["id"]),
-            "updates": [["inc", "remaining_jobs", -1], ["set", "complete_jobs", "$task_id"]]
+            "updates": [["inc", "remaining_jobs", -1]]
         })
 
-        job_map = {}
         full_tasks = []
-        complete_jobs = {}
-        for key, mol in flat_map.items():
-            packet = json.loads(meta_packet)
+        job_map = {}
+        for key, geoms in job_dict.items():
+            job_map[key] = []
+            for num, geom in enumerate(geoms):
 
-            # Construct constraints
-            containts = [
-                tuple(x) + (str(y), )
-                for x, y in zip(self.data["torsiondrive_meta"]["dihedral_template"], td_api.grid_id_from_string(key[0]))
-            ]
-            packet["meta"]["keywords"]["constraints"] = {"set": containts}
-            packet["data"] = [mol]
+                # Update molecule
+                packet = json.loads(meta_packet)
 
-            # Turn packet into a full task
-            task, complete, errors = procedures.get_procedure_input_parser("optimization")(
-                self.storage_socket, packet, duplicate_id="id")
+                # Construct constraints
+                containts = [
+                    tuple(x) + (str(y), )
+                    for x, y in zip(self.data["torsiondrive_meta"]["dihedral_template"], td_api.grid_id_from_string(key))
+                ]
+                packet["meta"]["keywords"]["constraints"] = {"set": containts}
 
-            uid = str(uuid.uuid4())
-            if len(complete):
-                # Job is already complete
-                complete_jobs[uid] = complete[0]
-            else:
-                # Create a hook which will update the complete jobs uid
-                hook = json.loads(hook_template)
-                hook["updates"][-1][1] = "complete_jobs." + uid
+                mol = json.loads(initial_molecule)
+                mol["geometry"] = geom
+                packet["data"] = [mol]
 
-                task[0]["hooks"].append(hook)
-                full_tasks.append(task[0])
-            job_map[uid] = key
+                # Turn packet into a full task
+                tasks, complete, errors = procedures.get_procedure_input_parser("optimization")(
+                    self.storage_socket, packet, duplicate_id="hash_index")
+
+                if len(complete):
+                    # Job is already complete
+                    job_map[k].append(complete[0])
+                else:
+                    # Create a hook which will update the complete jobs uid
+                    hook = json.loads(hook_template)
+
+                    tasks[0]["hooks"].append(hook)
+                    job_map[key].append(tasks[0]["hash_index"])
+                    full_tasks.append(tasks[0])
 
         # Create data for next round
-        self.data["update_structure"] = {k: len(v) for k, v in job_dict.items()}
+        # self.data["update_structure"] = {k: len(v) for k, v in job_dict.items()}
         self.data["job_map"] = job_map
+        self.data["required_jobs"] = list({x for v in job_map.values() for x in v})
         self.data["remaining_jobs"] = len(job_map)
-        self.data["complete_jobs"] = complete_jobs
-        # print(json.dumps(required_jobs, indent=2))
 
         # Add tasks to Nanny
         ret = self.queue_socket.submit_tasks(full_tasks)
-        self.data["queue_keys"] = [x[1] for x in ret["data"]]
+        self.data["queue_keys"] = ret["data"]
 
     def finalize(self):
         # Add finalize state
@@ -246,10 +255,8 @@ class TorsionDriveService:
         # print(self.data["final_energies"])
 
         # Pop temporaries
-        del self.data["update_structure"]
         del self.data["job_map"]
         del self.data["remaining_jobs"]
-        del self.data["complete_jobs"]
         del self.data["molecule_template"]
         del self.data["queue_keys"]
         del self.data["torsiondrive_state"]
