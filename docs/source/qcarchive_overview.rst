@@ -102,14 +102,14 @@ QCEngine is a stateless, lightweight wrapper around Quantum Chemistry programs
 so that these programs consistently accept and emit QCSchema_. Depending on
 the underlying program QCEngine provides this uniform interface by either:
 
-1) Calling the QCSchema_ IO functions that individual program have implemented.
-1) Calling the Python-API of the program and modifying the input/output according to the QCSchema_.
-2) Writing a ASCII input file based on the input QCSchema_, running the program, and
-parsing an ASCII output file into the QCSchema_.
+ 1) Calling the QCSchema_ IO functions that individual program have implemented.
+ 2) Calling the Python-API of the program and modifying the input/output according to the QCSchema_.
+ 3) Writing a ASCII input file based on the input QCSchema_, running the program, and parsing an ASCII output file into the QCSchema_.
 
 
 QCEngine also keeps track of the provenance of each task. This includes:
- - What kind of compute hardware was used.
+
+ - A description of the hardware used (CPU, GPU, memory, etc).
  - The total compute time and resources allocated to the run.
  - The function and version of the program called.
 
