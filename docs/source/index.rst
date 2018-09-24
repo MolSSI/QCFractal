@@ -112,6 +112,7 @@ Contains in-depth developer documentation.
    :hidden:
    :caption: Developer Documentation
 
+   qcarchive_overview
    glossary
    dev_guidelines
    changelog

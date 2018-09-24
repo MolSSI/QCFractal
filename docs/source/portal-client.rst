@@ -31,7 +31,7 @@ Molecule Handling
 -----------------
 
 As an example, we can use a molecule that comes with QCPortal and adds it to
-the database as shown. Please note that the Molecule ID (a :term:`DB Index`)
+the database as shown. Please note that the Molecule ID (a :term:`DB ID`)
 shown below will not be the same as your result and is unique to every
 database.
 

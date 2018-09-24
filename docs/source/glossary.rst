@@ -13,7 +13,7 @@ Glossary
       the queue and then are processed on the server to acquire the next iteration of
       calculations.
 
-    Queue Handlers
+    Queue Adapter
       The interface between QCFractal's internal queue representation and other
       queueing systems such as Dask or Fireworks.
 
@@ -27,12 +27,16 @@ Glossary
       Python queries and raw SQL or MongoDB query language.
 
     DB Index
-      A DB Index (or Database Index) is a unique ID for a given row (a document
-      or entry) in the database that uniquely defines that particular row. These rows
-      are automatically generated and will be different for every database, but
-      outlines ways to reference other rows in the database quickly. A DB Index is
-      unique to a DB Table.
+      A DB Index (or Database Index) is a commonly queried field used to speed up
+      searches in a :term:`DB Table`.
+
+    DB ID
+      A DB ID (or Database ID) is a unique ID for a given row (a document or
+      entry) in the database that uniquely defines that particular row in a
+      :term:`DB Table`. These rows are automatically generated and will be
+      different for every database, but outlines ways to reference other rows
+      in the database quickly. A DB ID is unique to a DB Table.
 
     DB Table
-      A set of data inside the Database which has a common :term:`DB Index`. The ``table``
+      A set of data inside the Database which has a common :term:`DB ID`. The ``table``
       name follows SQL conventions which is also known as a ``collection`` in MongoDB.

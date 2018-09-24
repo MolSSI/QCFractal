@@ -49,7 +49,7 @@ Hashes can be acquired from any molecule object and a ``FractalServer`` automati
 .. note::
 
     A molecule hash is different from a Molecule ID as the Molecule ID is a
-    :term:`DB Index` and reference where the molecule is in the database and
+    :term:`DB ID` and reference where the molecule is in the database and
     is different between databases. A molecule hash is a unique molecule
     identifier that can be created and accessed anywhere.
 
