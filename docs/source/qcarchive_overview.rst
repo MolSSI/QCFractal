@@ -55,6 +55,7 @@ QCFractal REST API.
 .. _QCFractalBadge: https://github.com/MolSSI/QCFractal
 
 QCFractal is the primary persistent server that QCPortal communicates with and has several main duties:
+
  - Maintain a database of all completed quantum chemistry results along with metadata that forms higher-level collections of results.
  - Maintain a compute queue of all requested and completed tasks. Where each task is a single quantum chemistry result.
  - Submit new tasks to distributed workflow engines and insert complete results into the database.
@@ -76,10 +77,12 @@ from Python-based API calls to REST API interfaces depending on the
 implementation details of the individual tools.
 
 Current distributed compute backends are:
+
  - `Dask Distributed <http://dask.pydata.org>`_ - Multi-node task graph schedular built in Python.
  - `Fireworks <https://materialsproject.github.io/fireworks/>`_ - Multi-site task schedular built in Python with a central MongoDB server.
 
 Pending backend implementations include:
+
  - `RADICAL Cybertools <https://radical-cybertools.github.io>`_ - Distributed task scheduler built for DOE and NSF compute resources.
  - `BOINC <http://boinc.berkeley.edu>`_ - High throughput volunteer computing task manager.
  - `Balsam <https://balsam.alcf.anl.gov>`_ - Task manager for a single compute resource (supercomputer) with tasks pulled from a central server.
