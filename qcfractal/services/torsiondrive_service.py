@@ -106,35 +106,34 @@ class TorsionDriveService:
 
         # Required jobs is false on first iteration
         # next_iter = (self.data["remaining_jobs"] is not False) and (self.data["remaining_jobs"] == 0):
-        next_iter = False
         # print("ID {} : REMAINING JOBS {}".format(self.data["hash_index"], self.data["queue_keys"]))
         # print("rem job", self.data["remaining_jobs"])
-        if (self.data["remaining_jobs"] is not False):
+        if self.data["remaining_jobs"] is not False:
 
-            # if (self.data["remaining_jobs"] == 0):
-            #     nex_iter = True
-            jq = self.storage_socket.get_procedures({"hash_index": self.data["required_jobs"]})
-            if len(jq["data"]) == len(self.data["required_jobs"]):
-                next_iter = True
-            else:
+            # Create the query payload, fetching the completed required jobs and output location
+            payload = self.storage_socket.get_queue({"id": self.data["required_jobs"], "status": "COMPLETE"},
+                                                    projection={"result_location": True, "status": True})
+            # If all jobs are not complete, return a False
+            if len(payload["data"]) != len(self.data["required_jobs"]):
                 return False
 
-        if next_iter:
+            job_query = payload["data"]
+            # Create a lookup table for job ID mapping to result from that job in the procedure table
+            inv_job_lookup = {v["id"]: self.storage_socket.locator(v["result_location"])["data"][0]
+                              for v in job_query}
 
-            # Query the jobs
-            job_query = self.storage_socket.get_procedures({"hash_index": self.data["required_jobs"]})["data"]
-            inv_job_lookup = {v["hash_index"]: v for v in job_query}
-
+            # Populate job results
             job_results = {}
-            for key, hashes in self.data["job_map"].items():
+            for key, job_ids in self.data["job_map"].items():
                 job_results[key] = []
 
                 # Check for history key
                 if key not in self.data["optimization_history"]:
                     self.data["optimization_history"][key] = []
 
-                for hash_index in hashes:
-                    ret = inv_job_lookup[hash_index]
+                for job_id in job_ids:
+                    # Cycle through all jobs for this entry
+                    ret = inv_job_lookup[job_id]
 
                     # Lookup molecules
                     mol_keys = self.storage_socket.get_molecules(
@@ -143,7 +142,7 @@ class TorsionDriveService:
                     job_results[key].append((mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1]))
 
                     # Update history
-                    self.data["optimization_history"][key].append(hash_index)
+                    self.data["optimization_history"][key].append(job_id)
 
             td_api.update_state(self.data["torsiondrive_state"], job_results)
 
@@ -191,6 +190,7 @@ class TorsionDriveService:
 
         full_tasks = []
         job_map = {}
+        submitted_hash_id_remap = []  # Tracking variable for exondary pass
         for key, geoms in job_dict.items():
             job_map[key] = []
             for num, geom in enumerate(geoms):
@@ -201,7 +201,8 @@ class TorsionDriveService:
                 # Construct constraints
                 containts = [
                     tuple(x) + (str(y), )
-                    for x, y in zip(self.data["torsiondrive_meta"]["dihedral_template"], td_api.grid_id_from_string(key))
+                    for x, y in zip(self.data["torsiondrive_meta"]["dihedral_template"],
+                                    td_api.grid_id_from_string(key))
                 ]
                 packet["meta"]["keywords"]["constraints"] = {"set": containts}
 
@@ -209,30 +210,36 @@ class TorsionDriveService:
                 mol["geometry"] = geom
                 packet["data"] = [mol]
 
-                # Turn packet into a full task
+                # Turn packet into a full task, if there are duplicates, get the ID
                 tasks, complete, errors = procedures.get_procedure_input_parser("optimization")(
-                    self.storage_socket, packet, duplicate_id="hash_index")
+                    self.storage_socket, packet, duplicate_id="id")
 
                 if len(complete):
                     # Job is already complete
-                    job_map[k].append(complete[0])
+                    job_map[key].append(complete[0])
                 else:
                     # Create a hook which will update the complete jobs uid
                     hook = json.loads(hook_template)
-
                     tasks[0]["hooks"].append(hook)
-                    job_map[key].append(tasks[0]["hash_index"])
+                    # Remember the full tasks map to update job_map later
+                    submitted_hash_id_remap.append((key, num))
+                    # Create a placeholder entry at that index for now, we'll update them all
+                    # with known task ID's after we submit them
+                    job_map[key].append(None)
+                    # Add task to "list to submit"
                     full_tasks.append(tasks[0])
-
-        # Create data for next round
-        # self.data["update_structure"] = {k: len(v) for k, v in job_dict.items()}
-        self.data["job_map"] = job_map
-        self.data["required_jobs"] = list({x for v in job_map.values() for x in v})
-        self.data["remaining_jobs"] = len(job_map)
 
         # Add tasks to Nanny
         ret = self.queue_socket.submit_tasks(full_tasks)
         self.data["queue_keys"] = ret["data"]
+
+        # Create data for next round
+        # Update job map based on task IDs
+        for (key, list_index), returned_id in zip(submitted_hash_id_remap, ret['data']):
+            job_map[key][list_index] = returned_id
+        self.data["job_map"] = job_map
+        self.data["required_jobs"] = list({x for v in job_map.values() for x in v})
+        self.data["remaining_jobs"] = len(job_map)
 
     def finalize(self):
         # Add finalize state

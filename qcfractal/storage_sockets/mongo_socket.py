@@ -293,7 +293,7 @@ class MongoSocket:
                 if isinstance(v, (list, tuple)):
                     query[k] = {"$in": v}
 
-            data = list(self._tables[table].find(query))
+            data = list(self._tables[table].find(query, projection=projection))
         else:
             meta["errors"] = "Malformed query"
 
@@ -728,7 +728,7 @@ class MongoSocket:
 
     def get_procedures(self, query, projection=None):
 
-        return self._get_generic(query, "procedures", allow_generic=True)
+        return self._get_generic(query, "procedures", allow_generic=True, projection=projection)
 
     def add_services(self, data):
 
