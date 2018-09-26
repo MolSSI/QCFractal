@@ -195,6 +195,7 @@ class TorsionDriveService:
             job_map[key] = []
             for num, geom in enumerate(geoms):
 
+                print(key, num, geom)
                 # Update molecule
                 packet = json.loads(meta_packet)
 
@@ -215,9 +216,12 @@ class TorsionDriveService:
                     self.storage_socket, packet, duplicate_id="id")
 
                 if len(complete):
+                    print("\n\ncomplete {}\n\n".format(complete))
                     # Job is already complete
-                    job_map[key].append(complete[0])
+                    queue_id = self.storage_socket.get_procedures({"id": complete[0]})["data"][0]["queue_id"]
+                    job_map[key].append(queue_id)
                 else:
+                    print("task", tasks[0]["hash_index"], tasks[0]["spec"]["args"][0]["initial_molecule"])
                     # Create a hook which will update the complete jobs uid
                     hook = json.loads(hook_template)
                     tasks[0]["hooks"].append(hook)
@@ -232,6 +236,8 @@ class TorsionDriveService:
         # Add tasks to Nanny
         ret = self.queue_socket.submit_tasks(full_tasks)
         self.data["queue_keys"] = ret["data"]
+        if len(ret["meta"]["duplicates"]):
+            raise KeyError("One more edge case Levi! Should be a case of adjusting the job map here")
 
         # Create data for next round
         # Update job map based on task IDs
@@ -239,7 +245,9 @@ class TorsionDriveService:
             job_map[key][list_index] = returned_id
         self.data["job_map"] = job_map
         self.data["required_jobs"] = list({x for v in job_map.values() for x in v})
-        self.data["remaining_jobs"] = len(job_map)
+
+        # TODO edit remaining jobs to reflect duplicates
+        self.data["remaining_jobs"] = len(self.data["required_jobs"])
 
     def finalize(self):
         # Add finalize state

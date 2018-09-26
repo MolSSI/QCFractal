@@ -126,3 +126,8 @@ def test_procedure_optimization(fractal_compute_server):
         for ind in range(len(results[0]._trajectory)):
             raw_energy = traj[ind]["properties"]["return_energy"]
             assert pytest.approx(raw_energy, 1.e-5) == energies[ind]
+
+    # Check that duplicates are caught
+    r = requests.post(fractal_compute_server.get_address("task_scheduler"), json=compute)
+    assert r.status_code == 200
+    assert len(r.json()["data"]["completed"]) == 1

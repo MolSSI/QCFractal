@@ -10,7 +10,7 @@ from qcfractal import testing
 
 def _run_command(folder, script):
     # Get the examples director
-    root = os.path.abspath(os.path.dirname(__file__)) 
+    root = os.path.abspath(os.path.dirname(__file__))
     example_path = os.path.join(root, folder)
     os.chdir(example_path)
 
@@ -20,7 +20,7 @@ def _run_command(folder, script):
     except sp.CalledProcessError as e:
         output = e.output
         error = True
-    
+
     os.chdir(root)
     if error:
         msg = "Example {} failed. Output as follows\n\n".format(folder)
@@ -38,4 +38,4 @@ def test_fireworks_server_example():
 
     assert _run_command("fireworks_server", "run_fireworks_example.sh")
 
-        
+
