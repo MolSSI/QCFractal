@@ -68,7 +68,7 @@
 #    client.mongod_query("del_database_by_data", {"name": "H2"})
 #
 #    # Add a new blank test set and submit
-#    db = ds.Database("H2", client)
+#    db = ds.Dataset("H2", client)
 #    db.add_rxn(
 #        "He 2 - 5", [("""He 0 0 5\n--\nHe 0 0 -5""", 1.0), ("He 0 0 0", -2.0)],
 #        reaction_results={"Benchmark": -1.0})
@@ -79,7 +79,7 @@
 #    db.save()
 #
 #    # Re initialize the DB from JSON
-#    db = ds.Database("H2", client)
+#    db = ds.Dataset("H2", client)
 #    assert db.data["name"] == "H2"
 #    assert len(db.data["reactions"]) == 2
 #
@@ -112,7 +112,7 @@
 #
 #    client.mongod_query("del_database_by_data", {"name": "H2_IE"})
 #
-#    db = ds.Database("H2_IE", client, db_type="IE")
+#    db = ds.Dataset("H2_IE", client, db_type="IE")
 #    db.add_ie_rxn("he 2 - 5", """he 0 0 5\n--\nhe 0 0 -5""", reaction_results={"Benchmark": -1.0})
 #    db.add_ie_rxn(
 #        "CHNO",
@@ -121,7 +121,7 @@
 #    db.save()
 #
 #    # Re initialize the DB from JSON
-#    db = ds.Database("H2_IE", client)
+#    db = ds.Dataset("H2_IE", client)
 #    assert db.data["name"] == "H2_IE"
 #    assert len(db.data["reactions"]) == 2
 #    assert db.data["db_type"] == "IE"

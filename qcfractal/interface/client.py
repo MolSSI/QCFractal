@@ -239,7 +239,7 @@ class FractalClient(object):
         else:
             return r.json()["data"]
 
-    ### Database section
+    ### Collections section
 
     def get_collections(self, db_list, full_return=False):
 

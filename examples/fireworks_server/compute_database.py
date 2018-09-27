@@ -9,7 +9,7 @@ option = portal.data.get_options("psi_default")
 opt_ret = p.add_options([option])
 
 # Pull data from the server
-db = portal.collections.Database.from_server(p, "Water")
+db = portal.collections.Dataset.from_server(p, "Water")
 print(db.data)
 
 # Print the current data

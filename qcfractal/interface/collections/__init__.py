@@ -1,6 +1,6 @@
 
-from .database import Database
+from .dataset import Dataset
 from .biofragment import BioFragment
 from .openffworkflow import OpenFFWorkflow
 
-__all__ = ['Database', 'BioFragment', "OpenFFWorkflow"]
+__all__ = ['Dataset', 'BioFragment', "OpenFFWorkflow"]
