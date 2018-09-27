@@ -195,7 +195,6 @@ class TorsionDriveService:
             job_map[key] = []
             for num, geom in enumerate(geoms):
 
-                print(key, num, geom)
                 # Update molecule
                 packet = json.loads(meta_packet)
 
@@ -216,12 +215,10 @@ class TorsionDriveService:
                     self.storage_socket, packet, duplicate_id="id")
 
                 if len(complete):
-                    print("\n\ncomplete {}\n\n".format(complete))
                     # Job is already complete
                     queue_id = self.storage_socket.get_procedures({"id": complete[0]})["data"][0]["queue_id"]
                     job_map[key].append(queue_id)
                 else:
-                    print("task", tasks[0]["hash_index"], tasks[0]["spec"]["args"][0]["initial_molecule"])
                     # Create a hook which will update the complete jobs uid
                     hook = json.loads(hook_template)
                     tasks[0]["hooks"].append(hook)
@@ -237,7 +234,12 @@ class TorsionDriveService:
         ret = self.queue_socket.submit_tasks(full_tasks)
         self.data["queue_keys"] = ret["data"]
         if len(ret["meta"]["duplicates"]):
-            raise KeyError("One more edge case Levi! Should be a case of adjusting the job map here")
+            raise RuntimeError("It appears that one of the jobs you submitted is already in the queue, but was "
+                               "not there when the jobs were populated.\n"
+                               "This should only happen if someone else submitted a similar or exact job "
+                               "was submitted at the same time.\n"
+                               "This is a corner case we have not solved yet. Please open a ticket with QCFractal"
+                               "describing the conditions which yielded this message.")
 
         # Create data for next round
         # Update job map based on task IDs
@@ -264,10 +266,6 @@ class TorsionDriveService:
             key = json.dumps(td_api.grid_id_from_string(k))
             self.data["minimum_positions"][key] = min_pos
             self.data["final_energies"][key] = v[min_pos][2]
-
-        # print(self.data["optimization_history"])
-        # print(self.data["minimum_positions"])
-        # print(self.data["final_energies"])
 
         # Pop temporaries
         del self.data["job_map"]
