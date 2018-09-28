@@ -78,12 +78,17 @@ Index
 
 Portal is the primary user interface to a Fractal server instance.
 
+* :doc:`portal-client`
+* :doc:`portal-collections`
+* :doc:`portal-molecule`
+
 .. toctree::
    :maxdepth: 1
    :hidden:
    :caption: Portal Documentation
 
    portal-client
+   portal-collections
    portal-molecule
 
 **Fractal Documentation**
