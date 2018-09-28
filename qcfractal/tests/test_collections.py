@@ -14,7 +14,7 @@ def test_compute_database(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server.get_address(""))
     db_name = "He_PES"
-    db = portal.collections.Dataset(db_name, client, db_type="ie")
+    ds = portal.collections.Dataset(db_name, client, db_type="ie")
 
     # Adds options
     option = portal.data.get_options("psi_default")
@@ -24,34 +24,34 @@ def test_compute_database(fractal_compute_server):
 
     # Add two helium dimers to the DB at 4 and 8 bohr
     He1 = portal.Molecule([[2, 0, 0, -2], [2, 0, 0, 2]], dtype="numpy", units="bohr", frags=[1])
-    db.add_ie_rxn("He1", He1, attributes={"r": 4}, reaction_results={"default": {"Benchmark": 0.0009608501557}})
+    ds.add_ie_rxn("He1", He1, attributes={"r": 4}, reaction_results={"default": {"Benchmark": 0.0009608501557}})
 
     # Save the DB and re-acquire
-    r = db.save()
-    db = portal.collections.Dataset.from_server(client, db_name)
+    r = ds.save()
+    ds = portal.collections.Dataset.from_server(client, db_name)
 
     He2 = portal.Molecule([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
-    db.add_ie_rxn("He2", He2, attributes={"r": 4}, reaction_results={"default": {"Benchmark": -0.00001098794749}})
+    ds.add_ie_rxn("He2", He2, attributes={"r": 4}, reaction_results={"default": {"Benchmark": -0.00001098794749}})
 
     # Save the DB and overwrite the result
-    r = db.save(overwrite=True)
+    r = ds.save(overwrite=True)
 
     # Open a new database
-    db = portal.collections.Dataset.from_server(client, db_name)
+    ds = portal.collections.Dataset.from_server(client, db_name)
 
     # Compute SCF/sto-3g
-    ret = db.compute("SCF", "STO-3G")
+    ret = ds.compute("SCF", "STO-3G")
     assert len(ret["submitted"]) == 3
     fractal_compute_server.objects["queue_nanny"].await_results()
 
     # Query computed results
-    assert db.query("SCF", "STO-3G")
-    assert pytest.approx(0.6024530476071095, 1.e-5) == db.df.loc["He1", "SCF/STO-3G"]
-    assert pytest.approx(-0.006895035942673289, 1.e-5) == db.df.loc["He2", "SCF/STO-3G"]
+    assert ds.query("SCF", "STO-3G")
+    assert pytest.approx(0.6024530476071095, 1.e-5) == ds.df.loc["He1", "SCF/STO-3G"]
+    assert pytest.approx(-0.006895035942673289, 1.e-5) == ds.df.loc["He2", "SCF/STO-3G"]
 
     # Check results
-    assert db.query("Benchmark", "", reaction_results=True)
-    assert pytest.approx(0.00024477933196125805, 1.e-5) == db.statistics("MUE", "SCF/STO-3G")
+    assert ds.query("Benchmark", "", reaction_results=True)
+    assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/STO-3G")
 
 
 ### Tests an entire server and interaction energy database run

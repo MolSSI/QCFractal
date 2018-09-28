@@ -35,9 +35,9 @@ def _compare_rxn_stoichs(ref, new):
 
 # Build a interesting database
 @pytest.fixture
-def water_db():
+def water_ds():
     # Create water Dataset, also tests that db_type is case insensitive
-    db = portal.collections.Dataset("Water Data", db_type='RxN')
+    ds = portal.collections.Dataset("Water Data", db_type='RxN')
 
     # Build the water dimer.
     dimer = portal.data.get_molecule("water_dimer_minima.psimol")
@@ -47,7 +47,7 @@ def water_db():
     frag_1_0 = dimer.get_fragment(1, 0, orient=True)
 
     # Add single stoich rxn via list
-    db.add_rxn(
+    ds.add_rxn(
         "Water Dimer, nocp", [(dimer, 1.0), (frag_0, -1.0), (frag_1, -1.0)],
         attributes={"R": "Minima"},
         reaction_results={
@@ -57,7 +57,7 @@ def water_db():
 
     dimer_string = dimer.to_string()
     # Add single stoich from strings, not a valid set
-    db.add_rxn(
+    ds.add_rxn(
         "Water Dimer, dimer - str (invalid)", [(dimer_string, 1.0), (dimer_string.splitlines()[-5], 0.0)],
         attributes={"R": "Minima"},
         reaction_results={
@@ -66,32 +66,32 @@ def water_db():
         })
 
     # Add single stoich rxn via hashes
-    db.add_rxn(
+    ds.add_rxn(
         "Water Dimer, nocp - hash", [(dimer.get_hash(), 1.0), (frag_0.get_hash(), -1.0), (frag_1.get_hash(), -1.0)],
         attributes={"R": "Minima"},
         reaction_results={"Benchmark": -5.0})
 
     # Add multi stoich reaction via dict
     with pytest.raises(KeyError):
-        db.add_rxn("Null", {"Null": [(dimer, 1.0)]})
+        ds.add_rxn("Null", {"Null": [(dimer, 1.0)]})
 
     # nocp and cp water dimer
-    db.add_rxn(
+    ds.add_rxn(
         "Water Dimer, all", {
             "cp": [(dimer, 1.0), (frag_0_1, -1.0), (frag_1_0, -1.0)],
             "default": [(dimer, 1.0), (frag_0, -1.0), (frag_1, -1.0)]
         },
         other_fields={"Something": "Other thing"})
 
-    db.add_ie_rxn("Water dimer", dimer.to_string())
+    ds.add_ie_rxn("Water dimer", dimer.to_string())
 
-    return db
+    return ds
 
 
 # Build a nbody database
 @pytest.fixture
-def nbody_db():
-    db = portal.collections.Dataset("N-Body Data")
+def nbody_ds():
+    ds = portal.collections.Dataset("N-Body Data")
 
     dimer = portal.data.get_molecule("water_dimer_minima.psimol")
     frag_0 = dimer.get_fragment(0, orient=True)
@@ -99,7 +99,7 @@ def nbody_db():
     frag_0_1 = dimer.get_fragment(0, 1, orient=True)
     frag_1_0 = dimer.get_fragment(1, 0, orient=True)
 
-    db.add_rxn(
+    ds.add_rxn(
         "Water Dimer, bench", {
             "cp1": [(frag_0_1, 1.0), (frag_1_0, 1.0)],
             "default1": [(frag_0, 1.0), (frag_1, 1.0)],
@@ -107,11 +107,11 @@ def nbody_db():
             "default": [(dimer, 1.0)],
         })
 
-    db.add_ie_rxn("Water Dimer", dimer.to_string())
-    db.add_ie_rxn("Ne Tetramer", portal.data.get_molecule("neon_tetramer.psimol"))
+    ds.add_ie_rxn("Water Dimer", dimer.to_string())
+    ds.add_ie_rxn("Ne Tetramer", portal.data.get_molecule("neon_tetramer.psimol"))
 
     # Ne Tetramer benchmark
-    db.ne_stoich = {
+    ds.ne_stoich = {
         'name': 'Ne Tetramer',
         'stoichiometry': {
             'default1': {
@@ -183,18 +183,18 @@ def nbody_db():
             'default': {}
         }
     }
-    return db
+    return ds
 
 
 # Test conventional add
-def test_rxn_add(water_db):
+def test_rxn_add(water_ds):
 
-    assert water_db.data["name"] == "Water Data"
-    assert len(water_db.get_index()) == 5
+    assert water_ds.data["name"] == "Water Data"
+    assert len(water_ds.get_index()) == 5
 
-    nocp_stoich_class = water_db.get_rxn("Water Dimer, nocp")["stoichiometry"]["default"]
-    nocp_stoich_hash = water_db.get_rxn("Water Dimer, nocp - hash")["stoichiometry"]["default"]
-    nocp_stoich_dict = water_db.get_rxn("Water Dimer, all")["stoichiometry"]["default"]
+    nocp_stoich_class = water_ds.get_rxn("Water Dimer, nocp")["stoichiometry"]["default"]
+    nocp_stoich_hash = water_ds.get_rxn("Water Dimer, nocp - hash")["stoichiometry"]["default"]
+    nocp_stoich_dict = water_ds.get_rxn("Water Dimer, all")["stoichiometry"]["default"]
 
     # Check if both builds check out
     _compare_stoichs(nocp_stoich_class, nocp_stoich_hash)
@@ -202,20 +202,20 @@ def test_rxn_add(water_db):
 
 
 # Test IE add
-def test_nbody_rxn(nbody_db):
+def test_nbody_rxn(nbody_ds):
 
     # Check the Water Dimer
-    water_stoich_bench = nbody_db.get_rxn("Water Dimer, bench")
-    water_stoich = nbody_db.get_rxn("Water Dimer")
+    water_stoich_bench = nbody_ds.get_rxn("Water Dimer, bench")
+    water_stoich = nbody_ds.get_rxn("Water Dimer")
     _compare_rxn_stoichs(water_stoich, water_stoich_bench)
 
     bench_vals = {"default1": 1, "cp1": 4, "default2": 6, "cp2": 10, "default3": 10, "cp3": 14, "default": 1, "cp": 1}
     # Check some basics
-    for key in list(nbody_db.ne_stoich["stoichiometry"]):
-        assert bench_vals[key] == len(nbody_db.ne_stoich["stoichiometry"][key])
+    for key in list(nbody_ds.ne_stoich["stoichiometry"]):
+        assert bench_vals[key] == len(nbody_ds.ne_stoich["stoichiometry"][key])
 
     # Check the N-body
-    ne_stoich = nbody_db.get_rxn("Ne Tetramer")
+    ne_stoich = nbody_ds.get_rxn("Ne Tetramer")
     mh = list(ne_stoich["stoichiometry"]["default"])[0]
     # print(ne_stoich)
-    # _compare_rxn_stoichs(nbody_db.ne_stoich, ne_stoich)
+    # _compare_rxn_stoichs(nbody_ds.ne_stoich, ne_stoich)

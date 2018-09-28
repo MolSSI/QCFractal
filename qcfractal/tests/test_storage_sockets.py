@@ -88,8 +88,8 @@ def test_molecules_get(storage_socket):
 
     # Pull molecule from the DB for tests
     db_json = storage_socket.get_molecules(water_id, index="id")["data"][0]
-    water_db = portal.Molecule.from_json(db_json)
-    water_db.compare(water)
+    water2 = portal.Molecule.from_json(db_json)
+    water2.compare(water)
 
     # Cleanup adds
     ret = storage_socket.del_molecules(water_id, index="id")

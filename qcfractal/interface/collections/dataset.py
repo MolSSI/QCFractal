@@ -191,7 +191,7 @@ class Dataset(Collection):
         Examples
         --------
 
-        db.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
+        ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
 
         """
 
