@@ -42,7 +42,7 @@ def test_compute_database(fractal_compute_server):
 
     # Save the DB and overwrite the result, reacquire via client
     r = ds.save(overwrite=True)
-    ds = portal.collections.Dataset.from_server(client, ds_name)
+    ds = client.get_collection("dataset", ds_name)
 
     # Compute SCF/sto-3g
     ret = ds.compute("SCF", "STO-3G")
