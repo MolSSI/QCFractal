@@ -9,6 +9,7 @@ import socket
 import threading
 import pymongo
 from contextlib import contextmanager
+from collections import Mapping
 
 import pytest
 from tornado.ioloop import IOLoop
@@ -47,6 +48,7 @@ else:
 def has_module(name):
     return _programs[name]
 
+
 # Add a number of module testing options
 using_fireworks = pytest.mark.skipif(has_module('fireworks') is False, reason=_import_message.format('fireworks'))
 using_dask = pytest.mark.skipif(
@@ -58,6 +60,17 @@ using_torsiondrive = pytest.mark.skipif(has_module('torsiondrive') is False, rea
 using_unix = pytest.mark.skipif(os.name.lower() != 'posix', reason='Not on Unix operating system, '
                                                                    'assuming Bash is not present')
 
+
+def recursive_dict_merge(base_dict, dict_to_merge_in):
+    """Recursive merge for more complex than a simple top-level merge {**x, **y} which does not handle nested dict"""
+    for k, v in dict_to_merge_in.items():
+        if (k in base_dict and isinstance(base_dict[k], dict)
+                and isinstance(dict_to_merge_in[k], Mapping)):
+            recursive_dict_merge(base_dict[k], dict_to_merge_in[k])
+        else:
+            base_dict[k] = dict_to_merge_in[k]
+
+
 # Check for MongoDB connection
 def check_active_mongo_server():
 
@@ -66,6 +79,7 @@ def check_active_mongo_server():
         client.server_info()
     except:
         pytest.skip("Could not find an activate mongo test instance at 'localhost:27017'.")
+
 
 ### Server testing mechanics
 
@@ -124,6 +138,7 @@ def active_loop(loop):
         except:
             pass
 
+
 @pytest.fixture(scope="module")
 def test_server(request):
     """
@@ -151,7 +166,6 @@ def test_server(request):
             yield server
 
 
-@using_dask
 @pytest.fixture(scope="module")
 def dask_server_fixture(request):
     """
@@ -191,7 +205,6 @@ def dask_server_fixture(request):
             client.close()
 
 
-@using_fireworks
 @pytest.fixture(scope="module")
 def fireworks_server_fixture(request):
     """
@@ -228,8 +241,6 @@ def fireworks_server_fixture(request):
     logging.basicConfig(level=None, filename=None)
 
 
-# @pytest.fixture(scope="module", params=["dask"])
-# @pytest.fixture(scope="module", params=["fireworks"])
 @pytest.fixture(scope="module", params=["dask", "fireworks"])
 def fractal_compute_server(request):
     if request.param == "dask":

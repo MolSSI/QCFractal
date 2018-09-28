@@ -216,7 +216,8 @@ class TorsionDriveService:
 
                 if len(complete):
                     # Job is already complete
-                    job_map[key].append(complete[0])
+                    queue_id = self.storage_socket.get_procedures({"id": complete[0]})["data"][0]["queue_id"]
+                    job_map[key].append(queue_id)
                 else:
                     # Create a hook which will update the complete jobs uid
                     hook = json.loads(hook_template)
@@ -232,6 +233,13 @@ class TorsionDriveService:
         # Add tasks to Nanny
         ret = self.queue_socket.submit_tasks(full_tasks)
         self.data["queue_keys"] = ret["data"]
+        if len(ret["meta"]["duplicates"]):
+            raise RuntimeError("It appears that one of the jobs you submitted is already in the queue, but was "
+                               "not there when the jobs were populated.\n"
+                               "This should only happen if someone else submitted a similar or exact job "
+                               "was submitted at the same time.\n"
+                               "This is a corner case we have not solved yet. Please open a ticket with QCFractal"
+                               "describing the conditions which yielded this message.")
 
         # Create data for next round
         # Update job map based on task IDs
@@ -239,7 +247,9 @@ class TorsionDriveService:
             job_map[key][list_index] = returned_id
         self.data["job_map"] = job_map
         self.data["required_jobs"] = list({x for v in job_map.values() for x in v})
-        self.data["remaining_jobs"] = len(job_map)
+
+        # TODO edit remaining jobs to reflect duplicates
+        self.data["remaining_jobs"] = len(self.data["required_jobs"])
 
     def finalize(self):
         # Add finalize state
@@ -256,10 +266,6 @@ class TorsionDriveService:
             key = json.dumps(td_api.grid_id_from_string(k))
             self.data["minimum_positions"][key] = min_pos
             self.data["final_energies"][key] = v[min_pos][2]
-
-        # print(self.data["optimization_history"])
-        # print(self.data["minimum_positions"])
-        # print(self.data["final_energies"])
 
         # Pop temporaries
         del self.data["job_map"]
