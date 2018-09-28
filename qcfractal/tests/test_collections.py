@@ -29,6 +29,7 @@ def test_compute_database(fractal_compute_server):
     # Save the DB and re-acquire via classmethod
     r = ds.save()
     ds = portal.collections.Dataset.from_server(client, ds_name)
+    assert "Dataset(" in str(ds)
 
     # Test collection lists
     ret = client.list_collections()

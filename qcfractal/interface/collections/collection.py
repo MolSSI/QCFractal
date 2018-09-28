@@ -47,6 +47,38 @@ class Collection(abc.ABC):
                 **self._init_collection_data(kwargs)
             }
 
+    def __str__(self):
+        """
+        A simple string representation of the Collection.
+
+        Returns
+        -------
+        ret : str
+            A representation of the Collection.
+
+        Examples
+        --------
+
+        >>> repr(obj)
+        Collection(id='5b7f1fd57b87872d2c5d0a6d', name=`S22`, client=`localhost:8888`)
+        """
+
+        uid = "local"
+        if "id" in self.data:
+            uid = self.data["id"]
+
+        client = None
+        if self.client:
+           client = self.client.address
+
+        class_name = self.__class__.__name__
+        ret = "{}(".format(class_name)
+        ret += "id='{}', ".format(uid)
+        ret += "name=`{}`, ".format(self.data["name"])
+        ret += "client='{}') ".format(client)
+
+        return ret
+
     @classmethod
     def from_server(cls, client, name):
         """Creates a new class from a server

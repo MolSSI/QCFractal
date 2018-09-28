@@ -83,7 +83,7 @@ Portal is the primary user interface to a Fractal server instance.
 * :doc:`portal-molecule`
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 2
    :hidden:
    :caption: Portal Documentation
 
