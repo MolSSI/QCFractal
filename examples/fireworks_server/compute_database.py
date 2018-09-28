@@ -9,15 +9,15 @@ option = portal.data.get_options("psi_default")
 opt_ret = p.add_options([option])
 
 # Pull data from the server
-db = portal.collections.Database.from_server(p, "Water")
-print(db.data)
+ds = portal.collections.Dataset.from_server(p, "Water")
+print(ds.data)
 
 # Print the current data
 # Should be blank, except for an index
-print(db.df)
+print(ds.df)
 
 # Submit computations (cp corrected scf/sto-3g)
-r = db.compute("scf", "sto-3g", stoich="cp")
+r = ds.compute("scf", "sto-3g", stoich="cp")
 
 print("Jobs to be computed")
 print(json.dumps(r, indent=2))

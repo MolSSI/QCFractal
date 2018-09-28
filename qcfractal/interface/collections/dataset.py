@@ -15,9 +15,9 @@ from .collection import Collection
 from .collection_utils import nCr
 
 
-class Database(Collection):
+class Dataset(Collection):
     """
-    This is a QCA Database class.
+    This is a QCA Dataset class.
 
     Attributes
     ----------
@@ -26,34 +26,34 @@ class Database(Collection):
     data : dict
         JSON representation of the database backbone
     df : pd.DataFrame
-        The underlying dataframe for the Database object
+        The underlying dataframe for the Dataset object
     rxn_index : pd.Index
-        The unrolled reaction index for all reactions in the Database
+        The unrolled reaction index for all reactions in the Dataset
     """
 
-    __required_fields = {"reactions", "db_type"}
+    __required_fields = {"reactions", "ds_type"}
 
-    def __init__(self, name, client=None, db_type="rxn", **kwargs):
+    def __init__(self, name, client=None, ds_type="rxn", **kwargs):
         """
-        Initializer for the Database object. If no Portal is supplied or the database name
+        Initializer for the Dataset object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
         created.
 
         Parameters
         ----------
         name : str
-            The name of the Database
+            The name of the Dataset
         client : client.FractalClient, optional
             A Portal client to connected to a server
-        db_type : str, optional
-            The type of Database involved
+        ds_type : str, optional
+            The type of Dataset involved
 
         """
-        db_type = db_type.lower()
-        super().__init__(name, client=client, db_type=db_type, **kwargs)
+        ds_type = ds_type.lower()
+        super().__init__(name, client=client, ds_type=ds_type, **kwargs)
 
-        if self.data["db_type"] not in ["rxn", "ie"]:
-            raise TypeError('Database: db_type must either be "rxn" or "ie".')
+        if self.data["ds_type"] not in ["rxn", "ie"]:
+            raise TypeError('Dataset: ds_type must either be "rxn" or "ie".')
 
         # Internal data
         self.rxn_index = pd.DataFrame()
@@ -76,11 +76,11 @@ class Database(Collection):
         self._new_molecule_jsons = {}
 
     def _init_collection_data(self, additional_args):
-        return {"reactions": [], "db_type": additional_args['db_type'].lower()}
+        return {"reactions": [], "ds_type": additional_args['ds_type'].lower()}
 
     def _pre_save_prep(self, client):
 
-        # Preps any new molecules introduced to the Database before storing data.
+        # Preps any new molecules introduced to the Dataset before storing data.
         mol_ret = client.add_molecules(self._new_molecule_jsons)
 
         # Update internal molecule UUID's to servers UUID's
@@ -147,7 +147,7 @@ class Database(Collection):
               reaction_results=False,
               scale="kcal",
               field="return_result",
-              ignore_db_type=False):
+              ignore_ds_type=False):
         """
         Queries the local Portal for the requested keys and stoichiometry.
 
@@ -175,7 +175,7 @@ class Database(Collection):
             All units are based in Hartree, the default scaling is to kcal/mol.
         field : str, optional
             The result field to query on
-        ignore_db_type : bool
+        ignore_ds_type : bool
             Override of "ie" for "rxn" db types.
 
 
@@ -191,7 +191,7 @@ class Database(Collection):
         Examples
         --------
 
-        db.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
+        ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
 
         """
 
@@ -221,10 +221,10 @@ class Database(Collection):
             self.df[prefix + method + postfix] = tmp_idx
             return True
 
-        # if self.data["db_type"].lower() == "ie":
+        # if self.data["ds_type"].lower() == "ie":
         #     _ie_helper(..)
 
-        if (not ignore_db_type) and (self.data["db_type"].lower() == "ie"):
+        if (not ignore_ds_type) and (self.data["ds_type"].lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
             tmp_idx_complex = self._unroll_query(query_keys, stoich, field=field)
             tmp_idx_monomers = self._unroll_query(query_keys, monomer_stoich, field=field)
@@ -252,8 +252,8 @@ class Database(Collection):
                 stoich="default",
                 options="default",
                 program="psi4",
-                ignore_db_type=False):
-        """Executes a computational method for all reactions in the Database.
+                ignore_ds_type=False):
+        """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
         Parameters
@@ -270,7 +270,7 @@ class Database(Collection):
             The options token for the requested compute
         program : str, optional
             The underlying QC program
-        ignore_db_type : bool, optional
+        ignore_ds_type : bool, optional
             Optionally only compute the "default" geometry
 
         Returns
@@ -282,7 +282,7 @@ class Database(Collection):
             raise AttributeError("DataBase: Compute: Client was not set.")
 
         # Figure out molecules that we need
-        if (not ignore_db_type) and (self.data["db_type"].lower() == "ie"):
+        if (not ignore_ds_type) and (self.data["ds_type"].lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
             tmp_monomer = self.rxn_index[self.rxn_index["stoichiometry"] == monomer_stoich].copy()
             tmp_complex = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
@@ -350,10 +350,10 @@ class Database(Collection):
                 found.append(num)
 
         if len(found) == 0:
-            raise KeyError("Database:get_rxn: Reaction name '{}' not found.".format(name))
+            raise KeyError("Dataset:get_rxn: Reaction name '{}' not found.".format(name))
 
         if len(found) > 1:
-            raise KeyError("Database:get_rxn: Multiple reactions of name '{}' found. Database failure.".format(name))
+            raise KeyError("Dataset:get_rxn: Multiple reactions of name '{}' found. Dataset failure.".format(name))
 
         return self.data["reactions"][found[0]]
 
@@ -429,13 +429,13 @@ class Database(Collection):
 
         for line in stoichiometry:
             if len(line) != 2:
-                raise KeyError("Database: Parse stoichiometry: passed in as a list must of key : value type")
+                raise KeyError("Dataset: Parse stoichiometry: passed in as a list must of key : value type")
 
             # Get the values
             try:
                 mol_values.append(float(line[1]))
             except:
-                raise TypeError("Database: Parse stoichiometry: must be able to cast second value must be as float.")
+                raise TypeError("Dataset: Parse stoichiometry: must be able to cast second value must be as float.")
 
             # What kind of molecule is it?
             mol = line[0]
@@ -445,12 +445,12 @@ class Database(Collection):
                 molecule_hash = mol
 
             elif isinstance(mol, str):
-                qcdb_mol = molecule.Molecule(mol)
+                qcf_mol = molecule.Molecule(mol)
 
-                molecule_hash = qcdb_mol.get_hash()
+                molecule_hash = qcf_mol.get_hash()
 
                 if molecule_hash not in list(self._new_molecule_jsons):
-                    self._new_molecule_jsons[molecule_hash] = qcdb_mol.to_json()
+                    self._new_molecule_jsons[molecule_hash] = qcf_mol.to_json()
 
             elif isinstance(mol, molecule.Molecule):
                 molecule_hash = mol.get_hash()
@@ -460,7 +460,7 @@ class Database(Collection):
 
             else:
                 raise TypeError(
-                    "Database: Parse stoichiometry: first value must either be a molecule hash, "
+                    "Dataset: Parse stoichiometry: first value must either be a molecule hash, "
                     "a molecule str, or a Molecule class."
                 )
 
@@ -517,7 +517,7 @@ class Database(Collection):
         # Set name
         if name in self.get_index():
             raise KeyError(
-                "Database: Name '{}' already exists. "
+                "Dataset: Name '{}' already exists. "
                 "Please either delete this entry or call the update function.".format(name))
 
         # Set stoich
@@ -525,7 +525,7 @@ class Database(Collection):
             rxn["stoichiometry"] = {}
 
             if "default" not in list(stoichiometry):
-                raise KeyError("Database:add_rxn: Stoichiometry dict must have a 'default' key.")
+                raise KeyError("Dataset:add_rxn: Stoichiometry dict must have a 'default' key.")
 
             for k, v in stoichiometry.items():
                 rxn["stoichiometry"][k] = self.parse_stoichiometry(v)
@@ -534,17 +534,17 @@ class Database(Collection):
             rxn["stoichiometry"] = {}
             rxn["stoichiometry"]["default"] = self.parse_stoichiometry(stoichiometry)
         else:
-            raise TypeError("Database:add_rxn: Type of stoichiometry input was not recognized:",
+            raise TypeError("Dataset:add_rxn: Type of stoichiometry input was not recognized:",
                             type(stoichiometry))
 
         # Set attributes
         if not isinstance(attributes, dict):
-            raise TypeError("Database:add_rxn: attributes must be a dictionary, not '{}'".format(type(attributes)))
+            raise TypeError("Dataset:add_rxn: attributes must be a dictionary, not '{}'".format(type(attributes)))
 
         rxn["attributes"] = attributes
 
         if not isinstance(other_fields, dict):
-            raise TypeError("Database:add_rxn: other_fields must be a dictionary, not '{}'".format(type(attributes)))
+            raise TypeError("Dataset:add_rxn: other_fields must be a dictionary, not '{}'".format(type(attributes)))
 
         for k, v in other_fields.items():
             rxn[k] = v
@@ -634,7 +634,7 @@ class Database(Collection):
             max_nbody = max_frag
 
         if max_nbody < 2:
-            raise AttributeError("Database:build_ie_fragments: Molecule must have at least two fragments.")
+            raise AttributeError("Dataset:build_ie_fragments: Molecule must have at least two fragments.")
 
         # Build some info
         fragment_range = list(range(max_frag))

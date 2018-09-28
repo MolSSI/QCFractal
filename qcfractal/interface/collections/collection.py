@@ -146,7 +146,7 @@ class Collection(abc.ABC):
         Returns
         -------
         ret : dict
-            A JSON representation of the Database
+            A JSON representation of the Collection
         """
         if filename is not None:
             with open(filename, 'w') as open_file:
@@ -173,7 +173,7 @@ class Collection(abc.ABC):
 
     # Setters
     def save(self, client=None, overwrite=False):
-        """Uploads the overall structure of the Database (reactions, names, new molecules, etc)
+        """Uploads the overall structure of the Collection (indices, options, new molecules, etc)
         to the server.
 
         Parameters
