@@ -5,6 +5,7 @@ import json
 import copy
 
 from .collection import Collection
+from . import collection_utils
 
 
 class OpenFFWorkflow(Collection):
@@ -118,3 +119,4 @@ class OpenFFWorkflow(Collection):
 
         return ret
 
+collection_utils.register_collection(OpenFFWorkflow)

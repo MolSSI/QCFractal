@@ -6,6 +6,7 @@ import json
 import copy
 
 from .collection import Collection
+from . import collection_utils
 
 
 class BioFragment(Collection):
@@ -114,3 +115,4 @@ class BioFragment(Collection):
                 submissions.append(ret)
         return submissions
 
+collection_utils.register_collection(BioFragment)
