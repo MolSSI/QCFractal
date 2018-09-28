@@ -61,8 +61,8 @@ using_unix = pytest.mark.skipif(os.name.lower() != 'posix', reason='Not on Unix 
                                                                    'assuming Bash is not present')
 
 
-# More complex than a simple top-level merge {**x, **y} which does not handle nested dict
 def recursive_dict_merge(base_dict, dict_to_merge_in):
+    """Recursive merge for more complex than a simple top-level merge {**x, **y} which does not handle nested dict"""
     for k, v in dict_to_merge_in.items():
         if (k in base_dict and isinstance(base_dict[k], dict)
                 and isinstance(dict_to_merge_in[k], Mapping)):
@@ -166,7 +166,6 @@ def test_server(request):
             yield server
 
 
-@using_dask
 @pytest.fixture(scope="module")
 def dask_server_fixture(request):
     """
@@ -206,7 +205,6 @@ def dask_server_fixture(request):
             client.close()
 
 
-@using_fireworks
 @pytest.fixture(scope="module")
 def fireworks_server_fixture(request):
     """
@@ -243,8 +241,6 @@ def fireworks_server_fixture(request):
     logging.basicConfig(level=None, filename=None)
 
 
-# @pytest.fixture(scope="module", params=["dask"])
-# @pytest.fixture(scope="module", params=["fireworks"])
 @pytest.fixture(scope="module", params=["dask", "fireworks"])
 def fractal_compute_server(request):
     if request.param == "dask":

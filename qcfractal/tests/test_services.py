@@ -11,11 +11,13 @@ import copy
 import qcfractal.interface as portal
 
 
-@testing.using_torsiondrive
-@testing.using_geometric
-@testing.using_rdkit
 @pytest.fixture(scope="module")
 def torsiondrive_fixture(dask_server_fixture):
+
+    # Cannot use this fixture without these services. Also cannot use `mark` and `fixture` decorators
+    pytest.importorskip("torsiondrive")
+    pytest.importorskip("geometric")
+    pytest.importorskip("rdkit")
 
     client = portal.FractalClient(dask_server_fixture.get_address())
 
@@ -60,7 +62,8 @@ def torsiondrive_fixture(dask_server_fixture):
 
 def test_service_torsiondrive(torsiondrive_fixture):
     """"Ensure torsiondrive works as intended gives the correct result"""
-    # This test does not ensure de-duplication of work,
+    # This test does not ensure de-duplication of work
+    # Test will be skipped if missing RDKit, Geomertic, and TorsionDrive from fixture
     spin_up_test, client = torsiondrive_fixture
 
     ret = spin_up_test()
@@ -79,6 +82,7 @@ def test_service_torsiondrive(torsiondrive_fixture):
 def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     """Ensure that duplicates are properly caught and yield the same results without calculation"""
     # This test does not ensure accuracy, there is another test for that
+    # Test will be skipped if missing RDKit, Geomertic, and TorsionDrive from fixture
     spin_up_test, client = torsiondrive_fixture
     # Run the test without modifications
     _ = spin_up_test()
