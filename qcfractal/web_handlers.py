@@ -147,7 +147,7 @@ class CollectionHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        ret = storage.get_collections(self.json["data"])
+        ret = storage.get_collections(self.json["data"], projection=self.json["meta"].get("projection", None))
         self.logger.info("GET: Collections - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
