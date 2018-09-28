@@ -241,9 +241,9 @@ class FractalClient(object):
 
     ### Collections section
 
-    def get_collections(self, db_list, full_return=False):
+    def get_collections(self, collection_list, full_return=False):
 
-        payload = {"meta": {}, "data": db_list}
+        payload = {"meta": {}, "data": collection_list}
         r = self._request("get", "collection", payload)
 
         if full_return:
@@ -251,14 +251,14 @@ class FractalClient(object):
         else:
             return r.json()["data"]
 
-    def add_collection(self, db, overwrite=False, full_return=False):
+    def add_collection(self, collection, overwrite=False, full_return=False):
 
         # Can take in either molecule or lists
 
-        if overwrite and ("id" not in db):
+        if overwrite and ("id" not in collection):
             raise KeyError("Attempting to overwrite collection, but no server ID found.")
 
-        payload = {"meta": {"overwrite": overwrite}, "data": db}
+        payload = {"meta": {"overwrite": overwrite}, "data": collection}
 
         r = self._request("post", "collection", payload)
         assert r.status_code == 200

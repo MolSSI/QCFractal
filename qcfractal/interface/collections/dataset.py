@@ -31,9 +31,9 @@ class Dataset(Collection):
         The unrolled reaction index for all reactions in the Dataset
     """
 
-    __required_fields = {"reactions", "db_type"}
+    __required_fields = {"reactions", "ds_type"}
 
-    def __init__(self, name, client=None, db_type="rxn", **kwargs):
+    def __init__(self, name, client=None, ds_type="rxn", **kwargs):
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -45,15 +45,15 @@ class Dataset(Collection):
             The name of the Dataset
         client : client.FractalClient, optional
             A Portal client to connected to a server
-        db_type : str, optional
+        ds_type : str, optional
             The type of Dataset involved
 
         """
-        db_type = db_type.lower()
-        super().__init__(name, client=client, db_type=db_type, **kwargs)
+        ds_type = ds_type.lower()
+        super().__init__(name, client=client, ds_type=ds_type, **kwargs)
 
-        if self.data["db_type"] not in ["rxn", "ie"]:
-            raise TypeError('Dataset: db_type must either be "rxn" or "ie".')
+        if self.data["ds_type"] not in ["rxn", "ie"]:
+            raise TypeError('Dataset: ds_type must either be "rxn" or "ie".')
 
         # Internal data
         self.rxn_index = pd.DataFrame()
@@ -76,7 +76,7 @@ class Dataset(Collection):
         self._new_molecule_jsons = {}
 
     def _init_collection_data(self, additional_args):
-        return {"reactions": [], "db_type": additional_args['db_type'].lower()}
+        return {"reactions": [], "ds_type": additional_args['ds_type'].lower()}
 
     def _pre_save_prep(self, client):
 
@@ -147,7 +147,7 @@ class Dataset(Collection):
               reaction_results=False,
               scale="kcal",
               field="return_result",
-              ignore_db_type=False):
+              ignore_ds_type=False):
         """
         Queries the local Portal for the requested keys and stoichiometry.
 
@@ -175,7 +175,7 @@ class Dataset(Collection):
             All units are based in Hartree, the default scaling is to kcal/mol.
         field : str, optional
             The result field to query on
-        ignore_db_type : bool
+        ignore_ds_type : bool
             Override of "ie" for "rxn" db types.
 
 
@@ -221,10 +221,10 @@ class Dataset(Collection):
             self.df[prefix + method + postfix] = tmp_idx
             return True
 
-        # if self.data["db_type"].lower() == "ie":
+        # if self.data["ds_type"].lower() == "ie":
         #     _ie_helper(..)
 
-        if (not ignore_db_type) and (self.data["db_type"].lower() == "ie"):
+        if (not ignore_ds_type) and (self.data["ds_type"].lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
             tmp_idx_complex = self._unroll_query(query_keys, stoich, field=field)
             tmp_idx_monomers = self._unroll_query(query_keys, monomer_stoich, field=field)
@@ -252,7 +252,7 @@ class Dataset(Collection):
                 stoich="default",
                 options="default",
                 program="psi4",
-                ignore_db_type=False):
+                ignore_ds_type=False):
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -270,7 +270,7 @@ class Dataset(Collection):
             The options token for the requested compute
         program : str, optional
             The underlying QC program
-        ignore_db_type : bool, optional
+        ignore_ds_type : bool, optional
             Optionally only compute the "default" geometry
 
         Returns
@@ -282,7 +282,7 @@ class Dataset(Collection):
             raise AttributeError("DataBase: Compute: Client was not set.")
 
         # Figure out molecules that we need
-        if (not ignore_db_type) and (self.data["db_type"].lower() == "ie"):
+        if (not ignore_ds_type) and (self.data["ds_type"].lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
             tmp_monomer = self.rxn_index[self.rxn_index["stoichiometry"] == monomer_stoich].copy()
             tmp_complex = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
@@ -445,12 +445,12 @@ class Dataset(Collection):
                 molecule_hash = mol
 
             elif isinstance(mol, str):
-                qcdb_mol = molecule.Molecule(mol)
+                qcf_mol = molecule.Molecule(mol)
 
-                molecule_hash = qcdb_mol.get_hash()
+                molecule_hash = qcf_mol.get_hash()
 
                 if molecule_hash not in list(self._new_molecule_jsons):
-                    self._new_molecule_jsons[molecule_hash] = qcdb_mol.to_json()
+                    self._new_molecule_jsons[molecule_hash] = qcf_mol.to_json()
 
             elif isinstance(mol, molecule.Molecule):
                 molecule_hash = mol.get_hash()

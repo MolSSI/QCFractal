@@ -13,8 +13,8 @@ import pytest
 def test_compute_database(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server.get_address(""))
-    db_name = "He_PES"
-    ds = portal.collections.Dataset(db_name, client, db_type="ie")
+    ds_name = "He_PES"
+    ds = portal.collections.Dataset(ds_name, client, ds_type="ie")
 
     # Adds options
     option = portal.data.get_options("psi_default")
@@ -28,7 +28,7 @@ def test_compute_database(fractal_compute_server):
 
     # Save the DB and re-acquire
     r = ds.save()
-    ds = portal.collections.Dataset.from_server(client, db_name)
+    ds = portal.collections.Dataset.from_server(client, ds_name)
 
     He2 = portal.Molecule([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
     ds.add_ie_rxn("He2", He2, attributes={"r": 4}, reaction_results={"default": {"Benchmark": -0.00001098794749}})
@@ -37,7 +37,7 @@ def test_compute_database(fractal_compute_server):
     r = ds.save(overwrite=True)
 
     # Open a new database
-    ds = portal.collections.Dataset.from_server(client, db_name)
+    ds = portal.collections.Dataset.from_server(client, ds_name)
 
     # Compute SCF/sto-3g
     ret = ds.compute("SCF", "STO-3G")
