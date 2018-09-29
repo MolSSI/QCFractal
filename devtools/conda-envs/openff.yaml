@@ -12,6 +12,7 @@ dependencies:
   - distributed
 
     # Base depends
+  - python
   - numpy
   - pandas
   - mongodb

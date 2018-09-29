@@ -6,6 +6,7 @@ dependencies:
   - psi4=1.2
 
     # Base depends
+  - python
   - numpy
   - pandas
   - mongodb
