@@ -3,9 +3,10 @@ channels:
   - psi4
 dependencies:
     # Compute
-  - psi4=1.2
+  - psi4
 
     # Base depends
+  - python
   - numpy
   - pandas
   - mongodb
