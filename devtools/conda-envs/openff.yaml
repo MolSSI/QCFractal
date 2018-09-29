@@ -4,7 +4,7 @@ channels:
   - rdkit
 dependencies:
     # Compute
-  - psi4=1.2
+  - psi4
   - rdkit
 
     # Dask testing environment
