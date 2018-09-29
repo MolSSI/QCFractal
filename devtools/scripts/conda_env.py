@@ -2,7 +2,6 @@ import argparse
 import os
 import shutil
 import subprocess as sp
-import sys
 
 # Args
 parser = argparse.ArgumentParser(description='Creates a conda environment from file for a given Python version.')
