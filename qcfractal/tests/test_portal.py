@@ -44,7 +44,7 @@ def test_options_portal(test_server):
 
 def test_collection_portal(test_server):
 
-    db = {"collection": "TorsionDrive", "name": "Torsion123", "something": "else", "array": ["54321"]}
+    db = {"collection": "torsiondrive", "name": "Torsion123", "something": "else", "array": ["54321"]}
 
     client = portal.FractalClient(test_server.get_address(""))
 
@@ -52,7 +52,7 @@ def test_collection_portal(test_server):
     ret = client.add_collection(db)
 
     # Test get
-    get_db = client.get_collections([(db["collection"], db["name"])])
-    del get_db[0]["id"]
+    get_db = client.get_collection(db["collection"], db["name"], full_return=True)
+    del get_db["data"][0]["id"]
 
-    assert db == get_db[0]
+    assert db == get_db["data"][0]

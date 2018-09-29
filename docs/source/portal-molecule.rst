@@ -75,16 +75,16 @@ Molecule Hash
 
 A molecule hash is automatically created to allow each molecule to be uniquely identified. The following keys are used to generate the hash:
 
- - `symbols`
- - `masses` (1.e-6 tolerance)
- - `charge` (1.e-4 tolerance)
- - `multiplicity`
- - `real`
- - `geometry` (1.e-8 tolerance)
- - `fragments`
- - `fragment_charges` (1.e-4 tolerance)
- - `fragment_multiplicities`
- - `connectivity`
+ - ``symbols``
+ - ``masses`` (1.e-6 tolerance)
+ - ``charge`` (1.e-4 tolerance)
+ - ``multiplicity``
+ - ``real``
+ - ``geometry`` (1.e-8 tolerance)
+ - ``fragments``
+ - ``fragment_charges`` (1.e-4 tolerance)
+ - ``fragment_multiplicities``
+ - ``connectivity``
 
 Hashes can be acquired from any molecule object and a ``FractalServer`` automatically generates canonical hashes when a molecule is added to the database.
 

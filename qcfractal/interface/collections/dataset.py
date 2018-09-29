@@ -17,7 +17,7 @@ from .collection_utils import nCr, register_collection
 
 class Dataset(Collection):
     """
-    This is a QCA Dataset class.
+    This QCA Dataset class.
 
     Attributes
     ----------
