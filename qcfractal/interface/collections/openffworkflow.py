@@ -39,16 +39,15 @@ class OpenFFWorkflow(Collection):
         """
         super().__init__(name, client=client, options=options, **kwargs)
 
+        self._fragment_cache = {}
+
     def _init_collection_data(self, additional_args):
         options = additional_args.get("options", None)
         if options is None:
             raise KeyError("No record of OpenFFWorkflow {} found and no initial options passed in.".format(name))
 
         ret = copy.deepcopy(options)
-        ret["fragments"] = {}  # No known fragments
-        ret["molecules"] = []
-
-        ret["fragment_cache"] = {}  # Caches pulled fragment data
+        ret["fragments"] = {}
 
         return ret
 
@@ -56,19 +55,63 @@ class OpenFFWorkflow(Collection):
         pass
 
     def get_options(self, key):
+        """
+        Obtains "base" workflow options that do not change.
+
+        Parameters
+        ----------
+        key : str
+            The original workflow options.
+
+        Returns
+        -------
+        dict
+            The requested options dictionary.
+        """
         if key not in self.__required_fields:
             raise KeyError("Key `{}` not understood.".format(key))
 
         return copy.deepcopy(self.data[key])
 
     def list_fragments(self):
-        return copy.deepcopy(list(self.data["fragments"]))
+        """
+        List all fragments associated with this workflow.
 
-    def list_initial_molecules(self):
-        return copy.deepcopy(self.data["molecules"])
+        Returns
+        -------
+        list of str
+            A list of fragment id's.
+        """
+        return list(self.data["fragments"])
 
     def add_fragment(self, fragment_id, data, provenance={}):
+        """
+        Adds a new fragment to the workflow along with the associated torsiondrives required.
 
+        Parameters
+        ----------
+        fragment_id : str
+            The tag associated with fragment. In general this should be the canonical isomeric
+            explicit hydrogen mapped SMILES tag for this fragment.
+        data : dict
+            A dictionary of label : {intial_molecule, grid_spacing, dihedrals} keys.
+
+        provenance : dict, optional
+            The provenance of the fragments creation
+
+        Example
+        -------
+
+        data = {
+           "label1": {
+                "initial_molecule": ptl.data.get_molecule("butane.json"),
+                "grid_spacing": [60],
+                "dihedrals": [[0, 2, 3, 1]],
+            },
+            ...
+        }
+        wf.add_fragment("CCCC", data=)
+        """
         if fragment_id not in self.data["fragments"]:
             self.data["fragments"][fragment_id] = {}
 
@@ -78,6 +121,7 @@ class OpenFFWorkflow(Collection):
                 print("Already found label {} for fragment_ID {}, skipping.".format(name, fragment_id))
                 continue
 
+            # Build out a new service
             torsion_meta = copy.deepcopy(
                 {k: self.data[k]
                  for k in ("torsiondrive_meta", "optimization_meta", "qc_meta")})
@@ -85,6 +129,7 @@ class OpenFFWorkflow(Collection):
             for k in ["grid_spacing", "dihedrals"]:
                 torsion_meta["torsiondrive_meta"][k] = packet[k]
 
+            # Get hash of torsion
             ret = self.client.add_service("torsiondrive", [packet["initial_molecule"]], torsion_meta)
 
             hash_lists = []
@@ -93,30 +138,34 @@ class OpenFFWorkflow(Collection):
             if len(hash_lists) != 1:
                 raise KeyError("Something went very wrong.")
 
-            hash_index = hash_lists[0]
-            frag_data[name] = hash_index
+            # add back to fragment data
+            packet["hash_index"] = hash_list[0]
+            frag_data[name] = packet
 
-        self.data["fragments"][fragment_id] = frag_data
+    def get_fragment_data(self, fragments=None, refresh_cache=False):
+        """Obtains fragment torsiondrives from server to local data.
 
-    def get_data(self):
+        Parameters
+        ----------
+        fragments : None, optional
+            A list of fragment ID's to query upon
+        refresh_cache : bool, optional
+            If True requery everything, otherwise use the cache to prevent extra lookups.
+        """
+        # If no fragments explicitly shown, grab all
+        if fragments is None:
+            fragments = self.data["fragments"].keys()
 
+        # Figure out the lookup
         lookup = []
-        for k, v in self.data["fragments"].items():
-            lookup.extend(list(v.values()))
+        for frag in fragments:
+            lookup.extend([v["hash_index"] for v in self.data["fragments"][frag]])
 
+        if refresh_cache is False:
+            lookup = list(set(lookup) - self._fragment_cache)
+
+        # Grab the data and update cache
         data = self.client.get_procedures({"hash_index": lookup})
-        data = {x._hash_index: x for x in data}
-
-        ret = {}
-        for frag, reqs in self.data["fragments"].items():
-            ret[frag] = {}
-            for label, hash_index in reqs.items():
-                try:
-                    ret[frag][label] = {json.dumps(k):v for k, v in data[hash_index].final_energies().items()}
-                except KeyError:
-                    ret[frag][label] = None
-
-
-        return ret
+        self._fragment_cache.update({x._hash_index: x for x in data})
 
 collection_utils.register_collection(OpenFFWorkflow)
