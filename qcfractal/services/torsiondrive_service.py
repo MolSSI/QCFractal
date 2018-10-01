@@ -267,6 +267,15 @@ class TorsionDriveService:
             self.data["minimum_positions"][key] = min_pos
             self.data["final_energies"][key] = v[min_pos][2]
 
+        self.data["optimization_history"] = {
+            json.dumps(td_api.grid_id_from_string(k)): v
+            for k, v in self.data["optimization_history"].items()
+        }
+
+        # print(self.data["optimization_history"])
+        # print(self.data["minimum_positions"])
+        # print(self.data["final_energies"])
+
         # Pop temporaries
         del self.data["job_map"]
         del self.data["remaining_jobs"]
@@ -274,6 +283,7 @@ class TorsionDriveService:
         del self.data["queue_keys"]
         del self.data["torsiondrive_state"]
         del self.data["status"]
+        del self.data["required_jobs"]
 
         return self.data
 

@@ -61,9 +61,8 @@ def torsiondrive_fixture(dask_server_fixture):
 
 
 def test_service_torsiondrive(torsiondrive_fixture):
-    """"Ensure torsiondrive works as intended gives the correct result"""
-    # This test does not ensure de-duplication of work
-    # Test will be skipped if missing RDKit, Geomertic, and TorsionDrive from fixture
+    """"Tests torsiondrive pathway and checks the result result"""
+
     spin_up_test, client = torsiondrive_fixture
 
     ret = spin_up_test()
@@ -78,14 +77,17 @@ def test_service_torsiondrive(torsiondrive_fixture):
     assert pytest.approx(0.000156553761859271, 1e-5) == result.final_energies(-90)
     assert pytest.approx(0.000753492556057886, 1e-5) == result.final_energies(180)
 
+    assert "symbols" in result.final_molecules()[(-90, )]
+
 
 def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     """Ensure that duplicates are properly caught and yield the same results without calculation"""
-    # This test does not ensure accuracy, there is another test for that
-    # Test will be skipped if missing RDKit, Geomertic, and TorsionDrive from fixture
+
     spin_up_test, client = torsiondrive_fixture
+
     # Run the test without modifications
     _ = spin_up_test()
+
     # Augment the input for torsion drive to yield a new hash procedure hash,
     # but not a new task set
     _ = spin_up_test(torsiondrive_meta={"meaningless_entry_to_change_hash": "Waffles!"})

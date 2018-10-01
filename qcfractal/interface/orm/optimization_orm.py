@@ -20,7 +20,6 @@ class OptimizationORM:
         # Options
         "_program": "program",
         "_qc_options": "qc_meta",
-
         "_initial_molecule_id": "initial_molecule",
         "_final_molecule_id": "final_molecule",
         "_trajectory": "trajectory",
@@ -150,8 +149,19 @@ class OptimizationORM:
         list of dict
             A list of results documents
         """
+
         payload = copy.deepcopy(self._trajectory)
         payload["projection"] = projection
         return self._client.locator(payload)
 
+    def final_molecule(self):
+        """Returns the optimized molecule
 
+        Returns
+        -------
+        Molecule
+            The optimized molecule
+        """
+
+        ret = self._client.get_molecules([self._final_molecule_id], index="id")
+        return ret[0]
