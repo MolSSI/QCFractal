@@ -322,7 +322,7 @@ class FractalClient(object):
         if return_objects:
             ret = []
             for packet in r.json()["data"]:
-                tmp = orm.build_orm(packet)
+                tmp = orm.build_orm(packet, client=self)
                 ret.append(tmp)
             return ret
         else:

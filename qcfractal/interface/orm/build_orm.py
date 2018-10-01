@@ -6,7 +6,7 @@ from .torsiondrive_orm import TorsionDriveORM
 from .optimization_orm import OptimizationORM
 
 
-def build_orm(data, procedure=None):
+def build_orm(data, procedure=None, client=None):
     """
     Constructs a Service ORM from incoming JSON data.
 
@@ -16,6 +16,8 @@ def build_orm(data, procedure=None):
         A JSON representation of the procedure.
     procedure : None, optional
         The name of the procedure. If blank the procedure name is pulled from the `data["procedure"]` field.
+    client : FractalClient, optional
+        A activate server connection.
 
     Returns
     -------
@@ -44,8 +46,8 @@ def build_orm(data, procedure=None):
     # import json
     # print(json.dumps(data, indent=2))
     if data["procedure"].lower() == "torsiondrive":
-        return TorsionDriveORM.from_json(data)
+        return TorsionDriveORM.from_json(data, client=client)
     elif data["procedure"].lower() == "optimization":
-        return OptimizationORM.from_json(data)
+        return OptimizationORM.from_json(data, client=client)
     else:
         raise KeyError("Service names {} not recognized.".format(data["procedure"]))

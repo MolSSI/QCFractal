@@ -2,8 +2,10 @@
 A ORM for TorsionDrive
 """
 
+import copy
 import json
 
+__all__ = ["TorsionDriveORM"]
 
 class TorsionDriveORM:
     """
@@ -19,6 +21,7 @@ class TorsionDriveORM:
         # Options
         "_optimization_history": "optimization_history",
         "_initial_molecule_id": "initial_molecule",
+        "_final_molecule_id": "final_molecule",
         "_torsiondrive_options": "torsiondrive_meta",
         "_geometric_options": "geometric_meta",
         "_qc_options": "qc_meta",
@@ -43,13 +46,16 @@ class TorsionDriveORM:
 
         """
         self._initial_molecule = initial_molecule
+        self._client = kwargs.pop("client", None)
 
         # Set kwargs
         for k in self.__json_mapper.keys():
             setattr(self, k, kwargs.get(k[1:], None))
 
+        self._cache = {}
+
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, data, client=None):
         """
         Creates a TorsionDriveORM object from FractalServer data.
 
@@ -64,6 +70,8 @@ class TorsionDriveORM:
                 - "geometric_meta": The options submitted to the Geometric method called by TorsionDrive
                 - "qc_meta": The program, options, method, and basis to be run by Geometric.
                 - "final_energies": A dictionary of final energies if the TorsionDrive service is finished
+        client : FractalClient
+            A server connection to
 
         Returns
         -------
@@ -75,11 +83,23 @@ class TorsionDriveORM:
         for k, v in TorsionDriveORM.__json_mapper.items():
             if v in data:
                 kwargs[k[1:]] = data[v]
+            else:
+                kwargs[k[1:]] = None
 
         if ("final_energies" in kwargs) and (kwargs["final_energies"] is not None):
             kwargs["final_energies"] = {tuple(json.loads(k)): v for k, v in kwargs["final_energies"].items()}
 
+        self._client = client
+
         return cls(None, **kwargs)
+
+    def _check_success(self):
+        if not self._success:
+            raise KeyError("{} has not completed or failed. Unable to process request.".format(self))
+
+    def _check_client(self):
+        if self._client is None:
+            raise KeyError("{} requires a FractalClient to aquire the requested information.".format(self))
 
     def __str__(self):
         """
@@ -133,8 +153,7 @@ class TorsionDriveORM:
         {(-90,): -148.7641654446243, (180,): -148.76501336993732, (0,): -148.75056290106735, (90,): -148.7641654446148}
         """
 
-        if not self._success:
-            raise KeyError("{} has not completed or failed. Unable to show final energies.".format(self))
+        self._check_success()
 
         if key is None:
             return self._final_energies.copy()
@@ -143,3 +162,20 @@ class TorsionDriveORM:
                 key = (int(key), )
 
             return self._final_energies[key]
+
+    def final_molecule(self):
+        """Returns the optimized molecule
+
+        Returns
+        -------
+        Molecule
+            The optimized molecule
+        """
+        self._check_success()
+        self._check_client()
+
+        if "final_molecule" not in self._cache:
+            self._cache["final_molecule"] = self._client.get_molecules({"mol": self._final_molecule_id}, index="id")["mol"]
+
+        return copy.deepcopy(self._cache["final_molecule"])
+

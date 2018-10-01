@@ -43,13 +43,14 @@ class OptimizationORM:
 
         """
         self._initial_molecule = initial_molecule
+        self._client = kwargs.pop("client", None)
 
         # Set kwargs
         for k in self.__json_mapper.keys():
             setattr(self, k, kwargs.get(k[1:], None))
 
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, data, client=None):
         """
         Creates a OptimizationORM object from FractalServer data.
 
@@ -65,6 +66,8 @@ class OptimizationORM:
                 - "final_molecule_id": The id of the optimizated molecule.
                 - "trajectory": QC results for each step in the geometry optimization.
                 - "energies": The final energies for each step in the geometry optimization.
+        client : FractalClient, optional
+            A activate server connection.
 
         Returns
         -------
@@ -80,6 +83,7 @@ class OptimizationORM:
         if ("final_energies" in kwargs) and (kwargs["final_energies"] is not None):
             kwargs["final_energies"] = {tuple(json.loads(k)): v for k, v in kwargs["final_energies"].items()}
 
+        kwargs["client"] = client
         return cls(None, **kwargs)
 
     def __str__(self):
@@ -131,7 +135,7 @@ class OptimizationORM:
         """
         return self._energies[-1]
 
-    def get_trajectory(self, client, projection=None):
+    def get_trajectory(self, projection=None):
         """Returns the raw documents for each gradient evaluation in the trajectory.
 
         Parameters
@@ -148,6 +152,6 @@ class OptimizationORM:
         """
         payload = copy.deepcopy(self._trajectory)
         payload["projection"] = projection
-        return client.locator(payload)
+        return self._client.locator(payload)
 
 
