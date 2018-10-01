@@ -37,9 +37,20 @@ class OpenFFWorkflow(Collection):
             A Portal client to connect to a server
 
         """
+
+        if client is None:
+            raise KeyError("OpenFFWorkflow must have a client.")
+
         super().__init__(name, client=client, options=options, **kwargs)
 
         self._fragment_cache = {}
+
+        # First workflow is saved
+        if "id" not in self.data:
+            ret = self.save()
+            if len(ret) == 0:
+                raise ValueError("Attempted to insert duplicate Workflow with name '{}'".format(name))
+            self.data["id"] = ret[0][1]
 
     def _init_collection_data(self, additional_args):
         options = additional_args.get("options", None)
@@ -139,8 +150,11 @@ class OpenFFWorkflow(Collection):
                 raise KeyError("Something went very wrong.")
 
             # add back to fragment data
-            packet["hash_index"] = hash_list[0]
+            packet["hash_index"] = hash_lists[0]
             frag_data[name] = packet
+
+        # Push collection data back to server
+        self.save(overwrite=True)
 
     def get_fragment_data(self, fragments=None, refresh_cache=False):
         """Obtains fragment torsiondrives from server to local data.
@@ -159,13 +173,61 @@ class OpenFFWorkflow(Collection):
         # Figure out the lookup
         lookup = []
         for frag in fragments:
-            lookup.extend([v["hash_index"] for v in self.data["fragments"][frag]])
+            lookup.extend([v["hash_index"] for v in self.data["fragments"][frag].values()])
 
         if refresh_cache is False:
-            lookup = list(set(lookup) - self._fragment_cache)
+            lookup = list(set(lookup) - self._fragment_cache.keys())
 
         # Grab the data and update cache
         data = self.client.get_procedures({"hash_index": lookup})
         self._fragment_cache.update({x._hash_index: x for x in data})
 
+
+    def list_final_energies(self, fragments=None, refresh_cache=False):
+
+        # If no fragments explicitly shown, grab all
+        if fragments is None:
+            fragments = self.data["fragments"].keys()
+
+        # Get the data if available
+        self.get_fragment_data(fragments=fragments, refresh_cache=refresh_cache)
+
+        ret = {}
+        for frag in fragments:
+            tmp = {}
+            for k, v in self.data["fragments"][frag].items():
+                if v["hash_index"] in self._fragment_cache:
+                    tmp[k] = self._fragment_cache[v["hash_index"]].final_energies()
+                else:
+                    tmp[k] = None
+
+            ret[frag] = tmp
+
+        return ret
+
+
+    def list_final_molecules(self, fragments=None, refresh_cache=False):
+
+        # If no fragments explicitly shown, grab all
+        if fragments is None:
+            fragments = self.data["fragments"].keys()
+
+        # Get the data if available
+        self.get_fragment_data(fragments=fragments, refresh_cache=refresh_cache)
+
+        ret = {}
+        for frag in fragments:
+            tmp = {}
+            for k, v in self.data["fragments"][frag].items():
+                if v["hash_index"] in self._fragment_cache:
+                    tmp[frag][k] = self._fragment_cache[v["hash_index"]].final_molecule()
+                else:
+                    tmp[k] = None
+
+            ret[frag] = tmp
+
+        return ret
+
+
 collection_utils.register_collection(OpenFFWorkflow)
+
