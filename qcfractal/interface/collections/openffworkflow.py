@@ -43,7 +43,7 @@ class OpenFFWorkflow(Collection):
 
         super().__init__(name, client=client, options=options, **kwargs)
 
-        self._fragment_cache = {}
+        self._torsiondrive_cache = {}
 
         # First workflow is saved
         if "id" not in self.data:
@@ -176,11 +176,11 @@ class OpenFFWorkflow(Collection):
             lookup.extend([v["hash_index"] for v in self.data["fragments"][frag].values()])
 
         if refresh_cache is False:
-            lookup = list(set(lookup) - self._fragment_cache.keys())
+            lookup = list(set(lookup) - self._torsiondrive_cache.keys())
 
         # Grab the data and update cache
         data = self.client.get_procedures({"hash_index": lookup})
-        self._fragment_cache.update({x._hash_index: x for x in data})
+        self._torsiondrive_cache.update({x._hash_index: x for x in data})
 
 
     def list_final_energies(self, fragments=None, refresh_cache=False):
@@ -196,8 +196,8 @@ class OpenFFWorkflow(Collection):
         for frag in fragments:
             tmp = {}
             for k, v in self.data["fragments"][frag].items():
-                if v["hash_index"] in self._fragment_cache:
-                    tmp[k] = self._fragment_cache[v["hash_index"]].final_energies()
+                if v["hash_index"] in self._torsiondrive_cache:
+                    tmp[k] = self._torsiondrive_cache[v["hash_index"]].final_energies()
                 else:
                     tmp[k] = None
 
@@ -219,8 +219,8 @@ class OpenFFWorkflow(Collection):
         for frag in fragments:
             tmp = {}
             for k, v in self.data["fragments"][frag].items():
-                if v["hash_index"] in self._fragment_cache:
-                    tmp[frag][k] = self._fragment_cache[v["hash_index"]].final_molecule()
+                if v["hash_index"] in self._torsiondrive_cache:
+                    tmp[k] = self._torsiondrive_cache[v["hash_index"]].final_molecules()
                 else:
                     tmp[k] = None
 

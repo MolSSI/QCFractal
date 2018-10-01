@@ -181,7 +181,7 @@ class TorsionDriveORM:
         """
 
         if key is None:
-            return {self._unserialize_key(k): v for k, v in self._final_energies}
+            return {self._unserialize_key(k): v for k, v in self._final_energies.items()}
         else:
 
             return self._final_energies[self._serialize_key(key)]
