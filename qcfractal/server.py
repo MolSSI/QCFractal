@@ -223,7 +223,7 @@ class FractalServer(object):
 
         # Add in periodic callbacks
 
-        self.logger.info("DQM Server successfully initialized at {}\n".format(self._address))
+        self.logger.info("FractalServer successfully initialized at {}\n".format(self._address))
 
         self.periodic = {}
 
@@ -232,7 +232,7 @@ class FractalServer(object):
         Starts up all IOLoops and processes
         """
 
-        self.logger.info("DQM Server successfully started. Starting IOLoop.\n")
+        self.logger.info("FractalServer successfully started. Starting IOLoop.\n")
 
         # If we have a queue socket start up the nanny
         if "queue_socket" in self.objects:
@@ -260,7 +260,7 @@ class FractalServer(object):
         for cb in self.periodic.values():
             cb.stop()
 
-        self.logger.info("DQM Server stopping gracefully. Stopped IOLoop.\n")
+        self.logger.info("FractalServer stopping gracefully. Stopped IOLoop.\n")
 
     def get_address(self, function=""):
         return self._address + function

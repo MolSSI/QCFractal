@@ -4,10 +4,35 @@ Tests the DQM Server class
 
 import qcfractal.interface as portal
 # Pytest Fixture
-from qcfractal.testing import test_server
+from qcfractal import FractalServer
+from qcfractal.testing import test_server, pristine_loop, find_open_port
 import requests
+import threading
 
 meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
+
+
+def test_start_stop():
+
+    with pristine_loop() as loop:
+
+        # Build server, manually handle IOLoop (no start/stop needed)
+        server = FractalServer(
+            port=find_open_port(), storage_project_name="something", io_loop=loop, ssl_options=False)
+
+        thread = threading.Thread(target=server.start, name="test IOLoop")
+        thread.daemon = True
+        thread.start()
+
+        loop_started = threading.Event()
+        loop.add_callback(loop_started.set)
+        loop_started.wait()
+
+        try:
+            loop.add_callback(server.stop)
+            thread.join(timeout=5)
+        except:
+            pass
 
 
 def test_molecule_socket(test_server):
@@ -86,13 +111,11 @@ def test_result_socket(test_server):
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
     r = requests.post(
         test_server.get_address("molecule"),
-        json={
-            "meta": {},
-            "data": {
-                "water1": water.to_json(),
-                "water2": water2.to_json()
-            }
-        })
+        json={"meta": {},
+              "data": {
+                  "water1": water.to_json(),
+                  "water2": water2.to_json()
+              }})
     assert r.status_code == 200
 
     mol_insert = r.json()

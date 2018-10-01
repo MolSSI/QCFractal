@@ -1,7 +1,6 @@
 """Mongo QCDB Fragment object and helpers
 """
 
-import json
 import copy
 
 from .collection import Collection
