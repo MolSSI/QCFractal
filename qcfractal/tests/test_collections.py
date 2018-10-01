@@ -10,9 +10,9 @@ import pytest
 from qcfractal.testing import dask_server_fixture as fractal_compute_server
 
 
-### Tests an entire server and interaction energy database run
+### Tests an entire server and interaction energy dataset run
 @testing.using_psi4
-def test_compute_database(fractal_compute_server):
+def test_compute_dataset(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server.get_address(""))
     ds_name = "He_PES"
@@ -105,7 +105,7 @@ def test_compute_biofragment(fractal_compute_server):
       ]
     } # yapf: disable
 
-    frag.submit_torsion_drives("v1", needed_torsions)
+    # frag.submit_torsion_drives("v1", needed_torsions)
 
     # Compute!
     # nanny = fractal_compute_server.objects["queue_nanny"]

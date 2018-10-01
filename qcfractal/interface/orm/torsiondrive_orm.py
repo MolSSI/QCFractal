@@ -141,9 +141,9 @@ class TorsionDriveORM:
         if "history" not in self._cache:
 
             # Grab procedures
-            needed_hashes = [x for v in self._optimization_history.values() for x in v]
-            objects = self._client.get_procedures({"hash_index": needed_hashes})
-            procedures = {v._hash_index: v for v in objects}
+            needed_ids = [x for v in self._optimization_history.values() for x in v]
+            objects = self._client.get_procedures({"id": needed_ids})
+            procedures = {v._id: v for v in objects}
 
             # Move procedures into the correct order
             ret = {}
@@ -221,7 +221,7 @@ class TorsionDriveORM:
         data = self._cache["final_molecules"]
 
         if key is None:
-            return {self._unserialize_key(k): v for k, v in data.items()}
+            return {self._unserialize_key(k): copy.deepcopy(v) for k, v in data.items()}
         else:
 
             return data[self._serialize_key(key)]

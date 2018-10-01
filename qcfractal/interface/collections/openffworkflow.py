@@ -166,6 +166,7 @@ class OpenFFWorkflow(Collection):
         refresh_cache : bool, optional
             If True requery everything, otherwise use the cache to prevent extra lookups.
         """
+
         # If no fragments explicitly shown, grab all
         if fragments is None:
             fragments = self.data["fragments"].keys()
@@ -184,6 +185,21 @@ class OpenFFWorkflow(Collection):
 
 
     def list_final_energies(self, fragments=None, refresh_cache=False):
+        """
+        Returns the final energies for the requested fragments.
+
+        Parameters
+        ----------
+        fragments : None, optional
+            A list of fragment ID's to query upon
+        refresh_cache : bool, optional
+            If True requery everything, otherwise use the cache to prevent extra lookups.
+
+        Returns
+        -------
+        dict
+            A dictionary structure with fragment and label fields available for access.
+        """
 
         # If no fragments explicitly shown, grab all
         if fragments is None:
@@ -207,6 +223,21 @@ class OpenFFWorkflow(Collection):
 
 
     def list_final_molecules(self, fragments=None, refresh_cache=False):
+        """
+        Returns the final molecules for the requested fragments.
+
+        Parameters
+        ----------
+        fragments : None, optional
+            A list of fragment ID's to query upon
+        refresh_cache : bool, optional
+            If True requery everything, otherwise use the cache to prevent extra lookups.
+
+        Returns
+        -------
+        dict
+            A dictionary structure with fragment and label fields available for access.
+        """
 
         # If no fragments explicitly shown, grab all
         if fragments is None:

@@ -60,7 +60,7 @@ def torsiondrive_fixture(dask_server_fixture):
     yield spin_up_test, client
 
 
-def test_service_torsiondrive(torsiondrive_fixture):
+def test_service_torsiondrive_single(torsiondrive_fixture):
     """"Tests torsiondrive pathway and checks the result result"""
 
     spin_up_test, client = torsiondrive_fixture

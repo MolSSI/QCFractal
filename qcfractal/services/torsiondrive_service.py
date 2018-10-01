@@ -142,7 +142,7 @@ class TorsionDriveService:
                     job_results[key].append((mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1]))
 
                     # Update history
-                    self.data["optimization_history"][key].append(job_id)
+                    self.data["optimization_history"][key].append(ret["id"])
 
             td_api.update_state(self.data["torsiondrive_state"], job_results)
 
