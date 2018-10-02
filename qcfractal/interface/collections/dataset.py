@@ -12,12 +12,12 @@ from .. import dict_utils
 from .. import molecule
 from .. import statistics
 from .collection import Collection
-from .collection_utils import nCr
+from .collection_utils import nCr, register_collection
 
 
 class Dataset(Collection):
     """
-    This is a QCA Dataset class.
+    This QCA Dataset class.
 
     Attributes
     ----------
@@ -701,3 +701,6 @@ class Dataset(Collection):
             A view of the underlying dataframe data
         """
         return self.df[args]
+
+
+register_collection(Dataset)

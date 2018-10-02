@@ -8,9 +8,6 @@ import abc
 import json
 import copy
 
-from .. import FractalClient
-
-
 class Collection(abc.ABC):
 
     __base_fields = {"name", "collection", "provenance"}
@@ -33,7 +30,7 @@ class Collection(abc.ABC):
         """
 
         self.client = kwargs.pop("client", None)
-        if (self.client is not None) and (not isinstance(self.client, FractalClient)):
+        if (self.client is not None) and not (self.client.__class__.__name__ == "FractalClient"):
             raise TypeError("Expected FractalClient as `client` kwarg, found {}.".format(type(self.client)))
 
         # Init from raw json blob, ignore everything else
@@ -46,9 +43,41 @@ class Collection(abc.ABC):
             self.data = {
                 "name": name,
                 "collection": class_name,
-                "provenance": {},
+                "provenance": kwargs.pop("provenance", {}),
                 **self._init_collection_data(kwargs)
             }
+
+    def __str__(self):
+        """
+        A simple string representation of the Collection.
+
+        Returns
+        -------
+        ret : str
+            A representation of the Collection.
+
+        Examples
+        --------
+
+        >>> repr(obj)
+        Collection(id='5b7f1fd57b87872d2c5d0a6d', name=`S22`, client=`localhost:8888`)
+        """
+
+        uid = "local"
+        if "id" in self.data:
+            uid = self.data["id"]
+
+        client = None
+        if self.client:
+           client = self.client.address
+
+        class_name = self.__class__.__name__
+        ret = "{}(".format(class_name)
+        ret += "id='{}', ".format(uid)
+        ret += "name=`{}`, ".format(self.data["name"])
+        ret += "client='{}') ".format(client)
+
+        return ret
 
     @classmethod
     def from_server(cls, client, name):
@@ -67,15 +96,15 @@ class Collection(abc.ABC):
             A ODM of the data.
         """
 
-        if not isinstance(client, FractalClient):
+        if not (client.__class__.__name__ == "FractalClient"):
             raise TypeError("Expected a FractalClient as first arguement, found {}.".format(type(self.client)))
 
         class_name = cls.__name__.lower()
-        tmp_data = client.get_collections([(class_name, name)])
-        if len(tmp_data) == 0:
+        tmp_data = client.get_collection(class_name, name, full_return=True)
+        if tmp_data["meta"]["n_found"] == 0:
             raise KeyError("Warning! `{}: {}` not found.".format(class_name, name))
 
-        return cls.from_json(tmp_data[0], client=client)
+        return cls.from_json(tmp_data["data"][0], client=client)
 
     @classmethod
     def from_json(cls, data, client=None):

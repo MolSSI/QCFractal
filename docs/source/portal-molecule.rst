@@ -23,21 +23,68 @@ Molecules can be created via NumPy, Psi4-like molecule strings, and QCSchema JSO
     Molecules can automatically be orientated to a common frame of reference using the ``orient=True`` kwarg.
     This is useful for finding identical molecules.
 
+
+A full description of the various specifications can be found below:
+
+Required Keys
++++++++++++++
+
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+   | Key Name                                      | Description                                                                                                              | Field Type                  |
+   +===============================================+==========================================================================================================================+=============================+
+   | symbols                                       | (nat, ) atom symbols in title case.                                                                                      | array[string]               |
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+   | geometry                                      | (3 * nat, ) vector of XYZ coordinates of the atoms.                                                                      | array[number]               |
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+
+Optional Keys
++++++++++++++
+
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+   | Key Name                                      | Description                                                                                                              | Field Type                  |
+   +===============================================+==========================================================================================================================+=============================+
+   | fragment_charges                              | (nfr, ) list of charges associated with each fragment tuple.                                                             | array[number]               |
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+   | fragment_multiplicities                       | (nfr, ) list of multiplicities associated with each fragment tuple.                                                      | array[number]               |
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+   | real                                          | (nat, ) list describing if atoms are real (T) or ghost (F).                                                              | array[boolean]              |
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+   | comment                                       | Any additional comment one would attach to the molecule.                                                                 | string                      |
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+   | connectivity                                  | (nat, ) list describing bonds within a molecule. Each element is a (atom1, atom2, order) tuple.                          | array[array]                |
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+   | molecular_charge                              | The overall charge of the molecule.                                                                                      | number                      |
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+   | fix_com                                       | Whether translation of geometry is allowed (fix F) or disallowed (fix T).                                                | boolean                     |
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+   | fix_orientation                               | Whether rotation of geometry is allowed (fix F) or disallowed (fix T).                                                   | boolean                     |
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+   | masses                                        | (nat, ) atom masses [u]; canonical weights assumed if not given.                                                         | array[number]               |
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+   | name                                          | The name of the molecule.                                                                                                | string                      |
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+   | molecular_multiplicity                        | The overall multiplicity of the molecule.                                                                                | number                      |
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+   | fragments                                     | (nfr, -1) list of indices (0-indexed) grouping atoms into molecular fragments within the topology.                       | array[array]                |
+   +-----------------------------------------------+--------------------------------------------------------------------------------------------------------------------------+-----------------------------+
+
+   * ``nat`` is shorthand for the number of atoms and ``nfr`` is shorthand for the number of fragments.
+
 Molecule Hash
 -------------
 
 A molecule hash is automatically created to allow each molecule to be uniquely identified. The following keys are used to generate the hash:
 
- - symbols
- - masses (1.e-6 tolerance)
- - charge (1.e-4 tolerance)
- - multiplicity
- - real
- - geometry (1.e-8 tolerance)
- - fragments
- - fragment_charges (1.e-4 tolerance)
- - fragment_multiplicities
- - connectivity
+ - ``symbols``
+ - ``masses`` (1.e-6 tolerance)
+ - ``charge`` (1.e-4 tolerance)
+ - ``multiplicity``
+ - ``real``
+ - ``geometry`` (1.e-8 tolerance)
+ - ``fragments``
+ - ``fragment_charges`` (1.e-4 tolerance)
+ - ``fragment_multiplicities``
+ - ``connectivity``
 
 Hashes can be acquired from any molecule object and a ``FractalServer`` automatically generates canonical hashes when a molecule is added to the database.
 

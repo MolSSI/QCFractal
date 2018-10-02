@@ -594,9 +594,9 @@ class MongoSocket:
         ret["meta"]["validation_errors"] = []  # TODO
         return ret
 
-    def get_collections(self, keys):
+    def get_collections(self, keys, projection=None):
 
-        return self._get_generic(keys, "collections")
+        return self._get_generic(keys, "collections", projection=projection)
 
     def del_collection(self, collection, name):
         """
@@ -816,7 +816,7 @@ class MongoSocket:
             # queue
             hash_indices = [x[2] for x in ret["meta"]["duplicates"]]
             ids = self._get_generic({"hash_index": hash_indices}, "task_queue")
-            ret["meta"]["duplicates"] = [x["id"] for x in ids["data"]] 
+            ret["meta"]["duplicates"] = [x["id"] for x in ids["data"]]
             ret["meta"]["error_description"] = False
 
         ret["meta"]["validation_errors"] = []

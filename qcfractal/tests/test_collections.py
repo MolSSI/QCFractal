@@ -26,18 +26,24 @@ def test_compute_database(fractal_compute_server):
     He1 = portal.Molecule([[2, 0, 0, -2], [2, 0, 0, 2]], dtype="numpy", units="bohr", frags=[1])
     ds.add_ie_rxn("He1", He1, attributes={"r": 4}, reaction_results={"default": {"Benchmark": 0.0009608501557}})
 
-    # Save the DB and re-acquire
+    # Save the DB and re-acquire via classmethod
     r = ds.save()
     ds = portal.collections.Dataset.from_server(client, ds_name)
+    assert "Dataset(" in str(ds)
+
+    # Test collection lists
+    ret = client.list_collections()
+    assert ret == {"dataset": [ds_name]}
+
+    ret = client.list_collections("dataset")
+    assert ret == [ds_name]
 
     He2 = portal.Molecule([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
     ds.add_ie_rxn("He2", He2, attributes={"r": 4}, reaction_results={"default": {"Benchmark": -0.00001098794749}})
 
-    # Save the DB and overwrite the result
+    # Save the DB and overwrite the result, reacquire via client
     r = ds.save(overwrite=True)
-
-    # Open a new database
-    ds = portal.collections.Dataset.from_server(client, ds_name)
+    ds = client.get_collection("dataset", ds_name)
 
     # Compute SCF/sto-3g
     ret = ds.compute("SCF", "STO-3G")

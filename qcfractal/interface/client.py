@@ -5,6 +5,10 @@ import os
 import requests
 import yaml
 
+from collections import defaultdict
+
+from .collections import collection_factory
+
 from . import molecule
 from . import orm
 
@@ -241,15 +245,37 @@ class FractalClient(object):
 
     ### Collections section
 
-    def get_collections(self, collection_list, full_return=False):
+    def list_collections(self, collection_type=None):
 
-        payload = {"meta": {}, "data": collection_list}
+        query = {}
+        if collection_type is not None:
+            query = {"collection": collection_type.lower()}
+
+        payload = {"meta": {"projection": {"name": True, "collection":True}}, "data": query}
+        r = self._request("get", "collection", payload)
+
+        if collection_type is None:
+            ret = defaultdict(list)
+            for entry in r.json()["data"]:
+                ret[entry["collection"]].append(entry["name"])
+            return dict(ret)
+        else:
+            return [x["name"] for x in r.json()["data"]]
+
+
+    def get_collection(self, collection_type, collection_name, full_return=False):
+
+        payload = {"meta": {}, "data": [(collection_type.lower(), collection_name)]}
         r = self._request("get", "collection", payload)
 
         if full_return:
             return r.json()
         else:
-            return r.json()["data"]
+            # If nothing found
+            if len(r.json()["data"]):
+                return collection_factory(r.json()["data"][0], client=self)
+            else:
+                return None
 
     def add_collection(self, collection, overwrite=False, full_return=False):
 
