@@ -62,6 +62,7 @@ def sec_server(request):
 ### Tests the compute queue stack
 def test_security_auth_decline_none(sec_server):
     client = portal.FractalClient(sec_server.get_address(), verify=False)
+    assert "FractalClient" in str(client)
 
     with pytest.raises(requests.exceptions.HTTPError):
         r = client.get_molecules([])

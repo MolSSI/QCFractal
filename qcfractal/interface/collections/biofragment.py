@@ -116,3 +116,4 @@ class BioFragment(Collection):
         return submissions
 
 collection_utils.register_collection(BioFragment)
+

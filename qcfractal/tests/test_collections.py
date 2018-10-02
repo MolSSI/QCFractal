@@ -4,13 +4,15 @@ Tests the server collection compute capabilities.
 
 import qcfractal.interface as portal
 from qcfractal import testing
-from qcfractal.testing import fractal_compute_server
 import pytest
 
+# Only use dask
+from qcfractal.testing import dask_server_fixture as fractal_compute_server
 
-### Tests an entire server and interaction energy database run
+
+### Tests an entire server and interaction energy dataset run
 @testing.using_psi4
-def test_compute_database(fractal_compute_server):
+def test_compute_dataset(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server.get_address(""))
     ds_name = "He_PES"
@@ -60,7 +62,7 @@ def test_compute_database(fractal_compute_server):
     assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/STO-3G")
 
 
-### Tests an entire server and interaction energy database run
+### Tests the biofragment collection
 @testing.using_torsiondrive
 @testing.using_geometric
 @testing.using_rdkit
@@ -103,10 +105,83 @@ def test_compute_biofragment(fractal_compute_server):
       ]
     } # yapf: disable
 
-    frag.submit_torsion_drives("v1", needed_torsions)
+    # frag.submit_torsion_drives("v1", needed_torsions)
 
     # Compute!
     # nanny = fractal_compute_server.objects["queue_nanny"]
     # nanny.await_services(max_iter=5)
     # assert len(nanny.list_current_tasks()) == 0
+
+### Tests the openffworkflow collection
+@testing.using_torsiondrive
+@testing.using_geometric
+@testing.using_rdkit
+def test_compute_openffworkflow(fractal_compute_server):
+
+    # Obtain a client and build a BioFragment
+    client = portal.FractalClient(fractal_compute_server.get_address(""))
+    nanny = fractal_compute_server.objects["queue_nanny"]
+
+    openff_workflow_options = {
+        # Blank Fragmenter options
+        "enumerate_states": {},
+        "enumerate_fragments": {},
+        "torsiondrive_input": {},
+
+        # TorsionDrive, Geometric, and QC options
+        "torsiondrive_meta": {},
+        "optimization_meta": {
+            "program": "geometric",
+            "coordsys": "tric",
+        },
+        "qc_meta": {
+            "driver": "gradient",
+            "method": "UFF",
+            "basis": "",
+            "options": "none",
+            "program": "rdkit",
+        }
+    }
+    wf = portal.collections.OpenFFWorkflow("Workflow1", client=client, options=openff_workflow_options)
+
+    # Add a fragment and wait for the compute
+    hooh = portal.data.get_molecule("hooh.json")
+    fragment_input = {
+        "label1": {
+            "initial_molecule": hooh.to_json(),
+            "grid_spacing": [120],
+            "dihedrals": [[0, 1, 2, 3]],
+        },
+    }
+    wf.add_fragment("HOOH", fragment_input, provenance={})
+    assert set(wf.list_fragments()) == {"HOOH"}
+    nanny.await_services(max_iter=5)
+
+    final_energies = wf.list_final_energies()
+    assert final_energies.keys() == {"HOOH"}
+    assert final_energies["HOOH"].keys() == {"label1"}
+
+    final_molecules = wf.list_final_molecules()
+    assert final_molecules.keys() == {"HOOH"}
+    assert final_molecules["HOOH"].keys() == {"label1"}
+
+    # Add a second fragment
+    butane = portal.data.get_molecule("butane.json")
+    butane_id = butane.identifiers["canonical_isomeric_explicit_hydrogen_mapped_smiles"]
+
+    fragment_input = {
+        "label1": {
+            "initial_molecule": butane.to_json(),
+            "grid_spacing": [90],
+            "dihedrals": [[0, 2, 3, 1]],
+        },
+    }
+    wf.add_fragment(butane_id, fragment_input, provenance={})
+    assert set(wf.list_fragments()) == {butane_id, "HOOH"}
+
+    final_energies = wf.list_final_energies()
+    assert final_energies.keys() == {butane_id, "HOOH"}
+    assert final_energies[butane_id].keys() == {"label1"}
+    assert final_energies[butane_id]["label1"] is None
+
 

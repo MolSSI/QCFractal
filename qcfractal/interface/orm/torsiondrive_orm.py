@@ -2,7 +2,10 @@
 A ORM for TorsionDrive
 """
 
+import copy
 import json
+
+__all__ = ["TorsionDriveORM"]
 
 
 class TorsionDriveORM:
@@ -19,12 +22,14 @@ class TorsionDriveORM:
         # Options
         "_optimization_history": "optimization_history",
         "_initial_molecule_id": "initial_molecule",
+        "_final_molecule_id": "final_molecule",
         "_torsiondrive_options": "torsiondrive_meta",
         "_geometric_options": "geometric_meta",
         "_qc_options": "qc_meta",
 
         # Energies
         "_final_energies": "final_energies",
+        "_minimum_positions": "minimum_positions",
     }
 
     def __init__(self, initial_molecule, **kwargs):
@@ -43,13 +48,16 @@ class TorsionDriveORM:
 
         """
         self._initial_molecule = initial_molecule
+        self._client = kwargs.pop("client", None)
 
         # Set kwargs
         for k in self.__json_mapper.keys():
             setattr(self, k, kwargs.get(k[1:], None))
 
+        self._cache = {}
+
     @classmethod
-    def from_json(cls, data):
+    def from_json(cls, data, client=None):
         """
         Creates a TorsionDriveORM object from FractalServer data.
 
@@ -64,6 +72,8 @@ class TorsionDriveORM:
                 - "geometric_meta": The options submitted to the Geometric method called by TorsionDrive
                 - "qc_meta": The program, options, method, and basis to be run by Geometric.
                 - "final_energies": A dictionary of final energies if the TorsionDrive service is finished
+        client : FractalClient
+            A server connection to
 
         Returns
         -------
@@ -75,10 +85,10 @@ class TorsionDriveORM:
         for k, v in TorsionDriveORM.__json_mapper.items():
             if v in data:
                 kwargs[k[1:]] = data[v]
+            else:
+                kwargs[k[1:]] = None
 
-        if ("final_energies" in kwargs) and (kwargs["final_energies"] is not None):
-            kwargs["final_energies"] = {tuple(json.loads(k)): v for k, v in kwargs["final_energies"].items()}
-
+        kwargs["client"] = client
         return cls(None, **kwargs)
 
     def __str__(self):
@@ -110,6 +120,43 @@ class TorsionDriveORM:
 
         return ret
 
+    def _serialize_key(self, key):
+        if isinstance(key, (int, float)):
+            key = (int(key), )
+
+        return json.dumps(key)
+
+    def _unserialize_key(self, key):
+        return tuple(json.loads(key))
+
+    def get_history(self):
+        """Pulls all optimization trajectories to local data.
+
+        Returns
+        -------
+        dict
+            The optimization history
+        """
+
+        if "history" not in self._cache:
+
+            # Grab procedures
+            needed_ids = [x for v in self._optimization_history.values() for x in v]
+            objects = self._client.get_procedures({"id": needed_ids})
+            procedures = {v._id: v for v in objects}
+
+            # Move procedures into the correct order
+            ret = {}
+            for key, hashes in self._optimization_history.items():
+                tmp = []
+                for h in hashes:
+                    tmp.append(procedures[h])
+                ret[key] = tmp
+
+            self._cache["history"] = ret
+
+        return self._cache["history"]
+
     def final_energies(self, key=None):
         """
         Provides the final optimized energies at each grid point.
@@ -117,7 +164,7 @@ class TorsionDriveORM:
         Parameters
         ----------
         key : None, optional
-            Returns the final energy at a single grid point.
+            Specifies a single entry to pull from.
 
 
         Returns
@@ -133,13 +180,48 @@ class TorsionDriveORM:
         {(-90,): -148.7641654446243, (180,): -148.76501336993732, (0,): -148.75056290106735, (90,): -148.7641654446148}
         """
 
-        if not self._success:
-            raise KeyError("{} has not completed or failed. Unable to show final energies.".format(self))
+        if key is None:
+            return {self._unserialize_key(k): v for k, v in self._final_energies.items()}
+        else:
+
+            return self._final_energies[self._serialize_key(key)]
+
+    def final_molecules(self, key=None):
+        """Returns the optimized molecules at each grid point
+
+        Parameters
+        ----------
+        key : None, optional
+            Specifies a single entry to pull from.
+
+
+        Returns
+        -------
+        energy : dict
+            Returns molecule at each grid point in a dictionary or at a
+            single point if a key is specified.
+
+        Examples
+        --------
+
+        >>> torsiondrive_obj.final_energies()
+        {(-90,):{'symbols': ['H', 'O', 'O', 'H'], 'geometry': [1.72669422, 1.28135788, ... }
+        """
+
+        if "final_molecules" not in self._cache:
+
+            ret = {}
+            for k, tasks in self.get_history().items():
+                minpos = self._minimum_positions[k]
+
+                ret[k] = tasks[minpos].final_molecule()
+
+            self._cache["final_molecules"] = ret
+
+        data = self._cache["final_molecules"]
 
         if key is None:
-            return self._final_energies.copy()
+            return {self._unserialize_key(k): copy.deepcopy(v) for k, v in data.items()}
         else:
-            if isinstance(key, (int, float)):
-                key = (int(key), )
 
-            return self._final_energies[key]
+            return data[self._serialize_key(key)]
