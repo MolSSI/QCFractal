@@ -246,12 +246,25 @@ class FractalClient(object):
     ### Collections section
 
     def list_collections(self, collection_type=None):
+        """Lists the available collections currently on the server.
+
+        Parameters
+        ----------
+        collection_type : None, optional
+            If `None` all collection types will be returned, otherwise only the
+            specified collection type will be returned
+
+        Returns
+        -------
+        dict
+            A dictionary containing the available collection types.
+        """
 
         query = {}
         if collection_type is not None:
             query = {"collection": collection_type.lower()}
 
-        payload = {"meta": {"projection": {"name": True, "collection":True}}, "data": query}
+        payload = {"meta": {"projection": {"name": True, "collection": True}}, "data": query}
         r = self._request("get", "collection", payload)
 
         if collection_type is None:
@@ -262,8 +275,23 @@ class FractalClient(object):
         else:
             return [x["name"] for x in r.json()["data"]]
 
-
     def get_collection(self, collection_type, collection_name, full_return=False):
+        """Aquires a given collection from the server
+
+        Parameters
+        ----------
+        collection_type : str
+            The collection type to be accessed
+        collection_name : str
+            The name of the collection to be accssed
+        full_return : bool, optional
+            If False, returns a Collection object otherwise returns raw JSON
+
+        Returns
+        -------
+        Collection
+            A Collection object if the given collection was found otherwise returns `None`.
+        """
 
         payload = {"meta": {}, "data": [(collection_type.lower(), collection_name)]}
         r = self._request("get", "collection", payload)
