@@ -26,6 +26,8 @@ New reactions can be added by providing the linear combination of molecules
 required to compute the desired quantity. When the Dataset is queried these
 linear combinations area automatically combined for the caller.
 
+.. code-block:: python
+
     ds = ptl.collections.Dataset("Atomization Energies", dtype="ie")
 
     N2 = ptl.Molecule("""
@@ -44,6 +46,8 @@ linear combinations area automatically combined for the caller.
 
 A given reaction can be examined by using the ``get_rxn`` function. We store
 the ``molecule_hash`` followed by the coefficient.
+
+.. code-block:: python
 
     json.dumps(ds.get_rxn("Nitrogen Molecule"), indent=2)
     {
