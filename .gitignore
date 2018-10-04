@@ -84,3 +84,6 @@ energy.txt
 *.pem
 *.crt
 *.key
+
+# Other
+monkeytype.sqlite3

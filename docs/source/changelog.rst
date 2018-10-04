@@ -13,31 +13,53 @@ Enhancements
 Bug Fixes
 +++++++++
 
-0.2.0a / 2018-10-DD
+X.Y.0 / 2018-11-DD
+-------------------
+
+This is potentially the first beta for QCFractal.
+
+New Features
+++++++++++++
+
+Enhancements
+++++++++++++
+
+Bug Fixes
++++++++++
+
+0.2.0a / 2018-10-02
 -------------------
 
 This is the second alpha release of QCFractal containing architectural changes
 to the relational pieces of the database. Base functionality has been expanded
 to generalize the collection idea with BioFragment and OpenFFWorkflow
-collections. 
+collections.
+
+Documentation
++++++++++++++
+- (:pr:`58`) A overview of the QCArchive project was added to demonstrate how all modules connect together.
 
 New Features
 ++++++++++++
- - (:pr:`57`) OpenFFWorkflow and BioFragment collections to support OpenFF uses cases.
- - (:pr:`57`) Requested compute will now return the id of the new submissions or the id of the completed results if duplicates are submitted.
+- (:pr:`57`) OpenFFWorkflow and BioFragment collections to support OpenFF uses cases.
+- (:pr:`57`) Requested compute will now return the id of the new submissions or the id of the completed results if duplicates are submitted.
+- (:pr:`67`) The OpenFFWorkflow collection now supports querying of individual geometry optimization trajectories and associated data for each torsiondrive.
 
 Enhancements
 ++++++++++++
-- (:pr:`43`) Services and Procedures now exist in the same unified table when complete as a single procedure can be completed in either capacity. 
-- (:pr:`44`) The backend database was renamed to storage to prevent misunderstanding of the Database collection. 
+- (:pr:`43`) Services and Procedures now exist in the same unified table when complete as a single procedure can be completed in either capacity.
+- (:pr:`44`) The backend database was renamed to storage to prevent misunderstanding of the Database collection.
 - (:pr:`47`) Tests can that require an activate Mongo instance are now correctly skipped.
-- (:pr:`51`) The queue now uses a fast hash index to determine uniqueness and prevent duplicate tasks. 
+- (:pr:`51`) The queue now uses a fast hash index to determine uniqueness and prevent duplicate tasks.
 - (:pr:`52`) QCFractal examples are now tested via CI.
 - (:pr:`53`) The MongoSocket `get_generic_by_id` was deprecated in favor of `get_generic` where an ID can be a search field.
+- (:pr:`61`, :pr:`64`) TorsionDrive now tracks jobs via ID rather than hash to ensure integrity.
+- (:pr:`63`) The Database collection was renamed Dataset to more correctly illuminate its purpose.
+- (:pr:`65`) Collection can now be aquired directly from a client via the `client.get_collection` function.
 
 Bug Fixes
 +++++++++
-- (:pr:`52`) The molecular comparison technology would occasionally incorrectly orientate molecules. 
+- (:pr:`52`) The molecular comparison technology would occasionally incorrectly orientate molecules.
 
 
 0.1.0a / 2018-09-04
