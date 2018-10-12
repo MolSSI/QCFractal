@@ -128,7 +128,7 @@ class QueueNanny:
         new_procedures = []
         complete_ids = []
         for data in current_services:
-            obj = services.build(data["service"], self.storage_socket, self, data)
+            obj = services.build(data["service"], self.storage_socket, data)
 
             finished = obj.iterate()
             self.storage_socket.update_services([(data["id"], obj.get_json())])
@@ -208,7 +208,6 @@ class QueueScheduler(APIHandler):
 
         # Grab objects
         storage = self.objects["storage_socket"]
-        queue_nanny = self.objects["queue_nanny"]
 
         # Format tasks
         func = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])
@@ -248,7 +247,6 @@ class ServiceScheduler(APIHandler):
 
         # Grab objects
         storage = self.objects["storage_socket"]
-        queue_nanny = self.objects["queue_nanny"]
 
         # Figure out initial molecules
         errors = []
@@ -258,7 +256,7 @@ class ServiceScheduler(APIHandler):
         # Build out services
         submitted_services = []
         for idx, mol in mol_query["data"].items():
-            tmp = services.initializer(self.json["meta"]["service"], storage, queue_nanny, self.json["meta"], mol)
+            tmp = services.initializer(self.json["meta"]["service"], storage, self.json["meta"], mol)
             submitted_services.append(tmp)
 
         # Figure out complete services

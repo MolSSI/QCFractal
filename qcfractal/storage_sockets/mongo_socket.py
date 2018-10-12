@@ -932,7 +932,7 @@ class MongoSocket:
         password : str
             The user's password
         permissions : list of str, optional
-            The associated permissions of a user ['read', 'write', 'compute', 'admin']
+            The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
 
         Returns
         -------
@@ -960,7 +960,7 @@ class MongoSocket:
         password : str
             The password associated with the username
         permission : str
-            The associated permissions of a user ['read', 'write', 'compute', 'admin']
+            The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
 
         Returns
         -------
@@ -991,7 +991,8 @@ class MongoSocket:
         if pwcheck is False:
             return (False, "Incorrect password.")
 
-        if permission.lower() not in data["permissions"]:
+        # Admin has access to everything
+        if (permission.lower() not in data["permissions"]) and ("admin" not in data["permissions"]):
             return (False, "User has insufficient permissions.")
 
         return (True, "Success")

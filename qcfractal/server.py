@@ -103,7 +103,7 @@ class FractalServer(object):
 
         app_logger = logging.getLogger("tornado.application")
         if logfile_name is not None:
-            handler = logging.FileHandler(logfile_name.logfile)
+            handler = logging.FileHandler(logfile_name)
             handler.setLevel(logging.INFO)
 
             handler.setFormatter(myFormatter)

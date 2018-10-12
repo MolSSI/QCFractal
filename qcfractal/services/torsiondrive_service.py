@@ -6,7 +6,10 @@ import copy
 import json
 import numpy as np
 
-from torsiondrive import td_api
+try:
+    from torsiondrive import td_api
+except ModuleNotFoundError:
+    td_api = None
 
 from qcfractal import procedures
 from qcfractal.interface import schema
@@ -14,18 +17,24 @@ from qcfractal.interface import schema
 __all__ = ["TorsionDriveService"]
 
 
+def _check_td():
+    if td_api is None:
+        raise ModuleNotFoundError("Unable to find TorsionDrive which must be installed to use the TorsionDriveService")
+
+
 class TorsionDriveService:
-    def __init__(self, storage_socket, queue_socket, data):
+    def __init__(self, storage_socket, data):
+        _check_td()
 
         # Server interaction
         self.storage_socket = storage_socket
-        self.queue_socket = queue_socket
 
         # Unpack data
         self.data = data
 
     @classmethod
-    def initialize_from_api(cls, storage_socket, queue_socket, meta, molecule):
+    def initialize_from_api(cls, storage_socket, meta, molecule):
+        _check_td()
 
         # Grab initial molecule
         meta["initial_molecule"] = molecule["id"]
@@ -83,7 +92,7 @@ class TorsionDriveService:
         meta["hash_keys"] = keys
         meta["tag"] = None
 
-        return cls(storage_socket, queue_socket, meta)
+        return cls(storage_socket, meta)
 
     def get_json(self):
         return self.data
@@ -95,12 +104,11 @@ class TorsionDriveService:
         # print(json.dumps(self.data["torsiondrive_state"], indent=2))
         # print("Iterate")
         #if (self.data["remaining_jobs"] > 0):
-            # print("Iterate: not yet done", self.data["remaining_jobs"])
-            # print("Complete jobs", self.data["complete_jobs"])
+        # print("Iterate: not yet done", self.data["remaining_jobs"])
+        # print("Complete jobs", self.data["complete_jobs"])
         #    return False
         # if self.data["success"] is True:
         #     return False
-
 
         # print(self.data["remaining_jobs"])
 
@@ -111,16 +119,20 @@ class TorsionDriveService:
         if self.data["remaining_jobs"] is not False:
 
             # Create the query payload, fetching the completed required jobs and output location
-            payload = self.storage_socket.get_queue({"id": self.data["required_jobs"], "status": "COMPLETE"},
-                                                    projection={"result_location": True, "status": True})
+            payload = self.storage_socket.get_queue(
+                {
+                    "id": self.data["required_jobs"],
+                    "status": "COMPLETE"
+                },
+                projection={"result_location": True,
+                            "status": True})
             # If all jobs are not complete, return a False
             if len(payload["data"]) != len(self.data["required_jobs"]):
                 return False
 
             job_query = payload["data"]
             # Create a lookup table for job ID mapping to result from that job in the procedure table
-            inv_job_lookup = {v["id"]: self.storage_socket.locator(v["result_location"])["data"][0]
-                              for v in job_query}
+            inv_job_lookup = {v["id"]: self.storage_socket.locator(v["result_location"])["data"][0] for v in job_query}
 
             # Populate job results
             job_results = {}
@@ -286,4 +298,3 @@ class TorsionDriveService:
         del self.data["required_jobs"]
 
         return self.data
-
