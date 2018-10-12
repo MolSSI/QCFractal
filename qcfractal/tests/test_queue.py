@@ -21,17 +21,16 @@ def test_queue_fireworks_cleanup(fw_server):
 
     # Pull out fireworks launchpad and queue nanny
     lpad = fw_server.objects["queue_socket"]
-    nanny = fw_server.objects["queue_manager"]
 
     # Push jobs to nanny and check
-    nanny.update()
+    fw_server.update_tasks()
     assert len(lpad.get_fw_ids()) == 1
-    assert len(nanny.list_current_tasks()) == 1
+    assert len(fw_server.list_current_tasks()) == 1
 
     # Await results and ensure that it is clean
     fw_server.await_results()
     assert len(lpad.get_fw_ids()) == 0
-    assert len(nanny.list_current_tasks()) == 0
+    assert len(fw_server.list_current_tasks()) == 0
 
 
 @testing.using_rdkit
@@ -47,7 +46,7 @@ def test_queue_error(fractal_compute_server):
     queue_id = ret["submitted"][0]
 
     # Pull out a special iteration on the queue manager
-    fractal_compute_server.objects["queue_manager"].update()
+    fractal_compute_server.update_tasks()
     assert len(fractal_compute_server.list_current_tasks()) == 1
 
     fractal_compute_server.await_results()
@@ -81,6 +80,7 @@ def test_queue_duplicate_compute(fractal_compute_server):
     ret = client.add_compute("rdkit", "UFF", "", "energy", "none", mol_ret["hooh"])
     assert len(ret["submitted"]) == 0
     assert len(ret["completed"]) == 1
+
 
 @testing.using_rdkit
 @testing.using_geometric
@@ -139,4 +139,3 @@ def test_queue_duplicate_submissions(fractal_compute_server):
 
     # Cleanup
     fractal_compute_server.objects["storage_socket"].queue_mark_complete([(queue_id, "output")])
-

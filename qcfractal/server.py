@@ -202,19 +202,18 @@ class FractalServer(object):
             (r"/locator", web_handlers.LocatorHandler, self.objects),
 
             # Queue Schedulers
-            (r"/task_queue", queue_handlers.TaskQueue, self.objects),
-            (r"/service_queue", queue_handlers.ServiceQueue, self.objects),
+            (r"/task_queue", queue_handlers.TaskQueueHandler, self.objects),
+            (r"/service_queue", queue_handlers.ServiceQueueHandler, self.objects),
         ]
 
         # Queue manager if direct build
         if queue_socket is not None:
 
-            queue_manager = queue_handlers.build_queue_manager(
-                queue_socket, self.objects["storage_socket"], logger=self.logger)
+            queue_adapter = queue_handlers.build_queue_adapter(queue_socket, logger=self.logger)
 
             # Add the socket to passed args
             self.objects["queue_socket"] = queue_socket
-            self.objects["queue_manager"] = queue_manager
+            self.objects["queue_adapter"] = queue_adapter
 
         # Build the app
         app_settings = {
@@ -245,7 +244,7 @@ class FractalServer(object):
         # If we have a queue socket start up the nanny
         if "queue_socket" in self.objects:
             # Add canonical queue callback
-            nanny = tornado.ioloop.PeriodicCallback(self.objects["queue_manager"].update, 2000)
+            nanny = tornado.ioloop.PeriodicCallback(self.update_tasks, 2000)
             nanny.start()
             self.periodic["queue_manager_update"] = nanny
 
@@ -323,6 +322,22 @@ class FractalServer(object):
 
         return running_services
 
+### Functions only available if using a local queue_adapter
+
+    def update_tasks(self):
+
+        if "queue_adapter" not in self.objects:
+            raise AttributeError("update_tasks is only available if the server was initalized with a queue manager.")
+
+        results = self.objects["queue_adapter"].aquire_complete()
+
+        # Call the QueueAPI static method
+        queue_handlers.QueueAPIHandler.insert_complete_tasks(self.objects["storage_socket"], results, self.logger)
+
+        # Add new jobs to queue
+        new_jobs = self.objects["storage_socket"].queue_get_next(n=1000)
+        self.objects["queue_adapter"].submit_tasks(new_jobs)
+
     def await_results(self):
         """A synchronous method for testing or small launches
         that awaits job completion before adding all queued results
@@ -334,12 +349,12 @@ class FractalServer(object):
             Return True if the operation completed successfully
         """
 
-        if "queue_manager" not in self.objects:
-            raise AttributeError("await_results only available if the server was initalized with a queue manager.")
+        if "queue_adapter" not in self.objects:
+            raise AttributeError("await_results is only available if the server was initalized with a queue manager.")
 
-        self.objects["queue_manager"].update()
-        self.objects["queue_manager"].queue_adapter.await_results()
-        self.objects["queue_manager"].update()
+        self.update_tasks()
+        self.objects["queue_adapter"].await_results()
+        self.update_tasks()
         return True
 
     def await_services(self, max_iter=10):
@@ -352,8 +367,8 @@ class FractalServer(object):
         bool
             Return True if the operation completed successfully
         """
-        if "queue_manager" not in self.objects:
-            raise AttributeError("await_results only available if the server was initalized with a queue manager.")
+        if "queue_adapter" not in self.objects:
+            raise AttributeError("await_results is only available if the server was initalized with a queue manager.")
 
         self.await_results()
         for x in range(1, max_iter + 1):
@@ -375,10 +390,10 @@ class FractalServer(object):
         ret : list of tuples
             All jobs currently still in the database
         """
-        if "queue_manager" not in self.objects:
-            raise AttributeError("list_current_tasks only available if the server was initalized with a queue manager.")
+        if "queue_adapter" not in self.objects:
+            raise AttributeError("list_current_tasks is only available if the server was initalized with a queue manager.")
 
-        return self.objects["queue_manager"].list_current_tasks()
+        return self.objects["queue_adapter"].list_tasks()
 
 
 if __name__ == "__main__":

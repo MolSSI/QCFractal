@@ -56,55 +56,7 @@ class QueueManager:
         while unsuccessful are logged for future inspection
 
         """
-
-        # Pivot data so that we group all results in categories
-        new_results = collections.defaultdict(list)
-        error_data = []
-
-        for key, (result, parser, hooks) in self.queue_adapter.aquire_complete().items():
-            try:
-
-                # Successful job
-                if result["success"] is True:
-                    self.logger.info("Update: {}".format(key))
-                    result["queue_id"] = key
-                    new_results[parser].append((result, hooks))
-
-                # Failed job
-                else:
-                    if "error" in result:
-                        error = result["error"]
-                    else:
-                        error = "No error supplied"
-
-                    self.logger.info("Computation key did not complete successfully:\n\t{}\n"
-                                     "Because: {}".format(str(key), error))
-
-                    error_data.append((key, error))
-            except Exception as e:
-                msg = "Internal FractalServer Error:\n" + traceback.format_exc()
-                self.errors[key] = msg
-                self.logger.info("update: ERROR\n{}".format(msg))
-                error_data.append((key, msg))
-
-        # Run output parsers
-        completed = []
-        hooks = []
-        for k, v in new_results.items():
-            ret = procedures.get_procedure_output_parser(k)(self.storage_socket, v)
-            completed.extend(ret[0])
-            error_data.extend(ret[1])
-            hooks.extend(ret[2])
-
-        # Handle hooks and complete jobs
-        self.storage_socket.handle_hooks(hooks)
-        self.storage_socket.queue_mark_complete(completed)
-        self.storage_socket.queue_mark_error(error_data)
-
-        # Get new jobs
-        open_slots = max(0, self.max_tasks - self.queue_adapter.task_count())
-        if open_slots == 0:
-            return
+        results = self.queue_adapter.aquire_complete()
 
         # Add new jobs to queue
         new_jobs = self.storage_socket.queue_get_next(n=open_slots)
@@ -122,15 +74,13 @@ class QueueManager:
         return self.queue_adapter.list_tasks()
 
 
-def build_queue_manager(queue_socket, db_socket, logger=None, **kwargs):
+def build_queue_adapter(queue_socket, logger=None, **kwargs):
     """Constructs a queue manager based off the incoming queue socket type.
 
     Parameters
     ----------
     queue_socket : object ("distributed.Client", "fireworks.LaunchPad")
         A object wrapper for different queue types
-    db_socket : DBSocket
-        A socket to the underlying database
     logger : logging.Logger, Optional. Default: None
         Logger to report to
     **kwargs
@@ -169,6 +119,4 @@ def build_queue_manager(queue_socket, db_socket, logger=None, **kwargs):
     else:
         raise KeyError("Queue type '{}' not understood".format(queue_type))
 
-    manager = QueueManager(adapter, db_socket, logger=logger, **kwargs)
-
-    return manager
+    return adapter
