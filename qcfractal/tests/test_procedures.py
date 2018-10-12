@@ -46,8 +46,7 @@ def test_compute_queue_stack(fractal_compute_server):
 
     # Manually handle the compute
     fractal_compute_server.await_results()
-    manager = fractal_compute_server.objects["queue_manager"]
-    assert len(manager.list_current_tasks()) == 0
+    assert len(fractal_compute_server.list_current_tasks()) == 0
 
     # Query result and check against out manual pul
     results_query = {
@@ -105,8 +104,7 @@ def test_procedure_optimization(fractal_compute_server):
 
     # Manually handle the compute
     fractal_compute_server.await_results()
-    manager = fractal_compute_server.objects["queue_manager"]
-    assert len(manager.list_current_tasks()) == 0
+    assert len(fractal_compute_server.list_current_tasks()) == 0
 
     # # Query result and check against out manual pul
     results1 = client.get_procedures({"program": "geometric"})

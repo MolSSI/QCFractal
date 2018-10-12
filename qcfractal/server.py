@@ -11,6 +11,7 @@ import tornado.web
 from . import storage_sockets
 from . import queue_handlers
 from . import web_handlers
+from . import services
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -87,7 +88,10 @@ class FractalServer(object):
             queue_socket=None,
 
             # Log options
-            logfile_name=None):
+            logfile_name=None,
+
+            # Queue options
+            max_active_services=10):
 
         # Save local options
         self.port = port
@@ -95,6 +99,8 @@ class FractalServer(object):
             self._address = "http://localhost:" + str(self.port) + "/"
         else:
             self._address = "https://localhost:" + str(self.port) + "/"
+
+        self.max_active_services = max_active_services
 
         # Setup logging.
         self.logger = logging.getLogger("FractalServer")
@@ -243,10 +249,10 @@ class FractalServer(object):
             nanny.start()
             self.periodic["queue_manager_update"] = nanny
 
-            # Add services callback
-            nanny_services = tornado.ioloop.PeriodicCallback(self.objects["queue_manager"].update_services, 2000)
-            nanny_services.start()
-            self.periodic["queue_manager_services"] = nanny_services
+        # Add services callback
+        nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, 2000)
+        nanny_services.start()
+        self.periodic["update_services"] = nanny_services
 
         # Soft quit with a keyboard interupt
         try:
@@ -278,6 +284,44 @@ class FractalServer(object):
             raise AttributeError("Endpoint '{}' not found.".format(endpoint))
 
         return self._address + endpoint
+
+    def update_services(self):
+        """Runs through all active services and examines their current status.
+        """
+
+        # Grab current services
+        current_services = self.storage.get_services({"status": "RUNNING"})["data"]
+
+        # Grab new services if we have open slots
+        open_slots = max(0, self.max_active_services - len(current_services))
+        if open_slots > 0:
+            new_services = self.storage.get_services({"status": "READY"}, limit=open_slots)["data"]
+            current_services.extend(new_services)
+
+        # Loop over the services and iterate
+        running_services = 0
+        new_procedures = []
+        complete_ids = []
+        for data in current_services:
+            obj = services.build(data["service"], self.storage, data)
+
+            finished = obj.iterate()
+            self.storage.update_services([(data["id"], obj.get_json())])
+            # print(obj.get_json())
+
+            if finished is not False:
+
+                # Add results to procedures, remove complete_ids
+                new_procedures.append(finished)
+                complete_ids.append(data["id"])
+            else:
+                running_services += 1
+
+        # Add new procedures and services
+        self.storage.add_procedures(new_procedures)
+        self.storage.del_services(complete_ids)
+
+        return running_services
 
     def await_results(self):
         """A synchronous method for testing or small launches
@@ -320,6 +364,21 @@ class FractalServer(object):
                 break
 
         return True
+
+
+    def list_current_tasks(self):
+        """Provides a list of tasks currently in the queue along
+        with the associated keys
+
+        Returns
+        -------
+        ret : list of tuples
+            All jobs currently still in the database
+        """
+        if "queue_manager" not in self.objects:
+            raise AttributeError("list_current_tasks only available if the server was initalized with a queue manager.")
+
+        return self.objects["queue_manager"].list_current_tasks()
 
 
 if __name__ == "__main__":

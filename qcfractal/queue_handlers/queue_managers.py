@@ -110,44 +110,6 @@ class QueueManager:
         new_jobs = self.storage_socket.queue_get_next(n=open_slots)
         self.queue_adapter.submit_tasks(new_jobs)
 
-    def update_services(self):
-        """Runs through all active services and examines their current status.
-        """
-
-        # Grab current services
-        current_services = self.storage_socket.get_services({"status": "RUNNING"})["data"]
-
-        # Grab new services if we have open slots
-        open_slots = max(0, self.max_services - len(current_services))
-        if open_slots > 0:
-            new_services = self.storage_socket.get_services({"status": "READY"}, limit=open_slots)["data"]
-            current_services.extend(new_services)
-
-        # Loop over the services and iterate
-        running_services = 0
-        new_procedures = []
-        complete_ids = []
-        for data in current_services:
-            obj = services.build(data["service"], self.storage_socket, data)
-
-            finished = obj.iterate()
-            self.storage_socket.update_services([(data["id"], obj.get_json())])
-            # print(obj.get_json())
-
-            if finished is not False:
-
-                # Add results to procedures, remove complete_ids
-                new_procedures.append(finished)
-                complete_ids.append(data["id"])
-            else:
-                running_services += 1
-
-        # Add new procedures and services
-        self.storage_socket.add_procedures(new_procedures)
-        self.storage_socket.del_services(complete_ids)
-
-        return running_services
-
     def list_current_tasks(self):
         """Provides a list of tasks currently in the queue along
         with the associated keys

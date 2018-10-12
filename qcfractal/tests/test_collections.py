@@ -107,10 +107,6 @@ def test_compute_biofragment(fractal_compute_server):
 
     # frag.submit_torsion_drives("v1", needed_torsions)
 
-    # Compute!
-    # nanny = fractal_compute_server.objects["queue_manager"]
-    # nanny.await_services(max_iter=5)
-    # assert len(nanny.list_current_tasks()) == 0
 
 ### Tests the openffworkflow collection
 @testing.using_torsiondrive
@@ -120,7 +116,6 @@ def test_compute_openffworkflow(fractal_compute_server):
 
     # Obtain a client and build a BioFragment
     client = portal.FractalClient(fractal_compute_server.get_address(""))
-    nanny = fractal_compute_server.objects["queue_manager"]
 
     openff_workflow_options = {
         # Blank Fragmenter options
@@ -155,7 +150,7 @@ def test_compute_openffworkflow(fractal_compute_server):
     }
     wf.add_fragment("HOOH", fragment_input, provenance={})
     assert set(wf.list_fragments()) == {"HOOH"}
-    nanny.await_services(max_iter=5)
+    fractal_compute_server.await_services(max_iter=5)
 
     final_energies = wf.list_final_energies()
     assert final_energies.keys() == {"HOOH"}
@@ -183,5 +178,3 @@ def test_compute_openffworkflow(fractal_compute_server):
     assert final_energies.keys() == {butane_id, "HOOH"}
     assert final_energies[butane_id].keys() == {"label1"}
     assert final_energies[butane_id]["label1"] is None
-
-

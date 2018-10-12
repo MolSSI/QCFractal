@@ -29,7 +29,7 @@ def test_queue_fireworks_cleanup(fw_server):
     assert len(nanny.list_current_tasks()) == 1
 
     # Await results and ensure that it is clean
-    fractal_compute_server.await_results()
+    fw_server.await_results()
     assert len(lpad.get_fw_ids()) == 0
     assert len(nanny.list_current_tasks()) == 0
 
@@ -46,14 +46,12 @@ def test_queue_error(fractal_compute_server):
     ret = client.add_compute("rdkit", "UFF", "", "energy", "none", mol_ret["hooh"])
     queue_id = ret["submitted"][0]
 
-    # Pull out fireworks launchpad and queue nanny
-    nanny = fractal_compute_server.objects["queue_manager"]
-
-    nanny.update()
-    assert len(nanny.list_current_tasks()) == 1
+    # Pull out a special iteration on the queue manager
+    fractal_compute_server.objects["queue_manager"].update()
+    assert len(fractal_compute_server.list_current_tasks()) == 1
 
     fractal_compute_server.await_results()
-    assert len(nanny.list_current_tasks()) == 0
+    assert len(fractal_compute_server.list_current_tasks()) == 0
 
     db = fractal_compute_server.objects["storage_socket"]
     ret = db.get_queue({"status": "ERROR"})["data"]
