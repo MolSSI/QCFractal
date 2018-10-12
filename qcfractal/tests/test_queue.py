@@ -23,11 +23,13 @@ def test_queue_fireworks_cleanup(fw_server):
     lpad = fw_server.objects["queue_socket"]
     nanny = fw_server.objects["queue_nanny"]
 
+    # Push jobs to nanny and check
+    nanny.update()
     assert len(lpad.get_fw_ids()) == 1
     assert len(nanny.list_current_tasks()) == 1
 
+    # Await results and ensure that it is clean
     nanny.await_results()
-
     assert len(lpad.get_fw_ids()) == 0
     assert len(nanny.list_current_tasks()) == 0
 
@@ -47,7 +49,9 @@ def test_queue_error(fractal_compute_server):
     # Pull out fireworks launchpad and queue nanny
     nanny = fractal_compute_server.objects["queue_nanny"]
 
+    nanny.update()
     assert len(nanny.list_current_tasks()) == 1
+
     nanny.await_results()
     assert len(nanny.list_current_tasks()) == 0
 

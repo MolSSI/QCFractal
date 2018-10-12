@@ -51,24 +51,6 @@ class QueueNanny:
         else:
             self.logger = logging.getLogger('QueueNanny')
 
-    def submit_tasks(self, tasks):
-        """Submits tasks to the queue for the Nanny to manage and watch for completion
-
-        Parameters
-        ----------
-        tasks : dict
-            A dictionary of key : JSON job representations
-
-        Returns
-        -------
-        ret : str
-            A list of jobs added to the queue
-        """
-        tmp = self.storage_socket.queue_submit(tasks)
-        self.update()
-        self.logger.info("QUEUE: Added {} tasks.".format(tmp["meta"]["n_inserted"]))
-        return tmp
-
     def submit_services(self, tasks):
         """Submits tasks to the queue for the Nanny to manage and watch for completion
 
@@ -192,6 +174,7 @@ class QueueNanny:
         TYPE
             Description
         """
+        self.update()
         self.queue_adapter.await_results()
         self.update()
         return True
@@ -246,8 +229,10 @@ class QueueScheduler(APIHandler):
         func = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])
         full_tasks, complete_jobs, errors = func(storage, self.json)
 
-        # Add tasks to Nanny
-        ret = queue_nanny.submit_tasks(full_tasks)
+        # Add tasks to queue
+        ret = storage.queue_submit(full_tasks)
+        self.logger.info("QUEUE: Added {} tasks.".format(ret["meta"]["n_inserted"]))
+
         ret["data"] = {"submitted": ret["data"], "completed": list(complete_jobs), "queue": ret["meta"]["duplicates"]}
         ret["meta"]["duplicates"] = []
         ret["meta"]["errors"].extend(errors)

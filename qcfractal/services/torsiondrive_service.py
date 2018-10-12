@@ -231,7 +231,7 @@ class TorsionDriveService:
                     full_tasks.append(tasks[0])
 
         # Add tasks to Nanny
-        ret = self.queue_socket.submit_tasks(full_tasks)
+        ret = self.storage_socket.queue_submit(full_tasks)
         self.data["queue_keys"] = ret["data"]
         if len(ret["meta"]["duplicates"]):
             raise RuntimeError("It appears that one of the jobs you submitted is already in the queue, but was "
