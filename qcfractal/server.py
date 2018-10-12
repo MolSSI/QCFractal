@@ -72,7 +72,6 @@ class FractalServer(object):
             # Server info options
             port=8888,
             io_loop=None,
-
             security=None,
             ssl_options=None,
 
@@ -193,21 +192,19 @@ class FractalServer(object):
             (r"/result", web_handlers.ResultHandler, self.objects),
             (r"/procedure", web_handlers.ProcedureHandler, self.objects),
             (r"/locator", web_handlers.LocatorHandler, self.objects),
+            (r"/task_scheduler", queue_handlers.QueueScheduler, self.objects),
+            (r"/service_scheduler", queue_handlers.ServiceScheduler, self.objects),
         ]
 
         # Queue handlers
         if queue_socket is not None:
 
-            queue_nanny, queue_scheduler, service_scheduler = queue_handlers.build_queue(
+            queue_manager = queue_handlers.build_queue_manager(
                 queue_socket, self.objects["storage_socket"], logger=self.logger)
 
             # Add the socket to passed args
             self.objects["queue_socket"] = queue_socket
-            self.objects["queue_nanny"] = queue_nanny
-
-            # Add the endpoint
-            endpoints.append((r"/task_scheduler", queue_scheduler, self.objects))
-            endpoints.append((r"/service_scheduler", service_scheduler, self.objects))
+            self.objects["queue_nanny"] = queue_manager
 
         # Build the app
         app_settings = {
@@ -254,7 +251,7 @@ class FractalServer(object):
 
     def stop(self):
         """
-        Shuts down all IOLoops
+        Shuts down all IOLoops and periodic updates
         """
         self.loop.stop()
         for cb in self.periodic.values():
