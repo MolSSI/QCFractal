@@ -253,7 +253,7 @@ class MongoSocket:
 
         return (self._tables[table].delete_many({index: {"$in": hashes}})).deleted_count
 
-    def _get_generic(self, query, table, projection=None, allow_generic=False):
+    def _get_generic(self, query, table, projection=None, allow_generic=False, limit=0):
 
         # TODO parse duplicates
         meta = storage_utils.get_metadata()
@@ -293,7 +293,7 @@ class MongoSocket:
                 if isinstance(v, (list, tuple)):
                     query[k] = {"$in": v}
 
-            data = list(self._tables[table].find(query, projection=projection))
+            data = list(self._tables[table].find(query, projection=projection, limit=limit))
         else:
             meta["errors"] = "Malformed query"
 
@@ -746,9 +746,9 @@ class MongoSocket:
 
         return ret
 
-    def get_services(self, query, projection=None):
+    def get_services(self, query, projection=None, limit=0):
 
-        return self._get_generic(query, "service_queue", projection=projection, allow_generic=True)
+        return self._get_generic(query, "service_queue", projection=projection, allow_generic=True, limit=limit)
 
     def update_services(self, updates):
 

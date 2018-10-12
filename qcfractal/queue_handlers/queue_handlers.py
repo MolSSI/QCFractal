@@ -28,7 +28,7 @@ class QueueNanny:
         A logger for the QueueNanny
     """
 
-    def __init__(self, queue_adapter, storage_socket, logger=None, max_tasks=1000):
+    def __init__(self, queue_adapter, storage_socket, logger=None, max_tasks=1000, max_services=20):
         """Summary
 
         Parameters
@@ -43,41 +43,13 @@ class QueueNanny:
         self.queue_adapter = queue_adapter
         self.storage_socket = storage_socket
         self.errors = {}
-        self.services = set()
         self.max_tasks = max_tasks
+        self.max_services = max_services
 
         if logger:
             self.logger = logger
         else:
             self.logger = logging.getLogger('QueueNanny')
-
-    def submit_services(self, tasks):
-        """Submits tasks to the queue for the Nanny to manage and watch for completion
-
-        Parameters
-        ----------
-        tasks : dict
-            A dictionary of key : JSON job representations
-
-        Returns
-        -------
-        ret : str
-            A list of jobs added to the queue
-        """
-
-        new_tasks = []
-        for task in tasks:
-            new_tasks.append(task.get_json())
-
-        tmp = self.storage_socket.add_services(new_tasks)
-        task_ids = [x["id"] for x in new_tasks]
-
-        self.services |= set(task_ids)
-
-        self.logger.info("QUEUE: Added {} services.\n".format(tmp["meta"]["n_inserted"]))
-        self.update()
-
-        return tmp
 
     def update(self):
         """Examines the queue for completed jobs and adds successful completions to the database
@@ -142,9 +114,20 @@ class QueueNanny:
         """Runs through all active services and examines their current status.
         """
 
+        # Grab current services
+        current_services = self.storage_socket.get_services({"status": "RUNNING"})["data"]
+
+        # Grab new services if we have open slots
+        open_slots = max(0, self.max_services - len(current_services))
+        if open_slots > 0:
+            new_services = self.storage_socket.get_services({"status": "READY"}, limit=open_slots)["data"]
+            current_services.extend(new_services)
+
+        # Loop over the services and iterate
+        running_services = 0
         new_procedures = []
         complete_ids = []
-        for data in self.storage_socket.get_services({"id": list(self.services)})["data"]:
+        for data in current_services:
             obj = services.build(data["service"], self.storage_socket, self, data)
 
             finished = obj.iterate()
@@ -152,17 +135,18 @@ class QueueNanny:
             # print(obj.get_json())
 
             if finished is not False:
-                # Decrement service lookup
-                self.services -= {
-                    data["id"],
-                }
 
                 # Add results to procedures, remove complete_ids
                 new_procedures.append(finished)
                 complete_ids.append(data["id"])
+            else:
+                running_services += 1
 
+        # Add new procedures and services
         self.storage_socket.add_procedures(new_procedures)
         self.storage_socket.del_services(complete_ids)
+
+        return running_services
 
     def await_results(self):
         """A synchronous method for testing or small launches
@@ -190,11 +174,12 @@ class QueueNanny:
             Description
         """
 
-        for x in range(max_iter):
-            self.logger.info("\nAwait services {0:d} : {1:s}\n".format(x + 1, str(self.services)))
-            self.update_services()
+        self.await_results()
+        for x in range(1, max_iter + 1):
+            self.logger.info("\nAwait services: Iteration {}\n".format(x))
+            running_services = self.update_services()
             self.await_results()
-            if len(self.services) == 0:
+            if running_services == 0:
                 break
 
         return True
@@ -291,8 +276,10 @@ class ServiceScheduler(APIHandler):
             else:
                 new_services.append(x)
 
-        # Add tasks to Nanny
-        ret = queue_nanny.submit_services(new_services)
+        # Add services to database
+        ret = storage.add_services([service.get_json() for service in new_services])
+        self.logger.info("QUEUE: Added {} services.\n".format(ret["meta"]["n_inserted"]))
+
         ret["data"] = {"submitted": ret["data"], "completed": list(complete_jobs), "queue": ret["meta"]["duplicates"]}
         ret["meta"]["duplicates"] = []
         ret["meta"]["errors"].extend(errors)
