@@ -17,7 +17,7 @@ class OpenFFWorkflow(Collection):
         A optional server portal to connect the database
     """
 
-__required_fields = {
+    __required_fields = {
         "enumerate_states", "enumerate_fragments", "torsiondrive_input", "torsiondrive_meta", "optimization_meta",
         "qc_meta"
     }

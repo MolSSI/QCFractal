@@ -148,42 +148,6 @@ class QueueManager:
 
         return running_services
 
-    def await_results(self):
-        """A synchronous method for testing or small launches
-        that awaits job completion before adding all queued results
-        to the database and returning.
-
-        Returns
-        -------
-        TYPE
-            Description
-        """
-        self.update()
-        self.queue_adapter.await_results()
-        self.update()
-        return True
-
-    def await_services(self, max_iter=10):
-        """A synchronous method for testing or small launches
-        that awaits all service completion before adding all service results
-        to the database and returning.
-
-        Returns
-        -------
-        TYPE
-            Description
-        """
-
-        self.await_results()
-        for x in range(1, max_iter + 1):
-            self.logger.info("\nAwait services: Iteration {}\n".format(x))
-            running_services = self.update_services()
-            self.await_results()
-            if running_services == 0:
-                break
-
-        return True
-
     def list_current_tasks(self):
         """Provides a list of tasks currently in the queue along
         with the associated keys

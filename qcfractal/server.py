@@ -217,6 +217,7 @@ class FractalServer(object):
             # "debug": True,
         }
         self.app = tornado.web.Application(endpoints, **app_settings)
+        self.endpoints = set([v[0].replace("/", "", 1) for v in endpoints])
 
         self.http_server = tornado.httpserver.HTTPServer(self.app, ssl_options=ssl_ctx)
 
@@ -263,8 +264,62 @@ class FractalServer(object):
 
         self.logger.info("FractalServer stopping gracefully. Stopped IOLoop.\n")
 
-    def get_address(self, function=""):
-        return self._address + function
+    def get_address(self, endpoint=""):
+        """Obtains the full URI for a given function on the FractalServer
+
+        Parameters
+        ----------
+        endpoint : str, optional
+            Specifies a endpoint to provide the URI to
+
+        """
+
+        if len(endpoint) and (endpoint not in self.endpoints):
+            raise AttributeError("Endpoint '{}' not found.".format(endpoint))
+
+        return self._address + endpoint
+
+    def await_results(self):
+        """A synchronous method for testing or small launches
+        that awaits job completion before adding all queued results
+        to the database and returning.
+
+        Returns
+        -------
+        bool
+            Return True if the operation completed successfully
+        """
+
+        if "queue_manager" not in self.objects:
+            raise AttributeError("await_results only available if the server was initalized with a queue manager.")
+
+        self.objects["queue_manager"].update()
+        self.objects["queue_manager"].queue_adapter.await_results()
+        self.objects["queue_manager"].update()
+        return True
+
+    def await_services(self, max_iter=10):
+        """A synchronous method for testing or small launches
+        that awaits all service completion before adding all service results
+        to the database and returning.
+
+        Returns
+        -------
+        bool
+            Return True if the operation completed successfully
+        """
+        if "queue_manager" not in self.objects:
+            raise AttributeError("await_results only available if the server was initalized with a queue manager.")
+
+        self.await_results()
+        for x in range(1, max_iter + 1):
+            self.logger.info("\nAwait services: Iteration {}\n".format(x))
+            running_services = self.update_services()
+            self.await_results()
+            if running_services == 0:
+                break
+
+        return True
 
 
 if __name__ == "__main__":

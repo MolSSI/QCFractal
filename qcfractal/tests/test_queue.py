@@ -29,7 +29,7 @@ def test_queue_fireworks_cleanup(fw_server):
     assert len(nanny.list_current_tasks()) == 1
 
     # Await results and ensure that it is clean
-    nanny.await_results()
+    fractal_compute_server.await_results()
     assert len(lpad.get_fw_ids()) == 0
     assert len(nanny.list_current_tasks()) == 0
 
@@ -52,7 +52,7 @@ def test_queue_error(fractal_compute_server):
     nanny.update()
     assert len(nanny.list_current_tasks()) == 1
 
-    nanny.await_results()
+    fractal_compute_server.await_results()
     assert len(nanny.list_current_tasks()) == 0
 
     db = fractal_compute_server.objects["storage_socket"]
@@ -76,8 +76,7 @@ def test_queue_duplicate_compute(fractal_compute_server):
     assert len(ret["completed"]) == 0
 
     # Pull out fireworks launchpad and queue nanny
-    nanny = fractal_compute_server.objects["queue_manager"]
-    nanny.await_results()
+    fractal_compute_server.await_results()
 
     db = fractal_compute_server.objects["storage_socket"]
 
@@ -110,8 +109,7 @@ def test_queue_duplicate_procedure(fractal_compute_server):
     assert len(ret["completed"]) == 0
 
     # Pull out fireworks launchpad and queue nanny
-    nanny = fractal_compute_server.objects["queue_manager"]
-    nanny.await_results()
+    fractal_compute_server.await_results()
 
     db = fractal_compute_server.objects["storage_socket"]
 
