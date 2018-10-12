@@ -50,7 +50,7 @@ def test_compute_dataset(fractal_compute_server):
     # Compute SCF/sto-3g
     ret = ds.compute("SCF", "STO-3G")
     assert len(ret["submitted"]) == 3
-    fractal_compute_server.objects["queue_nanny"].await_results()
+    fractal_compute_server.objects["queue_manager"].await_results()
 
     # Query computed results
     assert ds.query("SCF", "STO-3G")
@@ -108,7 +108,7 @@ def test_compute_biofragment(fractal_compute_server):
     # frag.submit_torsion_drives("v1", needed_torsions)
 
     # Compute!
-    # nanny = fractal_compute_server.objects["queue_nanny"]
+    # nanny = fractal_compute_server.objects["queue_manager"]
     # nanny.await_services(max_iter=5)
     # assert len(nanny.list_current_tasks()) == 0
 
@@ -120,7 +120,7 @@ def test_compute_openffworkflow(fractal_compute_server):
 
     # Obtain a client and build a BioFragment
     client = portal.FractalClient(fractal_compute_server.get_address(""))
-    nanny = fractal_compute_server.objects["queue_nanny"]
+    nanny = fractal_compute_server.objects["queue_manager"]
 
     openff_workflow_options = {
         # Blank Fragmenter options

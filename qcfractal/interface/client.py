@@ -392,7 +392,7 @@ class FractalClient(object):
             "data": molecule_id
         }
 
-        r = self._request("post", "task_scheduler", payload)
+        r = self._request("post", "task_queue", payload)
 
         if return_full:
             return r.json()
@@ -414,7 +414,7 @@ class FractalClient(object):
         }
         payload["meta"].update(program_options)
 
-        r = self._request("post", "task_scheduler", payload)
+        r = self._request("post", "task_queue", payload)
 
         if return_full:
             return r.json()
@@ -435,7 +435,7 @@ class FractalClient(object):
         }
         payload["meta"].update(options)
 
-        r = self._request("post", "service_scheduler", payload)
+        r = self._request("post", "service_queue", payload)
 
         if return_full:
             return r.json()

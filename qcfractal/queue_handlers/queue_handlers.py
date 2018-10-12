@@ -11,7 +11,7 @@ from .. import procedures
 from .. import services
 
 
-class QueueScheduler(APIHandler):
+class TaskQueue(APIHandler):
     """
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
     """
@@ -43,14 +43,14 @@ class QueueScheduler(APIHandler):
     #     # _check_auth(self.objects, self.request.headers)
 
     #     self.objects["db_socket"].set_project(header["project"])
-    #     queue_nanny = self.objects["queue_nanny"]
+    #     queue_manager = self.objects["queue_manager"]
     #     ret = {}
-    #     ret["queue"] = list(queue_nanny.queue)
-    #     ret["error"] = queue_nanny.errors
+    #     ret["queue"] = list(queue_manager.queue)
+    #     ret["error"] = queue_manager.errors
     #     self.write(ret)
 
 
-class ServiceScheduler(APIHandler):
+class ServiceQueue(APIHandler):
     """
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
     """

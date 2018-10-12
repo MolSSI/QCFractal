@@ -80,12 +80,12 @@ A command line interface to the qcfractal.
 #                 os.makedirs(dask_working_dir)
 
 #             # Dask Nanny
-#             self.queue_nanny = dqm.handlers.DaskNanny(self.queue_socket, self.mongod_socket, logger=self.logger)
+#             self.queue_manager = dqm.handlers.DaskNanny(self.queue_socket, self.mongod_socket, logger=self.logger)
 
 #             scheduler = dqm.handlers.DaskScheduler
 #         else:
 #             self.queue_socket = fireworks.LaunchPad.auto_load()
-#             self.queue_nanny = dqm.handlers.FireworksNanny(self.queue_socket, self.mongod_socket, logger=self.logger)
+#             self.queue_manager = dqm.handlers.FireworksNanny(self.queue_socket, self.mongod_socket, logger=self.logger)
 
 #             self.logger.info("Fireworks Scheduler Info:")
 #             self.logger.info(str(self.queue_socket.host) + ":" + str(self.queue_socket.port) + "\n")
@@ -95,7 +95,7 @@ A command line interface to the qcfractal.
 #         tornado_args = {
 #             "mongod_socket": self.mongod_socket,
 #             "queue_socket": self.queue_socket,
-#             "queue_nanny": self.queue_nanny,
+#             "queue_manager": self.queue_manager,
 #             "logger": self.logger,
 #         }
 
@@ -108,7 +108,7 @@ A command line interface to the qcfractal.
 #         app.listen(options.port)
 
 #         # Query Dask Nanny on loop
-#         tornado.ioloop.PeriodicCallback(self.queue_nanny.update, 2000).start()
+#         tornado.ioloop.PeriodicCallback(self.queue_manager.update, 2000).start()
 
 #         # This is for testing
 #         #loop.add_callback(get, "{data}")

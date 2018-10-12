@@ -186,17 +186,21 @@ class FractalServer(object):
         }
 
         endpoints = [
+
+            # Generic web handlers
             (r"/molecule", web_handlers.MoleculeHandler, self.objects),
             (r"/option", web_handlers.OptionHandler, self.objects),
             (r"/collection", web_handlers.CollectionHandler, self.objects),
             (r"/result", web_handlers.ResultHandler, self.objects),
             (r"/procedure", web_handlers.ProcedureHandler, self.objects),
             (r"/locator", web_handlers.LocatorHandler, self.objects),
-            (r"/task_scheduler", queue_handlers.QueueScheduler, self.objects),
-            (r"/service_scheduler", queue_handlers.ServiceScheduler, self.objects),
+
+            # Queue Schedulers
+            (r"/task_queue", queue_handlers.TaskQueue, self.objects),
+            (r"/service_queue", queue_handlers.ServiceQueue, self.objects),
         ]
 
-        # Queue handlers
+        # Queue manager if direct build
         if queue_socket is not None:
 
             queue_manager = queue_handlers.build_queue_manager(
@@ -204,7 +208,7 @@ class FractalServer(object):
 
             # Add the socket to passed args
             self.objects["queue_socket"] = queue_socket
-            self.objects["queue_nanny"] = queue_manager
+            self.objects["queue_manager"] = queue_manager
 
         # Build the app
         app_settings = {
@@ -234,14 +238,14 @@ class FractalServer(object):
         # If we have a queue socket start up the nanny
         if "queue_socket" in self.objects:
             # Add canonical queue callback
-            nanny = tornado.ioloop.PeriodicCallback(self.objects["queue_nanny"].update, 2000)
+            nanny = tornado.ioloop.PeriodicCallback(self.objects["queue_manager"].update, 2000)
             nanny.start()
-            self.periodic["queue_nanny_update"] = nanny
+            self.periodic["queue_manager_update"] = nanny
 
             # Add services callback
-            nanny_services = tornado.ioloop.PeriodicCallback(self.objects["queue_nanny"].update_services, 2000)
+            nanny_services = tornado.ioloop.PeriodicCallback(self.objects["queue_manager"].update_services, 2000)
             nanny_services.start()
-            self.periodic["queue_nanny_services"] = nanny_services
+            self.periodic["queue_manager_services"] = nanny_services
 
         # Soft quit with a keyboard interupt
         try:

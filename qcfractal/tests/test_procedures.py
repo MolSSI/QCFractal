@@ -45,7 +45,7 @@ def test_compute_queue_stack(fractal_compute_server):
     assert r.status_code == 200
 
     # Manually handle the compute
-    nanny = fractal_compute_server.objects["queue_nanny"]
+    nanny = fractal_compute_server.objects["queue_manager"]
     nanny.await_results()
     assert len(nanny.list_current_tasks()) == 0
 
@@ -104,7 +104,7 @@ def test_procedure_optimization(fractal_compute_server):
     compute_key = submitted[0]
 
     # Manually handle the compute
-    nanny = fractal_compute_server.objects["queue_nanny"]
+    nanny = fractal_compute_server.objects["queue_manager"]
     nanny.await_results()
     assert len(nanny.list_current_tasks()) == 0
 
