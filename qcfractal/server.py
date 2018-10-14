@@ -9,7 +9,7 @@ import tornado.ioloop
 import tornado.web
 
 from . import storage_sockets
-from . import queue_handlers
+from . import queue
 from . import web_handlers
 from . import services
 
@@ -202,14 +202,14 @@ class FractalServer(object):
             (r"/locator", web_handlers.LocatorHandler, self.objects),
 
             # Queue Schedulers
-            (r"/task_queue", queue_handlers.TaskQueueHandler, self.objects),
-            (r"/service_queue", queue_handlers.ServiceQueueHandler, self.objects),
+            (r"/task_queue", queue.TaskQueueHandler, self.objects),
+            (r"/service_queue", queue.ServiceQueueHandler, self.objects),
         ]
 
         # Queue manager if direct build
         if queue_socket is not None:
 
-            queue_adapter = queue_handlers.build_queue_adapter(queue_socket, logger=self.logger)
+            queue_adapter = queue.build_queue_adapter(queue_socket, logger=self.logger)
 
             # Add the socket to passed args
             self.objects["queue_socket"] = queue_socket
@@ -325,18 +325,27 @@ class FractalServer(object):
 ### Functions only available if using a local queue_adapter
 
     def update_tasks(self):
+        """Pulls tasks from the queue_adapter, inserts them into the database,
+        and fills the queue_adapter with new tasks.
 
+        Returns
+        -------
+        bool
+            Return True if the operation completed successfully
+        """
         if "queue_adapter" not in self.objects:
             raise AttributeError("update_tasks is only available if the server was initalized with a queue manager.")
 
         results = self.objects["queue_adapter"].aquire_complete()
 
         # Call the QueueAPI static method
-        queue_handlers.QueueAPIHandler.insert_complete_tasks(self.objects["storage_socket"], results, self.logger)
+        queue.QueueManagerHandler.insert_complete_tasks(self.objects["storage_socket"], results, self.logger)
 
         # Add new jobs to queue
         new_jobs = self.objects["storage_socket"].queue_get_next(n=1000)
         self.objects["queue_adapter"].submit_tasks(new_jobs)
+
+        return True
 
     def await_results(self):
         """A synchronous method for testing or small launches
@@ -358,9 +367,8 @@ class FractalServer(object):
         return True
 
     def await_services(self, max_iter=10):
-        """A synchronous method for testing or small launches
-        that awaits all service completion before adding all service results
-        to the database and returning.
+        """A synchronous method that awaits the completion of all services
+        before returning.
 
         Returns
         -------
@@ -380,7 +388,6 @@ class FractalServer(object):
 
         return True
 
-
     def list_current_tasks(self):
         """Provides a list of tasks currently in the queue along
         with the associated keys
@@ -391,10 +398,10 @@ class FractalServer(object):
             All jobs currently still in the database
         """
         if "queue_adapter" not in self.objects:
-            raise AttributeError("list_current_tasks is only available if the server was initalized with a queue manager.")
+            raise AttributeError(
+                "list_current_tasks is only available if the server was initalized with a queue manager.")
 
         return self.objects["queue_adapter"].list_tasks()
-
 
 if __name__ == "__main__":
 

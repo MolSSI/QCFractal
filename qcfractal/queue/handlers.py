@@ -97,16 +97,10 @@ class ServiceQueueHandler(APIHandler):
         ret["meta"]["duplicates"] = []
         ret["meta"]["errors"].extend(errors)
 
-        # Return anything of interest
-        # meta["success"] = True
-        # meta["n_inserted"] = len(submitted)
-        # meta["errors"] = []  # TODO
-        # ret = {"meta": meta, "data": submitted}
-
         self.write(ret)
 
 
-class QueueAPIHandler(APIHandler):
+class QueueManagerHandler(APIHandler):
     """
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
     Manages the external
@@ -120,6 +114,7 @@ class QueueAPIHandler(APIHandler):
 
         task_success = 0
         task_failures = 0
+        task_totals = len(results.items())
         for key, (result, parser, hooks) in results.items():
             try:
 
@@ -147,7 +142,8 @@ class QueueAPIHandler(APIHandler):
                 error_data.append((key, msg))
                 task_failures += 1
 
-        logger.info("QueueManager: Added {} successful tasks, {} failed.".format(task_success, task_failures))
+        logger.info("QueueManager: Found {} complete tasks ({} successful, {} failed).".format(
+            task_totals, task_success, task_failures))
 
         # Run output parsers
         completed = []
