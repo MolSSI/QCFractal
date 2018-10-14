@@ -3,8 +3,8 @@
 
 import copy
 
-from .collection import Collection
 from . import collection_utils
+from .collection import Collection
 
 
 class OpenFFWorkflow(Collection):

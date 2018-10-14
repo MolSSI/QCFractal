@@ -2,12 +2,14 @@
 Tests the DQM Server class
 """
 
+import threading
+
+import requests
+
 import qcfractal.interface as portal
 # Pytest Fixture
 from qcfractal import FractalServer
 from qcfractal.testing import test_server, pristine_loop, find_open_port
-import requests
-import threading
 
 meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
 

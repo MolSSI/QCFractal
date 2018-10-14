@@ -2,20 +2,21 @@
 Contains testing infrastructure for QCFractal
 """
 
-import os
 import logging
+import os
 import pkgutil
 import socket
 import threading
-import pymongo
-from contextlib import contextmanager
 from collections import Mapping
+from contextlib import contextmanager
 
+import pymongo
 import pytest
 from tornado.ioloop import IOLoop
 
-from .storage_sockets import storage_socket_factory
 from .server import FractalServer
+from .storage_sockets import storage_socket_factory
+
 
 ### Addon testing capabilities
 

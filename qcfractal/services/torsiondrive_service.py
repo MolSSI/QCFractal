@@ -4,6 +4,7 @@ Wraps geometric procedures
 
 import copy
 import json
+
 import numpy as np
 
 try:

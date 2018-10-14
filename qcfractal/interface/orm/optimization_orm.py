@@ -2,8 +2,8 @@
 A ORM for Optimization results
 """
 
-import json
 import copy
+import json
 
 
 class OptimizationORM:

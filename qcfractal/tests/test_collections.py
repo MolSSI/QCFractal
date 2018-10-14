@@ -2,10 +2,10 @@
 Tests the server collection compute capabilities.
 """
 
-import qcfractal.interface as portal
-from qcfractal import testing
 import pytest
 
+import qcfractal.interface as portal
+from qcfractal import testing
 # Only use dask
 from qcfractal.testing import dask_server_fixture as fractal_compute_server
 

@@ -2,14 +2,13 @@
 Tests the on-node procedures compute capabilities.
 """
 
-import qcfractal
-from qcfractal import testing
 import cryptography
-
-import requests
 import pytest
+import requests
 
+import qcfractal
 import qcfractal.interface as portal
+from qcfractal import testing
 
 _users = {
     "read": {

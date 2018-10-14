@@ -2,11 +2,11 @@
 DQM Molecule object and helpers
 """
 
+import collections
 import hashlib
 import json
 import os
 import re
-import collections
 
 import numpy as np
 

@@ -8,10 +8,10 @@ import ssl
 import tornado.ioloop
 import tornado.web
 
-from . import storage_sockets
 from . import queue
-from . import web_handlers
 from . import services
+from . import storage_sockets
+from . import web_handlers
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 

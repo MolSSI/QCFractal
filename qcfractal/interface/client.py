@@ -2,15 +2,14 @@
 
 import json
 import os
+from collections import defaultdict
+
 import requests
 import yaml
 
-from collections import defaultdict
-
-from .collections import collection_factory
-
 from . import molecule
 from . import orm
+from .collections import collection_factory
 
 
 class FractalClient(object):

@@ -4,8 +4,8 @@ Queue adapter for Dask
 
 import importlib
 import logging
-import traceback
 import operator
+import traceback
 
 
 def _get_future(future):

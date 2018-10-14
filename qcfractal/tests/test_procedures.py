@@ -2,11 +2,12 @@
 Tests the server compute capabilities.
 """
 
+import pytest
+import requests
+
 import qcfractal.interface as portal
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
-import requests
-import pytest
 
 
 ### Tests the compute queue stack

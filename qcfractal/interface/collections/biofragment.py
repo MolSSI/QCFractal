@@ -2,11 +2,11 @@
 OpenFF BioFragment ODM
 """
 
-import json
 import copy
+import json
 
-from .collection import Collection
 from . import collection_utils
+from .collection import Collection
 
 
 class BioFragment(Collection):

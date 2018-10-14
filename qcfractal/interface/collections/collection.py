@@ -5,8 +5,9 @@ Helper
 """
 
 import abc
-import json
 import copy
+import json
+
 
 class Collection(abc.ABC):
 

@@ -13,11 +13,11 @@ import collections
 import copy
 import datetime
 import logging
-import bcrypt
 
+import bcrypt
+import bson.errors
 import pandas as pd
 from bson.objectid import ObjectId
-import bson.errors
 
 from . import storage_utils
 # Pull in the hashing algorithms from the client
