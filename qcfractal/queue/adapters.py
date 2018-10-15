@@ -27,10 +27,10 @@ def build_queue_adapter(workflow_client, logger=None, **kwargs):
     adapter_type = type(workflow_client).__module__ + "." + type(workflow_client).__name__
 
     if adapter_type == "distributed.client.Client":
-        adapter = dask_adapter.DaskAdapter(workflow_client)
+        adapter = dask_adapter.DaskAdapter(workflow_client, logger=logger)
 
     elif adapter_type == "fireworks.core.launchpad.LaunchPad":
-        adapter = fireworks_adapter.FireworksAdapter(workflow_client)
+        adapter = fireworks_adapter.FireworksAdapter(workflow_client, logger=logger)
 
     else:
         raise KeyError("Queue type '{}' not understood".format(adapter_type))

@@ -65,7 +65,7 @@ class FractalClient(object):
         ret += "username='{}')".format(self.username)
         return ret
 
-    def _request(self, method, service, payload):
+    def _request(self, method, service, payload, noraise=False):
 
         addr = self.address + service
         if method == "get":
@@ -75,7 +75,7 @@ class FractalClient(object):
         else:
             raise KeyError("Method not understood: {}".format(method))
 
-        if r.status_code != 200:
+        if (r.status_code != 200) and (not noraise):
             raise requests.exceptions.HTTPError("Server communication failure. Reason: {}".format(r.reason))
 
         return r

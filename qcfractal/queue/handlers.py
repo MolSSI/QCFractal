@@ -164,16 +164,24 @@ class QueueManagerHandler(APIHandler):
         # Add new jobs to queue
         self.authenticate("queue")
 
-        new_jobs = self.storage_socket.queue_get_next(n=open_slots)
-        self.queue_adapter.submit_tasks(new_jobs)
+        # Grab objects
+        storage = self.objects["storage_socket"]
+        new_jobs = storage.queue_get_next(n=self.json["meta"].get("limit", 100))
+        self.write({"meta": {}, "data": new_jobs})
 
     def post(self):
         """Summary
         """
         self.authenticate("queue")
 
+        # Grab objects
+        storage = self.objects["storage_socket"]
+
+        self.insert_complete_tasks(storage, self.json["data"], self.logger)
+
+        self.write({"meta": {}, "data": None})
+
     def update(self):
         """
         """
         self.authenticate("queue")
-        return
