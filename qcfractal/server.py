@@ -66,13 +66,13 @@ def _build_ssl():
     return (cert_pem, key_pem)
 
 
-class FractalServer(object):
+class FractalServer:
     def __init__(
             self,
 
             # Server info options
             port=8888,
-            io_loop=None,
+            loop=None,
             security=None,
             ssl_options=None,
 
@@ -180,10 +180,10 @@ class FractalServer(object):
             bypass_security=storage_bypass_security)
 
         # Pull the current loop if we need it
-        if io_loop is None:
+        if loop is None:
             self.loop = tornado.ioloop.IOLoop.current()
         else:
-            self.loop = io_loop
+            self.loop = loop
 
         # Build up the application
         self.objects = {
@@ -204,6 +204,7 @@ class FractalServer(object):
             # Queue Schedulers
             (r"/task_queue", queue.TaskQueueHandler, self.objects),
             (r"/service_queue", queue.ServiceQueueHandler, self.objects),
+            (r"/queue_manager", queue.QueueManagerHandler, self.objects),
         ]
 
         # Queue manager if direct build
@@ -228,11 +229,10 @@ class FractalServer(object):
 
         self.http_server.listen(self.port)
 
-        # Add in periodic callbacks
+        # Add periodic callback holders
+        self.periodic = {}
 
         self.logger.info("FractalServer successfully initialized at {}\n".format(self._address))
-
-        self.periodic = {}
 
     def start(self):
         """

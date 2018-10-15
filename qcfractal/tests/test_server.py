@@ -20,7 +20,7 @@ def test_start_stop():
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = FractalServer(
-            port=find_open_port(), storage_project_name="something", io_loop=loop, ssl_options=False)
+            port=find_open_port(), storage_project_name="something", loop=loop, ssl_options=False)
 
         thread = threading.Thread(target=server.start, name="test IOLoop")
         thread.daemon = True
