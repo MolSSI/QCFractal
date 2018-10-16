@@ -8,6 +8,7 @@ import ssl
 import tornado.ioloop
 import tornado.web
 
+from . import interface
 from . import queue
 from . import services
 from . import storage_sockets
@@ -210,11 +211,14 @@ class FractalServer:
         # Queue manager if direct build
         if queue_socket is not None:
 
-            queue_adapter = queue.build_queue_adapter(queue_socket, logger=self.logger)
+            if "security" == "local":
+                raise ValueError("Cannot yet use local security with a internal QueueManager")
 
             # Add the socket to passed args
-            self.objects["queue_socket"] = queue_socket
-            self.objects["queue_adapter"] = queue_adapter
+            verify = ssl_options is not None
+            client = interface.FractalClient(self._address, verify=verify)
+            self.objects["queue_manager"] = queue.QueueManager(
+                client, queue_socket, loop=loop, logger=self.logger, cluster="FractalServer")
 
         # Build the app
         app_settings = {
@@ -333,19 +337,10 @@ class FractalServer:
         bool
             Return True if the operation completed successfully
         """
-        if "queue_adapter" not in self.objects:
+        if "queue_manager" not in self.objects:
             raise AttributeError("update_tasks is only available if the server was initalized with a queue manager.")
 
-        results = self.objects["queue_adapter"].aquire_complete()
-
-        # Call the QueueAPI static method
-        queue.QueueManagerHandler.insert_complete_tasks(self.objects["storage_socket"], results, self.logger)
-
-        # Add new tasks to queue
-        new_tasks = self.objects["storage_socket"].queue_get_next(n=1000)
-        self.objects["queue_adapter"].submit_tasks(new_tasks)
-
-        return True
+        return self.objects["queue_manager"].update()
 
     def await_results(self):
         """A synchronous method for testing or small launches
@@ -358,13 +353,10 @@ class FractalServer:
             Return True if the operation completed successfully
         """
 
-        if "queue_adapter" not in self.objects:
+        if "queue_manager" not in self.objects:
             raise AttributeError("await_results is only available if the server was initalized with a queue manager.")
 
-        self.update_tasks()
-        self.objects["queue_adapter"].await_results()
-        self.update_tasks()
-        return True
+        return self.objects["queue_manager"].await_results()
 
     def await_services(self, max_iter=10):
         """A synchronous method that awaits the completion of all services
@@ -375,7 +367,7 @@ class FractalServer:
         bool
             Return True if the operation completed successfully
         """
-        if "queue_adapter" not in self.objects:
+        if "queue_manager" not in self.objects:
             raise AttributeError("await_results is only available if the server was initalized with a queue manager.")
 
         self.await_results()
@@ -397,11 +389,11 @@ class FractalServer:
         ret : list of tuples
             All tasks currently still in the database
         """
-        if "queue_adapter" not in self.objects:
+        if "queue_manager" not in self.objects:
             raise AttributeError(
                 "list_current_tasks is only available if the server was initalized with a queue manager.")
 
-        return self.objects["queue_adapter"].list_tasks()
+        return self.objects["queue_manager"].list_current_tasks()
 
 if __name__ == "__main__":
 

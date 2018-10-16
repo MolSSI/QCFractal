@@ -187,7 +187,6 @@ class QueueManagerHandler(APIHandler):
         # Update manager logs
         storage.manager_update(name, tag=tag, submitted=len(new_tasks))
 
-
     def post(self):
         """Posts complete tasks to the Servers queue
         """
