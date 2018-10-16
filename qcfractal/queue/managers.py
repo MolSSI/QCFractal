@@ -28,7 +28,7 @@ class QueueManager:
         A logger for the QueueManager
     """
 
-    def __init__(self, client, queue_client, loop=None, logger=None, max_tasks=1000):
+    def __init__(self, client, queue_client, loop=None, logger=None, max_tasks=1000, queue_tag=None):
         """
         Parameters
         ----------
@@ -44,6 +44,8 @@ class QueueManager:
             A logger for the QueueManager
         max_tasks : int
             The maximum number of tasks to hold at any given time
+        queue_tag : str
+            Allows managers to pull from specific tags
         """
 
         # Setup logging
@@ -55,6 +57,8 @@ class QueueManager:
         self.client = client
         self.queue_adapter = build_queue_adapter(queue_client, logger=self.logger)
         self.max_tasks = max_tasks
+        self.queue_tag = queue_tag
+
         self.periodic = {}
         self.active = 0
 
@@ -64,7 +68,10 @@ class QueueManager:
         else:
             self.loop = loop
 
-        self.logger.info("QueueManager successfully initialized.\n")
+        self.logger.info("QueueManager successfully initialized.\n"
+                         "Queue credential username: {}\n"
+                         "Pulling tasks from {} with tag '{}'.\n".format(self.client.username, self.client.address,
+                                                                       self.queue_tag))
 
     def start(self):
         """
@@ -104,7 +111,8 @@ class QueueManager:
             payload = {"meta": {}, "data": results}
             r = self.client._request("post", "queue_manager", payload, noraise=True)
             if r.status_code != 200:
-                # Do something as we didnt successfully add the data
+                self.logger.warning("Post complete tasks was not successful. Data may be lost.")
+                # TODO something as we didnt successfully add the data
                 pass
 
             self.active -= len(results)
@@ -115,8 +123,12 @@ class QueueManager:
             return True
 
         # Get new tasks
-        payload = {"meta": {"limit": open_slots}, "data": {}}
+        payload = {"meta": {"limit": open_slots, "tag": self.queue_tag}, "data": {}}
         r = self.client._request("get", "queue_manager", payload, noraise=True)
+        if r.status_code != 200:
+            self.logger.warning("Aquisition of new tasks was not successful.")
+            # TODO something as we didnt successfully get data
+            pass
         new_tasks = r.json()["data"]
 
         # Add new tasks to queue

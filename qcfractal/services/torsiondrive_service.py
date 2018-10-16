@@ -91,7 +91,7 @@ class TorsionDriveService:
         meta["program"] = "torsiondrive"
         meta["hash_index"] = procedures.procedures_util.hash_procedure_keys(keys)
         meta["hash_keys"] = keys
-        meta["tag"] = None
+        meta["tag"] = meta.pop("tag", None)
 
         return cls(storage_socket, meta)
 
@@ -247,7 +247,7 @@ class TorsionDriveService:
                     full_tasks.append(tasks[0])
 
         # Add tasks to Nanny
-        ret = self.storage_socket.queue_submit(full_tasks)
+        ret = self.storage_socket.queue_submit(full_tasks, tag=self.data["tag"])
         self.data["queue_keys"] = ret["data"]
         if len(ret["meta"]["duplicates"]):
             raise RuntimeError("It appears that one of the tasks you submitted is already in the queue, but was "

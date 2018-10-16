@@ -23,13 +23,14 @@ class TaskQueueHandler(APIHandler):
 
         # Grab objects
         storage = self.objects["storage_socket"]
+        tag = self.json["meta"].pop("tag", None)
 
         # Format tasks
         func = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])
         full_tasks, complete_tasks, errors = func(storage, self.json)
 
         # Add tasks to queue
-        ret = storage.queue_submit(full_tasks)
+        ret = storage.queue_submit(full_tasks, tag=tag)
         self.logger.info("TaskQueue: Added {} tasks.".format(ret["meta"]["n_inserted"]))
 
         ret["data"] = {"submitted": ret["data"], "completed": list(complete_tasks), "queue": ret["meta"]["duplicates"]}
@@ -62,6 +63,7 @@ class ServiceQueueHandler(APIHandler):
 
         # Grab objects
         storage = self.objects["storage_socket"]
+        tag = self.json["meta"].pop("tag", None)
 
         # Figure out initial molecules
         errors = []
@@ -142,7 +144,7 @@ class QueueManagerHandler(APIHandler):
                 error_data.append((key, msg))
                 task_failures += 1
 
-        if len(task_totals):
+        if task_totals:
             logger.info("QueueManager: Found {} complete tasks ({} successful, {} failed).".format(
                 task_totals, task_success, task_failures))
 
@@ -177,6 +179,7 @@ class QueueManagerHandler(APIHandler):
         new_tasks = storage.queue_get_next(**kwargs)
 
         self.write({"meta": {"n_found": len(new_tasks), "success": True}, "data": new_tasks})
+        self.logger.info("QueueManager: Served {} tasks.".format(len(new_tasks)))
 
     def post(self):
         """Posts complete tasks to the Servers queue
@@ -189,6 +192,7 @@ class QueueManagerHandler(APIHandler):
         ret = self.insert_complete_tasks(storage, self.json["data"], self.logger)
 
         self.write({"meta": {}, "data": True})
+        self.logger.info("QueueManager: Aquired {} complete tasks.".format(len(self.json["data"])))
 
     def update(self):
         """

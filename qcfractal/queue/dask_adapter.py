@@ -81,17 +81,17 @@ class DaskAdapter:
             The tags associated with the submitted tasks.
         """
         ret = []
-        for task in tasks:
+        for spec in tasks:
 
-            tag = task["id"]
+            tag = spec["id"]
             if tag in self.queue:
                 continue
 
             # Form run tuple
-            func = self.get_function(task["spec"]["function"])
-            task = self.dask_client.submit(func, *task["spec"]["args"], **task["spec"]["kwargs"])
+            func = self.get_function(spec["spec"]["function"])
+            task = self.dask_client.submit(func, *spec["spec"]["args"], **spec["spec"]["kwargs"])
 
-            self.queue[tag] = (task, task["parser"], task["hooks"])
+            self.queue[tag] = (task, spec["parser"], spec["hooks"])
             self.logger.info("Adapter: Task submitted {}".format(tag))
             ret.append(tag)
         return ret

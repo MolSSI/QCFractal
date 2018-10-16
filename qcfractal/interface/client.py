@@ -373,7 +373,7 @@ class FractalClient(object):
 
     ### Compute section
 
-    def add_compute(self, program, method, basis, driver, options, molecule_id, return_full=False):
+    def add_compute(self, program, method, basis, driver, options, molecule_id, return_full=False, tag=None):
 
         # Always a list
         if isinstance(molecule_id, str):
@@ -386,7 +386,8 @@ class FractalClient(object):
                 "program": program,
                 "method": method,
                 "basis": basis,
-                "options": options
+                "options": options,
+                "tag": tag,
             },
             "data": molecule_id
         }

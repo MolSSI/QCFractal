@@ -7,7 +7,7 @@ import pytest
 
 import qcfractal.interface as portal
 from qcfractal import testing, queue
-from qcfractal.testing import test_server
+from qcfractal.testing import test_server, reset_server_database
 
 
 @pytest.fixture(scope="module")
@@ -22,9 +22,7 @@ def compute_manager_fixture(test_server):
     lpad = fireworks.LaunchPad(name="fw_testing_manager", logdir="/tmp/", strm_lvl="CRITICAL")
     lpad.reset(None, require_password=False)
 
-    manager = queue.QueueManager(client, lpad)
-
-    yield client, test_server, manager
+    yield client, test_server, lpad
 
     # Cleanup and reset
     lpad.reset(None, require_password=False)
@@ -33,13 +31,39 @@ def compute_manager_fixture(test_server):
 
 @testing.using_rdkit
 def test_queue_manager_single(compute_manager_fixture):
-    client, server, manager = compute_manager_fixture
+    client, server, lpad = compute_manager_fixture
+    reset_server_database(server)
+
+    manager = queue.QueueManager(client, lpad)
 
     # Add compute
     hooh = portal.data.get_molecule("hooh.json")
-    ret = client.add_compute("rdkit", "UFF", "", "energy", "none", [hooh.to_json()])
+    ret = client.add_compute("rdkit", "UFF", "", "energy", "none", [hooh.to_json()], tag="other")
 
     # Force manager compute and get results
     manager.await_results()
+    ret = client.get_results()
+    assert len(ret) == 1
+
+
+@testing.using_rdkit
+def test_queue_manager_single_tags(compute_manager_fixture):
+    client, server, lpad = compute_manager_fixture
+    reset_server_database(server)
+
+    manager_stuff = queue.QueueManager(client, lpad, queue_tag="stuff")
+    manager_other = queue.QueueManager(client, lpad, queue_tag="other")
+
+    # Add compute
+    hooh = portal.data.get_molecule("hooh.json")
+    ret = client.add_compute("rdkit", "UFF", "", "energy", "none", [hooh.to_json()], tag="other")
+
+    # Computer with the incorrect tag
+    manager_stuff.await_results()
+    ret = client.get_results()
+    assert len(ret) == 0
+
+    # Computer with the correct tag
+    manager_other.await_results()
     ret = client.get_results()
     assert len(ret) == 1
