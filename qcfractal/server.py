@@ -211,7 +211,7 @@ class FractalServer:
         # Queue manager if direct build
         if queue_socket is not None:
 
-            if "security" == "local":
+            if security == "local":
                 raise ValueError("Cannot yet use local security with a internal QueueManager")
 
             # Add the socket to passed args

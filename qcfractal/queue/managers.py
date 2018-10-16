@@ -107,7 +107,22 @@ class QueueManager:
         for cb in self.periodic.values():
             cb.stop()
 
+        self.shutdown()
         self.logger.info("QueueManager stopping gracefully. Stopped IOLoop.\n")
+
+    def shutdown(self):
+
+        task_ids = [x[0] for x in self.list_current_tasks()]
+        if len(task_ids) == 0:
+            return True
+
+        payload = {"meta": {"name": self.name_str, "tag": self.queue_tag, "operation": "shutdown"}, "data": task_ids}
+        r = self.client._request("put", "queue_manager", payload, noraise=True)
+        if r.status_code != 200:
+            # TODO something as we didnt successfully add the data
+            self.logger.warning("Shutdown was not successful. This may delay queued tasks.")
+        else:
+            self.logger.info("Shutdown was successful, {} tasks returned to master queue.".format(len(task_ids)))
 
     def update(self, new_tasks=True):
         """Examines the queue for completed tasks and adds successful completions to the database

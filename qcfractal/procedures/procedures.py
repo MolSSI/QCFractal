@@ -205,6 +205,7 @@ def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"
         hash_index = procedures_util.hash_procedure_keys(keys)
         packet["hash_index"] = hash_index
         duplicate_lookup.append(hash_index)
+        print(packet)
 
         task = {
             "hash_index": hash_index,

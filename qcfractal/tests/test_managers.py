@@ -87,6 +87,18 @@ def test_queue_manager_shutdown(compute_manager_fixture):
     client, server, lpad = compute_manager_fixture
     reset_server_database(server)
 
-    manager_stuff = queue.QueueManager(client, lpad)
+    manager = queue.QueueManager(client, lpad)
 
+    hooh = portal.data.get_molecule("hooh.json")
+    ret = client.add_compute("rdkit", "UFF", "", "energy", "none", [hooh.to_json()], tag="other")
 
+    # Pull job to manager and shutdown
+    manager.update()
+    assert len(manager.list_current_tasks()) == 1
+    manager.shutdown()
+
+    # Boot new manager and await results
+    manager = queue.QueueManager(client, lpad)
+    manager.await_results()
+    ret = client.get_results()
+    assert len(ret) == 1

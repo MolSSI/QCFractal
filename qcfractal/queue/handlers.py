@@ -191,7 +191,20 @@ class QueueManagerHandler(APIHandler):
         tag = self.json["meta"].get("tag", None)
         storage.manager_update(name, tag=tag, completed=len(self.json["data"]))
 
-    def update(self):
+    def put(self):
         """
         """
         self.authenticate("queue")
+
+        storage = self.objects["storage_socket"]
+
+        ret = storage.queue_reset_status(self.json["data"])
+        self.write({"meta" : {}, "data": True})
+
+        # Update manager logs
+        name = self.json["meta"]["name"]
+        storage.manager_update(name, returned=len(self.json["data"]))
+        self.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(name, len(self.json["data"])))
+
+
+

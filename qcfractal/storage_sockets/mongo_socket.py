@@ -883,12 +883,31 @@ class MongoSocket:
 
     def queue_mark_error(self, data):
         bulk_commands = []
+        dt = datetime.datetime.utcnow()
         for queue_id, msg in data:
             update = {
                 "$set": {
                     "status": "ERROR",
                     "error": msg,
-                    "modified_on": datetime.datetime.utcnow(),
+                    "modified_on": dt,
+                }
+            }
+            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(queue_id)}, update))
+
+        if len(bulk_commands) == 0:
+            return
+
+        ret = self._tables["task_queue"].bulk_write(bulk_commands, ordered=False)
+        return ret
+
+    def queue_reset_status(self, data):
+        bulk_commands = []
+        dt = datetime.datetime.utcnow()
+        for queue_id in data:
+            update = {
+                "$set": {
+                    "status": "WAITING",
+                    "modified_on": dt,
                 }
             }
             bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(queue_id)}, update))
@@ -923,7 +942,7 @@ class MongoSocket:
 
 ### QueueManagers
 
-    def manager_update(self, name, tag=None, submitted=0, completed=0, failures=0):
+    def manager_update(self, name, tag=None, submitted=0, completed=0, failures=0, returned=0):
         dt = datetime.datetime.utcnow()
 
         r = self._tables["queue_managers"].update_one(
@@ -945,6 +964,7 @@ class MongoSocket:
                 "$inc": {
                     "submitted": submitted,
                     "completed": completed,
+                    "returned": returned,
                     "failures": failures
                 }
             },

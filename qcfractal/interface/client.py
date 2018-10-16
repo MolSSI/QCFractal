@@ -72,6 +72,8 @@ class FractalClient(object):
             r = requests.get(addr, json=payload, headers=self._headers, verify=self._verify)
         elif method == "post":
             r = requests.post(addr, json=payload, headers=self._headers, verify=self._verify)
+        elif method == "put":
+            r = requests.put(addr, json=payload, headers=self._headers, verify=self._verify)
         else:
             raise KeyError("Method not understood: {}".format(method))
 
