@@ -30,7 +30,8 @@ class QueueManager:
         A logger for the QueueManager
     """
 
-    def __init__(self, client, queue_client, loop=None, logger=None, max_tasks=1000, queue_tag=None, cluster="unknown"):
+    def __init__(self, client, queue_client, loop=None, logger=None, max_tasks=1000, queue_tag=None,
+                 cluster="unknown"):
         """
         Parameters
         ----------
@@ -118,9 +119,8 @@ class QueueManager:
             payload = {"meta": {"name": self.name_str, "tag": self.queue_tag}, "data": results}
             r = self.client._request("post", "queue_manager", payload, noraise=True)
             if r.status_code != 200:
-                self.logger.warning("Post complete tasks was not successful. Data may be lost.")
                 # TODO something as we didnt successfully add the data
-                pass
+                self.logger.warning("Post complete tasks was not successful. Data may be lost.")
 
             self.active -= len(results)
 
@@ -133,9 +133,9 @@ class QueueManager:
         payload = {"meta": {"name": self.name_str, "tag": self.queue_tag, "limit": open_slots}, "data": {}}
         r = self.client._request("get", "queue_manager", payload, noraise=True)
         if r.status_code != 200:
-            self.logger.warning("Aquisition of new tasks was not successful.")
             # TODO something as we didnt successfully get data
-            pass
+            self.logger.warning("Aquisition of new tasks was not successful.")
+
         new_tasks = r.json()["data"]
 
         # Add new tasks to queue

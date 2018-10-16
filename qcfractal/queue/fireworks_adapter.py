@@ -7,7 +7,7 @@ import logging
 try:
     import fireworks
     import fireworks.core.rocket_launcher
-except:
+except ImportError:
     fireworks = None
 
 

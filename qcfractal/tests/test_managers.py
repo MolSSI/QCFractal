@@ -80,4 +80,13 @@ def test_queue_manager_single_tags(compute_manager_fixture):
     assert other_log["completed"] == 1
 
 
+@testing.using_rdkit
+def test_queue_manager_shutdown(compute_manager_fixture):
+    """Tests to ensure tasks are returned to queue when the manager shuts down
+    """
+    client, server, lpad = compute_manager_fixture
+    reset_server_database(server)
+
+    manager_stuff = queue.QueueManager(client, lpad)
+
 

@@ -936,9 +936,6 @@ class MongoSocket:
                     "name": name,
                     "created_on": dt,
                     "tag": tag,
-                    # "submitted": 0,
-                    # "completed": 0,
-                    # "failures": 0
                 },
                 # Set the date
                 "$set": {
@@ -952,7 +949,7 @@ class MongoSocket:
                 }
             },
             upsert=True)
-        return True
+        return r.matched_count == 1
 
     def get_managers(self, query, projection=None):
 

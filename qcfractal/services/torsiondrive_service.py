@@ -9,7 +9,7 @@ import numpy as np
 
 try:
     from torsiondrive import td_api
-except ModuleNotFoundError:
+except ImportError:
     td_api = None
 
 from qcfractal import procedures
@@ -20,7 +20,7 @@ __all__ = ["TorsionDriveService"]
 
 def _check_td():
     if td_api is None:
-        raise ModuleNotFoundError("Unable to find TorsionDrive which must be installed to use the TorsionDriveService")
+        raise ImportError("Unable to find TorsionDrive which must be installed to use the TorsionDriveService")
 
 
 class TorsionDriveService:

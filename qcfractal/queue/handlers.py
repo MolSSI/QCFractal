@@ -3,7 +3,6 @@ Queue backend abstraction manager.
 """
 
 import collections
-import logging
 import traceback
 
 from .. import procedures
@@ -39,17 +38,6 @@ class TaskQueueHandler(APIHandler):
 
         self.write(ret)
 
-    # def get(self):
-
-    #     # _check_auth(self.objects, self.request.headers)
-
-    #     self.objects["db_socket"].set_project(header["project"])
-    #     queue_nanny = self.objects["queue_nanny"]
-    #     ret = {}
-    #     ret["queue"] = list(queue_nanny.queue)
-    #     ret["error"] = queue_nanny.errors
-    #     self.write(ret)
-
 
 class ServiceQueueHandler(APIHandler):
     """
@@ -63,7 +51,6 @@ class ServiceQueueHandler(APIHandler):
 
         # Grab objects
         storage = self.objects["storage_socket"]
-        tag = self.json["meta"].pop("tag", None)
 
         # Figure out initial molecules
         errors = []
@@ -196,8 +183,7 @@ class QueueManagerHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         ret = self.insert_complete_tasks(storage, self.json["data"], self.logger)
-
-        self.write({"meta": {}, "data": True})
+        self.write({"meta" : {"n_inserted": ret[0]}, "data": True})
         self.logger.info("QueueManager: Aquired {} complete tasks.".format(len(self.json["data"])))
 
         # Update manager logs

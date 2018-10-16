@@ -20,7 +20,7 @@ def test_queue_fireworks_cleanup(fw_server):
     ret = client.add_compute("rdkit", "UFF", "", "energy", "none", mol_ret["hooh"])
 
     # Pull out fireworks launchpad and queue nanny
-    lpad = fw_server.objects["queue_socket"]
+    lpad = fw_server.objects["queue_manager"].queue_adapter.lpad
 
     # Push tasks to nanny and check
     fw_server.update_tasks()
