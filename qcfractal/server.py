@@ -341,15 +341,15 @@ class FractalServer:
         # Call the QueueAPI static method
         queue.QueueManagerHandler.insert_complete_tasks(self.objects["storage_socket"], results, self.logger)
 
-        # Add new jobs to queue
-        new_jobs = self.objects["storage_socket"].queue_get_next(n=1000)
-        self.objects["queue_adapter"].submit_tasks(new_jobs)
+        # Add new tasks to queue
+        new_tasks = self.objects["storage_socket"].queue_get_next(n=1000)
+        self.objects["queue_adapter"].submit_tasks(new_tasks)
 
         return True
 
     def await_results(self):
         """A synchronous method for testing or small launches
-        that awaits job completion before adding all queued results
+        that awaits task completion before adding all queued results
         to the database and returning.
 
         Returns
@@ -395,7 +395,7 @@ class FractalServer:
         Returns
         -------
         ret : list of tuples
-            All jobs currently still in the database
+            All tasks currently still in the database
         """
         if "queue_adapter" not in self.objects:
             raise AttributeError(

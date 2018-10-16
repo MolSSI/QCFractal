@@ -78,7 +78,7 @@ class DaskAdapter:
         Returns
         -------
         list of str
-            The tags associated with the submitted jobs.
+            The tags associated with the submitted tasks.
         """
         ret = []
         for task in tasks:
@@ -89,9 +89,9 @@ class DaskAdapter:
 
             # Form run tuple
             func = self.get_function(task["spec"]["function"])
-            job = self.dask_client.submit(func, *task["spec"]["args"], **task["spec"]["kwargs"])
+            task = self.dask_client.submit(func, *task["spec"]["args"], **task["spec"]["kwargs"])
 
-            self.queue[tag] = (job, task["parser"], task["hooks"])
+            self.queue[tag] = (task, task["parser"], task["hooks"])
             self.logger.info("Adapter: Task submitted {}".format(tag))
             ret.append(tag)
         return ret
@@ -102,7 +102,7 @@ class DaskAdapter:
         Returns
         -------
         list of dict
-            The JSON structures of complete jobs
+            The JSON structures of complete tasks
         """
         ret = {}
         del_keys = []
@@ -117,7 +117,7 @@ class DaskAdapter:
         return ret
 
     def await_results(self):
-        """Waits for all jobs to complete before returning
+        """Waits for all tasks to complete before returning
 
         Returns
         -------

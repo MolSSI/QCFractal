@@ -26,13 +26,13 @@ class TaskQueueHandler(APIHandler):
 
         # Format tasks
         func = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])
-        full_tasks, complete_jobs, errors = func(storage, self.json)
+        full_tasks, complete_tasks, errors = func(storage, self.json)
 
         # Add tasks to queue
         ret = storage.queue_submit(full_tasks)
         self.logger.info("TaskQueue: Added {} tasks.".format(ret["meta"]["n_inserted"]))
 
-        ret["data"] = {"submitted": ret["data"], "completed": list(complete_jobs), "queue": ret["meta"]["duplicates"]}
+        ret["data"] = {"submitted": ret["data"], "completed": list(complete_tasks), "queue": ret["meta"]["duplicates"]}
         ret["meta"]["duplicates"] = []
         ret["meta"]["errors"].extend(errors)
 
@@ -80,12 +80,12 @@ class ServiceQueueHandler(APIHandler):
         found_hashes = set(x["hash_index"] for x in found_hashes["data"])
 
         new_services = []
-        complete_jobs = []
+        complete_tasks = []
         for x in submitted_services:
             hash_index = x.data["hash_index"]
 
             if hash_index in found_hashes:
-                complete_jobs.append(hash_index)
+                complete_tasks.append(hash_index)
             else:
                 new_services.append(x)
 
@@ -93,7 +93,7 @@ class ServiceQueueHandler(APIHandler):
         ret = storage.add_services([service.get_json() for service in new_services])
         self.logger.info("ServiceQueue: Added {} services.\n".format(ret["meta"]["n_inserted"]))
 
-        ret["data"] = {"submitted": ret["data"], "completed": list(complete_jobs), "queue": ret["meta"]["duplicates"]}
+        ret["data"] = {"submitted": ret["data"], "completed": list(complete_tasks), "queue": ret["meta"]["duplicates"]}
         ret["meta"]["duplicates"] = []
         ret["meta"]["errors"].extend(errors)
 
@@ -118,13 +118,13 @@ class QueueManagerHandler(APIHandler):
         for key, (result, parser, hooks) in results.items():
             try:
 
-                # Successful job
+                # Successful task
                 if result["success"] is True:
                     result["queue_id"] = key
                     new_results[parser].append((result, hooks))
                     task_success += 1
 
-                # Failed job
+                # Failed task
                 else:
                     if "error" in result:
                         error = result["error"]
@@ -155,14 +155,15 @@ class QueueManagerHandler(APIHandler):
             error_data.extend(err)
             hooks.extend(hks)
 
-        # Handle hooks and complete jobs
+        # Handle hooks and complete tasks
         storage_socket.handle_hooks(hooks)
         storage_socket.queue_mark_complete(completed)
         storage_socket.queue_mark_error(error_data)
         return (len(completed), len(error_data))
 
     def get(self):
-        # Add new jobs to queue
+        """Pulls new tasks from the Servers queue
+        """
         self.authenticate("queue")
 
         # Grab objects
@@ -173,19 +174,19 @@ class QueueManagerHandler(APIHandler):
             "n": self.json["meta"].get("limit", 100),
             "tag": self.json["meta"].get("tag", None),
         } # yapf: disable
-        new_jobs = storage.queue_get_next(**kwargs)
+        new_tasks = storage.queue_get_next(**kwargs)
 
-        self.write({"meta": {}, "data": new_jobs})
+        self.write({"meta": {"n_found": len(new_tasks), "success": True}, "data": new_tasks})
 
     def post(self):
-        """Summary
+        """Posts complete tasks to the Servers queue
         """
         self.authenticate("queue")
 
         # Grab objects
         storage = self.objects["storage_socket"]
 
-        self.insert_complete_tasks(storage, self.json["data"], self.logger)
+        ret = self.insert_complete_tasks(storage, self.json["data"], self.logger)
 
         self.write({"meta": {}, "data": True})
 

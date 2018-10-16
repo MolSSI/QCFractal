@@ -163,7 +163,7 @@ def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"
 
     """
 
-    # Unpack individual QC jobs
+    # Unpack individual QC tasks
     runs, errors = procedures_util.unpack_single_run_meta(storage, data["meta"]["qc_meta"], data["data"])
 
     if "options" in data["meta"]:

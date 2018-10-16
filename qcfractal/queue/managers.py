@@ -13,8 +13,8 @@ __all__ = ["QueueManager"]
 
 class QueueManager:
     """
-    This object maintains a computational queue and watches for finished jobs for different
-    queue backends. Finished jobs are added to the database and removed from the queue.
+    This object maintains a computational queue and watches for finished tasks for different
+    queue backends. Finished tasks are added to the database and removed from the queue.
 
     Attributes
     ----------
@@ -95,7 +95,7 @@ class QueueManager:
         self.logger.info("QueueManager stopping gracefully. Stopped IOLoop.\n")
 
     def update(self, new_tasks=True):
-        """Examines the queue for completed jobs and adds successful completions to the database
+        """Examines the queue for completed tasks and adds successful completions to the database
         while unsuccessful are logged for future inspection
 
         """
@@ -114,19 +114,19 @@ class QueueManager:
         if (new_tasks is False) or (open_slots == 0):
             return True
 
-        # Get new jobs
+        # Get new tasks
         payload = {"meta": {"limit": open_slots}, "data": {}}
         r = self.client._request("get", "queue_manager", payload, noraise=True)
         new_tasks = r.json()["data"]
 
-        # Add new jobs to queue
+        # Add new tasks to queue
         self.queue_adapter.submit_tasks(new_tasks)
         self.active += len(new_tasks)
         return True
 
     def await_results(self):
         """A synchronous method for testing or small launches
-        that awaits job completion.
+        that awaits task completion.
 
         Returns
         -------
@@ -146,6 +146,6 @@ class QueueManager:
         Returns
         -------
         ret : list of tuples
-            All jobs currently still in the database
+            All tasks currently still in the database
         """
         return self.queue_adapter.list_tasks()

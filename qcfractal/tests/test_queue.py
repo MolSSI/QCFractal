@@ -22,7 +22,7 @@ def test_queue_fireworks_cleanup(fw_server):
     # Pull out fireworks launchpad and queue nanny
     lpad = fw_server.objects["queue_socket"]
 
-    # Push jobs to nanny and check
+    # Push tasks to nanny and check
     fw_server.update_tasks()
     assert len(lpad.get_fw_ids()) == 1
     assert len(fw_server.list_current_tasks()) == 1

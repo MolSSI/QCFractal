@@ -99,7 +99,7 @@ def test_procedure_optimization(fractal_compute_server):
     r = requests.post(fractal_compute_server.get_address("task_queue"), json=compute)
     assert r.status_code == 200
 
-    # Get the first submitted job, the second index will be a hash_index
+    # Get the first submitted task, the second index will be a hash_index
     submitted = r.json()["data"]["submitted"]
     compute_key = submitted[0]
 

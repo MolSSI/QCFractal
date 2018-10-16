@@ -101,7 +101,7 @@ class BioFragment(Collection):
         options["torsiondrive_meta"] = {}
         options = json.dumps(options)
 
-        # Loop over all spacing types and build jobs
+        # Loop over all spacing types and build tasks
         submissions = []
         for ttype in ["internal", "terminal"]:
 
