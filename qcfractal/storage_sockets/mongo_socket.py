@@ -94,7 +94,8 @@ class MongoSocket:
             "procedures": interface.schema.get_table_indices("procedure"),
             "service_queue": interface.schema.get_table_indices("service_queue"),
             "task_queue": interface.schema.get_table_indices("task_queue"),
-            "users": ("username", )
+            "users": ("username", ),
+            "queue_managers": ("name", )
         }
         self._valid_tables = set(self._table_indices.keys())
         self._table_unique_indices = {
@@ -106,6 +107,7 @@ class MongoSocket:
             "service_queue": False,
             "task_queue": False,
             "users": True,
+            "queue_managers": True,
         }
 
         self._lower_results_index = ["method", "basis", "options", "program"]
@@ -918,6 +920,44 @@ class MongoSocket:
 
         ret = self._tables["service_queue"].bulk_write(bulk_commands, ordered=False)
         return ret
+
+### QueueManagers
+
+    def manager_update(self, name, tag=None, submitted=0, completed=0, failures=0):
+        dt = datetime.datetime.utcnow()
+
+        r = self._tables["queue_managers"].update_one(
+            {
+                "name": name
+            },
+            {
+                # Provide base data
+                "$setOnInsert": {
+                    "name": name,
+                    "created_on": dt,
+                    "tag": tag,
+                    # "submitted": 0,
+                    # "completed": 0,
+                    # "failures": 0
+                },
+                # Set the date
+                "$set": {
+                    "modifed_on": dt,
+                },
+                # Incremement relevant data
+                "$inc": {
+                    "submitted": submitted,
+                    "completed": completed,
+                    "failures": failures
+                }
+            },
+            upsert=True)
+        return True
+
+    def get_managers(self, query, projection=None):
+
+        return self._get_generic(query, "queue_managers", allow_generic=True, projection=projection)
+
 
 ### Users
 

@@ -171,15 +171,22 @@ class QueueManagerHandler(APIHandler):
         # Grab objects
         storage = self.objects["storage_socket"]
 
-        # Figure out kwargs
+        # Figure out metadata and kwargs
+        name = self.json["meta"]["name"]
+        tag = self.json["meta"].get("tag", None)
         kwargs = {
             "n": self.json["meta"].get("limit", 100),
-            "tag": self.json["meta"].get("tag", None),
+            "tag": tag,
         } # yapf: disable
-        new_tasks = storage.queue_get_next(**kwargs)
 
+        # Grab new tasks and write out
+        new_tasks = storage.queue_get_next(**kwargs)
         self.write({"meta": {"n_found": len(new_tasks), "success": True}, "data": new_tasks})
         self.logger.info("QueueManager: Served {} tasks.".format(len(new_tasks)))
+
+        # Update manager logs
+        storage.manager_update(name, tag=tag, submitted=len(new_tasks))
+
 
     def post(self):
         """Posts complete tasks to the Servers queue
@@ -193,6 +200,11 @@ class QueueManagerHandler(APIHandler):
 
         self.write({"meta": {}, "data": True})
         self.logger.info("QueueManager: Aquired {} complete tasks.".format(len(self.json["data"])))
+
+        # Update manager logs
+        name = self.json["meta"]["name"]
+        tag = self.json["meta"].get("tag", None)
+        storage.manager_update(name, tag=tag, completed=len(self.json["data"]))
 
     def update(self):
         """

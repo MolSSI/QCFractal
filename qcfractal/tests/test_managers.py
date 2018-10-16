@@ -67,3 +67,17 @@ def test_queue_manager_single_tags(compute_manager_fixture):
     manager_other.await_results()
     ret = client.get_results()
     assert len(ret) == 1
+
+    # Check the logs to make sure
+    manager_logs = server.storage.get_managers({})["data"]
+    assert len(manager_logs) == 2
+
+    stuff_log = next(x for x in manager_logs if x["tag"] == "stuff")
+    assert stuff_log["submitted"] == 0
+
+    other_log = next(x for x in manager_logs if x["tag"] == "other")
+    assert other_log["submitted"] == 1
+    assert other_log["completed"] == 1
+
+
+
