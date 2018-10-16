@@ -28,13 +28,13 @@ class QueueManager:
         A logger for the QueueManager
     """
 
-    def __init__(self, client, queue_adapter, loop=None, logger=None, max_tasks=1000):
+    def __init__(self, client, queue_client, loop=None, logger=None, max_tasks=1000):
         """
         Parameters
         ----------
         client : FractalClient
             A Portal client to connect to a server
-        queue_adapter : QueueAdapter
+        queue_client : QueueAdapter
             The DBAdapter class for queue abstraction
         storage_socket : DBSocket
             A socket for the backend database
@@ -53,7 +53,7 @@ class QueueManager:
             self.logger = logging.getLogger('QueueManager')
 
         self.client = client
-        self.queue_adapter = build_queue_adapter(queue_adapter, logger=self.logger)
+        self.queue_adapter = build_queue_adapter(queue_client, logger=self.logger)
         self.max_tasks = max_tasks
         self.periodic = {}
         self.active = 0

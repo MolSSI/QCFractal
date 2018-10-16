@@ -142,8 +142,9 @@ class QueueManagerHandler(APIHandler):
                 error_data.append((key, msg))
                 task_failures += 1
 
-        logger.info("QueueManager: Found {} complete tasks ({} successful, {} failed).".format(
-            task_totals, task_success, task_failures))
+        if len(task_totals):
+            logger.info("QueueManager: Found {} complete tasks ({} successful, {} failed).".format(
+                task_totals, task_success, task_failures))
 
         # Run output parsers
         completed = []
@@ -166,7 +167,14 @@ class QueueManagerHandler(APIHandler):
 
         # Grab objects
         storage = self.objects["storage_socket"]
-        new_jobs = storage.queue_get_next(n=self.json["meta"].get("limit", 100))
+
+        # Figure out kwargs
+        kwargs = {
+            "n": self.json["meta"].get("limit", 100),
+            "tag": self.json["meta"].get("tag", None),
+        } # yapf: disable
+        new_jobs = storage.queue_get_next(**kwargs)
+
         self.write({"meta": {}, "data": new_jobs})
 
     def post(self):
@@ -179,7 +187,7 @@ class QueueManagerHandler(APIHandler):
 
         self.insert_complete_tasks(storage, self.json["data"], self.logger)
 
-        self.write({"meta": {}, "data": None})
+        self.write({"meta": {}, "data": True})
 
     def update(self):
         """

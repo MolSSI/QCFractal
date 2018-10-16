@@ -824,11 +824,13 @@ class MongoSocket:
 
     def queue_get_next(self, n=100, tag=None):
 
+        # Figure out query, tagless has no requirements
+        query = {"status": "WAITING"}
+        if tag is not None:
+            query["tag"] = tag
+
         found = list(self._tables["task_queue"].find(
-            {
-                "status": "WAITING",
-                "tag": tag
-            },
+            query,
             sort=[("created_on", -1)],
             limit=n,
             projection={"_id": True,
