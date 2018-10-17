@@ -23,6 +23,7 @@ dependencies:
 
     # Pip depends
   - pip:
+    - pydantic
     - git+git://github.com/MolSSI/QCEngine#egg=qcengine
 
     # Fireworks

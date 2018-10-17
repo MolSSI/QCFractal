@@ -8,9 +8,11 @@ import abc
 import json
 import copy
 
-class Collection(abc.ABC):
+from typing import Dict
+from pydantic import BaseModel
 
-    __base_fields = {"name", "collection", "provenance"}
+
+class Collection(abc.ABC):
 
     def __init__(self, name, **kwargs):
         """
@@ -33,19 +35,34 @@ class Collection(abc.ABC):
         if (self.client is not None) and not (self.client.__class__.__name__ == "FractalClient"):
             raise TypeError("Expected FractalClient as `client` kwarg, found {}.".format(type(self.client)))
 
-        # Init from raw json blob, ignore everything else
-        if kwargs.get("json_data", False):
-            self.data = kwargs["json_data"]
+        if 'collection' not in kwargs:
+            kwargs['collection'] = self.__class__.__name__.lower()
 
-        # Base init
-        else:
-            class_name = self.__class__.__name__.lower()
-            self.data = {
-                "name": name,
-                "collection": class_name,
-                "provenance": kwargs.pop("provenance", {}),
-                **self._init_collection_data(kwargs)
-            }
+        kwargs['name'] = name
+
+        # Create the data model
+        self.data = self.DataModel(**kwargs)
+
+    class DataModel(BaseModel):
+        """
+        Internal Data structure base model typed by PyDantic
+
+        This structure validates input, allows server-side validation and data security,
+        and will create the information to pass back and forth between server and client
+
+        Subclasses of Collection can extend this class internally to change the set of
+        additional data defined by the Collection
+        """
+        name: str
+        collection: str = None
+        provenance: Dict[str, str] = {}
+        id: str = 'local'
+
+        class Config:
+            # Allows extra args to prevent subclass errors, but just ignore them
+            # These might be the defaults, but make it explicit to be sure
+            allow_extra = False
+            ignore_extra = True
 
     def __str__(self):
         """
@@ -63,18 +80,16 @@ class Collection(abc.ABC):
         Collection(id='5b7f1fd57b87872d2c5d0a6d', name=`S22`, client=`localhost:8888`)
         """
 
-        uid = "local"
-        if "id" in self.data:
-            uid = self.data["id"]
+        uid = self.data.id
 
         client = None
         if self.client:
-           client = self.client.address
+            client = self.client.address
 
         class_name = self.__class__.__name__
         ret = "{}(".format(class_name)
         ret += "id='{}', ".format(uid)
-        ret += "name=`{}`, ".format(self.data["name"])
+        ret += "name=`{}`, ".format(self.data.name)
         ret += "client='{}') ".format(client)
 
         return ret
@@ -97,7 +112,7 @@ class Collection(abc.ABC):
         """
 
         if not (client.__class__.__name__ == "FractalClient"):
-            raise TypeError("Expected a FractalClient as first arguement, found {}.".format(type(self.client)))
+            raise TypeError("Expected a FractalClient as first argument, found {}.".format(type(client)))
 
         class_name = cls.__name__.lower()
         tmp_data = client.get_collection(class_name, name, full_return=True)
@@ -132,36 +147,13 @@ class Collection(abc.ABC):
             raise KeyError("Attempted to create Collection from JSON with class {}, but found collection type of {}.".
                            format(class_name, data["collection"]))
 
-        # Ensure all required fields are found.
-        req_fields = cls.__base_fields | getattr(cls, "_" + cls.__name__ + "__required_fields")
-        if len(req_fields - data.keys()):
-            missing = req_fields - data.keys()
+        # Attempt to build class, ensure all fields to reconstruct from JSON are present
+        req_fields = cls.DataModel.schema()['properties'].keys()
+        missing = req_fields - data.keys()
+        if len(missing):
             raise KeyError("For class {} the following fields are missing {}.".format(class_name, missing))
-
-        # Build and return object
-        ret = cls(data["name"], json_data=data, client=client)
-
-        return ret
-
-    @abc.abstractmethod
-    def _init_collection_data(self, additional_data_dict):
-        """
-        Additional data defined by the Collection
-
-        This is in addition to the default data. If there is no additional data, simply return and empty dict
-
-        Parameters
-        ----------
-        additional_data_dict : dict
-            Additional data which the individual implementation can work with
-
-        Returns
-        -------
-        collection_data : dict
-            Additional data to be added as part of the collection.
-            If the collection does not have additional data, return this as an empty dict
-        """
-        raise NotImplementedError()
+        name = data.pop('name')
+        return cls(name, client=client, **data)
 
     def to_json(self, filename=None):
         """
@@ -180,9 +172,8 @@ class Collection(abc.ABC):
         if filename is not None:
             with open(filename, 'w') as open_file:
                 json.dump(self.data, open_file)
-
         else:
-            return copy.deepcopy(self.data)
+            return copy.deepcopy(self.data.dict())
 
     @abc.abstractmethod
     def _pre_save_prep(self, client):
@@ -214,19 +205,19 @@ class Collection(abc.ABC):
 
         """
         class_name = self.__class__.__name__.lower()
-        if self.data["name"] == "":
+        if self.data.name == "":
             raise AttributeError("Collection:save: {} must have a name!".format(class_name))
 
         if client is None:
             if self.client is None:
-                raise AttributeError("Collection:save: {} does not own a MongoDB "
+                raise AttributeError("Collection:save: {} does not own a Storage Database "
                                      "instance and one was not passed in.".format(class_name))
             client = self.client
 
-        if overwrite and ("id" not in self.data):
+        if overwrite and (self.data.id == self.data.fields['id'].default):
             raise KeyError("Attempting to overwrite the {} class on the server, but no ID found.".format(class_name))
 
         self._pre_save_prep(client)
 
         # Add the database
-        return client.add_collection(self.data, overwrite=overwrite)
+        return client.add_collection(self.data.dict(), overwrite=overwrite)

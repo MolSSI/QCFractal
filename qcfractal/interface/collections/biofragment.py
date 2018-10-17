@@ -8,6 +8,9 @@ import copy
 from .collection import Collection
 from . import collection_utils
 
+from pydantic import validator
+from typing import Dict
+
 
 class BioFragment(Collection):
     """
@@ -18,8 +21,6 @@ class BioFragment(Collection):
     client : client.FractalClient
         A optional server portal to connect the database
     """
-
-    __required_fields = {"initial_molecule"}
 
     def __init__(self, name, initial_molecule=None, client=None, **kwargs):
         """
@@ -35,24 +36,27 @@ class BioFragment(Collection):
             A Portal client to connect to a server
 
         """
-        super().__init__(name, client=client, initial_molecule=initial_molecule)
+        super().__init__(name, client=client, initial_molecule=initial_molecule, **kwargs)
+        server_ret = self.client.add_molecules({"initial_molecule": self.data.initial_molecule})
+        self.data.initial_molecule_id = server_ret["initial_molecule"]
 
-    def _init_collection_data(self, additional_args):
-        mol = additional_args.get("initial_molecule", None)
-        if mol is None:
-            raise KeyError("No record of Fragment {} found and no initial molecule passed in.".format(name))
+    class DataModel(Collection.DataModel):
+        """
+        Internal Data structure base model typed by PyDantic
 
-        if self.client is None:
-            raise KeyError("BioFragment must be initialized with a FractalClient.")
+        This structure validates input, allows server-side validation and data security,
+        and will create the information to pass back and forth between server and client
+        """
+        initial_molecule: Dict
+        # Constructed dynamically from the init
+        initial_molecule_id: str = None
+        torsiondrives: Dict = {}
+        options: Dict = {"torsiondrive": {}}
 
-        ret = self.client.add_molecules({"initial_molecule": mol})
-
-        return {
-            "initial_molecule": mol.to_json(),
-            "initial_molecule_id": ret["initial_molecule"],
-            "options": {"torsiondrive": {}},
-            "torsiondrives": {}
-        }
+        @validator("initial_molecule", pre=True)
+        def cast_mol_to_json(cls, mol):
+            # Start by validating the
+            return mol.to_json()
 
     def _pre_save_prep(self, client):
         pass
@@ -64,7 +68,7 @@ class BioFragment(Collection):
             raise KeyError("Options set of type {} not understood.".format(dtype))
 
         # Check for duplicates
-        opts = self.data["options"][dtype]
+        opts = self.data.options[dtype]
         if key in opts:
             raise KeyError("Attempted to set options of type {} with key {}, duplicate key found.".format(dtype, key))
 
@@ -83,15 +87,15 @@ class BioFragment(Collection):
 
         # Grab the options key
         try:
-            options = copy.deepcopy(self.data["options"]["torsiondrive"][options_set])
+            options = copy.deepcopy(self.data.options["torsiondrive"][options_set])
         except KeyError:
             raise KeyError("Options set of type {} for key {} not found.".format("torsiondrive", options_set))
 
         if len(torsions.keys() ^ {"internal", "terminal"}):
             raise KeyError("'torsions' input must have keys {}".format({"internal", "terminal"}))
 
-        if options_set not in self.data["torsiondrives"]:
-            self.data["torsiondrives"] = {}
+        if options_set not in self.data.torsiondrives:
+            self.data.torsiondrives = {}
 
         # Pull out different spacing
         spacing = {
@@ -111,9 +115,9 @@ class BioFragment(Collection):
                 tmp_options["torsiondrive_meta"]["grid_spacing"] = spacing[ttype]
                 tmp_options["torsiondrive_meta"]["dihedrals"] = t
 
-                ret = self.client.add_service("torsiondrive", [self.data["initial_molecule_id"]], tmp_options)
+                ret = self.client.add_service("torsiondrive", [self.data.initial_molecule_id], tmp_options)
                 submissions.append(ret)
         return submissions
 
-collection_utils.register_collection(BioFragment)
 
+collection_utils.register_collection(BioFragment)

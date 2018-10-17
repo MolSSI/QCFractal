@@ -6,6 +6,7 @@ import math
 
 __registered_collections = {}
 
+
 def nCr(n, r):
     """
     Compute the binomial coefficient n! / (k! * (n-k)!)
@@ -24,6 +25,7 @@ def nCr(n, r):
     """
     return math.factorial(n) / math.factorial(r) / math.factorial(n - r)
 
+
 def register_collection(collection):
     """Registers a collection for the factory
 
@@ -33,11 +35,11 @@ def register_collection(collection):
         The Collection class to be registered
     """
 
-
     class_name = collection.__name__.lower()
     if class_name in __registered_collections:
         raise KeyError("Collection type '{}' already registered".format(class_name))
     __registered_collections[class_name] = collection
+
 
 def collection_factory(data, client=None):
     """Creates a new Collection class from a JSON blob.

@@ -1,5 +1,5 @@
 """
-Tests the QCPortal database object
+Tests the QCPortal dataset object
 """
 
 from . import portal
@@ -33,7 +33,7 @@ def _compare_rxn_stoichs(ref, new):
     return True
 
 
-# Build a interesting database
+# Build an interesting dataset
 @pytest.fixture
 def water_ds():
     # Create water Dataset, also tests that ds_type is case insensitive
@@ -88,7 +88,7 @@ def water_ds():
     return ds
 
 
-# Build a nbody database
+# Build a nbody dataset
 @pytest.fixture
 def nbody_ds():
     ds = portal.collections.Dataset("N-Body Data")
@@ -189,7 +189,7 @@ def nbody_ds():
 # Test conventional add
 def test_rxn_add(water_ds):
 
-    assert water_ds.data["name"] == "Water Data"
+    assert water_ds.data.name == "Water Data"
     assert len(water_ds.get_index()) == 5
 
     nocp_stoich_class = water_ds.get_rxn("Water Dimer, nocp")["stoichiometry"]["default"]

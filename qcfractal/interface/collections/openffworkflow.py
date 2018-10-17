@@ -6,6 +6,9 @@ import copy
 from .collection import Collection
 from . import collection_utils
 
+from typing import Dict
+from pydantic import BaseModel
+
 
 class OpenFFWorkflow(Collection):
     """
@@ -21,6 +24,38 @@ class OpenFFWorkflow(Collection):
         "enumerate_states", "enumerate_fragments", "torsiondrive_input", "torsiondrive_meta", "optimization_meta",
         "qc_meta"
     }
+
+    class _WorkflowOptionsModel(BaseModel):
+        """
+        Helper Data model class to help with identifying explicit workflow options
+
+        This allows reference to keep them isolated from the base Collection Datamodel
+        and from any non-options specific settings
+        """
+        enumerate_states: dict = {}
+        enumerate_fragments: dict = {}
+        torsiondrive_input: dict = {}
+        torsiondrive_meta: dict = {}
+        optimization_meta: Dict[str, str] = {
+                "program": "geometric",
+                "coordsys": "tric",
+            }
+        qc_meta: Dict[str, str] = {
+                "driver": "gradient",
+                "method": "UFF",
+                "basis": "",
+                "options": "none",
+                "program": "rdkit",
+            }
+
+    class DataModel(Collection.DataModel, _WorkflowOptionsModel):
+        """
+        Internal Data structure base model typed by PyDantic
+
+        This structure validates input, allows server-side validation and data security,
+        and will create the information to pass back and forth between server and client
+        """
+        fragments: dict = {}
 
     def __init__(self, name, options=None, client=None, **kwargs):
         """
@@ -39,27 +74,19 @@ class OpenFFWorkflow(Collection):
 
         if client is None:
             raise KeyError("OpenFFWorkflow must have a client.")
-
-        super().__init__(name, client=client, options=options, **kwargs)
+        # Expand options
+        if options is None:
+            raise KeyError("No record of OpenFFWorkflow {} found and no initial options passed in.".format(name))
+        super().__init__(name, client=client, **options, **kwargs)
 
         self._torsiondrive_cache = {}
 
         # First workflow is saved
-        if "id" not in self.data:
+        if self.data.id == self.data.fields['id'].default:
             ret = self.save()
             if len(ret) == 0:
                 raise ValueError("Attempted to insert duplicate Workflow with name '{}'".format(name))
-            self.data["id"] = ret[0][1]
-
-    def _init_collection_data(self, additional_args):
-        options = additional_args.get("options", None)
-        if options is None:
-            raise KeyError("No record of OpenFFWorkflow {} found and no initial options passed in.".format(name))
-
-        ret = copy.deepcopy(options)
-        ret["fragments"] = {}
-
-        return ret
+            self.data.id = ret[0][1]
 
     def _pre_save_prep(self, client):
         pass
@@ -78,10 +105,12 @@ class OpenFFWorkflow(Collection):
         dict
             The requested options dictionary.
         """
-        if key not in self.__required_fields:
+        # Get the set of options unique to the Workflow data model
+        valid_options = self._WorkflowOptionsModel.schema()['properties'].keys()
+        if key not in valid_options:
             raise KeyError("Key `{}` not understood.".format(key))
 
-        return copy.deepcopy(self.data[key])
+        return copy.deepcopy(getattr(self.data, key))
 
     def list_fragments(self):
         """
@@ -92,7 +121,7 @@ class OpenFFWorkflow(Collection):
         list of str
             A list of fragment id's.
         """
-        return list(self.data["fragments"])
+        return list(self.data.fragments)
 
     def add_fragment(self, fragment_id, data, provenance={}):
         """
@@ -104,7 +133,7 @@ class OpenFFWorkflow(Collection):
             The tag associated with fragment. In general this should be the canonical isomeric
             explicit hydrogen mapped SMILES tag for this fragment.
         data : dict
-            A dictionary of label : {intial_molecule, grid_spacing, dihedrals} keys.
+            A dictionary of label : {initial_molecule, grid_spacing, dihedrals} keys.
 
         provenance : dict, optional
             The provenance of the fragments creation
@@ -122,10 +151,10 @@ class OpenFFWorkflow(Collection):
         }
         wf.add_fragment("CCCC", data=)
         """
-        if fragment_id not in self.data["fragments"]:
-            self.data["fragments"][fragment_id] = {}
+        if fragment_id not in self.data.fragments:
+            self.data.fragments[fragment_id] = {}
 
-        frag_data = self.data["fragments"][fragment_id]
+        frag_data = self.data.fragments[fragment_id]
         for name, packet in data.items():
             if name in frag_data:
                 print("Already found label {} for fragment_ID {}, skipping.".format(name, fragment_id))
@@ -133,7 +162,7 @@ class OpenFFWorkflow(Collection):
 
             # Build out a new service
             torsion_meta = copy.deepcopy(
-                {k: self.data[k]
+                {k: getattr(self.data, k)
                  for k in ("torsiondrive_meta", "optimization_meta", "qc_meta")})
 
             for k in ["grid_spacing", "dihedrals"]:
@@ -168,12 +197,12 @@ class OpenFFWorkflow(Collection):
 
         # If no fragments explicitly shown, grab all
         if fragments is None:
-            fragments = self.data["fragments"].keys()
+            fragments = self.data.fragments.keys()
 
         # Figure out the lookup
         lookup = []
         for frag in fragments:
-            lookup.extend([v["hash_index"] for v in self.data["fragments"][frag].values()])
+            lookup.extend([v["hash_index"] for v in self.data.fragments[frag].values()])
 
         if refresh_cache is False:
             lookup = list(set(lookup) - self._torsiondrive_cache.keys())
@@ -181,7 +210,6 @@ class OpenFFWorkflow(Collection):
         # Grab the data and update cache
         data = self.client.get_procedures({"hash_index": lookup})
         self._torsiondrive_cache.update({x._hash_index: x for x in data})
-
 
     def list_final_energies(self, fragments=None, refresh_cache=False):
         """
@@ -202,7 +230,7 @@ class OpenFFWorkflow(Collection):
 
         # If no fragments explicitly shown, grab all
         if fragments is None:
-            fragments = self.data["fragments"].keys()
+            fragments = self.data.fragments.keys()
 
         # Get the data if available
         self.get_fragment_data(fragments=fragments, refresh_cache=refresh_cache)
@@ -210,7 +238,7 @@ class OpenFFWorkflow(Collection):
         ret = {}
         for frag in fragments:
             tmp = {}
-            for k, v in self.data["fragments"][frag].items():
+            for k, v in self.data.fragments[frag].items():
                 if v["hash_index"] in self._torsiondrive_cache:
                     tmp[k] = self._torsiondrive_cache[v["hash_index"]].final_energies()
                 else:
@@ -219,7 +247,6 @@ class OpenFFWorkflow(Collection):
             ret[frag] = tmp
 
         return ret
-
 
     def list_final_molecules(self, fragments=None, refresh_cache=False):
         """
@@ -240,7 +267,7 @@ class OpenFFWorkflow(Collection):
 
         # If no fragments explicitly shown, grab all
         if fragments is None:
-            fragments = self.data["fragments"].keys()
+            fragments = self.data.fragments.keys()
 
         # Get the data if available
         self.get_fragment_data(fragments=fragments, refresh_cache=refresh_cache)
@@ -248,7 +275,7 @@ class OpenFFWorkflow(Collection):
         ret = {}
         for frag in fragments:
             tmp = {}
-            for k, v in self.data["fragments"][frag].items():
+            for k, v in self.data.fragments[frag].items():
                 if v["hash_index"] in self._torsiondrive_cache:
                     tmp[k] = self._torsiondrive_cache[v["hash_index"]].final_molecules()
                 else:
@@ -260,4 +287,3 @@ class OpenFFWorkflow(Collection):
 
 
 collection_utils.register_collection(OpenFFWorkflow)
-

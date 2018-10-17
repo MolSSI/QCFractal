@@ -14,6 +14,15 @@ from .. import statistics
 from .collection import Collection
 from .collection_utils import nCr, register_collection
 
+from enum import Enum
+from typing import Dict, List, Union
+
+
+class _RxnEnum(str, Enum):
+    """Helper class for locking the reaction type into one or the other"""
+    rxn = 'rxn'
+    ie = 'ie'
+
 
 class Dataset(Collection):
     """
@@ -30,8 +39,6 @@ class Dataset(Collection):
     rxn_index : pd.Index
         The unrolled reaction index for all reactions in the Dataset
     """
-
-    __required_fields = {"reactions", "ds_type"}
 
     def __init__(self, name, client=None, ds_type="rxn", **kwargs):
         """
@@ -52,19 +59,16 @@ class Dataset(Collection):
         ds_type = ds_type.lower()
         super().__init__(name, client=client, ds_type=ds_type, **kwargs)
 
-        if self.data["ds_type"] not in ["rxn", "ie"]:
-            raise TypeError('Dataset: ds_type must either be "rxn" or "ie".')
-
         # Internal data
         self.rxn_index = pd.DataFrame()
         self.df = pd.DataFrame()
 
-        # Initialize internal dataframes
+        # Initialize internal data frames
         self.df = pd.DataFrame(index=self.get_index())
 
         # Unroll the index
         tmp_index = []
-        for rxn in self.data["reactions"]:
+        for rxn in self.data.reactions:
             name = rxn["name"]
             for stoich_name in list(rxn["stoichiometry"]):
                 for mol_hash, coef in rxn["stoichiometry"][stoich_name].items():
@@ -75,8 +79,16 @@ class Dataset(Collection):
         # If we making a new database we may need new hashes and json objects
         self._new_molecule_jsons = {}
 
-    def _init_collection_data(self, additional_args):
-        return {"reactions": [], "ds_type": additional_args['ds_type'].lower()}
+    class DataModel(Collection.DataModel):
+        """
+        Internal Data structure base model typed by PyDantic
+
+        This structure validates input, allows server-side validation and data security,
+        and will create the information to pass back and forth between server and client
+        """
+        ds_type: _RxnEnum = _RxnEnum.rxn
+        #                    top       name stoch stname     attributes       hash  coef        default
+        reactions: List[Dict[str, Union[str, Dict[str, Union[int, float, Dict[str, float]]]]]] = []
 
     def _pre_save_prep(self, client):
 
@@ -84,7 +96,7 @@ class Dataset(Collection):
         mol_ret = client.add_molecules(self._new_molecule_jsons)
 
         # Update internal molecule UUID's to servers UUID's
-        self.data["reactions"] = dict_utils.replace_dict_keys(self.data["reactions"], mol_ret)
+        self.data.reactions = dict_utils.replace_dict_keys(self.data.reactions, mol_ret)
         self._new_molecule_jsons = {}
 
     def _unroll_query(self, keys, stoich, field="result_result"):
@@ -208,7 +220,7 @@ class Dataset(Collection):
         # # If reaction results
         if reaction_results:
             tmp_idx = pd.Series(index=self.df.index)
-            for rxn in self.data["reactions"]:
+            for rxn in self.data.reactions:
                 try:
                     tmp_idx.loc[rxn["name"]] = rxn["reaction_results"][stoich][method]
                 except KeyError:
@@ -221,10 +233,10 @@ class Dataset(Collection):
             self.df[prefix + method + postfix] = tmp_idx
             return True
 
-        # if self.data["ds_type"].lower() == "ie":
+        # if self.data.ds_type.lower() == "ie":
         #     _ie_helper(..)
 
-        if (not ignore_ds_type) and (self.data["ds_type"].lower() == "ie"):
+        if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
             tmp_idx_complex = self._unroll_query(query_keys, stoich, field=field)
             tmp_idx_monomers = self._unroll_query(query_keys, monomer_stoich, field=field)
@@ -282,7 +294,7 @@ class Dataset(Collection):
             raise AttributeError("DataBase: Compute: Client was not set.")
 
         # Figure out molecules that we need
-        if (not ignore_ds_type) and (self.data["ds_type"].lower() == "ie"):
+        if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
             tmp_monomer = self.rxn_index[self.rxn_index["stoichiometry"] == monomer_stoich].copy()
             tmp_complex = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
@@ -326,7 +338,7 @@ class Dataset(Collection):
         ret : list of str
             The names of all reactions in the database
         """
-        return [x["name"] for x in self.data["reactions"]]
+        return [x["name"] for x in self.data.reactions]
 
     def get_rxn(self, name):
         """
@@ -345,7 +357,7 @@ class Dataset(Collection):
         """
 
         found = []
-        for num, x in enumerate(self.data["reactions"]):
+        for num, x in enumerate(self.data.reactions):
             if x["name"] == name:
                 found.append(num)
 
@@ -355,7 +367,7 @@ class Dataset(Collection):
         if len(found) > 1:
             raise KeyError("Dataset:get_rxn: Multiple reactions of name '{}' found. Dataset failure.".format(name))
 
-        return self.data["reactions"][found[0]]
+        return self.data.reactions[found[0]]
 
     # Statistical quantities
     def statistics(self, stype, value, bench="Benchmark"):
@@ -557,7 +569,7 @@ class Dataset(Collection):
         else:
             raise TypeError("Passed in reaction_results not understood.")
 
-        self.data["reactions"].append(rxn)
+        self.data.reactions.append(rxn)
 
         return rxn
 
