@@ -239,6 +239,7 @@ class FractalServer:
         self.periodic = {}
 
         self.logger.info("FractalServer successfully initialized at {}\n".format(self._address))
+        self.loop_active = False
 
     def start(self):
         """
@@ -261,6 +262,7 @@ class FractalServer:
 
         # Soft quit with a keyboard interupt
         try:
+            self.loop_active = True
             self.loop.start()
         except KeyboardInterrupt:
             self.stop()
@@ -270,8 +272,11 @@ class FractalServer:
         Shuts down all IOLoops and periodic updates
         """
         self.loop.stop()
+        self.loop_active = False
         for cb in self.periodic.values():
             cb.stop()
+
+        self.loop.close(all_fds=True)
 
         self.logger.info("FractalServer stopping gracefully. Stopped IOLoop.\n")
 
@@ -342,12 +347,14 @@ class FractalServer:
         if "queue_manager" not in self.objects:
             raise AttributeError("update_tasks is only available if the server was initalized with a queue manager.")
 
-
-        # Drop this in a thread so that we are not blocking eachother
-        thread = threading.Thread(target=self.objects["queue_manager"].update, name="QueueManager Update")
-        thread.daemon = True
-        thread.start()
-        self.loop.call_later(5, thread.join)
+        if self.loop_active:
+            # Drop this in a thread so that we are not blocking eachother
+            thread = threading.Thread(target=self.objects["queue_manager"].update, name="QueueManager Update")
+            thread.daemon = True
+            thread.start()
+            self.loop.call_later(5, thread.join)
+        else:
+            self.objects["queue_manager"].update()
 
         return True
 
@@ -361,7 +368,7 @@ class FractalServer:
         bool
             Return True if the operation completed successfully
         """
-        self.logging.info("Updating tasks")
+        self.logger.info("Updating tasks")
 
         if "queue_manager" not in self.objects:
             raise AttributeError("await_results is only available if the server was initalized with a queue manager.")
