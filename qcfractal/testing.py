@@ -5,7 +5,11 @@ Contains testing infrastructure for QCFractal
 import logging
 import os
 import pkgutil
+import signal
 import socket
+import subprocess
+import sys
+import time
 import threading
 from collections import Mapping
 from contextlib import contextmanager
@@ -141,6 +145,86 @@ def active_loop(loop):
             thread.join(timeout=5)
         except:
             pass
+
+
+def terminate_process(proc):
+    if proc.poll() is None:
+
+        # Sigint (keyboard interupt)
+        if sys.platform.startswith('win'):
+            proc.send_signal(signal.CTRL_BREAK_EVENT)
+        else:
+            proc.send_signal(signal.SIGINT)
+
+        try:
+            start = time.time()
+            while (proc.poll() is None) and (time.time() < (start + 5)):
+                time.sleep(0.02)
+        # Flat kill
+        finally:
+            proc.kill()
+
+
+@contextmanager
+def popen(args, **kwargs):
+    """
+    Opens a background task
+
+    Code and idea from dask.distributed's testing suite
+    https://github.com/dask/distributed
+    """
+    # Do we prefix with Python?
+    args = list(args)
+    if kwargs.pop("append_prefix", False):
+        if sys.platform.startswith('win'):
+            args[0] = os.path.join(sys.prefix, 'Scripts', args[0])
+        else:
+            args[0] = os.path.join(sys.prefix, 'bin', args[0])
+
+    # Do we optionally dumpstdout?
+    dump_stdout = kwargs.pop("dump_stdout", False)
+
+    if sys.platform.startswith('win'):
+        # Allow using CTRL_C_EVENT / CTRL_BREAK_EVENT
+        kwargs['creationflags'] = subprocess.CREATE_NEW_PROCESS_GROUP
+
+    kwargs['stdout'] = subprocess.PIPE
+    kwargs['stderr'] = subprocess.PIPE
+    proc = subprocess.Popen(args, **kwargs)
+    try:
+        yield proc
+    except Exception:
+        dump_stdout = True
+        raise
+
+    finally:
+        try:
+            terminate_process(proc)
+        finally:
+            output, error = proc.communicate()
+            if dump_stdout:
+                print('-' * 30)
+                print("\n|| Process command: {}".format(" ".join(args)))
+                print('\n|| Process stderr: \n{}'.format(error.decode()))
+                print('-' * 30)
+                print('\n|| Process stdout: \n{}'.format(output.decode()))
+                print('-' * 30)
+
+
+def run_process(args, **kwargs):
+    """
+    Runs a process in the background until complete.
+
+    Returns True if exit code zero
+    """
+
+    timeout = kwargs.pop("timeout", 30)
+    with popen(args, **kwargs) as p:
+        p.wait(timeout=timeout)
+
+        retcode = p.poll()
+
+    return retcode == 0
 
 
 ### Server testing mechanics
