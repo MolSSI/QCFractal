@@ -28,6 +28,8 @@ def test_fireworks_server_example():
 
         assert testing.run_process(["python", "build_database.py"], **kwargs)
         assert testing.run_process(["python", "compute_database.py"], **kwargs)
+
+        time.sleep(3) # Ensure tasks are pushed to QueueManager
         assert testing.run_process(["rlaunch", "-l", "fw_lpad.yaml", "rapidfire"], **kwargs, append_prefix=True)
 
         time.sleep(3) # Ensure all tasks are gathered

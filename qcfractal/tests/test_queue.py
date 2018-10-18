@@ -9,31 +9,6 @@ from qcfractal.testing import fractal_compute_server
 
 
 @testing.using_rdkit
-@testing.using_fireworks
-def test_queue_fireworks_cleanup(fw_server):
-
-    client = portal.FractalClient(fw_server.get_address())
-
-    hooh = portal.data.get_molecule("hooh.json")
-    mol_ret = client.add_molecules({"hooh": hooh})
-
-    ret = client.add_compute("rdkit", "UFF", "", "energy", "none", mol_ret["hooh"])
-
-    # Pull out fireworks launchpad and queue nanny
-    lpad = fw_server.objects["queue_manager"].queue_adapter.lpad
-
-    # Push tasks to nanny and check
-    fw_server.update_tasks()
-    assert len(lpad.get_fw_ids()) == 1
-    assert len(fw_server.list_current_tasks()) == 1
-
-    # Await results and ensure that it is clean
-    fw_server.await_results()
-    assert len(lpad.get_fw_ids()) == 0
-    assert len(fw_server.list_current_tasks()) == 0
-
-
-@testing.using_rdkit
 def test_queue_error(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server.get_address())

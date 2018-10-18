@@ -82,8 +82,6 @@ class FireworksAdapter:
                 blob["success"] = False
                 ret[key] = (blob, parser, hooks)
 
-            self.lpad.delete_wf(tmp_data["fw_id"])
-
         return ret
 
     def await_results(self):
