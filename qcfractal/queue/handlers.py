@@ -198,7 +198,7 @@ class QueueManagerHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        ret = storage.queue_reset_status(self.json["data"])
+        storage.queue_reset_status(self.json["data"])
         self.write({"meta" : {}, "data": True})
 
         # Update manager logs

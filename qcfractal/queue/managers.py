@@ -139,6 +139,7 @@ class QueueManager:
 
             self.active -= len(results)
 
+
         open_slots = max(0, self.max_tasks - self.active)
 
         if (new_tasks is False) or (open_slots == 0):

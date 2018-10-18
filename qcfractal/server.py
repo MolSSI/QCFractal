@@ -4,6 +4,7 @@ The FractalServer class
 
 import logging
 import ssl
+import threading
 
 import tornado.ioloop
 import tornado.web
@@ -133,6 +134,7 @@ class FractalServer:
 
         # Handle SSL
         ssl_ctx = None
+        client_verify = True
         if ssl_options is None:
             self.logger.warning("No SSL files passed in, generating self-signed SSL certificate.")
             self.logger.warning("Clients must use `verify=False` when connecting.\n")
@@ -159,6 +161,7 @@ class FractalServer:
             import os
             atexit.register(os.remove, cert_name)
             atexit.register(os.remove, key_name)
+            client_verify = False
         elif ssl_options is False:
             ssl_ctx = None
         elif isinstance(ssl_options, dict):
@@ -215,8 +218,7 @@ class FractalServer:
                 raise ValueError("Cannot yet use local security with a internal QueueManager")
 
             # Add the socket to passed args
-            verify = ssl_options is not None
-            client = interface.FractalClient(self._address, verify=verify)
+            client = interface.FractalClient(self._address, verify=client_verify)
             self.objects["queue_manager"] = queue.QueueManager(
                 client, queue_socket, loop=loop, logger=self.logger, cluster="FractalServer")
 
@@ -246,11 +248,11 @@ class FractalServer:
         self.logger.info("FractalServer successfully started. Starting IOLoop.\n")
 
         # If we have a queue socket start up the nanny
-        if "queue_socket" in self.objects:
+        if "queue_manager" in self.objects:
             # Add canonical queue callback
-            nanny = tornado.ioloop.PeriodicCallback(self.update_tasks, 2000)
-            nanny.start()
-            self.periodic["queue_manager_update"] = nanny
+            manager = tornado.ioloop.PeriodicCallback(self.update_tasks, 2000)
+            manager.start()
+            self.periodic["queue_manager_update"] = manager
 
         # Add services callback
         nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, 2000)
@@ -340,7 +342,14 @@ class FractalServer:
         if "queue_manager" not in self.objects:
             raise AttributeError("update_tasks is only available if the server was initalized with a queue manager.")
 
-        return self.objects["queue_manager"].update()
+
+        # Drop this in a thread so that we are not blocking eachother
+        thread = threading.Thread(target=self.objects["queue_manager"].update, name="QueueManager Update")
+        thread.daemon = True
+        thread.start()
+        self.loop.call_later(5, thread.join)
+
+        return True
 
     def await_results(self):
         """A synchronous method for testing or small launches
@@ -352,6 +361,7 @@ class FractalServer:
         bool
             Return True if the operation completed successfully
         """
+        self.logging.info("Updating tasks")
 
         if "queue_manager" not in self.objects:
             raise AttributeError("await_results is only available if the server was initalized with a queue manager.")
