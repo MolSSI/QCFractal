@@ -20,18 +20,14 @@ class OpenFFWorkflow(Collection):
         A optional server portal to connect the database
     """
 
-    __required_fields = {
-        "enumerate_states", "enumerate_fragments", "torsiondrive_input", "torsiondrive_meta", "optimization_meta",
-        "qc_meta"
-    }
-
-    class _WorkflowOptionsModel(BaseModel):
+    class DataModel(Collection.DataModel):
         """
-        Helper Data model class to help with identifying explicit workflow options
+        Internal Data structure base model typed by PyDantic
 
-        This allows reference to keep them isolated from the base Collection Datamodel
-        and from any non-options specific settings
+        This structure validates input, allows server-side validation and data security,
+        and will create the information to pass back and forth between server and client
         """
+        fragments: dict = {}
         enumerate_states: dict = {}
         enumerate_fragments: dict = {}
         torsiondrive_input: dict = {}
@@ -48,14 +44,10 @@ class OpenFFWorkflow(Collection):
                 "program": "rdkit",
             }
 
-    class DataModel(Collection.DataModel, _WorkflowOptionsModel):
-        """
-        Internal Data structure base model typed by PyDantic
-
-        This structure validates input, allows server-side validation and data security,
-        and will create the information to pass back and forth between server and client
-        """
-        fragments: dict = {}
+    # Valid options which can be fetched from the get_options method
+    # Kept as separate list to be easier to read for devs
+    __workflow_options = ("enumerate_states", "enumerate_fragments", "torsiondrive_input", "torsiondrive_meta",
+                          "optimization_meta", "qc_meta")
 
     def __init__(self, name, options=None, client=None, **kwargs):
         """
@@ -106,8 +98,7 @@ class OpenFFWorkflow(Collection):
             The requested options dictionary.
         """
         # Get the set of options unique to the Workflow data model
-        valid_options = self._WorkflowOptionsModel.schema()['properties'].keys()
-        if key not in valid_options:
+        if key not in self.__workflow_options:
             raise KeyError("Key `{}` not understood.".format(key))
 
         return copy.deepcopy(getattr(self.data, key))
