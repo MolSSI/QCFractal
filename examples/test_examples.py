@@ -4,30 +4,12 @@ Test the examples
 
 import os
 import pytest
+import time
 import subprocess as sp
 from qcfractal import testing
 
+_pwd = os.path.abspath(os.path.dirname(__file__))
 
-def _run_command(folder, script):
-    # Get the examples director
-    root = os.path.abspath(os.path.dirname(__file__))
-    example_path = os.path.join(root, folder)
-    os.chdir(example_path)
-
-    error = False
-    try:
-        output = sp.check_output(["bash", script], shell=False)
-    except sp.CalledProcessError as e:
-        output = e.output
-        error = True
-
-    os.chdir(root)
-    if error:
-        msg = "Example {} failed. Output as follows\n\n".format(folder)
-        msg += output.decode()
-        raise SystemError(msg)
-
-    return not error
 
 @testing.using_psi4
 @testing.using_fireworks
@@ -36,6 +18,19 @@ def _run_command(folder, script):
 def test_fireworks_server_example():
     """Make sure the Fireworks example works as intended"""
 
-    assert _run_command("fireworks_server", "run_fireworks_example.sh")
+    os.chdir(os.path.join(_pwd, "fireworks_server"))
+    testing.check_active_mongo_server()
 
+    kwargs = {"dump_stdout": True}
 
+    with testing.popen(["python", "server.py"], **kwargs) as server:
+        time.sleep(5) # Boot up server
+
+        assert testing.run_process(["python", "build_database.py"], **kwargs)
+        assert testing.run_process(["python", "compute_database.py"], **kwargs)
+        assert testing.run_process(["rlaunch", "-l", "fw_lpad.yaml", "rapidfire"], **kwargs, append_prefix=True)
+
+        time.sleep(3) # Ensure all tasks are gathered
+        assert testing.run_process(["python", "query_database.py"], **kwargs)
+
+    os.chdir(_pwd)
