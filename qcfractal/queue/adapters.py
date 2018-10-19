@@ -33,6 +33,6 @@ def build_queue_adapter(workflow_client, logger=None, **kwargs):
         adapter = fireworks_adapter.FireworksAdapter(workflow_client, logger=logger)
 
     else:
-        raise KeyError("Queue type '{}' not understood".format(adapter_type))
+        raise KeyError("QueueAdapter type '{}' not understood".format(adapter_type))
 
     return adapter

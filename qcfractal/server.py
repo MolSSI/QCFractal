@@ -229,6 +229,9 @@ class FractalServer:
         # Add periodic callback holders
         self.periodic = {}
 
+        # Exit callbacks
+        self.exit_callbacks = []
+
         self.logger.info("FractalServer successfully initialized at {}\n".format(self._address))
         self.loop_active = False
 
@@ -254,7 +257,7 @@ class FractalServer:
         # Soft quit with a keyboard interupt
         try:
             self.loop_active = True
-            if not asyncio.get_event_loop().is_running(): # Only works on Py3
+            if not asyncio.get_event_loop().is_running():  # Only works on Py3
                 self.loop.start()
         except KeyboardInterrupt:
             self.stop()
@@ -263,15 +266,49 @@ class FractalServer:
         """
         Shuts down all IOLoops and periodic updates
         """
+
+        # Shut down queue manager
+        if "queue_manager" is self.objects:
+            if self.loop_active:
+                # Drop this in a thread so that we are not blocking eachother
+                thread = threading.Thread(target=self.objects["queue_manager"].shutdown, name="QueueManager Shutdown")
+                thread.daemon = True
+                thread.start()
+                self.loop.call_later(5, thread.join)
+            else:
+                self.objects["queue_manager"].shutdown()
+
+        # Call exit callbacks
+        for func, args, kwargs in self.exit_callbacks:
+            func(*args, **kwargs)
+
+        # Shutdown IOLoop if needed
         if asyncio.get_event_loop().is_running():
             self.loop.stop()
+
+        # Close down periodics
         self.loop_active = False
         for cb in self.periodic.values():
             cb.stop()
 
+        # Final shutdown
         self.loop.close(all_fds=True)
-
         self.logger.info("FractalServer stopping gracefully. Stopped IOLoop.\n")
+
+    def add_exit_callback(self, callback, *args, **kwargs):
+        """Adds additional callbacks to perform when closing down the server
+
+        Parameters
+        ----------
+        callback : callable
+            The function to call at exit
+        *args
+            Arguements to call with the function.
+        **kwargs
+            Kwargs to call with the function.
+
+        """
+        self.exit_callbacks.append((callback, args, kwargs))
 
     def get_address(self, endpoint=""):
         """Obtains the full URI for a given function on the FractalServer
