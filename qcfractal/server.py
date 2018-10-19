@@ -2,6 +2,7 @@
 The FractalServer class
 """
 
+import asyncio
 import logging
 import ssl
 import threading
@@ -253,7 +254,8 @@ class FractalServer:
         # Soft quit with a keyboard interupt
         try:
             self.loop_active = True
-            self.loop.start()
+            if not asyncio.get_event_loop().is_running(): # Only works on Py3
+                self.loop.start()
         except KeyboardInterrupt:
             self.stop()
 
@@ -261,7 +263,8 @@ class FractalServer:
         """
         Shuts down all IOLoops and periodic updates
         """
-        self.loop.stop()
+        if asyncio.get_event_loop().is_running():
+            self.loop.stop()
         self.loop_active = False
         for cb in self.periodic.values():
             cb.stop()

@@ -13,10 +13,11 @@ parser.add_argument(
 parser.add_argument("--logfile", type=str, default=None, help="The logfile to use")
 parser.add_argument("--port", type=int, default=7777, help="The server port")
 parser.add_argument("--security", type=str, default=None, help="The security protocol to use")
-parser.add_argument("--database-uri", type=str, default="localhost:27017", help="The database URI to use")
+parser.add_argument("--database-uri", type=str, default="mongodb://localhost", help="The database URI to use")
 parser.add_argument("--tls-cert", type=str, default=None, help="Certificate file for TLS (in PEM format)")
 parser.add_argument("--tls-key", type=str, default=None, help="Private key file for TLS (in PEM format)")
 parser.add_argument("--config-file", type=str, default=None, help="A configuration file to use")
+
 
 args = vars(parser.parse_args())
 if args["config_file"] is not None:
