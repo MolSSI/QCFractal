@@ -82,7 +82,7 @@ def check_active_mongo_server():
     """Checks for a active mongo server, skips the test if not found.
     """
 
-    client = pymongo.MongoClient("localhost:27017", serverSelectionTimeoutMS=100)
+    client = pymongo.MongoClient("mongodb://localhost", serverSelectionTimeoutMS=100)
     try:
         client.server_info()
     except:
@@ -361,7 +361,7 @@ def storage_socket_fixture(request):
 
     # IP/port/drop table is specific to build
     if request.param == "mongo":
-        storage = storage_socket_factory("127.0.0.1", 27017, storage_name, storage_type=request.param)
+        storage = storage_socket_factory("mongodb://localhost", storage_name, storage_type=request.param)
 
         # Clean and re-init the database
         storage.client.drop_database(storage._project_name)

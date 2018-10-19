@@ -79,11 +79,7 @@ class FractalServer:
             ssl_options=None,
 
             # Database options
-            storage_ip="127.0.0.1",
-            storage_port=27017,
-            storage_username=None,
-            storage_password=None,
-            storage_type="mongo",
+            storage_uri="mongodb://localhost",
             storage_project_name="molssistorage",
 
             # Queue options
@@ -175,13 +171,7 @@ class FractalServer:
 
         # Setup the database connection
         self.storage = storage_sockets.storage_socket_factory(
-            storage_ip,
-            storage_port,
-            project_name=storage_project_name,
-            username=storage_username,
-            password=storage_password,
-            storage_type=storage_type,
-            bypass_security=storage_bypass_security)
+            storage_uri, project_name=storage_project_name, bypass_security=storage_bypass_security)
 
         # Pull the current loop if we need it
         if loop is None:

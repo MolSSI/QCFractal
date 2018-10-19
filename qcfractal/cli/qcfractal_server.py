@@ -43,7 +43,6 @@ def main():
     else:
         raise KeyError("Both tls-cert and tls-key must be passed in.")
 
-    # lpad = fireworks.LaunchPad.from_file("fw_lpad.yaml")
     server = qcfractal.FractalServer(
         port=args["port"], security=args["security"], ssl_options=ssl_options, logfile_name=args["logfile"])
 
