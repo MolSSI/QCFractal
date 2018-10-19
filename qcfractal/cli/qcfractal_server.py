@@ -3,21 +3,34 @@ A command line interface to the qcfractal server.
 """
 
 import argparse
-import qcfractal
+import logging
+import time
 
 from . import cli_utils
+import qcfractal
 
 parser = argparse.ArgumentParser(description='A CLI for the QCFractalServer.')
-parser.add_argument(
-    "--name", type=str, help="The name of the FractalServer and its associated database", required=True)
-parser.add_argument("--logfile", type=str, default=None, help="The logfile to use")
-parser.add_argument("--port", type=int, default=7777, help="The server port")
-parser.add_argument("--security", type=str, default=None, help="The security protocol to use")
-parser.add_argument("--database-uri", type=str, default="mongodb://localhost", help="The database URI to use")
-parser.add_argument("--tls-cert", type=str, default=None, help="Certificate file for TLS (in PEM format)")
-parser.add_argument("--tls-key", type=str, default=None, help="Private key file for TLS (in PEM format)")
-parser.add_argument("--config-file", type=str, default=None, help="A configuration file to use")
 
+manager = parser.add_argument_group('QueueManager Settings (optional)')
+manager_exclusive = manager.add_mutually_exclusive_group()
+manager_exclusive.add_argument(
+    "--dask-manager", action="store_true", help="Creates a QueueManager using a Dask LocalCluster on the server")
+manager_exclusive.add_argument(
+    "--fireworks-manager",
+    action="store_true",
+    help="Creates a QueueManager using Fireworks on the server (name + '_fireworks_queue')")
+
+server = parser.add_argument_group('QCFractalServer Settings')
+server.add_argument("name", type=str, help="The name of the FractalServer and its associated database")
+server.add_argument("--logfile", type=str, default=None, help="The logfile to use")
+server.add_argument("--port", type=int, default=7777, help="The server port")
+server.add_argument("--security", type=str, default=None, choices=[None, "local"], help="The security protocol to use")
+server.add_argument("--database-uri", type=str, default="mongodb://localhost", help="The database URI to use")
+server.add_argument("--tls-cert", type=str, default=None, help="Certificate file for TLS (in PEM format)")
+server.add_argument("--tls-key", type=str, default=None, help="Private key file for TLS (in PEM format)")
+server.add_argument("--config-file", type=str, default=None, help="A configuration file to use")
+
+parser._action_groups.reverse()
 
 args = vars(parser.parse_args())
 if args["config_file"] is not None:
@@ -44,8 +57,48 @@ def main():
     else:
         raise KeyError("Both tls-cert and tls-key must be passed in.")
 
+    # Handle Adapters/QueueManagers
+    exit_callbacks = []
+
+    if args["dask_manager"]:
+        dd = cli_utils.import_module("distributed")
+
+        # Build localcluster and exit callbacks
+        local_cluster = dd.LocalCluster(threads_per_worker=1)
+        adapter = dd.Client(local_cluster)
+        exit_callbacks.append([local_cluster.scale_down, (local_cluster.workers, ), {}])
+        exit_callbacks.append([local_cluster.close, (2, ), {}])
+
+    elif args["fireworks_manager"]:
+        fw = cli_utils.import_module("fireworks")
+
+        # Build Fireworks client
+        name = args["name"] + "_fireworks_queue"
+        adapter = fw.LaunchPad(host=args["database_uri"], name=name)
+        adapter.reset(None, require_password=False)
+        exit_callbacks.append([adapter.reset, (None, ), {"require_password": False}])
+
+    else:
+        adapter = None
+
     server = qcfractal.FractalServer(
-        port=args["port"], security=args["security"], ssl_options=ssl_options, logfile_name=args["logfile"])
+        port=args["port"],
+        security=args["security"],
+        ssl_options=ssl_options,
+        storage_uri=args["database_uri"],
+        storage_project_name=args["name"],
+        logfile_name=args["logfile"],
+        queue_socket=adapter)
+
+    # Print Queue Manager data
+    if args["dask_manager"]:
+        server.logger.info("\nDask QueueManager initialized: {}\n".format(str(adapter)))
+    elif args["fireworks_manager"]:
+        server.logger.info("\nFireworks QueueManager initialized: \n"
+                           "    Host: {}, Name: {}\n".format(adapter.host, adapter.name))
+
+    for cb in exit_callbacks:
+        server.add_exit_callback(cb[0], *cb[1], **cb[2])
 
     server.start()
 
