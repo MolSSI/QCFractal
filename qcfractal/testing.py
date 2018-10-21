@@ -184,7 +184,7 @@ def popen(args, **kwargs):
     """
     # Do we prefix with Python?
     args = list(args)
-    if kwargs.pop("append_prefix", False):
+    if kwargs.pop("append_prefix", True):
         if sys.platform.startswith('win'):
             args[0] = os.path.join(sys.prefix, 'Scripts', args[0])
         else:

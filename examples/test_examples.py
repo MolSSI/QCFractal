@@ -24,14 +24,15 @@ def test_fireworks_server_example():
 
     with testing.preserve_cwd():
         os.chdir(os.path.join(_pwd, "fireworks_server"))
-        with testing.popen(["python", "server.py"], **kwargs) as server:
+        server_args = ["qcfractal-server", "qca_fw_testing", "--fireworks-manager"]
+        with testing.popen(server_args, **kwargs) as server:
             time.sleep(5) # Boot up server
 
             assert testing.run_process(["python", "build_database.py"], **kwargs)
             assert testing.run_process(["python", "compute_database.py"], **kwargs)
 
             time.sleep(3) # Ensure tasks are pushed to QueueManager
-            assert testing.run_process(["rlaunch", "-l", "fw_lpad.yaml", "rapidfire"], **kwargs, append_prefix=True)
+            assert testing.run_process(["rlaunch", "-l", "fw_lpad.yaml", "rapidfire"], **kwargs)
 
             time.sleep(3) # Ensure all tasks are gathered
             assert testing.run_process(["python", "query_database.py"], **kwargs)

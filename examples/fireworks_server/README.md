@@ -16,7 +16,7 @@ it to where ever you like.
 
 ### Step 1
 
-Run the MongoDB and Fireworks server in the background or a new window.
+Run the MongoDB and QCFractal server in the background or a new window.
 
 We recommend running these commands in separate windows so that you can
 see the logging information of interactions with the server.
@@ -29,10 +29,12 @@ mkdir -p $MONGOPATH
 mongod --dbpath $MONGOPATH
 ```
 
-Run the fireworks server from this example directory. 
+The QCFractal server can be started with a fireworks-queue manager in the
+database `qca_fw_testing`. This will automatically create a fireworks queue
+with the name `qca_fw_testing_fireworks_queue`.
 
 ```bash
-python server.py
+qcfractal-server qca_fw_testing --fireworks-manager
 ```
 
 ### Step 2
@@ -66,3 +68,12 @@ python query_database.py
 
 ### Cleanup
 You can now stop the Fireworks and MongoDB processes
+
+If you wish to remove data from the server you can run the script
+```bash
+python reset_server.py
+```
+
+*Warning!* This can be a very dangerous operation as it will remove all stored
+data.  This operation should likely not be used in production and provides
+testing functionality only.
