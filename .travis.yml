@@ -96,6 +96,7 @@ before_script:
 script:
   - py.test -v --runslow --cov=qcfractal qcfractal/
   - py.test -v --runexamples examples/
+  - python devtools/cli_tests/cli_coverage_test.py
 
 notifications:
   email: false
