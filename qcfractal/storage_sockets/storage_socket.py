@@ -27,6 +27,6 @@ def storage_socket_factory(uri, project_name, logger=None, **kwargs):
 
     if uri.startswith("mongodb"):
         from . import mongo_socket
-        return mongo_socket.MongoSocket(uri, logger=logger, **kwargs)
+        return mongo_socket.MongoSocket(uri, project=project_name, logger=logger, **kwargs)
     else:
         raise Exception

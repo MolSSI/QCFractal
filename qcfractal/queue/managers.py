@@ -71,15 +71,12 @@ class QueueManager:
         self.active = 0
 
         # Pull the current loop if we need it
-        if loop is None:
-            self.loop = tornado.ioloop.IOLoop.current()
-        else:
-            self.loop = loop
+        self.loop = loop or tornado.ioloop.IOLoop.current()
 
-        self.logger.info("QueueManager '{}' successfully initialized.\n"
-                         "Queue credential username: {}\n"
-                         "Pulling tasks from {} with tag '{}'.\n".format(self.name_str, self.client.username,
-                                                                         self.client.address, self.queue_tag))
+        self.logger.info("QueueManager '{}' successfully initialized.".format(self.name_str))
+        self.logger.info("QueueManager: Queue credential username: {}".format(self.client.username))
+        self.logger.info(
+            "QueueManager: Pulling tasks from {} with tag '{}'.\n".format(self.client.address, self.queue_tag))
 
     def start(self):
         """
@@ -138,7 +135,6 @@ class QueueManager:
                 self.logger.warning("Post complete tasks was not successful. Data may be lost.")
 
             self.active -= len(results)
-
 
         open_slots = max(0, self.max_tasks - self.active)
 

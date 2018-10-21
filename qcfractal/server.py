@@ -162,6 +162,7 @@ class FractalServer:
         # Setup the database connection
         self.storage = storage_sockets.storage_socket_factory(
             storage_uri, project_name=storage_project_name, bypass_security=storage_bypass_security)
+        self.logger.info("Connected to '{}'' with database name '{}'\n.".format(storage_uri, storage_project_name))
 
         # Pull the current loop if we need it
         self.loop = loop or tornado.ioloop.IOLoop.current()

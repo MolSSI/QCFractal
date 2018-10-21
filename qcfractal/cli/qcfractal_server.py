@@ -3,8 +3,6 @@ A command line interface to the qcfractal server.
 """
 
 import argparse
-import logging
-import time
 
 from . import cli_utils
 import qcfractal
@@ -22,7 +20,7 @@ manager_exclusive.add_argument(
 
 server = parser.add_argument_group('QCFractalServer Settings')
 server.add_argument("name", type=str, help="The name of the FractalServer and its associated database")
-server.add_argument("--logfile", type=str, default=None, help="The logfile to use")
+server.add_argument("--log-prefix", type=str, default=None, help="The logfile prefix to use")
 server.add_argument("--port", type=int, default=7777, help="The server port")
 server.add_argument("--security", type=str, default=None, choices=[None, "local"], help="The security protocol to use")
 server.add_argument("--database-uri", type=str, default="mongodb://localhost", help="The database URI to use")
@@ -87,7 +85,7 @@ def main():
         ssl_options=ssl_options,
         storage_uri=args["database_uri"],
         storage_project_name=args["name"],
-        logfile_name=args["logfile"],
+        logfile_prefix=args["log_prefix"],
         queue_socket=adapter)
 
     # Print Queue Manager data
