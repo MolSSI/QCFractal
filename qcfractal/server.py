@@ -9,6 +9,8 @@ import threading
 
 import tornado.ioloop
 import tornado.web
+import tornado.options
+import tornado.log
 
 from . import interface
 from . import queue
@@ -87,7 +89,7 @@ class FractalServer:
             queue_socket=None,
 
             # Log options
-            logfile_name=None,
+            logfile_prefix=None,
 
             # Queue options
             max_active_services=10):
@@ -102,24 +104,11 @@ class FractalServer:
         self.max_active_services = max_active_services
 
         # Setup logging.
-        self.logger = logging.getLogger("FractalServer")
-        self.logger.setLevel(logging.INFO)
+        if logfile_prefix is not None:
+            tornado.options.options['log_file_prefix'] = logfile_prefix
 
-        app_logger = logging.getLogger("tornado.application")
-        if logfile_name is not None:
-            handler = logging.FileHandler(logfile_name)
-            handler.setLevel(logging.INFO)
-
-            handler.setFormatter(myFormatter)
-
-            self.logger.addHandler(handler)
-            app_logger.addHandler(handler)
-
-            self.logger.info("Logfile set to {}\n".format(logfile_name))
-        else:
-            app_logger.addHandler(logging.StreamHandler())
-            self.logger.addHandler(logging.StreamHandler())
-            self.logger.info("No logfile given, setting output to stdout\n")
+        tornado.log.enable_pretty_logging()
+        self.logger = logging.getLogger("tornado.application")
 
         # Build security layers
         if security is None:
@@ -175,10 +164,7 @@ class FractalServer:
             storage_uri, project_name=storage_project_name, bypass_security=storage_bypass_security)
 
         # Pull the current loop if we need it
-        if loop is None:
-            self.loop = tornado.ioloop.IOLoop.current()
-        else:
-            self.loop = loop
+        self.loop = loop or tornado.ioloop.IOLoop.current()
 
         # Build up the application
         self.objects = {
@@ -232,7 +218,7 @@ class FractalServer:
         # Exit callbacks
         self.exit_callbacks = []
 
-        self.logger.info("FractalServer successfully initialized at {}\n".format(self._address))
+        self.logger.info("FractalServer successfully initialized at {}".format(self._address))
         self.loop_active = False
 
     def start(self):
@@ -441,8 +427,3 @@ class FractalServer:
                 "list_current_tasks is only available if the server was initalized with a queue manager.")
 
         return self.objects["queue_manager"].list_current_tasks()
-
-if __name__ == "__main__":
-
-    server = FractalServer()
-    server.start()
