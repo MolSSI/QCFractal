@@ -182,13 +182,32 @@ def popen(args, **kwargs):
     Code and idea from dask.distributed's testing suite
     https://github.com/dask/distributed
     """
-    # Do we prefix with Python?
     args = list(args)
+
+    # Bin prefix
+    if sys.platform.startswith('win'):
+        bin_prefix = os.path.join(sys.prefix, 'Scripts')
+    else:
+        bin_prefix = os.path.join(sys.prefix, 'bin')
+
+    # Do we prefix with Python?
     if kwargs.pop("append_prefix", True):
-        if sys.platform.startswith('win'):
-            args[0] = os.path.join(sys.prefix, 'Scripts', args[0])
+        args[0] = os.path.join(bin_prefix, args[0])
+
+    # Add coverage testing
+    if kwargs.pop("coverage", False):
+        coverage_dir = os.path.join(bin_prefix, "coverage")
+        if not os.path.exists(coverage_dir):
+            print("Could not find Python coverage, skipping cov.")
+
         else:
-            args[0] = os.path.join(sys.prefix, 'bin', args[0])
+            src_dir = os.path.dirname(os.path.abspath(__file__))
+            coverage_flags = [coverage_dir, "run", "--append", "--source=" + src_dir]
+
+            # If python script, skip the python bin
+            if args[0].endswith("python"):
+               args.pop(0)
+            args = coverage_flags + args
 
     # Do we optionally dumpstdout?
     dump_stdout = kwargs.pop("dump_stdout", False)
