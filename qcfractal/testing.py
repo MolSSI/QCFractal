@@ -68,6 +68,25 @@ using_unix = pytest.mark.skipif(
 
 ### Generic helpers
 
+def mark_slow(func):
+    try:
+        if not pytest.config.getoption("--runslow"):
+            func = pytest.mark.skip("need --runslow option to run")(func)
+    except AttributeError:
+        # AttributeError: module 'pytest' has no attribute 'config'
+        pass
+
+    return func
+
+def mark_example(func):
+    try:
+        if not pytest.config.getoption("--runexamples"):
+            func = pytest.mark.skip("need --runexample option to run")(func)
+    except AttributeError:
+        # AttributeError: module 'pytest' has no attribute 'config'
+        pass
+
+    return func
 
 def recursive_dict_merge(base_dict, dict_to_merge_in):
     """Recursive merge for more complex than a simple top-level merge {**x, **y} which does not handle nested dict"""
@@ -385,7 +404,7 @@ def storage_socket_fixture(request):
 
     # IP/port/drop table is specific to build
     if request.param == "mongo":
-        storage = storage_socket_factory("mongodb://localhost", storage_name, storage_type=request.param)
+        storage = storage_socket_factory("mongodb://localhost", storage_name)
 
         # Clean and re-init the database
         storage.client.drop_database(storage._project_name)

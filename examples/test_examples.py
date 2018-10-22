@@ -14,7 +14,7 @@ _pwd = os.path.abspath(os.path.dirname(__file__))
 @testing.using_psi4
 @testing.using_fireworks
 @testing.using_unix
-@pytest.mark.example
+@testing.mark_example
 def test_fireworks_server_example():
     """Make sure the Fireworks example works as intended"""
 
