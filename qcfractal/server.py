@@ -8,9 +8,9 @@ import ssl
 import threading
 
 import tornado.ioloop
-import tornado.web
-import tornado.options
 import tornado.log
+import tornado.options
+import tornado.web
 
 from . import interface
 from . import queue
@@ -255,7 +255,7 @@ class FractalServer:
         """
 
         # Shut down queue manager
-        if "queue_manager" is self.objects:
+        if "queue_manager" in self.objects:
             if self.loop_active:
                 # Drop this in a thread so that we are not blocking eachother
                 thread = threading.Thread(target=self.objects["queue_manager"].shutdown, name="QueueManager Shutdown")
@@ -265,6 +265,10 @@ class FractalServer:
             else:
                 self.objects["queue_manager"].shutdown()
 
+        # Close down periodics
+        for cb in self.periodic.values():
+            cb.stop()
+
         # Call exit callbacks
         for func, args, kwargs in self.exit_callbacks:
             func(*args, **kwargs)
@@ -272,10 +276,7 @@ class FractalServer:
         # Shutdown IOLoop if needed
         if asyncio.get_event_loop().is_running():
             self.loop.stop()
-
-        # Close down periodics
-        for cb in self.periodic.values():
-            cb.stop()
+        self.loop_active = False
 
         # Final shutdown
         self.loop.close(all_fds=True)

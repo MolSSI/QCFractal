@@ -4,13 +4,15 @@ A command line interface to the qcfractal server.
 
 import argparse
 
-from . import cli_utils
 import qcfractal
+from . import cli_utils
 
 parser = argparse.ArgumentParser(description='A CLI for the QCFractalServer.')
 
 manager = parser.add_argument_group('QueueManager Settings (optional)')
 manager_exclusive = manager.add_mutually_exclusive_group()
+manager_exclusive.add_argument(
+    "--dask-manager-single", action="store_true", help="Creates a QueueManager using a Dask LocalCluster with a single worker")
 manager_exclusive.add_argument(
     "--dask-manager", action="store_true", help="Creates a QueueManager using a Dask LocalCluster on the server")
 manager_exclusive.add_argument(
@@ -52,11 +54,15 @@ def main():
     exit_callbacks = []
 
     # Build an optional adapter
-    if args["dask_manager"]:
+    if args["dask_manager"] or args["dask_manager_single"]:
         dd = cli_utils.import_module("distributed")
 
+        n_workers = None
+        if args["dask_manager_single"]:
+            n_workers = 1
+
         # Build localcluster and exit callbacks
-        local_cluster = dd.LocalCluster(threads_per_worker=1)
+        local_cluster = dd.LocalCluster(threads_per_worker=1, n_workers=n_workers)
         adapter = dd.Client(local_cluster)
         exit_callbacks.append([adapter.close, (), {}])
         exit_callbacks.append([local_cluster.scale_down, (local_cluster.workers, ), {}])

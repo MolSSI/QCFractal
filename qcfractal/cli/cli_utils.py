@@ -3,9 +3,10 @@ Utilities for CLI programs
 """
 
 import copy
-import json
-import yaml
 import importlib
+import json
+
+import yaml
 
 
 def import_module(module):

@@ -9,8 +9,8 @@ import signal
 import socket
 import subprocess
 import sys
-import time
 import threading
+import time
 from collections import Mapping
 from contextlib import contextmanager
 
@@ -20,6 +20,7 @@ from tornado.ioloop import IOLoop
 
 from .server import FractalServer
 from .storage_sockets import storage_socket_factory
+
 
 ### Addon testing capabilities
 
@@ -186,7 +187,7 @@ def terminate_process(proc):
 
         try:
             start = time.time()
-            while (proc.poll() is None) and (time.time() < (start + 5)):
+            while (proc.poll() is None) and (time.time() < (start + 15)):
                 time.sleep(0.02)
         # Flat kill
         finally:
@@ -250,7 +251,7 @@ def popen(args, **kwargs):
         finally:
             output, error = proc.communicate()
             if dump_stdout:
-                print('-' * 30)
+                print('\n' + '-' * 30)
                 print("\n|| Process command: {}".format(" ".join(args)))
                 print('\n|| Process stderr: \n{}'.format(error.decode()))
                 print('-' * 30)
@@ -266,7 +267,7 @@ def run_process(args, **kwargs):
     """
 
     timeout = kwargs.pop("timeout", 30)
-    terminate_after = kwargs.pop("terminate_after", None)
+    terminate_after = kwargs.pop("interupt_after", None)
     with popen(args, **kwargs) as proc:
         if terminate_after is None:
             proc.wait(timeout=timeout)

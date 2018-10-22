@@ -3,11 +3,11 @@ A command line interface to the qcfractal server.
 """
 
 import argparse
-import time
+
 import tornado.log
 
-from . import cli_utils
 import qcfractal
+from . import cli_utils
 
 parser = argparse.ArgumentParser(description='A CLI for the QCFractal QueueManager.')
 subparsers = parser.add_subparsers(help='QueueManager Backend Type', dest='adapter_type')
@@ -18,6 +18,7 @@ fw_parser = subparsers.add_parser('fireworks', help='Fireworks QueueManager')
 dask_parser.add_argument("--dask-uri", type=str, help="URI of the dask-server")
 dask_parser.add_argument(
     "--local-cluster", action="store_true", help="Start a Dask LocalCluster rather than connect to a scheduler")
+dask_parser.add_argument("--local-workers", type=int, default=None, help="The number of workers for the LocalCluster")
 
 # Options for Fireworks
 fw_parser.add_argument("--fw-config", type=str, help="A FWConfig file")
@@ -57,7 +58,7 @@ def main():
 
         if args["local_cluster"]:
             # Build localcluster and exit callbacks
-            local_cluster = dd.LocalCluster(threads_per_worker=1)
+            local_cluster = dd.LocalCluster(threads_per_worker=1, n_workers=args["local_workers"])
             queue_client = dd.Client(local_cluster)
             exit_callbacks.append([queue_client.close, (), {}])
             exit_callbacks.append([local_cluster.scale_down, (local_cluster.workers, ), {}])

@@ -1,9 +1,8 @@
 import fireworks
 import pymongo
-import qcfractal
 
 # Reset fireworks queue
-lpad = fireworks.LaunchPad.from_file("fw_lpad.yaml") 
+lpad = fireworks.LaunchPad.from_file("fw_lpad.yaml")
 lpad.reset(None, require_password=False)
 
 # Reset database
