@@ -16,12 +16,20 @@ from .collection_utils import nCr, register_collection
 
 from enum import Enum
 from typing import Dict, List, Union
+from pydantic import BaseModel
 
 
 class _RxnEnum(str, Enum):
     """Helper class for locking the reaction type into one or the other"""
     rxn = 'rxn'
     ie = 'ie'
+
+
+class Rxn(BaseModel):
+    attributes: Dict[str, Union[int, float]]
+    reaction_results: Dict[str, dict]
+    name: str
+    stoichiometry: Dict[str, Dict[str, float]]
 
 
 class Dataset(Collection):
@@ -81,14 +89,17 @@ class Dataset(Collection):
 
     class DataModel(Collection.DataModel):
         """
-        Internal Data structure base model typed by PyDantic
+        Internal Data structure of Dataset typed by PyDantic
 
         This structure validates input, allows server-side validation and data security,
         and will create the information to pass back and forth between server and client
         """
+
         ds_type: _RxnEnum = _RxnEnum.rxn
         #                    top       name stoch stname     attributes       hash  coef        default
-        reactions: List[Dict[str, Union[str, Dict[str, Union[int, float, Dict[str, float]]]]]] = []
+        # reactions: List[Dict[str, Union[str, Dict[str, Union[int, float, Dict[str, float]]]]]] = []
+
+        reactions: List[Dict[str, Dict[str, Rxn]]] = []
 
     def _pre_save_prep(self, client):
 

@@ -7,7 +7,6 @@ from .collection import Collection
 from . import collection_utils
 
 from typing import Dict
-from pydantic import BaseModel
 
 
 class OpenFFWorkflow(Collection):
