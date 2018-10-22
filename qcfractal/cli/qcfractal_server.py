@@ -33,18 +33,11 @@ parser._action_groups.reverse()
 args = vars(parser.parse_args())
 if args["config_file"] is not None:
     data = cli_utils.read_config_file(args["config_file"])
-    diff = data.keys() - args.keys()
-    if diff:
-        raise argparse.ArgumentError(None,
-                                     "Unknown arguments found in configuration file: {}.".format(", ".join(diff)))
 
-    # Overwrite config args with config_file
-    # This isnt quite what we want, CLI should take precedence over file?
-    args = {**args, **data}
+    args = cli_utils.argparse_config_merge(parse, args, data)
 
 
 def main():
-    print(args)
 
     # Handle SSL
     ssl_certs = sum(args[x] is not None for x in ["tls_key", "tls_cert"])
@@ -58,14 +51,16 @@ def main():
     # Handle Adapters/QueueManagers
     exit_callbacks = []
 
+    # Build an optional adapter
     if args["dask_manager"]:
         dd = cli_utils.import_module("distributed")
 
         # Build localcluster and exit callbacks
         local_cluster = dd.LocalCluster(threads_per_worker=1)
         adapter = dd.Client(local_cluster)
+        exit_callbacks.append([adapter.close, (), {}])
         exit_callbacks.append([local_cluster.scale_down, (local_cluster.workers, ), {}])
-        exit_callbacks.append([local_cluster.close, (2, ), {}])
+        exit_callbacks.append([local_cluster.close, (4, ), {}])
 
     elif args["fireworks_manager"]:
         fw = cli_utils.import_module("fireworks")
@@ -73,7 +68,7 @@ def main():
         # Build Fireworks client
         name = args["name"] + "_fireworks_queue"
         adapter = fw.LaunchPad(host=args["database_uri"], name=name)
-        adapter.reset(None, require_password=False) # Leave cap on reset
+        adapter.reset(None, require_password=False)  # Leave cap on reset
         exit_callbacks.append(
             [adapter.reset, (None, ), {
                 "require_password": False,
@@ -83,6 +78,7 @@ def main():
     else:
         adapter = None
 
+    # Build the server itself
     server = qcfractal.FractalServer(
         port=args["port"],
         security=args["security"],
@@ -99,6 +95,7 @@ def main():
         server.logger.info("\nFireworks QueueManager initialized: \n"
                            "    Host: {}, Name: {}\n".format(adapter.host, adapter.name))
 
+    # Add exit callbacks
     for cb in exit_callbacks:
         server.add_exit_callback(cb[0], *cb[1], **cb[2])
 

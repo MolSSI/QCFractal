@@ -247,10 +247,15 @@ def run_process(args, **kwargs):
     """
 
     timeout = kwargs.pop("timeout", 30)
-    with popen(args, **kwargs) as p:
-        p.wait(timeout=timeout)
+    terminate_after = kwargs.pop("terminate_after", None)
+    with popen(args, **kwargs) as proc:
+        if terminate_after is None:
+            proc.wait(timeout=timeout)
+        else:
+            time.sleep(terminate_after)
+            terminate_process(proc)
 
-        retcode = p.poll()
+        retcode = proc.poll()
 
     return retcode == 0
 

@@ -3,6 +3,8 @@ A command line interface to the qcfractal server.
 """
 
 import argparse
+import time
+import tornado.log
 
 from . import cli_utils
 import qcfractal
@@ -27,36 +29,25 @@ fw_parser.add_argument(
 parser.add_argument("--fractal-uri", type=str, default="localhost:7777", help="FractalServer location to pull from")
 parser.add_argument("-u", "--username", type=str, help="FractalServer username")
 parser.add_argument("-p", "--password", type=str, help="FractalServer password")
-parser.add_argument("--noverify", action="store_true", default=True)
+parser.add_argument("--noverify", action="store_true", default=True, help="The logfile prefix to use")
 
 # QueueManager options
 parser.add_argument("--max-tasks", type=int, default=1000, help="Maximum number of tasks to hold at any given time.")
 parser.add_argument("--cluster-name", type=str, default="unknwon", help="The name of the compute cluster to start")
 parser.add_argument("--queue-tag", type=str, help="The queue tag to pull from")
+parser.add_argument("--logfile-prefix", type=str, default=None, help="")
 
 # Additional args
 parser.add_argument("--rapidfire", action="store_true", help="Boot and run jobs until complete")
-dask_parser.add_argument("--config-file", type=str, default=None, help="A configuration file to use")
+parser.add_argument("--config-file", type=str, default=None, help="A configuration file to use")
 
 args = vars(parser.parse_args())
-
-# print(parser.get_default("password"))
-# print(vars(parser.parse_args(["fireworks"])))
-
-# if args["config_file"] is not None:
-#     data = cli_utils.read_config_file(args["config_file"])
-#     diff = data.keys() - args.keys()
-#     if diff:
-#         raise argparse.ArgumentError(None,
-#                                      "Unknown arguments found in configuration file: {}.".format(", ".join(diff)))
-
-#     # Overwrite config args with config_file
-#     # This isnt quite what we want, CLI should take precedence over file?
-#     args = {**args, **data}
+if args["config_file"] is not None:
+    data = cli_utils.read_config_file(args["config_file"])
+    args = cli_utils.argparse_config_merge(parser, args, data, parser_default=[args["adapter_type"]])
 
 
 def main():
-    print(args)
 
     exit_callbacks = []
 
@@ -68,8 +59,9 @@ def main():
             # Build localcluster and exit callbacks
             local_cluster = dd.LocalCluster(threads_per_worker=1)
             queue_client = dd.Client(local_cluster)
+            exit_callbacks.append([queue_client.close, (), {}])
             exit_callbacks.append([local_cluster.scale_down, (local_cluster.workers, ), {}])
-            exit_callbacks.append([local_cluster.close, (2, ), {}])
+            exit_callbacks.append([local_cluster.close, (4, ), {}])
         else:
             if args["dask_uri"] is None:
                 raise KeyError("A 'dask-uri' must be specified.")
@@ -85,7 +77,7 @@ def main():
         elif num_options != 1:
             raise KeyError("Can only provide a single URI or config_file for Fireworks.")
 
-        fireworks = import_module("fireworks")
+        fireworks = cli_utils.import_module("fireworks")
 
         if args["fw_uri"] is not None:
             queue_client = fireworks.LaunchPad(args["fw_uri"], name=args["fw_name"])
@@ -98,6 +90,11 @@ def main():
         raise KeyError(
             "Unknown adapter type '{}', available options: {'fireworks', 'dask'}.".format(args["adapter_type"]))
 
+    # Quick logging
+    if args["logfile_prefix"] is not None:
+        tornado.options.options['log_file_prefix'] = logfile_prefix
+    tornado.log.enable_pretty_logging()
+
     # Build the client
     client = qcfractal.interface.FractalClient(
         args["fractal_uri"], username=args["username"], password=args["password"], verify=(not args["noverify"]))
@@ -105,6 +102,16 @@ def main():
     # Build out the manager itself
     manager = qcfractal.queue.QueueManager(
         client, queue_client, max_tasks=args["max_tasks"], queue_tag=args["queue_tag"], cluster=args["cluster_name"])
+
+    if args["adapter_type"] == "dask":
+        manager.logger.info("\nDask QueueManager initialized: {}\n".format(str(queue_client)))
+    elif args["adapter_type"] == "fireworks":
+        manager.logger.info("\nFireworks QueueManager initialized: \n"
+                           "    Host: {}, Name: {}\n".format(queue_client.host, queue_client.name))
+
+    # Add exit callbacks
+    for cb in exit_callbacks:
+        manager.add_exit_callback(cb[0], *cb[1], **cb[2])
 
     # Either startup the manager or run until complete
     if args["rapidfire"]:

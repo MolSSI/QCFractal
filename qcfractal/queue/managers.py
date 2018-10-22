@@ -94,6 +94,7 @@ class QueueManager:
 
         # Soft quit with a keyboard interupt
         try:
+            self.running = True
             if not asyncio.get_event_loop().is_running():  # Only works on Py3
                 self.loop.start()
         except KeyboardInterrupt:
@@ -107,18 +108,19 @@ class QueueManager:
         # Push data back to the server
         self.shutdown()
 
-        # Call exit callbacks
-        for func, args, kwargs in self.exit_callbacks:
-            func(*args, **kwargs)
-
         # Stop callbacks
         for cb in self.periodic.values():
             cb.stop()
+
+        # Call exit callbacks
+        for func, args, kwargs in self.exit_callbacks:
+            func(*args, **kwargs)
 
         # Stop loop
         if not asyncio.get_event_loop().is_running():  # Only works on Py3
             self.loop.stop()
 
+        self.loop.close(all_fds=True)
         self.logger.info("QueueManager stopping gracefully. Stopped IOLoop.\n")
 
     def shutdown(self):

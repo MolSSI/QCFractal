@@ -274,7 +274,6 @@ class FractalServer:
             self.loop.stop()
 
         # Close down periodics
-        self.loop_active = False
         for cb in self.periodic.values():
             cb.stop()
 
