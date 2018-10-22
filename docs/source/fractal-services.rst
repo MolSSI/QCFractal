@@ -23,7 +23,10 @@ of this dihedral bond.
  5. The service waits for the 90- and -90-degree tasks to complete. Then it builds its final data structure for user querying and marks itself complete.
 
 The service technology allows the ``FractalServer`` to complete very complex
-workflows of arbitrary design.
+workflows of arbitrary design. To see a pictorial representation of this
+process, please see the
+:ref:`flowchart showing the psuedo-calls <flowchart_add_procedure>` when a
+service is added to the ``FractalServrer``
 
 
 .. toctree::
