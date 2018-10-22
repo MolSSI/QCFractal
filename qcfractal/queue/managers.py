@@ -2,6 +2,7 @@
 Queue backend abstraction manager.
 """
 
+import asyncio
 import logging
 import socket
 import uuid
@@ -69,6 +70,7 @@ class QueueManager:
 
         self.periodic = {}
         self.active = 0
+        self.exit_callbacks = []
 
         # Pull the current loop if we need it
         self.loop = loop or tornado.ioloop.IOLoop.current()
@@ -92,7 +94,8 @@ class QueueManager:
 
         # Soft quit with a keyboard interupt
         try:
-            self.loop.start()
+            if not asyncio.get_event_loop().is_running():  # Only works on Py3
+                self.loop.start()
         except KeyboardInterrupt:
             self.stop()
 
@@ -100,11 +103,22 @@ class QueueManager:
         """
         Shuts down all IOLoops and periodic updates
         """
-        self.loop.stop()
+
+        # Push data back to the server
+        self.shutdown()
+
+        # Call exit callbacks
+        for func, args, kwargs in self.exit_callbacks:
+            func(*args, **kwargs)
+
+        # Stop callbacks
         for cb in self.periodic.values():
             cb.stop()
 
-        self.shutdown()
+        # Stop loop
+        if not asyncio.get_event_loop().is_running():  # Only works on Py3
+            self.loop.stop()
+
         self.logger.info("QueueManager stopping gracefully. Stopped IOLoop.\n")
 
     def shutdown(self):
@@ -120,6 +134,21 @@ class QueueManager:
             self.logger.warning("Shutdown was not successful. This may delay queued tasks.")
         else:
             self.logger.info("Shutdown was successful, {} tasks returned to master queue.".format(len(task_ids)))
+
+    def add_exit_callback(self, callback, *args, **kwargs):
+        """Adds additional callbacks to perform when closing down the server
+
+        Parameters
+        ----------
+        callback : callable
+            The function to call at exit
+        *args
+            Arguements to call with the function.
+        **kwargs
+            Kwargs to call with the function.
+
+        """
+        self.exit_callbacks.append((callback, args, kwargs))
 
     def update(self, new_tasks=True):
         """Examines the queue for completed tasks and adds successful completions to the database

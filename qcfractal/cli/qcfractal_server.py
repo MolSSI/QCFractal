@@ -73,8 +73,12 @@ def main():
         # Build Fireworks client
         name = args["name"] + "_fireworks_queue"
         adapter = fw.LaunchPad(host=args["database_uri"], name=name)
-        adapter.reset(None, require_password=False)
-        exit_callbacks.append([adapter.reset, (None, ), {"require_password": False}])
+        adapter.reset(None, require_password=False) # Leave cap on reset
+        exit_callbacks.append(
+            [adapter.reset, (None, ), {
+                "require_password": False,
+                "max_reset_wo_password": int(1e8)
+            }])
 
     else:
         adapter = None
