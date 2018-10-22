@@ -1,4 +1,4 @@
-# Fireworks Server Example
+# Dataset Example using Fireworks backend
 
 ## Setup and Configure
 
