@@ -23,7 +23,7 @@ def test_fireworks_server_example():
     kwargs = {"dump_stdout": True}
 
     with testing.preserve_cwd():
-        os.chdir(os.path.join(_pwd, "fireworks_server"))
+        os.chdir(os.path.join(_pwd, "fireworks_dataset"))
         server_args = ["qcfractal-server", "qca_fw_testing", "--fireworks-manager"]
         with testing.popen(server_args, **kwargs) as server:
             time.sleep(5) # Boot up server
