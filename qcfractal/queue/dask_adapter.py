@@ -34,10 +34,7 @@ class DaskAdapter:
         self.queue = {}
         self.function_map = {}
 
-        if logger:
-            self.logger = logger
-        else:
-            self.logger = logging.getLogger('DaskAdapter')
+        self.logger = logger or logging.getLogger('DaskAdapter')
 
     def get_function(self, function):
         """Obtains a Python function from a given string

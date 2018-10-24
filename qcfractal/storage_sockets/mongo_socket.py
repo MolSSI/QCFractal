@@ -824,7 +824,7 @@ class MongoSocket:
         ret["meta"]["validation_errors"] = []
         return ret
 
-    def queue_get_next(self, n=100, tag=None):
+    def queue_get_next(self, limit=100, tag=None):
 
         # Figure out query, tagless has no requirements
         query = {"status": "WAITING"}
@@ -834,7 +834,7 @@ class MongoSocket:
         found = list(self._tables["task_queue"].find(
             query,
             sort=[("created_on", -1)],
-            limit=n,
+            limit=limit,
             projection={"_id": True,
                         "spec": True,
                         "hash_index": True,

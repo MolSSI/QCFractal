@@ -4,36 +4,26 @@ Queue adapter for Fireworks
 
 import logging
 
-try:
-    import fireworks
-    import fireworks.core.rocket_launcher
-except ImportError:
-    fireworks = None
-
 
 class FireworksAdapter:
     def __init__(self, lpad, logger=None):
         """
         Parameters
         ----------
-        dask_client : fireworks.LaunchPad
+        lpad : fireworks.LaunchPad
             A activte Fireworks LaunchPad
         logger : None, optional
             A optional logging object to write output to
         """
-        if fireworks is None:
-            raise ModuleNotFoundError("Unable to find Fireworks which must be installed to use the FireworksAdapter")
 
         self.lpad = lpad
         self.queue = {}
-        if logger:
-            self.logger = logger
-        else:
-            self.logger = logging.getLogger('FireworksAdapter')
+        self.logger = logger or logging.getLogger('FireworksAdapter')
 
     def submit_tasks(self, tasks):
         ret = []
 
+        import fireworks
         for task in tasks:
             tag = task["id"]
 
@@ -87,6 +77,7 @@ class FireworksAdapter:
     def await_results(self):
 
         # Try to get each results
+        import fireworks.core.rocket_launcher
         fireworks.core.rocket_launcher.rapidfire(self.lpad, strm_lvl="CRITICAL")
 
     def list_tasks(self):

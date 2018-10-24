@@ -100,6 +100,15 @@ def find_open_port():
 
     return port
 
+@contextmanager
+def preserve_cwd():
+    """Always returns to CWD on exit
+    """
+    cwd = os.getcwd()
+    try:
+        yield cwd
+    finally:
+        os.chdir(cwd)
 
 ### Background thread loops
 

@@ -162,7 +162,7 @@ class QueueManagerHandler(APIHandler):
         name = self.json["meta"]["name"]
         tag = self.json["meta"].get("tag", None)
         kwargs = {
-            "n": self.json["meta"].get("limit", 100),
+            "limit": self.json["meta"].get("limit", 100),
             "tag": tag,
         } # yapf: disable
 
