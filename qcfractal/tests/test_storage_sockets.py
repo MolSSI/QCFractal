@@ -375,16 +375,16 @@ def test_storage_queue_roundtrip(storage_socket):
         "tag": None,
     }
 
-    # Submit a job
+    # Submit a task
     r = storage_socket.queue_submit([task1])
     assert len(r["data"]) == 1
 
-    # Query for next jobs
+    # Query for next tasks
     r = storage_socket.queue_get_next()
     assert r[0]["spec"]["function"] == task1["spec"]["function"]
     queue_id = r[0]["id"]
 
-    # Mark job as done
+    # Mark task as done
     r = storage_socket.queue_mark_complete([(queue_id, "results_id")])
     assert r == 1
 
@@ -412,7 +412,7 @@ def test_storage_queue_duplicate(storage_socket):
     assert len(r["data"]) == 1
     queue_id = r["data"][0]
 
-    # Put the first job in a waiting state
+    # Put the first task in a waiting state
     r = storage_socket.queue_get_next()
     assert len(r) == 1
 

@@ -4,12 +4,15 @@ The FractalServer class
 
 import logging
 import ssl
+import threading
 
 import tornado.ioloop
 import tornado.web
 
+from . import interface
+from . import queue
+from . import services
 from . import storage_sockets
-from . import queue_handlers
 from . import web_handlers
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -65,14 +68,13 @@ def _build_ssl():
     return (cert_pem, key_pem)
 
 
-class FractalServer(object):
+class FractalServer:
     def __init__(
             self,
 
             # Server info options
             port=8888,
-            io_loop=None,
-
+            loop=None,
             security=None,
             ssl_options=None,
 
@@ -88,7 +90,10 @@ class FractalServer(object):
             queue_socket=None,
 
             # Log options
-            logfile_name=None):
+            logfile_name=None,
+
+            # Queue options
+            max_active_services=10):
 
         # Save local options
         self.port = port
@@ -97,13 +102,15 @@ class FractalServer(object):
         else:
             self._address = "https://localhost:" + str(self.port) + "/"
 
+        self.max_active_services = max_active_services
+
         # Setup logging.
         self.logger = logging.getLogger("FractalServer")
         self.logger.setLevel(logging.INFO)
 
         app_logger = logging.getLogger("tornado.application")
         if logfile_name is not None:
-            handler = logging.FileHandler(logfile_name.logfile)
+            handler = logging.FileHandler(logfile_name)
             handler.setLevel(logging.INFO)
 
             handler.setFormatter(myFormatter)
@@ -127,6 +134,7 @@ class FractalServer(object):
 
         # Handle SSL
         ssl_ctx = None
+        client_verify = True
         if ssl_options is None:
             self.logger.warning("No SSL files passed in, generating self-signed SSL certificate.")
             self.logger.warning("Clients must use `verify=False` when connecting.\n")
@@ -153,6 +161,7 @@ class FractalServer(object):
             import os
             atexit.register(os.remove, cert_name)
             atexit.register(os.remove, key_name)
+            client_verify = False
         elif ssl_options is False:
             ssl_ctx = None
         elif isinstance(ssl_options, dict):
@@ -175,10 +184,10 @@ class FractalServer(object):
             bypass_security=storage_bypass_security)
 
         # Pull the current loop if we need it
-        if io_loop is None:
+        if loop is None:
             self.loop = tornado.ioloop.IOLoop.current()
         else:
-            self.loop = io_loop
+            self.loop = loop
 
         # Build up the application
         self.objects = {
@@ -187,27 +196,31 @@ class FractalServer(object):
         }
 
         endpoints = [
+
+            # Generic web handlers
             (r"/molecule", web_handlers.MoleculeHandler, self.objects),
             (r"/option", web_handlers.OptionHandler, self.objects),
             (r"/collection", web_handlers.CollectionHandler, self.objects),
             (r"/result", web_handlers.ResultHandler, self.objects),
             (r"/procedure", web_handlers.ProcedureHandler, self.objects),
             (r"/locator", web_handlers.LocatorHandler, self.objects),
+
+            # Queue Schedulers
+            (r"/task_queue", queue.TaskQueueHandler, self.objects),
+            (r"/service_queue", queue.ServiceQueueHandler, self.objects),
+            (r"/queue_manager", queue.QueueManagerHandler, self.objects),
         ]
 
-        # Queue handlers
+        # Queue manager if direct build
         if queue_socket is not None:
 
-            queue_nanny, queue_scheduler, service_scheduler = queue_handlers.build_queue(
-                queue_socket, self.objects["storage_socket"], logger=self.logger)
+            if security == "local":
+                raise ValueError("Cannot yet use local security with a internal QueueManager")
 
             # Add the socket to passed args
-            self.objects["queue_socket"] = queue_socket
-            self.objects["queue_nanny"] = queue_nanny
-
-            # Add the endpoint
-            endpoints.append((r"/task_scheduler", queue_scheduler, self.objects))
-            endpoints.append((r"/service_scheduler", service_scheduler, self.objects))
+            client = interface.FractalClient(self._address, verify=client_verify)
+            self.objects["queue_manager"] = queue.QueueManager(
+                client, queue_socket, loop=loop, logger=self.logger, cluster="FractalServer")
 
         # Build the app
         app_settings = {
@@ -216,16 +229,17 @@ class FractalServer(object):
             # "debug": True,
         }
         self.app = tornado.web.Application(endpoints, **app_settings)
+        self.endpoints = set([v[0].replace("/", "", 1) for v in endpoints])
 
         self.http_server = tornado.httpserver.HTTPServer(self.app, ssl_options=ssl_ctx)
 
         self.http_server.listen(self.port)
 
-        # Add in periodic callbacks
+        # Add periodic callback holders
+        self.periodic = {}
 
         self.logger.info("FractalServer successfully initialized at {}\n".format(self._address))
-
-        self.periodic = {}
+        self.loop_active = False
 
     def start(self):
         """
@@ -235,36 +249,168 @@ class FractalServer(object):
         self.logger.info("FractalServer successfully started. Starting IOLoop.\n")
 
         # If we have a queue socket start up the nanny
-        if "queue_socket" in self.objects:
+        if "queue_manager" in self.objects:
             # Add canonical queue callback
-            nanny = tornado.ioloop.PeriodicCallback(self.objects["queue_nanny"].update, 2000)
-            nanny.start()
-            self.periodic["queue_nanny_update"] = nanny
+            manager = tornado.ioloop.PeriodicCallback(self.update_tasks, 2000)
+            manager.start()
+            self.periodic["queue_manager_update"] = manager
 
-            # Add services callback
-            nanny_services = tornado.ioloop.PeriodicCallback(self.objects["queue_nanny"].update_services, 2000)
-            nanny_services.start()
-            self.periodic["queue_nanny_services"] = nanny_services
+        # Add services callback
+        nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, 2000)
+        nanny_services.start()
+        self.periodic["update_services"] = nanny_services
 
         # Soft quit with a keyboard interupt
         try:
+            self.loop_active = True
             self.loop.start()
         except KeyboardInterrupt:
             self.stop()
 
     def stop(self):
         """
-        Shuts down all IOLoops
+        Shuts down all IOLoops and periodic updates
         """
         self.loop.stop()
+        self.loop_active = False
         for cb in self.periodic.values():
             cb.stop()
 
+        self.loop.close(all_fds=True)
+
         self.logger.info("FractalServer stopping gracefully. Stopped IOLoop.\n")
 
-    def get_address(self, function=""):
-        return self._address + function
+    def get_address(self, endpoint=""):
+        """Obtains the full URI for a given function on the FractalServer
 
+        Parameters
+        ----------
+        endpoint : str, optional
+            Specifies a endpoint to provide the URI to
+
+        """
+
+        if len(endpoint) and (endpoint not in self.endpoints):
+            raise AttributeError("Endpoint '{}' not found.".format(endpoint))
+
+        return self._address + endpoint
+
+    def update_services(self):
+        """Runs through all active services and examines their current status.
+        """
+
+        # Grab current services
+        current_services = self.storage.get_services({"status": "RUNNING"})["data"]
+
+        # Grab new services if we have open slots
+        open_slots = max(0, self.max_active_services - len(current_services))
+        if open_slots > 0:
+            new_services = self.storage.get_services({"status": "READY"}, limit=open_slots)["data"]
+            current_services.extend(new_services)
+
+        # Loop over the services and iterate
+        running_services = 0
+        new_procedures = []
+        complete_ids = []
+        for data in current_services:
+            obj = services.build(data["service"], self.storage, data)
+
+            finished = obj.iterate()
+            self.storage.update_services([(data["id"], obj.get_json())])
+            # print(obj.get_json())
+
+            if finished is not False:
+
+                # Add results to procedures, remove complete_ids
+                new_procedures.append(finished)
+                complete_ids.append(data["id"])
+            else:
+                running_services += 1
+
+        # Add new procedures and services
+        self.storage.add_procedures(new_procedures)
+        self.storage.del_services(complete_ids)
+
+        return running_services
+
+### Functions only available if using a local queue_adapter
+
+    def update_tasks(self):
+        """Pulls tasks from the queue_adapter, inserts them into the database,
+        and fills the queue_adapter with new tasks.
+
+        Returns
+        -------
+        bool
+            Return True if the operation completed successfully
+        """
+        if "queue_manager" not in self.objects:
+            raise AttributeError("update_tasks is only available if the server was initalized with a queue manager.")
+
+        if self.loop_active:
+            # Drop this in a thread so that we are not blocking eachother
+            thread = threading.Thread(target=self.objects["queue_manager"].update, name="QueueManager Update")
+            thread.daemon = True
+            thread.start()
+            self.loop.call_later(5, thread.join)
+        else:
+            self.objects["queue_manager"].update()
+
+        return True
+
+    def await_results(self):
+        """A synchronous method for testing or small launches
+        that awaits task completion before adding all queued results
+        to the database and returning.
+
+        Returns
+        -------
+        bool
+            Return True if the operation completed successfully
+        """
+        self.logger.info("Updating tasks")
+
+        if "queue_manager" not in self.objects:
+            raise AttributeError("await_results is only available if the server was initalized with a queue manager.")
+
+        return self.objects["queue_manager"].await_results()
+
+    def await_services(self, max_iter=10):
+        """A synchronous method that awaits the completion of all services
+        before returning.
+
+        Returns
+        -------
+        bool
+            Return True if the operation completed successfully
+        """
+        if "queue_manager" not in self.objects:
+            raise AttributeError("await_results is only available if the server was initalized with a queue manager.")
+
+        self.await_results()
+        for x in range(1, max_iter + 1):
+            self.logger.info("\nAwait services: Iteration {}\n".format(x))
+            running_services = self.update_services()
+            self.await_results()
+            if running_services == 0:
+                break
+
+        return True
+
+    def list_current_tasks(self):
+        """Provides a list of tasks currently in the queue along
+        with the associated keys
+
+        Returns
+        -------
+        ret : list of tuples
+            All tasks currently still in the database
+        """
+        if "queue_manager" not in self.objects:
+            raise AttributeError(
+                "list_current_tasks is only available if the server was initalized with a queue manager.")
+
+        return self.objects["queue_manager"].list_current_tasks()
 
 if __name__ == "__main__":
 

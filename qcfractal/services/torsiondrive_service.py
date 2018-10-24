@@ -4,9 +4,13 @@ Wraps geometric procedures
 
 import copy
 import json
+
 import numpy as np
 
-from torsiondrive import td_api
+try:
+    from torsiondrive import td_api
+except ImportError:
+    td_api = None
 
 from qcfractal import procedures
 from qcfractal.interface import schema
@@ -14,18 +18,24 @@ from qcfractal.interface import schema
 __all__ = ["TorsionDriveService"]
 
 
+def _check_td():
+    if td_api is None:
+        raise ImportError("Unable to find TorsionDrive which must be installed to use the TorsionDriveService")
+
+
 class TorsionDriveService:
-    def __init__(self, storage_socket, queue_socket, data):
+    def __init__(self, storage_socket, data):
+        _check_td()
 
         # Server interaction
         self.storage_socket = storage_socket
-        self.queue_socket = queue_socket
 
         # Unpack data
         self.data = data
 
     @classmethod
-    def initialize_from_api(cls, storage_socket, queue_socket, meta, molecule):
+    def initialize_from_api(cls, storage_socket, meta, molecule):
+        _check_td()
 
         # Grab initial molecule
         meta["initial_molecule"] = molecule["id"]
@@ -47,8 +57,8 @@ class TorsionDriveService:
 
         # Save initial molecule and add hash
         meta["status"] = "READY"
-        meta["required_jobs"] = False
-        meta["remaining_jobs"] = False
+        meta["required_tasks"] = False
+        meta["remaining_tasks"] = False
         meta["molecule_template"] = molecule_template
         meta["optimization_history"] = {}
 
@@ -81,9 +91,9 @@ class TorsionDriveService:
         meta["program"] = "torsiondrive"
         meta["hash_index"] = procedures.procedures_util.hash_procedure_keys(keys)
         meta["hash_keys"] = keys
-        meta["tag"] = None
+        meta["tag"] = meta.pop("tag", None)
 
-        return cls(storage_socket, queue_socket, meta)
+        return cls(storage_socket, meta)
 
     def get_json(self):
         return self.data
@@ -94,83 +104,89 @@ class TorsionDriveService:
         # print("\nTorsionDrive State:")
         # print(json.dumps(self.data["torsiondrive_state"], indent=2))
         # print("Iterate")
-        #if (self.data["remaining_jobs"] > 0):
-            # print("Iterate: not yet done", self.data["remaining_jobs"])
-            # print("Complete jobs", self.data["complete_jobs"])
+        #if (self.data["remaining_tasks"] > 0):
+        # print("Iterate: not yet done", self.data["remaining_tasks"])
+        # print("Complete tasks", self.data["complete_tasks"])
         #    return False
         # if self.data["success"] is True:
         #     return False
 
+        # print(self.data["remaining_tasks"])
 
-        # print(self.data["remaining_jobs"])
-
-        # Required jobs is false on first iteration
-        # next_iter = (self.data["remaining_jobs"] is not False) and (self.data["remaining_jobs"] == 0):
+        # Required tasks is false on first iteration
+        # next_iter = (self.data["remaining_tasks"] is not False) and (self.data["remaining_tasks"] == 0):
         # print("ID {} : REMAINING JOBS {}".format(self.data["hash_index"], self.data["queue_keys"]))
-        # print("rem job", self.data["remaining_jobs"])
-        if self.data["remaining_jobs"] is not False:
+        # print("rem task", self.data["remaining_tasks"])
+        if self.data["remaining_tasks"] is not False:
 
-            # Create the query payload, fetching the completed required jobs and output location
-            payload = self.storage_socket.get_queue({"id": self.data["required_jobs"], "status": "COMPLETE"},
-                                                    projection={"result_location": True, "status": True})
-            # If all jobs are not complete, return a False
-            if len(payload["data"]) != len(self.data["required_jobs"]):
+            # Create the query payload, fetching the completed required tasks and output location
+            payload = self.storage_socket.get_queue(
+                {
+                    "id": self.data["required_tasks"],
+                    "status": "COMPLETE"
+                },
+                projection={"result_location": True,
+                            "status": True})
+            # If all tasks are not complete, return a False
+            if len(payload["data"]) != len(self.data["required_tasks"]):
                 return False
 
-            job_query = payload["data"]
-            # Create a lookup table for job ID mapping to result from that job in the procedure table
-            inv_job_lookup = {v["id"]: self.storage_socket.locator(v["result_location"])["data"][0]
-                              for v in job_query}
+            task_query = payload["data"]
+            # Create a lookup table for task ID mapping to result from that task in the procedure table
+            inv_task_lookup = {
+                v["id"]: self.storage_socket.locator(v["result_location"])["data"][0]
+                for v in task_query
+            }
 
-            # Populate job results
-            job_results = {}
-            for key, job_ids in self.data["job_map"].items():
-                job_results[key] = []
+            # Populate task results
+            task_results = {}
+            for key, task_ids in self.data["task_map"].items():
+                task_results[key] = []
 
                 # Check for history key
                 if key not in self.data["optimization_history"]:
                     self.data["optimization_history"][key] = []
 
-                for job_id in job_ids:
-                    # Cycle through all jobs for this entry
-                    ret = inv_job_lookup[job_id]
+                for task_id in task_ids:
+                    # Cycle through all tasks for this entry
+                    ret = inv_task_lookup[task_id]
 
                     # Lookup molecules
                     mol_keys = self.storage_socket.get_molecules(
                         [ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
 
-                    job_results[key].append((mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1]))
+                    task_results[key].append((mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1]))
 
                     # Update history
                     self.data["optimization_history"][key].append(ret["id"])
 
-            td_api.update_state(self.data["torsiondrive_state"], job_results)
+            td_api.update_state(self.data["torsiondrive_state"], task_results)
 
             # print("\nTorsionDrive State Updated:")
             # print(json.dumps(self.data["torsiondrive_state"], indent=2))
 
-        # Figure out if we are still waiting on jobs
+        # Figure out if we are still waiting on tasks
 
-        # Create new jobs from the current state
-        next_jobs = td_api.next_jobs_from_state(self.data["torsiondrive_state"], verbose=True)
-        # print("\n\nNext Jobs:\n" + str(next_jobs))
+        # Create new tasks from the current state
+        next_tasks = td_api.next_jobs_from_state(self.data["torsiondrive_state"], verbose=True)
+        # print("\n\nNext Jobs:\n" + str(next_tasks))
 
         # All done
-        if len(next_jobs) == 0:
+        if len(next_tasks) == 0:
             self.finalize()
             return self.data
 
-        self.submit_optimization_tasks(next_jobs)
+        self.submit_optimization_tasks(next_tasks)
 
         return False
-        # if len(next_jobs) == 0:
+        # if len(next_tasks) == 0:
         #     return self.finalize()
 
         # step 5
 
         # Save torsiondrive state
 
-    def submit_optimization_tasks(self, job_dict):
+    def submit_optimization_tasks(self, task_dict):
 
         # Prepare optimization
         initial_molecule = json.dumps(self.data["molecule_template"])
@@ -185,14 +201,14 @@ class TorsionDriveService:
 
         hook_template = json.dumps({
             "document": ("service_queue", self.data["id"]),
-            "updates": [["inc", "remaining_jobs", -1]]
+            "updates": [["inc", "remaining_tasks", -1]]
         })
 
         full_tasks = []
-        job_map = {}
+        task_map = {}
         submitted_hash_id_remap = []  # Tracking variable for exondary pass
-        for key, geoms in job_dict.items():
-            job_map[key] = []
+        for key, geoms in task_dict.items():
+            task_map[key] = []
             for num, geom in enumerate(geoms):
 
                 # Update molecule
@@ -217,44 +233,44 @@ class TorsionDriveService:
                 if len(complete):
                     # Job is already complete
                     queue_id = self.storage_socket.get_procedures({"id": complete[0]})["data"][0]["queue_id"]
-                    job_map[key].append(queue_id)
+                    task_map[key].append(queue_id)
                 else:
-                    # Create a hook which will update the complete jobs uid
+                    # Create a hook which will update the complete tasks uid
                     hook = json.loads(hook_template)
                     tasks[0]["hooks"].append(hook)
-                    # Remember the full tasks map to update job_map later
+                    # Remember the full tasks map to update task_map later
                     submitted_hash_id_remap.append((key, num))
                     # Create a placeholder entry at that index for now, we'll update them all
                     # with known task ID's after we submit them
-                    job_map[key].append(None)
+                    task_map[key].append(None)
                     # Add task to "list to submit"
                     full_tasks.append(tasks[0])
 
         # Add tasks to Nanny
-        ret = self.queue_socket.submit_tasks(full_tasks)
+        ret = self.storage_socket.queue_submit(full_tasks, tag=self.data["tag"])
         self.data["queue_keys"] = ret["data"]
         if len(ret["meta"]["duplicates"]):
-            raise RuntimeError("It appears that one of the jobs you submitted is already in the queue, but was "
-                               "not there when the jobs were populated.\n"
-                               "This should only happen if someone else submitted a similar or exact job "
+            raise RuntimeError("It appears that one of the tasks you submitted is already in the queue, but was "
+                               "not there when the tasks were populated.\n"
+                               "This should only happen if someone else submitted a similar or exact task "
                                "was submitted at the same time.\n"
                                "This is a corner case we have not solved yet. Please open a ticket with QCFractal"
                                "describing the conditions which yielded this message.")
 
         # Create data for next round
-        # Update job map based on task IDs
+        # Update task map based on task IDs
         for (key, list_index), returned_id in zip(submitted_hash_id_remap, ret['data']):
-            job_map[key][list_index] = returned_id
-        self.data["job_map"] = job_map
-        self.data["required_jobs"] = list({x for v in job_map.values() for x in v})
+            task_map[key][list_index] = returned_id
+        self.data["task_map"] = task_map
+        self.data["required_tasks"] = list({x for v in task_map.values() for x in v})
 
-        # TODO edit remaining jobs to reflect duplicates
-        self.data["remaining_jobs"] = len(self.data["required_jobs"])
+        # TODO edit remaining tasks to reflect duplicates
+        self.data["remaining_tasks"] = len(self.data["required_tasks"])
 
     def finalize(self):
         # Add finalize state
         # Parse remaining procedures
-        # Create a map of "jobs" so that procedures does not have to followed
+        # Create a map of "tasks" so that procedures does not have to followed
         self.data["success"] = True
 
         self.data["final_energies"] = {}
@@ -277,13 +293,12 @@ class TorsionDriveService:
         # print(self.data["final_energies"])
 
         # Pop temporaries
-        del self.data["job_map"]
-        del self.data["remaining_jobs"]
+        del self.data["task_map"]
+        del self.data["remaining_tasks"]
         del self.data["molecule_template"]
         del self.data["queue_keys"]
         del self.data["torsiondrive_state"]
         del self.data["status"]
-        del self.data["required_jobs"]
+        del self.data["required_tasks"]
 
         return self.data
-

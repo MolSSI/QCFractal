@@ -2,20 +2,24 @@
 Contains testing infrastructure for QCFractal
 """
 
-import os
 import logging
+import os
 import pkgutil
+import signal
 import socket
+import subprocess
+import sys
+import time
 import threading
-import pymongo
-from contextlib import contextmanager
 from collections import Mapping
+from contextlib import contextmanager
 
+import pymongo
 import pytest
 from tornado.ioloop import IOLoop
 
-from .storage_sockets import storage_socket_factory
 from .server import FractalServer
+from .storage_sockets import storage_socket_factory
 
 ### Addon testing capabilities
 
@@ -56,32 +60,33 @@ using_dask = pytest.mark.skipif(
 using_psi4 = pytest.mark.skipif(has_module('psi4') is False, reason=_import_message.format('psi4'))
 using_rdkit = pytest.mark.skipif(has_module('rdkit') is False, reason=_import_message.format('rdkit'))
 using_geometric = pytest.mark.skipif(has_module('geometric') is False, reason=_import_message.format('geometric'))
-using_torsiondrive = pytest.mark.skipif(has_module('torsiondrive') is False, reason=_import_message.format('torsiondrive'))
-using_unix = pytest.mark.skipif(os.name.lower() != 'posix', reason='Not on Unix operating system, '
-                                                                   'assuming Bash is not present')
+using_torsiondrive = pytest.mark.skipif(
+    has_module('torsiondrive') is False, reason=_import_message.format('torsiondrive'))
+using_unix = pytest.mark.skipif(
+    os.name.lower() != 'posix', reason='Not on Unix operating system, '
+    'assuming Bash is not present')
+
+### Generic helpers
 
 
 def recursive_dict_merge(base_dict, dict_to_merge_in):
     """Recursive merge for more complex than a simple top-level merge {**x, **y} which does not handle nested dict"""
     for k, v in dict_to_merge_in.items():
-        if (k in base_dict and isinstance(base_dict[k], dict)
-                and isinstance(dict_to_merge_in[k], Mapping)):
+        if (k in base_dict and isinstance(base_dict[k], dict) and isinstance(dict_to_merge_in[k], Mapping)):
             recursive_dict_merge(base_dict[k], dict_to_merge_in[k])
         else:
             base_dict[k] = dict_to_merge_in[k]
 
 
-# Check for MongoDB connection
 def check_active_mongo_server():
+    """Checks for a active mongo server, skips the test if not found.
+    """
 
     client = pymongo.MongoClient("localhost:27017", serverSelectionTimeoutMS=100)
     try:
         client.server_info()
     except:
         pytest.skip("Could not find an activate mongo test instance at 'localhost:27017'.")
-
-
-### Server testing mechanics
 
 
 def find_open_port():
@@ -94,6 +99,18 @@ def find_open_port():
     host, port = sock.getsockname()
 
     return port
+
+@contextmanager
+def preserve_cwd():
+    """Always returns to CWD on exit
+    """
+    cwd = os.getcwd()
+    try:
+        yield cwd
+    finally:
+        os.chdir(cwd)
+
+### Background thread loops
 
 
 @contextmanager
@@ -139,6 +156,96 @@ def active_loop(loop):
             pass
 
 
+def terminate_process(proc):
+    if proc.poll() is None:
+
+        # Sigint (keyboard interupt)
+        if sys.platform.startswith('win'):
+            proc.send_signal(signal.CTRL_BREAK_EVENT)
+        else:
+            proc.send_signal(signal.SIGINT)
+
+        try:
+            start = time.time()
+            while (proc.poll() is None) and (time.time() < (start + 5)):
+                time.sleep(0.02)
+        # Flat kill
+        finally:
+            proc.kill()
+
+
+@contextmanager
+def popen(args, **kwargs):
+    """
+    Opens a background task
+
+    Code and idea from dask.distributed's testing suite
+    https://github.com/dask/distributed
+    """
+    # Do we prefix with Python?
+    args = list(args)
+    if kwargs.pop("append_prefix", False):
+        if sys.platform.startswith('win'):
+            args[0] = os.path.join(sys.prefix, 'Scripts', args[0])
+        else:
+            args[0] = os.path.join(sys.prefix, 'bin', args[0])
+
+    # Do we optionally dumpstdout?
+    dump_stdout = kwargs.pop("dump_stdout", False)
+
+    if sys.platform.startswith('win'):
+        # Allow using CTRL_C_EVENT / CTRL_BREAK_EVENT
+        kwargs['creationflags'] = subprocess.CREATE_NEW_PROCESS_GROUP
+
+    kwargs['stdout'] = subprocess.PIPE
+    kwargs['stderr'] = subprocess.PIPE
+    proc = subprocess.Popen(args, **kwargs)
+    try:
+        yield proc
+    except Exception:
+        dump_stdout = True
+        raise
+
+    finally:
+        try:
+            terminate_process(proc)
+        finally:
+            output, error = proc.communicate()
+            if dump_stdout:
+                print('-' * 30)
+                print("\n|| Process command: {}".format(" ".join(args)))
+                print('\n|| Process stderr: \n{}'.format(error.decode()))
+                print('-' * 30)
+                print('\n|| Process stdout: \n{}'.format(output.decode()))
+                print('-' * 30)
+
+
+def run_process(args, **kwargs):
+    """
+    Runs a process in the background until complete.
+
+    Returns True if exit code zero
+    """
+
+    timeout = kwargs.pop("timeout", 30)
+    with popen(args, **kwargs) as p:
+        p.wait(timeout=timeout)
+
+        retcode = p.poll()
+
+    return retcode == 0
+
+
+### Server testing mechanics
+
+
+def reset_server_database(server):
+    """Resets the server database for testing.
+    """
+    server.storage.client.drop_database(server.storage._project_name)
+    server.storage.init_database()
+
+
 @pytest.fixture(scope="module")
 def test_server(request):
     """
@@ -153,14 +260,10 @@ def test_server(request):
     with pristine_loop() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(port=find_open_port(),
-                               storage_project_name=storage_name,
-                               io_loop=loop,
-                               ssl_options=False)
+        server = FractalServer(port=find_open_port(), storage_project_name=storage_name, loop=loop, ssl_options=False)
 
         # Clean and re-init the database
-        server.storage.client.drop_database(server.storage._project_name)
-        server.storage.init_database()
+        reset_server_database(server)
 
         with active_loop(loop) as act:
             yield server
@@ -191,13 +294,12 @@ def dask_server_fixture(request):
             server = FractalServer(
                 port=find_open_port(),
                 storage_project_name=storage_name,
-                io_loop=cluster.loop,
+                loop=cluster.loop,
                 queue_socket=client,
                 ssl_options=False)
 
             # Clean and re-init the databse
-            server.storage.client.drop_database(server.storage._project_name)
-            server.storage.init_database()
+            reset_server_database(server)
 
             # Yield the server instance
             yield server
@@ -226,12 +328,10 @@ def fireworks_server_fixture(request):
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = FractalServer(
-            port=find_open_port(), storage_project_name=storage_name,
-            io_loop=loop, queue_socket=lpad, ssl_options=False)
+            port=find_open_port(), storage_project_name=storage_name, loop=loop, queue_socket=lpad, ssl_options=False)
 
         # Clean and re-init the databse
-        server.storage.client.drop_database(server.storage._project_name)
-        server.storage.init_database()
+        reset_server_database(server)
 
         # Yield the server instance
         with active_loop(loop) as act:

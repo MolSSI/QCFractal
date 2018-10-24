@@ -6,9 +6,9 @@ from . import interface
 from . import testing
 # Handle versioneer
 from ._version import get_versions
+from .server import FractalServer
 # Import modules
 from .storage_sockets import storage_socket_factory
-from .server import FractalServer
 
 # from . import mongo_helper
 # from . import database

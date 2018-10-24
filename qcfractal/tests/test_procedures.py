@@ -2,11 +2,12 @@
 Tests the server compute capabilities.
 """
 
+import pytest
+import requests
+
 import qcfractal.interface as portal
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
-import requests
-import pytest
 
 
 ### Tests the compute queue stack
@@ -41,13 +42,12 @@ def test_compute_queue_stack(fractal_compute_server):
     }
 
     # Ask the server to compute a new computation
-    r = requests.post(fractal_compute_server.get_address("task_scheduler"), json=compute)
+    r = requests.post(fractal_compute_server.get_address("task_queue"), json=compute)
     assert r.status_code == 200
 
     # Manually handle the compute
-    nanny = fractal_compute_server.objects["queue_nanny"]
-    nanny.await_results()
-    assert len(nanny.list_current_tasks()) == 0
+    fractal_compute_server.await_results()
+    assert len(fractal_compute_server.list_current_tasks()) == 0
 
     # Query result and check against out manual pul
     results_query = {
@@ -96,17 +96,16 @@ def test_procedure_optimization(fractal_compute_server):
     }
 
     # Ask the server to compute a new computation
-    r = requests.post(fractal_compute_server.get_address("task_scheduler"), json=compute)
+    r = requests.post(fractal_compute_server.get_address("task_queue"), json=compute)
     assert r.status_code == 200
 
-    # Get the first submitted job, the second index will be a hash_index
+    # Get the first submitted task, the second index will be a hash_index
     submitted = r.json()["data"]["submitted"]
     compute_key = submitted[0]
 
     # Manually handle the compute
-    nanny = fractal_compute_server.objects["queue_nanny"]
-    nanny.await_results()
-    assert len(nanny.list_current_tasks()) == 0
+    fractal_compute_server.await_results()
+    assert len(fractal_compute_server.list_current_tasks()) == 0
 
     # # Query result and check against out manual pul
     results1 = client.get_procedures({"program": "geometric"})
@@ -129,6 +128,6 @@ def test_procedure_optimization(fractal_compute_server):
             assert pytest.approx(raw_energy, 1.e-5) == energies[ind]
 
     # Check that duplicates are caught
-    r = requests.post(fractal_compute_server.get_address("task_scheduler"), json=compute)
+    r = requests.post(fractal_compute_server.get_address("task_queue"), json=compute)
     assert r.status_code == 200
     assert len(r.json()["data"]["completed"]) == 1

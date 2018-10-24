@@ -2,11 +2,11 @@
 OpenFF BioFragment ODM
 """
 
-import json
 import copy
+import json
 
-from .collection import Collection
 from . import collection_utils
+from .collection import Collection
 
 
 class BioFragment(Collection):
@@ -101,7 +101,7 @@ class BioFragment(Collection):
         options["torsiondrive_meta"] = {}
         options = json.dumps(options)
 
-        # Loop over all spacing types and build jobs
+        # Loop over all spacing types and build tasks
         submissions = []
         for ttype in ["internal", "terminal"]:
 

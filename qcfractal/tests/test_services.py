@@ -2,13 +2,14 @@
 Tests the on-node procedures compute capabilities.
 """
 
+import copy
+
+import pytest
+
+import qcfractal.interface as portal
 from qcfractal import testing
 # Pytest Fixture import
 from qcfractal.testing import dask_server_fixture, recursive_dict_merge
-import pytest
-import copy
-
-import qcfractal.interface as portal
 
 
 @pytest.fixture(scope="module")
@@ -52,9 +53,8 @@ def torsiondrive_fixture(dask_server_fixture):
         # instance_options = {**instance_options, **keyword_augments}
         recursive_dict_merge(instance_options, keyword_augments)
         ret = client.add_service("torsiondrive", [mol_ret["hooh"]], instance_options)
-        nanny = dask_server_fixture.objects["queue_nanny"]
-        nanny.await_services(max_iter=5)
-        assert len(nanny.list_current_tasks()) == 0
+        dask_server_fixture.await_services()
+        assert len(dask_server_fixture.list_current_tasks()) == 0
         return ret
 
     yield spin_up_test, client

@@ -53,7 +53,7 @@ Enhancements
 - (:pr:`51`) The queue now uses a fast hash index to determine uniqueness and prevent duplicate tasks.
 - (:pr:`52`) QCFractal examples are now tested via CI.
 - (:pr:`53`) The MongoSocket `get_generic_by_id` was deprecated in favor of `get_generic` where an ID can be a search field.
-- (:pr:`61`, :pr:`64`) TorsionDrive now tracks jobs via ID rather than hash to ensure integrity.
+- (:pr:`61`, :pr:`64`) TorsionDrive now tracks tasks via ID rather than hash to ensure integrity.
 - (:pr:`63`) The Database collection was renamed Dataset to more correctly illuminate its purpose.
 - (:pr:`65`) Collection can now be aquired directly from a client via the `client.get_collection` function.
 

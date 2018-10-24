@@ -6,13 +6,13 @@ import itertools as it
 import numpy as np
 import pandas as pd
 
+from .collection import Collection
+from .collection_utils import nCr, register_collection
 # from .. import client
 from .. import constants
 from .. import dict_utils
 from .. import molecule
 from .. import statistics
-from .collection import Collection
-from .collection_utils import nCr, register_collection
 
 
 class Dataset(Collection):

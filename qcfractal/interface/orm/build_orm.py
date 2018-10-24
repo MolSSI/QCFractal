@@ -2,8 +2,8 @@
 Constructs ORMs from raw JSON
 """
 
-from .torsiondrive_orm import TorsionDriveORM
 from .optimization_orm import OptimizationORM
+from .torsiondrive_orm import TorsionDriveORM
 
 
 def build_orm(data, procedure=None, client=None):
