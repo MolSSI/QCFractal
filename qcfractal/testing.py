@@ -9,8 +9,8 @@ import signal
 import socket
 import subprocess
 import sys
-import time
 import threading
+import time
 from collections import Mapping
 from contextlib import contextmanager
 
@@ -20,6 +20,7 @@ from tornado.ioloop import IOLoop
 
 from .server import FractalServer
 from .storage_sockets import storage_socket_factory
+
 
 ### Addon testing capabilities
 
@@ -68,6 +69,25 @@ using_unix = pytest.mark.skipif(
 
 ### Generic helpers
 
+def mark_slow(func):
+    try:
+        if not pytest.config.getoption("--runslow"):
+            func = pytest.mark.skip("need --runslow option to run")(func)
+    except AttributeError:
+        # AttributeError: module 'pytest' has no attribute 'config'
+        pass
+
+    return func
+
+def mark_example(func):
+    try:
+        if not pytest.config.getoption("--runexamples"):
+            func = pytest.mark.skip("need --runexample option to run")(func)
+    except AttributeError:
+        # AttributeError: module 'pytest' has no attribute 'config'
+        pass
+
+    return func
 
 def recursive_dict_merge(base_dict, dict_to_merge_in):
     """Recursive merge for more complex than a simple top-level merge {**x, **y} which does not handle nested dict"""
@@ -82,7 +102,7 @@ def check_active_mongo_server():
     """Checks for a active mongo server, skips the test if not found.
     """
 
-    client = pymongo.MongoClient("localhost:27017", serverSelectionTimeoutMS=100)
+    client = pymongo.MongoClient("mongodb://localhost", serverSelectionTimeoutMS=100)
     try:
         client.server_info()
     except:
@@ -167,7 +187,7 @@ def terminate_process(proc):
 
         try:
             start = time.time()
-            while (proc.poll() is None) and (time.time() < (start + 5)):
+            while (proc.poll() is None) and (time.time() < (start + 15)):
                 time.sleep(0.02)
         # Flat kill
         finally:
@@ -182,13 +202,32 @@ def popen(args, **kwargs):
     Code and idea from dask.distributed's testing suite
     https://github.com/dask/distributed
     """
-    # Do we prefix with Python?
     args = list(args)
-    if kwargs.pop("append_prefix", False):
-        if sys.platform.startswith('win'):
-            args[0] = os.path.join(sys.prefix, 'Scripts', args[0])
+
+    # Bin prefix
+    if sys.platform.startswith('win'):
+        bin_prefix = os.path.join(sys.prefix, 'Scripts')
+    else:
+        bin_prefix = os.path.join(sys.prefix, 'bin')
+
+    # Do we prefix with Python?
+    if kwargs.pop("append_prefix", True):
+        args[0] = os.path.join(bin_prefix, args[0])
+
+    # Add coverage testing
+    if kwargs.pop("coverage", False):
+        coverage_dir = os.path.join(bin_prefix, "coverage")
+        if not os.path.exists(coverage_dir):
+            print("Could not find Python coverage, skipping cov.")
+
         else:
-            args[0] = os.path.join(sys.prefix, 'bin', args[0])
+            src_dir = os.path.dirname(os.path.abspath(__file__))
+            coverage_flags = [coverage_dir, "run", "--append", "--source=" + src_dir]
+
+            # If python script, skip the python bin
+            if args[0].endswith("python"):
+               args.pop(0)
+            args = coverage_flags + args
 
     # Do we optionally dumpstdout?
     dump_stdout = kwargs.pop("dump_stdout", False)
@@ -212,7 +251,7 @@ def popen(args, **kwargs):
         finally:
             output, error = proc.communicate()
             if dump_stdout:
-                print('-' * 30)
+                print('\n' + '-' * 30)
                 print("\n|| Process command: {}".format(" ".join(args)))
                 print('\n|| Process stderr: \n{}'.format(error.decode()))
                 print('-' * 30)
@@ -228,10 +267,15 @@ def run_process(args, **kwargs):
     """
 
     timeout = kwargs.pop("timeout", 30)
-    with popen(args, **kwargs) as p:
-        p.wait(timeout=timeout)
+    terminate_after = kwargs.pop("interupt_after", None)
+    with popen(args, **kwargs) as proc:
+        if terminate_after is None:
+            proc.wait(timeout=timeout)
+        else:
+            time.sleep(terminate_after)
+            terminate_process(proc)
 
-        retcode = p.poll()
+        retcode = proc.poll()
 
     return retcode == 0
 
@@ -361,7 +405,7 @@ def storage_socket_fixture(request):
 
     # IP/port/drop table is specific to build
     if request.param == "mongo":
-        storage = storage_socket_factory("127.0.0.1", 27017, storage_name, storage_type=request.param)
+        storage = storage_socket_factory("mongodb://localhost", storage_name)
 
         # Clean and re-init the database
         storage.client.drop_database(storage._project_name)

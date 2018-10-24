@@ -2,11 +2,14 @@
 The FractalServer class
 """
 
+import asyncio
 import logging
 import ssl
 import threading
 
 import tornado.ioloop
+import tornado.log
+import tornado.options
 import tornado.web
 
 from . import interface
@@ -79,18 +82,14 @@ class FractalServer:
             ssl_options=None,
 
             # Database options
-            storage_ip="127.0.0.1",
-            storage_port=27017,
-            storage_username=None,
-            storage_password=None,
-            storage_type="mongo",
+            storage_uri="mongodb://localhost",
             storage_project_name="molssistorage",
 
             # Queue options
             queue_socket=None,
 
             # Log options
-            logfile_name=None,
+            logfile_prefix=None,
 
             # Queue options
             max_active_services=10):
@@ -105,24 +104,11 @@ class FractalServer:
         self.max_active_services = max_active_services
 
         # Setup logging.
-        self.logger = logging.getLogger("FractalServer")
-        self.logger.setLevel(logging.INFO)
+        if logfile_prefix is not None:
+            tornado.options.options['log_file_prefix'] = logfile_prefix
 
-        app_logger = logging.getLogger("tornado.application")
-        if logfile_name is not None:
-            handler = logging.FileHandler(logfile_name)
-            handler.setLevel(logging.INFO)
-
-            handler.setFormatter(myFormatter)
-
-            self.logger.addHandler(handler)
-            app_logger.addHandler(handler)
-
-            self.logger.info("Logfile set to {}\n".format(logfile_name))
-        else:
-            app_logger.addHandler(logging.StreamHandler())
-            self.logger.addHandler(logging.StreamHandler())
-            self.logger.info("No logfile given, setting output to stdout\n")
+        tornado.log.enable_pretty_logging()
+        self.logger = logging.getLogger("tornado.application")
 
         # Build security layers
         if security is None:
@@ -175,19 +161,11 @@ class FractalServer:
 
         # Setup the database connection
         self.storage = storage_sockets.storage_socket_factory(
-            storage_ip,
-            storage_port,
-            project_name=storage_project_name,
-            username=storage_username,
-            password=storage_password,
-            storage_type=storage_type,
-            bypass_security=storage_bypass_security)
+            storage_uri, project_name=storage_project_name, bypass_security=storage_bypass_security)
+        self.logger.info("Connected to '{}'' with database name '{}'\n.".format(storage_uri, storage_project_name))
 
         # Pull the current loop if we need it
-        if loop is None:
-            self.loop = tornado.ioloop.IOLoop.current()
-        else:
-            self.loop = loop
+        self.loop = loop or tornado.ioloop.IOLoop.current()
 
         # Build up the application
         self.objects = {
@@ -238,7 +216,10 @@ class FractalServer:
         # Add periodic callback holders
         self.periodic = {}
 
-        self.logger.info("FractalServer successfully initialized at {}\n".format(self._address))
+        # Exit callbacks
+        self.exit_callbacks = []
+
+        self.logger.info("FractalServer successfully initialized at {}".format(self._address))
         self.loop_active = False
 
     def start(self):
@@ -263,7 +244,8 @@ class FractalServer:
         # Soft quit with a keyboard interupt
         try:
             self.loop_active = True
-            self.loop.start()
+            if not asyncio.get_event_loop().is_running():  # Only works on Py3
+                self.loop.start()
         except KeyboardInterrupt:
             self.stop()
 
@@ -271,14 +253,49 @@ class FractalServer:
         """
         Shuts down all IOLoops and periodic updates
         """
-        self.loop.stop()
-        self.loop_active = False
+
+        # Shut down queue manager
+        if "queue_manager" in self.objects:
+            if self.loop_active:
+                # Drop this in a thread so that we are not blocking eachother
+                thread = threading.Thread(target=self.objects["queue_manager"].shutdown, name="QueueManager Shutdown")
+                thread.daemon = True
+                thread.start()
+                self.loop.call_later(5, thread.join)
+            else:
+                self.objects["queue_manager"].shutdown()
+
+        # Close down periodics
         for cb in self.periodic.values():
             cb.stop()
 
-        self.loop.close(all_fds=True)
+        # Call exit callbacks
+        for func, args, kwargs in self.exit_callbacks:
+            func(*args, **kwargs)
 
+        # Shutdown IOLoop if needed
+        if asyncio.get_event_loop().is_running():
+            self.loop.stop()
+        self.loop_active = False
+
+        # Final shutdown
+        self.loop.close(all_fds=True)
         self.logger.info("FractalServer stopping gracefully. Stopped IOLoop.\n")
+
+    def add_exit_callback(self, callback, *args, **kwargs):
+        """Adds additional callbacks to perform when closing down the server
+
+        Parameters
+        ----------
+        callback : callable
+            The function to call at exit
+        *args
+            Arguements to call with the function.
+        **kwargs
+            Kwargs to call with the function.
+
+        """
+        self.exit_callbacks.append((callback, args, kwargs))
 
     def get_address(self, endpoint=""):
         """Obtains the full URI for a given function on the FractalServer
@@ -411,8 +428,3 @@ class FractalServer:
                 "list_current_tasks is only available if the server was initalized with a queue manager.")
 
         return self.objects["queue_manager"].list_current_tasks()
-
-if __name__ == "__main__":
-
-    server = FractalServer()
-    server.start()

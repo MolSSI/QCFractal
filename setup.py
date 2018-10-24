@@ -24,6 +24,10 @@ if __name__ == "__main__":
             'bcrypt',
             'cryptography',
         ],
+        entry_points={"console_scripts": [
+            "qcfractal-server=qcfractal.cli.qcfractal_server:main",
+            "qcfractal-manager=qcfractal.cli.qcfractal_manager:main",
+        ]},
         extras_require={
             'docs': [
                 'sphinx==1.2.3',  # autodoc was broken in 1.3.1
@@ -36,12 +40,10 @@ if __name__ == "__main__":
                 'pytest-cov',
             ],
         },
-
         tests_require=[
             'pytest',
             'pytest-cov',
         ],
-
         classifiers=[
             'Development Status :: 4 - Beta',
             'Intended Audience :: Science/Research',

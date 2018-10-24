@@ -2,6 +2,7 @@
 Queue backend abstraction manager.
 """
 
+import asyncio
 import logging
 import socket
 import uuid
@@ -69,17 +70,15 @@ class QueueManager:
 
         self.periodic = {}
         self.active = 0
+        self.exit_callbacks = []
 
         # Pull the current loop if we need it
-        if loop is None:
-            self.loop = tornado.ioloop.IOLoop.current()
-        else:
-            self.loop = loop
+        self.loop = loop or tornado.ioloop.IOLoop.current()
 
-        self.logger.info("QueueManager '{}' successfully initialized.\n"
-                         "Queue credential username: {}\n"
-                         "Pulling tasks from {} with tag '{}'.\n".format(self.name_str, self.client.username,
-                                                                         self.client.address, self.queue_tag))
+        self.logger.info("QueueManager '{}' successfully initialized.".format(self.name_str))
+        self.logger.info("QueueManager: Queue credential username: {}".format(self.client.username))
+        self.logger.info(
+            "QueueManager: Pulling tasks from {} with tag '{}'.\n".format(self.client.address, self.queue_tag))
 
     def start(self):
         """
@@ -95,7 +94,9 @@ class QueueManager:
 
         # Soft quit with a keyboard interupt
         try:
-            self.loop.start()
+            self.running = True
+            if not asyncio.get_event_loop().is_running():  # Only works on Py3
+                self.loop.start()
         except KeyboardInterrupt:
             self.stop()
 
@@ -103,11 +104,23 @@ class QueueManager:
         """
         Shuts down all IOLoops and periodic updates
         """
-        self.loop.stop()
+
+        # Push data back to the server
+        self.shutdown()
+
+        # Stop callbacks
         for cb in self.periodic.values():
             cb.stop()
 
-        self.shutdown()
+        # Call exit callbacks
+        for func, args, kwargs in self.exit_callbacks:
+            func(*args, **kwargs)
+
+        # Stop loop
+        if not asyncio.get_event_loop().is_running():  # Only works on Py3
+            self.loop.stop()
+
+        self.loop.close(all_fds=True)
         self.logger.info("QueueManager stopping gracefully. Stopped IOLoop.\n")
 
     def shutdown(self):
@@ -124,6 +137,21 @@ class QueueManager:
         else:
             self.logger.info("Shutdown was successful, {} tasks returned to master queue.".format(len(task_ids)))
 
+    def add_exit_callback(self, callback, *args, **kwargs):
+        """Adds additional callbacks to perform when closing down the server
+
+        Parameters
+        ----------
+        callback : callable
+            The function to call at exit
+        *args
+            Arguements to call with the function.
+        **kwargs
+            Kwargs to call with the function.
+
+        """
+        self.exit_callbacks.append((callback, args, kwargs))
+
     def update(self, new_tasks=True):
         """Examines the queue for completed tasks and adds successful completions to the database
         while unsuccessful are logged for future inspection
@@ -138,7 +166,6 @@ class QueueManager:
                 self.logger.warning("Post complete tasks was not successful. Data may be lost.")
 
             self.active -= len(results)
-
 
         open_slots = max(0, self.max_tasks - self.active)
 

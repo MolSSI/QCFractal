@@ -62,11 +62,8 @@ class MongoSocket:
     """
 
     def __init__(self,
-                 url,
-                 port,
+                 uri,
                  project="molssidb",
-                 username=None,
-                 password=None,
                  bypass_security=False,
                  authMechanism="SCRAM-SHA-1",
                  authSource=None,
@@ -112,15 +109,14 @@ class MongoSocket:
 
         self._lower_results_index = ["method", "basis", "options", "program"]
 
-        self._url = url
-        self._port = port
-
-        # Are we authenticating?
-        if username:
-            self.client = pymongo.MongoClient(
-                url, port, username=username, password=password, authMechanism=authMechanism, authSource=authSource)
+        # Build MongoClient
+        self.client = pymongo.MongoClient(uri)
+        expanded_uri = pymongo.uri_parser.parse_uri(uri)
+        if expanded_uri["password"] is not None:
+            self.client = pymongo.MongoClient(uri, authMechanism=authMechanism, authSource=authSource)
         else:
-            self.client = pymongo.MongoClient(url, port)
+            self.client = pymongo.MongoClient(uri)
+        self._url, self._port = expanded_uri["nodelist"][0]
 
         try:
             version_array = self.client.server_info()['versionArray']
@@ -974,7 +970,6 @@ class MongoSocket:
     def get_managers(self, query, projection=None):
 
         return self._get_generic(query, "queue_managers", allow_generic=True, projection=projection)
-
 
 ### Users
 
