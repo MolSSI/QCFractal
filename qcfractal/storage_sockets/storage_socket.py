@@ -3,7 +3,7 @@ A factory for Database sockets
 """
 
 
-def storage_socket_factory(uri, project_name, logger=None, **kwargs):
+def storage_socket_factory(uri, project_name, logger=None, db_type='pymongo', **kwargs):
     """
     Factory for generating storage sockets. Spins up a given storage layer on request given common inputs.
 
@@ -17,6 +17,8 @@ def storage_socket_factory(uri, project_name, logger=None, **kwargs):
         Name of the project
     logger : logging.Logger, Optional, Default: None
         Specific logger to report to
+    db_type : string, Optional, Default: 'pymongo'
+        socket type, 'pymongo' or 'mongoengine'
     **kwargs
         Additional keyword arguments to pass to the storage constructor
 
@@ -25,8 +27,11 @@ def storage_socket_factory(uri, project_name, logger=None, **kwargs):
 
     """
 
-    if uri.startswith("mongodb"):
+    if db_type == "pymongo":
         from . import mongo_socket
         return mongo_socket.MongoSocket(uri, project=project_name, logger=logger, **kwargs)
+    elif db_type == "monoengine":
+        from . import mongoengine_socket
+        return mongoengine_socket.MongoengineSocket(uri, project=project_name, logger=logger, **kwargs)
     else:
         raise Exception
