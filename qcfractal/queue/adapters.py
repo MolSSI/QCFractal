@@ -4,6 +4,7 @@ Queue backend abstraction manager.
 
 from . import dask_adapter
 from . import fireworks_adapter
+from . import parsl_adapter
 
 
 def build_queue_adapter(workflow_client, logger=None, **kwargs):
@@ -26,7 +27,10 @@ def build_queue_adapter(workflow_client, logger=None, **kwargs):
 
     adapter_type = type(workflow_client).__module__ + "." + type(workflow_client).__name__
 
-    if adapter_type == "distributed.client.Client":
+    if adapter_type.startwith("parsl"):
+        adapter = parsl_adapter.ParslAdapter(workflow_client, logger=logger)
+
+    elif adapter_type == "distributed.client.Client":
         adapter = dask_adapter.DaskAdapter(workflow_client, logger=logger)
 
     elif adapter_type == "fireworks.core.launchpad.LaunchPad":
