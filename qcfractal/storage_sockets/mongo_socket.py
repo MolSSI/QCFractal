@@ -973,7 +973,7 @@ class MongoSocket:
 
 ### Users
 
-    def add_user(self, username, password, permissions=["read"]):
+    def add_user(self, username, password, permissions=None):
         """
         Adds a new user and associated permissions.
 
@@ -994,6 +994,8 @@ class MongoSocket:
             Successful insert or not
         """
 
+        if permissions is None:
+            permissions = ["read"]
         hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
         try:
             self._tables["users"].insert_one({"username": username, "password": hashed, "permissions": permissions})

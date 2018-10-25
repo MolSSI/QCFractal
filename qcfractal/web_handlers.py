@@ -210,7 +210,7 @@ class ProcedureHandler(APIHandler):
 
 class LocatorHandler(APIHandler):
     """
-    A handler to aquire results from locators
+    A handler to acquire results from locators
     """
 
     def get(self):

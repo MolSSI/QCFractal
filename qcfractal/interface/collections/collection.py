@@ -24,7 +24,7 @@ class Collection(abc.ABC):
         Parameters
         ----------
         name : str
-            The name of the Collection object as ID'ed on the storage backend@
+            The name of the Collection object as ID'ed on the storage backend.
         client : client.FractalClient, optional
             A Portal client to connect to a server
         **kwargs

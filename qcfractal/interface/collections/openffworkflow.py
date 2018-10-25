@@ -113,7 +113,7 @@ class OpenFFWorkflow(Collection):
         """
         return list(self.data.fragments)
 
-    def add_fragment(self, fragment_id, data, provenance={}):
+    def add_fragment(self, fragment_id, data, provenance=None):
         """
         Adds a new fragment to the workflow along with the associated torsiondrives required.
 
@@ -141,6 +141,8 @@ class OpenFFWorkflow(Collection):
         }
         wf.add_fragment("CCCC", data=)
         """
+        if provenance is None:
+            provenance = {}
         if fragment_id not in self.data.fragments:
             self.data.fragments[fragment_id] = {}
 

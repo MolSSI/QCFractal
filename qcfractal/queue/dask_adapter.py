@@ -93,7 +93,7 @@ class DaskAdapter:
             ret.append(tag)
         return ret
 
-    def aquire_complete(self):
+    def acquire_complete(self):
         """Pulls complete tasks out of the Dask queue.
 
         Returns

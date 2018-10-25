@@ -80,7 +80,7 @@ def procedure_single_input_parser(storage, data):
 
         full_tasks.append(task)
 
-    return (full_tasks, completed, errors)
+    return full_tasks, completed, errors
 
 
 def procedure_single_output_parser(storage, data):
@@ -110,7 +110,7 @@ def procedure_single_output_parser(storage, data):
         # errors = [(k, "Duplicate results found")]
         raise ValueError("TODO: Cannot yet handle queue result duplicates.")
 
-    return (completed, errors, hook_data)
+    return completed, errors, hook_data
 
 
 def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"):
@@ -244,10 +244,10 @@ def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"
         else:
             raise KeyError("Duplicate id '{}' not understood".format(duplicate_id))
 
-        return (new_tasks, duplicates, errors)
+        return new_tasks, duplicates, errors
 
     else:
-        return (full_tasks, [], errors)
+        return full_tasks, [], errors
 
 
 def procedure_optimization_output_parser(storage, data):
@@ -298,7 +298,7 @@ def procedure_optimization_output_parser(storage, data):
     hook_data = procedures_util.parse_hooks(new_procedures, new_hooks)
 
     # return (ret, hook_data)
-    return (completed, errors, hook_data)
+    return completed, errors, hook_data
 
 
 # Add in all registered procedures
