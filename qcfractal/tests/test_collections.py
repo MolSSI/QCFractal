@@ -124,17 +124,33 @@ def test_compute_openffworkflow(fractal_compute_server):
         "torsiondrive_input": {},
 
         # TorsionDrive, Geometric, and QC options
-        "torsiondrive_meta": {},
-        "optimization_meta": {
-            "program": "geometric",
-            "coordsys": "tric",
+        ""
+        "torsiondrive_static_options":{
+          "torsiondrive_meta": {},
+          "optimization_meta": {
+              "program": "geometric",
+              "coordsys": "tric",
+          },
+          "qc_meta": {
+              "driver": "gradient",
+              "method": "UFF",
+              "basis": "",
+              "options": "none",
+              "program": "rdkit",
+          }
         },
-        "qc_meta": {
-            "driver": "gradient",
-            "method": "UFF",
-            "basis": "",
-            "options": "none",
-            "program": "rdkit",
+        "optimization_static_options": {
+            "optimization_meta": {
+                "program": "geometric",
+                "coordsys": "tric",
+            },
+            "qc_meta": {
+              "driver": "gradient",
+              "method": "UFF",
+              "basis": "",
+              "options": "none",
+              "program": "rdkit",
+            }
         }
     }
     wf = portal.collections.OpenFFWorkflow("Workflow1", client=client, options=openff_workflow_options)
@@ -148,7 +164,7 @@ def test_compute_openffworkflow(fractal_compute_server):
             "dihedrals": [[0, 1, 2, 3]],
         },
     }
-    wf.add_fragment("HOOH", fragment_input, provenance={})
+    wf.add_torsiondrive("HOOH", fragment_input, provenance={})
     assert set(wf.list_fragments()) == {"HOOH"}
     fractal_compute_server.await_services(max_iter=5)
 
@@ -171,10 +187,26 @@ def test_compute_openffworkflow(fractal_compute_server):
             "dihedrals": [[0, 2, 3, 1]],
         },
     }
-    wf.add_fragment(butane_id, fragment_input, provenance={})
+    wf.add_torsiondrive(butane_id, fragment_input, provenance={})
     assert set(wf.list_fragments()) == {butane_id, "HOOH"}
 
     final_energies = wf.list_final_energies()
     assert final_energies.keys() == {butane_id, "HOOH"}
     assert final_energies[butane_id].keys() == {"label1"}
     assert final_energies[butane_id]["label1"] is None
+
+    optimization_input = {
+        "label2": {
+            "initial_molecule": butane.to_json(),
+            "constraints": {'scan': [('dihedral', '0', '2', '3', '1', '0', '120', '4')]}
+        }
+    }
+
+    wf.add_optimize(butane_id, optimization_input, provenance={})
+    fractal_compute_server.await_services(max_iter=5)
+
+    final_energies = wf.list_final_energies()
+    assert final_energies[butane_id].keys() == {"label1", "label2"}
+
+
+
