@@ -143,8 +143,9 @@ class OpenFFWorkflow(Collection):
         """
         if provenance is None:
             provenance = {}
+
         if fragment_id not in self.data.fragments:
-            self.data.fragments[fragment_id] = {}
+            self.data.fragments[fragment_id] = {"provenance": provenance}
 
         frag_data = self.data.fragments[fragment_id]
         for name, packet in data.items():
