@@ -131,3 +131,23 @@ def test_procedure_optimization(fractal_compute_server):
     r = requests.post(fractal_compute_server.get_address("task_queue"), json=compute)
     assert r.status_code == 200
     assert len(r.json()["data"]["completed"]) == 1
+
+
+@testing.using_rdkit
+def test_procedure_task_error(fractal_compute_server):
+    client = portal.FractalClient(fractal_compute_server.get_address())
+
+    ret = client.add_compute("rdkit", "cookiemonster", "", "energy", "none", [{
+        "geometry": [0, 0, 0],
+        "symbols": ["He"]
+    }])
+
+    # Manually handle the compute
+    fractal_compute_server.await_results()
+
+    # Check for error
+    ret = client.check_tasks({"id": ret["submitted"][0]})
+
+    assert len(ret) == 1
+    assert ret[0]["status"] == "ERROR"
+    assert "run_rdkit" in ret[0]["error_message"]

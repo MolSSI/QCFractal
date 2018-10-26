@@ -13,7 +13,7 @@ def _get_future(future):
         return future.result()
     else:
         msg = "".join(traceback.format_exception(TypeError, future.exception(), future.traceback()))
-        ret = {"success": False, "error": msg}
+        ret = {"success": False, "error_message": msg}
         return ret
 
 

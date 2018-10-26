@@ -884,7 +884,7 @@ class MongoSocket:
             update = {
                 "$set": {
                     "status": "ERROR",
-                    "error": msg,
+                    "error_message": msg,
                     "modified_on": dt,
                 }
             }

@@ -68,7 +68,7 @@ class FireworksAdapter:
             else:
                 blob = tmp_data["action"]["stored_data"]["_task"]["args"][0]
                 msg = tmp_data["action"]["stored_data"]["_exception"]["_stacktrace"]
-                blob["error"] = msg
+                blob["error_message"] = msg
                 blob["success"] = False
                 ret[key] = (blob, parser, hooks)
 

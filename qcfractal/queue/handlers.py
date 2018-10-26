@@ -47,7 +47,7 @@ class TaskQueueHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         projection = {x: True for x in ["status", "error_message", "tag"]}
-        ret = storage.get_services(self.json["data"], projection=projection)
+        ret = storage.get_queue(self.json["data"], projection=projection)
 
         self.write(ret)
 
@@ -141,7 +141,11 @@ class QueueManagerHandler(APIHandler):
                 # Failed task
                 else:
                     if "error" in result:
+                        logger.warning("Found old-style error field, please change to 'error_message'. Will be deprecated")
                         error = result["error"]
+                        result["error_message"] = error
+                    elif "error_message" in result:
+                        error = result["error_message"]
                     else:
                         error = "No error supplied"
 
