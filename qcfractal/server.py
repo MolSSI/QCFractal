@@ -6,6 +6,7 @@ import asyncio
 import logging
 import ssl
 import threading
+import traceback
 
 import tornado.ioloop
 import tornado.log
@@ -330,11 +331,18 @@ class FractalServer:
         new_procedures = []
         complete_ids = []
         for data in current_services:
-            obj = services.build(data["service"], self.storage, data)
 
-            finished = obj.iterate()
-            self.storage.update_services([(data["id"], obj.get_json())])
-            # print(obj.get_json())
+            # Attempt to iteration and get message
+            try:
+                obj = services.build(data["service"], self.storage, data)
+                finished = obj.iterate()
+                data = obj.get_json()
+            except Exception as e:
+                data["status"] = "ERROR"
+                data["error_message"] = "Service Build and Iterate Error:\n" + traceback.format_exc()
+                finished = False
+
+            self.storage.update_services([(data["id"], data)])
 
             if finished is not False:
 

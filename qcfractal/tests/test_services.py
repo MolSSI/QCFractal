@@ -95,3 +95,17 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     assert len(procedures) == 2  # Make sure only 2 procedures are yielded
     base_run, duplicate_run = procedures
     assert base_run._optimization_history == duplicate_run._optimization_history
+
+def test_service_iterate_error(torsiondrive_fixture):
+    """Ensure errors are caught and logged when iterating serivces"""
+
+    spin_up_test, client = torsiondrive_fixture
+
+    # Run the test without modifications
+    ret = spin_up_test(grid_spacing="waffles_crasher")
+
+    status = client.check_services({"hash_index": ret["submitted"][0]})
+    assert len(status) == 1
+
+    assert status[0]["status"] == "ERROR"
+    assert "Service Build" in status[0]["error_message"]
