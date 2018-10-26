@@ -87,3 +87,8 @@ energy.txt
 
 # Other
 monkeytype.sqlite3
+
+# Parsl
+ipengine.*
+parsl_scripts/*
+runinfo/*

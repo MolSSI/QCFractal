@@ -23,16 +23,16 @@ class ParslAdapter:
     """A Adapter for Parsl
     """
 
-    def __init__(self, parsl_config, logger=None):
+    def __init__(self, parsl_dataflow, logger=None):
         """
         Parameters
         ----------
-        config : str
-            # TODO, Parsl appears global and cannot reload config
+        parsl_dataflow : parsl.dataflow.dflow.DataFlowKernel
+            A activate Parsl DataFlow
         logger : None, optional
             A optional logging object to write output to
         """
-        self.parsl_config = parsl_config
+        self.dataflow = parsl_dataflow
         self.queue = {}
         self.function_map = {}
 
@@ -65,9 +65,10 @@ class ParslAdapter:
 
         module_name, func_name = function.split(".", 1)
         module = importlib.import_module(module_name)
+        func = operator.attrgetter(func_name)(module)
 
         # TODO set walltime and the like
-        self.function_map[function] = python_app(operator.attrgetter(func_name)(module))
+        self.function_map[function] = python_app(func, data_flow_kernel=self.dataflow)
 
         return self.function_map[function]
 
