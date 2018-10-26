@@ -180,7 +180,7 @@ class OpenFFWorkflow(Collection):
 
     def add_optimize(self, fragment_id, data, provenance={}):
         """
-        Adds a new fragment to the workflow along with the associated torsiondrives required.
+        Adds a new fragment to the workflow along with the associated optimization required.
 
         Parameters
         ----------
@@ -188,7 +188,7 @@ class OpenFFWorkflow(Collection):
             The tag associated with fragment. In general this should be the canonical isomeric
             explicit hydrogen mapped SMILES tag for this fragment.
         data : dict
-            A dictionary of label : {intial_molecule, grid_spacing, dihedrals} keys.
+            A dictionary of label : {intial_molecule, constraints} keys.
 
         provenance : dict, optional
             The provenance of the fragments creation
@@ -199,8 +199,7 @@ class OpenFFWorkflow(Collection):
         data = {
            "label1": {
                 "initial_molecule": ptl.data.get_molecule("butane.json"),
-                "grid_spacing": [60],
-                "dihedrals": [[0, 2, 3, 1]],
+                "constraints" : {'scan': [('dihedral', '1', '5', '6', '7', '110.0', '150.0', '3')]}
             },
             ...
         }
@@ -224,7 +223,7 @@ class OpenFFWorkflow(Collection):
                 optimization_meta["optimization_meta"][k] = packet[k]
 
             # Get hash of optimization
-            ret = self.client.add_service("optimization", [packet["initial_molecule"]], optimization_meta)
+            ret = self.client.add_procedure("optimization", "geoemetric", optimization_meta, [packet["initial_molecule"]])
 
             hash_lists = []
             [hash_lists.extend(x) for x in ret.values()]
