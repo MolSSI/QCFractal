@@ -81,15 +81,13 @@ class Collection(abc.ABC):
         Collection(id='5b7f1fd57b87872d2c5d0a6d', name=`S22`, client=`localhost:8888`)
         """
 
-        uid = self.data.id
-
         client = None
         if self.client:
             client = self.client.address
 
         class_name = self.__class__.__name__
         ret = "{}(".format(class_name)
-        ret += "id='{}', ".format(uid)
+        ret += "id='{}', ".format(self.data.id)
         ret += "name=`{}`, ".format(self.data.name)
         ret += "client='{}') ".format(client)
 
@@ -148,12 +146,21 @@ class Collection(abc.ABC):
             raise KeyError("Attempted to create Collection from JSON with class {}, but found collection type of {}.".
                            format(class_name, data["collection"]))
 
-        # Attempt to build class, ensure all fields to reconstruct from JSON are present
+        # Attempt to build class
+        # First make sure external source provides ALL keys, including "optional" ones
+        # Assumption here is that incoming source should have all this from a previous instance
+        # and will not have missing fields. Also enforces that no default values are *assumed* from
+        # external input.
+        # PyDantic can only enforce required on init entries, but lets everything else have defaults,
+        # this check asserts all fields are present, even if their default values are chosen
+        # Also provides consistency check in case defaults ever change in the future.
+        # This check could be removed though without any code failures
         req_fields = cls.DataModel.schema()['properties'].keys()
         missing = req_fields - data.keys()
         if len(missing):
             raise KeyError("For class {} the following fields are missing {}.".format(class_name, missing))
         name = data.pop('name')
+        # Allow PyDantic to handle type validation
         return cls(name, client=client, **data)
 
     def to_json(self, filename=None):

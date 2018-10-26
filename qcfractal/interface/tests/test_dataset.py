@@ -20,8 +20,8 @@ def _compare_stoichs(stoich, stoich_other):
 
 
 def _compare_rxn_stoichs(ref, new):
-    stoich = ref["stoichiometry"]
-    stoich_other = new["stoichiometry"]
+    stoich = ref.stoichiometry
+    stoich_other = new.stoichiometry
 
     keys = list(stoich)
     keys_other = list(stoich_other)
@@ -193,9 +193,9 @@ def test_rxn_add(water_ds):
     assert water_ds.data.name == "Water Data"
     assert len(water_ds.get_index()) == 5
 
-    nocp_stoich_class = water_ds.get_rxn("Water Dimer, nocp")["stoichiometry"]["default"]
-    nocp_stoich_hash = water_ds.get_rxn("Water Dimer, nocp - hash")["stoichiometry"]["default"]
-    nocp_stoich_dict = water_ds.get_rxn("Water Dimer, all")["stoichiometry"]["default"]
+    nocp_stoich_class = water_ds.get_rxn("Water Dimer, nocp").stoichiometry["default"]
+    nocp_stoich_hash = water_ds.get_rxn("Water Dimer, nocp - hash").stoichiometry["default"]
+    nocp_stoich_dict = water_ds.get_rxn("Water Dimer, all").stoichiometry["default"]
 
     # Check if both builds check out
     _compare_stoichs(nocp_stoich_class, nocp_stoich_hash)
@@ -217,6 +217,6 @@ def test_nbody_rxn(nbody_ds):
 
     # Check the N-body
     ne_stoich = nbody_ds.get_rxn("Ne Tetramer")
-    mh = list(ne_stoich["stoichiometry"]["default"])[0]
+    mh = list(ne_stoich.stoichiometry["default"])[0]
     # print(ne_stoich)
     # _compare_rxn_stoichs(nbody_ds.ne_stoich, ne_stoich)

@@ -26,7 +26,8 @@ class _RxnEnum(str, Enum):
 
 
 class Rxn(BaseModel):
-    attributes: Dict[str, Union[int, float]]
+    """Data model for the `reactions` list in Dataset"""
+    attributes: Dict[str, Union[int, float, str]]  # Might be overloaded key types
     reaction_results: Dict[str, dict]
     name: str
     stoichiometry: Dict[str, Dict[str, float]]
@@ -77,9 +78,9 @@ class Dataset(Collection):
         # Unroll the index
         tmp_index = []
         for rxn in self.data.reactions:
-            name = rxn["name"]
-            for stoich_name in list(rxn["stoichiometry"]):
-                for mol_hash, coef in rxn["stoichiometry"][stoich_name].items():
+            name = rxn.name
+            for stoich_name in list(rxn.stoichiometry):
+                for mol_hash, coef in rxn.stoichiometry[stoich_name].items():
                     tmp_index.append([name, stoich_name, mol_hash, coef])
 
         self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule_id", "coefficient"])
@@ -97,7 +98,7 @@ class Dataset(Collection):
 
         ds_type: _RxnEnum = _RxnEnum.rxn
 
-        reactions: List[Dict[str, Dict[str, Rxn]]] = []
+        reactions: List[Rxn] = []
 
     def _pre_save_prep(self, client):
 
@@ -232,7 +233,7 @@ class Dataset(Collection):
             tmp_idx = pd.Series(index=self.df.index)
             for rxn in self.data.reactions:
                 try:
-                    tmp_idx.loc[rxn["name"]] = rxn["reaction_results"][stoich][method]
+                    tmp_idx.loc[rxn.name] = rxn.reaction_results[stoich][method]
                 except KeyError:
                     pass
 
@@ -337,7 +338,7 @@ class Dataset(Collection):
         ret : list of str
             The names of all reactions in the database
         """
-        return [x["name"] for x in self.data.reactions]
+        return [x.name for x in self.data.reactions]
 
     def get_rxn(self, name):
         """
@@ -357,7 +358,7 @@ class Dataset(Collection):
 
         found = []
         for num, x in enumerate(self.data.reactions):
-            if x["name"] == name:
+            if x.name == name:
                 found.append(num)
 
         if len(found) == 0:
@@ -523,7 +524,7 @@ class Dataset(Collection):
             attributes = {}
         if other_fields is None:
             other_fields = {}
-        rxn = {"name": name}
+        rxn_dict = {"name": name}
 
         # Set name
         if name in self.get_index():
@@ -533,17 +534,17 @@ class Dataset(Collection):
 
         # Set stoich
         if isinstance(stoichiometry, dict):
-            rxn["stoichiometry"] = {}
+            rxn_dict["stoichiometry"] = {}
 
             if "default" not in list(stoichiometry):
                 raise KeyError("Dataset:add_rxn: Stoichiometry dict must have a 'default' key.")
 
             for k, v in stoichiometry.items():
-                rxn["stoichiometry"][k] = self.parse_stoichiometry(v)
+                rxn_dict["stoichiometry"][k] = self.parse_stoichiometry(v)
 
         elif isinstance(stoichiometry, (tuple, list)):
-            rxn["stoichiometry"] = {}
-            rxn["stoichiometry"]["default"] = self.parse_stoichiometry(stoichiometry)
+            rxn_dict["stoichiometry"] = {}
+            rxn_dict["stoichiometry"]["default"] = self.parse_stoichiometry(stoichiometry)
         else:
             raise TypeError("Dataset:add_rxn: Type of stoichiometry input was not recognized:",
                             type(stoichiometry))
@@ -552,21 +553,23 @@ class Dataset(Collection):
         if not isinstance(attributes, dict):
             raise TypeError("Dataset:add_rxn: attributes must be a dictionary, not '{}'".format(type(attributes)))
 
-        rxn["attributes"] = attributes
+        rxn_dict["attributes"] = attributes
 
         if not isinstance(other_fields, dict):
             raise TypeError("Dataset:add_rxn: other_fields must be a dictionary, not '{}'".format(type(attributes)))
 
         for k, v in other_fields.items():
-            rxn[k] = v
+            rxn_dict[k] = v
 
         if "default" in list(reaction_results):
-            rxn["reaction_results"] = reaction_results
+            rxn_dict["reaction_results"] = reaction_results
         elif isinstance(reaction_results, dict):
-            rxn["reaction_results"] = {}
-            rxn["reaction_results"]["default"] = reaction_results
+            rxn_dict["reaction_results"] = {}
+            rxn_dict["reaction_results"]["default"] = reaction_results
         else:
             raise TypeError("Passed in reaction_results not understood.")
+
+        rxn = Rxn(**rxn_dict)
 
         self.data.reactions.append(rxn)
 
