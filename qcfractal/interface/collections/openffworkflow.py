@@ -19,35 +19,6 @@ class OpenFFWorkflow(Collection):
         A optional server portal to connect the database
     """
 
-    class DataModel(Collection.DataModel):
-        """
-        Internal Data structure base model typed by PyDantic
-
-        This structure validates input, allows server-side validation and data security,
-        and will create the information to pass back and forth between server and client
-        """
-        fragments: dict = {}
-        enumerate_states: dict = {}
-        enumerate_fragments: dict = {}
-        torsiondrive_input: dict = {}
-        torsiondrive_meta: dict = {}
-        optimization_meta: Dict[str, str] = {
-                "program": "geometric",
-                "coordsys": "tric",
-            }
-        qc_meta: Dict[str, str] = {
-                "driver": "gradient",
-                "method": "UFF",
-                "basis": "",
-                "options": "none",
-                "program": "rdkit",
-            }
-
-    # Valid options which can be fetched from the get_options method
-    # Kept as separate list to be easier to read for devs
-    __workflow_options = ("enumerate_states", "enumerate_fragments", "torsiondrive_input", "torsiondrive_meta",
-                          "optimization_meta", "qc_meta")
-
     def __init__(self, name, options=None, client=None, **kwargs):
         """
         Initializer for the OpenFFWorkflow object. If no Portal is supplied or the database name
@@ -78,6 +49,35 @@ class OpenFFWorkflow(Collection):
             if len(ret) == 0:
                 raise ValueError("Attempted to insert duplicate Workflow with name '{}'".format(name))
             self.data.id = ret[0][1]
+
+    class DataModel(Collection.DataModel):
+        """
+        Internal Data structure base model typed by PyDantic
+
+        This structure validates input, allows server-side validation and data security,
+        and will create the information to pass back and forth between server and client
+        """
+        fragments: dict = {}
+        enumerate_states: dict = {}
+        enumerate_fragments: dict = {}
+        torsiondrive_input: dict = {}
+        torsiondrive_meta: dict = {}
+        optimization_meta: Dict[str, str] = {
+                "program": "geometric",
+                "coordsys": "tric",
+            }
+        qc_meta: Dict[str, str] = {
+                "driver": "gradient",
+                "method": "UFF",
+                "basis": "",
+                "options": "none",
+                "program": "rdkit",
+            }
+
+    # Valid options which can be fetched from the get_options method
+    # Kept as separate list to be easier to read for devs
+    __workflow_options = ("enumerate_states", "enumerate_fragments", "torsiondrive_input", "torsiondrive_meta",
+                          "optimization_meta", "qc_meta")
 
     def _pre_save_prep(self, client):
         pass

@@ -96,8 +96,6 @@ class Dataset(Collection):
         """
 
         ds_type: _RxnEnum = _RxnEnum.rxn
-        #                    top       name stoch stname     attributes       hash  coef        default
-        # reactions: List[Dict[str, Union[str, Dict[str, Union[int, float, Dict[str, float]]]]]] = []
 
         reactions: List[Dict[str, Dict[str, Rxn]]] = []
 
@@ -144,7 +142,8 @@ class Dataset(Collection):
 
         # Apply stoich values
         for col in values.columns:
-            if col == "molecule_id": continue
+            if col == "molecule_id":
+                continue
             tmp_idx[col] *= tmp_idx["coefficient"]
         tmp_idx = tmp_idx.drop(['stoichiometry', 'molecule_id', 'coefficient'], axis=1)
 
@@ -257,7 +256,7 @@ class Dataset(Collection):
 
         else:
             tmp_idx = self._unroll_query(query_keys, stoich, field=field)
-        tmp_idx.columns = [prefix + method + '/' + basis + postfix for x in tmp_idx.columns]
+        tmp_idx.columns = [prefix + method + '/' + basis + postfix for _ in tmp_idx.columns]
 
         # scale
         tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
