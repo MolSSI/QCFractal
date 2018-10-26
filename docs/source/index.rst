@@ -98,6 +98,7 @@ Fractal contains the sever instance, database, and distributed compute queue.
 * :doc:`fractal-results`
 * :doc:`fractal-procedures`
 * :doc:`fractal-services`
+* :doc:`fractal-flow`
 
 .. toctree::
    :maxdepth: 1
@@ -107,6 +108,7 @@ Fractal contains the sever instance, database, and distributed compute queue.
    fractal-results
    fractal-procedures
    fractal-services
+   fractal-flow
 
 **Developer Documentation**
 

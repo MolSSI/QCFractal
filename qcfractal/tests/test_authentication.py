@@ -2,14 +2,13 @@
 Tests the on-node procedures compute capabilities.
 """
 
-import qcfractal
-from qcfractal import testing
 import cryptography
-
-import requests
 import pytest
+import requests
 
+import qcfractal
 import qcfractal.interface as portal
+from qcfractal import testing
 
 _users = {
     "read": {
@@ -44,7 +43,7 @@ def sec_server(request):
         server = qcfractal.FractalServer(
             port=testing.find_open_port(),
             storage_project_name=storage_name,
-            io_loop=loop,
+            loop=loop,
             security="local")
 
         # Clean and re-init the databse

@@ -4,23 +4,26 @@ Queue adapter for Fireworks
 
 import logging
 
-import fireworks
-import fireworks.core.rocket_launcher
-
 
 class FireworksAdapter:
     def __init__(self, lpad, logger=None):
+        """
+        Parameters
+        ----------
+        lpad : fireworks.LaunchPad
+            A activte Fireworks LaunchPad
+        logger : None, optional
+            A optional logging object to write output to
+        """
 
         self.lpad = lpad
         self.queue = {}
-        if logger:
-            self.logger = logger
-        else:
-            self.logger = logging.getLogger('FireworksNanny')
+        self.logger = logger or logging.getLogger('FireworksAdapter')
 
     def submit_tasks(self, tasks):
         ret = []
 
+        import fireworks
         for task in tasks:
             tag = task["id"]
 
@@ -69,13 +72,12 @@ class FireworksAdapter:
                 blob["success"] = False
                 ret[key] = (blob, parser, hooks)
 
-            self.lpad.delete_wf(tmp_data["fw_id"])
-
         return ret
 
     def await_results(self):
 
         # Try to get each results
+        import fireworks.core.rocket_launcher
         fireworks.core.rocket_launcher.rapidfire(self.lpad, strm_lvl="CRITICAL")
 
     def list_tasks(self):

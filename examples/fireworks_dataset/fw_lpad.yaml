@@ -1,0 +1,5 @@
+host: localhost
+port: 27017
+name: qca_fw_testing_fireworks_queue
+username: null
+password: null

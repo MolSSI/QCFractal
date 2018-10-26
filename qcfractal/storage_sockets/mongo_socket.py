@@ -13,11 +13,11 @@ import collections
 import copy
 import datetime
 import logging
-import bcrypt
 
+import bcrypt
+import bson.errors
 import pandas as pd
 from bson.objectid import ObjectId
-import bson.errors
 
 from . import storage_utils
 # Pull in the hashing algorithms from the client
@@ -62,11 +62,8 @@ class MongoSocket:
     """
 
     def __init__(self,
-                 url,
-                 port,
+                 uri,
                  project="molssidb",
-                 username=None,
-                 password=None,
                  bypass_security=False,
                  authMechanism="SCRAM-SHA-1",
                  authSource=None,
@@ -94,7 +91,8 @@ class MongoSocket:
             "procedures": interface.schema.get_table_indices("procedure"),
             "service_queue": interface.schema.get_table_indices("service_queue"),
             "task_queue": interface.schema.get_table_indices("task_queue"),
-            "users": ("username", )
+            "users": ("username", ),
+            "queue_managers": ("name", )
         }
         self._valid_tables = set(self._table_indices.keys())
         self._table_unique_indices = {
@@ -106,19 +104,19 @@ class MongoSocket:
             "service_queue": False,
             "task_queue": False,
             "users": True,
+            "queue_managers": True,
         }
 
         self._lower_results_index = ["method", "basis", "options", "program"]
 
-        self._url = url
-        self._port = port
-
-        # Are we authenticating?
-        if username:
-            self.client = pymongo.MongoClient(
-                url, port, username=username, password=password, authMechanism=authMechanism, authSource=authSource)
+        # Build MongoClient
+        self.client = pymongo.MongoClient(uri)
+        expanded_uri = pymongo.uri_parser.parse_uri(uri)
+        if expanded_uri["password"] is not None:
+            self.client = pymongo.MongoClient(uri, authMechanism=authMechanism, authSource=authSource)
         else:
-            self.client = pymongo.MongoClient(url, port)
+            self.client = pymongo.MongoClient(uri)
+        self._url, self._port = expanded_uri["nodelist"][0]
 
         try:
             version_array = self.client.server_info()['versionArray']
@@ -253,7 +251,7 @@ class MongoSocket:
 
         return (self._tables[table].delete_many({index: {"$in": hashes}})).deleted_count
 
-    def _get_generic(self, query, table, projection=None, allow_generic=False):
+    def _get_generic(self, query, table, projection=None, allow_generic=False, limit=0):
 
         # TODO parse duplicates
         meta = storage_utils.get_metadata()
@@ -293,7 +291,7 @@ class MongoSocket:
                 if isinstance(v, (list, tuple)):
                     query[k] = {"$in": v}
 
-            data = list(self._tables[table].find(query, projection=projection))
+            data = list(self._tables[table].find(query, projection=projection, limit=limit))
         else:
             meta["errors"] = "Malformed query"
 
@@ -746,9 +744,9 @@ class MongoSocket:
 
         return ret
 
-    def get_services(self, query, projection=None):
+    def get_services(self, query, projection=None, limit=0):
 
-        return self._get_generic(query, "service_queue", projection=projection, allow_generic=True)
+        return self._get_generic(query, "service_queue", projection=projection, allow_generic=True, limit=limit)
 
     def update_services(self, updates):
 
@@ -822,15 +820,17 @@ class MongoSocket:
         ret["meta"]["validation_errors"] = []
         return ret
 
-    def queue_get_next(self, n=100, tag=None):
+    def queue_get_next(self, limit=100, tag=None):
+
+        # Figure out query, tagless has no requirements
+        query = {"status": "WAITING"}
+        if tag is not None:
+            query["tag"] = tag
 
         found = list(self._tables["task_queue"].find(
-            {
-                "status": "WAITING",
-                "tag": tag
-            },
+            query,
             sort=[("created_on", -1)],
-            limit=n,
+            limit=limit,
             projection={"_id": True,
                         "spec": True,
                         "hash_index": True,
@@ -879,12 +879,31 @@ class MongoSocket:
 
     def queue_mark_error(self, data):
         bulk_commands = []
+        dt = datetime.datetime.utcnow()
         for queue_id, msg in data:
             update = {
                 "$set": {
                     "status": "ERROR",
                     "error": msg,
-                    "modified_on": datetime.datetime.utcnow(),
+                    "modified_on": dt,
+                }
+            }
+            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(queue_id)}, update))
+
+        if len(bulk_commands) == 0:
+            return
+
+        ret = self._tables["task_queue"].bulk_write(bulk_commands, ordered=False)
+        return ret
+
+    def queue_reset_status(self, data):
+        bulk_commands = []
+        dt = datetime.datetime.utcnow()
+        for queue_id in data:
+            update = {
+                "$set": {
+                    "status": "WAITING",
+                    "modified_on": dt,
                 }
             }
             bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(queue_id)}, update))
@@ -917,6 +936,41 @@ class MongoSocket:
         ret = self._tables["service_queue"].bulk_write(bulk_commands, ordered=False)
         return ret
 
+### QueueManagers
+
+    def manager_update(self, name, tag=None, submitted=0, completed=0, failures=0, returned=0):
+        dt = datetime.datetime.utcnow()
+
+        r = self._tables["queue_managers"].update_one(
+            {
+                "name": name
+            },
+            {
+                # Provide base data
+                "$setOnInsert": {
+                    "name": name,
+                    "created_on": dt,
+                    "tag": tag,
+                },
+                # Set the date
+                "$set": {
+                    "modifed_on": dt,
+                },
+                # Incremement relevant data
+                "$inc": {
+                    "submitted": submitted,
+                    "completed": completed,
+                    "returned": returned,
+                    "failures": failures
+                }
+            },
+            upsert=True)
+        return r.matched_count == 1
+
+    def get_managers(self, query, projection=None):
+
+        return self._get_generic(query, "queue_managers", allow_generic=True, projection=projection)
+
 ### Users
 
     def add_user(self, username, password, permissions=["read"]):
@@ -932,7 +986,7 @@ class MongoSocket:
         password : str
             The user's password
         permissions : list of str, optional
-            The associated permissions of a user ['read', 'write', 'compute', 'admin']
+            The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
 
         Returns
         -------
@@ -960,7 +1014,7 @@ class MongoSocket:
         password : str
             The password associated with the username
         permission : str
-            The associated permissions of a user ['read', 'write', 'compute', 'admin']
+            The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
 
         Returns
         -------
@@ -991,7 +1045,8 @@ class MongoSocket:
         if pwcheck is False:
             return (False, "Incorrect password.")
 
-        if permission.lower() not in data["permissions"]:
+        # Admin has access to everything
+        if (permission.lower() not in data["permissions"]) and ("admin" not in data["permissions"]):
             return (False, "User has insufficient permissions.")
 
         return (True, "Success")

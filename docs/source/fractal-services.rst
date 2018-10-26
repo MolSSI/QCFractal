@@ -19,11 +19,14 @@ of this dihedral bond.
  1. A client submits a task to scan the HOOH molecule dihedral every 90 degrees.
  2. The service is received by the server, and the first 0-degree dihedral geometry optimization is spawned.
  3. The service waits until the 0-degree task is complete, and then generates 90 and -90-degree tasks based off this 0-degree geometry.
- 4. The service waits for the two new jobs to complete and spawns 0 and 180-degree tasks based on the 90 and - 90-degree geometries.
+ 4. The service waits for the two new tasks to complete and spawns 0 and 180-degree tasks based on the 90 and - 90-degree geometries.
  5. The service waits for the 90- and -90-degree tasks to complete. Then it builds its final data structure for user querying and marks itself complete.
 
 The service technology allows the ``FractalServer`` to complete very complex
-workflows of arbitrary design.
+workflows of arbitrary design. To see a pictorial representation of this
+process, please see the
+:ref:`flowchart showing the psuedo-calls <flowchart_add_procedure>` when a
+service is added to the ``FractalServrer``
 
 
 .. toctree::

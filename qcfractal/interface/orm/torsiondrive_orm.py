@@ -35,7 +35,7 @@ class TorsionDriveORM:
     def __init__(self, initial_molecule, **kwargs):
         """Initializes a TorsionDriveORM object, from local data.
 
-        This object may be able to submit jobs to the server in the future.
+        This object may be able to submit tasks to the server in the future.
 
         *Prototype object, may change in the future.
 

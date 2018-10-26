@@ -2,9 +2,10 @@
 Tests the QCPortal dataset object
 """
 
+import pytest
+
 from . import portal
 from . import test_helper as th
-import pytest
 
 
 def _compare_stoichs(stoich, stoich_other):

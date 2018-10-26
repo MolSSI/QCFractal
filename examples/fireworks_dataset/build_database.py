@@ -1,6 +1,5 @@
 import qcfractal.interface as portal
 
-
 # Builds a blank database object
 # Tell the database we are going to build interaction energies
 ds = portal.collections.Dataset("Water", ds_type="ie")

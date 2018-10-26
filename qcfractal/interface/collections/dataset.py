@@ -6,13 +6,13 @@ import itertools as it
 import numpy as np
 import pandas as pd
 
+from .collection import Collection
+from .collection_utils import nCr, register_collection
 # from .. import client
 from .. import constants
 from .. import dict_utils
 from .. import molecule
 from .. import statistics
-from .collection import Collection
-from .collection_utils import nCr, register_collection
 
 from enum import Enum
 from typing import Dict, List, Union
@@ -318,21 +318,10 @@ class Dataset(Collection):
         umols, uidx = np.unique(tmp_idx["molecule_id"], return_index=True)
 
         complete_values = self.client.get_results(
-            molecule_id=list(umols), driver=driver, options=options, program=program, method=method, basis=basis)
+            molecule_id=list(umols), driver=driver, options=options, program=program, method=method, basis=basis, projection={"molecule_id": True})
 
-        if len(complete_values):
-            raise KeyError("Completed expressions not yet implemented")
-        # mask = pd.isnull(values)
-        # compute_list = []
-        # for idx, row in pd.isnull(values).iterrows():
-
-        #     for method in values.columns[row]:
-        #         tmp = {}
-        #         tmp["molecule_id"] = idx
-        #         tmp["modelchem"] = method
-        #         for k, v in other_fields.items():
-        #             tmp[k] = v
-        #         compute_list.append(tmp)
+        complete_mols = np.array([x["molecule_id"] for x in complete_values])
+        umols = np.setdiff1d(umols, complete_mols)
         compute_list = list(umols)
 
         ret = self.client.add_compute(program, method.lower(), basis.lower(), driver, options, compute_list)

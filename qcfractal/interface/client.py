@@ -2,15 +2,14 @@
 
 import json
 import os
+from collections import defaultdict
+
 import requests
 import yaml
 
-from collections import defaultdict
-
-from .collections import collection_factory
-
 from . import molecule
 from . import orm
+from .collections import collection_factory
 
 
 class FractalClient(object):
@@ -66,17 +65,19 @@ class FractalClient(object):
         ret += "username='{}')".format(self.username)
         return ret
 
-    def _request(self, method, service, payload):
+    def _request(self, method, service, payload, noraise=False):
 
         addr = self.address + service
         if method == "get":
             r = requests.get(addr, json=payload, headers=self._headers, verify=self._verify)
         elif method == "post":
             r = requests.post(addr, json=payload, headers=self._headers, verify=self._verify)
+        elif method == "put":
+            r = requests.put(addr, json=payload, headers=self._headers, verify=self._verify)
         else:
             raise KeyError("Method not understood: {}".format(method))
 
-        if r.status_code != 200:
+        if (r.status_code != 200) and (not noraise):
             raise requests.exceptions.HTTPError("Server communication failure. Reason: {}".format(r.reason))
 
         return r
@@ -374,7 +375,7 @@ class FractalClient(object):
 
     ### Compute section
 
-    def add_compute(self, program, method, basis, driver, options, molecule_id, return_full=False):
+    def add_compute(self, program, method, basis, driver, options, molecule_id, return_full=False, tag=None):
 
         # Always a list
         if isinstance(molecule_id, str):
@@ -387,12 +388,13 @@ class FractalClient(object):
                 "program": program,
                 "method": method,
                 "basis": basis,
-                "options": options
+                "options": options,
+                "tag": tag,
             },
             "data": molecule_id
         }
 
-        r = self._request("post", "task_scheduler", payload)
+        r = self._request("post", "task_queue", payload)
 
         if return_full:
             return r.json()
@@ -414,7 +416,7 @@ class FractalClient(object):
         }
         payload["meta"].update(program_options)
 
-        r = self._request("post", "task_scheduler", payload)
+        r = self._request("post", "task_queue", payload)
 
         if return_full:
             return r.json()
@@ -435,7 +437,7 @@ class FractalClient(object):
         }
         payload["meta"].update(options)
 
-        r = self._request("post", "service_scheduler", payload)
+        r = self._request("post", "service_queue", payload)
 
         if return_full:
             return r.json()
