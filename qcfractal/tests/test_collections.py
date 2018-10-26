@@ -159,12 +159,13 @@ def test_compute_openffworkflow(fractal_compute_server):
     hooh = portal.data.get_molecule("hooh.json")
     fragment_input = {
         "label1": {
+            "type": "torsiondrive_input",
             "initial_molecule": hooh.to_json(),
             "grid_spacing": [120],
             "dihedrals": [[0, 1, 2, 3]],
         },
     }
-    wf.add_torsiondrive("HOOH", fragment_input, provenance={})
+    wf.add_fragment("HOOH", fragment_input, provenance={})
     assert set(wf.list_fragments()) == {"HOOH"}
     fractal_compute_server.await_services(max_iter=5)
 
@@ -182,12 +183,13 @@ def test_compute_openffworkflow(fractal_compute_server):
 
     fragment_input = {
         "label1": {
+            "type": "torsiondrive_input",
             "initial_molecule": butane.to_json(),
             "grid_spacing": [90],
             "dihedrals": [[0, 2, 3, 1]],
         },
     }
-    wf.add_torsiondrive(butane_id, fragment_input, provenance={})
+    wf.add_fragment(butane_id, fragment_input, provenance={})
     assert set(wf.list_fragments()) == {butane_id, "HOOH"}
 
     final_energies = wf.list_final_energies()
@@ -197,12 +199,13 @@ def test_compute_openffworkflow(fractal_compute_server):
 
     optimization_input = {
         "label2": {
+            "type": "optimization_input",
             "initial_molecule": butane.to_json(),
             "constraints": {'scan': [('dihedral', '0', '2', '3', '1', '0', '120', '4')]}
         }
     }
 
-    wf.add_optimize(butane_id, optimization_input, provenance={})
+    wf.add_fragment(butane_id, optimization_input, provenance={})
     fractal_compute_server.await_services(max_iter=5)
 
     final_energies = wf.list_final_energies()

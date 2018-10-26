@@ -117,9 +117,9 @@ class OpenFFWorkflow(Collection):
         """
         return list(self.data.fragments)
 
-    def add_torsiondrive(self, fragment_id, data, provenance={}):
+    def add_fragment(self, fragment_id, data, provenance={}):
         """
-        Adds a new fragment to the workflow along with the associated torsiondrives required.
+        Adds a new fragment to the workflow along with the associated input required.
 
         Parameters
         ----------
@@ -127,7 +127,8 @@ class OpenFFWorkflow(Collection):
             The tag associated with fragment. In general this should be the canonical isomeric
             explicit hydrogen mapped SMILES tag for this fragment.
         data : dict
-            A dictionary of label : {initial_molecule, grid_spacing, dihedrals} keys.
+            A dictionary of label : {type, intial_molecule, grid_spacing, dihedrals} for torsiondrive type and
+            label : {type, initial_molecule, contraints} for an optimization type
 
         provenance : dict, optional
             The provenance of the fragments creation
@@ -153,17 +154,12 @@ class OpenFFWorkflow(Collection):
             if name in frag_data:
                 print("Already found label {} for fragment_ID {}, skipping.".format(name, fragment_id))
                 continue
-
-            # Build out a new service
-            torsion_meta = copy.deepcopy(
-                {k: getattr(self.data, k)
-                 for k in ("torsiondrive_meta", "optimization_meta", "qc_meta")})
-
-            for k in ["grid_spacing", "dihedrals"]:
-                torsion_meta["torsiondrive_meta"][k] = packet[k]
-
-            # Get hash of torsion
-            ret = self.client.add_service("torsiondrive", [packet["initial_molecule"]], torsion_meta)
+            if packet['type'] == 'torsiondrive_input':
+                ret = self._add_torsiondrive(packet)
+            elif packet['type'] == 'optimization_input':
+                ret = self._add_optimize(packet)
+            else:
+                raise KeyError("{} is not an openffworklow type job".format(packet['type']))
 
             hash_lists = []
             [hash_lists.extend(x) for x in ret.values()]
@@ -178,65 +174,32 @@ class OpenFFWorkflow(Collection):
         # Push collection data back to server
         self.save(overwrite=True)
 
-    def add_optimize(self, fragment_id, data, provenance={}):
-        """
-        Adds a new fragment to the workflow along with the associated optimization required.
+    def _add_torsiondrive(self, packet):
+        # Build out a new service
+        torsion_meta = copy.deepcopy(
+            {k: self.data["torsiondrive_static_options"][k]
+                for k in ("torsiondrive_meta", "optimization_meta",  "qc_meta")})
 
-        Parameters
-        ----------
-        fragment_id : str
-            The tag associated with fragment. In general this should be the canonical isomeric
-            explicit hydrogen mapped SMILES tag for this fragment.
-        data : dict
-            A dictionary of label : {intial_molecule, constraints} keys.
+        for k in ["grid_spacing", "dihedrals"]:
+            torsion_meta["torsiondrive_meta"][k] = packet[k]
 
-        provenance : dict, optional
-            The provenance of the fragments creation
+        # Get hash of torsion
+        ret = self.client.add_service("torsiondrive", [packet["initial_molecule"]], torsion_meta)
+        return ret
 
-        Example
-        -------
+    def _add_optimize(self, packet):
 
-        data = {
-           "label1": {
-                "initial_molecule": ptl.data.get_molecule("butane.json"),
-                "constraints" : {'scan': [('dihedral', '1', '5', '6', '7', '110.0', '150.0', '3')]}
-            },
-            ...
-        }
-        wf.add_fragment("CCCC", data=)
-        """
-        if fragment_id not in self.data["fragments"]:
-            self.data["fragments"][fragment_id] = {}
+        optimization_meta = copy.deepcopy(
+            {k: self.data["optimization_static_options"][k]
+             for k in ("optimization_meta", "qc_meta")})
 
-        frag_data = self.data["fragments"][fragment_id]
-        for name, packet in data.items():
-            if name in frag_data:
-                print("Already found label {} for fragment_ID {}, skipping.".format(name, fragment_id))
-                continue
+        for k in ["constraints"]:
+            optimization_meta["optimization_meta"][k] = packet[k]
 
-            # Build out a new service
-            optimization_meta = copy.deepcopy(
-                {k: self.data["optimization_static_options"][k]
-                 for k in ("optimization_meta", "qc_meta")})
+        # Get hash of optimization
+        ret = self.client.add_procedure("optimization", "geoemetric", optimization_meta, [packet["initial_molecule"]])
 
-            for k in ["constraints"]:
-                optimization_meta["optimization_meta"][k] = packet[k]
-
-            # Get hash of optimization
-            ret = self.client.add_procedure("optimization", "geoemetric", optimization_meta, [packet["initial_molecule"]])
-
-            hash_lists = []
-            [hash_lists.extend(x) for x in ret.values()]
-
-            if len(hash_lists) != 1:
-                raise KeyError("Something went very wrong.")
-
-            # add back to fragment data
-            packet["hash_index"] = hash_lists[0]
-            frag_data[name] = packet
-
-        # Push collection data back to server
-        self.save(overwrite=True)
+        return ret
 
     def get_fragment_data(self, fragments=None, refresh_cache=False):
         """Obtains fragment torsiondrives from server to local data.
