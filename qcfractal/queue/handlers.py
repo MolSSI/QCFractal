@@ -88,6 +88,18 @@ class ServiceQueueHandler(APIHandler):
 
         self.write(ret)
 
+    def get(self):
+        """Posts new services to the service queue
+        """
+        self.authenticate("read")
+
+        # Grab objects
+        storage = self.objects["storage_socket"]
+
+        projection = {x: True for x in ["status", "error_message", "tag", "created_on", "modified_on"]}
+        ret = storage.get_services(self.json["data"], projection=projection)
+
+        self.write(ret)
 
 class QueueManagerHandler(APIHandler):
     """

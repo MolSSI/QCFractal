@@ -350,6 +350,8 @@ def dask_server_fixture(request):
 
             client.close()
 
+        cluster.close()
+
 
 @pytest.fixture(scope="module")
 def fireworks_server_fixture(request):

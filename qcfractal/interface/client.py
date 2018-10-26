@@ -444,4 +444,18 @@ class FractalClient(object):
         else:
             return r.json()["data"]
 
+    def check_services(self, query, return_full=False):
+
+        payload = {
+            "meta": {},
+            "data": query
+        }
+
+        r = self._request("get", "service_queue", payload)
+
+        if return_full:
+            return r.json()
+        else:
+            return r.json()["data"]
+
     # Def add_service
