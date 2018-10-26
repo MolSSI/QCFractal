@@ -73,6 +73,10 @@ class OpenFFWorkflow(Collection):
                 "options": "none",
                 "program": "rdkit",
             }
+        optimization_static_options: Dict[str, str] = {
+                "program": "geometric",
+                "coordsys": "tric",
+            }
 
     # Valid options which can be fetched from the get_options method
     # Kept as separate list to be easier to read for devs
@@ -113,7 +117,7 @@ class OpenFFWorkflow(Collection):
         """
         return list(self.data.fragments)
 
-    def add_fragment(self, fragment_id, data, provenance={}):
+    def add_torsiondrive(self, fragment_id, data, provenance={}):
         """
         Adds a new fragment to the workflow along with the associated torsiondrives required.
 
@@ -160,6 +164,67 @@ class OpenFFWorkflow(Collection):
 
             # Get hash of torsion
             ret = self.client.add_service("torsiondrive", [packet["initial_molecule"]], torsion_meta)
+
+            hash_lists = []
+            [hash_lists.extend(x) for x in ret.values()]
+
+            if len(hash_lists) != 1:
+                raise KeyError("Something went very wrong.")
+
+            # add back to fragment data
+            packet["hash_index"] = hash_lists[0]
+            frag_data[name] = packet
+
+        # Push collection data back to server
+        self.save(overwrite=True)
+
+    def add_optimize(self, fragment_id, data, provenance={}):
+        """
+        Adds a new fragment to the workflow along with the associated torsiondrives required.
+
+        Parameters
+        ----------
+        fragment_id : str
+            The tag associated with fragment. In general this should be the canonical isomeric
+            explicit hydrogen mapped SMILES tag for this fragment.
+        data : dict
+            A dictionary of label : {intial_molecule, grid_spacing, dihedrals} keys.
+
+        provenance : dict, optional
+            The provenance of the fragments creation
+
+        Example
+        -------
+
+        data = {
+           "label1": {
+                "initial_molecule": ptl.data.get_molecule("butane.json"),
+                "grid_spacing": [60],
+                "dihedrals": [[0, 2, 3, 1]],
+            },
+            ...
+        }
+        wf.add_fragment("CCCC", data=)
+        """
+        if fragment_id not in self.data["fragments"]:
+            self.data["fragments"][fragment_id] = {}
+
+        frag_data = self.data["fragments"][fragment_id]
+        for name, packet in data.items():
+            if name in frag_data:
+                print("Already found label {} for fragment_ID {}, skipping.".format(name, fragment_id))
+                continue
+
+            # Build out a new service
+            optimization_meta = copy.deepcopy(
+                {k: self.data["optimization_static_options"][k]
+                 for k in ("optimization_meta", "qc_meta")})
+
+            for k in ["constraints"]:
+                optimization_meta["optimization_meta"][k] = packet[k]
+
+            # Get hash of optimization
+            ret = self.client.add_service("optimization", [packet["initial_molecule"]], optimization_meta)
 
             hash_lists = []
             [hash_lists.extend(x) for x in ret.values()]
