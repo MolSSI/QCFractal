@@ -29,6 +29,7 @@ class FractalClient(object):
             FractalServer was not provided a SSL certificate and defaults back to self-signed
             SSL keys.
         """
+
         if "http" not in address:
             address = "https://" + address
 
@@ -423,6 +424,34 @@ class FractalClient(object):
         else:
             return r.json()["data"]
 
+    def check_tasks(self, query, return_full=False):
+        """Checks the status of tasks in the Fractal queue.
+
+        Parameters
+        ----------
+        query : dict
+            A query to find tasks
+        return_full : bool, optional
+            Returns the full JSON return if True
+
+        Returns
+        -------
+        list of dict
+            A dictionary of each match that contains the current status
+            and, if an error has occured, the error message.
+
+        >>> client.check_tasks({"id": "5bd35af47b878715165f8225"})
+        [{"status": "WAITING"}]
+        """
+        payload = {"meta": {}, "data": query}
+
+        r = self._request("get", "task_queue", payload)
+
+        if return_full:
+            return r.json()
+        else:
+            return r.json()["data"]
+
     def add_service(self, service, data, options, return_full=False):
 
         # Always a list
@@ -445,11 +474,26 @@ class FractalClient(object):
             return r.json()["data"]
 
     def check_services(self, query, return_full=False):
+        """Checks the status of services in the Fractal queue.
 
-        payload = {
-            "meta": {},
-            "data": query
-        }
+        Parameters
+        ----------
+        query : dict
+            A query to find services
+        return_full : bool, optional
+            Returns the full JSON return if True
+
+        Returns
+        -------
+        list of dict
+            A dictionary of each match that contains the current status
+            and, if an error has occured, the error message.
+
+        >>> client.check_services({"id": "5bd35af47b878715165f8225"})
+        [{"status": "RUNNING"}]
+        """
+
+        payload = {"meta": {}, "data": query}
 
         r = self._request("get", "service_queue", payload)
 
@@ -457,5 +501,3 @@ class FractalClient(object):
             return r.json()
         else:
             return r.json()["data"]
-
-    # Def add_service
