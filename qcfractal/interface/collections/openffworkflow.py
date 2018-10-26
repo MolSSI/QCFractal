@@ -145,7 +145,7 @@ class OpenFFWorkflow(Collection):
             provenance = {}
 
         if fragment_id not in self.data.fragments:
-            self.data.fragments[fragment_id] = {"provenance": provenance}
+            self.data.fragments[fragment_id] = {}
 
         frag_data = self.data.fragments[fragment_id]
         for name, packet in data.items():
@@ -172,6 +172,7 @@ class OpenFFWorkflow(Collection):
 
             # add back to fragment data
             packet["hash_index"] = hash_lists[0]
+            packet["provenance"] = provenance
             frag_data[name] = packet
 
         # Push collection data back to server
