@@ -167,7 +167,7 @@ class QueueManager:
         while unsuccessful are logged for future inspection
 
         """
-        results = self.queue_adapter.aquire_complete()
+        results = self.queue_adapter.acquire_complete()
         if len(results):
             payload = {"meta": {"name": self.name_str, "tag": self.queue_tag}, "data": results}
             r = self.client._request("post", "queue_manager", payload, noraise=True)
