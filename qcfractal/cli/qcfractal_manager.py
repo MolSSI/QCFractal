@@ -43,7 +43,9 @@ def parse_args():
         "--max-tasks", type=int, default=1000, help="Maximum number of tasks to hold at any given time.")
     parser.add_argument("--cluster-name", type=str, default="unknown", help="The name of the compute cluster to start")
     parser.add_argument("--queue-tag", type=str, help="The queue tag to pull from")
-    parser.add_argument("--logfile-prefix", type=str, default=None, help="")
+    parser.add_argument("--logfile-prefix", type=str, default=None, help="The prefix of the logfile to write to.")
+    parser.add_argument(
+        "--update-frequency", type=int, default=15, help="The frquency in seconds to check for complete tasks.")
 
     # Additional args
     parser.add_argument("--rapidfire", action="store_true", help="Boot and run jobs until complete")
@@ -114,7 +116,12 @@ def main(args=None):
 
     # Build out the manager itself
     manager = qcfractal.queue.QueueManager(
-        client, queue_client, max_tasks=args["max_tasks"], queue_tag=args["queue_tag"], cluster=args["cluster_name"])
+        client,
+        queue_client,
+        max_tasks=args["max_tasks"],
+        queue_tag=args["queue_tag"],
+        cluster=args["cluster_name"],
+        update_frequency=args["update_frequency"])
 
     if args["adapter_type"] == "dask":
         manager.logger.info("\nDask QueueManager initialized: {}\n".format(str(queue_client)))
