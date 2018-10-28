@@ -328,7 +328,7 @@ def dask_server_fixture(request):
 
     with pristine_loop() as loop:
 
-        # LocalCluster will start the loop in a background thread.
+        # LocalCluster will start the loop in a background thread for us
         with dd.LocalCluster(n_workers=1, threads_per_worker=1, loop=loop) as cluster:
 
             # Build a Dask Client

@@ -103,7 +103,7 @@ def main(args=None):
 
     else:
         raise KeyError(
-            "Unknown adapter type '{}', available options: {'fireworks', 'dask'}.".format(args["adapter_type"]))
+            "Unknown adapter type '{}', available options: 'fireworks', 'dask'.".format(args["adapter_type"]))
 
     # Quick logging
     if args["logfile_prefix"] is not None:
