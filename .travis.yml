@@ -20,11 +20,6 @@ dist: trusty
 
 matrix:
   include:
-    - os: linux
-      python: 3.5
-      env:
-        - PYTHON_VER=3.5
-        - ENVIRON=DASK
 
     - os: linux
       python: 3.6
@@ -38,11 +33,6 @@ matrix:
         - PYTHON_VER=3.6
         - ENVIRON=FIREWORKS
 
-#    - os: linux
-#      python: 3.7
-#      env:
-#        - PYTHON_VER=3.7
-#        - ENVIRON=FIREWORKS
 
     - os: linux
       python: 3.6
@@ -50,12 +40,22 @@ matrix:
         - PYTHON_VER=3.6
         - ENVIRON=OPENFF
 
+#    - os: linux
+#      python: 3.7
+#      dist: xenial
+#      sudo: true
+#      env:
+#      - PYTHON_VER=3.7
+#      - ENVIRON=DASK
+#
 #   allow_failures:
-#     - os: linux
-#       python: 3.6
-#       env:
-#         - PYTHON_VER=3.6
-#         - ENVIRON=OPENFF
+#      - os: linux
+#        python: 3.7
+#        dist: xenial
+#        sudo: true
+#        env:
+#        - PYTHON_VER=3.7
+#        - ENVIRON=DASK
 
 
 before_install:

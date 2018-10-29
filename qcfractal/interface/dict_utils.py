@@ -1,6 +1,8 @@
 """
-Utilities for dictionary and JSON handeling.
+Utilities for dictionary and JSON handling.
 """
+
+from pydantic import BaseModel
 
 
 def replace_dict_keys(data, replacement):
@@ -34,6 +36,19 @@ def replace_dict_keys(data, replacement):
             new_data = tuple(new_data)
 
         return new_data
+
+    elif isinstance(data, BaseModel):
+        # Handle base model structures
+        ret = data.copy()  # Create a copy
+        search_keys = data.fields.keys()  # Enumerate keys
+        for key in search_keys:
+            existing_data = getattr(data, key)
+            # Try to replace data recursively
+            new_data = replace_dict_keys(existing_data, replacement)
+            if new_data == existing_data:
+                continue  # Do nothing if new data is the same (safer)
+            setattr(ret, key, new_data)  # Replace new data in the copy to avoid in-place changes
+        return ret  # Return
 
     else:
         return data
