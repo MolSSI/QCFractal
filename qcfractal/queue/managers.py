@@ -31,8 +31,15 @@ class QueueManager:
         A logger for the QueueManager
     """
 
-    def __init__(self, client, queue_client, loop=None, logger=None, max_tasks=1000, queue_tag=None,
-                 cluster="unknown"):
+    def __init__(self,
+                 client,
+                 queue_client,
+                 loop=None,
+                 logger=None,
+                 max_tasks=1000,
+                 queue_tag=None,
+                 cluster="unknown",
+                 update_frequency=2):
         """
         Parameters
         ----------
@@ -52,6 +59,8 @@ class QueueManager:
             Allows managers to pull from specific tags
         cluster : str
             The cluster the manager belongs to
+        update_frequency : int
+            The frequency to check for new tasks in seconds
         """
 
         # Setup logging
@@ -68,6 +77,7 @@ class QueueManager:
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag
 
+        self.update_frequency = update_frequency
         self.periodic = {}
         self.active = 0
         self.exit_callbacks = []
@@ -87,8 +97,8 @@ class QueueManager:
 
         self.logger.info("QueueManager successfully started. Starting IOLoop.\n")
 
-        # Add services callback
-        update = tornado.ioloop.PeriodicCallback(self.update, 2000)
+        # Add services callback, cb freq is given in milliseconds
+        update = tornado.ioloop.PeriodicCallback(self.update, 1000 * self.update_frequency)
         update.start()
         self.periodic["update"] = update
 

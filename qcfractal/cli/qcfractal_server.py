@@ -7,39 +7,50 @@ import argparse
 import qcfractal
 from . import cli_utils
 
-parser = argparse.ArgumentParser(description='A CLI for the QCFractalServer.')
 
-manager = parser.add_argument_group('QueueManager Settings (optional)')
-manager_exclusive = manager.add_mutually_exclusive_group()
-manager_exclusive.add_argument(
-    "--dask-manager-single", action="store_true", help="Creates a QueueManager using a Dask LocalCluster with a single worker")
-manager_exclusive.add_argument(
-    "--dask-manager", action="store_true", help="Creates a QueueManager using a Dask LocalCluster on the server")
-manager_exclusive.add_argument(
-    "--fireworks-manager",
-    action="store_true",
-    help="Creates a QueueManager using Fireworks on the server (name + '_fireworks_queue')")
+def parse_args():
+    parser = argparse.ArgumentParser(description='A CLI for the QCFractalServer.')
 
-server = parser.add_argument_group('QCFractalServer Settings')
-server.add_argument("name", type=str, help="The name of the FractalServer and its associated database")
-server.add_argument("--log-prefix", type=str, default=None, help="The logfile prefix to use")
-server.add_argument("--port", type=int, default=7777, help="The server port")
-server.add_argument("--security", type=str, default=None, choices=[None, "local"], help="The security protocol to use")
-server.add_argument("--database-uri", type=str, default="mongodb://localhost", help="The database URI to use")
-server.add_argument("--tls-cert", type=str, default=None, help="Certificate file for TLS (in PEM format)")
-server.add_argument("--tls-key", type=str, default=None, help="Private key file for TLS (in PEM format)")
-server.add_argument("--config-file", type=str, default=None, help="A configuration file to use")
+    manager = parser.add_argument_group('QueueManager Settings (optional)')
+    manager_exclusive = manager.add_mutually_exclusive_group()
+    manager_exclusive.add_argument(
+        "--dask-manager-single",
+        action="store_true",
+        help="Creates a QueueManager using a Dask LocalCluster with a single worker")
+    manager_exclusive.add_argument(
+        "--dask-manager", action="store_true", help="Creates a QueueManager using a Dask LocalCluster on the server")
+    manager_exclusive.add_argument(
+        "--fireworks-manager",
+        action="store_true",
+        help="Creates a QueueManager using Fireworks on the server (name + '_fireworks_queue')")
 
-parser._action_groups.reverse()
+    server = parser.add_argument_group('QCFractalServer Settings')
+    server.add_argument("name", type=str, help="The name of the FractalServer and its associated database")
+    server.add_argument("--log-prefix", type=str, default=None, help="The logfile prefix to use")
+    server.add_argument("--port", type=int, default=7777, help="The server port")
+    server.add_argument(
+        "--security", type=str, default=None, choices=[None, "local"], help="The security protocol to use")
+    server.add_argument("--database-uri", type=str, default="mongodb://localhost", help="The database URI to use")
+    server.add_argument("--tls-cert", type=str, default=None, help="Certificate file for TLS (in PEM format)")
+    server.add_argument("--tls-key", type=str, default=None, help="Private key file for TLS (in PEM format)")
+    server.add_argument("--config-file", type=str, default=None, help="A configuration file to use")
 
-args = vars(parser.parse_args())
-if args["config_file"] is not None:
-    data = cli_utils.read_config_file(args["config_file"])
+    parser._action_groups.reverse()
 
-    args = cli_utils.argparse_config_merge(parse, args, data)
+    args = vars(parser.parse_args())
+    if args["config_file"] is not None:
+        data = cli_utils.read_config_file(args["config_file"])
+
+        args = cli_utils.argparse_config_merge(parse, args, data)
+
+    return args
 
 
-def main():
+def main(args=None):
+
+    # Grab CLI args if not present
+    if args is None:
+        args = parse_args()
 
     # Handle SSL
     ssl_certs = sum(args[x] is not None for x in ["tls_key", "tls_cert"])
@@ -105,6 +116,7 @@ def main():
     for cb in exit_callbacks:
         server.add_exit_callback(cb[0], *cb[1], **cb[2])
 
+    # Blocks until keyboard interupt
     server.start()
 
 

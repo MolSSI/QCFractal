@@ -68,7 +68,7 @@ def _build_ssl():
         encryption_algorithm=serialization.NoEncryption(),
     ) # yapf: disable
 
-    return (cert_pem, key_pem)
+    return cert_pem, key_pem
 
 
 class FractalServer:
@@ -241,7 +241,7 @@ class FractalServer:
         nanny_services.start()
         self.periodic["update_services"] = nanny_services
 
-        # Soft quit with a keyboard interupt
+        # Soft quit with a keyboard interrupt
         try:
             self.loop_active = True
             if not asyncio.get_event_loop().is_running():  # Only works on Py3
@@ -290,14 +290,14 @@ class FractalServer:
         callback : callable
             The function to call at exit
         *args
-            Arguements to call with the function.
+            Arguments to call with the function.
         **kwargs
             Kwargs to call with the function.
 
         """
         self.exit_callbacks.append((callback, args, kwargs))
 
-    def get_address(self, endpoint=""):
+    def get_address(self, endpoint=None):
         """Obtains the full URI for a given function on the FractalServer
 
         Parameters
@@ -307,10 +307,13 @@ class FractalServer:
 
         """
 
-        if len(endpoint) and (endpoint not in self.endpoints):
+        if endpoint and (endpoint not in self.endpoints):
             raise AttributeError("Endpoint '{}' not found.".format(endpoint))
 
-        return self._address + endpoint
+        if endpoint:
+            return self._address + endpoint
+        else:
+            return self._address
 
     def update_services(self):
         """Runs through all active services and examines their current status.
@@ -352,6 +355,11 @@ class FractalServer:
 
 ### Functions only available if using a local queue_adapter
 
+    def _check_manager(self, func_name):
+        if "queue_manager" not in self.objects:
+            raise AttributeError(
+                "{} is only available if the server was initialized with a queue manager.".format(func_name))
+
     def update_tasks(self):
         """Pulls tasks from the queue_adapter, inserts them into the database,
         and fills the queue_adapter with new tasks.
@@ -361,11 +369,10 @@ class FractalServer:
         bool
             Return True if the operation completed successfully
         """
-        if "queue_manager" not in self.objects:
-            raise AttributeError("update_tasks is only available if the server was initalized with a queue manager.")
+        self._check_manager("update_tasks")
 
         if self.loop_active:
-            # Drop this in a thread so that we are not blocking eachother
+            # Drop this in a thread so that we are not blocking each other
             thread = threading.Thread(target=self.objects["queue_manager"].update, name="QueueManager Update")
             thread.daemon = True
             thread.start()
@@ -385,11 +392,9 @@ class FractalServer:
         bool
             Return True if the operation completed successfully
         """
+        self._check_manager("await_results")
+
         self.logger.info("Updating tasks")
-
-        if "queue_manager" not in self.objects:
-            raise AttributeError("await_results is only available if the server was initalized with a queue manager.")
-
         return self.objects["queue_manager"].await_results()
 
     def await_services(self, max_iter=10):
@@ -401,8 +406,7 @@ class FractalServer:
         bool
             Return True if the operation completed successfully
         """
-        if "queue_manager" not in self.objects:
-            raise AttributeError("await_results is only available if the server was initalized with a queue manager.")
+        self._check_manager("await_services")
 
         self.await_results()
         for x in range(1, max_iter + 1):
@@ -423,8 +427,6 @@ class FractalServer:
         ret : list of tuples
             All tasks currently still in the database
         """
-        if "queue_manager" not in self.objects:
-            raise AttributeError(
-                "list_current_tasks is only available if the server was initalized with a queue manager.")
+        self._check_manager("list_current_tasks")
 
         return self.objects["queue_manager"].list_current_tasks()
