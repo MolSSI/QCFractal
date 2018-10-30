@@ -124,25 +124,42 @@ def test_compute_openffworkflow(fractal_compute_server):
         "torsiondrive_input": {},
 
         # TorsionDrive, Geometric, and QC options
-        "torsiondrive_meta": {},
-        "optimization_meta": {
-            "program": "geometric",
-            "coordsys": "tric",
+        ""
+        "torsiondrive_static_options":{
+          "torsiondrive_meta": {},
+          "optimization_meta": {
+              "program": "geometric",
+              "coordsys": "tric",
+          },
+          "qc_meta": {
+              "driver": "gradient",
+              "method": "UFF",
+              "basis": "",
+              "options": "none",
+              "program": "rdkit",
+          }
         },
-        "qc_meta": {
-            "driver": "gradient",
-            "method": "UFF",
-            "basis": "",
-            "options": "none",
-            "program": "rdkit",
+        "optimization_static_options": {
+            "optimization_meta": {
+                "program": "geometric",
+                "coordsys": "tric",
+            },
+            "qc_meta": {
+              "driver": "gradient",
+              "method": "UFF",
+              "basis": "",
+              "options": "none",
+              "program": "rdkit",
+            }
         }
     }
     wf = portal.collections.OpenFFWorkflow("Workflow1", client=client, options=openff_workflow_options)
 
-    # Add a fragment and wait for the compute
+    # # Add a fragment and wait for the compute
     hooh = portal.data.get_molecule("hooh.json")
     fragment_input = {
         "label1": {
+            "type": "torsiondrive_input",
             "initial_molecule": hooh.to_json(),
             "grid_spacing": [120],
             "dihedrals": [[0, 1, 2, 3]],
@@ -160,12 +177,27 @@ def test_compute_openffworkflow(fractal_compute_server):
     assert final_molecules.keys() == {"HOOH"}
     assert final_molecules["HOOH"].keys() == {"label1"}
 
+    optimization_input = {
+        "label2": {
+            "type": "optimization_input",
+            "initial_molecule": hooh.to_json(),
+            "constraints": {'set': [('dihedral', '1', '2', '3', '4', '0')]}
+        }
+    }
+
+    wf.add_fragment("HOOH", optimization_input, provenance={})
+    fractal_compute_server.await_services(max_iter=5)
+
+    final_energies = wf.list_final_energies()
+    assert final_energies["HOOH"].keys() == {"label1", "label2"}
+
     # Add a second fragment
     butane = portal.data.get_molecule("butane.json")
     butane_id = butane.identifiers["canonical_isomeric_explicit_hydrogen_mapped_smiles"]
 
     fragment_input = {
         "label1": {
+            "type": "torsiondrive_input",
             "initial_molecule": butane.to_json(),
             "grid_spacing": [90],
             "dihedrals": [[0, 2, 3, 1]],
@@ -178,3 +210,8 @@ def test_compute_openffworkflow(fractal_compute_server):
     assert final_energies.keys() == {butane_id, "HOOH"}
     assert final_energies[butane_id].keys() == {"label1"}
     assert final_energies[butane_id]["label1"] is None
+
+
+
+
+

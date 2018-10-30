@@ -6,7 +6,7 @@ import copy
 from . import collection_utils
 from .collection import Collection
 
-from typing import Dict
+from typing import Dict, Union
 
 
 class OpenFFWorkflow(Collection):
@@ -60,19 +60,24 @@ class OpenFFWorkflow(Collection):
         fragments: dict = {}
         enumerate_states: dict = {}
         enumerate_fragments: dict = {}
-        torsiondrive_input: dict = {}
-        torsiondrive_meta: dict = {}
-        optimization_meta: Dict[str, str] = {
+        torsiondrive_static_options: Dict[str, Union[str, Dict[str, str]]] = {
+            "torsiondrive_meta": {},
+            "optimization_meta": {
                 "program": "geometric",
                 "coordsys": "tric",
-            }
-        qc_meta: Dict[str, str] = {
+            },
+            "qc_meta": {
                 "driver": "gradient",
                 "method": "UFF",
                 "basis": "",
                 "options": "none",
                 "program": "rdkit",
             }
+        }
+        optimization_static_options: Dict[str, Union[str, Dict[str, str]]] = {
+            "optimization_meta": {},
+            "qc_meta": {},
+        }
 
     # Valid options which can be fetched from the get_options method
     # Kept as separate list to be easier to read for devs
@@ -115,7 +120,7 @@ class OpenFFWorkflow(Collection):
 
     def add_fragment(self, fragment_id, data, provenance=None):
         """
-        Adds a new fragment to the workflow along with the associated torsiondrives required.
+        Adds a new fragment to the workflow along with the associated input required.
 
         Parameters
         ----------
@@ -123,7 +128,8 @@ class OpenFFWorkflow(Collection):
             The tag associated with fragment. In general this should be the canonical isomeric
             explicit hydrogen mapped SMILES tag for this fragment.
         data : dict
-            A dictionary of label : {initial_molecule, grid_spacing, dihedrals} keys.
+            A dictionary of label : {type, intial_molecule, grid_spacing, dihedrals} for torsiondrive type and
+            label : {type, initial_molecule, contraints} for an optimization type
 
         provenance : dict, optional
             The provenance of the fragments creation
@@ -152,17 +158,12 @@ class OpenFFWorkflow(Collection):
             if name in frag_data:
                 print("Already found label {} for fragment_ID {}, skipping.".format(name, fragment_id))
                 continue
-
-            # Build out a new service
-            torsion_meta = copy.deepcopy(
-                {k: getattr(self.data, k)
-                 for k in ("torsiondrive_meta", "optimization_meta", "qc_meta")})
-
-            for k in ["grid_spacing", "dihedrals"]:
-                torsion_meta["torsiondrive_meta"][k] = packet[k]
-
-            # Get hash of torsion
-            ret = self.client.add_service("torsiondrive", [packet["initial_molecule"]], torsion_meta)
+            if packet['type'] == 'torsiondrive_input':
+                ret = self._add_torsiondrive(packet)
+            elif packet['type'] == 'optimization_input':
+                ret = self._add_optimize(packet)
+            else:
+                raise KeyError("{} is not an openffworklow type job".format(packet['type']))
 
             hash_lists = []
             [hash_lists.extend(x) for x in ret.values()]
@@ -177,6 +178,36 @@ class OpenFFWorkflow(Collection):
 
         # Push collection data back to server
         self.save(overwrite=True)
+
+    def _add_torsiondrive(self, packet):
+        # Build out a new service
+        torsion_meta = copy.deepcopy({
+            k: self.data.torsiondrive_static_options[k]
+            for k in ("torsiondrive_meta", "optimization_meta", "qc_meta")
+        })
+
+        for k in ["grid_spacing", "dihedrals"]:
+            torsion_meta["torsiondrive_meta"][k] = packet[k]
+
+        # Get hash of torsion
+        ret = self.client.add_service("torsiondrive", [packet["initial_molecule"]], torsion_meta)
+        return ret
+
+    def _add_optimize(self, packet):
+
+        optimization_meta = copy.deepcopy(
+            {k: self.data.optimization_static_options[k]
+             for k in ("optimization_meta", "qc_meta")})
+
+        for k in ["constraints"]:
+            optimization_meta["optimization_meta"][k] = packet[k]
+
+        optimization_meta["keywords"] = optimization_meta.pop("optimization_meta")
+        program = optimization_meta["keywords"]["program"]
+        # Get hash of optimization
+        ret = self.client.add_procedure("optimization", program, optimization_meta, [packet["initial_molecule"]])
+
+        return ret
 
     def get_fragment_data(self, fragments=None, refresh_cache=False):
         """Obtains fragment torsiondrives from server to local data.
