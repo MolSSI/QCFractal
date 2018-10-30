@@ -155,7 +155,7 @@ def test_compute_openffworkflow(fractal_compute_server):
     }
     wf = portal.collections.OpenFFWorkflow("Workflow1", client=client, options=openff_workflow_options)
 
-    # Add a fragment and wait for the compute
+    # # Add a fragment and wait for the compute
     hooh = portal.data.get_molecule("hooh.json")
     fragment_input = {
         "label1": {
@@ -181,7 +181,7 @@ def test_compute_openffworkflow(fractal_compute_server):
         "label2": {
             "type": "optimization_input",
             "initial_molecule": hooh.to_json(),
-            "constraints": {'scan': [('dihedral', '0', '1', '2', '3', '0', '180', '2')]}
+            "constraints": {'set': [('dihedral', '1', '2', '3', '4', '0')]}
         }
     }
 

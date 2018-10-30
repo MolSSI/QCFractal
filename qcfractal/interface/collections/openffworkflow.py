@@ -6,7 +6,7 @@ import copy
 from . import collection_utils
 from .collection import Collection
 
-from typing import Dict
+from typing import Dict, Union
 
 
 class OpenFFWorkflow(Collection):
@@ -60,23 +60,24 @@ class OpenFFWorkflow(Collection):
         fragments: dict = {}
         enumerate_states: dict = {}
         enumerate_fragments: dict = {}
-        torsiondrive_input: dict = {}
-        torsiondrive_meta: dict = {}
-        optimization_meta: Dict[str, str] = {
+        torsiondrive_static_options: Dict[str, Union[str, Dict[str, str]]] = {
+            "torsiondrive_meta": {},
+            "optimization_meta": {
                 "program": "geometric",
                 "coordsys": "tric",
-            }
-        qc_meta: Dict[str, str] = {
+            },
+            "qc_meta": {
                 "driver": "gradient",
                 "method": "UFF",
                 "basis": "",
                 "options": "none",
                 "program": "rdkit",
             }
-        optimization_static_options: Dict[str, str] = {
-                "program": "geometric",
-                "coordsys": "tric",
-            }
+        }
+        optimization_static_options: Dict[str, Union[str, Dict[str, str]]] = {
+            "optimization_meta": {},
+            "qc_meta": {},
+        }
 
     # Valid options which can be fetched from the get_options method
     # Kept as separate list to be easier to read for devs
@@ -176,9 +177,10 @@ class OpenFFWorkflow(Collection):
 
     def _add_torsiondrive(self, packet):
         # Build out a new service
-        torsion_meta = copy.deepcopy(
-            {k: self.data["torsiondrive_static_options"][k]
-                for k in ("torsiondrive_meta", "optimization_meta",  "qc_meta")})
+        torsion_meta = copy.deepcopy({
+            k: self.data.torsiondrive_static_options[k]
+            for k in ("torsiondrive_meta", "optimization_meta", "qc_meta")
+        })
 
         for k in ["grid_spacing", "dihedrals"]:
             torsion_meta["torsiondrive_meta"][k] = packet[k]
@@ -190,14 +192,15 @@ class OpenFFWorkflow(Collection):
     def _add_optimize(self, packet):
 
         optimization_meta = copy.deepcopy(
-            {k: self.data["optimization_static_options"][k]
+            {k: self.data.optimization_static_options[k]
              for k in ("optimization_meta", "qc_meta")})
 
         for k in ["constraints"]:
             optimization_meta["optimization_meta"][k] = packet[k]
 
+        optimization_meta["keywords"] = optimization_meta.pop("optimization_meta")
         # Get hash of optimization
-        ret = self.client.add_procedure("optimization", "geoemetric", optimization_meta, [packet["initial_molecule"]])
+        ret = self.client.add_procedure("optimization", "geometric", optimization_meta, [packet["initial_molecule"]])
 
         return ret
 
