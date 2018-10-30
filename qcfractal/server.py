@@ -6,6 +6,7 @@ import asyncio
 import logging
 import ssl
 import threading
+import traceback
 
 import tornado.ioloop
 import tornado.log
@@ -120,7 +121,7 @@ class FractalServer:
 
         # Handle SSL
         ssl_ctx = None
-        client_verify = True
+        self.client_verify = True
         if ssl_options is None:
             self.logger.warning("No SSL files passed in, generating self-signed SSL certificate.")
             self.logger.warning("Clients must use `verify=False` when connecting.\n")
@@ -147,7 +148,7 @@ class FractalServer:
             import os
             atexit.register(os.remove, cert_name)
             atexit.register(os.remove, key_name)
-            client_verify = False
+            self.client_verify = False
         elif ssl_options is False:
             ssl_ctx = None
         elif isinstance(ssl_options, dict):
@@ -196,7 +197,7 @@ class FractalServer:
                 raise ValueError("Cannot yet use local security with a internal QueueManager")
 
             # Add the socket to passed args
-            client = interface.FractalClient(self._address, verify=client_verify)
+            client = interface.FractalClient(self._address, verify=self.client_verify)
             self.objects["queue_manager"] = queue.QueueManager(
                 client, queue_socket, loop=loop, logger=self.logger, cluster="FractalServer")
 
@@ -333,11 +334,18 @@ class FractalServer:
         new_procedures = []
         complete_ids = []
         for data in current_services:
-            obj = services.build(data["service"], self.storage, data)
 
-            finished = obj.iterate()
-            self.storage.update_services([(data["id"], obj.get_json())])
-            # print(obj.get_json())
+            # Attempt to iteration and get message
+            try:
+                obj = services.build(data["service"], self.storage, data)
+                finished = obj.iterate()
+                data = obj.get_json()
+            except Exception as e:
+                data["status"] = "ERROR"
+                data["error_message"] = "FractalServer Service Build and Iterate Error:\n" + traceback.format_exc()
+                finished = False
+
+            self.storage.update_services([(data["id"], data)])
 
             if finished is not False:
 

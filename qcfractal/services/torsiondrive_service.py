@@ -101,35 +101,22 @@ class TorsionDriveService:
     def iterate(self):
 
         self.data["status"] = "RUNNING"
-        # print("\nTorsionDrive State:")
-        # print(json.dumps(self.data["torsiondrive_state"], indent=2))
-        # print("Iterate")
-        #if (self.data["remaining_tasks"] > 0):
-        # print("Iterate: not yet done", self.data["remaining_tasks"])
-        # print("Complete tasks", self.data["complete_tasks"])
-        #    return False
-        # if self.data["success"] is True:
-        #     return False
-
-        # print(self.data["remaining_tasks"])
-
-        # Required tasks is false on first iteration
-        # next_iter = (self.data["remaining_tasks"] is not False) and (self.data["remaining_tasks"] == 0):
-        # print("ID {} : REMAINING JOBS {}".format(self.data["hash_index"], self.data["queue_keys"]))
-        # print("rem task", self.data["remaining_tasks"])
         if self.data["remaining_tasks"] is not False:
 
             # Create the query payload, fetching the completed required tasks and output location
             payload = self.storage_socket.get_queue(
                 {
                     "id": self.data["required_tasks"],
-                    "status": "COMPLETE"
+                    "status": ["COMPLETE", "ERROR"]
                 },
                 projection={"result_location": True,
                             "status": True})
             # If all tasks are not complete, return a False
             if len(payload["data"]) != len(self.data["required_tasks"]):
                 return False
+
+            if "ERROR" in set(x["status"] for x in payload["data"]):
+                raise KeyError("All tasks did not execute successfully.")
 
             task_query = payload["data"]
             # Create a lookup table for task ID mapping to result from that task in the procedure table
