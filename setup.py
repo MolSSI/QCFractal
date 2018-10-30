@@ -23,6 +23,7 @@ if __name__ == "__main__":
             'pytest',
             'bcrypt',
             'cryptography',
+            'pydantic',
             'mongoengine'
         ],
         entry_points={"console_scripts": [
