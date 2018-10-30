@@ -6,11 +6,13 @@
 """
 
 import pytest
+import mongoengine as db
 import qcfractal.interface as portal
 
 from qcfractal.storage_sockets.mongoengine_socket import MongoengineSocket
-from qcfractal.storage_sockets.models import Molecule, Result, Procedure
-import mongoengine as db
+from qcfractal.storage_sockets.models import Molecule, Result, Options, \
+                    Procedure, OptimizationProcedure, TorsiondriveProcedure
+from qcfractal.storage_sockets.models import TaskQueue
 
 
 @pytest.fixture(scope='module')
@@ -19,7 +21,7 @@ def mongoengine_socket():
     db_client = db.connect('test_qc_mongoengine')
     db_client.drop_database('test_qc_mongoengine')
 
-    # connect to the DB using MongoengineSocket
+    # connect to the DB using the MongoengineSocket class
     mongoengine_socket = MongoengineSocket("mongodb://localhost", 'test_qc_mongoengine')
 
     yield mongoengine_socket
@@ -40,6 +42,7 @@ def test_molecule(mongoengine_socket):
 
     # don't use len(Molecule.objects), slow
     num_mol_in_db = Molecule.objects().count()
+    # Molecule.objects().delete()
     assert num_mol_in_db == 0
 
     water = portal.data.get_molecule("water_dimer_minima.psimol")
@@ -72,3 +75,159 @@ def test_molecule(mongoengine_socket):
                                molecular_formula=water_mol.molecular_formula)
     assert len(one_mol) == 1
 
+
+def test_results(mongoengine_socket):
+    """
+        Handling results throught the ME classes
+    """
+
+    assert Result.objects().count() == 0
+    assert Options.objects().count() == 0
+
+    molecules = Molecule.objects(molecular_formula='H4O2')
+
+    assert molecules.count() == 2
+
+    page1 = {
+        "molecule": molecules[0],
+        "method": "M1",
+        "basis": "B1",
+        "options": None,
+        "program": "P1",
+        "driver": "energy",
+        "other_data": 5,
+    }
+
+    page2 = {
+        "molecule": molecules[1],
+        "method": "M1",
+        "basis": "B1",
+        "options": None,
+        "program": "P1",
+        "driver": "energy",
+        "other_data": 10,
+    }
+
+    result = Result(**page1)
+    result.save()
+    # print('Result After save: ', result.to_json())
+    assert result.molecule.molecular_formula == 'H4O2'
+
+
+def test_procedure(mongoengine_socket):
+    """
+        Handling procedure throught the ME classes
+    """
+
+    assert Procedure.objects().count() == 0
+    # assert Options.objects().count() == 0
+
+    # molecules = Molecule.objects(molecular_formula='H4O2')
+    # assert molecules.count() == 2
+
+    data1 = {
+        # "molecule": molecules[0],
+        "procedure_type": "custom_new_type",
+        "procedure_options": None,
+        "procedure_program": "P5",
+        "qc_meta": {
+            "basis": "B1",
+            "program": "P1",
+            "method": "M1",
+            "driver": "energy"
+        },
+    }
+
+    procedure = Procedure(**data1)
+    procedure.save()
+    # print('Procedure After save: ', procedure.to_json())
+    # assert procedure.molecule.molecular_formula == 'H4O2'
+
+
+def test_optimization_procedure(mongoengine_socket):
+    """
+        Optimization procedure
+    """
+
+    assert OptimizationProcedure.objects().count() == 0
+    # assert Options.objects().count() == 0
+
+    molecules = Molecule.objects(molecular_formula='H4O2')
+
+    data1 = {
+        "initial_molecule": molecules[0],
+        # "procedure_type": None,
+        "procedure_options": None,
+        "procedure_program": "P7",
+        "qc_meta": {
+            "basis": "B1",
+            "program": "P1",
+            "method": "M1",
+            "driver": "energy"
+        },
+    }
+
+    procedure = OptimizationProcedure(**data1)
+    procedure.save()
+    # print('OptimizationProcedure After save: ', procedure.to_json())
+    assert procedure.initial_molecule.molecular_formula == 'H4O2'
+
+
+def test_torsiondrive_procedure(mongoengine_socket):
+    """
+        Torsiondrive procedure
+    """
+
+    assert TorsiondriveProcedure.objects().count() == 0
+    # assert Options.objects().count() == 0
+
+    # molecules = Molecule.objects(molecular_formula='H4O2')
+    # assert molecules.count() == 2
+
+    data1 = {
+        # "molecule": molecules[0],
+        # "procedure_type": None,
+        "procedure_options": None,
+        "procedure_program": "P9",
+        "qc_meta": {
+            "basis": "B1",
+            "program": "P1",
+            "method": "M1",
+            "driver": "energy"
+        },
+    }
+
+    procedure = TorsiondriveProcedure(**data1)
+    procedure.save()
+    # print('TorsiondriveProcedure After save: ', procedure.to_json())
+
+
+def test_add_task_queue():
+    """
+        Simple test of adding a task using the ME classes
+        in QCFractal, tasks should be added using mongoengine_socket
+    """
+
+    assert TaskQueue.objects.count() == 0
+    TaskQueue.objects().delete()
+
+    # add a task that reference results
+    result = Result.objects().first()
+
+    task = TaskQueue(baseResult=result)
+    task.save()
+    assert TaskQueue.objects().count() == 1
+
+    # add a task that reference Optimization Procedure
+    opt = OptimizationProcedure.objects().first()
+
+    task = TaskQueue(baseResult=opt)
+    task.save()
+    assert TaskQueue.objects().count() == 2
+
+    # add a task that reference Torsiondrive Procedure
+    tor = TorsiondriveProcedure.objects().first()
+
+    task = TaskQueue(baseResult=tor)
+    task.save()
+    assert TaskQueue.objects().count() == 3
