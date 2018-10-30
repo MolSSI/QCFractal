@@ -141,7 +141,7 @@ def test_compute_openffworkflow(fractal_compute_server):
         },
         "optimization_static_options": {
             "optimization_meta": {
-                "program": "geometric",
+                "program": "rdkit",
                 "coordsys": "tric",
             },
             "qc_meta": {
@@ -177,6 +177,20 @@ def test_compute_openffworkflow(fractal_compute_server):
     assert final_molecules.keys() == {"HOOH"}
     assert final_molecules["HOOH"].keys() == {"label1"}
 
+    optimization_input = {
+        "label2": {
+            "type": "optimization_input",
+            "initial_molecule": hooh.to_json(),
+            "constraints": {'scan': [('dihedral', '0', '1', '2', '3', '0', '180', '2')]}
+        }
+    }
+
+    wf.add_fragment("HOOH", optimization_input, provenance={})
+    fractal_compute_server.await_services(max_iter=5)
+
+    final_energies = wf.list_final_energies()
+    assert final_energies["HOOH"].keys() == {"label1", "label2"}
+
     # Add a second fragment
     butane = portal.data.get_molecule("butane.json")
     butane_id = butane.identifiers["canonical_isomeric_explicit_hydrogen_mapped_smiles"]
@@ -197,19 +211,7 @@ def test_compute_openffworkflow(fractal_compute_server):
     assert final_energies[butane_id].keys() == {"label1"}
     assert final_energies[butane_id]["label1"] is None
 
-    optimization_input = {
-        "label2": {
-            "type": "optimization_input",
-            "initial_molecule": butane.to_json(),
-            "constraints": {'scan': [('dihedral', '0', '2', '3', '1', '0', '120', '4')]}
-        }
-    }
 
-    wf.add_fragment(butane_id, optimization_input, provenance={})
-    fractal_compute_server.await_services(max_iter=5)
-
-    final_energies = wf.list_final_energies()
-    assert final_energies[butane_id].keys() == {"label1", "label2"}
 
 
 
