@@ -16,6 +16,7 @@ dependencies:
   - jsonschema
   - bcrypt
   - cryptography
+  - mongoengine
 
     # Testing
   - pytest
