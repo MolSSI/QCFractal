@@ -88,7 +88,7 @@ class BaseResult(db.DynamicDocument):
 
     # queue related
     task_queue_id = db.StringField()  # ObjectId, reference task_queue but without validation
-    status = db.StringField(default='INCOMPLETE', choices=['COMPLETE, INCOMPLETE', 'ERROR'])
+    status = db.StringField(default='INCOMPLETE', choices=['COMPLETE', 'INCOMPLETE', 'ERROR'])
 
     meta = {
         'abstract': True,
@@ -97,6 +97,7 @@ class BaseResult(db.DynamicDocument):
             'status'
         ]
     }
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -127,12 +128,22 @@ class Result(BaseResult):
     schema_version = db.IntField()  # or String?
 
     meta = {
-        'collection': 'results',
+        'collection': 'result',
         'indexes': [
            {'fields': ('program', 'driver', 'method', 'basis',
                        'molecule', 'options'), 'unique': True},
         ]
     }
+
+    # def save(self, *args, **kwargs):
+    #     """Override save to handle options"""
+    #
+    #     print('Options before: ', self.options)
+    #     if not isinstance(self.options, Options):
+    #         self.options = Options(program=self.program, option_name='default').update(upsert=True, full_result=True)
+    #         print('Options after: ', self.options)
+    #
+    #     return super(Result, self).save(*args, **kwargs)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -147,15 +158,16 @@ class Procedure(BaseResult):
     procedure_type = db.StringField(required=True)  # example: 'optimization', 'single'
     # Todo: change name to be different from results program
     procedure_program = db.StringField(required=True)  # example: 'Geometric'
-    options = db.ReferenceField(Options)  # options of the procedure
+    procedure_options = db.ReferenceField(Options)  # options of the procedure
 
     qc_meta = db.DynamicField()  # --> all inside results
 
     meta = {
+        'collection': 'procedure',
         'allow_inheritance': True,
         'indexes': [
-            # TODO: needs a unique index
-            {'fields': ('procedure_type', 'procedure_program'), 'unique': False}  # check
+            # TODO: needs a unique index, + molecule?
+            {'fields': ('procedure_type', 'procedure_program'), 'unique': False}  # TODO: check
         ]
     }
 
@@ -177,6 +189,7 @@ class OptimizationProcedure(Procedure):
 
     meta = {
         'indexes': [
+            {'fields': ('initial_molecule', 'procedure_type', 'procedure_program'), 'unique': False}  # TODO: check
         ]
     }
 
@@ -225,7 +238,7 @@ class TaskQueue(db.DynamicDocument):
     created_on = db.DateTimeField(required=True, default=datetime.datetime.now)
     modified_on = db.DateTimeField(required=True, default=datetime.datetime.now)
 
-    output = db.ReferenceField(BaseResult)  # can reference Results or Procedures
+    baseResult = db.ReferenceField(BaseResult)  # can reference Results or any Procedure
 
     meta = {
         'indexes': [
