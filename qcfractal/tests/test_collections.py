@@ -141,7 +141,7 @@ def test_compute_openffworkflow(fractal_compute_server):
         },
         "optimization_static_options": {
             "optimization_meta": {
-                "program": "rdkit",
+                "program": "geometric",
                 "coordsys": "tric",
             },
             "qc_meta": {
