@@ -44,7 +44,10 @@ conda activate {name}
 * `fireworks.yaml`: Fireworks based workflow for QCFractal
     * Same as `openff.yaml` without additional workflow components
     * Minimal recommendation to run examples
-* `dask.yaml`: Minimal structure using just Dask and Mongodb
+* `dask.yaml`: Minimal structure using Dask and Mongodb
+    * Minimal
+    * Does NOT include fireworks
+* `parsl.yaml`: Minimal structure using Parsl and Mongodb
     * Minimal
     * Does NOT include fireworks
 

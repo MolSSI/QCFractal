@@ -21,7 +21,6 @@ from tornado.ioloop import IOLoop
 from .server import FractalServer
 from .storage_sockets import storage_socket_factory
 
-
 ### Addon testing capabilities
 
 
@@ -69,6 +68,7 @@ using_unix = pytest.mark.skipif(
 
 ### Generic helpers
 
+
 def mark_slow(func):
     try:
         if not pytest.config.getoption("--runslow"):
@@ -79,6 +79,7 @@ def mark_slow(func):
 
     return func
 
+
 def mark_example(func):
     try:
         if not pytest.config.getoption("--runexamples"):
@@ -88,6 +89,7 @@ def mark_example(func):
         pass
 
     return func
+
 
 def recursive_dict_merge(base_dict, dict_to_merge_in):
     """Recursive merge for more complex than a simple top-level merge {**x, **y} which does not handle nested dict"""
@@ -120,6 +122,7 @@ def find_open_port():
 
     return port
 
+
 @contextmanager
 def preserve_cwd():
     """Always returns to CWD on exit
@@ -129,6 +132,7 @@ def preserve_cwd():
         yield cwd
     finally:
         os.chdir(cwd)
+
 
 ### Background thread loops
 
@@ -226,7 +230,7 @@ def popen(args, **kwargs):
 
             # If python script, skip the python bin
             if args[0].endswith("python"):
-               args.pop(0)
+                args.pop(0)
             args = coverage_flags + args
 
     # Do we optionally dumpstdout?
@@ -387,12 +391,49 @@ def fireworks_server_fixture(request):
     logging.basicConfig(level=None, filename=None)
 
 
-@pytest.fixture(scope="module", params=["dask", "fireworks"])
+@pytest.fixture(scope="module")
+def parsl_server_fixture(request):
+    """
+    Builds a server instance with the event loop running in a thread.
+    """
+
+    # Check mongo
+    check_active_mongo_server()
+
+    parsl = pytest.importorskip("parsl")
+    from parsl.configs.local_ipp import config
+    dataflow = parsl.dataflow.dflow.DataFlowKernel(config)
+
+    storage_name = "qcf_parsl_server_test"
+
+    with pristine_loop() as loop:
+
+        # Build server, manually handle IOLoop (no start/stop needed)
+        server = FractalServer(
+            port=find_open_port(),
+            storage_project_name=storage_name,
+            loop=loop,
+            queue_socket=dataflow,
+            ssl_options=False)
+
+        # Clean and re-init the databse
+        reset_server_database(server)
+
+        # Yield the server instance
+        with active_loop(loop) as act:
+            yield server
+
+    dataflow.atexit_cleanup()
+
+
+@pytest.fixture(scope="module", params=["dask", "fireworks", "parsl"])
 def fractal_compute_server(request):
     if request.param == "dask":
         yield from dask_server_fixture(request)
     elif request.param == "fireworks":
         yield from fireworks_server_fixture(request)
+    elif request.param == "parsl":
+        yield from parsl_server_fixture(request)
     else:
         raise TypeError("fractal_compute_server: internal parametrize error")
 

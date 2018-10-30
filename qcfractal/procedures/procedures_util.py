@@ -83,7 +83,7 @@ def unpack_single_run_meta(storage, meta, molecules):
         indexer["molecule_id"] = mol["id"]
         tasks[interface.schema.format_result_indices(indexer)] = data
 
-    return (tasks, [])
+    return tasks, []
 
 
 def parse_single_runs(storage, results):
@@ -132,7 +132,7 @@ def single_run_hash(data, program=None):
     single_keys = interface.schema.format_result_indices(data, program=program)
     keys = {"procedure_type": "single", "single_key": single_keys}
     hash_index =hash_procedure_keys(keys)
-    return (keys, hash_index)
+    return keys, hash_index
 
 
 def hash_procedure_keys(keys):

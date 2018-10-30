@@ -41,7 +41,7 @@ class FireworksAdapter:
 
         return ret
 
-    def aquire_complete(self):
+    def acquire_complete(self):
         ret = {}
 
         # Pull out completed results that match our queue ids

@@ -1,7 +1,8 @@
 """
-Queue adapter for Dask
+Queue adapter for Parsl
 """
 
+import time
 import importlib
 import logging
 import operator
@@ -9,35 +10,36 @@ import traceback
 
 
 def _get_future(future):
-    if future.exception() is None:
+    # if future.exception() is None: # This always seems to return None
+    try:
         return future.result()
-    else:
-        msg = "".join(traceback.format_exception(TypeError, future.exception(), future.traceback()))
-        ret = {"success": False, "error_message": msg}
+    except Exception as e:
+        msg = "Caught Parsl Error:\n" + traceback.format_exc()
+        ret = {"success": False, "error": msg}
         return ret
 
 
-class DaskAdapter:
-    """A Adapter for Dask
+class ParslAdapter:
+    """A Adapter for Parsl
     """
 
-    def __init__(self, dask_client, logger=None):
+    def __init__(self, parsl_dataflow, logger=None):
         """
         Parameters
         ----------
-        dask_client : distributed.Client
-            A activte Dask Distributed Client
+        parsl_dataflow : parsl.dataflow.dflow.DataFlowKernel
+            A activate Parsl DataFlow
         logger : None, optional
             A optional logging object to write output to
         """
-        self.dask_client = dask_client
+        self.dataflow = parsl_dataflow
         self.queue = {}
         self.function_map = {}
 
-        self.logger = logger or logging.getLogger('DaskAdapter')
+        self.logger = logger or logging.getLogger('ParslAdapter')
 
     def get_function(self, function):
-        """Obtains a Python function from a given string
+        """Obtains a Python function wrapped in a Parsl Python App
 
         Parameters
         ----------
@@ -47,30 +49,36 @@ class DaskAdapter:
         Returns
         -------
         callable
-            The desired Python function
+            The desired AppFactory
 
         Examples
         --------
 
         >>> get_function("numpy.einsum")
-        <function einsum at 0x110406a60>
+        <class PythonApp"AppFactory for einsum>
         """
+
+        from parsl.app.app import python_app
+
         if function in self.function_map:
             return self.function_map[function]
 
         module_name, func_name = function.split(".", 1)
         module = importlib.import_module(module_name)
-        self.function_map[function] = operator.attrgetter(func_name)(module)
+        func = operator.attrgetter(func_name)(module)
+
+        # TODO set walltime and the like
+        self.function_map[function] = python_app(func, data_flow_kernel=self.dataflow)
 
         return self.function_map[function]
 
     def submit_tasks(self, tasks):
-        """Adds tasks to the Dask queue
+        """Adds tasks to the Parsl queue
 
         Parameters
         ----------
         tasks : list of dict
-            Canonical Fractal with {"spec: {"function", "args", "kwargs"}} fields.
+            Canonical Fractal task with {"spec: {"function", "args", "kwargs"}} fields.
 
         Returns
         -------
@@ -86,7 +94,7 @@ class DaskAdapter:
 
             # Form run tuple
             func = self.get_function(spec["spec"]["function"])
-            task = self.dask_client.submit(func, *spec["spec"]["args"], **spec["spec"]["kwargs"])
+            task = func(*spec["spec"]["args"], **spec["spec"]["kwargs"])
 
             self.queue[tag] = (task, spec["parser"], spec["hooks"])
             self.logger.info("Adapter: Task submitted {}".format(tag))
@@ -94,7 +102,7 @@ class DaskAdapter:
         return ret
 
     def acquire_complete(self):
-        """Pulls complete tasks out of the Dask queue.
+        """Pulls complete tasks out of the Parsl queue.
 
         Returns
         -------
@@ -121,9 +129,10 @@ class DaskAdapter:
         bool
             True if the opertions was successful.
         """
-        from dask.distributed import wait
-        futures = [v[0] for k, v in self.queue.items()]
-        wait(futures)
+
+        for future in self.queue.values():
+            while future[0].done() is False:
+                time.sleep(0.1)
 
         return True
 

@@ -177,7 +177,7 @@ class QueueManagerHandler(APIHandler):
         storage_socket.handle_hooks(hooks)
         storage_socket.queue_mark_complete(completed)
         storage_socket.queue_mark_error(error_data)
-        return (len(completed), len(error_data))
+        return len(completed), len(error_data)
 
     def get(self):
         """Pulls new tasks from the Servers queue
