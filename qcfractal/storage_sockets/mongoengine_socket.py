@@ -125,12 +125,12 @@ class MongoengineSocket:
             self.client = pymongo.MongoClient(uri, authMechanism=authMechanism, authSource=authSource)
 
             # connect to mongoengine
-            self.mongoengine_client = db.connect(uri, authMechanism=authMechanism, authSource=authSource)
+            self.mongoengine_client = db.connect(db=project, host=uri, authMechanism=authMechanism, authSource=authSource)
         else:
             self.client = pymongo.MongoClient(uri)
 
             # connect to mongoengine
-            self.mongoengine_client = db.connect(uri)
+            self.mongoengine_client = db.connect(db=project, host=uri)
 
         self._url, self._port = expanded_uri["nodelist"][0]
 

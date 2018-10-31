@@ -127,7 +127,7 @@ def test_procedure(mongoengine_socket):
 
     data1 = {
         # "molecule": molecules[0],
-        "procedure_type": "custom_new_type",
+        "procedure_type": "undefined",
         "procedure_options": None,
         "procedure_program": "P5",
         "qc_meta": {
@@ -231,3 +231,15 @@ def test_add_task_queue():
     task = TaskQueue(baseResult=tor)
     task.save()
     assert TaskQueue.objects().count() == 3
+
+
+@pytest.mark.skip
+def test_queue():
+    tasks = TaskQueue.objects(status='WAITING')\
+                .limit(5)\
+                .order_by('-created_on')\
+                .select_related()   # *** no lazy load of ReferenceField, get them now (trurns of dereferencing, max_depth=1)
+                # .only(projections_list)
+                # .fields(..)
+                # .exculde(..)
+                # .no_dereference()  # don't get any of the ReferenceFields (ids) (Turning off dereferencing)

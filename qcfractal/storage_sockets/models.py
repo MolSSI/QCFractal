@@ -30,8 +30,12 @@ class Molecule(db.DynamicDocument):
     """
 
     name = db.StringField()
+    symbols = db.ListField()
     molecular_formula = db.StringField()
     molecule_hash = db.StringField()
+    geometry = db.ListField()
+    real = db.ListField()
+    fragments = db.DynamicField()
 
     def create_hash(self):
         """ TODO: create a special hash before saving"""
@@ -78,6 +82,9 @@ class Options(db.DynamicDocument):
         ]
     }
 
+    def __str__(self):
+        return self.program + ', ' + self.option_name
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -113,7 +120,7 @@ class Result(BaseResult):
     method = db.StringField(required=True)  # example "uff"
     basis = db.StringField()
     molecule = db.ReferenceField(Molecule, required=True)   # or LazyReferenceField if only ID is needed?
-    options = db.LazyReferenceField(Options)  # ** has to be a FK or empty, can't be a string
+    options = db.ReferenceField(Options)  # ** has to be a FK or empty, can't be a string
 
     # output related
     properties = db.DynamicField()  # accept any, no validation
@@ -135,15 +142,18 @@ class Result(BaseResult):
         ]
     }
 
-    # def save(self, *args, **kwargs):
-    #     """Override save to handle options"""
-    #
-    #     print('Options before: ', self.options)
-    #     if not isinstance(self.options, Options):
-    #         self.options = Options(program=self.program, option_name='default').update(upsert=True, full_result=True)
-    #         print('Options after: ', self.options)
-    #
-    #     return super(Result, self).save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        """Override save to handle options"""
+
+        if not isinstance(self.options, Options):
+            # self.options = Options.objects(program=self.program, option_name='default')\
+            #     .modify(upsert=True, new=True, option_name='default')
+            self.options = Options.objects(program=self.program, option_name='default').first()
+            if not self.options:
+                self.options = Options(program=self.program, option_name='default').save()
+                # self.options.save()
+
+        return super(Result, self).save(*args, **kwargs)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -155,7 +165,8 @@ class Procedure(BaseResult):
         TODO: this looks exactly like results except those attributes listed here
     """
 
-    procedure_type = db.StringField(required=True)  # example: 'optimization', 'single'
+    procedure_type = db.StringField(required=True,
+                                    choices=['undefined', 'optimization', 'torsiondrive'])
     # Todo: change name to be different from results program
     procedure_program = db.StringField(required=True)  # example: 'Geometric'
     procedure_options = db.ReferenceField(Options)  # options of the procedure
