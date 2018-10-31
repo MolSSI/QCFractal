@@ -36,9 +36,6 @@ class OpenFFWorkflow(Collection):
 
         if client is None:
             raise KeyError("OpenFFWorkflow must have a client.")
-        # Expand options
-        # if options is None:
-        #     raise KeyError("No record of OpenFFWorkflow {} found and no initial options passed in.".format(name))
         super().__init__(name, client=client, **kwargs)
 
         self._torsiondrive_cache = {}
