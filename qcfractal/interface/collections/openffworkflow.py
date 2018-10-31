@@ -19,7 +19,7 @@ class OpenFFWorkflow(Collection):
         A optional server portal to connect the database
     """
 
-    def __init__(self, name, options=None, client=None, **kwargs):
+    def __init__(self, name, client=None, **kwargs):
         """
         Initializer for the OpenFFWorkflow object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -37,9 +37,9 @@ class OpenFFWorkflow(Collection):
         if client is None:
             raise KeyError("OpenFFWorkflow must have a client.")
         # Expand options
-        if options is None:
-            raise KeyError("No record of OpenFFWorkflow {} found and no initial options passed in.".format(name))
-        super().__init__(name, client=client, **options, **kwargs)
+        # if options is None:
+        #     raise KeyError("No record of OpenFFWorkflow {} found and no initial options passed in.".format(name))
+        super().__init__(name, client=client, **kwargs)
 
         self._torsiondrive_cache = {}
 
@@ -60,6 +60,7 @@ class OpenFFWorkflow(Collection):
         fragments: dict = {}
         enumerate_states: dict = {}
         enumerate_fragments: dict = {}
+        torsiondrive_input: dict = {}
         torsiondrive_static_options: Dict[str, Union[str, Dict[str, str]]] = {
             "torsiondrive_meta": {},
             "optimization_meta": {
