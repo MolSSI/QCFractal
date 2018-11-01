@@ -65,7 +65,7 @@ class OpenFFWorkflow(Collection):
                 "level": 0,
                 "reasonable": True,
                 "carbon_hybridization": True,
-                "supress_hydrogen": True
+                "suppress_hydrogen": True
             }
         }
         enumerate_fragments: Dict[str, Union[str, Dict[str, str]]] = {
