@@ -55,7 +55,7 @@ class OpenFFWorkflow(Collection):
         and will create the information to pass back and forth between server and client
         """
         fragments: dict = {}
-        enumerate_states: Dict[str, Union[str, Dict[str, str]]] = {
+        enumerate_states: Dict[str, Union[str, Dict]] = {
             "version": "",
             "options": {
                 "protonation": True,
@@ -68,7 +68,7 @@ class OpenFFWorkflow(Collection):
                 "suppress_hydrogen": True
             }
         }
-        enumerate_fragments: Dict[str, Union[str, Dict[str, str]]] = {
+        enumerate_fragments: Dict[str, Union[str, Dict]] = {
             "version": "",
             "options": {
                 "strict_stereo": True,
@@ -77,7 +77,7 @@ class OpenFFWorkflow(Collection):
                 "remove_map": True
             }
         }
-        torsiondrive_input: Dict[str, Union[str, Dict[str, str]]] = {
+        torsiondrive_input: Dict[str, Union[str, Dict]] = {
             "restricted": True,
             "torsiondrive_options": {
                 "max_conf": 1,
