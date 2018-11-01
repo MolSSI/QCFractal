@@ -55,9 +55,43 @@ class OpenFFWorkflow(Collection):
         and will create the information to pass back and forth between server and client
         """
         fragments: dict = {}
-        enumerate_states: dict = {}
-        enumerate_fragments: dict = {}
-        torsiondrive_input: dict = {}
+        enumerate_states: Dict[str, str] = {
+            "version": "",
+            "options": {
+                "protonation": True,
+                "tautomers": False,
+                "stereoisomers": True,
+                "max_states": 200,
+                "level": 0,
+                "reasonable": True,
+                "carbon_hybridization": True,
+                "supress_hydrogen": True
+            }
+        }
+        enumerate_fragments: Dict[str, str] = {
+            "version": "",
+            "options": {
+                "strict_stereo": True,
+                "combinatorial": True,
+                "MAX_ROTORS": 3,
+                "remove_map": True
+            }
+        }
+        torsiondrive_input: Dict[str, Union[str, Dict[str, str]]] = {
+            "restricted": True,
+            "torsiondrive_options": {
+                "max_conf": 1,
+                "terminal_torsion_resolution": 30,
+                "internal_torsion_resolution": 30,
+                "scan_internal_terminal_combination": 0,
+                "scan_dimension": 1
+            },
+            "restricted_optimization_options": {
+                "maximum_rotation": 30,
+                "interval": 5
+            }
+
+        }
         torsiondrive_static_options: Dict[str, Union[str, Dict[str, str]]] = {
             "torsiondrive_meta": {},
             "optimization_meta": {
@@ -73,14 +107,23 @@ class OpenFFWorkflow(Collection):
             }
         }
         optimization_static_options: Dict[str, Union[str, Dict[str, str]]] = {
-            "optimization_meta": {},
-            "qc_meta": {},
+            "optimization_meta": {
+                "program": "geometric",
+                "coordsys": "tric"
+            },
+            "qc_meta": {
+                "driver": "gradient",
+                "method": "UFF",
+                "basis": "",
+                "options": "none",
+                "program": "rdkit",
+            },
         }
 
     # Valid options which can be fetched from the get_options method
     # Kept as separate list to be easier to read for devs
-    __workflow_options = ("enumerate_states", "enumerate_fragments", "torsiondrive_input", "torsiondrive_meta",
-                          "optimization_meta", "qc_meta")
+    __workflow_options = ("enumerate_states", "enumerate_fragments", "torsiondrive_input", "torsiondrive_static_options",
+                          "optimization_static_options")
 
     def _pre_save_prep(self, client):
         pass
@@ -192,7 +235,6 @@ class OpenFFWorkflow(Collection):
         return ret
 
     def _add_optimize(self, packet):
-
         optimization_meta = copy.deepcopy(
             {k: self.data.optimization_static_options[k]
              for k in ("optimization_meta", "qc_meta")})
@@ -200,7 +242,6 @@ class OpenFFWorkflow(Collection):
         for k in ["constraints"]:
             optimization_meta["optimization_meta"][k] = packet[k]
 
-        optimization_meta["keywords"] = optimization_meta.pop("optimization_meta")
         program = optimization_meta["keywords"]["program"]
         # Get hash of optimization
         ret = self.client.add_procedure("optimization", program, optimization_meta, [packet["initial_molecule"]])
