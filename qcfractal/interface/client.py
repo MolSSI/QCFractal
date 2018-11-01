@@ -424,7 +424,7 @@ class FractalClient(object):
         else:
             return r.json()["data"]
 
-    def check_tasks(self, query, return_full=False):
+    def check_tasks(self, query, projection=None, return_full=False):
         """Checks the status of tasks in the Fractal queue.
 
         Parameters
@@ -443,7 +443,7 @@ class FractalClient(object):
         >>> client.check_tasks({"id": "5bd35af47b878715165f8225"})
         [{"status": "WAITING"}]
         """
-        payload = {"meta": {}, "data": query}
+        payload = {"meta": {"projection": projection}, "data": query}
 
         r = self._request("get", "task_queue", payload)
 
