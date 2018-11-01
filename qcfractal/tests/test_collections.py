@@ -181,7 +181,7 @@ def test_compute_openffworkflow(fractal_compute_server):
         "label2": {
             "type": "optimization_input",
             "initial_molecule": hooh.to_json(),
-            "constraints": {'set': [('dihedral', '1', '2', '3', '4', '0')]}
+            "constraints": {'set': [{"type": 'dihedral', "indices": [0, 1, 2, 3], "value": 0}]}
         }
     }
 
