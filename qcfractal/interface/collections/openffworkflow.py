@@ -55,7 +55,7 @@ class OpenFFWorkflow(Collection):
         and will create the information to pass back and forth between server and client
         """
         fragments: dict = {}
-        enumerate_states: Dict[str, str] = {
+        enumerate_states: Dict[str, Union[str, Dict[str, str]]] = {
             "version": "",
             "options": {
                 "protonation": True,
@@ -68,7 +68,7 @@ class OpenFFWorkflow(Collection):
                 "supress_hydrogen": True
             }
         }
-        enumerate_fragments: Dict[str, str] = {
+        enumerate_fragments: Dict[str, Union[str, Dict[str, str]]] = {
             "version": "",
             "options": {
                 "strict_stereo": True,
