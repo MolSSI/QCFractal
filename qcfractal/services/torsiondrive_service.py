@@ -206,8 +206,8 @@ class TorsionDriveService:
                 if not isinstance(key, (tuple, list)):
                     constraints[0]["value"] = key
                 else:
-                    for num, k in enumerate(key):
-                        constraints[num]["value"] = k
+                    for con_num, k in enumerate(key):
+                        constraints[con_num]["value"] = k
                 packet["meta"]["keywords"]["constraints"] = {"set": constraints}
 
                 mol = json.loads(initial_molecule)

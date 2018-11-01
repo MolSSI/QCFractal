@@ -5,6 +5,7 @@ import copy
 
 from . import collection_utils
 from .collection import Collection
+from .. import orm
 
 from typing import Dict, Union
 
@@ -90,7 +91,6 @@ class OpenFFWorkflow(Collection):
                 "maximum_rotation": 30,
                 "interval": 5
             }
-
         }
         torsiondrive_static_options: Dict[str, Union[str, Dict[str, str]]] = {
             "torsiondrive_meta": {},
@@ -122,8 +122,8 @@ class OpenFFWorkflow(Collection):
 
     # Valid options which can be fetched from the get_options method
     # Kept as separate list to be easier to read for devs
-    __workflow_options = ("enumerate_states", "enumerate_fragments", "torsiondrive_input", "torsiondrive_static_options",
-                          "optimization_static_options")
+    __workflow_options = ("enumerate_states", "enumerate_fragments", "torsiondrive_input",
+                          "torsiondrive_static_options", "optimization_static_options")
 
     def _pre_save_prep(self, client):
         pass
@@ -206,14 +206,8 @@ class OpenFFWorkflow(Collection):
             else:
                 raise KeyError("{} is not an openffworklow type job".format(packet['type']))
 
-            hash_lists = []
-            [hash_lists.extend(x) for x in ret.values()]
-
-            if len(hash_lists) != 1:
-                raise KeyError("Something went very wrong.")
-
             # add back to fragment data
-            packet["hash_index"] = hash_lists[0]
+            packet["hash_index"] = ret
             packet["provenance"] = provenance
             frag_data[name] = packet
 
@@ -232,7 +226,11 @@ class OpenFFWorkflow(Collection):
 
         # Get hash of torsion
         ret = self.client.add_service("torsiondrive", [packet["initial_molecule"]], torsion_meta)
-        return ret
+        hash_lists = []
+        [hash_lists.extend(x) for x in ret.values()]
+        if len(hash_lists) != 1:
+            raise KeyError("Something went very wrong.")
+        return hash_lists[0]
 
     def _add_optimize(self, packet):
         optimization_meta = copy.deepcopy(
@@ -244,10 +242,19 @@ class OpenFFWorkflow(Collection):
 
         optimization_meta["keywords"] = optimization_meta.pop("optimization_meta")
         program = optimization_meta["keywords"]["program"]
+
         # Get hash of optimization
         ret = self.client.add_procedure("optimization", program, optimization_meta, [packet["initial_molecule"]])
 
-        return ret
+        # TODO fix after reserved procedures/results
+        hash_lists = []
+        [hash_lists.extend(x) for x in ret.values()]
+        if len(hash_lists) != 1:
+            raise KeyError("Something went very wrong.")
+
+        ret = self.client.check_tasks({"id": hash_lists[0]}, projection={"hash_index": True})
+
+        return ret[0]["hash_index"]
 
     def get_fragment_data(self, fragments=None, refresh_cache=False):
         """Obtains fragment torsiondrives from server to local data.
@@ -305,7 +312,14 @@ class OpenFFWorkflow(Collection):
             tmp = {}
             for k, v in self.data.fragments[frag].items():
                 if v["hash_index"] in self._torsiondrive_cache:
-                    tmp[k] = self._torsiondrive_cache[v["hash_index"]].final_energies()
+                    # TODO figure out a better solution here
+                    obj = self._torsiondrive_cache[v["hash_index"]]
+                    if isinstance(obj, orm.TorsionDriveORM):
+                        tmp[k] = obj.final_energies()
+                    elif isinstance(obj, orm.OptimizationORM):
+                        tmp[k] = obj.final_energy()
+                    else:
+                        raise TypeError("Internal type error encoured, buy a dev a coffee.")
                 else:
                     tmp[k] = None
 
