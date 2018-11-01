@@ -354,6 +354,7 @@ def dask_server_fixture(request):
 
             client.close()
 
+        cluster.scale_down(cluster.workers)
         cluster.close()
 
 
