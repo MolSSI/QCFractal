@@ -242,6 +242,7 @@ class OpenFFWorkflow(Collection):
         for k in ["constraints"]:
             optimization_meta["optimization_meta"][k] = packet[k]
 
+        optimization_meta["keywords"] = optimization_meta.pop("optimization_meta")
         program = optimization_meta["keywords"]["program"]
         # Get hash of optimization
         ret = self.client.add_procedure("optimization", program, optimization_meta, [packet["initial_molecule"]])

@@ -153,7 +153,7 @@ def test_compute_openffworkflow(fractal_compute_server):
             }
         }
     }
-    wf = portal.collections.OpenFFWorkflow("Workflow1", client=client, options=openff_workflow_options)
+    wf = portal.collections.OpenFFWorkflow("Workflow1", client=client, **openff_workflow_options)
 
     # # Add a fragment and wait for the compute
     hooh = portal.data.get_molecule("hooh.json")
