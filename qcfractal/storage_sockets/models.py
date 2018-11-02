@@ -114,8 +114,7 @@ class Result(BaseResult):
     driver = db.StringField(required=True)  # example "gradient"
     method = db.StringField(required=True)  # example "uff"
     basis = db.StringField()
-    # molecule = db.ReferenceField(Molecule)   # or LazyReferenceField if only ID is needed?
-    molecule_id = db.DynamicField()
+    molecule = db.ReferenceField(Molecule)   # or LazyReferenceField if only ID is needed?
     # options = db.ReferenceField(Options)  # ** has to be a FK or empty, can't be a string
     options = db.StringField()
 

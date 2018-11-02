@@ -25,7 +25,6 @@ n_mol = 1000
 n_results = 1000
 n_query = 1000
 
-option = Options(program='Psi4', name='default').save()
 
 def insert_molecules(n_mol):
     # add Molecules
@@ -52,7 +51,7 @@ def insert_results(n_results, mol):
         # mol = Molecule.objects.first()  # one DB access
         # option = Options.objects().first()
         data = {
-            "molecule_id": mol.id,
+            "molecule": mol.id,
             "method": str(i),
             "basis": "B1",
             "options": None,
@@ -71,7 +70,7 @@ def bulk_insert_results(n_results, mol):
         # mol = Molecule.objects.first()  # one DB access
         # option = Options.objects().first()
         data = {
-            "molecule_id": mol.id,
+            "molecule": mol,
             "method": str(i),
             "basis": "Bulk",
             "options": None,
@@ -90,7 +89,7 @@ def bulk_insert_results_pymongo(n_results, mol):
         # mol = Molecule.objects.first()  # one DB access
         # option = Options.objects().first()
         data = {
-            "molecule_id": mol.id,
+            "molecule": mol.id,
             "method": str(i),
             "basis": "Bulk pymongo",
             "options": None,
@@ -114,7 +113,7 @@ def duplicate_results(n_results, mol):
         # mol = Molecule.objects.first()  # one DB access
         # option = Options.objects().first()
         data = {
-            "molecule_id": mol.id,
+            "molecule": mol,
             "method": str(i + int(n_results/2)),
             "basis": "Bulk",
             "options": None,
@@ -138,7 +137,7 @@ def duplicate_results_pymongo(n_results, mol):
         # mol = Molecule.objects.first()  # one DB access
         # option = Options.objects().first()
         data = {
-            "molecule_id": mol.id,
+            "molecule": mol.id,
             "method": str(i + int(n_results/2)),
             "basis": "Bulk pymongo",
             "options": None,
@@ -162,7 +161,7 @@ def query_results(n_query, mol):
         # mol = Molecule.objects.first()  # --> the overhead in this query
         # option = Options.objects(program='Psi4').first()  # or [0], throws ex
         query = {
-            "molecule_id": mol.id,
+            "molecule": mol,
             "method": str(i),
             "basis": "B1",
             "options": None,
@@ -177,7 +176,7 @@ def query_results_pymongo(n_query, mol):
         # mol = Molecule.objects.first()  # --> the overhead in this query
         # option = Options.objects(program='Psi4').first()  # or [0], throws ex
         query = {
-            "molecule_id": mol.id,
+            "molecule": mol.id,
             "method": str(i),
             "basis": "B1",
             "options": None,
@@ -189,6 +188,9 @@ def query_results_pymongo(n_query, mol):
         pymongo_client.results.find(query)
 
 def bench():
+
+    option = Options(program='Psi4', name='default').save()
+
     tstart = time()
     insert_molecules(n_mol)
     dtime = (time() - tstart) * 1000  # msec
@@ -250,3 +252,4 @@ def bench():
 
 if __name__ == "__main__":
     bench()
+
