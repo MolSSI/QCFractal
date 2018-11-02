@@ -50,7 +50,9 @@ class Molecule(db.DynamicDocument):
     meta = {
         'collection': 'molecules',
         'indexes': [
-            {'fields': ('molecule_hash', 'molecular_formula'), 'unique': True}
+            {'fields': ('molecule_hash', 'molecular_formula'),
+             'unique': False
+            }  # TODO: what is unique?
         ]
     }
 
@@ -62,28 +64,21 @@ class Options(db.DynamicDocument):
         Options are unique for a specific program and name
     """
 
-    program = db.StringField(required=True)
-    # TODO: choose a more descriptive name, like options_type
-    option_name = db.StringField(default='default', required=True)
-
-    # program specific
-    # e_convergence = db.IntField()
-    # d_convergence = db.IntField()
-    # dft_spherical_points = db.IntField()
-    # dft_radial_points = db.IntField()
-    # maxiter = db.IntField()
-    # scf_type = db.StringField()
-    # mp2_type = db.StringField()
-    # freeze_core = db.BooleanField()
+    # TODO: pull choices from const config
+    program = db.StringField(required=True) #, choices=['rdkit', 'psi4', 'geometric', 'torsiondrive'])
+    # "default is reserved, insert on start
+    # option_name = db.StringField(required=True)
+    name = db.StringField(required=True)
 
     meta = {
         'indexes': [
-            {'fields': ('program', 'option_name'), 'unique': True}
+            {'fields': ('program', 'name'), 'unique': True}
         ]
     }
 
     def __str__(self):
-        return self.program + ', ' + self.option_name
+        return str(self.id) + ', ' + str(self.program) + ', name: ' + str(self.name)
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -119,8 +114,10 @@ class Result(BaseResult):
     driver = db.StringField(required=True)  # example "gradient"
     method = db.StringField(required=True)  # example "uff"
     basis = db.StringField()
-    molecule = db.ReferenceField(Molecule, required=True)   # or LazyReferenceField if only ID is needed?
-    options = db.ReferenceField(Options)  # ** has to be a FK or empty, can't be a string
+    # molecule = db.ReferenceField(Molecule)   # or LazyReferenceField if only ID is needed?
+    molecule_id = db.DynamicField()
+    # options = db.ReferenceField(Options)  # ** has to be a FK or empty, can't be a string
+    options = db.StringField()
 
     # output related
     properties = db.DynamicField()  # accept any, no validation
@@ -131,18 +128,19 @@ class Result(BaseResult):
         # "cpu": "Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz", "hostname": "x1-carbon6", "username": "doaa",
         # "wall_time": 0.14191770553588867},
 
-    schema_name = db.StringField(default="qc_ret_data_output")
+    schema_name = db.StringField() #default="qc_ret_data_output")
     schema_version = db.IntField()  # or String?
 
     meta = {
-        'collection': 'result',
+        'collection': 'results',
         'indexes': [
            {'fields': ('program', 'driver', 'method', 'basis',
-                       'molecule', 'options'), 'unique': True},
+                       'molecule_id', 'options'), 'unique': True},
         ]
     }
 
-    def save(self, *args, **kwargs):
+    # not used yet
+    def _save(self, *args, **kwargs):
         """Override save to handle options"""
 
         if not isinstance(self.options, Options):
@@ -165,11 +163,11 @@ class Procedure(BaseResult):
         TODO: this looks exactly like results except those attributes listed here
     """
 
-    procedure_type = db.StringField(required=True,
-                                    choices=['undefined', 'optimization', 'torsiondrive'])
+    procedure = db.StringField(required=True)
+                                    # choices=['undefined', 'optimization', 'torsiondrive'])
     # Todo: change name to be different from results program
-    procedure_program = db.StringField(required=True)  # example: 'Geometric'
-    procedure_options = db.ReferenceField(Options)  # options of the procedure
+    program = db.StringField(required=True)  # example: 'Geometric'
+    options = db.ReferenceField(Options)  # options of the procedure
 
     qc_meta = db.DynamicField()  # --> all inside results
 
@@ -178,7 +176,7 @@ class Procedure(BaseResult):
         'allow_inheritance': True,
         'indexes': [
             # TODO: needs a unique index, + molecule?
-            {'fields': ('procedure_type', 'procedure_program'), 'unique': False}  # TODO: check
+            {'fields': ('procedure', 'program'), 'unique': False}  # TODO: check
         ]
     }
 
@@ -190,17 +188,17 @@ class OptimizationProcedure(Procedure):
         An Optimization  procedure
     """
 
-    procedure_type = db.StringField(default='optimization', required=True)
+    procedure = db.StringField(default='optimization', required=True)
 
-    initial_molecule = db.ReferenceField(Molecule)  # always load with select_related
-    final_molecule = db.ReferenceField(Molecule)
+    # initial_molecule = db.ReferenceField(Molecule)  # always load with select_related
+    # final_molecule = db.ReferenceField(Molecule)
 
     # output
-    trajectory = db.ListField(Result)
+    # trajectory = db.ListField(Result)
 
     meta = {
         'indexes': [
-            {'fields': ('initial_molecule', 'procedure_type', 'procedure_program'), 'unique': False}  # TODO: check
+            # {'fields': ('initial_molecule', 'procedure_type', 'procedure_program'), 'unique': False}  # TODO: check
         ]
     }
 
@@ -210,7 +208,7 @@ class TorsiondriveProcedure(Procedure):
         An torsion drive  procedure
     """
 
-    procedure_type = db.StringField(default='torsiondrive', required=True)
+    procedure = db.StringField(default='torsiondrive', required=True)
 
     # TODO: add more fields
 
@@ -243,18 +241,19 @@ class TaskQueue(db.DynamicDocument):
     hooks = db.ListField(db.DynamicField())  # ??
     tag = db.ListField()  # or str
     parser = db.StringField(default='')
-    status = db.StringField(default='WAITING',
-                            choices=['RUNNING', 'WAITING', 'ERROR', 'COMPLETE'])
+    status = db.StringField(default='WAITING')
+                            # choices=['RUNNING', 'WAITING', 'ERROR', 'COMPLETE'])
 
     created_on = db.DateTimeField(required=True, default=datetime.datetime.now)
     modified_on = db.DateTimeField(required=True, default=datetime.datetime.now)
 
-    baseResult = db.ReferenceField(BaseResult)  # can reference Results or any Procedure
+    base_result = db.ReferenceField(BaseResult)  # can reference Results or any Procedure
 
     meta = {
         'indexes': [
-            'created_on',
-            'status'
+            # 'created_on',
+            'status',
+            {'fields': ("status", "tag", "hash_index"), 'unique': False}
 
         ]
         # 'indexes': [
@@ -278,6 +277,12 @@ class TaskQueue(db.DynamicDocument):
 
 
 class ServiceQueue(db.DynamicDocument):
-    pass
 
+    meta = {
+        'indexes': [
+            'status',
+            {'fields': ("status", "tag", "hash_index"), 'unique': False}
+
+        ]
+    }
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
