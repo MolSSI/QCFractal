@@ -127,9 +127,9 @@ def test_procedure(mongoengine_socket):
 
     data1 = {
         # "molecule": molecules[0],
-        "procedure_type": "undefined",
-        "procedure_options": None,
-        "procedure_program": "P5",
+        "procedure": "undefined",
+        "options": None,
+        "program": "P5",
         "qc_meta": {
             "basis": "B1",
             "program": "P1",
@@ -157,8 +157,8 @@ def test_optimization_procedure(mongoengine_socket):
     data1 = {
         "initial_molecule": molecules[0],
         # "procedure_type": None,
-        "procedure_options": None,
-        "procedure_program": "P7",
+        "options": None,
+        "program": "P7",
         "qc_meta": {
             "basis": "B1",
             "program": "P1",
@@ -186,9 +186,9 @@ def test_torsiondrive_procedure(mongoengine_socket):
 
     data1 = {
         # "molecule": molecules[0],
-        # "procedure_type": None,
-        "procedure_options": None,
-        "procedure_program": "P9",
+        # "procedure": None,
+        "options": None,
+        "program": "P9",
         "qc_meta": {
             "basis": "B1",
             "program": "P1",
@@ -214,14 +214,14 @@ def test_add_task_queue():
     # add a task that reference results
     result = Result.objects().first()
 
-    task = TaskQueue(base_result=result)
+    task = TaskQueue(base_result=result, hash_index='1')
     task.save()
     assert TaskQueue.objects().count() == 1
 
     # add a task that reference Optimization Procedure
     opt = OptimizationProcedure.objects().first()
 
-    task = TaskQueue(base_result=opt)
+    task = TaskQueue(base_result=opt, hash_index='2')
     task.save()
     assert TaskQueue.objects().count() == 2
 

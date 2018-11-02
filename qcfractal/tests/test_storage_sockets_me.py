@@ -132,7 +132,7 @@ def test_options_add(storage_socket):
 
     # NOTE: changed interface
     ret = storage_socket.get_options(opts["program"], opts["name"])
-    print('----------', ret)
+
     # del opts["id"]
     assert ret["meta"]["n_found"] == 1
     assert ret["data"][0] == opts

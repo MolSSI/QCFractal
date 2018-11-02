@@ -24,6 +24,7 @@ import bson.errors
 import pandas as pd
 from bson.objectid import ObjectId
 import json
+from typing import List, Union, Dict, Optional
 
 from . import storage_utils
 # Pull in the hashing algorithms from the client
@@ -80,7 +81,8 @@ class MongoengineSocket:
                  bypass_security=False,
                  authMechanism="SCRAM-SHA-1",
                  authSource=None,
-                 logger=None):
+                 logger=None,
+                 max_limit=1000):
         """
         Constructs a new socket where url and port points towards a Mongod instance.
 
@@ -156,6 +158,7 @@ class MongoengineSocket:
         # Isolate objects to this single project DB
         self._project_name = project
         self._tables = self.client[project]
+        self._max_limit = max_limit
 
         new_table = self.init_database()
         for k, v in new_table.items():
@@ -480,28 +483,42 @@ class MongoengineSocket:
 
         return self._del_by_index("molecules", values, index=index)
 
-    def _doc_to_tuples(self, data: db.Document, with_id=True):
+    def _doc_to_tuples(self, doc: db.Document, with_ids=True):
         """
         Todo: to be removed
         """
-        if not data:
+        if not doc:
             return
 
-        table = data._get_collection_name()
+        table = doc._get_collection_name()
 
-        d_json = json.loads(data.to_json())
-        d_json["id"] = str(data.id)
+        d_json = json.loads(doc.to_json())
+        d_json["id"] = str(doc.id)
         del d_json["_id"]
-        ukey = tuple(data[key] for key in self._table_indices[table])
-        if with_id:
-            rdata = (ukey, str(data.id))
+        ukey = tuple(doc[key] for key in self._table_indices[table])
+        if with_ids:
+            rdata = (ukey, str(doc.id))
         else:
             rdata = ukey
         return rdata
 
-### Mongo options functions
+    def _doc_to_json(self, doc: db.Document, with_ids=True):
+        """Rename _id to id, or remove it altogether"""
 
-    def add_options(self, data):
+        if not doc:
+            return
+
+        d_json = json.loads(doc.to_json())
+        if with_ids:
+            d_json["id"] = str(doc.id)
+
+        del d_json["_id"]
+
+        return d_json
+
+    ### Mongo options functions
+
+    def add_options(self, data, return_json: bool=False, with_ids: bool=True):
         """
         Adds a single options to the database.
 
@@ -512,16 +529,14 @@ class MongoengineSocket:
 
         Returns
         -------
-        dict
+        dict --> still returns tuple
         """
 
         # If only a single promote it to a list
         if isinstance(data, dict):
             data = [data]
 
-        meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [],
-                "error_description": False,
-                "validation_errors": []}
+        meta = storage_utils.add_metadata()
 
         options = []
         try:
@@ -533,7 +548,7 @@ class MongoengineSocket:
                     options.append(self._doc_to_tuples(doc))
                     meta['n_inserted'] += 1
                 else:
-                    meta['duplicates'].append(self._doc_to_tuples(found, with_id=False))
+                    meta['duplicates'].append(self._doc_to_tuples(found, with_ids=False))
             meta["success"] = True
         except mongoengine.errors.ValidationError as err:
             meta["validation_errors"].append(str(err))
@@ -543,26 +558,44 @@ class MongoengineSocket:
         ret = {"data": options, "meta": meta}
         return ret
 
-    def get_options(self, keys, projection=None):
+    def get_options(self, program: str=None, name: str=None, return_json: bool=True,
+                    with_ids: bool=False, limit=None):
+        """
+
+        Parameters
+        ----------
+        keys
+        projection
+
+        Returns
+        -------
+
+        """
         meta = storage_utils.get_metadata()
+        query = {}
+        if program:
+            query['program'] = program
+        if name:
+            query['name'] = name
+        q_limit = self._max_limit
+        if limit and limit < q_limit:
+            q_limit = limit
+
         data = []
         try:
-            if projection:
-                data = Options.objects(**keys).only(projection).as_pymongo()
-            else:
-                data = Options.objects(**keys).as_pymongo()
-            # Convert ID
-            for d in data:
-                del d["id"]
-            meta["n_found"] = len(data)
+            data = Options.objects(**query).limit(q_limit)
+
+            meta["n_found"] = data.count()
             meta["success"] = True
         except Exception as err:
-            meta['errors'] = str(err)
+            meta['error_description'] = str(err)
 
-        # for pos, options in blanks:
-        #     ret["data"].insert(pos, options)
+        if return_json:
+            rdata = [self._doc_to_json(d, with_ids) for d in data]
+        else:
+            rdata = data
 
-        return {"meta": meta, "data": data}
+        return {"data": rdata, "meta": meta}
 
 
     def del_option(self, program, name):
@@ -585,15 +618,13 @@ class MongoengineSocket:
         # monogoengine
         count = 0
         option = Options.objects(program=program, name=name)
-        print('####', option)
         if option:
             count = option.delete()
 
         return count
 
-        # return (self._tables["options"].delete_one({"program": program, "name": name})).deleted_count
 
-### Mongo database functions
+    ### Mongo database functions
 
     def add_collection(self, data, overwrite=False):
         """
