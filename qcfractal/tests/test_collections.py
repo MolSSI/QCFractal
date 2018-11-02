@@ -192,6 +192,10 @@ def test_compute_openffworkflow(fractal_compute_server):
     assert final_energies["HOOH"].keys() == {"label1", "label2"}
     assert pytest.approx(0.00259754, 1.e-4) == final_energies["HOOH"]["label2"]
 
+    final_molecules = wf.list_final_molecules()
+    assert final_molecules.keys() == {"HOOH"}
+    assert final_molecules["HOOH"].keys() == {"label1", "label2"}
+
     # Add a second fragment
     butane = portal.data.get_molecule("butane.json")
     butane_id = butane.identifiers["canonical_isomeric_explicit_hydrogen_mapped_smiles"]
