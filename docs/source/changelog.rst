@@ -13,19 +13,34 @@ Enhancements
 Bug Fixes
 +++++++++
 
-X.Y.0 / 2018-11-DD
+0.3.0a / 2018-11-02
 -------------------
 
-This is potentially the first beta for QCFractal.
+This is the third alpha release of QCFractal focusing on a command line
+interface and the ability to have multiple queues interacting with a central
+server.
 
 New Features
 ++++++++++++
+- (:pr:`72`) Queues are no longer required of FractalServer instances, now separate QueueManager instances can be created that push and pull tasks to the server.
+- (:pr:`80`) A `Parsl <http://parsl-project.org>`_ queue manager was written.
+- (:pr:`75`) CLI's have been added for the `qcfractal-server` and `qcfractal-manager` instances.
+- (:pr:`83`) The status of server tasks and services can now be queried from a FractalClient.
+- (:pr:`82`) OpenFF Workflows can now add single optimizations for fragments.
 
 Enhancements
 ++++++++++++
 
+- (:pr:`74`) The documentation now has flowcharts showing task and service pathways through the code.
+- (:pr:`73`) Collection `.data` attributes are now typed and validated with pydantic.
+- (:pr:`85`) The CLI has been enhanced to cover additional features such as `queue-manager` ping time.
+- (:pr:`84`) QCEngine 0.4.0 and geomeTRIC 0.9.1 versions are now compatible with QCFractal.
+
+
 Bug Fixes
 +++++++++
+
+- (:pr:`92`) Fixes an error with query OpenFFWorkflows.
 
 0.2.0a / 2018-10-02
 -------------------
