@@ -23,14 +23,18 @@ import bcrypt
 import bson.errors
 import pandas as pd
 from bson.objectid import ObjectId
+import json
 
 from . import storage_utils
 # Pull in the hashing algorithms from the client
 from .. import interface
 
 # import models
-from . import models
 import mongoengine as db
+from qcfractal.storage_sockets.models import Options
+
+import mongoengine.errors
+
 
 
 def _translate_id_index(index):
@@ -153,10 +157,10 @@ class MongoengineSocket:
         self._project_name = project
         self._tables = self.client[project]
 
-        # new_table = self.init_database()
-        # for k, v in new_table.items():
-        #     if v:
-        #         self.logger.info("Add '{}' table to the database!".format(k))
+        new_table = self.init_database()
+        for k, v in new_table.items():
+            if v:
+                self.logger.info("Add '{}' table to the database!".format(k))
 
     ### Mongo meta functions
 
@@ -476,11 +480,30 @@ class MongoengineSocket:
 
         return self._del_by_index("molecules", values, index=index)
 
+    def _doc_to_tuples(self, data: db.Document, with_id=True):
+        """
+        Todo: to be removed
+        """
+        if not data:
+            return
+
+        table = data._get_collection_name()
+
+        d_json = json.loads(data.to_json())
+        d_json["id"] = str(data.id)
+        del d_json["_id"]
+        ukey = tuple(data[key] for key in self._table_indices[table])
+        if with_id:
+            rdata = (ukey, str(data.id))
+        else:
+            rdata = ukey
+        return rdata
+
 ### Mongo options functions
 
     def add_options(self, data):
         """
-        Adds options to the database.
+        Adds a single options to the database.
 
         Parameters
         ----------
@@ -489,48 +512,58 @@ class MongoengineSocket:
 
         Returns
         -------
-        bool
-            Whether the operation was successful.
+        dict
         """
 
         # If only a single promote it to a list
         if isinstance(data, dict):
             data = [data]
 
-        new_options = []
-        validation_errors = []
-        for dopt in data:
+        meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [],
+                "error_description": False,
+                "validation_errors": []}
 
-            error = interface.schema.validate(dopt, "options", return_errors=True)
-            if error is True:
-                new_options.append(dopt)
-            else:
-                validation_errors.append((dopt, error))
+        options = []
+        try:
+            for d in data:
+                # todo: search by index keywords not all
+                found = Options.objects(**d).first()
+                if not found:
+                    doc = Options(**d).save()
+                    options.append(self._doc_to_tuples(doc))
+                    meta['n_inserted'] += 1
+                else:
+                    meta['duplicates'].append(self._doc_to_tuples(found, with_id=False))
+            meta["success"] = True
+        except mongoengine.errors.ValidationError as err:
+            meta["validation_errors"].append(str(err))
+        except Exception as err:
+            meta['error_description'] = str(err)
 
-        ret = self._add_generic(new_options, "options")
-        ret["meta"]["validation_errors"] = validation_errors
+        ret = {"data": options, "meta": meta}
         return ret
 
     def get_options(self, keys, projection=None):
-
-        # Check for Nones
-        blanks = []
-        add_keys = []
-        for num, (program, name) in enumerate(keys):
-            if name.lower() == "none":
-                blanks.append((num, {"program": program, "name": name}))
+        meta = storage_utils.get_metadata()
+        data = []
+        try:
+            if projection:
+                data = Options.objects(**keys).only(projection).as_pymongo()
             else:
-                add_keys.append((program, name))
+                data = Options.objects(**keys).as_pymongo()
+            # Convert ID
+            for d in data:
+                del d["id"]
+            meta["n_found"] = len(data)
+            meta["success"] = True
+        except Exception as err:
+            meta['errors'] = str(err)
 
-        # if (len(data) == 2) and isinstance(data[0], str):
-        ret = self._get_generic(add_keys, "options", projection=projection)
-        for d in ret["data"]:
-            del d["id"]
+        # for pos, options in blanks:
+        #     ret["data"].insert(pos, options)
 
-        for pos, options in blanks:
-            ret["data"].insert(pos, options)
+        return {"meta": meta, "data": data}
 
-        return ret
 
     def del_option(self, program, name):
         """
@@ -549,7 +582,16 @@ class MongoengineSocket:
             Whether the operation was successful.
         """
 
-        return (self._tables["options"].delete_one({"program": program, "name": name})).deleted_count
+        # monogoengine
+        count = 0
+        option = Options.objects(program=program, name=name)
+        print('####', option)
+        if option:
+            count = option.delete()
+
+        return count
+
+        # return (self._tables["options"].delete_one({"program": program, "name": name})).deleted_count
 
 ### Mongo database functions
 

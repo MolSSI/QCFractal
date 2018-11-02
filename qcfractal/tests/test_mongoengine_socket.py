@@ -214,21 +214,21 @@ def test_add_task_queue():
     # add a task that reference results
     result = Result.objects().first()
 
-    task = TaskQueue(baseResult=result)
+    task = TaskQueue(base_result=result)
     task.save()
     assert TaskQueue.objects().count() == 1
 
     # add a task that reference Optimization Procedure
     opt = OptimizationProcedure.objects().first()
 
-    task = TaskQueue(baseResult=opt)
+    task = TaskQueue(base_result=opt)
     task.save()
     assert TaskQueue.objects().count() == 2
 
     # add a task that reference Torsiondrive Procedure
     tor = TorsiondriveProcedure.objects().first()
 
-    task = TaskQueue(baseResult=tor)
+    task = TaskQueue(base_result=tor)
     task.save()
     assert TaskQueue.objects().count() == 3
 
@@ -236,7 +236,7 @@ def test_add_task_queue():
 @pytest.mark.skip
 def test_queue():
     tasks = TaskQueue.objects(status='WAITING')\
-                .limit(5)\
+                .limit(1000)\
                 .order_by('-created_on')\
                 .select_related()   # *** no lazy load of ReferenceField, get them now (trurns of dereferencing, max_depth=1)
                 # .only(projections_list)
