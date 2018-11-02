@@ -356,7 +356,13 @@ class OpenFFWorkflow(Collection):
             tmp = {}
             for k, v in self.data.fragments[frag].items():
                 if v["hash_index"] in self._torsiondrive_cache:
-                    tmp[k] = self._torsiondrive_cache[v["hash_index"]].final_molecules()
+                    obj = self._torsiondrive_cache[v["hash_index"]]
+                    if isinstance(obj, orm.TorsionDriveORM):
+                        tmp[k] = obj.final_molecules()
+                    elif isinstance(obj, orm.OptimizationORM):
+                        tmp[k] = obj.final_molecule()
+                    else:
+                        raise TypeError("Internal type error encoured, buy a dev a coffee.")
                 else:
                     tmp[k] = None
 
