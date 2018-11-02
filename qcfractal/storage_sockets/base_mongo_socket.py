@@ -23,7 +23,8 @@ from . import storage_utils
 # Pull in the hashing algorithms from the client
 from .. import interface
 from abc import ABC
-from typing import List, Set, Dict, Tuple, Optional, Union
+from typing import Any, List, Set, Dict, Tuple, Optional, Union
+
 
 def _translate_id_index(index):
     if index in ["id", "ids"]:
@@ -69,7 +70,7 @@ class BaseMongoSocket(ABC):
                  authMechanism="SCRAM-SHA-1",
                  authSource=None,
                  logger=None,
-                 max_limit=1000): # FIXME define in confige
+                 max_limit=1000):  # FIXME define in confige
         """
         Constructs a new socket where url and port points towards a Mongod instance.
 
@@ -94,7 +95,7 @@ class BaseMongoSocket(ABC):
         self._url, self._port = expanded_uri["nodelist"][0]
         self._project_name = project
         self._tables = self.client[project]
-        self._max_limit = max_limit     # will be enforced in all queries
+        self._max_limit = max_limit  # will be enforced in all queries
 
     # ----------------- Mongo meta functions
     #
@@ -140,8 +141,7 @@ class BaseMongoSocket(ABC):
     # ---------------------- Mongo molecule functions -------------------------
     #
 
-    def add_molecules(self, data: Union[List[dict], dict],
-                      return_json=True, with_ids=True):
+    def add_molecules(self, data: Union[List[dict], dict], return_json=True, with_ids=True, limit=None) -> List[str]:
         """
         Adds molecules to the database.
 
@@ -156,21 +156,27 @@ class BaseMongoSocket(ABC):
         -------
         dict (specity here) TODO
 
+        # TODO Return full ids in bulk even if duplicate, size of return = size of query
+
         """
 
         # Build a dictionary of new molecules
         pass
 
-    def get_molecules(self, molecule_ids: List[str]=None,
-                            molecule_hashs: List[str]=None,
-                            return_json=True, with_ids=True):
+    def get_molecules(self,
+                      ids: List[str]=None,
+                      molecule_hashes: List[str]=None,
+                      molecule_formulas: List[str]=None,
+                      return_json=True,
+                      with_ids=True,
+                      limit=None):
         """
             Get the full molecules by the ids.
             TODO: exaplin what to do for not found ones? (shouldn't happen much)
 
         Parameters (FIXME)
         ----------
-        molecule_ids
+        ids: The id of this table
         molecule_hashs
 
         Returns
@@ -183,8 +189,7 @@ class BaseMongoSocket(ABC):
     def del_molecule(self, molecule_id: str):
         pass
 
-    def del_molecules(self, molecule_ids: List[str]=None,
-                            molecule_hashes: List[str]=None) -> bool:
+    def del_molecules(self, molecule_ids: List[str]=None, molecule_hashes: List[str]=None) -> bool:
         """
         Removes a molecule from the database from its hash.
 
@@ -200,8 +205,7 @@ class BaseMongoSocket(ABC):
 
     # ---------------------- Mongo options functions --------------------------
 
-    def add_options(self, data: Union[dict, List[dict]],
-                          return_json=True, with_ids=True):
+    def add_options(self, data: Union[dict, List[dict]], return_json: bool=True, with_ids: bool=True) -> str:
         """
         Adds a list of options to the database.
 
@@ -216,15 +220,16 @@ class BaseMongoSocket(ABC):
 
         pass
 
-    def get_options(self, program=None, name=None, data: dict=None,
-                          return_json=True, with_ids=True):
+    def get_options(self, program: str=None, name: str=None, return_json: bool=True,
+                    with_ids: bool=True) -> Dict[str, Any]:
         """
 
         Parameters
         ----------
         program
         name
-        data
+
+        #
 
         Returns
         -------
@@ -232,7 +237,7 @@ class BaseMongoSocket(ABC):
         """
         pass
 
-    def del_option(self, program, name) -> bool:
+    def del_option(self, id: str) -> bool:
         """
         Removes a option set from the database based on its keys.
 
@@ -253,8 +258,7 @@ class BaseMongoSocket(ABC):
 
     # -------------------------- Collections ---------------------------------
     #
-    def add_collection(self, name: str, data, overwrite=False,
-                            return_json=True, with_ids=True):
+    def add_collection(self, name: str, data, overwrite: bool=False, return_json: bool=True, with_ids: bool=True):
         """
         Adds a collection to the database.
 
@@ -271,7 +275,8 @@ class BaseMongoSocket(ABC):
 
         pass
 
-    def get_collections(self, keys: dict, return_json=True, with_ids=True):
+    def get_collections(self, collection_type: str, name: str, return_json: bool=True,
+                        with_ids: bool=True) -> Dict[str, Any]:
         """
         Gets ONE collection
         TODO: do we need pull multiple collections in the same DB access?
@@ -286,7 +291,7 @@ class BaseMongoSocket(ABC):
         """
         pass
 
-    def del_collection(self, collection: str, name: str) -> bool:
+    def del_collection(self, id: str) -> bool:
         """
         Removes a collection from the database from its hash.
 
@@ -308,6 +313,8 @@ class BaseMongoSocket(ABC):
         Returns
         -------
 
+        Do we want add/get dataset exactly? We can have get_collections return the correct type automatically.
+
         """
 
     def get_dataset(self, name):
@@ -318,16 +325,23 @@ class BaseMongoSocket(ABC):
 
     # -------------------------- Results functions ----------------------------
     #
-    def add_result(self, program, method, driver, molecule, basis,
-                         options: str, data: dict,
-                         return_json=True, with_ids=True):
+    def add_result(
+            self,
+            program: str,
+            method: str,
+            driver: str,
+            molecule: Union[str, Dict],  # Molecule id or Molecule object?
+            basis: str,
+            options: str,
+            data: dict,
+            return_json=True,
+            with_ids=True):
         """ FIXME
         """
 
         pass
 
-    def add_results(self, data: List[dict],
-                          return_json=True, with_ids=True):
+    def add_results(self, data: List[dict], return_json=True, with_ids=True):
         """
 
         Parameters
@@ -341,12 +355,22 @@ class BaseMongoSocket(ABC):
         pass
 
     # Do a lookup on the results collection using a <molecule, method> key.
-    def get_results(self, query, projection=None,
-                          return_json=True, with_ids=True):
+    def get_results(self,
+                    ids: Union[str, List[str]]=None,
+                    program: str=None,
+                    method: str=None,
+                    basis: str=None,
+                    molecule_id: str=None,
+                    driver: str=None,
+                    options: str=None,
+                    query: Dict,
+                    projection=None,
+                    return_json=True,
+                    with_ids=True):
 
         pass
 
-    def del_results(self, results_ids: Union[str, List[str]]):
+    def del_results(self, ids: List[str]):
         """
         Removes a page from the database from its hash.
 
@@ -364,11 +388,16 @@ class BaseMongoSocket(ABC):
 
     # ---------------  Mongo procedure/service functions ----------------------
 
-    def add_procedures(self, procedure: str, option: str, data: dict,
-                             return_json=True, with_ids=True):
+    def add_procedures(self, procedure: str, option: str, data: dict, return_json=True, with_ids=True):
         pass
 
-    def get_procedures(self, query, return_json=True, with_ids=True):
+    def get_procedures(self,
+                       ids: Union[str, List[str]]=None,
+                       procedure_type: str=None,
+                       program: str=None,
+                       task_id: Union[str, List[str]]=None,
+                       return_json=True,
+                       with_ids=True):
         pass
 
     def add_optimization_procedure(self):
@@ -384,12 +413,12 @@ class BaseMongoSocket(ABC):
 
         pass
 
-    def get_services(self, query, projection=None, limit=0):
+    def get_services(self, service_type: str=None, program: str=None, status: str=None, projection=None, limit=0):
 
-       pass
+        pass
 
-    def update_services(self, ids, updates):
-        """Use specific keys"""
+    def update_service(self, id: str, update: Dict[str, Any]):
+        """Updates a single service"""
         pass
 
     def del_services(self, ids: Union[str, List]):
@@ -401,7 +430,7 @@ class BaseMongoSocket(ABC):
 
     # --------------------- Mongo queue handling functions --------------------
 
-    def queue_submit(self, data, tag=None):
+    def queue_submit(self, data: Dict[str, Dict], tag=None):
         """
             TODO: explain the format of the data
             what is assumed to be saved before this step
@@ -418,13 +447,11 @@ class BaseMongoSocket(ABC):
 
         pass
 
-
-    def queue_get_next(self, limit=100, tag=None):
+    def queue_get_next(self, limit: int=100, tag: str=None):
 
         pass
 
-    def get_queue(self, query, with_results=False,
-                        return_json=True, with_ids=True):
+    def get_queue(self, query: Dict, with_results: bool=False, return_json: bool=True, with_ids: bool=True):
         """
         TODO: This is getting a task. If soI think it should be get_task
         Parameters
@@ -438,7 +465,7 @@ class BaseMongoSocket(ABC):
 
         pass
 
-    def queue_get_by_id(self, id: str, limit=100):
+    def queue_get_by_id(self, id: str, limit: int=100):
         """
         replaced n with limit
         Parameters
@@ -472,7 +499,7 @@ class BaseMongoSocket(ABC):
     def queue_mark_error(self, queue_ids: List[str], msgs: List[str]):
         pass
 
-    def queue_reset_status(self, daqueue_ids):
+    def queue_reset_status(self, daqueue_ids: List[str]):
         pass
 
     # ---------------------------  Hooks ----------------------------------
@@ -481,6 +508,7 @@ class BaseMongoSocket(ABC):
         """
 
         TODO: is this ever used or needs redesign later?
+        DGAS: Skip this for now
 
         Returns
         -------
@@ -543,7 +571,7 @@ class BaseMongoSocket(ABC):
 
 ### Users
 
-    def add_user(self, username, password, permissions=None):
+    def add_user(self, username: str, password: str, permissions: List[str]=None) -> bool:
         """
         Adds a new user and associated permissions.
 
@@ -573,7 +601,7 @@ class BaseMongoSocket(ABC):
         except pymongo.errors.DuplicateKeyError:
             return False
 
-    def verify_user(self, username, password, permission):
+    def verify_user(self, username: str, password: str, permission: str) -> Tuple[bool, str]:
         """
         Verifies if a user has the requested permissions or not.
 
@@ -623,7 +651,7 @@ class BaseMongoSocket(ABC):
 
         return (True, "Success")
 
-    def remove_user(self, username):
+    def remove_user(self, username: str) -> bool:
         """Removes a user from the MongoDB Tables
 
         Parameters
