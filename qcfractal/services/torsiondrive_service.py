@@ -104,7 +104,7 @@ class TorsionDriveService:
         if self.data["remaining_tasks"] is not False:
 
             # Create the query payload, fetching the completed required tasks and output location
-            payload = self.storage_socket.get_queue(
+            task_query = self.storage_socket.get_queue(
                 {
                     "id": self.data["required_tasks"],
                     "status": ["COMPLETE", "ERROR"]
@@ -112,17 +112,18 @@ class TorsionDriveService:
                 projection={"result_location": True,
                             "status": True})
             # If all tasks are not complete, return a False
-            if len(payload["data"]) != len(self.data["required_tasks"]):
+            if len(task_query["data"]) != len(self.data["required_tasks"]):
                 return False
 
-            if "ERROR" in set(x["status"] for x in payload["data"]):
+            if "ERROR" in set(x["status"] for x in task_query["data"]):
                 raise KeyError("All tasks did not execute successfully.")
 
-            task_query = payload["data"]
             # Create a lookup table for task ID mapping to result from that task in the procedure table
             inv_task_lookup = {
-                v["id"]: self.storage_socket.locator(v["result_location"])["data"][0]
-                for v in task_query
+                x["id"]: self.storage_socket.get_procedures({
+                    "id": x["result_location"]["data"]
+                })["data"][0]
+                for x in task_query["data"]
             }
 
             # Populate task results

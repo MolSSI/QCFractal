@@ -150,9 +150,7 @@ class OptimizationORM:
             A list of results documents
         """
 
-        payload = copy.deepcopy(self._trajectory)
-        payload["projection"] = projection
-        return self._client.locator(payload)
+        return self._client.get_results(id=self._trajectory)
 
     def final_molecule(self):
         """Returns the optimized molecule

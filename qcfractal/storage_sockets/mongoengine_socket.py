@@ -14,7 +14,6 @@ except ImportError:
     raise ImportError(
         "Mongoengine_socket requires mongoengine, please install this python module or try a different db_socket.")
 
-
 import collections
 import copy
 import datetime
@@ -32,6 +31,7 @@ from .. import interface
 # import models
 from . import models
 import mongoengine as db
+
 
 def _translate_id_index(index):
     if index in ["id", "ids"]:
@@ -125,7 +125,8 @@ class MongoengineSocket:
             self.client = pymongo.MongoClient(uri, authMechanism=authMechanism, authSource=authSource)
 
             # connect to mongoengine
-            self.mongoengine_client = db.connect(db=project, host=uri, authMechanism=authMechanism, authSource=authSource)
+            self.mongoengine_client = db.connect(
+                db=project, host=uri, authMechanism=authMechanism, authSource=authSource)
         else:
             self.client = pymongo.MongoClient(uri)
 
@@ -157,7 +158,7 @@ class MongoengineSocket:
         #     if v:
         #         self.logger.info("Add '{}' table to the database!".format(k))
 
-### Mongo meta functions
+    ### Mongo meta functions
 
     def __str__(self):
         return "<MongoSocket: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._tables_name))
@@ -321,26 +322,6 @@ class MongoengineSocket:
 
         ret = {"meta": meta, "data": data}
         return ret
-
-    def locator(self, locator):
-        """Simple query by locator object
-
-        Parameters
-        ----------
-        locator : dict
-            A dictionary with the following fields:
-                - table: The table to query on
-                - index: The index to query on
-                - data: The queries to search fo
-                - projection: optional, the projection to apply
-
-        Returns
-        -------
-        dict
-            The requested location
-        """
-        projection = locator.get("projection", None)
-        return self._get_generic({locator["index"]: locator["data"]}, locator["table"], projection=projection)
 
 ### Mongo molecule functions
 

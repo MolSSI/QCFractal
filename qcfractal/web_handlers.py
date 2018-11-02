@@ -207,31 +207,6 @@ class ProcedureHandler(APIHandler):
 
         self.write(ret)
 
-
-class LocatorHandler(APIHandler):
-    """
-    A handler to acquire results from locators
-    """
-
-    def get(self):
-        self.authenticate("read")
-
-        storage = self.objects["storage_socket"]
-
-        ret = storage.locator(self.json["data"])
-        self.logger.info("GET: Locator - {} pulls.".format(len(ret["data"])))
-
-        self.write(ret)
-
-    # def post(self):
-
-    #     db = self.objects["db_socket"]
-
-    #     ret = db.add_results(self.json["data"])
-    #     self.logger.info("POST: Results - {} inserted.".format(ret["meta"]["n_inserted"]))
-
-    #     self.write(ret)
-
     # def _check_auth(objects, header):
     #     auth = False
     #     try:
