@@ -153,7 +153,7 @@ def test_compute_openffworkflow(fractal_compute_server):
             }
         }
     }
-    wf = portal.collections.OpenFFWorkflow("Workflow1", client=client, options=openff_workflow_options)
+    wf = portal.collections.OpenFFWorkflow("Workflow1", client=client, **openff_workflow_options)
 
     # # Add a fragment and wait for the compute
     hooh = portal.data.get_molecule("hooh.json")
@@ -181,7 +181,7 @@ def test_compute_openffworkflow(fractal_compute_server):
         "label2": {
             "type": "optimization_input",
             "initial_molecule": hooh.to_json(),
-            "constraints": {'set': [('dihedral', '1', '2', '3', '4', '0')]}
+            "constraints": {'set': [{"type": 'dihedral', "indices": [0, 1, 2, 3], "value": 0}]}
         }
     }
 
@@ -190,6 +190,7 @@ def test_compute_openffworkflow(fractal_compute_server):
 
     final_energies = wf.list_final_energies()
     assert final_energies["HOOH"].keys() == {"label1", "label2"}
+    assert pytest.approx(0.00259754, 1.e-4) == final_energies["HOOH"]["label2"]
 
     # Add a second fragment
     butane = portal.data.get_molecule("butane.json")

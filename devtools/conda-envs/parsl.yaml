@@ -24,6 +24,6 @@ dependencies:
     # Pip depends
   - pip:
     - pydantic
-    - git+git://github.com/MolSSI/QCEngine@v0.3.1#egg=qcengine
+    - git+git://github.com/MolSSI/QCEngine@v0.4.0#egg=qcengine
     - parsl
     - codecov

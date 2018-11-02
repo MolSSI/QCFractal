@@ -64,7 +64,7 @@ class TorsionDriveService:
 
         dihedral_template = []
         for idx in meta["torsiondrive_meta"]["dihedrals"]:
-            tmp = ('dihedral', ) + tuple(str(z + 1) for z in idx)
+            tmp = {"type": "dihedral", "indices": idx}
             dihedral_template.append(tmp)
 
         meta["torsiondrive_meta"]["dihedral_template"] = dihedral_template
@@ -202,12 +202,13 @@ class TorsionDriveService:
                 packet = json.loads(meta_packet)
 
                 # Construct constraints
-                containts = [
-                    tuple(x) + (str(y), )
-                    for x, y in zip(self.data["torsiondrive_meta"]["dihedral_template"],
-                                    td_api.grid_id_from_string(key))
-                ]
-                packet["meta"]["keywords"]["constraints"] = {"set": containts}
+                constraints = copy.deepcopy(self.data["torsiondrive_meta"]["dihedral_template"])
+                if not isinstance(key, (tuple, list)):
+                    constraints[0]["value"] = key
+                else:
+                    for con_num, k in enumerate(key):
+                        constraints[con_num]["value"] = k
+                packet["meta"]["keywords"]["constraints"] = {"set": constraints}
 
                 mol = json.loads(initial_molecule)
                 mol["geometry"] = geom
