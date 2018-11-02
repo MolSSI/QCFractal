@@ -439,7 +439,7 @@ def fractal_compute_server(request):
         raise TypeError("fractal_compute_server: internal parametrize error")
 
 
-@pytest.fixture(scope="module", params=["mongo"])
+@pytest.fixture(scope="module", params=["pymongo"])
 def storage_socket_fixture(request):
     print("")
 
@@ -448,8 +448,8 @@ def storage_socket_fixture(request):
     storage_name = "qcf_local_values_test"
 
     # IP/port/drop table is specific to build
-    if request.param == "mongo":
-        storage = storage_socket_factory("mongodb://localhost", storage_name)
+    if request.param in ["pymongo", "mongoengine"]:
+        storage = storage_socket_factory("mongodb://localhost", storage_name, db_type=request.param)
 
         # Clean and re-init the database
         storage.client.drop_database(storage._project_name)
@@ -459,7 +459,25 @@ def storage_socket_fixture(request):
 
     yield storage
 
-    if request.param == "mongo":
+    if request.param in ["pymongo", "mongoengine"]:
         storage.client.drop_database(storage_name)
     else:
         raise KeyError("Storage type {} not understood".format(request.param))
+
+
+@pytest.fixture(scope="module")
+def mongoengine_socket_fixture(request):
+
+    # Check mongo
+    check_active_mongo_server()
+    storage_name = "qcf_local_values_test"
+
+    storage = storage_socket_factory("mongodb://localhost", storage_name, db_type="mongoengine")
+
+    # Clean and re-init the database
+    storage.client.drop_database(storage._project_name)
+    storage.init_database()
+
+    yield storage
+
+    storage.client.drop_database(storage_name)
