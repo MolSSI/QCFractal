@@ -20,42 +20,9 @@ import pandas as pd
 from bson.objectid import ObjectId
 
 from . import storage_utils
-# Pull in the hashing algorithms from the client
-from .. import interface
 from abc import ABC
-from typing import Any, List, Set, Dict, Tuple, Optional, Union
+from typing import Any, List, Dict, Tuple, Optional, Union
 
-
-def _translate_id_index(index):
-    if index in ["id", "ids"]:
-        return "_id"
-    else:
-        raise KeyError("Id Index alias '{}' not understood".format(index))
-
-
-def _str_to_indices(ids):
-    for num, x in enumerate(ids):
-        if isinstance(x, str):
-            ids[num] = ObjectId(x)
-
-
-def _str_to_indices_with_errors(ids):
-    if isinstance(ids, str):
-        ids = [ids]
-
-    good = []
-    bad = []
-    for x in ids:
-        if isinstance(x, str):
-            try:
-                good.append(ObjectId(x))
-            except bson.errors.InvalidId:
-                bad.append(x)
-        elif isinstance(x, ObjectId):
-            good.append(x)
-        else:
-            bad.append(x)
-    return good, bad
 
 
 class BaseMongoSocket(ABC):
@@ -70,7 +37,7 @@ class BaseMongoSocket(ABC):
                  authMechanism="SCRAM-SHA-1",
                  authSource=None,
                  logger=None,
-                 max_limit=1000):  # FIXME define in confige
+                 max_limit=1000):  # FIXME define in config
         """
         Constructs a new socket where url and port points towards a Mongod instance.
 
@@ -168,7 +135,7 @@ class BaseMongoSocket(ABC):
     def del_molecule(self, molecule_id: str):
         pass
 
-    def del_molecules(self, molecule_ids: List[str]=None, molecule_hashes: List[str]=None) -> bool:
+    def del_molecules(self, ids: List[str]=None, molecule_hashes: List[str]=None) -> bool:
         """
         Removes a molecule from the database from its hash.
 
@@ -205,10 +172,11 @@ class BaseMongoSocket(ABC):
 
         Parameters
         ----------
-        program
-        name
+         program : str
+            The program of the option set
+         name : str
+            The name of the option set
 
-        #
 
         Returns
         -------
@@ -218,14 +186,12 @@ class BaseMongoSocket(ABC):
 
     def del_option(self, id: str) -> bool:
         """
-        Removes a option set from the database based on its keys.
+        Removes an option set from the database based on its keys.
 
         Parameters
         ----------
-        program : str
-            The program of the option set
-        name : str
-            The name of the option set
+        id : str
+            The id of the option
 
         Returns
         -------
@@ -248,24 +214,22 @@ class BaseMongoSocket(ABC):
 
         Returns
         -------
-        bool
-            Whether the operation was successful.
+
         """
 
         pass
 
-    def get_collections(self, collection_type: str, name: str, return_json: bool=True,
+    def get_collection(self, collection_type: str, name: str, return_json: bool=True,
                         with_ids: bool=True) -> Dict[str, Any]:
         """
         Gets ONE collection
-        TODO: do we need pull multiple collections in the same DB access?
+
         Parameters
         ----------
-        name FIXME
-        or pass dict
-        TODO: add needed keys
+
         Returns
         -------
+        TODO: what are the keys in the returned dict?
 
         """
         pass
@@ -293,8 +257,13 @@ class BaseMongoSocket(ABC):
         -------
 
         Do we want add/get dataset exactly? We can have get_collections return the correct type automatically.
+        Doaa: we can use this to have keywords specific to datasets and to use the validation class
+        without having to use special conditions in the collections.
+
+        TODO: leave till the pydantic classes in place
 
         """
+        pass
 
     def get_dataset(self, name):
         pass
@@ -342,7 +311,7 @@ class BaseMongoSocket(ABC):
                     molecule_id: str=None,
                     driver: str=None,
                     options: str=None,
-                    query: Dict,
+                    query: Dict=None,
                     projection=None,
                     return_json=True,
                     with_ids=True):
