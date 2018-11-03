@@ -9,19 +9,16 @@ except ImportError:
     raise ImportError(
         "Mongostorage_socket requires pymongo, please install this python module or try a different db_socket.")
 
-import collections
-import copy
 import datetime
 import logging
 
 import bcrypt
-import bson.errors
 import pandas as pd
 from bson.objectid import ObjectId
 
 from . import storage_utils
 from abc import ABC
-from typing import Any, List, Dict, Tuple, Optional, Union
+from typing import Any, List, Dict, Tuple, Union
 
 
 

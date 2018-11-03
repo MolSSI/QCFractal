@@ -227,12 +227,14 @@ class MongoSocket:
             del d["_id"]
 
         # Add id's of new keys
+        skips = set(error_skips)
         rdata = []
         if return_map:
-            for x in (set(range(len(data))) - set(error_skips)):
-                d = data[x]
-                ukey = tuple(d[key] for key in self._table_indices[table])
-                rdata.append((ukey, d["id"]))
+            for x in range(len(data)):
+                if x in skips:
+                    rdata.append(None)
+                else:
+                    rdata.append(data[x]["id"])
 
         ret = {"data": rdata, "meta": meta}
 
@@ -713,9 +715,10 @@ class MongoSocket:
         ret = self._add_generic(data, "service_queue", return_map=True)
         ret["meta"]["validation_errors"] = []  # TODO
 
-        # Since we did an add generic we get ((status, tag, hashindex), queue_id)
-        # Move this to (hash_index)
-        ret["data"] = [x[0][2] for x in ret["data"]]
+        # Right now services expect hash return
+        # This and bad and should be fixed
+        serv = self.get_services({"id": ret["data"]})
+        ret["data"] = [x["hash_index"] for x in serv["data"]]
 
         # Means we have duplicates in the queue, massage results
         if len(ret["meta"]["duplicates"]):
@@ -786,7 +789,7 @@ class MongoSocket:
 
         # Since we did an add generic we get ((status, tag, hashindex), queue_id)
         # Move this to (queue_id)
-        ret["data"] = [x[1] for x in ret["data"]]
+        ret["data"] = [x for x in ret["data"]]
 
         # Means we have duplicates in the queue, massage results
         if len(ret["meta"]["duplicates"]):

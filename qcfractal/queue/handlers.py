@@ -32,6 +32,7 @@ class TaskQueueHandler(APIHandler):
         ret = storage.queue_submit(full_tasks, tag=tag)
         self.logger.info("TaskQueue: Added {} tasks.".format(ret["meta"]["n_inserted"]))
 
+        ret["data"] = [x for x in ret["data"] if x is not None]
         ret["data"] = {"submitted": ret["data"], "completed": list(complete_tasks), "queue": ret["meta"]["duplicates"]}
         ret["meta"]["duplicates"] = []
         ret["meta"]["errors"].extend(errors)

@@ -228,7 +228,7 @@ def test_results_add(storage_socket):
     ret = storage_socket.add_results([page1, page2])
     assert ret["meta"]["n_inserted"] == 2
 
-    result_ids = [x[1] for x in ret["data"]]
+    result_ids = [x for x in ret["data"]]
     ret = storage_socket.del_results(result_ids, index="id")
     assert ret == 2
 
@@ -308,7 +308,7 @@ def storage_results(storage_socket):
     yield storage_socket
 
     # Cleanup
-    result_ids = [x[1] for x in results_insert["data"]]
+    result_ids = [x for x in results_insert["data"]]
     ret = storage_socket.del_results(result_ids, index="id")
     assert ret == results_insert["meta"]["n_inserted"]
 
@@ -419,7 +419,7 @@ def test_storage_queue_duplicate(storage_socket):
     # Change hooks, only one submission due to hash_index conflict
     task1["hooks"] = [("service", "456")]
     r = storage_socket.queue_submit([task1])
-    assert len(r["data"]) == 0
+    assert r["meta"]["n_inserted"] == 0
 
     # Pull out the data and check the hooks
     r = storage_socket.get_queue({"id": queue_id})

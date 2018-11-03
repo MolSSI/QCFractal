@@ -427,7 +427,8 @@ def parsl_server_fixture(request):
     dataflow.atexit_cleanup()
 
 
-@pytest.fixture(scope="module", params=["dask", "fireworks", "parsl"])
+@pytest.fixture(scope="module", params=["dask"])
+# @pytest.fixture(scope="module", params=["dask", "fireworks", "parsl"])
 def fractal_compute_server(request):
     if request.param == "dask":
         yield from dask_server_fixture(request)

@@ -273,7 +273,7 @@ def procedure_optimization_output_parser(storage, data):
 
         # Add trajectory results and return ids
         ret = storage.add_results(list(results.values()))
-        result["trajectory"] = [x[1] for x in ret["data"]]
+        result["trajectory"] = ret["data"]
 
         # Coerce tags
         result.update(result["qcfractal_tags"])
