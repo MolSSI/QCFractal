@@ -177,11 +177,12 @@ class Collection(abc.ABC):
         ret : dict
             A JSON representation of the Collection
         """
+        data = self.data.dict()
         if filename is not None:
             with open(filename, 'w') as open_file:
-                json.dump(self.data, open_file)
+                json.dump(data, open_file)
         else:
-            return copy.deepcopy(self.data.dict())
+            return copy.deepcopy(data)
 
     @abc.abstractmethod
     def _pre_save_prep(self, client):
