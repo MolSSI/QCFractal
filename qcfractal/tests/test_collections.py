@@ -61,6 +61,7 @@ def test_compute_dataset(fractal_compute_server):
     assert ds.query("Benchmark", "", reaction_results=True)
     assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/STO-3G")
 
+    assert isinstance(ds.to_json(), dict)
 
 ### Tests the biofragment collection
 @testing.using_torsiondrive
