@@ -163,7 +163,7 @@ class BaseMongoSocket(ABC):
 
         pass
 
-    def get_options(self, program: str=None, name: str=None, return_json: bool=True,
+    def get_options(self, program: str=None, name: str=None,
                     with_ids: bool=True) -> Dict[str, Any]:
         """
 
