@@ -216,8 +216,8 @@ class BaseMongoSocket(ABC):
 
         pass
 
-    def get_collection(self, collection_type: str, name: str, return_json: bool=True,
-                        with_ids: bool=True) -> Dict[str, Any]:
+    def get_collection(self, collection: str, name: str, return_json: bool=True,
+                        with_ids: bool=True, limit=None) -> Dict[str, Any]:
         """
         Gets ONE collection
 

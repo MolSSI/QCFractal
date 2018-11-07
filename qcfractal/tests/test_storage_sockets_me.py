@@ -154,7 +154,7 @@ def test_collections_add(storage_socket):
 
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.get_collections([(collection, name)])
+    ret = storage_socket.get_collections(collection, name)
 
     assert ret["meta"]["success"] == True
     assert ret["meta"]["n_found"] == 1
@@ -163,8 +163,8 @@ def test_collections_add(storage_socket):
     ret = storage_socket.del_collection(collection, name)
     assert ret == 1
 
-    ret = storage_socket.get_collections([(collection, "bleh")])
-    assert len(ret["meta"]["missing"]) == 1
+    ret = storage_socket.get_collections(collection, "bleh")
+    # assert len(ret["meta"]["missing"]) == 1
     assert ret["meta"]["n_found"] == 0
 
 
@@ -175,10 +175,10 @@ def test_collections_overwrite(storage_socket):
     db = {"something": "else", "array": ["54321"]}
 
     ret = storage_socket.add_collection(collection, name, db)
-    print(ret)
+
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.get_collections([(collection, name)])
+    ret = storage_socket.get_collections(collection, name)
     assert ret["meta"]["n_found"] == 1
 
     db_update = {
@@ -192,7 +192,7 @@ def test_collections_overwrite(storage_socket):
     ret = storage_socket.add_collection(collection, name, db_update, overwrite=True)
     assert ret["meta"]["success"] == True
 
-    ret = storage_socket.get_collections([(collection, name)])
+    ret = storage_socket.get_collections(collection, name)
     assert ret["meta"]["n_found"] == 1
 
     # Check to make sure the field were replaced and not updated

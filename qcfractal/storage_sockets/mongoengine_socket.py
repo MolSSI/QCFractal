@@ -697,9 +697,50 @@ class MongoengineSocket:
         ret = {'data': col_id, 'meta': meta}
         return ret
 
-    def get_collections(self, keys, projection=None):
+    # def get_collections(self, keys, projection=None):
+    def get_collections(self, collection: str=None, name: str=None, return_json: bool=True,
+                        with_ids: bool=True, limit: int=None):
+        """Get collection by collection and/or name
 
-        return self._get_generic(keys, "collections", projection=projection)
+        Parameters
+        ----------
+        collection : str, optional
+        name : str, optional
+        return_json : bool
+        with_ids : bool
+        limit : int
+
+        Returns
+        -------
+        A dict with keys: 'data' and 'meta'
+            The data is a list of the collections found
+        """
+
+        meta = storage_utils.get_metadata()
+        query = {}
+        if collection:
+            query['collection'] = collection
+        if name:
+            query['name'] = name
+        q_limit = self._max_limit
+        if limit and limit < q_limit:
+            q_limit = limit
+
+        data = []
+        try:
+            data = Collection.objects(**query).limit(q_limit)
+
+            meta["n_found"] = data.count()
+            meta["success"] = True
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+        if return_json:
+            rdata = [self._doc_to_json(d, with_ids) for d in data]
+        else:
+            rdata = data
+
+        return {"data": rdata, "meta": meta}
 
     def del_collection(self, collection: str, name: str):
         """
