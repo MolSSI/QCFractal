@@ -251,12 +251,14 @@ class MongoengineSocket:
             del d["_id"]
 
         # Add id's of new keys
+        skips = set(error_skips)
         rdata = []
         if return_map:
-            for x in (set(range(len(data))) - set(error_skips)):
-                d = data[x]
-                ukey = tuple(d[key] for key in self._table_indices[table])
-                rdata.append((ukey, d["id"]))
+            for x in range(len(data)):
+                if x in skips:
+                    rdata.append(None)
+                else:
+                    rdata.append(data[x]["id"])
 
         ret = {"data": rdata, "meta": meta}
 
@@ -518,21 +520,30 @@ class MongoengineSocket:
 
     ### Mongo options functions
 
-    def add_options(self, data, return_json: bool=False, with_ids: bool=True):
-        """
-        Adds a single options to the database.
+    def add_options(self, data: Union[Dict, List[Dict]]):
+        """Add one option uniqely identified by 'program' and the 'name'.
 
         Parameters
         ----------
-        data : dict or list of dict
-            Structured instance of the options.
+         data : dict or List[dict]
+            The attribites of the 'option' or options to be inserted.
+            Must include for each 'option':
+                program : str, program name
+                name : str, option name
 
         Returns
         -------
-        dict --> still returns tuple
+            A dict with keys: 'data' and 'meta'
+            (see storage_utils.add_metadata())
+            The 'data' part is a list of ids of the inserted options
+            data['duplicates'] has the duplicate entries
+
+        Notes
+        ------
+            Duplicates are not considered errors.
+
         """
 
-        # If only a single promote it to a list
         if isinstance(data, dict):
             data = [data]
 
@@ -541,35 +552,51 @@ class MongoengineSocket:
         options = []
         try:
             for d in data:
-                # todo: search by index keywords not all
-                found = Options.objects(**d).first()
+                # search by index keywords not by all keys, much faster
+                found = Options.objects(program=d['program'], name=d['name']).first()
                 if not found:
                     doc = Options(**d).save()
-                    options.append(self._doc_to_tuples(doc))
+                    options.append(str(doc.id))
                     meta['n_inserted'] += 1
                 else:
-                    meta['duplicates'].append(self._doc_to_tuples(found, with_ids=False))
+                    meta['duplicates'].append(self._doc_to_tuples(found, with_ids=False))  # TODO
             meta["success"] = True
-        except mongoengine.errors.ValidationError as err:
-            meta["validation_errors"].append(str(err))
+        except (mongoengine.errors.ValidationError, KeyError) as err:
+            meta["validation_errors"].append(err)
         except Exception as err:
-            meta['error_description'] = str(err)
+            meta['error_description'] = err
 
         ret = {"data": options, "meta": meta}
         return ret
 
     def get_options(self, program: str=None, name: str=None, return_json: bool=True,
-                    with_ids: bool=False, limit=None):
-        """
+                    with_ids: bool=True, limit=None):
+        """Search for one (unique) option based on the 'program'
+        and the 'name'.
 
         Parameters
         ----------
-        keys
-        projection
+        program : str
+            program name
+        name : str
+            option name
+        return_json : bool, optional
+            Return the results as a json object
+            Default is True
+        with_ids : bool, optional
+            Include the DB ids in the returned object (names 'id')
+            Default is True
+        limit : int, optional
+            Maximum number of resaults to return.
+            If this number is greater than the mongoengine_soket.max_limit then
+            the max_limit will be returned instead.
+            Default is to return the socket's max_limit (when limit=None or 0)
 
         Returns
         -------
-
+            A dict with keys: 'data' and 'meta'
+            (see storage_utils.get_metadata())
+            The 'data' part is an object of the result or None if not found
         """
         meta = storage_utils.get_metadata()
         query = {}
@@ -611,8 +638,8 @@ class MongoengineSocket:
 
         Returns
         -------
-        bool
-            Whether the operation was successful.
+        int
+           number of deleted documents
         """
 
         # monogoengine
@@ -803,9 +830,10 @@ class MongoengineSocket:
         ret = self._add_generic(data, "service_queue", return_map=True)
         ret["meta"]["validation_errors"] = []  # TODO
 
-        # Since we did an add generic we get ((status, tag, hashindex), queue_id)
-        # Move this to (hash_index)
-        ret["data"] = [x[0][2] for x in ret["data"]]
+        # Right now services expect hash return
+        # This and bad and should be fixed
+        serv = self.get_services({"id": ret["data"]})
+        ret["data"] = [x["hash_index"] for x in serv["data"]]
 
         # Means we have duplicates in the queue, massage results
         if len(ret["meta"]["duplicates"]):
@@ -876,7 +904,7 @@ class MongoengineSocket:
 
         # Since we did an add generic we get ((status, tag, hashindex), queue_id)
         # Move this to (queue_id)
-        ret["data"] = [x[1] for x in ret["data"]]
+        ret["data"] = [x for x in ret["data"]]
 
         # Means we have duplicates in the queue, massage results
         if len(ret["meta"]["duplicates"]):
