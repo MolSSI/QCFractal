@@ -200,7 +200,7 @@ class BaseMongoSocket(ABC):
 
     # -------------------------- Collections ---------------------------------
     #
-    def add_collection(self, name: str, data, overwrite: bool=False, return_json: bool=True, with_ids: bool=True):
+    def add_collection(self, collection: str, name: str, data, overwrite: bool=False):
         """
         Adds a collection to the database.
 

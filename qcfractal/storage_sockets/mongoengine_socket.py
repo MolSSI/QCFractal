@@ -32,7 +32,7 @@ from .. import interface
 
 # import models
 import mongoengine as db
-from qcfractal.storage_sockets.models import Options
+from qcfractal.storage_sockets.models import Options, Collection
 
 import mongoengine.errors
 
@@ -598,6 +598,7 @@ class MongoengineSocket:
             (see storage_utils.get_metadata())
             The 'data' part is an object of the result or None if not found
         """
+
         meta = storage_utils.get_metadata()
         query = {}
         if program:
@@ -653,62 +654,67 @@ class MongoengineSocket:
 
     ### Mongo database functions
 
-    def add_collection(self, data, overwrite=False):
-        """
-        Adds a database to the database.
+    # def add_collection(self, data, overwrite=False):
+    def add_collection(self, collection: str, name: str, data, overwrite: bool=False):
+        """Add a collection to the database.
 
         Parameters
         ----------
+        collection : st
+        name : st
         data : dict
-            Structured instance of the database.
+        overwrite : bool
+            Update existing collection
 
         Returns
         -------
-        bool
-            Whether the operation was successful.
+        A dict with keys: 'data' and 'meta'
+            (see storage_utils.add_metadata())
+            The 'data' part is the id of the inserted document or none
+
+        Notes
+        -----
+        ** Change: The data doesn't have to include the ID, the document
+        is identified by the (collection, name) pairs.
+        ** Change: New fields will be added to the collection, but existing won't
+            be removed.
         """
 
-        if overwrite:
-            ret = {
-                "meta": {
-                    "errors": [],
-                    "n_inserted": 0,
-                    "success": False,
-                    "duplicates": [],
-                    "error_description": False
-                },
-                "data": [((data["collection"], data["name"]), data["id"])]
-            }
-            r = self._tables["collections"].replace_one({"_id": ObjectId(data["id"])}, data)
-            if r.modified_count == 1:
-                ret["meta"]["success"] = True
-                ret["meta"]["n_inserted"] = 1
+        meta = storage_utils.add_metadata()
+        col_id = None
+        try:
+            if overwrite:
+                col = Collection.objects(collection=collection, name=name).update_one(**data)
+            else:
+                col = Collection(collection=collection, name=name, **data).save()
 
-        else:
-            ret = self._add_generic([data], "collections")
-        ret["meta"]["validation_errors"] = []  # TODO
+            meta['success'] = True
+            meta['n_inserted'] = 1
+            col_id = str(col.id)
+        except Exception as err:
+            meta['error_description'] = err
+
+        ret = {'data': col_id, 'meta': meta}
         return ret
 
     def get_collections(self, keys, projection=None):
 
         return self._get_generic(keys, "collections", projection=projection)
 
-    def del_collection(self, collection, name):
+    def del_collection(self, collection: str, name: str):
         """
-        Removes a database from the database from its hash.
+        Remove a collection from the database from its keys.
 
         Parameters
         ----------
-        hash_val : str or list of strs
-            The hash of a database.
 
         Returns
         -------
-        bool
-            Whether the operation was successful.
+        int
+            Number of documents deleted
         """
 
-        return (self._tables["collections"].delete_one({"collection": collection, "name": name})).deleted_count
+        return Collection.objects(collection=collection, name=name).delete()
 
 ### Mongo database functions
 

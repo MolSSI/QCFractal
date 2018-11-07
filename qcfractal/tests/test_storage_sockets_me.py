@@ -128,7 +128,6 @@ def test_options_add(storage_socket):
     assert ret["meta"]["n_inserted"] == 0
 
     ret = storage_socket.get_options(opts["program"], opts["name"])
-    print(ret)
     opts["id"] = ret["data"][0]["id"]
     assert ret["meta"]["n_found"] == 1
     assert ret["data"][0] == opts
@@ -147,53 +146,65 @@ def test_options_error(storage_socket):
 
 def test_collections_add(storage_socket):
 
-    db = {"collection": "TorsionDrive", "name": "Torsion123", "something": "else", "array": ["54321"]}
+    collection = 'TorsionDrive'
+    name = 'Torsion123'
+    db = {"something": "else", "array": ["54321"]}
 
-    ret = storage_socket.add_collection(db)
+    ret = storage_socket.add_collection(collection, name, db)
+
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.get_collections([(db["collection"], db["name"])])
+    ret = storage_socket.get_collections([(collection, name)])
+
     assert ret["meta"]["success"] == True
     assert ret["meta"]["n_found"] == 1
-    assert db == ret["data"][0]
+    assert db['something'] == ret["data"][0]['something']
 
-    ret = storage_socket.del_collection(db["collection"], db["name"])
+    ret = storage_socket.del_collection(collection, name)
     assert ret == 1
 
-    ret = storage_socket.get_collections([(db["collection"], "bleh")])
+    ret = storage_socket.get_collections([(collection, "bleh")])
     assert len(ret["meta"]["missing"]) == 1
     assert ret["meta"]["n_found"] == 0
 
 
 def test_collections_overwrite(storage_socket):
 
-    db = {"collection": "TorsionDrive", "name": "Torsion123", "something": "else", "array": ["54321"]}
+    collection = "TorsionDrive"
+    name = "Torsion123"
+    db = {"something": "else", "array": ["54321"]}
 
-    ret = storage_socket.add_collection(db)
+    ret = storage_socket.add_collection(collection, name, db)
+    print(ret)
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.get_collections([(db["collection"], db["name"])])
+    ret = storage_socket.get_collections([(collection, name)])
     assert ret["meta"]["n_found"] == 1
 
     db_update = {
-        "id": ret["data"][0]["id"],
-        "collection": "TorsionDrive",
-        "name": "Torsion123",
+        # "id": ret["data"][0]["id"],
+        "collection": "TorsionDrive",  # no need to include
+        "name": "Torsion123",   # no need to include
+        "something": "New",
         "something2": "else",
         "array2": ["54321"]
     }
-    ret = storage_socket.add_collection(db_update, overwrite=True)
+    ret = storage_socket.add_collection(collection, name, db_update, overwrite=True)
     assert ret["meta"]["success"] == True
 
-    ret = storage_socket.get_collections([(db["collection"], db["name"])])
+    ret = storage_socket.get_collections([(collection, name)])
     assert ret["meta"]["n_found"] == 1
 
     # Check to make sure the field were replaced and not updated
     db_result = ret["data"][0]
-    assert "something" not in db_result
+    # existing fields will not be removed, the collection will be updated
+    # You will need to remove the old collection and create a new one
+    # assert "something" not in db_result
+    assert "something" in db_result
     assert "something2" in db_result
+    assert db_update['something'] == db_result['something']
 
-    ret = storage_socket.del_collection(db["collection"], db["name"])
+    ret = storage_socket.del_collection(collection, name)
     assert ret == 1
 
 

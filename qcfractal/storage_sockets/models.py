@@ -10,14 +10,13 @@ class Collection(db.DynamicDocument):
         extra fields (expandable and uncontrolled schema)
     """
 
-    collection_type = db.StringField(default='', required=True,
-                                     choices=['dataset', '?'])
-    name = db.StringField(default='', required=True)  # Example 'water'
+    collection = db.StringField(required=True)  # , choices=['dataset', '?'])
+    name = db.StringField(required=True)  # Example 'water'
 
     meta = {
         'collection': 'collections',  # DB collection/table name
         'indexes': [
-            {'fields': ('collection_type', 'name'), 'unique': True}
+            {'fields': ('collection', 'name'), 'unique': True}
         ]
     }
 
@@ -115,6 +114,7 @@ class Result(BaseResult):
     method = db.StringField(required=True)  # example "uff"
     basis = db.StringField()
     molecule = db.ReferenceField(Molecule)   # or LazyReferenceField if only ID is needed?
+    # options = db.ReferenceField(Options)  # ** has to be a FK or empty, can't be a string
     # options = db.ReferenceField(Options)  # ** has to be a FK or empty, can't be a string
     options = db.StringField()
 
