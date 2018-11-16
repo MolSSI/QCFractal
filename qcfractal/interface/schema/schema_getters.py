@@ -31,7 +31,7 @@ _table_indices = {
     "procedure": ("procedure", "program"),
 
     "molecule": ("molecule_hash", "molecular_formula"),
-    "result": ("molecule_id", "program", "driver", "method", "basis", "options"),
+    "result": ("molecule", "program", "driver", "method", "basis", "options"),  # ** Renamed molecule_id
     "options": ("program", "name"),
 
     "task_queue": ("status", "tag", "hash_index"),

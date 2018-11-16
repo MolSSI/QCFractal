@@ -46,6 +46,9 @@ class Molecule(db.DynamicDocument):
 
         return super(Molecule, self).save(*args, **kwargs)
 
+    def __str__(self):
+        return str(self.id)
+
     meta = {
         'collection': 'molecules',
         'indexes': [
@@ -76,7 +79,7 @@ class Options(db.DynamicDocument):
     }
 
     def __str__(self):
-        return str(self.id) + ', ' + str(self.program) + ', name: ' + str(self.name)
+        return str(self.id)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -89,7 +92,7 @@ class BaseResult(db.DynamicDocument):
 
     # queue related
     task_queue_id = db.StringField()  # ObjectId, reference task_queue but without validation
-    status = db.StringField(default='INCOMPLETE', choices=['COMPLETE', 'INCOMPLETE', 'ERROR'])
+    status = db.StringField(required=True, choices=['COMPLETE', 'INCOMPLETE', 'ERROR'])
 
     meta = {
         'abstract': True,
@@ -99,6 +102,13 @@ class BaseResult(db.DynamicDocument):
         ]
     }
 
+    # def save(self, *args, **kwargs):
+    #     """Override save to set defaults"""
+    #
+    #     if not self.status:
+    #         self.status = 'INCOMPLETE'
+    #
+    #     return super(BaseResult, self).save(*args, **kwargs)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -113,8 +123,7 @@ class Result(BaseResult):
     driver = db.StringField(required=True)  # example "gradient"
     method = db.StringField(required=True)  # example "uff"
     basis = db.StringField()
-    molecule = db.ReferenceField(Molecule)   # or LazyReferenceField if only ID is needed?
-    # options = db.ReferenceField(Options)  # ** has to be a FK or empty, can't be a string
+    molecule = db.ReferenceField(Molecule, required=True)   # or LazyReferenceField if only ID is needed?
     # options = db.ReferenceField(Options)  # ** has to be a FK or empty, can't be a string
     options = db.StringField()
 
@@ -134,11 +143,12 @@ class Result(BaseResult):
         'collection': 'results',
         'indexes': [
            {'fields': ('program', 'driver', 'method', 'basis',
-                       'molecule_id', 'options'), 'unique': True},
+                       'molecule', 'options'), 'unique': True},
         ]
     }
 
     # not used yet
+    # or  use pre_save
     def _save(self, *args, **kwargs):
         """Override save to handle options"""
 

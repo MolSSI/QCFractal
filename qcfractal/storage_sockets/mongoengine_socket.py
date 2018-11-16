@@ -32,7 +32,7 @@ from .. import interface
 
 # import models
 import mongoengine as db
-from qcfractal.storage_sockets.models import Options, Collection
+from qcfractal.storage_sockets.models import Options, Collection, Result
 
 import mongoengine.errors
 
@@ -497,7 +497,7 @@ class MongoengineSocket:
         d_json = json.loads(doc.to_json())
         d_json["id"] = str(doc.id)
         del d_json["_id"]
-        ukey = tuple(doc[key] for key in self._table_indices[table])
+        ukey = tuple(str(doc[key]) for key in self._table_indices[table])
         if with_ids:
             rdata = (ukey, str(doc.id))
         else:
@@ -572,7 +572,7 @@ class MongoengineSocket:
     def get_options(self, program: str=None, name: str=None, return_json: bool=True,
                     with_ids: bool=True, limit=None):
         """Search for one (unique) option based on the 'program'
-        and the 'name'.
+        and the 'name'. No overwrite allowed.
 
         Parameters
         ----------
@@ -656,12 +656,12 @@ class MongoengineSocket:
 
     # def add_collection(self, data, overwrite=False):
     def add_collection(self, collection: str, name: str, data, overwrite: bool=False):
-        """Add a collection to the database.
+        """Add (or update) a collection to the database.
 
         Parameters
         ----------
-        collection : st
-        name : st
+        collection : str
+        name : str
         data : dict
         overwrite : bool
             Update existing collection
@@ -684,6 +684,7 @@ class MongoengineSocket:
         col_id = None
         try:
             if overwrite:
+                # may use upsert=True to add or update
                 col = Collection.objects(collection=collection, name=name).update_one(**data)
             else:
                 col = Collection(collection=collection, name=name, **data).save()
@@ -742,12 +743,17 @@ class MongoengineSocket:
 
         return {"data": rdata, "meta": meta}
 
+
     def del_collection(self, collection: str, name: str):
         """
         Remove a collection from the database from its keys.
 
         Parameters
         ----------
+        collection: str
+            Collection type
+        name : str
+            Collection name
 
         Returns
         -------
@@ -757,107 +763,296 @@ class MongoengineSocket:
 
         return Collection.objects(collection=collection, name=name).delete()
 
-### Mongo database functions
+    # -------------------------- Results functions ----------------------------
+    #
+    # def add_result(
+    #         self,
+    #         program: str,
+    #         method: str,
+    #         driver: str,
+    #         molecule: str,  # Molecule id
+    #         basis: str,
+    #         options: str,
+    #         data: dict,
+    #         return_json=True,
+    #         with_ids=True):
+    #     """ Add one result
+    #     """
 
-    def add_results(self, data):
+    def add_results(self, data: List[dict], update_existing: bool=False, return_json=True):
         """
-        Adds a page to the database.
+        Add results from a given dict. The dict should have all the required
+        keys of a result.
 
         Parameters
         ----------
-        data : dict
-            Structured instance of the page.
+        data : list of dict
+            Each dict must have:
+            program, driver, method, basis, options, molecule
+            Where molecule is the molecule id in the DB
+            In addition, it should have the other attributes that it needs
+            to store
+        update_existing : bool (default False)
+            Update existing resaults
 
         Returns
         -------
-        bool
-            Whether the operation was successful.
+            Dict with keys: data, meta
+            Data is the ids of the inserted docs
         """
 
         for d in data:
             for i in self._lower_results_index:
                 d[i] = d[i].lower()
 
-        ret = self._add_generic(data, "results", return_map=True)
-        ret["meta"]["validation_errors"] = []  # TODO
+        meta = storage_utils.add_metadata()
 
-        return ret
+        results = []
+        # try:
+        for d in data:
+            # search by index keywords not by all keys, much faster
+            doc = Result.objects(program=d['program'], name=d['driver'],
+                                 method=d['method'], basis=d['basis'],
+                                 options=d['options'], molecule=d['molecule'])
 
-    # Do a lookup on the results collection using a <molecule, method> key.
-    def get_results(self, query, projection=None):
-
-        parsed_query = {}
-        ret = {"meta": storage_utils.get_metadata(), "data": []}
-
-        # We are querying via id
-        if ("_id" in query) or ("id" in query):
-            if len(query) > 1:
-                ret["error_description"] = "ID index was provided, cannot use other indices"
-                return ret
-
-            if "id" in query:
-                query["_id"] = query["id"]
-
-            if not isinstance(query, (list, tuple)):
-                parsed_query["_id"] = {"$in": query["_id"]}
-                _str_to_indices(parsed_query["_id"]["$in"])
+            if doc.count() == 0 or update_existing:
+                if not isinstance(d['molecule'], ObjectId):
+                    d['molecule'] = ObjectId(d['molecule'])
+                doc = doc.upsert_one(**d)
+                results.append(str(doc.id))
+                meta['n_inserted'] += 1
             else:
-                parsed_query["_id"] = [query["_id"]]
-                _str_to_indices(parsed_query["_id"])
+                meta['duplicates'].append(self._doc_to_tuples(doc.first(), with_ids=False))  # TODO
+                results.append(None)
+        meta["success"] = True
+        # except (mongoengine.errors.ValidationError, KeyError) as err:
+        #     meta["validation_errors"].append(err)
+        # except Exception as err:
+        #     meta['error_description'] = err
 
-        else:
-            # Check if there are unknown keys
-            remain = set(query) - set(self._table_indices["results"])
-            if remain:
-                ret["error_description"] = "Results query found unknown keys {}".format(list(remain))
-                return ret
-
-            for key, value in query.items():
-                if isinstance(value, (list, tuple)):
-                    if key in self._lower_results_index:
-                        value = [v.lower() for v in value]
-                    parsed_query[key] = {"$in": value}
-                else:
-                    parsed_query[key] = value.lower()
-
-        # Manipulate the projection
-        if projection is None:
-            proj = {}
-        else:
-            proj = copy.deepcopy(projection)
-
-        proj["_id"] = False
-
-        data = self._tables["results"].find(parsed_query, projection=proj)
-        if data is None:
-            data = []
-        else:
-            data = list(data)
-
-        ret["meta"]["n_found"] = len(data)
-        ret["meta"]["success"] = True
-
-        ret["data"] = data
-
+        ret = {"data": results, "meta": meta}
         return ret
 
-    def del_results(self, values, index="id"):
+    def get_resuls_by_ids(self, ids: List[str]=None, projection=None, return_json=True,
+                                with_ids=True):
         """
-        Removes a page from the database from its hash.
+        Get list of Results using the given list of Ids
 
         Parameters
         ----------
-        hash_val : str or list of strs
-            The hash of a page.
+        ids : List of str
+            Ids of the results in the DB
+        projection TODO
+        return_json : bool, default is True
+            Return the results as a list of json inseated of objects
+        with_ids: bool, default is True
+            Include the ids in the returned objects/dicts
 
         Returns
         -------
-        bool
-            Whether the operation was successful.
+        Dict with keys: data, meta
+            Data is the objects found
         """
-        index = _translate_id_index(index)
 
-        return self._del_by_index("results", values, index=index)
+        meta = storage_utils.get_metadata()
+
+        data = []
+        try:
+            data = Result.objects(id__in=ids).limit(self._max_limit)
+            # or
+            # data = Result.objects().in_bulk(ids).limit(self._max_limit)
+
+            meta["n_found"] = data.count()
+            meta["success"] = True
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+        if return_json:
+            rdata = [self._doc_to_json(d, with_ids) for d in data]
+        else:
+            rdata = data
+
+        return {"data": rdata, "meta": meta}
+
+    def get_results_count(self):
+        """
+        TODO: just return the count, used for big queries
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def get_results(self,
+                    program: str=None,
+                    method: str=None,
+                    basis: str=None,
+                    molecule: str=None,
+                    driver: str=None,
+                    options: str=None,
+                    status: str='COMPLETE',
+                    projection=None,
+                    limit: int=None,
+                    skip: int=None,
+                    return_json=True,
+                    with_ids=True):
+        """
+
+        Parameters
+        ----------
+        program : str
+        method : str
+        basis : str
+        molecule : str
+            Molecule id in the DB
+        driver : str
+        options : str
+            The id of the option in the DB
+        status : bool, default is 'COMPLETE'
+            The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        skip : int, default is None TODO
+            skip the first 'skip' resaults. Used to paginate
+        return_json : bool, deafult is True
+            Return the results as a list of json inseated of objects
+        with_ids : bool, default is True
+            Include the ids in the returned objects/dicts
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = storage_utils.get_metadata()
+        query = {}
+        parsed_query = {}
+        if program:
+            query['program'] = program
+        if method:
+            query['method'] = method
+        if basis:
+            query['basis'] = basis
+        if molecule:
+            query['molecule'] = molecule
+        if driver:
+            query['driver'] = driver
+        if options:
+            query['options'] = options
+
+        for key, value in query.items():
+            if isinstance(value, (list, tuple)):
+                parsed_query[key + "__in"] = [v.lower() for v in value]
+            else:
+                parsed_query[key] = value.lower()
+
+        q_limit = self._max_limit
+        if limit and limit < q_limit:
+            q_limit = limit
+
+        data = []
+        try:
+            if projection:
+                data = Result.objects(**parsed_query, status=status).only(*projection).limit(q_limit)
+            else:
+                data = Result.objects(**parsed_query, status=status).limit(q_limit)
+
+            meta["n_found"] = data.count()
+            meta["success"] = True
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+        if return_json:
+            rdata = [self._doc_to_json(d, with_ids) for d in data]
+        else:
+            rdata = data
+
+        return {"data": rdata, "meta": meta}
+
+
+    # def get_results(self, query: Union[Dict, List], projection=None):
+    #
+    #     parsed_query = {}
+    #     ret = {"meta": storage_utils.get_metadata(), "data": []}
+    #
+    #     # We are querying via id
+    #     if ("_id" in query) or ("id" in query):
+    #         if len(query) > 1:
+    #             ret["error_description"] = "ID index was provided, cannot use other indices"
+    #             return ret
+    #
+    #         if "id" in query:
+    #             query["_id"] = query["id"]
+    #
+    #         if not isinstance(query, (list, tuple)):
+    #             parsed_query["_id"] = {"$in": query["_id"]}
+    #             _str_to_indices(parsed_query["_id"]["$in"])
+    #         else:
+    #             parsed_query["_id"] = [query["_id"]]
+    #             _str_to_indices(parsed_query["_id"])
+    #
+    #     else:
+    #         # Check if there are unknown keys
+    #         remain = set(query) - set(self._table_indices["results"])
+    #         if remain:
+    #             ret["error_description"] = "Results query found unknown keys {}".format(list(remain))
+    #             return ret
+    #
+    #         for key, value in query.items():
+    #             if isinstance(value, (list, tuple)):
+    #                 if key in self._lower_results_index:
+    #                     value = [v.lower() for v in value]
+    #                 parsed_query[key] = {"$in": value}
+    #             else:
+    #                 parsed_query[key] = value.lower()
+    #
+    #     # Manipulate the projection
+    #     if projection is None:
+    #         proj = {}
+    #     else:
+    #         proj = copy.deepcopy(projection)
+    #
+    #     proj["_id"] = False
+    #
+    #     data = self._tables["results"].find(parsed_query, projection=proj)
+    #     if data is None:
+    #         data = []
+    #     else:
+    #         data = list(data)
+    #
+    #     ret["meta"]["n_found"] = len(data)
+    #     ret["meta"]["success"] = True
+    #
+    #     ret["data"] = data
+    #
+    #     return ret
+
+    def del_results(self, ids: List[str]):
+        """
+        Removes results from the database using their ids
+        (Should be cautious! other tables maybe referencing results)
+
+        Parameters
+        ----------
+        ids : list of str
+            The Ids of the results to be deleted
+
+        Returns
+        -------
+        int
+            number of results deleted
+        """
+
+        obj_ids = [ObjectId(x) for x in ids]
+
+        return Result.objects(id__in=obj_ids).delete()
 
 ### Mongo procedure/service functions
 

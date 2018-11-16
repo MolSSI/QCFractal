@@ -275,18 +275,17 @@ class BaseMongoSocket(ABC):
             program: str,
             method: str,
             driver: str,
-            molecule: Union[str, Dict],  # Molecule id or Molecule object?
+            molecule: str,  # Molecule id
             basis: str,
             options: str,
             data: dict,
-            return_json=True,
-            with_ids=True):
+            return_json=True):
         """ FIXME
         """
 
         pass
 
-    def add_results(self, data: List[dict], return_json=True, with_ids=True):
+    def add_results(self, data: List[dict], update_existing: bool=False, return_json=True):
         """
 
         Parameters
@@ -299,35 +298,91 @@ class BaseMongoSocket(ABC):
         """
         pass
 
-    # Do a lookup on the results collection using a <molecule, method> key.
+    def get_resuls_by_ids(self, ids: List[str]=None, projection=None, return_json=True,
+                                with_ids=True):
+        """
+        Get Results using the given list of Ids
+
+        Parameters
+        ----------
+        ids : List of str
+            Ids of the results in the DB
+        projection
+        return_json : bool, default is True
+            Return the results as a list of json inseated of objects
+        with_ids: bool, default is True
+            Include the ids in the returned objects/dicts
+
+        Returns
+        -------
+
+        """
+
+        pass
+
     def get_results(self,
-                    ids: Union[str, List[str]]=None,
                     program: str=None,
                     method: str=None,
                     basis: str=None,
-                    molecule_id: str=None,
+                    molecule: str=None,
                     driver: str=None,
                     options: str=None,
-                    query: Dict=None,
+                    status: str='COMPLETE',
                     projection=None,
+                    limit: int=None,
+                    skip: int=None,
                     return_json=True,
                     with_ids=True):
+        """
+
+        Parameters
+        ----------
+        program : str
+        method : str
+        basis : str
+        molecule : str
+            Molecule id in the DB
+        driver : str
+        options : str
+            The id of the option in the DB
+        status : bool, default is 'COMPLETE'
+            The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        skip : int, default is None TODO
+            skip the first 'skip' resaults. Used to paginate
+        return_json : bool, deafult is True
+            Return the results as a list of json inseated of objects
+        with_ids : bool, default is True
+            Include the ids in the returned objects/dicts
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
 
         pass
 
     def del_results(self, ids: List[str]):
         """
-        Removes a page from the database from its hash.
+        Removes results from the database using their ids
+        (Should be cautious! other tables maybe referencing results)
 
         Parameters
         ----------
-        hash_val : str or list of strs
-            The hash of a page.
+        ids : list of str
+            The Ids of the results to be deleted
 
         Returns
         -------
-        bool
-            Whether the operation was successful.
+        int
+            number of results deleted
         """
         pass
 

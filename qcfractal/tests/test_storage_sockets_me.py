@@ -216,7 +216,7 @@ def test_results_add(storage_socket):
     mol_insert = storage_socket.add_molecules({"water1": water.to_json(), "water2": water2.to_json()})
 
     page1 = {
-        "molecule_id": mol_insert["data"]["water1"],
+        "molecule": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
         "options": "default",
@@ -227,7 +227,7 @@ def test_results_add(storage_socket):
     }
 
     page2 = {
-        "molecule_id": mol_insert["data"]["water2"],
+        "molecule": mol_insert["data"]["water2"],
         "method": "M1",
         "basis": "B1",
         "options": "default",
@@ -237,13 +237,34 @@ def test_results_add(storage_socket):
         "hash_index": 1,
     }
 
+    page3 = {
+        "molecule": mol_insert["data"]["water2"],
+        "method": "M22",
+        "basis": "B1",
+        "options": "default",
+        "program": "P1",
+        "driver": "energy",
+        "other_data": 10,
+        "hash_index": 2,
+    }
+    ids = []
     ret = storage_socket.add_results([page1, page2])
     assert ret["meta"]["n_inserted"] == 2
+    ids.extend(ret['data'])
 
-    result_ids = [x for x in ret["data"]]
-    ret = storage_socket.del_results(result_ids, index="id")
-    assert ret == 2
+    # add with duplicates:
+    ret = storage_socket.add_results([page1, page2, page3])
 
+    assert ret["meta"]["n_inserted"] == 1
+    assert len(ret['data']) == 3   # first 2 found are None
+    assert len(ret["meta"]['duplicates']) == 2
+
+    for res_id in ret['data']:
+        if res_id is not None:
+            ids.append(res_id)
+
+    ret = storage_socket.del_results(ids)
+    assert ret == 3
     ret = storage_socket.del_molecules(list(mol_insert["data"].values()), index="id")
     assert ret == 2
 
@@ -259,7 +280,7 @@ def storage_results(storage_socket):
     mol_insert = storage_socket.add_molecules({"water1": water.to_json(), "water2": water2.to_json()})
 
     page1 = {
-        "molecule_id": mol_insert["data"]["water1"],
+        "molecule": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
         "options": "default",
@@ -267,11 +288,11 @@ def storage_results(storage_socket):
         "driver": "energy",
         "return_result": 5,
         "hash_index": 0,
-
+        "status": 'COMPLETE'
     }
 
     page2 = {
-        "molecule_id": mol_insert["data"]["water2"],
+        "molecule": mol_insert["data"]["water2"],
         "method": "M1",
         "basis": "B1",
         "options": "default",
@@ -279,10 +300,11 @@ def storage_results(storage_socket):
         "driver": "energy",
         "return_result": 10,
         "hash_index": 1,
+        "status": 'COMPLETE'
     }
 
     page3 = {
-        "molecule_id": mol_insert["data"]["water1"],
+        "molecule": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
         "options": "default",
@@ -290,10 +312,11 @@ def storage_results(storage_socket):
         "driver": "gradient",
         "return_result": 15,
         "hash_index": 2,
+        "status": 'COMPLETE'
     }
 
     page4 = {
-        "molecule_id": mol_insert["data"]["water1"],
+        "molecule": mol_insert["data"]["water1"],
         "method": "M2",
         "basis": "B1",
         "options": "default",
@@ -301,10 +324,11 @@ def storage_results(storage_socket):
         "driver": "gradient",
         "return_result": 15,
         "hash_index": 3,
+        "status": 'COMPLETE'
     }
 
     page5 = {
-        "molecule_id": mol_insert["data"]["water2"],
+        "molecule": mol_insert["data"]["water2"],
         "method": "M2",
         "basis": "B1",
         "options": "default",
@@ -312,6 +336,7 @@ def storage_results(storage_socket):
         "driver": "gradient",
         "return_result": 20,
         "hash_index": 4,
+        "status": 'COMPLETE'
     }
 
     results_insert = storage_socket.add_results([page1, page2, page3, page4, page5])
@@ -321,7 +346,7 @@ def storage_results(storage_socket):
 
     # Cleanup
     result_ids = [x for x in results_insert["data"]]
-    ret = storage_socket.del_results(result_ids, index="id")
+    ret = storage_socket.del_results(result_ids)
     assert ret == results_insert["meta"]["n_inserted"]
 
     ret = storage_socket.del_molecules(list(mol_insert["data"].values()), index="id")
@@ -330,41 +355,48 @@ def storage_results(storage_socket):
 
 def test_results_query_total(storage_results):
 
-    assert 5 == len(storage_results.get_results({})["data"])
+    assert 5 == len(storage_results.get_results()["data"])
 
 
 def test_results_query_method(storage_results):
 
-    ret = storage_results.get_results({"method": ["M2", "M1"]})
+    ret = storage_results.get_results(method=["M2", "M1"])
     assert ret["meta"]["n_found"] == 5
 
-    ret = storage_results.get_results({"method": ["M2"]})
+    ret = storage_results.get_results(method=["M2"])
     assert ret["meta"]["n_found"] == 2
 
-    ret = storage_results.get_results({"method": "M2"})
+    ret = storage_results.get_results(method="M2")
     assert ret["meta"]["n_found"] == 2
 
 
 def test_results_query_dual(storage_results):
 
-    ret = storage_results.get_results({"method": ["M2", "M1"], "program": ["P1", "P2"]})
+    ret = storage_results.get_results(method=["M2", "M1"], program=["P1", "P2"])
     assert ret["meta"]["n_found"] == 5
 
-    ret = storage_results.get_results({"method": ["M2"], "program": "P2"})
+    ret = storage_results.get_results(method=["M2"], program="P2")
     assert ret["meta"]["n_found"] == 1
 
-    ret = storage_results.get_results({"method": "M2", "program": "P2"})
+    ret = storage_results.get_results(method="M2", program="P2")
     assert ret["meta"]["n_found"] == 1
 
 
 def test_results_query_project(storage_results):
-    ret = storage_results.get_results({"method": "M2", "program": "P2"}, projection={"return_result": True})["data"][0]
-    assert set(ret.keys()) == {"return_result"}
+    """Check for changes here"""
+
+    ret = storage_results.get_results(method="M2", program="P2", projection={"return_result"})["data"][0]
+    assert set(ret.keys()) == {"id", "return_result"}
     assert ret["return_result"] == 15
+
+    # Note: explicitly set with_ids=False to remove ids
+    ret = storage_results.get_results(method="M2", program="P2", with_ids=False,
+                                      projection={"return_result"})["data"][0]
+    assert set(ret.keys()) == {"return_result"}
 
 
 def test_results_query_driver(storage_results):
-    ret = storage_results.get_results({"driver": "energy"})
+    ret = storage_results.get_results(driver="energy")
     assert ret["meta"]["n_found"] == 2
 
 

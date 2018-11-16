@@ -204,7 +204,7 @@ def test_results_add(storage_socket):
     mol_insert = storage_socket.add_molecules({"water1": water.to_json(), "water2": water2.to_json()})
 
     page1 = {
-        "molecule_id": mol_insert["data"]["water1"],
+        "molecule": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
         "options": "default",
@@ -215,7 +215,7 @@ def test_results_add(storage_socket):
     }
 
     page2 = {
-        "molecule_id": mol_insert["data"]["water2"],
+        "molecule": mol_insert["data"]["water2"],
         "method": "M1",
         "basis": "B1",
         "options": "default",
@@ -247,7 +247,7 @@ def storage_results(storage_socket):
     mol_insert = storage_socket.add_molecules({"water1": water.to_json(), "water2": water2.to_json()})
 
     page1 = {
-        "molecule_id": mol_insert["data"]["water1"],
+        "molecule": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
         "options": "default",
@@ -259,7 +259,7 @@ def storage_results(storage_socket):
     }
 
     page2 = {
-        "molecule_id": mol_insert["data"]["water2"],
+        "molecule": mol_insert["data"]["water2"],
         "method": "M1",
         "basis": "B1",
         "options": "default",
@@ -270,7 +270,7 @@ def storage_results(storage_socket):
     }
 
     page3 = {
-        "molecule_id": mol_insert["data"]["water1"],
+        "molecule": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
         "options": "default",
@@ -281,7 +281,7 @@ def storage_results(storage_socket):
     }
 
     page4 = {
-        "molecule_id": mol_insert["data"]["water1"],
+        "molecule": mol_insert["data"]["water1"],
         "method": "M2",
         "basis": "B1",
         "options": "default",
@@ -292,7 +292,7 @@ def storage_results(storage_socket):
     }
 
     page5 = {
-        "molecule_id": mol_insert["data"]["water2"],
+        "molecule": mol_insert["data"]["water2"],
         "method": "M2",
         "basis": "B1",
         "options": "default",
