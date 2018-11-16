@@ -102,13 +102,13 @@ class BaseResult(db.DynamicDocument):
         ]
     }
 
-    # def save(self, *args, **kwargs):
-    #     """Override save to set defaults"""
-    #
-    #     if not self.status:
-    #         self.status = 'INCOMPLETE'
-    #
-    #     return super(BaseResult, self).save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        """Override save to set defaults"""
+
+        if not self.status:
+            self.status = 'INCOMPLETE'
+
+        return super(BaseResult, self).save(*args, **kwargs)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

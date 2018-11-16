@@ -8,6 +8,7 @@ import pytest
 
 import qcfractal.interface as portal
 from qcfractal.testing import mongoengine_socket_fixture as storage_socket
+from time import time
 
 
 def test_molecules_add(storage_socket):
@@ -356,6 +357,18 @@ def storage_results(storage_socket):
 def test_results_query_total(storage_results):
 
     assert 5 == len(storage_results.get_results()["data"])
+
+
+def test_get_results_by_ids(storage_results):
+    results = storage_results.get_results()["data"]
+    ids = [x['id'] for x in results]
+
+    ret = storage_results.get_results_by_ids(ids, return_json=False)
+    assert ret["meta"]["n_found"] == 5
+    assert len(ret["data"]) == 5
+
+    ret = storage_results.get_results_by_ids(ids, projection=['status'])
+    assert ret['data'][0].keys() == {'id', 'status'}
 
 
 def test_results_query_method(storage_results):

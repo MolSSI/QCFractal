@@ -833,8 +833,8 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def get_resuls_by_ids(self, ids: List[str]=None, projection=None, return_json=True,
-                                with_ids=True):
+    def get_results_by_ids(self, ids: List[str]=None, projection=None, return_json=True,
+                           with_ids=True):
         """
         Get list of Results using the given list of Ids
 
@@ -842,7 +842,8 @@ class MongoengineSocket:
         ----------
         ids : List of str
             Ids of the results in the DB
-        projection TODO
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
         return_json : bool, default is True
             Return the results as a list of json inseated of objects
         with_ids: bool, default is True
@@ -857,15 +858,16 @@ class MongoengineSocket:
         meta = storage_utils.get_metadata()
 
         data = []
-        try:
+        # try:
+        if projection:
+            data = Result.objects(id__in=ids).only(*projection).limit(self._max_limit)
+        else:
             data = Result.objects(id__in=ids).limit(self._max_limit)
-            # or
-            # data = Result.objects().in_bulk(ids).limit(self._max_limit)
 
-            meta["n_found"] = data.count()
-            meta["success"] = True
-        except Exception as err:
-            meta['error_description'] = str(err)
+        meta["n_found"] = data.count()
+        meta["success"] = True
+        # except Exception as err:
+        #     meta['error_description'] = str(err)
 
         if return_json:
             rdata = [self._doc_to_json(d, with_ids) for d in data]
@@ -975,64 +977,6 @@ class MongoengineSocket:
             rdata = data
 
         return {"data": rdata, "meta": meta}
-
-
-    # def get_results(self, query: Union[Dict, List], projection=None):
-    #
-    #     parsed_query = {}
-    #     ret = {"meta": storage_utils.get_metadata(), "data": []}
-    #
-    #     # We are querying via id
-    #     if ("_id" in query) or ("id" in query):
-    #         if len(query) > 1:
-    #             ret["error_description"] = "ID index was provided, cannot use other indices"
-    #             return ret
-    #
-    #         if "id" in query:
-    #             query["_id"] = query["id"]
-    #
-    #         if not isinstance(query, (list, tuple)):
-    #             parsed_query["_id"] = {"$in": query["_id"]}
-    #             _str_to_indices(parsed_query["_id"]["$in"])
-    #         else:
-    #             parsed_query["_id"] = [query["_id"]]
-    #             _str_to_indices(parsed_query["_id"])
-    #
-    #     else:
-    #         # Check if there are unknown keys
-    #         remain = set(query) - set(self._table_indices["results"])
-    #         if remain:
-    #             ret["error_description"] = "Results query found unknown keys {}".format(list(remain))
-    #             return ret
-    #
-    #         for key, value in query.items():
-    #             if isinstance(value, (list, tuple)):
-    #                 if key in self._lower_results_index:
-    #                     value = [v.lower() for v in value]
-    #                 parsed_query[key] = {"$in": value}
-    #             else:
-    #                 parsed_query[key] = value.lower()
-    #
-    #     # Manipulate the projection
-    #     if projection is None:
-    #         proj = {}
-    #     else:
-    #         proj = copy.deepcopy(projection)
-    #
-    #     proj["_id"] = False
-    #
-    #     data = self._tables["results"].find(parsed_query, projection=proj)
-    #     if data is None:
-    #         data = []
-    #     else:
-    #         data = list(data)
-    #
-    #     ret["meta"]["n_found"] = len(data)
-    #     ret["meta"]["success"] = True
-    #
-    #     ret["data"] = data
-    #
-    #     return ret
 
     def del_results(self, ids: List[str]):
         """
