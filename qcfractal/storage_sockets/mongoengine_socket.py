@@ -1214,26 +1214,14 @@ class MongoengineSocket:
         if len(bulk_commands) == 0:
             return
 
-        ret = self._tables["task_queue"].bulk_write(bulk_commands, ordered=False)
+        ret = TaskQueue._collection.bulk_write(bulk_commands, ordered=False)
         return ret
 
-    def queue_reset_status(self, data):
-        bulk_commands = []
-        dt = datetime.datetime.utcnow()
-        for queue_id in data:
-            update = {
-                "$set": {
-                    "status": "WAITING",
-                    "modified_on": dt,
-                }
-            }
-            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(queue_id)}, update))
+    def queue_reset_status(self, task_ids):
+        """TODO: needs tests"""
+        found = TaskQueue.objects(id__in=task_ids).update(status='WAITING')
 
-        if len(bulk_commands) == 0:
-            return
-
-        ret = self._tables["task_queue"].bulk_write(bulk_commands, ordered=False)
-        return ret
+        return found
 
     def handle_hooks(self, hooks):
 

@@ -484,46 +484,46 @@ def test_storage_queue_roundtrip(storage_socket, storage_results):
     found = storage_socket.queue_get_by_id([queue_id])
     assert len(found) == 1
     assert found[0]["status"] == "COMPLETE"
-    # assert found[0]["base_result"] == "results_id"
 
     # Check queue is empty
     r = storage_socket.queue_get_next()
     assert len(r) == 0
 
 
-# def test_storage_queue_duplicate(storage_socket):
-#
-#     idx = "unique_hash_idx124"
-#     task1 = {
-#         "hash_index": idx,
-#         "spec": {},
-#         "hooks": [("service", "123")],
-#         "tag": None,
-#     }
-#     r = storage_socket.queue_submit([task1])
-#     assert len(r["data"]) == 1
-#     queue_id = r["data"][0]
-#
-#     # Put the first task in a waiting state
-#     r = storage_socket.queue_get_next()
-#     assert len(r) == 1
-#
-#     # Change hooks, only one submission due to hash_index conflict
-#     task1["hooks"] = [("service", "456")]
-#     r = storage_socket.queue_submit([task1])
-#     assert r["meta"]["n_inserted"] == 0
-#
-#     # Pull out the data and check the hooks
-#     r = storage_socket.get_queue({"id": queue_id})
-#     hooks = r["data"][0]["hooks"]
-#     assert len(hooks) == 2
-#     assert hooks[0][0] == "service"
-#     assert hooks[1][0] == "service"
-#     assert {"123", "456"} == {hooks[0][1], hooks[1][1]}
-#
-#     # Cleanup
-#     r = storage_socket.queue_mark_complete([(queue_id, "result_location")])
-#     assert r == 1
+def test_storage_queue_duplicate(storage_socket, storage_results):
+
+    result1 = storage_results.get_results()['data'][2]
+    task1 = {
+        # "hash_index": idx,
+        "spec": {},
+        "hooks": [("service", "123")],
+        "tag": None,
+        "base_result": ('results', result1['id'])
+    }
+    r = storage_socket.queue_submit([task1])
+    assert len(r["data"]) == 1
+    queue_id = r["data"][0]
+
+    # Put the first task in a waiting state
+    r = storage_socket.queue_get_next()
+    assert len(r) == 1
+
+    # Change hooks, only one submission due to hash_index conflict
+    task1["hooks"] = [("service", "456")]
+    r = storage_socket.queue_submit([task1])
+    assert r["meta"]["n_inserted"] == 0
+
+    # Pull out the data and check the hooks
+    r = storage_socket.queue_get_by_id([queue_id])
+    hooks = r[0]["hooks"]
+    assert len(hooks) == 2
+    assert hooks[0][0] == "service"
+    assert hooks[1][0] == "service"
+    assert {"123", "456"} == {hooks[0][1], hooks[1][1]}
+
+    # Cleanup
+    r = storage_socket.queue_mark_complete([queue_id])
+    assert r == 1
 
 
 # User testing
