@@ -606,9 +606,7 @@ class MongoengineSocket:
             query['program'] = program
         if name:
             query['name'] = name
-        q_limit = self._max_limit
-        if limit and limit < q_limit:
-            q_limit = limit
+        q_limit = limit if limit and limit < self._max_limit else self._max_limit
 
         data = []
         try:
@@ -724,9 +722,7 @@ class MongoengineSocket:
             query['collection'] = collection
         if name:
             query['name'] = name
-        q_limit = self._max_limit
-        if limit and limit < q_limit:
-            q_limit = limit
+        q_limit = limit if limit and limit < self._max_limit else self._max_limit
 
         data = []
         try:
@@ -955,9 +951,7 @@ class MongoengineSocket:
             else:
                 parsed_query[key] = value.lower()
 
-        q_limit = self._max_limit
-        if limit and limit < q_limit:
-            q_limit = limit
+        q_limit = limit if limit and limit < self._max_limit else self._max_limit
 
         data = []
         try:
@@ -1128,34 +1122,26 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def queue_get_next(self, limit=100, tag=None):
+    def queue_get_next(self, limit=100, tag=None, as_json=True):
 
         # Figure out query, tagless has no requirements
         query = {"status": "WAITING"}
         if tag is not None:
             query["tag"] = tag
 
-        found = list(self._tables["task_queue"].find(
-            query,
-            sort=[("created_on", -1)],
-            limit=limit,
-            projection={"_id": True,
-                        "spec": True,
-                        "hash_index": True,
-                        "parser": True,
-                        "hooks": True}))
+        found = TaskQueue.objects(**query).limit(limit).order_by('-created_on')
 
-        query = {"_id": {"$in": [x["_id"] for x in found]}}
+        query = {"_id": {"$in": [x.id for x in found]}}
 
-        upd = self._tables["task_queue"].update_many(
+        # update_many using pymongo in one DB access
+        upd = TaskQueue._collection.update_many(
             query, {"$set": {
                 "status": "RUNNING",
                 "modified_on": datetime.datetime.utcnow()
             }})
 
-        for f in found:
-            f["id"] = str(f["_id"])
-            del f["_id"]
+        if as_json:
+            found = [self._doc_to_json(task, with_ids=True) for task in found]
 
         if upd.modified_count != len(found):
             self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
@@ -1163,27 +1149,54 @@ class MongoengineSocket:
         return found
 
     def get_queue(self, query, projection=None):
+        """TODO: to be replaced with a specific query, add limit"""
 
         return self._get_generic(query, "task_queue", allow_generic=True, projection=projection)
 
-    def queue_get_by_id(self, ids, n=100):
+    def queue_get_by_id(self, ids, limit=100, as_json=True):
+        """Get tasks by their IDs
 
-        return list(self._tables["task_queue"].find({"_id": ids}, limit=n))
+        Parameters
+        ----------
+        ids : list of str
+            List of the task Ids in the DB
+        limit : int (optional)
+            max number of returned tasks. If limit > max_limit, max_limit
+            will be returned instead (safe query)
+        as_json : bool
+            Return tasks as JSON
 
-    def queue_mark_complete(self, updates):
+        Returns
+        -------
+        list of the found tasks
+        """
 
-        bulk_commands = []
+        q_limit = limit if limit and limit < self._max_limit else self._max_limit
+        found = TaskQueue.objects(id__in=ids).limit(q_limit)
 
-        now = datetime.datetime.utcnow()
-        for queue_id, result_location in updates:
-            update = {"$set": {"status": "COMPLETE", "modified_on": now, "result_location": result_location}}
-            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(queue_id)}, update))
+        if as_json:
+            found = [self._doc_to_json(task, with_ids=True) for task in found]
 
-        if len(bulk_commands) == 0:
-            return
+        return found
 
-        ret = self._tables["task_queue"].bulk_write(bulk_commands, ordered=False)
-        return ret.modified_count
+    def queue_mark_complete(self, task_ids):
+        """Update the given tasks as complete
+        Note that each task is already pointing to its result location
+
+        Parameters
+        ----------
+        task_ids : list
+            IDs of the tasks to mark as COMPLETE
+
+        Returns
+        -------
+        int
+            Updated count
+        """
+
+        found = TaskQueue.objects(id__in=task_ids).update(status='COMPLETE')
+
+        return found
 
     def queue_mark_error(self, data):
         bulk_commands = []

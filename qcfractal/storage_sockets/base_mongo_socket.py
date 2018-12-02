@@ -430,7 +430,7 @@ class BaseMongoSocket(ABC):
 
     # --------------------- Mongo queue handling functions --------------------
 
-    def queue_submit(self, data: Dict[str, Dict], tag=None):
+    def queue_submit(self, data: Dict[Dict], tag=None):
         """
             TODO: explain the format of the data
             what is assumed to be saved before this step

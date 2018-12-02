@@ -1,5 +1,6 @@
 import mongoengine as db
 import datetime
+import bson
 
 
 class Collection(db.DynamicDocument):
@@ -257,7 +258,7 @@ class TaskQueue(db.DynamicDocument):
     created_on = db.DateTimeField(required=True, default=datetime.datetime.now)
     modified_on = db.DateTimeField(required=True, default=datetime.datetime.now)
 
-    base_result = db.GenericLazyReferenceField()  # GenericLazyReferenceField()  # can reference Results or any Procedure
+    base_result = db.GenericLazyReferenceField(dbref=True)  # GenericLazyReferenceField()  # can reference Results or any Procedure
 
     meta = {
         'indexes': [
@@ -277,6 +278,12 @@ class TaskQueue(db.DynamicDocument):
         #     }
         # ]
     }
+
+    # override to simplify the generic reference field
+    def to_json(self):
+        data = self.to_mongo()
+        data['base_result'] = data['base_result']['_ref']
+        return bson.json_util.dumps(data)
 
     def save(self, *args, **kwargs):
         """Override save to update modified_on"""

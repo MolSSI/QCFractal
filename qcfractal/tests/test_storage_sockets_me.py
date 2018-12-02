@@ -448,48 +448,49 @@ def test_queue_submit(storage_results):
 
 # ----------------------------------------------------------
 
-# Builds tests for the queue
+# Builds tests for the queue - Changed design
 
-# def test_storage_queue_roundtrip(storage_socket):
-#
-#     idx = "unique_hash_idx123"
-#     task1 = {
-#         "hash_index": idx,
-#         "spec": {
-#             "function": "qcengine.compute_procedure",
-#             "args": [{
-#                 "json_blob": "data"
-#             }],
-#             "kwargs": {},
-#         },
-#         "hooks": [("service", "")],
-#         "tag": None,
-#     }
-#
-#     # Submit a task
-#     r = storage_socket.queue_submit([task1])
-#     assert len(r["data"]) == 1
-#
-#     # Query for next tasks
-#     r = storage_socket.queue_get_next()
-#     assert r[0]["spec"]["function"] == task1["spec"]["function"]
-#     queue_id = r[0]["id"]
-#
-#     # Mark task as done
-#     r = storage_socket.queue_mark_complete([(queue_id, "results_id")])
-#     assert r == 1
-#
-#     # Check results
-#     r = storage_socket.get_queue({"id": queue_id})
-#     assert r["meta"]["n_found"] == 1
-#     assert r["data"][0]["status"] == "COMPLETE"
-#     assert r["data"][0]["result_location"] == "results_id"
-#
-#     # Check queue is empty
-#     r = storage_socket.queue_get_next()
-#     assert len(r) == 0
-#
-#
+def test_storage_queue_roundtrip(storage_socket, storage_results):
+
+    result1 = storage_results.get_results()['data'][1]
+    task1 = {
+        # "hash_index": idx,
+        "spec": {
+            "function": "qcengine.compute_procedure",
+            "args": [{
+                "json_blob": "data"
+            }],
+            "kwargs": {},
+        },
+        "hooks": [("service", "")],
+        "tag": None,
+        "base_result": ('results', result1['id'])
+    }
+
+    # Submit a task
+    r = storage_socket.queue_submit([task1])
+    assert len(r["data"]) == 1
+
+    # Query for next tasks
+    r = storage_socket.queue_get_next()
+    assert r[0]["spec"]["function"] == task1["spec"]["function"]
+    queue_id = r[0]["id"]
+
+    # Mark task as done
+    r = storage_socket.queue_mark_complete([queue_id])
+    assert r == 1
+
+    # Check results
+    found = storage_socket.queue_get_by_id([queue_id])
+    assert len(found) == 1
+    assert found[0]["status"] == "COMPLETE"
+    # assert found[0]["base_result"] == "results_id"
+
+    # Check queue is empty
+    r = storage_socket.queue_get_next()
+    assert len(r) == 0
+
+
 # def test_storage_queue_duplicate(storage_socket):
 #
 #     idx = "unique_hash_idx124"
