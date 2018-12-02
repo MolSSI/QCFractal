@@ -244,7 +244,8 @@ class Spec(db.DynamicEmbeddedDocument):
 class TaskQueue(db.DynamicDocument):
     """A queue of tasks corresponding to a procedure"""
 
-    spec = db.EmbeddedDocumentField(Spec, default=Spec)
+    # spec = db.EmbeddedDocumentField(Spec, default=Spec)
+    spec = db.DynamicField()
 
     # others
     hooks = db.ListField(db.DynamicField())  # ??
@@ -256,13 +257,14 @@ class TaskQueue(db.DynamicDocument):
     created_on = db.DateTimeField(required=True, default=datetime.datetime.now)
     modified_on = db.DateTimeField(required=True, default=datetime.datetime.now)
 
-    base_result = db.ReferenceField(BaseResult)  # can reference Results or any Procedure
+    base_result = db.GenericLazyReferenceField()  # GenericLazyReferenceField()  # can reference Results or any Procedure
 
     meta = {
         'indexes': [
-            # 'created_on',
+            '+created_on',
             'status',
-            {'fields': ("status", "tag", "hash_index"), 'unique': False}
+            # {'fields': ("status", "tag", "hash_index"), 'unique': False}
+            {'fields': ("base_result",), 'unique': True}  # new
 
         ]
         # 'indexes': [

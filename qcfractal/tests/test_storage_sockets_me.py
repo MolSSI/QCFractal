@@ -8,7 +8,6 @@ import pytest
 
 import qcfractal.interface as portal
 from qcfractal.testing import mongoengine_socket_fixture as storage_socket
-from time import time
 
 
 def test_molecules_add(storage_socket):
@@ -396,9 +395,10 @@ def test_results_query_dual(storage_results):
 
 
 def test_results_query_project(storage_results):
-    """Check for changes here"""
+    """See new changes in design here"""
 
-    ret = storage_results.get_results(method="M2", program="P2", projection={"return_result"})["data"][0]
+    ret = storage_results.get_results(method="M2", program="P2",
+                                      projection={"return_result"})["data"][0]
     assert set(ret.keys()) == {"id", "return_result"}
     assert ret["return_result"] == 15
 
@@ -412,15 +412,16 @@ def test_results_query_driver(storage_results):
     ret = storage_results.get_results(driver="energy")
     assert ret["meta"]["n_found"] == 2
 
+# ------ New Task Queue tests ------
+# No hash index, tasks are unique by their base_result
 
-# Builds tests for the queue
 
+def test_queue_submit(storage_results):
 
-def test_storage_queue_roundtrip(storage_socket):
+    result1 = storage_results.get_results()['data'][0]
 
-    idx = "unique_hash_idx123"
     task1 = {
-        "hash_index": idx,
+        # "hash_index": idx,  # not used anymore
         "spec": {
             "function": "qcengine.compute_procedure",
             "args": [{
@@ -428,67 +429,100 @@ def test_storage_queue_roundtrip(storage_socket):
             }],
             "kwargs": {},
         },
-        "hooks": [("service", "")],
+        "hooks": [("service", "x")],
         "tag": None,
+        "base_result": ('results', result1['id'])
     }
 
-    # Submit a task
-    r = storage_socket.queue_submit([task1])
-    assert len(r["data"]) == 1
+    # Submit a new task
+    ret = storage_results.queue_submit([task1])
+    assert len(ret["data"]) == 1
+    assert ret['meta']['n_inserted'] == 1
 
-    # Query for next tasks
-    r = storage_socket.queue_get_next()
-    assert r[0]["spec"]["function"] == task1["spec"]["function"]
-    queue_id = r[0]["id"]
+    # submit a duplicate task with a hook
+    task1['hooks'] = [('service', 'y')]
+    ret = storage_results.queue_submit([task1])
+    assert len(ret["data"]) == 1
+    assert ret['meta']['n_inserted'] == 0
+    assert len(ret["meta"]['duplicates']) == 1
 
-    # Mark task as done
-    r = storage_socket.queue_mark_complete([(queue_id, "results_id")])
-    assert r == 1
+# ----------------------------------------------------------
 
-    # Check results
-    r = storage_socket.get_queue({"id": queue_id})
-    assert r["meta"]["n_found"] == 1
-    assert r["data"][0]["status"] == "COMPLETE"
-    assert r["data"][0]["result_location"] == "results_id"
+# Builds tests for the queue
 
-    # Check queue is empty
-    r = storage_socket.queue_get_next()
-    assert len(r) == 0
-
-
-def test_storage_queue_duplicate(storage_socket):
-
-    idx = "unique_hash_idx124"
-    task1 = {
-        "hash_index": idx,
-        "spec": {},
-        "hooks": [("service", "123")],
-        "tag": None,
-    }
-    r = storage_socket.queue_submit([task1])
-    assert len(r["data"]) == 1
-    queue_id = r["data"][0]
-
-    # Put the first task in a waiting state
-    r = storage_socket.queue_get_next()
-    assert len(r) == 1
-
-    # Change hooks, only one submission due to hash_index conflict
-    task1["hooks"] = [("service", "456")]
-    r = storage_socket.queue_submit([task1])
-    assert r["meta"]["n_inserted"] == 0
-
-    # Pull out the data and check the hooks
-    r = storage_socket.get_queue({"id": queue_id})
-    hooks = r["data"][0]["hooks"]
-    assert len(hooks) == 2
-    assert hooks[0][0] == "service"
-    assert hooks[1][0] == "service"
-    assert {"123", "456"} == {hooks[0][1], hooks[1][1]}
-
-    # Cleanup
-    r = storage_socket.queue_mark_complete([(queue_id, "result_location")])
-    assert r == 1
+# def test_storage_queue_roundtrip(storage_socket):
+#
+#     idx = "unique_hash_idx123"
+#     task1 = {
+#         "hash_index": idx,
+#         "spec": {
+#             "function": "qcengine.compute_procedure",
+#             "args": [{
+#                 "json_blob": "data"
+#             }],
+#             "kwargs": {},
+#         },
+#         "hooks": [("service", "")],
+#         "tag": None,
+#     }
+#
+#     # Submit a task
+#     r = storage_socket.queue_submit([task1])
+#     assert len(r["data"]) == 1
+#
+#     # Query for next tasks
+#     r = storage_socket.queue_get_next()
+#     assert r[0]["spec"]["function"] == task1["spec"]["function"]
+#     queue_id = r[0]["id"]
+#
+#     # Mark task as done
+#     r = storage_socket.queue_mark_complete([(queue_id, "results_id")])
+#     assert r == 1
+#
+#     # Check results
+#     r = storage_socket.get_queue({"id": queue_id})
+#     assert r["meta"]["n_found"] == 1
+#     assert r["data"][0]["status"] == "COMPLETE"
+#     assert r["data"][0]["result_location"] == "results_id"
+#
+#     # Check queue is empty
+#     r = storage_socket.queue_get_next()
+#     assert len(r) == 0
+#
+#
+# def test_storage_queue_duplicate(storage_socket):
+#
+#     idx = "unique_hash_idx124"
+#     task1 = {
+#         "hash_index": idx,
+#         "spec": {},
+#         "hooks": [("service", "123")],
+#         "tag": None,
+#     }
+#     r = storage_socket.queue_submit([task1])
+#     assert len(r["data"]) == 1
+#     queue_id = r["data"][0]
+#
+#     # Put the first task in a waiting state
+#     r = storage_socket.queue_get_next()
+#     assert len(r) == 1
+#
+#     # Change hooks, only one submission due to hash_index conflict
+#     task1["hooks"] = [("service", "456")]
+#     r = storage_socket.queue_submit([task1])
+#     assert r["meta"]["n_inserted"] == 0
+#
+#     # Pull out the data and check the hooks
+#     r = storage_socket.get_queue({"id": queue_id})
+#     hooks = r["data"][0]["hooks"]
+#     assert len(hooks) == 2
+#     assert hooks[0][0] == "service"
+#     assert hooks[1][0] == "service"
+#     assert {"123", "456"} == {hooks[0][1], hooks[1][1]}
+#
+#     # Cleanup
+#     r = storage_socket.queue_mark_complete([(queue_id, "result_location")])
+#     assert r == 1
 
 
 # User testing

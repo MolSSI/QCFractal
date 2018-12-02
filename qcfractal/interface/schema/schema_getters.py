@@ -34,7 +34,8 @@ _table_indices = {
     "result": ("molecule", "program", "driver", "method", "basis", "options"),  # ** Renamed molecule_id
     "options": ("program", "name"),
 
-    "task_queue": ("status", "tag", "hash_index"),
+    # "task_queue": ("status", "tag", "hash_index"),
+    "task_queue": ("status", "tag", "base_result"),  # updated
     "service_queue": ("status", "tag", "hash_index"),
 }  # yapf: disable
 

@@ -24,7 +24,7 @@ import bson.errors
 import pandas as pd
 from bson.objectid import ObjectId
 import json
-from typing import List, Union, Dict, Optional
+from typing import List, Union, Dict
 
 from . import storage_utils
 # Pull in the hashing algorithms from the client
@@ -32,10 +32,11 @@ from .. import interface
 
 # import models
 import mongoengine as db
-from qcfractal.storage_sockets.models import Options, Collection, Result
+from qcfractal.storage_sockets.models import Options, Collection, Result, \
+    TaskQueue, Procedure
 
 import mongoengine.errors
-
+# from bson.dbref import DBRef
 
 
 def _translate_id_index(index):
@@ -192,9 +193,9 @@ class MongoengineSocket:
             idx = [(x, pymongo.ASCENDING) for x in indices if x != "hash_index"]
             self._tables[table].create_index(idx, unique=self._table_unique_indices[table])
 
-        # Special queue index, hash_index should be unique
-        for table in ["task_queue", "service_queue"]:
-            self._tables[table].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
+        # # Special queue index, hash_index should be unique
+        # for table in ["task_queue", "service_queue"]:
+        #     self._tables[table].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
 
         # Return the success array
         return table_creation
@@ -743,7 +744,6 @@ class MongoengineSocket:
 
         return {"data": rdata, "meta": meta}
 
-
     def del_collection(self, collection: str, name: str):
         """
         Remove a collection from the database from its keys.
@@ -1050,58 +1050,82 @@ class MongoengineSocket:
 
 ### Mongo queue handling functions
 
-    def queue_submit(self, data, tag=None):
+    def queue_submit(self, data: List[Dict]):
+        """Submit a list of tasks to the queue.
+        Tasks are unique by their base_result, which should be inserted into
+        the DB first before submitting it's corresponding task to the queue
+        (with result.status='INCOMPLETE' as the default)
+        The default task.status is 'WAITING'
 
-        dt = datetime.datetime.utcnow()
-        for x in data:
-            x["status"] = "WAITING"
-            x["tag"] = tag
-            x["created_on"] = dt
-            x["modified_on"] = dt
+        Duplicate tasks sould be a rare case.
+        Hooks are merged if the task already exists
 
-        # Find duplicates
-        ret = self._add_generic(data, "task_queue", return_map=True)
+        Parameters
+        ----------
+        data : list of tasks (dict)
+            A task is a dict, with the following fields:
+            - hash_index: idx, not used anymore
+            - spec: dynamic field (dict-like), can have any structure
+            - hooks: list of any objects representing listeners (for now)
+            - tags: list (optional)
+            - base_results: tuple (required), first value is the class type
+             of the result, {'results' or 'procedure'). The second value is
+             the ID of the result in the DB. Example:
+             "base_result": ('results', result_id)
 
-        # Update hooks on duplicates
-        dup_inds = set(x[2] for x in ret["meta"]["duplicates"])
-        if dup_inds:
-            hook_updates = []
+        Returns
+        -------
+        dict (data and meta)
+            'data' is a list of the IDs of the tasks IN ORDER, including
+            duplicates. An errored task has 'None' in its ID
+            meta['duplicates'] has the duplicate tasks
+        """
 
-            for x in data:
-                # No hooks, skip
-                if len(x["hooks"]) == 0:
-                    continue
+        meta = storage_utils.add_metadata()
+        meta["success"] = True
 
-                if x["hash_index"] in dup_inds:
-                    upd = pymongo.UpdateOne({
-                        "hash_index": x["hash_index"]
-                    }, {"$push": {
-                        "hooks": {
-                            "$each": x["hooks"]
-                        }
-                    }})
-                    hook_updates.append(upd)
+        results = []
+        for d in data:
+            try:
+                if not isinstance(d['base_result'], tuple):
+                    raise Exception("base_result must be a tuple not {}."
+                                    .format(type(d['base_result'])))
 
-            # If no hook updates, continue
-            if hook_updates:
-                tmp = self._tables["task_queue"].bulk_write(hook_updates)
-                if tmp.modified_count != len(hook_updates):
-                    self.logger.warning("QUEUE: Hook duplicate found does not match hook triggers")
+                # If saved as DBRef, then use raw query to retrieve (avoid this)
+                # if d['base_result'][0] in ('results', 'procedure'):
+                #     base_result = DBRef(d['base_result'][0], d['base_result'][1])
 
-        # Since we did an add generic we get ((status, tag, hashindex), queue_id)
-        # Move this to (queue_id)
-        ret["data"] = [x for x in ret["data"]]
+                result_obj = None
+                if d['base_result'][0] == 'results':
+                    result_obj = Result(id=d['base_result'][1])
+                elif d['base_result'][0] == 'procedure':
+                    result_obj = Procedure(id=d['base_result'][1])
+                else:
+                    raise TypeError("Base_result type must be 'results' or 'procedure',"
+                                    " {} is given.".format(d['base_result'][0]))
+                task = TaskQueue(**d)
+                task.base_result = result_obj
+                task.save()
+                results.append(str(task.id))
+                meta['n_inserted'] += 1
+            except mongoengine.errors.NotUniqueError as err:  # rare case
+                # If results is stored as DBRef, get it with:
+                # task = TaskQueue.objects(__raw__={'base_result': base_result}).first()  # avoid
 
-        # Means we have duplicates in the queue, massage results
-        if len(ret["meta"]["duplicates"]):
-            # print(ret["meta"]["duplicates"])
-            # queue
-            hash_indices = [x[2] for x in ret["meta"]["duplicates"]]
-            ids = self._get_generic({"hash_index": hash_indices}, "task_queue")
-            ret["meta"]["duplicates"] = [x["id"] for x in ids["data"]]
-            ret["meta"]["error_description"] = False
+                # If base_result is stored as a Result or Procedure class, get it with:
+                task = TaskQueue.objects(base_result=result_obj).first()
+                # print('duplicate task: ', task.to_mongo())
+                if d['hooks']:  # merge hooks
+                    task.hooks.extend(d['hooks'])
+                    task.save()
+                results.append(str(task.id))
+                meta['duplicates'].append(self._doc_to_tuples(task, with_ids=False))  # TODO
+            except Exception as err:
+                meta["success"] = False
+                meta["error_description"].append(err)
+                results.append(None)
 
-        ret["meta"]["validation_errors"] = []
+        ret = {"data": results, "meta": meta}
         return ret
 
     def queue_get_next(self, limit=100, tag=None):
