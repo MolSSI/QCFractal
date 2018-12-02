@@ -1114,7 +1114,7 @@ class MongoengineSocket:
 
                 # If base_result is stored as a Result or Procedure class, get it with:
                 task = TaskQueue.objects(base_result=result_obj).first()
-                # print('duplicate task: ', task.to_mongo())
+                self.logger.warning('queue_submit got a duplicate task: ', task.to_mongo())
                 if d['hooks']:  # merge hooks
                     task.hooks.extend(d['hooks'])
                     task.save()
