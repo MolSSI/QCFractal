@@ -93,7 +93,7 @@ class BaseResult(db.DynamicDocument):
 
     # queue related
     task_queue_id = db.StringField()  # ObjectId, reference task_queue but without validation
-    status = db.StringField(required=True, choices=['COMPLETE', 'INCOMPLETE', 'ERROR'])
+    status = db.StringField(required=True, default="INCOMPLETE", choices=['COMPLETE', 'INCOMPLETE', 'ERROR'])
 
     meta = {
         'abstract': True,
@@ -250,7 +250,7 @@ class TaskQueue(db.DynamicDocument):
 
     # others
     hooks = db.ListField(db.DynamicField())  # ??
-    tag = db.ListField()  # or str
+    tag = db.StringField(default=None)
     parser = db.StringField(default='')
     status = db.StringField(default='WAITING')
                             # choices=['RUNNING', 'WAITING', 'ERROR', 'COMPLETE'])

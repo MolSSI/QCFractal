@@ -29,7 +29,7 @@ class TaskQueueHandler(APIHandler):
         full_tasks, complete_tasks, errors = func(storage, self.json)
 
         # Add tasks to queue
-        ret = storage.queue_submit(full_tasks, tag=tag)
+        ret = storage.queue_submit(full_tasks)
         self.logger.info("TaskQueue: Added {} tasks.".format(ret["meta"]["n_inserted"]))
 
         ret["data"] = [x for x in ret["data"] if x is not None]

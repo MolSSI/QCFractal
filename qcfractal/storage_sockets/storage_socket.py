@@ -3,7 +3,7 @@ A factory for Database sockets
 """
 
 
-def storage_socket_factory(uri, project_name, logger=None, db_type='pymongo', **kwargs):
+def storage_socket_factory(uri, project_name, logger=None, db_type='mongoengine', **kwargs):
     """
     Factory for generating storage sockets. Spins up a given storage layer on request given common inputs.
 

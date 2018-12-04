@@ -52,11 +52,11 @@ def test_compute_queue_stack(fractal_compute_server):
     # Query result and check against out manual pul
     results_query = {
         "program": "psi4",
-        "molecule_id": [hydrogen_mol_id, helium_mol_id],
+        "molecule": [hydrogen_mol_id, helium_mol_id],
         "method": compute["meta"]["method"],
         "basis": compute["meta"]["basis"]
     }
-    results = storage.get_results(results_query)["data"]
+    results = storage.get_results(**results_query)["data"]
 
     assert len(results) == 2
     for r in results:

@@ -440,7 +440,7 @@ def fractal_compute_server(request):
         raise TypeError("fractal_compute_server: internal parametrize error")
 
 
-@pytest.fixture(scope="module", params=["pymongo"])
+@pytest.fixture(scope="module", params=["mongoengine"])
 def storage_socket_fixture(request):
     print("")
 

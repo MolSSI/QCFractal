@@ -939,14 +939,16 @@ class MongoengineSocket:
         if basis:
             query['basis'] = basis
         if molecule:
-            query['molecule'] = molecule
+            query['molecule'], errors = _str_to_indices_with_errors(molecule)
         if driver:
             query['driver'] = driver
         if options:
             query['options'] = options
 
         for key, value in query.items():
-            if isinstance(value, (list, tuple)):
+            if key == "molecule":
+                parsed_query[key + "__in"] = query[key]
+            elif isinstance(value, (list, tuple)):
                 parsed_query[key + "__in"] = [v.lower() for v in value]
             else:
                 parsed_query[key] = value.lower()
@@ -966,7 +968,12 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-            rdata = [self._doc_to_json(d, with_ids) for d in data]
+            rdata = []
+            for d in data:
+                d = self._doc_to_json(d, with_ids)
+                d["molecule_id"] = d["molecule"]["$oid"]
+                rdata.append(d)
+
         else:
             rdata = data
 
@@ -1061,7 +1068,7 @@ class MongoengineSocket:
             - hash_index: idx, not used anymore
             - spec: dynamic field (dict-like), can have any structure
             - hooks: list of any objects representing listeners (for now)
-            - tags: list (optional)
+            - tag: str
             - base_results: tuple (required), first value is the class type
              of the result, {'results' or 'procedure'). The second value is
              the ID of the result in the DB. Example:
@@ -1076,7 +1083,6 @@ class MongoengineSocket:
         """
 
         meta = storage_utils.add_metadata()
-        meta["success"] = True
 
         results = []
         for d in data:
@@ -1116,8 +1122,10 @@ class MongoengineSocket:
                 meta['duplicates'].append(self._doc_to_tuples(task, with_ids=False))  # TODO
             except Exception as err:
                 meta["success"] = False
-                meta["error_description"].append(err)
+                meta["errors"].append(err)
                 results.append(None)
+
+        meta["success"] = True
 
         ret = {"data": results, "meta": meta}
         return ret
@@ -1153,7 +1161,7 @@ class MongoengineSocket:
 
         return self._get_generic(query, "task_queue", allow_generic=True, projection=projection)
 
-    def queue_get_by_id(self, ids, limit=100, as_json=True):
+    def queue_get_by_id(self, ids: List[str], limit: int=100, as_json: bool=True):
         """Get tasks by their IDs
 
         Parameters
@@ -1179,7 +1187,7 @@ class MongoengineSocket:
 
         return found
 
-    def queue_mark_complete(self, task_ids):
+    def queue_mark_complete(self, task_ids: List[str]) -> int:
         """Update the given tasks as complete
         Note that each task is already pointing to its result location
 

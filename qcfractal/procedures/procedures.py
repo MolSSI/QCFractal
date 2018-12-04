@@ -50,13 +50,18 @@ def procedure_single_input_parser(storage, data):
 
     # Remove duplicates
     query = {k: data["meta"][k] for k in ["driver", "method", "basis", "options", "program"]}
-    query["molecule_id"] = [x["molecule"]["id"] for x in runs.values()]
+    result_stub = json.dumps(query)
+    query["molecule"] = [x["molecule"]["id"] for x in runs.values()]
 
-    search = storage.get_results(query, projection={"molecule_id": True})
+    search = storage.get_results(**query, projection={"molecule_id": True})
     completed = set(x["molecule_id"] for x in search["data"])
+
+    # Grab the tag if available
+    tag = data["meta"].pop("tag", None)
 
     # Construct full tasks
     full_tasks = []
+    results_stubs = []
     for k, v in runs.items():
         if v["molecule"]["id"] in completed:
             continue
@@ -65,6 +70,12 @@ def procedure_single_input_parser(storage, data):
         keys, hash_index = procedures_util.single_run_hash(query)
         v["hash_index"] = hash_index
 
+        # Build stub
+        result_obj = json.loads(result_stub)
+        result_obj["molecule"] = v["molecule"]["id"]
+        base_id = storage.add_results([result_obj])["data"][0]
+
+        # Build task object
         task = {
             "hash_index": hash_index,
             "hash_keys": keys,
@@ -74,11 +85,13 @@ def procedure_single_input_parser(storage, data):
                 "kwargs": {}
             },
             "hooks": [],
-            "tag": None,
-            "parser": "single"
+            "tag": tag,
+            "parser": "single",
+            "base_result": ("results", base_id)
         }
 
         full_tasks.append(task)
+
 
     return full_tasks, completed, errors
 
@@ -97,13 +110,15 @@ def procedure_single_output_parser(storage, data):
 
     # Add results to database
     results = procedures_util.parse_single_runs(storage, rdata)
-    ret = storage.add_results(list(results.values()))
+    for k, v in results.items():
+        v["status"] = "COMPLETE"
+    ret = storage.add_results(list(results.values()), update_existing=True)
 
     # Sort out hook data
     hook_data = procedures_util.parse_hooks(results, rhooks)
 
     # Create a list of (queue_id, located) to update the queue with
-    completed = [(k, {"table": "results", "index": "id", "data": v["id"]}) for k, v in results.items()]
+    completed = list(results.keys())
 
     errors = []
     if len(ret["meta"]["errors"]):
