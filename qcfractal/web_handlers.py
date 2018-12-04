@@ -148,7 +148,7 @@ class CollectionHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        ret = storage.get_collections(self.json["data"], projection=self.json["meta"].get("projection", None))
+        ret = storage.get_collections(**self.json["data"])
         self.logger.info("GET: Collections - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
@@ -159,7 +159,11 @@ class CollectionHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         overwrite = self.json["meta"].get("overwrite", False)
-        ret = storage.add_collection(self.json["data"], overwrite=overwrite)
+
+        collection = self.json["data"].pop("collection")
+        name = self.json["data"].pop("name")
+
+        ret = storage.add_collection(collection, name, self.json["data"], overwrite=overwrite)
         self.logger.info("POST: Collections - {} inserted.".format(ret["meta"]["n_inserted"]))
 
         self.write(ret)

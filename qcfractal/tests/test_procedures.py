@@ -138,7 +138,7 @@ def test_procedure_optimization(fractal_compute_server):
 def test_procedure_task_error(fractal_compute_server):
     client = portal.FractalClient(fractal_compute_server.get_address())
 
-    ret = client.add_compute("rdkit", "cookiemonster", "", "energy", "none", [{
+    ret = client.add_compute("rdkit", "cookiemonster", "", "energy", None, [{
         "geometry": [0, 0, 0],
         "symbols": ["He"]
     }])
@@ -151,4 +151,4 @@ def test_procedure_task_error(fractal_compute_server):
 
     assert len(ret) == 1
     assert ret[0]["status"] == "ERROR"
-    assert "run_rdkit" in ret[0]["error_message"]
+    assert "run_rdkit" in ret[0]["error"]

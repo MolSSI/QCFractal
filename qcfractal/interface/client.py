@@ -283,7 +283,7 @@ class FractalClient(object):
             A Collection object if the given collection was found otherwise returns `None`.
         """
 
-        payload = {"meta": {}, "data": [(collection_type.lower(), collection_name)]}
+        payload = {"meta": {}, "data": {"collection": collection_type.lower(), "name": collection_name}}
         r = self._request("get", "collection", payload)
 
         if full_return:
@@ -317,7 +317,7 @@ class FractalClient(object):
     def get_results(self, **kwargs):
 
         query = {}
-        for key in ["program", "molecule_id", "driver", "method", "basis", "options", "hash_index", "id"]:
+        for key in ["program", "molecule", "driver", "method", "basis", "options", "hash_index", "id"]:
             if key in kwargs:
                 query[key] = kwargs[key]
 

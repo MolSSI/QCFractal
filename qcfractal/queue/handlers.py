@@ -48,7 +48,7 @@ class TaskQueueHandler(APIHandler):
 
         projection = self.json["meta"].get("projection", None)
         if projection is None:
-            projection = {x: True for x in ["status", "error_message", "tag"]}
+            projection = {x: True for x in ["status", "error", "tag"]}
 
         ret = storage.get_queue(self.json["data"], projection=projection)
 

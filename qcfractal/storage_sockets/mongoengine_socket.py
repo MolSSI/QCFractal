@@ -681,6 +681,10 @@ class MongoengineSocket:
         meta = storage_utils.add_metadata()
         col_id = None
         try:
+
+            if data["id"] == "local":
+                del data["id"]
+
             if overwrite:
                 # may use upsert=True to add or update
                 col = Collection.objects(collection=collection, name=name).update_one(**data)
@@ -691,7 +695,7 @@ class MongoengineSocket:
             meta['n_inserted'] = 1
             col_id = str(col.id)
         except Exception as err:
-            meta['error_description'] = err
+            meta['error_description'] = str(err)
 
         ret = {'data': col_id, 'meta': meta}
         return ret
@@ -973,7 +977,9 @@ class MongoengineSocket:
             rdata = []
             for d in data:
                 d = self._doc_to_json(d, with_ids)
-                d["molecule_id"] = d["molecule"]["$oid"]
+                if "molecule" in d:
+                    d["molecule_id"] = d["molecule"]["$oid"]
+                    del d["molecule"]
                 rdata.append(d)
 
         else:
