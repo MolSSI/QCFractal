@@ -572,4 +572,4 @@ def test_user_permissions_admin(storage_socket):
 
 
 def test_project_name(storage_socket):
-    assert 'qcf_local_values_test' == storage_socket.get_project_name()
+    assert 'test' in storage_socket.get_project_name()

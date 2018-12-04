@@ -73,6 +73,7 @@ def procedure_single_input_parser(storage, data):
         # Build stub
         result_obj = json.loads(result_stub)
         result_obj["molecule"] = v["molecule"]["id"]
+        result_obj["status"] = "INCOMPLETE"
         base_id = storage.add_results([result_obj])["data"][0]
 
         # Build task object

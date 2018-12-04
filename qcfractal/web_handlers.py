@@ -122,7 +122,7 @@ class OptionHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        ret = storage.get_options(self.json["data"])
+        ret = storage.get_options(**self.json["data"], with_ids=False)
         self.logger.info("GET: Options - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)

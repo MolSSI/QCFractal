@@ -471,7 +471,7 @@ def mongoengine_socket_fixture(request):
 
     # Check mongo
     check_active_mongo_server()
-    storage_name = "qcf_local_values_test"
+    storage_name = "qcf_local_values_test_me"
 
     storage = storage_socket_factory("mongodb://localhost", storage_name, db_type="mongoengine")
 

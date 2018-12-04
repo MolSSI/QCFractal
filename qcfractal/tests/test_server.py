@@ -80,7 +80,7 @@ def test_option_socket(test_server):
     assert pdata["meta"].keys() == meta_set
     assert pdata["meta"]["n_inserted"] == 1
 
-    r = requests.get(opt_api_addr, json={"meta": {}, "data": [(opts["program"], opts["name"])]})
+    r = requests.get(opt_api_addr, json={"meta": {}, "data": {"program": opts["program"], "name": opts["name"]}})
     assert r.status_code == 200
 
     assert r.json()["data"][0] == opts
@@ -98,62 +98,9 @@ def test_storage_socket(test_server):
     assert pdata["meta"].keys() == meta_set
     assert pdata["meta"]["n_inserted"] == 1
 
-    r = requests.get(storage_api_addr, json={"meta": {}, "data": [(storage["collection"], storage["name"])]})
+    r = requests.get(storage_api_addr, json={"meta": {}, "data": {"collection": storage["collection"], "name": storage["name"]}})
     assert r.status_code == 200
 
     pdata = r.json()
     del pdata["data"][0]["id"]
     assert pdata["data"][0] == storage
-
-
-def test_result_socket(test_server):
-
-    result_api_addr = test_server.get_address("result")
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
-    water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
-    r = requests.post(
-        test_server.get_address("molecule"),
-        json={"meta": {},
-              "data": {
-                  "water1": water.to_json(),
-                  "water2": water2.to_json()
-              }})
-    assert r.status_code == 200
-
-    mol_insert = r.json()
-
-    # Generate some random data
-    page1 = {
-        "molecule_id": mol_insert["data"]["water1"],
-        "method": "M1",
-        "basis": "B1",
-        "options": "default",
-        "program": "P1",
-        "driver": "energy",
-        "other_data": 5,
-        "hash_index": 2,
-    }
-
-    page2 = {
-        "molecule_id": mol_insert["data"]["water2"],
-        "method": "M1",
-        "basis": "B1",
-        "options": "default",
-        "program": "P1",
-        "driver": "energy",
-        "other_data": 10,
-        "hash_index": 4,
-    }
-    r = requests.post(result_api_addr, json={"meta": {}, "data": [page1, page2]})
-    assert r.status_code == 200
-
-    pdata = r.json()
-    assert pdata["meta"].keys() == meta_set
-    assert pdata["meta"]["n_inserted"] == 2
-
-    r = requests.get(result_api_addr, json={"meta": {}, "data": {"molecule_id": mol_insert["data"]["water2"]}})
-    assert r.status_code == 200
-
-    pdata = r.json()
-    assert len(pdata["data"]) == 1
-    assert pdata["data"][0]["other_data"] == 10

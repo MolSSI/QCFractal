@@ -682,7 +682,7 @@ class MongoengineSocket:
         col_id = None
         try:
 
-            if data["id"] == "local":
+            if ("id" in data) and (data["id"] == "local"):
                 del data["id"]
 
             if overwrite:
