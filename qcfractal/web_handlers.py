@@ -176,7 +176,10 @@ class ResultHandler(APIHandler):
         storage = self.objects["storage_socket"]
         proj = self.json["meta"].get("projection", None)
 
-        ret = storage.get_results(self.json["data"], projection=proj)
+        if "id" in self.json["data"]:
+            ret = storage.get_results_by_ids(self.json["data"]["id"], projection=proj)
+        else:
+            ret = storage.get_results(**self.json["data"], projection=proj)
         self.logger.info("GET: Results - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)

@@ -182,9 +182,12 @@ def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"
     runs, errors = procedures_util.unpack_single_run_meta(storage, data["meta"]["qc_meta"], data["data"])
 
     if "options" in data["meta"]:
-        keywords = storage.get_options([(data["meta"]["program"], data["meta"]["options"])])["data"][0]
-        del keywords["program"]
-        del keywords["name"]
+        if data["meta"]["options"] is None:
+            keywords = {}
+        else:
+            keywords = storage.get_options([(data["meta"]["program"], data["meta"]["options"])])["data"][0]
+            del keywords["program"]
+            del keywords["name"]
     elif "keywords" in data["meta"]:
         keywords = data["meta"]["keywords"]
     else:
@@ -236,11 +239,14 @@ def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"
 
         full_tasks.append(task)
 
+    # Find and handle duplicates
     query = storage.get_procedures(
         {
             "hash_index": duplicate_lookup
         }, projection={"hash_index": True,
                        "id": True})["data"]
+
+    duplicates = []
     if len(query):
         found_hashes = set(x["hash_index"] for x in query)
 
@@ -259,10 +265,15 @@ def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"
         else:
             raise KeyError("Duplicate id '{}' not understood".format(duplicate_id))
 
-        return new_tasks, duplicates, errors
+        full_tasks = new_tasks
 
-    else:
-        return full_tasks, [], errors
+    # Add task stubs
+    for task in full_tasks:
+        stub = {"hash_index": task["hash_index"], "procedure": "optimization", "program": data["meta"]["program"]}
+        ret = storage.add_procedures([stub])
+        task["base_result"] = ("procedure", ret["data"][0])
+
+    return full_tasks, duplicates, errors
 
 
 def procedure_optimization_output_parser(storage, data):
@@ -300,15 +311,18 @@ def procedure_optimization_output_parser(storage, data):
         if len(hooks):
             new_hooks[key] = hooks
 
-    ret = storage.add_procedures(list(new_procedures.values()))
+        storage.update_procedure(result["hash_index"], result)
+    # print(list(new_procedures.values()))
+    # raise Exception()
+    # ret = storage.add_procedures(list(new_procedures.values()))
 
     # Create a list of (queue_id, located) to update the queue with
-    completed = [(k, {"table": "procedures", "index": "id", "data": v["id"]}) for k, v in new_procedures.items()]
+    completed = list(new_procedures.keys())
 
     errors = []
-    if len(ret["meta"]["errors"]):
-        # errors = [(k, "Duplicate results found")]
-        raise ValueError("TODO: Cannot yet handle queue result duplicates.")
+    # if len(ret["meta"]["errors"]):
+    #     # errors = [(k, "Duplicate results found")]
+    #     raise ValueError("TODO: Cannot yet handle queue result duplicates.")
 
     hook_data = procedures_util.parse_hooks(new_procedures, new_hooks)
 

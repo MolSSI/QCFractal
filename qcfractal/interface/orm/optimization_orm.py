@@ -2,7 +2,6 @@
 A ORM for Optimization results
 """
 
-import copy
 import json
 
 

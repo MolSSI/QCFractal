@@ -22,7 +22,6 @@ class TaskQueueHandler(APIHandler):
 
         # Grab objects
         storage = self.objects["storage_socket"]
-        tag = self.json["meta"].pop("tag", None)
 
         # Format tasks
         func = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])

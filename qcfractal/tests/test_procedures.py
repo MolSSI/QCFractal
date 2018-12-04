@@ -83,12 +83,12 @@ def test_procedure_optimization(fractal_compute_server):
         "meta": {
             "procedure": "optimization",
             "program": "geometric",
-            "options": "none",
+            "options": None,
             "qc_meta": {
                 "driver": "gradient",
                 "method": "HF",
                 "basis": "sto-3g",
-                "options": "none",
+                "options": None,
                 "program": "psi4"
             },
         },
@@ -105,6 +105,7 @@ def test_procedure_optimization(fractal_compute_server):
 
     # Manually handle the compute
     fractal_compute_server.await_results()
+    # print(fractal_compute_server.storage.get_procedures({}))
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
     # # Query result and check against out manual pul

@@ -15,7 +15,6 @@ except ImportError:
         "Mongoengine_socket requires mongoengine, please install this python module or try a different db_socket.")
 
 import collections
-import copy
 import datetime
 import logging
 
@@ -799,6 +798,9 @@ class MongoengineSocket:
 
         for d in data:
             for i in self._lower_results_index:
+                if d[i] is None:
+                    continue
+
                 d[i] = d[i].lower()
 
         meta = storage_utils.add_metadata()
@@ -1012,6 +1014,14 @@ class MongoengineSocket:
 
         return self._get_generic(query, "procedures", allow_generic=True, projection=projection)
 
+    def update_procedure(self, hash_index, data):
+        """
+        This should be removed, temporary patch to make this more canonical mongoengine
+        """
+
+        ret = self._tables["procedures"].update_one({"hash_index": hash_index}, {"$set": data})
+        return ret.modified_count
+
     def add_services(self, data):
 
         ret = self._add_generic(data, "service_queue", return_map=True)
@@ -1122,7 +1132,7 @@ class MongoengineSocket:
                 meta['duplicates'].append(self._doc_to_tuples(task, with_ids=False))  # TODO
             except Exception as err:
                 meta["success"] = False
-                meta["errors"].append(err)
+                meta["errors"].append(str(err))
                 results.append(None)
 
         meta["success"] = True

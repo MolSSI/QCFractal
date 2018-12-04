@@ -342,7 +342,6 @@ class FractalServer:
             except Exception as e:
                 data["status"] = "ERROR"
                 data["error_message"] = "FractalServer Service Build and Iterate Error:\n" + traceback.format_exc()
-                print(data["error_message"])
                 finished = False
 
             self.storage.update_services([(data["id"], data)])
