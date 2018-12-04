@@ -52,7 +52,7 @@ def _str_to_indices(ids):
 
 
 def _str_to_indices_with_errors(ids):
-    if isinstance(ids, str):
+    if isinstance(ids, (str, ObjectId)):
         ids = [ids]
 
     good = []

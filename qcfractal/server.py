@@ -340,6 +340,7 @@ class FractalServer:
                 finished = obj.iterate()
                 data = obj.get_json()
             except Exception as e:
+                print(traceback.format_exc())
                 data["status"] = "ERROR"
                 data["error_message"] = "FractalServer Service Build and Iterate Error:\n" + traceback.format_exc()
                 finished = False

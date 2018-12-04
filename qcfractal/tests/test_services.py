@@ -41,7 +41,7 @@ def torsiondrive_fixture(dask_server_fixture):
             "driver": "gradient",
             "method": "UFF",
             "basis": "",
-            "options": "none",
+            "options": None,
             "program": "rdkit",
         },
     }

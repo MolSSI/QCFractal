@@ -109,7 +109,7 @@ class TorsionDriveService:
                     "id": self.data["required_tasks"],
                     "status": ["COMPLETE", "ERROR"]
                 },
-                projection={"result_location": True,
+                projection={"base_result": True,
                             "status": True})
             # If all tasks are not complete, return a False
             if len(task_query["data"]) != len(self.data["required_tasks"]):
@@ -121,7 +121,7 @@ class TorsionDriveService:
             # Create a lookup table for task ID mapping to result from that task in the procedure table
             inv_task_lookup = {
                 x["id"]: self.storage_socket.get_procedures({
-                    "id": x["result_location"]["data"]
+                    "id": x["base_result"]["_ref"].id
                 })["data"][0]
                 for x in task_query["data"]
             }
@@ -183,7 +183,8 @@ class TorsionDriveService:
                 "procedure": "optimization",
                 "keywords": self.data["optimization_meta"],
                 "program": self.data["optimization_program"],
-                "qc_meta": self.data["qc_meta"]
+                "qc_meta": self.data["qc_meta"],
+                "tag": self.data["tag"]
             },
         })
 
@@ -236,7 +237,7 @@ class TorsionDriveService:
                     full_tasks.append(tasks[0])
 
         # Add tasks to Nanny
-        ret = self.storage_socket.queue_submit(full_tasks, tag=self.data["tag"])
+        ret = self.storage_socket.queue_submit(full_tasks)
         self.data["queue_keys"] = ret["data"]
         if len(ret["meta"]["duplicates"]):
             raise RuntimeError("It appears that one of the tasks you submitted is already in the queue, but was "
