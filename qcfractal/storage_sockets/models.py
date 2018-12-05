@@ -304,3 +304,23 @@ class ServiceQueue(db.DynamicDocument):
         ]
     }
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+class User(db.DynamicDocument):
+
+    username = db.StringField(required=True, unique=True)
+    password = db.BinaryField(required=True)
+    permissions = db.ListField()
+
+    meta = {
+        'indexes': ['username']
+    }
+
+
+class QueueManagers(db.DynamicDocument):
+
+    name = db.StringField(unique=True)
+
+    meta = {
+        'indexes': ['name']
+    }

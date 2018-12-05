@@ -32,7 +32,7 @@ from .. import interface
 # import models
 import mongoengine as db
 from qcfractal.storage_sockets.models import Options, Collection, Result, \
-    TaskQueue, Procedure
+    TaskQueue, Procedure, User
 
 import mongoengine.errors
 # from bson.dbref import DBRef
@@ -125,19 +125,19 @@ class MongoengineSocket:
         self._lower_results_index = ["method", "basis", "options", "program"]
 
         # Build MongoClient
-        self.client = pymongo.MongoClient(uri)
+        # self.client = pymongo.MongoClient(uri)
         expanded_uri = pymongo.uri_parser.parse_uri(uri)
         if expanded_uri["password"] is not None:
-            self.client = pymongo.MongoClient(uri, authMechanism=authMechanism, authSource=authSource)
+            # self.client = pymongo.MongoClient(uri, authMechanism=authMechanism, authSource=authSource)
 
             # connect to mongoengine
-            self.mongoengine_client = db.connect(
+            self.client = db.connect(
                 db=project, host=uri, authMechanism=authMechanism, authSource=authSource)
         else:
-            self.client = pymongo.MongoClient(uri)
+            # self.client = pymongo.MongoClient(uri)
 
             # connect to mongoengine
-            self.mongoengine_client = db.connect(db=project, host=uri)
+            self.client = db.connect(db=project, host=uri)
 
         self._url, self._port = expanded_uri["nodelist"][0]
 
@@ -160,10 +160,10 @@ class MongoengineSocket:
         self._tables = self.client[project]
         self._max_limit = max_limit
 
-        new_table = self.init_database()
-        for k, v in new_table.items():
-            if v:
-                self.logger.info("Add '{}' table to the database!".format(k))
+        # new_table = self.init_database()
+        # for k, v in new_table.items():
+        #     if v:
+        #         self.logger.info("Add '{}' table to the database!".format(k))
 
     ### Mongo meta functions
 
@@ -178,19 +178,19 @@ class MongoengineSocket:
         """
         # Try to create a collection for each entry
         table_creation = {}
-        for table in self._valid_tables:
-            try:
-                # MongoDB "Collection" -> QCFractal "Table"
-                self._tables.create_collection(table)
-                table_creation[table] = True
-
-            except pymongo.errors.CollectionInvalid:
-                table_creation[table] = False
+        # for table in self._valid_tables:
+        #     try:
+        #         # MongoDB "Collection" -> QCFractal "Table"
+        #         self._tables.create_collection(table)
+        #         table_creation[table] = True
+        #
+        #     except pymongo.errors.CollectionInvalid:
+        #         table_creation[table] = False
 
         # Build the indices
-        for table, indices in self._table_indices.items():
-            idx = [(x, pymongo.ASCENDING) for x in indices if x != "hash_index"]
-            self._tables[table].create_index(idx, unique=self._table_unique_indices[table])
+        # for table, indices in self._table_indices.items():
+        #     idx = [(x, pymongo.ASCENDING) for x in indices if x != "hash_index"]
+        #     self._tables[table].create_index(idx, unique=self._table_unique_indices[table])
 
         # # Special queue index, hash_index should be unique
         # for table in ["task_queue", "service_queue"]:
@@ -1329,9 +1329,9 @@ class MongoengineSocket:
 
         hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
         try:
-            self._tables["users"].insert_one({"username": username, "password": hashed, "permissions": permissions})
+            User(username=username, password=hashed, permissions=permissions).save()
             return True
-        except pymongo.errors.DuplicateKeyError:
+        except mongoengine.errors.NotUniqueError:
             return False
 
     def verify_user(self, username, password, permission):
@@ -1370,16 +1370,16 @@ class MongoengineSocket:
         if self._bypass_security:
             return (True, "Success")
 
-        data = self._tables["users"].find_one({"username": username})
+        data = User.objects(username=username).first()
         if data is None:
             return (False, "User not found.")
 
-        pwcheck = bcrypt.checkpw(password.encode("UTF-8"), data["password"])
+        pwcheck = bcrypt.checkpw(password.encode("UTF-8"), data.password)
         if pwcheck is False:
             return (False, "Incorrect password.")
 
         # Admin has access to everything
-        if (permission.lower() not in data["permissions"]) and ("admin" not in data["permissions"]):
+        if (permission.lower() not in data.permissions) and ("admin" not in data.permissions):
             return (False, "User has insufficient permissions.")
 
         return (True, "Success")
@@ -1397,7 +1397,7 @@ class MongoengineSocket:
         bool
             If the operation was successful or not.
         """
-        return self._tables["users"].delete_one({"username": username}).deleted_count == 1
+        return User.objects(username=username).delete() == 1
 
 ### Complex parsers
 
