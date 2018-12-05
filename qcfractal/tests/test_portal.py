@@ -37,7 +37,7 @@ def test_options_portal(test_server):
     ret = client.add_options(opts)
 
     # Test get
-    get_opt = client.get_options([(opts["program"], opts["name"])])
+    get_opt = client.get_options({'program': opts["program"], 'name': opts["name"]})
 
     assert opts == get_opt[0]
 
