@@ -453,7 +453,7 @@ class BaseMongoSocket(ABC):
 
     def get_queue(self, query: Dict, with_results: bool=False, return_json: bool=True, with_ids: bool=True):
         """
-        TODO: This is getting a task. If soI think it should be get_task
+        TODO: This is getting a task. If so I think it should be get_task
         Parameters
         ----------
         FIXME
@@ -480,7 +480,7 @@ class BaseMongoSocket(ABC):
 
         pass
 
-    def queue_mark_complete(self, queue_ids: List[str], result_location: List[dict]):
+    def queue_mark_complete(self, queue_ids: List[str]):
         """
         Needs to be more specific.
         I think it should always come with the take Ids known, right?
@@ -499,8 +499,17 @@ class BaseMongoSocket(ABC):
     def queue_mark_error(self, queue_ids: List[str], msgs: List[str]):
         pass
 
-    def queue_reset_status(self, daqueue_ids: List[str]):
-        pass
+    def queue_reset_status(self, queue_ids: List[str]):
+        """Mark as waiting
+
+        Parameters
+        ----------
+        queue_ids
+
+        Returns
+        -------
+
+        """
 
     # ---------------------------  Hooks ----------------------------------
     #

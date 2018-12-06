@@ -809,12 +809,12 @@ class MongoengineSocket:
             In addition, it should have the other attributes that it needs
             to store
         update_existing : bool (default False)
-            Update existing resaults
+            Update existing results
 
         Returns
         -------
             Dict with keys: data, meta
-            Data is the ids of the inserted docs
+            Data is the ids of the inserted/updated/existing docs
         """
 
         for d in data:
@@ -842,7 +842,8 @@ class MongoengineSocket:
                 meta['n_inserted'] += 1
             else:
                 meta['duplicates'].append(self._doc_to_tuples(doc.first(), with_ids=False))  # TODO
-                results.append(None)
+                # If new or duplicate, add the id to the return list
+                results.append(str(doc.first().id))
         meta["success"] = True
         # except (mongoengine.errors.ValidationError, KeyError) as err:
         #     meta["validation_errors"].append(err)
