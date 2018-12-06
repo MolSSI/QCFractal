@@ -27,11 +27,8 @@ def storage_socket_factory(uri, project_name, logger=None, db_type='mongoengine'
 
     """
 
-    if db_type == "pymongo":
-        from . import mongo_socket
-        return mongo_socket.MongoSocket(uri, project=project_name, logger=logger, **kwargs)
-    elif db_type == "mongoengine":
+    if db_type == "mongoengine":
         from . import mongoengine_socket
         return mongoengine_socket.MongoengineSocket(uri, project=project_name, logger=logger, **kwargs)
     else:
-        raise Exception
+        raise KeyError("DBType {} not understood".format(db_type))
