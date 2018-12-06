@@ -62,7 +62,6 @@ def procedure_single_input_parser(storage, data):
 
     # Construct full tasks
     full_tasks = []
-    results_stubs = []
     for k, v in runs.items():
         if v["molecule"]["id"] in completed:
             continue

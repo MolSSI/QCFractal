@@ -965,7 +965,7 @@ class MongoengineSocket:
         if basis:
             query['basis'] = basis
         if molecule:
-            query['molecule'], errors = _str_to_indices_with_errors(molecule)
+            query['molecule'], _ = _str_to_indices_with_errors(molecule)
         if driver:
             query['driver'] = driver
         if options:

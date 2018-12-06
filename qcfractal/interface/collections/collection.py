@@ -155,7 +155,7 @@ class Collection(abc.ABC):
         # this check asserts all fields are present, even if their default values are chosen
         # Also provides consistency check in case defaults ever change in the future.
         # This check could be removed though without any code failures
-        req_fields = cls.DataModel.schema()['properties'].keys()
+        req_fields = cls.DataModel.__fields__.keys()
         missing = req_fields - data.keys()
         if len(missing):
             raise KeyError("For class {} the following fields are missing {}.".format(class_name, missing))

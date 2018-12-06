@@ -72,7 +72,7 @@ def mixed_molecule_get(socket, data):
     id_mols.update(socket.add_molecules(dict_mols)["data"])
 
     # Get molecules by index and translate back to dict
-    tmp = socket.get_molecules(list(id_mols.values()), index="id")
+    tmp = socket.get_molecules(list(id_mols.values()))
     id_mols_list = tmp["data"]
     meta["errors"].append(tmp["meta"]["errors"])
 
