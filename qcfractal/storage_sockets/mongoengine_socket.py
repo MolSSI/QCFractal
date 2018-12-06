@@ -977,7 +977,7 @@ class MongoengineSocket:
             if key == "molecule":
                 parsed_query[key + "__in"] = query[key]
             elif key == "status":
-                continue
+                parsed_query[key] = value
             elif isinstance(value, (list, tuple)):
                 parsed_query[key + "__in"] = [v.lower() for v in value]
             else:

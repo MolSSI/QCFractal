@@ -74,7 +74,7 @@ class TorsionDriveService:
 
         # Temporary hash index
         single_keys = copy.deepcopy(meta["qc_meta"])
-        single_keys["molecule_id"] = meta["initial_molecule"]
+        single_keys["molecule"] = meta["initial_molecule"]
         keys = {
             "type": "torsiondrive",
             "program": "torsiondrive",

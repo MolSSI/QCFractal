@@ -88,7 +88,7 @@ def test_compute_biofragment(fractal_compute_server):
             "driver": "gradient",
             "method": "UFF",
             "basis": "",
-            "options": "none",
+            "options": None,
             "program": "rdkit",
         },
     }
@@ -135,7 +135,7 @@ def test_compute_openffworkflow(fractal_compute_server):
               "driver": "gradient",
               "method": "UFF",
               "basis": "",
-              "options": "none",
+              "options": None,
               "program": "rdkit",
           }
         },
@@ -148,7 +148,7 @@ def test_compute_openffworkflow(fractal_compute_server):
               "driver": "gradient",
               "method": "UFF",
               "basis": "",
-              "options": "none",
+              "options": None,
               "program": "rdkit",
             }
         }
