@@ -83,7 +83,7 @@ def unpack_single_run_meta(storage, meta, molecules):
         data = json.loads(task_meta)
         data["molecule"] = mol
 
-        indexer["molecule_id"] = mol["id"]
+        indexer["molecule"] = mol["id"]
         tasks[interface.schema.format_result_indices(indexer)] = data
 
     return tasks, []

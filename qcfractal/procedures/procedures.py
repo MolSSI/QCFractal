@@ -52,9 +52,10 @@ def procedure_single_input_parser(storage, data):
     query = {k: data["meta"][k] for k in ["driver", "method", "basis", "options", "program"]}
     result_stub = json.dumps(query)
     query["molecule"] = [x["molecule"]["id"] for x in runs.values()]
+    query["status"] = None
 
-    search = storage.get_results(**query, projection={"molecule_id": True})
-    completed = set(x["molecule_id"] for x in search["data"])
+    search = storage.get_results(**query, projection={"molecule": True})
+    completed = set(x["molecule"] for x in search["data"])
 
     # Grab the tag if available
     tag = data["meta"].pop("tag", None)
@@ -66,7 +67,7 @@ def procedure_single_input_parser(storage, data):
         if v["molecule"]["id"] in completed:
             continue
 
-        query["molecule_id"] = v["molecule"]["id"]
+        query["molecule"] = v["molecule"]["id"]
         keys, hash_index = procedures_util.single_run_hash(query)
         v["hash_index"] = hash_index
 

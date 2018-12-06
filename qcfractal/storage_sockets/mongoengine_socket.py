@@ -216,6 +216,8 @@ class MongoengineSocket:
             Procedure.drop_collection()
             User.drop_collection()
 
+            self.client.drop_database(db_name)
+
     def get_project_name(self):
         return self._project_name
 
@@ -967,10 +969,14 @@ class MongoengineSocket:
             query['driver'] = driver
         if options:
             query['options'] = options
+        if status:
+            query['status'] = status
 
         for key, value in query.items():
             if key == "molecule":
                 parsed_query[key + "__in"] = query[key]
+            elif key == "status":
+                continue
             elif isinstance(value, (list, tuple)):
                 parsed_query[key + "__in"] = [v.lower() for v in value]
             else:
@@ -981,9 +987,9 @@ class MongoengineSocket:
         data = []
         try:
             if projection:
-                data = Result.objects(**parsed_query, status=status).only(*projection).limit(q_limit)
+                data = Result.objects(**parsed_query).only(*projection).limit(q_limit)
             else:
-                data = Result.objects(**parsed_query, status=status).limit(q_limit)
+                data = Result.objects(**parsed_query).limit(q_limit)
 
             meta["n_found"] = data.count()
             meta["success"] = True
@@ -995,8 +1001,7 @@ class MongoengineSocket:
             for d in data:
                 d = self._doc_to_json(d, with_ids)
                 if "molecule" in d:
-                    d["molecule_id"] = d["molecule"]["$oid"]
-                    del d["molecule"]
+                    d["molecule"] = d["molecule"]["$oid"]
                 rdata.append(d)
 
         else:

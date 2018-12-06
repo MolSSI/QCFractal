@@ -60,9 +60,9 @@ def test_compute_queue_stack(fractal_compute_server):
 
     assert len(results) == 2
     for r in results:
-        if r["molecule_id"] == hydrogen_mol_id:
+        if r["molecule"] == hydrogen_mol_id:
             assert pytest.approx(-1.0660263371078127, 1e-5) == r["properties"]["scf_total_energy"]
-        elif r["molecule_id"] == helium_mol_id:
+        elif r["molecule"] == helium_mol_id:
             assert pytest.approx(-2.807913354492941, 1e-5) == r["properties"]["scf_total_energy"]
         else:
             raise KeyError("Returned unexpected Molecule ID.")
