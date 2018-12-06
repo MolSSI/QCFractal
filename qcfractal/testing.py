@@ -290,8 +290,8 @@ def run_process(args, **kwargs):
 def reset_server_database(server):
     """Resets the server database for testing.
     """
-    server.storage.client.drop_database(server.storage._project_name)
-    server.storage.init_database()
+    server.storage._clear_db(server.storage._project_name)
+    # server.storage.init_database()
 
 
 @pytest.fixture(scope="module")
@@ -446,15 +446,14 @@ def storage_socket_fixture(request):
 
     # Check mongo
     check_active_mongo_server()
-    storage_name = "qcf_local_values_test"
+    storage_name = "qcf_test_me"
 
     # IP/port/drop table is specific to build
     if request.param in ["pymongo", "mongoengine"]:
         storage = storage_socket_factory("mongodb://localhost", storage_name, db_type=request.param)
 
         # Clean and re-init the database
-        storage.client.drop_database(storage._project_name)
-        storage.init_database()
+        storage._clear_db(storage_name)
     else:
         raise KeyError("Storage type {} not understood".format(request.param))
 
@@ -476,8 +475,7 @@ def mongoengine_socket_fixture(request):
     storage = storage_socket_factory("mongodb://localhost", storage_name, db_type="mongoengine")
 
     # Clean and re-init the database
-    storage.client.drop_database(storage._project_name)
-    storage.init_database()
+    storage._clear_db(storage_name)
 
     yield storage
 

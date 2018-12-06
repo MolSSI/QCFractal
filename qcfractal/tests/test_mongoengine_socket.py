@@ -6,32 +6,15 @@
 """
 
 import pytest
-import mongoengine as db
 import qcfractal.interface as portal
 
-from qcfractal.storage_sockets.mongoengine_socket import MongoengineSocket
 from qcfractal.storage_sockets.models import Molecule, Result, Options, \
                     Procedure, OptimizationProcedure, TorsiondriveProcedure
 from qcfractal.storage_sockets.models import TaskQueue
+from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 
 
-@pytest.fixture(scope='module')
-def mongoengine_socket():
-    # Drop DB if it exists
-    db_client = db.connect('test_qc_mongoengine')
-    db_client.drop_database('test_qc_mongoengine')
-
-    # connect to the DB using the MongoengineSocket class
-    mongoengine_socket = MongoengineSocket("mongodb://localhost", 'test_qc_mongoengine')
-
-    yield mongoengine_socket
-
-    # clean up, close connection, and delete Database
-    mongoengine_socket.mongoengine_client.close()
-    # mongoengine_socket.mongoengine_client.drop_database('test_qc_mongoengine')
-
-
-def test_molecule(mongoengine_socket):
+def test_molecule(storage_socket):
     """
         Test the use of the ME class Molecule
 
@@ -49,7 +32,7 @@ def test_molecule(mongoengine_socket):
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
 
     # Add Molecule using pymongo
-    ret = mongoengine_socket.add_molecules({"water1": water.to_json(),
+    ret = storage_socket.add_molecules({"water1": water.to_json(),
                                             "water2": water2.to_json()})
     assert ret["meta"]["success"] is True
     assert ret["meta"]["n_inserted"] == 2
@@ -76,7 +59,7 @@ def test_molecule(mongoengine_socket):
     assert len(one_mol) == 1
 
 
-def test_results(mongoengine_socket):
+def test_results(storage_socket):
     """
         Handling results throught the ME classes
     """
@@ -114,7 +97,7 @@ def test_results(mongoengine_socket):
     assert result.molecule.molecular_formula == 'H4O2'
 
 
-def test_procedure(mongoengine_socket):
+def test_procedure(storage_socket):
     """
         Handling procedure throught the ME classes
     """
@@ -144,7 +127,7 @@ def test_procedure(mongoengine_socket):
     # assert procedure.molecule.molecular_formula == 'H4O2'
 
 
-def test_optimization_procedure(mongoengine_socket):
+def test_optimization_procedure(storage_socket):
     """
         Optimization procedure
     """
@@ -173,7 +156,7 @@ def test_optimization_procedure(mongoengine_socket):
     assert procedure.initial_molecule.molecular_formula == 'H4O2'
 
 
-def test_torsiondrive_procedure(mongoengine_socket):
+def test_torsiondrive_procedure(storage_socket):
     """
         Torsiondrive procedure
     """
@@ -205,7 +188,7 @@ def test_torsiondrive_procedure(mongoengine_socket):
 def test_add_task_queue():
     """
         Simple test of adding a task using the ME classes
-        in QCFractal, tasks should be added using mongoengine_socket
+        in QCFractal, tasks should be added using storage_socket
     """
 
     assert TaskQueue.objects.count() == 0
@@ -214,14 +197,14 @@ def test_add_task_queue():
     # add a task that reference results
     result = Result.objects().first()
 
-    task = TaskQueue(base_result=result, hash_index='1')
+    task = TaskQueue(base_result=result)
     task.save()
     assert TaskQueue.objects().count() == 1
 
     # add a task that reference Optimization Procedure
     opt = OptimizationProcedure.objects().first()
 
-    task = TaskQueue(base_result=opt, hash_index='2')
+    task = TaskQueue(base_result=opt)
     task.save()
     assert TaskQueue.objects().count() == 2
 
@@ -233,7 +216,6 @@ def test_add_task_queue():
     assert TaskQueue.objects().count() == 3
 
 
-@pytest.mark.skip
 def test_queue():
     tasks = TaskQueue.objects(status='WAITING')\
                 .limit(1000)\
@@ -243,3 +225,4 @@ def test_queue():
                 # .fields(..)
                 # .exculde(..)
                 # .no_dereference()  # don't get any of the ReferenceFields (ids) (Turning off dereferencing)
+    assert len(tasks) == 3

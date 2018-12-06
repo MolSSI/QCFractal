@@ -30,9 +30,10 @@ from . import storage_utils
 from .. import interface
 
 # import models
+from mongoengine.connection import disconnect, get_db
 import mongoengine as db
 from qcfractal.storage_sockets.models import Options, Collection, Result, \
-    TaskQueue, Procedure, User
+    TaskQueue, Procedure, User, Molecule
 
 import mongoengine.errors
 # from bson.dbref import DBRef
@@ -124,8 +125,10 @@ class MongoengineSocket:
 
         self._lower_results_index = ["method", "basis", "options", "program"]
 
+        # disconnect from any active default connection
+        disconnect()
+
         # Build MongoClient
-        # self.client = pymongo.MongoClient(uri)
         expanded_uri = pymongo.uri_parser.parse_uri(uri)
         if expanded_uri["password"] is not None:
             # self.client = pymongo.MongoClient(uri, authMechanism=authMechanism, authSource=authSource)
@@ -198,6 +201,20 @@ class MongoengineSocket:
 
         # Return the success array
         return table_creation
+
+    def _clear_db(self, db_name: str):
+        """Dangerous, make sure you are deleting the right DB"""
+
+        # make sure it's the right DB
+        if get_db().name == db_name:
+            logging.info('Clearing database: {}'.format(db_name))
+            Result.drop_collection()
+            Molecule.drop_collection()
+            Options.drop_collection()
+            Collection.drop_collection()
+            TaskQueue.drop_collection()
+            Procedure.drop_collection()
+            User.drop_collection()
 
     def get_project_name(self):
         return self._project_name
