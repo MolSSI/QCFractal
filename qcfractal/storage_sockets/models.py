@@ -54,8 +54,10 @@ class Molecule(db.DynamicDocument):
     meta = {
         'collection': 'molecules',
         'indexes': [
-            {'fields': ('molecule_hash', 'molecular_formula'),
-             'unique': False
+            {'fields': ('molecule_hash',), 'unique': True},
+            {
+                'fields': ('molecule_hash', 'molecular_formula'),
+                'unique': False
             }  # TODO: what is unique?
         ]
     }
@@ -69,7 +71,7 @@ class Options(db.DynamicDocument):
     """
 
     # TODO: pull choices from const config
-    program = db.StringField(required=True) #, choices=['rdkit', 'psi4', 'geometric', 'torsiondrive'])
+    program = db.StringField(required=True)  #, choices=['rdkit', 'psi4', 'geometric', 'torsiondrive'])
     # "default is reserved, insert on start
     # option_name = db.StringField(required=True)
     name = db.StringField(required=True)
@@ -269,7 +271,8 @@ class TaskQueue(db.DynamicDocument):
             'status',
             'manager',
             # {'fields': ("status", "tag", "hash_index"), 'unique': False}
-            {'fields': ("base_result",), 'unique': True}  # new
+            {'fields': ('base_result',), 'unique': True},  # new
+            # {'fields': ('hash_index',), 'unique': True}
 
         ]
         # 'indexes': [
@@ -303,7 +306,8 @@ class ServiceQueue(db.DynamicDocument):
     meta = {
         'indexes': [
             'status',
-            {'fields': ("status", "tag", "hash_index"), 'unique': False}
+            {'fields': ("status", "tag", "hash_index"), 'unique': False},
+            # {'fields': ('hash_index',), 'unique': True}
 
         ]
     }
