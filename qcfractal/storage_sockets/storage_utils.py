@@ -13,11 +13,11 @@ _add_metadata = json.dumps({"errors": [], "n_inserted": 0, "success": False, "du
 
 
 def translate_molecule_index(index):
-    if index in ["id", "ids"]:
-        return "_id"
+    if index in ["_id", "ids"]:
+        return "id"
     elif index == "hash":
         return "molecule_hash"
-    elif index in ["_id", "molecule_hash"]:
+    elif index in ["id", "molecule_hash"]:
         return index
     elif index == "molecular_formula":
         return index

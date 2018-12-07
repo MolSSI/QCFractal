@@ -456,14 +456,15 @@ class MongoengineSocket:
             molecule_ids = [molecule_ids]
 
         bad_ids = []
-        if index == "_id":
+        if index == "id":
             molecule_ids, bad_ids = _str_to_indices_with_errors(molecule_ids)
 
         # Project out the duplicates we use for top level keys
         proj = {"molecule_hash": False, "molecular_formula": False}
 
         # Make the query
-        data = self._tables["molecules"].find({index: {"$in": molecule_ids}}, projection=proj)
+        query = {index+'__in': molecule_ids}
+        data = Molecule.objects(**query).exclude(*proj).as_pymongo()
 
         if data is None:
             data = []
@@ -496,12 +497,17 @@ class MongoengineSocket:
         Returns
         -------
         bool
-            Whether the operation was successful.
+            Number of deleted molecules.
         """
 
         index = storage_utils.translate_molecule_index(index)
 
-        return self._del_by_index("molecules", values, index=index)
+        if isinstance(values, str):
+            values = [values]
+
+        query = {index+'__in': values}
+
+        return Molecule.objects(**query).delete()
 
     def _doc_to_tuples(self, doc: db.Document, with_ids=True):
         """
