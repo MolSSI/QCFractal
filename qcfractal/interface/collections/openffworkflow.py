@@ -7,7 +7,7 @@ from . import collection_utils
 from .collection import Collection
 from .. import orm
 
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 
 
 class OpenFFWorkflow(Collection):
@@ -46,7 +46,7 @@ class OpenFFWorkflow(Collection):
             ret = self.save()
             if len(ret) == 0:
                 raise ValueError("Attempted to insert duplicate Workflow with name '{}'".format(name))
-            self.data.id = ret[0][1]
+            self.data.id = ret[0]
 
     class DataModel(Collection.DataModel):
         """
@@ -92,7 +92,7 @@ class OpenFFWorkflow(Collection):
                 "interval": 5
             }
         }
-        torsiondrive_static_options: Dict[str, Union[str, Dict[str, str]]] = {
+        torsiondrive_static_options: Dict[str, Union[str, Dict[str, Optional[str]]]] = {
             "torsiondrive_meta": {},
             "optimization_meta": {
                 "program": "geometric",
@@ -102,11 +102,11 @@ class OpenFFWorkflow(Collection):
                 "driver": "gradient",
                 "method": "UFF",
                 "basis": "",
-                "options": "none",
+                "options": None,
                 "program": "rdkit",
             }
         }
-        optimization_static_options: Dict[str, Union[str, Dict[str, str]]] = {
+        optimization_static_options: Dict[str, Union[str, Dict[str, Optional[str]]]] = {
             "optimization_meta": {
                 "program": "geometric",
                 "coordsys": "tric"
@@ -115,7 +115,7 @@ class OpenFFWorkflow(Collection):
                 "driver": "gradient",
                 "method": "UFF",
                 "basis": "",
-                "options": "none",
+                "options": None,
                 "program": "rdkit",
             },
         }

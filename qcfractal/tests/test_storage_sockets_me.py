@@ -7,7 +7,7 @@ All tests should be atomic, that is create and cleanup their data
 import pytest
 
 import qcfractal.interface as portal
-from qcfractal.testing import storage_socket_fixture as storage_socket
+from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 
 
 def test_molecules_add(storage_socket):
@@ -127,8 +127,8 @@ def test_options_add(storage_socket):
     ret = storage_socket.add_options(opts)
     assert ret["meta"]["n_inserted"] == 0
 
-    ret = storage_socket.get_options([(opts["program"], opts["name"])])
-    del opts["id"]
+    ret = storage_socket.get_options(opts["program"], opts["name"])
+    opts["id"] = ret["data"][0]["id"]
     assert ret["meta"]["n_found"] == 1
     assert ret["data"][0] == opts
 
@@ -146,53 +146,65 @@ def test_options_error(storage_socket):
 
 def test_collections_add(storage_socket):
 
-    db = {"collection": "TorsionDrive", "name": "Torsion123", "something": "else", "array": ["54321"]}
+    collection = 'TorsionDrive'
+    name = 'Torsion123'
+    db = {"something": "else", "array": ["54321"]}
 
-    ret = storage_socket.add_collection(db)
+    ret = storage_socket.add_collection(collection, name, db)
+
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.get_collections([(db["collection"], db["name"])])
+    ret = storage_socket.get_collections(collection, name)
+
     assert ret["meta"]["success"] == True
     assert ret["meta"]["n_found"] == 1
-    assert db == ret["data"][0]
+    assert db['something'] == ret["data"][0]['something']
 
-    ret = storage_socket.del_collection(db["collection"], db["name"])
+    ret = storage_socket.del_collection(collection, name)
     assert ret == 1
 
-    ret = storage_socket.get_collections([(db["collection"], "bleh")])
-    assert len(ret["meta"]["missing"]) == 1
+    ret = storage_socket.get_collections(collection, "bleh")
+    # assert len(ret["meta"]["missing"]) == 1
     assert ret["meta"]["n_found"] == 0
 
 
 def test_collections_overwrite(storage_socket):
 
-    db = {"collection": "TorsionDrive", "name": "Torsion123", "something": "else", "array": ["54321"]}
+    collection = "TorsionDrive"
+    name = "Torsion123"
+    db = {"something": "else", "array": ["54321"]}
 
-    ret = storage_socket.add_collection(db)
+    ret = storage_socket.add_collection(collection, name, db)
+
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.get_collections([(db["collection"], db["name"])])
+    ret = storage_socket.get_collections(collection, name)
     assert ret["meta"]["n_found"] == 1
 
     db_update = {
-        "id": ret["data"][0]["id"],
-        "collection": "TorsionDrive",
-        "name": "Torsion123",
+        # "id": ret["data"][0]["id"],
+        "collection": "TorsionDrive",  # no need to include
+        "name": "Torsion123",   # no need to include
+        "something": "New",
         "something2": "else",
         "array2": ["54321"]
     }
-    ret = storage_socket.add_collection(db_update, overwrite=True)
+    ret = storage_socket.add_collection(collection, name, db_update, overwrite=True)
     assert ret["meta"]["success"] == True
 
-    ret = storage_socket.get_collections([(db["collection"], db["name"])])
+    ret = storage_socket.get_collections(collection, name)
     assert ret["meta"]["n_found"] == 1
 
     # Check to make sure the field were replaced and not updated
     db_result = ret["data"][0]
-    assert "something" not in db_result
+    # existing fields will not be removed, the collection will be updated
+    # You will need to remove the old collection and create a new one
+    # assert "something" not in db_result
+    assert "something" in db_result
     assert "something2" in db_result
+    assert db_update['something'] == db_result['something']
 
-    ret = storage_socket.del_collection(db["collection"], db["name"])
+    ret = storage_socket.del_collection(collection, name)
     assert ret == 1
 
 
@@ -204,7 +216,7 @@ def test_results_add(storage_socket):
     mol_insert = storage_socket.add_molecules({"water1": water.to_json(), "water2": water2.to_json()})
 
     page1 = {
-        "molecule_id": mol_insert["data"]["water1"],
+        "molecule": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
         "options": "default",
@@ -215,7 +227,7 @@ def test_results_add(storage_socket):
     }
 
     page2 = {
-        "molecule_id": mol_insert["data"]["water2"],
+        "molecule": mol_insert["data"]["water2"],
         "method": "M1",
         "basis": "B1",
         "options": "default",
@@ -225,13 +237,34 @@ def test_results_add(storage_socket):
         "hash_index": 1,
     }
 
+    page3 = {
+        "molecule": mol_insert["data"]["water2"],
+        "method": "M22",
+        "basis": "B1",
+        "options": "default",
+        "program": "P1",
+        "driver": "energy",
+        "other_data": 10,
+        "hash_index": 2,
+    }
+    ids = []
     ret = storage_socket.add_results([page1, page2])
     assert ret["meta"]["n_inserted"] == 2
+    ids.extend(ret['data'])
 
-    result_ids = [x[1] for x in ret["data"]]
-    ret = storage_socket.del_results(result_ids, index="id")
-    assert ret == 2
+    # add with duplicates:
+    ret = storage_socket.add_results([page1, page2, page3])
 
+    assert ret["meta"]["n_inserted"] == 1
+    assert len(ret['data']) == 3   # first 2 found are None
+    assert len(ret["meta"]['duplicates']) == 2
+
+    for res_id in ret['data']:
+        if res_id is not None:
+            ids.append(res_id)
+
+    ret = storage_socket.del_results(ids)
+    assert ret == 3
     ret = storage_socket.del_molecules(list(mol_insert["data"].values()), index="id")
     assert ret == 2
 
@@ -247,7 +280,7 @@ def storage_results(storage_socket):
     mol_insert = storage_socket.add_molecules({"water1": water.to_json(), "water2": water2.to_json()})
 
     page1 = {
-        "molecule_id": mol_insert["data"]["water1"],
+        "molecule": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
         "options": "default",
@@ -255,11 +288,11 @@ def storage_results(storage_socket):
         "driver": "energy",
         "return_result": 5,
         "hash_index": 0,
-
+        "status": 'COMPLETE'
     }
 
     page2 = {
-        "molecule_id": mol_insert["data"]["water2"],
+        "molecule": mol_insert["data"]["water2"],
         "method": "M1",
         "basis": "B1",
         "options": "default",
@@ -267,10 +300,11 @@ def storage_results(storage_socket):
         "driver": "energy",
         "return_result": 10,
         "hash_index": 1,
+        "status": 'COMPLETE'
     }
 
     page3 = {
-        "molecule_id": mol_insert["data"]["water1"],
+        "molecule": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
         "options": "default",
@@ -278,10 +312,11 @@ def storage_results(storage_socket):
         "driver": "gradient",
         "return_result": 15,
         "hash_index": 2,
+        "status": 'COMPLETE'
     }
 
     page4 = {
-        "molecule_id": mol_insert["data"]["water1"],
+        "molecule": mol_insert["data"]["water1"],
         "method": "M2",
         "basis": "B1",
         "options": "default",
@@ -289,10 +324,11 @@ def storage_results(storage_socket):
         "driver": "gradient",
         "return_result": 15,
         "hash_index": 3,
+        "status": 'COMPLETE'
     }
 
     page5 = {
-        "molecule_id": mol_insert["data"]["water2"],
+        "molecule": mol_insert["data"]["water2"],
         "method": "M2",
         "basis": "B1",
         "options": "default",
@@ -300,6 +336,7 @@ def storage_results(storage_socket):
         "driver": "gradient",
         "return_result": 20,
         "hash_index": 4,
+        "status": 'COMPLETE'
     }
 
     results_insert = storage_socket.add_results([page1, page2, page3, page4, page5])
@@ -308,8 +345,8 @@ def storage_results(storage_socket):
     yield storage_socket
 
     # Cleanup
-    result_ids = [x[1] for x in results_insert["data"]]
-    ret = storage_socket.del_results(result_ids, index="id")
+    result_ids = [x for x in results_insert["data"]]
+    ret = storage_socket.del_results(result_ids)
     assert ret == results_insert["meta"]["n_inserted"]
 
     ret = storage_socket.del_molecules(list(mol_insert["data"].values()), index="id")
@@ -318,52 +355,106 @@ def storage_results(storage_socket):
 
 def test_results_query_total(storage_results):
 
-    assert 5 == len(storage_results.get_results({})["data"])
+    assert 5 == len(storage_results.get_results()["data"])
+
+
+def test_get_results_by_ids(storage_results):
+    results = storage_results.get_results()["data"]
+    ids = [x['id'] for x in results]
+
+    ret = storage_results.get_results_by_ids(ids, return_json=False)
+    assert ret["meta"]["n_found"] == 5
+    assert len(ret["data"]) == 5
+
+    ret = storage_results.get_results_by_ids(ids, projection=['status'])
+    assert ret['data'][0].keys() == {'id', 'status'}
 
 
 def test_results_query_method(storage_results):
 
-    ret = storage_results.get_results({"method": ["M2", "M1"]})
+    ret = storage_results.get_results(method=["M2", "M1"])
     assert ret["meta"]["n_found"] == 5
 
-    ret = storage_results.get_results({"method": ["M2"]})
+    ret = storage_results.get_results(method=["M2"])
     assert ret["meta"]["n_found"] == 2
 
-    ret = storage_results.get_results({"method": "M2"})
+    ret = storage_results.get_results(method="M2")
     assert ret["meta"]["n_found"] == 2
 
 
 def test_results_query_dual(storage_results):
 
-    ret = storage_results.get_results({"method": ["M2", "M1"], "program": ["P1", "P2"]})
+    ret = storage_results.get_results(method=["M2", "M1"], program=["P1", "P2"])
     assert ret["meta"]["n_found"] == 5
 
-    ret = storage_results.get_results({"method": ["M2"], "program": "P2"})
+    ret = storage_results.get_results(method=["M2"], program="P2")
     assert ret["meta"]["n_found"] == 1
 
-    ret = storage_results.get_results({"method": "M2", "program": "P2"})
+    ret = storage_results.get_results(method="M2", program="P2")
     assert ret["meta"]["n_found"] == 1
 
 
 def test_results_query_project(storage_results):
-    ret = storage_results.get_results({"method": "M2", "program": "P2"}, projection={"return_result": True})["data"][0]
-    assert set(ret.keys()) == {"return_result"}
+    """See new changes in design here"""
+
+    ret = storage_results.get_results(method="M2", program="P2",
+                                      projection={"return_result"})["data"][0]
+    assert set(ret.keys()) == {"id", "return_result"}
     assert ret["return_result"] == 15
+
+    # Note: explicitly set with_ids=False to remove ids
+    ret = storage_results.get_results(method="M2", program="P2", with_ids=False,
+                                      projection={"return_result"})["data"][0]
+    assert set(ret.keys()) == {"return_result"}
 
 
 def test_results_query_driver(storage_results):
-    ret = storage_results.get_results({"driver": "energy"})
+    ret = storage_results.get_results(driver="energy")
     assert ret["meta"]["n_found"] == 2
 
+# ------ New Task Queue tests ------
+# No hash index, tasks are unique by their base_result
 
-# Builds tests for the queue
 
+def test_queue_submit(storage_results):
 
-def test_storage_queue_roundtrip(storage_socket):
+    result1 = storage_results.get_results()['data'][0]
 
-    idx = "unique_hash_idx123"
     task1 = {
-        "hash_index": idx,
+        # "hash_index": idx,  # not used anymore
+        "spec": {
+            "function": "qcengine.compute_procedure",
+            "args": [{
+                "json_blob": "data"
+            }],
+            "kwargs": {},
+        },
+        "hooks": [("service", "x")],
+        "tag": None,
+        "base_result": ('results', result1['id'])
+    }
+
+    # Submit a new task
+    ret = storage_results.queue_submit([task1])
+    assert len(ret["data"]) == 1
+    assert ret['meta']['n_inserted'] == 1
+
+    # submit a duplicate task with a hook
+    task1['hooks'] = [('service', 'y')]
+    ret = storage_results.queue_submit([task1])
+    assert len(ret["data"]) == 1
+    assert ret['meta']['n_inserted'] == 0
+    assert len(ret["meta"]['duplicates']) == 1
+
+# ----------------------------------------------------------
+
+# Builds tests for the queue - Changed design
+
+def test_storage_queue_roundtrip(storage_results):
+
+    result1 = storage_results.get_results()['data'][1]
+    task1 = {
+        # "hash_index": idx,
         "spec": {
             "function": "qcengine.compute_procedure",
             "args": [{
@@ -373,64 +464,65 @@ def test_storage_queue_roundtrip(storage_socket):
         },
         "hooks": [("service", "")],
         "tag": None,
+        "base_result": ('results', result1['id'])
     }
 
     # Submit a task
-    r = storage_socket.queue_submit([task1])
+    r = storage_results.queue_submit([task1])
     assert len(r["data"]) == 1
 
     # Query for next tasks
-    r = storage_socket.queue_get_next()
+    r = storage_results.queue_get_next()
     assert r[0]["spec"]["function"] == task1["spec"]["function"]
     queue_id = r[0]["id"]
 
     # Mark task as done
-    r = storage_socket.queue_mark_complete([(queue_id, "results_id")])
+    r = storage_results.queue_mark_complete([queue_id])
     assert r == 1
 
     # Check results
-    r = storage_socket.get_queue({"id": queue_id})
-    assert r["meta"]["n_found"] == 1
-    assert r["data"][0]["status"] == "COMPLETE"
-    assert r["data"][0]["result_location"] == "results_id"
+    found = storage_results.queue_get_by_id([queue_id])
+    assert len(found) == 1
+    assert found[0]["status"] == "COMPLETE"
 
     # Check queue is empty
-    r = storage_socket.queue_get_next()
+    r = storage_results.queue_get_next()
     assert len(r) == 0
 
 
-def test_storage_queue_duplicate(storage_socket):
+def test_storage_queue_duplicate(storage_results):
 
-    idx = "unique_hash_idx124"
+    result1 = storage_results.get_results()['data'][2]
     task1 = {
-        "hash_index": idx,
+        # "hash_index": idx,
         "spec": {},
         "hooks": [("service", "123")],
         "tag": None,
+        "base_result": ('results', result1['id'])
     }
-    r = storage_socket.queue_submit([task1])
+    r = storage_results.queue_submit([task1])
     assert len(r["data"]) == 1
     queue_id = r["data"][0]
 
     # Put the first task in a waiting state
-    r = storage_socket.queue_get_next()
+    r = storage_results.queue_get_next()
     assert len(r) == 1
 
     # Change hooks, only one submission due to hash_index conflict
     task1["hooks"] = [("service", "456")]
-    r = storage_socket.queue_submit([task1])
-    assert len(r["data"]) == 0
+    r = storage_results.queue_submit([task1])
+    assert r["meta"]["n_inserted"] == 0
 
     # Pull out the data and check the hooks
-    r = storage_socket.get_queue({"id": queue_id})
-    hooks = r["data"][0]["hooks"]
+    r = storage_results.queue_get_by_id([queue_id])
+    hooks = r[0]["hooks"]
     assert len(hooks) == 2
     assert hooks[0][0] == "service"
     assert hooks[1][0] == "service"
     assert {"123", "456"} == {hooks[0][1], hooks[1][1]}
 
     # Cleanup
-    r = storage_socket.queue_mark_complete([(queue_id, "result_location")])
+    r = storage_results.queue_mark_complete([queue_id])
     assert r == 1
 
 
@@ -480,4 +572,4 @@ def test_user_permissions_admin(storage_socket):
 
 
 def test_project_name(storage_socket):
-    assert 'qcf_local_values_test' == storage_socket.get_project_name()
+    assert 'test' in storage_socket.get_project_name()

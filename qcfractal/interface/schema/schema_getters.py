@@ -31,10 +31,11 @@ _table_indices = {
     "procedure": ("procedure", "program"),
 
     "molecule": ("molecule_hash", "molecular_formula"),
-    "result": ("molecule_id", "program", "driver", "method", "basis", "options"),
+    "result": ("molecule", "program", "driver", "method", "basis", "options"),  # ** Renamed molecule_id
     "options": ("program", "name"),
 
-    "task_queue": ("status", "tag", "hash_index"),
+    # "task_queue": ("status", "tag", "hash_index"),
+    "task_queue": ("status", "tag", "base_result"),  # updated
     "service_queue": ("status", "tag", "hash_index"),
 }  # yapf: disable
 
@@ -54,7 +55,7 @@ def get_table_indices(name):
 def format_result_indices(data, program=None):
     if program is None:
         program = data["program"]
-    return program, data["molecule_id"], data["driver"], data["method"], data["basis"], data["options"]
+    return program, data["molecule"], data["driver"], data["method"], data["basis"], data["options"]
 
 
 def get_schema(name):

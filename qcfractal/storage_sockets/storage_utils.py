@@ -5,7 +5,11 @@ Contains a number of utility functions for storage sockets
 import json
 
 # Constants
-_get_metadata = json.dumps({"errors": [], "n_found": 0, "success": False, "error_description": False, "missing": []})
+_get_metadata = json.dumps({"errors": [], "n_found": 0, "success": False, "missing": [],
+                            "error_description": False})
+
+_add_metadata = json.dumps({"errors": [], "n_inserted": 0, "success": False, "duplicates": [],
+                            "error_description": False, "validation_errors": []})
 
 
 def translate_molecule_index(index):
@@ -37,6 +41,13 @@ def get_metadata():
     return json.loads(_get_metadata)
 
 
+def add_metadata():
+    """
+    Returns a copy of the metadata for database save/updates
+    """
+    return json.loads(_add_metadata)
+
+
 def mixed_molecule_get(socket, data):
     """
     Creates a mixed molecule getter so both molecule_id's and/or molecules can be supplied.
@@ -61,7 +72,7 @@ def mixed_molecule_get(socket, data):
     id_mols.update(socket.add_molecules(dict_mols)["data"])
 
     # Get molecules by index and translate back to dict
-    tmp = socket.get_molecules(list(id_mols.values()), index="id")
+    tmp = socket.get_molecules(list(id_mols.values()))
     id_mols_list = tmp["data"]
     meta["errors"].append(tmp["meta"]["errors"])
 

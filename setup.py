@@ -23,7 +23,8 @@ if __name__ == "__main__":
             'pytest',
             'bcrypt',
             'cryptography',
-            'pydantic'
+            'pydantic',
+            'mongoengine'
         ],
         entry_points={"console_scripts": [
             "qcfractal-server=qcfractal.cli.qcfractal_server:main",

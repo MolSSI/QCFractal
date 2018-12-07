@@ -22,16 +22,16 @@ class TaskQueueHandler(APIHandler):
 
         # Grab objects
         storage = self.objects["storage_socket"]
-        tag = self.json["meta"].pop("tag", None)
 
         # Format tasks
         func = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])
         full_tasks, complete_tasks, errors = func(storage, self.json)
 
         # Add tasks to queue
-        ret = storage.queue_submit(full_tasks, tag=tag)
+        ret = storage.queue_submit(full_tasks)
         self.logger.info("TaskQueue: Added {} tasks.".format(ret["meta"]["n_inserted"]))
 
+        ret["data"] = [x for x in ret["data"] if x is not None]
         ret["data"] = {"submitted": ret["data"], "completed": list(complete_tasks), "queue": ret["meta"]["duplicates"]}
         ret["meta"]["duplicates"] = []
         ret["meta"]["errors"].extend(errors)
@@ -48,7 +48,7 @@ class TaskQueueHandler(APIHandler):
 
         projection = self.json["meta"].get("projection", None)
         if projection is None:
-            projection = {x: True for x in ["status", "error_message", "tag"]}
+            projection = {x: True for x in ["status", "error", "tag"]}
 
         ret = storage.get_queue(self.json["data"], projection=projection)
 

@@ -83,7 +83,7 @@ class Dataset(Collection):
                 for mol_hash, coef in rxn.stoichiometry[stoich_name].items():
                     tmp_index.append([name, stoich_name, mol_hash, coef])
 
-        self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule_id", "coefficient"])
+        self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule", "coefficient"])
 
         # If we making a new database we may need new hashes and json objects
         self._new_molecule_jsons = {}
@@ -109,7 +109,7 @@ class Dataset(Collection):
         self.data.reactions = dict_utils.replace_dict_keys(self.data.reactions, mol_ret)
         self._new_molecule_jsons = {}
 
-    def _unroll_query(self, keys, stoich, field="result_result"):
+    def _unroll_query(self, keys, stoich, field="return_result"):
         """Unrolls a complex query into a "flat" query for the server object
 
         Parameters
@@ -130,23 +130,20 @@ class Dataset(Collection):
         tmp_idx = tmp_idx.reset_index(drop=True)
 
         # There could be duplicates so take the unique and save the map
-        umols, uidx = np.unique(tmp_idx["molecule_id"], return_index=True)
+        umols, uidx = np.unique(tmp_idx["molecule"], return_index=True)
 
         # Evaluate the overall dataframe
         query_keys = {k: v for k, v in keys.items()}
-        query_keys["molecule_id"] = list(umols)
-        query_keys["projection"] = {field: True, "molecule_id": True}
+        query_keys["molecule"] = list(umols)
+        query_keys["projection"] = {field: True, "molecule": True}
         values = pd.DataFrame(self.client.get_results(**query_keys))
 
         # Join on molecule hash
-        tmp_idx = tmp_idx.merge(values, how="left", on="molecule_id")
+        tmp_idx = tmp_idx.merge(values, how="left", on="molecule")
 
         # Apply stoich values
-        for col in values.columns:
-            if col == "molecule_id":
-                continue
-            tmp_idx[col] *= tmp_idx["coefficient"]
-        tmp_idx = tmp_idx.drop(['stoichiometry', 'molecule_id', 'coefficient'], axis=1)
+        tmp_idx[field] *= tmp_idx["coefficient"]
+        tmp_idx = tmp_idx.drop(['stoichiometry', 'molecule', 'coefficient'], axis=1)
 
         # If *any* value is null in the stoich sum, the whole thing should be Null. Pandas is being too clever
         null_mask = tmp_idx.copy()
@@ -316,12 +313,12 @@ class Dataset(Collection):
         tmp_idx = tmp_idx.reset_index(drop=True)
 
         # There could be duplicates so take the unique and save the map
-        umols, uidx = np.unique(tmp_idx["molecule_id"], return_index=True)
+        umols, uidx = np.unique(tmp_idx["molecule"], return_index=True)
 
         complete_values = self.client.get_results(
-            molecule_id=list(umols), driver=driver, options=options, program=program, method=method, basis=basis, projection={"molecule_id": True})
+            molecule=list(umols), driver=driver, options=options, program=program, method=method, basis=basis, projection={"molecule": True})
 
-        complete_mols = np.array([x["molecule_id"] for x in complete_values])
+        complete_mols = np.array([x["molecule"] for x in complete_values])
         umols = np.setdiff1d(umols, complete_mols)
         compute_list = list(umols)
 

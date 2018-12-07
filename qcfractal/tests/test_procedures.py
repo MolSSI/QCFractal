@@ -52,17 +52,17 @@ def test_compute_queue_stack(fractal_compute_server):
     # Query result and check against out manual pul
     results_query = {
         "program": "psi4",
-        "molecule_id": [hydrogen_mol_id, helium_mol_id],
+        "molecule": [hydrogen_mol_id, helium_mol_id],
         "method": compute["meta"]["method"],
         "basis": compute["meta"]["basis"]
     }
-    results = storage.get_results(results_query)["data"]
+    results = storage.get_results(**results_query)["data"]
 
     assert len(results) == 2
     for r in results:
-        if r["molecule_id"] == hydrogen_mol_id:
+        if r["molecule"] == hydrogen_mol_id:
             assert pytest.approx(-1.0660263371078127, 1e-5) == r["properties"]["scf_total_energy"]
-        elif r["molecule_id"] == helium_mol_id:
+        elif r["molecule"] == helium_mol_id:
             assert pytest.approx(-2.807913354492941, 1e-5) == r["properties"]["scf_total_energy"]
         else:
             raise KeyError("Returned unexpected Molecule ID.")
@@ -83,12 +83,12 @@ def test_procedure_optimization(fractal_compute_server):
         "meta": {
             "procedure": "optimization",
             "program": "geometric",
-            "options": "none",
+            "options": None,
             "qc_meta": {
                 "driver": "gradient",
                 "method": "HF",
                 "basis": "sto-3g",
-                "options": "none",
+                "options": None,
                 "program": "psi4"
             },
         },
@@ -105,6 +105,7 @@ def test_procedure_optimization(fractal_compute_server):
 
     # Manually handle the compute
     fractal_compute_server.await_results()
+    # print(fractal_compute_server.storage.get_procedures({}))
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
     # # Query result and check against out manual pul
@@ -137,7 +138,7 @@ def test_procedure_optimization(fractal_compute_server):
 def test_procedure_task_error(fractal_compute_server):
     client = portal.FractalClient(fractal_compute_server.get_address())
 
-    ret = client.add_compute("rdkit", "cookiemonster", "", "energy", "none", [{
+    ret = client.add_compute("rdkit", "cookiemonster", "", "energy", None, [{
         "geometry": [0, 0, 0],
         "symbols": ["He"]
     }])
@@ -150,4 +151,4 @@ def test_procedure_task_error(fractal_compute_server):
 
     assert len(ret) == 1
     assert ret[0]["status"] == "ERROR"
-    assert "run_rdkit" in ret[0]["error_message"]
+    assert "run_rdkit" in ret[0]["error"]

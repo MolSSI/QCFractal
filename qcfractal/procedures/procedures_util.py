@@ -51,9 +51,12 @@ def unpack_single_run_meta(storage, meta, molecules):
     raw_molecules_query = storage.mixed_molecule_get(indexed_molecules)
 
     # Pull out the needed options
-    option_set = storage.get_options([(meta["program"], meta["options"])])["data"][0]
-    del option_set["name"]
-    del option_set["program"]
+    if meta["options"] is None:
+        option_set = {}
+    else:
+        option_set = storage.get_options(program=meta["program"], name=meta["options"], with_ids=False)["data"][0]
+        del option_set["name"]
+        del option_set["program"]
 
     # Create the "universal header"
     task_meta = json.dumps({
@@ -80,7 +83,7 @@ def unpack_single_run_meta(storage, meta, molecules):
         data = json.loads(task_meta)
         data["molecule"] = mol
 
-        indexer["molecule_id"] = mol["id"]
+        indexer["molecule"] = mol["id"]
         tasks[interface.schema.format_result_indices(indexer)] = data
 
     return tasks, []
@@ -118,8 +121,8 @@ def parse_single_runs(storage, results):
         v["options"] = v["qcfractal_tags"]["options"]
         del v["keywords"]
 
-        v["molecule_id"] = mol_ret[k]
-        del v["molecule"]
+        # Molecule should be by ID
+        v["molecule"] = mol_ret[k]
 
         v["program"] = v["qcfractal_tags"]["program"]
 

@@ -74,7 +74,7 @@ class TorsionDriveService:
 
         # Temporary hash index
         single_keys = copy.deepcopy(meta["qc_meta"])
-        single_keys["molecule_id"] = meta["initial_molecule"]
+        single_keys["molecule"] = meta["initial_molecule"]
         keys = {
             "type": "torsiondrive",
             "program": "torsiondrive",
@@ -104,25 +104,26 @@ class TorsionDriveService:
         if self.data["remaining_tasks"] is not False:
 
             # Create the query payload, fetching the completed required tasks and output location
-            payload = self.storage_socket.get_queue(
+            task_query = self.storage_socket.get_queue(
                 {
                     "id": self.data["required_tasks"],
                     "status": ["COMPLETE", "ERROR"]
                 },
-                projection={"result_location": True,
+                projection={"base_result": True,
                             "status": True})
             # If all tasks are not complete, return a False
-            if len(payload["data"]) != len(self.data["required_tasks"]):
+            if len(task_query["data"]) != len(self.data["required_tasks"]):
                 return False
 
-            if "ERROR" in set(x["status"] for x in payload["data"]):
+            if "ERROR" in set(x["status"] for x in task_query["data"]):
                 raise KeyError("All tasks did not execute successfully.")
 
-            task_query = payload["data"]
             # Create a lookup table for task ID mapping to result from that task in the procedure table
             inv_task_lookup = {
-                v["id"]: self.storage_socket.locator(v["result_location"])["data"][0]
-                for v in task_query
+                x["id"]: self.storage_socket.get_procedures({
+                    "id": x["base_result"]["_ref"].id
+                })["data"][0]
+                for x in task_query["data"]
             }
 
             # Populate task results
@@ -182,7 +183,8 @@ class TorsionDriveService:
                 "procedure": "optimization",
                 "keywords": self.data["optimization_meta"],
                 "program": self.data["optimization_program"],
-                "qc_meta": self.data["qc_meta"]
+                "qc_meta": self.data["qc_meta"],
+                "tag": self.data["tag"]
             },
         })
 
@@ -235,7 +237,7 @@ class TorsionDriveService:
                     full_tasks.append(tasks[0])
 
         # Add tasks to Nanny
-        ret = self.storage_socket.queue_submit(full_tasks, tag=self.data["tag"])
+        ret = self.storage_socket.queue_submit(full_tasks)
         self.data["queue_keys"] = ret["data"]
         if len(ret["meta"]["duplicates"]):
             raise RuntimeError("It appears that one of the tasks you submitted is already in the queue, but was "

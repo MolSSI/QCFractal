@@ -182,7 +182,6 @@ class FractalServer:
             (r"/collection", web_handlers.CollectionHandler, self.objects),
             (r"/result", web_handlers.ResultHandler, self.objects),
             (r"/procedure", web_handlers.ProcedureHandler, self.objects),
-            (r"/locator", web_handlers.LocatorHandler, self.objects),
 
             # Queue Schedulers
             (r"/task_queue", queue.TaskQueueHandler, self.objects),
@@ -341,6 +340,7 @@ class FractalServer:
                 finished = obj.iterate()
                 data = obj.get_json()
             except Exception as e:
+                print(traceback.format_exc())
                 data["status"] = "ERROR"
                 data["error_message"] = "FractalServer Service Build and Iterate Error:\n" + traceback.format_exc()
                 finished = False

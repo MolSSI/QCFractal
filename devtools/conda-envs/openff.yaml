@@ -29,9 +29,10 @@ dependencies:
 
     # Pip depends
   - pip:
-    - pydantic
     - git+git://github.com/MolSSI/QCEngine@v0.4.0#egg=qcengine
     - codecov
+    - mongoengine
+    - pydantic
 
       # Fireworks
     - fireworks

@@ -290,8 +290,8 @@ def run_process(args, **kwargs):
 def reset_server_database(server):
     """Resets the server database for testing.
     """
-    server.storage.client.drop_database(server.storage._project_name)
-    server.storage.init_database()
+    server.storage._clear_db(server.storage._project_name)
+    # server.storage.init_database()
 
 
 @pytest.fixture(scope="module")
@@ -439,27 +439,43 @@ def fractal_compute_server(request):
         raise TypeError("fractal_compute_server: internal parametrize error")
 
 
-@pytest.fixture(scope="module", params=["mongo"])
+@pytest.fixture(scope="module", params=["mongoengine"])
 def storage_socket_fixture(request):
     print("")
 
     # Check mongo
     check_active_mongo_server()
-    storage_name = "qcf_local_values_test"
+    storage_name = "qcf_test_me"
 
     # IP/port/drop table is specific to build
-    if request.param == "mongo":
-        storage = storage_socket_factory("mongodb://localhost", storage_name)
+    if request.param in ["pymongo", "mongoengine"]:
+        storage = storage_socket_factory("mongodb://localhost", storage_name, db_type=request.param)
 
         # Clean and re-init the database
-        storage.client.drop_database(storage._project_name)
-        storage.init_database()
+        storage._clear_db(storage_name)
     else:
         raise KeyError("Storage type {} not understood".format(request.param))
 
     yield storage
 
-    if request.param == "mongo":
+    if request.param in ["pymongo", "mongoengine"]:
         storage.client.drop_database(storage_name)
     else:
         raise KeyError("Storage type {} not understood".format(request.param))
+
+
+@pytest.fixture(scope="module")
+def mongoengine_socket_fixture(request):
+
+    # Check mongo
+    check_active_mongo_server()
+    storage_name = "qcf_local_values_test_me"
+
+    storage = storage_socket_factory("mongodb://localhost", storage_name, db_type="mongoengine")
+
+    # Clean and re-init the database
+    storage._clear_db(storage_name)
+
+    yield storage
+
+    storage.client.drop_database(storage_name)

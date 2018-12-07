@@ -92,3 +92,4 @@ monkeytype.sqlite3
 ipengine.*
 parsl_scripts/*
 runinfo/*
+.idea/

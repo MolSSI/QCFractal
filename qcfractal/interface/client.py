@@ -136,18 +136,6 @@ class FractalClient(object):
 
         return cls(address, username=username, password=password, verify=verify)
 
-    ### Generics
-
-    def locator(self, data, return_full=False):
-
-        payload = {"meta": {}, "data": data}
-        r = self._request("get", "locator", payload)
-
-        if return_full:
-            return r.json()
-        else:
-            return r.json()["data"]
-
     ### Molecule section
 
     def get_molecules(self, mol_list, index="id", full_return=False):
@@ -295,7 +283,7 @@ class FractalClient(object):
             A Collection object if the given collection was found otherwise returns `None`.
         """
 
-        payload = {"meta": {}, "data": [(collection_type.lower(), collection_name)]}
+        payload = {"meta": {}, "data": {"collection": collection_type.lower(), "name": collection_name}}
         r = self._request("get", "collection", payload)
 
         if full_return:
@@ -328,8 +316,9 @@ class FractalClient(object):
 
     def get_results(self, **kwargs):
 
+        keys = ["program", "molecule", "driver", "method", "basis", "options", "hash_index", "id", "status"]
         query = {}
-        for key in ["program", "molecule_id", "driver", "method", "basis", "options", "hash_index", "id"]:
+        for key in keys:
             if key in kwargs:
                 query[key] = kwargs[key]
 

@@ -122,7 +122,7 @@ class OptionHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        ret = storage.get_options(self.json["data"])
+        ret = storage.get_options(**self.json["data"], with_ids=False)
         self.logger.info("GET: Options - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
@@ -148,7 +148,7 @@ class CollectionHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        ret = storage.get_collections(self.json["data"], projection=self.json["meta"].get("projection", None))
+        ret = storage.get_collections(**self.json["data"])
         self.logger.info("GET: Collections - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
@@ -159,7 +159,11 @@ class CollectionHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         overwrite = self.json["meta"].get("overwrite", False)
-        ret = storage.add_collection(self.json["data"], overwrite=overwrite)
+
+        collection = self.json["data"].pop("collection")
+        name = self.json["data"].pop("name")
+
+        ret = storage.add_collection(collection, name, self.json["data"], overwrite=overwrite)
         self.logger.info("POST: Collections - {} inserted.".format(ret["meta"]["n_inserted"]))
 
         self.write(ret)
@@ -176,7 +180,10 @@ class ResultHandler(APIHandler):
         storage = self.objects["storage_socket"]
         proj = self.json["meta"].get("projection", None)
 
-        ret = storage.get_results(self.json["data"], projection=proj)
+        if "id" in self.json["data"]:
+            ret = storage.get_results_by_ids(self.json["data"]["id"], projection=proj)
+        else:
+            ret = storage.get_results(**self.json["data"], projection=proj)
         self.logger.info("GET: Results - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
@@ -206,31 +213,6 @@ class ProcedureHandler(APIHandler):
         self.logger.info("GET: Procedures - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)
-
-
-class LocatorHandler(APIHandler):
-    """
-    A handler to acquire results from locators
-    """
-
-    def get(self):
-        self.authenticate("read")
-
-        storage = self.objects["storage_socket"]
-
-        ret = storage.locator(self.json["data"])
-        self.logger.info("GET: Locator - {} pulls.".format(len(ret["data"])))
-
-        self.write(ret)
-
-    # def post(self):
-
-    #     db = self.objects["db_socket"]
-
-    #     ret = db.add_results(self.json["data"])
-    #     self.logger.info("POST: Results - {} inserted.".format(ret["meta"]["n_inserted"]))
-
-    #     self.write(ret)
 
     # def _check_auth(objects, header):
     #     auth = False
