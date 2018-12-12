@@ -94,7 +94,7 @@ class TorsionDriveService:
         meta["hash_keys"] = keys
         meta["tag"] = meta.pop("tag", None)
         meta["provenance"] = {"creator": "torsiondrive",
-                              "version": torsiondrive.__version,
+                              "version": torsiondrive.__version__,
                               "route": "torsiondrive.td_api"}
 
         return cls(storage_socket, meta)

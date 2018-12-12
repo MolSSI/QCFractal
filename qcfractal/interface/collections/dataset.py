@@ -159,7 +159,7 @@ class Dataset(Collection):
               method,
               basis,
               driver="energy",
-              options="default",
+              options=None,
               program="psi4",
               stoich="default",
               prefix="",
@@ -222,7 +222,7 @@ class Dataset(Collection):
             "method": method.lower(),
             "basis": basis.lower(),
             "driver": driver.lower(),
-            "options": options.lower(),
+            "options": options,
             "program": program.lower(),
         }
         # # If reaction results
@@ -270,7 +270,7 @@ class Dataset(Collection):
                 basis,
                 driver="energy",
                 stoich="default",
-                options="default",
+                options=None,
                 program="psi4",
                 ignore_ds_type=False):
         """Executes a computational method for all reactions in the Dataset.
