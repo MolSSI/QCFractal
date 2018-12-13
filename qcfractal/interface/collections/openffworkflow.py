@@ -7,7 +7,7 @@ from . import collection_utils
 from .collection import Collection
 from .. import orm
 
-from typing import Dict, Union, Optional
+from typing import Dict, Any
 
 
 class OpenFFWorkflow(Collection):
@@ -55,8 +55,8 @@ class OpenFFWorkflow(Collection):
         This structure validates input, allows server-side validation and data security,
         and will create the information to pass back and forth between server and client
         """
-        fragments: dict = {}
-        enumerate_states: Dict[str, Union[str, Dict]] = {
+        fragments: Dict[str, Any] = {}
+        enumerate_states: Dict[str, Any] = {
             "version": "",
             "options": {
                 "protonation": True,
@@ -69,7 +69,7 @@ class OpenFFWorkflow(Collection):
                 "suppress_hydrogen": True
             }
         }
-        enumerate_fragments: Dict[str, Union[str, Dict]] = {
+        enumerate_fragments: Dict[str, Any] = {
             "version": "",
             "options": {
                 "strict_stereo": True,
@@ -78,7 +78,7 @@ class OpenFFWorkflow(Collection):
                 "remove_map": True
             }
         }
-        torsiondrive_input: Dict[str, Union[str, Dict]] = {
+        torsiondrive_input: Dict[str, Any] = {
             "restricted": True,
             "torsiondrive_options": {
                 "max_conf": 1,
@@ -92,7 +92,7 @@ class OpenFFWorkflow(Collection):
                 "interval": 5
             }
         }
-        torsiondrive_static_options: Dict[str, Union[str, Dict[str, Optional[str]]]] = {
+        torsiondrive_static_options: Dict[str, Any] = {
             "torsiondrive_meta": {},
             "optimization_meta": {
                 "program": "geometric",
@@ -106,7 +106,7 @@ class OpenFFWorkflow(Collection):
                 "program": "rdkit",
             }
         }
-        optimization_static_options: Dict[str, Union[str, Dict[str, Optional[str]]]] = {
+        optimization_static_options: Dict[str, Any] = {
             "optimization_meta": {
                 "program": "geometric",
                 "coordsys": "tric"

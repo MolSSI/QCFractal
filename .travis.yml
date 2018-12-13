@@ -64,6 +64,7 @@ before_install:
 
 install:
     # Create test environment for package
+  - echo $ENVIRON
   - |
     if [ $ENVIRON == "DASK" ]; then
       python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/dask.yaml
