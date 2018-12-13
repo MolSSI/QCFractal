@@ -41,15 +41,7 @@ matrix:
       python: 3.7
       env:
       - PYTHON_VER=3.7
-      - ENVIRON=PARSL
-
-allow_failures:
-    - os: linux
-      python: 3.7
-      env:
-      - PYTHON_VER=3.7
-      - ENVIRON=PARSL
-
+      - ENVIRON=BASE
 
 before_install:
   # Additional info about the build
@@ -74,6 +66,8 @@ install:
       python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/openff.yaml
     elif [ $ENVIRON == "PARSL" ]; then
       python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/parsl.yaml
+    elif [ $ENVIRON == "BASE" ]; then
+      python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/base.yaml
     else
       echo "ERROR: No match for ENVIRON ($ENVIRON)."
       exit 1

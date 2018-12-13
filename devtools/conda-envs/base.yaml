@@ -1,0 +1,25 @@
+name: test
+channels:
+dependencies:
+    # Base depends
+  - python
+  - numpy
+  - pandas
+  - mongodb
+  - pymongo
+  - tornado
+  - requests
+  - jsonschema
+  - bcrypt
+  - cryptography
+
+    # Testing
+  - pytest
+  - pytest-cov
+
+    # Pip depends
+  - pip:
+    - git+git://github.com/MolSSI/QCEngine@v0.4.0#egg=qcengine
+    - codecov
+    - mongoengine
+    - pydantic
