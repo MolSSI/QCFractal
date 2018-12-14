@@ -63,51 +63,6 @@ def test_compute_dataset(fractal_compute_server):
 
     assert isinstance(ds.to_json(), dict)
 
-### Tests the biofragment collection
-@testing.using_torsiondrive
-@testing.using_geometric
-@testing.using_rdkit
-def test_compute_biofragment(fractal_compute_server):
-
-    # Obtain a client and build a BioFragment
-    client = portal.FractalClient(fractal_compute_server.get_address(""))
-
-    butane = portal.data.get_molecule("butane.json")
-    frag = portal.collections.BioFragment("CCCC", butane, client=client)
-
-    # Options
-    torsiondrive_options = {
-        "torsiondrive_meta": {
-            "internal_grid_spacing": [90],
-            "terminal_grid_spacing": [90],
-        },
-        "optimization_meta": {
-            "program": "geometric",
-            "coordsys": "tric",
-        },
-        "qc_meta": {
-            "driver": "gradient",
-            "method": "UFF",
-            "basis": "",
-            "options": None,
-            "program": "rdkit",
-        },
-    }
-    frag.add_options_set("torsiondrive", "v1", torsiondrive_options)
-
-    # Required torsions
-    needed_torsions = {
-      "internal": [
-        [[0, 2, 3, 1]],
-      ],
-      "terminal": [
-        [[3, 2, 0, 4]],
-        [[2, 3, 1, 7]],
-      ]
-    } # yapf: disable
-
-    # frag.submit_torsion_drives("v1", needed_torsions)
-
 
 ### Tests the openffworkflow collection
 @testing.using_torsiondrive
@@ -126,19 +81,19 @@ def test_compute_openffworkflow(fractal_compute_server):
 
         # TorsionDrive, Geometric, and QC options
         ""
-        "torsiondrive_static_options":{
-          "torsiondrive_meta": {},
-          "optimization_meta": {
-              "program": "geometric",
-              "coordsys": "tric",
-          },
-          "qc_meta": {
-              "driver": "gradient",
-              "method": "UFF",
-              "basis": "",
-              "options": None,
-              "program": "rdkit",
-          }
+        "torsiondrive_static_options": {
+            "torsiondrive_meta": {},
+            "optimization_meta": {
+                "program": "geometric",
+                "coordsys": "tric",
+            },
+            "qc_meta": {
+                "driver": "gradient",
+                "method": "UFF",
+                "basis": "",
+                "options": None,
+                "program": "rdkit",
+            }
         },
         "optimization_static_options": {
             "optimization_meta": {
@@ -146,11 +101,11 @@ def test_compute_openffworkflow(fractal_compute_server):
                 "coordsys": "tric",
             },
             "qc_meta": {
-              "driver": "gradient",
-              "method": "UFF",
-              "basis": "",
-              "options": None,
-              "program": "rdkit",
+                "driver": "gradient",
+                "method": "UFF",
+                "basis": "",
+                "options": None,
+                "program": "rdkit",
             }
         }
     }
@@ -182,7 +137,13 @@ def test_compute_openffworkflow(fractal_compute_server):
         "label2": {
             "type": "optimization_input",
             "initial_molecule": hooh.to_json(),
-            "constraints": {'set': [{"type": 'dihedral', "indices": [0, 1, 2, 3], "value": 0}]}
+            "constraints": {
+                'set': [{
+                    "type": 'dihedral',
+                    "indices": [0, 1, 2, 3],
+                    "value": 0
+                }]
+            }
         }
     }
 
@@ -216,8 +177,3 @@ def test_compute_openffworkflow(fractal_compute_server):
     assert final_energies.keys() == {butane_id, "HOOH"}
     assert final_energies[butane_id].keys() == {"label1"}
     assert final_energies[butane_id]["label1"] is None
-
-
-
-
-

@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import shutil
 import subprocess as sp
@@ -23,7 +24,11 @@ script = script.replace("- python", "- python {}*".format(args.python[0]))
 with open(tmp_file, "w") as handle:
     handle.write(script)
 
-conda_path = shutil.which("conda")
+# Figure out conda path
+if "CONDA_EXE" in os.environ:
+    conda_path = os.environ["CONDA_EXE"]
+else:
+    conda_path = shutil.which("conda")
 
 print("CONDA ENV NAME  {}".format(args.name[0]))
 print("PYTHON VERSION  {}".format(args.python[0]))

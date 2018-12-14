@@ -1,10 +1,6 @@
 name: test
 channels:
-  - conda-forge
 dependencies:
-    # Compute
-  - rdkit
-
     # Base depends
   - python
   - numpy
@@ -27,6 +23,3 @@ dependencies:
     - codecov
     - mongoengine
     - pydantic
-
-      # Parsl
-    - parsl

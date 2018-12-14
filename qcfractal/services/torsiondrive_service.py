@@ -8,6 +8,7 @@ import json
 import numpy as np
 
 try:
+    import torsiondrive
     from torsiondrive import td_api
 except ImportError:
     td_api = None
@@ -92,6 +93,9 @@ class TorsionDriveService:
         meta["hash_index"] = procedures.procedures_util.hash_procedure_keys(keys)
         meta["hash_keys"] = keys
         meta["tag"] = meta.pop("tag", None)
+        meta["provenance"] = {"creator": "torsiondrive",
+                              "version": torsiondrive.__version__,
+                              "route": "torsiondrive.td_api"}
 
         return cls(storage_socket, meta)
 
