@@ -71,12 +71,7 @@ class OpenFFWorkflow(Collection):
         }
         enumerate_fragments: Dict[str, Any] = {
             "version": "",
-            "options": {
-                "strict_stereo": True,
-                "combinatorial": True,
-                "MAX_ROTORS": 3,
-                "remove_map": True
-            }
+            "options": {}
         }
         torsiondrive_input: Dict[str, Any] = {
             "restricted": True,
