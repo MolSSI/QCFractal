@@ -209,10 +209,11 @@ class TorsionDriveService:
 
                 # Construct constraints
                 constraints = copy.deepcopy(self.data["torsiondrive_meta"]["dihedral_template"])
-                if not isinstance(key, (tuple, list)):
-                    constraints[0]["value"] = key
+                grid_id = td_api.grid_id_from_string(key)
+                if len(grid_id) == 1:
+                    constraints[0]["value"] = grid_id[0]
                 else:
-                    for con_num, k in enumerate(key):
+                    for con_num, k in enumerate(grid_id):
                         constraints[con_num]["value"] = k
                 packet["meta"]["keywords"]["constraints"] = {"set": constraints}
 
