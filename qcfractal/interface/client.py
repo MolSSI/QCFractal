@@ -18,8 +18,9 @@ class FractalClient(object):
 
         Parameters
         ----------
-        address : str
-            The IP and port of the FractalServer instance ("192.168.1.1:8888")
+        address : str or FractalServer
+            The IP and port of the FractalServer instance ("192.168.1.1:8888") or
+            a FractalServer instance
         username : None, optional
             The username to authenticate with.
         password : None, optional
@@ -29,6 +30,11 @@ class FractalClient(object):
             FractalServer was not provided a SSL certificate and defaults back to self-signed
             SSL keys.
         """
+
+        if hasattr(address, "get_address"):
+            # We are a FractalServer-like object
+            verify = address.client_verify
+            address = address.get_address()
 
         if "http" not in address:
             address = "https://" + address

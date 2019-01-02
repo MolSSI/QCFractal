@@ -41,10 +41,7 @@ def sec_server(request):
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = qcfractal.FractalServer(
-            port=testing.find_open_port(),
-            storage_project_name=storage_name,
-            loop=loop,
-            security="local")
+            port=testing.find_open_port(), storage_project_name=storage_name, loop=loop, security="local")
 
         # Clean and re-init the databse
         server.storage.client.drop_database(server.storage._project_name)
@@ -60,7 +57,7 @@ def sec_server(request):
 
 ### Tests the compute queue stack
 def test_security_auth_decline_none(sec_server):
-    client = portal.FractalClient(sec_server.get_address(), verify=False)
+    client = portal.FractalClient(sec_server)
     assert "FractalClient" in str(client)
 
     with pytest.raises(requests.exceptions.HTTPError):
@@ -68,6 +65,7 @@ def test_security_auth_decline_none(sec_server):
 
     with pytest.raises(requests.exceptions.HTTPError):
         r = client.add_molecules({})
+
 
 def test_security_auth_bad_ssl(sec_server):
     client = portal.FractalClient.from_file({
@@ -79,6 +77,7 @@ def test_security_auth_bad_ssl(sec_server):
 
     with pytest.raises(requests.exceptions.SSLError):
         r = client.get_molecules([])
+
 
 def test_security_auth_decline_bad_user(sec_server):
     client = portal.FractalClient.from_file({
@@ -97,8 +96,7 @@ def test_security_auth_decline_bad_user(sec_server):
 
 def test_security_auth_accept(sec_server):
 
-    client = portal.FractalClient(
-        sec_server.get_address(), username="write", password=_users["write"]["pw"], verify=False)
+    client = portal.FractalClient(sec_server, username="write", password=_users["write"]["pw"])
 
     r = client.add_molecules({})
     r = client.get_molecules([])

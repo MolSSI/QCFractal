@@ -20,7 +20,7 @@ def torsiondrive_fixture(dask_server_fixture):
     pytest.importorskip("geometric")
     pytest.importorskip("rdkit")
 
-    client = portal.FractalClient(dask_server_fixture.get_address())
+    client = portal.FractalClient(dask_server_fixture)
 
     # Add a HOOH
     hooh = portal.data.get_molecule("hooh.json")

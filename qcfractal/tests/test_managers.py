@@ -13,7 +13,7 @@ from qcfractal.testing import test_server, reset_server_database
 @pytest.fixture(scope="module")
 def compute_manager_fixture(test_server):
 
-    client = portal.FractalClient(test_server.get_address())
+    client = portal.FractalClient(test_server)
 
     # Build Fireworks test server and manager
     fireworks = pytest.importorskip("fireworks")
