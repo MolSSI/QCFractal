@@ -46,6 +46,22 @@ class APIHandler(tornado.web.RequestHandler):
             raise tornado.web.HTTPError(status_code=401, reason=msg)
 
 
+class InformationHandler(APIHandler):
+    """
+    A handler that returns public server information
+    """
+
+    def get(self):
+        """
+
+        """
+        self.authenticate("read")
+
+        self.logger.info("GET: Information")
+
+        self.write(self.objects["public_information"])
+
+
 class MoleculeHandler(APIHandler):
     """
     A handler to push and get molecules.

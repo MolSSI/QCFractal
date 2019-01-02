@@ -77,6 +77,7 @@ class FractalServer:
             self,
 
             # Server info options
+            name="QCFractal Server",
             port=8888,
             loop=None,
             security=None,
@@ -86,16 +87,16 @@ class FractalServer:
             storage_uri="mongodb://localhost",
             storage_project_name="molssistorage",
 
-            # Queue options
-            queue_socket=None,
-
             # Log options
             logfile_prefix=None,
 
             # Queue options
-            max_active_services=10):
+            queue_socket=None,
+            max_active_services=10,
+            heartbeat_interval=300):
 
         # Save local options
+        self.name = name
         self.port = port
         if ssl_options is False:
             self._address = "http://localhost:" + str(self.port) + "/"
@@ -103,6 +104,7 @@ class FractalServer:
             self._address = "https://localhost:" + str(self.port) + "/"
 
         self.max_active_services = max_active_services
+        self.heartbeat_interval = heartbeat_interval
 
         # Setup logging.
         if logfile_prefix is not None:
@@ -174,9 +176,13 @@ class FractalServer:
             "logger": self.logger,
         }
 
+        # Public information
+        self.objects["public_information"] = {"name": self.name, "heartbeat_interval": self.heartbeat_interval}
+
         endpoints = [
 
             # Generic web handlers
+            (r"/information", web_handlers.InformationHandler, self.objects),
             (r"/molecule", web_handlers.MoleculeHandler, self.objects),
             (r"/option", web_handlers.OptionHandler, self.objects),
             (r"/collection", web_handlers.CollectionHandler, self.objects),

@@ -40,6 +40,9 @@ def test_server_information(test_server):
 
     client = portal.FractalClient(test_server)
 
+    server_info = client.server_information()
+    assert {"name", "heartbeat_interval"} <= server_info.keys()
+
 
 def test_molecule_socket(test_server):
 

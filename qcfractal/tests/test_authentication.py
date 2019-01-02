@@ -57,41 +57,35 @@ def sec_server(request):
 
 ### Tests the compute queue stack
 def test_security_auth_decline_none(sec_server):
-    client = portal.FractalClient(sec_server)
-    assert "FractalClient" in str(client)
+    with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+        client = portal.FractalClient(sec_server)
 
-    with pytest.raises(requests.exceptions.HTTPError):
-        r = client.get_molecules([])
-
-    with pytest.raises(requests.exceptions.HTTPError):
-        r = client.add_molecules({})
+    assert "user not found" in str(excinfo.value).lower()
 
 
 def test_security_auth_bad_ssl(sec_server):
-    client = portal.FractalClient.from_file({
-        "address": sec_server.get_address(),
-        "username": "read",
-        "password": _users["write"]["pw"],
-        "verify": True
-    })
+    with pytest.raises(requests.exceptions.SSLError) as excinfo:
+        client = portal.FractalClient.from_file({
+            "address": sec_server.get_address(),
+            "username": "read",
+            "password": _users["write"]["pw"],
+            "verify": True
+        })
 
-    with pytest.raises(requests.exceptions.SSLError):
-        r = client.get_molecules([])
+    assert "ssl handshake" in str(excinfo.value).lower()
+    assert "verify=false" in str(excinfo.value).lower()
 
 
 def test_security_auth_decline_bad_user(sec_server):
-    client = portal.FractalClient.from_file({
-        "address": sec_server.get_address(),
-        "username": "hello",
-        "password": "something",
-        "verify": False
-    })
+    with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+        client = portal.FractalClient.from_file({
+            "address": sec_server.get_address(),
+            "username": "hello",
+            "password": "something",
+            "verify": False
+        })
 
-    with pytest.raises(requests.exceptions.HTTPError):
-        r = client.get_molecules([])
-
-    with pytest.raises(requests.exceptions.HTTPError):
-        r = client.add_molecules({})
+    assert "user not found" in str(excinfo.value).lower()
 
 
 def test_security_auth_accept(sec_server):
