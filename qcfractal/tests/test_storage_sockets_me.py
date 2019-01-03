@@ -472,7 +472,7 @@ def test_storage_queue_roundtrip(storage_results):
     assert len(r["data"]) == 1
 
     # Query for next tasks
-    r = storage_results.queue_get_next()
+    r = storage_results.queue_get_next("test_manager")
     assert r[0]["spec"]["function"] == task1["spec"]["function"]
     queue_id = r[0]["id"]
 
@@ -486,7 +486,7 @@ def test_storage_queue_roundtrip(storage_results):
     assert found[0]["status"] == "COMPLETE"
 
     # Check queue is empty
-    r = storage_results.queue_get_next()
+    r = storage_results.queue_get_next("test_manager")
     assert len(r) == 0
 
 
@@ -505,7 +505,7 @@ def test_storage_queue_duplicate(storage_results):
     queue_id = r["data"][0]
 
     # Put the first task in a waiting state
-    r = storage_results.queue_get_next()
+    r = storage_results.queue_get_next("test_manager")
     assert len(r) == 1
 
     # Change hooks, only one submission due to hash_index conflict

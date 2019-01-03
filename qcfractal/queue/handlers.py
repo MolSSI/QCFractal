@@ -206,7 +206,7 @@ class QueueManagerHandler(APIHandler):
         } # yapf: disable
 
         # Grab new tasks and write out
-        new_tasks = storage.queue_get_next(**queue_tags)
+        new_tasks = storage.queue_get_next(name, **queue_tags)
         self.write({"meta": {"n_found": len(new_tasks), "success": True}, "data": new_tasks})
         self.logger.info("QueueManager: Served {} tasks.".format(len(new_tasks)))
 
@@ -236,8 +236,13 @@ class QueueManagerHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        storage.queue_reset_status(self.json["data"])
-        self.write({"meta": {}, "data": True})
+        name = self._get_name_from_metadata(self.json["meta"])
+        if self.json["data"]["operation"] == "shutdown":
+            nshutdown = storage.queue_reset_status(name)
+            ret = {"nshutdown": nshutdown}
+        else:
+            raise KeyError("Unknown operation")
+        self.write({"meta": {}, "data": ret})
 
         # Update manager logs
         name = self._get_name_from_metadata(self.json["meta"])

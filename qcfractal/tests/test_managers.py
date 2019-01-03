@@ -95,7 +95,7 @@ def test_queue_manager_shutdown(compute_manager_fixture):
     # Pull job to manager and shutdown
     manager.update()
     assert len(manager.list_current_tasks()) == 1
-    manager.shutdown()
+    assert manager.shutdown()["nshutdown"] == 1
 
     # Boot new manager and await results
     manager = queue.QueueManager(client, lpad)

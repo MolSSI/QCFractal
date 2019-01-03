@@ -162,7 +162,7 @@ class QueueManager:
         else:
             self.logger.info("Shutdown was successful, {} tasks returned to master queue.".format(len(task_ids)))
 
-        return True
+        return r.json()["data"]
 
     def add_exit_callback(self, callback, *args, **kwargs):
         """Adds additional callbacks to perform when closing down the server

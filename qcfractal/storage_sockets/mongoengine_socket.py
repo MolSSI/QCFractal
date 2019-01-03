@@ -36,6 +36,7 @@ from qcfractal.storage_sockets.models import Options, Collection, Result, \
     TaskQueue, Procedure, User, Molecule
 
 import mongoengine.errors
+
 # from bson.dbref import DBRef
 
 
@@ -134,8 +135,7 @@ class MongoengineSocket:
             # self.client = pymongo.MongoClient(uri, authMechanism=authMechanism, authSource=authSource)
 
             # connect to mongoengine
-            self.client = db.connect(
-                db=project, host=uri, authMechanism=authMechanism, authSource=authSource)
+            self.client = db.connect(db=project, host=uri, authMechanism=authMechanism, authSource=authSource)
         else:
             # self.client = pymongo.MongoClient(uri)
 
@@ -588,8 +588,7 @@ class MongoengineSocket:
         ret = {"data": options, "meta": meta}
         return ret
 
-    def get_options(self, program: str=None, name: str=None, return_json: bool=True,
-                    with_ids: bool=True, limit=None):
+    def get_options(self, program: str=None, name: str=None, return_json: bool=True, with_ids: bool=True, limit=None):
         """Search for one (unique) option based on the 'program'
         and the 'name'. No overwrite allowed.
 
@@ -642,7 +641,6 @@ class MongoengineSocket:
 
         return {"data": rdata, "meta": meta}
 
-
     def del_option(self, program, name):
         """
         Removes a option set from the database based on its keys.
@@ -667,7 +665,6 @@ class MongoengineSocket:
             count = option.delete()
 
         return count
-
 
     ### Mongo database functions
 
@@ -720,8 +717,12 @@ class MongoengineSocket:
         return ret
 
     # def get_collections(self, keys, projection=None):
-    def get_collections(self, collection: str=None, name: str=None, return_json: bool=True,
-                        with_ids: bool=True, limit: int=None):
+    def get_collections(self,
+                        collection: str=None,
+                        name: str=None,
+                        return_json: bool=True,
+                        with_ids: bool=True,
+                        limit: int=None):
         """Get collection by collection and/or name
 
         Parameters
@@ -832,9 +833,13 @@ class MongoengineSocket:
         # try:
         for d in data:
             # search by index keywords not by all keys, much faster
-            doc = Result.objects(program=d['program'], name=d['driver'],
-                                 method=d['method'], basis=d['basis'],
-                                 options=d['options'], molecule=d['molecule'])
+            doc = Result.objects(
+                program=d['program'],
+                name=d['driver'],
+                method=d['method'],
+                basis=d['basis'],
+                options=d['options'],
+                molecule=d['molecule'])
 
             if doc.count() == 0 or update_existing:
                 if not isinstance(d['molecule'], ObjectId):
@@ -855,8 +860,7 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def get_results_by_ids(self, ids: List[str]=None, projection=None, return_json=True,
-                           with_ids=True):
+    def get_results_by_ids(self, ids: List[str]=None, projection=None, return_json=True, with_ids=True):
         """
         Get list of Results using the given list of Ids
 
@@ -1127,8 +1131,7 @@ class MongoengineSocket:
         for d in data:
             try:
                 if not isinstance(d['base_result'], tuple):
-                    raise Exception("base_result must be a tuple not {}."
-                                    .format(type(d['base_result'])))
+                    raise Exception("base_result must be a tuple not {}.".format(type(d['base_result'])))
 
                 # If saved as DBRef, then use raw query to retrieve (avoid this)
                 # if d['base_result'][0] in ('results', 'procedure'):
@@ -1169,7 +1172,7 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def queue_get_next(self, limit=100, tag=None, as_json=True):
+    def queue_get_next(self, manager, limit=100, tag=None, as_json=True):
 
         # Figure out query, tagless has no requirements
         query = {"status": "WAITING"}
@@ -1184,7 +1187,8 @@ class MongoengineSocket:
         upd = TaskQueue._collection.update_many(
             query, {"$set": {
                 "status": "RUNNING",
-                "modified_on": datetime.datetime.utcnow()
+                "modified_on": datetime.datetime.utcnow(),
+                "manager": manager,
             }})
 
         if as_json:
@@ -1264,9 +1268,25 @@ class MongoengineSocket:
         ret = TaskQueue._collection.bulk_write(bulk_commands, ordered=False)
         return ret
 
-    def queue_reset_status(self, task_ids):
-        """TODO: needs tests"""
-        found = TaskQueue.objects(id__in=task_ids).update(status='WAITING')
+    def queue_reset_status(self, manager: str, status: str="RUNNING", update_status: str="WAITING") -> int:
+        """
+        Sets the status of the tasks that a manager owns.
+
+        Parameters
+        ----------
+        manager : str
+            The manager name to reset the status of
+        status : str, optional
+            An optional status filter to apply
+        update_status : str, optional
+            What to reset the status to
+
+        Returns
+        -------
+        int
+            Updated count
+        """
+        found = TaskQueue.objects(manager=manager, status=status).update(status=update_status)
 
         return found
 
