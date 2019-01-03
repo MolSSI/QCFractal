@@ -1294,7 +1294,7 @@ class MongoengineSocket:
 
 ### QueueManagers
 
-    def manager_update(self, name, tag=None, submitted=0, completed=0, failures=0, returned=0):
+    def manager_update(self, name, **kwargs):
         dt = datetime.datetime.utcnow()
 
         r = self._tables["queue_managers"].update_one(
@@ -1305,8 +1305,11 @@ class MongoengineSocket:
                 # Provide base data
                 "$setOnInsert": {
                     "name": name,
+                    "cluster": kwargs.get("cluster", None),
+                    "hostname": kwargs.get("hostname", None),
+                    "uuid": kwargs.get("uuid", None),
+                    "tag": kwargs.get("tag", None),
                     "created_on": dt,
-                    "tag": tag,
                 },
                 # Set the date
                 "$set": {
@@ -1314,10 +1317,10 @@ class MongoengineSocket:
                 },
                 # Incremement relevant data
                 "$inc": {
-                    "submitted": submitted,
-                    "completed": completed,
-                    "returned": returned,
-                    "failures": failures
+                    "submitted": kwargs.get("submitted", 0),
+                    "completed": kwargs.get("completed", 0),
+                    "returned": kwargs.get("returned", 0),
+                    "failures": kwargs.get("failures", 0)
                 }
             },
             upsert=True)

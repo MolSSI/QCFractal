@@ -3,6 +3,7 @@ Queue backend abstraction manager.
 """
 
 import asyncio
+import json
 import logging
 import socket
 import uuid
@@ -69,10 +70,11 @@ class QueueManager:
         else:
             self.logger = logging.getLogger('QueueManager')
 
-        self.name = {"cluster": cluster, "hostname": socket.gethostname(), "uuid": str(uuid.uuid4())}
-        self.name_str = self.name["cluster"] + "-" + self.name["hostname"] + "-" + self.name["uuid"]
+        self.name_data = {"cluster": cluster, "hostname": socket.gethostname(), "uuid": str(uuid.uuid4())}
+        self.name = self.name_data["cluster"] + "-" + self.name_data["hostname"] + "-" + self.name_data["uuid"]
 
         self.client = client
+        self.heartbeat_interval = client.server_information()["heartbeat_interval"]
         self.queue_adapter = build_queue_adapter(queue_client, logger=self.logger)
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag
@@ -85,10 +87,19 @@ class QueueManager:
         # Pull the current loop if we need it
         self.loop = loop or tornado.ioloop.IOLoop.current()
 
-        self.logger.info("QueueManager '{}' successfully initialized.".format(self.name_str))
+        # Build a meta header
+        meta_packet = self.name_data.copy()
+        meta_packet["tag"] = self.queue_tag
+        meta_packet["max_tasks"] = self.max_tasks
+        self.meta_packet = json.dumps(meta_packet)
+
+        self.logger.info("QueueManager '{}' successfully initialized.".format(self.name))
         self.logger.info("QueueManager: Queue credential username: {}".format(self.client.username))
         self.logger.info(
             "QueueManager: Pulling tasks from {} with tag '{}'.\n".format(self.client.address, self.queue_tag))
+
+    def _payload_template(self):
+        return {"meta": json.loads(self.meta_packet), "data": {}}
 
     def start(self):
         """
@@ -101,6 +112,8 @@ class QueueManager:
         update = tornado.ioloop.PeriodicCallback(self.update, 1000 * self.update_frequency)
         update.start()
         self.periodic["update"] = update
+
+        # Add heartbeat
 
         # Soft quit with a keyboard interupt
         try:
@@ -137,15 +150,19 @@ class QueueManager:
 
         task_ids = [x[0] for x in self.list_current_tasks()]
         if len(task_ids) == 0:
+            self.logger.info("Shutdown was successful, no owned tasks.")
             return True
 
-        payload = {"meta": {"name": self.name_str, "tag": self.queue_tag, "operation": "shutdown"}, "data": task_ids}
+        payload = self._payload_template()
+        payload["data"]["operation"] = "shutdown"
         r = self.client._request("put", "queue_manager", payload, noraise=True)
         if r.status_code != 200:
             # TODO something as we didnt successfully add the data
             self.logger.warning("Shutdown was not successful. This may delay queued tasks.")
         else:
             self.logger.info("Shutdown was successful, {} tasks returned to master queue.".format(len(task_ids)))
+
+        return True
 
     def add_exit_callback(self, callback, *args, **kwargs):
         """Adds additional callbacks to perform when closing down the server
@@ -169,7 +186,8 @@ class QueueManager:
         """
         results = self.queue_adapter.acquire_complete()
         if len(results):
-            payload = {"meta": {"name": self.name_str, "tag": self.queue_tag}, "data": results}
+            payload = self._payload_template()
+            payload["data"] = results
             r = self.client._request("post", "queue_manager", payload, noraise=True)
             if r.status_code != 200:
                 # TODO something as we didnt successfully add the data
@@ -183,7 +201,8 @@ class QueueManager:
             return True
 
         # Get new tasks
-        payload = {"meta": {"name": self.name_str, "tag": self.queue_tag, "limit": open_slots}, "data": {}}
+        payload = self._payload_template()
+        payload["data"]["limit"] = open_slots
         r = self.client._request("get", "queue_manager", payload, noraise=True)
         if r.status_code != 200:
             # TODO something as we didnt successfully get data

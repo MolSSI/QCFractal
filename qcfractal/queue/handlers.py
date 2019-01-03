@@ -124,6 +124,12 @@ class QueueManagerHandler(APIHandler):
     Manages the external
     """
 
+    def _get_name_from_metadata(self, meta):
+        """
+        Form the canonical name string.
+        """
+        return meta["cluster"] + "-" + meta["hostname"] + "-" + meta["uuid"]
+
     @staticmethod
     def insert_complete_tasks(storage_socket, results, logger):
         # Pivot data so that we group all results in categories
@@ -193,20 +199,19 @@ class QueueManagerHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         # Figure out metadata and kwargs
-        name = self.json["meta"]["name"]
-        tag = self.json["meta"].get("tag", None)
-        kwargs = {
-            "limit": self.json["meta"].get("limit", 100),
-            "tag": tag,
+        name = self._get_name_from_metadata(self.json["meta"])
+        queue_tags = {
+            "limit": self.json["data"].get("limit", 100),
+            "tag": self.json["meta"]["tag"],
         } # yapf: disable
 
         # Grab new tasks and write out
-        new_tasks = storage.queue_get_next(**kwargs)
+        new_tasks = storage.queue_get_next(**queue_tags)
         self.write({"meta": {"n_found": len(new_tasks), "success": True}, "data": new_tasks})
         self.logger.info("QueueManager: Served {} tasks.".format(len(new_tasks)))
 
         # Update manager logs
-        storage.manager_update(name, tag=tag, submitted=len(new_tasks))
+        storage.manager_update(name, submitted=len(new_tasks), **self.json["meta"])
 
     def post(self):
         """Posts complete tasks to the Servers queue
@@ -221,9 +226,8 @@ class QueueManagerHandler(APIHandler):
         self.logger.info("QueueManager: Aquired {} complete tasks.".format(len(self.json["data"])))
 
         # Update manager logs
-        name = self.json["meta"]["name"]
-        tag = self.json["meta"].get("tag", None)
-        storage.manager_update(name, tag=tag, completed=len(self.json["data"]))
+        name = self._get_name_from_metadata(self.json["meta"])
+        storage.manager_update(name, completed=len(self.json["data"]), **self.json["meta"])
 
     def put(self):
         """
@@ -236,7 +240,7 @@ class QueueManagerHandler(APIHandler):
         self.write({"meta": {}, "data": True})
 
         # Update manager logs
-        name = self.json["meta"]["name"]
-        storage.manager_update(name, returned=len(self.json["data"]))
+        name = self._get_name_from_metadata(self.json["meta"])
+        storage.manager_update(name, returned=len(self.json["data"]), **self.json["meta"])
         self.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(
             name, len(self.json["data"])))

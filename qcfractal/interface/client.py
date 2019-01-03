@@ -59,12 +59,14 @@ class FractalClient(object):
         if (username is not None) or (password is not None):
             self._headers["Authorization"] = json.dumps({"username": username, "password": password})
 
+        # Try to connect and pull general data
         try:
             self.server_info = self._request("get", "information", {}).json()
         except requests.exceptions.SSLError as exc:
             error_msg = ("SSL handshake failed. This is likely caused by a failure to retrive certificates.\n"
                          "If you trust the server you are connecting to, try 'FractalClient(... verify=False)'")
             raise requests.exceptions.SSLError(error_msg)
+
         self.server_name = self.server_info["name"]
 
     def __str__(self):
