@@ -179,6 +179,28 @@ def active_loop(loop):
         except:
             pass
 
+@contextmanager
+def fireworks_quiet_lpad():
+    """
+    Returns a (relatively) quiet launchpad instance
+    """
+
+    # Build Fireworks test server and manager
+    fireworks = pytest.importorskip("fireworks")
+    logging.basicConfig(level=logging.CRITICAL, filename="/tmp/fireworks_logfile.txt")
+
+    name = "fw_testing_quiet"
+    lpad = fireworks.LaunchPad(name="fw_testing_quiet", logdir="/tmp/", strm_lvl="CRITICAL")
+    lpad.reset(None, require_password=False)
+
+    try:
+        yield lpad
+
+    finally:
+        # Cleanup and reset
+        lpad.reset(None, require_password=False)
+        logging.basicConfig(level=None, filename=None)
+
 
 def terminate_process(proc):
     if proc.poll() is None:
@@ -376,16 +398,15 @@ def fireworks_server_fixture(request):
     storage_name = "qcf_fireworks_server_test"
 
     with pristine_loop() as loop:
+        with active_loop(loop):
 
-        # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(
-            port=find_open_port(), storage_project_name=storage_name, loop=loop, queue_socket=lpad, ssl_options=False)
+            # Build server, manually handle IOLoop (no start/stop needed)
+            server = FractalServer(
+                port=find_open_port(), storage_project_name=storage_name, loop=loop, queue_socket=lpad, ssl_options=False)
 
-        # Clean and re-init the databse
-        reset_server_database(server)
+            # Clean and re-init the databse
+            reset_server_database(server)
 
-        # Yield the server instance
-        with active_loop(loop) as act:
             yield server
 
     lpad.reset(None, require_password=False)

@@ -74,7 +74,6 @@ class QueueManager:
         self._name = self.name_data["cluster"] + "-" + self.name_data["hostname"] + "-" + self.name_data["uuid"]
 
         self.client = client
-        print(client.server_information())
         self.queue_adapter = build_queue_adapter(queue_client, logger=self.logger)
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag

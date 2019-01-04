@@ -46,7 +46,10 @@ def torsiondrive_fixture(dask_server_fixture):
         },
     }
 
-    def spin_up_test(grid_spacing=default_grid_spacing, **keyword_augments):
+    def spin_up_test(grid_spacing=None, **keyword_augments):
+        if grid_spacing is None:
+            grid_spacing = default_grid_spacing
+
         instance_options = copy.deepcopy(torsiondrive_options)
         instance_options["torsiondrive_meta"]["grid_spacing"] = [grid_spacing]
 
@@ -64,6 +67,7 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
     """"Tests torsiondrive pathway and checks the result result"""
 
     spin_up_test, client = torsiondrive_fixture
+    print(client)
 
     ret = spin_up_test()
     compute_key = ret["submitted"][0]

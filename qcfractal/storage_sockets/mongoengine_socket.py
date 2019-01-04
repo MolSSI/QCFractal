@@ -1341,7 +1341,6 @@ class MongoengineSocket:
             if value in kwargs:
                 upd["$set"][value] = kwargs[value]
 
-        print(upd)
         r = self._tables["queue_managers"].update_one({"name": name}, upd, upsert=True)
         return r.matched_count == 1
 

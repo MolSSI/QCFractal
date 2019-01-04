@@ -5,6 +5,7 @@ The FractalServer class
 import asyncio
 import datetime
 import logging
+import json
 import ssl
 import threading
 import traceback
@@ -196,17 +197,6 @@ class FractalServer:
             (r"/queue_manager", queue.QueueManagerHandler, self.objects),
         ]
 
-        # Queue manager if direct build
-        if queue_socket is not None:
-
-            if security == "local":
-                raise ValueError("Cannot yet use local security with a internal QueueManager")
-
-            # Add the socket to passed args
-            client = interface.FractalClient(self._address, verify=self.client_verify)
-            self.objects["queue_manager"] = queue.QueueManager(
-                client, queue_socket, loop=loop, logger=self.logger, cluster="FractalServer")
-
         # Build the app
         app_settings = {
             "compress_response": True,
@@ -229,6 +219,17 @@ class FractalServer:
         self.logger.info("FractalServer successfully initialized at {}".format(self._address))
         self.loop_active = False
 
+        # Queue manager if direct build
+        if queue_socket is not None:
+
+            if security == "local":
+                raise ValueError("Cannot yet use local security with a internal QueueManager")
+
+            # Add the socket to passed args
+            client = interface.FractalClient(self._address, verify=self.client_verify)
+            self.objects["queue_manager"] = queue.QueueManager(
+                client, queue_socket, loop=loop, logger=self.logger, cluster="FractalServer")
+
     def start(self):
         """
         Starts up all IOLoops and processes
@@ -249,7 +250,7 @@ class FractalServer:
         self.periodic["update_services"] = nanny_services
 
         # Add Manager heartbeats
-        heartbeats = tornado.ioloop.PeriodicCallback(self.manager_heartbeats, self.heartbeat_frequency * 1000)
+        heartbeats = tornado.ioloop.PeriodicCallback(self.check_manager_heartbeats, self.heartbeat_frequency * 1000)
         heartbeats.start()
         self.periodic["heartbeats"] = heartbeats
 
@@ -373,15 +374,20 @@ class FractalServer:
 
         return running_services
 
-    def manager_heartbeats(self):
+    def check_manager_heartbeats(self):
+        """
+        Checks the heartbeats and kills off managers that have not been heard from
+        """
 
         dt = datetime.datetime.utcnow() - datetime.timedelta(seconds=self.heartbeat_frequency)
-        print()
-        print(dt)
-
-        print(self.storage.get_managers({})["data"])
         ret = self.storage.get_managers({"modifed_on": {"$lt": dt}, "status": "ACTIVE"}, projection={"name": True})
-        print(ret["data"])
+
+        for blob in ret["data"]:
+            nshutdown = self.storage.queue_reset_status(blob["name"])
+            self.storage.manager_update(blob["name"], returned=nshutdown, status="INACTIVE")
+
+            self.logger.info("Hearbeat missing from {}. Shutting down, recycling {} incomplete tasks.".format(
+                blob["name"], nshutdown))
 
     def list_managers(self, status=None, name=None):
         """
