@@ -74,7 +74,7 @@ class QueueManager:
         self.name = self.name_data["cluster"] + "-" + self.name_data["hostname"] + "-" + self.name_data["uuid"]
 
         self.client = client
-        self.heartbeat_interval = client.server_information()["heartbeat_interval"]
+        self.heatbeat_frequency = client.server_information()["heatbeat_frequency"]
         self.queue_adapter = build_queue_adapter(queue_client, logger=self.logger)
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag
@@ -114,6 +114,10 @@ class QueueManager:
         self.periodic["update"] = update
 
         # Add heartbeat
+        heatbeat_frequency = int(0.8 * 1000 * self.heatbeat_frequency) # Beat at 80% of cutoff time
+        heartbeat = tornado.ioloop.PeriodicCallback(self.heartbeat, heatbeat_frequency)
+        heartbeat.start()
+        self.periodic["heartbeat"] = heartbeat
 
         # Soft quit with a keyboard interupt
         try:
@@ -145,6 +149,14 @@ class QueueManager:
 
         self.loop.close(all_fds=True)
         self.logger.info("QueueManager stopping gracefully. Stopped IOLoop.\n")
+
+    def heartbeat(self):
+        payload = self._payload_template()
+        payload["data"]["operation"] = "heartbeat"
+        r = self.client._request("put", "queue_manager", payload, noraise=True)
+        if r.status_code != 200:
+            # TODO something as we didnt successfully add the data
+            self.logger.warning("Heartbeat was not successful.")
 
     def shutdown(self):
 

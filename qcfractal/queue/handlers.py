@@ -231,6 +231,7 @@ class QueueManagerHandler(APIHandler):
 
     def put(self):
         """
+        Various manager manipulation operations
         """
         self.authenticate("queue")
 
@@ -239,13 +240,22 @@ class QueueManagerHandler(APIHandler):
         name = self._get_name_from_metadata(self.json["meta"])
         if self.json["data"]["operation"] == "shutdown":
             nshutdown = storage.queue_reset_status(name)
+            storage.manager_update(name, returned=nshutdown, **self.json["meta"])
+
+            self.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(
+                name, nshutdown))
+
             ret = {"nshutdown": nshutdown}
+
+        elif self.json["data"]["operation"] == "heartbeat":
+            name = self._get_name_from_metadata(self.json["meta"])
+            storage.manager_update(name, **self.json["meta"])
+            self.logger.info("QueueManager: Heartbeat of manager {} detected.".format(name))
+
+            ret = True
+
         else:
             raise KeyError("Unknown operation")
         self.write({"meta": {}, "data": ret})
 
         # Update manager logs
-        name = self._get_name_from_metadata(self.json["meta"])
-        storage.manager_update(name, returned=len(self.json["data"]), **self.json["meta"])
-        self.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(
-            name, len(self.json["data"])))

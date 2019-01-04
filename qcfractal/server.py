@@ -93,7 +93,7 @@ class FractalServer:
             # Queue options
             queue_socket=None,
             max_active_services=10,
-            heartbeat_interval=300):
+            heatbeat_frequency=300):
 
         # Save local options
         self.name = name
@@ -104,7 +104,7 @@ class FractalServer:
             self._address = "https://localhost:" + str(self.port) + "/"
 
         self.max_active_services = max_active_services
-        self.heartbeat_interval = heartbeat_interval
+        self.heatbeat_frequency = heatbeat_frequency
 
         # Setup logging.
         if logfile_prefix is not None:
@@ -177,7 +177,7 @@ class FractalServer:
         }
 
         # Public information
-        self.objects["public_information"] = {"name": self.name, "heartbeat_interval": self.heartbeat_interval}
+        self.objects["public_information"] = {"name": self.name, "heatbeat_frequency": self.heatbeat_frequency}
 
         endpoints = [
 
