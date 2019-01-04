@@ -63,9 +63,13 @@ class FractalClient(object):
         try:
             self.server_info = self._request("get", "information", {}).json()
         except requests.exceptions.SSLError as exc:
-            error_msg = ("SSL handshake failed. This is likely caused by a failure to retrive certificates.\n"
+            error_msg = ("\n\nSSL handshake failed. This is likely caused by a failure to retrive 3rd party SSL certificates.\n"
                          "If you trust the server you are connecting to, try 'FractalClient(... verify=False)'")
             raise requests.exceptions.SSLError(error_msg)
+        except requests.exceptions.ConnectionError as exc:
+            error_msg = (
+                "\n\nCould not connect to server {}, please check the address and try again.".format(self.address))
+            raise requests.exceptions.ConnectionError(error_msg)
 
         self.server_name = self.server_info["name"]
 

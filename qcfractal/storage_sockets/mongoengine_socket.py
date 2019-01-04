@@ -1317,33 +1317,32 @@ class MongoengineSocket:
     def manager_update(self, name, **kwargs):
         dt = datetime.datetime.utcnow()
 
-        r = self._tables["queue_managers"].update_one(
-            {
-                "name": name
+        upd = {
+            # Provide base data
+            "$setOnInsert": {
+                "name": name,
+                "created_on": dt,
             },
-            {
-                # Provide base data
-                "$setOnInsert": {
-                    "name": name,
-                    "cluster": kwargs.get("cluster", None),
-                    "hostname": kwargs.get("hostname", None),
-                    "uuid": kwargs.get("uuid", None),
-                    "tag": kwargs.get("tag", None),
-                    "created_on": dt,
-                },
-                # Set the date
-                "$set": {
-                    "modifed_on": dt,
-                },
-                # Incremement relevant data
-                "$inc": {
-                    "submitted": kwargs.get("submitted", 0),
-                    "completed": kwargs.get("completed", 0),
-                    "returned": kwargs.get("returned", 0),
-                    "failures": kwargs.get("failures", 0)
-                }
+            # Set the date
+            "$set": {
+                "modifed_on": dt,
             },
-            upsert=True)
+            # Incremement relevant data
+            "$inc": {
+                "submitted": kwargs.pop("submitted", 0),
+                "completed": kwargs.pop("completed", 0),
+                "returned": kwargs.pop("returned", 0),
+                "failures": kwargs.pop("failures", 0)
+            }
+        }
+
+        # Update server data
+        for value in ["cluster", "hostname", "uuid", "tag", "status"]:
+            if value in kwargs:
+                upd["$set"][value] = kwargs[value]
+
+        print(upd)
+        r = self._tables["queue_managers"].update_one({"name": name}, upd, upsert=True)
         return r.matched_count == 1
 
     def get_managers(self, query, projection=None):

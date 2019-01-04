@@ -3,6 +3,7 @@ The FractalServer class
 """
 
 import asyncio
+import datetime
 import logging
 import ssl
 import threading
@@ -93,7 +94,7 @@ class FractalServer:
             # Queue options
             queue_socket=None,
             max_active_services=10,
-            heatbeat_frequency=300):
+            heartbeat_frequency=300):
 
         # Save local options
         self.name = name
@@ -104,7 +105,7 @@ class FractalServer:
             self._address = "https://localhost:" + str(self.port) + "/"
 
         self.max_active_services = max_active_services
-        self.heatbeat_frequency = heatbeat_frequency
+        self.heartbeat_frequency = heartbeat_frequency
 
         # Setup logging.
         if logfile_prefix is not None:
@@ -177,7 +178,7 @@ class FractalServer:
         }
 
         # Public information
-        self.objects["public_information"] = {"name": self.name, "heatbeat_frequency": self.heatbeat_frequency}
+        self.objects["public_information"] = {"name": self.name, "heartbeat_frequency": self.heartbeat_frequency}
 
         endpoints = [
 
@@ -246,6 +247,11 @@ class FractalServer:
         nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, 2000)
         nanny_services.start()
         self.periodic["update_services"] = nanny_services
+
+        # Add Manager heartbeats
+        heartbeats = tornado.ioloop.PeriodicCallback(self.manager_heartbeats, self.heartbeat_frequency * 1000)
+        heartbeats.start()
+        self.periodic["heartbeats"] = heartbeats
 
         # Soft quit with a keyboard interrupt
         try:
@@ -366,6 +372,28 @@ class FractalServer:
         self.storage.del_services(complete_ids)
 
         return running_services
+
+    def manager_heartbeats(self):
+
+        dt = datetime.datetime.utcnow() - datetime.timedelta(seconds=self.heartbeat_frequency)
+        print()
+        print(dt)
+
+        print(self.storage.get_managers({})["data"])
+        ret = self.storage.get_managers({"modifed_on": {"$lt": dt}, "status": "ACTIVE"}, projection={"name": True})
+        print(ret["data"])
+
+    def list_managers(self, status=None, name=None):
+        """
+        Provides a list of managers associated with the server both active and inactive
+        """
+        query = {}
+        if status:
+            query["status"] = status.upper()
+        if name:
+            query["name"] = name
+
+        return self.storage.get_managers(query)["data"]
 
 ### Functions only available if using a local queue_adapter
 

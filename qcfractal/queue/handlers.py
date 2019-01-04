@@ -236,11 +236,17 @@ class QueueManagerHandler(APIHandler):
         self.authenticate("queue")
 
         storage = self.objects["storage_socket"]
+        ret = True
 
         name = self._get_name_from_metadata(self.json["meta"])
-        if self.json["data"]["operation"] == "shutdown":
+        if self.json["data"]["operation"] == "startup":
+            name = self._get_name_from_metadata(self.json["meta"])
+            storage.manager_update(name, status="ACTIVE", **self.json["meta"])
+            self.logger.info("QueueManager: New active manager {} detected.".format(name))
+
+        elif self.json["data"]["operation"] == "shutdown":
             nshutdown = storage.queue_reset_status(name)
-            storage.manager_update(name, returned=nshutdown, **self.json["meta"])
+            storage.manager_update(name, returned=nshutdown, status="INACTIVE", **self.json["meta"])
 
             self.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(
                 name, nshutdown))
@@ -249,13 +255,12 @@ class QueueManagerHandler(APIHandler):
 
         elif self.json["data"]["operation"] == "heartbeat":
             name = self._get_name_from_metadata(self.json["meta"])
-            storage.manager_update(name, **self.json["meta"])
+            storage.manager_update(name, status="ACTIVE", **self.json["meta"])
             self.logger.info("QueueManager: Heartbeat of manager {} detected.".format(name))
 
-            ret = True
-
         else:
-            raise KeyError("Unknown operation")
+            msg = "Operation '{}' not understood.".format(self.json["data"]["operation"])
+            raise tornado.web.HTTPError(status_code=400, reason=msg)
         self.write({"meta": {}, "data": ret})
 
         # Update manager logs
