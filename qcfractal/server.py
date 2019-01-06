@@ -5,7 +5,6 @@ The FractalServer class
 import asyncio
 import datetime
 import logging
-import json
 import ssl
 import threading
 import traceback
@@ -34,7 +33,6 @@ def _build_ssl():
 
     import sys
     import socket
-    import datetime
     import ipaddress
     import random
 

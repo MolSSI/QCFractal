@@ -100,7 +100,7 @@ class QueueManager:
         # Tell the server we are up and running
         payload = self._payload_template()
         payload["data"]["operation"] = "startup"
-        r = self.client._request("put", "queue_manager", payload)
+        self.client._request("put", "queue_manager", payload)
 
         self.logger.info("QueueManager '{}' successfully initialized.".format(self.name()))
         self.logger.info("    QCFractal server name:     {}".format(self.server_name))

@@ -154,7 +154,7 @@ def pristine_loop():
     finally:
         try:
             loop.close(all_fds=True)
-        except (ValueError, KeyError):
+        except (ValueError, KeyError, RuntimeError):
             pass
         IOLoop.clear_instance()
         IOLoop.clear_current()
@@ -358,17 +358,15 @@ def dask_server_fixture(request):
 
     with pristine_loop() as loop:
 
+        # Client auto builds and shutsdown a LocalCluster
         # LocalCluster will start the loop in a background thread for us
-        with dd.LocalCluster(n_workers=1, threads_per_worker=1, loop=loop) as cluster:
-
-            # Build a Dask Client
-            client = dd.Client(cluster)
+        with dd.Client(n_workers=1, threads_per_worker=1, loop=loop) as client:
 
             # Build server, manually handle IOLoop (no start/stop needed)
             server = FractalServer(
                 port=find_open_port(),
                 storage_project_name=storage_name,
-                loop=cluster.loop,
+                loop=client.loop,
                 queue_socket=client,
                 ssl_options=False)
 
@@ -377,11 +375,6 @@ def dask_server_fixture(request):
 
             # Yield the server instance
             yield server
-
-            client.close()
-
-        cluster.scale_down(cluster.workers)
-        cluster.close()
 
 
 @pytest.fixture(scope="module")

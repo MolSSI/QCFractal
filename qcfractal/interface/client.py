@@ -60,16 +60,7 @@ class FractalClient(object):
             self._headers["Authorization"] = json.dumps({"username": username, "password": password})
 
         # Try to connect and pull general data
-        try:
-            self.server_info = self._request("get", "information", {}).json()
-        except requests.exceptions.SSLError as exc:
-            error_msg = ("\n\nSSL handshake failed. This is likely caused by a failure to retrive 3rd party SSL certificates.\n"
-                         "If you trust the server you are connecting to, try 'FractalClient(... verify=False)'")
-            raise requests.exceptions.SSLError(error_msg)
-        except requests.exceptions.ConnectionError as exc:
-            error_msg = (
-                "\n\nCould not connect to server {}, please check the address and try again.".format(self.address))
-            raise requests.exceptions.ConnectionError(error_msg)
+        self.server_info = self._request("get", "information", {}).json()
 
         self.server_name = self.server_info["name"]
 
@@ -88,14 +79,24 @@ class FractalClient(object):
     def _request(self, method, service, payload, noraise=False):
 
         addr = self.address + service
-        if method == "get":
-            r = requests.get(addr, json=payload, headers=self._headers, verify=self._verify)
-        elif method == "post":
-            r = requests.post(addr, json=payload, headers=self._headers, verify=self._verify)
-        elif method == "put":
-            r = requests.put(addr, json=payload, headers=self._headers, verify=self._verify)
-        else:
-            raise KeyError("Method not understood: '{}'".format(method))
+        try:
+            if method == "get":
+                r = requests.get(addr, json=payload, headers=self._headers, verify=self._verify)
+            elif method == "post":
+                r = requests.post(addr, json=payload, headers=self._headers, verify=self._verify)
+            elif method == "put":
+                r = requests.put(addr, json=payload, headers=self._headers, verify=self._verify)
+            else:
+                raise KeyError("Method not understood: '{}'".format(method))
+        except requests.exceptions.SSLError as exc:
+            error_msg = (
+                "\n\nSSL handshake failed. This is likely caused by a failure to retrive 3rd party SSL certificates.\n"
+                "If you trust the server you are connecting to, try 'FractalClient(... verify=False)'")
+            raise requests.exceptions.SSLError(error_msg)
+        except requests.exceptions.ConnectionError as exc:
+            error_msg = (
+                "\n\nCould not connect to server {}, please check the address and try again.".format(self.address))
+            raise requests.exceptions.ConnectionError(error_msg)
 
         if (r.status_code != 200) and (not noraise):
             raise requests.exceptions.HTTPError("Server communication failure. Reason: {}".format(r.reason))
