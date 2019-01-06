@@ -235,8 +235,6 @@ class FractalServer:
         Starts up all IOLoops and processes
         """
 
-        self.logger.info("FractalServer successfully started. Starting IOLoop.\n")
-
         # If we have a queue socket start up the nanny
         if "queue_manager" in self.objects:
             # Add canonical queue callback
@@ -257,10 +255,11 @@ class FractalServer:
         # Soft quit with a keyboard interrupt
         try:
             self.loop_active = True
-            if not asyncio.get_event_loop().is_running():  # Only works on Py3
-                self.loop.start()
+            self.loop.start()
         except KeyboardInterrupt:
             self.stop()
+
+        self.logger.info("FractalServer successfully started.\n")
 
     def stop(self):
         """

@@ -161,36 +161,41 @@ def pristine_loop():
 
 
 @contextmanager
-def active_loop(loop):
-    # Add the IOloop to a thread daemon
-    thread = threading.Thread(target=loop.start, name="test IOLoop")
-    thread.daemon = True
-    thread.start()
-    loop_started = threading.Event()
-    loop.add_callback(loop_started.set)
-    loop_started.wait()
+def loop_in_thread():
+    with pristine_loop() as loop:
+        # Add the IOloop to a thread daemon
+        thread = threading.Thread(target=loop.start, name="test IOLoop")
+        thread.daemon = True
+        thread.start()
+        loop_started = threading.Event()
+        loop.add_callback(loop_started.set)
+        loop_started.wait()
 
-    try:
-        yield loop
-    finally:
         try:
-            loop.add_callback(loop.stop)
-            thread.join(timeout=5)
-        except:
-            pass
+            yield loop
+        finally:
+            try:
+                loop.add_callback(loop.stop)
+                thread.join(timeout=5)
+            except:
+                pass
+
 
 @contextmanager
-def fireworks_quiet_lpad():
+def fireworks_quiet_lpad(name=None):
     """
     Returns a (relatively) quiet launchpad instance
     """
+
+    if name is None:
+        name = "fw_testing_quiet"
 
     # Build Fireworks test server and manager
     fireworks = pytest.importorskip("fireworks")
     logging.basicConfig(level=logging.CRITICAL, filename="/tmp/fireworks_logfile.txt")
 
     name = "fw_testing_quiet"
-    lpad = fireworks.LaunchPad(name="fw_testing_quiet", logdir="/tmp/", strm_lvl="CRITICAL")
+    lpad = fireworks.LaunchPad(name=name, logdir="/tmp/", strm_lvl="CRITICAL")
     lpad.reset(None, require_password=False)
 
     try:
@@ -327,7 +332,7 @@ def test_server(request):
 
     storage_name = "qcf_local_server_test"
 
-    with pristine_loop() as loop:
+    with loop_in_thread() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = FractalServer(port=find_open_port(), storage_project_name=storage_name, loop=loop, ssl_options=False)
@@ -335,8 +340,7 @@ def test_server(request):
         # Clean and re-init the database
         reset_server_database(server)
 
-        with active_loop(loop) as act:
-            yield server
+        yield server
 
 
 @pytest.fixture(scope="module")
@@ -397,17 +401,16 @@ def fireworks_server_fixture(request):
 
     storage_name = "qcf_fireworks_server_test"
 
-    with pristine_loop() as loop:
-        with active_loop(loop):
+    with loop_in_thread() as loop:
 
-            # Build server, manually handle IOLoop (no start/stop needed)
-            server = FractalServer(
-                port=find_open_port(), storage_project_name=storage_name, loop=loop, queue_socket=lpad, ssl_options=False)
+        # Build server, manually handle IOLoop (no start/stop needed)
+        server = FractalServer(
+            port=find_open_port(), storage_project_name=storage_name, loop=loop, queue_socket=lpad, ssl_options=False)
 
-            # Clean and re-init the databse
-            reset_server_database(server)
+        # Clean and re-init the databse
+        reset_server_database(server)
 
-            yield server
+        yield server
 
     lpad.reset(None, require_password=False)
     logging.basicConfig(level=None, filename=None)
@@ -428,7 +431,7 @@ def parsl_server_fixture(request):
 
     storage_name = "qcf_parsl_server_test"
 
-    with pristine_loop() as loop:
+    with loop_in_thread() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = FractalServer(
@@ -442,8 +445,7 @@ def parsl_server_fixture(request):
         reset_server_database(server)
 
         # Yield the server instance
-        with active_loop(loop) as act:
-            yield server
+        yield server
 
     dataflow.atexit_cleanup()
 

@@ -37,7 +37,7 @@ def sec_server(request):
 
     storage_name = "qcf_local_server_auth_test"
 
-    with testing.pristine_loop() as loop:
+    with testing.loop_in_thread() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = qcfractal.FractalServer(
@@ -51,8 +51,7 @@ def sec_server(request):
         for k, v in _users.items():
             assert server.storage.add_user(k, _users[k]["pw"], _users[k]["perm"])
 
-        with testing.active_loop(loop) as act:
-            yield server
+        yield server
 
 
 ### Tests the compute queue stack

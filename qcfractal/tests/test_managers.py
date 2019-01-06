@@ -16,18 +16,9 @@ def compute_manager_fixture(test_server):
 
     client = portal.FractalClient(test_server)
 
-    # Build Fireworks test server and manager
-    fireworks = pytest.importorskip("fireworks")
-    logging.basicConfig(level=logging.CRITICAL, filename="/tmp/fireworks_logfile.txt")
+    with testing.fireworks_quiet_lpad() as lpad:
 
-    lpad = fireworks.LaunchPad(name="fw_testing_manager", logdir="/tmp/", strm_lvl="CRITICAL")
-    lpad.reset(None, require_password=False)
-
-    yield client, test_server, lpad
-
-    # Cleanup and reset
-    lpad.reset(None, require_password=False)
-    logging.basicConfig(level=None, filename=None)
+        yield client, test_server, lpad
 
 
 @testing.using_rdkit
@@ -114,31 +105,30 @@ def test_queue_manager_heartbeat():
     """
 
     with testing.fireworks_quiet_lpad() as lpad:
-        with testing.pristine_loop() as loop:
-            with testing.active_loop(loop):
+        with testing.loop_in_thread() as loop:
 
-                # Build server, manually handle IOLoop (no start/stop needed)
-                server = FractalServer(
-                    port=testing.find_open_port(),
-                    storage_project_name="heartbeat_checker",
-                    loop=loop,
-                    ssl_options=False,
-                    heartbeat_frequency=0.1)
+            # Build server, manually handle IOLoop (no start/stop needed)
+            server = FractalServer(
+                port=testing.find_open_port(),
+                storage_project_name="heartbeat_checker",
+                loop=loop,
+                ssl_options=False,
+                heartbeat_frequency=0.1)
 
-                # Clean and re-init the database
-                testing.reset_server_database(server)
+            # Clean and re-init the database
+            testing.reset_server_database(server)
 
-                client = portal.FractalClient(server)
-                manager = queue.QueueManager(client, lpad)
+            client = portal.FractalClient(server)
+            manager = queue.QueueManager(client, lpad)
 
-                sman = server.list_managers(name=manager.name())
-                assert len(sman) == 1
-                assert sman[0]["status"] == "ACTIVE"
+            sman = server.list_managers(name=manager.name())
+            assert len(sman) == 1
+            assert sman[0]["status"] == "ACTIVE"
 
-                # Make sure interval exceeds heartbeat time
-                time.sleep(1)
-                server.check_manager_heartbeats()
+            # Make sure interval exceeds heartbeat time
+            time.sleep(1)
+            server.check_manager_heartbeats()
 
-                sman = server.list_managers(name=manager.name())
-                assert len(sman) == 1
-                assert sman[0]["status"] == "INACTIVE"
+            sman = server.list_managers(name=manager.name())
+            assert len(sman) == 1
+            assert sman[0]["status"] == "INACTIVE"
