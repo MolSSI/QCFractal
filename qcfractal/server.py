@@ -220,15 +220,29 @@ class FractalServer:
         self.loop_active = False
 
         # Queue manager if direct build
-        if queue_socket is not None:
-
+        self.queue_socket = queue_socket
+        if (self.queue_socket is not None):
             if security == "local":
                 raise ValueError("Cannot yet use local security with a internal QueueManager")
 
-            # Add the socket to passed args
-            client = interface.FractalClient(self._address, verify=self.client_verify)
-            self.objects["queue_manager"] = queue.QueueManager(
-                client, queue_socket, loop=loop, logger=self.logger, cluster="FractalServer")
+            # Build the queue manager
+            self._run_in_thread(self._build_manager)
+
+    def _run_in_thread(self, func, timeout=5):
+        thread = threading.Thread(target=func, name="QCFractal Background")
+        thread.daemon = True
+        thread.start()
+        self.loop.call_later(timeout, thread.join)
+
+    def _build_manager(self):
+        """
+        Async build the manager so it can talk to itself
+        """
+
+        # Add the socket to passed args
+        client = interface.FractalClient(self._address, verify=self.client_verify)
+        self.objects["queue_manager"] = queue.QueueManager(
+            client, self.queue_socket, loop=self.loop, logger=self.logger, cluster="FractalServer")
 
     def start(self):
         """
@@ -236,7 +250,8 @@ class FractalServer:
         """
 
         # If we have a queue socket start up the nanny
-        if "queue_manager" in self.objects:
+        if self.queue_socket is not None:
+
             # Add canonical queue callback
             manager = tornado.ioloop.PeriodicCallback(self.update_tasks, 2000)
             manager.start()
@@ -253,13 +268,12 @@ class FractalServer:
         self.periodic["heartbeats"] = heartbeats
 
         # Soft quit with a keyboard interrupt
-        try:
-            self.loop_active = True
-            self.loop.start()
-        except KeyboardInterrupt:
-            self.stop()
-
+        # try:
         self.logger.info("FractalServer successfully started.\n")
+        self.loop_active = True
+        self.loop.start()
+        # except KeyboardInterrupt:
+        #     self.stop()
 
     def stop(self):
         """
@@ -267,13 +281,12 @@ class FractalServer:
         """
 
         # Shut down queue manager
-        if "queue_manager" in self.objects:
+        if self.queue_socket is not None:
             if self.loop_active:
-                # Drop this in a thread so that we are not blocking eachother
-                thread = threading.Thread(target=self.objects["queue_manager"].shutdown, name="QueueManager Shutdown")
-                thread.daemon = True
-                thread.start()
-                self.loop.call_later(5, thread.join)
+                # This currently doesn't work, we need to rethink
+                # how the background thread works
+                pass
+                # self._run_in_thread(self.objects["queue_manager"].shutdown)
             else:
                 self.objects["queue_manager"].shutdown()
 
@@ -403,7 +416,7 @@ class FractalServer:
 ### Functions only available if using a local queue_adapter
 
     def _check_manager(self, func_name):
-        if "queue_manager" not in self.objects:
+        if self.queue_socket is None:
             raise AttributeError(
                 "{} is only available if the server was initialized with a queue manager.".format(func_name))
 
@@ -420,10 +433,7 @@ class FractalServer:
 
         if self.loop_active:
             # Drop this in a thread so that we are not blocking each other
-            thread = threading.Thread(target=self.objects["queue_manager"].update, name="QueueManager Update")
-            thread.daemon = True
-            thread.start()
-            self.loop.call_later(5, thread.join)
+            self._run_in_thread(self.objects["queue_manager"].update)
         else:
             self.objects["queue_manager"].update()
 

@@ -137,6 +137,9 @@ def main(args=None):
     if args["rapidfire"]:
         manager.await_results()
     else:
+
+        cli_utils.install_signal_handlers(manager.loop, manager.stop)
+
         # Blocks until keyboard interupt
         manager.start()
 

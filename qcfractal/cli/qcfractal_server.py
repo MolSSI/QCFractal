@@ -118,6 +118,9 @@ def main(args=None):
     for cb in exit_callbacks:
         server.add_exit_callback(cb[0], *cb[1], **cb[2])
 
+    # Register closing
+    cli_utils.install_signal_handlers(server.loop, server.stop)
+
     # Blocks until keyboard interupt
     server.start()
 

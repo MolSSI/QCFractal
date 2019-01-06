@@ -137,12 +137,8 @@ class QueueManager:
         self.periodic["heartbeat"] = heartbeat
 
         # Soft quit with a keyboard interupt
-        try:
-            self.running = True
-            if not asyncio.get_event_loop().is_running():  # Only works on Py3
-                self.loop.start()
-        except KeyboardInterrupt:
-            self.stop()
+        self.running = True
+        self.loop.start()
 
     def stop(self):
         """
