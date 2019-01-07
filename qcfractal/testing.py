@@ -343,8 +343,7 @@ def test_server(request):
         yield server
 
 
-@pytest.fixture(scope="module")
-def dask_server_fixture(request):
+def _dask_server_fixture(request):
     """
     Builds a server instance with the event loop running in a thread.
     """
@@ -378,7 +377,11 @@ def dask_server_fixture(request):
 
 
 @pytest.fixture(scope="module")
-def fireworks_server_fixture(request):
+def dask_server_fixture(request):
+    yield from _dask_server_fixture(request)
+
+
+def _fireworks_server_fixture(request):
     """
     Builds a server instance with the event loop running in a thread.
     """
@@ -410,7 +413,11 @@ def fireworks_server_fixture(request):
 
 
 @pytest.fixture(scope="module")
-def parsl_server_fixture(request):
+def fireworks_server_fixture(request):
+    yield from _fireworks_server_fixture(request)
+
+
+def _parsl_server_fixture(request):
     """
     Builds a server instance with the event loop running in a thread.
     """
@@ -419,7 +426,7 @@ def parsl_server_fixture(request):
     check_active_mongo_server()
 
     parsl = pytest.importorskip("parsl")
-    from parsl.configs.local_ipp import config
+    from parsl.configs.local_threads_no_cache import config
     dataflow = parsl.dataflow.dflow.DataFlowKernel(config)
 
     storage_name = "qcf_parsl_server_test"
@@ -443,14 +450,19 @@ def parsl_server_fixture(request):
     dataflow.atexit_cleanup()
 
 
+@pytest.fixture(scope="module")
+def parsl_server_fixture(request):
+    yield from _dask_server_fixture(request)
+
+
 @pytest.fixture(scope="module", params=["dask", "fireworks", "parsl"])
 def fractal_compute_server(request):
     if request.param == "dask":
-        yield from dask_server_fixture(request)
+        yield from _dask_server_fixture(request)
     elif request.param == "fireworks":
-        yield from fireworks_server_fixture(request)
+        yield from _fireworks_server_fixture(request)
     elif request.param == "parsl":
-        yield from parsl_server_fixture(request)
+        yield from _parsl_server_fixture(request)
     else:
         raise TypeError("fractal_compute_server: internal parametrize error")
 
