@@ -18,8 +18,9 @@ class FractalClient(object):
 
         Parameters
         ----------
-        address : str
-            The IP and port of the FractalServer instance ("192.168.1.1:8888")
+        address : str or FractalServer
+            The IP and port of the FractalServer instance ("192.168.1.1:8888") or
+            a FractalServer instance
         username : None, optional
             The username to authenticate with.
         password : None, optional
@@ -29,6 +30,11 @@ class FractalClient(object):
             FractalServer was not provided a SSL certificate and defaults back to self-signed
             SSL keys.
         """
+
+        if hasattr(address, "get_address"):
+            # We are a FractalServer-like object
+            verify = address.client_verify
+            address = address.get_address()
 
         if "http" not in address:
             address = "https://" + address
@@ -53,6 +59,11 @@ class FractalClient(object):
         if (username is not None) or (password is not None):
             self._headers["Authorization"] = json.dumps({"username": username, "password": password})
 
+        # Try to connect and pull general data
+        self.server_info = self._request("get", "information", {}).json()
+
+        self.server_name = self.server_info["name"]
+
     def __str__(self):
         """A short short representation of the current FractalClient.
 
@@ -61,22 +72,31 @@ class FractalClient(object):
         str
             The desired representation.
         """
-        ret = "FractalClient("
-        ret += "server='{}', ".format(self.address)
-        ret += "username='{}')".format(self.username)
+        ret = "FractalClient(server_name='{}', address='{}', username='{}')".format(
+            self.server_name, self.address, self.username)
         return ret
 
     def _request(self, method, service, payload, noraise=False):
 
         addr = self.address + service
-        if method == "get":
-            r = requests.get(addr, json=payload, headers=self._headers, verify=self._verify)
-        elif method == "post":
-            r = requests.post(addr, json=payload, headers=self._headers, verify=self._verify)
-        elif method == "put":
-            r = requests.put(addr, json=payload, headers=self._headers, verify=self._verify)
-        else:
-            raise KeyError("Method not understood: {}".format(method))
+        try:
+            if method == "get":
+                r = requests.get(addr, json=payload, headers=self._headers, verify=self._verify)
+            elif method == "post":
+                r = requests.post(addr, json=payload, headers=self._headers, verify=self._verify)
+            elif method == "put":
+                r = requests.put(addr, json=payload, headers=self._headers, verify=self._verify)
+            else:
+                raise KeyError("Method not understood: '{}'".format(method))
+        except requests.exceptions.SSLError as exc:
+            error_msg = (
+                "\n\nSSL handshake failed. This is likely caused by a failure to retrive 3rd party SSL certificates.\n"
+                "If you trust the server you are connecting to, try 'FractalClient(... verify=False)'")
+            raise requests.exceptions.SSLError(error_msg)
+        except requests.exceptions.ConnectionError as exc:
+            error_msg = (
+                "\n\nCould not connect to server {}, please check the address and try again.".format(self.address))
+            raise requests.exceptions.ConnectionError(error_msg)
 
         if (r.status_code != 200) and (not noraise):
             raise requests.exceptions.HTTPError("Server communication failure. Reason: {}".format(r.reason))
@@ -135,6 +155,9 @@ class FractalClient(object):
         verify = data.get("verify", True)
 
         return cls(address, username=username, password=password, verify=verify)
+
+    def server_information(self):
+        return json.loads(json.dumps(self.server_info))
 
     ### Molecule section
 

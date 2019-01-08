@@ -5,6 +5,7 @@ Utilities for CLI programs
 import copy
 import importlib
 import json
+import signal
 
 import yaml
 
@@ -65,3 +66,28 @@ def argparse_config_merge(parser, parsed_options, config_options, parser_default
             config_options[k] = v
 
     return config_options
+
+
+def install_signal_handlers(loop, cleanup):
+    """
+    Install cleanup handlers to shutdown on:
+     - Keyboard Interupt (SIGINT)
+     - Shutdown kill/pkill (SIGTERM)
+    """
+
+    old_handlers = {}
+
+    def handle_signal(sig, frame):
+        async def cleanup_and_stop():
+            try:
+                cleanup()
+            finally:
+                loop.stop()
+
+        loop.add_callback_from_signal(cleanup_and_stop)
+
+        # Add old handlers back in so we do not cleanup twice
+        signal.signal(sig, old_handlers[sig])
+
+    for sig in [signal.SIGINT, signal.SIGTERM]:
+        old_handlers[sig] = signal.signal(sig, handle_signal)

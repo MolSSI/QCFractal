@@ -2,31 +2,23 @@
 Explicit tests for queue manipulation.
 """
 
+import time
 import logging
 import pytest
 
 import qcfractal.interface as portal
-from qcfractal import testing, queue
+from qcfractal import testing, queue, FractalServer
 from qcfractal.testing import test_server, reset_server_database
 
 
 @pytest.fixture(scope="module")
 def compute_manager_fixture(test_server):
 
-    client = portal.FractalClient(test_server.get_address())
+    client = portal.FractalClient(test_server)
 
-    # Build Fireworks test server and manager
-    fireworks = pytest.importorskip("fireworks")
-    logging.basicConfig(level=logging.CRITICAL, filename="/tmp/fireworks_logfile.txt")
+    with testing.fireworks_quiet_lpad() as lpad:
 
-    lpad = fireworks.LaunchPad(name="fw_testing_manager", logdir="/tmp/", strm_lvl="CRITICAL")
-    lpad.reset(None, require_password=False)
-
-    yield client, test_server, lpad
-
-    # Cleanup and reset
-    lpad.reset(None, require_password=False)
-    logging.basicConfig(level=None, filename=None)
+        yield client, test_server, lpad
 
 
 @testing.using_rdkit
@@ -95,10 +87,48 @@ def test_queue_manager_shutdown(compute_manager_fixture):
     # Pull job to manager and shutdown
     manager.update()
     assert len(manager.list_current_tasks()) == 1
-    manager.shutdown()
+    assert manager.shutdown()["nshutdown"] == 1
+
+    sman = server.list_managers(name=manager.name())
+    assert len(sman) == 1
+    assert sman[0]["status"] == "INACTIVE"
 
     # Boot new manager and await results
     manager = queue.QueueManager(client, lpad)
     manager.await_results()
     ret = client.get_results()
     assert len(ret) == 1
+
+
+def test_queue_manager_heartbeat():
+    """Tests to ensure tasks are returned to queue when the manager shuts down
+    """
+
+    with testing.fireworks_quiet_lpad() as lpad:
+        with testing.loop_in_thread() as loop:
+
+            # Build server, manually handle IOLoop (no start/stop needed)
+            server = FractalServer(
+                port=testing.find_open_port(),
+                storage_project_name="heartbeat_checker",
+                loop=loop,
+                ssl_options=False,
+                heartbeat_frequency=0.1)
+
+            # Clean and re-init the database
+            testing.reset_server_database(server)
+
+            client = portal.FractalClient(server)
+            manager = queue.QueueManager(client, lpad)
+
+            sman = server.list_managers(name=manager.name())
+            assert len(sman) == 1
+            assert sman[0]["status"] == "ACTIVE"
+
+            # Make sure interval exceeds heartbeat time
+            time.sleep(1)
+            server.check_manager_heartbeats()
+
+            sman = server.list_managers(name=manager.name())
+            assert len(sman) == 1
+            assert sman[0]["status"] == "INACTIVE"

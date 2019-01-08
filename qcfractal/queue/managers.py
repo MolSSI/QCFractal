@@ -3,6 +3,7 @@ Queue backend abstraction manager.
 """
 
 import asyncio
+import json
 import logging
 import socket
 import uuid
@@ -69,8 +70,8 @@ class QueueManager:
         else:
             self.logger = logging.getLogger('QueueManager')
 
-        self.name = {"cluster": cluster, "hostname": socket.gethostname(), "uuid": str(uuid.uuid4())}
-        self.name_str = self.name["cluster"] + "-" + self.name["hostname"] + "-" + self.name["uuid"]
+        self.name_data = {"cluster": cluster, "hostname": socket.gethostname(), "uuid": str(uuid.uuid4())}
+        self._name = self.name_data["cluster"] + "-" + self.name_data["hostname"] + "-" + self.name_data["uuid"]
 
         self.client = client
         self.queue_adapter = build_queue_adapter(queue_client, logger=self.logger)
@@ -85,10 +86,37 @@ class QueueManager:
         # Pull the current loop if we need it
         self.loop = loop or tornado.ioloop.IOLoop.current()
 
-        self.logger.info("QueueManager '{}' successfully initialized.".format(self.name_str))
-        self.logger.info("QueueManager: Queue credential username: {}".format(self.client.username))
+        # Pull server info
+        self.server_info = client.server_information()
+        self.server_name = self.server_info["name"]
+        self.heartbeat_frequency = self.server_info["heartbeat_frequency"]
+
+        # Build a meta header
+        meta_packet = self.name_data.copy()
+        meta_packet["tag"] = self.queue_tag
+        meta_packet["max_tasks"] = self.max_tasks
+        self.meta_packet = json.dumps(meta_packet)
+
+        # Tell the server we are up and running
+        payload = self._payload_template()
+        payload["data"]["operation"] = "startup"
+        self.client._request("put", "queue_manager", payload)
+
+        self.logger.info("QueueManager '{}' successfully initialized.".format(self.name()))
+        self.logger.info("    QCFractal server name:     {}".format(self.server_name))
+        self.logger.info("    Queue credential username: {}".format(self.client.username))
         self.logger.info(
-            "QueueManager: Pulling tasks from {} with tag '{}'.\n".format(self.client.address, self.queue_tag))
+            "    Pulling tasks from {} with tag '{}'.\n".format(self.client.address, self.queue_tag))
+
+    def _payload_template(self):
+        return {"meta": json.loads(self.meta_packet), "data": {}}
+
+## Accessors
+
+    def name(self):
+        return self._name
+
+## Start/stop functionality
 
     def start(self):
         """
@@ -102,13 +130,15 @@ class QueueManager:
         update.start()
         self.periodic["update"] = update
 
+        # Add heartbeat
+        heartbeat_frequency = int(0.8 * 1000 * self.heartbeat_frequency) # Beat at 80% of cutoff time
+        heartbeat = tornado.ioloop.PeriodicCallback(self.heartbeat, heartbeat_frequency)
+        heartbeat.start()
+        self.periodic["heartbeat"] = heartbeat
+
         # Soft quit with a keyboard interupt
-        try:
-            self.running = True
-            if not asyncio.get_event_loop().is_running():  # Only works on Py3
-                self.loop.start()
-        except KeyboardInterrupt:
-            self.stop()
+        self.running = True
+        self.loop.start()
 
     def stop(self):
         """
@@ -133,19 +163,30 @@ class QueueManager:
         self.loop.close(all_fds=True)
         self.logger.info("QueueManager stopping gracefully. Stopped IOLoop.\n")
 
+## Queue Manager functions
+
+    def heartbeat(self):
+        payload = self._payload_template()
+        payload["data"]["operation"] = "heartbeat"
+        r = self.client._request("put", "queue_manager", payload, noraise=True)
+        if r.status_code != 200:
+            # TODO something as we didnt successfully add the data
+            self.logger.warning("Heartbeat was not successful.")
+
     def shutdown(self):
 
-        task_ids = [x[0] for x in self.list_current_tasks()]
-        if len(task_ids) == 0:
-            return True
-
-        payload = {"meta": {"name": self.name_str, "tag": self.queue_tag, "operation": "shutdown"}, "data": task_ids}
+        payload = self._payload_template()
+        payload["data"]["operation"] = "shutdown"
         r = self.client._request("put", "queue_manager", payload, noraise=True)
         if r.status_code != 200:
             # TODO something as we didnt successfully add the data
             self.logger.warning("Shutdown was not successful. This may delay queued tasks.")
+            return -1
         else:
-            self.logger.info("Shutdown was successful, {} tasks returned to master queue.".format(len(task_ids)))
+            nshutdown = r.json()["data"]["nshutdown"]
+            self.logger.info("Shutdown was successful, {} tasks returned to master queue.".format(nshutdown))
+            return r.json()["data"]
+
 
     def add_exit_callback(self, callback, *args, **kwargs):
         """Adds additional callbacks to perform when closing down the server
@@ -169,7 +210,8 @@ class QueueManager:
         """
         results = self.queue_adapter.acquire_complete()
         if len(results):
-            payload = {"meta": {"name": self.name_str, "tag": self.queue_tag}, "data": results}
+            payload = self._payload_template()
+            payload["data"] = results
             r = self.client._request("post", "queue_manager", payload, noraise=True)
             if r.status_code != 200:
                 # TODO something as we didnt successfully add the data
@@ -183,7 +225,8 @@ class QueueManager:
             return True
 
         # Get new tasks
-        payload = {"meta": {"name": self.name_str, "tag": self.queue_tag, "limit": open_slots}, "data": {}}
+        payload = self._payload_template()
+        payload["data"]["limit"] = open_slots
         r = self.client._request("get", "queue_manager", payload, noraise=True)
         if r.status_code != 200:
             # TODO something as we didnt successfully get data

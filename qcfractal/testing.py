@@ -154,30 +154,57 @@ def pristine_loop():
     finally:
         try:
             loop.close(all_fds=True)
-        except (ValueError, KeyError):
+        except (ValueError, KeyError, RuntimeError):
             pass
         IOLoop.clear_instance()
         IOLoop.clear_current()
 
 
 @contextmanager
-def active_loop(loop):
-    # Add the IOloop to a thread daemon
-    thread = threading.Thread(target=loop.start, name="test IOLoop")
-    thread.daemon = True
-    thread.start()
-    loop_started = threading.Event()
-    loop.add_callback(loop_started.set)
-    loop_started.wait()
+def loop_in_thread():
+    with pristine_loop() as loop:
+        # Add the IOloop to a thread daemon
+        thread = threading.Thread(target=loop.start, name="test IOLoop")
+        thread.daemon = True
+        thread.start()
+        loop_started = threading.Event()
+        loop.add_callback(loop_started.set)
+        loop_started.wait()
+
+        try:
+            yield loop
+        finally:
+            try:
+                loop.add_callback(loop.stop)
+                thread.join(timeout=5)
+            except:
+                pass
+
+
+@contextmanager
+def fireworks_quiet_lpad(name=None):
+    """
+    Returns a (relatively) quiet launchpad instance
+    """
+
+    if name is None:
+        name = "fw_testing_quiet"
+
+    # Build Fireworks test server and manager
+    fireworks = pytest.importorskip("fireworks")
+    logging.basicConfig(level=logging.CRITICAL, filename="/tmp/fireworks_logfile.txt")
+
+    name = "fw_testing_quiet"
+    lpad = fireworks.LaunchPad(name=name, logdir="/tmp/", strm_lvl="CRITICAL")
+    lpad.reset(None, require_password=False)
 
     try:
-        yield loop
+        yield lpad
+
     finally:
-        try:
-            loop.add_callback(loop.stop)
-            thread.join(timeout=5)
-        except:
-            pass
+        # Cleanup and reset
+        lpad.reset(None, require_password=False)
+        logging.basicConfig(level=None, filename=None)
 
 
 def terminate_process(proc):
@@ -305,7 +332,7 @@ def test_server(request):
 
     storage_name = "qcf_local_server_test"
 
-    with pristine_loop() as loop:
+    with loop_in_thread() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = FractalServer(port=find_open_port(), storage_project_name=storage_name, loop=loop, ssl_options=False)
@@ -313,12 +340,10 @@ def test_server(request):
         # Clean and re-init the database
         reset_server_database(server)
 
-        with active_loop(loop) as act:
-            yield server
+        yield server
 
 
-@pytest.fixture(scope="module")
-def dask_server_fixture(request):
+def _dask_server_fixture(request):
     """
     Builds a server instance with the event loop running in a thread.
     """
@@ -332,17 +357,15 @@ def dask_server_fixture(request):
 
     with pristine_loop() as loop:
 
+        # Client auto builds and shutsdown a LocalCluster
         # LocalCluster will start the loop in a background thread for us
-        with dd.LocalCluster(n_workers=1, threads_per_worker=1, loop=loop) as cluster:
-
-            # Build a Dask Client
-            client = dd.Client(cluster)
+        with dd.Client(n_workers=1, threads_per_worker=1, loop=loop) as client:
 
             # Build server, manually handle IOLoop (no start/stop needed)
             server = FractalServer(
                 port=find_open_port(),
                 storage_project_name=storage_name,
-                loop=cluster.loop,
+                loop=client.loop,
                 queue_socket=client,
                 ssl_options=False)
 
@@ -352,14 +375,13 @@ def dask_server_fixture(request):
             # Yield the server instance
             yield server
 
-            client.close()
-
-        cluster.scale_down(cluster.workers)
-        cluster.close()
-
 
 @pytest.fixture(scope="module")
-def fireworks_server_fixture(request):
+def dask_server_fixture(request):
+    yield from _dask_server_fixture(request)
+
+
+def _fireworks_server_fixture(request):
     """
     Builds a server instance with the event loop running in a thread.
     """
@@ -375,7 +397,7 @@ def fireworks_server_fixture(request):
 
     storage_name = "qcf_fireworks_server_test"
 
-    with pristine_loop() as loop:
+    with loop_in_thread() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = FractalServer(
@@ -384,16 +406,18 @@ def fireworks_server_fixture(request):
         # Clean and re-init the databse
         reset_server_database(server)
 
-        # Yield the server instance
-        with active_loop(loop) as act:
-            yield server
+        yield server
 
     lpad.reset(None, require_password=False)
     logging.basicConfig(level=None, filename=None)
 
 
 @pytest.fixture(scope="module")
-def parsl_server_fixture(request):
+def fireworks_server_fixture(request):
+    yield from _fireworks_server_fixture(request)
+
+
+def _parsl_server_fixture(request):
     """
     Builds a server instance with the event loop running in a thread.
     """
@@ -402,12 +426,12 @@ def parsl_server_fixture(request):
     check_active_mongo_server()
 
     parsl = pytest.importorskip("parsl")
-    from parsl.configs.local_ipp import config
+    from parsl.configs.local_threads_no_cache import config
     dataflow = parsl.dataflow.dflow.DataFlowKernel(config)
 
     storage_name = "qcf_parsl_server_test"
 
-    with pristine_loop() as loop:
+    with loop_in_thread() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = FractalServer(
@@ -421,20 +445,24 @@ def parsl_server_fixture(request):
         reset_server_database(server)
 
         # Yield the server instance
-        with active_loop(loop) as act:
-            yield server
+        yield server
 
     dataflow.atexit_cleanup()
+
+
+@pytest.fixture(scope="module")
+def parsl_server_fixture(request):
+    yield from _dask_server_fixture(request)
 
 
 @pytest.fixture(scope="module", params=["dask", "fireworks", "parsl"])
 def fractal_compute_server(request):
     if request.param == "dask":
-        yield from dask_server_fixture(request)
+        yield from _dask_server_fixture(request)
     elif request.param == "fireworks":
-        yield from fireworks_server_fixture(request)
+        yield from _fireworks_server_fixture(request)
     elif request.param == "parsl":
-        yield from parsl_server_fixture(request)
+        yield from _parsl_server_fixture(request)
     else:
         raise TypeError("fractal_compute_server: internal parametrize error")
 

@@ -3,6 +3,7 @@ The FractalServer class
 """
 
 import asyncio
+import datetime
 import logging
 import ssl
 import threading
@@ -32,7 +33,6 @@ def _build_ssl():
 
     import sys
     import socket
-    import datetime
     import ipaddress
     import random
 
@@ -77,6 +77,7 @@ class FractalServer:
             self,
 
             # Server info options
+            name="QCFractal Server",
             port=8888,
             loop=None,
             security=None,
@@ -86,16 +87,16 @@ class FractalServer:
             storage_uri="mongodb://localhost",
             storage_project_name="molssistorage",
 
-            # Queue options
-            queue_socket=None,
-
             # Log options
             logfile_prefix=None,
 
             # Queue options
-            max_active_services=10):
+            queue_socket=None,
+            max_active_services=10,
+            heartbeat_frequency=300):
 
         # Save local options
+        self.name = name
         self.port = port
         if ssl_options is False:
             self._address = "http://localhost:" + str(self.port) + "/"
@@ -103,6 +104,7 @@ class FractalServer:
             self._address = "https://localhost:" + str(self.port) + "/"
 
         self.max_active_services = max_active_services
+        self.heartbeat_frequency = heartbeat_frequency
 
         # Setup logging.
         if logfile_prefix is not None:
@@ -174,9 +176,13 @@ class FractalServer:
             "logger": self.logger,
         }
 
+        # Public information
+        self.objects["public_information"] = {"name": self.name, "heartbeat_frequency": self.heartbeat_frequency}
+
         endpoints = [
 
             # Generic web handlers
+            (r"/information", web_handlers.InformationHandler, self.objects),
             (r"/molecule", web_handlers.MoleculeHandler, self.objects),
             (r"/option", web_handlers.OptionHandler, self.objects),
             (r"/collection", web_handlers.CollectionHandler, self.objects),
@@ -188,17 +194,6 @@ class FractalServer:
             (r"/service_queue", queue.ServiceQueueHandler, self.objects),
             (r"/queue_manager", queue.QueueManagerHandler, self.objects),
         ]
-
-        # Queue manager if direct build
-        if queue_socket is not None:
-
-            if security == "local":
-                raise ValueError("Cannot yet use local security with a internal QueueManager")
-
-            # Add the socket to passed args
-            client = interface.FractalClient(self._address, verify=self.client_verify)
-            self.objects["queue_manager"] = queue.QueueManager(
-                client, queue_socket, loop=loop, logger=self.logger, cluster="FractalServer")
 
         # Build the app
         app_settings = {
@@ -222,15 +217,39 @@ class FractalServer:
         self.logger.info("FractalServer successfully initialized at {}".format(self._address))
         self.loop_active = False
 
+        # Queue manager if direct build
+        self.queue_socket = queue_socket
+        if (self.queue_socket is not None):
+            if security == "local":
+                raise ValueError("Cannot yet use local security with a internal QueueManager")
+
+            # Build the queue manager
+            self._run_in_thread(self._build_manager)
+
+    def _run_in_thread(self, func, timeout=5):
+        thread = threading.Thread(target=func, name="QCFractal Background")
+        thread.daemon = True
+        thread.start()
+        self.loop.call_later(timeout, thread.join)
+
+    def _build_manager(self):
+        """
+        Async build the manager so it can talk to itself
+        """
+
+        # Add the socket to passed args
+        client = interface.FractalClient(self._address, verify=self.client_verify)
+        self.objects["queue_manager"] = queue.QueueManager(
+            client, self.queue_socket, loop=self.loop, logger=self.logger, cluster="FractalServer")
+
     def start(self):
         """
         Starts up all IOLoops and processes
         """
 
-        self.logger.info("FractalServer successfully started. Starting IOLoop.\n")
-
         # If we have a queue socket start up the nanny
-        if "queue_manager" in self.objects:
+        if self.queue_socket is not None:
+
             # Add canonical queue callback
             manager = tornado.ioloop.PeriodicCallback(self.update_tasks, 2000)
             manager.start()
@@ -241,13 +260,18 @@ class FractalServer:
         nanny_services.start()
         self.periodic["update_services"] = nanny_services
 
+        # Add Manager heartbeats
+        heartbeats = tornado.ioloop.PeriodicCallback(self.check_manager_heartbeats, self.heartbeat_frequency * 1000)
+        heartbeats.start()
+        self.periodic["heartbeats"] = heartbeats
+
         # Soft quit with a keyboard interrupt
-        try:
-            self.loop_active = True
-            if not asyncio.get_event_loop().is_running():  # Only works on Py3
-                self.loop.start()
-        except KeyboardInterrupt:
-            self.stop()
+        # try:
+        self.logger.info("FractalServer successfully started.\n")
+        self.loop_active = True
+        self.loop.start()
+        # except KeyboardInterrupt:
+        #     self.stop()
 
     def stop(self):
         """
@@ -255,13 +279,12 @@ class FractalServer:
         """
 
         # Shut down queue manager
-        if "queue_manager" in self.objects:
+        if self.queue_socket is not None:
             if self.loop_active:
-                # Drop this in a thread so that we are not blocking eachother
-                thread = threading.Thread(target=self.objects["queue_manager"].shutdown, name="QueueManager Shutdown")
-                thread.daemon = True
-                thread.start()
-                self.loop.call_later(5, thread.join)
+                # This currently doesn't work, we need to rethink
+                # how the background thread works
+                pass
+                # self._run_in_thread(self.objects["queue_manager"].shutdown)
             else:
                 self.objects["queue_manager"].shutdown()
 
@@ -361,10 +384,37 @@ class FractalServer:
 
         return running_services
 
+    def check_manager_heartbeats(self):
+        """
+        Checks the heartbeats and kills off managers that have not been heard from
+        """
+
+        dt = datetime.datetime.utcnow() - datetime.timedelta(seconds=self.heartbeat_frequency)
+        ret = self.storage.get_managers({"modifed_on": {"$lt": dt}, "status": "ACTIVE"}, projection={"name": True})
+
+        for blob in ret["data"]:
+            nshutdown = self.storage.queue_reset_status(blob["name"])
+            self.storage.manager_update(blob["name"], returned=nshutdown, status="INACTIVE")
+
+            self.logger.info("Hearbeat missing from {}. Shutting down, recycling {} incomplete tasks.".format(
+                blob["name"], nshutdown))
+
+    def list_managers(self, status=None, name=None):
+        """
+        Provides a list of managers associated with the server both active and inactive
+        """
+        query = {}
+        if status:
+            query["status"] = status.upper()
+        if name:
+            query["name"] = name
+
+        return self.storage.get_managers(query)["data"]
+
 ### Functions only available if using a local queue_adapter
 
     def _check_manager(self, func_name):
-        if "queue_manager" not in self.objects:
+        if self.queue_socket is None:
             raise AttributeError(
                 "{} is only available if the server was initialized with a queue manager.".format(func_name))
 
@@ -381,10 +431,7 @@ class FractalServer:
 
         if self.loop_active:
             # Drop this in a thread so that we are not blocking each other
-            thread = threading.Thread(target=self.objects["queue_manager"].update, name="QueueManager Update")
-            thread.daemon = True
-            thread.start()
-            self.loop.call_later(5, thread.join)
+            self._run_in_thread(self.objects["queue_manager"].update)
         else:
             self.objects["queue_manager"].update()
 

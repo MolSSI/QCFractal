@@ -254,6 +254,8 @@ class TaskQueue(db.DynamicDocument):
     parser = db.StringField(default='')
     status = db.StringField(default='WAITING')
                             # choices=['RUNNING', 'WAITING', 'ERROR', 'COMPLETE'])
+    manager = db.StringField(default=None)
+
 
     created_on = db.DateTimeField(required=True, default=datetime.datetime.now)
     modified_on = db.DateTimeField(required=True, default=datetime.datetime.now)
@@ -264,6 +266,7 @@ class TaskQueue(db.DynamicDocument):
         'indexes': [
             '-created_on',
             'status',
+            'manager',
             # {'fields': ("status", "tag", "hash_index"), 'unique': False}
             {'fields': ("base_result",), 'unique': True}  # new
 

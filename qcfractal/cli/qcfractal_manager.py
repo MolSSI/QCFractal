@@ -72,11 +72,8 @@ def main(args=None):
 
         if args["local_cluster"]:
             # Build localcluster and exit callbacks
-            local_cluster = dd.LocalCluster(threads_per_worker=1, n_workers=args["local_workers"])
-            queue_client = dd.Client(local_cluster)
+            queue_client = dd.Client(threads_per_worker=1, n_workers=args["local_workers"])
             exit_callbacks.append([queue_client.close, (), {}])
-            exit_callbacks.append([local_cluster.scale_down, (local_cluster.workers, ), {}])
-            exit_callbacks.append([local_cluster.close, (4, ), {}])
         else:
             if args["dask_uri"] is None:
                 raise KeyError("A 'dask-uri' must be specified.")
@@ -137,6 +134,9 @@ def main(args=None):
     if args["rapidfire"]:
         manager.await_results()
     else:
+
+        cli_utils.install_signal_handlers(manager.loop, manager.stop)
+
         # Blocks until keyboard interupt
         manager.start()
 

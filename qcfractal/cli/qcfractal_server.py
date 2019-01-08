@@ -34,6 +34,7 @@ def parse_args():
     server.add_argument("--tls-cert", type=str, default=None, help="Certificate file for TLS (in PEM format)")
     server.add_argument("--tls-key", type=str, default=None, help="Private key file for TLS (in PEM format)")
     server.add_argument("--config-file", type=str, default=None, help="A configuration file to use")
+    server.add_argument("--heartbeat-frequency", type=int, default=300, help="The manager heartbeat frequency.")
 
     parser._action_groups.reverse()
 
@@ -103,6 +104,7 @@ def main(args=None):
         storage_uri=args["database_uri"],
         storage_project_name=args["name"],
         logfile_prefix=args["log_prefix"],
+        heartbeat_frequency=args["heartbeat_frequency"],
         queue_socket=adapter)
 
     # Print Queue Manager data
@@ -115,6 +117,9 @@ def main(args=None):
     # Add exit callbacks
     for cb in exit_callbacks:
         server.add_exit_callback(cb[0], *cb[1], **cb[2])
+
+    # Register closing
+    cli_utils.install_signal_handlers(server.loop, server.stop)
 
     # Blocks until keyboard interupt
     server.start()

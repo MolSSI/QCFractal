@@ -84,7 +84,7 @@ before_script:
   - conda list
 
 script:
-  - py.test -v --runslow --cov=qcfractal qcfractal/
+  - py.test -v -rsx --runslow --cov=qcfractal qcfractal/
   - py.test -v --runexamples examples/
 
 notifications:

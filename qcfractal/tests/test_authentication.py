@@ -37,14 +37,11 @@ def sec_server(request):
 
     storage_name = "qcf_local_server_auth_test"
 
-    with testing.pristine_loop() as loop:
+    with testing.loop_in_thread() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = qcfractal.FractalServer(
-            port=testing.find_open_port(),
-            storage_project_name=storage_name,
-            loop=loop,
-            security="local")
+            port=testing.find_open_port(), storage_project_name=storage_name, loop=loop, security="local")
 
         # Clean and re-init the databse
         server.storage.client.drop_database(server.storage._project_name)
@@ -54,51 +51,45 @@ def sec_server(request):
         for k, v in _users.items():
             assert server.storage.add_user(k, _users[k]["pw"], _users[k]["perm"])
 
-        with testing.active_loop(loop) as act:
-            yield server
+        yield server
 
 
 ### Tests the compute queue stack
 def test_security_auth_decline_none(sec_server):
-    client = portal.FractalClient(sec_server.get_address(), verify=False)
-    assert "FractalClient" in str(client)
+    with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+        client = portal.FractalClient(sec_server)
 
-    with pytest.raises(requests.exceptions.HTTPError):
-        r = client.get_molecules([])
+    assert "user not found" in str(excinfo.value).lower()
 
-    with pytest.raises(requests.exceptions.HTTPError):
-        r = client.add_molecules({})
 
 def test_security_auth_bad_ssl(sec_server):
-    client = portal.FractalClient.from_file({
-        "address": sec_server.get_address(),
-        "username": "read",
-        "password": _users["write"]["pw"],
-        "verify": True
-    })
+    with pytest.raises(requests.exceptions.SSLError) as excinfo:
+        client = portal.FractalClient.from_file({
+            "address": sec_server.get_address(),
+            "username": "read",
+            "password": _users["write"]["pw"],
+            "verify": True
+        })
 
-    with pytest.raises(requests.exceptions.SSLError):
-        r = client.get_molecules([])
+    assert "ssl handshake" in str(excinfo.value).lower()
+    assert "verify=false" in str(excinfo.value).lower()
+
 
 def test_security_auth_decline_bad_user(sec_server):
-    client = portal.FractalClient.from_file({
-        "address": sec_server.get_address(),
-        "username": "hello",
-        "password": "something",
-        "verify": False
-    })
+    with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+        client = portal.FractalClient.from_file({
+            "address": sec_server.get_address(),
+            "username": "hello",
+            "password": "something",
+            "verify": False
+        })
 
-    with pytest.raises(requests.exceptions.HTTPError):
-        r = client.get_molecules([])
-
-    with pytest.raises(requests.exceptions.HTTPError):
-        r = client.add_molecules({})
+    assert "user not found" in str(excinfo.value).lower()
 
 
 def test_security_auth_accept(sec_server):
 
-    client = portal.FractalClient(
-        sec_server.get_address(), username="write", password=_users["write"]["pw"], verify=False)
+    client = portal.FractalClient(sec_server, username="write", password=_users["write"]["pw"])
 
     r = client.add_molecules({})
     r = client.get_molecules([])

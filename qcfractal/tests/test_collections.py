@@ -14,7 +14,7 @@ from qcfractal.testing import dask_server_fixture as fractal_compute_server
 @testing.using_psi4
 def test_compute_dataset(fractal_compute_server):
 
-    client = portal.FractalClient(fractal_compute_server.get_address(""))
+    client = portal.FractalClient(fractal_compute_server)
     ds_name = "He_PES"
     ds = portal.collections.Dataset(ds_name, client, ds_type="ie")
 
@@ -71,7 +71,7 @@ def test_compute_dataset(fractal_compute_server):
 def test_compute_openffworkflow(fractal_compute_server):
 
     # Obtain a client and build a BioFragment
-    client = portal.FractalClient(fractal_compute_server.get_address(""))
+    client = portal.FractalClient(fractal_compute_server)
 
     openff_workflow_options = {
         # Blank Fragmenter options

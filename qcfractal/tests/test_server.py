@@ -36,6 +36,13 @@ def test_start_stop():
         except:
             pass
 
+def test_server_information(test_server):
+
+    client = portal.FractalClient(test_server)
+
+    server_info = client.server_information()
+    assert {"name", "heartbeat_frequency"} <= server_info.keys()
+
 
 def test_molecule_socket(test_server):
 
