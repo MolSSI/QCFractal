@@ -9,6 +9,7 @@ if __name__ == "__main__":
         author_email='dgasmith@vt.edu',
         url="https://github.com/molssi/qcfractal",
         license='BSD-3C',
+        include_package_data=True,
         version=versioneer.get_version(),
         cmdclass=versioneer.get_cmdclass(),
         packages=setuptools.find_packages(),
@@ -26,10 +27,12 @@ if __name__ == "__main__":
             'pydantic',
             'mongoengine'
         ],
-        entry_points={"console_scripts": [
-            "qcfractal-server=qcfractal.cli.qcfractal_server:main",
-            "qcfractal-manager=qcfractal.cli.qcfractal_manager:main",
-        ]},
+        entry_points={
+            "console_scripts": [
+                "qcfractal-server=qcfractal.cli.qcfractal_server:main",
+                "qcfractal-manager=qcfractal.cli.qcfractal_manager:main",
+            ]
+        },
         extras_require={
             'docs': [
                 'sphinx==1.2.3',  # autodoc was broken in 1.3.1
