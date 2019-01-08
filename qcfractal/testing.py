@@ -73,7 +73,7 @@ def mark_slow(func):
     try:
         if not pytest.config.getoption("--runslow"):
             func = pytest.mark.skip("need --runslow option to run")(func)
-    except AttributeError:
+    except (AttributeError, ValueError):
         # AttributeError: module 'pytest' has no attribute 'config'
         pass
 

@@ -177,3 +177,11 @@ def test_compute_openffworkflow(fractal_compute_server):
     assert final_energies.keys() == {butane_id, "HOOH"}
     assert final_energies[butane_id].keys() == {"label1"}
     assert final_energies[butane_id]["label1"] is None
+
+def test_missing_collection(fractal_compute_server):
+
+    client = portal.FractalClient(fractal_compute_server)
+    with pytest.raises(KeyError):
+        client.get_collection("dataset", "_waffles_")
+
+
