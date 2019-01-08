@@ -316,7 +316,7 @@ class FractalClient(object):
             if len(r.json()["data"]):
                 return collection_factory(r.json()["data"][0], client=self)
             else:
-                return None
+                raise KeyError("Collection '{}:{}' not found.".format(collection_type, collection_name))
 
     def add_collection(self, collection, overwrite=False, full_return=False):
 
