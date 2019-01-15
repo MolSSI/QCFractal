@@ -9,7 +9,7 @@ import requests
 
 import qcfractal.interface as portal
 from qcfractal import FractalServer
-from qcfractal.testing import pristine_loop, find_open_port, check_active_mongo_server
+from qcfractal.testing import pristine_loop, find_open_port, check_active_mongo_server, test_server
 
 meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
 

@@ -4,6 +4,7 @@ Explicit tests for queue manipulation.
 
 import qcfractal.interface as portal
 from qcfractal import testing
+from qcfractal.testing import fractal_compute_server
 
 
 @testing.using_rdkit

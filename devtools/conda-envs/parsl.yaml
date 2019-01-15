@@ -1,5 +1,6 @@
 name: qcarchive
 channels:
+  - defaults
   - conda-forge
 dependencies:
   - python
@@ -7,7 +8,6 @@ dependencies:
   - pandas
   - mongodb
   - pymongo
-  - mongoengine
   - tornado
   - requests
   - jsonschema
@@ -29,4 +29,5 @@ dependencies:
 # Pip includes
   - pip:
     - pydantic
+    - mongoengine
     - parsl

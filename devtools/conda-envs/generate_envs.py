@@ -11,6 +11,7 @@ yaml.indent(mapping=2, sequence=2, offset=2)
 template = """
 name: qcarchive
 channels:
+  - defaults
   - conda-forge
 dependencies:
   - python
@@ -18,7 +19,6 @@ dependencies:
   - pandas
   - mongodb
   - pymongo
-  - mongoengine
   - tornado
   - requests
   - jsonschema
@@ -31,7 +31,9 @@ dependencies:
   - codecov
 """
 qca_ecosystem_template = ["qcengine>=0.4.0", "qcelemental>=0.1.3"]
-pip_depends_template = ["pydantic"]
+
+# Note we temporarily duplicate mongoengine as conda-forge appears to be broken
+pip_depends_template = ["pydantic", "mongoengine"]
 
 
 def generate_yaml(filename=None, channels=None, dependencies=None, pip_dependencies=None, qca_ecosystem=None):
@@ -45,7 +47,7 @@ def generate_yaml(filename=None, channels=None, dependencies=None, pip_dependenc
     # Handle channels
     env = yaml.load(template)
     if channels is not None:
-        env["channels"].extend(channels)
+        env["channels"][1:1] = channels
     offset = len(env["channels"])
     env["channels"].yaml_set_comment_before_after_key(offset, before="\n")
 
@@ -101,10 +103,11 @@ environs = [{
     "dependencies": ["rdkit"],
     "qca_ecosystem": [],
     "pip_dependencies": [
-        "git+git://github.com/MolSSI/QCEngine#egg=qcengine", "git+git://github.com/MolSSI/QCElemental#egg=qcengine",
+        "git+git://github.com/MolSSI/QCEngine#egg=qcengine",
+        "git+git://github.com/MolSSI/QCElemental#egg=qcelemental",
         "git+git://github.com/lpwgroup/torsiondrive.git#egg=torsiondrive",
         "git+git://github.com/leeping/geomeTRIC#egg=geometric"
-    ]
+    ] # yapf: disable
 }]
 
 for envdata in environs:

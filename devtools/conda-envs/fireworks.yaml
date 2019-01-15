@@ -1,14 +1,14 @@
 name: qcarchive
 channels:
-  - conda-forge
+  - defaults
   - psi4
+  - conda-forge
 dependencies:
   - python
   - numpy
   - pandas
   - mongodb
   - pymongo
-  - mongoengine
   - tornado
   - requests
   - jsonschema
@@ -30,4 +30,5 @@ dependencies:
 # Pip includes
   - pip:
     - pydantic
+    - mongoengine
     - fireworks

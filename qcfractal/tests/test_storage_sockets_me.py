@@ -7,6 +7,7 @@ All tests should be atomic, that is create and cleanup their data
 import pytest
 
 import qcfractal.interface as portal
+from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 
 
 def test_molecules_add(storage_socket):

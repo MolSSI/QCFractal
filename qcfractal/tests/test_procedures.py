@@ -7,6 +7,7 @@ import requests
 
 import qcfractal.interface as portal
 from qcfractal import testing
+from qcfractal.testing import fractal_compute_server
 
 
 ### Tests the compute queue stack

@@ -1,15 +1,15 @@
 name: qcarchive
 channels:
-  - conda-forge
+  - defaults
   - psi4
   - rdkit
+  - conda-forge
 dependencies:
   - python
   - numpy
   - pandas
   - mongodb
   - pymongo
-  - mongoengine
   - tornado
   - requests
   - jsonschema
@@ -35,4 +35,5 @@ dependencies:
 # Pip includes
   - pip:
     - pydantic
+    - mongoengine
     - git+git://github.com/lpwgroup/torsiondrive.git@v0.9.1#egg=torsiondrive

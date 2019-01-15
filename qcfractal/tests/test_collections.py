@@ -6,6 +6,7 @@ import pytest
 
 import qcfractal.interface as portal
 from qcfractal import testing
+from qcfractal.testing import fractal_compute_server
 
 
 # Only use dask

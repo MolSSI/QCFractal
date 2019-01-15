@@ -1,5 +1,6 @@
 name: qcarchive
 channels:
+  - defaults
   - conda-forge
 dependencies:
   - python
@@ -7,7 +8,6 @@ dependencies:
   - pandas
   - mongodb
   - pymongo
-  - mongoengine
   - tornado
   - requests
   - jsonschema
@@ -27,7 +27,8 @@ dependencies:
 # Pip includes
   - pip:
     - pydantic
+    - mongoengine
     - git+git://github.com/MolSSI/QCEngine#egg=qcengine
-    - git+git://github.com/MolSSI/QCElemental#egg=qcengine
+    - git+git://github.com/MolSSI/QCElemental#egg=qcelemental
     - git+git://github.com/lpwgroup/torsiondrive.git#egg=torsiondrive
     - git+git://github.com/leeping/geomeTRIC#egg=geometric

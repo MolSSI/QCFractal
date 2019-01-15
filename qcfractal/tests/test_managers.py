@@ -8,7 +8,8 @@ import pytest
 
 import qcfractal.interface as portal
 from qcfractal import testing, queue, FractalServer
-from qcfractal.testing import reset_server_database
+from qcfractal.testing import reset_server_database, test_server
+from qcfractal.testing import dask_server_fixture as compute_manager_fixture
 
 
 @pytest.fixture(scope="module")
