@@ -1,7 +1,7 @@
 Changelog
 =========
 
-X.Y.0 / 2018-MM-DD
+X.Y.0 / 2019-MM-DD
 -------------------
 
 New Features
@@ -12,6 +12,27 @@ Enhancements
 
 Bug Fixes
 +++++++++
+
+0.4.0a / 2019-01-15
+-------------------
+
+This is the fourth alpha release of QCFractal focusing on the database backend
+and compute manager enhancements.
+
+New Features
+++++++++++++
+- (:pr:`78`) Migrates Mongo backend to MongoEngine.
+- (:pr:`78`) Overhauls tasks so that results or procedures own a task and ID.
+- (:pr:`78`) Results and procedures are now inserted upon creation, not just completion. Added a status field to results and procedures.
+- (:pr:`78`) Overhauls storage API to no longer accept arbitrary JSON queries, but now pinned kwargs.
+- (:pr:`106`) Compute managers now have heartbeats and tasks are recycled after a manager has not been heard from after a preset interval.
+- (:pr:`106`) Managers now also quietly shutdown on SIGTERM as well as SIGINT.
+
+Bug Fixes
++++++++++
+- (:pr:`102`) Py37 fix for pydantic and better None defaults for ``options``.
+- (:pr:`107`) ``FractalClient.get_collections`` now raises an exception when no collection is found.
+
 
 0.3.0a / 2018-11-02
 -------------------
