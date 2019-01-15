@@ -11,9 +11,11 @@ from . import molecule
 from . import orm
 from .collections import collection_factory
 
+from typing import List, Union, Dict, Any, Optional
+
 
 class FractalClient(object):
-    def __init__(self, address, username=None, password=None, verify=True):
+    def __init__(self, address: Any, username: Optional[str]=None, password: Optional[str]=None, verify: bool=True):
         """Initializes a FractalClient instance from an address and verification information.
 
         Parameters
@@ -64,7 +66,7 @@ class FractalClient(object):
 
         self.server_name = self.server_info["name"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         """A short short representation of the current FractalClient.
 
         Returns
@@ -76,7 +78,7 @@ class FractalClient(object):
             self.server_name, self.address, self.username)
         return ret
 
-    def _request(self, method, service, payload, noraise=False):
+    def _request(self, method: str, service: str, payload: Dict[str, Any], noraise: bool=False):
 
         addr = self.address + service
         try:
@@ -104,7 +106,7 @@ class FractalClient(object):
         return r
 
     @classmethod
-    def from_file(cls, load_path=None):
+    def from_file(cls, load_path: Optional[str]=None):
         """Creates a new FractalClient from file. If no path is passed in searches
         current working directory and ~.qca/ for "qcportal_config.yaml"
 
@@ -156,12 +158,12 @@ class FractalClient(object):
 
         return cls(address, username=username, password=password, verify=verify)
 
-    def server_information(self):
+    def server_information(self) -> Dict[str, str]:
         return json.loads(json.dumps(self.server_info))
 
     ### Molecule section
 
-    def get_molecules(self, mol_list, index="id", full_return=False):
+    def get_molecules(self, mol_list: List[str], index: str="id", full_return: bool=False) -> Dict[str, Any]:
         """Get molecules from the Server.
 
         Parameters
@@ -194,7 +196,7 @@ class FractalClient(object):
         else:
             return r.json()["data"]
 
-    def add_molecules(self, mol_list, full_return=False):
+    def add_molecules(self, mol_list: Dict[str, Any], full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
         """Adds molecules to the Server
 
         Parameters
@@ -244,7 +246,7 @@ class FractalClient(object):
 
         return r.json()["data"]
 
-    def add_options(self, opt_list, full_return=False):
+    def add_options(self, opt_list: List[Dict[str, Any]], full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
 
         # Can take in either molecule or lists
 
@@ -258,7 +260,7 @@ class FractalClient(object):
 
     ### Collections section
 
-    def list_collections(self, collection_type=None):
+    def list_collections(self, collection_type: Optional[str]=None) -> Dict[str, Any]:
         """Lists the available collections currently on the server.
 
         Parameters
@@ -288,7 +290,7 @@ class FractalClient(object):
         else:
             return [x["name"] for x in r.json()["data"]]
 
-    def get_collection(self, collection_type, collection_name, full_return=False):
+    def get_collection(self, collection_type: str, collection_name: str, full_return: bool=False):
         """Aquires a given collection from the server
 
         Parameters
@@ -318,7 +320,7 @@ class FractalClient(object):
             else:
                 raise KeyError("Collection '{}:{}' not found.".format(collection_type, collection_name))
 
-    def add_collection(self, collection, overwrite=False, full_return=False):
+    def add_collection(self, collection: Dict[str, Any], overwrite: bool=False, full_return: bool=False):
 
         # Can take in either molecule or lists
 
@@ -356,7 +358,7 @@ class FractalClient(object):
         else:
             return r.json()["data"]
 
-    def get_procedures(self, procedure_id, return_objects=True):
+    def get_procedures(self, procedure_id: List[str], return_objects: bool=True):
 
         payload = {"meta": {}, "data": procedure_id}
         r = self._request("get", "procedure", payload)
@@ -388,7 +390,15 @@ class FractalClient(object):
 
     ### Compute section
 
-    def add_compute(self, program, method, basis, driver, options, molecule_id, return_full=False, tag=None):
+    def add_compute(self,
+                    program: str,
+                    method: str,
+                    basis: str,
+                    driver: str,
+                    options: str,
+                    molecule_id: str,
+                    return_full: bool=False,
+                    tag: str=None):
 
         # Always a list
         if isinstance(molecule_id, str):
@@ -414,7 +424,12 @@ class FractalClient(object):
         else:
             return r.json()["data"]
 
-    def add_procedure(self, procedure, program, program_options, molecule_id, return_full=False):
+    def add_procedure(self,
+                      procedure: str,
+                      program: str,
+                      program_options: Dict[str, Any],
+                      molecule_id: List[str],
+                      return_full: bool=False):
 
         # Always a list
         if isinstance(molecule_id, str):
@@ -436,7 +451,7 @@ class FractalClient(object):
         else:
             return r.json()["data"]
 
-    def check_tasks(self, query, projection=None, return_full=False):
+    def check_tasks(self, query: Dict[str, Any], projection: Optional[Dict[str, Any]]=None, return_full: bool=False):
         """Checks the status of tasks in the Fractal queue.
 
         Parameters
@@ -464,7 +479,7 @@ class FractalClient(object):
         else:
             return r.json()["data"]
 
-    def add_service(self, service, data, options, return_full=False):
+    def add_service(self, service: str, data: Dict[str, Any], options: Dict[str, Any], return_full: bool=False):
 
         # Always a list
         if isinstance(data, str):
@@ -485,7 +500,7 @@ class FractalClient(object):
         else:
             return r.json()["data"]
 
-    def check_services(self, query, return_full=False):
+    def check_services(self, query: Dict[str, Any], return_full: bool=False):
         """Checks the status of services in the Fractal queue.
 
         Parameters

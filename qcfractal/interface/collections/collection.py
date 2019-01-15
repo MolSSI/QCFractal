@@ -8,14 +8,12 @@ import abc
 import copy
 import json
 
-
-from typing import Dict
+from typing import Dict, Optional
 from pydantic import BaseModel
 
 
 class Collection(abc.ABC):
-
-    def __init__(self, name, **kwargs):
+    def __init__(self, name: str, **kwargs):
         """
         Initializer for the Collections objects. If no Portal is supplied or the Collection name
         is not present on the server that the Portal is connected to a blank Collection will be
@@ -65,7 +63,7 @@ class Collection(abc.ABC):
             allow_extra = False
             ignore_extra = True
 
-    def __str__(self):
+    def __str__(self) -> str:
         """
         A simple string representation of the Collection.
 
@@ -163,7 +161,7 @@ class Collection(abc.ABC):
         # Allow PyDantic to handle type validation
         return cls(name, client=client, **data)
 
-    def to_json(self, filename=None):
+    def to_json(self, filename: Optional[str]=None):
         """
         If a filename is provided, dumps the file to disk. Otherwise returns a copy of the current data.
 
@@ -201,7 +199,7 @@ class Collection(abc.ABC):
         pass
 
     # Setters
-    def save(self, client=None, overwrite=False):
+    def save(self, client=None, overwrite: bool=False):
         """Uploads the overall structure of the Collection (indices, options, new molecules, etc)
         to the server.
 
