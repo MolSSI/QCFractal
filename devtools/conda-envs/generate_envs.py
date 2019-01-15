@@ -1,34 +1,35 @@
 """
 Automatically generates the QCArchive environments
 """
-import yaml
+from ruamel.yaml import YAML
 import glob
 import copy
 
-template = {
-    "name":
-    "qcarchive",
-    "channels": ["conda-forge"],
-    "dependencies": [
-        # Base
-        "python",
-        "numpy",
-        "pandas",
-        "mongodb",
-        "pymongo",
-        "mongoengine",
-        "tornado",
-        "requests",
-        "jsonschema",
-        "bcrypt",
-        "cryptography",
+yaml = YAML()
+yaml.indent(mapping=2, sequence=2, offset=2)
 
-        # Test
-        "pytest",
-        "pytest-cov",
-        "codecov",
-    ],
-}
+template = """
+name: qcarchive
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - numpy
+  - pandas
+  - mongodb
+  - pymongo
+  - mongoengine
+  - tornado
+  - requests
+  - jsonschema
+  - bcrypt
+  - cryptography
+
+# Test depends
+  - pytest
+  - pytest-cov
+  - codecov
+"""
 qca_ecosystem_template = ["qcengine>=0.4.0", "qcelemental>=0.1.3"]
 pip_depends_template = ["pydantic"]
 
@@ -41,15 +42,22 @@ def generate_yaml(filename=None, channels=None, dependencies=None, pip_dependenc
     if filename is None:
         raise KeyError("Must have a filename")
 
-    env = copy.deepcopy(template)
+    # Handle channels
+    env = yaml.load(template)
     if channels is not None:
         env["channels"].extend(channels)
+    offset = len(env["channels"])
+    env["channels"].yaml_set_comment_before_after_key(offset, before="\n")
 
     # General conda depends
     if dependencies is not None:
+        offset = len(env["dependencies"])
+        env["dependencies"].yaml_set_comment_before_after_key(offset, before="\nEnvironment specific includes")
         env["dependencies"].extend(dependencies)
 
     # Add in QCArchive ecosystem
+    offset = len(env["dependencies"])
+    env["dependencies"].yaml_set_comment_before_after_key(offset, before="\nQCArchive includes")
     if qca_ecosystem is None:
         env["dependencies"].extend(qca_ecosystem_template)
     else:
@@ -59,10 +67,13 @@ def generate_yaml(filename=None, channels=None, dependencies=None, pip_dependenc
     pip_env = copy.deepcopy(pip_depends_template)
     if pip_dependencies is not None:
         pip_env.extend(pip_dependencies)
-    env["dependencies"].append({"pip": pip_env})
+    offset = len(env["dependencies"])
+    env["dependencies"].yaml_set_comment_before_after_key(offset, before="\nPip includes")
+    env["dependencies"].extend([{"pip": pip_env}])
 
     with open(filename, "w") as handle:
-        yaml.dump(env, handle, default_flow_style=False, indent=2)
+        yaml.dump(env, handle)
+
 
 environs = [{
     "filename": "base.yaml",
@@ -82,15 +93,15 @@ environs = [{
 }, {
     "filename": "openff.yaml",
     "channels": ["psi4", "rdkit"],
-    "dependencies": ["dask", "distributed", "psi4", "rdkit", "torsiondrive", "geometric"]
+    "dependencies": ["dask", "distributed", "psi4", "rdkit", "geometric"],
+    "pip_dependencies": ["git+git://github.com/lpwgroup/torsiondrive.git@v0.9.1#egg=torsiondrive"]
 }, {
     "filename":
     "dev_head.yaml",
     "dependencies": ["rdkit"],
     "qca_ecosystem": [],
     "pip_dependencies": [
-        "git+git://github.com/MolSSI/QCEngine#egg=qcengine",
-        "git+git://github.com/MolSSI/QCElemental#egg=qcengine",
+        "git+git://github.com/MolSSI/QCEngine#egg=qcengine", "git+git://github.com/MolSSI/QCElemental#egg=qcengine",
         "git+git://github.com/lpwgroup/torsiondrive.git#egg=torsiondrive",
         "git+git://github.com/leeping/geomeTRIC#egg=geometric"
     ]
