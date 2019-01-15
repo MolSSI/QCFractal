@@ -2,9 +2,12 @@
 QCPortal Database ODM
 """
 import itertools as it
+from enum import Enum
+from typing import Dict, List, Union
 
 import numpy as np
 import pandas as pd
+from pydantic import BaseModel
 
 from .collection import Collection
 from .collection_utils import nCr, register_collection
@@ -13,10 +16,6 @@ from .. import constants
 from .. import dict_utils
 from .. import molecule
 from .. import statistics
-
-from enum import Enum
-from typing import Dict, List, Union
-from pydantic import BaseModel
 
 
 class _RxnEnum(str, Enum):

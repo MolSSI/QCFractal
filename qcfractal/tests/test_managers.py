@@ -3,12 +3,12 @@ Explicit tests for queue manipulation.
 """
 
 import time
-import logging
+
 import pytest
 
 import qcfractal.interface as portal
 from qcfractal import testing, queue, FractalServer
-from qcfractal.testing import test_server, reset_server_database
+from qcfractal.testing import reset_server_database
 
 
 @pytest.fixture(scope="module")

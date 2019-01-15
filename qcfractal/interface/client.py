@@ -3,6 +3,7 @@
 import json
 import os
 from collections import defaultdict
+from typing import List, Union, Dict, Any, Optional
 
 import requests
 import yaml
@@ -10,8 +11,6 @@ import yaml
 from . import molecule
 from . import orm
 from .collections import collection_factory
-
-from typing import List, Union, Dict, Any, Optional
 
 
 class FractalClient(object):

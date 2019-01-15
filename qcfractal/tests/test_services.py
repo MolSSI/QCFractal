@@ -7,9 +7,8 @@ import copy
 import pytest
 
 import qcfractal.interface as portal
-from qcfractal import testing
 # Pytest Fixture import
-from qcfractal.testing import dask_server_fixture, recursive_dict_merge
+from qcfractal.testing import recursive_dict_merge
 
 
 @pytest.fixture(scope="module")

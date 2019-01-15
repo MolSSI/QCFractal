@@ -2,12 +2,11 @@
 """
 
 import copy
+from typing import Dict, Any
 
 from . import collection_utils
 from .collection import Collection
 from .. import orm
-
-from typing import Dict, Any
 
 
 class OpenFFWorkflow(Collection):

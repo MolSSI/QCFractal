@@ -1,6 +1,7 @@
-import mongoengine as db
 import datetime
+
 import bson
+import mongoengine as db
 
 
 class Collection(db.DynamicDocument):

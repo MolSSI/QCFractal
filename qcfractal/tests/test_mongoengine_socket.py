@@ -5,13 +5,11 @@
 
 """
 
-import pytest
 import qcfractal.interface as portal
 
 from qcfractal.storage_sockets.models import Molecule, Result, Options, \
                     Procedure, OptimizationProcedure, TorsiondriveProcedure
 from qcfractal.storage_sockets.models import TaskQueue
-from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 
 
 def test_molecule(storage_socket):

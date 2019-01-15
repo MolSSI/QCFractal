@@ -6,8 +6,9 @@ import pytest
 
 import qcfractal.interface as portal
 from qcfractal import testing
+
+
 # Only use dask
-from qcfractal.testing import dask_server_fixture as fractal_compute_server
 
 
 ### Tests an entire server and interaction energy dataset run

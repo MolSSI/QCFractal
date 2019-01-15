@@ -3,12 +3,13 @@ Tests the DQM Server class
 """
 
 import threading
+
 import pytest
 import requests
 
 import qcfractal.interface as portal
 from qcfractal import FractalServer
-from qcfractal.testing import test_server, pristine_loop, find_open_port, check_active_mongo_server
+from qcfractal.testing import pristine_loop, find_open_port, check_active_mongo_server
 
 meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
 
