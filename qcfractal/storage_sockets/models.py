@@ -132,12 +132,8 @@ class Result(BaseResult):
     properties = db.DynamicField()  # accept any, no validation
     return_result = db.DynamicField()  # better performance than db.ListField(db.FloatField())
     provenance = db.DynamicField()  # or an Embedded Documents with a structure?
-        #  {"creator": "rdkit", "version": "2018.03.4",
-        # "routine": "rdkit.Chem.AllChem.UFFGetMoleculeForceField",
-        # "cpu": "Intel(R) Core(TM) i7-8650U CPU @ 1.90GHz", "hostname": "x1-carbon6", "username": "doaa",
-        # "wall_time": 0.14191770553588867},
 
-    schema_name = db.StringField() #default="qc_ret_data_output")
+    schema_name = db.StringField()  # default="qc_ret_data_output"??
     schema_version = db.IntField()  # or String?
 
     meta = {
@@ -195,7 +191,7 @@ class Procedure(BaseResult):
 
 class OptimizationProcedure(Procedure):
     """
-        An Optimization  procedure
+        An Optimization  procedure (not used so far)
     """
 
     procedure = db.StringField(default='optimization', required=True)
@@ -243,7 +239,11 @@ class Spec(db.DynamicEmbeddedDocument):
 
 
 class TaskQueue(db.DynamicDocument):
-    """A queue of tasks corresponding to a procedure"""
+    """A queue of tasks corresponding to a procedure
+
+       Notes: don't sort query results without having the index sorted
+              will impact the performce
+    """
 
     # spec = db.EmbeddedDocumentField(Spec, default=Spec)
     spec = db.DynamicField()
@@ -256,11 +256,11 @@ class TaskQueue(db.DynamicDocument):
                             # choices=['RUNNING', 'WAITING', 'ERROR', 'COMPLETE'])
     manager = db.StringField(default=None)
 
-
     created_on = db.DateTimeField(required=True, default=datetime.datetime.now)
     modified_on = db.DateTimeField(required=True, default=datetime.datetime.now)
 
-    base_result = db.GenericLazyReferenceField(dbref=True)  # GenericLazyReferenceField()  # can reference Results or any Procedure
+    # can reference Results or any Procedure
+    base_result = db.GenericLazyReferenceField(dbref=True)
 
     meta = {
         'indexes': [
