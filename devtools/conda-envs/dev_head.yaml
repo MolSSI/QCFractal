@@ -1,8 +1,6 @@
 name: qcarchive
 channels:
   - defaults
-  - psi4
-  - rdkit
   - conda-forge
 dependencies:
   - python
@@ -22,18 +20,15 @@ dependencies:
   - codecov
 
 # Environment specific includes
-  - dask
-  - distributed
-  - psi4
   - rdkit
-  - geometric
 
 # QCArchive includes
-  - qcengine>=0.4.0
-  - qcelemental>=0.1.3
 
 # Pip includes
   - pip:
     - pydantic
     - mongoengine
-    - git+git://github.com/lpwgroup/torsiondrive.git@v0.9.1#egg=torsiondrive
+    - git+git://github.com/MolSSI/QCEngine#egg=qcengine
+    - git+git://github.com/MolSSI/QCElemental#egg=qcelemental
+    - git+git://github.com/lpwgroup/torsiondrive.git#egg=torsiondrive
+    - git+git://github.com/leeping/geomeTRIC#egg=geometric

@@ -5,7 +5,6 @@
 
 """
 
-import pytest
 import qcfractal.interface as portal
 
 from qcfractal.storage_sockets.models import Molecule, Result, Options, \

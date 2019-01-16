@@ -2,7 +2,6 @@
 Tests the on-node procedures compute capabilities.
 """
 
-import cryptography
 import pytest
 import requests
 

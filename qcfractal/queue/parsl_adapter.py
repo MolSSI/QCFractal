@@ -2,10 +2,10 @@
 Queue adapter for Parsl
 """
 
-import time
 import importlib
 import logging
 import operator
+import time
 import traceback
 
 
