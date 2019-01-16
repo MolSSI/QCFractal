@@ -98,7 +98,8 @@ class MongoengineSocket:
         # Security
         self._bypass_security = bypass_security
 
-        # Static data
+        # Important: this dict is Not used for creating indices
+        # To be removed and replaced by ME functions
         self._table_indices = {
             "collections": interface.schema.get_table_indices("collection"),
             "options": interface.schema.get_table_indices("options"),
@@ -110,18 +111,18 @@ class MongoengineSocket:
             "users": ("username", ),
             "queue_managers": ("name", )
         }
-        self._valid_tables = set(self._table_indices.keys())
-        self._table_unique_indices = {
-            "collections": True,
-            "options": True,
-            "results": True,
-            "molecules": False,
-            "procedures": False,
-            "service_queue": False,
-            "task_queue": False,
-            "users": True,
-            "queue_managers": True,
-        }
+        # self._valid_tables = set(self._table_indices.keys())
+        # self._table_unique_indices = {
+        #     "collections": True,
+        #     "options": True,
+        #     "results": True,
+        #     "molecules": False,
+        #     "procedures": False,
+        #     "service_queue": False,
+        #     "task_queue": False,
+        #     "users": True,
+        #     "queue_managers": True,
+        # }
 
         self._lower_results_index = ["method", "basis", "options", "program"]
 
@@ -131,13 +132,9 @@ class MongoengineSocket:
         # Build MongoClient
         expanded_uri = pymongo.uri_parser.parse_uri(uri)
         if expanded_uri["password"] is not None:
-            # self.client = pymongo.MongoClient(uri, authMechanism=authMechanism, authSource=authSource)
-
             # connect to mongoengine
             self.client = db.connect(db=project, host=uri, authMechanism=authMechanism, authSource=authSource)
         else:
-            # self.client = pymongo.MongoClient(uri)
-
             # connect to mongoengine
             self.client = db.connect(db=project, host=uri)
 
@@ -459,12 +456,10 @@ class MongoengineSocket:
         if index == "id":
             molecule_ids, bad_ids = _str_to_indices_with_errors(molecule_ids)
 
-        # Project out the duplicates we use for top level keys
-        proj = {"molecule_hash": False, "molecular_formula": False}
-
+        # Don't include the hash or the molecular_formula in the returned result
         # Make the query
         query = {index+'__in': molecule_ids}
-        data = Molecule.objects(**query).exclude(*proj).as_pymongo()
+        data = Molecule.objects(**query).exclude("molecule_hash", "molecular_formula").as_pymongo()
 
         if data is None:
             data = []
