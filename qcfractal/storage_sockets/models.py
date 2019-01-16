@@ -264,7 +264,7 @@ class TaskQueue(db.DynamicDocument):
 
     meta = {
         'indexes': [
-            '-created_on',
+            'created_on',
             'status',
             'manager',
             # {'fields': ("status", "tag", "hash_index"), 'unique': False}

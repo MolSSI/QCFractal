@@ -1179,7 +1179,7 @@ class MongoengineSocket:
         if tag is not None:
             query["tag"] = tag
 
-        found = TaskQueue.objects(**query).limit(limit).order_by('-created_on')
+        found = TaskQueue.objects(**query).limit(limit).order_by('created_on')
 
         query = {"_id": {"$in": [x.id for x in found]}}
 
@@ -1193,6 +1193,13 @@ class MongoengineSocket:
 
         if as_json:
             found = [self._doc_to_json(task, with_ids=True) for task in found]
+            # simplify returned formats
+            # TODO: do it in models if possible
+            for task in found:
+                task['base_result']['id'] = task['base_result']['$id']['$oid']
+                del task['base_result']['$id']
+                task['created_on'] = task['created_on']['$date']
+                task['modified_on'] = task['modified_on']['$date']
 
         if upd.modified_count != len(found):
             self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
