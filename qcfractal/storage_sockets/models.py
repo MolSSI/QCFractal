@@ -54,11 +54,8 @@ class Molecule(db.DynamicDocument):
     meta = {
         'collection': 'molecules',
         'indexes': [
-            {'fields': ('molecule_hash',), 'unique': True},
-            {
-                'fields': ('molecule_hash', 'molecular_formula'),
-                'unique': False
-            }  # TODO: what is unique?
+            {'fields': ('molecule_hash',), 'unique': False},  # should almost be unique
+            {'fields': ('molecular_formula',), 'unique': False}
         ]
     }
 
