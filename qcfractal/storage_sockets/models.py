@@ -175,6 +175,7 @@ class Procedure(BaseResult):
     program = db.StringField(required=True)  # example: 'Geometric'
     options = db.ReferenceField(Options)  # options of the procedure
 
+    hash_index = db.StringField()  # TODO: still used, to be removed
     qc_meta = db.DynamicField()  # --> all inside results
 
     meta = {
@@ -182,7 +183,8 @@ class Procedure(BaseResult):
         'allow_inheritance': True,
         'indexes': [
             # TODO: needs a unique index, + molecule?
-            {'fields': ('procedure', 'program'), 'unique': False}  # TODO: check
+            {'fields': ('procedure', 'program'), 'unique': False},  # TODO: check
+            {'fields': ('hash_index',), 'unique': False}  # used in queries
         ]
     }
 
