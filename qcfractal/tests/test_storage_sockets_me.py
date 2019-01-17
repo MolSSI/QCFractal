@@ -339,8 +339,20 @@ def storage_results(storage_socket):
         "status": 'COMPLETE'
     }
 
-    results_insert = storage_socket.add_results([page1, page2, page3, page4, page5])
-    assert results_insert["meta"]["n_inserted"] == 5
+    page6 = {
+        "molecule": mol_insert["data"]["water2"],
+        "method": "M3",
+        "basis": "B1",
+        "options": "default",
+        "program": "P1",
+        "driver": "gradient",
+        "return_result": 20,
+        "hash_index": 5,
+        "status": 'COMPLETE'
+    }
+
+    results_insert = storage_socket.add_results([page1, page2, page3, page4, page5, page6])
+    assert results_insert["meta"]["n_inserted"] == 6
 
     yield storage_socket
 
@@ -355,7 +367,7 @@ def storage_results(storage_socket):
 
 def test_results_query_total(storage_results):
 
-    assert 5 == len(storage_results.get_results()["data"])
+    assert 6 == len(storage_results.get_results()["data"])
 
 
 def test_get_results_by_ids(storage_results):
@@ -363,8 +375,8 @@ def test_get_results_by_ids(storage_results):
     ids = [x['id'] for x in results]
 
     ret = storage_results.get_results_by_ids(ids, return_json=False)
-    assert ret["meta"]["n_found"] == 5
-    assert len(ret["data"]) == 5
+    assert ret["meta"]["n_found"] == 6
+    assert len(ret["data"]) == 6
 
     ret = storage_results.get_results_by_ids(ids, projection=['status'])
     assert ret['data'][0].keys() == {'id', 'status'}
@@ -525,6 +537,33 @@ def test_storage_queue_duplicate(storage_results):
     r = storage_results.queue_mark_complete([queue_id])
     assert r == 1
 
+
+def test_queue_submit_many_order(storage_results):
+
+    results = storage_results.get_results()['data']
+
+    task1 = {
+        "base_result": ('results', results[3]['id'])
+    }
+    task2 = {
+        "base_result": ('results', results[4]['id'])
+    }
+    task3 = {
+        "base_result": ('results', results[5]['id'])
+    }
+
+    # Submit tasks
+    ret = storage_results.queue_submit([task1, task2, task3])
+    assert len(ret["data"]) == 3
+    assert ret['meta']['n_inserted'] == 3
+
+    # Get task
+    r = storage_results.queue_get_next("test_manager", limit=1)
+    assert len(r) == 1
+    # will get the first submitted result first
+    assert r[0]['base_result']['id'] == results[3]['id']
+
+    # Todo: test more scenarios
 
 # User testing
 

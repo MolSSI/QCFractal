@@ -98,7 +98,8 @@ class MongoengineSocket:
         # Security
         self._bypass_security = bypass_security
 
-        # Static data
+        # Important: this dict is Not used for creating indices
+        # To be removed and replaced by ME functions
         self._table_indices = {
             "collections": interface.schema.get_table_indices("collection"),
             "options": interface.schema.get_table_indices("options"),
@@ -110,18 +111,18 @@ class MongoengineSocket:
             "users": ("username", ),
             "queue_managers": ("name", )
         }
-        self._valid_tables = set(self._table_indices.keys())
-        self._table_unique_indices = {
-            "collections": True,
-            "options": True,
-            "results": True,
-            "molecules": False,
-            "procedures": False,
-            "service_queue": False,
-            "task_queue": False,
-            "users": True,
-            "queue_managers": True,
-        }
+        # self._valid_tables = set(self._table_indices.keys())
+        # self._table_unique_indices = {
+        #     "collections": True,
+        #     "options": True,
+        #     "results": True,
+        #     "molecules": False,
+        #     "procedures": False,
+        #     "service_queue": False,
+        #     "task_queue": False,
+        #     "users": True,
+        #     "queue_managers": True,
+        # }
 
         self._lower_results_index = ["method", "basis", "options", "program"]
 
@@ -131,13 +132,9 @@ class MongoengineSocket:
         # Build MongoClient
         expanded_uri = pymongo.uri_parser.parse_uri(uri)
         if expanded_uri["password"] is not None:
-            # self.client = pymongo.MongoClient(uri, authMechanism=authMechanism, authSource=authSource)
-
             # connect to mongoengine
             self.client = db.connect(db=project, host=uri, authMechanism=authMechanism, authSource=authSource)
         else:
-            # self.client = pymongo.MongoClient(uri)
-
             # connect to mongoengine
             self.client = db.connect(db=project, host=uri)
 
@@ -456,14 +453,13 @@ class MongoengineSocket:
             molecule_ids = [molecule_ids]
 
         bad_ids = []
-        if index == "_id":
+        if index == "id":
             molecule_ids, bad_ids = _str_to_indices_with_errors(molecule_ids)
 
-        # Project out the duplicates we use for top level keys
-        proj = {"molecule_hash": False, "molecular_formula": False}
-
+        # Don't include the hash or the molecular_formula in the returned result
         # Make the query
-        data = self._tables["molecules"].find({index: {"$in": molecule_ids}}, projection=proj)
+        query = {index+'__in': molecule_ids}
+        data = Molecule.objects(**query).exclude("molecule_hash", "molecular_formula").as_pymongo()
 
         if data is None:
             data = []
@@ -496,12 +492,17 @@ class MongoengineSocket:
         Returns
         -------
         bool
-            Whether the operation was successful.
+            Number of deleted molecules.
         """
 
         index = storage_utils.translate_molecule_index(index)
 
-        return self._del_by_index("molecules", values, index=index)
+        if isinstance(values, str):
+            values = [values]
+
+        query = {index+'__in': values}
+
+        return Molecule.objects(**query).delete()
 
     def _doc_to_tuples(self, doc: db.Document, with_ids=True):
         """
@@ -1178,7 +1179,7 @@ class MongoengineSocket:
         if tag is not None:
             query["tag"] = tag
 
-        found = TaskQueue.objects(**query).limit(limit).order_by('-created_on')
+        found = TaskQueue.objects(**query).limit(limit).order_by('created_on')
 
         query = {"_id": {"$in": [x.id for x in found]}}
 
@@ -1192,6 +1193,13 @@ class MongoengineSocket:
 
         if as_json:
             found = [self._doc_to_json(task, with_ids=True) for task in found]
+            # simplify returned formats
+            # TODO: do it in models if possible
+            for task in found:
+                task['base_result']['id'] = task['base_result']['$id']['$oid']
+                del task['base_result']['$id']
+                task['created_on'] = task['created_on']['$date']
+                task['modified_on'] = task['modified_on']['$date']
 
         if upd.modified_count != len(found):
             self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
