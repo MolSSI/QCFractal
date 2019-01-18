@@ -9,9 +9,6 @@ from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
 
 
-# Only use dask
-
-
 ### Tests an entire server and interaction energy dataset run
 @testing.using_psi4
 def test_compute_dataset(fractal_compute_server):
@@ -180,10 +177,32 @@ def test_compute_openffworkflow(fractal_compute_server):
     assert final_energies[butane_id].keys() == {"label1"}
     assert final_energies[butane_id]["label1"] is None
 
+
+def test_generic_collection(fractal_compute_server):
+
+    client = portal.FractalClient(fractal_compute_server)
+    g = portal.collections.Generic("Generic1", client=client)
+
+    # Check getters/savers
+    g["hello"] = 5
+    assert g["hello"] == 5
+
+    # Copy the data over
+    cp = g.get_data()
+    assert cp.data["hello"] == 5
+    cp.data["hello"] = 10
+
+    # Make sure we did not change underlying data.
+    assert g["hello"] == 5
+
+    # Save semantics slightly wonky, double check this works
+    g.save()
+    g2 = portal.collections.Generic.from_server(client, "Generic1")
+    assert g2["hello"] == 5
+
+
 def test_missing_collection(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server)
     with pytest.raises(KeyError):
         client.get_collection("dataset", "_waffles_")
-
-
