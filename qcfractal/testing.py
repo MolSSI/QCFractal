@@ -427,8 +427,7 @@ def _parsl_server_fixture(request):
     check_active_mongo_server()
 
     parsl = pytest.importorskip("parsl")
-    from parsl.configs.local_threads_no_cache import config
-    dataflow = parsl.dataflow.dflow.DataFlowKernel(config)
+    from parsl.configs.local_ipp import config
 
     storage_name = "qcf_parsl_server_test"
 
@@ -439,8 +438,11 @@ def _parsl_server_fixture(request):
             port=find_open_port(),
             storage_project_name=storage_name,
             loop=loop,
-            queue_socket=dataflow,
+            queue_socket=config,
             ssl_options=False)
+
+        # Parsl takes a bit to boot
+        time.sleep(2)
 
         # Clean and re-init the databse
         reset_server_database(server)
@@ -448,7 +450,7 @@ def _parsl_server_fixture(request):
         # Yield the server instance
         yield server
 
-    dataflow.atexit_cleanup()
+        server.objects["queue_manager"].queue_adapter.dataflow.atexit_cleanup()
 
 
 @pytest.fixture(scope="module")
@@ -456,7 +458,8 @@ def parsl_server_fixture(request):
     yield from _dask_server_fixture(request)
 
 
-@pytest.fixture(scope="module", params=["dask", "fireworks", "parsl"])
+@pytest.fixture(scope="module", params=["parsl"])
+# @pytest.fixture(scope="module", params=["dask", "fireworks", "parsl"])
 def fractal_compute_server(request):
     if request.param == "dask":
         yield from _dask_server_fixture(request)

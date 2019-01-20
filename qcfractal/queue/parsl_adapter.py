@@ -23,16 +23,18 @@ class ParslAdapter:
     """A Adapter for Parsl
     """
 
-    def __init__(self, parsl_dataflow, logger=None):
+    def __init__(self, parsl_config, logger=None):
         """
         Parameters
         ----------
-        parsl_dataflow : parsl.dataflow.dflow.DataFlowKernel
+        parsl_dataflow : parsl.config.Config
             A activate Parsl DataFlow
         logger : None, optional
             A optional logging object to write output to
         """
-        self.dataflow = parsl_dataflow
+
+        import parsl
+        self.dataflow = parsl.dataflow.dflow.DataFlowKernel(parsl_config)
         self.queue = {}
         self.function_map = {}
 
