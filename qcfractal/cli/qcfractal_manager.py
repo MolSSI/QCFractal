@@ -45,7 +45,7 @@ def parse_args():
     parser.add_argument("--queue-tag", type=str, help="The queue tag to pull from")
     parser.add_argument("--logfile-prefix", type=str, default=None, help="The prefix of the logfile to write to.")
     parser.add_argument(
-        "--update-frequency", type=int, default=15, help="The frquency in seconds to check for complete tasks.")
+        "--update-frequency", type=int, default=15, help="The frequency in seconds to check for complete tasks.")
 
     # Additional args
     parser.add_argument("--rapidfire", action="store_true", help="Boot and run jobs until complete")
@@ -97,6 +97,14 @@ def main(args=None):
             queue_client = fireworks.LaunchPad.from_file(args["fw_config"])
         else:
             raise KeyError("A URI or config_file must be specified.")
+
+        queue_client.reset(None, require_password=False)  # Leave cap on reset
+        exit_callbacks.append(
+            [queue_client.reset, (None, ), {
+                "require_password": False,
+                "max_reset_wo_password": int(1e8)
+            }])
+
 
     else:
         raise KeyError(

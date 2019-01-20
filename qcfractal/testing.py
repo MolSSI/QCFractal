@@ -458,8 +458,7 @@ def parsl_server_fixture(request):
     yield from _dask_server_fixture(request)
 
 
-@pytest.fixture(scope="module", params=["parsl"])
-# @pytest.fixture(scope="module", params=["dask", "fireworks", "parsl"])
+@pytest.fixture(scope="module", params=["dask", "fireworks", "parsl"])
 def fractal_compute_server(request):
     if request.param == "dask":
         yield from _dask_server_fixture(request)
