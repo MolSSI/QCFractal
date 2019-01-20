@@ -75,6 +75,7 @@ def main(args=None):
 
         # Build localcluster and exit callbacks
         adapter = dd.Client(threads_per_worker=1, n_workers=n_workers)
+        exit_callbacks.append([adapter.close, (), {}])
 
     elif args["fireworks_manager"]:
         fw = cli_utils.import_module("fireworks")
@@ -96,13 +97,6 @@ def main(args=None):
         logfile_prefix=args["log_prefix"],
         heartbeat_frequency=args["heartbeat_frequency"],
         queue_socket=adapter)
-
-    # Print Queue Manager data
-    if args["dask_manager"]:
-        server.logger.info("\nDask QueueManager initialized: {}\n".format(str(adapter)))
-    elif args["fireworks_manager"]:
-        server.logger.info("\nFireworks QueueManager initialized: \n"
-                           "    Host: {}, Name: {}\n".format(adapter.host, adapter.name))
 
     # Add exit callbacks
     for cb in exit_callbacks:

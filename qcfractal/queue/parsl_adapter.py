@@ -40,6 +40,9 @@ class ParslAdapter:
 
         self.logger = logger or logging.getLogger('ParslAdapter')
 
+    def __repr__(self):
+        return "<ParslAdapter client=<DataFlow label='{}'>>".format(self.dataflow.executors[0].label)
+
     def get_function(self, function):
         """Obtains a Python function wrapped in a Parsl Python App
 

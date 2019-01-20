@@ -36,6 +36,9 @@ class DaskAdapter:
 
         self.logger = logger or logging.getLogger('DaskAdapter')
 
+    def __repr__(self):
+        return "<DaskAdapter client={}>".format(self.dask_client)
+
     def get_function(self, function):
         """Obtains a Python function from a given string
 
@@ -146,7 +149,6 @@ class DaskAdapter:
             Count of active tasks
         """
         return len(self.queue)
-
 
     def close(self):
         """Closes down the DaskClient object

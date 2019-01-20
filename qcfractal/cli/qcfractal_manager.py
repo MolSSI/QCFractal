@@ -119,12 +119,6 @@ def main(args=None):
         cluster=args["cluster_name"],
         update_frequency=args["update_frequency"])
 
-    if args["adapter_type"] == "dask":
-        manager.logger.info("\nDask QueueManager initialized: {}\n".format(str(queue_client)))
-    elif args["adapter_type"] == "fireworks":
-        manager.logger.info("\nFireworks QueueManager initialized: \n"
-                            "    Host: {}, Name: {}\n".format(queue_client.host, queue_client.name))
-
     # Add exit callbacks
     for cb in exit_callbacks:
         manager.add_exit_callback(cb[0], *cb[1], **cb[2])

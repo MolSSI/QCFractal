@@ -102,10 +102,20 @@ class QueueManager:
         payload["data"]["operation"] = "startup"
         self.client._request("put", "queue_manager", payload)
 
-        self.logger.info("QueueManager '{}' successfully initialized.".format(self.name()))
-        self.logger.info("    QCFractal server name:     {}".format(self.server_name))
-        self.logger.info("    Queue credential username: {}".format(self.client.username))
-        self.logger.info("    Pulling tasks from {} with tag '{}'.\n".format(self.client.address, self.queue_tag))
+        self.logger.info("QueueManager:")
+        self.logger.info("    Name Information:")
+        self.logger.info("        cluster:     {}".format(self.name_data["cluster"]))
+        self.logger.info("        hostname:    {}".format(self.name_data["hostname"]))
+        self.logger.info("        uuid:        {}\n".format(self.name_data["uuid"]))
+
+        self.logger.info("    Queue Adapter:")
+        self.logger.info("        {}\n".format(self.queue_adapter))
+
+        self.logger.info("    QCFractal server information:")
+        self.logger.info("        address:     {}".format(self.client.address))
+        self.logger.info("        name:        {}".format(self.server_name))
+        self.logger.info("        queue tag:   {}".format(self.queue_tag))
+        self.logger.info("        username:    {}\n".format(self.client.username))
 
     def _payload_template(self):
         return {"meta": json.loads(self.meta_packet), "data": {}}
