@@ -73,7 +73,6 @@ def main(args=None):
         if args["local_cluster"]:
             # Build localcluster and exit callbacks
             queue_client = dd.Client(threads_per_worker=1, n_workers=args["local_workers"])
-            exit_callbacks.append([queue_client.close, (), {}])
         else:
             if args["dask_uri"] is None:
                 raise KeyError("A 'dask-uri' must be specified.")
@@ -97,14 +96,6 @@ def main(args=None):
             queue_client = fireworks.LaunchPad.from_file(args["fw_config"])
         else:
             raise KeyError("A URI or config_file must be specified.")
-
-        queue_client.reset(None, require_password=False)  # Leave cap on reset
-        exit_callbacks.append(
-            [queue_client.reset, (None, ), {
-                "require_password": False,
-                "max_reset_wo_password": int(1e8)
-            }])
-
 
     else:
         raise KeyError(

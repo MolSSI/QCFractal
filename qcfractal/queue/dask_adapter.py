@@ -146,3 +146,16 @@ class DaskAdapter:
             Count of active tasks
         """
         return len(self.queue)
+
+
+    def close(self):
+        """Closes down the DaskClient object
+
+        Returns
+        -------
+        bool
+            True if the closing was successful.
+        """
+
+        self.dask_client.close()
+        return True

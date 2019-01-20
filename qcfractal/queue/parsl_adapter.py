@@ -129,7 +129,7 @@ class ParslAdapter:
         Returns
         -------
         bool
-            True if the opertions was successful.
+            True if the opertion was successful.
         """
 
         for future in self.queue.values():
@@ -157,3 +157,15 @@ class ParslAdapter:
             Count of active tasks
         """
         return len(self.queue)
+
+    def close(self):
+        """Closes down the DataFlow object
+
+        Returns
+        -------
+        bool
+            True if the closing was successful.
+        """
+
+        self.dataflow.atexit_cleanup()
+        return True

@@ -88,8 +88,8 @@ before_script:
   - conda list
 
 script:
-  - py.test -v -rsx --runslow --cov=qcfractal qcfractal/
-  - py.test -v --runexamples examples/
+  - pytest -v -rsx --runslow --cov=qcfractal qcfractal/
+  - pytest -v --runexamples examples/
 
 notifications:
   email: false
