@@ -158,6 +158,8 @@ class DaskAdapter:
         bool
             True if the closing was successful.
         """
+        for k, future in self.queue.items():
+            future.cancel()
 
         self.dask_client.close()
         return True
