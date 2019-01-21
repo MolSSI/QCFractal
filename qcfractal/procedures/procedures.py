@@ -93,7 +93,7 @@ class SingleResultTasks:
         rdata = {}
         rhooks = {}
         for data, hooks in data:
-            key = data["queue_id"]
+            key = data["task_id"]
             rdata[key] = data
             if len(hooks):
                 rhooks[key] = hooks
@@ -240,7 +240,7 @@ class OptimizationTasks(SingleResultTasks):
             {
                 "hash_index": duplicate_lookup
             }, projection={"hash_index": True,
-                           "id": True, "queue_id": True})["data"]
+                           "id": True, "task_id": True})["data"]
 
         duplicates = []
         if len(completed_procedures):
@@ -278,7 +278,7 @@ class OptimizationTasks(SingleResultTasks):
 
         # Each optimization is a unique entry:
         for result, hooks in data:
-            key = result["queue_id"]
+            key = result["task_id"]
 
             # Convert start/stop molecules to hash
             mols = {"initial": result["initial_molecule"], "final": result["final_molecule"]}
@@ -290,7 +290,7 @@ class OptimizationTasks(SingleResultTasks):
             traj_dict = {k: v for k, v in enumerate(result["trajectory"])}
             results = procedures_util.parse_single_runs(self.storage, traj_dict)
             for k, v in results.items():
-                v["queue_id"] = key
+                v["task_id"] = key
 
             # Add trajectory results and return ids
             ret = self.storage.add_results(list(results.values()))

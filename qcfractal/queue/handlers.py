@@ -143,7 +143,7 @@ class QueueManagerHandler(APIHandler):
 
                 # Successful task
                 if result["success"] is True:
-                    result["queue_id"] = key
+                    result["task_id"] = key
                     new_results[parser].append((result, hooks))
                     task_success += 1
 

@@ -227,7 +227,7 @@ class TorsionDriveService:
 
                 if len(completed):
                     # Job is already complete
-                    task_map[key].append(completed[0]["queue_id"])
+                    task_map[key].append(completed[0]["task_id"])
                 else:
                     # Create a hook which will update the complete tasks uid
                     hook = json.loads(hook_template)

@@ -92,7 +92,7 @@ class BaseResult(db.DynamicDocument):
     """
 
     # queue related
-    task_queue_id = db.StringField()  # ObjectId, reference task_queue but without validation
+    task_id = db.StringField()  # ObjectId, reference task_queue but without validation
     status = db.StringField(required=True, choices=['COMPLETE', 'INCOMPLETE', 'ERROR'])
 
     meta = {

@@ -1374,7 +1374,7 @@ class MongoengineSocket:
             "$set": {
                 "modifed_on": dt,
             },
-            # Incremement relevant data
+            # Increment relevant data
             "$inc": {
                 "submitted": kwargs.pop("submitted", 0),
                 "completed": kwargs.pop("completed", 0),
