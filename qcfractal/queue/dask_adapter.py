@@ -7,6 +7,10 @@ import logging
 import operator
 import traceback
 
+from typing import Callable, Dict, List, Any, Optional
+
+from .base_adapter import BaseAdapter
+
 
 def _get_future(future):
     if future.exception() is None:
@@ -17,29 +21,18 @@ def _get_future(future):
         return ret
 
 
-class DaskAdapter:
-    """A Adapter for Dask
+class DaskAdapter(BaseAdapter):
+    """A Queue Adapter for Dask
     """
 
-    def __init__(self, dask_client, logger=None):
-        """
-        Parameters
-        ----------
-        dask_client : distributed.Client
-            A activte Dask Distributed Client
-        logger : None, optional
-            A optional logging object to write output to
-        """
-        self.dask_client = dask_client
-        self.queue = {}
+    def __init__(self, client: Any, logger: Optional[logging.Logger]=None):
+        BaseAdapter.__init__(self, client, logger)
         self.function_map = {}
 
-        self.logger = logger or logging.getLogger('DaskAdapter')
-
     def __repr__(self):
-        return "<DaskAdapter client={}>".format(self.dask_client)
+        return "<DaskAdapter client={}>".format(self.client)
 
-    def get_function(self, function):
+    def get_function(self, function: str) -> Callable:
         """Obtains a Python function from a given string
 
         Parameters
@@ -67,19 +60,7 @@ class DaskAdapter:
 
         return self.function_map[function]
 
-    def submit_tasks(self, tasks):
-        """Adds tasks to the Dask queue
-
-        Parameters
-        ----------
-        tasks : list of dict
-            Canonical Fractal with {"spec: {"function", "args", "kwargs"}} fields.
-
-        Returns
-        -------
-        list of str
-            The tags associated with the submitted tasks.
-        """
+    def submit_tasks(self, tasks: Dict[str, Any]) -> List[str]:
         ret = []
         for spec in tasks:
 
@@ -89,21 +70,14 @@ class DaskAdapter:
 
             # Form run tuple
             func = self.get_function(spec["spec"]["function"])
-            task = self.dask_client.submit(func, *spec["spec"]["args"], **spec["spec"]["kwargs"])
+            task = self.client.submit(func, *spec["spec"]["args"], **spec["spec"]["kwargs"])
 
             self.queue[tag] = (task, spec["parser"], spec["hooks"])
             self.logger.info("Adapter: Task submitted {}".format(tag))
             ret.append(tag)
         return ret
 
-    def acquire_complete(self):
-        """Pulls complete tasks out of the Dask queue.
-
-        Returns
-        -------
-        list of dict
-            The JSON structures of complete tasks
-        """
+    def acquire_complete(self) -> List[Dict[str, Any]]:
         ret = {}
         del_keys = []
         for key, (future, parser, hooks) in self.queue.items():
@@ -116,50 +90,16 @@ class DaskAdapter:
 
         return ret
 
-    def await_results(self):
-        """Waits for all tasks to complete before returning
-
-        Returns
-        -------
-        bool
-            True if the opertions was successful.
-        """
+    def await_results(self) -> bool:
         from dask.distributed import wait
         futures = [v[0] for k, v in self.queue.items()]
         wait(futures)
 
         return True
 
-    def list_tasks(self):
-        """Returns the tags for all active tasks
-
-        Returns
-        -------
-        list of str
-            Tags of all activate tasks.
-        """
-        return list(self.queue.keys())
-
-    def task_count(self):
-        """Counts all active tasks
-
-        Returns
-        -------
-        int
-            Count of active tasks
-        """
-        return len(self.queue)
-
-    def close(self):
-        """Closes down the DaskClient object
-
-        Returns
-        -------
-        bool
-            True if the closing was successful.
-        """
+    def close(self) -> bool:
         for k, future in self.queue.items():
             future.cancel()
 
-        self.dask_client.close()
+        self.client.close()
         return True

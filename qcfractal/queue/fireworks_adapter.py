@@ -4,28 +4,20 @@ Queue adapter for Fireworks
 
 import logging
 
+from typing import Callable, Dict, List, Any, Optional
 
-class FireworksAdapter:
-    def __init__(self, lpad, logger=None):
-        """
-        Parameters
-        ----------
-        lpad : fireworks.LaunchPad
-            A activte Fireworks LaunchPad
-        logger : None, optional
-            A optional logging object to write output to
-        """
+from .base_adapter import BaseAdapter
 
-        self.lpad = lpad
-        self.lpad.reset(None, require_password=False, max_reset_wo_password=int(1e8))
 
-        self.queue = {}
-        self.logger = logger or logging.getLogger('FireworksAdapter')
+class FireworksAdapter(BaseAdapter):
+    def __init__(self, client: Any, logger: Optional[logging.Logger]=None):
+        BaseAdapter.__init__(self, client, logger)
+        self.client.reset(None, require_password=False, max_reset_wo_password=int(1e8))
 
     def __repr__(self):
-        return "<FireworksAdapter client=<LaunchPad host='{}' name='{}'>>".format(self.lpad.host, self.lpad.name)
+        return "<FireworksAdapter client=<LaunchPad host='{}' name='{}'>>".format(self.client.host, self.client.name)
 
-    def submit_tasks(self, tasks):
+    def submit_tasks(self, tasks: Dict[str, Any]) -> List[str]:
         ret = []
 
         import fireworks
@@ -39,18 +31,18 @@ class FireworksAdapter:
                     kwargs=task["spec"]["kwargs"],
                     stored_data_varname="fw_results"),
                 spec={"_launch_dir": "/tmp/"})
-            launches = self.lpad.add_wf(fw)
+            launches = self.client.add_wf(fw)
 
             self.queue[list(launches.values())[0]] = (tag, task["parser"], task["hooks"])
             ret.append(tag)
 
         return ret
 
-    def acquire_complete(self):
+    def acquire_complete(self) -> List[Dict[str, Any]]:
         ret = {}
 
         # Pull out completed results that match our queue ids
-        cursor = self.lpad.launches.find({
+        cursor = self.client.launches.find({
             "fw_id": {
                 "$in": list(self.queue.keys())
             },
@@ -79,26 +71,11 @@ class FireworksAdapter:
 
         return ret
 
-    def await_results(self):
-
-        # Try to get each results
+    def await_results(self) -> bool:
+        # Launch all results consecutively
         import fireworks.core.rocket_launcher
-        fireworks.core.rocket_launcher.rapidfire(self.lpad, strm_lvl="CRITICAL")
+        fireworks.core.rocket_launcher.rapidfire(self.client, strm_lvl="CRITICAL")
 
-    def list_tasks(self):
-        return list(self.queue.values())
-
-    def task_count(self):
-        return len(self.queue)
-
-    def close(self):
-        """Closes down the LaunchPad object
-
-        Returns
-        -------
-        bool
-            True if the closing was successful.
-        """
-
-        self.lpad.reset(None, require_password=False, max_reset_wo_password=int(1e8))
+    def close(self) -> bool:
+        self.client.reset(None, require_password=False, max_reset_wo_password=int(1e8))
         return True
