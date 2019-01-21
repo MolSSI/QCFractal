@@ -3,15 +3,17 @@ Queue adapter for Parsl
 """
 
 import abc
+import importlib
 import logging
-from typing import Any, Dict, Optional, List
+import operator
+from typing import Any, Dict, Optional, List, Callable
 
 
 class BaseAdapter(abc.ABC):
     """A Adapter for Parsl
     """
 
-    def __init__(self, client: Any, logger: Optional[logging.Logger]=None):
+    def __init__(self, client: Any, logger: Optional[logging.Logger] = None):
         """
         Parameters
         ----------

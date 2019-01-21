@@ -2,12 +2,9 @@
 Queue adapter for Parsl
 """
 
-import importlib
 import logging
-import operator
 import time
 import traceback
-
 from typing import Callable, Dict, List, Any, Optional
 
 from .base_adapter import BaseAdapter
@@ -27,7 +24,7 @@ class ParslAdapter(BaseAdapter):
     """A Adapter for Parsl
     """
 
-    def __init__(self, client: Any, logger: Optional[logging.Logger]=None):
+    def __init__(self, client: Any, logger: Optional[logging.Logger] = None):
         BaseAdapter.__init__(self, client, logger)
 
         import parsl

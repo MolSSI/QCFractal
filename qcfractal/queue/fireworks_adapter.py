@@ -3,8 +3,7 @@ Queue adapter for Fireworks
 """
 
 import logging
-
-from typing import Callable, Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional
 
 from .base_adapter import BaseAdapter
 

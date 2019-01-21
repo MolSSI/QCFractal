@@ -2,12 +2,9 @@
 Queue adapter for Dask
 """
 
-import importlib
 import logging
-import operator
 import traceback
-
-from typing import Callable, Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional
 
 from .base_adapter import BaseAdapter
 
@@ -21,15 +18,19 @@ def _get_future(future):
         return ret
 
 
-class DaskAdapter(BaseAdapter):
-    """A Queue Adapter for Dask
+class ExecutorAdapter(BaseAdapter):
+    """A Queue Adapter for Python Executors
     """
 
-    def __init__(self, client: Any, logger: Optional[logging.Logger]=None):
+    def __init__(self, client: Any, logger: Optional[logging.Logger] = None):
         BaseAdapter.__init__(self, client, logger)
 
     def __repr__(self):
-        return "<DaskAdapter client={}>".format(self.client)
+
+        if hasattr(self.client, "_max_workers"):
+            return "<ExecutorAdapter client=<{} max_workers={}>>".format(exec.__class__.__name__, self._max_workers)
+        else:
+            return "<ExecutorAdapter client={}>".format(self.client)
 
     def submit_tasks(self, tasks: Dict[str, Any]) -> List[str]:
         ret = []
@@ -62,9 +63,9 @@ class DaskAdapter(BaseAdapter):
         return ret
 
     def await_results(self) -> bool:
-        from dask.distributed import wait
-        futures = [v[0] for k, v in self.queue.items()]
-        wait(futures)
+        for future in self.queue.values():
+            while future[0].done() is False:
+                time.sleep(0.1)
 
         return True
 
@@ -73,4 +74,15 @@ class DaskAdapter(BaseAdapter):
             future.cancel()
 
         self.client.close()
+        return True
+
+
+class DaskAdapter(ExecutorAdapter):
+    """A Queue Adapter for Dask
+    """
+
+    def await_results(self) -> bool:
+        from dask.distributed import wait
+        futures = [v[0] for k, v in self.queue.items()]
+        wait(futures)
         return True
