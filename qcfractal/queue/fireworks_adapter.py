@@ -23,8 +23,7 @@ class FireworksAdapter:
         self.logger = logger or logging.getLogger('FireworksAdapter')
 
     def __repr__(self):
-        return "<FireworksAdapter client=<LaunchPad host='{}' name='{}'>>".format(self.lpad.host, self.lpad.port,
-                                                                                  self.lpad.name)
+        return "<FireworksAdapter client=<LaunchPad host='{}' name='{}'>>".format(self.lpad.host, self.lpad.name)
 
     def submit_tasks(self, tasks):
         ret = []
