@@ -37,3 +37,4 @@ dependencies:
     - pydantic
     - mongoengine
     - git+git://github.com/lpwgroup/torsiondrive.git@v0.9.1#egg=torsiondrive
+    - parsl

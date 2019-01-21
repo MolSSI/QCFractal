@@ -1,4 +1,3 @@
-import fireworks
 import pymongo
 
 # Reset database

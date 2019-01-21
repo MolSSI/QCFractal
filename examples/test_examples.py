@@ -38,6 +38,7 @@ def test_fireworks_server_example():
             assert testing.run_process(["python", "query_database.py"], **kwargs)
 
 
+@testing.using_parsl
 @testing.using_geometric
 @testing.using_torsiondrive
 @testing.using_rdkit

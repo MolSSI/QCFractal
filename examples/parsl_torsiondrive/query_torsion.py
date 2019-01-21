@@ -1,5 +1,4 @@
 import qcfractal.interface as portal
-import json
 
 # Build a interface to the server 
 client = portal.FractalClient("localhost:7777", verify=False)

@@ -39,6 +39,7 @@ _programs = {
     "fireworks": _plugin_import("fireworks"),
     "rdkit": _plugin_import("rdkit"),
     "psi4": _plugin_import("psi4"),
+    "parsl": _plugin_import("parsl"),
     "dask": _plugin_import("dask"),
     "geometric": _plugin_import("geometric"),
     "torsiondrive": _plugin_import("torsiondrive"),
@@ -58,6 +59,7 @@ using_fireworks = pytest.mark.skipif(has_module('fireworks') is False, reason=_i
 using_dask = pytest.mark.skipif(
     has_module('dask.distributed') is False, reason=_import_message.format('dask.distributed'))
 using_psi4 = pytest.mark.skipif(has_module('psi4') is False, reason=_import_message.format('psi4'))
+using_parsl = pytest.mark.skipif(has_module('parsl') is False, reason=_import_message.format('parsl'))
 using_rdkit = pytest.mark.skipif(has_module('rdkit') is False, reason=_import_message.format('rdkit'))
 using_geometric = pytest.mark.skipif(has_module('geometric') is False, reason=_import_message.format('geometric'))
 using_torsiondrive = pytest.mark.skipif(

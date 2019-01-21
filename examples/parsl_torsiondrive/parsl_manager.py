@@ -1,25 +1,25 @@
+"""
+A canonical Parsl manager example
+"""
 
 # QCFractal import
 import qcfractal
 import qcfractal.interface as portal
-import json
 
 # Make sure logging is setup correctly
 import tornado.log
 tornado.log.enable_pretty_logging()
 
-# Parsl imports and config
-from parsl.channels import SSHChannel
-from parsl.providers import SlurmProvider
-
-from parsl.config import Config
-from parsl.executors.ipp import IPyParallelExecutor
-from parsl.executors.ipp_controller import Controller
-
 # Import a process config
 from parsl.configs.local_ipp import config
 
 # Setup a custom configuration
+# from parsl.channels import SSHChannel
+# from parsl.providers import SlurmProvider
+# 
+# from parsl.config import Config
+# from parsl.executors.ipp import IPyParallelExecutor
+# from parsl.executors.ipp_controller import Controller
 # config = Config(
 #     executors=[
 #         IPyParallelExecutor(
