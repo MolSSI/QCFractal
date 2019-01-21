@@ -45,8 +45,8 @@ class SingleResultTasks:
         query["molecule"] = [x["molecule"]["id"] for x in runs.values()]
         query["status"] = None
 
-        search = self.storage.get_results(**query, projection={"molecule": True})
-        completed = set(x["molecule"] for x in search["data"])
+        completed_results = self.storage.get_results(**query, projection={"molecule": True})["data"]
+        completed_ids = set(x["molecule"] for x in completed_results)
 
         # Grab the tag if available
         tag = data["meta"].pop("tag", None)
@@ -54,7 +54,7 @@ class SingleResultTasks:
         # Construct full tasks
         full_tasks = []
         for k, v in runs.items():
-            if v["molecule"]["id"] in completed:
+            if v["molecule"]["id"] in completed_ids:
                 continue
 
             query["molecule"] = v["molecule"]["id"]
@@ -84,7 +84,7 @@ class SingleResultTasks:
 
             full_tasks.append(task)
 
-        return full_tasks, completed, errors
+        return full_tasks, completed_results, errors
 
     def parse_output(self, data):
 
@@ -236,15 +236,15 @@ class OptimizationTasks(SingleResultTasks):
             full_tasks.append(task)
 
         # Find and handle duplicates
-        query = self.storage.get_procedures(
+        completed_procedures = self.storage.get_procedures(
             {
                 "hash_index": duplicate_lookup
             }, projection={"hash_index": True,
-                           "id": True})["data"]
+                           "id": True, "queue_id": True})["data"]
 
         duplicates = []
-        if len(query):
-            found_hashes = set(x["hash_index"] for x in query)
+        if len(completed_procedures):
+            found_hashes = set(x["hash_index"] for x in completed_procedures)
 
             # Filter out tasks
             new_tasks = []
@@ -254,12 +254,12 @@ class OptimizationTasks(SingleResultTasks):
                 else:
                     new_tasks.append(task)
 
-            if duplicate_id == "hash_index":
-                duplicates = list(found_hashes)
-            elif duplicate_id == "id":
-                duplicates = [x["id"] for x in query]
-            else:
-                raise KeyError("Duplicate id '{}' not understood".format(duplicate_id))
+            # if duplicate_id == "hash_index":
+            #     duplicates = list(found_hashes)
+            # elif duplicate_id == "id":
+            #     duplicates = [x["id"] for x in completed_procedures]
+            # else:
+            #     raise KeyError("Duplicate id '{}' not understood".format(duplicate_id))
 
             full_tasks = new_tasks
 
@@ -269,7 +269,7 @@ class OptimizationTasks(SingleResultTasks):
             ret = self.storage.add_procedures([stub])
             task["base_result"] = ("procedure", ret["data"][0])
 
-        return full_tasks, duplicates, errors
+        return full_tasks, completed_procedures, errors
 
     def parse_output(self, data):
 

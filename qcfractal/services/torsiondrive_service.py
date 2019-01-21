@@ -223,12 +223,11 @@ class TorsionDriveService:
 
                 # Turn packet into a full task, if there are duplicates, get the ID
                 procedure_parser = procedures.get_procedure_parser("optimization", self.storage_socket)
-                tasks, complete, errors = procedure_parser.parse_input(packet, duplicate_id="id")
+                tasks, completed, errors = procedure_parser.parse_input(packet, duplicate_id="id")
 
-                if len(complete):
+                if len(completed):
                     # Job is already complete
-                    queue_id = self.storage_socket.get_procedures({"id": complete[0]})["data"][0]["queue_id"]
-                    task_map[key].append(queue_id)
+                    task_map[key].append(completed[0]["queue_id"])
                 else:
                     # Create a hook which will update the complete tasks uid
                     hook = json.loads(hook_template)
