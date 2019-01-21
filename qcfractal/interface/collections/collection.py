@@ -76,7 +76,7 @@ class Collection(abc.ABC):
         --------
 
         >>> repr(obj)
-        Collection(id='5b7f1fd57b87872d2c5d0a6d', name=`S22`, client=`localhost:8888`)
+        Collection(name=`S22`, id='5b7f1fd57b87872d2c5d0a6d', client=`localhost:8888`)
         """
 
         client = None
@@ -85,8 +85,8 @@ class Collection(abc.ABC):
 
         class_name = self.__class__.__name__
         ret = "{}(".format(class_name)
-        ret += "id='{}', ".format(self.data.id)
         ret += "name=`{}`, ".format(self.data.name)
+        ret += "id='{}', ".format(self.data.id)
         ret += "client='{}') ".format(client)
 
         return ret
