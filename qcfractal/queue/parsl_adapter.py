@@ -32,13 +32,13 @@ class ParslAdapter(BaseAdapter):
 
         import parsl
         self.client = parsl.dataflow.dflow.DataFlowKernel(self.client)
-        self.function_map = {}
+        self.app_map = {}
 
     def __repr__(self):
         return "<ParslAdapter client=<DataFlow label='{}'>>".format(self.client.config.executors[0].label)
 
-    def get_function(self, function: str) -> Callable:
-        """Obtains a Python function wrapped in a Parsl Python App
+    def get_app(self, function: str) -> Callable:
+        """Obtains a Parsl python_application
 
         Parameters
         ----------
@@ -53,23 +53,21 @@ class ParslAdapter(BaseAdapter):
         Examples
         --------
 
-        >>> get_function("numpy.einsum")
+        >>> get_app("numpy.einsum")
         <class PythonApp"AppFactory for einsum>
         """
 
         from parsl.app.app import python_app
 
-        if function in self.function_map:
-            return self.function_map[function]
+        if function in self.app_map:
+            return self.app_map[function]
 
-        module_name, func_name = function.split(".", 1)
-        module = importlib.import_module(module_name)
-        func = operator.attrgetter(func_name)(module)
+        func = self.get_function(function)
 
         # TODO set walltime and the like
-        self.function_map[function] = python_app(func, data_flow_kernel=self.client)
+        self.app_map[function] = python_app(func, data_flow_kernel=self.client)
 
-        return self.function_map[function]
+        return self.app_map[function]
 
     def submit_tasks(self, tasks: Dict[str, Any]) -> List[str]:
         ret = []
@@ -80,7 +78,7 @@ class ParslAdapter(BaseAdapter):
                 continue
 
             # Form run tuple
-            func = self.get_function(spec["spec"]["function"])
+            func = self.get_app(spec["spec"]["function"])
             task = func(*spec["spec"]["args"], **spec["spec"]["kwargs"])
 
             self.queue[tag] = (task, spec["parser"], spec["hooks"])

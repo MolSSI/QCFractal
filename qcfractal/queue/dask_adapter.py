@@ -27,38 +27,9 @@ class DaskAdapter(BaseAdapter):
 
     def __init__(self, client: Any, logger: Optional[logging.Logger]=None):
         BaseAdapter.__init__(self, client, logger)
-        self.function_map = {}
 
     def __repr__(self):
         return "<DaskAdapter client={}>".format(self.client)
-
-    def get_function(self, function: str) -> Callable:
-        """Obtains a Python function from a given string
-
-        Parameters
-        ----------
-        function : str
-            A full path to a function
-
-        Returns
-        -------
-        callable
-            The desired Python function
-
-        Examples
-        --------
-
-        >>> get_function("numpy.einsum")
-        <function einsum at 0x110406a60>
-        """
-        if function in self.function_map:
-            return self.function_map[function]
-
-        module_name, func_name = function.split(".", 1)
-        module = importlib.import_module(module_name)
-        self.function_map[function] = operator.attrgetter(func_name)(module)
-
-        return self.function_map[function]
 
     def submit_tasks(self, tasks: Dict[str, Any]) -> List[str]:
         ret = []

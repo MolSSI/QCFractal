@@ -10,7 +10,7 @@ from .base_adapter import BaseAdapter
 
 
 class FireworksAdapter(BaseAdapter):
-    def __init__(self, client: Any, logger: Optional[logging.Logger]=None):
+    def __init__(self, client: Any, logger: Optional[logging.Logger] = None):
         BaseAdapter.__init__(self, client, logger)
         self.client.reset(None, require_password=False, max_reset_wo_password=int(1e8))
 
