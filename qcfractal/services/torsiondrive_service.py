@@ -125,7 +125,7 @@ class TorsionDriveService:
             # Create a lookup table for task ID mapping to result from that task in the procedure table
             inv_task_lookup = {
                 x["id"]: self.storage_socket.get_procedures({
-                    "id": x["base_result"]["_ref"].id
+                    "id": x["base_result"]["_ref"].id    #TODO: check key _ref
                 })["data"][0]
                 for x in task_query["data"]
             }
@@ -222,8 +222,8 @@ class TorsionDriveService:
                 packet["data"] = [mol]
 
                 # Turn packet into a full task, if there are duplicates, get the ID
-                tasks, complete, errors = procedures.get_procedure_input_parser("optimization")(
-                    self.storage_socket, packet, duplicate_id="id")
+                procedure_parser = procedures.get_procedure_parser("optimization", self.storage_socket)
+                tasks, complete, errors = procedure_parser.parse_input(packet, duplicate_id="id")
 
                 if len(complete):
                     # Job is already complete

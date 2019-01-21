@@ -24,8 +24,8 @@ class TaskQueueHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         # Format tasks
-        func = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])
-        full_tasks, complete_tasks, errors = func(storage, self.json)
+        procedure_parser = procedures.get_procedure_parser(self.json["meta"]["procedure"], storage)
+        full_tasks, complete_tasks, errors = procedure_parser.parse_input(self.json)
 
         # Add tasks to queue
         ret = storage.queue_submit(full_tasks)
@@ -70,8 +70,7 @@ class ServiceQueueHandler(APIHandler):
 
         # Figure out initial molecules
         errors = []
-        ordered_mol_dict = {x: mol for x, mol in enumerate(self.json["data"])}
-        mol_query = storage.mixed_molecule_get(ordered_mol_dict)
+        mol_query = storage.get_add_molecules_mixed(self.json["data"])
 
         # Build out services
         submitted_services = []
@@ -178,8 +177,9 @@ class QueueManagerHandler(APIHandler):
         # Run output parsers
         completed = []
         hooks = []
-        for k, v in new_results.items():
-            com, err, hks = procedures.get_procedure_output_parser(k)(storage_socket, v)
+        for k, v in new_results.items():  # todo: can be merged? do they have diff k?
+            procedure_parser = procedures.get_procedure_parser(k,storage_socket)
+            com, err, hks = procedure_parser.parse_output(v)
             completed.extend(com)
             error_data.extend(err)
             hooks.extend(hks)

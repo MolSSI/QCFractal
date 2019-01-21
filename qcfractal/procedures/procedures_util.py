@@ -44,12 +44,10 @@ def unpack_single_run_meta(storage, meta, molecules):
 
     >>> unpack_single_run_meta(storage, meta, molecules)
 
-
     """
 
     # Get the required molecules
-    indexed_molecules = {k: v for k, v in enumerate(molecules)}
-    raw_molecules_query = storage.mixed_molecule_get(indexed_molecules)
+    raw_molecules_query = storage.get_add_molecules_mixed(molecules)
 
     # Pull out the needed options
     if meta["options"] is None:

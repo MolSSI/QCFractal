@@ -217,8 +217,48 @@ class MongoengineSocket:
     def get_project_name(self):
         return self._project_name
 
-    def mixed_molecule_get(self, data):
-        return storage_utils.mixed_molecule_get(self, data)
+    def get_add_molecules_mixed(self, data):
+        """
+        Get or add the given molecules (if they don't exit).
+        Molecules are given in a mixed format, either as a dict of mol data
+        or as existing mol id
+
+        TODO: to be split into get by_id and get_by_data
+        """
+
+        meta = storage_utils.get_metadata()
+
+        ordered_mol_dict = {indx: mol for indx, mol in enumerate(data)}
+        dict_mols = {}
+        id_mols = {}
+        for idx, mol in ordered_mol_dict.items():
+            if isinstance(mol, str):
+                id_mols[idx] = mol
+            elif isinstance(mol, dict):
+                dict_mols[idx] = mol
+            else:
+                meta["errors"].append((idx, "Data type not understood"))
+
+        ret_mols = {}
+
+        # Add all new molecules
+        id_mols.update(self.add_molecules(dict_mols)["data"])
+
+        # Get molecules by index and translate back to dict
+        tmp = self.get_molecules(list(id_mols.values()))
+        id_mols_list = tmp["data"]
+        meta["errors"].append(tmp["meta"]["errors"])
+
+        inv_id_mols = {v: k for k, v in id_mols.items()}
+
+        for mol in id_mols_list:
+            ret_mols[inv_id_mols[mol["id"]]] = mol
+
+        meta["success"] = True
+        meta["n_found"] = len(ret_mols)
+        meta["missing"] = list(ordered_mol_dict.keys() - ret_mols.keys())
+
+        return {"meta": meta, "data": ret_mols}
 
     def _add_generic(self, data, table, return_map=True):
         """
