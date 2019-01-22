@@ -27,7 +27,8 @@ class ExecutorAdapter(BaseAdapter):
 
         # ProcessPoolExecutors and similar
         if hasattr(self.client, "_max_workers"):
-            return "<ExecutorAdapter client=<{} max_workers={}>>".format(exec.__class__.__name__, self._max_workers)
+            return "<ExecutorAdapter client=<{} max_workers={}>>".format(exec.__class__.__name__,
+                                                                         self.client._max_workers)
 
         # Dask Clients and similar
         else:
@@ -74,7 +75,7 @@ class ExecutorAdapter(BaseAdapter):
         for future in self.queue.values():
             future[0].cancel()
 
-        self.client.close()
+        self.client.shutdown()
         return True
 
 

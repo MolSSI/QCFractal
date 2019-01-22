@@ -5,11 +5,11 @@ Explicit tests for queue manipulation.
 import time
 
 import pytest
+from concurrent.futures import ProcessPoolExecutor
 
 import qcfractal.interface as portal
 from qcfractal import testing, queue, FractalServer
-from qcfractal.testing import reset_server_database, test_server
-from qcfractal.testing import dask_server_fixture as compute_manager_fixture
+from qcfractal.testing import reset_server_database, test_server, parametrized_compute_server
 
 
 @pytest.fixture(scope="module")
@@ -17,17 +17,17 @@ def compute_manager_fixture(test_server):
 
     client = portal.FractalClient(test_server)
 
-    with testing.fireworks_quiet_lpad() as lpad:
+    with ProcessPoolExecutor(max_workers=2) as adapter:
 
-        yield client, test_server, lpad
+        yield client, test_server, adapter
 
 
 @testing.using_rdkit
 def test_queue_manager_single(compute_manager_fixture):
-    client, server, lpad = compute_manager_fixture
+    client, server, adapter = compute_manager_fixture
     reset_server_database(server)
 
-    manager = queue.QueueManager(client, lpad)
+    manager = queue.QueueManager(client, adapter)
 
     # Add compute
     hooh = portal.data.get_molecule("hooh.json")
@@ -41,11 +41,11 @@ def test_queue_manager_single(compute_manager_fixture):
 
 @testing.using_rdkit
 def test_queue_manager_single_tags(compute_manager_fixture):
-    client, server, lpad = compute_manager_fixture
+    client, server, adapter = compute_manager_fixture
     reset_server_database(server)
 
-    manager_stuff = queue.QueueManager(client, lpad, queue_tag="stuff")
-    manager_other = queue.QueueManager(client, lpad, queue_tag="other")
+    manager_stuff = queue.QueueManager(client, adapter, queue_tag="stuff")
+    manager_other = queue.QueueManager(client, adapter, queue_tag="other")
 
     # Add compute
     hooh = portal.data.get_molecule("hooh.json")
@@ -77,10 +77,10 @@ def test_queue_manager_single_tags(compute_manager_fixture):
 def test_queue_manager_shutdown(compute_manager_fixture):
     """Tests to ensure tasks are returned to queue when the manager shuts down
     """
-    client, server, lpad = compute_manager_fixture
+    client, server, adapter = compute_manager_fixture
     reset_server_database(server)
 
-    manager = queue.QueueManager(client, lpad)
+    manager = queue.QueueManager(client, adapter)
 
     hooh = portal.data.get_molecule("hooh.json")
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.to_json()], tag="other")
@@ -95,41 +95,41 @@ def test_queue_manager_shutdown(compute_manager_fixture):
     assert sman[0]["status"] == "INACTIVE"
 
     # Boot new manager and await results
-    manager = queue.QueueManager(client, lpad)
+    manager = queue.QueueManager(client, adapter)
     manager.await_results()
     ret = client.get_results()
     assert len(ret) == 1
 
 
-def test_queue_manager_heartbeat():
+def test_queue_manager_heartbeat(compute_manager_fixture):
     """Tests to ensure tasks are returned to queue when the manager shuts down
     """
 
-    with testing.fireworks_quiet_lpad() as lpad:
-        with testing.loop_in_thread() as loop:
+    client, server, adapter = compute_manager_fixture
+    with testing.loop_in_thread() as loop:
 
-            # Build server, manually handle IOLoop (no start/stop needed)
-            server = FractalServer(
-                port=testing.find_open_port(),
-                storage_project_name="heartbeat_checker",
-                loop=loop,
-                ssl_options=False,
-                heartbeat_frequency=0.1)
+        # Build server, manually handle IOLoop (no start/stop needed)
+        server = FractalServer(
+            port=testing.find_open_port(),
+            storage_project_name="heartbeat_checker",
+            loop=loop,
+            ssl_options=False,
+            heartbeat_frequency=0.1)
 
-            # Clean and re-init the database
-            testing.reset_server_database(server)
+        # Clean and re-init the database
+        testing.reset_server_database(server)
 
-            client = portal.FractalClient(server)
-            manager = queue.QueueManager(client, lpad)
+        client = portal.FractalClient(server)
+        manager = queue.QueueManager(client, adapter)
 
-            sman = server.list_managers(name=manager.name())
-            assert len(sman) == 1
-            assert sman[0]["status"] == "ACTIVE"
+        sman = server.list_managers(name=manager.name())
+        assert len(sman) == 1
+        assert sman[0]["status"] == "ACTIVE"
 
-            # Make sure interval exceeds heartbeat time
-            time.sleep(1)
-            server.check_manager_heartbeats()
+        # Make sure interval exceeds heartbeat time
+        time.sleep(1)
+        server.check_manager_heartbeats()
 
-            sman = server.list_managers(name=manager.name())
-            assert len(sman) == 1
-            assert sman[0]["status"] == "INACTIVE"
+        sman = server.list_managers(name=manager.name())
+        assert len(sman) == 1
+        assert sman[0]["status"] == "INACTIVE"

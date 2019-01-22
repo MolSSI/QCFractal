@@ -345,108 +345,51 @@ def test_server(request):
         yield server
 
 
-def _dask_server_fixture(request):
-    """
-    Builds a server instance with the event loop running in a thread.
-    """
+def build_managed_compute_server(mtype):
 
     # Check mongo
     check_active_mongo_server()
 
-    dd = pytest.importorskip("dask.distributed")
+    # Basic boot and loop information
+    storage_name = "qcf_compute_server_test"
+    sleep_time = 0.1
 
-    storage_name = "qcf_dask_server_test"
+    if mtype == "pool":
+        from concurrent.futures import ProcessPoolExecutor
 
-    with pristine_loop() as loop:
+        adapter_client = ProcessPoolExecutor(max_workers=2)
 
-        # Client auto builds and shuts down a LocalCluster
-        # LocalCluster will start the loop in a background thread for us
-        with dd.Client(n_workers=1, threads_per_worker=1, loop=loop) as client:
+    elif mtype == "dask":
+        dd = pytest.importorskip("dask.distributed")
+        adapter_client = dd.Client(n_workers=2, threads_per_worker=1)
 
-            # Build server, manually handle IOLoop (no start/stop needed)
-            server = FractalServer(
-                port=find_open_port(),
-                storage_project_name=storage_name,
-                loop=client.loop,
-                queue_socket=client,
-                ssl_options=False)
+        # Not super happy about this line, but shuts up dangling reference errors
+        adapter_client._should_close_loop = False
 
-            # Clean and re-init the databse
-            reset_server_database(server)
+    elif mtype == "fireworks":
+        fireworks = pytest.importorskip("fireworks")
 
-            # Yield the server instance
-            yield server
+        fireworks_name = storage_name + "_fireworks_queue"
+        adapter_client = fireworks.LaunchPad(name=fireworks_name, logdir="/tmp/", strm_lvl="CRITICAL")
 
-            # LocalCluster cleans itself up in loop
+    elif mtype == "parsl":
+        parsl = pytest.importorskip("parsl")
+        from parsl.configs.local_ipp import config as adapter_client
+        sleep_time = 2
 
-
-@pytest.fixture(scope="module")
-def dask_server_fixture(request):
-    yield from _dask_server_fixture(request)
-
-
-def _fireworks_server_fixture(request):
-    """
-    Builds a server instance with the event loop running in a thread.
-    """
-
-    # Check mongo
-    check_active_mongo_server()
-
-    fireworks = pytest.importorskip("fireworks")
-    logging.basicConfig(level=logging.CRITICAL, filename="/tmp/fireworks_logfile.txt")
-
-    storage_name = "qcf_fireworks_server_test"
-    fireworks_name = storage_name + "_fireworks_queue"
-    lpad = fireworks.LaunchPad(name=fireworks_name, logdir="/tmp/", strm_lvl="CRITICAL")
+    else:
+        raise TypeError("fractal_compute_server: internal parametrize error")
 
     with loop_in_thread() as loop:
-
-        # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(
-            port=find_open_port(), storage_project_name=storage_name, loop=loop, queue_socket=lpad, ssl_options=False)
-
-        # Clean and re-init the databse
-        reset_server_database(server)
-
-        yield server
-
-        # Close down and clean the lpad
-        server.objects["queue_manager"].close_adapter()
-
-    logging.basicConfig(level=None, filename=None)
-
-
-@pytest.fixture(scope="module")
-def fireworks_server_fixture(request):
-    yield from _fireworks_server_fixture(request)
-
-
-def _parsl_server_fixture(request):
-    """
-    Builds a server instance with the event loop running in a thread.
-    """
-
-    # Check mongo
-    check_active_mongo_server()
-
-    parsl = pytest.importorskip("parsl")
-    from parsl.configs.local_ipp import config
-
-    storage_name = "qcf_parsl_server_test"
-
-    with loop_in_thread() as loop:
-
-        # Build server, manually handle IOLoop (no start/stop needed)
         server = FractalServer(
             port=find_open_port(),
             storage_project_name=storage_name,
             loop=loop,
-            queue_socket=config,
+            queue_socket=adapter_client,
             ssl_options=False)
 
-        # Parsl takes a bit to boot
-        time.sleep(2)
+        # Some need time to boot
+        time.sleep(sleep_time)
 
         # Clean and re-init the databse
         reset_server_database(server)
@@ -454,25 +397,25 @@ def _parsl_server_fixture(request):
         # Yield the server instance
         yield server
 
-        # Close down and clean the parsl adapter
+        # Close down and clean the adapter
         server.objects["queue_manager"].close_adapter()
 
 
+@pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
+def parametrized_compute_server(request):
+    """
+    A FractalServer with compute associated parametrize for all managers
+    """
+
+    yield from build_managed_compute_server(request.param)
+
 @pytest.fixture(scope="module")
-def parsl_server_fixture(request):
-    yield from _dask_server_fixture(request)
-
-
-@pytest.fixture(scope="module", params=["dask", "fireworks", "parsl"])
 def fractal_compute_server(request):
-    if request.param == "dask":
-        yield from _dask_server_fixture(request)
-    elif request.param == "fireworks":
-        yield from _fireworks_server_fixture(request)
-    elif request.param == "parsl":
-        yield from _parsl_server_fixture(request)
-    else:
-        raise TypeError("fractal_compute_server: internal parametrize error")
+    """
+    A FractalServer with a local Pool manager
+    """
+
+    yield from build_managed_compute_server("pool")
 
 
 @pytest.fixture(scope="module", params=["mongoengine"])
