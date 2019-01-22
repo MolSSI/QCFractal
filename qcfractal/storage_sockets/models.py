@@ -262,7 +262,7 @@ class TaskQueue(db.DynamicDocument):
     modified_on = db.DateTimeField(required=True, default=datetime.datetime.now)
 
     # can reference Results or any Procedure
-    base_result = db.GenericLazyReferenceField(dbref=True)
+    base_result = db.GenericLazyReferenceField(dbref=True)  # use res.id and res.document_type (class)
 
     meta = {
         'indexes': [

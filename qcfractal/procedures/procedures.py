@@ -278,7 +278,7 @@ class OptimizationTasks(SingleResultTasks):
 
         # Each optimization is a unique entry:
         for result, hooks in data:
-            key = result["task_id"]
+            task_id = result["task_id"]
 
             # Convert start/stop molecules to hash
             mols = {"initial": result["initial_molecule"], "final": result["final_molecule"]}
@@ -290,7 +290,7 @@ class OptimizationTasks(SingleResultTasks):
             traj_dict = {k: v for k, v in enumerate(result["trajectory"])}
             results = procedures_util.parse_single_runs(self.storage, traj_dict)
             for k, v in results.items():
-                v["task_id"] = key
+                v["task_id"] = task_id
 
             # Add trajectory results and return ids
             ret = self.storage.add_results(list(results.values()))
@@ -302,9 +302,9 @@ class OptimizationTasks(SingleResultTasks):
             del result["qcfractal_tags"]
             # print("Adding optimization result")
             # print(json.dumps(v, indent=2))
-            new_procedures[key] = result
+            new_procedures[task_id] = result
             if len(hooks):
-                new_hooks[key] = hooks
+                new_hooks[task_id] = hooks
 
             self.storage.update_procedure(result["hash_index"], result)
         # print(list(new_procedures.values()))

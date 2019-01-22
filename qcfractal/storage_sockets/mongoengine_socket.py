@@ -1188,6 +1188,7 @@ class MongoengineSocket:
                 task = TaskQueue(**d)
                 task.base_result = result_obj
                 task.save()
+                result_obj.update(task_id=str(task.id))  # update bidirectional rel
                 results.append(str(task.id))
                 meta['n_inserted'] += 1
             except mongoengine.errors.NotUniqueError as err:  # rare case
@@ -1280,6 +1281,7 @@ class MongoengineSocket:
     def queue_mark_complete(self, task_ids: List[str]) -> int:
         """Update the given tasks as complete
         Note that each task is already pointing to its result location
+        Mark the corresponding result/procedure as complete
 
         Parameters
         ----------
@@ -1292,14 +1294,40 @@ class MongoengineSocket:
             Updated count
         """
 
-        found = TaskQueue.objects(id__in=task_ids).update(status='COMPLETE')
+        # If using replica sets, we can use as a transcation:
+        # with self.client.start_session() as session:
+        #     with session.start_transaction():
+        #         # automatically calls ClientSession.commit_transaction().
+        #         # If the block exits with an exception, the transaction
+        #         # automatically calls ClientSession.abort_transaction().
+        #           found = TaskQueue._collection.update_many(
+        #                               {'id': {'$in': task_ids}},
+        #                               {'$set': {'status': 'COMPLETE'}},
+        #                               session=session)
+        #         # next, Update results
 
-        return found
+        tasks = TaskQueue.objects(id__in=task_ids).update(status='COMPLETE')
+        results = Result.objects(task_id__in=task_ids).update(status='COMPLETE')
+        procedures = Procedure.objects(task_id__in=task_ids).update(status='COMPLETE')
+
+        # This should not happen unless there is data inconsistency in the DB
+        if results + procedures != tasks:
+            logging.error("Some tasks don't reference results or procedures correctly!"
+                          "Tasks: {}, Results: {}, procedures: {}. "
+                          "# of results + procedures should equal # of tasks."
+                          .format(tasks, results, procedures))
+        return tasks
 
     def queue_mark_error(self, data):
+        """update the given tasks as errored
+        Mark the corresponding result/procedure as complete
+
+        """
+
         bulk_commands = []
+        task_ids = []
         dt = datetime.datetime.utcnow()
-        for queue_id, msg in data:
+        for task_id, msg in data:
             update = {
                 "$set": {
                     "status": "ERROR",
@@ -1307,12 +1335,16 @@ class MongoengineSocket:
                     "modified_on": dt,
                 }
             }
-            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(queue_id)}, update))
+            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(task_id)}, update))
+            task_ids.append(task_id)
 
         if len(bulk_commands) == 0:
             return
 
-        ret = TaskQueue._collection.bulk_write(bulk_commands, ordered=False)
+        ret = TaskQueue._collection.bulk_write(bulk_commands, ordered=False).modified_count
+        Result.objects(task_id__in=task_ids).update(status='ERROR')
+        Procedure.objects(task_id__in=task_ids).update(status='ERROR')
+
         return ret
 
     def queue_reset_status(self, manager: str, status: str="RUNNING", update_status: str="WAITING") -> int:
@@ -1334,6 +1366,7 @@ class MongoengineSocket:
             Updated count
         """
         found = TaskQueue.objects(manager=manager, status=status).update(status=update_status)
+        # TODO: update results and procedures
 
         return found
 
