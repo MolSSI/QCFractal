@@ -388,26 +388,31 @@ def build_managed_compute_server(mtype):
             queue_socket=adapter_client,
             ssl_options=False)
 
-        # Some need time to boot
-        time.sleep(sleep_time)
-
         # Clean and re-init the databse
         reset_server_database(server)
 
+        # Build Client and Manager
+        from qcfractal.interface import FractalClient
+        client = FractalClient(server)
+
+        from qcfractal.queue import QueueManager
+        manager = QueueManager(client, adapter_client)
+
         # Yield the server instance
-        yield server
+        yield client, server, manager
 
         # Close down and clean the adapter
-        server.objects["queue_manager"].close_adapter()
+        manager.close_adapter()
 
 
 @pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
-def parametrized_compute_server(request):
+def managed_compute_server(request):
     """
     A FractalServer with compute associated parametrize for all managers
     """
 
     yield from build_managed_compute_server(request.param)
+
 
 @pytest.fixture(scope="module")
 def fractal_compute_server(request):
@@ -415,7 +420,27 @@ def fractal_compute_server(request):
     A FractalServer with a local Pool manager
     """
 
-    yield from build_managed_compute_server("pool")
+    # Check mongo
+    check_active_mongo_server()
+
+    # Basic boot and loop information
+    storage_name = "qcf_compute_server_test"
+    from concurrent.futures import ProcessPoolExecutor
+
+    with ProcessPoolExecutor(max_workers=2) as adapter_client:
+        with loop_in_thread() as loop:
+            server = FractalServer(
+                port=find_open_port(),
+                storage_project_name=storage_name,
+                loop=loop,
+                queue_socket=adapter_client,
+                ssl_options=False)
+
+            # Clean and re-init the databse
+            reset_server_database(server)
+
+            # Yield the server instance
+            yield server
 
 
 @pytest.fixture(scope="module", params=["mongoengine"])

@@ -9,11 +9,11 @@ from concurrent.futures import ProcessPoolExecutor
 
 import qcfractal.interface as portal
 from qcfractal import testing, queue, FractalServer
-from qcfractal.testing import reset_server_database, test_server, parametrized_compute_server
+from qcfractal.testing import reset_server_database, test_server
 
 
 @pytest.fixture(scope="module")
-def compute_manager_fixture(test_server):
+def compute_adapter_fixture(test_server):
 
     client = portal.FractalClient(test_server)
 
@@ -23,25 +23,8 @@ def compute_manager_fixture(test_server):
 
 
 @testing.using_rdkit
-def test_queue_manager_single(compute_manager_fixture):
-    client, server, adapter = compute_manager_fixture
-    reset_server_database(server)
-
-    manager = queue.QueueManager(client, adapter)
-
-    # Add compute
-    hooh = portal.data.get_molecule("hooh.json")
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.to_json()], tag="other")
-
-    # Force manager compute and get results
-    manager.await_results()
-    ret = client.get_results()
-    assert len(ret) == 1
-
-
-@testing.using_rdkit
-def test_queue_manager_single_tags(compute_manager_fixture):
-    client, server, adapter = compute_manager_fixture
+def test_queue_manager_single_tags(compute_adapter_fixture):
+    client, server, adapter = compute_adapter_fixture
     reset_server_database(server)
 
     manager_stuff = queue.QueueManager(client, adapter, queue_tag="stuff")
@@ -74,10 +57,10 @@ def test_queue_manager_single_tags(compute_manager_fixture):
 
 
 @testing.using_rdkit
-def test_queue_manager_shutdown(compute_manager_fixture):
+def test_queue_manager_shutdown(compute_adapter_fixture):
     """Tests to ensure tasks are returned to queue when the manager shuts down
     """
-    client, server, adapter = compute_manager_fixture
+    client, server, adapter = compute_adapter_fixture
     reset_server_database(server)
 
     manager = queue.QueueManager(client, adapter)
@@ -101,11 +84,11 @@ def test_queue_manager_shutdown(compute_manager_fixture):
     assert len(ret) == 1
 
 
-def test_queue_manager_heartbeat(compute_manager_fixture):
+def test_queue_manager_heartbeat(compute_adapter_fixture):
     """Tests to ensure tasks are returned to queue when the manager shuts down
     """
 
-    client, server, adapter = compute_manager_fixture
+    client, server, adapter = compute_adapter_fixture
     with testing.loop_in_thread() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
