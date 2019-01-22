@@ -25,14 +25,8 @@ class ExecutorAdapter(BaseAdapter):
 
     def __repr__(self):
 
-        # ProcessPoolExecutors and similar
-        if hasattr(self.client, "_max_workers"):
-            return "<ExecutorAdapter client=<{} max_workers={}>>".format(exec.__class__.__name__,
-                                                                         self.client._max_workers)
-
-        # Dask Clients and similar
-        else:
-            return "<ExecutorAdapter client={}>".format(self.client)
+        return "<ExecutorAdapter client=<{} max_workers={}>>".format(self.client.__class__.__name__,
+                                                                     self.client._max_workers)
 
     def submit_tasks(self, tasks: Dict[str, Any]) -> List[str]:
         ret = []
@@ -82,6 +76,10 @@ class ExecutorAdapter(BaseAdapter):
 class DaskAdapter(ExecutorAdapter):
     """A Queue Adapter for Dask
     """
+
+    def __repr__(self):
+
+        return "<DaskAdapter client={}>".format(self.client)
 
     def await_results(self) -> bool:
         from dask.distributed import wait

@@ -66,7 +66,7 @@ python query_database.py
 
 
 ### Cleanup
-You can now stop the FractalServer and MongoDB processes
+You can now stop the FractalServer and MongoDB processes.
 
 If you wish to remove data from the server you can run the script
 ```bash
