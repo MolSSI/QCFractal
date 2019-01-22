@@ -35,10 +35,10 @@ def build_queue_adapter(workflow_client, logger=None, **kwargs):
     if adapter_type == "parsl.config.Config":
         adapter = ParslAdapter(workflow_client, logger=logger, **kwargs)
 
-    elif adapter_type in ["concurrent.futures.process.ProcessPoolExecutor"]:
+    elif adapter_type == "concurrent.futures.process.ProcessPoolExecutor":
         adapter = ExecutorAdapter(workflow_client, logger=logger, **kwargs)
 
-    elif adapter_type in ["distributed.client.Client"]:
+    elif adapter_type == "distributed.client.Client":
         adapter = DaskAdapter(workflow_client, logger=logger, **kwargs)
 
     elif adapter_type == "fireworks.core.launchpad.LaunchPad":
