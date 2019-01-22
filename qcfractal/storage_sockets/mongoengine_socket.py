@@ -101,15 +101,15 @@ class MongoengineSocket:
         # Important: this dict is Not used for creating indices
         # To be removed and replaced by ME functions
         self._table_indices = {
-            "collections": interface.schema.get_table_indices("collection"),
+            "collection": interface.schema.get_table_indices("collection"),
             "options": interface.schema.get_table_indices("options"),
-            "results": interface.schema.get_table_indices("result"),
-            "molecules": interface.schema.get_table_indices("molecule"),
-            "procedures": interface.schema.get_table_indices("procedure"),
+            "result": interface.schema.get_table_indices("result"),
+            "molecule": interface.schema.get_table_indices("molecule"),
+            "procedure": interface.schema.get_table_indices("procedure"),
             "service_queue": interface.schema.get_table_indices("service_queue"),
             "task_queue": interface.schema.get_table_indices("task_queue"),
-            "users": ("username", ),
-            "queue_managers": ("name", )
+            "user": ("username", ),
+            "queue_manager": ("name", )
         }
         # self._valid_tables = set(self._table_indices.keys())
         # self._table_unique_indices = {
@@ -459,7 +459,7 @@ class MongoengineSocket:
             new_inserts.append(data)
             new_keys.append(new_key)
 
-        ret = self._add_generic(new_inserts, "molecules", return_map=True)
+        ret = self._add_generic(new_inserts, "molecule", return_map=True)
         ret["meta"]["duplicates"].extend(list(key_mapper.keys()))
         ret["meta"]["validation_errors"] = []
 
@@ -1078,21 +1078,21 @@ class MongoengineSocket:
 
     def add_procedures(self, data):
 
-        ret = self._add_generic(data, "procedures")
+        ret = self._add_generic(data, "procedure")
         ret["meta"]["validation_errors"] = []  # TODO
 
         return ret
 
     def get_procedures(self, query, projection=None):
 
-        return self._get_generic(query, "procedures", allow_generic=True, projection=projection)
+        return self._get_generic(query, "procedure", allow_generic=True, projection=projection)
 
     def update_procedure(self, hash_index, data):
         """
         This should be removed, temporary patch to make this more canonical mongoengine
         """
 
-        ret = self._tables["procedures"].update_one({"hash_index": hash_index}, {"$set": data})
+        ret = self._tables["procedure"].update_one({"hash_index": hash_index}, {"$set": data})
         return ret.modified_count
 
     def add_services(self, data):
@@ -1421,12 +1421,12 @@ class MongoengineSocket:
             if value in kwargs:
                 upd["$set"][value] = kwargs[value]
 
-        r = self._tables["queue_managers"].update_one({"name": name}, upd, upsert=True)
+        r = self._tables["queue_manager"].update_one({"name": name}, upd, upsert=True)
         return r.matched_count == 1
 
     def get_managers(self, query, projection=None):
 
-        return self._get_generic(query, "queue_managers", allow_generic=True, projection=projection)
+        return self._get_generic(query, "queue_manager", allow_generic=True, projection=projection)
 
 ### Users
 

@@ -16,7 +16,7 @@ class Collection(db.DynamicDocument):
     name = db.StringField(required=True)  # Example 'water'
 
     meta = {
-        'collection': 'collections',  # DB collection/table name
+        'collection': 'collection',  # DB collection/table name
         'indexes': [
             {'fields': ('collection', 'name'), 'unique': True}
         ]
@@ -52,7 +52,7 @@ class Molecule(db.DynamicDocument):
         return str(self.id)
 
     meta = {
-        'collection': 'molecules',
+        'collection': 'molecule',
         'indexes': [
             {'fields': ('molecule_hash',), 'unique': False},  # should almost be unique
             {'fields': ('molecular_formula',), 'unique': False}
@@ -137,7 +137,7 @@ class Result(BaseResult):
     schema_version = db.IntField()  # or String?
 
     meta = {
-        'collection': 'results',
+        'collection': 'result',
         'indexes': [
            {'fields': ('program', 'driver', 'method', 'basis',
                        'molecule', 'options'), 'unique': True},
