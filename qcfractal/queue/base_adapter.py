@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional, List, Callable
 
 
 class BaseAdapter(abc.ABC):
-    """A Adapter for Parsl
+    """A BaseAdapter for wrapping compute engines
     """
 
     def __init__(self, client: Any, logger: Optional[logging.Logger] = None):

@@ -3,6 +3,7 @@ Queue adapter for Dask
 """
 
 import logging
+import time
 import traceback
 from typing import Dict, List, Any, Optional
 
@@ -22,13 +23,13 @@ class ExecutorAdapter(BaseAdapter):
     """A Queue Adapter for Python Executors
     """
 
-    def __init__(self, client: Any, logger: Optional[logging.Logger] = None):
-        BaseAdapter.__init__(self, client, logger)
-
     def __repr__(self):
 
+        # ProcessPoolExecutors and similar
         if hasattr(self.client, "_max_workers"):
             return "<ExecutorAdapter client=<{} max_workers={}>>".format(exec.__class__.__name__, self._max_workers)
+
+        # Dask Clients and similar
         else:
             return "<ExecutorAdapter client={}>".format(self.client)
 
@@ -70,8 +71,8 @@ class ExecutorAdapter(BaseAdapter):
         return True
 
     def close(self) -> bool:
-        for k, future in self.queue.items():
-            future.cancel()
+        for future in self.queue.values():
+            future[0].cancel()
 
         self.client.close()
         return True
@@ -83,6 +84,11 @@ class DaskAdapter(ExecutorAdapter):
 
     def await_results(self) -> bool:
         from dask.distributed import wait
-        futures = [v[0] for k, v in self.queue.items()]
+        futures = [f[0] for f in self.queue.values()]
         wait(futures)
+        return True
+
+    def close(self) -> bool:
+
+        self.client.close()
         return True
