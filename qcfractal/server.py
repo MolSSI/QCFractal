@@ -266,12 +266,9 @@ class FractalServer:
         self.periodic["heartbeats"] = heartbeats
 
         # Soft quit with a keyboard interrupt
-        # try:
         self.logger.info("FractalServer successfully started.\n")
         self.loop_active = True
         self.loop.start()
-        # except KeyboardInterrupt:
-        #     self.stop()
 
     def stop(self):
         """
@@ -287,6 +284,7 @@ class FractalServer:
                 # self._run_in_thread(self.objects["queue_manager"].shutdown)
             else:
                 self.objects["queue_manager"].shutdown()
+                self.objects["queue_manager"].close_adapter()
 
         # Close down periodics
         for cb in self.periodic.values():

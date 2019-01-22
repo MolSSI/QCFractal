@@ -102,11 +102,20 @@ class QueueManager:
         payload["data"]["operation"] = "startup"
         self.client._request("put", "queue_manager", payload)
 
-        self.logger.info("QueueManager '{}' successfully initialized.".format(self.name()))
-        self.logger.info("    QCFractal server name:     {}".format(self.server_name))
-        self.logger.info("    Queue credential username: {}".format(self.client.username))
-        self.logger.info(
-            "    Pulling tasks from {} with tag '{}'.\n".format(self.client.address, self.queue_tag))
+        self.logger.info("QueueManager:")
+        self.logger.info("    Name Information:")
+        self.logger.info("        cluster:     {}".format(self.name_data["cluster"]))
+        self.logger.info("        hostname:    {}".format(self.name_data["hostname"]))
+        self.logger.info("        uuid:        {}\n".format(self.name_data["uuid"]))
+
+        self.logger.info("    Queue Adapter:")
+        self.logger.info("        {}\n".format(self.queue_adapter))
+
+        self.logger.info("    QCFractal server information:")
+        self.logger.info("        address:     {}".format(self.client.address))
+        self.logger.info("        name:        {}".format(self.server_name))
+        self.logger.info("        queue tag:   {}".format(self.queue_tag))
+        self.logger.info("        username:    {}\n".format(self.client.username))
 
     def _payload_template(self):
         return {"meta": json.loads(self.meta_packet), "data": {}}
@@ -131,7 +140,7 @@ class QueueManager:
         self.periodic["update"] = update
 
         # Add heartbeat
-        heartbeat_frequency = int(0.8 * 1000 * self.heartbeat_frequency) # Beat at 80% of cutoff time
+        heartbeat_frequency = int(0.8 * 1000 * self.heartbeat_frequency)  # Beat at 80% of cutoff time
         heartbeat = tornado.ioloop.PeriodicCallback(self.heartbeat, heartbeat_frequency)
         heartbeat.start()
         self.periodic["heartbeat"] = heartbeat
@@ -148,6 +157,9 @@ class QueueManager:
         # Push data back to the server
         self.shutdown()
 
+        # Close down the adapter
+        self.close_adapter()
+
         # Stop callbacks
         for cb in self.periodic.values():
             cb.stop()
@@ -162,6 +174,13 @@ class QueueManager:
 
         self.loop.close(all_fds=True)
         self.logger.info("QueueManager stopping gracefully. Stopped IOLoop.\n")
+
+    def close_adapter(self):
+        """
+        Closes down the underlying adapater
+        """
+
+        self.queue_adapter.close()
 
 ## Queue Manager functions
 
@@ -186,7 +205,6 @@ class QueueManager:
             nshutdown = r.json()["data"]["nshutdown"]
             self.logger.info("Shutdown was successful, {} tasks returned to master queue.".format(nshutdown))
             return r.json()["data"]
-
 
     def add_exit_callback(self, callback, *args, **kwargs):
         """Adds additional callbacks to perform when closing down the server

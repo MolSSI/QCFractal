@@ -96,7 +96,7 @@ environs = [{
     "filename": "openff.yaml",
     "channels": ["psi4", "rdkit"],
     "dependencies": ["dask", "distributed", "psi4", "rdkit", "geometric"],
-    "pip_dependencies": ["git+git://github.com/lpwgroup/torsiondrive.git@v0.9.1#egg=torsiondrive"]
+    "pip_dependencies": ["git+git://github.com/lpwgroup/torsiondrive.git@v0.9.1#egg=torsiondrive", "parsl"]
 }, {
     "filename":
     "dev_head.yaml",

@@ -21,7 +21,6 @@ from tornado.ioloop import IOLoop
 from .server import FractalServer
 from .storage_sockets import storage_socket_factory
 
-
 ### Addon testing capabilities
 
 
@@ -40,6 +39,7 @@ _programs = {
     "fireworks": _plugin_import("fireworks"),
     "rdkit": _plugin_import("rdkit"),
     "psi4": _plugin_import("psi4"),
+    "parsl": _plugin_import("parsl"),
     "dask": _plugin_import("dask"),
     "geometric": _plugin_import("geometric"),
     "torsiondrive": _plugin_import("torsiondrive"),
@@ -59,6 +59,7 @@ using_fireworks = pytest.mark.skipif(has_module('fireworks') is False, reason=_i
 using_dask = pytest.mark.skipif(
     has_module('dask.distributed') is False, reason=_import_message.format('dask.distributed'))
 using_psi4 = pytest.mark.skipif(has_module('psi4') is False, reason=_import_message.format('psi4'))
+using_parsl = pytest.mark.skipif(has_module('parsl') is False, reason=_import_message.format('parsl'))
 using_rdkit = pytest.mark.skipif(has_module('rdkit') is False, reason=_import_message.format('rdkit'))
 using_geometric = pytest.mark.skipif(has_module('geometric') is False, reason=_import_message.format('geometric'))
 using_torsiondrive = pytest.mark.skipif(
@@ -358,7 +359,7 @@ def _dask_server_fixture(request):
 
     with pristine_loop() as loop:
 
-        # Client auto builds and shutsdown a LocalCluster
+        # Client auto builds and shuts down a LocalCluster
         # LocalCluster will start the loop in a background thread for us
         with dd.Client(n_workers=1, threads_per_worker=1, loop=loop) as client:
 
@@ -375,6 +376,8 @@ def _dask_server_fixture(request):
 
             # Yield the server instance
             yield server
+
+            # LocalCluster cleans itself up in loop
 
 
 @pytest.fixture(scope="module")
@@ -393,10 +396,9 @@ def _fireworks_server_fixture(request):
     fireworks = pytest.importorskip("fireworks")
     logging.basicConfig(level=logging.CRITICAL, filename="/tmp/fireworks_logfile.txt")
 
-    lpad = fireworks.LaunchPad(name="fw_testing_server", logdir="/tmp/", strm_lvl="CRITICAL")
-    lpad.reset(None, require_password=False)
-
     storage_name = "qcf_fireworks_server_test"
+    fireworks_name = storage_name + "_fireworks_queue"
+    lpad = fireworks.LaunchPad(name=fireworks_name, logdir="/tmp/", strm_lvl="CRITICAL")
 
     with loop_in_thread() as loop:
 
@@ -409,7 +411,9 @@ def _fireworks_server_fixture(request):
 
         yield server
 
-    lpad.reset(None, require_password=False)
+        # Close down and clean the lpad
+        server.objects["queue_manager"].close_adapter()
+
     logging.basicConfig(level=None, filename=None)
 
 
@@ -427,8 +431,7 @@ def _parsl_server_fixture(request):
     check_active_mongo_server()
 
     parsl = pytest.importorskip("parsl")
-    from parsl.configs.local_threads_no_cache import config
-    dataflow = parsl.dataflow.dflow.DataFlowKernel(config)
+    from parsl.configs.local_ipp import config
 
     storage_name = "qcf_parsl_server_test"
 
@@ -439,8 +442,11 @@ def _parsl_server_fixture(request):
             port=find_open_port(),
             storage_project_name=storage_name,
             loop=loop,
-            queue_socket=dataflow,
+            queue_socket=config,
             ssl_options=False)
+
+        # Parsl takes a bit to boot
+        time.sleep(2)
 
         # Clean and re-init the databse
         reset_server_database(server)
@@ -448,7 +454,8 @@ def _parsl_server_fixture(request):
         # Yield the server instance
         yield server
 
-    dataflow.atexit_cleanup()
+        # Close down and clean the parsl adapter
+        server.objects["queue_manager"].close_adapter()
 
 
 @pytest.fixture(scope="module")

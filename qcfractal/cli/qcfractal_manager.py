@@ -45,7 +45,7 @@ def parse_args():
     parser.add_argument("--queue-tag", type=str, help="The queue tag to pull from")
     parser.add_argument("--logfile-prefix", type=str, default=None, help="The prefix of the logfile to write to.")
     parser.add_argument(
-        "--update-frequency", type=int, default=15, help="The frquency in seconds to check for complete tasks.")
+        "--update-frequency", type=int, default=15, help="The frequency in seconds to check for complete tasks.")
 
     # Additional args
     parser.add_argument("--rapidfire", action="store_true", help="Boot and run jobs until complete")
@@ -73,7 +73,6 @@ def main(args=None):
         if args["local_cluster"]:
             # Build localcluster and exit callbacks
             queue_client = dd.Client(threads_per_worker=1, n_workers=args["local_workers"])
-            exit_callbacks.append([queue_client.close, (), {}])
         else:
             if args["dask_uri"] is None:
                 raise KeyError("A 'dask-uri' must be specified.")
@@ -119,12 +118,6 @@ def main(args=None):
         queue_tag=args["queue_tag"],
         cluster=args["cluster_name"],
         update_frequency=args["update_frequency"])
-
-    if args["adapter_type"] == "dask":
-        manager.logger.info("\nDask QueueManager initialized: {}\n".format(str(queue_client)))
-    elif args["adapter_type"] == "fireworks":
-        manager.logger.info("\nFireworks QueueManager initialized: \n"
-                            "    Host: {}, Name: {}\n".format(queue_client.host, queue_client.name))
 
     # Add exit callbacks
     for cb in exit_callbacks:

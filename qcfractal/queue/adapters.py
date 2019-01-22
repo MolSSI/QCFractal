@@ -27,7 +27,7 @@ def build_queue_adapter(workflow_client, logger=None, **kwargs):
 
     adapter_type = type(workflow_client).__module__ + "." + type(workflow_client).__name__
 
-    if adapter_type == "parsl.dataflow.dflow.DataFlowKernel":
+    if adapter_type == "parsl.config.Config":
         adapter = parsl_adapter.ParslAdapter(workflow_client, logger=logger)
 
     elif adapter_type == "distributed.client.Client":

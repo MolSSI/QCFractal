@@ -74,11 +74,8 @@ def main(args=None):
             n_workers = 1
 
         # Build localcluster and exit callbacks
-        local_cluster = dd.LocalCluster(threads_per_worker=1, n_workers=n_workers)
-        adapter = dd.Client(local_cluster)
+        adapter = dd.Client(threads_per_worker=1, n_workers=n_workers)
         exit_callbacks.append([adapter.close, (), {}])
-        exit_callbacks.append([local_cluster.scale_down, (local_cluster.workers, ), {}])
-        exit_callbacks.append([local_cluster.close, (4, ), {}])
 
     elif args["fireworks_manager"]:
         fw = cli_utils.import_module("fireworks")
@@ -86,12 +83,6 @@ def main(args=None):
         # Build Fireworks client
         name = args["name"] + "_fireworks_queue"
         adapter = fw.LaunchPad(host=args["database_uri"], name=name)
-        adapter.reset(None, require_password=False)  # Leave cap on reset
-        exit_callbacks.append(
-            [adapter.reset, (None, ), {
-                "require_password": False,
-                "max_reset_wo_password": int(1e8)
-            }])
 
     else:
         adapter = None
@@ -106,13 +97,6 @@ def main(args=None):
         logfile_prefix=args["log_prefix"],
         heartbeat_frequency=args["heartbeat_frequency"],
         queue_socket=adapter)
-
-    # Print Queue Manager data
-    if args["dask_manager"]:
-        server.logger.info("\nDask QueueManager initialized: {}\n".format(str(adapter)))
-    elif args["fireworks_manager"]:
-        server.logger.info("\nFireworks QueueManager initialized: \n"
-                           "    Host: {}, Name: {}\n".format(adapter.host, adapter.name))
 
     # Add exit callbacks
     for cb in exit_callbacks:

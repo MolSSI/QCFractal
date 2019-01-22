@@ -17,8 +17,13 @@ class FireworksAdapter:
         """
 
         self.lpad = lpad
+        self.lpad.reset(None, require_password=False, max_reset_wo_password=int(1e8))
+
         self.queue = {}
         self.logger = logger or logging.getLogger('FireworksAdapter')
+
+    def __repr__(self):
+        return "<FireworksAdapter client=<LaunchPad host='{}' name='{}'>>".format(self.lpad.host, self.lpad.name)
 
     def submit_tasks(self, tasks):
         ret = []
@@ -85,3 +90,15 @@ class FireworksAdapter:
 
     def task_count(self):
         return len(self.queue)
+
+    def close(self):
+        """Closes down the LaunchPad object
+
+        Returns
+        -------
+        bool
+            True if the closing was successful.
+        """
+
+        self.lpad.reset(None, require_password=False, max_reset_wo_password=int(1e8))
+        return True

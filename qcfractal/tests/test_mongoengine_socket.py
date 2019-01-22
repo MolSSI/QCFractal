@@ -184,7 +184,7 @@ def test_torsiondrive_procedure(storage_socket):
     # print('TorsiondriveProcedure After save: ', procedure.to_json())
 
 
-def test_add_task_queue():
+def test_add_task_queue(storage_socket):
     """
         Simple test of adding a task using the ME classes
         in QCFractal, tasks should be added using storage_socket
@@ -215,7 +215,7 @@ def test_add_task_queue():
     assert TaskQueue.objects().count() == 3
 
 
-def test_queue():
+def test_queue(storage_socket):
     tasks = TaskQueue.objects(status='WAITING')\
                 .limit(1000)\
                 .order_by('-created_on')\

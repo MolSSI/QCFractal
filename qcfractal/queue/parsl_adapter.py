@@ -23,20 +23,25 @@ class ParslAdapter:
     """A Adapter for Parsl
     """
 
-    def __init__(self, parsl_dataflow, logger=None):
+    def __init__(self, parsl_config, logger=None):
         """
         Parameters
         ----------
-        parsl_dataflow : parsl.dataflow.dflow.DataFlowKernel
+        parsl_dataflow : parsl.config.Config
             A activate Parsl DataFlow
         logger : None, optional
             A optional logging object to write output to
         """
-        self.dataflow = parsl_dataflow
+
+        import parsl
+        self.dataflow = parsl.dataflow.dflow.DataFlowKernel(parsl_config)
         self.queue = {}
         self.function_map = {}
 
         self.logger = logger or logging.getLogger('ParslAdapter')
+
+    def __repr__(self):
+        return "<ParslAdapter client=<DataFlow label='{}'>>".format(self.dataflow.config.executors[0].label)
 
     def get_function(self, function):
         """Obtains a Python function wrapped in a Parsl Python App
@@ -127,7 +132,7 @@ class ParslAdapter:
         Returns
         -------
         bool
-            True if the opertions was successful.
+            True if the opertion was successful.
         """
 
         for future in self.queue.values():
@@ -155,3 +160,15 @@ class ParslAdapter:
             Count of active tasks
         """
         return len(self.queue)
+
+    def close(self):
+        """Closes down the DataFlow object
+
+        Returns
+        -------
+        bool
+            True if the closing was successful.
+        """
+
+        self.dataflow.atexit_cleanup()
+        return True
