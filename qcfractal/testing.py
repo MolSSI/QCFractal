@@ -183,32 +183,6 @@ def loop_in_thread():
                 pass
 
 
-@contextmanager
-def fireworks_quiet_lpad(name=None):
-    """
-    Returns a (relatively) quiet launchpad instance
-    """
-
-    if name is None:
-        name = "fw_testing_quiet"
-
-    # Build Fireworks test server and manager
-    fireworks = pytest.importorskip("fireworks")
-    logging.basicConfig(level=logging.CRITICAL, filename="/tmp/fireworks_logfile.txt")
-
-    name = "fw_testing_quiet"
-    lpad = fireworks.LaunchPad(name=name, logdir="/tmp/", strm_lvl="CRITICAL")
-    lpad.reset(None, require_password=False)
-
-    try:
-        yield lpad
-
-    finally:
-        # Cleanup and reset
-        lpad.reset(None, require_password=False)
-        logging.basicConfig(level=None, filename=None)
-
-
 def terminate_process(proc):
     if proc.poll() is None:
 
@@ -443,43 +417,31 @@ def fractal_compute_server(request):
             yield server
 
 
-@pytest.fixture(scope="module", params=["mongoengine"])
-def storage_socket_fixture(request):
+def build_socket_fixture(stype):
     print("")
 
     # Check mongo
     check_active_mongo_server()
-    storage_name = "qcf_test_me"
+    storage_name = "qcf_local_values_test_" + stype
 
     # IP/port/drop table is specific to build
-    if request.param in ["pymongo", "mongoengine"]:
-        storage = storage_socket_factory("mongodb://localhost", storage_name, db_type=request.param)
+    if stype in ["pymongo", "mongoengine"]:
+        storage = storage_socket_factory("mongodb://localhost", storage_name, db_type=stype)
 
         # Clean and re-init the database
         storage._clear_db(storage_name)
     else:
-        raise KeyError("Storage type {} not understood".format(request.param))
+        raise KeyError("Storage type {} not understood".format(stype))
 
     yield storage
 
-    if request.param in ["pymongo", "mongoengine"]:
+    if stype in ["pymongo", "mongoengine"]:
         storage.client.drop_database(storage_name)
     else:
-        raise KeyError("Storage type {} not understood".format(request.param))
+        raise KeyError("Storage type {} not understood".format(stype))
 
 
 @pytest.fixture(scope="module")
 def mongoengine_socket_fixture(request):
 
-    # Check mongo
-    check_active_mongo_server()
-    storage_name = "qcf_local_values_test_me"
-
-    storage = storage_socket_factory("mongodb://localhost", storage_name, db_type="mongoengine")
-
-    # Clean and re-init the database
-    storage._clear_db(storage_name)
-
-    yield storage
-
-    storage.client.drop_database(storage_name)
+    yield from build_socket_fixture("mongoengine")
