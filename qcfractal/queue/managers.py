@@ -182,6 +182,7 @@ class QueueManager:
 
         self.queue_adapter.close()
 
+
 ## Queue Manager functions
 
     def heartbeat(self):

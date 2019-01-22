@@ -9,9 +9,11 @@ from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
 
 
-### Tests an entire server and interaction energy dataset run
 @testing.using_psi4
 def test_compute_dataset(fractal_compute_server):
+    """
+    Tests an entire server and interaction energy dataset run
+    """
 
     client = portal.FractalClient(fractal_compute_server)
     ds_name = "He_PES"
@@ -63,11 +65,13 @@ def test_compute_dataset(fractal_compute_server):
     assert isinstance(ds.to_json(), dict)
 
 
-### Tests the openffworkflow collection
 @testing.using_torsiondrive
 @testing.using_geometric
 @testing.using_rdkit
 def test_compute_openffworkflow(fractal_compute_server):
+    """
+    Tests the openffworkflow collection
+    """
 
     # Obtain a client and build a BioFragment
     client = portal.FractalClient(fractal_compute_server)

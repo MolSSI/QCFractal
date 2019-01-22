@@ -7,18 +7,18 @@ import copy
 import pytest
 
 import qcfractal.interface as portal
-from qcfractal.testing import dask_server_fixture, recursive_dict_merge
+from qcfractal.testing import fractal_compute_server, recursive_dict_merge
 
 
 @pytest.fixture(scope="module")
-def torsiondrive_fixture(dask_server_fixture):
+def torsiondrive_fixture(fractal_compute_server):
 
     # Cannot use this fixture without these services. Also cannot use `mark` and `fixture` decorators
     pytest.importorskip("torsiondrive")
     pytest.importorskip("geometric")
     pytest.importorskip("rdkit")
 
-    client = portal.FractalClient(dask_server_fixture)
+    client = portal.FractalClient(fractal_compute_server)
 
     # Add a HOOH
     hooh = portal.data.get_molecule("hooh.json")
@@ -54,8 +54,8 @@ def torsiondrive_fixture(dask_server_fixture):
         # instance_options = {**instance_options, **keyword_augments}
         recursive_dict_merge(instance_options, keyword_augments)
         ret = client.add_service("torsiondrive", [mol_ret["hooh"]], instance_options)
-        dask_server_fixture.await_services()
-        assert len(dask_server_fixture.list_current_tasks()) == 0
+        fractal_compute_server.await_services()
+        assert len(fractal_compute_server.list_current_tasks()) == 0
         return ret
 
     yield spin_up_test, client
@@ -65,7 +65,6 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
     """"Tests torsiondrive pathway and checks the result result"""
 
     spin_up_test, client = torsiondrive_fixture
-    print(client)
 
     ret = spin_up_test()
     compute_key = ret["submitted"][0]

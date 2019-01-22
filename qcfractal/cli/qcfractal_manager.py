@@ -15,10 +15,9 @@ __all__ = ["main"]
 def parse_args():
     parser = argparse.ArgumentParser(description='A CLI for the QCFractal QueueManager.')
     subparsers = parser.add_subparsers(help='QueueManager Backend Type', dest='adapter_type')
-    dask_parser = subparsers.add_parser('dask', help='Dask QueueManager')
-    fw_parser = subparsers.add_parser('fireworks', help='Fireworks QueueManager')
 
     # Options for Dask
+    dask_parser = subparsers.add_parser('dask', help='Dask')
     dask_parser.add_argument("--dask-uri", type=str, help="URI of the dask-server")
     dask_parser.add_argument(
         "--local-cluster", action="store_true", help="Start a Dask LocalCluster rather than connect to a scheduler")
@@ -26,10 +25,15 @@ def parse_args():
         "--local-workers", type=int, default=None, help="The number of workers for the LocalCluster")
 
     # Options for Fireworks
+    fw_parser = subparsers.add_parser('fireworks', help='Fireworks')
     fw_parser.add_argument("--fw-config", type=str, help="A FWConfig file")
     fw_parser.add_argument("--fw-uri", type=str, help="URI of MongoDB server")
     fw_parser.add_argument(
         "--fw-name", type=str, default="qcfractal_fireworks_manager", help="The MongoDB Database to use locally")
+
+    # Options for ProcessPoolExecutor
+    executor_parser = subparsers.add_parser('executor', help='ProcessPoolExecutor')
+    executor_parser.add_argument("--nprocs", type=int, help="The number of process for the executor")
 
     # FractalClient options
     parser.add_argument(
@@ -96,6 +100,12 @@ def main(args=None):
             queue_client = fireworks.LaunchPad.from_file(args["fw_config"])
         else:
             raise KeyError("A URI or config_file must be specified.")
+
+    elif args["adapter_type"] == "executor":
+
+        from concurrent.futures import ProcessPoolExecutor
+
+        queue_client = ProcessPoolExecutor(max_workers=args["nprocs"])
 
     else:
         raise KeyError(

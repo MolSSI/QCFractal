@@ -12,17 +12,15 @@ def parse_args():
     parser = argparse.ArgumentParser(description='A CLI for the QCFractalServer.')
 
     manager = parser.add_argument_group('QueueManager Settings (optional)')
-    manager_exclusive = manager.add_mutually_exclusive_group()
-    manager_exclusive.add_argument(
-        "--dask-manager-single",
-        action="store_true",
-        help="Creates a QueueManager using a Dask LocalCluster with a single worker")
-    manager_exclusive.add_argument(
-        "--dask-manager", action="store_true", help="Creates a QueueManager using a Dask LocalCluster on the server")
-    manager_exclusive.add_argument(
-        "--fireworks-manager",
-        action="store_true",
-        help="Creates a QueueManager using Fireworks on the server (name + '_fireworks_queue')")
+    # This option defaults to None if option not present, -1 if present, or value if provided
+    manager.add_argument(
+        '--local-manager',
+        const=-1,
+        default=None,
+        action='store',
+        nargs='?',
+        type=int,
+        help='Creates a local pool QueueManager')
 
     server = parser.add_argument_group('QCFractalServer Settings')
     server.add_argument("name", type=str, help="The name of the FractalServer and its associated database")
@@ -66,23 +64,14 @@ def main(args=None):
     exit_callbacks = []
 
     # Build an optional adapter
-    if args["dask_manager"] or args["dask_manager_single"]:
-        dd = cli_utils.import_module("distributed")
+    if args["local_manager"]:
+        ncores = args["local_manager"]
+        if ncores == -1:
+            ncores = None
 
-        n_workers = None
-        if args["dask_manager_single"]:
-            n_workers = 1
+        from concurrent.futures import ProcessPoolExecutor
 
-        # Build localcluster and exit callbacks
-        adapter = dd.Client(threads_per_worker=1, n_workers=n_workers)
-        exit_callbacks.append([adapter.close, (), {}])
-
-    elif args["fireworks_manager"]:
-        fw = cli_utils.import_module("fireworks")
-
-        # Build Fireworks client
-        name = args["name"] + "_fireworks_queue"
-        adapter = fw.LaunchPad(host=args["database_uri"], name=name)
+        adapter = ProcessPoolExecutor(max_workers=ncores)
 
     else:
         adapter = None
