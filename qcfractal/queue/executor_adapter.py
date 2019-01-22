@@ -2,10 +2,9 @@
 Queue adapter for Dask
 """
 
-import logging
 import time
 import traceback
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any
 
 from .base_adapter import BaseAdapter
 

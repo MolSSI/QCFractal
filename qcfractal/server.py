@@ -6,7 +6,6 @@ import asyncio
 import datetime
 import logging
 import ssl
-import threading
 import traceback
 
 import tornado.ioloop
@@ -219,18 +218,27 @@ class FractalServer:
 
         # Queue manager if direct build
         self.queue_socket = queue_socket
+        self.executor = None
         if (self.queue_socket is not None):
             if security == "local":
                 raise ValueError("Cannot yet use local security with a internal QueueManager")
 
-            # Build the queue manager
+            # Create the executor
+            from concurrent.futures import ThreadPoolExecutor
+            self.executor = ThreadPoolExecutor(max_workers=2)
+
+            # Build the queue manager, will not run until loop starts
             self._run_in_thread(self._build_manager)
 
     def _run_in_thread(self, func, timeout=5):
-        thread = threading.Thread(target=func, name="QCFractal Background")
-        thread.daemon = True
-        thread.start()
-        self.loop.call_later(timeout, thread.join)
+        """
+        Runs a function in a background thread
+        """
+        if self.executor is None:
+            raise AttributeError("No Executor was created, but run_in_thread was called.")
+
+        fut = self.executor.submit(func)
+        return fut
 
     def _build_manager(self):
         """
