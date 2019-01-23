@@ -8,6 +8,8 @@ import logging
 import socket
 import uuid
 
+from typing import Any, Callable, Dict, List, Optional
+
 import tornado.ioloop
 
 from .adapters import build_queue_adapter
@@ -33,14 +35,14 @@ class QueueManager:
     """
 
     def __init__(self,
-                 client,
-                 queue_client,
-                 loop=None,
-                 logger=None,
-                 max_tasks=1000,
-                 queue_tag=None,
-                 cluster="unknown",
-                 update_frequency=2):
+                 client: Any,
+                 queue_client: Any,
+                 loop: Any=None,
+                 logger: Optional[logging.Logger]=None,
+                 max_tasks: int=1000,
+                 queue_tag: str=None,
+                 cluster: str="unknown",
+                 update_frequency: int=2):
         """
         Parameters
         ----------
@@ -111,26 +113,49 @@ class QueueManager:
         self.logger.info("    Queue Adapter:")
         self.logger.info("        {}\n".format(self.queue_adapter))
 
-        self.logger.info("    QCFractal server information:")
-        self.logger.info("        address:     {}".format(self.client.address))
-        self.logger.info("        name:        {}".format(self.server_name))
-        self.logger.info("        queue tag:   {}".format(self.queue_tag))
-        self.logger.info("        username:    {}\n".format(self.client.username))
+        if self.connected():
+            self.logger.info("    QCFractal server information:")
+            self.logger.info("        address:     {}".format(self.client.address))
+            self.logger.info("        name:        {}".format(self.server_name))
+            self.logger.info("        queue tag:   {}".format(self.queue_tag))
+            self.logger.info("        username:    {}\n".format(self.client.username))
+
+        else:
+            self.logger.info("    QCFractal server information:")
+            self.logger.info("        Not connected, some actions will not be available")
 
     def _payload_template(self):
         return {"meta": json.loads(self.meta_packet), "data": {}}
 
 ## Accessors
 
-    def name(self):
+    def name(self) -> str:
+        """
+        Returns the Managers full name.
+        """
         return self._name
+
+    def connected(self) -> bool:
+        """
+        Checks the connection to the server.
+        """
+        return self.client is not None
+
+    def assert_connected(self) -> None:
+        """
+        Raises an error for functions that require a server connection.
+        """
+        if self.connected() is False:
+            raise AttributeError("Manager is not connected to a server, this operations is not available.")
 
 ## Start/stop functionality
 
-    def start(self):
+    def start(self) -> None:
         """
         Starts up all IOLoops and processes
         """
+
+        self.assert_connected()
 
         self.logger.info("QueueManager successfully started. Starting IOLoop.\n")
 
@@ -149,7 +174,7 @@ class QueueManager:
         self.running = True
         self.loop.start()
 
-    def stop(self):
+    def stop(self) -> None:
         """
         Shuts down all IOLoops and periodic updates
         """
@@ -175,17 +200,22 @@ class QueueManager:
         self.loop.close(all_fds=True)
         self.logger.info("QueueManager stopping gracefully. Stopped IOLoop.\n")
 
-    def close_adapter(self):
+    def close_adapter(self) -> bool:
         """
         Closes down the underlying adapater
         """
 
-        self.queue_adapter.close()
-
+        return self.queue_adapter.close()
 
 ## Queue Manager functions
 
-    def heartbeat(self):
+    def heartbeat(self) -> None:
+        """
+        Provides a heartbeat to the connected Server
+        """
+
+        self.assert_connected()
+
         payload = self._payload_template()
         payload["data"]["operation"] = "heartbeat"
         r = self.client._request("put", "queue_manager", payload, noraise=True)
@@ -193,7 +223,11 @@ class QueueManager:
             # TODO something as we didnt successfully add the data
             self.logger.warning("Heartbeat was not successful.")
 
-    def shutdown(self):
+    def shutdown(self) -> bool:
+        """
+        Shutsdown the manager and returns tasks to queue.
+        """
+        self.assert_connected()
 
         payload = self._payload_template()
         payload["data"]["operation"] = "shutdown"
@@ -201,13 +235,13 @@ class QueueManager:
         if r.status_code != 200:
             # TODO something as we didnt successfully add the data
             self.logger.warning("Shutdown was not successful. This may delay queued tasks.")
-            return -1
+            return True
         else:
             nshutdown = r.json()["data"]["nshutdown"]
             self.logger.info("Shutdown was successful, {} tasks returned to master queue.".format(nshutdown))
-            return r.json()["data"]
+            return False
 
-    def add_exit_callback(self, callback, *args, **kwargs):
+    def add_exit_callback(self, callback: Callable, *args: List[Any], **kwargs: Dict[Any, Any]) -> None:
         """Adds additional callbacks to perform when closing down the server
 
         Parameters
@@ -222,11 +256,14 @@ class QueueManager:
         """
         self.exit_callbacks.append((callback, args, kwargs))
 
-    def update(self, new_tasks=True):
+    def update(self, new_tasks: bool=True) -> bool:
         """Examines the queue for completed tasks and adds successful completions to the database
         while unsuccessful are logged for future inspection
 
         """
+
+        self.assert_connected()
+
         results = self.queue_adapter.acquire_complete()
         if len(results):
             payload = self._payload_template()
@@ -258,7 +295,7 @@ class QueueManager:
         self.active += len(new_tasks)
         return True
 
-    def await_results(self):
+    def await_results(self) -> bool:
         """A synchronous method for testing or small launches
         that awaits task completion.
 
@@ -268,12 +305,14 @@ class QueueManager:
             Return True if the operation completed successfully
         """
 
+        self.assert_connected()
+
         self.update()
         self.queue_adapter.await_results()
         self.update(new_tasks=False)
         return True
 
-    def list_current_tasks(self):
+    def list_current_tasks(self) -> List[Any]:
         """Provides a list of tasks currently in the queue along
         with the associated keys
 
