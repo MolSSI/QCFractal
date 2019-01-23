@@ -12,6 +12,8 @@ from typing import Any, Callable, Dict, List, Optional
 
 import tornado.ioloop
 
+from qcfractal import interface as portal
+from qcfractal import testing
 from .adapters import build_queue_adapter
 
 __all__ = ["QueueManager"]
@@ -88,21 +90,11 @@ class QueueManager:
         # Pull the current loop if we need it
         self.loop = loop or tornado.ioloop.IOLoop.current()
 
-        # Pull server info
-        self.server_info = client.server_information()
-        self.server_name = self.server_info["name"]
-        self.heartbeat_frequency = self.server_info["heartbeat_frequency"]
-
         # Build a meta header
         meta_packet = self.name_data.copy()
         meta_packet["tag"] = self.queue_tag
         meta_packet["max_tasks"] = self.max_tasks
         self.meta_packet = json.dumps(meta_packet)
-
-        # Tell the server we are up and running
-        payload = self._payload_template()
-        payload["data"]["operation"] = "startup"
-        self.client._request("put", "queue_manager", payload)
 
         self.logger.info("QueueManager:")
         self.logger.info("    Name Information:")
@@ -113,7 +105,18 @@ class QueueManager:
         self.logger.info("    Queue Adapter:")
         self.logger.info("        {}\n".format(self.queue_adapter))
 
+        # DGAS Note: Note super happy about how this if/else turned out. Looking for alternatives.
         if self.connected():
+            # Pull server info
+            self.server_info = client.server_information()
+            self.server_name = self.server_info["name"]
+            self.heartbeat_frequency = self.server_info["heartbeat_frequency"]
+
+            # Tell the server we are up and running
+            payload = self._payload_template()
+            payload["data"]["operation"] = "startup"
+            self.client._request("put", "queue_manager", payload)
+
             self.logger.info("    QCFractal server information:")
             self.logger.info("        address:     {}".format(self.client.address))
             self.logger.info("        name:        {}".format(self.server_name))
@@ -322,3 +325,72 @@ class QueueManager:
             All tasks currently still in the database
         """
         return self.queue_adapter.list_tasks()
+
+    def test(self) -> bool:
+
+        self.logger.info("\nTesting requested, generating tasks")
+        task_base = json.dumps({
+            "spec": {
+                "function":
+                "qcengine.compute",
+                "args": [{
+                    "schema_name": "qc_schema_input",
+                    "schema_version": 1,
+                    "molecule": portal.data.get_molecule("water_dimer_minima.psimol").to_json(),
+                    "driver": "energy",
+                    "model": {},
+                    "keywords": {},
+                    "return_output": False
+                }, "program"],
+                "kwargs": {}
+            },
+            "parser": "nothing",
+            "hooks": []
+        })
+
+        programs = {
+            "rdkit": {
+                "method": "UFF",
+                "basis": None
+            },
+            "torchani": {
+                "method": "ANI1",
+                "basis": None
+            },
+            "psi4": {
+                "method": "HF",
+                "basis": "sto-3g"
+            },
+        }
+        tasks = []
+        found_programs = []
+
+        for program, model in programs.items():
+            if testing.has_module(program):
+                self.logger.info("Found program {}, adding to testing queue.".format(program))
+                found_programs.append(program)
+            else:
+                self.logger.warning("Could not find program {}, skipping tests.".format(program))
+                continue
+
+            task = json.loads(task_base)
+            task["id"] = program
+            task["spec"]["args"][0]["model"] = model
+            task["spec"]["args"][1] = program
+
+            tasks.append(task)
+
+        self.queue_adapter.submit_tasks(tasks)
+
+        self.logger.info("Testing tasks submitting, awaiting results.\n")
+        self.queue_adapter.await_results()
+
+        results = self.queue_adapter.acquire_complete()
+        self.logger.info("Testing results aquired.")
+
+
+        # missing_program
+        # if not results.keys() == set(found_program):
+        #     self.logger.error("Could not find program {}, skipping tests.".format(program))
+
+        # print(json.dumps(results, indent=2))

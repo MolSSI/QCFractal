@@ -10,10 +10,10 @@ from .base_adapter import BaseAdapter
 
 
 def _get_future(future):
-    if future.exception() is None:
+    try:
         return future.result()
-    else:
-        msg = "".join(traceback.format_exception(TypeError, future.exception(), future.traceback()))
+    except Exception as e:
+        msg = traceback.format_exc()
         ret = {"success": False, "error_message": msg}
         return ret
 
