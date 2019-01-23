@@ -117,9 +117,10 @@ def test_queue_manager_heartbeat(compute_adapter_fixture):
         assert len(sman) == 1
         assert sman[0]["status"] == "INACTIVE"
 
+
 def test_queue_manager_testing():
 
-     with ProcessPoolExecutor(max_workers=2) as adapter:
+    with ProcessPoolExecutor(max_workers=2) as adapter:
         manager = queue.QueueManager(None, adapter)
 
-        manager.test()
+        assert manager.test()

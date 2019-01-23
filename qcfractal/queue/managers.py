@@ -327,8 +327,11 @@ class QueueManager:
         return self.queue_adapter.list_tasks()
 
     def test(self) -> bool:
+        """
+        Tests all known programs with simple inputs to check if the Adapter is correctly instantiated.
+        """
 
-        self.logger.info("\nTesting requested, generating tasks")
+        self.logger.info("Testing requested, generating tasks")
         task_base = json.dumps({
             "spec": {
                 "function":
@@ -336,7 +339,7 @@ class QueueManager:
                 "args": [{
                     "schema_name": "qc_schema_input",
                     "schema_version": 1,
-                    "molecule": portal.data.get_molecule("water_dimer_minima.psimol").to_json(),
+                    "molecule": portal.data.get_molecule("hooh.json").to_json(),
                     "driver": "energy",
                     "model": {},
                     "keywords": {},
@@ -388,9 +391,24 @@ class QueueManager:
         results = self.queue_adapter.acquire_complete()
         self.logger.info("Testing results aquired.")
 
+        missing_programs = results.keys() - set(found_programs)
+        if len(missing_programs):
+            self.logger.error("Not all tasks were retrieved, missing programs {}.".format(missing_programs))
+            raise ValueError("Testing failed, not all tasks were retrived.")
+        else:
+            self.logger.info("All tasks retrieved successfully.")
 
-        # missing_program
-        # if not results.keys() == set(found_program):
-        #     self.logger.error("Could not find program {}, skipping tests.".format(program))
+        failures = 0
+        for k, result in results.items():
+            if result[0]["success"]:
+                self.logger.info("  {} - PASSED".format(k))
+            else:
+                self.logger.error("  {} - FAILED!".format(k))
+                failures += 1
 
-        # print(json.dumps(results, indent=2))
+        if failures:
+            self.logger.error("{}/{} tasks failed!".format(failures, len(results)))
+            return False
+        else:
+            self.logger.info("All tasks completed successfully!")
+            return True
