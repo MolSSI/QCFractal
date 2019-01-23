@@ -100,8 +100,8 @@ class SingleResultTasks:
 
         # Add results to database
         results = procedures_util.parse_single_runs(self.storage, rdata)
-        for k, v in results.items():
-            v["status"] = "COMPLETE"
+        # for k, v in results.items():
+        #     v["status"] = "COMPLETE"
         ret = self.storage.add_results(list(results.values()), update_existing=True)
 
         # Sort out hook data

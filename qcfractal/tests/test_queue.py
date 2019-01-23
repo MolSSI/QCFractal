@@ -28,10 +28,16 @@ def test_queue_error(fractal_compute_server):
 
     db = fractal_compute_server.objects["storage_socket"]
     ret = db.get_queue({"status": "ERROR"})["data"]
+    result = db.get_results_by_task_id(task_id=queue_id)['data'][0]
 
     assert len(ret) == 1
     assert "connectivity graph" in ret[0]["error"]["error_message"]
+    assert result['status'] == 'ERROR'
+
+    # Force a complete mark and test
     fractal_compute_server.objects["storage_socket"].queue_mark_complete([queue_id])
+    result = db.get_results_by_task_id(task_id=queue_id)['data'][0]
+    assert result['status'] == 'COMPLETE'
 
 
 @testing.using_rdkit

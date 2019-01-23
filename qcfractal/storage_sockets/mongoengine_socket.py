@@ -1054,6 +1054,68 @@ class MongoengineSocket:
 
         return {"data": rdata, "meta": meta}
 
+    def get_results_by_task_id(self,
+                    task_id: Union[List[str], str],
+                    projection=None,
+                    limit: int=None,
+                    return_json=True):
+        """
+
+        Parameters
+        ----------
+        task_id : List of str or str
+            Task id that ran the results
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        return_json : bool, deafult is True
+            Return the results as a list of json inseated of objects
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = storage_utils.get_metadata()
+        query = {}
+
+        if isinstance(task_id, (list, tuple)):
+            query['task_id__in'] = task_id
+        else:
+            query['task_id'] = task_id
+
+        q_limit = limit if limit and limit < self._max_limit else self._max_limit
+
+        data = []
+        try:
+            if projection:
+                data = Result.objects(**query).only(*projection).limit(q_limit)
+            else:
+                data = Result.objects(**query).limit(q_limit)
+
+            meta["n_found"] = data.count()
+            meta["success"] = True
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+        if return_json:
+            rdata = []
+            for d in data:
+                d = self._doc_to_json(d)
+                if "molecule" in d:
+                    d["molecule"] = d["molecule"]["$oid"]
+                rdata.append(d)
+
+        else:
+            rdata = data
+
+        return {"data": rdata, "meta": meta}
+
     def del_results(self, ids: List[str]):
         """
         Removes results from the database using their ids
@@ -1347,28 +1409,47 @@ class MongoengineSocket:
 
         return ret
 
-    def queue_reset_status(self, manager: str, status: str="RUNNING", update_status: str="WAITING") -> int:
+    def queue_reset_status(self, manager: str, reset_running: bool=True,
+                           reset_error: bool=False) -> int:
         """
-        Sets the status of the tasks that a manager owns.
+        Reset the status of the tasks that a manager owns from Running to Waiting
+        If reset_error is True, then also reset errored tasks AND its results/proc
 
         Parameters
         ----------
         manager : str
             The manager name to reset the status of
-        status : str, optional
-            An optional status filter to apply
-        update_status : str, optional
-            What to reset the status to
+        reset_running : str (optional), default is True
+            If True, reset running tasks to be waiting
+        reset_error : str (optional), default is False
+            If True, also reset errored tasks to be waiting,
+            also update results/proc to be INCOMPLETE
 
         Returns
         -------
         int
             Updated count
         """
-        found = TaskQueue.objects(manager=manager, status=status).update(status=update_status)
-        # TODO: update results and procedures
 
-        return found
+        if not (reset_running or reset_error):
+            # nothing to do
+            return 0
+
+        # Update results and procedures if reset_error
+        if reset_error:
+            task_ids = TaskQueue.objects(manager=manager, status="ERROR").only('id')
+            Result.objects(task_id__in=task_ids).update(status='INCOMPLETE')
+            Procedure.objects(task_id__in=task_ids).update(status='INCOMPLETE')
+
+        status = []
+        if reset_running:
+            status.append("RUNNING")
+        if reset_error:
+            status.append("ERROR")
+
+        updated = TaskQueue.objects(manager=manager, status__in=status).update(status="WAITING")
+
+        return updated
 
     def handle_hooks(self, hooks):
 
