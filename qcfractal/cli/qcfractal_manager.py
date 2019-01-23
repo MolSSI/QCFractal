@@ -15,6 +15,7 @@ __all__ = ["main"]
 def parse_args():
     parser = argparse.ArgumentParser(description='A CLI for the QCFractal QueueManager.')
     subparsers = parser.add_subparsers(help='QueueManager Backend Type', dest='adapter_type')
+    subparsers.required = True
 
     # Options for Dask
     dask_parser = subparsers.add_parser('dask', help='Dask')
@@ -52,12 +53,16 @@ def parse_args():
         "--update-frequency", type=int, default=15, help="The frequency in seconds to check for complete tasks.")
 
     # Additional args
+    parser.add_argument("--test", action="store_true", help="Boot and run a short test suite to validate setup")
     parser.add_argument("--rapidfire", action="store_true", help="Boot and run jobs until complete")
     parser.add_argument("--config-file", type=str, default=None, help="A configuration file to use")
     args = vars(parser.parse_args())
     if args["config_file"] is not None:
         data = cli_utils.read_config_file(args["config_file"])
         args = cli_utils.argparse_config_merge(parser, args, data, parser_default=[args["adapter_type"]])
+
+    if args["rapidfire"] and args["test"]:
+        raise KeyError("Can only either select 'rapidfire' or 'test' options, but not both.")
 
     return args
 
@@ -109,7 +114,7 @@ def main(args=None):
 
     else:
         raise KeyError(
-            "Unknown adapter type '{}', available options: 'fireworks', 'dask'.".format(args["adapter_type"]))
+            "Unknown adapter type '{}', available options: 'fireworks', 'dask', .".format(args["adapter_type"]))
 
     # Quick logging
     if args["logfile_prefix"] is not None:
@@ -117,8 +122,11 @@ def main(args=None):
     tornado.log.enable_pretty_logging()
 
     # Build the client
-    client = qcfractal.interface.FractalClient(
-        args["fractal_uri"], username=args["username"], password=args["password"], verify=(not args["noverify"]))
+    if args["test"]:
+        client = None
+    else:
+        client = qcfractal.interface.FractalClient(
+            args["fractal_uri"], username=args["username"], password=args["password"], verify=(not args["noverify"]))
 
     # Build out the manager itself
     manager = qcfractal.queue.QueueManager(
@@ -136,6 +144,10 @@ def main(args=None):
     # Either startup the manager or run until complete
     if args["rapidfire"]:
         manager.await_results()
+    elif args["test"]:
+        success = manager.test()
+        if success is False:
+            raise ValueError("Testing was not successful, failing.")
     else:
 
         cli_utils.install_signal_handlers(manager.loop, manager.stop)

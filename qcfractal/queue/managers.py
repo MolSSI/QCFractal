@@ -12,8 +12,8 @@ from typing import Any, Callable, Dict, List, Optional
 
 import tornado.ioloop
 
-from qcfractal import interface as portal
 from qcfractal import testing
+from ..interface.data import get_molecule
 from .adapters import build_queue_adapter
 
 __all__ = ["QueueManager"]
@@ -226,7 +226,7 @@ class QueueManager:
             # TODO something as we didnt successfully add the data
             self.logger.warning("Heartbeat was not successful.")
 
-    def shutdown(self) -> bool:
+    def shutdown(self) -> Dict[str, Any]:
         """
         Shutsdown the manager and returns tasks to queue.
         """
@@ -238,11 +238,11 @@ class QueueManager:
         if r.status_code != 200:
             # TODO something as we didnt successfully add the data
             self.logger.warning("Shutdown was not successful. This may delay queued tasks.")
-            return True
+            return {"nshutdown": 0}
         else:
             nshutdown = r.json()["data"]["nshutdown"]
             self.logger.info("Shutdown was successful, {} tasks returned to master queue.".format(nshutdown))
-            return False
+            return r.json()["data"]
 
     def add_exit_callback(self, callback: Callable, *args: List[Any], **kwargs: Dict[Any, Any]) -> None:
         """Adds additional callbacks to perform when closing down the server
@@ -339,7 +339,7 @@ class QueueManager:
                 "args": [{
                     "schema_name": "qc_schema_input",
                     "schema_version": 1,
-                    "molecule": portal.data.get_molecule("hooh.json").to_json(),
+                    "molecule": get_molecule("hooh.json").to_json(),
                     "driver": "energy",
                     "model": {},
                     "keywords": {},
