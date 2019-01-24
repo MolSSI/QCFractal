@@ -43,6 +43,7 @@ _programs = {
     "dask": _plugin_import("dask"),
     "geometric": _plugin_import("geometric"),
     "torsiondrive": _plugin_import("torsiondrive"),
+    "torchani": _plugin_import("torchani"),
 }
 if _programs["dask"]:
     _programs["dask.distributed"] = _plugin_import("dask.distributed")
