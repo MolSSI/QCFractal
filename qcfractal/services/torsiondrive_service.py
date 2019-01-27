@@ -123,7 +123,7 @@ class TorsionDriveService:
             # Create a lookup table for task ID mapping to result from that task in the procedure table
             inv_task_lookup = {
                 x["id"]: self.storage_socket.get_procedures_by_id(
-                    id=x["base_result"]["ref"].id
+                    id=x["base_result"]["id"]
                 )["data"][0]
                 for x in task_query["data"]
             }
@@ -264,6 +264,7 @@ class TorsionDriveService:
         # Parse remaining procedures
         # Create a map of "tasks" so that procedures does not have to followed
         self.data["success"] = True
+        self.data["status"] = "COMPLETE"
 
         self.data["final_energies"] = {}
         self.data["minimum_positions"] = {}
@@ -290,7 +291,6 @@ class TorsionDriveService:
         del self.data["molecule_template"]
         del self.data["queue_keys"]
         del self.data["torsiondrive_state"]
-        del self.data["status"]
         del self.data["required_tasks"]
 
         return self.data
