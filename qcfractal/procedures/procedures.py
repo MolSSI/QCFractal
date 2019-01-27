@@ -236,11 +236,9 @@ class OptimizationTasks(SingleResultTasks):
             full_tasks.append(task)
 
         # Find and handle duplicates
-        completed_procedures = self.storage.get_procedures(
-            {
-                "hash_index": duplicate_lookup
-            }, projection={"hash_index": True,
-                           "id": True, "task_id": True})["data"]
+        completed_procedures = self.storage.get_procedures_by_id(
+            hash_index=duplicate_lookup,
+            projection={"hash_index": True, "id": True, "task_id": True})["data"]
 
         duplicates = []
         if len(completed_procedures):
@@ -254,13 +252,7 @@ class OptimizationTasks(SingleResultTasks):
                 else:
                     new_tasks.append(task)
 
-            # if duplicate_id == "hash_index":
-            #     duplicates = list(found_hashes)
-            # elif duplicate_id == "id":
-            #     duplicates = [x["id"] for x in completed_procedures]
-            # else:
-            #     raise KeyError("Duplicate id '{}' not understood".format(duplicate_id))
-
+            # Update returned list to exclude duplicates
             full_tasks = new_tasks
 
         # Add task stubs

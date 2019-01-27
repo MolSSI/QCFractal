@@ -50,7 +50,7 @@ class TaskQueueHandler(APIHandler):
         if projection is None:
             projection = {x: True for x in ["status", "error", "tag"]}
 
-        ret = storage.get_queue(self.json["data"], projection=projection)
+        ret = storage.get_queue(**self.json["data"], projection=projection)
 
         self.write(ret)
 
@@ -80,7 +80,7 @@ class ServiceQueueHandler(APIHandler):
 
         # Figure out complete services
         service_hashes = [x.data["hash_index"] for x in submitted_services]
-        found_hashes = storage.get_procedures({"hash_index": service_hashes}, projection={"hash_index": True})
+        found_hashes = storage.get_procedures_by_id(hash_index=service_hashes, projection={"hash_index": True})
         found_hashes = set(x["hash_index"] for x in found_hashes["data"])
 
         new_services = []

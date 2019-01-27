@@ -202,18 +202,16 @@ class Result(BaseResult):
 class Procedure(BaseResult):
     """
         A procedure is a group of related results applied to a list of molecules
-
-        TODO: this looks exactly like results except those attributes listed here
     """
 
     procedure = db.StringField(required=True)
-                                    # choices=['undefined', 'optimization', 'torsiondrive'])
+                                    # choices=['optimization', 'torsiondrive'])
     # Todo: change name to be different from results program
     program = db.StringField(required=True)  # example: 'Geometric'
-    options = db.ReferenceField(Options)  # options of the procedure
+    keywords = db.DynamicField()  # options of the procedure
 
-    hash_index = db.StringField()  # TODO: still used, to be removed
-    qc_meta = db.DynamicField()  # --> all inside results
+    hash_index = db.StringField()
+    qc_meta = db.DynamicField()  # --> all inside results except mol
 
     meta = {
         'collection': 'procedure',
@@ -240,12 +238,6 @@ class OptimizationProcedure(Procedure):
 
     # output
     # trajectory = db.ListField(Result)
-
-    meta = {
-        'indexes': [
-            {'fields': ('procedure', 'program', 'options'), 'unique': True}  # TODO: check
-        ]
-    }
 
 
 class TorsiondriveProcedure(Procedure):

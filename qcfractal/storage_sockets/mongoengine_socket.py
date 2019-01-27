@@ -886,13 +886,13 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def get_results_by_ids(self, ids: List[str]=None, projection=None, return_json=True, with_ids=True):
+    def get_results_by_id(self, id: List[str]=None, projection=None, return_json=True, with_ids=True):
         """
         Get list of Results using the given list of Ids
 
         Parameters
         ----------
-        ids : List of str
+        id : List of str
             Ids of the results in the DB
         projection : list/set/tuple of keys, default is None
             The fields to return, default to return all
@@ -912,9 +912,9 @@ class MongoengineSocket:
         data = []
         # try:
         if projection:
-            data = Result.objects(id__in=ids).only(*projection).limit(self._max_limit)
+            data = Result.objects(id__in=id).only(*projection).limit(self._max_limit)
         else:
-            data = Result.objects(id__in=ids).limit(self._max_limit)
+            data = Result.objects(id__in=id).limit(self._max_limit)
 
         meta["n_found"] = data.count()
         meta["success"] = True
@@ -922,11 +922,9 @@ class MongoengineSocket:
         #     meta['error_description'] = str(err)
 
         if return_json:
-            rdata = [d.to_json_obj(with_ids) for d in data]
-        else:
-            rdata = data
+            data = [d.to_json_obj(with_ids) for d in data]
 
-        return {"data": rdata, "meta": meta}
+        return {"data": data, "meta": meta}
 
     def get_results_count(self):
         """
@@ -1028,15 +1026,10 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-            rdata = []
-            for d in data:
-                d = d.to_json_obj(with_ids)
-                rdata.append(d)
+          if return_json:
+            data = [d.to_json_obj(with_ids) for d in data]
 
-        else:
-            rdata = data
-
-        return {"data": rdata, "meta": meta}
+        return {"data": data, "meta": meta}
 
     def get_results_by_task_id(self,
                     task_id: Union[List[str], str],
@@ -1057,7 +1050,7 @@ class MongoengineSocket:
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
         return_json : bool, deafult is True
-            Return the results as a list of json inseated of objects
+            Return the results as a list of json instead of objects
 
         Returns
         -------
@@ -1088,15 +1081,9 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-            rdata = []
-            for d in data:
-                d = d.to_json_obj()
-                rdata.append(d)
+            data = [d.to_json_obj() for d in data]
 
-        else:
-            rdata = data
-
-        return {"data": rdata, "meta": meta}
+        return {"data": data, "meta": meta}
 
     def del_results(self, ids: List[str]):
         """
@@ -1120,16 +1107,245 @@ class MongoengineSocket:
 
 ### Mongo procedure/service functions
 
-    def add_procedures(self, data):
+    def add_procedures(self, data: List[dict], update_existing: bool=False, return_json=True):
+        """
+        Add procedures from a given dict. The dict should have all the required
+        keys of a result.
 
-        ret = self._add_generic(data, "procedure")
-        ret["meta"]["validation_errors"] = []  # TODO
+        Parameters
+        ----------
+        data : list of dict
+            Each dict must have:
+            procedure, program, keywords, qc_meta, hash_index
+            In addition, it should have the other attributes that it needs
+            to store
+        update_existing : bool (default False)
+            Update existing results
 
+        Returns
+        -------
+            Dict with keys: data, meta
+            Data is the ids of the inserted/updated/existing docs
+        """
+
+        meta = storage_utils.add_metadata()
+
+        results = []
+        # try:
+        for d in data:
+            # search by hash index
+            doc = Procedure.objects(hash_index=d['hash_index'])
+
+            if doc.count() == 0 or update_existing:
+                doc = doc.upsert_one(**d)
+                results.append(str(doc.id))
+                meta['n_inserted'] += 1
+            else:
+                meta['duplicates'].append(self._doc_to_tuples(doc.first(), with_ids=False))  # TODO
+                # If new or duplicate, add the id to the return list
+                results.append(str(doc.first().id))
+        meta["success"] = True
+        # except (mongoengine.errors.ValidationError, KeyError) as err:
+        #     meta["validation_errors"].append(err)
+        # except Exception as err:
+        #     meta['error_description'] = err
+
+        ret = {"data": results, "meta": meta}
         return ret
 
-    def get_procedures(self, query, projection=None):
+    def get_procedures(self,
+                        procedure: str=None,
+                        program: str=None,
+                        hash_index: str=None,
+                        ids: List[str]=None,
+                        status: str='COMPLETE',
+                        projection=None,
+                        limit: int=None,
+                        skip: int=None,
+                        return_json=True,
+                        with_ids=True):
+        """
 
-        return self._get_generic(query, "procedure", allow_generic=True, projection=projection)
+        Parameters
+        ----------
+        procedure : str
+        program : str
+        hash_index : str
+        ids : str
+        status : bool, default is 'COMPLETE'
+            The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        skip : int, default is None TODO
+            skip the first 'skip' resaults. Used to paginate
+        return_json : bool, deafult is True
+            Return the results as a list of json inseated of objects
+        with_ids : bool, default is True
+            Include the ids in the returned objects/dicts
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = storage_utils.get_metadata()
+        query = {}
+        parsed_query = {}
+        if procedure:
+            query['procedure'] = procedure
+        if program:
+            query['program'] = program
+        if hash_index:
+            query['hash_index'] = hash_index
+        if ids:
+            query['ids'] = ids
+        if status:
+            query['status'] = status
+
+        for key, value in query.items():
+            if key == "status":
+                parsed_query[key] = value
+            elif isinstance(value, (list, tuple)):
+                parsed_query[key + "__in"] = [v.lower() for v in value]
+            else:
+                parsed_query[key] = value.lower()
+
+        q_limit = limit if limit and limit < self._max_limit else self._max_limit
+
+        data = []
+        try:
+            if projection:
+                data = Procedure.objects(**parsed_query).only(*projection).limit(q_limit)
+            else:
+                data = Procedure.objects(**parsed_query).limit(q_limit)
+
+            meta["n_found"] = data.count()
+            meta["success"] = True
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+        if return_json:
+            data = [d.to_json_obj(with_ids) for d in data]
+
+        return {"data": data, "meta": meta}
+
+    def get_procedures_by_id(self, id: List[str]=None,
+                             hash_index: List[str]=None,
+                             projection=None,
+                             return_json=True,
+                             with_ids=True):
+        """
+        Get list of Procedures using the given list of Ids
+
+        Parameters
+        ----------
+        id : List of str
+            Ids of the results in the DB
+        hash_index: List or str
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        return_json : bool, default is True
+            Return the results as a list of json instead of objects
+        with_ids: bool, default is True
+            Include the ids in the returned objects/dicts
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = storage_utils.get_metadata()
+
+        query, parsed_query = {}, {}
+        if id:
+            query['id'] = id
+        if hash_index:
+            query['hash_index'] = hash_index
+
+        for key, value in query.items():
+            if isinstance(value, (list, tuple)):
+                parsed_query[key + "__in"] = value
+            else:
+                parsed_query[key] = value
+
+        data = []
+        # try:
+        if projection:
+            data = Procedure.objects(**parsed_query).only(*projection).limit(self._max_limit)
+        else:
+            data = Procedure.objects(**parsed_query).limit(self._max_limit)
+
+        meta["n_found"] = data.count()
+        meta["success"] = True
+        # except Exception as err:
+        #     meta['error_description'] = str(err)
+
+        if return_json:
+            data = [d.to_json_obj(with_ids) for d in data]
+
+        return {"data": data, "meta": meta}
+
+
+    def get_procedures_by_task_id(self,
+                    task_id: Union[List[str], str],
+                    projection=None,
+                    limit: int=None,
+                    return_json=True):
+        """
+
+        Parameters
+        ----------
+        task_id : List of str or str
+            Task id that ran the procedure
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        return_json : bool, deafult is True
+            Return the results as a list of json instead of objects
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = storage_utils.get_metadata()
+        query = {}
+
+        if isinstance(task_id, (list, tuple)):
+            query['task_id__in'] = task_id
+        else:
+            query['task_id'] = task_id
+
+        q_limit = limit if limit and limit < self._max_limit else self._max_limit
+
+        data = []
+        try:
+            if projection:
+                data = Procedure.objects(**query).only(*projection).limit(q_limit)
+            else:
+                data = Procedure.objects(**query).limit(q_limit)
+
+            meta["n_found"] = data.count()
+            meta["success"] = True
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+        if return_json:
+            data = [d.to_json_obj() for d in data]
+
+        return {"data": data, "meta": meta}
 
     def update_procedure(self, hash_index, data):
         """
@@ -1284,10 +1500,87 @@ class MongoengineSocket:
 
         return found
 
-    def get_queue(self, query, projection=None):
+    def get_queue_(self, query, projection=None):
         """TODO: to be replaced with a specific query, add limit"""
 
         return self._get_generic(query, "task_queue", allow_generic=True, projection=projection)
+
+    def get_queue(self,
+                    id=None,
+                    hash_index=None,
+                    program=None,
+                    status: str=None,
+                    projection=None,
+                    limit: int=None,
+                    skip: int=None,
+                    return_json=True,
+                    with_ids=True):
+        """
+        TODO: check what query keys are needs
+        Parameters
+        ----------
+        id : list or str
+            Id of the task
+        Hash_index
+        status : bool, default is None (find all)
+            The status of the task: 'COMPLETE', 'RUNNING', 'WAITING', or 'ERROR'
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        skip : int, default is None TODO
+            skip the first 'skip' resaults. Used to paginate
+        return_json : bool, deafult is True
+            Return the results as a list of json inseated of objects
+        with_ids : bool, default is True
+            Include the ids in the returned objects/dicts
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = storage_utils.get_metadata()
+        query = {}
+        parsed_query = {}
+        if program:
+            query['program'] = program
+        if id:
+            query['id'] = id
+        if hash_index:
+            query['hash_index'] = hash_index
+        if status:
+            query['status'] = status
+
+        for key, value in query.items():
+            if isinstance(value, (list, tuple)):
+                parsed_query[key + "__in"] = value
+            else:
+                parsed_query[key] = value
+
+        q_limit = limit if limit and limit < self._max_limit else self._max_limit
+
+        data = []
+        try:
+            if projection:
+                data = TaskQueue.objects(**parsed_query).only(*projection).limit(q_limit)
+            else:
+                data = TaskQueue.objects(**parsed_query).limit(q_limit)
+
+            meta["n_found"] = data.count()
+            meta["success"] = True
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+        if return_json:
+            if return_json:
+                data = [d.to_json_obj(with_ids) for d in data]
+
+        return {"data": data, "meta": meta}
 
     def queue_get_by_id(self, ids: List[str], limit: int=100, as_json: bool=True):
         """Get tasks by their IDs

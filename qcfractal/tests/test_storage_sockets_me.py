@@ -374,11 +374,11 @@ def test_get_results_by_ids(storage_results):
     results = storage_results.get_results()["data"]
     ids = [x['id'] for x in results]
 
-    ret = storage_results.get_results_by_ids(ids, return_json=False)
+    ret = storage_results.get_results_by_id(ids, return_json=False)
     assert ret["meta"]["n_found"] == 6
     assert len(ret["data"]) == 6
 
-    ret = storage_results.get_results_by_ids(ids, projection=['status'])
+    ret = storage_results.get_results_by_id(ids, projection=['status'])
     assert ret['data'][0].keys() == {'id', 'status'}
 
 

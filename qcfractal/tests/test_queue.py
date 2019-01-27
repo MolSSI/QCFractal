@@ -27,7 +27,7 @@ def test_queue_error(fractal_compute_server):
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
     db = fractal_compute_server.objects["storage_socket"]
-    ret = db.get_queue({"status": "ERROR"})["data"]
+    ret = db.get_queue(status="ERROR")["data"]
     result = db.get_results_by_task_id(task_id=queue_id)['data'][0]
 
     assert len(ret) == 1
