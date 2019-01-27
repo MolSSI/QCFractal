@@ -396,7 +396,7 @@ class FractalServer:
         """
 
         dt = datetime.datetime.utcnow() - datetime.timedelta(seconds=self.heartbeat_frequency)
-        ret = self.storage.get_managers({"modifed_on": {"$lt": dt}, "status": "ACTIVE"}, projection={"name": True})
+        ret = self.storage.get_managers(status="ACTIVE", modified_before=dt)
 
         for blob in ret["data"]:
             nshutdown = self.storage.queue_reset_status(blob["name"])
@@ -409,13 +409,8 @@ class FractalServer:
         """
         Provides a list of managers associated with the server both active and inactive
         """
-        query = {}
-        if status:
-            query["status"] = status.upper()
-        if name:
-            query["name"] = name
 
-        return self.storage.get_managers(query)["data"]
+        return self.storage.get_managers(status=status, name=name)["data"]
 
 ### Functions only available if using a local queue_adapter
 

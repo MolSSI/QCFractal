@@ -35,7 +35,6 @@ from . import storage_utils
 # Pull in the hashing algorithms from the client
 from .. import interface
 
-
 # from bson.dbref import DBRef
 
 
@@ -211,6 +210,7 @@ class MongoengineSocket:
             TaskQueue.drop_collection()
             Procedure.drop_collection()
             User.drop_collection()
+            QueueManager.drop_collection()
 
             self.client.drop_database(db_name)
 
@@ -498,7 +498,7 @@ class MongoengineSocket:
 
         # Don't include the hash or the molecular_formula in the returned result
         # Make the query
-        query = {index+'__in': molecule_ids}
+        query = {index + '__in': molecule_ids}
         data = Molecule.objects(**query).exclude("molecule_hash", "molecular_formula").as_pymongo()
 
         if data is None:
@@ -540,7 +540,7 @@ class MongoengineSocket:
         if isinstance(values, str):
             values = [values]
 
-        query = {index+'__in': values}
+        query = {index + '__in': values}
 
         return Molecule.objects(**query).delete()
 
@@ -1026,16 +1026,16 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-          if return_json:
-            data = [d.to_json_obj(with_ids) for d in data]
+            if return_json:
+                data = [d.to_json_obj(with_ids) for d in data]
 
         return {"data": data, "meta": meta}
 
     def get_results_by_task_id(self,
-                    task_id: Union[List[str], str],
-                    projection=None,
-                    limit: int=None,
-                    return_json=True):
+                               task_id: Union[List[str], str],
+                               projection=None,
+                               limit: int=None,
+                               return_json=True):
         """
 
         Parameters
@@ -1154,16 +1154,16 @@ class MongoengineSocket:
         return ret
 
     def get_procedures(self,
-                        procedure: str=None,
-                        program: str=None,
-                        hash_index: str=None,
-                        ids: List[str]=None,
-                        status: str='COMPLETE',
-                        projection=None,
-                        limit: int=None,
-                        skip: int=None,
-                        return_json=True,
-                        with_ids=True):
+                       procedure: str=None,
+                       program: str=None,
+                       hash_index: str=None,
+                       ids: List[str]=None,
+                       status: str='COMPLETE',
+                       projection=None,
+                       limit: int=None,
+                       skip: int=None,
+                       return_json=True,
+                       with_ids=True):
         """
 
         Parameters
@@ -1235,7 +1235,8 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-    def get_procedures_by_id(self, id: List[str]=None,
+    def get_procedures_by_id(self,
+                             id: List[str]=None,
                              hash_index: List[str]=None,
                              projection=None,
                              return_json=True,
@@ -1292,12 +1293,11 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-
     def get_procedures_by_task_id(self,
-                    task_id: Union[List[str], str],
-                    projection=None,
-                    limit: int=None,
-                    return_json=True):
+                                  task_id: Union[List[str], str],
+                                  projection=None,
+                                  limit: int=None,
+                                  return_json=True):
         """
 
         Parameters
@@ -1506,15 +1506,15 @@ class MongoengineSocket:
         return self._get_generic(query, "task_queue", allow_generic=True, projection=projection)
 
     def get_queue(self,
-                    id=None,
-                    hash_index=None,
-                    program=None,
-                    status: str=None,
-                    projection=None,
-                    limit: int=None,
-                    skip: int=None,
-                    return_json=True,
-                    with_ids=True):
+                  id=None,
+                  hash_index=None,
+                  program=None,
+                  status: str=None,
+                  projection=None,
+                  limit: int=None,
+                  skip: int=None,
+                  return_json=True,
+                  with_ids=True):
         """
         TODO: check what query keys are needs
         Parameters
@@ -1644,8 +1644,7 @@ class MongoengineSocket:
         if results + procedures != tasks:
             logging.error("Some tasks don't reference results or procedures correctly!"
                           "Tasks: {}, Results: {}, procedures: {}. "
-                          "# of results + procedures should equal # of tasks."
-                          .format(tasks, results, procedures))
+                          "# of results + procedures should equal # of tasks.".format(tasks, results, procedures))
         return tasks
 
     def queue_mark_error(self, data):
@@ -1677,8 +1676,7 @@ class MongoengineSocket:
 
         return ret
 
-    def queue_reset_status(self, manager: str, reset_running: bool=True,
-                           reset_error: bool=False) -> int:
+    def queue_reset_status(self, manager: str, reset_running: bool=True, reset_error: bool=False) -> int:
         """
         Reset the status of the tasks that a manager owns from Running to Waiting
         If reset_error is True, then also reset errored tasks AND its results/proc
@@ -1749,7 +1747,7 @@ class MongoengineSocket:
         upd = {
             # Set the date
             "$set": {
-                "modifed_on": dt,
+                "modified_on": dt,
             },
             # Increment relevant data
             "$inc": {
@@ -1769,9 +1767,25 @@ class MongoengineSocket:
         r = QueueManager._collection.update_one({"name": name}, upd, upsert=True)
         return r.matched_count == 1
 
-    def get_managers(self, query, projection=None):
+    def get_managers(self, name: str=None, status: str=None, modified_before=None):
 
-        return self._get_generic(query, "queue_manager", allow_generic=True, projection=projection)
+        query = {}
+        if name:
+            query["name"] = name
+        if modified_before:
+            query["modified_on__lt"] = modified_before
+        if status:
+            query["status"] = status
+
+        data = QueueManager.objects(**query)
+
+        meta = storage_utils.get_metadata()
+        meta["success"] = True
+        meta["n_found"] = data.count()
+
+        data = [x.to_json_obj(False) for x in data]
+
+        return {"data": data, "meta": meta}
 
 ### Users
 

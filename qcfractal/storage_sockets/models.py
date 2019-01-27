@@ -354,12 +354,13 @@ class QueueManager(CustomDynamicDocument):
     submitted = db.IntField()
     failures = db.IntField()
     returned = db.IntField()
+    status = db.StringField(default='INACTIVE')
 
     created_on = db.DateTimeField(required=True, default=datetime.datetime.now)
     modified_on = db.DateTimeField(required=True, default=datetime.datetime.now)
 
     meta = {
-        'indexes': ['name']
+        'indexes': ['status', 'name', 'modified_on']
     }
 
     def save(self, *args, **kwargs):
