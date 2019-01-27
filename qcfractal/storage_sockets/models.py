@@ -2,9 +2,46 @@ import datetime
 
 import bson
 import mongoengine as db
+import json
+from collections.abc import Iterable
 
 
-class Collection(db.DynamicDocument):
+class CustomDynamicDocument(db.DynamicDocument):
+    """
+    This class is serializable into standard json
+    """
+
+    def to_json_obj(self, with_id=True):
+        """Removes object types like $date, _cls, and $oid
+            Also, replaces _id with id
+            Assumes one level of ReferenceFields which is suffice
+        """
+
+        data = json.loads(bson.json_util.dumps(self.to_mongo()))
+
+        for key, value in data.items():
+            if isinstance(value, dict) and len(value) == 1:
+                (subkey, subvalue), = value.items()
+                if subkey.startswith('$'):
+                    data[key] = subvalue
+            elif isinstance(value, Iterable) and '_ref' in value:
+                data[key] = data[key]['_ref']
+                data[key]['ref'] = data[key]['$ref']
+                del data[key]['$ref']
+                data[key]['id'] = str(data[key]['$id']['$oid'])
+                del data[key]['$id']
+
+        if with_id:
+            data['id'] = data['_id']
+        del data['_id']
+
+        return data
+
+    meta = {
+        'abstract': True,
+    }
+
+class Collection(CustomDynamicDocument):
     """
         A collection of precomuted workflows such as datasets, ..
 
@@ -25,7 +62,7 @@ class Collection(db.DynamicDocument):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class Molecule(db.DynamicDocument):
+class Molecule(CustomDynamicDocument):
     """
         The molecule DB collection is managed by pymongo, so far
     """
@@ -62,7 +99,7 @@ class Molecule(db.DynamicDocument):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class Options(db.DynamicDocument):
+class Options(CustomDynamicDocument):
     """
         Options are unique for a specific program and name
     """
@@ -86,7 +123,7 @@ class Options(db.DynamicDocument):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class BaseResult(db.DynamicDocument):
+class BaseResult(CustomDynamicDocument):
     """
         Abstract Base class for Results and Procedures
     """
@@ -124,7 +161,7 @@ class Result(BaseResult):
     driver = db.StringField(required=True)  # example "gradient"
     method = db.StringField(required=True)  # example "uff"
     basis = db.StringField()
-    molecule = db.ReferenceField(Molecule, required=True)   # or LazyReferenceField if only ID is needed?
+    molecule = db.ReferenceField(Molecule, required=True)   # todo: or LazyReferenceField if only ID is needed?
     # options = db.ReferenceField(Options)  # ** has to be a FK or empty, can't be a string
     options = db.StringField()
 
@@ -193,20 +230,20 @@ class Procedure(BaseResult):
 
 class OptimizationProcedure(Procedure):
     """
-        An Optimization  procedure (not used so far)
+        An Optimization  procedure
     """
 
     procedure = db.StringField(default='optimization', required=True)
 
-    # initial_molecule = db.ReferenceField(Molecule)  # always load with select_related
-    # final_molecule = db.ReferenceField(Molecule)
+    initial_molecule = db.ReferenceField(Molecule)  # always load with select_related
+    final_molecule = db.ReferenceField(Molecule)
 
     # output
     # trajectory = db.ListField(Result)
 
     meta = {
         'indexes': [
-            # {'fields': ('initial_molecule', 'procedure_type', 'procedure_program'), 'unique': False}  # TODO: check
+            {'fields': ('procedure', 'program', 'options'), 'unique': True}  # TODO: check
         ]
     }
 
@@ -240,7 +277,7 @@ class Spec(db.DynamicEmbeddedDocument):
     kwargs = db.DynamicField()
 
 
-class TaskQueue(db.DynamicDocument):
+class TaskQueue(CustomDynamicDocument):
     """A queue of tasks corresponding to a procedure
 
        Notes: don't sort query results without having the index sorted
@@ -285,12 +322,6 @@ class TaskQueue(db.DynamicDocument):
         # ]
     }
 
-    # override to simplify the generic reference field
-    def to_json(self):
-        data = self.to_mongo()
-        data['base_result'] = data['base_result']['_ref']
-        return bson.json_util.dumps(data)
-
     def save(self, *args, **kwargs):
         """Override save to update modified_on"""
         self.modified_on = datetime.datetime.now()
@@ -300,7 +331,7 @@ class TaskQueue(db.DynamicDocument):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class ServiceQueue(db.DynamicDocument):
+class ServiceQueue(CustomDynamicDocument):
 
     meta = {
         'indexes': [
@@ -313,7 +344,7 @@ class ServiceQueue(db.DynamicDocument):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class User(db.DynamicDocument):
+class User(CustomDynamicDocument):
 
     username = db.StringField(required=True, unique=True)
     password = db.BinaryField(required=True)
@@ -324,10 +355,23 @@ class User(db.DynamicDocument):
     }
 
 
-class QueueManagers(db.DynamicDocument):
+class QueueManager(CustomDynamicDocument):
 
     name = db.StringField(unique=True)
+    completed = db.IntField()
+    submitted = db.IntField()
+    failures = db.IntField()
+    returned = db.IntField()
+
+    created_on = db.DateTimeField(required=True, default=datetime.datetime.now)
+    modified_on = db.DateTimeField(required=True, default=datetime.datetime.now)
 
     meta = {
         'indexes': ['name']
     }
+
+    def save(self, *args, **kwargs):
+        """Override save to update modified_on"""
+        self.modified_on = datetime.datetime.now()
+
+        return super(QueueManager, self).save(*args, **kwargs)

@@ -30,7 +30,7 @@ from bson.objectid import ObjectId
 from mongoengine.connection import disconnect, get_db
 
 from qcfractal.storage_sockets.models import Options, Collection, Result, \
-    TaskQueue, Procedure, User, Molecule
+    TaskQueue, Procedure, User, Molecule, QueueManager
 from . import storage_utils
 # Pull in the hashing algorithms from the client
 from .. import interface
@@ -563,20 +563,6 @@ class MongoengineSocket:
             rdata = ukey
         return rdata
 
-    def _doc_to_json(self, doc: db.Document, with_ids=True):
-        """Rename _id to id, or remove it altogether"""
-
-        if not doc:
-            return
-
-        d_json = json.loads(doc.to_json())
-        if with_ids:
-            d_json["id"] = str(doc.id)
-
-        del d_json["_id"]
-
-        return d_json
-
     ### Mongo options functions
 
     def add_options(self, data: Union[Dict, List[Dict]]):
@@ -675,7 +661,7 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-            rdata = [self._doc_to_json(d, with_ids) for d in data]
+            rdata = [d.to_json_obj(with_ids) for d in data]
         else:
             rdata = data
 
@@ -797,7 +783,7 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-            rdata = [self._doc_to_json(d, with_ids) for d in data]
+            rdata = [d.to_json_obj(with_ids) for d in data]
         else:
             rdata = data
 
@@ -936,7 +922,7 @@ class MongoengineSocket:
         #     meta['error_description'] = str(err)
 
         if return_json:
-            rdata = [self._doc_to_json(d, with_ids) for d in data]
+            rdata = [d.to_json_obj(with_ids) for d in data]
         else:
             rdata = data
 
@@ -1044,9 +1030,7 @@ class MongoengineSocket:
         if return_json:
             rdata = []
             for d in data:
-                d = self._doc_to_json(d, with_ids)
-                if "molecule" in d:
-                    d["molecule"] = d["molecule"]["$oid"]
+                d = d.to_json_obj(with_ids)
                 rdata.append(d)
 
         else:
@@ -1106,9 +1090,7 @@ class MongoengineSocket:
         if return_json:
             rdata = []
             for d in data:
-                d = self._doc_to_json(d)
-                if "molecule" in d:
-                    d["molecule"] = d["molecule"]["$oid"]
+                d = d.to_json_obj()
                 rdata.append(d)
 
         else:
@@ -1295,14 +1277,7 @@ class MongoengineSocket:
             }})
 
         if as_json:
-            found = [self._doc_to_json(task, with_ids=True) for task in found]
-            # simplify returned formats
-            # TODO: do it in models if possible
-            for task in found:
-                task['base_result']['id'] = task['base_result']['$id']['$oid']
-                del task['base_result']['$id']
-                task['created_on'] = task['created_on']['$date']
-                task['modified_on'] = task['modified_on']['$date']
+            found = [task.to_json_obj() for task in found]
 
         if upd.modified_count != len(found):
             self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
@@ -1336,7 +1311,7 @@ class MongoengineSocket:
         found = TaskQueue.objects(id__in=ids).limit(q_limit)
 
         if as_json:
-            found = [self._doc_to_json(task, with_ids=True) for task in found]
+            found = [task.to_json_obj() for task in found]
 
         return found
 
@@ -1479,11 +1454,6 @@ class MongoengineSocket:
         dt = datetime.datetime.utcnow()
 
         upd = {
-            # Provide base data
-            "$setOnInsert": {
-                "name": name,
-                "created_on": dt,
-            },
             # Set the date
             "$set": {
                 "modifed_on": dt,
@@ -1502,7 +1472,8 @@ class MongoengineSocket:
             if value in kwargs:
                 upd["$set"][value] = kwargs[value]
 
-        r = self._tables["queue_manager"].update_one({"name": name}, upd, upsert=True)
+        QueueManager.objects()  # init
+        r = QueueManager._collection.update_one({"name": name}, upd, upsert=True)
         return r.matched_count == 1
 
     def get_managers(self, query, projection=None):
