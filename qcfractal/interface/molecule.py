@@ -52,8 +52,8 @@ class Molecule:
         self._masses = []
         self.name = kwargs.pop("name", "")
         self.comment = ""
-        self.charge = 0.0
-        self.multiplicity = 1
+        self.molecular_charge = 0.0
+        self.molecular_multiplicity = 1
         self.real = []
         self.fragments = []
         self.fragment_charges = []
@@ -100,17 +100,17 @@ class Molecule:
             if not self.fragments:
                 natoms = self._geometry.shape[0]
                 self.fragments = [list(range(natoms))]
-                self.fragment_charges = [self.charge]
-                self.fragment_multiplicities = [self.multiplicity]
+                self.fragment_charges = [self.molecular_charge]
+                self.fragment_multiplicities = [self.molecular_multiplicity]
             else:
                 if not self.fragment_charges:
-                    if np.isclose(self.charge, 0.0):
+                    if np.isclose(self.molecular_charge, 0.0):
                         self.fragment_charges = [0 for _ in self.fragments]
                     else:
                         raise KeyError("Fragments passed in, but not fragment charges for a charged molecule.")
 
                 if not self.fragment_multiplicities:
-                    if self.multiplicity == 1:
+                    if self.molecular_multiplicity == 1:
                         self.fragment_multiplicities = [1 for _ in self.fragments]
                     else:
                         raise KeyError("Fragments passed in, but not fragment multiplicities for a non-singlet molecule.")
@@ -300,8 +300,8 @@ class Molecule:
                 tempMultiplicity = int(cgmp.match(line).group(2))
 
                 if ifrag == 0:
-                    self.charge = float(tempCharge)
-                    self.multiplicity = tempMultiplicity
+                    self.molecular_charge = float(tempCharge)
+                    self.molecular_multiplicity = tempMultiplicity
                 self.fragment_charges.append(float(tempCharge))
                 self.fragment_multiplicities.append(tempMultiplicity)
 
@@ -452,8 +452,8 @@ class Molecule:
         match &= np.allclose(bench.fragment_charges, other.fragment_charges, atol=CHARGE_NOISE)
         match &= np.equal(bench.fragment_multiplicities, other.fragment_multiplicities).all()
 
-        match &= np.allclose(bench.charge, other.charge, atol=CHARGE_NOISE)
-        match &= np.equal(bench.multiplicity, other.multiplicity).all()
+        match &= np.allclose(bench.molecular_charge, other.molecular_charge, atol=CHARGE_NOISE)
+        match &= np.equal(bench.molecular_multiplicity, other.molecular_multiplicity).all()
         match &= np.allclose(bench.geometry, other.geometry, atol=GEOMETRY_NOISE)
         return match
 
@@ -465,7 +465,7 @@ class Molecule:
         text = ""
 
         text += """    Geometry (in {0:s}), charge = {1:.1f}, multiplicity = {2:d}:\n\n""".format(
-            'Angstrom', self.charge, self.multiplicity)
+            'Angstrom', self.molecular_charge, self.molecular_multiplicity)
         text += """       Center              X                  Y                   Z       \n"""
         text += """    ------------   -----------------  -----------------  -----------------\n"""
 
@@ -599,8 +599,8 @@ class Molecule:
             ret.fragment_multiplicities.append(self.fragment_multiplicities[frag])
 
         # Set charge and multiplicity
-        ret.charge = sum(ret.fragment_charges)
-        ret.multiplicity = sum(x - 1 for x in ret.fragment_multiplicities) + 1
+        ret.molecular_charge = sum(ret.fragment_charges)
+        ret.molecular_multiplicity = sum(x - 1 for x in ret.fragment_multiplicities) + 1
 
         # Loop through the ghost blocks
         for frag in ghost:
@@ -702,7 +702,7 @@ class Molecule:
                 ret[field] = hash_helpers.float_prep(data, GEOMETRY_NOISE).ravel().tolist()
             elif field == "fragment_charges":
                 ret[field] = hash_helpers.float_prep(data, CHARGE_NOISE).tolist()
-            elif field == "charge":
+            elif field == "molecular_charge":
                 ret[field] = hash_helpers.float_prep(data, CHARGE_NOISE)
             elif field == "masses":
                 ret[field] = hash_helpers.float_prep(data, MASS_NOISE).tolist()

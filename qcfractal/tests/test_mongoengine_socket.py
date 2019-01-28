@@ -39,7 +39,7 @@ def test_molecule(storage_socket):
     # Use the ORM class
     water_mol = Molecule.objects().first()
     assert water_mol.molecular_formula == "H4O2"
-    assert water_mol.charge == 0
+    assert water_mol.molecular_charge == 0
 
     # print(water_mol.to_json())
 
