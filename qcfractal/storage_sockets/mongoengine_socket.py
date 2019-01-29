@@ -1026,8 +1026,7 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-            if return_json:
-                data = [d.to_json_obj(with_ids) for d in data]
+            data = [d.to_json_obj(with_ids) for d in data]
 
         return {"data": data, "meta": meta}
 
@@ -1742,30 +1741,25 @@ class MongoengineSocket:
 ### QueueManagers
 
     def manager_update(self, name, **kwargs):
-        dt = datetime.datetime.utcnow()
 
         upd = {
             # Set the date
-            "$set": {
-                "modified_on": dt,
-            },
+            "modified_on": datetime.datetime.utcnow(),
             # Increment relevant data
-            "$inc": {
-                "submitted": kwargs.pop("submitted", 0),
-                "completed": kwargs.pop("completed", 0),
-                "returned": kwargs.pop("returned", 0),
-                "failures": kwargs.pop("failures", 0)
-            }
+            "inc__submitted": kwargs.pop("submitted", 0),
+            "inc__completed": kwargs.pop("completed", 0),
+            "inc__returned": kwargs.pop("returned", 0),
+            "inc__failures": kwargs.pop("failures", 0)
         }
 
         # Update server data
         for value in ["cluster", "hostname", "uuid", "tag", "status"]:
             if value in kwargs:
-                upd["$set"][value] = kwargs[value]
+                upd[value] = kwargs[value]
 
         QueueManager.objects()  # init
-        r = QueueManager._collection.update_one({"name": name}, upd, upsert=True)
-        return r.matched_count == 1
+        r = QueueManager.objects(name=name).update(**upd, upsert=True)
+        return r == 1
 
     def get_managers(self, name: str=None, status: str=None, modified_before=None):
 
