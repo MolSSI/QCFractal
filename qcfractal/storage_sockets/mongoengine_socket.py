@@ -1757,7 +1757,7 @@ class MongoengineSocket:
             if value in kwargs:
                 upd[value] = kwargs[value]
 
-        QueueManager.objects()  # init
+        # QueueManager.objects()  # init
         r = QueueManager.objects(name=name).update(**upd, upsert=True)
         return r == 1
 
@@ -1777,7 +1777,7 @@ class MongoengineSocket:
         meta["success"] = True
         meta["n_found"] = data.count()
 
-        data = [x.to_json_obj(False) for x in data]
+        data = [x.to_json_obj(with_id=False) for x in data]
 
         return {"data": data, "meta": meta}
 
