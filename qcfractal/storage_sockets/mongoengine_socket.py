@@ -15,7 +15,7 @@ except ImportError:
         "Mongoengine_socket requires mongoengine, please install this python module or try a different db_socket.")
 
 import collections
-import datetime
+from datetime import datetime as dt
 import json
 import logging
 from typing import List, Union, Dict
@@ -1362,7 +1362,7 @@ class MongoengineSocket:
                 logging.warning('Trying to update Procedre with none ' +
                                 'allowed keyword: ({}={})'.format(key, value))
 
-        modified_count = Procedure.objects(hash_index=hash_index).update(**update)
+        modified_count = Procedure.objects(hash_index=hash_index).update(**update, modified_on=dt.utcnow())
 
         return modified_count
 
@@ -1391,7 +1391,7 @@ class MongoengineSocket:
 
         match_count = 0
         modified_count = 0
-        for uid, data in updates:
+        for uid, data in updates: # TODO: why this is replace not update?
             result = self._tables["service_queue"].replace_one({"_id": ObjectId(uid)}, data)
             match_count += result.matched_count
             modified_count += result.modified_count
@@ -1499,7 +1499,7 @@ class MongoengineSocket:
         upd = TaskQueue._collection.update_many(
             query, {"$set": {
                 "status": "RUNNING",
-                "modified_on": datetime.datetime.utcnow(),
+                "modified_on": dt.utcnow(),
                 "manager": manager,
             }})
 
@@ -1647,9 +1647,9 @@ class MongoengineSocket:
         #                               session=session)
         #         # next, Update results
 
-        tasks = TaskQueue.objects(id__in=task_ids).update(status='COMPLETE')
-        results = Result.objects(task_id__in=task_ids).update(status='COMPLETE')
-        procedures = Procedure.objects(task_id__in=task_ids).update(status='COMPLETE')
+        tasks = TaskQueue.objects(id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
+        results = Result.objects(task_id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
+        procedures = Procedure.objects(task_id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
 
         # This should not happen unless there is data inconsistency in the DB
         if results + procedures != tasks:
@@ -1666,13 +1666,12 @@ class MongoengineSocket:
 
         bulk_commands = []
         task_ids = []
-        dt = datetime.datetime.utcnow()
         for task_id, msg in data:
             update = {
                 "$set": {
                     "status": "ERROR",
                     "error": msg,
-                    "modified_on": dt,
+                    "modified_on": dt.utcnow(),
                 }
             }
             bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(task_id)}, update))
@@ -1682,8 +1681,8 @@ class MongoengineSocket:
             return
 
         ret = TaskQueue._collection.bulk_write(bulk_commands, ordered=False).modified_count
-        Result.objects(task_id__in=task_ids).update(status='ERROR')
-        Procedure.objects(task_id__in=task_ids).update(status='ERROR')
+        Result.objects(task_id__in=task_ids).update(status='ERROR', modified_on=dt.utcnow())
+        Procedure.objects(task_id__in=task_ids).update(status='ERROR', modified_on=dt.utcnow())
 
         return ret
 
@@ -1715,8 +1714,8 @@ class MongoengineSocket:
         # Update results and procedures if reset_error
         if reset_error:
             task_ids = TaskQueue.objects(manager=manager, status="ERROR").only('id')
-            Result.objects(task_id__in=task_ids).update(status='INCOMPLETE')
-            Procedure.objects(task_id__in=task_ids).update(status='INCOMPLETE')
+            Result.objects(task_id__in=task_ids).update(status='INCOMPLETE', modified_on=dt.utcnow())
+            Procedure.objects(task_id__in=task_ids).update(status='INCOMPLETE', modified_on=dt.utcnow())
 
         status = []
         if reset_running:
@@ -1724,7 +1723,7 @@ class MongoengineSocket:
         if reset_error:
             status.append("ERROR")
 
-        updated = TaskQueue.objects(manager=manager, status__in=status).update(status="WAITING")
+        updated = TaskQueue.objects(manager=manager, status__in=status).update(status="WAITING", modified_on=dt.utcnow())
 
         return updated
 
@@ -1755,8 +1754,6 @@ class MongoengineSocket:
     def manager_update(self, name, **kwargs):
 
         upd = {
-            # Set the date
-            "modified_on": datetime.datetime.utcnow(),
             # Increment relevant data
             "inc__submitted": kwargs.pop("submitted", 0),
             "inc__completed": kwargs.pop("completed", 0),
@@ -1770,7 +1767,7 @@ class MongoengineSocket:
                 upd[value] = kwargs[value]
 
         # QueueManager.objects()  # init
-        r = QueueManager.objects(name=name).update(**upd, upsert=True)
+        r = QueueManager.objects(name=name).update(**upd, upsert=True, modified_on=dt.utcnow())
         return r == 1
 
     def get_managers(self, name: str=None, status: str=None, modified_before=None):
