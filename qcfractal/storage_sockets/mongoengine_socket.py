@@ -1346,13 +1346,25 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
+
     def update_procedure(self, hash_index, data):
         """
-        This should be removed, temporary patch to make this more canonical mongoengine
+        TODO: to be updated with needed
         """
 
-        ret = self._tables["procedure"].update_one({"hash_index": hash_index}, {"$set": data})
-        return ret.modified_count
+        update = {}
+        # create safe query with allowed keys only
+        # shouldn't be allowed to update status manually
+        for key, value in data.items():
+            if key not in ['procedure', 'program', 'status']:  # FIXME: what else?
+                update[key] = value
+            else:
+                logging.warning('Trying to update Procedre with none ' +
+                                'allowed keyword: ({}={})'.format(key, value))
+
+        modified_count = Procedure(hash_index=hash_index).update(**update)
+
+        return modified_count
 
     def add_services(self, data):
 
