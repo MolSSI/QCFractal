@@ -18,7 +18,7 @@ def test_adapter_single(managed_compute_server):
 
     # Add compute
     hooh = portal.data.get_molecule("hooh.json")
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.to_json()], tag="other")
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json(as_dict=True)], tag="other")
 
     # Force manager compute and get results
     manager.await_results()
@@ -32,7 +32,7 @@ def test_adapter_error_message(managed_compute_server):
     reset_server_database(server)
 
     # HOOH without connectivity, RDKit should fail
-    hooh = portal.data.get_molecule("hooh.json").to_json()
+    hooh = portal.data.get_molecule("hooh.json").json(as_dict=True)
     del hooh["connectivity"]
     mol_ret = client.add_molecules({"hooh": hooh})
 
@@ -53,7 +53,7 @@ def test_adapter_error_message(managed_compute_server):
     ret = db.get_queue({"status": "ERROR"})["data"]
 
     assert len(ret) == 1
-    assert "connectivity graph" in ret[0]["error"]
+    assert "connectivity graph" in ret[0]["error"]["error_message"]
     server.objects["storage_socket"].queue_mark_complete([queue_id])
 
 
@@ -63,7 +63,7 @@ def test_adapter_raised_error(managed_compute_server):
     reset_server_database(server)
 
     # HOOH without connectivity, RDKit should fail
-    hooh = portal.data.get_molecule("hooh.json").to_json()
+    hooh = portal.data.get_molecule("hooh.json").json(as_dict=True)
     del hooh["connectivity"]
     mol_ret = client.add_molecules({"hooh": hooh})
 
@@ -76,5 +76,5 @@ def test_adapter_raised_error(managed_compute_server):
     ret = db.get_queue({"status": "ERROR"})["data"]
 
     assert len(ret) == 1
-    assert "QCEngine Call Error" in ret[0]["error"]
+    assert "QCEngine Call Error" in ret[0]["error"]["error_message"]
     server.objects["storage_socket"].queue_mark_complete([queue_id])

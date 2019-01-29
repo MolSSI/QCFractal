@@ -31,8 +31,8 @@ def test_molecule(storage_socket):
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
 
     # Add Molecule using pymongo
-    ret = storage_socket.add_molecules({"water1": water.to_json(),
-                                            "water2": water2.to_json()})
+    ret = storage_socket.add_molecules({"water1": water.json(as_dict=True),
+                                            "water2": water2.json(as_dict=True)})
     assert ret["meta"]["success"] is True
     assert ret["meta"]["n_inserted"] == 2
 
@@ -41,15 +41,19 @@ def test_molecule(storage_socket):
     assert water_mol.molecular_formula == "H4O2"
     assert water_mol.molecular_charge == 0
 
-    # print(water_mol.to_json())
+    # print(water_mol.json(as_dict=True))
 
     # Query with fields in the model
     result_list = Molecule.objects(molecular_formula="H4O2")
+    print(result_list)
+    print(len(result_list))
     assert len(result_list) == 2
-    assert result_list[0].multiplicity == 1
+    assert result_list[0].molecular_multiplicity == 1
 
     # Query with fields NOT in the model. works too!
     result_list = Molecule.objects(charge=0)
+    print(result_list)
+    print(len(result_list))
     assert len(result_list) == 2
 
     # get unique by hash and formula
@@ -92,7 +96,7 @@ def test_results(storage_socket):
 
     result = Result(**page1)
     result.save()
-    # print('Result After save: ', result.to_json())
+    # print('Result After save: ', result.json(as_dict=True))
     assert result.molecule.molecular_formula == 'H4O2'
 
 
@@ -122,7 +126,7 @@ def test_procedure(storage_socket):
 
     procedure = Procedure(**data1)
     procedure.save()
-    # print('Procedure After save: ', procedure.to_json())
+    # print('Procedure After save: ', procedure.json(as_dict=True))
     # assert procedure.molecule.molecular_formula == 'H4O2'
 
 
@@ -151,7 +155,7 @@ def test_optimization_procedure(storage_socket):
 
     procedure = OptimizationProcedure(**data1)
     procedure.save()
-    # print('OptimizationProcedure After save: ', procedure.to_json())
+    # print('OptimizationProcedure After save: ', procedure.json(as_dict=True))
     assert procedure.initial_molecule.molecular_formula == 'H4O2'
 
 
@@ -181,7 +185,7 @@ def test_torsiondrive_procedure(storage_socket):
 
     procedure = TorsiondriveProcedure(**data1)
     procedure.save()
-    # print('TorsiondriveProcedure After save: ', procedure.to_json())
+    # print('TorsiondriveProcedure After save: ', procedure.json(as_dict=True))
 
 
 def test_add_task_queue(storage_socket):

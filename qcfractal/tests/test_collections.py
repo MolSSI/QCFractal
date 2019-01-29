@@ -26,7 +26,7 @@ def test_compute_dataset(fractal_compute_server):
     opt_key = option["name"]
 
     # Add two helium dimers to the DB at 4 and 8 bohr
-    He1 = portal.Molecule([[2, 0, 0, -2], [2, 0, 0, 2]], dtype="numpy", units="bohr", frags=[1])
+    He1 = portal.Molecule.from_data([[2, 0, 0, -2], [2, 0, 0, 2]], dtype="numpy", units="bohr", frags=[1])
     ds.add_ie_rxn("He1", He1, attributes={"r": 4}, reaction_results={"default": {"Benchmark": 0.0009608501557}})
 
     # Save the DB and re-acquire via classmethod
@@ -41,7 +41,7 @@ def test_compute_dataset(fractal_compute_server):
     ret = client.list_collections("dataset")
     assert ret == [ds_name]
 
-    He2 = portal.Molecule([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
+    He2 = portal.Molecule.from_data([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
     ds.add_ie_rxn("He2", He2, attributes={"r": 4}, reaction_results={"default": {"Benchmark": -0.00001098794749}})
 
     # Save the DB and overwrite the result, reacquire via client
@@ -62,7 +62,7 @@ def test_compute_dataset(fractal_compute_server):
     assert ds.query("Benchmark", "", reaction_results=True)
     assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/STO-3G")
 
-    assert isinstance(ds.to_json(), dict)
+    assert isinstance(ds.json(as_dict=True), dict)
 
 
 @testing.using_torsiondrive
@@ -119,7 +119,7 @@ def test_compute_openffworkflow(fractal_compute_server):
     fragment_input = {
         "label1": {
             "type": "torsiondrive_input",
-            "initial_molecule": hooh.to_json(),
+            "initial_molecule": hooh.json(as_dict=True),
             "grid_spacing": [120],
             "dihedrals": [[0, 1, 2, 3]],
         },
@@ -139,7 +139,7 @@ def test_compute_openffworkflow(fractal_compute_server):
     optimization_input = {
         "label2": {
             "type": "optimization_input",
-            "initial_molecule": hooh.to_json(),
+            "initial_molecule": hooh.json(as_dict=True),
             "constraints": {
                 'set': [{
                     "type": 'dihedral',
@@ -168,7 +168,7 @@ def test_compute_openffworkflow(fractal_compute_server):
     fragment_input = {
         "label1": {
             "type": "torsiondrive_input",
-            "initial_molecule": butane.to_json(),
+            "initial_molecule": butane.json(as_dict=True),
             "grid_spacing": [90],
             "dihedrals": [[0, 2, 3, 1]],
         },
