@@ -113,7 +113,6 @@ def procedure_single_output_parser(storage, data):
     results = procedures_util.parse_single_runs(storage, rdata)
     for k, v in results.items():
         v["status"] = "COMPLETE"
-        del v["id"]
     ret = storage.add_results(list(results.values()), update_existing=True)
 
     # Sort out hook data

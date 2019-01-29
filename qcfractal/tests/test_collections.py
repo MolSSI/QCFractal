@@ -62,7 +62,7 @@ def test_compute_dataset(fractal_compute_server):
     assert ds.query("Benchmark", "", reaction_results=True)
     assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/STO-3G")
 
-    assert isinstance(ds.json(as_dict=True), dict)
+    assert isinstance(ds.to_json(), dict)
 
 
 @testing.using_torsiondrive
@@ -163,7 +163,7 @@ def test_compute_openffworkflow(fractal_compute_server):
 
     # Add a second fragment
     butane = portal.data.get_molecule("butane.json")
-    butane_id = butane.identifiers["canonical_isomeric_explicit_hydrogen_mapped_smiles"]
+    butane_id = butane.identifiers.canonical_isomeric_explicit_hydrogen_mapped_smiles
 
     fragment_input = {
         "label1": {

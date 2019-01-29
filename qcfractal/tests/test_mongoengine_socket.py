@@ -45,15 +45,11 @@ def test_molecule(storage_socket):
 
     # Query with fields in the model
     result_list = Molecule.objects(molecular_formula="H4O2")
-    print(result_list)
-    print(len(result_list))
     assert len(result_list) == 2
     assert result_list[0].molecular_multiplicity == 1
 
     # Query with fields NOT in the model. works too!
-    result_list = Molecule.objects(charge=0)
-    print(result_list)
-    print(len(result_list))
+    result_list = Molecule.objects(molecular_charge=0)
     assert len(result_list) == 2
 
     # get unique by hash and formula

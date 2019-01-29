@@ -161,7 +161,7 @@ class QueueManagerHandler(APIHandler):
                         error = "No error supplied"
 
                     logger.info("Computation key did not complete successfully:\n\t{}\n"
-                                "Because: {}".format(str(key), error))
+                                "Because: {}".format(str(key), error["error_message"]))
 
                     error_data.append((key, error))
                     task_failures += 1
