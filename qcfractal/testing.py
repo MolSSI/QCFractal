@@ -380,8 +380,7 @@ def build_managed_compute_server(mtype):
         manager.close_adapter()
 
 
-# @pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
-@pytest.fixture(scope="module", params=["pool"])
+@pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
 def managed_compute_server(request):
     """
     A FractalServer with compute associated parametrize for all managers
