@@ -8,7 +8,7 @@ from typing import List, Union, Dict, Any, Optional
 import requests
 import yaml
 
-from . import molecule
+from .models import Molecule
 from . import orm
 from .collections import collection_factory
 
@@ -216,8 +216,8 @@ class FractalClient(object):
 
         mol_submission = {}
         for key, mol in mol_list.items():
-            if isinstance(mol, molecule.Molecule):
-                mol_submission[key] = mol.to_json()
+            if isinstance(mol, Molecule):
+                mol_submission[key] = mol.json(as_dict=True)
             elif isinstance(mol, dict):
                 mol_submission[key] = mol
             else:
