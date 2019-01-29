@@ -1,17 +1,44 @@
 Changelog
 =========
 
-X.Y.0 / 2019-MM-DD
+.. X.Y.0 / 2019-MM-DD
+.. -------------------
+..
+.. New Features
+.. ++++++++++++
+
+.. Enhancements
+.. ++++++++++++
+..
+.. Bug Fixes
+.. +++++++++
+
+0.5.0a / 2019-01-29
 -------------------
+
+This is the fifth alpha release for QCFractal, refactoring adapters, queue managers
+and adding in some of the QCElemental Pydantic primitives.
 
 New Features
 ++++++++++++
+- (:pr:`114`) A ``Generic`` Collection object added for developers to template from, and still have an object be
+  serializable through QCFractal.
+- (:pr:`125`) The migration to QCElemental's Pydantic models begins by replacing ``Molecule`` class. This continues
+  the unification of data objects over QCArchive project by ensuring data models are all pulled from a common source.
+  This change should reduce maintenance burden and proliferation data models in the future.
+
 
 Enhancements
 ++++++++++++
+- (:pr:`110`) CI tools cleaned up a bit to be more consistent across platforms.
+- (:pr:`116`) Parsl Queue manger added to the available managers.
+- (:pr:`120`) Queue adapters now have a base class which all others derive from. Execution through Python Executor will
+  be attempted in most cases to handle parallel task launches. CLI has been refactored to reflect the generic
+  adapter changes.
 
 Bug Fixes
 +++++++++
+- (:pr:`123`) Queue Manager testing now more robust to catch programming errors earlier
 
 0.4.0a / 2019-01-15
 -------------------

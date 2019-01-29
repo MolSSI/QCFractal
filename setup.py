@@ -25,7 +25,9 @@ if __name__ == "__main__":
             'bcrypt',
             'cryptography',
             'pydantic',
-            'mongoengine'
+            'mongoengine',
+            'qcelemental>=0.2.3',
+            'qcengine>=0.5.1'
         ],
         entry_points={
             "console_scripts": [
