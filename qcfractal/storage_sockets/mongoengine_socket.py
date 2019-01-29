@@ -367,7 +367,7 @@ class MongoengineSocket:
         # Build a dictionary of new molecules
         new_mols = {}
         for key, dmol in data.items():
-            mol = interface.Molecule(dmol, dtype="json", orient=False)
+            mol = interface.Molecule(**dmol, orient=False)
             new_mols[key] = mol
 
         new_kv_hash = {k: v.get_hash() for k, v in new_mols.items()}
@@ -401,7 +401,7 @@ class MongoengineSocket:
         new_inserts = []
         new_keys = []
         for new_key, new_mol in new_mols.items():
-            data = new_mol.to_json()
+            data = new_mol.json(as_dict=True)
             data["identifiers"] = {}
 
             # Build new molecule hash
