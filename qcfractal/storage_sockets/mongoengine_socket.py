@@ -1356,13 +1356,13 @@ class MongoengineSocket:
         # create safe query with allowed keys only
         # shouldn't be allowed to update status manually
         for key, value in data.items():
-            if key not in ['procedure', 'program', 'status']:  # FIXME: what else?
+            if key not in ['procedure', 'program', 'status', 'task_id']:  # FIXME: what else?
                 update[key] = value
             else:
                 logging.warning('Trying to update Procedre with none ' +
                                 'allowed keyword: ({}={})'.format(key, value))
 
-        modified_count = Procedure(hash_index=hash_index).update(**update)
+        modified_count = Procedure.objects(hash_index=hash_index).update(**update)
 
         return modified_count
 
