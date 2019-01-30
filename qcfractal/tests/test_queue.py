@@ -27,11 +27,17 @@ def test_queue_error(fractal_compute_server):
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
     db = fractal_compute_server.objects["storage_socket"]
-    ret = db.get_queue({"status": "ERROR"})["data"]
+    ret = db.get_queue(status="ERROR")["data"]
+    result = db.get_results_by_task_id(task_id=queue_id)['data'][0]
 
     assert len(ret) == 1
     assert "connectivity graph" in ret[0]["error"]["error_message"]
+    assert result['status'] == 'ERROR'
+
+    # Force a complete mark and test
     fractal_compute_server.objects["storage_socket"].queue_mark_complete([queue_id])
+    result = db.get_results_by_task_id(task_id=queue_id)['data'][0]
+    assert result['status'] == 'COMPLETE'
 
 
 @testing.using_rdkit
@@ -102,15 +108,15 @@ def test_queue_duplicate_submissions(fractal_compute_server):
     assert len(ret["submitted"]) == 1
     assert len(ret["completed"]) == 0
     assert len(ret["queue"]) == 0
-    queue_id = ret["submitted"][0]
+    task_id = ret["submitted"][0]
 
     # Do not compute, add duplicate
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["he2"])
     assert len(ret["submitted"]) == 0
     assert len(ret["completed"]) == 1
-    # assert ret["queue"][0] == queue_id
+    # assert ret["queue"][0] == task_id
     # assert len(ret["queue"]) == 1
-    # assert ret["queue"][0] == queue_id
+    # assert ret["queue"][0] == task_id
 
     # Cleanup
-    fractal_compute_server.objects["storage_socket"].queue_mark_complete([queue_id])
+    fractal_compute_server.objects["storage_socket"].queue_mark_complete([task_id])

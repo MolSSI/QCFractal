@@ -16,6 +16,10 @@ from qcfractal import testing
 from ..interface.data import get_molecule
 from .adapters import build_queue_adapter
 
+from qcfractal._version import get_versions
+
+import qcengine
+
 __all__ = ["QueueManager"]
 
 
@@ -97,19 +101,25 @@ class QueueManager:
         self.meta_packet = json.dumps(meta_packet)
 
         self.logger.info("QueueManager:")
+        self.logger.info("    Version:         {}\n".format(get_versions()["version"]))
+
         self.logger.info("    Name Information:")
-        self.logger.info("        cluster:     {}".format(self.name_data["cluster"]))
-        self.logger.info("        hostname:    {}".format(self.name_data["hostname"]))
-        self.logger.info("        uuid:        {}\n".format(self.name_data["uuid"]))
+        self.logger.info("        Cluster:     {}".format(self.name_data["cluster"]))
+        self.logger.info("        Hostname:    {}".format(self.name_data["hostname"]))
+        self.logger.info("        UUID:        {}\n".format(self.name_data["uuid"]))
 
         self.logger.info("    Queue Adapter:")
         self.logger.info("        {}\n".format(self.queue_adapter))
+
+        self.logger.info("    QCEngine:")
+        self.logger.info("        Version:    {}\n".format(qcengine.__version__))
 
         # DGAS Note: Note super happy about how this if/else turned out. Looking for alternatives.
         if self.connected():
             # Pull server info
             self.server_info = client.server_information()
             self.server_name = self.server_info["name"]
+            self.server_version = self.server_info["version"]
             self.heartbeat_frequency = self.server_info["heartbeat_frequency"]
 
             # Tell the server we are up and running
@@ -117,11 +127,12 @@ class QueueManager:
             payload["data"]["operation"] = "startup"
             self.client._request("put", "queue_manager", payload)
 
-            self.logger.info("    QCFractal server information:")
-            self.logger.info("        address:     {}".format(self.client.address))
-            self.logger.info("        name:        {}".format(self.server_name))
-            self.logger.info("        queue tag:   {}".format(self.queue_tag))
-            self.logger.info("        username:    {}\n".format(self.client.username))
+            self.logger.info("    Connected:")
+            self.logger.info("        Version:     {}".format(self.server_version))
+            self.logger.info("        Address:     {}".format(self.client.address))
+            self.logger.info("        Name:        {}".format(self.server_name))
+            self.logger.info("        Queue tag:   {}".format(self.queue_tag))
+            self.logger.info("        Username:    {}\n".format(self.client.username))
 
         else:
             self.logger.info("    QCFractal server information:")

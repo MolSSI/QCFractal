@@ -50,7 +50,7 @@ def test_adapter_error_message(managed_compute_server):
     assert len(manager.list_current_tasks()) == 0
 
     db = server.objects["storage_socket"]
-    ret = db.get_queue({"status": "ERROR"})["data"]
+    ret = db.get_queue(status="ERROR")["data"]
 
     assert len(ret) == 1
     assert "connectivity graph" in ret[0]["error"]["error_message"]
@@ -73,7 +73,7 @@ def test_adapter_raised_error(managed_compute_server):
     manager.await_results()
 
     db = server.objects["storage_socket"]
-    ret = db.get_queue({"status": "ERROR"})["data"]
+    ret = db.get_queue(status="ERROR")["data"]
 
     assert len(ret) == 1
     assert "QCEngine Call Error" in ret[0]["error"]["error_message"]

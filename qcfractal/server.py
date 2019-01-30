@@ -19,6 +19,8 @@ from . import services
 from . import storage_sockets
 from . import web_handlers
 
+from qcfractal._version import get_versions
+
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
 
@@ -164,7 +166,6 @@ class FractalServer:
         # Setup the database connection
         self.storage = storage_sockets.storage_socket_factory(
             storage_uri, project_name=storage_project_name, bypass_security=storage_bypass_security)
-        self.logger.info("Connected to '{}'' with database name '{}'\n.".format(storage_uri, storage_project_name))
 
         # Pull the current loop if we need it
         self.loop = loop or tornado.ioloop.IOLoop.current()
@@ -176,7 +177,11 @@ class FractalServer:
         }
 
         # Public information
-        self.objects["public_information"] = {"name": self.name, "heartbeat_frequency": self.heartbeat_frequency}
+        self.objects["public_information"] = {
+            "name": self.name,
+            "heartbeat_frequency": self.heartbeat_frequency,
+            "version": get_versions()["version"]
+        }
 
         endpoints = [
 
@@ -213,7 +218,11 @@ class FractalServer:
         # Exit callbacks
         self.exit_callbacks = []
 
-        self.logger.info("FractalServer successfully initialized at {}".format(self._address))
+        self.logger.info("FractalServer:")
+        self.logger.info("    Version:       {}".format(get_versions()["version"]))
+        self.logger.info("    Address:       {}".format(self._address))
+        self.logger.info("    Database URI:  {}".format(storage_uri))
+        self.logger.info("    Database Name: {}\n".format(storage_project_name))
         self.loop_active = False
 
         # Queue manager if direct build
@@ -396,7 +405,7 @@ class FractalServer:
         """
 
         dt = datetime.datetime.utcnow() - datetime.timedelta(seconds=self.heartbeat_frequency)
-        ret = self.storage.get_managers({"modifed_on": {"$lt": dt}, "status": "ACTIVE"}, projection={"name": True})
+        ret = self.storage.get_managers(status="ACTIVE", modified_before=dt)
 
         for blob in ret["data"]:
             nshutdown = self.storage.queue_reset_status(blob["name"])
@@ -409,13 +418,8 @@ class FractalServer:
         """
         Provides a list of managers associated with the server both active and inactive
         """
-        query = {}
-        if status:
-            query["status"] = status.upper()
-        if name:
-            query["name"] = name
 
-        return self.storage.get_managers(query)["data"]
+        return self.storage.get_managers(status=status, name=name)["data"]
 
 ### Functions only available if using a local queue_adapter
 

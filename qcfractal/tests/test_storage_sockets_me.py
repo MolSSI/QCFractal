@@ -374,11 +374,11 @@ def test_get_results_by_ids(storage_results):
     results = storage_results.get_results()["data"]
     ids = [x['id'] for x in results]
 
-    ret = storage_results.get_results_by_ids(ids, return_json=False)
+    ret = storage_results.get_results_by_id(ids, return_json=False)
     assert ret["meta"]["n_found"] == 6
     assert len(ret["data"]) == 6
 
-    ret = storage_results.get_results_by_ids(ids, projection=['status'])
+    ret = storage_results.get_results_by_id(ids, projection=['status'])
     assert ret['data'][0].keys() == {'id', 'status'}
 
 
@@ -496,6 +496,8 @@ def test_storage_queue_roundtrip(storage_results):
     found = storage_results.queue_get_by_id([queue_id])
     assert len(found) == 1
     assert found[0]["status"] == "COMPLETE"
+    res = storage_results.get_results_by_task_id(queue_id)['data'][0]
+    assert res['status'] == 'COMPLETE'
 
     # Check queue is empty
     r = storage_results.queue_get_next("test_manager")
