@@ -115,11 +115,11 @@ class SingleResultTasks:
 
         return completed, errors, hook_data
 
+
 # ----------------------------------------------------------------------------
 
 
 class OptimizationTasks(SingleResultTasks):
-
     def __init__(self, storage):
         super().__init__(storage)
 
@@ -143,8 +143,6 @@ class OptimizationTasks(SingleResultTasks):
         }
 
         qc_schema_input = {
-            "schema_name": "qc_schema_input",
-            "schema_version": 1,
             "molecule": {
                 "geometry": [
                     0.0,  0.0, -0.6,
@@ -161,8 +159,6 @@ class OptimizationTasks(SingleResultTasks):
             "keywords": {},
         }
         json_data = {
-            "schema_name": "qc_schema_optimization_input",
-            "schema_version": 1,
             "keywords": {
                 "coordsys": "tric",
                 "maxiter": 100,
@@ -188,12 +184,7 @@ class OptimizationTasks(SingleResultTasks):
             keywords = {}
 
         keywords["program"] = data["meta"]["qc_meta"]["program"]
-        template = json.dumps({
-            "schema_name": "qc_schema_optimization_input",
-            "schema_version": 1,
-            "keywords": keywords,
-            "qcfractal_tags": data["meta"]
-        })
+        template = json.dumps({"keywords": keywords, "qcfractal_tags": data["meta"]})
 
         full_tasks = []
         duplicate_lookup = []
@@ -235,8 +226,9 @@ class OptimizationTasks(SingleResultTasks):
 
         # Find and handle duplicates
         completed_procedures = self.storage.get_procedures_by_id(
-            hash_index=duplicate_lookup,
-            projection={"hash_index": True, "id": True, "task_id": True})["data"]
+            hash_index=duplicate_lookup, projection={"hash_index": True,
+                                                     "id": True,
+                                                     "task_id": True})["data"]
 
         if len(completed_procedures):
             found_hashes = set(x["hash_index"] for x in completed_procedures)
@@ -254,10 +246,7 @@ class OptimizationTasks(SingleResultTasks):
 
         # Add task stubs
         for task in full_tasks:
-            stub = {"hash_index": task["hash_index"],
-                    "procedure": "optimization",
-                    "program": data["meta"]["program"]
-            }
+            stub = {"hash_index": task["hash_index"], "procedure": "optimization", "program": data["meta"]["program"]}
             ret = self.storage.add_procedures([stub])
             task["base_result"] = ("procedure", ret["data"][0])
 
@@ -313,8 +302,8 @@ class OptimizationTasks(SingleResultTasks):
         # return (ret, hook_data)
         return completed, errors, hook_data
 
-# ----------------------------------------------------------------------------
 
+# ----------------------------------------------------------------------------
 
 supported_procedures = Union[SingleResultTasks, OptimizationTasks]
 
