@@ -14,18 +14,26 @@ if __name__ == "__main__":
         cmdclass=versioneer.get_cmdclass(),
         packages=setuptools.find_packages(),
         install_requires=[
-            'numpy>=1.7',
-            'pymongo>=3.0',
-            'requests',
-            'tornado',
-            'jsonschema',
-            'pandas',
-            'qcengine',
-            'pytest',
+            # Base requires
             'bcrypt',
             'cryptography',
-            'pydantic',
-            'mongoengine'
+            'jsonschema',
+            'numpy >=1.7',
+            'pandas',
+            'pydantic >=0.18',
+            'pymongo >=3.0',
+            'requests',
+            'tornado',
+
+            # Database
+            'mongoengine',
+
+            # QCArchive depends
+            'qcengine >=0.5.1',
+            'qcelemental >=0.2.3',
+
+            # Testing
+            'pytest',
         ],
         entry_points={
             "console_scripts": [
