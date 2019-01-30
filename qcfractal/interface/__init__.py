@@ -8,5 +8,6 @@ from . import dict_utils
 from . import orm
 from . import schema
 from .client import FractalClient
+
 # Add imports here
-from .molecule import Molecule
+from .models import Molecule

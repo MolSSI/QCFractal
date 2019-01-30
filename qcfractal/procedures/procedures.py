@@ -149,8 +149,6 @@ def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"
     }
 
     qc_schema_input = {
-        "schema_name": "qc_schema_input",
-        "schema_version": 1,
         "molecule": {
             "geometry": [
                 0.0,  0.0, -0.6,
@@ -167,8 +165,6 @@ def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"
         "keywords": {},
     }
     json_data = {
-        "schema_name": "qc_schema_optimization_input",
-        "schema_version": 1,
         "keywords": {
             "coordsys": "tric",
             "maxiter": 100,
@@ -196,8 +192,6 @@ def procedure_optimization_input_parser(storage, data, duplicate_id="hash_index"
 
     keywords["program"] = data["meta"]["qc_meta"]["program"]
     template = json.dumps({
-        "schema_name": "qc_schema_optimization_input",
-        "schema_version": 1,
         "keywords": keywords,
         "qcfractal_tags": data["meta"]
     })

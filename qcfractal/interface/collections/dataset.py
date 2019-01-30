@@ -11,10 +11,10 @@ from pydantic import BaseModel
 
 from .collection import Collection
 from .collection_utils import nCr, register_collection
+from ..models import Molecule
 # from .. import client
 from .. import constants
 from .. import dict_utils
-from .. import molecule
 from .. import statistics
 
 
@@ -453,18 +453,18 @@ class Dataset(Collection):
                 molecule_hash = mol
 
             elif isinstance(mol, str):
-                qcf_mol = molecule.Molecule(mol)
+                qcf_mol = Molecule.from_data(mol)
 
                 molecule_hash = qcf_mol.get_hash()
 
                 if molecule_hash not in list(self._new_molecule_jsons):
-                    self._new_molecule_jsons[molecule_hash] = qcf_mol.to_json()
+                    self._new_molecule_jsons[molecule_hash] = qcf_mol.json(as_dict=True)
 
-            elif isinstance(mol, molecule.Molecule):
+            elif isinstance(mol, Molecule):
                 molecule_hash = mol.get_hash()
 
                 if molecule_hash not in list(self._new_molecule_jsons):
-                    self._new_molecule_jsons[molecule_hash] = mol.to_json()
+                    self._new_molecule_jsons[molecule_hash] = mol.json(as_dict=True)
 
             else:
                 raise TypeError(
@@ -633,9 +633,9 @@ class Dataset(Collection):
         do_vmfc = kwargs.pop("do_vmfc", False)
         max_nbody = kwargs.pop("max_nbody", 0)
 
-        if not isinstance(mol, molecule.Molecule):
+        if not isinstance(mol, Molecule):
 
-            mol = molecule.Molecule(mol, **kwargs)
+            mol = Molecule.from_data(mol, **kwargs)
 
         ret = {}
 

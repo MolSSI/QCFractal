@@ -202,7 +202,7 @@ class OpenFFWorkflow(Collection):
 
             # add back to fragment data
             packet["hash_index"] = ret
-            packet["provenance"] = provenance
+            # packet["provenance"] = provenance
             frag_data[name] = packet
 
         # Push collection data back to server

@@ -34,7 +34,7 @@ def insert_molecules(n_mol):
     # Add Molecule using pymongo
     for i in range(n_mol):
         tmp = water.copy()
-        tmp['charge'] = i
+        tmp['molecular_charge'] = i
         mol_data['water'+str(i)] = tmp
 
     mongoengine_socket.add_molecules(mol_data)

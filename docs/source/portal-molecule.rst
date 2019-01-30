@@ -77,8 +77,8 @@ A molecule hash is automatically created to allow each molecule to be uniquely i
 
  - ``symbols``
  - ``masses`` (1.e-6 tolerance)
- - ``charge`` (1.e-4 tolerance)
- - ``multiplicity``
+ - ``molecular_charge`` (1.e-4 tolerance)
+ - ``molecular_multiplicity``
  - ``real``
  - ``geometry`` (1.e-8 tolerance)
  - ``fragments``

@@ -32,7 +32,7 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
 
     # Add compute
     hooh = portal.data.get_molecule("hooh.json")
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.to_json()], tag="other")
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json(as_dict=True)], tag="other")
 
     # Computer with the incorrect tag
     manager_stuff.await_results()
@@ -66,7 +66,7 @@ def test_queue_manager_shutdown(compute_adapter_fixture):
     manager = queue.QueueManager(client, adapter)
 
     hooh = portal.data.get_molecule("hooh.json")
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.to_json()], tag="other")
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json(as_dict=True)], tag="other")
 
     # Pull job to manager and shutdown
     manager.update()

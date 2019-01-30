@@ -337,9 +337,7 @@ class QueueManager:
                 "function":
                 "qcengine.compute",
                 "args": [{
-                    "schema_name": "qc_schema_input",
-                    "schema_version": 1,
-                    "molecule": get_molecule("hooh.json").to_json(),
+                    "molecule": get_molecule("hooh.json").json(as_dict=True),
                     "driver": "energy",
                     "model": {},
                     "keywords": {},

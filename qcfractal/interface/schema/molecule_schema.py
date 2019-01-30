@@ -61,12 +61,12 @@ molecule_schema = {
             "description": "Any additional comment one would attach to the molecule.",
             "type": "string"
         },
-        "charge": {
+        "molecular_charge": {
             "description": "The overall charge of the molecule.",
             "type": "number",
             "default": 0.0
         },
-        "multiplicity": {
+        "molecular_multiplicity": {
             "description": "The overall multiplicity of the molecule.",
             "type": "number",
             "multipleOf": 1.0,
@@ -144,7 +144,7 @@ molecule_schema = {
 
     # Custom components
     "hash_fields": [
-        "symbols", "masses", "charge", "multiplicity", "real", "geometry", "fragments", "fragment_charges",
+        "symbols", "masses", "molecular_charge", "molecular_multiplicity", "real", "geometry", "fragments", "fragment_charges",
         "fragment_multiplicities", "connectivity"
     ],
     "required_definitions": ["provenance"]

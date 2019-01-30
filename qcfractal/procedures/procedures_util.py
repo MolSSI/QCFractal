@@ -60,8 +60,6 @@ def unpack_single_run_meta(storage, meta, molecules):
 
     # Create the "universal header"
     task_meta = json.dumps({
-        "schema_name": "qc_schema_input",
-        "schema_version": 1,
         "program": meta["program"],
         "driver": meta["driver"],
         "keywords": option_set,

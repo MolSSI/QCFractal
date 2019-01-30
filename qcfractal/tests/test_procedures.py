@@ -15,11 +15,11 @@ from qcfractal.testing import fractal_compute_server
 def test_compute_queue_stack(fractal_compute_server):
 
     # Add a hydrogen and helium molecule
-    hydrogen = portal.Molecule([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
-    helium = portal.Molecule([[2, 0, 0, 0.0]], dtype="numpy", units="bohr")
+    hydrogen = portal.Molecule.from_data([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
+    helium = portal.Molecule.from_data([[2, 0, 0, 0.0]], dtype="numpy", units="bohr")
 
     storage = fractal_compute_server.objects["storage_socket"]
-    mol_ret = storage.add_molecules({"hydrogen": hydrogen.to_json(), "helium": helium.to_json()})
+    mol_ret = storage.add_molecules({"hydrogen": hydrogen.json(as_dict=True), "helium": helium.json(as_dict=True)})
 
     hydrogen_mol_id = mol_ret["data"]["hydrogen"]
     helium_mol_id = mol_ret["data"]["helium"]
@@ -38,7 +38,7 @@ def test_compute_queue_stack(fractal_compute_server):
             "options": opt_key,
             "program": "psi4",
         },
-        "data": [hydrogen_mol_id, helium.to_json()],
+        "data": [hydrogen_mol_id, helium.json(as_dict=True)],
     }
 
     # Ask the server to compute a new computation
@@ -74,9 +74,9 @@ def test_compute_queue_stack(fractal_compute_server):
 def test_procedure_optimization(fractal_compute_server):
 
     # Add a hydrogen molecule
-    hydrogen = portal.Molecule([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
+    hydrogen = portal.Molecule.from_data([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
     client = portal.FractalClient(fractal_compute_server.get_address(""))
-    mol_ret = client.add_molecules({"hydrogen": hydrogen.to_json()})
+    mol_ret = client.add_molecules({"hydrogen": hydrogen.json(as_dict=True)})
 
     # Add compute
     compute = {
@@ -151,4 +151,4 @@ def test_procedure_task_error(fractal_compute_server):
 
     assert len(ret) == 1
     assert ret[0]["status"] == "ERROR"
-    assert "run_rdkit" in ret[0]["error"]
+    assert "run_rdkit" in ret[0]["error"]["error_message"]
