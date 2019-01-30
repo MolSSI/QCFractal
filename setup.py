@@ -18,10 +18,10 @@ if __name__ == "__main__":
             'bcrypt',
             'cryptography',
             'jsonschema',
-            'numpy >=1.7',
+            'numpy>=1.7',
             'pandas',
-            'pydantic >=0.18',
-            'pymongo >=3.0',
+            'pydantic>=0.18',
+            'pymongo>=3.0',
             'requests',
             'tornado',
 
@@ -29,8 +29,8 @@ if __name__ == "__main__":
             'mongoengine',
 
             # QCArchive depends
-            'qcengine >=0.5.1',
-            'qcelemental >=0.2.3',
+            'qcengine>=0.5.1',
+            'qcelemental>=0.2.3',
 
             # Testing
             'pytest',
