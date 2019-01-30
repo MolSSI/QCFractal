@@ -15,7 +15,7 @@ def unpack_single_run_meta(storage, meta, molecules):
 
     Parameters
     ----------
-    db : DBSocket
+    storage : DBSocket
         A live connection to the current database.
     meta : dict
         A JSON description of the metadata involved with the computation
@@ -26,6 +26,7 @@ def unpack_single_run_meta(storage, meta, molecules):
     -------
     ret : tuple(dict, list)
         A dictionary of JSON representations with keys built in.
+        The list is an array of any errors occurred
 
     Examples
     --------
@@ -43,12 +44,10 @@ def unpack_single_run_meta(storage, meta, molecules):
 
     >>> unpack_single_run_meta(storage, meta, molecules)
 
-
     """
 
     # Get the required molecules
-    indexed_molecules = {k: v for k, v in enumerate(molecules)}
-    raw_molecules_query = storage.mixed_molecule_get(indexed_molecules)
+    raw_molecules_query = storage.get_add_molecules_mixed(molecules)
 
     # Pull out the needed options
     if meta["options"] is None:
@@ -72,7 +71,6 @@ def unpack_single_run_meta(storage, meta, molecules):
             "options": meta["options"]
         }
     })
-
 
     tasks = {}
     indexer = copy.deepcopy(meta)
@@ -128,11 +126,12 @@ def parse_single_runs(storage, results):
 
     return results
 
+
 def single_run_hash(data, program=None):
 
     single_keys = interface.schema.format_result_indices(data, program=program)
     keys = {"procedure_type": "single", "single_key": single_keys}
-    hash_index =hash_procedure_keys(keys)
+    hash_index = hash_procedure_keys(keys)
     return keys, hash_index
 
 
@@ -141,8 +140,10 @@ def hash_procedure_keys(keys):
     m.update(json.dumps(keys, sort_keys=True).encode("UTF-8"))
     return m.hexdigest()
 
+
 def parse_hooks(rdata, rhooks):
     """Parses the hook data in a list of hooks
+    TODO: this methos an has error, results is undefined
 
     Parameters
     ----------

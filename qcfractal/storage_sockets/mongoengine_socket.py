@@ -15,7 +15,7 @@ except ImportError:
         "Mongoengine_socket requires mongoengine, please install this python module or try a different db_socket.")
 
 import collections
-import datetime
+from datetime import datetime as dt
 import json
 import logging
 from typing import List, Union, Dict
@@ -30,11 +30,10 @@ from bson.objectid import ObjectId
 from mongoengine.connection import disconnect, get_db
 
 from qcfractal.storage_sockets.models import Options, Collection, Result, \
-    TaskQueue, Procedure, User, Molecule
+    TaskQueue, Procedure, User, Molecule, QueueManager
 from . import storage_utils
 # Pull in the hashing algorithms from the client
 from .. import interface
-
 
 # from bson.dbref import DBRef
 
@@ -101,15 +100,15 @@ class MongoengineSocket:
         # Important: this dict is Not used for creating indices
         # To be removed and replaced by ME functions
         self._table_indices = {
-            "collections": interface.schema.get_table_indices("collection"),
+            "collection": interface.schema.get_table_indices("collection"),
             "options": interface.schema.get_table_indices("options"),
-            "results": interface.schema.get_table_indices("result"),
-            "molecules": interface.schema.get_table_indices("molecule"),
-            "procedures": interface.schema.get_table_indices("procedure"),
+            "result": interface.schema.get_table_indices("result"),
+            "molecule": interface.schema.get_table_indices("molecule"),
+            "procedure": interface.schema.get_table_indices("procedure"),
             "service_queue": interface.schema.get_table_indices("service_queue"),
             "task_queue": interface.schema.get_table_indices("task_queue"),
-            "users": ("username", ),
-            "queue_managers": ("name", )
+            "user": ("username", ),
+            "queue_manager": ("name", )
         }
         # self._valid_tables = set(self._table_indices.keys())
         # self._table_unique_indices = {
@@ -211,14 +210,55 @@ class MongoengineSocket:
             TaskQueue.drop_collection()
             Procedure.drop_collection()
             User.drop_collection()
+            QueueManager.drop_collection()
 
             self.client.drop_database(db_name)
 
     def get_project_name(self):
         return self._project_name
 
-    def mixed_molecule_get(self, data):
-        return storage_utils.mixed_molecule_get(self, data)
+    def get_add_molecules_mixed(self, data):
+        """
+        Get or add the given molecules (if they don't exit).
+        Molecules are given in a mixed format, either as a dict of mol data
+        or as existing mol id
+
+        TODO: to be split into get by_id and get_by_data
+        """
+
+        meta = storage_utils.get_metadata()
+
+        ordered_mol_dict = {indx: mol for indx, mol in enumerate(data)}
+        dict_mols = {}
+        id_mols = {}
+        for idx, mol in ordered_mol_dict.items():
+            if isinstance(mol, str):
+                id_mols[idx] = mol
+            elif isinstance(mol, dict):
+                dict_mols[idx] = mol
+            else:
+                meta["errors"].append((idx, "Data type not understood"))
+
+        ret_mols = {}
+
+        # Add all new molecules
+        id_mols.update(self.add_molecules(dict_mols)["data"])
+
+        # Get molecules by index and translate back to dict
+        tmp = self.get_molecules(list(id_mols.values()))
+        id_mols_list = tmp["data"]
+        meta["errors"].append(tmp["meta"]["errors"])
+
+        inv_id_mols = {v: k for k, v in id_mols.items()}
+
+        for mol in id_mols_list:
+            ret_mols[inv_id_mols[mol["id"]]] = mol
+
+        meta["success"] = True
+        meta["n_found"] = len(ret_mols)
+        meta["missing"] = list(ordered_mol_dict.keys() - ret_mols.keys())
+
+        return {"meta": meta, "data": ret_mols}
 
     def _add_generic(self, data, table, return_map=True):
         """
@@ -419,7 +459,7 @@ class MongoengineSocket:
             new_inserts.append(data)
             new_keys.append(new_key)
 
-        ret = self._add_generic(new_inserts, "molecules", return_map=True)
+        ret = self._add_generic(new_inserts, "molecule", return_map=True)
         ret["meta"]["duplicates"].extend(list(key_mapper.keys()))
         ret["meta"]["validation_errors"] = []
 
@@ -458,7 +498,7 @@ class MongoengineSocket:
 
         # Don't include the hash or the molecular_formula in the returned result
         # Make the query
-        query = {index+'__in': molecule_ids}
+        query = {index + '__in': molecule_ids}
         data = Molecule.objects(**query).exclude("molecule_hash", "molecular_formula").as_pymongo()
 
         if data is None:
@@ -500,7 +540,7 @@ class MongoengineSocket:
         if isinstance(values, str):
             values = [values]
 
-        query = {index+'__in': values}
+        query = {index + '__in': values}
 
         return Molecule.objects(**query).delete()
 
@@ -522,20 +562,6 @@ class MongoengineSocket:
         else:
             rdata = ukey
         return rdata
-
-    def _doc_to_json(self, doc: db.Document, with_ids=True):
-        """Rename _id to id, or remove it altogether"""
-
-        if not doc:
-            return
-
-        d_json = json.loads(doc.to_json())
-        if with_ids:
-            d_json["id"] = str(doc.id)
-
-        del d_json["_id"]
-
-        return d_json
 
     ### Mongo options functions
 
@@ -635,7 +661,7 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-            rdata = [self._doc_to_json(d, with_ids) for d in data]
+            rdata = [d.to_json_obj(with_ids) for d in data]
         else:
             rdata = data
 
@@ -757,7 +783,7 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-            rdata = [self._doc_to_json(d, with_ids) for d in data]
+            rdata = [d.to_json_obj(with_ids) for d in data]
         else:
             rdata = data
 
@@ -860,13 +886,13 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def get_results_by_ids(self, ids: List[str]=None, projection=None, return_json=True, with_ids=True):
+    def get_results_by_id(self, id: List[str]=None, projection=None, return_json=True, with_ids=True):
         """
         Get list of Results using the given list of Ids
 
         Parameters
         ----------
-        ids : List of str
+        id : List of str
             Ids of the results in the DB
         projection : list/set/tuple of keys, default is None
             The fields to return, default to return all
@@ -886,9 +912,9 @@ class MongoengineSocket:
         data = []
         # try:
         if projection:
-            data = Result.objects(id__in=ids).only(*projection).limit(self._max_limit)
+            data = Result.objects(id__in=id).only(*projection).limit(self._max_limit)
         else:
-            data = Result.objects(id__in=ids).limit(self._max_limit)
+            data = Result.objects(id__in=id).limit(self._max_limit)
 
         meta["n_found"] = data.count()
         meta["success"] = True
@@ -896,11 +922,9 @@ class MongoengineSocket:
         #     meta['error_description'] = str(err)
 
         if return_json:
-            rdata = [self._doc_to_json(d, with_ids) for d in data]
-        else:
-            rdata = data
+            data = [d.to_json_obj(with_ids) for d in data]
 
-        return {"data": rdata, "meta": meta}
+        return {"data": data, "meta": meta}
 
     def get_results_count(self):
         """
@@ -1002,17 +1026,63 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-            rdata = []
-            for d in data:
-                d = self._doc_to_json(d, with_ids)
-                if "molecule" in d:
-                    d["molecule"] = d["molecule"]["$oid"]
-                rdata.append(d)
+            data = [d.to_json_obj(with_ids) for d in data]
 
+        return {"data": data, "meta": meta}
+
+    def get_results_by_task_id(self,
+                               task_id: Union[List[str], str],
+                               projection=None,
+                               limit: int=None,
+                               return_json=True):
+        """
+
+        Parameters
+        ----------
+        task_id : List of str or str
+            Task id that ran the results
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        return_json : bool, deafult is True
+            Return the results as a list of json instead of objects
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = storage_utils.get_metadata()
+        query = {}
+
+        if isinstance(task_id, (list, tuple)):
+            query['task_id__in'] = task_id
         else:
-            rdata = data
+            query['task_id'] = task_id
 
-        return {"data": rdata, "meta": meta}
+        q_limit = limit if limit and limit < self._max_limit else self._max_limit
+
+        data = []
+        try:
+            if projection:
+                data = Result.objects(**query).only(*projection).limit(q_limit)
+            else:
+                data = Result.objects(**query).limit(q_limit)
+
+            meta["n_found"] = data.count()
+            meta["success"] = True
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+        if return_json:
+            data = [d.to_json_obj() for d in data]
+
+        return {"data": data, "meta": meta}
 
     def del_results(self, ids: List[str]):
         """
@@ -1036,24 +1106,265 @@ class MongoengineSocket:
 
 ### Mongo procedure/service functions
 
-    def add_procedures(self, data):
+    def add_procedures(self, data: List[dict], update_existing: bool=False, return_json=True):
+        """
+        Add procedures from a given dict. The dict should have all the required
+        keys of a result.
 
-        ret = self._add_generic(data, "procedures")
-        ret["meta"]["validation_errors"] = []  # TODO
+        Parameters
+        ----------
+        data : list of dict
+            Each dict must have:
+            procedure, program, keywords, qc_meta, hash_index
+            In addition, it should have the other attributes that it needs
+            to store
+        update_existing : bool (default False)
+            Update existing results
 
+        Returns
+        -------
+            Dict with keys: data, meta
+            Data is the ids of the inserted/updated/existing docs
+        """
+
+        meta = storage_utils.add_metadata()
+
+        results = []
+        # try:
+        for d in data:
+            # search by hash index
+            doc = Procedure.objects(hash_index=d['hash_index'])
+
+            if doc.count() == 0 or update_existing:
+                doc = doc.upsert_one(**d)
+                results.append(str(doc.id))
+                meta['n_inserted'] += 1
+            else:
+                meta['duplicates'].append(self._doc_to_tuples(doc.first(), with_ids=False))  # TODO
+                # If new or duplicate, add the id to the return list
+                results.append(str(doc.first().id))
+        meta["success"] = True
+        # except (mongoengine.errors.ValidationError, KeyError) as err:
+        #     meta["validation_errors"].append(err)
+        # except Exception as err:
+        #     meta['error_description'] = err
+
+        ret = {"data": results, "meta": meta}
         return ret
 
-    def get_procedures(self, query, projection=None):
+    def get_procedures(self,
+                       procedure: str=None,
+                       program: str=None,
+                       hash_index: str=None,
+                       ids: List[str]=None,
+                       status: str='COMPLETE',
+                       projection=None,
+                       limit: int=None,
+                       skip: int=None,
+                       return_json=True,
+                       with_ids=True):
+        """
 
-        return self._get_generic(query, "procedures", allow_generic=True, projection=projection)
+        Parameters
+        ----------
+        procedure : str
+        program : str
+        hash_index : str
+        ids : str
+        status : bool, default is 'COMPLETE'
+            The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        skip : int, default is None TODO
+            skip the first 'skip' resaults. Used to paginate
+        return_json : bool, deafult is True
+            Return the results as a list of json inseated of objects
+        with_ids : bool, default is True
+            Include the ids in the returned objects/dicts
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = storage_utils.get_metadata()
+        query = {}
+        parsed_query = {}
+        if procedure:
+            query['procedure'] = procedure
+        if program:
+            query['program'] = program
+        if hash_index:
+            query['hash_index'] = hash_index
+        if ids:
+            query['ids'] = ids
+        if status:
+            query['status'] = status
+
+        for key, value in query.items():
+            if key == "status":
+                parsed_query[key] = value
+            elif isinstance(value, (list, tuple)):
+                parsed_query[key + "__in"] = [v.lower() for v in value]
+            else:
+                parsed_query[key] = value.lower()
+
+        q_limit = limit if limit and limit < self._max_limit else self._max_limit
+
+        data = []
+        try:
+            if projection:
+                data = Procedure.objects(**parsed_query).only(*projection).limit(q_limit)
+            else:
+                data = Procedure.objects(**parsed_query).limit(q_limit)
+
+            meta["n_found"] = data.count()
+            meta["success"] = True
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+        if return_json:
+            data = [d.to_json_obj(with_ids) for d in data]
+
+        return {"data": data, "meta": meta}
+
+    def get_procedures_by_id(self,
+                             id: List[str]=None,
+                             hash_index: List[str]=None,
+                             projection=None,
+                             return_json=True,
+                             with_ids=True):
+        """
+        Get list of Procedures using the given list of Ids
+
+        Parameters
+        ----------
+        id : List of str
+            Ids of the results in the DB
+        hash_index: List or str
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        return_json : bool, default is True
+            Return the results as a list of json instead of objects
+        with_ids: bool, default is True
+            Include the ids in the returned objects/dicts
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = storage_utils.get_metadata()
+
+        query, parsed_query = {}, {}
+        if id:
+            query['id'] = id
+        if hash_index:
+            query['hash_index'] = hash_index
+
+        for key, value in query.items():
+            if isinstance(value, (list, tuple)):
+                parsed_query[key + "__in"] = value
+            else:
+                parsed_query[key] = value
+
+        data = []
+        # try:
+        if projection:
+            data = Procedure.objects(**parsed_query).only(*projection).limit(self._max_limit)
+        else:
+            data = Procedure.objects(**parsed_query).limit(self._max_limit)
+
+        meta["n_found"] = data.count()
+        meta["success"] = True
+        # except Exception as err:
+        #     meta['error_description'] = str(err)
+
+        if return_json:
+            data = [d.to_json_obj(with_ids) for d in data]
+
+        return {"data": data, "meta": meta}
+
+    def get_procedures_by_task_id(self,
+                                  task_id: Union[List[str], str],
+                                  projection=None,
+                                  limit: int=None,
+                                  return_json=True):
+        """
+
+        Parameters
+        ----------
+        task_id : List of str or str
+            Task id that ran the procedure
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        return_json : bool, deafult is True
+            Return the results as a list of json instead of objects
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = storage_utils.get_metadata()
+        query = {}
+
+        if isinstance(task_id, (list, tuple)):
+            query['task_id__in'] = task_id
+        else:
+            query['task_id'] = task_id
+
+        q_limit = limit if limit and limit < self._max_limit else self._max_limit
+
+        data = []
+        try:
+            if projection:
+                data = Procedure.objects(**query).only(*projection).limit(q_limit)
+            else:
+                data = Procedure.objects(**query).limit(q_limit)
+
+            meta["n_found"] = data.count()
+            meta["success"] = True
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+        if return_json:
+            data = [d.to_json_obj() for d in data]
+
+        return {"data": data, "meta": meta}
+
 
     def update_procedure(self, hash_index, data):
         """
-        This should be removed, temporary patch to make this more canonical mongoengine
+        TODO: to be updated with needed
         """
 
-        ret = self._tables["procedures"].update_one({"hash_index": hash_index}, {"$set": data})
-        return ret.modified_count
+        update = {}
+        # create safe query with allowed keys only
+        # shouldn't be allowed to update status manually
+        for key, value in data.items():
+            if key not in ['procedure', 'program', 'status', 'task_id']:  # FIXME: what else?
+                update[key] = value
+            else:
+                logging.warning('Trying to update Procedre with none ' +
+                                'allowed keyword: ({}={})'.format(key, value))
+
+        modified_count = Procedure.objects(hash_index=hash_index).update(**update, modified_on=dt.utcnow())
+
+        return modified_count
 
     def add_services(self, data):
 
@@ -1080,7 +1391,7 @@ class MongoengineSocket:
 
         match_count = 0
         modified_count = 0
-        for uid, data in updates:
+        for uid, data in updates: # TODO: why this is replace not update?
             result = self._tables["service_queue"].replace_one({"_id": ObjectId(uid)}, data)
             match_count += result.matched_count
             modified_count += result.modified_count
@@ -1148,6 +1459,7 @@ class MongoengineSocket:
                 task = TaskQueue(**d)
                 task.base_result = result_obj
                 task.save()
+                result_obj.update(task_id=str(task.id))  # update bidirectional rel
                 results.append(str(task.id))
                 meta['n_inserted'] += 1
             except mongoengine.errors.NotUniqueError as err:  # rare case
@@ -1187,29 +1499,99 @@ class MongoengineSocket:
         upd = TaskQueue._collection.update_many(
             query, {"$set": {
                 "status": "RUNNING",
-                "modified_on": datetime.datetime.utcnow(),
+                "modified_on": dt.utcnow(),
                 "manager": manager,
             }})
 
         if as_json:
-            found = [self._doc_to_json(task, with_ids=True) for task in found]
-            # simplify returned formats
-            # TODO: do it in models if possible
-            for task in found:
-                task['base_result']['id'] = task['base_result']['$id']['$oid']
-                del task['base_result']['$id']
-                task['created_on'] = task['created_on']['$date']
-                task['modified_on'] = task['modified_on']['$date']
+            found = [task.to_json_obj() for task in found]
 
         if upd.modified_count != len(found):
             self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
 
         return found
 
-    def get_queue(self, query, projection=None):
+    def get_queue_(self, query, projection=None):
         """TODO: to be replaced with a specific query, add limit"""
 
         return self._get_generic(query, "task_queue", allow_generic=True, projection=projection)
+
+    def get_queue(self,
+                  id=None,
+                  hash_index=None,
+                  program=None,
+                  status: str=None,
+                  projection=None,
+                  limit: int=None,
+                  skip: int=None,
+                  return_json=True,
+                  with_ids=True):
+        """
+        TODO: check what query keys are needs
+        Parameters
+        ----------
+        id : list or str
+            Id of the task
+        Hash_index
+        status : bool, default is None (find all)
+            The status of the task: 'COMPLETE', 'RUNNING', 'WAITING', or 'ERROR'
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        skip : int, default is None TODO
+            skip the first 'skip' resaults. Used to paginate
+        return_json : bool, deafult is True
+            Return the results as a list of json inseated of objects
+        with_ids : bool, default is True
+            Include the ids in the returned objects/dicts
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = storage_utils.get_metadata()
+        query = {}
+        parsed_query = {}
+        if program:
+            query['program'] = program
+        if id:
+            query['id'] = id
+        if hash_index:
+            query['hash_index'] = hash_index
+        if status:
+            query['status'] = status
+
+        for key, value in query.items():
+            if isinstance(value, (list, tuple)):
+                parsed_query[key + "__in"] = value
+            else:
+                parsed_query[key] = value
+
+        q_limit = limit if limit and limit < self._max_limit else self._max_limit
+
+        data = []
+        try:
+            if projection:
+                data = TaskQueue.objects(**parsed_query).only(*projection).limit(q_limit)
+            else:
+                data = TaskQueue.objects(**parsed_query).limit(q_limit)
+
+            meta["n_found"] = data.count()
+            meta["success"] = True
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+        if return_json:
+            if return_json:
+                data = [d.to_json_obj(with_ids) for d in data]
+
+        return {"data": data, "meta": meta}
 
     def queue_get_by_id(self, ids: List[str], limit: int=100, as_json: bool=True):
         """Get tasks by their IDs
@@ -1233,13 +1615,14 @@ class MongoengineSocket:
         found = TaskQueue.objects(id__in=ids).limit(q_limit)
 
         if as_json:
-            found = [self._doc_to_json(task, with_ids=True) for task in found]
+            found = [task.to_json_obj() for task in found]
 
         return found
 
     def queue_mark_complete(self, task_ids: List[str]) -> int:
         """Update the given tasks as complete
         Note that each task is already pointing to its result location
+        Mark the corresponding result/procedure as complete
 
         Parameters
         ----------
@@ -1252,50 +1635,97 @@ class MongoengineSocket:
             Updated count
         """
 
-        found = TaskQueue.objects(id__in=task_ids).update(status='COMPLETE')
+        # If using replica sets, we can use as a transcation:
+        # with self.client.start_session() as session:
+        #     with session.start_transaction():
+        #         # automatically calls ClientSession.commit_transaction().
+        #         # If the block exits with an exception, the transaction
+        #         # automatically calls ClientSession.abort_transaction().
+        #           found = TaskQueue._collection.update_many(
+        #                               {'id': {'$in': task_ids}},
+        #                               {'$set': {'status': 'COMPLETE'}},
+        #                               session=session)
+        #         # next, Update results
 
-        return found
+        tasks = TaskQueue.objects(id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
+        results = Result.objects(task_id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
+        procedures = Procedure.objects(task_id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
+
+        # This should not happen unless there is data inconsistency in the DB
+        if results + procedures != tasks:
+            logging.error("Some tasks don't reference results or procedures correctly!"
+                          "Tasks: {}, Results: {}, procedures: {}. "
+                          "# of results + procedures should equal # of tasks.".format(tasks, results, procedures))
+        return tasks
 
     def queue_mark_error(self, data):
+        """update the given tasks as errored
+        Mark the corresponding result/procedure as complete
+
+        """
+
         bulk_commands = []
-        dt = datetime.datetime.utcnow()
-        for queue_id, msg in data:
+        task_ids = []
+        for task_id, msg in data:
             update = {
                 "$set": {
                     "status": "ERROR",
                     "error": msg,
-                    "modified_on": dt,
+                    "modified_on": dt.utcnow(),
                 }
             }
-            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(queue_id)}, update))
+            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(task_id)}, update))
+            task_ids.append(task_id)
 
         if len(bulk_commands) == 0:
             return
 
-        ret = TaskQueue._collection.bulk_write(bulk_commands, ordered=False)
+        ret = TaskQueue._collection.bulk_write(bulk_commands, ordered=False).modified_count
+        Result.objects(task_id__in=task_ids).update(status='ERROR', modified_on=dt.utcnow())
+        Procedure.objects(task_id__in=task_ids).update(status='ERROR', modified_on=dt.utcnow())
+
         return ret
 
-    def queue_reset_status(self, manager: str, status: str="RUNNING", update_status: str="WAITING") -> int:
+    def queue_reset_status(self, manager: str, reset_running: bool=True, reset_error: bool=False) -> int:
         """
-        Sets the status of the tasks that a manager owns.
+        Reset the status of the tasks that a manager owns from Running to Waiting
+        If reset_error is True, then also reset errored tasks AND its results/proc
 
         Parameters
         ----------
         manager : str
             The manager name to reset the status of
-        status : str, optional
-            An optional status filter to apply
-        update_status : str, optional
-            What to reset the status to
+        reset_running : str (optional), default is True
+            If True, reset running tasks to be waiting
+        reset_error : str (optional), default is False
+            If True, also reset errored tasks to be waiting,
+            also update results/proc to be INCOMPLETE
 
         Returns
         -------
         int
             Updated count
         """
-        found = TaskQueue.objects(manager=manager, status=status).update(status=update_status)
 
-        return found
+        if not (reset_running or reset_error):
+            # nothing to do
+            return 0
+
+        # Update results and procedures if reset_error
+        if reset_error:
+            task_ids = TaskQueue.objects(manager=manager, status="ERROR").only('id')
+            Result.objects(task_id__in=task_ids).update(status='INCOMPLETE', modified_on=dt.utcnow())
+            Procedure.objects(task_id__in=task_ids).update(status='INCOMPLETE', modified_on=dt.utcnow())
+
+        status = []
+        if reset_running:
+            status.append("RUNNING")
+        if reset_error:
+            status.append("ERROR")
+
+        updated = TaskQueue.objects(manager=manager, status__in=status).update(status="WAITING", modified_on=dt.utcnow())
+
+        return updated
 
     def handle_hooks(self, hooks):
 
@@ -1322,38 +1752,43 @@ class MongoengineSocket:
 ### QueueManagers
 
     def manager_update(self, name, **kwargs):
-        dt = datetime.datetime.utcnow()
 
         upd = {
-            # Provide base data
-            "$setOnInsert": {
-                "name": name,
-                "created_on": dt,
-            },
-            # Set the date
-            "$set": {
-                "modifed_on": dt,
-            },
-            # Incremement relevant data
-            "$inc": {
-                "submitted": kwargs.pop("submitted", 0),
-                "completed": kwargs.pop("completed", 0),
-                "returned": kwargs.pop("returned", 0),
-                "failures": kwargs.pop("failures", 0)
-            }
+            # Increment relevant data
+            "inc__submitted": kwargs.pop("submitted", 0),
+            "inc__completed": kwargs.pop("completed", 0),
+            "inc__returned": kwargs.pop("returned", 0),
+            "inc__failures": kwargs.pop("failures", 0)
         }
 
         # Update server data
         for value in ["cluster", "hostname", "uuid", "tag", "status"]:
             if value in kwargs:
-                upd["$set"][value] = kwargs[value]
+                upd[value] = kwargs[value]
 
-        r = self._tables["queue_managers"].update_one({"name": name}, upd, upsert=True)
-        return r.matched_count == 1
+        QueueManager.objects()  # init
+        r = QueueManager.objects(name=name).update(**upd, upsert=True, modified_on=dt.utcnow())
+        return r == 1
 
-    def get_managers(self, query, projection=None):
+    def get_managers(self, name: str=None, status: str=None, modified_before=None):
 
-        return self._get_generic(query, "queue_managers", allow_generic=True, projection=projection)
+        query = {}
+        if name:
+            query["name"] = name
+        if modified_before:
+            query["modified_on__lt"] = modified_before
+        if status:
+            query["status"] = status
+
+        data = QueueManager.objects(**query)
+
+        meta = storage_utils.get_metadata()
+        meta["success"] = True
+        meta["n_found"] = data.count()
+
+        data = [x.to_json_obj(with_id=False) for x in data]
+
+        return {"data": data, "meta": meta}
 
 ### Users
 

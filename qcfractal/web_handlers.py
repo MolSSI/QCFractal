@@ -197,7 +197,9 @@ class ResultHandler(APIHandler):
         proj = self.json["meta"].get("projection", None)
 
         if "id" in self.json["data"]:
-            ret = storage.get_results_by_ids(self.json["data"]["id"], projection=proj)
+            ret = storage.get_results_by_id(self.json["data"]["id"], projection=proj)
+        elif 'task_id' in self.json["data"]:
+            ret = storage.get_results_by_task_id(self.json["data"]["task_id"], projection=proj)
         else:
             ret = storage.get_results(**self.json["data"], projection=proj)
         self.logger.info("GET: Results - {} pulls.".format(len(ret["data"])))
@@ -225,7 +227,14 @@ class ProcedureHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        ret = storage.get_procedures(self.json["data"])
+        if "id" in self.json["data"]:
+            ret = storage.get_procedures_by_id(id=self.json["data"]["id"])
+        elif "hash_index" in self.json["data"]:
+            ret = storage.get_procedures_by_id(hash_index=self.json["data"]["hash_index"])
+        elif 'task_id' in self.json["data"]:
+            ret = storage.get_procedures_by_task_id(self.json["data"]["task_id"])
+        else:
+            ret = storage.get_procedures(**self.json["data"])
         self.logger.info("GET: Procedures - {} pulls.".format(len(ret["data"])))
 
         self.write(ret)

@@ -24,8 +24,8 @@ class TaskQueueHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         # Format tasks
-        func = procedures.get_procedure_input_parser(self.json["meta"]["procedure"])
-        full_tasks, complete_tasks, errors = func(storage, self.json)
+        procedure_parser = procedures.get_procedure_parser(self.json["meta"]["procedure"], storage)
+        full_tasks, complete_tasks, errors = procedure_parser.parse_input(self.json)
 
         # Add tasks to queue
         ret = storage.queue_submit(full_tasks)
@@ -50,7 +50,7 @@ class TaskQueueHandler(APIHandler):
         if projection is None:
             projection = {x: True for x in ["status", "error", "tag"]}
 
-        ret = storage.get_queue(self.json["data"], projection=projection)
+        ret = storage.get_queue(**self.json["data"], projection=projection)
 
         self.write(ret)
 
@@ -70,8 +70,7 @@ class ServiceQueueHandler(APIHandler):
 
         # Figure out initial molecules
         errors = []
-        ordered_mol_dict = {x: mol for x, mol in enumerate(self.json["data"])}
-        mol_query = storage.mixed_molecule_get(ordered_mol_dict)
+        mol_query = storage.get_add_molecules_mixed(self.json["data"])
 
         # Build out services
         submitted_services = []
@@ -81,7 +80,7 @@ class ServiceQueueHandler(APIHandler):
 
         # Figure out complete services
         service_hashes = [x.data["hash_index"] for x in submitted_services]
-        found_hashes = storage.get_procedures({"hash_index": service_hashes}, projection={"hash_index": True})
+        found_hashes = storage.get_procedures_by_id(hash_index=service_hashes, projection={"hash_index": True})
         found_hashes = set(x["hash_index"] for x in found_hashes["data"])
 
         new_services = []
@@ -144,7 +143,7 @@ class QueueManagerHandler(APIHandler):
 
                 # Successful task
                 if result["success"] is True:
-                    result["queue_id"] = key
+                    result["task_id"] = key
                     new_results[parser].append((result, hooks))
                     task_success += 1
 
@@ -178,8 +177,9 @@ class QueueManagerHandler(APIHandler):
         # Run output parsers
         completed = []
         hooks = []
-        for k, v in new_results.items():
-            com, err, hks = procedures.get_procedure_output_parser(k)(storage_socket, v)
+        for k, v in new_results.items():  # todo: can be merged? do they have diff k?
+            procedure_parser = procedures.get_procedure_parser(k,storage_socket)
+            com, err, hks = procedure_parser.parse_output(v)
             completed.extend(com)
             error_data.extend(err)
             hooks.extend(hks)
