@@ -64,7 +64,6 @@ class SingleResultTasks:
             # Build stub
             result_obj = json.loads(result_stub)
             result_obj["molecule"] = v["molecule"]["id"]
-            result_obj["status"] = "INCOMPLETE"  # TODO: no need, it's default
             base_id = self.storage.add_results([result_obj])["data"][0]
 
             # Build task object
@@ -100,8 +99,7 @@ class SingleResultTasks:
 
         # Add results to database
         results = procedures_util.parse_single_runs(self.storage, rdata)
-        # for k, v in results.items():
-        #     v["status"] = "COMPLETE"
+
         ret = self.storage.add_results(list(results.values()), update_existing=True)
 
         # Sort out hook data
@@ -240,7 +238,6 @@ class OptimizationTasks(SingleResultTasks):
             hash_index=duplicate_lookup,
             projection={"hash_index": True, "id": True, "task_id": True})["data"]
 
-        duplicates = []
         if len(completed_procedures):
             found_hashes = set(x["hash_index"] for x in completed_procedures)
 
@@ -257,7 +254,10 @@ class OptimizationTasks(SingleResultTasks):
 
         # Add task stubs
         for task in full_tasks:
-            stub = {"hash_index": task["hash_index"], "procedure": "optimization", "program": data["meta"]["program"]}
+            stub = {"hash_index": task["hash_index"],
+                    "procedure": "optimization",
+                    "program": data["meta"]["program"]
+            }
             ret = self.storage.add_procedures([stub])
             task["base_result"] = ("procedure", ret["data"][0])
 
@@ -299,9 +299,6 @@ class OptimizationTasks(SingleResultTasks):
                 new_hooks[task_id] = hooks
 
             self.storage.update_procedure(result["hash_index"], result)
-        # print(list(new_procedures.values()))
-        # raise Exception()
-        # ret = self.storage.add_procedures(list(new_procedures.values()))
 
         # Create a list of (queue_id, located) to update the queue with
         completed = list(new_procedures.keys())

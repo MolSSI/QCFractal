@@ -283,8 +283,8 @@ class TaskQueue(CustomDynamicDocument):
     hooks = db.ListField(db.DynamicField())  # ??
     tag = db.StringField(default=None)
     parser = db.StringField(default='')
-    status = db.StringField(default='WAITING')
-                            # choices=['RUNNING', 'WAITING', 'ERROR', 'COMPLETE'])
+    status = db.StringField(default='WAITING',
+                            choices=['RUNNING', 'WAITING', 'ERROR', 'COMPLETE'])
     manager = db.StringField(default=None)
 
     created_on = db.DateTimeField(required=True, default=datetime.datetime.now)

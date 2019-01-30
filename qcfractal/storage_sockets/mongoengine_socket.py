@@ -1766,7 +1766,7 @@ class MongoengineSocket:
             if value in kwargs:
                 upd[value] = kwargs[value]
 
-        # QueueManager.objects()  # init
+        QueueManager.objects()  # init
         r = QueueManager.objects(name=name).update(**upd, upsert=True, modified_on=dt.utcnow())
         return r == 1
 
