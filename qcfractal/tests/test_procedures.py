@@ -121,7 +121,7 @@ def test_procedure_optimization(fractal_compute_server):
         traj = results[0].get_trajectory(projection={"properties": True})
         energies = results[0].energies()
         assert len(traj) == len(energies)
-        assert results[0].final_molecule()["symbols"] == ["H", "H"]
+        assert results[0].final_molecule().symbols == ["H", "H"]
 
         # Check individual elements
         for ind in range(len(results[0]._trajectory)):

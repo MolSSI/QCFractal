@@ -8,9 +8,11 @@ from typing import List, Union, Dict, Any, Optional
 import requests
 import yaml
 
-from .models import Molecule
 from . import orm
 from .collections import collection_factory
+
+from .models import Molecule
+from .models.rest_models import MoleculeGETBody, MoleculeGETResponse
 
 
 class FractalClient(object):
@@ -60,6 +62,8 @@ class FractalClient(object):
         if (username is not None) or (password is not None):
             self._headers["Authorization"] = json.dumps({"username": username, "password": password})
 
+        self._headers["content_type"] = 'application/json'
+
         # Try to connect and pull general data
         self.server_info = self._request("get", "information", {}).json()
 
@@ -77,16 +81,16 @@ class FractalClient(object):
             self.server_name, self.address, self.username)
         return ret
 
-    def _request(self, method: str, service: str, payload: Dict[str, Any], noraise: bool=False):
+    def _request(self, method: str, service: str, payload: Dict[str, Any]=None, *, data: str=None, noraise: bool=False):
 
         addr = self.address + service
         try:
             if method == "get":
-                r = requests.get(addr, json=payload, headers=self._headers, verify=self._verify)
+                r = requests.get(addr, json=payload, data=data, headers=self._headers, verify=self._verify)
             elif method == "post":
-                r = requests.post(addr, json=payload, headers=self._headers, verify=self._verify)
+                r = requests.post(addr, json=payload, data=data, headers=self._headers, verify=self._verify)
             elif method == "put":
-                r = requests.put(addr, json=payload, headers=self._headers, verify=self._verify)
+                r = requests.put(addr, json=payload, data=data, headers=self._headers, verify=self._verify)
             else:
                 raise KeyError("Method not understood: '{}'".format(method))
         except requests.exceptions.SSLError as exc:
@@ -179,23 +183,20 @@ class FractalClient(object):
         list of molecule JSON
             Returns all found molecules.
         """
-        # Can take in either molecule or lists
-        if not isinstance(mol_list, (tuple, list)):
+
+        if isinstance(mol_list, str):
             mol_list = [mol_list]
 
-        index = index.lower()
-        if index not in ["id", "index", "molecular_formula"]:
-            raise KeyError("Search index must either be 'id' or hash, found: {}".format(index))
-
-        payload = {"meta": {"index": index}, "data": mol_list}
-        r = self._request("get", "molecule", payload)
+        body = MoleculeGETBody(data=mol_list, meta={"index": index.lower()})
+        r = self._request("get", "molecule", data=body.json())
+        r = MoleculeGETResponse.parse_raw(r.text)
 
         if full_return:
-            return r.json()
+            return r
         else:
-            return r.json()["data"]
+            return r.data
 
-    def add_molecules(self, mol_list: Dict[str, Any], full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
+    def add_molecules(self, mol_list: Dict[str, Molecule], full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
         """Adds molecules to the Server
 
         Parameters

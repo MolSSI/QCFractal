@@ -5,6 +5,7 @@ import json
 
 import tornado.web
 
+from .interface.models.rest_models import MoleculeGETBody, MoleculeGETResponse
 
 class APIHandler(tornado.web.RequestHandler):
     """
@@ -45,6 +46,11 @@ class APIHandler(tornado.web.RequestHandler):
         if verified is False:
             raise tornado.web.HTTPError(status_code=401, reason=msg)
 
+    # def build_body(self, obj_type):
+    #     try:
+    #         return obj_type(self.rquest.body)
+    #     except pydantic.ValidationError as e:
+    #         raise tornado.web.HTTPError(status_code=401, reason=str(e))
 
 class InformationHandler(APIHandler):
     """
@@ -91,14 +97,13 @@ class MoleculeHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        kwargs = {}
-        if "index" in self.json["meta"]:
-            kwargs["index"] = self.json["meta"]["index"]
+        body = MoleculeGETBody.parse_raw(self.request.body)
 
-        ret = storage.get_molecules(self.json["data"], **kwargs)
-        self.logger.info("GET: Molecule - {} pulls.".format(len(ret["data"])))
+        molecules = storage.get_molecules(body.data, index=body.meta.index.value)
+        self.logger.info("GET: Molecule - {} pulls.".format(len(molecules["data"])))
 
-        self.write(ret)
+        ret = MoleculeGETResponse(**molecules)
+        self.write(ret.json())
 
     def post(self):
         """

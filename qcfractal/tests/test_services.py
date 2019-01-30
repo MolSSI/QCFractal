@@ -78,7 +78,7 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
     assert pytest.approx(0.000156553761859271, 1e-5) == result.final_energies(-90)
     assert pytest.approx(0.000753492556057886, 1e-5) == result.final_energies(180)
 
-    assert "symbols" in result.final_molecules()[(-90, )]
+    assert hasattr(result.final_molecules()[(-90, )], "symbols")
 
 
 def test_service_torsiondrive_duplicates(torsiondrive_fixture):

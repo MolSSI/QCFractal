@@ -67,7 +67,7 @@ def test_molecule_socket(test_server):
     assert water.compare(gdata["data"][0])
 
     # Retrieve said molecule via hash
-    r = requests.get(mol_api_addr, json={"meta": {"index": "hash"}, "data": [water.get_hash()]})
+    r = requests.get(mol_api_addr, json={"meta": {"index": "molecule_hash"}, "data": [water.get_hash()]})
     assert r.status_code == 200
 
     gdata = r.json()
