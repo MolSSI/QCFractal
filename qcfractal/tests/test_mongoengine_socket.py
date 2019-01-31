@@ -11,6 +11,22 @@ from qcfractal.storage_sockets.models import Molecule, Result, Options, \
                     Procedure, OptimizationProcedure, TorsiondriveProcedure
 from qcfractal.storage_sockets.models import TaskQueue
 from qcfractal.testing import mongoengine_socket_fixture as storage_socket
+import pytest
+from bson import ObjectId
+
+
+@pytest.fixture
+def molecules_H4O2(storage_socket):
+    water = portal.data.get_molecule("water_dimer_minima.psimol")
+    water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
+
+    ret = storage_socket.add_molecules({"water1": water.json(as_dict=True),
+                                        "water2": water2.json(as_dict=True)})
+
+    yield list(ret['data'].values())
+
+    storage_socket.del_molecules(water.get_hash(), index="hash")
+    storage_socket.del_molecules(water2.get_hash(), index="hash")
 
 
 def test_molecule(storage_socket):
@@ -57,8 +73,12 @@ def test_molecule(storage_socket):
                                molecular_formula=water_mol.molecular_formula)
     assert len(one_mol) == 1
 
+    # Clean up
+    storage_socket.del_molecules(water.get_hash(), index="hash")
+    storage_socket.del_molecules(water2.get_hash(), index="hash")
 
-def test_results(storage_socket):
+
+def test_results(storage_socket, molecules_H4O2):
     """
         Handling results throught the ME classes
     """
@@ -66,12 +86,12 @@ def test_results(storage_socket):
     assert Result.objects().count() == 0
     assert Options.objects().count() == 0
 
-    molecules = Molecule.objects(molecular_formula='H4O2')
+    molecules = molecules_H4O2
 
-    assert molecules.count() == 2
+    assert len(molecules) == 2
 
     page1 = {
-        "molecule": molecules[0],
+        "molecule": ObjectId(molecules[0]),
         "method": "M1",
         "basis": "B1",
         "options": None,
@@ -81,7 +101,7 @@ def test_results(storage_socket):
     }
 
     page2 = {
-        "molecule": molecules[1],
+        "molecule": ObjectId(molecules[1]),
         "method": "M1",
         "basis": "B1",
         "options": None,
@@ -90,10 +110,12 @@ def test_results(storage_socket):
         "other_data": 10,
     }
 
-    result = Result(**page1)
-    result.save()
-    # print('Result After save: ', result.json(as_dict=True))
-    assert result.molecule.molecular_formula == 'H4O2'
+    Result(**page1).save()
+    ret = Result.objects(method='M1').first()
+    assert ret.molecule.molecular_formula == 'H4O2'
+
+    # clean up
+    Result.objects().delete()
 
 
 def test_procedure(storage_socket):
@@ -122,11 +144,12 @@ def test_procedure(storage_socket):
 
     procedure = Procedure(**data1)
     procedure.save()
+    assert procedure.id
     # print('Procedure After save: ', procedure.json(as_dict=True))
     # assert procedure.molecule.molecular_formula == 'H4O2'
 
 
-def test_optimization_procedure(storage_socket):
+def test_optimization_procedure(storage_socket, molecules_H4O2):
     """
         Optimization procedure
     """
@@ -134,10 +157,8 @@ def test_optimization_procedure(storage_socket):
     assert OptimizationProcedure.objects().count() == 0
     # assert Options.objects().count() == 0
 
-    molecules = Molecule.objects(molecular_formula='H4O2')
-
     data1 = {
-        "initial_molecule": molecules[0],
+        "initial_molecule": ObjectId(molecules_H4O2[0]),
         # "procedure_type": None,
         "options": None,
         "program": "P7",
@@ -149,10 +170,9 @@ def test_optimization_procedure(storage_socket):
         },
     }
 
-    procedure = OptimizationProcedure(**data1)
-    procedure.save()
-    # print('OptimizationProcedure After save: ', procedure.json(as_dict=True))
-    assert procedure.initial_molecule.molecular_formula == 'H4O2'
+    procedure = OptimizationProcedure(**data1).save()
+    proc = OptimizationProcedure.objects().first()
+    assert proc.initial_molecule.molecular_formula == 'H4O2'
 
 
 def test_torsiondrive_procedure(storage_socket):
@@ -184,7 +204,7 @@ def test_torsiondrive_procedure(storage_socket):
     # print('TorsiondriveProcedure After save: ', procedure.json(as_dict=True))
 
 
-def test_add_task_queue(storage_socket):
+def test_add_task_queue(storage_socket, molecules_H4O2):
     """
         Simple test of adding a task using the ME classes
         in QCFractal, tasks should be added using storage_socket
@@ -193,8 +213,17 @@ def test_add_task_queue(storage_socket):
     assert TaskQueue.objects.count() == 0
     TaskQueue.objects().delete()
 
+    page1 = {
+        "molecule": ObjectId(molecules_H4O2[0]),
+        "method": "M1",
+        "basis": "B1",
+        "options": None,
+        "program": "P1",
+        "driver": "energy",
+        "other_data": 5,
+    }
     # add a task that reference results
-    result = Result.objects().first()
+    result = Result(**page1).save()
 
     task = TaskQueue(base_result=result)
     task.save()
@@ -208,7 +237,18 @@ def test_add_task_queue(storage_socket):
     assert TaskQueue.objects().count() == 2
 
     # add a task that reference Torsiondrive Procedure
-    tor = TorsiondriveProcedure.objects().first()
+    data1 = {
+        "options": None,
+        "program": "P9",
+        "qc_meta": {
+            "basis": "B1",
+            "program": "P1",
+            "method": "M1",
+            "driver": "energy"
+        },
+    }
+
+    tor = TorsiondriveProcedure(**data1).save()
 
     task = TaskQueue(base_result=tor)
     task.save()
