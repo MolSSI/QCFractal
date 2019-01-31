@@ -12,7 +12,7 @@ from . import orm
 from .collections import collection_factory
 
 from .models import Molecule
-from .models.rest_models import MoleculeGETBody, MoleculeGETResponse
+from .models.rest_models import MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse
 
 
 class FractalClient(object):
@@ -215,22 +215,24 @@ class FractalClient(object):
         """
         # Can take in either molecule or lists
 
-        mol_submission = {}
-        for key, mol in mol_list.items():
-            if isinstance(mol, Molecule):
-                mol_submission[key] = mol.json(as_dict=True)
-            elif isinstance(mol, dict):
-                mol_submission[key] = mol
-            else:
-                raise TypeError("Input molecule type '{}' not recognized".format(type(mol)))
+        # mol_submission = {}
+        # for key, mol in mol_list.items():
+        #     if isinstance(mol, Molecule):
+        #         mol_submission[key] = mol.json(as_dict=True)
+        #     elif isinstance(mol, dict):
+        #         mol_submission[key] = mol
+        #     else:
+        #         raise TypeError("Input molecule type '{}' not recognized".format(type(mol)))
 
-        payload = {"meta": {}, "data": mol_submission}
-        r = self._request("post", "molecule", payload)
+        # payload = {"meta": {}, "data": mol_submission}
+        body = MoleculePOSTBody(meta={}, data=mol_list)
+        r = self._request("post", "molecule", data=body.json())
+        r = MoleculePOSTResponse.parse_raw(r.text)
 
         if full_return:
-            return r.json()
+            return r
         else:
-            return r.json()["data"]
+            return r.data
 
     ### Options section
 
