@@ -26,6 +26,7 @@ class TorsionDriveInput(BaseModel):
         grid_spacing: List[float]
 
         class Config:
+            allow_extra = True
             allow_mutation = False
 
     class OptOptions(BaseModel):
@@ -51,7 +52,7 @@ class TorsionDriveInput(BaseModel):
 
     def get_hash_index(self):
         if self.initial_molecule.id is None:
-            raise ValueError("Cannot get has without a valid intial_molecule.id field.")
+            raise ValueError("Cannot get the hash_index without a valid intial_molecule.id field.")
 
         data = self.dict(include=["program", "procedure", "torsiondrive_meta", "optimization_meta", "qc_meta"])
         data["initial_molecule"] = self.initial_molecule.id
@@ -64,8 +65,9 @@ class TorsionDrive(TorsionDriveInput):
     A interface to the raw JSON data of a TorsionDrive torsion scan run.
     """
 
-    id: str
-    success: bool
+    id: str = None
+    success: bool = False
+    status: str = "INCOMPLETE"
     hash_index: str
     provenance: Provenance
 
@@ -74,4 +76,11 @@ class TorsionDrive(TorsionDriveInput):
     final_molecule: Union[str, Molecule]
 
     final_energies: Dict[str, float]
-    minimum_positions: List[int]
+    minimum_positions: Dict[str, int]
+
+    class Config:
+        allow_mutation = False
+        json_encoders = json_encoders
+
+    def json_dict(self):
+        return json.loads(self.json())

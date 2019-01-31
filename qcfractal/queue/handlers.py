@@ -94,7 +94,7 @@ class ServiceQueueHandler(APIHandler):
                 new_services.append(x)
 
         # Add services to database
-        ret = storage.add_services([service.get_json() for service in new_services])
+        ret = storage.add_services([service.json_dict() for service in new_services])
         self.logger.info("ServiceQueue: Added {} services.\n".format(ret["meta"]["n_inserted"]))
 
         ret["data"] = {"submitted": ret["data"], "completed": list(complete_tasks), "queue": ret["meta"]["duplicates"]}

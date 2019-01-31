@@ -1141,6 +1141,8 @@ class MongoengineSocket:
         # try:
         for d in data:
             # search by hash index
+            if "id" in d:
+                del d["id"]
             doc = Procedure.objects(hash_index=d['hash_index'])
 
             if doc.count() == 0 or update_existing:

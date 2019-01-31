@@ -14,13 +14,14 @@ __all__ = ["QCMeta", "json_encoder"]
 # Add in QCElemental models
 __all__.extend(["Molecule", "Provenance"])
 
-
 json_encoders = {np.ndarray: lambda v: v.flatten().tolist()}
+
 
 def hash_dictionary(data):
     m = hashlib.sha1()
     m.update(json.dumps(data, sort_keys=True).encode("UTF-8"))
     return m.hexdigest()
+
 
 class QCMeta(BaseModel):
     """

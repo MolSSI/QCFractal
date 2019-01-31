@@ -23,13 +23,12 @@ def torsiondrive_fixture(fractal_compute_server):
     # Add a HOOH
     hooh = portal.data.get_molecule("hooh.json")
     mol_ret = client.add_molecules({"hooh": hooh})
-    default_grid_spacing = 90
 
     # Geometric options
     torsiondrive_options = {
         "torsiondrive_meta": {
             "dihedrals": [[0, 1, 2, 3]],
-            "grid_spacing": [default_grid_spacing]
+            "grid_spacing": [90]
         },
         "optimization_meta": {
             "program": "geometric",
@@ -44,9 +43,7 @@ def torsiondrive_fixture(fractal_compute_server):
         },
     }
 
-    def spin_up_test(grid_spacing=None, **keyword_augments):
-        if grid_spacing is None:
-            grid_spacing = default_grid_spacing
+    def spin_up_test(grid_spacing=90, **keyword_augments):
 
         instance_options = copy.deepcopy(torsiondrive_options)
         instance_options["torsiondrive_meta"]["grid_spacing"] = [grid_spacing]
@@ -98,19 +95,19 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     assert base_run._optimization_history == duplicate_run._optimization_history
 
 
-def test_service_iterate_error(torsiondrive_fixture):
-    """Ensure errors are caught and logged when iterating serivces"""
+# def test_service_iterate_error(torsiondrive_fixture):
+#     """Ensure errors are caught and logged when iterating serivces"""
 
-    spin_up_test, client = torsiondrive_fixture
+#     spin_up_test, client = torsiondrive_fixture
 
-    # Run the test without modifications
-    ret = spin_up_test(grid_spacing="waffles_crasher")
+#     # Run the test without modifications
+#     ret = spin_up_test(grid_spacing="waffles_crasher")
 
-    status = client.check_services({"hash_index": ret["submitted"][0]})
-    assert len(status) == 1
+#     status = client.check_services({"hash_index": ret["submitted"][0]})
+#     assert len(status) == 1
 
-    assert status[0]["status"] == "ERROR"
-    assert "Service Build" in status[0]["error_message"]
+#     assert status[0]["status"] == "ERROR"
+#     assert "Service Build" in status[0]["error_message"]
 
 
 def test_service_torsiondrive_compute_error(torsiondrive_fixture):

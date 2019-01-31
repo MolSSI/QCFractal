@@ -376,7 +376,7 @@ class FractalServer:
             try:
                 obj = services.build(data["service"], self.storage, data)
                 finished = obj.iterate()
-                data = obj.dict()
+                data = obj.json_dict()
             except Exception as e:
                 print(traceback.format_exc())
                 data["status"] = "ERROR"
@@ -388,7 +388,7 @@ class FractalServer:
             if finished is not False:
 
                 # Add results to procedures, remove complete_ids
-                new_procedures.append(finished)
+                new_procedures.append(finished.json_dict())
                 complete_ids.append(data["id"])
             else:
                 running_services += 1
