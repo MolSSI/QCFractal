@@ -17,7 +17,7 @@ from qcfractal import procedures
 from qcfractal.interface.models.torsiondrive import TorsionDrive, TorsionDriveInput
 from qcfractal.interface.models.common_models import json_encoders
 
-from typing import Any, Dict
+from typing import Any, Dict, List, Union
 from pydantic import BaseModel
 
 __all__ = ["TorsionDriveService"]
@@ -45,15 +45,15 @@ class TorsionDriveService(BaseModel):
     output: TorsionDrive
 
     # Temporaries
-    molecule_template: Any
     torsiondrive_state: Dict[str, Any]
-    torsiondrive_meta: Dict[str, Any]
-    required_tasks: Any
-    remaining_tasks: Any
-    optimization_history: Any = {}
-    task_map: Any = {}
+    required_tasks: List[str] = []
+    task_map: Dict[str, List[str]] = {}
+    optimization_history: Dict[str, List[str]] = {}
+
+    # Templates
+    dihedral_template: str
     optimization_template: str
-    queue_keys: Any = None
+    molecule_template: str
 
     class Config:
         json_encoders = json_encoders
@@ -63,45 +63,42 @@ class TorsionDriveService(BaseModel):
         _check_td()
 
         # Validate input
-        tdinput = TorsionDriveInput(**meta, initial_molecule=molecule)
         output = TorsionDrive(
-            **tdinput.dict(),
-            hash_index=tdinput.get_hash_index(),
+            **meta,
+            initial_molecule=molecule["id"],
             provenance={
                 "creator": "torsiondrive",
                 "version": torsiondrive.__version__,
                 "routine": "torsiondrive.td_api"
             },
             final_energies={},
-            final_molecule="not_complete",
             minimum_positions={},
             optimization_history={})
 
-        meta = {"output": output, "torsiondrive_meta": {}}
-        # Remove identity info from template
+        meta = {"output": output}
+
+        # Remove identity info from molecule template
         molecule_template = copy.deepcopy(molecule)
         del molecule_template["id"]
         del molecule_template["identifiers"]
-        meta["molecule_template"] = molecule_template
+        meta["molecule_template"] = json.dumps(molecule_template)
 
         # Initiate torsiondrive meta
         meta["torsiondrive_state"] = td_api.create_initial_state(
-            dihedrals=tdinput.torsiondrive_meta.dihedrals,
-            grid_spacing=tdinput.torsiondrive_meta.grid_spacing,
-            elements=tdinput.initial_molecule.symbols,
-            init_coords=[tdinput.initial_molecule.geometry.ravel().tolist()])
+            dihedrals=output.torsiondrive_meta.dihedrals,
+            grid_spacing=output.torsiondrive_meta.grid_spacing,
+            elements=molecule_template["symbols"],
+            init_coords=[molecule_template["geometry"]])
 
-        # Save initial molecule and add hash
-        meta["required_tasks"] = False
-        meta["remaining_tasks"] = False
-
+        # Build dihedral template
         dihedral_template = []
         for idx in output.torsiondrive_meta.dihedrals:
             tmp = {"type": "dihedral", "indices": idx}
             dihedral_template.append(tmp)
 
-        meta["torsiondrive_meta"]["dihedral_template"] = dihedral_template
+        meta["dihedral_template"] = json.dumps(dihedral_template)
 
+        # Build optimization template
         meta["optimization_template"] = json.dumps({
             "meta": {
                 "procedure": "optimization",
@@ -116,11 +113,6 @@ class TorsionDriveService(BaseModel):
         meta["optimization_program"] = output.optimization_meta.program
 
         meta["hash_index"] = output.get_hash_index()
-        meta["provenance"] = {
-            "creator": "torsiondrive",
-            "version": torsiondrive.__version__,
-            "route": "torsiondrive.td_api"
-        }
 
         return cls(**meta, storage_socket=storage_socket)
 
@@ -134,53 +126,47 @@ class TorsionDriveService(BaseModel):
     def iterate(self):
 
         self.status = "RUNNING"
-        if self.remaining_tasks is not False:
 
-            # Create the query payload, fetching the completed required tasks and output location
-            task_query = self.storage_socket.get_queue(
-                id=self.required_tasks, status=["COMPLETE", "ERROR"], projection={"base_result": True,
-                                                                                  "status": True})
-            # If all tasks are not complete, return a False
-            if len(task_query["data"]) != len(self.required_tasks):
-                return False
+        # Create the query payload, fetching the completed required tasks and output location
+        task_query = self.storage_socket.get_queue(
+            id=self.required_tasks, status=["COMPLETE", "ERROR"], projection={"base_result": True,
+                                                                              "status": True})
+        # If all tasks are not complete, return a False
+        if len(task_query["data"]) != len(self.required_tasks):
+            return False
 
-            if "ERROR" in set(x["status"] for x in task_query["data"]):
-                raise KeyError("All tasks did not execute successfully.")
+        if "ERROR" in set(x["status"] for x in task_query["data"]):
+            raise KeyError("All tasks did not execute successfully.")
 
-            # Create a lookup table for task ID mapping to result from that task in the procedure table
-            inv_task_lookup = {
-                x["id"]: self.storage_socket.get_procedures_by_id(id=x["base_result"]["id"])["data"][0]
-                for x in task_query["data"]
-            }
+        # Create a lookup table for task ID mapping to result from that task in the procedure table
+        inv_task_lookup = {
+            x["id"]: self.storage_socket.get_procedures_by_id(id=x["base_result"]["id"])["data"][0]
+            for x in task_query["data"]
+        }
 
-            # Populate task results
-            task_results = {}
-            for key, task_ids in self.task_map.items():
-                task_results[key] = []
+        # Populate task results
+        task_results = {}
+        for key, task_ids in self.task_map.items():
+            task_results[key] = []
 
-                # Check for history key
-                if key not in self.optimization_history:
-                    self.optimization_history[key] = []
+            # Check for history key
+            if key not in self.optimization_history:
+                self.optimization_history[key] = []
 
-                for task_id in task_ids:
-                    # Cycle through all tasks for this entry
-                    ret = inv_task_lookup[task_id]
+            for task_id in task_ids:
+                # Cycle through all tasks for this entry
+                ret = inv_task_lookup[task_id]
 
-                    # Lookup molecules
-                    mol_keys = self.storage_socket.get_molecules(
-                        [ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
+                # Lookup molecules
+                mol_keys = self.storage_socket.get_molecules(
+                    [ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
 
-                    task_results[key].append((mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1]))
+                task_results[key].append((mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1]))
 
-                    # Update history
-                    self.optimization_history[key].append(ret["id"])
+                # Update history
+                self.optimization_history[key].append(ret["id"])
 
-            td_api.update_state(self.torsiondrive_state, task_results)
-
-            # print("\nTorsionDrive State Updated:")
-            # print(json.dumps(self.torsiondrive_state, indent=2))
-
-        # Figure out if we are still waiting on tasks
+        td_api.update_state(self.torsiondrive_state, task_results)
 
         # Create new tasks from the current state
         next_tasks = td_api.next_jobs_from_state(self.torsiondrive_state, verbose=True)
@@ -196,9 +182,6 @@ class TorsionDriveService(BaseModel):
 
     def submit_optimization_tasks(self, task_dict):
 
-        # Prepare optimization
-        initial_molecule = json.dumps(self.molecule_template)
-
         procedure_parser = procedures.get_procedure_parser("optimization", self.storage_socket)
 
         full_tasks = []
@@ -212,7 +195,7 @@ class TorsionDriveService(BaseModel):
                 packet = json.loads(self.optimization_template)
 
                 # Construct constraints
-                constraints = copy.deepcopy(self.torsiondrive_meta["dihedral_template"])
+                constraints = json.loads(self.dihedral_template)
                 grid_id = td_api.grid_id_from_string(key)
                 if len(grid_id) == 1:
                     constraints[0]["value"] = grid_id[0]
@@ -221,7 +204,8 @@ class TorsionDriveService(BaseModel):
                         constraints[con_num]["value"] = k
                 packet["meta"]["keywords"]["constraints"] = {"set": constraints}
 
-                mol = json.loads(initial_molecule)
+                # Build new molecule
+                mol = json.loads(self.molecule_template)
                 mol["geometry"] = geom
                 packet["data"] = [mol]
 
@@ -242,7 +226,6 @@ class TorsionDriveService(BaseModel):
 
         # Add tasks to Nanny
         ret = self.storage_socket.queue_submit(full_tasks)
-        self.queue_keys = ret["data"]
         if len(ret["meta"]["duplicates"]):
             raise RuntimeError("It appears that one of the tasks you submitted is already in the queue, but was "
                                "not there when the tasks were populated.\n"
@@ -257,9 +240,6 @@ class TorsionDriveService(BaseModel):
             task_map[key][list_index] = returned_id
         self.task_map = task_map
         self.required_tasks = list({x for v in task_map.values() for x in v})
-
-        # TODO edit remaining tasks to reflect duplicates
-        self.remaining_tasks = len(self.required_tasks)
 
     def finalize(self):
         # Add finalize state
