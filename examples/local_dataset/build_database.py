@@ -14,7 +14,7 @@ helium_dimer = portal.Molecule.from_data("He 0 0 -5\n--\nHe 0 0 5", dtype="psi4"
 # Add several intermolecular interaction, dimers are automatically fragmented
 ds.add_ie_rxn("Water Dimer", water_dimer)
 ds.add_ie_rxn("Water Dimer Stretch", water_dimer_stretch)
-# ds.add_ie_rxn("Helium Dimer", helium_dimer)
+ds.add_ie_rxn("Helium Dimer", helium_dimer)
 
 # Build a interface to the server 
 p = portal.FractalClient("localhost:7777", verify=False)

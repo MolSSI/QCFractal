@@ -407,6 +407,11 @@ class MongoengineSocket:
         # Build a dictionary of new molecules
         new_mols = {}
         for key, dmol in data.items():
+
+            # All molecules must be fixed
+            dmol["fix_com"] = True
+            dmol["fix_orientation"] = True
+
             mol = interface.Molecule(**dmol, orient=False)
             new_mols[key] = mol
 
