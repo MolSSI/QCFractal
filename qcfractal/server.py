@@ -257,7 +257,7 @@ class FractalServer:
         # Add the socket to passed args
         client = interface.FractalClient(self._address, verify=self.client_verify)
         self.objects["queue_manager"] = queue.QueueManager(
-            client, self.queue_socket, loop=self.loop, logger=self.logger, cluster="FractalServer")
+            client, self.queue_socket, loop=self.loop, logger=self.logger, cluster="FractalServer", verbose=False)
 
     def start(self):
         """
@@ -376,7 +376,7 @@ class FractalServer:
             try:
                 obj = services.build(data["service"], self.storage, data)
                 finished = obj.iterate()
-                data = obj.get_json()
+                data = obj.dict()
             except Exception as e:
                 print(traceback.format_exc())
                 data["status"] = "ERROR"

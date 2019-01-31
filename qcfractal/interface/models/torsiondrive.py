@@ -8,7 +8,7 @@ import json
 from typing import Any, Dict, List, Tuple, Union
 from pydantic import BaseModel
 
-from .common_models import QCMeta, Provenance, Molecule, json_encoders
+from .common_models import QCMeta, Provenance, Molecule, json_encoders, hash_dictionary
 
 __all__ = ["TorsionDriveInput", "TorsionDrive"]
 
@@ -38,6 +38,8 @@ class TorsionDriveInput(BaseModel):
             allow_extra = True
             allow_mutation = False
 
+    program: str = "torsiondrive"
+    procedure: str = "torsiondrive"
     initial_molecule: Molecule
     torsiondrive_meta: TDOptions
     optimization_meta: OptOptions
@@ -46,6 +48,15 @@ class TorsionDriveInput(BaseModel):
     class Config:
         allow_mutation = False
         json_encoders = json_encoders
+
+    def get_hash_index(self):
+        if self.initial_molecule.id is None:
+            raise ValueError("Cannot get has without a valid intial_molecule.id field.")
+
+        data = self.dict(include=["program", "procedure", "torsiondrive_meta", "optimization_meta", "qc_meta"])
+        data["initial_molecule"] = self.initial_molecule.id
+
+        return hash_dictionary(data)
 
 
 class TorsionDrive(TorsionDriveInput):

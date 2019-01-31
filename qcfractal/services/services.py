@@ -52,6 +52,6 @@ def build(name, storage_socket, data):
     """
     name = name.lower()
     if name == "torsiondrive":
-        return TorsionDriveService(storage_socket, data)
+        return TorsionDriveService(**data, storage_socket=storage_socket)
     else:
         raise KeyError("Name {} not recognized.".format(name.title()))

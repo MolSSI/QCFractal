@@ -48,7 +48,8 @@ class QueueManager:
                  max_tasks: int=1000,
                  queue_tag: str=None,
                  cluster: str="unknown",
-                 update_frequency: int=2):
+                 update_frequency: int=2,
+                 verbose: bool=True):
         """
         Parameters
         ----------
@@ -85,6 +86,7 @@ class QueueManager:
         self.queue_adapter = build_queue_adapter(queue_client, logger=self.logger)
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag
+        self.verbose = verbose
 
         self.update_frequency = update_frequency
         self.periodic = {}
@@ -103,16 +105,18 @@ class QueueManager:
         self.logger.info("QueueManager:")
         self.logger.info("    Version:         {}\n".format(get_versions()["version"]))
 
-        self.logger.info("    Name Information:")
-        self.logger.info("        Cluster:     {}".format(self.name_data["cluster"]))
-        self.logger.info("        Hostname:    {}".format(self.name_data["hostname"]))
-        self.logger.info("        UUID:        {}\n".format(self.name_data["uuid"]))
+        if self.verbose:
+            self.logger.info("    Name Information:")
+            self.logger.info("        Cluster:     {}".format(self.name_data["cluster"]))
+            self.logger.info("        Hostname:    {}".format(self.name_data["hostname"]))
+            self.logger.info("        UUID:        {}\n".format(self.name_data["uuid"]))
 
         self.logger.info("    Queue Adapter:")
         self.logger.info("        {}\n".format(self.queue_adapter))
 
-        self.logger.info("    QCEngine:")
-        self.logger.info("        Version:    {}\n".format(qcengine.__version__))
+        if self.verbose:
+            self.logger.info("    QCEngine:")
+            self.logger.info("        Version:    {}\n".format(qcengine.__version__))
 
         # DGAS Note: Note super happy about how this if/else turned out. Looking for alternatives.
         if self.connected():
@@ -127,12 +131,13 @@ class QueueManager:
             payload["data"]["operation"] = "startup"
             self.client._request("put", "queue_manager", payload)
 
-            self.logger.info("    Connected:")
-            self.logger.info("        Version:     {}".format(self.server_version))
-            self.logger.info("        Address:     {}".format(self.client.address))
-            self.logger.info("        Name:        {}".format(self.server_name))
-            self.logger.info("        Queue tag:   {}".format(self.queue_tag))
-            self.logger.info("        Username:    {}\n".format(self.client.username))
+            if self.verbose:
+                self.logger.info("    Connected:")
+                self.logger.info("        Version:     {}".format(self.server_version))
+                self.logger.info("        Address:     {}".format(self.client.address))
+                self.logger.info("        Name:        {}".format(self.server_name))
+                self.logger.info("        Queue tag:   {}".format(self.queue_tag))
+                self.logger.info("        Username:    {}\n".format(self.client.username))
 
         else:
             self.logger.info("    QCFractal server information:")
