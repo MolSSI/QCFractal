@@ -325,6 +325,10 @@ class TaskQueue(CustomDynamicDocument):
 
 class ServiceQueue(CustomDynamicDocument):
 
+    status = db.StringField()
+    tag = db.StringField(default=None)
+    hash_index = db.StringField()
+
     meta = {
         'indexes': [
             'status',
@@ -348,13 +352,21 @@ class User(CustomDynamicDocument):
 
 
 class QueueManager(CustomDynamicDocument):
+    """
+    """
 
     name = db.StringField(unique=True)
-    completed = db.IntField()
-    submitted = db.IntField()
-    failures = db.IntField()
-    returned = db.IntField()
-    status = db.StringField(default='INACTIVE')
+    cluster = db.StringField()
+    hostname = db.StringField()
+    uuid = db.StringField()
+
+    # counts
+    completed = db.IntField(default=0)
+    submitted = db.IntField(default=0)
+    failures = db.IntField(default=0)
+    returned = db.IntField(default=0)
+
+    status = db.StringField(default='INACTIVE', choices=['ACTIVE', 'INACTIVE'])
 
     created_on = db.DateTimeField(required=True, default=datetime.datetime.now)
     modified_on = db.DateTimeField(required=True, default=datetime.datetime.now)

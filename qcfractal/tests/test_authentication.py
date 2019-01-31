@@ -44,7 +44,6 @@ def sec_server(request):
 
         # Clean and re-init the databse
         server.storage.client.drop_database(server.storage._project_name)
-        server.storage.init_database()
 
         # Add local users
         for k, v in _users.items():

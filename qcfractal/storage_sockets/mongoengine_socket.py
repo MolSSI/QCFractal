@@ -158,44 +158,12 @@ class MongoengineSocket:
         self._tables = self.client[project]
         self._max_limit = max_limit
 
-        # new_table = self.init_database()
-        # for k, v in new_table.items():
-        #     if v:
-        #         self.logger.info("Add '{}' table to the database!".format(k))
+        QueueManager.objects(name='').first()  # init
 
     ### Mongo meta functions
 
     def __str__(self):
         return "<MongoSocket: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._tables_name))
-
-    def init_database(self):
-        """
-        Builds out the initial project structure.
-
-        This is the Mongo definition of "Database"
-        """
-        # Try to create a collection for each entry
-        table_creation = {}
-        # for table in self._valid_tables:
-        #     try:
-        #         # MongoDB "Collection" -> QCFractal "Table"
-        #         self._tables.create_collection(table)
-        #         table_creation[table] = True
-        #
-        #     except pymongo.errors.CollectionInvalid:
-        #         table_creation[table] = False
-
-        # Build the indices
-        # for table, indices in self._table_indices.items():
-        #     idx = [(x, pymongo.ASCENDING) for x in indices if x != "hash_index"]
-        #     self._tables[table].create_index(idx, unique=self._table_unique_indices[table])
-
-        # # Special queue index, hash_index should be unique
-        # for table in ["task_queue", "service_queue"]:
-        #     self._tables[table].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
-
-        # Return the success array
-        return table_creation
 
     def _clear_db(self, db_name: str):
         """Dangerous, make sure you are deleting the right DB"""
@@ -1780,7 +1748,7 @@ class MongoengineSocket:
             if value in kwargs:
                 upd[value] = kwargs[value]
 
-        QueueManager.objects()  # init
+        # QueueManager.objects()  # init
         r = QueueManager.objects(name=name).update(**upd, upsert=True, modified_on=dt.utcnow())
         return r == 1
 
