@@ -5,8 +5,11 @@ import json
 
 import tornado.web
 
-from .interface.models.rest_models import (MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
-                                           OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse)
+from .interface.models.rest_models import (
+    MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
+    OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse,
+    CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse
+)
 
 
 class APIHandler(tornado.web.RequestHandler):
@@ -134,7 +137,9 @@ class MoleculeHandler(APIHandler):
         body = MoleculePOSTBody.parse_raw(self.request.body)
         ret = storage.add_molecules(body.data)
         response = MoleculePOSTResponse(**ret)
+
         self.logger.info("POST: Molecule - {} inserted.".format(response.meta.n_inserted))
+
         self.write(response.json())
 
 
@@ -147,9 +152,11 @@ class OptionHandler(APIHandler):
         self.authenticate("read")
 
         storage = self.objects["storage_socket"]
+
         body = OptionGETBody.parse_raw(self.request.body)
         ret = storage.get_options(**body.data, with_ids=False)
         options = OptionGETResponse(**ret)
+
         self.logger.info("GET: Options - {} pulls.".format(len(options.data)))
 
         self.write(options.json())
@@ -162,7 +169,9 @@ class OptionHandler(APIHandler):
         body = OptionPOSTBody.parse_raw(self.request.body)
         ret = storage.add_options(body.data)
         response = OptionPOSTResponse(**ret)
+
         self.logger.info("POST: Options - {} inserted.".format(response.meta.n_inserted))
+
         self.write(response.json())
 
 
@@ -176,25 +185,29 @@ class CollectionHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        ret = storage.get_collections(**self.json["data"])
-        self.logger.info("GET: Collections - {} pulls.".format(len(ret["data"])))
+        body = CollectionGETBody.parse_raw(self.request.body)
+        cols = storage.get_collections(**body.data.dict())
+        response = CollectionGETResponse(**cols)
+        self.logger.info("GET: Options - {} pulls.".format(len(response.data)))
 
-        self.write(ret)
+        self.write(response.json())
 
     def post(self):
         self.authenticate("write")
 
         storage = self.objects["storage_socket"]
 
-        overwrite = self.json["meta"].get("overwrite", False)
+        body = CollectionPOSTBody.parse_raw(self.request.body)
+        ret = storage.add_collection(body.data.collection,
+                                     body.data.name,
+                                     body.data.dict(exclude={"collection", "name"}),
+                                     overwrite=body.meta.overwrite)
 
-        collection = self.json["data"].pop("collection")
-        name = self.json["data"].pop("name")
+        response = CollectionPOSTResponse(**ret)
 
-        ret = storage.add_collection(collection, name, self.json["data"], overwrite=overwrite)
-        self.logger.info("POST: Collections - {} inserted.".format(ret["meta"]["n_inserted"]))
+        self.logger.info("POST: Collections - {} inserted.".format(response.meta.n_inserted))
 
-        self.write(ret)
+        self.write(response.json())
 
 
 class ResultHandler(APIHandler):

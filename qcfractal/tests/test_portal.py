@@ -4,6 +4,7 @@ Tests the interface portal adapter to the REST API
 
 import qcfractal.interface as portal
 from qcfractal.testing import test_server
+import pytest
 
 
 # All tests should import test_server, but not use it
@@ -50,10 +51,31 @@ def test_collection_portal(test_server):
     client = portal.FractalClient(test_server)
 
     # Test add
-    ret = client.add_collection(db)
+    # import pdb; pdb.set_trace()
+    _ = client.add_collection(db)
 
     # Test get
     get_db = client.get_collection(db["collection"], db["name"], full_return=True)
-    del get_db["data"][0]["id"]
+    db_id = get_db.data[0].pop("id")
 
-    assert db == get_db["data"][0]
+    assert db == get_db.data[0]
+
+    # Test add w/o overwrite
+    ret = client.add_collection(db, full_return=True)
+    assert ret.meta.success is False
+
+    # Test that client is smart enough to trap non-id'ed overwrites
+    with pytest.raises(KeyError):
+        _ = client.add_collection(db, overwrite=True)
+
+    # Test that we cannot use a local key
+    db['id'] = 'local'
+    db['array'] = ["12345"]
+    with pytest.raises(KeyError):
+        _ = client.add_collection(db, overwrite=True)
+
+    # Finally test that we can overwrite
+    db['id'] = db_id
+    _ = client.add_collection(db, overwrite=True)
+    get_db = client.get_collection(db["collection"], db["name"], full_return=True)
+    assert get_db.data[0]['array'] == ["12345"]

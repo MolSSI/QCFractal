@@ -13,7 +13,8 @@ from .collections import collection_factory
 
 from .models import Molecule
 from .models.rest_models import (MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
-                                 OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse)
+                                 OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse,
+                                 CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse)
 
 
 class FractalClient(object):
@@ -277,15 +278,15 @@ class FractalClient(object):
         else:
             return [x["name"] for x in r.json()["data"]]
 
-    def get_collection(self, collection_type: str, collection_name: str, full_return: bool=False):
-        """Aquires a given collection from the server
+    def get_collection(self, collection_type: str, name: str, full_return: bool=False):
+        """Acquires a given collection from the server
 
         Parameters
         ----------
         collection_type : str
             The collection type to be accessed
-        collection_name : str
-            The name of the collection to be accssed
+        name : str
+            The name of the collection to be accessed
         full_return : bool, optional
             If False, returns a Collection object otherwise returns raw JSON
 
@@ -295,34 +296,36 @@ class FractalClient(object):
             A Collection object if the given collection was found otherwise returns `None`.
         """
 
-        payload = {"meta": {}, "data": {"collection": collection_type.lower(), "name": collection_name}}
-        r = self._request("get", "collection", payload)
-
+        body = CollectionGETBody(meta={}, data={"collection": collection_type, "name": name})
+        r = self._request("get", "collection", data=body.json())
+        cols = CollectionGETResponse.parse_raw(r.text)
         if full_return:
-            return r.json()
+            return cols
         else:
             # If nothing found
-            if len(r.json()["data"]):
-                return collection_factory(r.json()["data"][0], client=self)
+            if len(cols.data):
+                return collection_factory(cols.data[0], client=self)
             else:
-                raise KeyError("Collection '{}:{}' not found.".format(collection_type, collection_name))
+                raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
 
     def add_collection(self, collection: Dict[str, Any], overwrite: bool=False, full_return: bool=False):
 
         # Can take in either molecule or lists
 
-        if overwrite and ("id" not in collection):
-            raise KeyError("Attempting to overwrite collection, but no server ID found.")
+        if overwrite and ("id" not in collection or collection['id'] == 'local'):
+            raise KeyError("Attempting to overwrite collection, but no server ID found (cannot use 'local').")
 
         payload = {"meta": {"overwrite": overwrite}, "data": collection}
-
-        r = self._request("post", "collection", payload)
+        body = CollectionPOSTBody(**payload)
+        r = self._request("post", "collection", data=body.json())
         assert r.status_code == 200
+        r = CollectionPOSTResponse.parse_raw(r.text)
 
         if full_return:
-            return r.json()
+            return r
         else:
-            return r.json()["data"]
+            return r.data
+
 
     ### Results section
 

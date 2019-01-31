@@ -5,7 +5,8 @@ from qcelemental.models import Molecule
 from qcelemental.models.common_models import ndarray_encoder
 
 __all__ = ["MoleculeGETBody", "MoleculeGETResponse", "MoleculePOSTBody", "MoleculePOSTResponse",
-           "OptionGETBody", "OptionGETResponse", "OptionPOSTBody", "OptionPOSTResponse"]
+           "OptionGETBody", "OptionGETResponse", "OptionPOSTBody", "OptionPOSTResponse",
+           "CollectionGETBody", "CollectionGETResponse", "CollectionPOSTBody", "CollectionPOSTResponse"]
 
 
 ### Generic and Common Models
@@ -90,4 +91,57 @@ class OptionPOSTBody(BaseModel):
 
 class OptionPOSTResponse(BaseModel):
     data: List[str]
+    meta: ResponsePOSTMeta
+
+
+### Collections
+
+class CollectionGETBody(BaseModel):
+    class Data(BaseModel):
+        collection: str = None
+        name: str = None
+
+        @validator("collection")
+        def cast_to_lower(cls, v):
+            return v.lower()
+
+    meta: Dict = None
+    data: Data
+
+
+class CollectionGETResponse(BaseModel):
+    meta: ResponseGETMeta
+    data: List[Dict[str, Any]]
+
+    @validator("data", whole=True)
+    def ensure_collection_name_in_data_get_res(cls, v):
+        for col in v:
+            if "name" not in col or "collection" not in col:
+                raise ValueError("Dicts in 'data' must have both 'collection' and 'name'")
+        return v
+
+
+class CollectionPOSTBody(BaseModel):
+    class Meta(BaseModel):
+        overwrite: bool = False
+
+    class Data(BaseModel):
+        id: str = "local"  # Auto blocks overwriting
+        collection: str
+        name: str
+
+        @validator("collection")
+        def cast_to_lower(cls, v):
+            return v.lower()
+
+        class Config:
+            # Maps effectively Dict[str, Any] but enforces the collection and name fields
+            allow_extra = True
+
+    meta: Meta = Meta()
+    data: Data
+
+
+class CollectionPOSTResponse(BaseModel):
+    data: Union[str, None]
     meta: ResponsePOSTMeta

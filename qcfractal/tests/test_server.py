@@ -98,6 +98,8 @@ def test_storage_socket(test_server):
 
     storage_api_addr = test_server.get_address("collection")  # Targets and endpoint in the FractalServer
     storage = {"collection": "TorsionDrive", "name": "Torsion123", "something": "else", "array": ["54321"]}
+    # Cast collection type to lower since the server-side does it anyways
+    storage['collection'] = storage['collection'].lower()
 
     r = requests.post(storage_api_addr, json={"meta": {}, "data": storage})
     assert r.status_code == 200
