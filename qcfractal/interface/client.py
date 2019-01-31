@@ -14,7 +14,8 @@ from .collections import collection_factory
 from .models import Molecule
 from .models.rest_models import (MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
                                  OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse,
-                                 CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse)
+                                 CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
+                                 ResultGETBody, ResultGETResponse, ResultPOSTBody, ResultPOSTResponse)
 
 
 class FractalClient(object):
@@ -326,27 +327,22 @@ class FractalClient(object):
         else:
             return r.data
 
-
     ### Results section
 
-    def get_results(self, **kwargs):
+    def get_results(self, projection=None, return_full=False, **kwargs):
 
-        keys = ["program", "molecule", "driver", "method", "basis", "options", "hash_index", "task_id", "id", "status"]
-        query = {}
-        for key in keys:
-            if key in kwargs:
-                query[key] = kwargs[key]
+        payload = {"meta": {}, "data": kwargs}
+        if projection is not None:
+            payload["meta"]["projection"] = projection
 
-        payload = {"meta": {}, "data": query}
-        if "projection" in kwargs:
-            payload["meta"]["projection"] = kwargs["projection"]
+        body = ResultGETBody(**payload)
+        r = self._request("get", "result", data=body.json())
+        r = ResultGETResponse.parse_raw(r.text)
 
-        r = self._request("get", "result", payload)
-
-        if kwargs.get("return_full", False):
-            return r.json()
+        if return_full:
+            return r
         else:
-            return r.json()["data"]
+            return r.data
 
     def get_procedures(self, procedure_id: List[str], return_objects: bool=True):
 

@@ -6,7 +6,8 @@ from qcelemental.models.common_models import ndarray_encoder
 
 __all__ = ["MoleculeGETBody", "MoleculeGETResponse", "MoleculePOSTBody", "MoleculePOSTResponse",
            "OptionGETBody", "OptionGETResponse", "OptionPOSTBody", "OptionPOSTResponse",
-           "CollectionGETBody", "CollectionGETResponse", "CollectionPOSTBody", "CollectionPOSTResponse"]
+           "CollectionGETBody", "CollectionGETResponse", "CollectionPOSTBody", "CollectionPOSTResponse",
+           "ResultGETBody", "ResultGETResponse", "ResultPOSTBody", "ResultPOSTResponse"]
 
 
 ### Generic and Common Models
@@ -143,5 +144,59 @@ class CollectionPOSTBody(BaseModel):
 
 
 class CollectionPOSTResponse(BaseModel):
+    data: Union[str, None]
+    meta: ResponsePOSTMeta
+    
+    
+### Result
+
+
+class ResultGETBody(BaseModel):
+    class Meta(BaseModel):
+        projection: Dict[str, Any] = None
+
+    meta: Meta = Meta()
+    data: Dict[str, Any]
+
+    @validator("data", whole=True)
+    def only_data_keys(cls, v):
+        keys = ["program", "molecule", "driver", "method", "basis", "options", "hash_index", "task_id", "id", "status"]
+        final_data = {key: v[key] for key in keys if key in v}
+        return final_data
+
+
+class ResultGETResponse(BaseModel):
+    meta: ResponseGETMeta
+    data: List[Dict[str, Any]]
+
+    @validator("data", whole=True, pre=True)
+    def ensure_list_of_dict(cls, v):
+        if isinstance(v, dict):
+            return [v]
+        return v
+
+
+class ResultPOSTBody(BaseModel):
+    class Meta(BaseModel):
+        overwrite: bool = False
+
+    class Data(BaseModel):
+        id: str = "local"  # Auto blocks overwriting
+        collection: str
+        name: str
+
+        @validator("collection")
+        def cast_to_lower(cls, v):
+            return v.lower()
+
+        class Config:
+            # Maps effectively Dict[str, Any] but enforces the collection and name fields
+            allow_extra = True
+
+    meta: Meta = Meta()
+    data: Data
+
+
+class ResultPOSTResponse(BaseModel):
     data: Union[str, None]
     meta: ResponsePOSTMeta

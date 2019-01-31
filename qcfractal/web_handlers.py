@@ -8,7 +8,8 @@ import tornado.web
 from .interface.models.rest_models import (
     MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
     OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse,
-    CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse
+    CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
+    ResultGETBody, ResultGETResponse, ResultPOSTBody, ResultPOSTResponse
 )
 
 
@@ -219,16 +220,17 @@ class ResultHandler(APIHandler):
         self.authenticate("read")
 
         storage = self.objects["storage_socket"]
-        proj = self.json["meta"].get("projection", None)
 
-        if "id" in self.json["data"]:
-            ret = storage.get_results_by_id(self.json["data"]["id"], projection=proj)
-        elif 'task_id' in self.json["data"]:
-            ret = storage.get_results_by_task_id(self.json["data"]["task_id"], projection=proj)
+        body = ResultGETBody.parse_raw(self.request.body)
+        proj = body.meta.projection
+        if 'id' in body.data:
+            ret = storage.get_results_by_id(body.data['id'], projection=proj)
+        elif 'task_id' in body.data:
+            ret = storage.get_results_by_task_id(body.data['task_id'], projection=proj)
         else:
-            ret = storage.get_results(**self.json["data"], projection=proj)
-        self.logger.info("GET: Results - {} pulls.".format(len(ret["data"])))
-
+            ret = storage.get_results(**body.data, projection=proj)
+        result = ResultGETResponse(**ret)
+        self.logger.info("GET: Results - {} pulls.".format(len(result.data)))
         self.write(ret)
 
     def post(self):
