@@ -5,7 +5,8 @@ import json
 
 import tornado.web
 
-from .interface.models.rest_models import MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse
+from .interface.models.rest_models import (MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
+                                           OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse)
 
 
 class APIHandler(tornado.web.RequestHandler):
@@ -146,21 +147,23 @@ class OptionHandler(APIHandler):
         self.authenticate("read")
 
         storage = self.objects["storage_socket"]
+        body = OptionGETBody.parse_raw(self.request.body)
+        ret = storage.get_options(**body.data, with_ids=False)
+        options = OptionGETResponse(**ret)
+        self.logger.info("GET: Options - {} pulls.".format(len(options.data)))
 
-        ret = storage.get_options(**self.json["data"], with_ids=False)
-        self.logger.info("GET: Options - {} pulls.".format(len(ret["data"])))
-
-        self.write(ret)
+        self.write(options.json())
 
     def post(self):
         self.authenticate("write")
 
         storage = self.objects["storage_socket"]
 
-        ret = storage.add_options(self.json["data"])
-        self.logger.info("POST: Options - {} inserted.".format(ret["meta"]["n_inserted"]))
-
-        self.write(ret)
+        body = OptionPOSTBody.parse_raw(self.request.body)
+        ret = storage.add_options(body.data)
+        response = OptionPOSTResponse(**ret)
+        self.logger.info("POST: Options - {} inserted.".format(response.meta.n_inserted))
+        self.write(response.json())
 
 
 class CollectionHandler(APIHandler):

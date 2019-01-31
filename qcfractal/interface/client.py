@@ -12,7 +12,8 @@ from . import orm
 from .collections import collection_factory
 
 from .models import Molecule
-from .models.rest_models import MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse
+from .models.rest_models import (MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
+                                 OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse)
 
 
 class FractalClient(object):
@@ -213,18 +214,7 @@ class FractalClient(object):
             A (key: molecule id) dictionary of added molecules.
 
         """
-        # Can take in either molecule or lists
 
-        # mol_submission = {}
-        # for key, mol in mol_list.items():
-        #     if isinstance(mol, Molecule):
-        #         mol_submission[key] = mol.json(as_dict=True)
-        #     elif isinstance(mol, dict):
-        #         mol_submission[key] = mol
-        #     else:
-        #         raise TypeError("Input molecule type '{}' not recognized".format(type(mol)))
-
-        # payload = {"meta": {}, "data": mol_submission}
         body = MoleculePOSTBody(meta={}, data=mol_list)
         r = self._request("post", "molecule", data=body.json())
         r = MoleculePOSTResponse.parse_raw(r.text)
@@ -238,27 +228,22 @@ class FractalClient(object):
 
     def get_options(self, opt_list):
 
-        # Logic to figure out if we are doing single/multiple pulling.
-        # Need to fix later
-        # if not isinstance(opt_list, (tuple, list)):
-        #     opt_list = [opt_list]
+        body = OptionGETBody(meta={}, data=opt_list)
+        r = self._request("get", "option", data=body.json())
+        r = OptionGETResponse.parse_raw(r.text)
 
-        payload = {"meta": {}, "data": opt_list}
-        r = self._request("get", "option", payload)
-
-        return r.json()["data"]
+        return r.data
 
     def add_options(self, opt_list: List[Dict[str, Any]], full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
 
-        # Can take in either molecule or lists
-
-        payload = {"meta": {}, "data": opt_list}
-        r = self._request("post", "option", payload)
+        body = OptionPOSTBody(meta={}, data=opt_list)
+        r = self._request("post", "option", data=body.json())
+        r = OptionPOSTResponse.parse_raw(r.text)
 
         if full_return:
-            return r.json()
+            return r
         else:
-            return r.json()["data"]
+            return r.data
 
     ### Collections section
 

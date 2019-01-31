@@ -1,11 +1,14 @@
 from pydantic import BaseModel, validator
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union, Any
 from enum import Enum
 from qcelemental.models import Molecule
 from qcelemental.models.common_models import ndarray_encoder
 
-__all__ = ["MoleculeGETBody", "MoleculeGETResponse", "MoleculePOSTBody", "MoleculePOSTResponse"]
+__all__ = ["MoleculeGETBody", "MoleculeGETResponse", "MoleculePOSTBody", "MoleculePOSTResponse",
+           "OptionGETBody", "OptionGETResponse", "OptionPOSTBody", "OptionPOSTResponse"]
 
+
+### Generic and Common Models
 
 class ResponseMeta(BaseModel):
     errors: List[Tuple[str, str]]
@@ -24,7 +27,7 @@ class ResponsePOSTMeta(ResponseMeta):
     validation_errors: List[str]
 
 
-## Molecule response
+### Molecule response
 
 
 class MoleculeIndices(Enum):
@@ -37,8 +40,8 @@ class MoleculeGETBody(BaseModel):
     class Meta(BaseModel):
         index: MoleculeIndices
 
-    meta: Meta
     data: List[str]
+    meta: Meta
 
 
 class MoleculeGETResponse(BaseModel):
@@ -50,15 +53,8 @@ class MoleculeGETResponse(BaseModel):
 
 
 class MoleculePOSTBody(BaseModel):
-
-    meta: dict = None
+    meta: Dict = None
     data: Dict[str, Molecule]
-
-    @validator('meta')
-    def meta_must_be_empty(cls, v):
-        """Ensure meta for molecule POST is empty (might be overkill, we could just ignore)"""
-        if v:
-            raise ValueError("No molecule POST meta options are available at this time")
 
     class Config:
         json_encoders = {**ndarray_encoder}
@@ -67,3 +63,31 @@ class MoleculePOSTBody(BaseModel):
 class MoleculePOSTResponse(BaseModel):
     meta: ResponsePOSTMeta
     data: Dict[str, str]
+
+
+### Options
+
+class OptionGETBody(BaseModel):
+    meta: Dict = None
+    data: Dict[str, Any]
+
+
+class OptionGETResponse(BaseModel):
+    meta: ResponseGETMeta
+    data: List[Dict[str, Any]]
+
+
+class OptionPOSTBody(BaseModel):
+    meta: Dict = None
+    data: List[Dict[str, Any]]
+
+    @validator("data", whole=True, pre=True)
+    def cast_dict_to_list_of_dict(cls, v):
+        if isinstance(v, dict):
+            return [v]
+        return v
+
+
+class OptionPOSTResponse(BaseModel):
+    data: List[str]
+    meta: ResponsePOSTMeta
