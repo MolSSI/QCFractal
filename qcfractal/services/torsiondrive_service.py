@@ -15,6 +15,9 @@ except ImportError:
 
 from qcfractal import procedures
 from qcfractal.interface import schema
+from qcfractal.interface.models.torsiondrive import TorsionDriveInput
+
+from pydantic import BaseModel
 
 __all__ = ["TorsionDriveService"]
 
@@ -23,6 +26,13 @@ def _check_td():
     if td_api is None:
         raise ImportError("Unable to find TorsionDrive which must be installed to use the TorsionDriveService")
 
+
+class TDData(BaseModel):
+
+    input: TorsionDriveInput
+    status: str= "READY"
+    required_tasks
+    initial_molecule
 
 class TorsionDriveService:
     def __init__(self, storage_socket, data):
@@ -38,6 +48,8 @@ class TorsionDriveService:
     def initialize_from_api(cls, storage_socket, meta, molecule):
         _check_td()
 
+        tdinput = TorsionDriveInput(**meta, initial_molecule=molecule)
+
         # Grab initial molecule
         meta["initial_molecule"] = molecule["id"]
 
@@ -51,10 +63,10 @@ class TorsionDriveService:
 
         # Initiate torsiondrive meta
         meta["torsiondrive_state"] = td_api.create_initial_state(
-            dihedrals=meta["torsiondrive_meta"]["dihedrals"],
-            grid_spacing=meta["torsiondrive_meta"]["grid_spacing"],
-            elements=molecule_template["symbols"],
-            init_coords=[molecule_template["geometry"]])
+            dihedrals=tdinput.torsiondrive_meta.dihedrals,
+            grid_spacing=tdinput.torsiondrive_meta.grid_spacing,
+            elements=tdinput.initial_molecule.symbols,
+            init_coords=[tdinput.initial_molecule.geometry.ravel().tolist()])
 
         # Save initial molecule and add hash
         meta["status"] = "READY"
