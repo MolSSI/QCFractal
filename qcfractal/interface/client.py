@@ -15,7 +15,8 @@ from .models import Molecule
 from .models.rest_models import (MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
                                  OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse,
                                  CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
-                                 ResultGETBody, ResultGETResponse, ResultPOSTBody, ResultPOSTResponse)
+                                 ResultGETBody, ResultGETResponse,
+                                 ProcedureGETBody, ProcedureGETReponse)
 
 
 class FractalClient(object):
@@ -344,19 +345,21 @@ class FractalClient(object):
         else:
             return r.data
 
-    def get_procedures(self, procedure_id: List[str], return_objects: bool=True):
+    def get_procedures(self, procedure_query: Dict[str, Any], return_objects: bool=True):
 
-        payload = {"meta": {}, "data": procedure_id}
-        r = self._request("get", "procedure", payload)
+        body = ProcedureGETBody(data=procedure_query)
+        r = self._request("get", "procedure", data=body.json())
+        r = ProcedureGETReponse.parse_raw(r.text)
 
         if return_objects:
             ret = []
-            for packet in r.json()["data"]:
+            for packet in r.data:
                 tmp = orm.build_orm(packet, client=self)
                 ret.append(tmp)
             return ret
         else:
-            return r.json()
+            # Equivalent to full_return from other gets
+            return r
 
     # Must compute results?
     # def add_results(self, db, full_return=False):

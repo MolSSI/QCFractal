@@ -7,7 +7,8 @@ from qcelemental.models.common_models import ndarray_encoder
 __all__ = ["MoleculeGETBody", "MoleculeGETResponse", "MoleculePOSTBody", "MoleculePOSTResponse",
            "OptionGETBody", "OptionGETResponse", "OptionPOSTBody", "OptionPOSTResponse",
            "CollectionGETBody", "CollectionGETResponse", "CollectionPOSTBody", "CollectionPOSTResponse",
-           "ResultGETBody", "ResultGETResponse", "ResultPOSTBody", "ResultPOSTResponse"]
+           "ResultGETBody", "ResultGETResponse", "ResultPOSTBody", "ResultPOSTResponse",
+           "ProcedureGETBody", "ProcedureGETReponse"]
 
 
 ### Generic and Common Models
@@ -127,7 +128,7 @@ class CollectionPOSTBody(BaseModel):
         overwrite: bool = False
 
     class Data(BaseModel):
-        id: str = "local"  # Auto blocks overwriting
+        id: str = "local"  # Auto blocks overwriting in mongoengine_socket
         collection: str
         name: str
 
@@ -200,3 +201,21 @@ class ResultPOSTBody(BaseModel):
 class ResultPOSTResponse(BaseModel):
     data: Union[str, None]
     meta: ResponsePOSTMeta
+
+
+### Procedures
+
+class ProcedureGETBody(BaseModel):
+    meta: Dict[str, Any] = {}
+    data: Dict[str, Any]
+
+
+class ProcedureGETReponse(BaseModel):
+    meta: ResponseGETMeta
+    data: List[Dict[str, Any]]
+
+    @validator("data", whole=True, pre=True)
+    def convert_dict_to_list_of_dict(cls, v):
+        if isinstance(v, dict):
+            return [v]
+        return v

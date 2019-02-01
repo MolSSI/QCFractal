@@ -9,7 +9,8 @@ from .interface.models.rest_models import (
     MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
     OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse,
     CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
-    ResultGETBody, ResultGETResponse, ResultPOSTBody, ResultPOSTResponse
+    ResultGETBody, ResultGETResponse,
+    ProcedureGETBody, ProcedureGETReponse
 )
 
 
@@ -51,12 +52,6 @@ class APIHandler(tornado.web.RequestHandler):
         verified, msg = self.objects["storage_socket"].verify_user(username, password, permission)
         if verified is False:
             raise tornado.web.HTTPError(status_code=401, reason=msg)
-
-    # def build_body(self, obj_type):
-    #     try:
-    #         return obj_type(self.rquest.body)
-    #     except pydantic.ValidationError as e:
-    #         raise tornado.web.HTTPError(status_code=401, reason=str(e))
 
 
 class InformationHandler(APIHandler):
@@ -231,17 +226,7 @@ class ResultHandler(APIHandler):
             ret = storage.get_results(**body.data, projection=proj)
         result = ResultGETResponse(**ret)
         self.logger.info("GET: Results - {} pulls.".format(len(result.data)))
-        self.write(ret)
-
-    def post(self):
-        self.authenticate("write")
-
-        storage = self.objects["storage_socket"]
-
-        ret = storage.add_results(self.json["data"])
-        self.logger.info("POST: Results - {} inserted.".format(ret["meta"]["n_inserted"]))
-
-        self.write(ret)
+        self.write(result.json())
 
 
 class ProcedureHandler(APIHandler):
@@ -254,58 +239,19 @@ class ProcedureHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        if "id" in self.json["data"]:
-            ret = storage.get_procedures_by_id(id=self.json["data"]["id"])
-        elif "hash_index" in self.json["data"]:
-            ret = storage.get_procedures_by_id(hash_index=self.json["data"]["hash_index"])
-        elif 'task_id' in self.json["data"]:
-            ret = storage.get_procedures_by_task_id(self.json["data"]["task_id"])
+        body = ProcedureGETBody.parse_raw(self.request.body)
+
+        if "id" in body.data:
+            ret = storage.get_procedures_by_id(id=body.data["id"])
+        elif "hash_index" in body.data:
+            ret = storage.get_procedures_by_id(hash_index=body.data["hash_index"])
+        elif 'task_id' in body.data:
+            ret = storage.get_procedures_by_task_id(body.data["task_id"])
         else:
-            ret = storage.get_procedures(**self.json["data"])
-        self.logger.info("GET: Procedures - {} pulls.".format(len(ret["data"])))
+            ret = storage.get_procedures(**body.data)
 
-        self.write(ret)
+        response = ProcedureGETReponse(**ret)
+        self.logger.info("GET: Procedures - {} pulls.".format(len(response.data)))
 
-    # def _check_auth(objects, header):
-    #     auth = False
-    #     try:
-    #         objects["mongod_socket"].client.database_names()
-    #         username = "default"
-    #         auth = True
-    #     except pymongo.errors.OperationFailure:
+        self.write(response.json())
 
-    #         # The authenticate method should match a username and password
-    #         # to a username and password hash in the database users table.
-    #         db = self.objects["mongod_socket"][header["project"]]
-    #         try:
-    #             auth = db.authenticate(header["username"], header["password"])
-    #         except pymongo.errors.OperationFailure:
-    #             auth = False
-
-    #     if auth is not True:
-    #         raise KeyError("Could not authenticate user.")
-
-    # class Information(tornado.web.RequestHandler):
-    #     """
-    #     Obtains generic information about the Application Objects
-    #     """
-
-    #     def initialize(self, **objects):
-    #         self.objects = objects
-
-    #         if "logger" in list(self.objects):
-    #             self.logger = self.objects["logger"]
-    #         else:
-    #             self.logger = logging.getLogger('Information')
-    #         self.logger.info("INFO: %s" % self.request.method)
-
-    #     def get(self):
-    #         _check_auth(self.objects, self.request.headers)
-
-    #         queue = self.objects["queue_socket"]
-    #         mongod = self.objects["mongod_socket"]
-
-    #         ret = {}
-    #         ret["mongo_data"] = (mongod.url, mongod.port)
-    #         ret["dask_data"] = str(queue.host) + ":" + str(queue.port)
-    #         self.write(json.dumps(ret))
