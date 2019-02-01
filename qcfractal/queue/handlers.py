@@ -79,14 +79,14 @@ class ServiceQueueHandler(APIHandler):
             submitted_services.append(tmp)
 
         # Figure out complete services
-        service_hashes = [x.data["hash_index"] for x in submitted_services]
+        service_hashes = [x.hash_index for x in submitted_services]
         found_hashes = storage.get_procedures_by_id(hash_index=service_hashes, projection={"hash_index": True})
         found_hashes = set(x["hash_index"] for x in found_hashes["data"])
 
         new_services = []
         complete_tasks = []
         for x in submitted_services:
-            hash_index = x.data["hash_index"]
+            hash_index = x.hash_index
 
             if hash_index in found_hashes:
                 complete_tasks.append(hash_index)
@@ -94,7 +94,7 @@ class ServiceQueueHandler(APIHandler):
                 new_services.append(x)
 
         # Add services to database
-        ret = storage.add_services([service.get_json() for service in new_services])
+        ret = storage.add_services([service.json_dict() for service in new_services])
         self.logger.info("ServiceQueue: Added {} services.\n".format(ret["meta"]["n_inserted"]))
 
         ret["data"] = {"submitted": ret["data"], "completed": list(complete_tasks), "queue": ret["meta"]["duplicates"]}

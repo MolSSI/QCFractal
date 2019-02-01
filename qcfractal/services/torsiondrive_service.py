@@ -14,7 +14,11 @@ except ImportError:
     td_api = None
 
 from qcfractal import procedures
-from qcfractal.interface import schema
+from qcfractal.interface.models.torsiondrive import TorsionDrive
+from qcfractal.interface.models.common_models import json_encoders
+
+from typing import Any, Dict, List
+from pydantic import BaseModel
 
 __all__ = ["TorsionDriveService"]
 
@@ -24,176 +28,160 @@ def _check_td():
         raise ImportError("Unable to find TorsionDrive which must be installed to use the TorsionDriveService")
 
 
-class TorsionDriveService:
-    def __init__(self, storage_socket, data):
-        _check_td()
+class TorsionDriveService(BaseModel):
 
-        # Server interaction
-        self.storage_socket = storage_socket
+    storage_socket: Any
 
-        # Unpack data
-        self.data = data
+    # Index info
+    id: str = None
+    hash_index: str
+    success: bool = False
+    status: str = "READY"
+    service: str = "torsiondrive"
+    program: str = "torsiondrive"
+    procedure: str = "torsiondrive"
+
+    # Output
+    output: TorsionDrive
+
+    # Temporaries
+    torsiondrive_state: Dict[str, Any]
+    required_tasks: List[str] = []
+    task_map: Dict[str, List[str]] = {}
+    optimization_history: Dict[str, List[str]] = {}
+
+    # Templates
+    dihedral_template: str
+    optimization_template: str
+    molecule_template: str
+
+    class Config:
+        json_encoders = json_encoders
 
     @classmethod
     def initialize_from_api(cls, storage_socket, meta, molecule):
         _check_td()
 
-        # Grab initial molecule
-        meta["initial_molecule"] = molecule["id"]
+        # Validate input
+        output = TorsionDrive(
+            **meta,
+            initial_molecule=molecule["id"],
+            provenance={
+                "creator": "torsiondrive",
+                "version": torsiondrive.__version__,
+                "routine": "torsiondrive.td_api"
+            },
+            final_energy_dict={},
+            minimum_positions={},
+            optimization_history={})
 
-        # Copy initial intial input and build out a torsiondrive_state
-        meta = copy.deepcopy(meta)
+        meta = {"output": output}
 
-        # Remove identity info from template
+        # Remove identity info from molecule template
         molecule_template = copy.deepcopy(molecule)
         del molecule_template["id"]
         del molecule_template["identifiers"]
+        meta["molecule_template"] = json.dumps(molecule_template)
 
         # Initiate torsiondrive meta
         meta["torsiondrive_state"] = td_api.create_initial_state(
-            dihedrals=meta["torsiondrive_meta"]["dihedrals"],
-            grid_spacing=meta["torsiondrive_meta"]["grid_spacing"],
+            dihedrals=output.torsiondrive_meta.dihedrals,
+            grid_spacing=output.torsiondrive_meta.grid_spacing,
             elements=molecule_template["symbols"],
             init_coords=[molecule_template["geometry"]])
 
-        # Save initial molecule and add hash
-        meta["status"] = "READY"
-        meta["required_tasks"] = False
-        meta["remaining_tasks"] = False
-        meta["molecule_template"] = molecule_template
-        meta["optimization_history"] = {}
-
+        # Build dihedral template
         dihedral_template = []
-        for idx in meta["torsiondrive_meta"]["dihedrals"]:
+        for idx in output.torsiondrive_meta.dihedrals:
             tmp = {"type": "dihedral", "indices": idx}
             dihedral_template.append(tmp)
 
-        meta["torsiondrive_meta"]["dihedral_template"] = dihedral_template
+        meta["dihedral_template"] = json.dumps(dihedral_template)
+
+        # Build optimization template
+        meta["optimization_template"] = json.dumps({
+            "meta": {
+                "procedure": "optimization",
+                "keywords": output.optimization_meta.dict(),
+                "program": output.optimization_meta.program,
+                "qc_meta": output.qc_meta.dict(),
+                "tag": meta.pop("tag", None)
+            },
+        })
 
         # Move around geometric data
-        meta["optimization_program"] = meta["optimization_meta"].pop("program")
+        meta["optimization_program"] = output.optimization_meta.program
 
-        # Temporary hash index
-        single_keys = copy.deepcopy(meta["qc_meta"])
-        single_keys["molecule"] = meta["initial_molecule"]
-        keys = {
-            "type": "torsiondrive",
-            "program": "torsiondrive",
-            "keywords": meta["torsiondrive_meta"],
-            "optimization_keys": {
-                "procedure": meta["optimization_program"],
-                "keywords": meta["optimization_meta"],
-            },
-            "single_keys": schema.format_result_indices(single_keys)
-        }
+        meta["hash_index"] = output.get_hash_index()
 
-        meta["success"] = False
-        meta["procedure"] = "torsiondrive"
-        meta["program"] = "torsiondrive"
-        meta["hash_index"] = procedures.procedures_util.hash_procedure_keys(keys)
-        meta["hash_keys"] = keys
-        meta["tag"] = meta.pop("tag", None)
-        meta["provenance"] = {"creator": "torsiondrive",
-                              "version": torsiondrive.__version__,
-                              "route": "torsiondrive.td_api"}
+        return cls(**meta, storage_socket=storage_socket)
 
-        return cls(storage_socket, meta)
+    def dict(self, include=None, exclude=None, by_alias=False):
+        # return self.data
+        return super().dict(exclude={"storage_socket"})
 
-    def get_json(self):
-        return self.data
+    def json_dict(self):
+        return json.loads(self.json())
 
     def iterate(self):
 
-        self.data["status"] = "RUNNING"
-        if self.data["remaining_tasks"] is not False:
+        self.status = "RUNNING"
 
-            # Create the query payload, fetching the completed required tasks and output location
-            task_query = self.storage_socket.get_queue(
-                id=self.data["required_tasks"],
-                status=["COMPLETE", "ERROR"],
-                projection={"base_result": True,
-                            "status": True})
-            # If all tasks are not complete, return a False
-            if len(task_query["data"]) != len(self.data["required_tasks"]):
-                return False
+        # Create the query payload, fetching the completed required tasks and output location
+        task_query = self.storage_socket.get_queue(
+            id=self.required_tasks, status=["COMPLETE", "ERROR"], projection={"base_result": True,
+                                                                              "status": True})
+        # If all tasks are not complete, return a False
+        if len(task_query["data"]) != len(self.required_tasks):
+            return False
 
-            if "ERROR" in set(x["status"] for x in task_query["data"]):
-                raise KeyError("All tasks did not execute successfully.")
+        if "ERROR" in set(x["status"] for x in task_query["data"]):
+            raise KeyError("All tasks did not execute successfully.")
 
-            # Create a lookup table for task ID mapping to result from that task in the procedure table
-            inv_task_lookup = {
-                x["id"]: self.storage_socket.get_procedures_by_id(
-                    id=x["base_result"]["id"]
-                )["data"][0]
-                for x in task_query["data"]
-            }
+        # Create a lookup table for task ID mapping to result from that task in the procedure table
+        inv_task_lookup = {
+            x["id"]: self.storage_socket.get_procedures_by_id(id=x["base_result"]["id"])["data"][0]
+            for x in task_query["data"]
+        }
 
-            # Populate task results
-            task_results = {}
-            for key, task_ids in self.data["task_map"].items():
-                task_results[key] = []
+        # Populate task results
+        task_results = {}
+        for key, task_ids in self.task_map.items():
+            task_results[key] = []
 
-                # Check for history key
-                if key not in self.data["optimization_history"]:
-                    self.data["optimization_history"][key] = []
+            # Check for history key
+            if key not in self.optimization_history:
+                self.optimization_history[key] = []
 
-                for task_id in task_ids:
-                    # Cycle through all tasks for this entry
-                    ret = inv_task_lookup[task_id]
+            for task_id in task_ids:
+                # Cycle through all tasks for this entry
+                ret = inv_task_lookup[task_id]
 
-                    # Lookup molecules
-                    mol_keys = self.storage_socket.get_molecules(
-                        [ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
+                # Lookup molecules
+                mol_keys = self.storage_socket.get_molecules(
+                    [ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
 
-                    task_results[key].append((mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1]))
+                task_results[key].append((mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1]))
 
-                    # Update history
-                    self.data["optimization_history"][key].append(ret["id"])
+                # Update history
+                self.optimization_history[key].append(ret["id"])
 
-            td_api.update_state(self.data["torsiondrive_state"], task_results)
-
-            # print("\nTorsionDrive State Updated:")
-            # print(json.dumps(self.data["torsiondrive_state"], indent=2))
-
-        # Figure out if we are still waiting on tasks
+        td_api.update_state(self.torsiondrive_state, task_results)
 
         # Create new tasks from the current state
-        next_tasks = td_api.next_jobs_from_state(self.data["torsiondrive_state"], verbose=True)
-        # print("\n\nNext Jobs:\n" + str(next_tasks))
+        next_tasks = td_api.next_jobs_from_state(self.torsiondrive_state, verbose=True)
 
         # All done
         if len(next_tasks) == 0:
-            self.finalize()
-            return self.data
+            return self.finalize()
 
         self.submit_optimization_tasks(next_tasks)
 
         return False
-        # if len(next_tasks) == 0:
-        #     return self.finalize()
-
-        # step 5
-
-        # Save torsiondrive state
 
     def submit_optimization_tasks(self, task_dict):
 
-        # Prepare optimization
-        initial_molecule = json.dumps(self.data["molecule_template"])
-        meta_packet = json.dumps({
-            "meta": {
-                "procedure": "optimization",
-                "keywords": self.data["optimization_meta"],
-                "program": self.data["optimization_program"],
-                "qc_meta": self.data["qc_meta"],
-                "tag": self.data["tag"]
-            },
-        })
-
-        hook_template = json.dumps({
-            "document": ("service_queue", self.data["id"]),
-            "updates": [["inc", "remaining_tasks", -1]]
-        })
+        procedure_parser = procedures.get_procedure_parser("optimization", self.storage_socket)
 
         full_tasks = []
         task_map = {}
@@ -203,10 +191,10 @@ class TorsionDriveService:
             for num, geom in enumerate(geoms):
 
                 # Update molecule
-                packet = json.loads(meta_packet)
+                packet = json.loads(self.optimization_template)
 
                 # Construct constraints
-                constraints = copy.deepcopy(self.data["torsiondrive_meta"]["dihedral_template"])
+                constraints = json.loads(self.dihedral_template)
                 grid_id = td_api.grid_id_from_string(key)
                 if len(grid_id) == 1:
                     constraints[0]["value"] = grid_id[0]
@@ -215,21 +203,18 @@ class TorsionDriveService:
                         constraints[con_num]["value"] = k
                 packet["meta"]["keywords"]["constraints"] = {"set": constraints}
 
-                mol = json.loads(initial_molecule)
+                # Build new molecule
+                mol = json.loads(self.molecule_template)
                 mol["geometry"] = geom
                 packet["data"] = [mol]
 
                 # Turn packet into a full task, if there are duplicates, get the ID
-                procedure_parser = procedures.get_procedure_parser("optimization", self.storage_socket)
                 tasks, completed, errors = procedure_parser.parse_input(packet, duplicate_id="id")
 
                 if len(completed):
                     # Job is already complete
                     task_map[key].append(completed[0]["task_id"])
                 else:
-                    # Create a hook which will update the complete tasks uid
-                    hook = json.loads(hook_template)
-                    tasks[0]["hooks"].append(hook)
                     # Remember the full tasks map to update task_map later
                     submitted_hash_id_remap.append((key, num))
                     # Create a placeholder entry at that index for now, we'll update them all
@@ -240,7 +225,6 @@ class TorsionDriveService:
 
         # Add tasks to Nanny
         ret = self.storage_socket.queue_submit(full_tasks)
-        self.data["queue_keys"] = ret["data"]
         if len(ret["meta"]["duplicates"]):
             raise RuntimeError("It appears that one of the tasks you submitted is already in the queue, but was "
                                "not there when the tasks were populated.\n"
@@ -253,44 +237,29 @@ class TorsionDriveService:
         # Update task map based on task IDs
         for (key, list_index), returned_id in zip(submitted_hash_id_remap, ret['data']):
             task_map[key][list_index] = returned_id
-        self.data["task_map"] = task_map
-        self.data["required_tasks"] = list({x for v in task_map.values() for x in v})
-
-        # TODO edit remaining tasks to reflect duplicates
-        self.data["remaining_tasks"] = len(self.data["required_tasks"])
+        self.task_map = task_map
+        self.required_tasks = list({x for v in task_map.values() for x in v})
 
     def finalize(self):
-        # Add finalize state
-        # Parse remaining procedures
-        # Create a map of "tasks" so that procedures does not have to followed
-        self.data["success"] = True
-        self.data["status"] = "COMPLETE"
+        """
+        Finishes adding data to the TorsionDrive object
+        """
 
-        self.data["final_energies"] = {}
-        self.data["minimum_positions"] = {}
+        self.output.Config.allow_mutation = True
+        self.output.success = True
+        self.output.status = "COMPLETE"
 
         # # Get lowest energies and positions
-        for k, v in self.data["torsiondrive_state"]["grid_status"].items():
+        for k, v in self.torsiondrive_state["grid_status"].items():
             min_pos = int(np.argmin([x[2] for x in v]))
             key = json.dumps(td_api.grid_id_from_string(k))
-            self.data["minimum_positions"][key] = min_pos
-            self.data["final_energies"][key] = v[min_pos][2]
+            self.output.minimum_positions[key] = min_pos
+            self.output.final_energy_dict[key] = v[min_pos][2]
 
-        self.data["optimization_history"] = {
+        self.output.optimization_history = {
             json.dumps(td_api.grid_id_from_string(k)): v
-            for k, v in self.data["optimization_history"].items()
+            for k, v in self.optimization_history.items()
         }
 
-        # print(self.data["optimization_history"])
-        # print(self.data["minimum_positions"])
-        # print(self.data["final_energies"])
-
-        # Pop temporaries
-        del self.data["task_map"]
-        del self.data["remaining_tasks"]
-        del self.data["molecule_template"]
-        del self.data["queue_keys"]
-        del self.data["torsiondrive_state"]
-        del self.data["required_tasks"]
-
-        return self.data
+        self.output.Config.allow_mutation = False
+        return self.output

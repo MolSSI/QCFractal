@@ -8,6 +8,8 @@ from . import collection_utils
 from .collection import Collection
 from .. import orm
 
+from ..models.torsiondrive import TorsionDrive
+
 
 class OpenFFWorkflow(Collection):
     """
@@ -275,7 +277,7 @@ class OpenFFWorkflow(Collection):
 
         # Grab the data and update cache
         data = self.client.get_procedures({"hash_index":lookup})
-        self._torsiondrive_cache.update({x._hash_index: x for x in data})
+        self._torsiondrive_cache.update({x.hash_index: x for x in data})
 
     def list_final_energies(self, fragments=None, refresh_cache=False):
         """
@@ -308,7 +310,7 @@ class OpenFFWorkflow(Collection):
                 if v["hash_index"] in self._torsiondrive_cache:
                     # TODO figure out a better solution here
                     obj = self._torsiondrive_cache[v["hash_index"]]
-                    if isinstance(obj, orm.TorsionDriveORM):
+                    if isinstance(obj, TorsionDrive):
                         tmp[k] = obj.final_energies()
                     elif isinstance(obj, orm.OptimizationORM):
                         tmp[k] = obj.final_energy()
@@ -351,7 +353,7 @@ class OpenFFWorkflow(Collection):
             for k, v in self.data.fragments[frag].items():
                 if v["hash_index"] in self._torsiondrive_cache:
                     obj = self._torsiondrive_cache[v["hash_index"]]
-                    if isinstance(obj, orm.TorsionDriveORM):
+                    if isinstance(obj, TorsionDrive):
                         tmp[k] = obj.final_molecules()
                     elif isinstance(obj, orm.OptimizationORM):
                         tmp[k] = obj.final_molecule()

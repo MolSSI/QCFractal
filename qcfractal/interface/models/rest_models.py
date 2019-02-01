@@ -1,17 +1,23 @@
+"""
+Models for the REST interface
+"""
 from pydantic import BaseModel, validator
 from typing import Dict, List, Tuple, Union, Any
 from enum import Enum
-from qcelemental.models import Molecule
-from qcelemental.models.common_models import ndarray_encoder
 
-__all__ = ["MoleculeGETBody", "MoleculeGETResponse", "MoleculePOSTBody", "MoleculePOSTResponse",
-           "OptionGETBody", "OptionGETResponse", "OptionPOSTBody", "OptionPOSTResponse",
-           "CollectionGETBody", "CollectionGETResponse", "CollectionPOSTBody", "CollectionPOSTResponse",
-           "ResultGETBody", "ResultGETResponse", "ResultPOSTBody", "ResultPOSTResponse",
-           "ProcedureGETBody", "ProcedureGETReponse"]
+from .common_models import Molecule, json_encoders
+
+__all__ = [
+    "MoleculeGETBody", "MoleculeGETResponse", "MoleculePOSTBody", "MoleculePOSTResponse",
+    "OptionGETBody", "OptionGETResponse", "OptionPOSTBody", "OptionPOSTResponse",
+    "CollectionGETBody", "CollectionGETResponse", "CollectionPOSTBody", "CollectionPOSTResponse",
+    "ResultGETBody", "ResultGETResponse", "ResultPOSTBody", "ResultPOSTResponse",
+    "ProcedureGETBody", "ProcedureGETReponse"
+] # yapf: disable
 
 
 ### Generic and Common Models
+
 
 class ResponseMeta(BaseModel):
     errors: List[Tuple[str, str]]
@@ -52,7 +58,7 @@ class MoleculeGETResponse(BaseModel):
     data: List[Molecule]
 
     class Config:
-        json_encoders = {**ndarray_encoder}
+        json_encoders = json_encoders
 
 
 class MoleculePOSTBody(BaseModel):
@@ -60,7 +66,7 @@ class MoleculePOSTBody(BaseModel):
     data: Dict[str, Molecule]
 
     class Config:
-        json_encoders = {**ndarray_encoder}
+        json_encoders = json_encoders
 
 
 class MoleculePOSTResponse(BaseModel):
@@ -69,6 +75,7 @@ class MoleculePOSTResponse(BaseModel):
 
 
 ### Options
+
 
 class OptionGETBody(BaseModel):
     meta: Dict = None
@@ -97,6 +104,7 @@ class OptionPOSTResponse(BaseModel):
 
 
 ### Collections
+
 
 class CollectionGETBody(BaseModel):
     class Data(BaseModel):
@@ -147,8 +155,8 @@ class CollectionPOSTBody(BaseModel):
 class CollectionPOSTResponse(BaseModel):
     data: Union[str, None]
     meta: ResponsePOSTMeta
-    
-    
+
+
 ### Result
 
 
@@ -161,9 +169,12 @@ class ResultGETBody(BaseModel):
 
     @validator("data", whole=True)
     def only_data_keys(cls, v):
-        keys = ["program", "molecule", "driver", "method", "basis", "options", "hash_index", "task_id", "id", "status"]
-        final_data = {key: v[key] for key in keys if key in v}
-        return final_data
+        # We should throw a warning here for unused keys
+        valid_keys = {
+            "program", "molecule", "driver", "method", "basis", "options", "hash_index", "task_id", "id", "status"
+        }
+        data = {key: v[key] for key in (v.keys() & valid_keys)}
+        return data
 
 
 class ResultGETResponse(BaseModel):
@@ -204,6 +215,7 @@ class ResultPOSTResponse(BaseModel):
 
 
 ### Procedures
+
 
 class ProcedureGETBody(BaseModel):
     meta: Dict[str, Any] = {}
