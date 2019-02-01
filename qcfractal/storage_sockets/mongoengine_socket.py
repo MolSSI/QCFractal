@@ -168,6 +168,8 @@ class MongoengineSocket:
     def _clear_db(self, db_name: str):
         """Dangerous, make sure you are deleting the right DB"""
 
+        logging.warning('Clearing the Databse, droping tables and the whole DB.')
+
         # make sure it's the right DB
         if get_db().name == db_name:
             logging.info('Clearing database: {}'.format(db_name))
@@ -1735,7 +1737,7 @@ class MongoengineSocket:
 
     def manager_update(self, name, **kwargs):
 
-        upd = {
+        inc_count = {
             # Increment relevant data
             "inc__submitted": kwargs.pop("submitted", 0),
             "inc__completed": kwargs.pop("completed", 0),
@@ -1743,14 +1745,18 @@ class MongoengineSocket:
             "inc__failures": kwargs.pop("failures", 0)
         }
 
-        # Update server data
-        for value in ["cluster", "hostname", "uuid", "tag", "status"]:
-            if value in kwargs:
-                upd[value] = kwargs[value]
+        upd = {key: kwargs[key] for key in QueueManager._fields_ordered if key in kwargs}
 
         # QueueManager.objects()  # init
-        r = QueueManager.objects(name=name).update(**upd, upsert=True, modified_on=dt.utcnow())
-        return r == 1
+        manager = QueueManager.objects(name=name)
+        if manager:  # existing
+            upd.update(inc_count)
+            num_updated = manager.update(**upd, modified_on=dt.utcnow())
+        else:  # create new, ensures defaults and validations
+            QueueManager(name=name, **upd).save()
+            num_updated = 1
+
+        return num_updated == 1
 
     def get_managers(self, name: str=None, status: str=None, modified_before=None):
 
