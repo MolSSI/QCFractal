@@ -5,6 +5,14 @@ import json
 
 import tornado.web
 
+from .interface.models.rest_models import (
+    MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
+    OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse,
+    CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
+    ResultGETBody, ResultGETResponse,
+    ProcedureGETBody, ProcedureGETReponse
+)
+
 
 class APIHandler(tornado.web.RequestHandler):
     """
@@ -91,14 +99,13 @@ class MoleculeHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        kwargs = {}
-        if "index" in self.json["meta"]:
-            kwargs["index"] = self.json["meta"]["index"]
+        body = MoleculeGETBody.parse_raw(self.request.body)
 
-        ret = storage.get_molecules(self.json["data"], **kwargs)
-        self.logger.info("GET: Molecule - {} pulls.".format(len(ret["data"])))
+        molecules = storage.get_molecules(body.data, index=body.meta.index.value)
+        self.logger.info("GET: Molecule - {} pulls.".format(len(molecules["data"])))
 
-        self.write(ret)
+        ret = MoleculeGETResponse(**molecules)
+        self.write(ret.json())
 
     def post(self):
         """
@@ -123,9 +130,13 @@ class MoleculeHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        ret = storage.add_molecules(self.json["data"])
-        self.logger.info("POST: Molecule - {} inserted.".format(ret["meta"]["n_inserted"]))
-        self.write(ret)
+        body = MoleculePOSTBody.parse_raw(self.request.body)
+        ret = storage.add_molecules(body.data)
+        response = MoleculePOSTResponse(**ret)
+
+        self.logger.info("POST: Molecule - {} inserted.".format(response.meta.n_inserted))
+
+        self.write(response.json())
 
 
 class OptionHandler(APIHandler):
@@ -138,20 +149,26 @@ class OptionHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        ret = storage.get_options(**self.json["data"], with_ids=False)
-        self.logger.info("GET: Options - {} pulls.".format(len(ret["data"])))
+        body = OptionGETBody.parse_raw(self.request.body)
+        ret = storage.get_options(**body.data, with_ids=False)
+        options = OptionGETResponse(**ret)
 
-        self.write(ret)
+        self.logger.info("GET: Options - {} pulls.".format(len(options.data)))
+
+        self.write(options.json())
 
     def post(self):
         self.authenticate("write")
 
         storage = self.objects["storage_socket"]
 
-        ret = storage.add_options(self.json["data"])
-        self.logger.info("POST: Options - {} inserted.".format(ret["meta"]["n_inserted"]))
+        body = OptionPOSTBody.parse_raw(self.request.body)
+        ret = storage.add_options(body.data)
+        response = OptionPOSTResponse(**ret)
 
-        self.write(ret)
+        self.logger.info("POST: Options - {} inserted.".format(response.meta.n_inserted))
+
+        self.write(response.json())
 
 
 class CollectionHandler(APIHandler):
@@ -164,25 +181,29 @@ class CollectionHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        ret = storage.get_collections(**self.json["data"])
-        self.logger.info("GET: Collections - {} pulls.".format(len(ret["data"])))
+        body = CollectionGETBody.parse_raw(self.request.body)
+        cols = storage.get_collections(**body.data.dict())
+        response = CollectionGETResponse(**cols)
+        self.logger.info("GET: Options - {} pulls.".format(len(response.data)))
 
-        self.write(ret)
+        self.write(response.json())
 
     def post(self):
         self.authenticate("write")
 
         storage = self.objects["storage_socket"]
 
-        overwrite = self.json["meta"].get("overwrite", False)
+        body = CollectionPOSTBody.parse_raw(self.request.body)
+        ret = storage.add_collection(body.data.collection,
+                                     body.data.name,
+                                     body.data.dict(exclude={"collection", "name"}),
+                                     overwrite=body.meta.overwrite)
 
-        collection = self.json["data"].pop("collection")
-        name = self.json["data"].pop("name")
+        response = CollectionPOSTResponse(**ret)
 
-        ret = storage.add_collection(collection, name, self.json["data"], overwrite=overwrite)
-        self.logger.info("POST: Collections - {} inserted.".format(ret["meta"]["n_inserted"]))
+        self.logger.info("POST: Collections - {} inserted.".format(response.meta.n_inserted))
 
-        self.write(ret)
+        self.write(response.json())
 
 
 class ResultHandler(APIHandler):
@@ -194,27 +215,18 @@ class ResultHandler(APIHandler):
         self.authenticate("read")
 
         storage = self.objects["storage_socket"]
-        proj = self.json["meta"].get("projection", None)
 
-        if "id" in self.json["data"]:
-            ret = storage.get_results_by_id(self.json["data"]["id"], projection=proj)
-        elif 'task_id' in self.json["data"]:
-            ret = storage.get_results_by_task_id(self.json["data"]["task_id"], projection=proj)
+        body = ResultGETBody.parse_raw(self.request.body)
+        proj = body.meta.projection
+        if 'id' in body.data:
+            ret = storage.get_results_by_id(body.data['id'], projection=proj)
+        elif 'task_id' in body.data:
+            ret = storage.get_results_by_task_id(body.data['task_id'], projection=proj)
         else:
-            ret = storage.get_results(**self.json["data"], projection=proj)
-        self.logger.info("GET: Results - {} pulls.".format(len(ret["data"])))
-
-        self.write(ret)
-
-    def post(self):
-        self.authenticate("write")
-
-        storage = self.objects["storage_socket"]
-
-        ret = storage.add_results(self.json["data"])
-        self.logger.info("POST: Results - {} inserted.".format(ret["meta"]["n_inserted"]))
-
-        self.write(ret)
+            ret = storage.get_results(**body.data, projection=proj)
+        result = ResultGETResponse(**ret)
+        self.logger.info("GET: Results - {} pulls.".format(len(result.data)))
+        self.write(result.json())
 
 
 class ProcedureHandler(APIHandler):
@@ -227,58 +239,19 @@ class ProcedureHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        if "id" in self.json["data"]:
-            ret = storage.get_procedures_by_id(id=self.json["data"]["id"])
-        elif "hash_index" in self.json["data"]:
-            ret = storage.get_procedures_by_id(hash_index=self.json["data"]["hash_index"])
-        elif 'task_id' in self.json["data"]:
-            ret = storage.get_procedures_by_task_id(self.json["data"]["task_id"])
+        body = ProcedureGETBody.parse_raw(self.request.body)
+
+        if "id" in body.data:
+            ret = storage.get_procedures_by_id(id=body.data["id"])
+        elif "hash_index" in body.data:
+            ret = storage.get_procedures_by_id(hash_index=body.data["hash_index"])
+        elif 'task_id' in body.data:
+            ret = storage.get_procedures_by_task_id(body.data["task_id"])
         else:
-            ret = storage.get_procedures(**self.json["data"])
-        self.logger.info("GET: Procedures - {} pulls.".format(len(ret["data"])))
+            ret = storage.get_procedures(**body.data)
 
-        self.write(ret)
+        response = ProcedureGETReponse(**ret)
+        self.logger.info("GET: Procedures - {} pulls.".format(len(response.data)))
 
-    # def _check_auth(objects, header):
-    #     auth = False
-    #     try:
-    #         objects["mongod_socket"].client.database_names()
-    #         username = "default"
-    #         auth = True
-    #     except pymongo.errors.OperationFailure:
+        self.write(response.json())
 
-    #         # The authenticate method should match a username and password
-    #         # to a username and password hash in the database users table.
-    #         db = self.objects["mongod_socket"][header["project"]]
-    #         try:
-    #             auth = db.authenticate(header["username"], header["password"])
-    #         except pymongo.errors.OperationFailure:
-    #             auth = False
-
-    #     if auth is not True:
-    #         raise KeyError("Could not authenticate user.")
-
-    # class Information(tornado.web.RequestHandler):
-    #     """
-    #     Obtains generic information about the Application Objects
-    #     """
-
-    #     def initialize(self, **objects):
-    #         self.objects = objects
-
-    #         if "logger" in list(self.objects):
-    #             self.logger = self.objects["logger"]
-    #         else:
-    #             self.logger = logging.getLogger('Information')
-    #         self.logger.info("INFO: %s" % self.request.method)
-
-    #     def get(self):
-    #         _check_auth(self.objects, self.request.headers)
-
-    #         queue = self.objects["queue_socket"]
-    #         mongod = self.objects["mongod_socket"]
-
-    #         ret = {}
-    #         ret["mongo_data"] = (mongod.url, mongod.port)
-    #         ret["dask_data"] = str(queue.host) + ":" + str(queue.port)
-    #         self.write(json.dumps(ret))

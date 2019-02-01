@@ -113,10 +113,10 @@ class Collection(abc.ABC):
 
         class_name = cls.__name__.lower()
         tmp_data = client.get_collection(class_name, name, full_return=True)
-        if tmp_data["meta"]["n_found"] == 0:
+        if tmp_data.meta.n_found == 0:
             raise KeyError("Warning! `{}: {}` not found.".format(class_name, name))
 
-        return cls.from_json(tmp_data["data"][0], client=client)
+        return cls.from_json(tmp_data.data[0], client=client)
 
     @classmethod
     def from_json(cls, data, client=None):

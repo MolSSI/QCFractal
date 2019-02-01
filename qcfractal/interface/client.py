@@ -8,9 +8,15 @@ from typing import List, Union, Dict, Any, Optional
 import requests
 import yaml
 
-from .models import Molecule
 from . import orm
 from .collections import collection_factory
+
+from .models import Molecule
+from .models.rest_models import (MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
+                                 OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse,
+                                 CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
+                                 ResultGETBody, ResultGETResponse,
+                                 ProcedureGETBody, ProcedureGETReponse)
 
 
 class FractalClient(object):
@@ -60,6 +66,8 @@ class FractalClient(object):
         if (username is not None) or (password is not None):
             self._headers["Authorization"] = json.dumps({"username": username, "password": password})
 
+        self._headers["content_type"] = 'application/json'
+
         # Try to connect and pull general data
         self.server_info = self._request("get", "information", {}).json()
 
@@ -77,16 +85,16 @@ class FractalClient(object):
             self.server_name, self.address, self.username)
         return ret
 
-    def _request(self, method: str, service: str, payload: Dict[str, Any], noraise: bool=False):
+    def _request(self, method: str, service: str, payload: Dict[str, Any]=None, *, data: str=None, noraise: bool=False):
 
         addr = self.address + service
         try:
             if method == "get":
-                r = requests.get(addr, json=payload, headers=self._headers, verify=self._verify)
+                r = requests.get(addr, json=payload, data=data, headers=self._headers, verify=self._verify)
             elif method == "post":
-                r = requests.post(addr, json=payload, headers=self._headers, verify=self._verify)
+                r = requests.post(addr, json=payload, data=data, headers=self._headers, verify=self._verify)
             elif method == "put":
-                r = requests.put(addr, json=payload, headers=self._headers, verify=self._verify)
+                r = requests.put(addr, json=payload, data=data, headers=self._headers, verify=self._verify)
             else:
                 raise KeyError("Method not understood: '{}'".format(method))
         except requests.exceptions.SSLError as exc:
@@ -179,23 +187,20 @@ class FractalClient(object):
         list of molecule JSON
             Returns all found molecules.
         """
-        # Can take in either molecule or lists
-        if not isinstance(mol_list, (tuple, list)):
+
+        if isinstance(mol_list, str):
             mol_list = [mol_list]
 
-        index = index.lower()
-        if index not in ["id", "index", "molecular_formula"]:
-            raise KeyError("Search index must either be 'id' or hash, found: {}".format(index))
-
-        payload = {"meta": {"index": index}, "data": mol_list}
-        r = self._request("get", "molecule", payload)
+        body = MoleculeGETBody(data=mol_list, meta={"index": index.lower()})
+        r = self._request("get", "molecule", data=body.json())
+        r = MoleculeGETResponse.parse_raw(r.text)
 
         if full_return:
-            return r.json()
+            return r
         else:
-            return r.json()["data"]
+            return r.data
 
-    def add_molecules(self, mol_list: Dict[str, Any], full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
+    def add_molecules(self, mol_list: Dict[str, Molecule], full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
         """Adds molecules to the Server
 
         Parameters
@@ -212,50 +217,36 @@ class FractalClient(object):
             A (key: molecule id) dictionary of added molecules.
 
         """
-        # Can take in either molecule or lists
 
-        mol_submission = {}
-        for key, mol in mol_list.items():
-            if isinstance(mol, Molecule):
-                mol_submission[key] = mol.json(as_dict=True)
-            elif isinstance(mol, dict):
-                mol_submission[key] = mol
-            else:
-                raise TypeError("Input molecule type '{}' not recognized".format(type(mol)))
-
-        payload = {"meta": {}, "data": mol_submission}
-        r = self._request("post", "molecule", payload)
+        body = MoleculePOSTBody(meta={}, data=mol_list)
+        r = self._request("post", "molecule", data=body.json())
+        r = MoleculePOSTResponse.parse_raw(r.text)
 
         if full_return:
-            return r.json()
+            return r
         else:
-            return r.json()["data"]
+            return r.data
 
     ### Options section
 
     def get_options(self, opt_list):
 
-        # Logic to figure out if we are doing single/multiple pulling.
-        # Need to fix later
-        # if not isinstance(opt_list, (tuple, list)):
-        #     opt_list = [opt_list]
+        body = OptionGETBody(meta={}, data=opt_list)
+        r = self._request("get", "option", data=body.json())
+        r = OptionGETResponse.parse_raw(r.text)
 
-        payload = {"meta": {}, "data": opt_list}
-        r = self._request("get", "option", payload)
-
-        return r.json()["data"]
+        return r.data
 
     def add_options(self, opt_list: List[Dict[str, Any]], full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
 
-        # Can take in either molecule or lists
-
-        payload = {"meta": {}, "data": opt_list}
-        r = self._request("post", "option", payload)
+        body = OptionPOSTBody(meta={}, data=opt_list)
+        r = self._request("post", "option", data=body.json())
+        r = OptionPOSTResponse.parse_raw(r.text)
 
         if full_return:
-            return r.json()
+            return r
         else:
-            return r.json()["data"]
+            return r.data
 
     ### Collections section
 
@@ -289,15 +280,15 @@ class FractalClient(object):
         else:
             return [x["name"] for x in r.json()["data"]]
 
-    def get_collection(self, collection_type: str, collection_name: str, full_return: bool=False):
-        """Aquires a given collection from the server
+    def get_collection(self, collection_type: str, name: str, full_return: bool=False):
+        """Acquires a given collection from the server
 
         Parameters
         ----------
         collection_type : str
             The collection type to be accessed
-        collection_name : str
-            The name of the collection to be accssed
+        name : str
+            The name of the collection to be accessed
         full_return : bool, optional
             If False, returns a Collection object otherwise returns raw JSON
 
@@ -307,69 +298,68 @@ class FractalClient(object):
             A Collection object if the given collection was found otherwise returns `None`.
         """
 
-        payload = {"meta": {}, "data": {"collection": collection_type.lower(), "name": collection_name}}
-        r = self._request("get", "collection", payload)
-
+        body = CollectionGETBody(meta={}, data={"collection": collection_type, "name": name})
+        r = self._request("get", "collection", data=body.json())
+        cols = CollectionGETResponse.parse_raw(r.text)
         if full_return:
-            return r.json()
+            return cols
         else:
             # If nothing found
-            if len(r.json()["data"]):
-                return collection_factory(r.json()["data"][0], client=self)
+            if len(cols.data):
+                return collection_factory(cols.data[0], client=self)
             else:
-                raise KeyError("Collection '{}:{}' not found.".format(collection_type, collection_name))
+                raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
 
     def add_collection(self, collection: Dict[str, Any], overwrite: bool=False, full_return: bool=False):
 
         # Can take in either molecule or lists
 
-        if overwrite and ("id" not in collection):
-            raise KeyError("Attempting to overwrite collection, but no server ID found.")
+        if overwrite and ("id" not in collection or collection['id'] == 'local'):
+            raise KeyError("Attempting to overwrite collection, but no server ID found (cannot use 'local').")
 
         payload = {"meta": {"overwrite": overwrite}, "data": collection}
-
-        r = self._request("post", "collection", payload)
+        body = CollectionPOSTBody(**payload)
+        r = self._request("post", "collection", data=body.json())
         assert r.status_code == 200
+        r = CollectionPOSTResponse.parse_raw(r.text)
 
         if full_return:
-            return r.json()
+            return r
         else:
-            return r.json()["data"]
+            return r.data
 
     ### Results section
 
-    def get_results(self, **kwargs):
+    def get_results(self, projection=None, return_full=False, **kwargs):
 
-        keys = ["program", "molecule", "driver", "method", "basis", "options", "hash_index", "task_id", "id", "status"]
-        query = {}
-        for key in keys:
-            if key in kwargs:
-                query[key] = kwargs[key]
+        payload = {"meta": {}, "data": kwargs}
+        if projection is not None:
+            payload["meta"]["projection"] = projection
 
-        payload = {"meta": {}, "data": query}
-        if "projection" in kwargs:
-            payload["meta"]["projection"] = kwargs["projection"]
+        body = ResultGETBody(**payload)
+        r = self._request("get", "result", data=body.json())
+        r = ResultGETResponse.parse_raw(r.text)
 
-        r = self._request("get", "result", payload)
-
-        if kwargs.get("return_full", False):
-            return r.json()
+        if return_full:
+            return r
         else:
-            return r.json()["data"]
+            return r.data
 
-    def get_procedures(self, procedure_id: List[str], return_objects: bool=True):
+    def get_procedures(self, procedure_query: Dict[str, Any], return_objects: bool=True):
 
-        payload = {"meta": {}, "data": procedure_id}
-        r = self._request("get", "procedure", payload)
+        body = ProcedureGETBody(data=procedure_query)
+        r = self._request("get", "procedure", data=body.json())
+        r = ProcedureGETReponse.parse_raw(r.text)
 
         if return_objects:
             ret = []
-            for packet in r.json()["data"]:
+            for packet in r.data:
                 tmp = orm.build_orm(packet, client=self)
                 ret.append(tmp)
             return ret
         else:
-            return r.json()
+            # Equivalent to full_return from other gets
+            return r
 
     # Must compute results?
     # def add_results(self, db, full_return=False):
