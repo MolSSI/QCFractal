@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 from qcelemental.models import Molecule, Provenance
 
-__all__ = ["QCMeta", "json_encoder"]
+__all__ = ["QCMeta", "json_encoders", "hash_dictionary"]
 
 # Add in QCElemental models
 __all__.extend(["Molecule", "Provenance"])

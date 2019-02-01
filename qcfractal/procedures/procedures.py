@@ -120,8 +120,9 @@ class SingleResultTasks:
 
 
 class OptimizationTasks(SingleResultTasks):
-    def __init__(self, storage):
-        super().__init__(storage)
+    """
+    Optimization task manipulation
+    """
 
     def parse_input(self, data, duplicate_id="hash_index"):
         """
