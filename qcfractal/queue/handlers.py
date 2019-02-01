@@ -9,6 +9,10 @@ from .. import procedures
 from .. import services
 from ..web_handlers import APIHandler
 
+from ..interface.models.rest_models import (
+    TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse
+)
+
 
 class TaskQueueHandler(APIHandler):
     """
@@ -23,20 +27,26 @@ class TaskQueueHandler(APIHandler):
         # Grab objects
         storage = self.objects["storage_socket"]
 
+        body = TaskQueuePOSTBody.parse_raw(self.request.body)
         # Format tasks
-        procedure_parser = procedures.get_procedure_parser(self.json["meta"]["procedure"], storage)
-        full_tasks, complete_tasks, errors = procedure_parser.parse_input(self.json)
+        procedure_parser = procedures.get_procedure_parser(body.meta["procedure"], storage)
+        full_tasks, complete_tasks, errors = procedure_parser.parse_input(body.dict())
 
         # Add tasks to queue
         ret = storage.queue_submit(full_tasks)
-        self.logger.info("TaskQueue: Added {} tasks.".format(ret["meta"]["n_inserted"]))
 
-        ret["data"] = [x for x in ret["data"] if x is not None]
-        ret["data"] = {"submitted": ret["data"], "completed": list(complete_tasks), "queue": ret["meta"]["duplicates"]}
+        # Do some quick reformatting
+        data_payload = {"submitted": [x for x in ret["data"] if x is not None],
+                        "completed": list(complete_tasks),
+                        "queue": ret["meta"]["duplicates"]
+                        }
         ret["meta"]["duplicates"] = []
         ret["meta"]["errors"].extend(errors)
 
-        self.write(ret)
+        response = TaskQueuePOSTResponse(data=data_payload, meta=ret["meta"])
+        self.logger.info("TaskQueue: Added {} tasks.".format(response.meta.n_inserted))
+
+        self.write(response.json())
 
     def get(self):
         """Posts new services to the service queue
@@ -46,13 +56,12 @@ class TaskQueueHandler(APIHandler):
         # Grab objects
         storage = self.objects["storage_socket"]
 
-        projection = self.json["meta"].get("projection", None)
-        if projection is None:
-            projection = {x: True for x in ["status", "error", "tag"]}
+        body = TaskQueueGETBody.parse_raw(self.request.body)
 
-        ret = storage.get_queue(**self.json["data"], projection=projection)
+        tasks = storage.get_queue(**body.data, projection=body.meta.projection)
+        response = TaskQueueGETResponse(**tasks)
 
-        self.write(ret)
+        self.write(response.json())
 
 
 class ServiceQueueHandler(APIHandler):

@@ -50,7 +50,7 @@ def test_compute_dataset(fractal_compute_server):
 
     # Compute SCF/sto-3g
     ret = ds.compute("SCF", "STO-3G")
-    assert len(ret["submitted"]) == 3
+    assert len(ret.submitted) == 3
     fractal_compute_server.await_results()
 
     # Query computed results

@@ -17,7 +17,7 @@ def test_queue_error(fractal_compute_server):
     mol_ret = client.add_molecules({"hooh": hooh})
 
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["hooh"])
-    queue_id = ret["submitted"][0]
+    queue_id = ret.submitted[0]
 
     # Pull out a special iteration on the queue manager
     fractal_compute_server.update_tasks()
@@ -49,8 +49,8 @@ def test_queue_duplicate_compute(fractal_compute_server):
     mol_ret = client.add_molecules({"hooh": hooh})
 
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["hooh"])
-    assert len(ret["submitted"]) == 1
-    assert len(ret["completed"]) == 0
+    assert len(ret.submitted) == 1
+    assert len(ret.completed) == 0
 
     # Pull out fireworks launchpad and queue nanny
     fractal_compute_server.await_results()
@@ -58,8 +58,8 @@ def test_queue_duplicate_compute(fractal_compute_server):
     db = fractal_compute_server.objects["storage_socket"]
 
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["hooh"])
-    assert len(ret["submitted"]) == 0
-    assert len(ret["completed"]) == 1
+    assert len(ret.submitted) == 0
+    assert len(ret.completed) == 1
 
 
 @testing.using_rdkit
@@ -105,15 +105,15 @@ def test_queue_duplicate_submissions(fractal_compute_server):
     mol_ret = client.add_molecules({"he2": he2})
 
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["he2"])
-    assert len(ret["submitted"]) == 1
-    assert len(ret["completed"]) == 0
-    assert len(ret["queue"]) == 0
-    task_id = ret["submitted"][0]
+    assert len(ret.submitted) == 1
+    assert len(ret.completed) == 0
+    assert len(ret.queue) == 0
+    task_id = ret.submitted[0]
 
     # Do not compute, add duplicate
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["he2"])
-    assert len(ret["submitted"]) == 0
-    assert len(ret["completed"]) == 1
+    assert len(ret.submitted) == 0
+    assert len(ret.completed) == 1
     # assert ret["queue"][0] == task_id
     # assert len(ret["queue"]) == 1
     # assert ret["queue"][0] == task_id
