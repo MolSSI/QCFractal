@@ -158,7 +158,6 @@ class MongoengineSocket:
         self._tables = self.client[project]
         self._max_limit = max_limit
 
-        QueueManager.objects(name='').first()  # init
 
     ### Mongo meta functions
 
@@ -168,7 +167,7 @@ class MongoengineSocket:
     def _clear_db(self, db_name: str):
         """Dangerous, make sure you are deleting the right DB"""
 
-        logging.warning('Clearing the Databse, droping tables and the whole DB.')
+        logging.warning('Clearing the Databse and droping tables')
 
         # make sure it's the right DB
         if get_db().name == db_name:
@@ -183,6 +182,8 @@ class MongoengineSocket:
             QueueManager.drop_collection()
 
             self.client.drop_database(db_name)
+
+        QueueManager.objects(name='').first()  # init
 
     def get_project_name(self):
         return self._project_name
