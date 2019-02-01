@@ -1570,7 +1570,7 @@ class MongoengineSocket:
         parsed_query = {}
         if program:
             query['program'] = program
-        if id:
+        if id is not None:
             query['id'] = id
         if hash_index:
             query['hash_index'] = hash_index

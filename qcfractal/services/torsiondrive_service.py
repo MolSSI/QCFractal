@@ -14,10 +14,10 @@ except ImportError:
     td_api = None
 
 from qcfractal import procedures
-from qcfractal.interface.models.torsiondrive import TorsionDrive, TorsionDriveInput
+from qcfractal.interface.models.torsiondrive import TorsionDrive
 from qcfractal.interface.models.common_models import json_encoders
 
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 from pydantic import BaseModel
 
 __all__ = ["TorsionDriveService"]
@@ -71,7 +71,7 @@ class TorsionDriveService(BaseModel):
                 "version": torsiondrive.__version__,
                 "routine": "torsiondrive.td_api"
             },
-            final_energies={},
+            final_energy_dict={},
             minimum_positions={},
             optimization_history={})
 
@@ -170,7 +170,6 @@ class TorsionDriveService(BaseModel):
 
         # Create new tasks from the current state
         next_tasks = td_api.next_jobs_from_state(self.torsiondrive_state, verbose=True)
-        # print("\n\nNext Jobs:\n" + str(next_tasks))
 
         # All done
         if len(next_tasks) == 0:
@@ -242,9 +241,9 @@ class TorsionDriveService(BaseModel):
         self.required_tasks = list({x for v in task_map.values() for x in v})
 
     def finalize(self):
-        # Add finalize state
-        # Parse remaining procedures
-        # Create a map of "tasks" so that procedures does not have to followed
+        """
+        Finishes adding data to the TorsionDrive object
+        """
 
         self.output.Config.allow_mutation = True
         self.output.success = True
@@ -255,7 +254,7 @@ class TorsionDriveService(BaseModel):
             min_pos = int(np.argmin([x[2] for x in v]))
             key = json.dumps(td_api.grid_id_from_string(k))
             self.output.minimum_positions[key] = min_pos
-            self.output.final_energies[key] = v[min_pos][2]
+            self.output.final_energy_dict[key] = v[min_pos][2]
 
         self.output.optimization_history = {
             json.dumps(td_api.grid_id_from_string(k)): v

@@ -43,13 +43,11 @@ def torsiondrive_fixture(fractal_compute_server):
         },
     }
 
-    def spin_up_test(grid_spacing=90, **keyword_augments):
+    def spin_up_test(**keyword_augments):
 
         instance_options = copy.deepcopy(torsiondrive_options)
-        instance_options["torsiondrive_meta"]["grid_spacing"] = [grid_spacing]
-
-        # instance_options = {**instance_options, **keyword_augments}
         recursive_dict_merge(instance_options, keyword_augments)
+
         ret = client.add_service("torsiondrive", [mol_ret["hooh"]], instance_options)
         fractal_compute_server.await_services()
         assert len(fractal_compute_server.list_current_tasks()) == 0
@@ -92,22 +90,22 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     procedures = client.get_procedures({"procedure": "torsiondrive"})
     assert len(procedures) == 2  # Make sure only 2 procedures are yielded
     base_run, duplicate_run = procedures
-    assert base_run._optimization_history == duplicate_run._optimization_history
+    assert base_run.optimization_history == duplicate_run.optimization_history
 
 
-# def test_service_iterate_error(torsiondrive_fixture):
-#     """Ensure errors are caught and logged when iterating serivces"""
+def test_service_iterate_error(torsiondrive_fixture):
+    """Ensure errors are caught and logged when iterating serivces"""
 
-#     spin_up_test, client = torsiondrive_fixture
+    spin_up_test, client = torsiondrive_fixture
 
-#     # Run the test without modifications
-#     ret = spin_up_test(grid_spacing="waffles_crasher")
+    # Run the test without modifications
+    ret = spin_up_test(torsiondrive_meta={"dihedrals": [[0, 1, 2, 50]]})
 
-#     status = client.check_services({"hash_index": ret["submitted"][0]})
-#     assert len(status) == 1
+    status = client.check_services({"hash_index": ret["submitted"][0]})
+    assert len(status) == 1
 
-#     assert status[0]["status"] == "ERROR"
-#     assert "Service Build" in status[0]["error_message"]
+    assert status[0]["status"] == "ERROR"
+    assert "Service Build" in status[0]["error_message"]
 
 
 def test_service_torsiondrive_compute_error(torsiondrive_fixture):
