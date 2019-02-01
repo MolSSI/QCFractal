@@ -1341,8 +1341,8 @@ class MongoengineSocket:
                 not_allowed_keys.append(key)
 
         if not_allowed_keys:
-            logging.warning('Trying to update Procedre with none ' +
-                            'allowed keyword: {}'.format(not_allowed_keys))
+            logging.warning('Trying to update Procedure immutable keywords ' +
+                            '"{}", skipping'.format(not_allowed_keys))
 
         modified_count = Procedure.objects(hash_index=hash_index).update(**update, modified_on=dt.utcnow())
 
