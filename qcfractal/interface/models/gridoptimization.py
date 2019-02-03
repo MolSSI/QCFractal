@@ -1,5 +1,5 @@
 """
-A model for TorsionDrive
+A model for GridOptimization
 """
 
 import copy
@@ -15,7 +15,7 @@ __all__ = ["GridOptimizationInput", "GridOptimization"]
 
 class GridOptimizationInput(BaseModel):
     """
-    A TorsionDrive Input base class
+    A GridOptimization Input base class
     """
 
     class ScanDimension(BaseModel):
@@ -47,7 +47,7 @@ class GridOptimizationInput(BaseModel):
 
     class GOOptions(BaseModel):
         """
-        TorsionDrive options
+        GridOptimization options
         """
         scans: List[ScanDimension]
         grid_spacing: List[float]
@@ -58,7 +58,7 @@ class GridOptimizationInput(BaseModel):
 
     class OptOptions(BaseModel):
         """
-        TorsionDrive options
+        GridOptimization options
         """
         program: str
 
@@ -95,7 +95,7 @@ class GridOptimizationInput(BaseModel):
 
 class GridOptimization(GridOptimizationInput):
     """
-    A interface to the raw JSON data of a TorsionDrive torsion scan run.
+    A interface to the raw JSON data of a GridOptimization torsion scan run.
     """
 
     # Client and local data

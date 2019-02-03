@@ -18,8 +18,7 @@ from . import queue
 from . import services
 from . import storage_sockets
 from . import web_handlers
-
-from qcfractal._version import get_versions
+from .extras import get_information
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -180,7 +179,7 @@ class FractalServer:
         self.objects["public_information"] = {
             "name": self.name,
             "heartbeat_frequency": self.heartbeat_frequency,
-            "version": get_versions()["version"]
+            "version": get_information("version")
         }
 
         endpoints = [
