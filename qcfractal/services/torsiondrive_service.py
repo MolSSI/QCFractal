@@ -6,6 +6,7 @@ import copy
 import json
 
 import numpy as np
+from typing import Any, Dict, List
 
 try:
     import torsiondrive
@@ -17,8 +18,7 @@ from qcfractal import procedures
 from qcfractal.interface.models.torsiondrive import TorsionDrive
 from qcfractal.interface.models.common_models import json_encoders
 
-from typing import Any, Dict, List
-from pydantic import BaseModel
+from .service_util import BaseService
 
 __all__ = ["TorsionDriveService"]
 
@@ -28,14 +28,9 @@ def _check_td():
         raise ImportError("Unable to find TorsionDrive which must be installed to use the TorsionDriveService")
 
 
-class TorsionDriveService(BaseModel):
-
-    storage_socket: Any
+class TorsionDriveService(BaseService):
 
     # Index info
-    id: str = None
-    hash_index: str
-    success: bool = False
     status: str = "READY"
     service: str = "torsiondrive"
     program: str = "torsiondrive"
@@ -115,13 +110,6 @@ class TorsionDriveService(BaseModel):
         meta["hash_index"] = output.get_hash_index()
 
         return cls(**meta, storage_socket=storage_socket)
-
-    def dict(self, include=None, exclude=None, by_alias=False):
-        # return self.data
-        return super().dict(exclude={"storage_socket"})
-
-    def json_dict(self):
-        return json.loads(self.json())
 
     def iterate(self):
 
