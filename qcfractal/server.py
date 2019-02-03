@@ -218,7 +218,7 @@ class FractalServer:
         self.exit_callbacks = []
 
         self.logger.info("FractalServer:")
-        self.logger.info("    Version:       {}".format(get_versions()["version"]))
+        self.logger.info("    Version:       {}".format(get_information("version")))
         self.logger.info("    Address:       {}".format(self._address))
         self.logger.info("    Database URI:  {}".format(storage_uri))
         self.logger.info("    Database Name: {}\n".format(storage_project_name))

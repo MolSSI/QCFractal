@@ -113,8 +113,7 @@ class GridOptimization(GridOptimizationInput):
     # Data pointers
     initial_molecule: str
     final_energy_dict: Dict[str, float]
-    optimization_history: Dict[str, List[str]]
-    minimum_positions: Dict[str, int]
+    grid_optimizations: Dict[str, str]
 
     class Config:
         allow_mutation = False
