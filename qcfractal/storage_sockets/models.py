@@ -287,8 +287,8 @@ class TaskQueue(CustomDynamicDocument):
                             choices=['RUNNING', 'WAITING', 'ERROR', 'COMPLETE'])
     manager = db.StringField(default=None)
 
-    created_on = db.DateTimeField(required=True, default=datetime.datetime.now)
-    modified_on = db.DateTimeField(required=True, default=datetime.datetime.now)
+    created_on = db.DateTimeField(required=True, default=datetime.datetime.utcnow)
+    modified_on = db.DateTimeField(required=True, default=datetime.datetime.utcnow)
 
     # can reference Results or any Procedure
     base_result = db.GenericLazyReferenceField(dbref=True)  # use res.id and res.document_type (class)
@@ -316,7 +316,7 @@ class TaskQueue(CustomDynamicDocument):
 
     def save(self, *args, **kwargs):
         """Override save to update modified_on"""
-        self.modified_on = datetime.datetime.now()
+        self.modified_on = datetime.datetime.utcnow()
 
         return super(TaskQueue, self).save(*args, **kwargs)
 
@@ -324,6 +324,10 @@ class TaskQueue(CustomDynamicDocument):
 
 
 class ServiceQueue(CustomDynamicDocument):
+
+    status = db.StringField()
+    tag = db.StringField(default=None)
+    hash_index = db.StringField()
 
     meta = {
         'indexes': [
@@ -348,16 +352,25 @@ class User(CustomDynamicDocument):
 
 
 class QueueManager(CustomDynamicDocument):
+    """
+    """
 
     name = db.StringField(unique=True)
-    completed = db.IntField()
-    submitted = db.IntField()
-    failures = db.IntField()
-    returned = db.IntField()
-    status = db.StringField(default='INACTIVE')
+    cluster = db.StringField()
+    hostname = db.StringField()
+    uuid = db.StringField()
+    tag = db.StringField()
 
-    created_on = db.DateTimeField(required=True, default=datetime.datetime.now)
-    modified_on = db.DateTimeField(required=True, default=datetime.datetime.now)
+    # counts
+    completed = db.IntField(default=0)
+    submitted = db.IntField(default=0)
+    failures = db.IntField(default=0)
+    returned = db.IntField(default=0)
+
+    status = db.StringField(default='INACTIVE', choices=['ACTIVE', 'INACTIVE'])
+
+    created_on = db.DateTimeField(required=True, default=datetime.datetime.utcnow)
+    modified_on = db.DateTimeField(required=True, default=datetime.datetime.utcnow)
 
     meta = {
         'indexes': ['status', 'name', 'modified_on']
@@ -365,6 +378,6 @@ class QueueManager(CustomDynamicDocument):
 
     def save(self, *args, **kwargs):
         """Override save to update modified_on"""
-        self.modified_on = datetime.datetime.now()
+        self.modified_on = datetime.datetime.utcnow()
 
         return super(QueueManager, self).save(*args, **kwargs)

@@ -295,7 +295,6 @@ def reset_server_database(server):
     """Resets the server database for testing.
     """
     server.storage._clear_db(server.storage._project_name)
-    # server.storage.init_database()
 
 
 @pytest.fixture(scope="module")

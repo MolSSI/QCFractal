@@ -158,47 +158,16 @@ class MongoengineSocket:
         self._tables = self.client[project]
         self._max_limit = max_limit
 
-        # new_table = self.init_database()
-        # for k, v in new_table.items():
-        #     if v:
-        #         self.logger.info("Add '{}' table to the database!".format(k))
 
     ### Mongo meta functions
 
     def __str__(self):
         return "<MongoSocket: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._tables_name))
 
-    def init_database(self):
-        """
-        Builds out the initial project structure.
-
-        This is the Mongo definition of "Database"
-        """
-        # Try to create a collection for each entry
-        table_creation = {}
-        # for table in self._valid_tables:
-        #     try:
-        #         # MongoDB "Collection" -> QCFractal "Table"
-        #         self._tables.create_collection(table)
-        #         table_creation[table] = True
-        #
-        #     except pymongo.errors.CollectionInvalid:
-        #         table_creation[table] = False
-
-        # Build the indices
-        # for table, indices in self._table_indices.items():
-        #     idx = [(x, pymongo.ASCENDING) for x in indices if x != "hash_index"]
-        #     self._tables[table].create_index(idx, unique=self._table_unique_indices[table])
-
-        # # Special queue index, hash_index should be unique
-        # for table in ["task_queue", "service_queue"]:
-        #     self._tables[table].create_index([("hash_index", pymongo.ASCENDING)], unique=True)
-
-        # Return the success array
-        return table_creation
-
     def _clear_db(self, db_name: str):
         """Dangerous, make sure you are deleting the right DB"""
+
+        logging.warning('Clearing the Databse and droping tables')
 
         # make sure it's the right DB
         if get_db().name == db_name:
@@ -213,6 +182,8 @@ class MongoengineSocket:
             QueueManager.drop_collection()
 
             self.client.drop_database(db_name)
+
+        QueueManager.objects(name='').first()  # init
 
     def get_project_name(self):
         return self._project_name
@@ -1363,14 +1334,18 @@ class MongoengineSocket:
         """
 
         update = {}
+        not_allowed_keys = []
         # create safe query with allowed keys only
         # shouldn't be allowed to update status manually
         for key, value in data.items():
             if key not in ['procedure', 'program', 'status', 'task_id']:  # FIXME: what else?
                 update[key] = value
             else:
-                logging.warning('Trying to update Procedre with none ' +
-                                'allowed keyword: ({}={})'.format(key, value))
+                not_allowed_keys.append(key)
+
+        if not_allowed_keys:
+            logging.warning('Trying to update Procedure immutable keywords ' +
+                            '"{}", skipping'.format(not_allowed_keys))
 
         modified_count = Procedure.objects(hash_index=hash_index).update(**update, modified_on=dt.utcnow())
 
@@ -1763,7 +1738,7 @@ class MongoengineSocket:
 
     def manager_update(self, name, **kwargs):
 
-        upd = {
+        inc_count = {
             # Increment relevant data
             "inc__submitted": kwargs.pop("submitted", 0),
             "inc__completed": kwargs.pop("completed", 0),
@@ -1771,14 +1746,18 @@ class MongoengineSocket:
             "inc__failures": kwargs.pop("failures", 0)
         }
 
-        # Update server data
-        for value in ["cluster", "hostname", "uuid", "tag", "status"]:
-            if value in kwargs:
-                upd[value] = kwargs[value]
+        upd = {key: kwargs[key] for key in QueueManager._fields_ordered if key in kwargs}
 
-        QueueManager.objects()  # init
-        r = QueueManager.objects(name=name).update(**upd, upsert=True, modified_on=dt.utcnow())
-        return r == 1
+        # QueueManager.objects()  # init
+        manager = QueueManager.objects(name=name)
+        if manager:  # existing
+            upd.update(inc_count)
+            num_updated = manager.update(**upd, modified_on=dt.utcnow())
+        else:  # create new, ensures defaults and validations
+            QueueManager(name=name, **upd).save()
+            num_updated = 1
+
+        return num_updated == 1
 
     def get_managers(self, name: str=None, status: str=None, modified_before=None):
 
