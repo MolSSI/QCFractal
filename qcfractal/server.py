@@ -236,7 +236,7 @@ class FractalServer:
             self.executor = ThreadPoolExecutor(max_workers=2)
 
             # Build the queue manager, will not run until loop starts
-            self._run_in_thread(self._build_manager)
+            self.objects["queue_manager_future"] = self._run_in_thread(self._build_manager)
 
     def _run_in_thread(self, func, timeout=5):
         """
@@ -252,7 +252,6 @@ class FractalServer:
         """
         Async build the manager so it can talk to itself
         """
-
         # Add the socket to passed args
         client = interface.FractalClient(self._address, verify=self.client_verify)
         self.objects["queue_manager"] = queue.QueueManager(
@@ -426,6 +425,12 @@ class FractalServer:
         if self.queue_socket is None:
             raise AttributeError(
                 "{} is only available if the server was initialized with a queue manager.".format(func_name))
+
+        # Pull the manager and delete
+        if "queue_manager_future" in self.objects:
+            self.logger.info("Waiting on queue_manager to build.")
+            self.objects["queue_manager_future"].result()
+            del self.objects["queue_manager_future"]
 
     def update_tasks(self):
         """Pulls tasks from the queue_adapter, inserts them into the database,
