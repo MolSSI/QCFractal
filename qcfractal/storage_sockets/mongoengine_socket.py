@@ -1637,10 +1637,9 @@ class MongoengineSocket:
         procedures = Procedure.objects(task_id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
 
         # This should not happen unless there is data inconsistency in the DB
-        if results + procedures != tasks:
+        if results + procedures < tasks:
             logging.error("Some tasks don't reference results or procedures correctly!"
-                          "Tasks: {}, Results: {}, procedures: {}. "
-                          "# of results + procedures should equal # of tasks.".format(tasks, results, procedures))
+                          "Tasks: {}, Results: {}, procedures: {}. ".format(tasks, results, procedures))
         return tasks
 
     def queue_mark_error(self, data):
