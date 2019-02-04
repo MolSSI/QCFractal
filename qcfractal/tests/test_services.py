@@ -7,7 +7,7 @@ import copy
 import pytest
 
 import qcfractal.interface as portal
-from qcfractal.testing import fractal_compute_server, recursive_dict_merge
+from qcfractal.testing import fractal_compute_server, recursive_dict_merge, using_geometric, using_rdkit
 
 
 @pytest.fixture(scope="module")
@@ -126,3 +126,46 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
 
     assert status[0]["status"] == "ERROR"
     assert "All tasks" in status[0]["error_message"]
+
+
+@using_geometric
+@using_rdkit
+def test_service_gridoptimization_single(fractal_compute_server):
+
+    client = portal.FractalClient(fractal_compute_server)
+
+    # Add a HOOH
+    hooh = portal.data.get_molecule("hooh.json")
+    mol_ret = client.add_molecules({"hooh": hooh})
+
+    # Options
+    gridoptimization_options = {
+        "gridoptimization_meta": {
+            "scans": [{
+                "type": "bond",
+                "indices": [1, 2],
+                "steps": [1.0, 1.1]
+            }, {
+                "type": "dihedral",
+                "indices": [0, 1, 2, 3],
+                "steps": [0, 180]
+            }]
+        },
+        "optimization_meta": {
+            "program": "geometric",
+            "coordsys": "tric",
+        },
+        "qc_meta": {
+            "driver": "gradient",
+            "method": "UFF",
+            "basis": "",
+            "options": None,
+            "program": "rdkit",
+        },
+    }
+
+    ret = client.add_service("gridoptimization", [mol_ret["hooh"]], gridoptimization_options)
+    fractal_compute_server.await_services()
+    assert len(fractal_compute_server.list_current_tasks()) == 0
+
+    result = client.get_procedures({"procedure": "gridoptimization"})[0]

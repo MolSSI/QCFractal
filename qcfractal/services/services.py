@@ -3,8 +3,22 @@ Manipulates available services.
 """
 
 from .torsiondrive_service import TorsionDriveService
+from .gridoptimization_service import GridOptimizationService
 
 __all__ = ["initializer", "build"]
+
+
+def _service_chooser(name):
+    """
+    Choose the correct service
+    """
+    name = name.lower()
+    if name == "torsiondrive":
+        return TorsionDriveService
+    elif name == "gridoptimization":
+        return GridOptimizationService
+    else:
+        raise KeyError("Name {} not recognized.".format(name.title()))
 
 
 def initializer(name, storage_socket, meta, molecule):
@@ -27,11 +41,7 @@ def initializer(name, storage_socket, meta, molecule):
         Returns an instantiated service
 
     """
-    name = name.lower()
-    if name == "torsiondrive":
-        return TorsionDriveService.initialize_from_api(storage_socket, meta, molecule)
-    else:
-        raise KeyError("Name {} not recognized.".format(name.title()))
+    return _service_chooser(name).initialize_from_api(storage_socket, meta, molecule)
 
 
 def build(name, storage_socket, data):
@@ -50,8 +60,4 @@ def build(name, storage_socket, data):
         Returns an instantiated service
 
     """
-    name = name.lower()
-    if name == "torsiondrive":
-        return TorsionDriveService(**data, storage_socket=storage_socket)
-    else:
-        raise KeyError("Name {} not recognized.".format(name.title()))
+    return _service_chooser(name)(**data, storage_socket=storage_socket)

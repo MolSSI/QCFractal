@@ -6,14 +6,14 @@ import copy
 import json
 
 import numpy as np
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set, Tuple
 
 from qcfractal.interface.models.gridoptimization import GridOptimization
 from qcfractal.interface.models.common_models import json_encoders
 from qcfractal import procedures
 from qcfractal.extras import get_information
 
-from .service_util import BaseService, TaskManager
+from .service_util import BaseService, TaskManager, expand_ndimensional_grid
 
 __all__ = ["GridOptimizationService"]
 
@@ -30,7 +30,10 @@ class GridOptimizationService(BaseService):
     output: GridOptimization
 
     # Temporaries
-    grid_optimizations: Dict[str, str]
+    grid_optimizations: Dict[str, str] = {}
+    seeds: Set[Tuple]
+    complete: Set[Tuple] = set()
+    dimensions: Tuple
 
     # Task helpers
     task_map: Dict[str, str] = {}
@@ -46,7 +49,6 @@ class GridOptimizationService(BaseService):
 
     @classmethod
     def initialize_from_api(cls, storage_socket, meta, molecule):
-        _check_td()
 
         # Validate input
         output = GridOptimization(
@@ -91,6 +93,8 @@ class GridOptimizationService(BaseService):
         meta["optimization_program"] = output.optimization_meta.program
 
         meta["hash_index"] = output.get_hash_index()
+        meta["seeds"] = set([(0, 0)])
+        meta["dimensions"] = (2, 2)
 
         return cls(**meta, storage_socket=storage_socket)
 
@@ -106,7 +110,10 @@ class GridOptimizationService(BaseService):
 
         # Populate task results
 
-        td_api.update_state(self.gridoptimization_state, task_results)
+        new_tasks = expand_ndimensional_grid(self.dimensions, self.seeds, self.complete)
+
+        print(new_tasks)
+        raise Exception()
 
         # Create new tasks from the current state
         next_tasks = td_api.next_jobs_from_state(self.gridoptimization_state, verbose=True)

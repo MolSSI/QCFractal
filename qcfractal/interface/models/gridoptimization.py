@@ -6,65 +6,71 @@ import copy
 import json
 from typing import Any, Dict, List, Tuple
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 from .common_models import QCMeta, Provenance, Molecule, json_encoders, hash_dictionary
 
 __all__ = ["GridOptimizationInput", "GridOptimization"]
 
 
+class ScanDimension(BaseModel):
+    """
+    A dimension to scan over
+    """
+    type: str
+    indices: List[int]
+    steps: List[float]
+
+    @validator('type')
+    def check_type(cls, v, values, **kwargs):
+        possibilities = {"bond", "angle", "dihedral"}
+        if v not in possibilities:
+            raise TypeError("Type '{}' found, can only be one of {}.".format(v, possibilities))
+
+        return v
+
+    @validator('indices', whole=True)
+    def check_indices(cls, v, values, **kwargs):
+        sizes = {"bond": 2, "angle": 3, "dihedral": 4}
+        if sizes[values["type"]] != len(v):
+            raise ValueError("ScanDimension of type {} must have {} values, found {}.".format(
+                values["type"], sizes[values["type"]], len(v)))
+
+        return v
+
+    @validator('steps', whole=True)
+    def check_steps_monotonic(cls, v):
+        if not all(x < y for x, y in zip(v, v[1:])):
+            raise ValueError("Steps are not monotonically increasing.")
+
+        return v
+
+
+class GOOptions(BaseModel):
+    """
+    GridOptimization options
+    """
+    scans: List[ScanDimension]
+
+    class Config:
+        allow_mutation = False
+
+
+class OptOptions(BaseModel):
+    """
+    GridOptimization options
+    """
+    program: str
+
+    class Config:
+        allow_extra = True
+        allow_mutation = False
+
+
 class GridOptimizationInput(BaseModel):
     """
     A GridOptimization Input base class
     """
-
-    class ScanDimension(BaseModel):
-        type: str
-        indices: List[int]
-        steps: List[float]
-
-        @validator('type')
-        def check_type(cls, v, values, **kwargs):
-            possibilities = {"bond", "angle", "dihedral"}
-            if v not in possibilities:
-                raise TypeError("Type '{}' found, can only be one of {}.".format(v, possibilities))
-
-            return v
-
-        @validator('indices')
-        def check_type(cls, v, values, **kwargs):
-            sizes = {"bond": 2, "angle": 3, "dihedral": 4}
-            if sizes[values["type"]] != len(v):
-                raise ValueError("ScanDimension of type {} must have {} values, found {}.".format(
-                    values["type"], sizes[values["type"]], len(v)))
-
-        @validator('indices')
-        def check_steps_monotonic(cls, v):
-            if not all(x < y for x, y in zip(L, L[1:])):
-                raise ValueError("Steps are not monotonically increasing.")
-
-            return v
-
-    class GOOptions(BaseModel):
-        """
-        GridOptimization options
-        """
-        scans: List[ScanDimension]
-        grid_spacing: List[float]
-
-        class Config:
-            allow_extra = True
-            allow_mutation = False
-
-    class OptOptions(BaseModel):
-        """
-        GridOptimization options
-        """
-        program: str
-
-        class Config:
-            allow_extra = True
-            allow_mutation = False
 
     program: str = "gridoptimization"
     procedure: str = "gridoptimization"
@@ -91,6 +97,26 @@ class GridOptimizationInput(BaseModel):
         data["initial_molecule"] = mol_id
 
         return hash_dictionary(data)
+
+    def serialize_key(self, key):
+        if isinstance(key, (int, float)):
+            key = (int(key), )
+
+        return json.dumps(key)
+
+    def deserialize_key(self, key):
+
+        return tuple(json.loads(key))
+
+    def get_scan_value(self, key):
+        if isinstance(key, str):
+            key = self.deserialize_key(key)
+
+        ret = []
+        for n, idx in enumerate(key):
+            ret.append(gridoptimization_meta.scans[n].steps[idx])
+
+        return tuple(ret)
 
 
 class GridOptimization(GridOptimizationInput):

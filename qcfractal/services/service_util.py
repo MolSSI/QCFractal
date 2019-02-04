@@ -7,7 +7,7 @@ import json
 
 from qcfractal.procedures import get_procedure_parser
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set, Tuple
 from pydantic import BaseModel
 
 
@@ -124,3 +124,48 @@ class TaskManager(BaseModel):
         self.required_tasks = required_tasks
 
         return True
+
+
+def expand_ndimensional_grid(dimensions: Tuple[int, ...], seeds: Set[Tuple[int, ...]],
+                             complete: Set[Tuple[int, ...]]) -> List[Tuple[Tuple[int, ...], Tuple[int, ...]]]:
+    """
+    Expands an n-dimensional key/value grid
+
+    Example:
+    >>> expand_ndimensional_grid((3, 3), {(1, 1)}, set())
+    [((1, 1), (0, 1)), ((1, 1), (2, 1)), ((1, 1), (1, 0)), ((1, 1), (1, 2))]
+    """
+
+    dimensions = tuple(dimensions)
+    compute = set()
+    connections = []
+
+    for d in range(len(dimensions)):
+
+        # Loop over all compute seeds
+        for seed in seeds:
+
+            # Iterate both directions
+            for disp in [-1, 1]:
+                new_dim = seed[d] + disp
+
+                # Bound check
+                if new_dim >= dimensions[d]:
+                    continue
+                if new_dim < 0:
+                    continue
+
+                new = list(seed)
+                new[d] = new_dim
+                new = tuple(new)
+
+                # Push out duplicates from both new compute and copmlete
+                if new in compute:
+                    continue
+                if new in complete:
+                    continue
+
+                compute |= {new}
+                connections.append((seed, new))
+
+    return connections
