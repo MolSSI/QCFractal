@@ -23,7 +23,7 @@ class ScanDimension(BaseModel):
 
     @validator('type')
     def check_type(cls, v, values, **kwargs):
-        possibilities = {"bond", "angle", "dihedral"}
+        possibilities = {"distance", "angle", "dihedral"}
         if v not in possibilities:
             raise TypeError("Type '{}' found, can only be one of {}.".format(v, possibilities))
 
@@ -31,7 +31,7 @@ class ScanDimension(BaseModel):
 
     @validator('indices', whole=True)
     def check_indices(cls, v, values, **kwargs):
-        sizes = {"bond": 2, "angle": 3, "dihedral": 4}
+        sizes = {"distance": 2, "angle": 3, "dihedral": 4}
         if sizes[values["type"]] != len(v):
             raise ValueError("ScanDimension of type {} must have {} values, found {}.".format(
                 values["type"], sizes[values["type"]], len(v)))
@@ -114,7 +114,7 @@ class GridOptimizationInput(BaseModel):
 
         ret = []
         for n, idx in enumerate(key):
-            ret.append(gridoptimization_meta.scans[n].steps[idx])
+            ret.append(self.gridoptimization_meta.scans[n].steps[idx])
 
         return tuple(ret)
 

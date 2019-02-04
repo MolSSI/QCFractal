@@ -5,6 +5,7 @@ Constructs ORMs from raw JSON
 from .optimization_orm import OptimizationORM
 # from .torsiondrive_orm import TorsionDriveORM
 from ..models.torsiondrive import TorsionDrive
+from ..models.gridoptimization import GridOptimization
 
 
 def build_orm(data, procedure=None, client=None):
@@ -48,6 +49,8 @@ def build_orm(data, procedure=None, client=None):
     # print(json.dumps(data, indent=2))
     if data["procedure"].lower() == "torsiondrive":
         return TorsionDrive(**data, client=client)
+    elif data["procedure"].lower() == "gridoptimization":
+        return GridOptimization(**data, client=client)
     elif data["procedure"].lower() == "optimization":
         return OptimizationORM.from_json(data, client=client)
     else:

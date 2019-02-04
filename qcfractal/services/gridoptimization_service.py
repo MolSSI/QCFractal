@@ -34,6 +34,7 @@ class GridOptimizationService(BaseService):
     seeds: Set[Tuple]
     complete: Set[Tuple] = set()
     dimensions: Tuple
+    iteration: int = 0
 
     # Task helpers
     task_map: Dict[str, str] = {}
@@ -73,7 +74,7 @@ class GridOptimizationService(BaseService):
         # Build dihedral template
         constraint_template = []
         for scan in output.gridoptimization_meta.scans:
-            tmp = {"type": scan.type, "indices": 0}
+            tmp = {"type": scan.type, "indices": scan.indices}
             constraint_template.append(tmp)
 
         meta["constraint_template"] = json.dumps(constraint_template)
@@ -102,21 +103,41 @@ class GridOptimizationService(BaseService):
 
         self.status = "RUNNING"
 
+        # Special init case
+        if self.iteration == 0:
+            geom = json.loads(self.molecule_template)["geometry"]
+
+            self.submit_optimization_tasks({self.output.serialize_key((0, 0)): self.output.initial_molecule})
+            self.iteration = 1
+
+            return False
+
         # Check if tasks are done
         if self.task_manager.done(self.storage_socket) is False:
             return False
 
+        # Obtain complete tasks and figure out future tasks
         complete_tasks = self.task_manager.get_tasks(self.storage_socket)
+        complete_seeds = set(tuple(json.loads(k)) for k in complete_tasks.keys())
+        self.complete |= complete_seeds
+        self.seeds = complete_seeds
+        print("Complete", self.complete)
 
-        # Populate task results
+        # Compute new points
+        new_points_list = expand_ndimensional_grid(self.dimensions, self.seeds, self.complete)
+        print(new_points_list)
 
-        new_tasks = expand_ndimensional_grid(self.dimensions, self.seeds, self.complete)
+        grid = np.zeros(self.dimensions)
+        for x in self.complete:
+            grid[x] = 1
+        print(grid)
 
-        print(new_tasks)
-        raise Exception()
+        next_tasks = {}
+        for new_points in new_points_list:
+            old = self.output.serialize_key(new_points[0])
+            new = self.output.serialize_key(new_points[1])
 
-        # Create new tasks from the current state
-        next_tasks = td_api.next_jobs_from_state(self.gridoptimization_state, verbose=True)
+            next_tasks[new] = complete_tasks[old]["final_molecule"]
 
         # All done
         if len(next_tasks) == 0:
@@ -131,32 +152,26 @@ class GridOptimizationService(BaseService):
         procedure_parser = procedures.get_procedure_parser("optimization", self.storage_socket)
 
         new_tasks = {}
-        task_map = {}
 
-        for key, geoms in task_dict.items():
+        for key, mol in task_dict.items():
 
             # Update molecule
             packet = json.loads(self.optimization_template)
 
             # Construct constraints
             constraints = json.loads(self.constraint_template)
-            grid_id = td_api.grid_id_from_string(key)
-            for con_num, k in enumerate(grid_id):
+            grid_values = self.output.get_scan_value(key)
+            for con_num, k in enumerate(grid_values):
                 constraints[con_num]["value"] = k
             packet["meta"]["keywords"]["constraints"] = {"set": constraints}
+            print(constraints)
 
             # Build new molecule
-            mol = json.loads(self.molecule_template)
-            mol["geometry"] = geom
             packet["data"] = [mol]
 
-            task_key = "{}-{}".format(key, num)
-            new_tasks[task_key] = packet
-
-            task_map[key].append(task_key)
+            new_tasks[key] = packet
 
         self.task_manager.submit_tasks(self.storage_socket, "optimization", new_tasks)
-        self.task_map = task_map
 
     def finalize(self):
         """

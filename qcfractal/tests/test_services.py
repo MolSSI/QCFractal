@@ -142,13 +142,13 @@ def test_service_gridoptimization_single(fractal_compute_server):
     gridoptimization_options = {
         "gridoptimization_meta": {
             "scans": [{
-                "type": "bond",
+                "type": "distance",
                 "indices": [1, 2],
                 "steps": [1.0, 1.1]
             }, {
                 "type": "dihedral",
                 "indices": [0, 1, 2, 3],
-                "steps": [0, 180]
+                "steps": [0, 90]
             }]
         },
         "optimization_meta": {

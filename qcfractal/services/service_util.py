@@ -56,11 +56,18 @@ class TaskManager(BaseModel):
             id=list(self.required_tasks.values()),
             status=["COMPLETE", "ERROR"],
             projection={"base_result": True,
-                        "status": True})
+                        "status": True,
+                        "error": True})
+
         if len(task_query["data"]) != len(self.required_tasks):
             return False
 
         elif "ERROR" in set(x["status"] for x in task_query["data"]):
+            for x in task_query["data"]:
+                if x["status"] != "ERROR":
+                    continue
+                print(x["error"])
+                print(x["error"]["error_message"])
             raise KeyError("All tasks did not execute successfully.")
 
         return True
