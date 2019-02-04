@@ -1,5 +1,4 @@
 import qcfractal.interface as portal
-import json
 
 # Build a interface to the server 
 p = portal.FractalClient("localhost:7777", verify=False)
@@ -19,6 +18,8 @@ print(ds.df)
 # Submit computations (cp corrected scf/sto-3g)
 r = ds.compute("scf", "sto-3g", stoich="cp")
 
-print("Jobs to be computed")
-print(json.dumps(r, indent=2))
+print("Jobs to be computed:")
+print("\n\t-".join([x['molecule'] for x in r.queue]) + "\n")
+print("Jobs Already Done:")
+print("\n\t-".join([x['molecule'] for x in r.completed]) + "\n")
 

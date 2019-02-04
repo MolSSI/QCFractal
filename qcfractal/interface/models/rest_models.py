@@ -35,7 +35,7 @@ class ResponseGETMeta(ResponseMeta):
 
 class ResponsePOSTMeta(ResponseMeta):
     n_inserted: int
-    duplicates: List[str]
+    duplicates: Union[List[str], List[Tuple[str, str]]]
     validation_errors: List[str]
 
 

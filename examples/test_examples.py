@@ -3,9 +3,7 @@ Test the examples
 """
 
 import os
-import pytest
 import time
-import subprocess as sp
 from qcfractal import testing
 
 _pwd = os.path.abspath(os.path.dirname(__file__))
