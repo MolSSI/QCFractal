@@ -8,12 +8,14 @@ from enum import Enum
 from .common_models import Molecule, json_encoders
 
 __all__ = [
+    "ResponseGETMeta",
     "MoleculeGETBody", "MoleculeGETResponse", "MoleculePOSTBody", "MoleculePOSTResponse",
     "OptionGETBody", "OptionGETResponse", "OptionPOSTBody", "OptionPOSTResponse",
     "CollectionGETBody", "CollectionGETResponse", "CollectionPOSTBody", "CollectionPOSTResponse",
     "ResultGETBody", "ResultGETResponse",
     "ProcedureGETBody", "ProcedureGETReponse",
     "TaskQueueGETBody", "TaskQueueGETResponse", "TaskQueuePOSTBody", "TaskQueuePOSTResponse",
+    "ServiceQueueGETBody", "ServiceQueueGETResponse", "ServiceQueuePOSTBody", "ServiceQueuePOSTResponse",
 ]  # yapf: disable
 
 
@@ -253,6 +255,39 @@ class TaskQueuePOSTResponse(BaseModel):
     class Data(BaseModel):
         submitted: List[str]
         completed: List[Dict[str, str]]
+        queue: List[str]
+
+    meta: ResponsePOSTMeta
+    data: Data
+
+
+### Service Queue
+
+class ServiceQueueGETBody(BaseModel):
+    meta: Dict[str, Any]
+    data: Dict[str, Any]
+
+
+class ServiceQueueGETResponse(BaseModel):
+    meta: ResponseGETMeta
+    data: List[Dict[str, Any]]
+
+    @validator("data", whole=True, pre=True)
+    def ensure_list_of_dict(cls, v):
+        if isinstance(v, dict):
+            return [v]
+        return v
+
+
+class ServiceQueuePOSTBody(BaseModel):
+    meta: Dict[str, Any]
+    data: List[Union[str, Dict[str, Any]]]
+
+
+class ServiceQueuePOSTResponse(BaseModel):
+    class Data(BaseModel):
+        submitted: List[str]
+        completed: List[str]
         queue: List[str]
 
     meta: ResponsePOSTMeta

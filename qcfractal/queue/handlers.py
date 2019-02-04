@@ -9,9 +9,23 @@ from .. import procedures
 from .. import services
 from ..web_handlers import APIHandler
 
+from pydantic import BaseModel
+from typing import Dict
+
+from ..interface.models.common_models import Molecule, json_encoders
 from ..interface.models.rest_models import (
-    TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse
+    ResponseGETMeta,
+    TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse,
+    ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse
 )
+
+
+class MultiMoleculeGETResponse(BaseModel):
+    meta: ResponseGETMeta
+    data: Dict[int, Molecule]
+
+    class Config:
+        json_encoders = json_encoders
 
 
 class TaskQueueHandler(APIHandler):
@@ -79,12 +93,19 @@ class ServiceQueueHandler(APIHandler):
 
         # Figure out initial molecules
         errors = []
-        mol_query = storage.get_add_molecules_mixed(self.json["data"])
+        body = ServiceQueuePOSTBody.parse_raw(self.request.body)
+        mol_query = storage.get_add_molecules_mixed(body.data)
+        mol_response = MultiMoleculeGETResponse(**mol_query)
 
         # Build out services
         submitted_services = []
-        for idx, mol in mol_query["data"].items():
-            tmp = services.initializer(self.json["meta"]["service"], storage, self.json["meta"], mol)
+        for idx, mol in mol_response.data.items():
+            mol_dict = mol.json(as_dict=True)
+            # Ensure ID is present
+            if hasattr(mol, 'id') and mol.id is not None:
+                # Workaround until we can better refine our Molecule object 'id' is preserved better when casting to str
+                mol_dict['id'] = mol.id
+            tmp = services.initializer(body.meta["service"], storage, body.meta, mol_dict)
             submitted_services.append(tmp)
 
         # Figure out complete services
@@ -104,26 +125,33 @@ class ServiceQueueHandler(APIHandler):
 
         # Add services to database
         ret = storage.add_services([service.json_dict() for service in new_services])
-        self.logger.info("ServiceQueue: Added {} services.\n".format(ret["meta"]["n_inserted"]))
 
-        ret["data"] = {"submitted": ret["data"], "completed": list(complete_tasks), "queue": ret["meta"]["duplicates"]}
+        data_payload = {"submitted": ret["data"],
+                        "completed": list(complete_tasks),
+                        "queue": ret["meta"]["duplicates"]}
         ret["meta"]["duplicates"] = []
         ret["meta"]["errors"].extend(errors)
 
-        self.write(ret)
+        response = ServiceQueuePOSTResponse(data=data_payload, meta=ret['meta'])
+        self.logger.info("ServiceQueue: Added {} services.\n".format(response.meta.n_inserted))
+
+        self.write(response.json())
 
     def get(self):
-        """Posts new services to the service queue
+        """Gets services from the service queue
         """
         self.authenticate("read")
 
         # Grab objects
         storage = self.objects["storage_socket"]
 
-        projection = {x: True for x in ["status", "error_message", "tag"]}
-        ret = storage.get_services(self.json["data"], projection=projection)
+        body = ServiceQueueGETBody.parse_raw(self.request.body)
 
-        self.write(ret)
+        projection = {x: True for x in ["status", "error_message", "tag"]}
+        ret = storage.get_services(body.data, projection=projection)
+        response = ServiceQueueGETResponse(**ret)
+
+        self.write(response.json())
 
 
 class QueueManagerHandler(APIHandler):

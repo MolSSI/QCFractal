@@ -223,7 +223,7 @@ class OpenFFWorkflow(Collection):
         # Get hash of torsion
         ret = self.client.add_service("torsiondrive", [packet["initial_molecule"]], torsion_meta)
         hash_lists = []
-        [hash_lists.extend(x) for x in ret.values()]
+        hash_lists.extend(ret.submitted)
         if len(hash_lists) != 1:
             raise KeyError("Something went very wrong.")
         return hash_lists[0]

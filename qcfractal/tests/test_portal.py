@@ -51,7 +51,6 @@ def test_collection_portal(test_server):
     client = portal.FractalClient(test_server)
 
     # Test add
-    # import pdb; pdb.set_trace()
     _ = client.add_collection(db)
 
     # Test get
