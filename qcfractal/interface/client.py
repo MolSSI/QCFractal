@@ -11,7 +11,7 @@ import yaml
 from . import orm
 from .collections import collection_factory
 
-from .models import Molecule
+from .models.common_models import Molecule
 from .models.rest_models import (
     MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
     OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse,
@@ -389,7 +389,7 @@ class FractalClient(object):
                     basis: str,
                     driver: str,
                     options: Union[str, None],
-                    molecule_id: Union[str, Dict[str, Any], List[Union[str, Dict[str, Any]]]],
+                    molecule_id: Union[str, Molecule, List[Union[str, Molecule]]],
                     return_full: bool=False,
                     tag: str=None) -> Union[TaskQueuePOSTResponse, TaskQueuePOSTResponse.Data]:
 

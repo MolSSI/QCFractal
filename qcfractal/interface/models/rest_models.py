@@ -242,11 +242,14 @@ class TaskQueueGETResponse(BaseModel):
 
 class TaskQueuePOSTBody(BaseModel):
     meta: Dict[str, Any]
-    data: List[Union[str, Dict[str, Any]]]
+    data: List[Union[str, Molecule]]
+
+    class Config:
+        json_encoders = json_encoders
 
     @validator("data", whole=True, pre=True)
     def ensure_list_of_dict(cls, v):
-        if isinstance(v, dict):
+        if not isinstance(v, list):
             return [v]
         return v
 

@@ -50,11 +50,12 @@ def test_task_molecule_no_orientation(data, fractal_compute_server):
 def test_task_error(fractal_compute_server):
     client = portal.FractalClient(fractal_compute_server)
 
-    # Cookiemonster is an invalid method
-    ret = client.add_compute("rdkit", "cookiemonster", "", "energy", None, [{
+    mol = portal.models.common_models.Molecule(**{
         "geometry": [0, 0, 0],
         "symbols": ["He"]
-    }])
+    })
+    # Cookiemonster is an invalid method
+    ret = client.add_compute("rdkit", "cookiemonster", "", "energy", None, [mol])
 
     # Manually handle the compute
     fractal_compute_server.await_results()

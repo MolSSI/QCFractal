@@ -7,7 +7,7 @@ import glob
 import json
 import os
 
-from ..models import Molecule
+from ..models.common_models import Molecule
 
 __all__ = ["list_directories", "get_file_name", "get_file", "get_molecule", "get_options"]
 
