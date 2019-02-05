@@ -88,10 +88,17 @@ def test_option_socket(test_server):
     assert pdata["meta"].keys() == meta_set
     assert pdata["meta"]["n_inserted"] == 1
 
-    r = requests.get(opt_api_addr, json={"meta": {}, "data": {"program": opts["program"], "name": opts["name"]}})
+    data_payload = {"program": opts["program"], "name": opts["name"]}
+
+    r = requests.get(opt_api_addr, json={"meta": {}, "data": data_payload})
     assert r.status_code == 200
 
     assert r.json()["data"][0] == opts
+
+    # Try duplicates
+    r = requests.post(opt_api_addr, json={"meta": {}, "data": [opts]})
+    assert r.status_code == 200
+    assert len(r.json()["meta"]["duplicates"]) == 1
 
 
 def test_storage_socket(test_server):

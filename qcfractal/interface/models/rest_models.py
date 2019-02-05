@@ -8,12 +8,15 @@ from enum import Enum
 from .common_models import Molecule, json_encoders
 
 __all__ = [
+    "ResponseGETMeta",
     "MoleculeGETBody", "MoleculeGETResponse", "MoleculePOSTBody", "MoleculePOSTResponse",
     "OptionGETBody", "OptionGETResponse", "OptionPOSTBody", "OptionPOSTResponse",
     "CollectionGETBody", "CollectionGETResponse", "CollectionPOSTBody", "CollectionPOSTResponse",
-    "ResultGETBody", "ResultGETResponse", "ResultPOSTBody", "ResultPOSTResponse",
-    "ProcedureGETBody", "ProcedureGETReponse"
-] # yapf: disable
+    "ResultGETBody", "ResultGETResponse",
+    "ProcedureGETBody", "ProcedureGETReponse",
+    "TaskQueueGETBody", "TaskQueueGETResponse", "TaskQueuePOSTBody", "TaskQueuePOSTResponse",
+    "ServiceQueueGETBody", "ServiceQueueGETResponse", "ServiceQueuePOSTBody", "ServiceQueuePOSTResponse",
+]  # yapf: disable
 
 
 ### Generic and Common Models
@@ -32,7 +35,7 @@ class ResponseGETMeta(ResponseMeta):
 
 class ResponsePOSTMeta(ResponseMeta):
     n_inserted: int
-    duplicates: List[str]
+    duplicates: Union[List[str], List[Tuple[str, str]]]
     validation_errors: List[str]
 
 
@@ -92,7 +95,7 @@ class OptionPOSTBody(BaseModel):
     data: List[Dict[str, Any]]
 
     @validator("data", whole=True, pre=True)
-    def cast_dict_to_list_of_dict(cls, v):
+    def ensure_list_of_dict(cls, v):
         if isinstance(v, dict):
             return [v]
         return v
@@ -188,32 +191,6 @@ class ResultGETResponse(BaseModel):
         return v
 
 
-class ResultPOSTBody(BaseModel):
-    class Meta(BaseModel):
-        overwrite: bool = False
-
-    class Data(BaseModel):
-        id: str = "local"  # Auto blocks overwriting
-        collection: str
-        name: str
-
-        @validator("collection")
-        def cast_to_lower(cls, v):
-            return v.lower()
-
-        class Config:
-            # Maps effectively Dict[str, Any] but enforces the collection and name fields
-            allow_extra = True
-
-    meta: Meta = Meta()
-    data: Data
-
-
-class ResultPOSTResponse(BaseModel):
-    data: Union[str, None]
-    meta: ResponsePOSTMeta
-
-
 ### Procedures
 
 
@@ -227,7 +204,94 @@ class ProcedureGETReponse(BaseModel):
     data: List[Dict[str, Any]]
 
     @validator("data", whole=True, pre=True)
-    def convert_dict_to_list_of_dict(cls, v):
+    def ensure_list_of_dict(cls, v):
         if isinstance(v, dict):
             return [v]
         return v
+
+
+### Task Queue
+
+default_task_projection = {x: True for x in ["status", "error", "tag"]}  # Not Pydantic attr
+
+
+class TaskQueueGETBody(BaseModel):
+    class Meta(BaseModel):
+        projection: Dict[str, Any] = default_task_projection  # Is Pydantic attr
+
+        @validator("projection", pre=True, whole=True)
+        def projection_default(cls, v):
+            if v is None:
+                return default_task_projection
+            return v
+
+    meta: Meta = Meta()
+    data: Dict[str, Any]
+
+
+class TaskQueueGETResponse(BaseModel):
+    meta: ResponseGETMeta
+    data: List[Dict[str, Any]]
+
+    @validator("data", whole=True, pre=True)
+    def ensure_list_of_dict(cls, v):
+        if isinstance(v, dict):
+            return [v]
+        return v
+
+
+class TaskQueuePOSTBody(BaseModel):
+    meta: Dict[str, Any]
+    data: List[Union[str, Molecule]]
+
+    class Config:
+        json_encoders = json_encoders
+
+    @validator("data", whole=True, pre=True)
+    def ensure_list_of_dict(cls, v):
+        if not isinstance(v, list):
+            return [v]
+        return v
+
+
+class TaskQueuePOSTResponse(BaseModel):
+    class Data(BaseModel):
+        submitted: List[str]
+        completed: List[Dict[str, str]]
+        queue: List[str]
+
+    meta: ResponsePOSTMeta
+    data: Data
+
+
+### Service Queue
+
+class ServiceQueueGETBody(BaseModel):
+    meta: Dict[str, Any]
+    data: Dict[str, Any]
+
+
+class ServiceQueueGETResponse(BaseModel):
+    meta: ResponseGETMeta
+    data: List[Dict[str, Any]]
+
+    @validator("data", whole=True, pre=True)
+    def ensure_list_of_dict(cls, v):
+        if isinstance(v, dict):
+            return [v]
+        return v
+
+
+class ServiceQueuePOSTBody(BaseModel):
+    meta: Dict[str, Any]
+    data: List[Union[str, Dict[str, Any]]]
+
+
+class ServiceQueuePOSTResponse(BaseModel):
+    class Data(BaseModel):
+        submitted: List[str]
+        completed: List[str]
+        queue: List[str]
+
+    meta: ResponsePOSTMeta
+    data: Data

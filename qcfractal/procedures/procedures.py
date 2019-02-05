@@ -17,7 +17,7 @@ class SingleResultTasks:
         self.storage = storage
 
     def parse_input(self, data):
-        """Parse input json into internally approperiate format
+        """Parse input json into internally appropriate format
 
 
         Format of the input data:

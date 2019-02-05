@@ -218,7 +218,7 @@ class MongoengineSocket:
         # Get molecules by index and translate back to dict
         tmp = self.get_molecules(list(id_mols.values()))
         id_mols_list = tmp["data"]
-        meta["errors"].append(tmp["meta"]["errors"])
+        meta["errors"].extend(tmp["meta"]["errors"])
 
         inv_id_mols = {v: k for k, v in id_mols.items()}
 

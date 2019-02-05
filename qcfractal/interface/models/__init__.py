@@ -1,4 +1,7 @@
 """
 Either pull in QCEl models or local models
 """
-from qcelemental.models import Molecule
+
+from . import common_models
+from . import rest_models
+from . import torsiondrive

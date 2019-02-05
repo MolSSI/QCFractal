@@ -9,6 +9,24 @@ from .. import procedures
 from .. import services
 from ..web_handlers import APIHandler
 
+from pydantic import BaseModel
+from typing import Dict
+
+from ..interface.models.common_models import Molecule, json_encoders
+from ..interface.models.rest_models import (
+    ResponseGETMeta,
+    TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse,
+    ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse
+)
+
+
+class MultiMoleculeGETResponse(BaseModel):
+    meta: ResponseGETMeta
+    data: Dict[int, Molecule]
+
+    class Config:
+        json_encoders = json_encoders
+
 
 class TaskQueueHandler(APIHandler):
     """
@@ -23,20 +41,26 @@ class TaskQueueHandler(APIHandler):
         # Grab objects
         storage = self.objects["storage_socket"]
 
+        body = TaskQueuePOSTBody.parse_raw(self.request.body)
         # Format tasks
-        procedure_parser = procedures.get_procedure_parser(self.json["meta"]["procedure"], storage)
-        full_tasks, complete_tasks, errors = procedure_parser.parse_input(self.json)
+        procedure_parser = procedures.get_procedure_parser(body.meta["procedure"], storage)
+        full_tasks, complete_tasks, errors = procedure_parser.parse_input(body.dict())
 
         # Add tasks to queue
         ret = storage.queue_submit(full_tasks)
-        self.logger.info("TaskQueue: Added {} tasks.".format(ret["meta"]["n_inserted"]))
 
-        ret["data"] = [x for x in ret["data"] if x is not None]
-        ret["data"] = {"submitted": ret["data"], "completed": list(complete_tasks), "queue": ret["meta"]["duplicates"]}
+        # Do some quick reformatting
+        data_payload = {"submitted": [x for x in ret["data"] if x is not None],
+                        "completed": list(complete_tasks),
+                        "queue": ret["meta"]["duplicates"]
+                        }
         ret["meta"]["duplicates"] = []
         ret["meta"]["errors"].extend(errors)
 
-        self.write(ret)
+        response = TaskQueuePOSTResponse(data=data_payload, meta=ret["meta"])
+        self.logger.info("TaskQueue: Added {} tasks.".format(response.meta.n_inserted))
+
+        self.write(response.json())
 
     def get(self):
         """Posts new services to the service queue
@@ -46,13 +70,12 @@ class TaskQueueHandler(APIHandler):
         # Grab objects
         storage = self.objects["storage_socket"]
 
-        projection = self.json["meta"].get("projection", None)
-        if projection is None:
-            projection = {x: True for x in ["status", "error", "tag"]}
+        body = TaskQueueGETBody.parse_raw(self.request.body)
 
-        ret = storage.get_queue(**self.json["data"], projection=projection)
+        tasks = storage.get_queue(**body.data, projection=body.meta.projection)
+        response = TaskQueueGETResponse(**tasks)
 
-        self.write(ret)
+        self.write(response.json())
 
 
 class ServiceQueueHandler(APIHandler):
@@ -70,12 +93,19 @@ class ServiceQueueHandler(APIHandler):
 
         # Figure out initial molecules
         errors = []
-        mol_query = storage.get_add_molecules_mixed(self.json["data"])
+        body = ServiceQueuePOSTBody.parse_raw(self.request.body)
+        mol_query = storage.get_add_molecules_mixed(body.data)
+        mol_response = MultiMoleculeGETResponse(**mol_query)
 
         # Build out services
         submitted_services = []
-        for idx, mol in mol_query["data"].items():
-            tmp = services.initializer(self.json["meta"]["service"], storage, self.json["meta"], mol)
+        for idx, mol in mol_response.data.items():
+            mol_dict = mol.json(as_dict=True)
+            # Ensure ID is present
+            if hasattr(mol, 'id') and mol.id is not None:
+                # Workaround until we can better refine our Molecule object 'id' is preserved better when casting to str
+                mol_dict['id'] = mol.id
+            tmp = services.initializer(body.meta["service"], storage, body.meta, mol_dict)
             submitted_services.append(tmp)
 
         # Figure out complete services
@@ -95,26 +125,33 @@ class ServiceQueueHandler(APIHandler):
 
         # Add services to database
         ret = storage.add_services([service.json_dict() for service in new_services])
-        self.logger.info("ServiceQueue: Added {} services.\n".format(ret["meta"]["n_inserted"]))
 
-        ret["data"] = {"submitted": ret["data"], "completed": list(complete_tasks), "queue": ret["meta"]["duplicates"]}
+        data_payload = {"submitted": ret["data"],
+                        "completed": list(complete_tasks),
+                        "queue": ret["meta"]["duplicates"]}
         ret["meta"]["duplicates"] = []
         ret["meta"]["errors"].extend(errors)
 
-        self.write(ret)
+        response = ServiceQueuePOSTResponse(data=data_payload, meta=ret['meta'])
+        self.logger.info("ServiceQueue: Added {} services.\n".format(response.meta.n_inserted))
+
+        self.write(response.json())
 
     def get(self):
-        """Posts new services to the service queue
+        """Gets services from the service queue
         """
         self.authenticate("read")
 
         # Grab objects
         storage = self.objects["storage_socket"]
 
-        projection = {x: True for x in ["status", "error_message", "tag"]}
-        ret = storage.get_services(self.json["data"], projection=projection)
+        body = ServiceQueueGETBody.parse_raw(self.request.body)
 
-        self.write(ret)
+        projection = {x: True for x in ["status", "error_message", "tag"]}
+        ret = storage.get_services(body.data, projection=projection)
+        response = ServiceQueueGETResponse(**ret)
+
+        self.write(response.json())
 
 
 class QueueManagerHandler(APIHandler):
@@ -260,7 +297,8 @@ class QueueManagerHandler(APIHandler):
 
         else:
             msg = "Operation '{}' not understood.".format(self.json["data"]["operation"])
-            raise tornado.web.HTTPError(status_code=400, reason=msg)
+            from tornado.web import HTTPError
+            raise HTTPError(status_code=400, reason=msg)
         self.write({"meta": {}, "data": ret})
 
         # Update manager logs

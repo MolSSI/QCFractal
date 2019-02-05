@@ -11,12 +11,16 @@ import yaml
 from . import orm
 from .collections import collection_factory
 
-from .models import Molecule
-from .models.rest_models import (MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
-                                 OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse,
-                                 CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
-                                 ResultGETBody, ResultGETResponse,
-                                 ProcedureGETBody, ProcedureGETReponse)
+from .models.common_models import Molecule
+from .models.rest_models import (
+    MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
+    OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse,
+    CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
+    ResultGETBody, ResultGETResponse,
+    ProcedureGETBody, ProcedureGETReponse,
+    TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse,
+    ServiceQueuePOSTBody, ServiceQueuePOSTResponse, ServiceQueueGETBody, ServiceQueueGETResponse
+)
 
 
 class FractalClient(object):
@@ -384,13 +388,13 @@ class FractalClient(object):
                     method: str,
                     basis: str,
                     driver: str,
-                    options: str,
-                    molecule_id: str,
+                    options: Union[str, None],
+                    molecule_id: Union[str, Molecule, List[Union[str, Molecule]]],
                     return_full: bool=False,
-                    tag: str=None):
+                    tag: str=None) -> Union[TaskQueuePOSTResponse, TaskQueuePOSTResponse.Data]:
 
         # Always a list
-        if isinstance(molecule_id, str):
+        if not isinstance(molecule_id, list):
             molecule_id = [molecule_id]
 
         payload = {
@@ -406,12 +410,15 @@ class FractalClient(object):
             "data": molecule_id
         }
 
-        r = self._request("post", "task_queue", payload)
+        body = TaskQueuePOSTBody(**payload)
+
+        r = self._request("post", "task_queue", data=body.json())
+        r = TaskQueuePOSTResponse.parse_raw(r.text)
 
         if return_full:
-            return r.json()
+            return r
         else:
-            return r.json()["data"]
+            return r.data
 
     def add_procedure(self,
                       procedure: str,
@@ -447,6 +454,8 @@ class FractalClient(object):
         ----------
         query : dict
             A query to find tasks
+        projection: dict, optional
+            Projection of data to call from the database
         return_full : bool, optional
             Returns the full JSON return if True
 
@@ -459,16 +468,23 @@ class FractalClient(object):
         >>> client.check_tasks({"id": "5bd35af47b878715165f8225"})
         [{"status": "WAITING"}]
         """
-        payload = {"meta": {"projection": projection}, "data": query}
 
-        r = self._request("get", "task_queue", payload)
+        print(projection)
+        payload = {"meta": {"projection": projection}, "data": query}
+        body = TaskQueueGETBody(**payload)
+
+        r = self._request("get", "task_queue", data=body.json())
+        r = TaskQueueGETResponse.parse_raw(r.text)
 
         if return_full:
-            return r.json()
+            return r
         else:
-            return r.json()["data"]
+            return r.data
 
-    def add_service(self, service: str, data: Dict[str, Any], options: Dict[str, Any], return_full: bool=False):
+    def add_service(self, service: str,
+                    data: Union[Dict[str, Any], List[str], str],
+                    options: Dict[str, Any],
+                    return_full: bool=False):
 
         # Always a list
         if isinstance(data, str):
@@ -482,12 +498,15 @@ class FractalClient(object):
         }
         payload["meta"].update(options)
 
-        r = self._request("post", "service_queue", payload)
+        body = ServiceQueuePOSTBody(**payload)
+
+        r = self._request("post", "service_queue", data=body.json())
+        r = ServiceQueuePOSTResponse.parse_raw(r.text)
 
         if return_full:
-            return r.json()
+            return r
         else:
-            return r.json()["data"]
+            return r.data
 
     def check_services(self, query: Dict[str, Any], return_full: bool=False):
         """Checks the status of services in the Fractal queue.
@@ -503,7 +522,7 @@ class FractalClient(object):
         -------
         list of dict
             A dictionary of each match that contains the current status
-            and, if an error has occured, the error message.
+            and, if an error has occurred, the error message.
 
         >>> client.check_services({"id": "5bd35af47b878715165f8225"})
         [{"status": "RUNNING"}]
@@ -511,9 +530,12 @@ class FractalClient(object):
 
         payload = {"meta": {}, "data": query}
 
-        r = self._request("get", "service_queue", payload)
+        body = ServiceQueueGETBody(**payload)
+
+        r = self._request("get", "service_queue", data=body.json())
+        r = ServiceQueueGETResponse.parse_raw(r.text)
 
         if return_full:
-            return r.json()
+            return r
         else:
-            return r.json()["data"]
+            return r.data
