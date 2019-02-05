@@ -73,7 +73,6 @@ class BaseAdapter(abc.ABC):
         list of str
             The tags associated with the submitted tasks.
         """
-        pass
 
     @abc.abstractmethod
     def acquire_complete(self) -> List[Dict[str, Any]]:
@@ -124,4 +123,3 @@ class BaseAdapter(abc.ABC):
         bool
             True if the closing was successful.
         """
-        pass

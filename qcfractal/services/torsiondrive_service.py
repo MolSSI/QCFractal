@@ -6,6 +6,7 @@ import copy
 import json
 
 import numpy as np
+from typing import Any, Dict, List
 
 try:
     import torsiondrive
@@ -13,12 +14,10 @@ try:
 except ImportError:
     td_api = None
 
-from qcfractal import procedures
 from qcfractal.interface.models.torsiondrive import TorsionDrive
 from qcfractal.interface.models.common_models import json_encoders
 
-from typing import Any, Dict, List
-from pydantic import BaseModel
+from .service_util import BaseService, TaskManager
 
 __all__ = ["TorsionDriveService"]
 
@@ -28,14 +27,9 @@ def _check_td():
         raise ImportError("Unable to find TorsionDrive which must be installed to use the TorsionDriveService")
 
 
-class TorsionDriveService(BaseModel):
-
-    storage_socket: Any
+class TorsionDriveService(BaseService):
 
     # Index info
-    id: str = None
-    hash_index: str
-    success: bool = False
     status: str = "READY"
     service: str = "torsiondrive"
     program: str = "torsiondrive"
@@ -46,9 +40,11 @@ class TorsionDriveService(BaseModel):
 
     # Temporaries
     torsiondrive_state: Dict[str, Any]
-    required_tasks: List[str] = []
-    task_map: Dict[str, List[str]] = {}
     optimization_history: Dict[str, List[str]] = {}
+
+    # Task helpers
+    task_map: Dict[str, List[str]] = {}
+    task_manager: TaskManager = TaskManager()
 
     # Templates
     dihedral_template: str
@@ -116,33 +112,15 @@ class TorsionDriveService(BaseModel):
 
         return cls(**meta, storage_socket=storage_socket)
 
-    def dict(self, include=None, exclude=None, by_alias=False):
-        # return self.data
-        return super().dict(exclude={"storage_socket"})
-
-    def json_dict(self):
-        return json.loads(self.json())
-
     def iterate(self):
 
         self.status = "RUNNING"
 
-        # Create the query payload, fetching the completed required tasks and output location
-        task_query = self.storage_socket.get_queue(
-            id=self.required_tasks, status=["COMPLETE", "ERROR"], projection={"base_result": True,
-                                                                              "status": True})
-        # If all tasks are not complete, return a False
-        if len(task_query["data"]) != len(self.required_tasks):
+        # Check if tasks are done
+        if self.task_manager.done(self.storage_socket) is False:
             return False
 
-        if "ERROR" in set(x["status"] for x in task_query["data"]):
-            raise KeyError("All tasks did not execute successfully.")
-
-        # Create a lookup table for task ID mapping to result from that task in the procedure table
-        inv_task_lookup = {
-            x["id"]: self.storage_socket.get_procedures_by_id(id=x["base_result"]["id"])["data"][0]
-            for x in task_query["data"]
-        }
+        complete_tasks = self.task_manager.get_tasks(self.storage_socket)
 
         # Populate task results
         task_results = {}
@@ -155,7 +133,7 @@ class TorsionDriveService(BaseModel):
 
             for task_id in task_ids:
                 # Cycle through all tasks for this entry
-                ret = inv_task_lookup[task_id]
+                ret = complete_tasks[task_id]
 
                 # Lookup molecules
                 mol_keys = self.storage_socket.get_molecules(
@@ -181,11 +159,9 @@ class TorsionDriveService(BaseModel):
 
     def submit_optimization_tasks(self, task_dict):
 
-        procedure_parser = procedures.get_procedure_parser("optimization", self.storage_socket)
-
-        full_tasks = []
+        new_tasks = {}
         task_map = {}
-        submitted_hash_id_remap = []  # Tracking variable for exondary pass
+
         for key, geoms in task_dict.items():
             task_map[key] = []
             for num, geom in enumerate(geoms):
@@ -196,11 +172,8 @@ class TorsionDriveService(BaseModel):
                 # Construct constraints
                 constraints = json.loads(self.dihedral_template)
                 grid_id = td_api.grid_id_from_string(key)
-                if len(grid_id) == 1:
-                    constraints[0]["value"] = grid_id[0]
-                else:
-                    for con_num, k in enumerate(grid_id):
-                        constraints[con_num]["value"] = k
+                for con_num, k in enumerate(grid_id):
+                    constraints[con_num]["value"] = k
                 packet["meta"]["keywords"]["constraints"] = {"set": constraints}
 
                 # Build new molecule
@@ -208,37 +181,13 @@ class TorsionDriveService(BaseModel):
                 mol["geometry"] = geom
                 packet["data"] = [mol]
 
-                # Turn packet into a full task, if there are duplicates, get the ID
-                tasks, completed, errors = procedure_parser.parse_input(packet, duplicate_id="id")
+                task_key = "{}-{}".format(key, num)
+                new_tasks[task_key] = packet
 
-                if len(completed):
-                    # Job is already complete
-                    task_map[key].append(completed[0]["task_id"])
-                else:
-                    # Remember the full tasks map to update task_map later
-                    submitted_hash_id_remap.append((key, num))
-                    # Create a placeholder entry at that index for now, we'll update them all
-                    # with known task ID's after we submit them
-                    task_map[key].append(None)
-                    # Add task to "list to submit"
-                    full_tasks.append(tasks[0])
+                task_map[key].append(task_key)
 
-        # Add tasks to Nanny
-        ret = self.storage_socket.queue_submit(full_tasks)
-        if len(ret["meta"]["duplicates"]):
-            raise RuntimeError("It appears that one of the tasks you submitted is already in the queue, but was "
-                               "not there when the tasks were populated.\n"
-                               "This should only happen if someone else submitted a similar or exact task "
-                               "was submitted at the same time.\n"
-                               "This is a corner case we have not solved yet. Please open a ticket with QCFractal"
-                               "describing the conditions which yielded this message.")
-
-        # Create data for next round
-        # Update task map based on task IDs
-        for (key, list_index), returned_id in zip(submitted_hash_id_remap, ret['data']):
-            task_map[key][list_index] = returned_id
+        self.task_manager.submit_tasks(self.storage_socket, "optimization", new_tasks)
         self.task_map = task_map
-        self.required_tasks = list({x for v in task_map.values() for x in v})
 
     def finalize(self):
         """

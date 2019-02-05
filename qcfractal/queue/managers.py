@@ -20,7 +20,7 @@ from ..interface.models.rest_models import (
 )
 from .adapters import build_queue_adapter
 
-from qcfractal._version import get_versions
+from qcfractal.extras import get_information
 
 import qcengine
 
@@ -107,7 +107,7 @@ class QueueManager:
         self.meta_packet = json.dumps(meta_packet)
 
         self.logger.info("QueueManager:")
-        self.logger.info("    Version:         {}\n".format(get_versions()["version"]))
+        self.logger.info("    Version:         {}\n".format(get_information("version")))
 
         if self.verbose:
             self.logger.info("    Name Information:")

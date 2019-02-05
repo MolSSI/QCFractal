@@ -18,8 +18,7 @@ from . import queue
 from . import services
 from . import storage_sockets
 from . import web_handlers
-
-from qcfractal._version import get_versions
+from .extras import get_information
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -180,7 +179,7 @@ class FractalServer:
         self.objects["public_information"] = {
             "name": self.name,
             "heartbeat_frequency": self.heartbeat_frequency,
-            "version": get_versions()["version"]
+            "version": get_information("version")
         }
 
         endpoints = [
@@ -219,7 +218,7 @@ class FractalServer:
         self.exit_callbacks = []
 
         self.logger.info("FractalServer:")
-        self.logger.info("    Version:       {}".format(get_versions()["version"]))
+        self.logger.info("    Version:       {}".format(get_information("version")))
         self.logger.info("    Address:       {}".format(self._address))
         self.logger.info("    Database URI:  {}".format(storage_uri))
         self.logger.info("    Database Name: {}\n".format(storage_project_name))
@@ -237,7 +236,7 @@ class FractalServer:
             self.executor = ThreadPoolExecutor(max_workers=2)
 
             # Build the queue manager, will not run until loop starts
-            self._run_in_thread(self._build_manager)
+            self.objects["queue_manager_future"] = self._run_in_thread(self._build_manager)
 
     def _run_in_thread(self, func, timeout=5):
         """
@@ -253,7 +252,6 @@ class FractalServer:
         """
         Async build the manager so it can talk to itself
         """
-
         # Add the socket to passed args
         client = interface.FractalClient(self._address, verify=self.client_verify)
         self.objects["queue_manager"] = queue.QueueManager(
@@ -427,6 +425,12 @@ class FractalServer:
         if self.queue_socket is None:
             raise AttributeError(
                 "{} is only available if the server was initialized with a queue manager.".format(func_name))
+
+        # Pull the manager and delete
+        if "queue_manager_future" in self.objects:
+            self.logger.info("Waiting on queue_manager to build.")
+            self.objects["queue_manager_future"].result()
+            del self.objects["queue_manager_future"]
 
     def update_tasks(self):
         """Pulls tasks from the queue_adapter, inserts them into the database,

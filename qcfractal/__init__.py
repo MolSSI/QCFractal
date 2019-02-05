@@ -13,8 +13,7 @@ from .server import FractalServer
 from .queue import QueueManager
 
 # Handle versioneer
-from ._version import get_versions
-versions = get_versions()
-__version__ = versions['version']
-__git_revision__ = versions['full-revisionid']
-del get_versions, versions
+from .extras import get_information
+__version__ = get_information('version')
+__git_revision__ = get_information('git_revision')
+del get_information

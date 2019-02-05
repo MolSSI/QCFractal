@@ -7,7 +7,7 @@ import copy
 import pytest
 
 import qcfractal.interface as portal
-from qcfractal.testing import fractal_compute_server, recursive_dict_merge
+from qcfractal.testing import fractal_compute_server, recursive_dict_merge, using_geometric, using_rdkit
 
 
 @pytest.fixture(scope="module")
@@ -94,6 +94,7 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     _ = spin_up_test(torsiondrive_meta={"meaningless_entry_to_change_hash": "Waffles!"})
     procedures = client.get_procedures({"procedure": "torsiondrive"})
     assert len(procedures) == 2  # Make sure only 2 procedures are yielded
+
     base_run, duplicate_run = procedures
     assert base_run.optimization_history == duplicate_run.optimization_history
 
@@ -126,3 +127,50 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
 
     assert status[0]["status"] == "ERROR"
     assert "All tasks" in status[0]["error_message"]
+
+
+@using_geometric
+@using_rdkit
+def test_service_gridoptimization_single(fractal_compute_server):
+
+    client = portal.FractalClient(fractal_compute_server)
+
+    # Add a HOOH
+    hooh = portal.data.get_molecule("hooh.json")
+    mol_ret = client.add_molecules({"hooh": hooh})
+
+    # Options
+    gridoptimization_options = {
+        "gridoptimization_meta": {
+            "starting_grid": "zero",
+            "scans": [{
+                "type": "distance",
+                "indices": [1, 2],
+                "steps": [1.0, 1.1]
+            }, {
+                "type": "dihedral",
+                "indices": [0, 1, 2, 3],
+                "steps": [0, 90]
+            }]
+        },
+        "optimization_meta": {
+            "program": "geometric",
+            "coordsys": "tric",
+        },
+        "qc_meta": {
+            "driver": "gradient",
+            "method": "UFF",
+            "basis": "",
+            "options": None,
+            "program": "rdkit",
+        },
+    }
+
+    ret = client.add_service("gridoptimization", [mol_ret["hooh"]], gridoptimization_options)
+    fractal_compute_server.await_services()
+    assert len(fractal_compute_server.list_current_tasks()) == 0
+
+    result = client.get_procedures({"procedure": "gridoptimization"})[0]
+
+    assert pytest.approx(result.final_energies((0, 0)), abs=1.e-6) == 0.0359547286924164
+    assert pytest.approx(result.final_energies((1, 1)), abs=1.e-6) == 0.014190882621078291
