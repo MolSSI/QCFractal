@@ -254,41 +254,45 @@ class OptimizationTasks(SingleResultTasks):
         return full_tasks, completed_procedures, errors
 
     def parse_output(self, data):
+        """Save the results of the procedure.
+        It must make sure to save the results in the results table
+        including the task_id in the TaskQueue table
+        """
 
         new_procedures = {}
         new_hooks = {}
 
         # Each optimization is a unique entry:
-        for result, hooks in data:
-            task_id = result["task_id"]
+        for procedure, hooks in data:
+            task_id = procedure["task_id"]
 
             # Convert start/stop molecules to hash
-            mols = {"initial": result["initial_molecule"], "final": result["final_molecule"]}
+            mols = {"initial": procedure["initial_molecule"], "final": procedure["final_molecule"]}
             mol_keys = self.storage.add_molecules(mols)["data"]
-            result["initial_molecule"] = mol_keys["initial"]
-            result["final_molecule"] = mol_keys["final"]
+            procedure["initial_molecule"] = mol_keys["initial"]
+            procedure["final_molecule"] = mol_keys["final"]
 
-            # Parse trajectory computations and add queue_id
-            traj_dict = {k: v for k, v in enumerate(result["trajectory"])}
+            # Parse trajectory computations and add task_id
+            traj_dict = {k: v for k, v in enumerate(procedure["trajectory"])}
             results = procedures_util.parse_single_runs(self.storage, traj_dict)
             for k, v in results.items():
                 v["task_id"] = task_id
 
             # Add trajectory results and return ids
             ret = self.storage.add_results(list(results.values()))
-            result["trajectory"] = ret["data"]
+            procedure["trajectory"] = ret["data"]
 
             # Coerce tags
-            result.update(result["qcfractal_tags"])
-            del result["input_specification"]
-            del result["qcfractal_tags"]
+            procedure.update(procedure["qcfractal_tags"])
+            del procedure["input_specification"]
+            del procedure["qcfractal_tags"]
             # print("Adding optimization result")
             # print(json.dumps(v, indent=2))
-            new_procedures[task_id] = result
+            new_procedures[task_id] = procedure
             if len(hooks):
                 new_hooks[task_id] = hooks
 
-            self.storage.update_procedure(result["hash_index"], result)
+            self.storage.update_procedure(procedure["hash_index"], procedure)
 
         # Create a list of (queue_id, located) to update the queue with
         completed = list(new_procedures.keys())
