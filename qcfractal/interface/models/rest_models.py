@@ -16,6 +16,8 @@ __all__ = [
     "ProcedureGETBody", "ProcedureGETReponse",
     "TaskQueueGETBody", "TaskQueueGETResponse", "TaskQueuePOSTBody", "TaskQueuePOSTResponse",
     "ServiceQueueGETBody", "ServiceQueueGETResponse", "ServiceQueuePOSTBody", "ServiceQueuePOSTResponse",
+    "QueueManagerGETBody", "QueueManagerGETResponse", "QueueManagerPOSTBody", "QueueManagerPOSTResponse",
+    "QueueManagerPUTBody", "QueueManagerPUTResponse"
 ]  # yapf: disable
 
 
@@ -65,7 +67,7 @@ class MoleculeGETResponse(BaseModel):
 
 
 class MoleculePOSTBody(BaseModel):
-    meta: Dict = None
+    meta: Dict[str, Any] = None
     data: Dict[str, Molecule]
 
     class Config:
@@ -81,7 +83,7 @@ class MoleculePOSTResponse(BaseModel):
 
 
 class OptionGETBody(BaseModel):
-    meta: Dict = None
+    meta: Dict[str, Any] = None
     data: Dict[str, Any]
 
 
@@ -91,7 +93,7 @@ class OptionGETResponse(BaseModel):
 
 
 class OptionPOSTBody(BaseModel):
-    meta: Dict = None
+    meta: Dict[str, Any] = None
     data: List[Dict[str, Any]]
 
     @validator("data", whole=True, pre=True)
@@ -118,7 +120,7 @@ class CollectionGETBody(BaseModel):
         def cast_to_lower(cls, v):
             return v.lower()
 
-    meta: Dict = None
+    meta: Dict[str, Any] = None
     data: Data
 
 
@@ -295,3 +297,58 @@ class ServiceQueuePOSTResponse(BaseModel):
 
     meta: ResponsePOSTMeta
     data: Data
+
+
+### Queue Manager
+
+class QueueManagerMeta(BaseModel):
+    cluster: str = 'unknown'
+    hostname: str
+    uuid: str
+    tag: Union[str, None] = None
+    max_tasks: int = 1000
+
+
+class QueueManagerGETBody(BaseModel):
+    class Data(BaseModel):
+        limit: int = 100
+
+    meta: QueueManagerMeta
+    data: Data = Data()
+
+
+class QueueManagerGETResponse(BaseModel):
+    meta: ResponseGETMeta
+    data: List[Dict[str, Any]]
+
+    @validator("data", whole=True, pre=True)
+    def ensure_list_of_dict(cls, v):
+        if isinstance(v, dict):
+            return [v]
+        return v
+
+
+class QueueManagerPOSTBody(BaseModel):
+    meta: QueueManagerMeta
+    data: Dict[str, Any]
+
+
+class QueueManagerPOSTResponse(BaseModel):
+    meta: ResponsePOSTMeta
+    data: bool
+
+
+class QueueManagerPUTBody(BaseModel):
+    class Data(BaseModel):
+        operation: str
+
+    meta: QueueManagerMeta
+    data: Data
+
+
+class QueueManagerPUTResponse(BaseModel):
+    meta: Dict[str, Any] = {}
+    # Order on Union[] is important. Union[bool, Dict[str, int]] -> True if the input dict is not empty since
+    # Python can resolve dict -> bool since it passes a `is` test. Will not cast bool -> dict[str, int], so make Dict[]
+    # check first
+    data: Union[Dict[str, int], bool]
