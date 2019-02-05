@@ -31,10 +31,12 @@ class GridOptimizationService(BaseService):
 
     # Temporaries
     grid_optimizations: Dict[str, str] = {}
-    seeds: Set[Tuple]
+    seeds: Set[Tuple] = set()
     complete: Set[Tuple] = set()
     dimensions: Tuple
     iteration: int = 0
+    starting_grid: Tuple
+    final_energies = {}
 
     # Task helpers
     task_map: Dict[str, str] = {}
@@ -94,8 +96,18 @@ class GridOptimizationService(BaseService):
         meta["optimization_program"] = output.optimization_meta.program
 
         meta["hash_index"] = output.get_hash_index()
-        meta["seeds"] = set([(0, 0)])
-        meta["dimensions"] = (2, 2)
+
+        # Hard coded data, # TODO
+        meta["dimensions"] = output.get_scan_dimensions()
+
+        start = output.gridoptimization_meta.starting_grid
+        if output.gridoptimization_meta.starting_grid == "relative":
+            meta["iteration"] = -1
+            meta["starting_grid"] = (0, )
+        print("\n")
+        print(start)
+        print("\n")
+        meta["starting_grid"] = output.gridoptimization_meta.starting_grid
 
         return cls(**meta, storage_socket=storage_socket)
 
@@ -103,11 +115,11 @@ class GridOptimizationService(BaseService):
 
         self.status = "RUNNING"
 
-        # Special init case
         if self.iteration == 0:
-            geom = json.loads(self.molecule_template)["geometry"]
 
-            self.submit_optimization_tasks({self.output.serialize_key((0, 0)): self.output.initial_molecule})
+            self.submit_optimization_tasks({
+                self.output.serialize_key(self.starting_grid): self.output.initial_molecule
+            })
             self.iteration = 1
 
             return False
@@ -118,6 +130,10 @@ class GridOptimizationService(BaseService):
 
         # Obtain complete tasks and figure out future tasks
         complete_tasks = self.task_manager.get_tasks(self.storage_socket)
+        for k, v in complete_tasks.items():
+            self.final_energies[k] = v["energies"][-1]
+
+        # Build out nthe new set of seeds
         complete_seeds = set(tuple(json.loads(k)) for k in complete_tasks.keys())
         self.complete |= complete_seeds
         self.seeds = complete_seeds
@@ -127,7 +143,7 @@ class GridOptimizationService(BaseService):
         new_points_list = expand_ndimensional_grid(self.dimensions, self.seeds, self.complete)
         print(new_points_list)
 
-        grid = np.zeros(self.dimensions)
+        grid = np.zeros(self.dimensions, dtype=np.int)
         for x in self.complete:
             grid[x] = 1
         print(grid)
@@ -181,6 +197,10 @@ class GridOptimizationService(BaseService):
         self.output.Config.allow_mutation = True
         self.output.success = True
         self.output.status = "COMPLETE"
+
+        self.output.starting_grid = self.starting_grid
+        self.output.grid_optimizations = self.grid_optimizations
+        self.output.final_energy_dict = self.final_energies
 
         self.output.Config.allow_mutation = False
         return self.output

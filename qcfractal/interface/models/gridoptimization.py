@@ -4,7 +4,7 @@ A model for GridOptimization
 
 import copy
 import json
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 from pydantic import BaseModel, validator
 
@@ -51,6 +51,7 @@ class GOOptions(BaseModel):
     GridOptimization options
     """
     scans: List[ScanDimension]
+    starting_grid: str = "relative"
 
     class Config:
         allow_mutation = False
@@ -108,13 +109,26 @@ class GridOptimizationInput(BaseModel):
 
         return tuple(json.loads(key))
 
-    def get_scan_value(self, key):
+    def get_scan_value(self, key: Union[str, Tuple]) -> Tuple:
+        """
+        Obtains the scan parameters at a given grid point.
+        """
         if isinstance(key, str):
             key = self.deserialize_key(key)
 
         ret = []
         for n, idx in enumerate(key):
             ret.append(self.gridoptimization_meta.scans[n].steps[idx])
+
+        return tuple(ret)
+
+    def get_scan_dimensions(self) -> Tuple:
+        """
+        Returns the overall dimensions of the scan.
+        """
+        ret = []
+        for scan in self.gridoptimization_meta.scans:
+            ret.append(len(scan.steps))
 
         return tuple(ret)
 
@@ -183,3 +197,12 @@ class GridOptimization(GridOptimizationInput):
 
     def json_dict(self):
         return json.loads(self.json())
+
+## Query
+
+    def final_energies(self, key=None):
+
+        if key is None:
+            return {self.deserialize_key(k): v for k, v in self.final_energy_dict.items()}
+        else:
+            return self.final_energy_dict[self.serialize_key(key)]

@@ -94,6 +94,7 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     _ = spin_up_test(torsiondrive_meta={"meaningless_entry_to_change_hash": "Waffles!"})
     procedures = client.get_procedures({"procedure": "torsiondrive"})
     assert len(procedures) == 2  # Make sure only 2 procedures are yielded
+
     base_run, duplicate_run = procedures
     assert base_run.optimization_history == duplicate_run.optimization_history
 
@@ -169,3 +170,6 @@ def test_service_gridoptimization_single(fractal_compute_server):
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
     result = client.get_procedures({"procedure": "gridoptimization"})[0]
+
+    assert pytest.approx(result.final_energies((0, 0)), 1.e-6) == 0.0359547286924164
+    assert pytest.approx(result.final_energies((1, 1)), 1.e-6) == 0.014190882621078291
