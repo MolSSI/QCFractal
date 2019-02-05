@@ -16,7 +16,9 @@ from ..interface.models.common_models import Molecule, json_encoders
 from ..interface.models.rest_models import (
     ResponseGETMeta,
     TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse,
-    ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse
+    ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
+    QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse,
+    QueueManagerPUTBody, QueueManagerPUTResponse
 )
 
 
@@ -164,7 +166,8 @@ class QueueManagerHandler(APIHandler):
         """
         Form the canonical name string.
         """
-        return meta["cluster"] + "-" + meta["hostname"] + "-" + meta["uuid"]
+        ret = meta.cluster + "-" + meta.hostname + "-" + meta.uuid
+        return ret
 
     @staticmethod
     def insert_complete_tasks(storage_socket, results, logger):
@@ -235,20 +238,28 @@ class QueueManagerHandler(APIHandler):
         # Grab objects
         storage = self.objects["storage_socket"]
 
+        body = QueueManagerGETBody.parse_raw(self.request.body)
+
         # Figure out metadata and kwargs
-        name = self._get_name_from_metadata(self.json["meta"])
+        name = self._get_name_from_metadata(body.meta)
         queue_tags = {
-            "limit": self.json["data"].get("limit", 100),
-            "tag": self.json["meta"]["tag"],
-        } # yapf: disable
+            "limit": body.data.limit,
+            "tag": body.meta.tag,
+        }  # yapf: disable
 
         # Grab new tasks and write out
         new_tasks = storage.queue_get_next(name, **queue_tags)
-        self.write({"meta": {"n_found": len(new_tasks), "success": True}, "data": new_tasks})
-        self.logger.info("QueueManager: Served {} tasks.".format(len(new_tasks)))
+        response = QueueManagerGETResponse(meta={"n_found": len(new_tasks),
+                                                 "success": True,
+                                                 "errors": [],
+                                                 "error_description": "",
+                                                 "missing": []},
+                                           data=new_tasks)
+        self.write(response.json())
+        self.logger.info("QueueManager: Served {} tasks.".format(response.meta.n_found))
 
         # Update manager logs
-        storage.manager_update(name, submitted=len(new_tasks), **self.json["meta"])
+        storage.manager_update(name, submitted=len(new_tasks), **body.meta.dict())
 
     def post(self):
         """Posts complete tasks to the Servers queue
@@ -258,13 +269,23 @@ class QueueManagerHandler(APIHandler):
         # Grab objects
         storage = self.objects["storage_socket"]
 
-        ret = self.insert_complete_tasks(storage, self.json["data"], self.logger)
-        self.write({"meta": {"n_inserted": ret[0]}, "data": True})
-        self.logger.info("QueueManager: Aquired {} complete tasks.".format(len(self.json["data"])))
+        body = QueueManagerPOSTBody.parse_raw(self.request.body)
+        ret = self.insert_complete_tasks(storage, body.data, self.logger)
+
+        response = QueueManagerPOSTResponse(meta={"n_inserted": ret[0],
+                                                  "duplicates": [],
+                                                  "validation_errors": [],
+                                                  "success": True,
+                                                  "errors": [],
+                                                  "error_description": "" if not ret[1] else "{} errors".format(ret[1])
+                                                  },
+                                            data=True)
+        self.write(response.json())
+        self.logger.info("QueueManager: Acquired {} complete tasks.".format(len(body.data)))
 
         # Update manager logs
-        name = self._get_name_from_metadata(self.json["meta"])
-        storage.manager_update(name, completed=len(self.json["data"]), **self.json["meta"])
+        name = self._get_name_from_metadata(body.meta)
+        storage.manager_update(name, completed=len(body.data), **body.meta.dict())
 
     def put(self):
         """
@@ -275,30 +296,33 @@ class QueueManagerHandler(APIHandler):
         storage = self.objects["storage_socket"]
         ret = True
 
-        name = self._get_name_from_metadata(self.json["meta"])
-        if self.json["data"]["operation"] == "startup":
-            name = self._get_name_from_metadata(self.json["meta"])
-            storage.manager_update(name, status="ACTIVE", **self.json["meta"])
+        body = QueueManagerPUTBody.parse_raw(self.request.body)
+        name = self._get_name_from_metadata(body.meta)
+        op = body.data.operation
+        if op == "startup":
+            storage.manager_update(name, status="ACTIVE", **body.meta.dict())
             self.logger.info("QueueManager: New active manager {} detected.".format(name))
 
-        elif self.json["data"]["operation"] == "shutdown":
+        elif op == "shutdown":
             nshutdown = storage.queue_reset_status(name)
-            storage.manager_update(name, returned=nshutdown, status="INACTIVE", **self.json["meta"])
+            storage.manager_update(name, returned=nshutdown, status="INACTIVE", **body.meta.dict())
 
             self.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(
                 name, nshutdown))
 
             ret = {"nshutdown": nshutdown}
 
-        elif self.json["data"]["operation"] == "heartbeat":
-            name = self._get_name_from_metadata(self.json["meta"])
-            storage.manager_update(name, status="ACTIVE", **self.json["meta"])
+        elif op == "heartbeat":
+            storage.manager_update(name, status="ACTIVE", **body.meta.dict())
             self.logger.info("QueueManager: Heartbeat of manager {} detected.".format(name))
 
         else:
-            msg = "Operation '{}' not understood.".format(self.json["data"]["operation"])
+            msg = "Operation '{}' not understood.".format(op)
             from tornado.web import HTTPError
             raise HTTPError(status_code=400, reason=msg)
-        self.write({"meta": {}, "data": ret})
+
+        response = QueueManagerPUTResponse(meta={},
+                                           data=ret)
+        self.write(response.json())
 
         # Update manager logs

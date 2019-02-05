@@ -14,6 +14,10 @@ import tornado.ioloop
 
 from qcfractal import testing
 from ..interface.data import get_molecule
+from ..interface.models.rest_models import (
+    QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse, QueueManagerPUTBody,
+    QueueManagerPUTResponse
+)
 from .adapters import build_queue_adapter
 
 from qcfractal._version import get_versions
@@ -129,7 +133,9 @@ class QueueManager:
             # Tell the server we are up and running
             payload = self._payload_template()
             payload["data"]["operation"] = "startup"
-            self.client._request("put", "queue_manager", payload)
+            put_body = QueueManagerPUTBody(**payload)
+            r = self.client._request("put", "queue_manager", data=put_body.json())
+            _ = QueueManagerPUTResponse.parse_raw(r.text)  # Validate
 
             if self.verbose:
                 self.logger.info("    Connected:")
@@ -237,28 +243,34 @@ class QueueManager:
 
         payload = self._payload_template()
         payload["data"]["operation"] = "heartbeat"
-        r = self.client._request("put", "queue_manager", payload, noraise=True)
+        put_body = QueueManagerPUTBody(**payload)
+        r = self.client._request("put", "queue_manager", data=put_body.json(), noraise=True)
         if r.status_code != 200:
             # TODO something as we didnt successfully add the data
             self.logger.warning("Heartbeat was not successful.")
 
+        _ = QueueManagerPUTResponse.parse_raw(r.text)  # Validate
+
     def shutdown(self) -> Dict[str, Any]:
         """
-        Shutsdown the manager and returns tasks to queue.
+        Shutdown the manager and returns tasks to queue.
         """
         self.assert_connected()
 
         payload = self._payload_template()
         payload["data"]["operation"] = "shutdown"
-        r = self.client._request("put", "queue_manager", payload, noraise=True)
+        put_body = QueueManagerPUTBody(**payload)
+        r = self.client._request("put", "queue_manager", data=put_body.json(), noraise=True)
+
         if r.status_code != 200:
             # TODO something as we didnt successfully add the data
             self.logger.warning("Shutdown was not successful. This may delay queued tasks.")
             return {"nshutdown": 0}
-        else:
-            nshutdown = r.json()["data"]["nshutdown"]
-            self.logger.info("Shutdown was successful, {} tasks returned to master queue.".format(nshutdown))
-            return r.json()["data"]
+
+        response = QueueManagerPUTResponse.parse_raw(r.text)
+        nshutdown = response.data["nshutdown"]
+        self.logger.info("Shutdown was successful, {} tasks returned to master queue.".format(nshutdown))
+        return response.data
 
     def add_exit_callback(self, callback: Callable, *args: List[Any], **kwargs: Dict[Any, Any]) -> None:
         """Adds additional callbacks to perform when closing down the server
@@ -287,10 +299,13 @@ class QueueManager:
         if len(results):
             payload = self._payload_template()
             payload["data"] = results
-            r = self.client._request("post", "queue_manager", payload, noraise=True)
+            body = QueueManagerPOSTBody(**payload)
+            r = self.client._request("post", "queue_manager", data=body.json(), noraise=True)
             if r.status_code != 200:
                 # TODO something as we didnt successfully add the data
                 self.logger.warning("Post complete tasks was not successful. Data may be lost.")
+
+            _ = QueueManagerPOSTResponse.parse_raw(r.text)  # Ensure validation from server
 
             self.active -= len(results)
 
@@ -302,12 +317,14 @@ class QueueManager:
         # Get new tasks
         payload = self._payload_template()
         payload["data"]["limit"] = open_slots
-        r = self.client._request("get", "queue_manager", payload, noraise=True)
+        body = QueueManagerGETBody(**payload)
+        r = self.client._request("get", "queue_manager", data=body.json(), noraise=True)
         if r.status_code != 200:
             # TODO something as we didnt successfully get data
-            self.logger.warning("Aquisition of new tasks was not successful.")
+            self.logger.warning("Acquisition of new tasks was not successful.")
 
-        new_tasks = r.json()["data"]
+        response = QueueManagerGETResponse.parse_raw(r.text)
+        new_tasks = response.data
 
         # Add new tasks to queue
         self.queue_adapter.submit_tasks(new_tasks)
