@@ -17,19 +17,19 @@ matrix:
   include:
 
     - env:
-      - NAME="Dask 3.6"
+      - NAME="BASE 3.6"
       - PYTHON_VER=3.6
-      - ENVIRON=DASK
+      - ENVIRON=BASE
 
     - env:
-      - NAME="Fireworks 3.6"
-      - PYTHON_VER=3.6
-      - ENVIRON=FIREWORKS
+      - NAME="BASE 3.7"
+      - PYTHON_VER=3.7
+      - ENVIRON=BASE
 
     - env:
-      - NAME="Parsl 3.6"
+      - NAME="Adapters 3.6"
       - PYTHON_VER=3.6
-      - ENVIRON=PARSL
+      - ENVIRON=ADAPTERS
 
     - env:
       - NAME="OpenFF 3.6"
@@ -60,14 +60,10 @@ install:
     # Create test environment for package
   - echo $ENVIRON
   - |
-    if [ $ENVIRON == "DASK" ]; then
-      python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/dask.yaml
-    elif [ $ENVIRON == "FIREWORKS" ]; then
-      python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/fireworks.yaml
+    if [ $ENVIRON == "ADAPTERS" ]; then
+      python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/adapters.yaml
     elif [ $ENVIRON == "OPENFF" ]; then
       python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/openff.yaml
-    elif [ $ENVIRON == "PARSL" ]; then
-      python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/parsl.yaml
     elif [ $ENVIRON == "DEV_HEAD" ]; then
       python devtools/scripts/conda_env.py -n=test -p=$PYTHON_VER devtools/conda-envs/dev_head.yaml
     elif [ $ENVIRON == "BASE" ]; then

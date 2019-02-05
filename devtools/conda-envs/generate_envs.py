@@ -24,6 +24,7 @@ dependencies:
   - jsonschema
   - bcrypt
   - cryptography
+  - pydantic
 
 # Test depends
   - pytest
@@ -33,7 +34,7 @@ dependencies:
 qca_ecosystem_template = ["qcengine>=0.5.1", "qcelemental>=0.2.3"]
 
 # Note we temporarily duplicate mongoengine as conda-forge appears to be broken
-pip_depends_template = ["pydantic", "mongoengine"]
+pip_depends_template = ["mongoengine"]
 
 
 def generate_yaml(filename=None, channels=None, dependencies=None, pip_dependencies=None, qca_ecosystem=None):
@@ -80,23 +81,13 @@ def generate_yaml(filename=None, channels=None, dependencies=None, pip_dependenc
 environs = [{
     "filename": "base.yaml",
 }, {
-    "filename": "fireworks.yaml",
-    "channels": ["psi4"],
-    "dependencies": ["psi4"],
-    "pip_dependencies": ["fireworks"]
-}, {
-    "filename": "dask.yaml",
-    "channels": ["psi4"],
-    "dependencies": ["psi4", "dask", "distributed"]
-}, {
-    "filename": "parsl.yaml",
-    "dependencies": ["rdkit"],
-    "pip_dependencies": ["parsl"]
+    "filename": "adapters.yaml",
+    "dependencies": ["rdkit", "dask", "distributed"],
+    "pip_dependencies": ["fireworks", "parsl"]
 }, {
     "filename": "openff.yaml",
-    "channels": ["psi4", "rdkit"],
-    "dependencies": ["dask", "distributed", "psi4", "rdkit", "geometric"],
-    "pip_dependencies": ["git+git://github.com/lpwgroup/torsiondrive.git@v0.9.1#egg=torsiondrive", "parsl"]
+    "channels": ["psi4"],
+    "dependencies": ["psi4", "rdkit", "geometric", "torsiondrive"],
 }, {
     "filename":
     "dev_head.yaml",

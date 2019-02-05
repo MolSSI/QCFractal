@@ -13,6 +13,7 @@ dependencies:
   - jsonschema
   - bcrypt
   - cryptography
+  - pydantic
 
 # Test depends
   - pytest
@@ -26,7 +27,6 @@ dependencies:
 
 # Pip includes
   - pip:
-    - pydantic
     - mongoengine
     - git+git://github.com/MolSSI/QCEngine#egg=qcengine
     - git+git://github.com/MolSSI/QCElemental#egg=qcelemental

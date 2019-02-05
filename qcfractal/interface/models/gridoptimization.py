@@ -153,7 +153,7 @@ class GridOptimization(GridOptimizationInput):
     initial_molecule: str
     final_energy_dict: Dict[str, float]
     grid_optimizations: Dict[str, str]
-    starting_grid: Tuple
+    starting_grid: tuple
 
     class Config:
         allow_mutation = False
