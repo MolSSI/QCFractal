@@ -99,7 +99,7 @@ class TaskManager(BaseModel):
         for key, packet in tasks.items():
 
             # Turn packet into a full task, if there are duplicates, get the ID
-            submitted, completed, errors = procedure_parser.parse_input(packet, duplicate_id="id")
+            submitted, completed, errors = procedure_parser.parse_input(packet)
 
             if len(errors):
                 raise KeyError("Problem submitting task: {}.".format(errors))
@@ -176,6 +176,3 @@ def expand_ndimensional_grid(dimensions: Tuple[int, ...], seeds: Set[Tuple[int, 
                 connections.append((seed, new))
 
     return connections
-
-
-

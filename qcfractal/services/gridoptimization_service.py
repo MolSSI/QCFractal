@@ -4,15 +4,11 @@ Wraps geometric procedures
 
 import copy
 import json
+from typing import Dict, Set, Tuple
 
-import numpy as np
-from typing import Any, Dict, List, Set, Tuple
-
-from qcfractal.interface.models.gridoptimization import GridOptimization
-from qcfractal.interface.models.common_models import json_encoders
-from qcfractal import procedures
 from qcfractal.extras import get_information
-
+from qcfractal.interface.models.common_models import json_encoders
+from qcfractal.interface.models.gridoptimization import GridOptimization
 from .service_util import BaseService, TaskManager, expand_ndimensional_grid
 
 __all__ = ["GridOptimizationService"]
@@ -63,7 +59,8 @@ class GridOptimizationService(BaseService):
                 "routine": "qcfractal.services.gridoptimization"
             },
             final_energy_dict={},
-            grid_optimizations={})
+            grid_optimizations={},
+            starting_grid=(None, ))
 
         meta = {"output": output}
 
@@ -100,14 +97,13 @@ class GridOptimizationService(BaseService):
         # Hard coded data, # TODO
         meta["dimensions"] = output.get_scan_dimensions()
 
-        start = output.gridoptimization_meta.starting_grid
-        if output.gridoptimization_meta.starting_grid == "relative":
-            meta["iteration"] = -1
-            meta["starting_grid"] = (0, )
-        print("\n")
-        print(start)
-        print("\n")
-        meta["starting_grid"] = output.gridoptimization_meta.starting_grid
+        if output.gridoptimization_meta.starting_grid == "zero":
+            meta["iteration"] = 0
+            meta["starting_grid"] = (0 for x in meta["dimensions"])
+        else:
+            raise KeyError(
+                "Unknown starting_grid configuration {}.".format(output.gridoptimization_meta.starting_grid))
+        # meta["starting_grid"] = output.gridoptimization_meta.starting_grid
 
         return cls(**meta, storage_socket=storage_socket)
 
@@ -137,16 +133,16 @@ class GridOptimizationService(BaseService):
         complete_seeds = set(tuple(json.loads(k)) for k in complete_tasks.keys())
         self.complete |= complete_seeds
         self.seeds = complete_seeds
-        print("Complete", self.complete)
+        # print("Complete", self.complete)
 
         # Compute new points
         new_points_list = expand_ndimensional_grid(self.dimensions, self.seeds, self.complete)
-        print(new_points_list)
+        # print(new_points_list)
 
-        grid = np.zeros(self.dimensions, dtype=np.int)
-        for x in self.complete:
-            grid[x] = 1
-        print(grid)
+        # grid = np.zeros(self.dimensions, dtype=np.int)
+        # for x in self.complete:
+        #     grid[x] = 1
+        # print(grid)
 
         next_tasks = {}
         for new_points in new_points_list:
@@ -165,8 +161,6 @@ class GridOptimizationService(BaseService):
 
     def submit_optimization_tasks(self, task_dict):
 
-        procedure_parser = procedures.get_procedure_parser("optimization", self.storage_socket)
-
         new_tasks = {}
 
         for key, mol in task_dict.items():
@@ -180,7 +174,7 @@ class GridOptimizationService(BaseService):
             for con_num, k in enumerate(grid_values):
                 constraints[con_num]["value"] = k
             packet["meta"]["keywords"]["constraints"] = {"set": constraints}
-            print(constraints)
+            # print(constraints)
 
             # Build new molecule
             packet["data"] = [mol]

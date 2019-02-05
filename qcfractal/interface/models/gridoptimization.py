@@ -2,7 +2,6 @@
 A model for GridOptimization
 """
 
-import copy
 import json
 from typing import Any, Dict, List, Tuple, Union
 
@@ -154,6 +153,7 @@ class GridOptimization(GridOptimizationInput):
     initial_molecule: str
     final_energy_dict: Dict[str, float]
     grid_optimizations: Dict[str, str]
+    starting_grid: Tuple
 
     class Config:
         allow_mutation = False

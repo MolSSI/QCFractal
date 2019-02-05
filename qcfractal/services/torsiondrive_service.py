@@ -14,7 +14,6 @@ try:
 except ImportError:
     td_api = None
 
-from qcfractal import procedures
 from qcfractal.interface.models.torsiondrive import TorsionDrive
 from qcfractal.interface.models.common_models import json_encoders
 
@@ -159,8 +158,6 @@ class TorsionDriveService(BaseService):
         return False
 
     def submit_optimization_tasks(self, task_dict):
-
-        procedure_parser = procedures.get_procedure_parser("optimization", self.storage_socket)
 
         new_tasks = {}
         task_map = {}

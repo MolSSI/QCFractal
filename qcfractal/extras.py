@@ -4,7 +4,7 @@ Misc information and runtime information.
 
 from . import _version
 
-__all__ = ["information"]
+__all__ = ["get_information"]
 
 versions = _version.get_versions()
 

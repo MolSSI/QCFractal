@@ -142,6 +142,7 @@ def test_service_gridoptimization_single(fractal_compute_server):
     # Options
     gridoptimization_options = {
         "gridoptimization_meta": {
+            "starting_grid": "zero",
             "scans": [{
                 "type": "distance",
                 "indices": [1, 2],
@@ -171,5 +172,5 @@ def test_service_gridoptimization_single(fractal_compute_server):
 
     result = client.get_procedures({"procedure": "gridoptimization"})[0]
 
-    assert pytest.approx(result.final_energies((0, 0)), 1.e-6) == 0.0359547286924164
-    assert pytest.approx(result.final_energies((1, 1)), 1.e-6) == 0.014190882621078291
+    assert pytest.approx(result.final_energies((0, 0)), abs=1.e-6) == 0.0359547286924164
+    assert pytest.approx(result.final_energies((1, 1)), abs=1.e-6) == 0.014190882621078291
