@@ -67,7 +67,7 @@ class MoleculeGETResponse(BaseModel):
 
 
 class MoleculePOSTBody(BaseModel):
-    meta: Dict = None
+    meta: Dict[str, Any] = None
     data: Dict[str, Molecule]
 
     class Config:
@@ -83,7 +83,7 @@ class MoleculePOSTResponse(BaseModel):
 
 
 class OptionGETBody(BaseModel):
-    meta: Dict = None
+    meta: Dict[str, Any] = None
     data: Dict[str, Any]
 
 
@@ -93,7 +93,7 @@ class OptionGETResponse(BaseModel):
 
 
 class OptionPOSTBody(BaseModel):
-    meta: Dict = None
+    meta: Dict[str, Any] = None
     data: List[Dict[str, Any]]
 
     @validator("data", whole=True, pre=True)
@@ -120,7 +120,7 @@ class CollectionGETBody(BaseModel):
         def cast_to_lower(cls, v):
             return v.lower()
 
-    meta: Dict = None
+    meta: Dict[str, Any] = None
     data: Data
 
 
@@ -347,7 +347,7 @@ class QueueManagerPUTBody(BaseModel):
 
 
 class QueueManagerPUTResponse(BaseModel):
-    meta: Dict = {}
+    meta: Dict[str, Any] = {}
     # Order on Union[] is important. Union[bool, Dict[str, int]] -> True if the input dict is not empty since
     # Python can resolve dict -> bool since it passes a `is` test. Will not cast bool -> dict[str, int], so make Dict[]
     # check first
