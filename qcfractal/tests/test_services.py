@@ -49,10 +49,12 @@ def torsiondrive_fixture(fractal_compute_server):
 
         instance_options = copy.deepcopy(torsiondrive_options)
         recursive_dict_merge(instance_options, keyword_augments)
-        ret = client.add_service("torsiondrive", [mol_ret["hooh"]], instance_options, return_full=True)
+
+        inp = TorsionDriveInput(**instance_options, initial_molecule=mol_ret["hooh"])
+        ret = client.add_service(inp, return_full=True)
 
         if ret.meta.n_inserted:  # In case test already submitted
-            compute_key = ret.data.submitted[0]
+            compute_key = ret.data.hash_index
             status = client.check_services({"hash_index": compute_key}, return_full=True)
             assert 'READY' in status.data[0]['status']
             assert status.data[0]['id'] != compute_key  # Hash should never be id
@@ -70,7 +72,6 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
     spin_up_test, client = torsiondrive_fixture
 
     ret = spin_up_test()
-    _ = ret.submitted[0]
 
     # Get a TorsionDriveORM result and check data
     result = client.get_procedures({"procedure": "torsiondrive"})[0]
@@ -90,11 +91,13 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     spin_up_test, client = torsiondrive_fixture
 
     # Run the test without modifications
-    _ = spin_up_test()
+    hash_index1 = spin_up_test().hash_index
 
     # Augment the input for torsion drive to yield a new hash procedure hash,
     # but not a new task set
-    _ = spin_up_test(torsiondrive_meta={"meaningless_entry_to_change_hash": "Waffles!"})
+    hash_index2 = spin_up_test(torsiondrive_meta={"meaningless_entry_to_change_hash": "Waffles!"}).hash_index
+
+    assert hash_index1 != hash_index2
     procedures = client.get_procedures({"procedure": "torsiondrive"})
     assert len(procedures) == 2  # Make sure only 2 procedures are yielded
 
@@ -110,7 +113,7 @@ def test_service_iterate_error(torsiondrive_fixture):
     # Run the test without modifications
     ret = spin_up_test(torsiondrive_meta={"dihedrals": [[0, 1, 2, 50]]})
 
-    status = client.check_services({"hash_index": ret.submitted[0]})
+    status = client.check_services({"hash_index": ret.hash_index})
     assert len(status) == 1
 
     assert status[0]["status"] == "ERROR"
@@ -125,7 +128,7 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
     # Run the test without modifications
     ret = spin_up_test(qc_meta={"method": "waffles_crasher"})
 
-    status = client.check_services({"hash_index": ret.submitted[0]})
+    status = client.check_services({"hash_index": ret.hash_index})
     assert len(status) == 1
 
     assert status[0]["status"] == "ERROR"

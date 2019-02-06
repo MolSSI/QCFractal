@@ -118,7 +118,7 @@ class ServiceQueueHandler(APIHandler):
             hash_index=new_service.hash_index, projection={"hash_index": True})["data"]
         if duplicate:
             data["status"] = "completed"
-            meta["duplicates"] = duplicate
+            # meta["duplicates"] = duplicate
         else:
             # Add services to the database
             ret = storage.add_services([new_service.json_dict()])

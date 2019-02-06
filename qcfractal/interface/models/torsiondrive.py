@@ -4,7 +4,7 @@ A model for TorsionDrive
 
 import copy
 import json
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 
 from pydantic import BaseModel
 
@@ -41,7 +41,7 @@ class TorsionDriveInput(BaseModel):
 
     program: str = "torsiondrive"
     procedure: str = "torsiondrive"
-    initial_molecule: Molecule
+    initial_molecule: Union[str, Molecule]
     torsiondrive_meta: TDOptions
     optimization_meta: OptOptions
     qc_meta: QCMeta
