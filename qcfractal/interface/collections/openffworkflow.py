@@ -8,7 +8,7 @@ from . import collection_utils
 from .collection import Collection
 from .. import orm
 
-from ..models.torsiondrive import TorsionDrive
+from ..models.torsiondrive import TorsionDriveInput, TorsionDrive
 
 
 class OpenFFWorkflow(Collection):
@@ -221,12 +221,10 @@ class OpenFFWorkflow(Collection):
             torsion_meta["torsiondrive_meta"][k] = packet[k]
 
         # Get hash of torsion
-        ret = self.client.add_service("torsiondrive", [packet["initial_molecule"]], torsion_meta)
-        hash_lists = []
-        hash_lists.extend(ret.submitted)
-        if len(hash_lists) != 1:
-            raise KeyError("Something went very wrong.")
-        return hash_lists[0]
+        inp = TorsionDriveInput(**torsion_meta, initial_molecule=packet["initial_molecule"])
+        ret = self.client.add_service(inp)
+
+        return ret.hash_index
 
     def _add_optimize(self, packet):
         optimization_meta = copy.deepcopy(

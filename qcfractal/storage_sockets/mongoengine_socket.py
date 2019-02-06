@@ -207,6 +207,8 @@ class MongoengineSocket:
                 id_mols[idx] = mol
             elif isinstance(mol, dict):
                 dict_mols[idx] = mol
+            elif isinstance(mol, interface.models.common_models.Molecule):
+                dict_mols[idx] = mol.json(as_dict=True)
             else:
                 meta["errors"].append((idx, "Data type not understood"))
 

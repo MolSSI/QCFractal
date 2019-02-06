@@ -68,8 +68,8 @@ class GridOptimizationService(BaseService):
 
         # Remove identity info from molecule template
         molecule_template = copy.deepcopy(service_input.initial_molecule.json(as_dict=True))
-        del molecule_template["id"]
-        del molecule_template["identifiers"]
+        molecule_template.pop("id", None)
+        molecule_template.pop("identifiers", None)
         meta["molecule_template"] = json.dumps(molecule_template)
 
         # Build dihedral template

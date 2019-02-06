@@ -1,7 +1,7 @@
 """
 Models for the REST interface
 """
-from pydantic import BaseModel, validator
+from pydantic import BaseConfig, BaseModel, validator
 from typing import Dict, List, Tuple, Union, Any
 from enum import Enum
 
@@ -24,6 +24,9 @@ __all__ = [
 
 
 ### Generic and Common Models
+
+class RESTConfig(BaseConfig):
+    json_encoders = json_encoders
 
 
 class ResponseMeta(BaseModel):
@@ -290,6 +293,10 @@ class ServiceQueuePOSTBody(BaseModel):
     meta: Dict[str, Any]
     data: Union[TorsionDriveInput, GridOptimizationInput]
 
+    class Config(RESTConfig):
+        pass
+        # json_encoders = json_encoders
+
 
 class ServiceQueuePOSTResponse(BaseModel):
     class Data(BaseModel):
@@ -298,6 +305,7 @@ class ServiceQueuePOSTResponse(BaseModel):
 
     meta: ResponsePOSTMeta
     data: Data
+
 
 
 ### Queue Manager
