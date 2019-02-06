@@ -6,6 +6,8 @@ from typing import Dict, List, Tuple, Union, Any
 from enum import Enum
 
 from .common_models import Molecule, json_encoders
+from .gridoptimization import GridOptimizationInput
+from .torsiondrive import TorsionDriveInput
 
 __all__ = [
     "ResponseGETMeta",
@@ -286,14 +288,13 @@ class ServiceQueueGETResponse(BaseModel):
 
 class ServiceQueuePOSTBody(BaseModel):
     meta: Dict[str, Any]
-    data: List[Union[str, Dict[str, Any]]]
+    data: Union[TorsionDriveInput, GridOptimizationInput]
 
 
 class ServiceQueuePOSTResponse(BaseModel):
     class Data(BaseModel):
-        submitted: List[str]
-        completed: List[str]
-        queue: List[str]
+        hash_index: str
+        status: str
 
     meta: ResponsePOSTMeta
     data: Data

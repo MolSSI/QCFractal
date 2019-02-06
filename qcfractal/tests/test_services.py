@@ -9,6 +9,8 @@ import pytest
 import qcfractal.interface as portal
 from qcfractal.testing import fractal_compute_server, recursive_dict_merge, using_geometric, using_rdkit
 
+from qcfractal.interface.models.gridoptimization import GridOptimizationInput
+from qcfractal.interface.models.torsiondrive import TorsionDriveInput
 
 @pytest.fixture(scope="module")
 def torsiondrive_fixture(fractal_compute_server):
@@ -54,6 +56,7 @@ def torsiondrive_fixture(fractal_compute_server):
             status = client.check_services({"hash_index": compute_key}, return_full=True)
             assert 'READY' in status.data[0]['status']
             assert status.data[0]['id'] != compute_key  # Hash should never be id
+
         fractal_compute_server.await_services()
         assert len(fractal_compute_server.list_current_tasks()) == 0
         return ret.data
@@ -140,7 +143,7 @@ def test_service_gridoptimization_single(fractal_compute_server):
     mol_ret = client.add_molecules({"hooh": hooh})
 
     # Options
-    gridoptimization_options = {
+    service = GridOptimizationInput(**{
         "gridoptimization_meta": {
             "starting_grid": "zero",
             "scans": [{
@@ -164,9 +167,10 @@ def test_service_gridoptimization_single(fractal_compute_server):
             "options": None,
             "program": "rdkit",
         },
-    }
+        "initial_molecule": mol_ret["hooh"],
+    })
 
-    ret = client.add_service("gridoptimization", [mol_ret["hooh"]], gridoptimization_options)
+    ret = client.add_service(service)
     fractal_compute_server.await_services()
     assert len(fractal_compute_server.list_current_tasks()) == 0
 

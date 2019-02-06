@@ -19,15 +19,7 @@ from ..interface.models.rest_models import (
     ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
     QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse,
     QueueManagerPUTBody, QueueManagerPUTResponse
-)
-
-
-class MultiMoleculeGETResponse(BaseModel):
-    meta: ResponseGETMeta
-    data: Dict[int, Molecule]
-
-    class Config:
-        json_encoders = json_encoders
+) # yapf: disable
 
 
 class TaskQueueHandler(APIHandler):
@@ -52,10 +44,11 @@ class TaskQueueHandler(APIHandler):
         ret = storage.queue_submit(full_tasks)
 
         # Do some quick reformatting
-        data_payload = {"submitted": [x for x in ret["data"] if x is not None],
-                        "completed": list(complete_tasks),
-                        "queue": ret["meta"]["duplicates"]
-                        }
+        data_payload = {
+            "submitted": [x for x in ret["data"] if x is not None],
+            "completed": list(complete_tasks),
+            "queue": ret["meta"]["duplicates"]
+        }
         ret["meta"]["duplicates"] = []
         ret["meta"]["errors"].extend(errors)
 
@@ -94,47 +87,48 @@ class ServiceQueueHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         # Figure out initial molecules
-        errors = []
-        body = ServiceQueuePOSTBody.parse_raw(self.request.body)
-        mol_query = storage.get_add_molecules_mixed(body.data)
-        mol_response = MultiMoleculeGETResponse(**mol_query)
+        service_input = ServiceQueuePOSTBody.parse_raw(self.request.body).data
+        meta = {
+            "validation_errors": [],
+            "duplicates": [],
+            "n_inserted": 0,
+            "success": True,
+            "errors": [],
+            "error_description": ""
+        }
 
-        # Build out services
-        submitted_services = []
-        for idx, mol in mol_response.data.items():
-            mol_dict = mol.json(as_dict=True)
-            # Ensure ID is present
-            if hasattr(mol, 'id') and mol.id is not None:
-                # Workaround until we can better refine our Molecule object 'id' is preserved better when casting to str
-                mol_dict['id'] = mol.id
-            tmp = services.initializer(body.meta["service"], storage, body.meta, mol_dict)
-            submitted_services.append(tmp)
+        # Get molecules with ids
+        if isinstance(service_input.initial_molecule, list):
+            mol_query = storage.get_add_molecules_mixed(service_input.initial_molecule)
+            molecules = [Molecule(**x) for x in mol_query["data"]]
+            if len(molecules) != len(service_input.initial_molecule):
+                raise KeyError("We should catch this error.")
+        else:
+            mol_query = storage.get_add_molecules_mixed([service_input.initial_molecule])
+            molecules = Molecule(**mol_query["data"][0])
+
+        # Update the input and build a service object
+        service_input = service_input.copy(update={"initial_molecule": molecules})
+        new_service = services.initializer(storage, service_input)
+
+        data = {"hash_index": new_service.hash_index, "status": None}
 
         # Figure out complete services
-        service_hashes = [x.hash_index for x in submitted_services]
-        found_hashes = storage.get_procedures_by_id(hash_index=service_hashes, projection={"hash_index": True})
-        found_hashes = set(x["hash_index"] for x in found_hashes["data"])
-
-        new_services = []
-        complete_tasks = []
-        for x in submitted_services:
-            hash_index = x.hash_index
-
-            if hash_index in found_hashes:
-                complete_tasks.append(hash_index)
+        duplicate = storage.get_procedures_by_id(
+            hash_index=new_service.hash_index, projection={"hash_index": True})["data"]
+        if duplicate:
+            data["status"] = "completed"
+            meta["duplicates"] = duplicate
+        else:
+            # Add services to the database
+            ret = storage.add_services([new_service.json_dict()])
+            if ret["meta"]["duplicates"]:
+                data["status"] = "running"
+                meta["n_inserted"] = 1
             else:
-                new_services.append(x)
+                data["status"] = "submitted"
 
-        # Add services to database
-        ret = storage.add_services([service.json_dict() for service in new_services])
-
-        data_payload = {"submitted": ret["data"],
-                        "completed": list(complete_tasks),
-                        "queue": ret["meta"]["duplicates"]}
-        ret["meta"]["duplicates"] = []
-        ret["meta"]["errors"].extend(errors)
-
-        response = ServiceQueuePOSTResponse(data=data_payload, meta=ret['meta'])
+        response = ServiceQueuePOSTResponse(data=data, meta=meta)
         self.logger.info("ServiceQueue: Added {} services.\n".format(response.meta.n_inserted))
 
         self.write(response.json())
@@ -218,7 +212,7 @@ class QueueManagerHandler(APIHandler):
         completed = []
         hooks = []
         for k, v in new_results.items():  # todo: can be merged? do they have diff k?
-            procedure_parser = procedures.get_procedure_parser(k,storage_socket)
+            procedure_parser = procedures.get_procedure_parser(k, storage_socket)
             com, err, hks = procedure_parser.parse_output(v)
             completed.extend(com)
             error_data.extend(err)
@@ -249,12 +243,13 @@ class QueueManagerHandler(APIHandler):
 
         # Grab new tasks and write out
         new_tasks = storage.queue_get_next(name, **queue_tags)
-        response = QueueManagerGETResponse(meta={"n_found": len(new_tasks),
-                                                 "success": True,
-                                                 "errors": [],
-                                                 "error_description": "",
-                                                 "missing": []},
-                                           data=new_tasks)
+        response = QueueManagerGETResponse(
+            meta={"n_found": len(new_tasks),
+                  "success": True,
+                  "errors": [],
+                  "error_description": "",
+                  "missing": []},
+            data=new_tasks)
         self.write(response.json())
         self.logger.info("QueueManager: Served {} tasks.".format(response.meta.n_found))
 
@@ -272,14 +267,16 @@ class QueueManagerHandler(APIHandler):
         body = QueueManagerPOSTBody.parse_raw(self.request.body)
         ret = self.insert_complete_tasks(storage, body.data, self.logger)
 
-        response = QueueManagerPOSTResponse(meta={"n_inserted": ret[0],
-                                                  "duplicates": [],
-                                                  "validation_errors": [],
-                                                  "success": True,
-                                                  "errors": [],
-                                                  "error_description": "" if not ret[1] else "{} errors".format(ret[1])
-                                                  },
-                                            data=True)
+        response = QueueManagerPOSTResponse(
+            meta={
+                "n_inserted": ret[0],
+                "duplicates": [],
+                "validation_errors": [],
+                "success": True,
+                "errors": [],
+                "error_description": "" if not ret[1] else "{} errors".format(ret[1])
+            },
+            data=True)
         self.write(response.json())
         self.logger.info("QueueManager: Acquired {} complete tasks.".format(len(body.data)))
 
@@ -321,8 +318,7 @@ class QueueManagerHandler(APIHandler):
             from tornado.web import HTTPError
             raise HTTPError(status_code=400, reason=msg)
 
-        response = QueueManagerPUTResponse(meta={},
-                                           data=ret)
+        response = QueueManagerPUTResponse(meta={}, data=ret)
         self.write(response.json())
 
         # Update manager logs

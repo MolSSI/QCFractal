@@ -47,12 +47,14 @@ class GridOptimizationService(BaseService):
         json_encoders = json_encoders
 
     @classmethod
-    def initialize_from_api(cls, storage_socket, meta, molecule):
+    def initialize_from_api(cls, storage_socket, service_input):
 
-        # Validate input
+        # Build the results object
+        input_dict = service_input.dict()
+        input_dict["initial_molecule"] = input_dict["initial_molecule"]["id"]
+
         output = GridOptimization(
-            **meta,
-            initial_molecule=molecule["id"],
+            **input_dict,
             provenance={
                 "creator": "QCFractal",
                 "version": get_information("version"),
@@ -65,7 +67,7 @@ class GridOptimizationService(BaseService):
         meta = {"output": output}
 
         # Remove identity info from molecule template
-        molecule_template = copy.deepcopy(molecule)
+        molecule_template = copy.deepcopy(service_input.initial_molecule.json(as_dict=True))
         del molecule_template["id"]
         del molecule_template["identifiers"]
         meta["molecule_template"] = json.dumps(molecule_template)

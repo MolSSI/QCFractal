@@ -74,7 +74,7 @@ class GridOptimizationInput(BaseModel):
 
     program: str = "gridoptimization"
     procedure: str = "gridoptimization"
-    initial_molecule: Molecule
+    initial_molecule: Union[str, Molecule]
     gridoptimization_meta: GOOptions
     optimization_meta: OptOptions
     qc_meta: QCMeta
