@@ -4,7 +4,7 @@ Wraps geometric procedures
 
 import copy
 import json
-from typing import Dict, Set, Tuple
+from typing import Dict, List, Set, Union
 
 from qcfractal.extras import get_information
 from qcfractal.interface.models.common_models import json_encoders
@@ -27,11 +27,11 @@ class GridOptimizationService(BaseService):
 
     # Temporaries
     grid_optimizations: Dict[str, str] = {}
-    seeds: Set[Tuple] = set()
-    complete: Set[Tuple] = set()
-    dimensions: Tuple
+    seeds: Set[tuple] = set()
+    complete: Set[tuple] = set()
+    dimensions: tuple
     iteration: int = 0
-    starting_grid: Tuple
+    starting_grid: tuple
     final_energies = {}
 
     # Task helpers
@@ -60,7 +60,7 @@ class GridOptimizationService(BaseService):
             },
             final_energy_dict={},
             grid_optimizations={},
-            starting_grid=(None, ))
+            starting_grid=[0])
 
         meta = {"output": output}
 

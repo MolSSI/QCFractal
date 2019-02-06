@@ -13,6 +13,7 @@ dependencies:
   - jsonschema
   - bcrypt
   - cryptography
+  - pydantic
 
 # Test depends
   - pytest
@@ -25,5 +26,4 @@ dependencies:
 
 # Pip includes
   - pip:
-    - pydantic
     - mongoengine

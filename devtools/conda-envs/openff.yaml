@@ -2,7 +2,6 @@ name: qcarchive
 channels:
   - defaults
   - psi4
-  - rdkit
   - conda-forge
 dependencies:
   - python
@@ -15,6 +14,7 @@ dependencies:
   - jsonschema
   - bcrypt
   - cryptography
+  - pydantic
 
 # Test depends
   - pytest
@@ -22,11 +22,10 @@ dependencies:
   - codecov
 
 # Environment specific includes
-  - dask
-  - distributed
   - psi4
   - rdkit
   - geometric
+  - torsiondrive
 
 # QCArchive includes
   - qcengine>=0.5.1
@@ -34,7 +33,4 @@ dependencies:
 
 # Pip includes
   - pip:
-    - pydantic
     - mongoengine
-    - git+git://github.com/lpwgroup/torsiondrive.git@v0.9.1#egg=torsiondrive
-    - parsl

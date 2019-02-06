@@ -1,7 +1,6 @@
 name: qcarchive
 channels:
   - defaults
-  - psi4
   - conda-forge
 dependencies:
   - python
@@ -14,6 +13,7 @@ dependencies:
   - jsonschema
   - bcrypt
   - cryptography
+  - pydantic
 
 # Test depends
   - pytest
@@ -21,7 +21,7 @@ dependencies:
   - codecov
 
 # Environment specific includes
-  - psi4
+  - rdkit
   - dask
   - distributed
 
@@ -31,5 +31,6 @@ dependencies:
 
 # Pip includes
   - pip:
-    - pydantic
     - mongoengine
+    - fireworks
+    - parsl
