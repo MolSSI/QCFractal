@@ -12,7 +12,6 @@ from typing import Any, Callable, Dict, List, Optional
 
 import tornado.ioloop
 
-from qcfractal import testing
 from ..interface.data import get_molecule
 from ..interface.models.rest_models import (
     QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse, QueueManagerPUTBody,
@@ -365,6 +364,7 @@ class QueueManager:
         Tests all known programs with simple inputs to check if the Adapter is correctly instantiated.
         """
 
+        from qcfractal import testing
         self.logger.info("Testing requested, generating tasks")
         task_base = json.dumps({
             "spec": {

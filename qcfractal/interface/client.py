@@ -6,7 +6,6 @@ from collections import defaultdict
 from typing import List, Union, Dict, Any, Optional
 
 import requests
-import yaml
 
 from . import orm
 from .collections import collection_factory
@@ -155,6 +154,7 @@ class FractalClient(object):
                 load_path = os.path.join(load_path, "qcportal_config.yaml")
 
             with open(load_path, "r") as handle:
+                import yaml
                 data = yaml.load(handle)
 
         elif isinstance(load_path, dict):
