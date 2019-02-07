@@ -60,7 +60,7 @@ class TorsionDriveService(BaseService):
 
         # Build the results object
         input_dict = service_input.dict()
-        input_dict["initial_molecule"] = input_dict["initial_molecule"]["id"]
+        input_dict["initial_molecule"] = [x["id"] for x in input_dict["initial_molecule"]]
 
         # Validate input
         output = TorsionDrive(
@@ -77,7 +77,7 @@ class TorsionDriveService(BaseService):
         meta = {"output": output}
 
         # Remove identity info from molecule template
-        molecule_template = copy.deepcopy(service_input.initial_molecule.json(as_dict=True))
+        molecule_template = copy.deepcopy(service_input.initial_molecule[0].json(as_dict=True))
         molecule_template.pop("id", None)
         molecule_template.pop("identifiers", None)
         meta["molecule_template"] = json.dumps(molecule_template)
@@ -87,7 +87,7 @@ class TorsionDriveService(BaseService):
             dihedrals=output.torsiondrive_meta.dihedrals,
             grid_spacing=output.torsiondrive_meta.grid_spacing,
             elements=molecule_template["symbols"],
-            init_coords=[molecule_template["geometry"]])
+            init_coords=[x.geometry for x in service_input.initial_molecule])
 
         # Build dihedral template
         dihedral_template = []

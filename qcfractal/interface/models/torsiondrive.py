@@ -41,29 +41,21 @@ class TorsionDriveInput(BaseModel):
 
     program: str = "torsiondrive"
     procedure: str = "torsiondrive"
-    initial_molecule: Union[str, Molecule]
+    initial_molecule: List[Union[str, Molecule]]
     torsiondrive_meta: TDOptions
     optimization_meta: OptOptions
     qc_meta: QCMeta
 
+    def __init__(self, **data):
+        mol = data["initial_molecule"]
+        if isinstance(mol, (str, dict, Molecule)):
+            data["initial_molecule"] = [mol]
+
+        BaseModel.__init__(self, **data)
+
     class Config:
         allow_mutation = False
         json_encoders = json_encoders
-
-    def get_hash_index(self):
-        if isinstance(self.initial_molecule, str):
-            mol_id = self.initial_molecule
-
-        else:
-            if self.initial_molecule.id is None:
-                raise ValueError("Cannot get the hash_index without a valid intial_molecule.id field.")
-
-            mol_id = self.initial_molecule.id
-
-        data = self.dict(include=["program", "procedure", "torsiondrive_meta", "optimization_meta", "qc_meta"])
-        data["initial_molecule"] = mol_id
-
-        return hash_dictionary(data)
 
 
 class TorsionDrive(TorsionDriveInput):
@@ -84,7 +76,7 @@ class TorsionDrive(TorsionDriveInput):
     provenance: Provenance
 
     # Data pointers
-    initial_molecule: str
+    initial_molecule: List[str]
     final_energy_dict: Dict[str, float]
     optimization_history: Dict[str, List[str]]
     minimum_positions: Dict[str, int]
@@ -140,6 +132,13 @@ class TorsionDrive(TorsionDriveInput):
 
     def json_dict(self):
         return json.loads(self.json())
+
+    def get_hash_index(self):
+
+        data = self.dict(
+            include=["initial_molecule", "program", "procedure", "torsiondrive_meta", "optimization_meta", "qc_meta"])
+
+        return hash_dictionary(data)
 
 ## Query
 

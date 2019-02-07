@@ -72,7 +72,7 @@ class GridOptimizationInput(BaseModel):
     A GridOptimization Input base class
     """
 
-    program: str = "gridoptimization"
+    program: str = "qcfractal"
     procedure: str = "gridoptimization"
     initial_molecule: Union[str, Molecule]
     gridoptimization_meta: GOOptions

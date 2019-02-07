@@ -12,6 +12,7 @@ from qcfractal.testing import fractal_compute_server, recursive_dict_merge, usin
 from qcfractal.interface.models.gridoptimization import GridOptimizationInput
 from qcfractal.interface.models.torsiondrive import TorsionDriveInput
 
+
 @pytest.fixture(scope="module")
 def torsiondrive_fixture(fractal_compute_server):
 
@@ -28,6 +29,7 @@ def torsiondrive_fixture(fractal_compute_server):
 
     # Geometric options
     torsiondrive_options = {
+        "initial_molecule": mol_ret["hooh"],
         "torsiondrive_meta": {
             "dihedrals": [[0, 1, 2, 3]],
             "grid_spacing": [90]
@@ -50,7 +52,7 @@ def torsiondrive_fixture(fractal_compute_server):
         instance_options = copy.deepcopy(torsiondrive_options)
         recursive_dict_merge(instance_options, keyword_augments)
 
-        inp = TorsionDriveInput(**instance_options, initial_molecule=mol_ret["hooh"])
+        inp = TorsionDriveInput(**instance_options)
         ret = client.add_service(inp, return_full=True)
 
         if ret.meta.n_inserted:  # In case test already submitted
@@ -74,7 +76,7 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
     ret = spin_up_test()
 
     # Get a TorsionDriveORM result and check data
-    result = client.get_procedures({"procedure": "torsiondrive"})[0]
+    result = client.get_procedures({"hash_index": ret.hash_index})[0]
     assert isinstance(str(result), str)  # Check that repr runs
 
     assert pytest.approx(0.002597541340221565, 1e-5) == result.final_energies(0)
@@ -83,6 +85,19 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
     assert pytest.approx(0.000753492556057886, 1e-5) == result.final_energies(180)
 
     assert hasattr(result.final_molecules()[(-90, )], "symbols")
+
+
+def test_service_torsiondrive_multi_single(torsiondrive_fixture):
+    spin_up_test, client = torsiondrive_fixture
+
+    hooh = portal.data.get_molecule("hooh.json")
+    hooh2 = hooh.copy(deep=True)
+    hooh2.geometry[0] += 0.0004
+
+    ret = spin_up_test(initial_molecule=[hooh, hooh2])
+
+    result = client.get_procedures({"hash_index": ret.hash_index})[0]
+    assert result.success
 
 
 def test_service_torsiondrive_duplicates(torsiondrive_fixture):
@@ -98,7 +113,7 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     hash_index2 = spin_up_test(torsiondrive_meta={"meaningless_entry_to_change_hash": "Waffles!"}).hash_index
 
     assert hash_index1 != hash_index2
-    procedures = client.get_procedures({"procedure": "torsiondrive"})
+    procedures = client.get_procedures({"hash_index": [hash_index1 ,hash_index2]})
     assert len(procedures) == 2  # Make sure only 2 procedures are yielded
 
     base_run, duplicate_run = procedures
@@ -148,7 +163,8 @@ def test_service_gridoptimization_single(fractal_compute_server):
     # Options
     service = GridOptimizationInput(**{
         "gridoptimization_meta": {
-            "starting_grid": "zero",
+            "starting_grid":
+            "zero",
             "scans": [{
                 "type": "distance",
                 "indices": [1, 2],

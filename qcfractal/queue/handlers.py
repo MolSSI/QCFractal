@@ -9,12 +9,8 @@ from .. import procedures
 from .. import services
 from ..web_handlers import APIHandler
 
-from pydantic import BaseModel
-from typing import Dict
-
-from ..interface.models.common_models import Molecule, json_encoders
+from ..interface.models.common_models import Molecule
 from ..interface.models.rest_models import (
-    ResponseGETMeta,
     TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse,
     ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
     QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse,
@@ -100,7 +96,7 @@ class ServiceQueueHandler(APIHandler):
         # Get molecules with ids
         if isinstance(service_input.initial_molecule, list):
             mol_query = storage.get_add_molecules_mixed(service_input.initial_molecule)
-            molecules = [Molecule(**x) for x in mol_query["data"]]
+            molecules = [Molecule(**mol) for k, mol in mol_query["data"].items()]
             if len(molecules) != len(service_input.initial_molecule):
                 raise KeyError("We should catch this error.")
         else:

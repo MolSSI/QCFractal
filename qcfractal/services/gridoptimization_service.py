@@ -56,7 +56,7 @@ class GridOptimizationService(BaseService):
         output = GridOptimization(
             **input_dict,
             provenance={
-                "creator": "QCFractal",
+                "creator": "qcfractal",
                 "version": get_information("version"),
                 "routine": "qcfractal.services.gridoptimization"
             },
@@ -94,7 +94,7 @@ class GridOptimizationService(BaseService):
         # Move around geometric data
         meta["optimization_program"] = output.optimization_meta.program
 
-        meta["hash_index"] = output.get_hash_index()
+        meta["hash_index"] = output.hash_index
 
         # Hard coded data, # TODO
         meta["dimensions"] = output.get_scan_dimensions()

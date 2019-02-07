@@ -13,11 +13,14 @@ from .collections import collection_factory
 
 from .models.common_models import Molecule
 from .models.rest_models import (
-    MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse, OptionGETBody, OptionGETResponse,
-    OptionPOSTBody, OptionPOSTResponse, CollectionGETBody, CollectionGETResponse, CollectionPOSTBody,
-    CollectionPOSTResponse, ResultGETBody, ResultGETResponse, ProcedureGETBody, ProcedureGETReponse, TaskQueueGETBody,
-    TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
-    ServiceQueueGETBody, ServiceQueueGETResponse)
+    MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
+    OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse,
+    CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
+    ResultGETBody, ResultGETResponse,
+    ProcedureGETBody, ProcedureGETReponse,
+    TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse,
+    ServiceQueuePOSTBody, ServiceQueuePOSTResponse, ServiceQueueGETBody, ServiceQueueGETResponse
+)
 from .models.gridoptimization import GridOptimizationInput
 from .models.torsiondrive import TorsionDriveInput
 
