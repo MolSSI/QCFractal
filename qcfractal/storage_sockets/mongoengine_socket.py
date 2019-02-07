@@ -24,7 +24,6 @@ import bcrypt
 import bson.errors
 import mongoengine as db
 import mongoengine.errors
-import pandas as pd
 from bson.objectid import ObjectId
 # import models
 from mongoengine.connection import disconnect, get_db
@@ -157,7 +156,6 @@ class MongoengineSocket:
         self._project_name = project
         self._tables = self.client[project]
         self._max_limit = max_limit
-
 
     ### Mongo meta functions
 
@@ -1327,7 +1325,6 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-
     def update_procedure(self, hash_index, data):
         """
         TODO: to be updated with needed
@@ -1376,7 +1373,7 @@ class MongoengineSocket:
 
         match_count = 0
         modified_count = 0
-        for uid, data in updates: # TODO: why this is replace not update?
+        for uid, data in updates:  # TODO: why this is replace not update?
             result = self._tables["service_queue"].replace_one({"_id": ObjectId(uid)}, data)
             match_count += result.matched_count
             modified_count += result.modified_count
@@ -1707,7 +1704,9 @@ class MongoengineSocket:
         if reset_error:
             status.append("ERROR")
 
-        updated = TaskQueue.objects(manager=manager, status__in=status).update(status="WAITING", modified_on=dt.utcnow())
+        updated = TaskQueue.objects(
+            manager=manager, status__in=status).update(
+                status="WAITING", modified_on=dt.utcnow())
 
         return updated
 
@@ -1872,34 +1871,3 @@ class MongoengineSocket:
             If the operation was successful or not.
         """
         return User.objects(username=username).delete() == 1
-
-### Complex parsers
-
-    def search_qc_variable(self, hashes, field):
-        """
-        Displays the first `field` value for each molecule in `hashes`.
-
-        Parameters
-        ----------
-        hashes : list
-            A list of molecules hashes.
-        field : str
-            A page field.
-
-        Returns
-        -------
-        dataframe
-            Returns a dataframe with your results. The rows will have the
-            molecule hashes and the column will contain the name. Each cell
-            contains the field value for the molecule in that row.
-
-        """
-        d = {}
-        for mol in hashes:
-            command = [{"$match": {"molecule_hash": mol}}, {"$group": {"_id": {}, "value": {"$push": "$" + field}}}]
-            results = list(self.project["results"].aggregate(command))
-            if len(results) == 0 or len(results[0]["value"]) == 0:
-                d[mol] = None
-            else:
-                d[mol] = results[0]["value"][0]
-        return pd.DataFrame(data=d, index=[field]).transpose()

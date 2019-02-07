@@ -1,7 +1,7 @@
 """A module for statistical quantities.
 """
 import numpy as np
-import pandas as pd
+# import pandas as pd
 
 # Need to use specifically with the fitting_database class
 

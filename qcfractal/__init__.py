@@ -3,7 +3,6 @@ Main init function for qcfractal
 """
 
 from . import interface
-from . import testing
 
 # Import modules
 from .storage_sockets import storage_socket_factory
