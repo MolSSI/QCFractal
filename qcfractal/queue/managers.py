@@ -18,6 +18,7 @@ from ..interface.models.rest_models import (
     QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse, QueueManagerPUTBody,
     QueueManagerPUTResponse
 )
+
 from .adapters import build_queue_adapter
 
 from qcfractal.extras import get_information

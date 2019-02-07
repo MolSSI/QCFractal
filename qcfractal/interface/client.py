@@ -21,6 +21,8 @@ from .models.rest_models import (
     TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse,
     ServiceQueuePOSTBody, ServiceQueuePOSTResponse, ServiceQueueGETBody, ServiceQueueGETResponse
 )
+from .models.gridoptimization import GridOptimizationInput
+from .models.torsiondrive import TorsionDriveInput
 
 
 class FractalClient(object):
@@ -89,7 +91,8 @@ class FractalClient(object):
             self.server_name, self.address, self.username)
         return ret
 
-    def _request(self, method: str, service: str, payload: Dict[str, Any]=None, *, data: str=None, noraise: bool=False):
+    def _request(self, method: str, service: str, payload: Dict[str, Any]=None, *, data: str=None,
+                 noraise: bool=False):
 
         addr = self.address + service
         try:
@@ -204,7 +207,8 @@ class FractalClient(object):
         else:
             return r.data
 
-    def add_molecules(self, mol_list: Dict[str, Molecule], full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
+    def add_molecules(self, mol_list: Dict[str, Molecule],
+                      full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
         """Adds molecules to the Server
 
         Parameters
@@ -469,7 +473,6 @@ class FractalClient(object):
         [{"status": "WAITING"}]
         """
 
-        print(projection)
         payload = {"meta": {"projection": projection}, "data": query}
         body = TaskQueueGETBody(**payload)
 
@@ -481,24 +484,9 @@ class FractalClient(object):
         else:
             return r.data
 
-    def add_service(self, service: str,
-                    data: Union[Dict[str, Any], List[str], str],
-                    options: Dict[str, Any],
-                    return_full: bool=False):
+    def add_service(self, service: Union[GridOptimizationInput, TorsionDriveInput], return_full: bool=False):
 
-        # Always a list
-        if isinstance(data, str):
-            data = [data]
-
-        payload = {
-            "meta": {
-                "service": service,
-            },
-            "data": data
-        }
-        payload["meta"].update(options)
-
-        body = ServiceQueuePOSTBody(**payload)
+        body = ServiceQueuePOSTBody(meta={}, data=service)
 
         r = self._request("post", "service_queue", data=body.json())
         r = ServiceQueuePOSTResponse.parse_raw(r.text)

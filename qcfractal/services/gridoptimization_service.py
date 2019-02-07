@@ -47,14 +47,16 @@ class GridOptimizationService(BaseService):
         json_encoders = json_encoders
 
     @classmethod
-    def initialize_from_api(cls, storage_socket, meta, molecule):
+    def initialize_from_api(cls, storage_socket, service_input):
 
-        # Validate input
+        # Build the results object
+        input_dict = service_input.dict()
+        input_dict["initial_molecule"] = input_dict["initial_molecule"]["id"]
+
         output = GridOptimization(
-            **meta,
-            initial_molecule=molecule["id"],
+            **input_dict,
             provenance={
-                "creator": "QCFractal",
+                "creator": "qcfractal",
                 "version": get_information("version"),
                 "routine": "qcfractal.services.gridoptimization"
             },
@@ -65,9 +67,9 @@ class GridOptimizationService(BaseService):
         meta = {"output": output}
 
         # Remove identity info from molecule template
-        molecule_template = copy.deepcopy(molecule)
-        del molecule_template["id"]
-        del molecule_template["identifiers"]
+        molecule_template = copy.deepcopy(service_input.initial_molecule.json(as_dict=True))
+        molecule_template.pop("id", None)
+        molecule_template.pop("identifiers", None)
         meta["molecule_template"] = json.dumps(molecule_template)
 
         # Build dihedral template
@@ -92,7 +94,7 @@ class GridOptimizationService(BaseService):
         # Move around geometric data
         meta["optimization_program"] = output.optimization_meta.program
 
-        meta["hash_index"] = output.get_hash_index()
+        meta["hash_index"] = output.hash_index
 
         # Hard coded data, # TODO
         meta["dimensions"] = output.get_scan_dimensions()
