@@ -144,7 +144,7 @@ def test_molecule_errors():
     data = mol.json(as_dict=True)
     data["whatever"] = 5
     with pytest.raises(ValueError):
-        portal.schema.validate(data, "molecule")
+        portal.Molecule(**data)
 
 
 def test_molecule_repeated_hashing():

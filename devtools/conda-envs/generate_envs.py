@@ -21,7 +21,6 @@ dependencies:
   - pymongo
   - tornado
   - requests
-  - jsonschema
   - bcrypt
   - cryptography
   - pydantic

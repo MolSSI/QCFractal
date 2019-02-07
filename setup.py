@@ -17,7 +17,6 @@ if __name__ == "__main__":
             # Base requires
             'bcrypt',
             'cryptography',
-            'jsonschema',
             'numpy>=1.7',
             'pandas',
             'pydantic>=0.18',
