@@ -2,7 +2,7 @@
 Models for the REST interface
 """
 from pydantic import BaseConfig, BaseModel, validator
-from typing import Dict, List, Tuple, Union, Any
+from typing import Any, Dict, List, Tuple, Optional, Union
 from enum import Enum
 
 from .common_models import Molecule, Option, json_encoders
@@ -109,7 +109,7 @@ class OptionPOSTBody(BaseModel):
 
 
 class OptionPOSTResponse(BaseModel):
-    data: List[str]
+    data: List[Optional[str]]
     meta: ResponsePOSTMeta
 
 

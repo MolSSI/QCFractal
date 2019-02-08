@@ -119,26 +119,27 @@ def test_molecules_bad_get(storage_socket):
 
 def test_options_add(storage_socket):
 
-    opts = portal.data.get_options("psi_default")
+    opts = {"program": "hello", "options": {"o": 5}, "hash_index": "something_unique"}
 
     ret = storage_socket.add_options([opts, opts.copy()])
+    assert len(ret["data"]) == 2
     assert ret["meta"]["n_inserted"] == 1
+    assert ret["data"][0] == ret["data"][1]
 
     ret = storage_socket.add_options(opts)
     assert ret["meta"]["n_inserted"] == 0
 
-    ret = storage_socket.get_options(opts["program"], opts["name"])
+    ret = storage_socket.get_options(hash_index="something_unique")
     opts["id"] = ret["data"][0]["id"]
     assert ret["meta"]["n_found"] == 1
     assert ret["data"][0] == opts
 
-    assert 1 == storage_socket.del_option(opts["program"], opts["name"])
+    assert 1 == storage_socket.del_option(id=opts["id"])
 
 
 def test_options_error(storage_socket):
-    opts = portal.data.get_options("psi_default")
+    opts = {"program": "hello"}
 
-    del opts["name"]
     ret = storage_socket.add_options(opts)
     assert ret["meta"]["n_inserted"] == 0
     assert len(ret["meta"]["validation_errors"]) == 1

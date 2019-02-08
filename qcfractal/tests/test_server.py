@@ -79,7 +79,7 @@ def test_molecule_socket(test_server):
 def test_option_socket(test_server):
 
     opt_api_addr = test_server.get_address("option")
-    opts = portal.data.get_options("psi_default")
+    opts = {"program": "qc", "options": {"opt": "a"}}
     # Add a molecule
     r = requests.post(opt_api_addr, json={"meta": {}, "data": [opts]})
     assert r.status_code == 200
@@ -88,12 +88,12 @@ def test_option_socket(test_server):
     assert pdata["meta"].keys() == meta_set
     assert pdata["meta"]["n_inserted"] == 1
 
-    data_payload = {"program": opts["program"], "name": opts["name"]}
+    data_payload = {"id": pdata["data"][0]}
 
     r = requests.get(opt_api_addr, json={"meta": {}, "data": data_payload})
     assert r.status_code == 200
 
-    assert r.json()["data"][0] == opts
+    assert r.json()["data"][0]["options"] == opts["options"]
 
     # Try duplicates
     r = requests.post(opt_api_addr, json={"meta": {}, "data": [opts]})

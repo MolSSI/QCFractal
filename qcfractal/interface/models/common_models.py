@@ -75,6 +75,7 @@ class Option(BaseModel):
     """
     An options object for the QCArchive ecosystem
     """
+    id: Optional[str] = None
     program: str
     hash_index: str
     options: Dict[str, Any]

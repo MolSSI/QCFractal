@@ -106,11 +106,8 @@ class Options(CustomDynamicDocument):
 
     # TODO: pull choices from const config
     program = db.StringField(required=True)  #, choices=['rdkit', 'psi4', 'geometric', 'torsiondrive'])
-    # "default is reserved, insert on start
-    # option_name = db.StringField(required=True)
     hash_index = db.StringField(required=True)
     options = db.DynamicField()
-
 
     meta = {
         'indexes': [
