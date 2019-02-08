@@ -166,7 +166,7 @@ def test_compute_openffworkflow(fractal_compute_server):
     fragment_input = {
         "label1": {
             "type": "torsiondrive_input",
-            "initial_molecule": hooh.json(as_dict=True),
+            "initial_molecule": hooh.json_dict(),
             "grid_spacing": [120],
             "dihedrals": [[0, 1, 2, 3]],
         },
@@ -186,7 +186,7 @@ def test_compute_openffworkflow(fractal_compute_server):
     optimization_input = {
         "label2": {
             "type": "optimization_input",
-            "initial_molecule": hooh.json(as_dict=True),
+            "initial_molecule": hooh.json_dict(),
             "constraints": {
                 'set': [{
                     "type": 'dihedral',
@@ -215,7 +215,7 @@ def test_compute_openffworkflow(fractal_compute_server):
     fragment_input = {
         "label1": {
             "type": "torsiondrive_input",
-            "initial_molecule": butane.json(as_dict=True),
+            "initial_molecule": butane.json_dict(),
             "grid_spacing": [90],
             "dihedrals": [[0, 2, 3, 1]],
         },

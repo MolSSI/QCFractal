@@ -206,7 +206,7 @@ class MongoengineSocket:
             elif isinstance(mol, dict):
                 dict_mols[idx] = mol
             elif isinstance(mol, interface.models.common_models.Molecule):
-                dict_mols[idx] = mol.json(as_dict=True)
+                dict_mols[idx] = mol.json_dict()
             else:
                 meta["errors"].append((idx, "Data type not understood"))
 
@@ -420,7 +420,7 @@ class MongoengineSocket:
         new_inserts = []
         new_keys = []
         for new_key, new_mol in new_mols.items():
-            data = new_mol.json(as_dict=True)
+            data = new_mol.json_dict()
             data["identifiers"] = {}
 
             # Build new molecule hash

@@ -12,7 +12,7 @@ def test_queue_error(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server)
 
-    hooh = portal.data.get_molecule("hooh.json").json(as_dict=True)
+    hooh = portal.data.get_molecule("hooh.json").json_dict()
     del hooh["connectivity"]
     mol_ret = client.add_molecules({"hooh": hooh})
 
@@ -45,7 +45,7 @@ def test_queue_duplicate_compute(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server)
 
-    hooh = portal.data.get_molecule("hooh.json").json(as_dict=True)
+    hooh = portal.data.get_molecule("hooh.json").json_dict()
     mol_ret = client.add_molecules({"hooh": hooh})
 
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["hooh"])
@@ -68,7 +68,7 @@ def test_queue_duplicate_procedure(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server)
 
-    hooh = portal.data.get_molecule("hooh.json").json(as_dict=True)
+    hooh = portal.data.get_molecule("hooh.json").json_dict()
     mol_ret = client.add_molecules({"hooh": hooh})
 
     geometric_options = {
@@ -101,7 +101,7 @@ def test_queue_duplicate_submissions(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server)
 
-    he2 = portal.data.get_molecule("helium_dimer.json").json(as_dict=True)
+    he2 = portal.data.get_molecule("helium_dimer.json").json_dict()
     mol_ret = client.add_molecules({"he2": he2})
 
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["he2"])

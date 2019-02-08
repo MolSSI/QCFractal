@@ -20,8 +20,8 @@ def molecules_H4O2(storage_socket):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
 
-    ret = storage_socket.add_molecules({"water1": water.json(as_dict=True),
-                                        "water2": water2.json(as_dict=True)})
+    ret = storage_socket.add_molecules({"water1": water.json_dict(),
+                                        "water2": water2.json_dict()})
 
     yield list(ret['data'].values())
 
@@ -47,8 +47,8 @@ def test_molecule(storage_socket):
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
 
     # Add Molecule using pymongo
-    ret = storage_socket.add_molecules({"water1": water.json(as_dict=True),
-                                            "water2": water2.json(as_dict=True)})
+    ret = storage_socket.add_molecules({"water1": water.json_dict(),
+                                            "water2": water2.json_dict()})
     assert ret["meta"]["success"] is True
     assert ret["meta"]["n_inserted"] == 2
 
@@ -57,7 +57,7 @@ def test_molecule(storage_socket):
     assert water_mol.molecular_formula == "H4O2"
     assert water_mol.molecular_charge == 0
 
-    # print(water_mol.json(as_dict=True))
+    # print(water_mol.json_dict())
 
     # Query with fields in the model
     result_list = Molecule.objects(molecular_formula="H4O2")
@@ -145,7 +145,7 @@ def test_procedure(storage_socket):
     procedure = Procedure(**data1)
     procedure.save()
     assert procedure.id
-    # print('Procedure After save: ', procedure.json(as_dict=True))
+    # print('Procedure After save: ', procedure.json_dict())
     # assert procedure.molecule.molecular_formula == 'H4O2'
 
 
@@ -201,7 +201,7 @@ def test_torsiondrive_procedure(storage_socket):
 
     procedure = TorsiondriveProcedure(**data1)
     procedure.save()
-    # print('TorsiondriveProcedure After save: ', procedure.json(as_dict=True))
+    # print('TorsiondriveProcedure After save: ', procedure.json_dict())
 
 
 def test_add_task_queue(storage_socket, molecules_H4O2):

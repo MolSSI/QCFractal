@@ -51,7 +51,7 @@ def test_molecule_socket(test_server):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
 
     # Add a molecule
-    r = requests.post(mol_api_addr, json={"meta": {}, "data": {"water": water.json(as_dict=True)}})
+    r = requests.post(mol_api_addr, json={"meta": {}, "data": {"water": water.json_dict()}})
     assert r.status_code == 200
 
     pdata = r.json()

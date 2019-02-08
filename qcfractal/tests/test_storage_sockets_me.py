@@ -15,12 +15,12 @@ def test_molecules_add(storage_socket):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
-    ret1 = storage_socket.add_molecules({"new_water": water.json(as_dict=True)})
+    ret1 = storage_socket.add_molecules({"new_water": water.json_dict()})
     assert ret1["meta"]["success"] is True
     assert ret1["meta"]["n_inserted"] == 1
 
     # Try duplicate adds
-    ret2 = storage_socket.add_molecules({"new_water2": water.json(as_dict=True)})
+    ret2 = storage_socket.add_molecules({"new_water2": water.json_dict()})
     assert ret2["meta"]["success"] is True
     assert ret2["meta"]["n_inserted"] == 0
     assert ret2["meta"]["duplicates"][0] == "new_water2"
@@ -45,7 +45,7 @@ def test_identical_mol_insert(storage_socket):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
 
     # Add two idential molecules
-    ret1 = storage_socket.add_molecules({"w1": water.json(as_dict=True), "w2": water.json(as_dict=True)})
+    ret1 = storage_socket.add_molecules({"w1": water.json_dict(), "w2": water.json_dict()})
     assert ret1["meta"]["success"] is True
     assert ret1["meta"]["n_inserted"] == 1
     assert ret1["data"]["w1"] == ret1["data"]["w2"]
@@ -62,14 +62,14 @@ def test_molecules_add_many(storage_socket):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
 
-    ret = storage_socket.add_molecules({"water1": water.json(as_dict=True), "water2": water2.json(as_dict=True)})
+    ret = storage_socket.add_molecules({"water1": water.json_dict(), "water2": water2.json_dict()})
     assert ret["meta"]["n_inserted"] == 2
 
     # Cleanup adds
     ret = storage_socket.del_molecules([water.get_hash(), water2.get_hash()], index="hash")
     assert ret == 2
 
-    ret = storage_socket.add_molecules({"water1": water.json(as_dict=True), "water2": water2.json(as_dict=True)})
+    ret = storage_socket.add_molecules({"water1": water.json_dict(), "water2": water2.json_dict()})
     assert ret["meta"]["n_inserted"] == 2
 
     # Cleanup adds
@@ -82,7 +82,7 @@ def test_molecules_get(storage_socket):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
-    ret = storage_socket.add_molecules({"water": water.json(as_dict=True)})
+    ret = storage_socket.add_molecules({"water": water.json_dict()})
     assert ret["meta"]["n_inserted"] == 1
     water_id = ret["data"]["water"]
 
@@ -95,13 +95,15 @@ def test_molecules_get(storage_socket):
     ret = storage_socket.del_molecules(water_id, index="id")
     assert ret == 1
 
+def test_molecules_mixed_add_get(storage_socket):
+    water = portal.data.get_molecule("water_dimer_minima.psimol")
 
 def test_molecules_bad_get(storage_socket):
 
     water = portal.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
-    ret = storage_socket.add_molecules({"water": water.json(as_dict=True)})
+    ret = storage_socket.add_molecules({"water": water.json_dict()})
     assert ret["meta"]["n_inserted"] == 1
     water_id = ret["data"]["water"]
 
@@ -214,7 +216,7 @@ def test_results_add(storage_socket):
     # Add two waters
     water = portal.data.get_molecule("water_dimer_minima.psimol")
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
-    mol_insert = storage_socket.add_molecules({"water1": water.json(as_dict=True), "water2": water2.json(as_dict=True)})
+    mol_insert = storage_socket.add_molecules({"water1": water.json_dict(), "water2": water2.json_dict()})
 
     page1 = {
         "molecule": mol_insert["data"]["water1"],
@@ -278,7 +280,7 @@ def storage_results(storage_socket):
     # Add two waters
     water = portal.data.get_molecule("water_dimer_minima.psimol")
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
-    mol_insert = storage_socket.add_molecules({"water1": water.json(as_dict=True), "water2": water2.json(as_dict=True)})
+    mol_insert = storage_socket.add_molecules({"water1": water.json_dict(), "water2": water2.json_dict()})
 
     page1 = {
         "molecule": mol_insert["data"]["water1"],

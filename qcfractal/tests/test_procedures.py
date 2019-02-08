@@ -19,7 +19,7 @@ def test_compute_queue_stack(fractal_compute_server):
     helium = portal.Molecule.from_data([[2, 0, 0, 0.0]], dtype="numpy", units="bohr")
 
     storage = fractal_compute_server.objects["storage_socket"]
-    mol_ret = storage.add_molecules({"hydrogen": hydrogen.json(as_dict=True), "helium": helium.json(as_dict=True)})
+    mol_ret = storage.add_molecules({"hydrogen": hydrogen.json_dict(), "helium": helium.json_dict()})
 
     hydrogen_mol_id = mol_ret["data"]["hydrogen"]
     helium_mol_id = mol_ret["data"]["helium"]
@@ -37,7 +37,7 @@ def test_compute_queue_stack(fractal_compute_server):
             "options": opt_key,
             "program": "psi4",
         },
-        "data": [hydrogen_mol_id, helium.json(as_dict=True)],
+        "data": [hydrogen_mol_id, helium.json_dict()],
     }
 
     # Ask the server to compute a new computation
@@ -75,7 +75,7 @@ def test_procedure_optimization(fractal_compute_server):
     # Add a hydrogen molecule
     hydrogen = portal.Molecule.from_data([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
     client = portal.FractalClient(fractal_compute_server.get_address(""))
-    mol_ret = client.add_molecules({"hydrogen": hydrogen.json(as_dict=True)})
+    mol_ret = client.add_molecules({"hydrogen": hydrogen.json_dict()})
 
     # Add compute
     compute = {

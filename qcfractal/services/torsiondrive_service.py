@@ -77,7 +77,7 @@ class TorsionDriveService(BaseService):
         meta = {"output": output}
 
         # Remove identity info from molecule template
-        molecule_template = copy.deepcopy(service_input.initial_molecule[0].json(as_dict=True))
+        molecule_template = copy.deepcopy(service_input.initial_molecule[0].json_dict())
         molecule_template.pop("id", None)
         molecule_template.pop("identifiers", None)
         meta["molecule_template"] = json.dumps(molecule_template)
