@@ -17,7 +17,44 @@ __all__.extend(["Molecule", "Provenance"])
 json_encoders = {np.ndarray: lambda v: v.flatten().tolist()}
 
 
-def hash_dictionary(data):
+def recursive_hash_prep(value: Any, **kwargs: Dict[str, Any]) -> Any:
+    """
+    Prepare a structure for hashing by lowercasing all values and round all floats
+    """
+    digits = kwargs.get("digits", 10)
+    lowercase = kwargs.get("lowercase", True)
+
+    if isinstance(value, (int, type(None))):
+        pass
+
+    elif isinstance(value, str):
+        if lowercase:
+            value = value.lower()
+
+    elif isinstance(value, (list, tuple)):
+        value = [recursive_hash_prep(x, **kwargs) for x in value]
+
+    elif isinstance(value, dict):
+        ret = {}
+        for k, v in value.items():
+            if lowercase:
+                k = k.lower()
+            ret[k] = recursive_hash_prep(v, **kwargs)
+        value = ret
+
+    elif isinstance(value, float):
+        if digits:
+            value = round(value, digits)
+            if value == 0.0:  # Values rounded to zero
+                value = 0
+
+    else:
+        raise TypeError("Invalid type in Option ({type(value)}), only simply Python types are allowed.")
+
+    return value
+
+
+def hash_dictionary(data: Dict[str, Any]) -> str:
     m = hashlib.sha1()
     m.update(json.dumps(data, sort_keys=True).encode("UTF-8"))
     return m.hexdigest()
@@ -41,6 +78,8 @@ class Option(BaseModel):
     program: str
     hash_index: str
     options: Dict[str, Any]
+    lowercase: bool = True
+    exact_floats: bool = False
 
     class Config:
         allow_extra = True
@@ -55,16 +94,20 @@ class Option(BaseModel):
 
         BaseModel.__init__(self, **data)
 
+        # Overwrite options with massaged values
+        kwargs = {"lowercase": self.lowercase}
+        if self.exact_floats:
+            kwargs["digits"] = False
+
+        self.__values__["options"] = recursive_hash_prep(self.options, **kwargs)
+
+        # Build a hash index if we need it
         if build_index:
             self.__values__["hash_index"] = self.get_hash_index()
 
     @validator('program')
     def check_program(cls, v):
         return v.lower()
-
-    @validator('options', whole=True)
-    def check_options(cls, v):
-        return {k.lower(): v for k, v in v.items()}
 
     def get_hash_index(self):
         packet = self.options.copy()
