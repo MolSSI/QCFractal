@@ -577,7 +577,7 @@ class MongoengineSocket:
         try:
             for d in data:
                 # search by index keywords not by all keys, much faster
-                found = Options.objects(program=d['program'], name=d['name']).first()
+                found = Options.objects(program=d['program'], hash_index=d['hash_index']).first()
                 if not found:
                     doc = Options(**d).save()
                     options.append(str(doc.id))
@@ -593,7 +593,7 @@ class MongoengineSocket:
         ret = {"data": options, "meta": meta}
         return ret
 
-    def get_options(self, program: str=None, name: str=None, return_json: bool=True, with_ids: bool=True, limit=None):
+    def get_options(self, id: str=None, program: str=None, hash_index: str=None, return_json: bool=True, with_ids: bool=True, limit=None):
         """Search for one (unique) option based on the 'program'
         and the 'name'. No overwrite allowed.
 
@@ -626,8 +626,10 @@ class MongoengineSocket:
         query = {}
         if program:
             query['program'] = program
-        if name:
-            query['name'] = name
+        if hash_index:
+            query['hash_index'] = hash_index
+        if id:
+            query['id'] = ObjectId(id)
         q_limit = limit if limit and limit < self._max_limit else self._max_limit
 
         data = []

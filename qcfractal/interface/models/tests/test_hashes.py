@@ -71,8 +71,8 @@ def test_option_canary_hash(data, hash_index):
      {"program": "s", "options": {"other": 1.0 - 1.e-17}}),
 
     # Test dict order
-    ({"program": "S", "options": {"a": 5, "b": 6}},
-     {"program": "s", "options": {"b": 6, "a": 5}}),
+    ({"program": "S", "options": {"a": 5, "b": 6, "c": None}},
+     {"program": "s", "options": {"b": 6, "a": 5, "c": None}}),
 
     # Check recusive
     ({"program": "PSI4", "options": {"d1": {"D2": [0.0, 5], "d3": (3, 1.e-17)}}},
@@ -87,8 +87,8 @@ def test_option_comparison_hash(data1, data2):
     opt2 = Option(**data2)
 
     # Check after serialization and rebuild index
-    opt2s = Option(**json.loads(opt2.json()), build_index=True)
     opt1s = Option(**json.loads(opt1.json()), build_index=True)
+    opt2s = Option(**json.loads(opt2.json()), build_index=True)
 
     # Paranoid, try all combinations
     assert opt1.hash_index == opt2.hash_index

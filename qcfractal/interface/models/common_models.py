@@ -113,3 +113,6 @@ class Option(BaseModel):
         packet = self.options.copy()
         packet["program"] = self.program
         return hash_dictionary(packet)
+
+    def json_dict(self, *args, **kwargs):
+        return json.loads(self.json(*args, **kwargs))

@@ -5,7 +5,7 @@ from pydantic import BaseConfig, BaseModel, validator
 from typing import Dict, List, Tuple, Union, Any
 from enum import Enum
 
-from .common_models import Molecule, json_encoders
+from .common_models import Molecule, Option, json_encoders
 from .gridoptimization import GridOptimizationInput
 from .torsiondrive import TorsionDriveInput
 
@@ -94,18 +94,18 @@ class OptionGETBody(BaseModel):
 
 class OptionGETResponse(BaseModel):
     meta: ResponseGETMeta
-    data: List[Dict[str, Any]]
+    data: List[Option]
 
 
 class OptionPOSTBody(BaseModel):
     meta: Dict[str, Any] = None
-    data: List[Dict[str, Any]]
+    data: List[Option]
 
-    @validator("data", whole=True, pre=True)
-    def ensure_list_of_dict(cls, v):
-        if isinstance(v, dict):
-            return [v]
-        return v
+    # @validator("data", whole=True, pre=True)
+    # def ensure_list_of_dict(cls, v):
+    #     if isinstance(v, dict):
+    #         return [v]
+    #     return v
 
 
 class OptionPOSTResponse(BaseModel):

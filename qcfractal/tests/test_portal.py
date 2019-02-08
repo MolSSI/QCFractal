@@ -33,15 +33,17 @@ def test_options_portal(test_server):
 
     client = portal.FractalClient(test_server)
 
-    opts = portal.data.get_options("psi_default")
+    opt = portal.models.Option(program="psi4", options={"one": "fish", "two": "fish"})
 
     # Test add
-    ret = client.add_options(opts)
+    ret = client.add_options([opt])
 
     # Test get
-    get_opt = client.get_options({'program': opts["program"], 'name': opts["name"]})
+    get_opt = client.get_options({'id': ret[0]})
+    assert opt == get_opt[0]
 
-    assert opts == get_opt[0]
+    get_opt = client.get_options({"program": "psi4", "hash_index": opt.hash_index})
+    assert opt == get_opt[0]
 
 
 def test_collection_portal(test_server):
