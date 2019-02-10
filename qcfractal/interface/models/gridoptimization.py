@@ -39,8 +39,8 @@ class ScanDimension(BaseModel):
 
     @validator('steps', whole=True)
     def check_steps_monotonic(cls, v):
-        if not all(x < y for x, y in zip(v, v[1:])):
-            raise ValueError("Steps are not monotonically increasing.")
+        if not (all(x < y for x, y in zip(v, v[1:])) or all(x > y for x, y in zip(v, v[1:]))):
+            raise ValueError("Steps are not monotonically increasing or decreasing.")
 
         return v
 
@@ -51,6 +51,14 @@ class GOOptions(BaseModel):
     """
     scans: List[ScanDimension]
     starting_grid: str = "relative"
+
+    @validator('starting_grid')
+    def check_starting_grid(cls, v):
+        v = v.lower()
+        if v not in ["relative", "zero"]:
+            raise KeyError("Starting grid can only be relative or zero, found '{}'".found(v))
+
+        return v
 
     class Config:
         allow_mutation = False
