@@ -855,6 +855,7 @@ class MongoengineSocket:
         results = []
         # try:
         for d in data:
+
             # search by index keywords not by all keys, much faster
             doc = Result.objects(
                 program=d['program'],

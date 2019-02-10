@@ -7,6 +7,7 @@ import hashlib
 import json
 
 from .. import interface
+from ..interface.models.common_models import ResultInput
 
 
 def unpack_single_run_meta(storage, meta, molecules):
@@ -71,15 +72,17 @@ def unpack_single_run_meta(storage, meta, molecules):
         }
     })
 
-    tasks = {}
+    tasks = []
     indexer = copy.deepcopy(meta)
-    for idx, mol in raw_molecules_query["data"].items():
+    for mol in raw_molecules_query["data"]:
+        if mol is None:
+            tasks.append(None)
+            continue
 
         data = json.loads(task_meta)
         data["molecule"] = mol
 
-        indexer["molecule"] = mol["id"]
-        tasks[interface.schema.format_result_indices(indexer)] = data
+        tasks.append(ResultInput(**data))
 
     return tasks, []
 

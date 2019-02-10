@@ -61,6 +61,31 @@ def test_queue_duplicate_compute(fractal_compute_server):
     assert len(ret.submitted) == 0
     assert len(ret.completed) == 1
 
+@testing.using_rdkit
+def test_queue_compute_mixed_molecule(fractal_compute_server):
+
+    client = portal.FractalClient(fractal_compute_server)
+
+
+    mol1 = portal.Molecule.from_data("He 0 0 0\nHe 0 0 2.1")
+    mol_ret = client.add_molecules({"he2.1": mol1})
+
+    mol2 = portal.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
+
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [mol1, mol2, "bad_id"], return_full=True)
+    print(ret)
+    assert len(ret.submitted) == 1
+    assert len(ret.completed) == 0
+
+    # Pull out fireworks launchpad and queue nanny
+    fractal_compute_server.await_results()
+
+    db = fractal_compute_server.objects["storage_socket"]
+
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["hooh"])
+    assert len(ret.submitted) == 0
+    assert len(ret.completed) == 1
+
 
 @testing.using_rdkit
 @testing.using_geometric
@@ -95,28 +120,3 @@ def test_queue_duplicate_procedure(fractal_compute_server):
     assert len(ret["submitted"]) == 0
     assert len(ret["completed"]) == 1
 
-
-@testing.using_rdkit
-def test_queue_duplicate_submissions(fractal_compute_server):
-
-    client = portal.FractalClient(fractal_compute_server)
-
-    he2 = portal.data.get_molecule("helium_dimer.json").json_dict()
-    mol_ret = client.add_molecules({"he2": he2})
-
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["he2"])
-    assert len(ret.submitted) == 1
-    assert len(ret.completed) == 0
-    assert len(ret.queue) == 0
-    task_id = ret.submitted[0]
-
-    # Do not compute, add duplicate
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["he2"])
-    assert len(ret.submitted) == 0
-    assert len(ret.completed) == 1
-    # assert ret["queue"][0] == task_id
-    # assert len(ret["queue"]) == 1
-    # assert ret["queue"][0] == task_id
-
-    # Cleanup
-    fractal_compute_server.objects["storage_socket"].queue_mark_complete([task_id])

@@ -7,7 +7,7 @@ import numpy as np
 from pydantic import BaseModel, validator
 from typing import Any, Dict, Optional
 
-from qcelemental.models import Molecule, Provenance
+from qcelemental.models import Molecule, Provenance, Result, ResultInput
 
 __all__ = ["QCMeta", "json_encoders", "hash_dictionary", "Option"]
 

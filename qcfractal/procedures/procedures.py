@@ -37,7 +37,9 @@ class SingleResultTasks:
         """
 
         # format the data
-        runs, errors = procedures_util.unpack_single_run_meta(self.storage, data["meta"], data["data"])
+        inputs, errors = procedures_util.unpack_single_run_meta(self.storage, data["meta"], data["data"])
+        print(inputs)
+        raise Exception()
 
         # Remove duplicates
         query = {k: data["meta"][k] for k in ["driver", "method", "basis", "options", "program"]}
@@ -53,7 +55,7 @@ class SingleResultTasks:
 
         # Construct full tasks
         full_tasks = []
-        for k, v in runs.items():
+        for mol in runs:
             if v["molecule"]["id"] in completed_ids:
                 continue
 
@@ -84,6 +86,8 @@ class SingleResultTasks:
             full_tasks.append(task)
 
         return full_tasks, completed_results, errors
+
+    # def submit_tasks(self, data):
 
     def parse_output(self, data):
 
