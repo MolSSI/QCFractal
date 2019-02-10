@@ -100,6 +100,7 @@ class Dataset(Collection):
 
         # Defaults
         default_program: Optional[str] = None
+        default_option: Optional[str] = None
         default_driver: str = "energy"
 
         reactions: List[Rxn] = []
@@ -119,6 +120,13 @@ class Dataset(Collection):
         # Update internal molecule UUID's to servers UUID's
         self.data.reactions = dict_utils.replace_dict_keys(self.data.reactions, mol_ret)
         self._new_molecules = {}
+
+        for k in list(self._new_options.keys()):
+            ret = client.add_options([self._new_options[k]])
+            assert len(ret) == 1, "Option added incorrectly"
+            self.data.options[k[0]][k[1]] = ret[0]
+            del self._new_options[k]
+
 
     def _unroll_query(self, keys, stoich, field="return_result"):
         """Unrolls a complex query into a "flat" query for the server object
@@ -167,6 +175,38 @@ class Dataset(Collection):
         tmp_idx[null_mask] = np.nan
 
         return tmp_idx
+
+    # def set_defaults(self, program: str, alias: str) -> bool:
+    #     """
+    #     Sets the default program and options.
+    #     """
+
+    #     self._check_state()
+
+    #     opt =
+
+    def add_options(self, alias: str, option: 'Option') -> bool:
+        """
+        Adds an option alias to the dataset. Not that options are not present
+        until a save call has been completed.
+
+        Parameters
+        ----------
+        alias : str
+            The alias of the option
+        option : Option
+            The Options object to use.
+        """
+
+        alias = alias.lower()
+        if option.program not in self.data.options:
+            self.data.options[option.program] = {}
+
+        if alias in self.data.options[option.program]:
+            raise KeyError("Alias '{}' already set for program {}.".format(alias, option.program))
+
+        self._new_options[(option.program, alias)] = option
+        return True
 
     def query(self,
               method,

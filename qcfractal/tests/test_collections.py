@@ -22,6 +22,13 @@ def test_dataset_check_state(fractal_compute_server):
     ds.save()
     assert ds.query("SCF", "STO-3G")
 
+    ds.add_option("default", portal.models.Option(program="psi4", options={"a": 5}))
+
+    with pytest.raises(ValueError):
+        ds.query("SCF", "STO-3G")
+
+    ds.save()
+    assert ds.query("SCF", "STO-3G")
 
 @testing.using_psi4
 def test_compute_dataset_regression(fractal_compute_server):
