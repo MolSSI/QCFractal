@@ -12,7 +12,7 @@ print(ds.data)
 print(ds.df)
 
 # Submit computations (cp corrected scf/sto-3g)
-r = ds.compute("scf", "sto-3g", stoich="cp")
+r = ds.compute("scf", "sto-3g", stoich="cp", program="psi4")
 
 print("Jobs to be computed:")
 print("\n\t-".join([x['molecule'] for x in r.queue]) + "\n")

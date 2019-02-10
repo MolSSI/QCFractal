@@ -54,10 +54,10 @@ def test_compute_dataset_regression(fractal_compute_server):
 
     # Test collection lists
     ret = client.list_collections()
-    assert ret == {"dataset": [ds_name]}
+    assert ds_name in ret["dataset"]
 
     ret = client.list_collections("dataset")
-    assert ret == [ds_name]
+    assert ds_name in ret
 
     He2 = portal.Molecule.from_data([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
     ds.add_ie_rxn("He2", He2, attributes={"r": 4}, reaction_results={"default": {"Benchmark": -0.00001098794749}})

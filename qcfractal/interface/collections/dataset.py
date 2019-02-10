@@ -418,7 +418,7 @@ class Dataset(Collection):
         umols = np.setdiff1d(umols, complete_mols)
         compute_list = list(umols)
 
-        ret = self.client.add_compute(program, method.lower(), basis.lower(), driver, options, compute_list, return_full=True)
+        ret = self.client.add_compute(program, method.lower(), basis.lower(), driver, options, compute_list)
 
         return ret
 
