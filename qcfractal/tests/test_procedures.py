@@ -24,9 +24,8 @@ def test_compute_queue_stack(fractal_compute_server):
     hydrogen_mol_id = mol_ret["data"]["hydrogen"]
     helium_mol_id = mol_ret["data"]["helium"]
 
-    option = portal.data.get_options("psi_default")
-    opt_ret = storage.add_options([option])
-    opt_key = option["name"]
+    option = portal.models.Option(**{"program": "psi4", "options": {"e_convergence": 1.e-8}})
+    opt_key = storage.add_options([option])["data"][0]
 
     # Add compute
     compute = {

@@ -53,9 +53,8 @@ def unpack_single_run_meta(storage, meta, molecules):
     if meta["options"] is None:
         option_set = {}
     else:
-        option_set = storage.get_options(program=meta["program"], name=meta["options"], with_ids=False)["data"][0]
-        del option_set["name"]
-        del option_set["program"]
+        option_set = storage.get_options(id=meta["options"], with_ids=False)["data"][0]
+        option_set = option_set["options"]
 
     # Create the "universal header"
     task_meta = json.dumps({

@@ -163,7 +163,7 @@ class OptionHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         body = OptionPOSTBody.parse_raw(self.request.body)
-        ret = storage.add_options(body.data)
+        ret = storage.add_options([x.json_dict() for x in body.data])
         response = OptionPOSTResponse(**ret)
 
         self.logger.info("POST: Options - {} inserted.".format(response.meta.n_inserted))

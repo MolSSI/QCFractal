@@ -85,7 +85,8 @@ class Dataset(Collection):
         self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule", "coefficient"])
 
         # If we making a new database we may need new hashes and json objects
-        self._new_molecule_jsons = {}
+        self._new_molecules = {}
+        self._new_options = {}
 
     class DataModel(Collection.DataModel):
         """
@@ -98,15 +99,16 @@ class Dataset(Collection):
         ds_type: _RxnEnum = _RxnEnum.rxn
 
         reactions: List[Rxn] = []
+        options: Dict[str, Dict[str, str]] = {} # program: option_name: option_id
 
     def _pre_save_prep(self, client):
 
         # Preps any new molecules introduced to the Dataset before storing data.
-        mol_ret = client.add_molecules(self._new_molecule_jsons)
+        mol_ret = client.add_molecules(self._new_molecules)
 
         # Update internal molecule UUID's to servers UUID's
         self.data.reactions = dict_utils.replace_dict_keys(self.data.reactions, mol_ret)
-        self._new_molecule_jsons = {}
+        self._new_molecules = {}
 
     def _unroll_query(self, keys, stoich, field="return_result"):
         """Unrolls a complex query into a "flat" query for the server object
@@ -457,14 +459,14 @@ class Dataset(Collection):
 
                 molecule_hash = qcf_mol.get_hash()
 
-                if molecule_hash not in list(self._new_molecule_jsons):
-                    self._new_molecule_jsons[molecule_hash] = qcf_mol.json(as_dict=True)
+                if molecule_hash not in list(self._new_molecules):
+                    self._new_molecules[molecule_hash] = qcf_mol.json(as_dict=True)
 
             elif isinstance(mol, Molecule):
                 molecule_hash = mol.get_hash()
 
-                if molecule_hash not in list(self._new_molecule_jsons):
-                    self._new_molecule_jsons[molecule_hash] = mol.json(as_dict=True)
+                if molecule_hash not in list(self._new_molecules):
+                    self._new_molecules[molecule_hash] = mol.json(as_dict=True)
 
             else:
                 raise TypeError(

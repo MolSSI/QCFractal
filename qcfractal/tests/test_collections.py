@@ -19,12 +19,6 @@ def test_compute_dataset(fractal_compute_server):
     ds_name = "He_PES"
     ds = portal.collections.Dataset(ds_name, client, ds_type="ie")
 
-    # Adds options
-    option = portal.data.get_options("psi_default")
-
-    opt_ret = client.add_options([option])
-    opt_key = option["name"]
-
     # Add two helium dimers to the DB at 4 and 8 bohr
     He1 = portal.Molecule.from_data([[2, 0, 0, -2], [2, 0, 0, 2]], dtype="numpy", units="bohr", frags=[1])
     ds.add_ie_rxn("He1", He1, attributes={"r": 4}, reaction_results={"default": {"Benchmark": 0.0009608501557}})

@@ -6,12 +6,11 @@ import qcfractal.interface as portal
 from qcfractal.testing import test_server
 import pytest
 
-
 # All tests should import test_server, but not use it
 # Make PyTest aware that this module needs the server
 
 
-def test_molecule_portal(test_server):
+def test_client_molecule(test_server):
 
     client = portal.FractalClient(test_server)
 
@@ -29,19 +28,43 @@ def test_molecule_portal(test_server):
     assert water.compare(get_mol[0])
 
 
-def test_options_portal(test_server):
+def test_client_options(test_server):
 
     client = portal.FractalClient(test_server)
 
-    opts = portal.data.get_options("psi_default")
+    opt = portal.models.Option(program="psi4", options={"one": "fish", "two": "fish"})
 
     # Test add
-    ret = client.add_options(opts)
+    ret = client.add_options([opt])
 
     # Test get
-    get_opt = client.get_options({'program': opts["program"], 'name': opts["name"]})
+    get_opt = client.get_options({'id': ret[0]})
+    assert opt == get_opt[0]
 
-    assert opts == get_opt[0]
+    get_opt = client.get_options({"program": "psi4", "hash_index": opt.hash_index})
+    assert opt == get_opt[0]
+
+
+def test_client_duplicate_options(test_server):
+
+    client = portal.FractalClient(test_server)
+
+    opt1 = portal.models.Option(program="psi4", options={"key": 1})
+    opt2 = portal.models.Option(program="psi4", options={"key": 2})
+    opt3 = portal.models.Option(program="psi4", options={"key": 3})
+
+    # Test add
+    ret = client.add_options([opt1, opt1])
+    assert len(ret) == 2
+    assert ret[0] == ret[1]
+
+    ret2 = client.add_options([opt1])
+    assert len(ret2) == 1
+    assert ret2[0] == ret[0]
+
+    ret3 = client.add_options([opt2, opt1, opt3])
+    assert len(ret3) == 3
+    assert ret3[1] == ret[0]
 
 
 def test_collection_portal(test_server):
