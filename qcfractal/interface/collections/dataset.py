@@ -74,15 +74,8 @@ class Dataset(Collection):
         # Initialize internal data frames
         self.df = pd.DataFrame(index=self.get_index())
 
-        # Unroll the index
-        tmp_index = []
-        for rxn in self.data.reactions:
-            name = rxn.name
-            for stoich_name in list(rxn.stoichiometry):
-                for mol_hash, coef in rxn.stoichiometry[stoich_name].items():
-                    tmp_index.append([name, stoich_name, mol_hash, coef])
-
-        self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule", "coefficient"])
+        self.rxn_index = None
+        self._form_index()
 
         # If we making a new database we may need new hashes and json objects
         self._new_molecules = {}
@@ -100,17 +93,28 @@ class Dataset(Collection):
 
         # Defaults
         default_program: Optional[str] = None
-        default_option: Optional[str] = None
+        default_options: Dict[str, str] = {}
         default_driver: str = "energy"
 
         reactions: List[Rxn] = []
-        options: Dict[str, Dict[str, str]] = {}  # program: option_name: option_id
+        alias_options: Dict[str, Dict[str, str]] = {}  # program: option_name: option_id
 
         known_compute: List[Tuple[str, Optional[str], str, Optional[str]]] = []  # method, basis, driver, options
 
     def _check_state(self):
         if self._new_molecules or self._new_options:
             raise ValueError("New molecules or options detected, run save before submitting new tasks.")
+
+    def _form_index(self):
+        # Unroll the index
+        tmp_index = []
+        for rxn in self.data.reactions:
+            name = rxn.name
+            for stoich_name in list(rxn.stoichiometry):
+                for mol_hash, coef in rxn.stoichiometry[stoich_name].items():
+                    tmp_index.append([name, stoich_name, mol_hash, coef])
+
+        self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule", "coefficient"])
 
     def _pre_save_prep(self, client):
 
@@ -124,9 +128,33 @@ class Dataset(Collection):
         for k in list(self._new_options.keys()):
             ret = client.add_options([self._new_options[k]])
             assert len(ret) == 1, "Option added incorrectly"
-            self.data.options[k[0]][k[1]] = ret[0]
+            self.data.alias_options[k[0]][k[1]] = ret[0]
             del self._new_options[k]
 
+        self._form_index()
+
+    def _default_parameters(self, driver, options, program):
+
+        if program is None:
+            if self.data.default_program is None:
+                raise KeyError("No default program was set and none was provided.")
+            program = self.data.default_program
+        else:
+            program = program.lower()
+
+        if driver is None:
+            driver = self.data.default_driver
+
+        if options is None:
+            if program in self.data.default_options:
+                options = self.data.alias_options[program][self.data.default_options[program]]
+        else:
+            if (program not in self.data.alias_options) or (options not in self.data.alias_options[program]):
+                raise KeyError("Option alias '{}' not found for program '{}'.".format(options, program))
+
+            options = self.data.alias_options[program][options]
+
+        return driver, options, program
 
     def _unroll_query(self, keys, stoich, field="return_result"):
         """Unrolls a complex query into a "flat" query for the server object
@@ -176,16 +204,14 @@ class Dataset(Collection):
 
         return tmp_idx
 
-    # def set_defaults(self, program: str, alias: str) -> bool:
-    #     """
-    #     Sets the default program and options.
-    #     """
+    def set_default_program(self, program: str) -> bool:
+        """
+        Sets the default program and options.
+        """
 
-    #     self._check_state()
+        self.data.default_program = program.lower()
 
-    #     opt =
-
-    def add_options(self, alias: str, option: 'Option') -> bool:
+    def add_options(self, alias: str, option: 'Option', default: bool=False) -> bool:
         """
         Adds an option alias to the dataset. Not that options are not present
         until a save call has been completed.
@@ -196,24 +222,29 @@ class Dataset(Collection):
             The alias of the option
         option : Option
             The Options object to use.
+        default : bool
+            Sets this option as the default for the program
         """
 
         alias = alias.lower()
-        if option.program not in self.data.options:
-            self.data.options[option.program] = {}
+        if option.program not in self.data.alias_options:
+            self.data.alias_options[option.program] = {}
 
-        if alias in self.data.options[option.program]:
+        if alias in self.data.alias_options[option.program]:
             raise KeyError("Alias '{}' already set for program {}.".format(alias, option.program))
 
         self._new_options[(option.program, alias)] = option
+
+        if default:
+            self.data.default_options[option.program] = alias
         return True
 
     def query(self,
               method,
               basis,
-              driver="energy",
+              driver=None,
               options=None,
-              program="psi4",
+              program=None,
               stoich="default",
               prefix="",
               postfix="",
@@ -268,6 +299,8 @@ class Dataset(Collection):
 
         """
 
+        driver, options, program = self._default_parameters(driver, options, program)
+
         if not reaction_results and (self.client is None):
             raise AttributeError("DataBase: FractalClient was not set.")
 
@@ -321,10 +354,10 @@ class Dataset(Collection):
     def compute(self,
                 method,
                 basis,
-                driver="energy",
-                stoich="default",
+                driver=None,
                 options=None,
-                program="psi4",
+                program=None,
+                stoich="default",
                 ignore_ds_type=False):
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
@@ -356,6 +389,8 @@ class Dataset(Collection):
         if self.client is None:
             raise AttributeError("DataBase: Compute: Client was not set.")
 
+        driver, options, program = self._default_parameters(driver, options, program)
+
         # Figure out molecules that we need
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
@@ -383,7 +418,7 @@ class Dataset(Collection):
         umols = np.setdiff1d(umols, complete_mols)
         compute_list = list(umols)
 
-        ret = self.client.add_compute(program, method.lower(), basis.lower(), driver, options, compute_list)
+        ret = self.client.add_compute(program, method.lower(), basis.lower(), driver, options, compute_list, return_full=True)
 
         return ret
 
