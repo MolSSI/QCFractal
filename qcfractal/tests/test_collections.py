@@ -8,9 +8,23 @@ import qcfractal.interface as portal
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
 
+def test_dataset_check_state(fractal_compute_server):
+    client = portal.FractalClient(fractal_compute_server)
+    ds = portal.collections.Dataset("check_state", client, ds_type="ie")
+    ds.add_ie_rxn("He1", portal.Molecule.from_data("He -3 0 0\n--\nHe 0 0 2"))
+
+    with pytest.raises(ValueError):
+        ds.compute("SCF", "STO-3G")
+
+    with pytest.raises(ValueError):
+        ds.query("SCF", "STO-3G")
+
+    ds.save()
+    assert ds.query("SCF", "STO-3G")
+
 
 @testing.using_psi4
-def test_compute_dataset(fractal_compute_server):
+def test_compute_dataset_regression(fractal_compute_server):
     """
     Tests an entire server and interaction energy dataset run
     """
@@ -22,6 +36,7 @@ def test_compute_dataset(fractal_compute_server):
     # Add two helium dimers to the DB at 4 and 8 bohr
     He1 = portal.Molecule.from_data([[2, 0, 0, -2], [2, 0, 0, 2]], dtype="numpy", units="bohr", frags=[1])
     ds.add_ie_rxn("He1", He1, attributes={"r": 4}, reaction_results={"default": {"Benchmark": 0.0009608501557}})
+
 
     # Save the DB and re-acquire via classmethod
     r = ds.save()
@@ -57,6 +72,18 @@ def test_compute_dataset(fractal_compute_server):
     assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/STO-3G")
 
     assert isinstance(ds.to_json(), dict)
+
+# @testing.using_psi4
+# def test_compute_dataset_options(fractal_compute_server):
+
+#     client = portal.FractalClient(fractal_compute_server)
+#     ds_name = "options"
+
+#     mol1 = portal.Molecule.from_data("He 0 0 -4.1\nHe 0 0 4.1")
+
+#     ds = portal.collections.Dataset(ds_name, client, ds_type="ie")
+#     ds.add_option(portal.models.Option({}))
+
 
 
 @testing.using_torsiondrive

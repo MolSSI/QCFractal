@@ -3,7 +3,7 @@ QCPortal Database ODM
 """
 import itertools as it
 from enum import Enum
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union, Optional
 
 import numpy as np
 import pandas as pd
@@ -98,8 +98,18 @@ class Dataset(Collection):
 
         ds_type: _RxnEnum = _RxnEnum.rxn
 
+        # Defaults
+        default_program: Optional[str] = None
+        default_driver: str = "energy"
+
         reactions: List[Rxn] = []
-        options: Dict[str, Dict[str, str]] = {} # program: option_name: option_id
+        options: Dict[str, Dict[str, str]] = {}  # program: option_name: option_id
+
+        known_compute: List[Tuple[str, Optional[str], str, Optional[str]]] = []  # method, basis, driver, options
+
+    def _check_state(self):
+        if self._new_molecules or self._new_options:
+            raise ValueError("New molecules or options detected, run save before submitting new tasks.")
 
     def _pre_save_prep(self, client):
 
@@ -127,6 +137,8 @@ class Dataset(Collection):
         ret : pd.DataFrame
             A DataFrame representation of the unrolled query
         """
+        self._check_state()
+
         tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
         tmp_idx = tmp_idx.reset_index(drop=True)
 
@@ -137,7 +149,7 @@ class Dataset(Collection):
         query_keys = {k: v for k, v in keys.items()}
         query_keys["molecule"] = list(umols)
         query_keys["projection"] = {field: True, "molecule": True}
-        values = pd.DataFrame(self.client.get_results(**query_keys))
+        values = pd.DataFrame(self.client.get_results(**query_keys), columns=["molecule", field])
 
         # Join on molecule hash
         tmp_idx = tmp_idx.merge(values, how="left", on="molecule")
@@ -299,6 +311,8 @@ class Dataset(Collection):
         ret : dict
             A dictionary of the keys for all requested computations
         """
+        self._check_state()
+
         if self.client is None:
             raise AttributeError("DataBase: Compute: Client was not set.")
 
@@ -317,7 +331,13 @@ class Dataset(Collection):
         umols, uidx = np.unique(tmp_idx["molecule"], return_index=True)
 
         complete_values = self.client.get_results(
-            molecule=list(umols), driver=driver, options=options, program=program, method=method, basis=basis, projection={"molecule": True})
+            molecule=list(umols),
+            driver=driver,
+            options=options,
+            program=program,
+            method=method,
+            basis=basis,
+            projection={"molecule": True})
 
         complete_mols = np.array([x["molecule"] for x in complete_values])
         umols = np.setdiff1d(umols, complete_mols)
@@ -399,7 +419,6 @@ class Dataset(Collection):
         """
         raise Exception("MPL not avail")
 
-
 #        return visualization.Ternary2D(self.df, cvals=cvals)
 
 # Adders
@@ -469,10 +488,8 @@ class Dataset(Collection):
                     self._new_molecules[molecule_hash] = mol.json(as_dict=True)
 
             else:
-                raise TypeError(
-                    "Dataset: Parse stoichiometry: first value must either be a molecule hash, "
-                    "a molecule str, or a Molecule class."
-                )
+                raise TypeError("Dataset: Parse stoichiometry: first value must either be a molecule hash, "
+                                "a molecule str, or a Molecule class.")
 
             mol_hashes.append(molecule_hash)
 
@@ -526,9 +543,8 @@ class Dataset(Collection):
 
         # Set name
         if name in self.get_index():
-            raise KeyError(
-                "Dataset: Name '{}' already exists. "
-                "Please either delete this entry or call the update function.".format(name))
+            raise KeyError("Dataset: Name '{}' already exists. "
+                           "Please either delete this entry or call the update function.".format(name))
 
         # Set stoich
         if isinstance(stoichiometry, dict):
@@ -544,8 +560,7 @@ class Dataset(Collection):
             rxn_dict["stoichiometry"] = {}
             rxn_dict["stoichiometry"]["default"] = self.parse_stoichiometry(stoichiometry)
         else:
-            raise TypeError("Dataset:add_rxn: Type of stoichiometry input was not recognized:",
-                            type(stoichiometry))
+            raise TypeError("Dataset:add_rxn: Type of stoichiometry input was not recognized:", type(stoichiometry))
 
         # Set attributes
         if not isinstance(attributes, dict):
@@ -714,6 +729,4 @@ class Dataset(Collection):
         """
         return self.df[args]
 
-
 register_collection(Dataset)
-
