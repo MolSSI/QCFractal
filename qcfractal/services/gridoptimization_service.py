@@ -4,6 +4,7 @@ Wraps geometric procedures
 
 import copy
 import json
+import numpy as np
 from typing import Dict, List, Set, Union
 
 from qcfractal.extras import get_information
@@ -102,10 +103,21 @@ class GridOptimizationService(BaseService):
         if output.gridoptimization_meta.starting_grid == "zero":
             meta["iteration"] = 0
             meta["starting_grid"] = (0 for x in meta["dimensions"])
+        elif output.gridoptimization_meta.starting_grid == "relative":
+            meta["iteration"] = 0
+            starting_grid = []
+            for scan in output.gridoptimization_meta.scans:
+
+                # Find closest index
+                m = service_input.initial_molecule.measure(scan.indices)
+                idx = np.abs(np.array(scan.steps) - m).argmin()
+                starting_grid.append(int(idx))
+
+            meta["starting_grid"] = tuple(starting_grid)
+
         else:
             raise KeyError(
                 "Unknown starting_grid configuration {}.".format(output.gridoptimization_meta.starting_grid))
-        # meta["starting_grid"] = output.gridoptimization_meta.starting_grid
 
         return cls(**meta, storage_socket=storage_socket)
 
