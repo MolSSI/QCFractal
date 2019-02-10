@@ -95,8 +95,20 @@ def test_molecules_get(storage_socket):
     ret = storage_socket.del_molecules(water_id, index="id")
     assert ret == 1
 
+
 def test_molecules_mixed_add_get(storage_socket):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
+
+    ret = storage_socket.get_add_molecules_mixed(["bad_id", water, "bad_id2"])
+    assert ret["data"][0] is None
+    assert ret["data"][1]["identifiers"]["molecule_hash"] == water.get_hash()
+    assert ret["data"][2] is None
+    assert set(ret["meta"]["missing"]) == {0, 2}
+
+    # Cleanup adds
+    ret = storage_socket.del_molecules([ret["data"][1]["id"]], index="id")
+    assert ret == 1
+
 
 def test_molecules_bad_get(storage_socket):
 
@@ -187,7 +199,7 @@ def test_collections_overwrite(storage_socket):
     db_update = {
         # "id": ret["data"][0]["id"],
         "collection": "TorsionDrive",  # no need to include
-        "name": "Torsion123",   # no need to include
+        "name": "Torsion123",  # no need to include
         "something": "New",
         "something2": "else",
         "array2": ["54321"]
@@ -259,7 +271,7 @@ def test_results_add(storage_socket):
     ret = storage_socket.add_results([page1, page2, page3])
 
     assert ret["meta"]["n_inserted"] == 1
-    assert len(ret['data']) == 3   # first 2 found are None
+    assert len(ret['data']) == 3  # first 2 found are None
     assert len(ret["meta"]['duplicates']) == 2
 
     for res_id in ret['data']:
@@ -412,20 +424,20 @@ def test_results_query_dual(storage_results):
 def test_results_query_project(storage_results):
     """See new changes in design here"""
 
-    ret = storage_results.get_results(method="M2", program="P2",
-                                      projection={"return_result"})["data"][0]
+    ret = storage_results.get_results(method="M2", program="P2", projection={"return_result"})["data"][0]
     assert set(ret.keys()) == {"id", "return_result"}
     assert ret["return_result"] == 15
 
     # Note: explicitly set with_ids=False to remove ids
-    ret = storage_results.get_results(method="M2", program="P2", with_ids=False,
-                                      projection={"return_result"})["data"][0]
+    ret = storage_results.get_results(
+        method="M2", program="P2", with_ids=False, projection={"return_result"})["data"][0]
     assert set(ret.keys()) == {"return_result"}
 
 
 def test_results_query_driver(storage_results):
     ret = storage_results.get_results(driver="energy")
     assert ret["meta"]["n_found"] == 2
+
 
 # ------ New Task Queue tests ------
 # No hash index, tasks are unique by their base_result
@@ -461,9 +473,11 @@ def test_queue_submit(storage_results):
     assert ret['meta']['n_inserted'] == 0
     assert len(ret["meta"]['duplicates']) == 1
 
+
 # ----------------------------------------------------------
 
 # Builds tests for the queue - Changed design
+
 
 def test_storage_queue_roundtrip(storage_results):
 
@@ -547,15 +561,9 @@ def test_queue_submit_many_order(storage_results):
 
     results = storage_results.get_results()['data']
 
-    task1 = {
-        "base_result": ('results', results[3]['id'])
-    }
-    task2 = {
-        "base_result": ('results', results[4]['id'])
-    }
-    task3 = {
-        "base_result": ('results', results[5]['id'])
-    }
+    task1 = {"base_result": ('results', results[3]['id'])}
+    task2 = {"base_result": ('results', results[4]['id'])}
+    task3 = {"base_result": ('results', results[5]['id'])}
 
     # Submit tasks
     ret = storage_results.queue_submit([task1, task2, task3])
@@ -569,6 +577,7 @@ def test_queue_submit_many_order(storage_results):
     assert r[0]['base_result']['id'] == results[3]['id']
 
     # Todo: test more scenarios
+
 
 # User testing
 

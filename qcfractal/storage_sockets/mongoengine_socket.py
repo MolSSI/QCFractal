@@ -229,7 +229,15 @@ class MongoengineSocket:
         meta["n_found"] = len(ret_mols)
         meta["missing"] = list(ordered_mol_dict.keys() - ret_mols.keys())
 
-        return {"meta": meta, "data": ret_mols}
+        # Rewind to flat last
+        ret = []
+        for ind in range(len(ordered_mol_dict)):
+            if ind in ret_mols:
+                ret.append(ret_mols[ind])
+            else:
+                ret.append(None)
+
+        return {"meta": meta, "data": ret}
 
     def _add_generic(self, data, table, return_map=True):
         """
