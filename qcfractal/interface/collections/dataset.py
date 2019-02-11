@@ -3,7 +3,7 @@ QCPortal Database ODM
 """
 import itertools as it
 from enum import Enum
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union, Optional
 
 import numpy as np
 import pandas as pd
@@ -74,15 +74,8 @@ class Dataset(Collection):
         # Initialize internal data frames
         self.df = pd.DataFrame(index=self.get_index())
 
-        # Unroll the index
-        tmp_index = []
-        for rxn in self.data.reactions:
-            name = rxn.name
-            for stoich_name in list(rxn.stoichiometry):
-                for mol_hash, coef in rxn.stoichiometry[stoich_name].items():
-                    tmp_index.append([name, stoich_name, mol_hash, coef])
-
-        self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule", "coefficient"])
+        self.rxn_index = None
+        self._form_index()
 
         # If we making a new database we may need new hashes and json objects
         self._new_molecules = {}
@@ -98,8 +91,30 @@ class Dataset(Collection):
 
         ds_type: _RxnEnum = _RxnEnum.rxn
 
+        # Defaults
+        default_program: Optional[str] = None
+        default_options: Dict[str, str] = {}
+        default_driver: str = "energy"
+
         reactions: List[Rxn] = []
-        options: Dict[str, Dict[str, str]] = {} # program: option_name: option_id
+        alias_options: Dict[str, Dict[str, str]] = {}  # program: option_name: option_id
+
+        known_compute: List[Tuple[str, Optional[str], str, Optional[str]]] = []  # method, basis, driver, options
+
+    def _check_state(self):
+        if self._new_molecules or self._new_options:
+            raise ValueError("New molecules or options detected, run save before submitting new tasks.")
+
+    def _form_index(self):
+        # Unroll the index
+        tmp_index = []
+        for rxn in self.data.reactions:
+            name = rxn.name
+            for stoich_name in list(rxn.stoichiometry):
+                for mol_hash, coef in rxn.stoichiometry[stoich_name].items():
+                    tmp_index.append([name, stoich_name, mol_hash, coef])
+
+        self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule", "coefficient"])
 
     def _pre_save_prep(self, client):
 
@@ -109,6 +124,37 @@ class Dataset(Collection):
         # Update internal molecule UUID's to servers UUID's
         self.data.reactions = dict_utils.replace_dict_keys(self.data.reactions, mol_ret)
         self._new_molecules = {}
+
+        for k in list(self._new_options.keys()):
+            ret = client.add_options([self._new_options[k]])
+            assert len(ret) == 1, "Option added incorrectly"
+            self.data.alias_options[k[0]][k[1]] = ret[0]
+            del self._new_options[k]
+
+        self._form_index()
+
+    def _default_parameters(self, driver, options, program):
+
+        if program is None:
+            if self.data.default_program is None:
+                raise KeyError("No default program was set and none was provided.")
+            program = self.data.default_program
+        else:
+            program = program.lower()
+
+        if driver is None:
+            driver = self.data.default_driver
+
+        if options is None:
+            if program in self.data.default_options:
+                options = self.data.alias_options[program][self.data.default_options[program]]
+        else:
+            if (program not in self.data.alias_options) or (options not in self.data.alias_options[program]):
+                raise KeyError("Option alias '{}' not found for program '{}'.".format(options, program))
+
+            options = self.data.alias_options[program][options]
+
+        return driver, options, program
 
     def _unroll_query(self, keys, stoich, field="return_result"):
         """Unrolls a complex query into a "flat" query for the server object
@@ -127,6 +173,8 @@ class Dataset(Collection):
         ret : pd.DataFrame
             A DataFrame representation of the unrolled query
         """
+        self._check_state()
+
         tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
         tmp_idx = tmp_idx.reset_index(drop=True)
 
@@ -137,7 +185,7 @@ class Dataset(Collection):
         query_keys = {k: v for k, v in keys.items()}
         query_keys["molecule"] = list(umols)
         query_keys["projection"] = {field: True, "molecule": True}
-        values = pd.DataFrame(self.client.get_results(**query_keys))
+        values = pd.DataFrame(self.client.get_results(**query_keys), columns=["molecule", field])
 
         # Join on molecule hash
         tmp_idx = tmp_idx.merge(values, how="left", on="molecule")
@@ -156,12 +204,47 @@ class Dataset(Collection):
 
         return tmp_idx
 
+    def set_default_program(self, program: str) -> bool:
+        """
+        Sets the default program and options.
+        """
+
+        self.data.default_program = program.lower()
+
+    def add_options(self, alias: str, option: 'Option', default: bool=False) -> bool:
+        """
+        Adds an option alias to the dataset. Not that options are not present
+        until a save call has been completed.
+
+        Parameters
+        ----------
+        alias : str
+            The alias of the option
+        option : Option
+            The Options object to use.
+        default : bool
+            Sets this option as the default for the program
+        """
+
+        alias = alias.lower()
+        if option.program not in self.data.alias_options:
+            self.data.alias_options[option.program] = {}
+
+        if alias in self.data.alias_options[option.program]:
+            raise KeyError("Alias '{}' already set for program {}.".format(alias, option.program))
+
+        self._new_options[(option.program, alias)] = option
+
+        if default:
+            self.data.default_options[option.program] = alias
+        return True
+
     def query(self,
               method,
               basis,
-              driver="energy",
+              driver=None,
               options=None,
-              program="psi4",
+              program=None,
               stoich="default",
               prefix="",
               postfix="",
@@ -216,6 +299,8 @@ class Dataset(Collection):
 
         """
 
+        driver, options, program = self._default_parameters(driver, options, program)
+
         if not reaction_results and (self.client is None):
             raise AttributeError("DataBase: FractalClient was not set.")
 
@@ -269,10 +354,10 @@ class Dataset(Collection):
     def compute(self,
                 method,
                 basis,
-                driver="energy",
-                stoich="default",
+                driver=None,
                 options=None,
-                program="psi4",
+                program=None,
+                stoich="default",
                 ignore_ds_type=False):
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
@@ -299,8 +384,12 @@ class Dataset(Collection):
         ret : dict
             A dictionary of the keys for all requested computations
         """
+        self._check_state()
+
         if self.client is None:
             raise AttributeError("DataBase: Compute: Client was not set.")
+
+        driver, options, program = self._default_parameters(driver, options, program)
 
         # Figure out molecules that we need
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
@@ -317,7 +406,13 @@ class Dataset(Collection):
         umols, uidx = np.unique(tmp_idx["molecule"], return_index=True)
 
         complete_values = self.client.get_results(
-            molecule=list(umols), driver=driver, options=options, program=program, method=method, basis=basis, projection={"molecule": True})
+            molecule=list(umols),
+            driver=driver,
+            options=options,
+            program=program,
+            method=method,
+            basis=basis,
+            projection={"molecule": True})
 
         complete_mols = np.array([x["molecule"] for x in complete_values])
         umols = np.setdiff1d(umols, complete_mols)
@@ -399,7 +494,6 @@ class Dataset(Collection):
         """
         raise Exception("MPL not avail")
 
-
 #        return visualization.Ternary2D(self.df, cvals=cvals)
 
 # Adders
@@ -469,10 +563,8 @@ class Dataset(Collection):
                     self._new_molecules[molecule_hash] = mol.json(as_dict=True)
 
             else:
-                raise TypeError(
-                    "Dataset: Parse stoichiometry: first value must either be a molecule hash, "
-                    "a molecule str, or a Molecule class."
-                )
+                raise TypeError("Dataset: Parse stoichiometry: first value must either be a molecule hash, "
+                                "a molecule str, or a Molecule class.")
 
             mol_hashes.append(molecule_hash)
 
@@ -526,9 +618,8 @@ class Dataset(Collection):
 
         # Set name
         if name in self.get_index():
-            raise KeyError(
-                "Dataset: Name '{}' already exists. "
-                "Please either delete this entry or call the update function.".format(name))
+            raise KeyError("Dataset: Name '{}' already exists. "
+                           "Please either delete this entry or call the update function.".format(name))
 
         # Set stoich
         if isinstance(stoichiometry, dict):
@@ -544,8 +635,7 @@ class Dataset(Collection):
             rxn_dict["stoichiometry"] = {}
             rxn_dict["stoichiometry"]["default"] = self.parse_stoichiometry(stoichiometry)
         else:
-            raise TypeError("Dataset:add_rxn: Type of stoichiometry input was not recognized:",
-                            type(stoichiometry))
+            raise TypeError("Dataset:add_rxn: Type of stoichiometry input was not recognized:", type(stoichiometry))
 
         # Set attributes
         if not isinstance(attributes, dict):
@@ -714,6 +804,4 @@ class Dataset(Collection):
         """
         return self.df[args]
 
-
 register_collection(Dataset)
-

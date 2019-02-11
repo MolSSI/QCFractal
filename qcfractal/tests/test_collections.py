@@ -9,8 +9,31 @@ from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
 
 
+def test_dataset_check_state(fractal_compute_server):
+    client = portal.FractalClient(fractal_compute_server)
+    ds = portal.collections.Dataset("check_state", client, ds_type="ie", default_program="rdkit")
+    ds.add_ie_rxn("He1", portal.Molecule.from_data("He -3 0 0\n--\nHe 0 0 2"))
+
+    with pytest.raises(ValueError):
+        ds.compute("SCF", "STO-3G")
+
+    with pytest.raises(ValueError):
+        ds.query("SCF", "STO-3G")
+
+    ds.save()
+    assert ds.query("SCF", "STO-3G")
+
+    ds.add_options("default", portal.models.Option(program="psi4", options={"a": 5}))
+
+    with pytest.raises(ValueError):
+        ds.query("SCF", "STO-3G")
+
+    ds.save()
+    assert ds.query("SCF", "STO-3G")
+
+
 @testing.using_psi4
-def test_compute_dataset(fractal_compute_server):
+def test_compute_dataset_regression(fractal_compute_server):
     """
     Tests an entire server and interaction energy dataset run
     """
@@ -26,14 +49,15 @@ def test_compute_dataset(fractal_compute_server):
     # Save the DB and re-acquire via classmethod
     r = ds.save()
     ds = portal.collections.Dataset.from_server(client, ds_name)
+    ds.set_default_program("psi4")
     assert "Dataset(" in str(ds)
 
     # Test collection lists
     ret = client.list_collections()
-    assert ret == {"dataset": [ds_name]}
+    assert ds_name in ret["dataset"]
 
     ret = client.list_collections("dataset")
-    assert ret == [ds_name]
+    assert ds_name in ret
 
     He2 = portal.Molecule.from_data([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
     ds.add_ie_rxn("He2", He2, attributes={"r": 4}, reaction_results={"default": {"Benchmark": -0.00001098794749}})
@@ -57,6 +81,35 @@ def test_compute_dataset(fractal_compute_server):
     assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/STO-3G")
 
     assert isinstance(ds.to_json(), dict)
+
+
+@testing.using_psi4
+def test_compute_dataset_options(fractal_compute_server):
+
+    client = portal.FractalClient(fractal_compute_server)
+
+    mol1 = portal.Molecule.from_data("He 0 0 -1.1\n--\nHe 0 0 1.1")
+
+    # Build a dataset
+    ds = portal.collections.Dataset("dataset_options", client, ds_type="ie")
+    ds.set_default_program("Psi4")
+
+    ds.add_ie_rxn("He2", mol1)
+    ds.add_options("direct", portal.models.Option(program="psi4", options={"scf_type": "direct"}), default=True)
+    ds.add_options("df", portal.models.Option(program="Psi4", options={"scf_type": "df"}))
+
+    ds.save()
+
+    # Compute, should default to direct options
+    r = ds.compute("SCF", "STO-3G")
+    fractal_compute_server.await_results()
+    assert ds.query("SCF", "STO-3G")
+    assert pytest.approx(0.39323818102293856, 1.e-5) == ds.df.loc["He2", "SCF/STO-3G"]
+
+    r = ds.compute("SCF", "STO-3G", options="df")
+    fractal_compute_server.await_results()
+    assert ds.query("SCF", "STO-3G", options="df", prefix="df-")
+    assert pytest.approx(0.38748602675524185, 1.e-5) == ds.df.loc["He2", "df-SCF/STO-3G"]
 
 
 @testing.using_torsiondrive
