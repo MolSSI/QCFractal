@@ -151,6 +151,23 @@ def test_options_add(storage_socket):
     assert 1 == storage_socket.del_option(id=opts["id"])
 
 
+def test_options_mixed_add_get(storage_socket):
+
+    opts1 = portal.models.Option(**{"program": "hello", "options": {"o": 5}})
+    id1 = storage_socket.add_options([opts1.json_dict()])["data"][0]
+
+    opts2 = {"program": "hello", "options": {"o": 6}}
+    opts = storage_socket.get_add_options_mixed([opts1, opts2, id1, "bad_id"])["data"]
+    assert opts[0]["id"] == id1
+    assert opts[1]["options"]["o"] == 6
+    assert "id" in opts[1]
+    assert opts[2]["id"] == id1
+    assert opts[3] is None
+
+    assert 1 == storage_socket.del_option(id=id1)
+    assert 1 == storage_socket.del_option(id=opts[1]["id"])
+
+
 def test_options_error(storage_socket):
     opts = {"program": "hello"}
 
