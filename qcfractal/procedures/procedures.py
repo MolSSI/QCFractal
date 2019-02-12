@@ -208,7 +208,6 @@ class OptimizationTasks(SingleResultTasks):
             keyword_set = {}
             keyword_id = None
         else:
-            print(data.meta["keywords"])
             keyword_set = self.storage.get_add_keywords_mixed([data.meta["keywords"]])["data"][0]
             keyword_id = keyword_set["id"]
             keyword_set = keyword_set["keywords"]

@@ -225,33 +225,21 @@ class OpenFFWorkflow(Collection):
         inp = TorsionDriveInput(**torsion_meta, initial_molecule=packet["initial_molecule"])
         ret = self.client.add_service(inp)
 
-        return ret.id
+        return ret.hash_index
 
     def _add_optimize(self, packet):
-        packet = copy.deepcopy(
-            {k: self.data.optimization_static_options[k]
-             for k in ("optimization_meta", "qc_meta")})
+        meta = copy.deepcopy({k: self.data.optimization_static_options[k] for k in ("keywords", "qc_meta", "program")})
 
-        print(self.data.optimization_static_options["optimization_meta"])
-
-        optimization_meta["keywords"] = optimization_meta.pop("optimization_meta")
-        optimization_meta["program"] = optimization_meta["keywords"]["program"]
-        print(optimization_meta)
+        meta["keywords"] = {"keywords": meta.pop("keywords"), "program": meta["program"]}
         for k in ["constraints"]:
-            optimization_meta["optimization_meta"]["keywords"][k] = packet[k]
+            meta["keywords"]["keywords"][k] = packet[k]
 
         # Get hash of optimization
-        ret = self.client.add_procedure("optimization", optimization_meta["program"], optimization_meta, [packet["initial_molecule"]])
+        ret = self.client.add_procedure("optimization", meta["program"], meta, [packet["initial_molecule"]])
 
-        # TODO fix after reserved procedures/results
-        hash_lists = []
-        [hash_lists.extend(x) for x in ret.values()]
-        if len(hash_lists) != 1:
-            raise KeyError("Something went very wrong.")
+        r = self.client.get_procedures({"id": ret.ids[0]})
 
-        ret = self.client.check_tasks({"id": hash_lists[0]}, projection={"hash_index": True})
-
-        return ret[0]["hash_index"]
+        return r[0].hash_index
 
     def get_fragment_data(self, fragments=None, refresh_cache=False):
         """Obtains fragment torsiondrives from server to local data.
