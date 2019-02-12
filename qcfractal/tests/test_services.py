@@ -113,7 +113,7 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     hash_index2 = spin_up_test(torsiondrive_meta={"meaningless_entry_to_change_hash": "Waffles!"}).hash_index
 
     assert hash_index1 != hash_index2
-    procedures = client.get_procedures({"hash_index": [hash_index1 ,hash_index2]})
+    procedures = client.get_procedures({"hash_index": [hash_index1, hash_index2]})
     assert len(procedures) == 2  # Make sure only 2 procedures are yielded
 
     base_run, duplicate_run = procedures

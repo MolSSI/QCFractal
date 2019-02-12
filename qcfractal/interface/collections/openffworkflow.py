@@ -70,10 +70,7 @@ class OpenFFWorkflow(Collection):
                 "suppress_hydrogen": True
             }
         }
-        enumerate_fragments: Dict[str, Any] = {
-            "version": "",
-            "options": {}
-        }
+        enumerate_fragments: Dict[str, Any] = {"version": "", "options": {}}
         torsiondrive_input: Dict[str, Any] = {
             "restricted": True,
             "torsiondrive_options": {
@@ -92,26 +89,30 @@ class OpenFFWorkflow(Collection):
             "torsiondrive_meta": {},
             "optimization_meta": {
                 "program": "geometric",
-                "coordsys": "tric",
+                "keywords": {
+                    "coordsys": "tric",
+                }
             },
             "qc_meta": {
                 "driver": "gradient",
                 "method": "UFF",
                 "basis": "",
-                "options": None,
+                "keywords": None,
                 "program": "rdkit",
             }
         }
         optimization_static_options: Dict[str, Any] = {
             "optimization_meta": {
                 "program": "geometric",
-                "coordsys": "tric"
+                "keywords": {
+                    "coordsys": "tric",
+                }
             },
             "qc_meta": {
                 "driver": "gradient",
                 "method": "UFF",
                 "basis": "",
-                "options": None,
+                "keywords": None,
                 "program": "rdkit",
             },
         }
@@ -224,21 +225,23 @@ class OpenFFWorkflow(Collection):
         inp = TorsionDriveInput(**torsion_meta, initial_molecule=packet["initial_molecule"])
         ret = self.client.add_service(inp)
 
-        return ret.hash_index
+        return ret.id
 
     def _add_optimize(self, packet):
-        optimization_meta = copy.deepcopy(
+        packet = copy.deepcopy(
             {k: self.data.optimization_static_options[k]
              for k in ("optimization_meta", "qc_meta")})
 
-        for k in ["constraints"]:
-            optimization_meta["optimization_meta"][k] = packet[k]
+        print(self.data.optimization_static_options["optimization_meta"])
 
         optimization_meta["keywords"] = optimization_meta.pop("optimization_meta")
-        program = optimization_meta["keywords"]["program"]
+        optimization_meta["program"] = optimization_meta["keywords"]["program"]
+        print(optimization_meta)
+        for k in ["constraints"]:
+            optimization_meta["optimization_meta"]["keywords"][k] = packet[k]
 
         # Get hash of optimization
-        ret = self.client.add_procedure("optimization", program, optimization_meta, [packet["initial_molecule"]])
+        ret = self.client.add_procedure("optimization", optimization_meta["program"], optimization_meta, [packet["initial_molecule"]])
 
         # TODO fix after reserved procedures/results
         hash_lists = []
@@ -274,7 +277,7 @@ class OpenFFWorkflow(Collection):
             lookup = list(set(lookup) - self._torsiondrive_cache.keys())
 
         # Grab the data and update cache
-        data = self.client.get_procedures({"hash_index":lookup})
+        data = self.client.get_procedures({"hash_index": lookup})
         self._torsiondrive_cache.update({x.hash_index: x for x in data})
 
     def list_final_energies(self, fragments=None, refresh_cache=False):

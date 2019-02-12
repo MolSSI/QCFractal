@@ -54,11 +54,12 @@ class TaskManager(BaseModel):
         Check if requested tasks are complete
         """
 
-        task_query = storage_socket.get_queue(
+        if len(self.required_tasks) == 0:
+            return True
+
+        task_query = storage_socket.get_procedures_by_id(
             id=list(self.required_tasks.values()),
-            status=["COMPLETE", "ERROR"],
-            projection={"base_result": True,
-                        "status": True,
+            projection={"status": True,
                         "error": True})
 
         if len(task_query["data"]) != len(self.required_tasks):
@@ -68,8 +69,6 @@ class TaskManager(BaseModel):
             for x in task_query["data"]:
                 if x["status"] != "ERROR":
                     continue
-                print(x["error"])
-                print(x["error"]["error_message"])
             raise KeyError("All tasks did not execute successfully.")
 
         return True
@@ -80,8 +79,8 @@ class TaskManager(BaseModel):
         """
 
         ret = {}
-        for k, task_id in self.required_tasks.items():
-            ret[k] = storage_socket.get_procedures_by_task_id(task_id)["data"][0]
+        for k, id in self.required_tasks.items():
+            ret[k] = storage_socket.get_procedures_by_id(id=id)["data"][0]
 
         return ret
 
@@ -102,34 +101,12 @@ class TaskManager(BaseModel):
             packet = TaskQueuePOSTBody(**packet)
 
             # Turn packet into a full task, if there are duplicates, get the ID
-            submitted, completed, errors = procedure_parser.parse_input(packet)
+            r = procedure_parser.submit_tasks(packet)
 
-            if len(errors):
+            if len(r["meta"]["errors"]):
                 raise KeyError("Problem submitting task: {}.".format(errors))
-            elif len(completed):
-                required_tasks[key] = completed[0]["task_id"]
-            else:
-                new_task_keys.append(key)
-                new_tasks.append(submitted[0])
 
-        # Add tasks to Nanny and map back
-        submit = storage_socket.queue_submit(new_tasks)
-        if len(submit["meta"]["duplicates"]):
-            raise RuntimeError("It appears that one of the tasks you submitted is already in the queue, but was "
-                               "not there when the tasks were populated.\n"
-                               "This should only happen if someone else submitted a similar or exact task "
-                               "was submitted at the same time.\n"
-                               "This is a corner case we have not solved yet. Please open a ticket with QCFractal"
-                               "describing the conditions which yielded this message.")
-
-        if len(submit["data"]) != len(new_task_keys):
-            raise KeyError("Issue submitting new tasks, legnth of submitted and input tasks do not match.")
-
-        for key, task_id in zip(new_task_keys, submit["data"]):
-            required_tasks[key] = task_id
-
-        if required_tasks.keys() != tasks.keys():
-            raise KeyError("Issue submitting new tasks, submitted and input keys do not match.")
+            required_tasks[key] = r["data"]["ids"][0]
 
         self.required_tasks = required_tasks
 

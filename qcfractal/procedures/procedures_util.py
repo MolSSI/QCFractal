@@ -54,7 +54,7 @@ def unpack_single_run_meta(storage, meta, molecules):
     if meta["keywords"] is None:
         keyword_set = {}
     else:
-        keyword_set = storage.get_keywords(id=meta["keywords"], with_ids=False)["data"][0]
+        keyword_set = storage.get_add_keywords_mixed([meta["keywords"]])["data"][0]
         keyword_set = keyword_set["keywords"]
 
     # Create the "universal header"

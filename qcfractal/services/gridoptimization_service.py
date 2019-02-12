@@ -85,7 +85,7 @@ class GridOptimizationService(BaseService):
         meta["optimization_template"] = json.dumps({
             "meta": {
                 "procedure": "optimization",
-                "keywords": output.optimization_meta.dict(),
+                "keywords": {"program": output.optimization_meta.program, "keywords": output.optimization_meta.dict()},
                 "program": output.optimization_meta.program,
                 "qc_meta": output.qc_meta.dict(),
                 "tag": meta.pop("tag", None)
@@ -187,8 +187,7 @@ class GridOptimizationService(BaseService):
             grid_values = self.output.get_scan_value(key)
             for con_num, k in enumerate(grid_values):
                 constraints[con_num]["value"] = k
-            packet["meta"]["keywords"]["constraints"] = {"set": constraints}
-            # print(constraints)
+            packet["meta"]["keywords"]["keywords"]["constraints"] = {"set": constraints}
 
             # Build new molecule
             packet["data"] = [mol]

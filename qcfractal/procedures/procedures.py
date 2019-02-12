@@ -205,13 +205,16 @@ class OptimizationTasks(SingleResultTasks):
 
         # Unpack options
         if data.meta["keywords"] is None:
-            option_set = {}
+            keyword_set = {}
+            keyword_id = None
         else:
-            option_set = storage.get_keywords(id=meta["keywords"], with_ids=False)["data"][0]
-            option_set = option_set["keywords"]
+            print(data.meta["keywords"])
+            keyword_set = self.storage.get_add_keywords_mixed([data.meta["keywords"]])["data"][0]
+            keyword_id = keyword_set["id"]
+            keyword_set = keyword_set["keywords"]
 
-        option_set["program"] = data.meta["qc_meta"]["program"]
-        template = json.dumps({"keywords": option_set, "qcfractal_tags": data.meta})
+        keyword_set["program"] = data.meta["qc_meta"]["program"]
+        template = json.dumps({"keywords": keyword_set, "qcfractal_tags": data.meta})
 
         tag = data.meta.pop("tag", None)
 
@@ -239,7 +242,7 @@ class OptimizationTasks(SingleResultTasks):
             hash_index = procedures_util.hash_procedure_keys({
                 "type": "optimization",
                 "program": data.meta["program"],
-                "keywords": packet["keywords"],
+                "keywords": keyword_id,
                 "single_key": single_keys,
             })
             packet["hash_index"] = hash_index
