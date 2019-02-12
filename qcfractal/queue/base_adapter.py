@@ -13,7 +13,11 @@ class BaseAdapter(abc.ABC):
     """A BaseAdapter for wrapping compute engines
     """
 
-    def __init__(self, client: Any, logger: Optional[logging.Logger] = None):
+    def __init__(self,
+                 client: Any,
+                 logger: Optional[logging.Logger] = None,
+                 cpu_per_task: Optional[int] = None,
+                 memory_per_task: Optional[int] = None):
         """
         Parameters
         ----------
@@ -21,9 +25,17 @@ class BaseAdapter(abc.ABC):
             A activate Parsl DataFlow
         logger : None, optional
             A optional logging object to write output to
+        cpu_per_task : int, optional, Default: None
+            How many CPU's per computation task to allocate for QCEngine
+            None indicates "use however many you can detect"
+        memory_per_task: int, optional, Default: None
+            How much memory, in GB, per computation task to allocate for QCEngine
+            None indicates "use however much you can consume"
         """
         self.client = client
         self.logger = logger or logging.getLogger(self.__class__.__name__)
+        self.cpu_per_task = cpu_per_task
+        self.memory_per_task = memory_per_task
 
         self.queue = {}
         self.function_map = {}

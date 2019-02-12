@@ -24,12 +24,14 @@ class ParslAdapter(BaseAdapter):
     """A Adapter for Parsl
     """
 
-    def __init__(self, client: Any, logger: Optional[logging.Logger] = None):
-        BaseAdapter.__init__(self, client, logger)
+    def __init__(self, client: Any, logger: Optional[logging.Logger] = None, **kwargs):
+        BaseAdapter.__init__(self, client, logger, **kwargs)
 
         import parsl
         self.client = parsl.dataflow.dflow.DataFlowKernel(self.client)
         self.app_map = {}
+        import pdb; pdb.set_trace()
+        pass
 
     def __repr__(self):
         return "<ParslAdapter client=<DataFlow label='{}'>>".format(self.client.config.executors[0].label)
@@ -76,6 +78,10 @@ class ParslAdapter(BaseAdapter):
 
             # Form run tuple
             func = self.get_app(spec["spec"]["function"])
+            # Trap QCEngine Memory and CPU
+            if spec["spec"].startswith("qcengine.compute"):
+                task_kwargs = spec["spec"]["kwargs"]
+
             task = func(*spec["spec"]["args"], **spec["spec"]["kwargs"])
 
             self.queue[tag] = (task, spec["parser"], spec["hooks"])
