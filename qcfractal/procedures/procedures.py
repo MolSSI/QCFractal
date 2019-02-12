@@ -229,6 +229,8 @@ class OptimizationTasks(SingleResultTasks):
             packet = json.loads(template)
             packet["initial_molecule"] = inp.pop("molecule")
             packet["input_specification"] = inp
+            packet["procedure"] = "optimization"
+            packet["program"] = data.meta["program"]
 
             single_keys = data.meta["qc_meta"].copy()
             single_keys["molecule"] = packet["initial_molecule"]["id"]
@@ -268,36 +270,6 @@ class OptimizationTasks(SingleResultTasks):
 
         return new_tasks, results_ids, existing_ids, errors
 
-    def submit_tasks(self, data):
-
-        new_tasks, results_ids, existing_ids, errors = self.parse_input(data)
-
-        ret = self.storage.queue_submit(new_tasks)
-
-        n_inserted = 0
-        missing = []
-        for num, x in enumerate(results_ids):
-            if x is None:
-                missing.append(num)
-            else:
-                n_inserted += 1
-
-        results = {
-            "meta": {
-                "n_inserted": n_inserted,
-                "duplicates": [],
-                "validation_errors": [],
-                "success": True,
-                "error_description": False,
-                "errors": errors
-            },
-            "data": {
-                "ids": results_ids,
-                "submitted": [x["base_result"][1] for x in new_tasks],
-                "existing": existing_ids,
-            }
-        }
-        return results
 
     def parse_output(self, data):
         """Save the results of the procedure.

@@ -12,14 +12,11 @@ from .collections import collection_factory
 
 from .models.common_models import Molecule
 from .models.rest_models import (
-    MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
-    OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse,
-    CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
-    ResultGETBody, ResultGETResponse,
-    ProcedureGETBody, ProcedureGETReponse,
-    TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse,
-    ServiceQueuePOSTBody, ServiceQueuePOSTResponse, ServiceQueueGETBody, ServiceQueueGETResponse
-)
+    MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse, OptionGETBody, OptionGETResponse,
+    OptionPOSTBody, OptionPOSTResponse, CollectionGETBody, CollectionGETResponse, CollectionPOSTBody,
+    CollectionPOSTResponse, ResultGETBody, ResultGETResponse, ProcedureGETBody, ProcedureGETReponse, TaskQueueGETBody,
+    TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
+    ServiceQueueGETBody, ServiceQueueGETResponse)
 from .models.gridoptimization import GridOptimizationInput
 from .models.torsiondrive import TorsionDriveInput
 
@@ -338,7 +335,9 @@ class FractalClient(object):
 
     ### Results section
 
-    def get_results(self, projection=None, return_full=False, **kwargs):
+    def get_results(self, **kwargs):
+        projection = kwargs.pop("projection", None)
+        return_full = kwargs.pop("return_full", False)
 
         payload = {"meta": {}, "data": kwargs}
         if projection is not None:
@@ -352,6 +351,15 @@ class FractalClient(object):
             return r
         else:
             return r.data
+
+    def check_results(self, **kwargs):
+
+        kwargs["status"] = None
+        if "projection" in kwargs:
+            kwargs["projection"]["status"] = True
+        else:
+            kwargs["projection"] = {"status": True}
+        return self.get_results(**kwargs)
 
     def get_procedures(self, procedure_query: Dict[str, Any], return_objects: bool=True):
 
@@ -452,38 +460,38 @@ class FractalClient(object):
         else:
             return r.data
 
-    def check_tasks(self, query: Dict[str, Any], projection: Optional[Dict[str, Any]]=None, return_full: bool=False):
-        """Checks the status of tasks in the Fractal queue.
+    # def check_tasks(self, query: Dict[str, Any], projection: Optional[Dict[str, Any]]=None, return_full: bool=False):
+    #     """Checks the status of tasks in the Fractal queue.
 
-        Parameters
-        ----------
-        query : dict
-            A query to find tasks
-        projection: dict, optional
-            Projection of data to call from the database
-        return_full : bool, optional
-            Returns the full JSON return if True
+    #     Parameters
+    #     ----------
+    #     query : dict
+    #         A query to find tasks
+    #     projection: dict, optional
+    #         Projection of data to call from the database
+    #     return_full : bool, optional
+    #         Returns the full JSON return if True
 
-        Returns
-        -------
-        list of dict
-            A dictionary of each match that contains the current status
-            and, if an error has occured, the error message.
+    #     Returns
+    #     -------
+    #     list of dict
+    #         A dictionary of each match that contains the current status
+    #         and, if an error has occured, the error message.
 
-        >>> client.check_tasks({"id": "5bd35af47b878715165f8225"})
-        [{"status": "WAITING"}]
-        """
+    #     >>> client.check_tasks({"id": "5bd35af47b878715165f8225"})
+    #     [{"status": "WAITING"}]
+    #     """
 
-        payload = {"meta": {"projection": projection}, "data": query}
-        body = TaskQueueGETBody(**payload)
+    #     payload = {"meta": {"projection": projection}, "data": query}
+    #     body = TaskQueueGETBody(**payload)
 
-        r = self._request("get", "task_queue", data=body.json())
-        r = TaskQueueGETResponse.parse_raw(r.text)
+    #     r = self._request("get", "task_queue", data=body.json())
+    #     r = TaskQueueGETResponse.parse_raw(r.text)
 
-        if return_full:
-            return r
-        else:
-            return r.data
+    #     if return_full:
+    #         return r
+    #     else:
+    #         return r.data
 
     def add_service(self, service: Union[GridOptimizationInput, TorsionDriveInput], return_full: bool=False):
 

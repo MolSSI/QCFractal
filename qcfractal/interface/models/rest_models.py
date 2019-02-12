@@ -181,7 +181,7 @@ class ResultGETBody(BaseModel):
     def only_data_keys(cls, v):
         # We should throw a warning here for unused keys
         valid_keys = {
-            "program", "molecule", "driver", "method", "basis", "options", "hash_index", "task_id", "id", "status"
+            "program", "molecule", "driver", "method", "basis", "options", "task_id", "id", "status"
         }
         data = {key: v[key] for key in (v.keys() & valid_keys)}
         return data

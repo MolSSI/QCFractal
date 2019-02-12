@@ -10,6 +10,8 @@ from qcfractal.procedures import get_procedure_parser
 from typing import Any, Dict, List, Set, Tuple
 from pydantic import BaseModel
 
+from ..interface.models.rest_models import TaskQueuePOSTBody
+
 
 class BaseService(BaseModel, abc.ABC):
 
@@ -97,6 +99,7 @@ class TaskManager(BaseModel):
 
         # Add in all new tasks
         for key, packet in tasks.items():
+            packet = TaskQueuePOSTBody(**packet)
 
             # Turn packet into a full task, if there are duplicates, get the ID
             submitted, completed, errors = procedure_parser.parse_input(packet)

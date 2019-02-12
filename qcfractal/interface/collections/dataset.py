@@ -553,14 +553,14 @@ class Dataset(Collection):
 
                 molecule_hash = qcf_mol.get_hash()
 
-                if molecule_hash not in list(self._new_molecule_jsons):
-                    self._new_molecule_jsons[molecule_hash] = qcf_mol.json_dict()
+                if molecule_hash not in list(self._new_molecules):
+                    self._new_molecules[molecule_hash] = qcf_mol.json_dict()
 
             elif isinstance(mol, Molecule):
                 molecule_hash = mol.get_hash()
 
-                if molecule_hash not in list(self._new_molecule_jsons):
-                    self._new_molecule_jsons[molecule_hash] = mol.json_dict()
+                if molecule_hash not in list(self._new_molecules):
+                    self._new_molecules[molecule_hash] = mol.json_dict()
 
             else:
                 raise TypeError("Dataset: Parse stoichiometry: first value must either be a molecule hash, "
