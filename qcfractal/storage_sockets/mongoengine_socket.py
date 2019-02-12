@@ -664,6 +664,66 @@ class MongoengineSocket:
 
         return {"data": rdata, "meta": meta}
 
+    def get_add_options_mixed(self, data, program=None):
+        """
+        Get or add the given options (if they don't exit).
+        Options are given in a mixed format, either as a dict of mol data
+        or as existing mol id
+
+        TODO: to be split into get by_id and get_by_data
+        """
+
+        meta = storage_utils.get_metadata()
+
+        ids = []
+
+        new_options = []
+        for idx, opt in enumerate(data):
+            if isinstance(opt, str):
+                ids.append(opt)
+
+            # New dictionary construct and add
+            elif isinstance(opt, dict):
+                if program is None:
+                    ret.append(None)
+                    continue
+
+                opt = interface.models.common_models.Option(program=program, options=opt)
+
+                new_id = self.add_options([opt.json_dict()])["data"][0]
+                ids.append(new_id)
+
+            elif isinstance(opt, interface.models.common_models.Option):
+                new_id = self.add_options([opt.json_dict()])["data"][0]
+                ids.append(new_id)
+            else:
+                meta["errors"].append((idx, "Data type not understood"))
+                ids.append(None)
+
+        missing = []
+        ret = []
+        for idx, id in enumerate(ids):
+            if id is None:
+                ret.append(None)
+                missing.append(idx)
+                continue
+
+            ret.append(self.get_options(id=id)["data"][0])
+
+        meta["success"] = True
+        meta["n_found"] = len(ret) - len(missing)
+        meta["missing"] = missing
+
+        # Rewind to flat last
+        ret = []
+        for ind in range(len(ordered_mol_dict)):
+            if ind in ret_opts:
+                ret.append(ret_opts[ind])
+            else:
+                ret.append(None)
+
+        return {"meta": meta, "data": ret}
+
     def del_option(self, id):
         """
         Removes a option set from the database based on its keys.
