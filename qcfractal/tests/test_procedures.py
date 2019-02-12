@@ -14,18 +14,20 @@ from qcfractal.testing import fractal_compute_server
 @testing.using_psi4
 def test_compute_queue_stack(fractal_compute_server):
 
+    # Build a client
+    client = portal.FractalClient(fractal_compute_server)
+
     # Add a hydrogen and helium molecule
     hydrogen = portal.Molecule.from_data([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
     helium = portal.Molecule.from_data([[2, 0, 0, 0.0]], dtype="numpy", units="bohr")
 
-    storage = fractal_compute_server.objects["storage_socket"]
-    mol_ret = storage.add_molecules({"hydrogen": hydrogen.json(as_dict=True), "helium": helium.json(as_dict=True)})
+    mol_ret = client.add_molecules({"hydrogen": hydrogen.json_dict(), "helium": helium.json_dict()})
 
-    hydrogen_mol_id = mol_ret["data"]["hydrogen"]
-    helium_mol_id = mol_ret["data"]["helium"]
+    hydrogen_mol_id = mol_ret["hydrogen"]
+    helium_mol_id = mol_ret["helium"]
 
-    option = portal.models.Option(**{"program": "psi4", "options": {"e_convergence": 1.e-8}})
-    opt_key = storage.add_options([option])["data"][0]
+    kw = portal.models.KeywordSet(**{"program": "psi4", "values": {"e_convergence": 1.e-8}})
+    kw_id = client.add_keywords([kw])[0]
 
     # Add compute
     compute = {
@@ -34,15 +36,15 @@ def test_compute_queue_stack(fractal_compute_server):
             "driver": "energy",
             "method": "HF",
             "basis": "sto-3g",
-            "options": opt_key,
+            "keywords": kw_id,
             "program": "psi4",
         },
-        "data": [hydrogen_mol_id, helium.json(as_dict=True)],
+        "data": [hydrogen_mol_id, helium.json_dict()],
     }
 
     # Ask the server to compute a new computation
-    r = requests.post(fractal_compute_server.get_address("task_queue"), json=compute)
-    assert r.status_code == 200
+    r = client.add_compute("psi4", "HF", "sto-3g", "energy", kw_id, [hydrogen_mol_id, helium])
+    assert len(r.ids) == 2
 
     # Manually handle the compute
     fractal_compute_server.await_results()
@@ -55,7 +57,7 @@ def test_compute_queue_stack(fractal_compute_server):
         "method": compute["meta"]["method"],
         "basis": compute["meta"]["basis"]
     }
-    results = storage.get_results(**results_query)["data"]
+    results = client.get_results(**results_query)
 
     assert len(results) == 2
     for r in results:
@@ -75,41 +77,32 @@ def test_procedure_optimization(fractal_compute_server):
     # Add a hydrogen molecule
     hydrogen = portal.Molecule.from_data([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
     client = portal.FractalClient(fractal_compute_server.get_address(""))
-    mol_ret = client.add_molecules({"hydrogen": hydrogen.json(as_dict=True)})
+    mol_ret = client.add_molecules({"hydrogen": hydrogen.json_dict()})
 
     # Add compute
-    compute = {
-        "meta": {
-            "procedure": "optimization",
-            "program": "geometric",
-            "options": None,
-            "qc_meta": {
-                "driver": "gradient",
-                "method": "HF",
-                "basis": "sto-3g",
-                "options": None,
-                "program": "psi4"
-            },
+    options = {
+        "keywords": None,
+        "qc_meta": {
+            "driver": "gradient",
+            "method": "HF",
+            "basis": "sto-3g",
+            "keywords": None,
+            "program": "psi4"
         },
-        "data": [mol_ret["hydrogen"]],
     }
 
     # Ask the server to compute a new computation
-    r = requests.post(fractal_compute_server.get_address("task_queue"), json=compute)
-    assert r.status_code == 200
-
-    # Get the first submitted task, the second index will be a hash_index
-    submitted = r.json()["data"]["submitted"]
-    compute_key = submitted[0]
+    r = client.add_procedure("optimization", "geometric", options, [mol_ret["hydrogen"]])
+    assert len(r.ids) == 1
+    compute_key = r.ids[0]
 
     # Manually handle the compute
     fractal_compute_server.await_results()
-    # print(fractal_compute_server.storage.get_procedures({}))
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
     # # Query result and check against out manual pul
     results1 = client.get_procedures({"program": "geometric"})
-    results2 = client.get_procedures({"task_id": compute_key})
+    results2 = client.get_procedures({"id": compute_key})
 
     for results in [results1, results2]:
         assert len(results) == 1
@@ -128,6 +121,6 @@ def test_procedure_optimization(fractal_compute_server):
             assert pytest.approx(raw_energy, 1.e-5) == energies[ind]
 
     # Check that duplicates are caught
-    r = requests.post(fractal_compute_server.get_address("task_queue"), json=compute)
-    assert r.status_code == 200
-    assert len(r.json()["data"]["completed"]) == 1
+    r = client.add_procedure("optimization", "geometric", options, [mol_ret["hydrogen"]])
+    assert len(r.ids) == 1
+    assert len(r.existing) == 1

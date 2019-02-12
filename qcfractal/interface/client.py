@@ -13,13 +13,11 @@ from .collections import collection_factory
 from .models.common_models import Molecule
 from .models.rest_models import (
     MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
-    OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse,
-    CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
-    ResultGETBody, ResultGETResponse,
-    ProcedureGETBody, ProcedureGETReponse,
+    KeywordGETBody, KeywordGETResponse, KeywordPOSTBody, KeywordPOSTResponse,
+    CollectionGETBody, CollectionGETResponse, CollectionPOSTBody,CollectionPOSTResponse,
+    ResultGETBody, ResultGETResponse, ProcedureGETBody, ProcedureGETReponse,
     TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse,
-    ServiceQueuePOSTBody, ServiceQueuePOSTResponse, ServiceQueueGETBody, ServiceQueueGETResponse
-)
+    ServiceQueuePOSTBody, ServiceQueuePOSTResponse, ServiceQueueGETBody, ServiceQueueGETResponse) # yapf: disable
 from .models.gridoptimization import GridOptimizationInput
 from .models.torsiondrive import TorsionDriveInput
 
@@ -235,21 +233,22 @@ class FractalClient(object):
         else:
             return r.data
 
-    ### Options section
+    ### Keywords section
 
-    def get_options(self, opt_list):
+    def get_keywords(self, opt_list):
 
-        body = OptionGETBody(meta={}, data=opt_list)
-        r = self._request("get", "option", data=body.json())
-        r = OptionGETResponse.parse_raw(r.text)
+        body = KeywordGETBody(meta={}, data=opt_list)
+        r = self._request("get", "keyword", data=body.json())
+        r = KeywordGETResponse.parse_raw(r.text)
 
         return r.data
 
-    def add_options(self, opt_list: List[Dict[str, Any]], full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
+    def add_keywords(self, opt_list: List[Dict[str, Any]],
+                     full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
 
-        body = OptionPOSTBody(meta={}, data=opt_list)
-        r = self._request("post", "option", data=body.json())
-        r = OptionPOSTResponse.parse_raw(r.text)
+        body = KeywordPOSTBody(meta={}, data=opt_list)
+        r = self._request("post", "keyword", data=body.json())
+        r = KeywordPOSTResponse.parse_raw(r.text)
 
         if full_return:
             return r
@@ -338,7 +337,9 @@ class FractalClient(object):
 
     ### Results section
 
-    def get_results(self, projection=None, return_full=False, **kwargs):
+    def get_results(self, **kwargs):
+        projection = kwargs.pop("projection", None)
+        return_full = kwargs.pop("return_full", False)
 
         payload = {"meta": {}, "data": kwargs}
         if projection is not None:
@@ -352,6 +353,15 @@ class FractalClient(object):
             return r
         else:
             return r.data
+
+    def check_results(self, **kwargs):
+
+        kwargs["status"] = None
+        if "projection" in kwargs:
+            kwargs["projection"]["status"] = True
+        else:
+            kwargs["projection"] = {"status": True}
+        return self.get_results(**kwargs)
 
     def get_procedures(self, procedure_query: Dict[str, Any], return_objects: bool=True):
 
@@ -392,7 +402,7 @@ class FractalClient(object):
                     method: str,
                     basis: str,
                     driver: str,
-                    options: Union[str, None],
+                    keywords: Union[str, None],
                     molecule_id: Union[str, Molecule, List[Union[str, Molecule]]],
                     return_full: bool=False,
                     tag: str=None) -> Union[TaskQueuePOSTResponse, TaskQueuePOSTResponse.Data]:
@@ -408,7 +418,7 @@ class FractalClient(object):
                 "program": program,
                 "method": method,
                 "basis": basis,
-                "options": options,
+                "keywords": keywords,
                 "tag": tag,
             },
             "data": molecule_id
@@ -445,11 +455,12 @@ class FractalClient(object):
         payload["meta"].update(program_options)
 
         r = self._request("post", "task_queue", payload)
+        r = TaskQueuePOSTResponse.parse_raw(r.text)
 
         if return_full:
-            return r.json()
+            return r
         else:
-            return r.json()["data"]
+            return r.data
 
     def check_tasks(self, query: Dict[str, Any], projection: Optional[Dict[str, Any]]=None, return_full: bool=False):
         """Checks the status of tasks in the Fractal queue.

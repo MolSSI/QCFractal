@@ -7,9 +7,9 @@ import numpy as np
 from pydantic import BaseModel, validator
 from typing import Any, Dict, Optional
 
-from qcelemental.models import Molecule, Provenance
+from qcelemental.models import Molecule, Provenance, Result, ResultInput
 
-__all__ = ["QCMeta", "json_encoders", "hash_dictionary", "Option"]
+__all__ = ["QCMeta", "json_encoders", "hash_dictionary", "KeywordSet"]
 
 # Add in QCElemental models
 __all__.extend(["Molecule", "Provenance"])
@@ -49,7 +49,7 @@ def recursive_hash_prep(value: Any, **kwargs: Dict[str, Any]) -> Any:
                 value = 0
 
     else:
-        raise TypeError("Invalid type in Option ({type(value)}), only simply Python types are allowed.")
+        raise TypeError("Invalid type in KeywordSet ({type(value)}), only simply Python types are allowed.")
 
     return value
 
@@ -67,18 +67,18 @@ class QCMeta(BaseModel):
     driver: str
     method: str
     basis: Optional[str] = None
-    options: Optional[str] = None
+    keywords: Optional[str] = None
     program: str
 
 
-class Option(BaseModel):
+class KeywordSet(BaseModel):
     """
     An options object for the QCArchive ecosystem
     """
     id: Optional[str] = None
     program: str
     hash_index: str
-    options: Dict[str, Any]
+    values: Dict[str, Any]
     lowercase: bool = True
     exact_floats: bool = False
 
@@ -100,7 +100,7 @@ class Option(BaseModel):
         if self.exact_floats:
             kwargs["digits"] = False
 
-        self.__values__["options"] = recursive_hash_prep(self.options, **kwargs)
+        self.__values__["values"] = recursive_hash_prep(self.values, **kwargs)
 
         # Build a hash index if we need it
         if build_index:
@@ -111,7 +111,7 @@ class Option(BaseModel):
         return v.lower()
 
     def get_hash_index(self):
-        packet = self.options.copy()
+        packet = self.values.copy()
         packet["program"] = self.program
         return hash_dictionary(packet)
 

@@ -42,7 +42,7 @@ def torsiondrive_fixture(fractal_compute_server):
             "driver": "gradient",
             "method": "UFF",
             "basis": "",
-            "options": None,
+            "keywords": None,
             "program": "rdkit",
         },
     }
@@ -113,7 +113,7 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     hash_index2 = spin_up_test(torsiondrive_meta={"meaningless_entry_to_change_hash": "Waffles!"}).hash_index
 
     assert hash_index1 != hash_index2
-    procedures = client.get_procedures({"hash_index": [hash_index1 ,hash_index2]})
+    procedures = client.get_procedures({"hash_index": [hash_index1, hash_index2]})
     assert len(procedures) == 2  # Make sure only 2 procedures are yielded
 
     base_run, duplicate_run = procedures
@@ -183,7 +183,7 @@ def test_service_gridoptimization_single(fractal_compute_server):
             "driver": "gradient",
             "method": "UFF",
             "basis": "",
-            "options": None,
+            "keywords": None,
             "program": "rdkit",
         },
         "initial_molecule": mol_ret["hooh"],
@@ -196,5 +196,5 @@ def test_service_gridoptimization_single(fractal_compute_server):
     result = client.get_procedures({"procedure": "gridoptimization"})[0]
 
     assert result.starting_grid == (1, 0)
-    assert pytest.approx(result.final_energies((0, 0)), abs=1.e-6) == 0.4115125808975514
-    assert pytest.approx(result.final_energies((1, 1)), abs=1.e-6) == 0.4867717471566498
+    assert pytest.approx(result.final_energies((0, 0)), abs=1.e-4) == 0.4115125808975514
+    assert pytest.approx(result.final_energies((1, 1)), abs=1.e-4) == 0.4867717471566498

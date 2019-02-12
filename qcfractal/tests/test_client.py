@@ -32,37 +32,37 @@ def test_client_options(test_server):
 
     client = portal.FractalClient(test_server)
 
-    opt = portal.models.Option(program="psi4", options={"one": "fish", "two": "fish"})
+    opt = portal.models.KeywordSet(program="psi4", values={"one": "fish", "two": "fish"})
 
     # Test add
-    ret = client.add_options([opt])
+    ret = client.add_keywords([opt])
 
     # Test get
-    get_opt = client.get_options({'id': ret[0]})
-    assert opt == get_opt[0]
+    get_kw = client.get_keywords({'id': ret[0]})
+    assert opt == get_kw[0]
 
-    get_opt = client.get_options({"program": "psi4", "hash_index": opt.hash_index})
-    assert opt == get_opt[0]
+    get_kw = client.get_keywords({"program": "psi4", "hash_index": opt.hash_index})
+    assert opt == get_kw[0]
 
 
-def test_client_duplicate_options(test_server):
+def test_client_duplicate_keywords(test_server):
 
     client = portal.FractalClient(test_server)
 
-    opt1 = portal.models.Option(program="psi4", options={"key": 1})
-    opt2 = portal.models.Option(program="psi4", options={"key": 2})
-    opt3 = portal.models.Option(program="psi4", options={"key": 3})
+    opt1 = portal.models.KeywordSet(program="psi4", values={"key": 1})
+    opt2 = portal.models.KeywordSet(program="psi4", values={"key": 2})
+    opt3 = portal.models.KeywordSet(program="psi4", values={"key": 3})
 
     # Test add
-    ret = client.add_options([opt1, opt1])
+    ret = client.add_keywords([opt1, opt1])
     assert len(ret) == 2
     assert ret[0] == ret[1]
 
-    ret2 = client.add_options([opt1])
+    ret2 = client.add_keywords([opt1])
     assert len(ret2) == 1
     assert ret2[0] == ret[0]
 
-    ret3 = client.add_options([opt2, opt1, opt3])
+    ret3 = client.add_keywords([opt2, opt1, opt3])
     assert len(ret3) == 3
     assert ret3[1] == ret[0]
 

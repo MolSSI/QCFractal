@@ -7,15 +7,14 @@ import traceback
 
 from .. import procedures
 from .. import services
-from ..web_handlers import APIHandler
-
 from ..interface.models.common_models import Molecule
 from ..interface.models.rest_models import (
     TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse,
     ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
     QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse,
     QueueManagerPUTBody, QueueManagerPUTResponse
-) # yapf: disable
+)  # yapf: disable
+from ..web_handlers import APIHandler
 
 
 class TaskQueueHandler(APIHandler):
@@ -31,24 +30,13 @@ class TaskQueueHandler(APIHandler):
         # Grab objects
         storage = self.objects["storage_socket"]
 
-        body = TaskQueuePOSTBody.parse_raw(self.request.body)
-        # Format tasks
-        procedure_parser = procedures.get_procedure_parser(body.meta["procedure"], storage)
-        full_tasks, complete_tasks, errors = procedure_parser.parse_input(body.dict())
+        post = TaskQueuePOSTBody.parse_raw(self.request.body)
 
-        # Add tasks to queue
-        ret = storage.queue_submit(full_tasks)
+        # Format and submit tasks
+        procedure_parser = procedures.get_procedure_parser(post.meta["procedure"], storage)
+        payload = procedure_parser.submit_tasks(post)
 
-        # Do some quick reformatting
-        data_payload = {
-            "submitted": [x for x in ret["data"] if x is not None],
-            "completed": list(complete_tasks),
-            "queue": ret["meta"]["duplicates"]
-        }
-        ret["meta"]["duplicates"] = []
-        ret["meta"]["errors"].extend(errors)
-
-        response = TaskQueuePOSTResponse(data=data_payload, meta=ret["meta"])
+        response = TaskQueuePOSTResponse(**payload)
         self.logger.info("TaskQueue: Added {} tasks.".format(response.meta.n_inserted))
 
         self.write(response.json())
@@ -96,7 +84,7 @@ class ServiceQueueHandler(APIHandler):
         # Get molecules with ids
         if isinstance(service_input.initial_molecule, list):
             mol_query = storage.get_add_molecules_mixed(service_input.initial_molecule)
-            molecules = [Molecule(**mol) for k, mol in mol_query["data"].items()]
+            molecules = [Molecule(**mol) for mol in mol_query["data"]]
             if len(molecules) != len(service_input.initial_molecule):
                 raise KeyError("We should catch this error.")
         else:

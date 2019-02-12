@@ -7,7 +7,7 @@
 
 import qcfractal.interface as portal
 
-from qcfractal.storage_sockets.models import Molecule, Result, Options, \
+from qcfractal.storage_sockets.models import Molecule, Result, Keywords, \
                     Procedure, OptimizationProcedure, TorsiondriveProcedure
 from qcfractal.storage_sockets.models import TaskQueue
 from qcfractal.testing import mongoengine_socket_fixture as storage_socket
@@ -20,8 +20,8 @@ def molecules_H4O2(storage_socket):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
 
-    ret = storage_socket.add_molecules({"water1": water.json(as_dict=True),
-                                        "water2": water2.json(as_dict=True)})
+    ret = storage_socket.add_molecules({"water1": water.json_dict(),
+                                        "water2": water2.json_dict()})
 
     yield list(ret['data'].values())
 
@@ -47,8 +47,8 @@ def test_molecule(storage_socket):
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
 
     # Add Molecule using pymongo
-    ret = storage_socket.add_molecules({"water1": water.json(as_dict=True),
-                                            "water2": water2.json(as_dict=True)})
+    ret = storage_socket.add_molecules({"water1": water.json_dict(),
+                                            "water2": water2.json_dict()})
     assert ret["meta"]["success"] is True
     assert ret["meta"]["n_inserted"] == 2
 
@@ -57,7 +57,7 @@ def test_molecule(storage_socket):
     assert water_mol.molecular_formula == "H4O2"
     assert water_mol.molecular_charge == 0
 
-    # print(water_mol.json(as_dict=True))
+    # print(water_mol.json_dict())
 
     # Query with fields in the model
     result_list = Molecule.objects(molecular_formula="H4O2")
@@ -84,7 +84,7 @@ def test_results(storage_socket, molecules_H4O2):
     """
 
     assert Result.objects().count() == 0
-    assert Options.objects().count() == 0
+    assert Keywords.objects().count() == 0
 
     molecules = molecules_H4O2
 
@@ -94,7 +94,7 @@ def test_results(storage_socket, molecules_H4O2):
         "molecule": ObjectId(molecules[0]),
         "method": "M1",
         "basis": "B1",
-        "options": None,
+        "keywords": None,
         "program": "P1",
         "driver": "energy",
         "other_data": 5,
@@ -104,7 +104,7 @@ def test_results(storage_socket, molecules_H4O2):
         "molecule": ObjectId(molecules[1]),
         "method": "M1",
         "basis": "B1",
-        "options": None,
+        "keywords": None,
         "program": "P1",
         "driver": "energy",
         "other_data": 10,
@@ -124,7 +124,7 @@ def test_procedure(storage_socket):
     """
 
     assert Procedure.objects().count() == 0
-    # assert Options.objects().count() == 0
+    # assert Keywords.objects().count() == 0
 
     # molecules = Molecule.objects(molecular_formula='H4O2')
     # assert molecules.count() == 2
@@ -132,7 +132,7 @@ def test_procedure(storage_socket):
     data1 = {
         # "molecule": molecules[0],
         "procedure": "undefined",
-        "options": None,
+        "keywords": None,
         "program": "P5",
         "qc_meta": {
             "basis": "B1",
@@ -145,7 +145,7 @@ def test_procedure(storage_socket):
     procedure = Procedure(**data1)
     procedure.save()
     assert procedure.id
-    # print('Procedure After save: ', procedure.json(as_dict=True))
+    # print('Procedure After save: ', procedure.json_dict())
     # assert procedure.molecule.molecular_formula == 'H4O2'
 
 
@@ -155,12 +155,12 @@ def test_optimization_procedure(storage_socket, molecules_H4O2):
     """
 
     assert OptimizationProcedure.objects().count() == 0
-    # assert Options.objects().count() == 0
+    # assert Keywords.objects().count() == 0
 
     data1 = {
         "initial_molecule": ObjectId(molecules_H4O2[0]),
         # "procedure_type": None,
-        "options": None,
+        "keywords": None,
         "program": "P7",
         "qc_meta": {
             "basis": "B1",
@@ -181,7 +181,7 @@ def test_torsiondrive_procedure(storage_socket):
     """
 
     assert TorsiondriveProcedure.objects().count() == 0
-    # assert Options.objects().count() == 0
+    # assert Keywords.objects().count() == 0
 
     # molecules = Molecule.objects(molecular_formula='H4O2')
     # assert molecules.count() == 2
@@ -189,7 +189,7 @@ def test_torsiondrive_procedure(storage_socket):
     data1 = {
         # "molecule": molecules[0],
         # "procedure": None,
-        "options": None,
+        "keywords": None,
         "program": "P9",
         "qc_meta": {
             "basis": "B1",
@@ -201,7 +201,7 @@ def test_torsiondrive_procedure(storage_socket):
 
     procedure = TorsiondriveProcedure(**data1)
     procedure.save()
-    # print('TorsiondriveProcedure After save: ', procedure.json(as_dict=True))
+    # print('TorsiondriveProcedure After save: ', procedure.json_dict())
 
 
 def test_add_task_queue(storage_socket, molecules_H4O2):
@@ -217,7 +217,7 @@ def test_add_task_queue(storage_socket, molecules_H4O2):
         "molecule": ObjectId(molecules_H4O2[0]),
         "method": "M1",
         "basis": "B1",
-        "options": None,
+        "keywords": None,
         "program": "P1",
         "driver": "energy",
         "other_data": 5,
@@ -238,7 +238,7 @@ def test_add_task_queue(storage_socket, molecules_H4O2):
 
     # add a task that reference Torsiondrive Procedure
     data1 = {
-        "options": None,
+        "keywords": None,
         "program": "P9",
         "qc_meta": {
             "basis": "B1",

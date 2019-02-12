@@ -18,7 +18,7 @@ def test_adapter_single(managed_compute_server):
 
     # Add compute
     hooh = portal.data.get_molecule("hooh.json")
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json(as_dict=True)], tag="other")
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
 
     # Force manager compute and get results
     manager.await_results()
@@ -32,7 +32,7 @@ def test_adapter_error_message(managed_compute_server):
     reset_server_database(server)
 
     # HOOH without connectivity, RDKit should fail
-    hooh = portal.data.get_molecule("hooh.json").json(as_dict=True)
+    hooh = portal.data.get_molecule("hooh.json").json_dict()
     del hooh["connectivity"]
     mol_ret = client.add_molecules({"hooh": hooh})
 
@@ -63,7 +63,7 @@ def test_adapter_raised_error(managed_compute_server):
     reset_server_database(server)
 
     # HOOH without connectivity, RDKit should fail
-    hooh = portal.data.get_molecule("hooh.json").json(as_dict=True)
+    hooh = portal.data.get_molecule("hooh.json").json_dict()
     del hooh["connectivity"]
     mol_ret = client.add_molecules({"hooh": hooh})
 

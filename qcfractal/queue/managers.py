@@ -7,22 +7,18 @@ import json
 import logging
 import socket
 import uuid
-
 from typing import Any, Callable, Dict, List, Optional
 
+import qcengine
 import tornado.ioloop
 
+from qcfractal.extras import get_information
+from .adapters import build_queue_adapter
 from ..interface.data import get_molecule
 from ..interface.models.rest_models import (
     QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse, QueueManagerPUTBody,
     QueueManagerPUTResponse
 )
-
-from .adapters import build_queue_adapter
-
-from qcfractal.extras import get_information
-
-import qcengine
 
 __all__ = ["QueueManager"]
 
@@ -371,7 +367,7 @@ class QueueManager:
                 "function":
                 "qcengine.compute",
                 "args": [{
-                    "molecule": get_molecule("hooh.json").json(as_dict=True),
+                    "molecule": get_molecule("hooh.json").json_dict(),
                     "driver": "energy",
                     "model": {},
                     "keywords": {},

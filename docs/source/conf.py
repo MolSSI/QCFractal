@@ -102,7 +102,7 @@ exclude_patterns = []
 pygments_style = 'default'
 
 
-# -- Options for HTML output -------------------------------------------------
+# -- Keywords for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
@@ -131,13 +131,13 @@ html_static_path = ['_static']
 # html_sidebars = {}
 
 
-# -- Options for HTMLHelp output ---------------------------------------------
+# -- Keywords for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'QCFractaldoc'
 
 
-# -- Options for LaTeX output ------------------------------------------------
+# -- Keywords for LaTeX output ------------------------------------------------
 
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
@@ -166,7 +166,7 @@ latex_documents = [
 ]
 
 
-# -- Options for manual page output ------------------------------------------
+# -- Keywords for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
@@ -176,7 +176,7 @@ man_pages = [
 ]
 
 
-# -- Options for Texinfo output ----------------------------------------------
+# -- Keywords for Texinfo output ----------------------------------------------
 
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
@@ -198,7 +198,7 @@ extlinks = {
 
 
 
-# -- Options for intersphinx extension ---------------------------------------
+# -- Keywords for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
@@ -206,7 +206,7 @@ intersphinx_mapping = {
     'numpy': ('http://docs.scipy.org/doc/numpy/', None),
 }
 
-# -- Options for todo extension ----------------------------------------------
+# -- Keywords for todo extension ----------------------------------------------
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True

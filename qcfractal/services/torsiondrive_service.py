@@ -4,9 +4,9 @@ Wraps geometric procedures
 
 import copy
 import json
+from typing import Any, Dict, List
 
 import numpy as np
-from typing import Any, Dict, List
 
 try:
     import torsiondrive
@@ -77,7 +77,7 @@ class TorsionDriveService(BaseService):
         meta = {"output": output}
 
         # Remove identity info from molecule template
-        molecule_template = copy.deepcopy(service_input.initial_molecule[0].json(as_dict=True))
+        molecule_template = copy.deepcopy(service_input.initial_molecule[0].json_dict())
         molecule_template.pop("id", None)
         molecule_template.pop("identifiers", None)
         meta["molecule_template"] = json.dumps(molecule_template)
@@ -101,7 +101,7 @@ class TorsionDriveService(BaseService):
         meta["optimization_template"] = json.dumps({
             "meta": {
                 "procedure": "optimization",
-                "keywords": output.optimization_meta.dict(),
+                "keywords": {"program": output.optimization_meta.program, "values": output.optimization_meta.dict()},
                 "program": output.optimization_meta.program,
                 "qc_meta": output.qc_meta.dict(),
                 "tag": meta.pop("tag", None)
@@ -120,6 +120,7 @@ class TorsionDriveService(BaseService):
         self.status = "RUNNING"
 
         # Check if tasks are done
+        print("Done", self.task_manager.done(self.storage_socket))
         if self.task_manager.done(self.storage_socket) is False:
             return False
 
@@ -177,7 +178,7 @@ class TorsionDriveService(BaseService):
                 grid_id = td_api.grid_id_from_string(key)
                 for con_num, k in enumerate(grid_id):
                     constraints[con_num]["value"] = k
-                packet["meta"]["keywords"]["constraints"] = {"set": constraints}
+                packet["meta"]["keywords"]["values"]["constraints"] = {"set": constraints}
 
                 # Build new molecule
                 mol = json.loads(self.molecule_template)

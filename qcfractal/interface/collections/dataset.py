@@ -11,11 +11,11 @@ from pydantic import BaseModel
 
 from .collection import Collection
 from .collection_utils import nCr, register_collection
-from ..models.common_models import Molecule
 # from .. import client
 from .. import constants
 from .. import dict_utils
 from .. import statistics
+from ..models.common_models import Molecule
 
 
 class _RxnEnum(str, Enum):
@@ -79,7 +79,7 @@ class Dataset(Collection):
 
         # If we making a new database we may need new hashes and json objects
         self._new_molecules = {}
-        self._new_options = {}
+        self._new_keywords = {}
 
     class DataModel(Collection.DataModel):
         """
@@ -93,17 +93,17 @@ class Dataset(Collection):
 
         # Defaults
         default_program: Optional[str] = None
-        default_options: Dict[str, str] = {}
+        default_keywords: Dict[str, str] = {}
         default_driver: str = "energy"
 
         reactions: List[Rxn] = []
-        alias_options: Dict[str, Dict[str, str]] = {}  # program: option_name: option_id
+        alias_keywords: Dict[str, Dict[str, str]] = {}  # program: option_name: option_id
 
-        known_compute: List[Tuple[str, Optional[str], str, Optional[str]]] = []  # method, basis, driver, options
+        known_compute: List[Tuple[str, Optional[str], str, Optional[str]]] = []  # method, basis, driver, keywords
 
     def _check_state(self):
-        if self._new_molecules or self._new_options:
-            raise ValueError("New molecules or options detected, run save before submitting new tasks.")
+        if self._new_molecules or self._new_keywords:
+            raise ValueError("New molecules or keywords detected, run save before submitting new tasks.")
 
     def _form_index(self):
         # Unroll the index
@@ -125,15 +125,15 @@ class Dataset(Collection):
         self.data.reactions = dict_utils.replace_dict_keys(self.data.reactions, mol_ret)
         self._new_molecules = {}
 
-        for k in list(self._new_options.keys()):
-            ret = client.add_options([self._new_options[k]])
-            assert len(ret) == 1, "Option added incorrectly"
-            self.data.alias_options[k[0]][k[1]] = ret[0]
-            del self._new_options[k]
+        for k in list(self._new_keywords.keys()):
+            ret = client.add_keywords([self._new_keywords[k]])
+            assert len(ret) == 1, "KeywordSet added incorrectly"
+            self.data.alias_keywords[k[0]][k[1]] = ret[0]
+            del self._new_keywords[k]
 
         self._form_index()
 
-    def _default_parameters(self, driver, options, program):
+    def _default_parameters(self, driver, keywords, program):
 
         if program is None:
             if self.data.default_program is None:
@@ -145,16 +145,16 @@ class Dataset(Collection):
         if driver is None:
             driver = self.data.default_driver
 
-        if options is None:
-            if program in self.data.default_options:
-                options = self.data.alias_options[program][self.data.default_options[program]]
+        if keywords is None:
+            if program in self.data.default_keywords:
+                keywords = self.data.alias_keywords[program][self.data.default_keywords[program]]
         else:
-            if (program not in self.data.alias_options) or (options not in self.data.alias_options[program]):
-                raise KeyError("Option alias '{}' not found for program '{}'.".format(options, program))
+            if (program not in self.data.alias_keywords) or (keywords not in self.data.alias_keywords[program]):
+                raise KeyError("KeywordSet alias '{}' not found for program '{}'.".format(keywords, program))
 
-            options = self.data.alias_options[program][options]
+            keywords = self.data.alias_keywords[program][keywords]
 
-        return driver, options, program
+        return driver, keywords, program
 
     def _unroll_query(self, keys, stoich, field="return_result"):
         """Unrolls a complex query into a "flat" query for the server object
@@ -206,44 +206,44 @@ class Dataset(Collection):
 
     def set_default_program(self, program: str) -> bool:
         """
-        Sets the default program and options.
+        Sets the default program.
         """
 
         self.data.default_program = program.lower()
 
-    def add_options(self, alias: str, option: 'Option', default: bool=False) -> bool:
+    def add_keywords(self, alias: str, keyword: 'KeywordSet', default: bool=False) -> bool:
         """
-        Adds an option alias to the dataset. Not that options are not present
+        Adds an option alias to the dataset. Not that keywords are not present
         until a save call has been completed.
 
         Parameters
         ----------
         alias : str
             The alias of the option
-        option : Option
-            The Options object to use.
+        keyword : KeywordSet
+            The Keywords object to use.
         default : bool
             Sets this option as the default for the program
         """
 
         alias = alias.lower()
-        if option.program not in self.data.alias_options:
-            self.data.alias_options[option.program] = {}
+        if keyword.program not in self.data.alias_keywords:
+            self.data.alias_keywords[keyword.program] = {}
 
-        if alias in self.data.alias_options[option.program]:
-            raise KeyError("Alias '{}' already set for program {}.".format(alias, option.program))
+        if alias in self.data.alias_keywords[keyword.program]:
+            raise KeyError("Alias '{}' already set for program {}.".format(alias, keyword.program))
 
-        self._new_options[(option.program, alias)] = option
+        self._new_keywords[(keyword.program, alias)] = keyword
 
         if default:
-            self.data.default_options[option.program] = alias
+            self.data.default_keywords[keyword.program] = alias
         return True
 
     def query(self,
               method,
               basis,
               driver=None,
-              options=None,
+              keywords=None,
               program=None,
               stoich="default",
               prefix="",
@@ -263,7 +263,7 @@ class Dataset(Collection):
             The computational basis query on (6-31G)
         driver : str, optional
             Search within energy, gradient, etc computations
-        options : str, optional
+        keywords : str, optional
             The option token desired
         program : str, optional
             The program to query on
@@ -299,7 +299,7 @@ class Dataset(Collection):
 
         """
 
-        driver, options, program = self._default_parameters(driver, options, program)
+        driver, keywords, program = self._default_parameters(driver, keywords, program)
 
         if not reaction_results and (self.client is None):
             raise AttributeError("DataBase: FractalClient was not set.")
@@ -308,7 +308,7 @@ class Dataset(Collection):
             "method": method.lower(),
             "basis": basis.lower(),
             "driver": driver.lower(),
-            "options": options,
+            "keywords": keywords,
             "program": program.lower(),
         }
         # # If reaction results
@@ -355,7 +355,7 @@ class Dataset(Collection):
                 method,
                 basis,
                 driver=None,
-                options=None,
+                keywords=None,
                 program=None,
                 stoich="default",
                 ignore_ds_type=False):
@@ -372,8 +372,8 @@ class Dataset(Collection):
             The type of computation to run (energy, gradient, etc)
         stoich : str, optional
             The stoichiometry of the requested compute (cp/nocp/etc)
-        options : str, optional
-            The options token for the requested compute
+        keywords : str, optional
+            The keyword alias for the requested compute
         program : str, optional
             The underlying QC program
         ignore_ds_type : bool, optional
@@ -389,7 +389,7 @@ class Dataset(Collection):
         if self.client is None:
             raise AttributeError("DataBase: Compute: Client was not set.")
 
-        driver, options, program = self._default_parameters(driver, options, program)
+        driver, keywords, program = self._default_parameters(driver, keywords, program)
 
         # Figure out molecules that we need
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
@@ -408,7 +408,7 @@ class Dataset(Collection):
         complete_values = self.client.get_results(
             molecule=list(umols),
             driver=driver,
-            options=options,
+            keywords=keywords,
             program=program,
             method=method,
             basis=basis,
@@ -418,7 +418,7 @@ class Dataset(Collection):
         umols = np.setdiff1d(umols, complete_mols)
         compute_list = list(umols)
 
-        ret = self.client.add_compute(program, method.lower(), basis.lower(), driver, options, compute_list)
+        ret = self.client.add_compute(program, method.lower(), basis.lower(), driver, keywords, compute_list)
 
         return ret
 
@@ -554,13 +554,13 @@ class Dataset(Collection):
                 molecule_hash = qcf_mol.get_hash()
 
                 if molecule_hash not in list(self._new_molecules):
-                    self._new_molecules[molecule_hash] = qcf_mol.json(as_dict=True)
+                    self._new_molecules[molecule_hash] = qcf_mol.json_dict()
 
             elif isinstance(mol, Molecule):
                 molecule_hash = mol.get_hash()
 
                 if molecule_hash not in list(self._new_molecules):
-                    self._new_molecules[molecule_hash] = mol.json(as_dict=True)
+                    self._new_molecules[molecule_hash] = mol.json_dict()
 
             else:
                 raise TypeError("Dataset: Parse stoichiometry: first value must either be a molecule hash, "

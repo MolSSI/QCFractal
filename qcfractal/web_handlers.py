@@ -7,7 +7,7 @@ import tornado.web
 
 from .interface.models.rest_models import (
     MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
-    OptionGETBody, OptionGETResponse, OptionPOSTBody, OptionPOSTResponse,
+    KeywordGETBody, KeywordGETResponse, KeywordPOSTBody, KeywordPOSTResponse,
     CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
     ResultGETBody, ResultGETResponse,
     ProcedureGETBody, ProcedureGETReponse
@@ -149,24 +149,24 @@ class OptionHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        body = OptionGETBody.parse_raw(self.request.body)
-        ret = storage.get_options(**body.data, with_ids=False)
-        options = OptionGETResponse(**ret)
+        body = KeywordGETBody.parse_raw(self.request.body)
+        ret = storage.get_keywords(**body.data, with_ids=False)
+        kw = KeywordGETResponse(**ret)
 
-        self.logger.info("GET: Options - {} pulls.".format(len(options.data)))
+        self.logger.info("GET: Keywords - {} pulls.".format(len(kw.data)))
 
-        self.write(options.json())
+        self.write(kw.json())
 
     def post(self):
         self.authenticate("write")
 
         storage = self.objects["storage_socket"]
 
-        body = OptionPOSTBody.parse_raw(self.request.body)
-        ret = storage.add_options([x.json_dict() for x in body.data])
-        response = OptionPOSTResponse(**ret)
+        body = KeywordPOSTBody.parse_raw(self.request.body)
+        ret = storage.add_keywords([x.json_dict() for x in body.data])
+        response = KeywordPOSTResponse(**ret)
 
-        self.logger.info("POST: Options - {} inserted.".format(response.meta.n_inserted))
+        self.logger.info("POST: Keywords - {} inserted.".format(response.meta.n_inserted))
 
         self.write(response.json())
 
@@ -184,7 +184,7 @@ class CollectionHandler(APIHandler):
         body = CollectionGETBody.parse_raw(self.request.body)
         cols = storage.get_collections(**body.data.dict())
         response = CollectionGETResponse(**cols)
-        self.logger.info("GET: Options - {} pulls.".format(len(response.data)))
+        self.logger.info("GET: Keywords - {} pulls.".format(len(response.data)))
 
         self.write(response.json())
 

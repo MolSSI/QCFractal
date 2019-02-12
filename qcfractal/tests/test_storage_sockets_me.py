@@ -15,12 +15,12 @@ def test_molecules_add(storage_socket):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
-    ret1 = storage_socket.add_molecules({"new_water": water.json(as_dict=True)})
+    ret1 = storage_socket.add_molecules({"new_water": water.json_dict()})
     assert ret1["meta"]["success"] is True
     assert ret1["meta"]["n_inserted"] == 1
 
     # Try duplicate adds
-    ret2 = storage_socket.add_molecules({"new_water2": water.json(as_dict=True)})
+    ret2 = storage_socket.add_molecules({"new_water2": water.json_dict()})
     assert ret2["meta"]["success"] is True
     assert ret2["meta"]["n_inserted"] == 0
     assert ret2["meta"]["duplicates"][0] == "new_water2"
@@ -45,7 +45,7 @@ def test_identical_mol_insert(storage_socket):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
 
     # Add two idential molecules
-    ret1 = storage_socket.add_molecules({"w1": water.json(as_dict=True), "w2": water.json(as_dict=True)})
+    ret1 = storage_socket.add_molecules({"w1": water.json_dict(), "w2": water.json_dict()})
     assert ret1["meta"]["success"] is True
     assert ret1["meta"]["n_inserted"] == 1
     assert ret1["data"]["w1"] == ret1["data"]["w2"]
@@ -62,14 +62,14 @@ def test_molecules_add_many(storage_socket):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
 
-    ret = storage_socket.add_molecules({"water1": water.json(as_dict=True), "water2": water2.json(as_dict=True)})
+    ret = storage_socket.add_molecules({"water1": water.json_dict(), "water2": water2.json_dict()})
     assert ret["meta"]["n_inserted"] == 2
 
     # Cleanup adds
     ret = storage_socket.del_molecules([water.get_hash(), water2.get_hash()], index="hash")
     assert ret == 2
 
-    ret = storage_socket.add_molecules({"water1": water.json(as_dict=True), "water2": water2.json(as_dict=True)})
+    ret = storage_socket.add_molecules({"water1": water.json_dict(), "water2": water2.json_dict()})
     assert ret["meta"]["n_inserted"] == 2
 
     # Cleanup adds
@@ -82,7 +82,7 @@ def test_molecules_get(storage_socket):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
-    ret = storage_socket.add_molecules({"water": water.json(as_dict=True)})
+    ret = storage_socket.add_molecules({"water": water.json_dict()})
     assert ret["meta"]["n_inserted"] == 1
     water_id = ret["data"]["water"]
 
@@ -96,12 +96,26 @@ def test_molecules_get(storage_socket):
     assert ret == 1
 
 
+def test_molecules_mixed_add_get(storage_socket):
+    water = portal.data.get_molecule("water_dimer_minima.psimol")
+
+    ret = storage_socket.get_add_molecules_mixed(["bad_id", water, "bad_id2"])
+    assert ret["data"][0] is None
+    assert ret["data"][1]["identifiers"]["molecule_hash"] == water.get_hash()
+    assert ret["data"][2] is None
+    assert set(ret["meta"]["missing"]) == {0, 2}
+
+    # Cleanup adds
+    ret = storage_socket.del_molecules([ret["data"][1]["id"]], index="id")
+    assert ret == 1
+
+
 def test_molecules_bad_get(storage_socket):
 
     water = portal.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
-    ret = storage_socket.add_molecules({"water": water.json(as_dict=True)})
+    ret = storage_socket.add_molecules({"water": water.json_dict()})
     assert ret["meta"]["n_inserted"] == 1
     water_id = ret["data"]["water"]
 
@@ -117,30 +131,47 @@ def test_molecules_bad_get(storage_socket):
     assert ret == 1
 
 
-def test_options_add(storage_socket):
+def test_keywords_add(storage_socket):
 
-    opts = {"program": "hello", "options": {"o": 5}, "hash_index": "something_unique"}
+    opts = {"program": "hello", "values": {"o": 5}, "hash_index": "something_unique"}
 
-    ret = storage_socket.add_options([opts, opts.copy()])
+    ret = storage_socket.add_keywords([opts, opts.copy()])
     assert len(ret["data"]) == 2
     assert ret["meta"]["n_inserted"] == 1
     assert ret["data"][0] == ret["data"][1]
 
-    ret = storage_socket.add_options(opts)
+    ret = storage_socket.add_keywords(opts)
     assert ret["meta"]["n_inserted"] == 0
 
-    ret = storage_socket.get_options(hash_index="something_unique")
+    ret = storage_socket.get_keywords(hash_index="something_unique")
     opts["id"] = ret["data"][0]["id"]
     assert ret["meta"]["n_found"] == 1
     assert ret["data"][0] == opts
 
-    assert 1 == storage_socket.del_option(id=opts["id"])
+    assert 1 == storage_socket.del_keywords(id=opts["id"])
 
 
-def test_options_error(storage_socket):
+def test_keywords_mixed_add_get(storage_socket):
+
+    opts1 = portal.models.KeywordSet(**{"program": "hello", "values": {"o": 5}})
+    id1 = storage_socket.add_keywords([opts1.json_dict()])["data"][0]
+
+    opts2 = {"program": "hello", "values": {"o": 6}}
+    opts = storage_socket.get_add_keywords_mixed([opts1, opts2, id1, "bad_id"])["data"]
+    assert opts[0]["id"] == id1
+    assert opts[1]["values"]["o"] == 6
+    assert "id" in opts[1]
+    assert opts[2]["id"] == id1
+    assert opts[3] is None
+
+    assert 1 == storage_socket.del_keywords(id=id1)
+    assert 1 == storage_socket.del_keywords(id=opts[1]["id"])
+
+
+def test_keywords_error(storage_socket):
     opts = {"program": "hello"}
 
-    ret = storage_socket.add_options(opts)
+    ret = storage_socket.add_keywords(opts)
     assert ret["meta"]["n_inserted"] == 0
     assert len(ret["meta"]["validation_errors"]) == 1
 
@@ -185,7 +216,7 @@ def test_collections_overwrite(storage_socket):
     db_update = {
         # "id": ret["data"][0]["id"],
         "collection": "TorsionDrive",  # no need to include
-        "name": "Torsion123",   # no need to include
+        "name": "Torsion123",  # no need to include
         "something": "New",
         "something2": "else",
         "array2": ["54321"]
@@ -214,13 +245,13 @@ def test_results_add(storage_socket):
     # Add two waters
     water = portal.data.get_molecule("water_dimer_minima.psimol")
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
-    mol_insert = storage_socket.add_molecules({"water1": water.json(as_dict=True), "water2": water2.json(as_dict=True)})
+    mol_insert = storage_socket.add_molecules({"water1": water.json_dict(), "water2": water2.json_dict()})
 
     page1 = {
         "molecule": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
-        "options": "default",
+        "keywords": "default",
         "program": "P1",
         "driver": "energy",
         "other_data": 5,
@@ -231,7 +262,7 @@ def test_results_add(storage_socket):
         "molecule": mol_insert["data"]["water2"],
         "method": "M1",
         "basis": "B1",
-        "options": "default",
+        "keywords": "default",
         "program": "P1",
         "driver": "energy",
         "other_data": 10,
@@ -242,7 +273,7 @@ def test_results_add(storage_socket):
         "molecule": mol_insert["data"]["water2"],
         "method": "M22",
         "basis": "B1",
-        "options": "default",
+        "keywords": "default",
         "program": "P1",
         "driver": "energy",
         "other_data": 10,
@@ -257,7 +288,7 @@ def test_results_add(storage_socket):
     ret = storage_socket.add_results([page1, page2, page3])
 
     assert ret["meta"]["n_inserted"] == 1
-    assert len(ret['data']) == 3   # first 2 found are None
+    assert len(ret['data']) == 3  # first 2 found are None
     assert len(ret["meta"]['duplicates']) == 2
 
     for res_id in ret['data']:
@@ -278,13 +309,13 @@ def storage_results(storage_socket):
     # Add two waters
     water = portal.data.get_molecule("water_dimer_minima.psimol")
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
-    mol_insert = storage_socket.add_molecules({"water1": water.json(as_dict=True), "water2": water2.json(as_dict=True)})
+    mol_insert = storage_socket.add_molecules({"water1": water.json_dict(), "water2": water2.json_dict()})
 
     page1 = {
         "molecule": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
-        "options": "default",
+        "keywords": "default",
         "program": "P1",
         "driver": "energy",
         "return_result": 5,
@@ -296,7 +327,7 @@ def storage_results(storage_socket):
         "molecule": mol_insert["data"]["water2"],
         "method": "M1",
         "basis": "B1",
-        "options": "default",
+        "keywords": "default",
         "program": "P1",
         "driver": "energy",
         "return_result": 10,
@@ -308,7 +339,7 @@ def storage_results(storage_socket):
         "molecule": mol_insert["data"]["water1"],
         "method": "M1",
         "basis": "B1",
-        "options": "default",
+        "keywords": "default",
         "program": "P2",
         "driver": "gradient",
         "return_result": 15,
@@ -320,7 +351,7 @@ def storage_results(storage_socket):
         "molecule": mol_insert["data"]["water1"],
         "method": "M2",
         "basis": "B1",
-        "options": "default",
+        "keywords": "default",
         "program": "P2",
         "driver": "gradient",
         "return_result": 15,
@@ -332,7 +363,7 @@ def storage_results(storage_socket):
         "molecule": mol_insert["data"]["water2"],
         "method": "M2",
         "basis": "B1",
-        "options": "default",
+        "keywords": "default",
         "program": "P1",
         "driver": "gradient",
         "return_result": 20,
@@ -344,7 +375,7 @@ def storage_results(storage_socket):
         "molecule": mol_insert["data"]["water2"],
         "method": "M3",
         "basis": "B1",
-        "options": "default",
+        "keywords": "default",
         "program": "P1",
         "driver": "gradient",
         "return_result": 20,
@@ -410,20 +441,20 @@ def test_results_query_dual(storage_results):
 def test_results_query_project(storage_results):
     """See new changes in design here"""
 
-    ret = storage_results.get_results(method="M2", program="P2",
-                                      projection={"return_result"})["data"][0]
+    ret = storage_results.get_results(method="M2", program="P2", projection={"return_result"})["data"][0]
     assert set(ret.keys()) == {"id", "return_result"}
     assert ret["return_result"] == 15
 
     # Note: explicitly set with_ids=False to remove ids
-    ret = storage_results.get_results(method="M2", program="P2", with_ids=False,
-                                      projection={"return_result"})["data"][0]
+    ret = storage_results.get_results(
+        method="M2", program="P2", with_ids=False, projection={"return_result"})["data"][0]
     assert set(ret.keys()) == {"return_result"}
 
 
 def test_results_query_driver(storage_results):
     ret = storage_results.get_results(driver="energy")
     assert ret["meta"]["n_found"] == 2
+
 
 # ------ New Task Queue tests ------
 # No hash index, tasks are unique by their base_result
@@ -459,9 +490,11 @@ def test_queue_submit(storage_results):
     assert ret['meta']['n_inserted'] == 0
     assert len(ret["meta"]['duplicates']) == 1
 
+
 # ----------------------------------------------------------
 
 # Builds tests for the queue - Changed design
+
 
 def test_storage_queue_roundtrip(storage_results):
 
@@ -545,15 +578,9 @@ def test_queue_submit_many_order(storage_results):
 
     results = storage_results.get_results()['data']
 
-    task1 = {
-        "base_result": ('results', results[3]['id'])
-    }
-    task2 = {
-        "base_result": ('results', results[4]['id'])
-    }
-    task3 = {
-        "base_result": ('results', results[5]['id'])
-    }
+    task1 = {"base_result": ('results', results[3]['id'])}
+    task2 = {"base_result": ('results', results[4]['id'])}
+    task3 = {"base_result": ('results', results[5]['id'])}
 
     # Submit tasks
     ret = storage_results.queue_submit([task1, task2, task3])
@@ -567,6 +594,7 @@ def test_queue_submit_many_order(storage_results):
     assert r[0]['base_result']['id'] == results[3]['id']
 
     # Todo: test more scenarios
+
 
 # User testing
 
