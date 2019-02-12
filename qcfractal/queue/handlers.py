@@ -31,11 +31,11 @@ class TaskQueueHandler(APIHandler):
         # Grab objects
         storage = self.objects["storage_socket"]
 
-        body = TaskQueuePOSTBody.parse_raw(self.request.body)
+        post = TaskQueuePOSTBody.parse_raw(self.request.body)
 
         # Format and submit tasks
-        procedure_parser = procedures.get_procedure_parser(body.meta["procedure"], storage)
-        payload = procedure_parser.submit_tasks(body.dict())
+        procedure_parser = procedures.get_procedure_parser(post.meta["procedure"], storage)
+        payload = procedure_parser.submit_tasks(post)
 
         response = TaskQueuePOSTResponse(**payload)
         self.logger.info("TaskQueue: Added {} tasks.".format(response.meta.n_inserted))

@@ -445,11 +445,12 @@ class FractalClient(object):
         payload["meta"].update(program_options)
 
         r = self._request("post", "task_queue", payload)
+        r = TaskQueuePOSTResponse.parse_raw(r.text)
 
         if return_full:
-            return r.json()
+            return r
         else:
-            return r.json()["data"]
+            return r.data
 
     def check_tasks(self, query: Dict[str, Any], projection: Optional[Dict[str, Any]]=None, return_full: bool=False):
         """Checks the status of tasks in the Fractal queue.

@@ -37,13 +37,13 @@ class SingleResultTasks:
         """
 
         # format the data
-        inputs, errors = procedures_util.unpack_single_run_meta(self.storage, data["meta"], data["data"])
+        inputs, errors = procedures_util.unpack_single_run_meta(self.storage, data.meta, data.data)
 
         # Insert new results stubs
-        result_stub = json.dumps({k: data["meta"][k] for k in ["driver", "method", "basis", "options", "program"]})
+        result_stub = json.dumps({k: data.meta[k] for k in ["driver", "method", "basis", "options", "program"]})
 
         # Grab the tag if available
-        tag = data["meta"].pop("tag", None)
+        tag = data.meta.pop("tag", None)
 
         # Construct full tasks
         new_tasks = []
@@ -71,7 +71,7 @@ class SingleResultTasks:
             task = {
                 "spec": {
                     "function": "qcengine.compute",  # todo: add defaults in models
-                    "args": [json.loads(inp.json()), data["meta"]["program"]], # todo: json_dict should come from results
+                    "args": [json.loads(inp.json()), data.meta["program"]], # todo: json_dict should come from results
                     "kwargs": {}  # todo: add defaults in models
                 },
                 "hooks": [],  # todo: add defaults in models
@@ -201,88 +201,103 @@ class OptimizationTasks(SingleResultTasks):
         """
 
         # Unpack individual QC tasks
-        runs, errors = procedures_util.unpack_single_run_meta(self.storage, data["meta"]["qc_meta"], data["data"])
+        inputs, errors = procedures_util.unpack_single_run_meta(self.storage, data.meta["qc_meta"], data.data)
 
-        if "options" in data["meta"]:
-            if data["meta"]["options"] is None:
-                keywords = {}
-            else:  # TODO: why is the option guaranteed to exist? (implicit dependency)
-                keywords = self.storage.get_options([(data["meta"]["program"], data["meta"]["options"])])["data"][0]
-                del keywords["program"]
-                del keywords["name"]
-        elif "keywords" in data["meta"]:
-            keywords = data["meta"]["keywords"]
+        # Unpack options
+        if data.meta["options"] is None:
+            option_set = {}
         else:
-            keywords = {}
+            option_set = storage.get_options(id=meta["options"], with_ids=False)["data"][0]
+            option_set = option_set["options"]
 
-        keywords["program"] = data["meta"]["qc_meta"]["program"]
-        template = json.dumps({"keywords": keywords, "qcfractal_tags": data["meta"]})
+        option_set["program"] = data.meta["qc_meta"]["program"]
+        template = json.dumps({"keywords": option_set, "qcfractal_tags": data.meta})
 
-        full_tasks = []
-        duplicate_lookup = []
-        for k, v in runs.items():
+        tag = data.meta.pop("tag", None)
+
+        new_tasks = []
+        results_ids = []
+        existing_ids = []
+        for inp in inputs:
+            if inp is None:
+                results_ids.append(None)
+                continue
+
+            inp = json.loads(inp.json())
 
             # Coerce qc_template information
             packet = json.loads(template)
-            packet["initial_molecule"] = v["molecule"]
-            del v["molecule"]
-            packet["input_specification"] = v
+            packet["initial_molecule"] = inp.pop("molecule")
+            packet["input_specification"] = inp
 
-            # Unique nesting of args
-            keys = {
-                "type": "optimization",
-                "program": data["meta"]["program"],
-                "keywords": packet["keywords"],
-                "single_key": k,
-            }
+            single_keys = data.meta["qc_meta"].copy()
+            single_keys["molecule"] = packet["initial_molecule"]["id"]
 
             # Add to args document to carry through to self.storage
-            hash_index = procedures_util.hash_procedure_keys(keys)
+            hash_index = procedures_util.hash_procedure_keys({
+                "type": "optimization",
+                "program": data.meta["program"],
+                "keywords": packet["keywords"],
+                "single_key": single_keys,
+            })
             packet["hash_index"] = hash_index
-            duplicate_lookup.append(hash_index)
 
+            ret = self.storage.add_procedures([packet])
+            base_id = ret["data"][0]
+            results_ids.append(base_id)
+
+            # Task is complete
+            if len(ret["meta"]["duplicates"]):
+                existing_ids.append(base_id)
+                continue
+
+            # Build task object
             task = {
-                "hash_index": hash_index,
-                "hash_keys": keys,
                 "spec": {
                     "function": "qcengine.compute_procedure",
-                    "args": [packet, data["meta"]["program"]],
+                    "args": [packet, data.meta["program"]],
                     "kwargs": {}
                 },
                 "hooks": [],
-                "tag": None,
-                "parser": "optimization"
+                "tag": tag,
+                "parser": "optimization",
+                "base_result": ("procedure", base_id)
             }
 
-            full_tasks.append(task)
+            new_tasks.append(task)
 
-        # Find and handle duplicates
-        completed_procedures = self.storage.get_procedures_by_id(
-            hash_index=duplicate_lookup, projection={"hash_index": True,
-                                                     "id": True,
-                                                     "task_id": True})["data"]
+        return new_tasks, results_ids, existing_ids, errors
 
-        if len(completed_procedures):
-            found_hashes = set(x["hash_index"] for x in completed_procedures)
+    def submit_tasks(self, data):
 
-            # Filter out tasks
-            new_tasks = []
-            for task in full_tasks:
-                if task["hash_index"] in found_hashes:
-                    continue
-                else:
-                    new_tasks.append(task)
+        new_tasks, results_ids, existing_ids, errors = self.parse_input(data)
 
-            # Update returned list to exclude duplicates
-            full_tasks = new_tasks
+        ret = self.storage.queue_submit(new_tasks)
 
-        # Add task stubs
-        for task in full_tasks:
-            stub = {"hash_index": task["hash_index"], "procedure": "optimization", "program": data["meta"]["program"]}
-            ret = self.storage.add_procedures([stub])
-            task["base_result"] = ("procedure", ret["data"][0])
+        n_inserted = 0
+        missing = []
+        for num, x in enumerate(results_ids):
+            if x is None:
+                missing.append(num)
+            else:
+                n_inserted += 1
 
-        return full_tasks, completed_procedures, errors
+        results = {
+            "meta": {
+                "n_inserted": n_inserted,
+                "duplicates": [],
+                "validation_errors": [],
+                "success": True,
+                "error_description": False,
+                "errors": errors
+            },
+            "data": {
+                "ids": results_ids,
+                "submitted": [x["base_result"][1] for x in new_tasks],
+                "existing": existing_ids,
+            }
+        }
+        return results
 
     def parse_output(self, data):
         """Save the results of the procedure.
