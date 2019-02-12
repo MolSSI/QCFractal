@@ -38,43 +38,40 @@ class SingleResultTasks:
 
         # format the data
         inputs, errors = procedures_util.unpack_single_run_meta(self.storage, data["meta"], data["data"])
-        print(inputs)
-        raise Exception()
 
-        # Remove duplicates
-        query = {k: data["meta"][k] for k in ["driver", "method", "basis", "options", "program"]}
-        result_stub = json.dumps(query)
-        query["molecule"] = [x["molecule"]["id"] for x in runs.values()]
-        query["status"] = None
-
-        completed_results = self.storage.get_results(**query, projection={"molecule": True})["data"]
-        completed_ids = set(x["molecule"] for x in completed_results)
+        # Insert new results stubs
+        result_stub = json.dumps({k: data["meta"][k] for k in ["driver", "method", "basis", "options", "program"]})
 
         # Grab the tag if available
         tag = data["meta"].pop("tag", None)
 
         # Construct full tasks
-        full_tasks = []
-        for mol in runs:
-            if v["molecule"]["id"] in completed_ids:
+        new_tasks = []
+        results_ids = []
+        existing_ids = []
+        for inp in inputs:
+            if inp is None:
+                results_ids.append(None)
                 continue
-
-            query["molecule"] = v["molecule"]["id"]
-            keys, hash_index = procedures_util.single_run_hash(query)
-            v["hash_index"] = hash_index  # TODO: this field to be removed
 
             # Build stub
             result_obj = json.loads(result_stub)
-            result_obj["molecule"] = v["molecule"]["id"]
-            base_id = self.storage.add_results([result_obj])["data"][0]
+            result_obj["molecule"] = str(inp.molecule.id)
+            ret = self.storage.add_results([result_obj])
+
+            base_id = ret["data"][0]
+            results_ids.append(base_id)
+
+            # Task is complete
+            if len(ret["meta"]["duplicates"]):
+                existing_ids.append(base_id)
+                continue
 
             # Build task object
             task = {
-                "hash_index": hash_index,  # todo: to be removed
-                "hash_keys": keys,
                 "spec": {
                     "function": "qcengine.compute",  # todo: add defaults in models
-                    "args": [v, data["meta"]["program"]],
+                    "args": [json.loads(inp.json()), data["meta"]["program"]], # todo: json_dict should come from results
                     "kwargs": {}  # todo: add defaults in models
                 },
                 "hooks": [],  # todo: add defaults in models
@@ -83,11 +80,41 @@ class SingleResultTasks:
                 "base_result": ("results", base_id)
             }
 
-            full_tasks.append(task)
+            new_tasks.append(task)
 
-        return full_tasks, completed_results, errors
+        return new_tasks, results_ids, existing_ids, errors
 
-    # def submit_tasks(self, data):
+    def submit_tasks(self, data):
+
+        new_tasks, results_ids, existing_ids, errors = self.parse_input(data)
+
+        ret = self.storage.queue_submit(new_tasks)
+
+        n_inserted = 0
+        missing = []
+        for num, x in enumerate(results_ids):
+            if x is None:
+                missing.append(num)
+            else:
+                n_inserted += 1
+
+        results = {
+            "meta": {
+                "n_inserted": n_inserted,
+                "duplicates": [],
+                "validation_errors": [],
+                "success": True,
+                "error_description": False,
+                "errors": errors
+            },
+            "data": {
+                "ids": results_ids,
+                "submitted": [x["base_result"][1] for x in new_tasks],
+                "existing": existing_ids,
+            }
+        }
+
+        return results
 
     def parse_output(self, data):
 

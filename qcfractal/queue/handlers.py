@@ -32,23 +32,12 @@ class TaskQueueHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         body = TaskQueuePOSTBody.parse_raw(self.request.body)
-        # Format tasks
+
+        # Format and submit tasks
         procedure_parser = procedures.get_procedure_parser(body.meta["procedure"], storage)
-        full_tasks, complete_tasks, errors = procedure_parser.parse_input(body.dict())
+        payload = procedure_parser.submit_tasks(body.dict())
 
-        # Add tasks to queue
-        ret = storage.queue_submit(full_tasks)
-
-        # Do some quick reformatting
-        data_payload = {
-            "submitted": [x for x in ret["data"] if x is not None],
-            "completed": list(complete_tasks),
-            "queue": ret["meta"]["duplicates"]
-        }
-        ret["meta"]["duplicates"] = []
-        ret["meta"]["errors"].extend(errors)
-
-        response = TaskQueuePOSTResponse(data=data_payload, meta=ret["meta"])
+        response = TaskQueuePOSTResponse(**payload)
         self.logger.info("TaskQueue: Added {} tasks.".format(response.meta.n_inserted))
 
         self.write(response.json())

@@ -66,25 +66,27 @@ def test_queue_compute_mixed_molecule(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server)
 
-
     mol1 = portal.Molecule.from_data("He 0 0 0\nHe 0 0 2.1")
     mol_ret = client.add_molecules({"he2.1": mol1})
 
     mol2 = portal.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
 
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, [mol1, mol2, "bad_id"], return_full=True)
-    print(ret)
-    assert len(ret.submitted) == 1
-    assert len(ret.completed) == 0
+    assert len(ret.data.ids) == 3
+    assert ret.data.ids[2] is None
+    assert len(ret.data.submitted) == 2
+    assert len(ret.data.existing) == 0
 
     # Pull out fireworks launchpad and queue nanny
     fractal_compute_server.await_results()
 
     db = fractal_compute_server.objects["storage_socket"]
 
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["hooh"])
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [mol_ret["he2.1"], "bad_id2"])
+    assert len(ret.ids) == 2
+    assert ret.ids[1] is None
     assert len(ret.submitted) == 0
-    assert len(ret.completed) == 1
+    assert len(ret.existing) == 1
 
 
 @testing.using_rdkit

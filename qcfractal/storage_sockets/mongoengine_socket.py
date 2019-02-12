@@ -872,9 +872,10 @@ class MongoengineSocket:
                 results.append(str(doc.id))
                 meta['n_inserted'] += 1
             else:
-                meta['duplicates'].append(self._doc_to_tuples(doc.first(), with_ids=False))  # TODO
+                id = str(doc.first().id)
+                meta['duplicates'].append(id)  # TODO
                 # If new or duplicate, add the id to the return list
-                results.append(str(doc.first().id))
+                results.append(id)
         meta["success"] = True
         # except (mongoengine.errors.ValidationError, KeyError) as err:
         #     meta["validation_errors"].append(err)

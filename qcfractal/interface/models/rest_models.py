@@ -263,9 +263,9 @@ class TaskQueuePOSTBody(BaseModel):
 
 class TaskQueuePOSTResponse(BaseModel):
     class Data(BaseModel):
+        ids: List[Optional[str]]
         submitted: List[str]
-        completed: List[Dict[str, str]]
-        queue: List[str]
+        existing: List[str]
 
     meta: ResponsePOSTMeta
     data: Data
