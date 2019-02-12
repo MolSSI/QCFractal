@@ -1,9 +1,9 @@
 import datetime
+import json
+from collections.abc import Iterable
 
 import bson
 import mongoengine as db
-import json
-from collections.abc import Iterable
 
 
 class CustomDynamicDocument(db.DynamicDocument):

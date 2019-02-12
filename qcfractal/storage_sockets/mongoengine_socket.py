@@ -15,9 +15,9 @@ except ImportError:
         "Mongoengine_socket requires mongoengine, please install this python module or try a different db_socket.")
 
 import collections
-from datetime import datetime as dt
 import json
 import logging
+from datetime import datetime as dt
 from typing import List, Union, Dict, Sequence
 
 import bcrypt
@@ -33,6 +33,7 @@ from qcfractal.storage_sockets.models import Keywords, Collection, Result, \
 from . import storage_utils
 # Pull in the hashing algorithms from the client
 from .. import interface
+
 
 # from bson.dbref import DBRef
 

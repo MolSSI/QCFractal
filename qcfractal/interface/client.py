@@ -12,11 +12,12 @@ from .collections import collection_factory
 
 from .models.common_models import Molecule
 from .models.rest_models import (
-    MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse, KeywordGETBody, KeywordGETResponse,
-    KeywordPOSTBody, KeywordPOSTResponse, CollectionGETBody, CollectionGETResponse, CollectionPOSTBody,
-    CollectionPOSTResponse, ResultGETBody, ResultGETResponse, ProcedureGETBody, ProcedureGETReponse, TaskQueueGETBody,
-    TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
-    ServiceQueueGETBody, ServiceQueueGETResponse)
+    MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
+    KeywordGETBody, KeywordGETResponse, KeywordPOSTBody, KeywordPOSTResponse,
+    CollectionGETBody, CollectionGETResponse, CollectionPOSTBody,CollectionPOSTResponse,
+    ResultGETBody, ResultGETResponse, ProcedureGETBody, ProcedureGETReponse,
+    TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse,
+    ServiceQueuePOSTBody, ServiceQueuePOSTResponse, ServiceQueueGETBody, ServiceQueueGETResponse) # yapf: disable
 from .models.gridoptimization import GridOptimizationInput
 from .models.torsiondrive import TorsionDriveInput
 
@@ -242,7 +243,8 @@ class FractalClient(object):
 
         return r.data
 
-    def add_keywords(self, opt_list: List[Dict[str, Any]], full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
+    def add_keywords(self, opt_list: List[Dict[str, Any]],
+                     full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
 
         body = KeywordPOSTBody(meta={}, data=opt_list)
         r = self._request("post", "keyword", data=body.json())
@@ -460,38 +462,38 @@ class FractalClient(object):
         else:
             return r.data
 
-    # def check_tasks(self, query: Dict[str, Any], projection: Optional[Dict[str, Any]]=None, return_full: bool=False):
-    #     """Checks the status of tasks in the Fractal queue.
+    def check_tasks(self, query: Dict[str, Any], projection: Optional[Dict[str, Any]]=None, return_full: bool=False):
+        """Checks the status of tasks in the Fractal queue.
 
-    #     Parameters
-    #     ----------
-    #     query : dict
-    #         A query to find tasks
-    #     projection: dict, optional
-    #         Projection of data to call from the database
-    #     return_full : bool, optional
-    #         Returns the full JSON return if True
+        Parameters
+        ----------
+        query : dict
+            A query to find tasks
+        projection: dict, optional
+            Projection of data to call from the database
+        return_full : bool, optional
+            Returns the full JSON return if True
 
-    #     Returns
-    #     -------
-    #     list of dict
-    #         A dictionary of each match that contains the current status
-    #         and, if an error has occured, the error message.
+        Returns
+        -------
+        list of dict
+            A dictionary of each match that contains the current status
+            and, if an error has occured, the error message.
 
-    #     >>> client.check_tasks({"id": "5bd35af47b878715165f8225"})
-    #     [{"status": "WAITING"}]
-    #     """
+        >>> client.check_tasks({"id": "5bd35af47b878715165f8225"})
+        [{"status": "WAITING"}]
+        """
 
-    #     payload = {"meta": {"projection": projection}, "data": query}
-    #     body = TaskQueueGETBody(**payload)
+        payload = {"meta": {"projection": projection}, "data": query}
+        body = TaskQueueGETBody(**payload)
 
-    #     r = self._request("get", "task_queue", data=body.json())
-    #     r = TaskQueueGETResponse.parse_raw(r.text)
+        r = self._request("get", "task_queue", data=body.json())
+        r = TaskQueueGETResponse.parse_raw(r.text)
 
-    #     if return_full:
-    #         return r
-    #     else:
-    #         return r.data
+        if return_full:
+            return r
+        else:
+            return r.data
 
     def add_service(self, service: Union[GridOptimizationInput, TorsionDriveInput], return_full: bool=False):
 

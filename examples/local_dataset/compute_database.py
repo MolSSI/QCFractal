@@ -15,7 +15,7 @@ print(ds.df)
 r = ds.compute("scf", "sto-3g", stoich="cp", program="psi4")
 
 print("Jobs to be computed:")
-print("\n\t-".join([x['molecule'] for x in r.queue]) + "\n")
+print("\n".join(r.submitted) + "\n")
 print("Jobs Already Done:")
-print("\n\t-".join([x['molecule'] for x in r.completed]) + "\n")
+print("\n".join(r.existing) + "\n")
 

@@ -1,9 +1,10 @@
 """
 Models for the REST interface
 """
-from pydantic import BaseConfig, BaseModel, validator
-from typing import Any, Dict, List, Tuple, Optional, Union
 from enum import Enum
+from typing import Any, Dict, List, Tuple, Optional, Union
+
+from pydantic import BaseConfig, BaseModel, validator
 
 from .common_models import Molecule, KeywordSet, json_encoders
 from .gridoptimization import GridOptimizationInput

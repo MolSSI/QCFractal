@@ -4,12 +4,11 @@ Utilities and base functions for Services.
 
 import abc
 import json
-
-from qcfractal.procedures import get_procedure_parser
-
 from typing import Any, Dict, List, Set, Tuple
+
 from pydantic import BaseModel
 
+from qcfractal.procedures import get_procedure_parser
 from ..interface.models.rest_models import TaskQueuePOSTBody
 
 
@@ -91,10 +90,6 @@ class TaskManager(BaseModel):
         procedure_parser = get_procedure_parser(procedure_type, storage_socket)
 
         required_tasks = {}
-
-        # Flat map of tasks
-        new_task_keys = []
-        new_tasks = []
 
         # Add in all new tasks
         for key, packet in tasks.items():

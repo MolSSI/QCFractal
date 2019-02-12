@@ -79,7 +79,7 @@ def test_molecule_socket(test_server):
 def test_keywords_socket(test_server):
 
     opt_api_addr = test_server.get_address("keyword")
-    opts = {"program": "qc", "keywords": {"opt": "a"}}
+    opts = {"program": "qc", "values": {"opt": "a"}}
     # Add a molecule
     r = requests.post(opt_api_addr, json={"meta": {}, "data": [opts]})
     assert r.status_code == 200
@@ -93,7 +93,7 @@ def test_keywords_socket(test_server):
     r = requests.get(opt_api_addr, json={"meta": {}, "data": data_payload})
     assert r.status_code == 200
 
-    assert r.json()["data"][0]["keywords"] == opts["keywords"]
+    assert r.json()["data"][0]["values"] == opts["values"]
 
     # Try duplicates
     r = requests.post(opt_api_addr, json={"meta": {}, "data": [opts]})

@@ -7,7 +7,6 @@ from typing import Dict, Any
 from . import collection_utils
 from .collection import Collection
 from .. import orm
-
 from ..models.torsiondrive import TorsionDriveInput, TorsionDrive
 
 
@@ -230,9 +229,9 @@ class OpenFFWorkflow(Collection):
     def _add_optimize(self, packet):
         meta = copy.deepcopy({k: self.data.optimization_static_options[k] for k in ("keywords", "qc_meta", "program")})
 
-        meta["keywords"] = {"keywords": meta.pop("keywords"), "program": meta["program"]}
+        meta["keywords"] = {"values": meta.pop("keywords"), "program": meta["program"]}
         for k in ["constraints"]:
-            meta["keywords"]["keywords"][k] = packet[k]
+            meta["keywords"]["values"][k] = packet[k]
 
         # Get hash of optimization
         ret = self.client.add_procedure("optimization", meta["program"], meta, [packet["initial_molecule"]])

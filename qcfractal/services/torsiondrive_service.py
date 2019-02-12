@@ -4,9 +4,9 @@ Wraps geometric procedures
 
 import copy
 import json
+from typing import Any, Dict, List
 
 import numpy as np
-from typing import Any, Dict, List
 
 try:
     import torsiondrive
@@ -101,7 +101,7 @@ class TorsionDriveService(BaseService):
         meta["optimization_template"] = json.dumps({
             "meta": {
                 "procedure": "optimization",
-                "keywords": {"program": output.optimization_meta.program, "keywords": output.optimization_meta.dict()},
+                "keywords": {"program": output.optimization_meta.program, "values": output.optimization_meta.dict()},
                 "program": output.optimization_meta.program,
                 "qc_meta": output.qc_meta.dict(),
                 "tag": meta.pop("tag", None)
@@ -178,7 +178,7 @@ class TorsionDriveService(BaseService):
                 grid_id = td_api.grid_id_from_string(key)
                 for con_num, k in enumerate(grid_id):
                     constraints[con_num]["value"] = k
-                packet["meta"]["keywords"]["keywords"]["constraints"] = {"set": constraints}
+                packet["meta"]["keywords"]["values"]["constraints"] = {"set": constraints}
 
                 # Build new molecule
                 mol = json.loads(self.molecule_template)

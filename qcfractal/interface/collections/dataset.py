@@ -11,11 +11,11 @@ from pydantic import BaseModel
 
 from .collection import Collection
 from .collection_utils import nCr, register_collection
-from ..models.common_models import Molecule
 # from .. import client
 from .. import constants
 from .. import dict_utils
 from .. import statistics
+from ..models.common_models import Molecule
 
 
 class _RxnEnum(str, Enum):

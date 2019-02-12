@@ -4,8 +4,9 @@ Wraps geometric procedures
 
 import copy
 import json
+from typing import Dict, Set
+
 import numpy as np
-from typing import Dict, List, Set, Union
 
 from qcfractal.extras import get_information
 from qcfractal.interface.models.common_models import json_encoders
@@ -85,7 +86,7 @@ class GridOptimizationService(BaseService):
         meta["optimization_template"] = json.dumps({
             "meta": {
                 "procedure": "optimization",
-                "keywords": {"program": output.optimization_meta.program, "keywords": output.optimization_meta.dict()},
+                "keywords": {"program": output.optimization_meta.program, "values": output.optimization_meta.dict()},
                 "program": output.optimization_meta.program,
                 "qc_meta": output.qc_meta.dict(),
                 "tag": meta.pop("tag", None)
@@ -187,7 +188,7 @@ class GridOptimizationService(BaseService):
             grid_values = self.output.get_scan_value(key)
             for con_num, k in enumerate(grid_values):
                 constraints[con_num]["value"] = k
-            packet["meta"]["keywords"]["keywords"]["constraints"] = {"set": constraints}
+            packet["meta"]["keywords"]["values"]["constraints"] = {"set": constraints}
 
             # Build new molecule
             packet["data"] = [mol]

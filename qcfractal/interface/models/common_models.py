@@ -78,7 +78,7 @@ class KeywordSet(BaseModel):
     id: Optional[str] = None
     program: str
     hash_index: str
-    keywords: Dict[str, Any]
+    values: Dict[str, Any]
     lowercase: bool = True
     exact_floats: bool = False
 
@@ -100,7 +100,7 @@ class KeywordSet(BaseModel):
         if self.exact_floats:
             kwargs["digits"] = False
 
-        self.__values__["keywords"] = recursive_hash_prep(self.keywords, **kwargs)
+        self.__values__["values"] = recursive_hash_prep(self.values, **kwargs)
 
         # Build a hash index if we need it
         if build_index:
@@ -111,7 +111,7 @@ class KeywordSet(BaseModel):
         return v.lower()
 
     def get_hash_index(self):
-        packet = self.keywords.copy()
+        packet = self.values.copy()
         packet["program"] = self.program
         return hash_dictionary(packet)
 

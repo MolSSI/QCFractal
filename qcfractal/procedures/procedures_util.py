@@ -2,7 +2,6 @@
 Utility functions for on-node procedures.
 """
 
-import copy
 import hashlib
 import json
 
@@ -55,7 +54,7 @@ def unpack_single_run_meta(storage, meta, molecules):
         keyword_set = {}
     else:
         keyword_set = storage.get_add_keywords_mixed([meta["keywords"]])["data"][0]
-        keyword_set = keyword_set["keywords"]
+        keyword_set = keyword_set["values"]
 
     # Create the "universal header"
     task_meta = json.dumps({
@@ -73,7 +72,6 @@ def unpack_single_run_meta(storage, meta, molecules):
     })
 
     tasks = []
-    indexer = copy.deepcopy(meta)
     for mol in raw_molecules_query["data"]:
         if mol is None:
             tasks.append(None)

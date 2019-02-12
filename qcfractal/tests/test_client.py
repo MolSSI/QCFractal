@@ -32,7 +32,7 @@ def test_client_options(test_server):
 
     client = portal.FractalClient(test_server)
 
-    opt = portal.models.KeywordSet(program="psi4", keywords={"one": "fish", "two": "fish"})
+    opt = portal.models.KeywordSet(program="psi4", values={"one": "fish", "two": "fish"})
 
     # Test add
     ret = client.add_keywords([opt])
@@ -49,9 +49,9 @@ def test_client_duplicate_keywords(test_server):
 
     client = portal.FractalClient(test_server)
 
-    opt1 = portal.models.KeywordSet(program="psi4", keywords={"key": 1})
-    opt2 = portal.models.KeywordSet(program="psi4", keywords={"key": 2})
-    opt3 = portal.models.KeywordSet(program="psi4", keywords={"key": 3})
+    opt1 = portal.models.KeywordSet(program="psi4", values={"key": 1})
+    opt2 = portal.models.KeywordSet(program="psi4", values={"key": 2})
+    opt3 = portal.models.KeywordSet(program="psi4", values={"key": 3})
 
     # Test add
     ret = client.add_keywords([opt1, opt1])

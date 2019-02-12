@@ -133,7 +133,7 @@ def test_molecules_bad_get(storage_socket):
 
 def test_keywords_add(storage_socket):
 
-    opts = {"program": "hello", "keywords": {"o": 5}, "hash_index": "something_unique"}
+    opts = {"program": "hello", "values": {"o": 5}, "hash_index": "something_unique"}
 
     ret = storage_socket.add_keywords([opts, opts.copy()])
     assert len(ret["data"]) == 2
@@ -153,13 +153,13 @@ def test_keywords_add(storage_socket):
 
 def test_keywords_mixed_add_get(storage_socket):
 
-    opts1 = portal.models.KeywordSet(**{"program": "hello", "keywords": {"o": 5}})
+    opts1 = portal.models.KeywordSet(**{"program": "hello", "values": {"o": 5}})
     id1 = storage_socket.add_keywords([opts1.json_dict()])["data"][0]
 
-    opts2 = {"program": "hello", "keywords": {"o": 6}}
+    opts2 = {"program": "hello", "values": {"o": 6}}
     opts = storage_socket.get_add_keywords_mixed([opts1, opts2, id1, "bad_id"])["data"]
     assert opts[0]["id"] == id1
-    assert opts[1]["keywords"]["o"] == 6
+    assert opts[1]["values"]["o"] == 6
     assert "id" in opts[1]
     assert opts[2]["id"] == id1
     assert opts[3] is None

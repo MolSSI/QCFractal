@@ -7,15 +7,14 @@ import traceback
 
 from .. import procedures
 from .. import services
-from ..web_handlers import APIHandler
-
 from ..interface.models.common_models import Molecule
 from ..interface.models.rest_models import (
     TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse,
     ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
     QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse,
     QueueManagerPUTBody, QueueManagerPUTResponse
-) # yapf: disable
+)  # yapf: disable
+from ..web_handlers import APIHandler
 
 
 class TaskQueueHandler(APIHandler):

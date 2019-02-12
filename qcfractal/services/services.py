@@ -2,8 +2,8 @@
 Manipulates available services.
 """
 
-from .torsiondrive_service import TorsionDriveService
 from .gridoptimization_service import GridOptimizationService
+from .torsiondrive_service import TorsionDriveService
 
 __all__ = ["initializer", "build"]
 

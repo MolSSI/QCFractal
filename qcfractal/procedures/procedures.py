@@ -4,6 +4,7 @@ All procedures tasks involved in on-node computation.
 
 import json
 from typing import Union
+
 from . import procedures_util
 
 
@@ -88,7 +89,7 @@ class SingleResultTasks:
 
         new_tasks, results_ids, existing_ids, errors = self.parse_input(data)
 
-        ret = self.storage.queue_submit(new_tasks)
+        self.storage.queue_submit(new_tasks)
 
         n_inserted = 0
         missing = []
@@ -210,7 +211,7 @@ class OptimizationTasks(SingleResultTasks):
         else:
             keyword_set = self.storage.get_add_keywords_mixed([data.meta["keywords"]])["data"][0]
             keyword_id = keyword_set["id"]
-            keyword_set = keyword_set["keywords"]
+            keyword_set = keyword_set["values"]
 
         keyword_set["program"] = data.meta["qc_meta"]["program"]
         template = json.dumps({"keywords": keyword_set, "qcfractal_tags": data.meta})

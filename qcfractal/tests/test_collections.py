@@ -23,7 +23,7 @@ def test_dataset_check_state(fractal_compute_server):
     ds.save()
     assert ds.query("SCF", "STO-3G")
 
-    ds.add_keywords("default", portal.models.KeywordSet(program="psi4", keywords={"a": 5}))
+    ds.add_keywords("default", portal.models.KeywordSet(program="psi4", values={"a": 5}))
 
     with pytest.raises(ValueError):
         ds.query("SCF", "STO-3G")
@@ -95,8 +95,8 @@ def test_compute_dataset_keywords(fractal_compute_server):
     ds.set_default_program("Psi4")
 
     ds.add_ie_rxn("He2", mol1)
-    ds.add_keywords("direct", portal.models.KeywordSet(program="psi4", keywords={"scf_type": "direct"}), default=True)
-    ds.add_keywords("df", portal.models.KeywordSet(program="Psi4", keywords={"scf_type": "df"}))
+    ds.add_keywords("direct", portal.models.KeywordSet(program="psi4", values={"scf_type": "direct"}), default=True)
+    ds.add_keywords("df", portal.models.KeywordSet(program="Psi4", values={"scf_type": "df"}))
 
     ds.save()
 
