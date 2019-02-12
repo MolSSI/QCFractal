@@ -319,7 +319,7 @@ def test_server(request):
         yield server
 
 
-def build_managed_compute_server(mtype):
+def build_managed_compute_server(mtype, ncore=None, memory=None):
 
     # Check mongo
     check_active_mongo_server()
@@ -370,7 +370,7 @@ def build_managed_compute_server(mtype):
         client = FractalClient(server)
 
         from qcfractal.queue import QueueManager
-        manager = QueueManager(client, adapter_client)
+        manager = QueueManager(client, adapter_client, cores_per_task=ncore, memory_per_task=memory)
 
         # Yield the server instance
         yield client, server, manager

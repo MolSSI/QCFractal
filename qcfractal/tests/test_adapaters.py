@@ -11,6 +11,12 @@ from qcfractal import testing
 from qcfractal.testing import reset_server_database, managed_compute_server
 
 
+# @pytest.mark.parametrize("cores_per_task,memory_per_task", [
+#     (None, None),
+#     (1, 2),
+#     pytest.param(50000, 100000,
+#                  marks=pytest.mark.xfail)
+# ])
 @testing.using_rdkit
 def test_adapter_single(managed_compute_server):
     client, server, manager = managed_compute_server
@@ -67,7 +73,7 @@ def test_adapter_raised_error(managed_compute_server):
     del hooh["connectivity"]
     mol_ret = client.add_molecules({"hooh": hooh})
 
-    ret = client.add_compute("something_bas", "UFF", "", "energy", None, mol_ret["hooh"])
+    ret = client.add_compute("something_bad", "UFF", "", "energy", None, mol_ret["hooh"])
     queue_id = ret.submitted[0]
 
     manager.await_results()

@@ -9,8 +9,8 @@ from .base_adapter import BaseAdapter
 
 
 class FireworksAdapter(BaseAdapter):
-    def __init__(self, client: Any, logger: Optional[logging.Logger] = None):
-        BaseAdapter.__init__(self, client, logger)
+    def __init__(self, client: Any, logger: Optional[logging.Logger] = None, **kwargs):
+        BaseAdapter.__init__(self, client, logger, **kwargs)
         self.client.reset(None, require_password=False, max_reset_wo_password=int(1e8))
 
     def __repr__(self):
@@ -22,6 +22,13 @@ class FireworksAdapter(BaseAdapter):
         import fireworks
         for task in tasks:
             tag = task["id"]
+            # Trap QCEngine Memory and CPU
+            if task["spec"]["function"].startswith("qcengine.compute"):
+                local_options = self.qcengine_local_options
+                if local_options:
+                    task_kwargs = task["spec"]["kwargs"]
+                    task = task.copy()  # Copy for safety
+                    task["spec"]["kwargs"] = {**task_kwargs, **{"local_options": local_options}}
 
             fw = fireworks.Firework(
                 fireworks.PyTask(

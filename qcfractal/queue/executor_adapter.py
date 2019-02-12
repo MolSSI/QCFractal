@@ -37,6 +37,13 @@ class ExecutorAdapter(BaseAdapter):
 
             # Form run tuple
             func = self.get_function(spec["spec"]["function"])
+            # Trap QCEngine Memory and CPU
+            if spec["spec"]["function"].startswith("qcengine.compute"):
+                local_options = self.qcengine_local_options
+                if local_options:
+                    task_kwargs = spec["spec"]["kwargs"]
+                    spec = spec.copy()  # Copy for safety
+                    spec["spec"]["kwargs"] = {**task_kwargs, **{"local_options": local_options}}
             task = self.client.submit(func, *spec["spec"]["args"], **spec["spec"]["kwargs"])
 
             self.queue[tag] = (task, spec["parser"], spec["hooks"])

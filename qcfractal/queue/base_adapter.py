@@ -16,8 +16,7 @@ class BaseAdapter(abc.ABC):
     def __init__(self,
                  client: Any,
                  logger: Optional[logging.Logger] = None,
-                 cpu_per_task: Optional[int] = None,
-                 memory_per_task: Optional[int] = None):
+                 **kwargs):
         """
         Parameters
         ----------
@@ -25,20 +24,22 @@ class BaseAdapter(abc.ABC):
             A activate Parsl DataFlow
         logger : None, optional
             A optional logging object to write output to
-        cpu_per_task : int, optional, Default: None
-            How many CPU's per computation task to allocate for QCEngine
+        cores_per_task : int, optional, Default: None
+            How many CPU cores per computation task to allocate for QCEngine
             None indicates "use however many you can detect"
+            It is up to the specific Adapter implementation to handle this option
         memory_per_task: int, optional, Default: None
-            How much memory, in GB, per computation task to allocate for QCEngine
+            How much memory, in GiB, per computation task to allocate for QCEngine
             None indicates "use however much you can consume"
+            It is up to the specific Adapter implementation to handle this option
         """
         self.client = client
         self.logger = logger or logging.getLogger(self.__class__.__name__)
-        self.cpu_per_task = cpu_per_task
-        self.memory_per_task = memory_per_task
 
         self.queue = {}
         self.function_map = {}
+        self.cores_per_task = kwargs.pop("cores_per_task", None)
+        self.memory_per_task = kwargs.pop("memory_per_task", None)
 
     def __repr__(self) -> str:
         return "<BaseAdapter>"
@@ -70,6 +71,24 @@ class BaseAdapter(abc.ABC):
         self.function_map[function] = operator.attrgetter(func_name)(module)
 
         return self.function_map[function]
+
+    @property
+    def qcengine_local_options(self) -> dict:
+        """
+        Helper property to return the local QCEngine Options based on number of cores and memory per task
+
+        Individual adapters can overload this behavior
+        Returns
+        -------
+        local_options : dict
+            Dict of local options
+        """
+        local_options = {}
+        if self.memory_per_task is not None:
+            local_options["memory"] = self.memory_per_task
+        if self.cores_per_task is not None:
+            local_options["ncores"] = self.cores_per_task
+        return local_options
 
     @abc.abstractmethod
     def submit_tasks(self, tasks: Dict[str, Any]) -> List[str]:

@@ -49,7 +49,9 @@ class QueueManager:
                  queue_tag: str=None,
                  cluster: str="unknown",
                  update_frequency: int=2,
-                 verbose: bool=True):
+                 verbose: bool=True,
+                 cores_per_task: Optional[int] = None,
+                 memory_per_task: Optional[int] = None):
         """
         Parameters
         ----------
@@ -71,6 +73,12 @@ class QueueManager:
             The cluster the manager belongs to
         update_frequency : int
             The frequency to check for new tasks in seconds
+        cores_per_task : int, optional, Default: None
+            How many CPU cores per computation task to allocate for QCEngine
+            None indicates "use however many you can detect"
+        memory_per_task: int, optional, Default: None
+            How much memory, in GiB, per computation task to allocate for QCEngine
+            None indicates "use however much you can consume"
         """
 
         # Setup logging
@@ -83,7 +91,12 @@ class QueueManager:
         self._name = self.name_data["cluster"] + "-" + self.name_data["hostname"] + "-" + self.name_data["uuid"]
 
         self.client = client
-        self.queue_adapter = build_queue_adapter(queue_client, logger=self.logger)
+        self.cores_per_task = cores_per_task
+        self.memory_per_task = memory_per_task
+        self.queue_adapter = build_queue_adapter(queue_client,
+                                                 logger=self.logger,
+                                                 cpus_per_task=self.cores_per_task,
+                                                 memory_per_task=self.memory_per_task)
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag
         self.verbose = verbose
