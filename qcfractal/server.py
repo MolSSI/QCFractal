@@ -187,7 +187,7 @@ class FractalServer:
             # Generic web handlers
             (r"/information", web_handlers.InformationHandler, self.objects),
             (r"/molecule", web_handlers.MoleculeHandler, self.objects),
-            (r"/option", web_handlers.OptionHandler, self.objects),
+            (r"/keyword", web_handlers.OptionHandler, self.objects),
             (r"/collection", web_handlers.CollectionHandler, self.objects),
             (r"/result", web_handlers.ResultHandler, self.objects),
             (r"/procedure", web_handlers.ProcedureHandler, self.objects),

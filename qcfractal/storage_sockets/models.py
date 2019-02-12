@@ -99,15 +99,15 @@ class Molecule(CustomDynamicDocument):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class Options(CustomDynamicDocument):
+class Keywords(CustomDynamicDocument):
     """
-        Options are unique for a specific program and name
+        Keywords are unique for a specific program and name
     """
 
     # TODO: pull choices from const config
     program = db.StringField(required=True)  #, choices=['rdkit', 'psi4', 'geometric', 'torsiondrive'])
     hash_index = db.StringField(required=True)
-    options = db.DynamicField()
+    keywords = db.DynamicField()
 
     meta = {
         'indexes': [
@@ -156,13 +156,13 @@ class Result(BaseResult):
     """
 
     # uniquely identifying a result
-    program = db.StringField(required=True)  # example "rdkit", is it the same as program in options?
+    program = db.StringField(required=True)  # example "rdkit", is it the same as program in keywords?
     driver = db.StringField(required=True)  # example "gradient"
     method = db.StringField(required=True)  # example "uff"
     basis = db.StringField()
     molecule = db.ReferenceField(Molecule, required=True)   # todo: or LazyReferenceField if only ID is needed?
-    # options = db.ReferenceField(Options)  # ** has to be a FK or empty, can't be a string
-    options = db.StringField()
+    # options = db.ReferenceField(Keywords)  # ** has to be a FK or empty, can't be a string
+    keywords = db.StringField()
 
     # output related
     properties = db.DynamicField()  # accept any, no validation
@@ -176,22 +176,22 @@ class Result(BaseResult):
         'collection': 'result',
         'indexes': [
            {'fields': ('program', 'driver', 'method', 'basis',
-                       'molecule', 'options'), 'unique': True},
+                       'molecule', 'keywords'), 'unique': True},
         ]
     }
 
     # not used yet
     # or  use pre_save
     def _save(self, *args, **kwargs):
-        """Override save to handle options"""
+        """Override save to handle keywords"""
 
-        if not isinstance(self.options, Options):
-            # self.options = Options.objects(program=self.program, option_name='default')\
+        if not isinstance(self.keywords, Keywords):
+            # self.keywords = Keywords.objects(program=self.program, option_name='default')\
             #     .modify(upsert=True, new=True, option_name='default')
-            self.options = Options.objects(program=self.program, option_name='default').first()
-            if not self.options:
-                self.options = Options(program=self.program, option_name='default').save()
-                # self.options.save()
+            self.keywords = Keywords.objects(program=self.program, option_name='default').first()
+            if not self.keywords:
+                self.keywords = Keywords(program=self.program, option_name='default').save()
+                # self.keywords.save()
 
         return super(Result, self).save(*args, **kwargs)
 
@@ -207,7 +207,7 @@ class Procedure(BaseResult):
                                     # choices=['optimization', 'torsiondrive'])
     # Todo: change name to be different from results program
     program = db.StringField(required=True)  # example: 'Geometric'
-    keywords = db.DynamicField()  # options of the procedure
+    keywords = db.DynamicField()  # keywords of the procedure
 
     hash_index = db.StringField()
     qc_meta = db.DynamicField()  # --> all inside results except mol

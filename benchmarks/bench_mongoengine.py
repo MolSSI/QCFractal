@@ -4,7 +4,7 @@ This tests the Mongoenegine performance when handling Results and procedures
 """
 
 import mongoengine as db
-from qcfractal.storage_sockets.models import Molecule, Result, Options
+from qcfractal.storage_sockets.models import Molecule, Result, Keywords
 from qcfractal.storage_sockets.mongoengine_socket import MongoengineSocket
 import qcfractal.interface as portal
 from time import time
@@ -49,12 +49,12 @@ def insert_results(n_results, mol):
     # repeat searching for the molecule
     for i in range(n_results):
         # mol = Molecule.objects.first()  # one DB access
-        # option = Options.objects().first()
+        # option = Keywords.objects().first()
         data = {
             "molecule": mol.id,
             "method": str(i),
             "basis": "B1",
-            "options": None,
+            "keywords": None,
             "program": "P1",
             "driver": "energy",
             "other_data": 5,
@@ -68,12 +68,12 @@ def bulk_insert_results(n_results, mol):
     results = []
     for i in range(n_results):
         # mol = Molecule.objects.first()  # one DB access
-        # option = Options.objects().first()
+        # option = Keywords.objects().first()
         data = {
             "molecule": mol,
             "method": str(i),
             "basis": "Bulk",
-            "options": None,
+            "keywords": None,
             "program": "P1",
             "driver": "energy",
             "other_data": 5,
@@ -87,12 +87,12 @@ def bulk_insert_results_pymongo(n_results, mol):
     results = []
     for i in range(n_results):
         # mol = Molecule.objects.first()  # one DB access
-        # option = Options.objects().first()
+        # option = Keywords.objects().first()
         data = {
             "molecule": mol.id,
             "method": str(i),
             "basis": "Bulk pymongo",
-            "options": None,
+            "keywords": None,
             "program": "P1",
             "driver": "energy",
             "other_data": 5,
@@ -111,12 +111,12 @@ def duplicate_results(n_results, mol):
     tosave_results = []
     for i in range(n_results):
         # mol = Molecule.objects.first()  # one DB access
-        # option = Options.objects().first()
+        # option = Keywords.objects().first()
         data = {
             "molecule": mol,
             "method": str(i + int(n_results/2)),
             "basis": "Bulk",
-            "options": None,
+            "keywords": None,
             "program": "P1",
             "driver": "energy",
             "other_data": 5,
@@ -135,12 +135,12 @@ def duplicate_results_pymongo(n_results, mol):
     results = []
     for i in range(n_results):
         # mol = Molecule.objects.first()  # one DB access
-        # option = Options.objects().first()
+        # option = Keywords.objects().first()
         data = {
             "molecule": mol.id,
             "method": str(i + int(n_results/2)),
             "basis": "Bulk pymongo",
-            "options": None,
+            "keywords": None,
             "program": "P1",
             "driver": "energy",
             "other_data": 5,
@@ -159,12 +159,12 @@ def duplicate_results_pymongo(n_results, mol):
 def query_results(n_query, mol):
     for i in range(n_query):
         # mol = Molecule.objects.first()  # --> the overhead in this query
-        # option = Options.objects(program='Psi4').first()  # or [0], throws ex
+        # option = Keywords.objects(program='Psi4').first()  # or [0], throws ex
         query = {
             "molecule": mol,
             "method": str(i),
             "basis": "B1",
-            "options": None,
+            "keywords": None,
             "program": "P1",
             "driver": "energy",
         }
@@ -174,12 +174,12 @@ def query_results(n_query, mol):
 def query_results_pymongo(n_query, mol):
     for i in range(n_query):
         # mol = Molecule.objects.first()  # --> the overhead in this query
-        # option = Options.objects(program='Psi4').first()  # or [0], throws ex
+        # option = Keywords.objects(program='Psi4').first()  # or [0], throws ex
         query = {
             "molecule": mol.id,
             "method": str(i),
             "basis": "B1",
-            "options": None,
+            "keywords": None,
             "program": "P1",
             "driver": "energy",
         }
@@ -189,7 +189,7 @@ def query_results_pymongo(n_query, mol):
 
 def bench():
 
-    option = Options(program='Psi4', name='default').save()
+    option = Keywords(program='Psi4', name='default').save()
 
     tstart = time()
     insert_molecules(n_mol)

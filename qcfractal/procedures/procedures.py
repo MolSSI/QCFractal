@@ -27,7 +27,7 @@ class SingleResultTasks:
                 "driver": "energy",
                 "method": "HF",
                 "basis": "sto-3g",
-                "options": "default",
+                "keywords": "default",
                 "program": "psi4"
                 },
             },
@@ -40,7 +40,7 @@ class SingleResultTasks:
         inputs, errors = procedures_util.unpack_single_run_meta(self.storage, data.meta, data.data)
 
         # Insert new results stubs
-        result_stub = json.dumps({k: data.meta[k] for k in ["driver", "method", "basis", "options", "program"]})
+        result_stub = json.dumps({k: data.meta[k] for k in ["driver", "method", "basis", "keywords", "program"]})
 
         # Grab the tag if available
         tag = data.meta.pop("tag", None)
@@ -167,7 +167,7 @@ class OptimizationTasks(SingleResultTasks):
                     "driver": "energy",
                     "method": "HF",
                     "basis": "sto-3g",
-                    "options": "default",
+                    "keywords": "default",
                     "program": "psi4"
                 },
             },
@@ -204,11 +204,11 @@ class OptimizationTasks(SingleResultTasks):
         inputs, errors = procedures_util.unpack_single_run_meta(self.storage, data.meta["qc_meta"], data.data)
 
         # Unpack options
-        if data.meta["options"] is None:
+        if data.meta["keywords"] is None:
             option_set = {}
         else:
-            option_set = storage.get_options(id=meta["options"], with_ids=False)["data"][0]
-            option_set = option_set["options"]
+            option_set = storage.get_keywords(id=meta["keywords"], with_ids=False)["data"][0]
+            option_set = option_set["keywords"]
 
         option_set["program"] = data.meta["qc_meta"]["program"]
         template = json.dumps({"keywords": option_set, "qcfractal_tags": data.meta})

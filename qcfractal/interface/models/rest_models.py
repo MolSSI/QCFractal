@@ -5,14 +5,14 @@ from pydantic import BaseConfig, BaseModel, validator
 from typing import Any, Dict, List, Tuple, Optional, Union
 from enum import Enum
 
-from .common_models import Molecule, Option, json_encoders
+from .common_models import Molecule, KeywordSet, json_encoders
 from .gridoptimization import GridOptimizationInput
 from .torsiondrive import TorsionDriveInput
 
 __all__ = [
     "ResponseGETMeta",
     "MoleculeGETBody", "MoleculeGETResponse", "MoleculePOSTBody", "MoleculePOSTResponse",
-    "OptionGETBody", "OptionGETResponse", "OptionPOSTBody", "OptionPOSTResponse",
+    "KeywordGETBody", "KeywordGETResponse", "KeywordPOSTBody", "KeywordPOSTResponse",
     "CollectionGETBody", "CollectionGETResponse", "CollectionPOSTBody", "CollectionPOSTResponse",
     "ResultGETBody", "ResultGETResponse",
     "ProcedureGETBody", "ProcedureGETReponse",
@@ -84,22 +84,22 @@ class MoleculePOSTResponse(BaseModel):
     data: Dict[str, str]
 
 
-### Options
+### Keywords
 
 
-class OptionGETBody(BaseModel):
+class KeywordGETBody(BaseModel):
     meta: Dict[str, Any] = None
     data: Dict[str, Any]
 
 
-class OptionGETResponse(BaseModel):
+class KeywordGETResponse(BaseModel):
     meta: ResponseGETMeta
-    data: List[Option]
+    data: List[KeywordSet]
 
 
-class OptionPOSTBody(BaseModel):
+class KeywordPOSTBody(BaseModel):
     meta: Dict[str, Any] = None
-    data: List[Option]
+    data: List[KeywordSet]
 
     # @validator("data", whole=True, pre=True)
     # def ensure_list_of_dict(cls, v):
@@ -108,7 +108,7 @@ class OptionPOSTBody(BaseModel):
     #     return v
 
 
-class OptionPOSTResponse(BaseModel):
+class KeywordPOSTResponse(BaseModel):
     data: List[Optional[str]]
     meta: ResponsePOSTMeta
 
@@ -181,7 +181,7 @@ class ResultGETBody(BaseModel):
     def only_data_keys(cls, v):
         # We should throw a warning here for unused keys
         valid_keys = {
-            "program", "molecule", "driver", "method", "basis", "options", "task_id", "id", "status"
+            "program", "molecule", "driver", "method", "basis", "keywords", "task_id", "id", "status"
         }
         data = {key: v[key] for key in (v.keys() & valid_keys)}
         return data

@@ -17,7 +17,7 @@ def parse_args():
     subparsers = parser.add_subparsers(help='QueueManager Backend Type', dest='adapter_type')
     subparsers.required = True
 
-    # Options for Dask
+    # Keywords for Dask
     dask_parser = subparsers.add_parser('dask', help='Dask')
     dask_parser.add_argument("--dask-uri", type=str, help="URI of the dask-server")
     dask_parser.add_argument(
@@ -25,14 +25,14 @@ def parse_args():
     dask_parser.add_argument(
         "--local-workers", type=int, default=None, help="The number of workers for the LocalCluster")
 
-    # Options for Fireworks
+    # Keywords for Fireworks
     fw_parser = subparsers.add_parser('fireworks', help='Fireworks')
     fw_parser.add_argument("--fw-config", type=str, help="A FWConfig file")
     fw_parser.add_argument("--fw-uri", type=str, help="URI of MongoDB server")
     fw_parser.add_argument(
         "--fw-name", type=str, default="qcfractal_fireworks_manager", help="The MongoDB Database to use locally")
 
-    # Options for ProcessPoolExecutor
+    # Keywords for ProcessPoolExecutor
     executor_parser = subparsers.add_parser('executor', help='ProcessPoolExecutor')
     executor_parser.add_argument("--nprocs", type=int, help="The number of process for the executor")
 

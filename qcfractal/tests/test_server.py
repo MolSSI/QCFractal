@@ -76,10 +76,10 @@ def test_molecule_socket(test_server):
     assert water.compare(gdata["data"][0])
 
 
-def test_option_socket(test_server):
+def test_keywords_socket(test_server):
 
-    opt_api_addr = test_server.get_address("option")
-    opts = {"program": "qc", "options": {"opt": "a"}}
+    opt_api_addr = test_server.get_address("keyword")
+    opts = {"program": "qc", "keywords": {"opt": "a"}}
     # Add a molecule
     r = requests.post(opt_api_addr, json={"meta": {}, "data": [opts]})
     assert r.status_code == 200
@@ -93,7 +93,7 @@ def test_option_socket(test_server):
     r = requests.get(opt_api_addr, json={"meta": {}, "data": data_payload})
     assert r.status_code == 200
 
-    assert r.json()["data"][0]["options"] == opts["options"]
+    assert r.json()["data"][0]["keywords"] == opts["keywords"]
 
     # Try duplicates
     r = requests.post(opt_api_addr, json={"meta": {}, "data": [opts]})

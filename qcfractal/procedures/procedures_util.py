@@ -37,7 +37,7 @@ def unpack_single_run_meta(storage, meta, molecules):
         "driver": "energy",
         "method": "HF",
         "basis": "sto-3g",
-        "options": "default",
+        "keywords": "default",
         "program": "psi4",
     }
 
@@ -50,25 +50,25 @@ def unpack_single_run_meta(storage, meta, molecules):
     # Get the required molecules
     raw_molecules_query = storage.get_add_molecules_mixed(molecules)
 
-    # Pull out the needed options
-    if meta["options"] is None:
-        option_set = {}
+    # Pull out the needed keywords
+    if meta["keywords"] is None:
+        keyword_set = {}
     else:
-        option_set = storage.get_options(id=meta["options"], with_ids=False)["data"][0]
-        option_set = option_set["options"]
+        keyword_set = storage.get_keywords(id=meta["keywords"], with_ids=False)["data"][0]
+        keyword_set = keyword_set["keywords"]
 
     # Create the "universal header"
     task_meta = json.dumps({
         "program": meta["program"],
         "driver": meta["driver"],
-        "keywords": option_set,
+        "keywords": keyword_set,
         "model": {
             "method": meta["method"],
             "basis": meta["basis"]
         },
         "qcfractal_tags": {
             "program": meta["program"],
-            "options": meta["options"]
+            "keywords": meta["keywords"]
         }
     })
 
@@ -116,8 +116,7 @@ def parse_single_runs(storage, results):
         v["basis"] = v["model"]["basis"]
         del v["model"]
 
-        v["options"] = v["qcfractal_tags"]["options"]
-        del v["keywords"]
+        v["keywords"] = v["qcfractal_tags"]["keywords"]
 
         # Molecule should be by ID
         v["molecule"] = mol_ret[k]
@@ -125,7 +124,6 @@ def parse_single_runs(storage, results):
         v["program"] = v["qcfractal_tags"]["program"]
 
         del v["qcfractal_tags"]
-
     return results
 
 

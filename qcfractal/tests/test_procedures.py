@@ -26,8 +26,8 @@ def test_compute_queue_stack(fractal_compute_server):
     hydrogen_mol_id = mol_ret["hydrogen"]
     helium_mol_id = mol_ret["helium"]
 
-    option = portal.models.Option(**{"program": "psi4", "options": {"e_convergence": 1.e-8}})
-    opt_key = client.add_options([option])[0]
+    kw = portal.models.KeywordSet(**{"program": "psi4", "keywords": {"e_convergence": 1.e-8}})
+    kw_id = client.add_keywords([kw])[0]
 
     # Add compute
     compute = {
@@ -36,14 +36,14 @@ def test_compute_queue_stack(fractal_compute_server):
             "driver": "energy",
             "method": "HF",
             "basis": "sto-3g",
-            "options": opt_key,
+            "keywords": kw_id,
             "program": "psi4",
         },
         "data": [hydrogen_mol_id, helium.json_dict()],
     }
 
     # Ask the server to compute a new computation
-    r = client.add_compute("psi4", "HF", "sto-3g", "energy", opt_key, [hydrogen_mol_id, helium])
+    r = client.add_compute("psi4", "HF", "sto-3g", "energy", kw_id, [hydrogen_mol_id, helium])
     assert len(r.ids) == 2
 
     # Manually handle the compute
@@ -81,12 +81,12 @@ def test_procedure_optimization(fractal_compute_server):
 
     # Add compute
     options = {
-        "options": None,
+        "keywords": None,
         "qc_meta": {
             "driver": "gradient",
             "method": "HF",
             "basis": "sto-3g",
-            "options": None,
+            "keywords": None,
             "program": "psi4"
         },
     }

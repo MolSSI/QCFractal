@@ -16,7 +16,7 @@ class OptimizationORM:
         "_success": "success",
         "hash_index": "hash_index",
 
-        # Options
+        # Keywords
         "_program": "program",
         "_qc_options": "qc_meta",
         "_initial_molecule_id": "initial_molecule",

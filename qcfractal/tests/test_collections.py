@@ -23,7 +23,7 @@ def test_dataset_check_state(fractal_compute_server):
     ds.save()
     assert ds.query("SCF", "STO-3G")
 
-    ds.add_options("default", portal.models.Option(program="psi4", options={"a": 5}))
+    ds.add_keywords("default", portal.models.KeywordSet(program="psi4", keywords={"a": 5}))
 
     with pytest.raises(ValueError):
         ds.query("SCF", "STO-3G")
@@ -84,7 +84,7 @@ def test_compute_dataset_regression(fractal_compute_server):
 
 
 @testing.using_psi4
-def test_compute_dataset_options(fractal_compute_server):
+def test_compute_dataset_keywords(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server)
 
@@ -95,8 +95,8 @@ def test_compute_dataset_options(fractal_compute_server):
     ds.set_default_program("Psi4")
 
     ds.add_ie_rxn("He2", mol1)
-    ds.add_options("direct", portal.models.Option(program="psi4", options={"scf_type": "direct"}), default=True)
-    ds.add_options("df", portal.models.Option(program="Psi4", options={"scf_type": "df"}))
+    ds.add_keywords("direct", portal.models.KeywordSet(program="psi4", keywords={"scf_type": "direct"}), default=True)
+    ds.add_keywords("df", portal.models.KeywordSet(program="Psi4", keywords={"scf_type": "df"}))
 
     ds.save()
 
@@ -106,9 +106,9 @@ def test_compute_dataset_options(fractal_compute_server):
     assert ds.query("SCF", "STO-3G")
     assert pytest.approx(0.39323818102293856, 1.e-5) == ds.df.loc["He2", "SCF/STO-3G"]
 
-    r = ds.compute("SCF", "STO-3G", options="df")
+    r = ds.compute("SCF", "STO-3G", keywords="df")
     fractal_compute_server.await_results()
-    assert ds.query("SCF", "STO-3G", options="df", prefix="df-")
+    assert ds.query("SCF", "STO-3G", keywords="df", prefix="df-")
     assert pytest.approx(0.38748602675524185, 1.e-5) == ds.df.loc["He2", "df-SCF/STO-3G"]
 
 
@@ -141,7 +141,7 @@ def test_compute_openffworkflow(fractal_compute_server):
                 "driver": "gradient",
                 "method": "UFF",
                 "basis": "",
-                "options": None,
+                "keywords": None,
                 "program": "rdkit",
             }
         },
@@ -154,7 +154,7 @@ def test_compute_openffworkflow(fractal_compute_server):
                 "driver": "gradient",
                 "method": "UFF",
                 "basis": "",
-                "options": None,
+                "keywords": None,
                 "program": "rdkit",
             }
         }

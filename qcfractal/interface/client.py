@@ -12,8 +12,8 @@ from .collections import collection_factory
 
 from .models.common_models import Molecule
 from .models.rest_models import (
-    MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse, OptionGETBody, OptionGETResponse,
-    OptionPOSTBody, OptionPOSTResponse, CollectionGETBody, CollectionGETResponse, CollectionPOSTBody,
+    MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse, KeywordGETBody, KeywordGETResponse,
+    KeywordPOSTBody, KeywordPOSTResponse, CollectionGETBody, CollectionGETResponse, CollectionPOSTBody,
     CollectionPOSTResponse, ResultGETBody, ResultGETResponse, ProcedureGETBody, ProcedureGETReponse, TaskQueueGETBody,
     TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
     ServiceQueueGETBody, ServiceQueueGETResponse)
@@ -232,21 +232,21 @@ class FractalClient(object):
         else:
             return r.data
 
-    ### Options section
+    ### Keywords section
 
-    def get_options(self, opt_list):
+    def get_keywords(self, opt_list):
 
-        body = OptionGETBody(meta={}, data=opt_list)
-        r = self._request("get", "option", data=body.json())
-        r = OptionGETResponse.parse_raw(r.text)
+        body = KeywordGETBody(meta={}, data=opt_list)
+        r = self._request("get", "keyword", data=body.json())
+        r = KeywordGETResponse.parse_raw(r.text)
 
         return r.data
 
-    def add_options(self, opt_list: List[Dict[str, Any]], full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
+    def add_keywords(self, opt_list: List[Dict[str, Any]], full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
 
-        body = OptionPOSTBody(meta={}, data=opt_list)
-        r = self._request("post", "option", data=body.json())
-        r = OptionPOSTResponse.parse_raw(r.text)
+        body = KeywordPOSTBody(meta={}, data=opt_list)
+        r = self._request("post", "keyword", data=body.json())
+        r = KeywordPOSTResponse.parse_raw(r.text)
 
         if full_return:
             return r
@@ -400,7 +400,7 @@ class FractalClient(object):
                     method: str,
                     basis: str,
                     driver: str,
-                    options: Union[str, None],
+                    keywords: Union[str, None],
                     molecule_id: Union[str, Molecule, List[Union[str, Molecule]]],
                     return_full: bool=False,
                     tag: str=None) -> Union[TaskQueuePOSTResponse, TaskQueuePOSTResponse.Data]:
@@ -416,7 +416,7 @@ class FractalClient(object):
                 "program": program,
                 "method": method,
                 "basis": basis,
-                "options": options,
+                "keywords": keywords,
                 "tag": tag,
             },
             "data": molecule_id

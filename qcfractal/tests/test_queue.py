@@ -99,12 +99,12 @@ def test_queue_duplicate_procedure(fractal_compute_server):
     mol_ret = client.add_molecules({"hooh": hooh})
 
     geometric_options = {
-        "options": None,
+        "keywords": None,
         "qc_meta": {
             "driver": "gradient",
             "method": "UFF",
             "basis": "",
-            "options": None,
+            "keywords": None,
             "program": "rdkit"
         },
     }

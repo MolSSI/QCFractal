@@ -42,7 +42,7 @@ def torsiondrive_fixture(fractal_compute_server):
             "driver": "gradient",
             "method": "UFF",
             "basis": "",
-            "options": None,
+            "keywords": None,
             "program": "rdkit",
         },
     }
@@ -183,7 +183,7 @@ def test_service_gridoptimization_single(fractal_compute_server):
             "driver": "gradient",
             "method": "UFF",
             "basis": "",
-            "options": None,
+            "keywords": None,
             "program": "rdkit",
         },
         "initial_molecule": mol_ret["hooh"],
