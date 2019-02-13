@@ -137,6 +137,18 @@ def preserve_cwd():
         os.chdir(cwd)
 
 
+@contextmanager
+def queue_manager(client, adapter, **kwargs):
+    """
+    Parameterizable Queue manager safely wrapped in a context manager
+    """
+    from qcfractal.queue import QueueManager
+    manager = QueueManager(client, adapter, **kwargs)
+    yield manager
+    # Close down and clean the adapter
+    manager.close_adapter()
+
+
 ### Background thread loops
 
 
@@ -319,7 +331,7 @@ def test_server(request):
         yield server
 
 
-def build_managed_compute_server(mtype, ncore=None, memory=None):
+def build_compute_server(mtype):
 
     # Check mongo
     check_active_mongo_server()
@@ -369,17 +381,25 @@ def build_managed_compute_server(mtype, ncore=None, memory=None):
         from qcfractal.interface import FractalClient
         client = FractalClient(server)
 
-        from qcfractal.queue import QueueManager
-        manager = QueueManager(client, adapter_client, cores_per_task=ncore, memory_per_task=memory)
-
-        # Yield the server instance
-        yield client, server, manager
-
-        # Close down and clean the adapter
-        manager.close_adapter()
+        yield client, server, adapter_client
 
 
-@pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
+def build_managed_compute_server(mtype):
+    for (client, server, adapter_client) in build_compute_server(mtype):
+        with queue_manager(client, adapter_client) as manager:
+
+            # Yield the server instance
+            yield client, server, manager
+
+
+# @pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
+@pytest.fixture(scope="function", params=["pool"])
+def parameterizable_fractal_compute_server(request):
+    yield from build_compute_server(request.param)
+
+
+# @pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
+@pytest.fixture(scope="module", params=["pool"])
 def managed_compute_server(request):
     """
     A FractalServer with compute associated parametrize for all managers

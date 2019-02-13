@@ -95,7 +95,7 @@ class QueueManager:
         self.memory_per_task = memory_per_task
         self.queue_adapter = build_queue_adapter(queue_client,
                                                  logger=self.logger,
-                                                 cpus_per_task=self.cores_per_task,
+                                                 cores_per_task=self.cores_per_task,
                                                  memory_per_task=self.memory_per_task)
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag
@@ -388,7 +388,7 @@ class QueueManager:
                 }, "program"],
                 "kwargs": {}
             },
-            "parser": "nothing",
+            "parser": "single",
             "hooks": []
         })
 
@@ -435,7 +435,7 @@ class QueueManager:
         missing_programs = results.keys() - set(found_programs)
         if len(missing_programs):
             self.logger.error("Not all tasks were retrieved, missing programs {}.".format(missing_programs))
-            raise ValueError("Testing failed, not all tasks were retrived.")
+            raise ValueError("Testing failed, not all tasks were retrieved.")
         else:
             self.logger.info("All tasks retrieved successfully.")
 

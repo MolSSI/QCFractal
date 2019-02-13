@@ -8,15 +8,11 @@ import pytest
 
 import qcfractal.interface as portal
 from qcfractal import testing
-from qcfractal.testing import reset_server_database, managed_compute_server
+from qcfractal.testing import (
+    reset_server_database, queue_manager, managed_compute_server, parameterizable_fractal_compute_server)
+import json
 
 
-# @pytest.mark.parametrize("cores_per_task,memory_per_task", [
-#     (None, None),
-#     (1, 2),
-#     pytest.param(50000, 100000,
-#                  marks=pytest.mark.xfail)
-# ])
 @testing.using_rdkit
 def test_adapter_single(managed_compute_server):
     client, server, manager = managed_compute_server
@@ -30,6 +26,61 @@ def test_adapter_single(managed_compute_server):
     manager.await_results()
     ret = client.get_results()
     assert len(ret) == 1
+
+
+@pytest.mark.parametrize("cores_per_task,memory_per_task", [
+    (None, None),
+    (1, 1.53645),
+])
+@testing.using_psi4
+def test_keyword_args_passing(parameterizable_fractal_compute_server, cores_per_task, memory_per_task):
+    client, server, adapter_client = parameterizable_fractal_compute_server
+    reset_server_database(server)
+    tasks = [  # Emulate the QueueManager test function
+        json.loads(json.dumps({
+            "id": "123456789012345678901234",
+            "spec": {
+                "function":
+                    "qcengine.compute",
+                "args": [{
+                    "molecule": portal.data.get_molecule("hooh.json").json(as_dict=True),
+                    "driver": "energy",
+                    "model": {"method": "HF",
+                              "basis": "sto-3g"},
+                    "keywords": {},
+                    "return_output": True,
+                    'qcfractal_tags': {'program': 'psi4', 'options': None}
+                }, "psi4"],
+                "kwargs": {}
+            },
+            "parser": "single",
+            "hooks": [],
+            "tag": "other"
+        }))
+    ]
+    x ={'spec':
+         {'function': 'qcengine.compute', 'args': [
+             {'program': 'psi4', 'driver': 'energy', 'keywords': {}, 'model': {'method': 'UFF', 'basis': ''},
+              'qcfractal_tags': {'program': 'psi4', 'options': None},
+              'hash_index': '4e3de8f0e821818c9542cea62420b80ae1fb203a'}, 'psi4'],
+          'kwargs': {}},
+     'base_result': {'ref': 'result', 'id': '5c646cbd33e2c1cc90f6212f'},
+     'hash_index': '4e3de8f0e821818c9542cea62420b80ae1fb203a',
+     'hash_keys': {'procedure_type': 'single',
+                   'single_key': ['psi4',
+                                  '5c646cbd384e945013755183',
+                                  'energy', 'UFF', '', None]},
+     'id': '5c646cbd384e945013755184'}
+    with queue_manager(client,
+                       adapter_client,
+                       cores_per_task=cores_per_task,
+                       memory_per_task=memory_per_task) as manager:
+        manager.queue_adapter.submit_tasks(tasks)
+        manager.await_results()
+        ret = client.get_results()
+        print(ret[0]['provenance'])
+        # import pdb; pdb.set_trace()
+        pass
 
 
 @testing.using_rdkit
