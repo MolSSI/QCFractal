@@ -19,9 +19,10 @@ class ScanDimension(BaseModel):
     type: str
     indices: List[int]
     steps: List[float]
+    step_type: str
 
     @validator('type')
-    def check_type(cls, v, values, **kwargs):
+    def check_type(cls, v):
         possibilities = {"distance", "angle", "dihedral"}
         if v not in possibilities:
             raise TypeError("Type '{}' found, can only be one of {}.".format(v, possibilities))
@@ -40,7 +41,15 @@ class ScanDimension(BaseModel):
     @validator('steps', whole=True)
     def check_steps_monotonic(cls, v):
         if not (all(x < y for x, y in zip(v, v[1:])) or all(x > y for x, y in zip(v, v[1:]))):
-            raise ValueError("Steps are not monotonically increasing or decreasing.")
+            raise ValueError("Steps are not strictly monotonically increasing or decreasing.")
+
+        return v
+
+    @validator('step_type')
+    def check_step_type(cls, v):
+        v = v.lower()
+        if v not in ["absolute", "relative"]:
+            raise KeyError("Keyword 'step_type' must either be absolute or relative.")
 
         return v
 
@@ -50,15 +59,7 @@ class GOOptions(BaseModel):
     GridOptimization options
     """
     scans: List[ScanDimension]
-    starting_grid: str = "relative"
-
-    @validator('starting_grid')
-    def check_starting_grid(cls, v):
-        v = v.lower()
-        if v not in ["relative", "zero"]:
-            raise KeyError("Starting grid can only be relative or zero, found '{}'".found(v))
-
-        return v
+    preoptimization: bool = True
 
     class Config:
         allow_mutation = False
@@ -159,6 +160,7 @@ class GridOptimization(GridOptimizationInput):
 
     # Data pointers
     initial_molecule: str
+    starting_molecule: str
     final_energy_dict: Dict[str, float]
     grid_optimizations: Dict[str, str]
     starting_grid: tuple

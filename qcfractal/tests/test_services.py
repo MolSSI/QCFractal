@@ -163,16 +163,17 @@ def test_service_gridoptimization_single(fractal_compute_server):
     # Options
     service = GridOptimizationInput(**{
         "gridoptimization_meta": {
-            "starting_grid":
-            "relative",
+            "preoptimization": True,
             "scans": [{
                 "type": "distance",
                 "indices": [1, 2],
-                "steps": [2.5, 2.6]
+                "steps": [-0.1, 0.0, 0.1],
+                "step_type": "relative"
             }, {
                 "type": "dihedral",
                 "indices": [0, 1, 2, 3],
-                "steps": [90, 180]
+                "steps": [90, 180],
+                "step_type": "absolute"
             }]
         },
         "optimization_meta": {
