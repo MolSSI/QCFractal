@@ -29,7 +29,7 @@ from bson.objectid import ObjectId
 from mongoengine.connection import disconnect, get_db
 
 from qcfractal.storage_sockets.models import Keywords, Collection, Result, \
-    TaskQueue, Procedure, User, Molecule, QueueManager
+    TaskQueue, Procedure, User, Molecule, QueueManager, ServiceQueue
 from . import storage_utils
 # Pull in the hashing algorithms from the client
 from .. import interface
@@ -176,9 +176,9 @@ class MongoengineSocket:
             Keywords.drop_collection()
             Collection.drop_collection()
             TaskQueue.drop_collection()
+            QueueManager.drop_collection()
             Procedure.drop_collection()
             User.drop_collection()
-            QueueManager.drop_collection()
 
             self.client.drop_database(db_name)
 
@@ -1423,26 +1423,116 @@ class MongoengineSocket:
 
         return modified_count
 
-    def add_services(self, data):
+    def add_services(self, data: List[dict], update_existing: bool=False, return_json=True):
+        """
+        Add services from a given dict.
 
-        ret = self._add_generic(data, "service_queue", return_map=True)
-        ret["meta"]["validation_errors"] = []  # TODO
+        Parameters
+        ----------
+        data : list of dict
+        update_existing: bool, default False
 
-        # Right now services expect hash return
-        # This and bad and should be fixed
-        serv = self.get_services({"id": ret["data"]})
-        ret["data"] = [x["hash_index"] for x in serv["data"]]
+        Returns
+        -------
+            Dict with keys: data, meta
+            Data is the hash_index of the inserted/existing docs
+        """
 
-        # Means we have duplicates in the queue, massage results
-        if len(ret["meta"]["duplicates"]):
-            ret["meta"]["duplicates"] = [x[2] for x in ret["meta"]["duplicates"]]
-            ret["meta"]["error_description"] = False
+        meta = storage_utils.add_metadata()
 
+        services = []
+        # try:
+        for d in data:
+            # search by hash index
+            if "id" in d:
+                del d["id"]
+            doc = ServiceQueue.objects(hash_index=d['hash_index'])
+
+            if doc.count() == 0 or update_existing:
+                doc = doc.upsert_one(**d)
+                services.append(doc.hash_index)
+                meta['n_inserted'] += 1
+            else:
+                # id = str(doc.first().id)
+                # By D2: Right now services expect hash return
+                # This and bad and should be fixed
+                hash_index = doc.first().hash_index
+                meta['duplicates'].append(hash_index)
+                # If new or duplicate, add the to the return list
+                services.append(hash_index)
+        meta["success"] = True
+        # except (mongoengine.errors.ValidationError, KeyError) as err:
+        #     meta["validation_errors"].append(err)
+        # except Exception as err:
+        #     meta['error_description'] = err
+
+        ret = {"data": services, "meta": meta}
         return ret
 
-    def get_services(self, query, projection=None, limit=0):
+    def get_services(self,
+                     id: Union[List[str], str]=None,
+                     hash_index: Union[List[str], str]=None,
+                     status: str=None,
+                     projection=None,
+                     limit: int=None,
+                     return_json=True):
+        """
 
-        return self._get_generic(query, "service_queue", projection=projection, allow_generic=True, limit=limit)
+        Parameters
+        ----------
+        id / hash_index : List of str or str
+            service id / hash_index that ran the results
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        return_json : bool, deafult is True
+            Return the results as a list of json instead of objects
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = storage_utils.get_metadata()
+        query = {}
+
+        if isinstance(id, (list, tuple)):
+            query['id__in'] = id
+        elif id:
+            query['id'] = id
+
+        if isinstance(hash_index, (list, tuple)):
+            query['hash_index__in'] = hash_index
+        elif hash_index:
+            query['hash_index'] = hash_index
+
+        if status:
+            query['status'] = status
+
+        q_limit = int(limit if limit and limit < self._max_limit else self._max_limit)
+
+        data = []
+        # try:
+        if projection:
+            services = ServiceQueue.objects(**query).only(*projection).limit(q_limit)
+        else:
+            services = ServiceQueue.objects(**query).limit(q_limit)
+
+        meta["n_found"] = services.count()
+        meta["success"] = True
+        # except Exception as err:
+        #     meta['error_description'] = str(err)
+
+        if services.count() and return_json:
+            data = [d.to_json_obj() for d in services]
+
+        return {"data": data, "meta": meta}
+
 
     def update_services(self, updates):
 
@@ -1542,6 +1632,7 @@ class MongoengineSocket:
         return ret
 
     def queue_get_next(self, manager, limit=100, tag=None, as_json=True):
+        """TODO: needs to be done a transcation"""
 
         # Figure out query, tagless has no requirements
         query = {"status": "WAITING"}
@@ -1553,7 +1644,7 @@ class MongoengineSocket:
         query = {"_id": {"$in": [x.id for x in found]}}
 
         # update_many using pymongo in one DB access
-        upd = TaskQueue._collection.update_many(
+        upd = TaskQueue._get_collection().update_many(
             query, {"$set": {
                 "status": "RUNNING",
                 "modified_on": dt.utcnow(),
@@ -1698,7 +1789,7 @@ class MongoengineSocket:
         #         # automatically calls ClientSession.commit_transaction().
         #         # If the block exits with an exception, the transaction
         #         # automatically calls ClientSession.abort_transaction().
-        #           found = TaskQueue._collection.update_many(
+        #           found = TaskQueue._get_collection().update_many(
         #                               {'id': {'$in': task_ids}},
         #                               {'$set': {'status': 'COMPLETE'}},
         #                               session=session)
@@ -1736,7 +1827,7 @@ class MongoengineSocket:
         if len(bulk_commands) == 0:
             return
 
-        ret = TaskQueue._collection.bulk_write(bulk_commands, ordered=False).modified_count
+        ret = TaskQueue._get_collection().bulk_write(bulk_commands, ordered=False).modified_count
         Result.objects(task_id__in=task_ids).update(status='ERROR', modified_on=dt.utcnow())
         Procedure.objects(task_id__in=task_ids).update(status='ERROR', modified_on=dt.utcnow())
 
@@ -1821,7 +1912,7 @@ class MongoengineSocket:
 
         upd = {key: kwargs[key] for key in QueueManager._fields_ordered if key in kwargs}
 
-        # QueueManager.objects()  # init
+        QueueManager.objects()  # init
         manager = QueueManager.objects(name=name)
         if manager:  # existing
             upd.update(inc_count)
