@@ -374,7 +374,7 @@ def build_compute_server(mtype):
             queue_socket=adapter_client,
             ssl_options=False)
 
-        # Clean and re-init the databse
+        # Clean and re-init the database
         reset_server_database(server)
 
         # Build Client and Manager
@@ -392,14 +392,12 @@ def build_managed_compute_server(mtype):
             yield client, server, manager
 
 
-# @pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
-@pytest.fixture(scope="function", params=["pool"])
+@pytest.fixture(scope="function", params=["pool", "dask", "fireworks", "parsl"])
 def parameterizable_fractal_compute_server(request):
     yield from build_compute_server(request.param)
 
 
-# @pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
-@pytest.fixture(scope="module", params=["pool"])
+@pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
 def managed_compute_server(request):
     """
     A FractalServer with compute associated parametrize for all managers

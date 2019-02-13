@@ -2,8 +2,7 @@
 Explicit tests for queue manipulation.
 """
 
-import time
-
+from numpy import allclose
 import pytest
 
 import qcfractal.interface as portal
@@ -30,15 +29,17 @@ def test_adapter_single(managed_compute_server):
 
 @pytest.mark.parametrize("cores_per_task,memory_per_task", [
     (None, None),
-    (1, 1.53645),
+    (1, 1),
+    (2, 1.9)
 ])
 @testing.using_psi4
 def test_keyword_args_passing(parameterizable_fractal_compute_server, cores_per_task, memory_per_task):
+    psi4_mem_buffer = 0.95  # Memory consumption buffer on psi4
     client, server, adapter_client = parameterizable_fractal_compute_server
     reset_server_database(server)
     tasks = [  # Emulate the QueueManager test function
         json.loads(json.dumps({
-            "id": "123456789012345678901234",
+            "id": "123456789012345678901234",  # Placeholder ID
             "spec": {
                 "function":
                     "qcengine.compute",
@@ -58,19 +59,6 @@ def test_keyword_args_passing(parameterizable_fractal_compute_server, cores_per_
             "tag": "other"
         }))
     ]
-    x ={'spec':
-         {'function': 'qcengine.compute', 'args': [
-             {'program': 'psi4', 'driver': 'energy', 'keywords': {}, 'model': {'method': 'UFF', 'basis': ''},
-              'qcfractal_tags': {'program': 'psi4', 'options': None},
-              'hash_index': '4e3de8f0e821818c9542cea62420b80ae1fb203a'}, 'psi4'],
-          'kwargs': {}},
-     'base_result': {'ref': 'result', 'id': '5c646cbd33e2c1cc90f6212f'},
-     'hash_index': '4e3de8f0e821818c9542cea62420b80ae1fb203a',
-     'hash_keys': {'procedure_type': 'single',
-                   'single_key': ['psi4',
-                                  '5c646cbd384e945013755183',
-                                  'energy', 'UFF', '', None]},
-     'id': '5c646cbd384e945013755184'}
     with queue_manager(client,
                        adapter_client,
                        cores_per_task=cores_per_task,
@@ -78,9 +66,12 @@ def test_keyword_args_passing(parameterizable_fractal_compute_server, cores_per_
         manager.queue_adapter.submit_tasks(tasks)
         manager.await_results()
         ret = client.get_results()
-        print(ret[0]['provenance'])
-        # import pdb; pdb.set_trace()
-        pass
+        assert len(ret) == 1
+        provenance = ret[0]['provenance']
+        if cores_per_task is not None:
+            assert provenance['nthreads'] == cores_per_task
+        if memory_per_task is not None:
+            assert allclose(provenance['memory'], memory_per_task*psi4_mem_buffer)
 
 
 @testing.using_rdkit

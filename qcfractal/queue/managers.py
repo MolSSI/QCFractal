@@ -204,7 +204,7 @@ class QueueManager:
         heartbeat.start()
         self.periodic["heartbeat"] = heartbeat
 
-        # Soft quit with a keyboard interupt
+        # Soft quit with a keyboard interrupt
         self.running = True
         self.loop.start()
 
@@ -236,7 +236,7 @@ class QueueManager:
 
     def close_adapter(self) -> bool:
         """
-        Closes down the underlying adapater
+        Closes down the underlying adapter
         """
 
         return self.queue_adapter.close()
