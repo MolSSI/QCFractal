@@ -5,7 +5,7 @@ Queue adapter for Parsl
 import logging
 import time
 import traceback
-from typing import Callable, Dict, List, Any, Optional
+from typing import Callable, Dict, List, Any, Optional, Tuple, Union
 
 from .base_adapter import BaseAdapter
 
@@ -66,30 +66,12 @@ class ParslAdapter(BaseAdapter):
 
         return self.app_map[function]
 
-    def submit_tasks(self, tasks: Dict[str, Any]) -> List[str]:
-        ret = []
-        for spec in tasks:
+    def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Union[str, float, int], Any]:
 
-            tag = spec["id"]
-            if tag in self.queue:
-                continue
-
-            # Form run tuple
-            func = self.get_app(spec["spec"]["function"])
-            # Trap QCEngine Memory and CPU
-            if spec["spec"]["function"].startswith("qcengine.compute"):
-                local_options = self.qcengine_local_options
-                if local_options:
-                    task_kwargs = spec["spec"]["kwargs"]
-                    spec = spec.copy()  # Copy for safety
-                    spec["spec"]["kwargs"] = {**task_kwargs, **{"local_options": local_options}}
-
-            task = func(*spec["spec"]["args"], **spec["spec"]["kwargs"])
-
-            self.queue[tag] = (task, spec["parser"], spec["hooks"])
-            self.logger.info("Adapter: Task submitted {}".format(tag))
-            ret.append(tag)
-        return ret
+        # Form run tuple
+        func = self.get_app(task_spec["spec"]["function"])
+        task = func(*task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
+        return task_spec["id"], task
 
     def acquire_complete(self) -> List[Dict[str, Any]]:
         ret = {}

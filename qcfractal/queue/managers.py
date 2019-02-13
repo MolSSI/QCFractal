@@ -430,7 +430,7 @@ class QueueManager:
         self.queue_adapter.await_results()
 
         results = self.queue_adapter.acquire_complete()
-        self.logger.info("Testing results aquired.")
+        self.logger.info("Testing results acquired.")
 
         missing_programs = results.keys() - set(found_programs)
         if len(missing_programs):

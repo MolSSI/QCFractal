@@ -3,7 +3,7 @@ Queue adapter for Fireworks
 """
 
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple, Union
 
 from .base_adapter import BaseAdapter
 
@@ -16,33 +16,22 @@ class FireworksAdapter(BaseAdapter):
     def __repr__(self):
         return "<FireworksAdapter client=<LaunchPad host='{}' name='{}'>>".format(self.client.host, self.client.name)
 
-    def submit_tasks(self, tasks: Dict[str, Any]) -> List[str]:
-        ret = []
-
+    def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Union[str, float, int], Any]:
         import fireworks
-        for task in tasks:
-            tag = task["id"]
-            # Trap QCEngine Memory and CPU
-            if task["spec"]["function"].startswith("qcengine.compute"):
-                local_options = self.qcengine_local_options
-                if local_options:
-                    task_kwargs = task["spec"]["kwargs"]
-                    task = task.copy()  # Copy for safety
-                    task["spec"]["kwargs"] = {**task_kwargs, **{"local_options": local_options}}
+        fw = fireworks.Firework(
+            fireworks.PyTask(
+                func=task_spec["spec"]["function"],
+                args=task_spec["spec"]["args"],
+                kwargs=task_spec["spec"]["kwargs"],
+                stored_data_varname="fw_results"),
+            spec={"_launch_dir": "/tmp/"})
+        launches = self.client.add_wf(fw)
 
-            fw = fireworks.Firework(
-                fireworks.PyTask(
-                    func=task["spec"]["function"],
-                    args=task["spec"]["args"],
-                    kwargs=task["spec"]["kwargs"],
-                    stored_data_varname="fw_results"),
-                spec={"_launch_dir": "/tmp/"})
-            launches = self.client.add_wf(fw)
+        return list(launches.values())[0], task_spec["id"]
 
-            self.queue[list(launches.values())[0]] = (tag, task["parser"], task["hooks"])
-            ret.append(tag)
-
-        return ret
+    def _task_exists(self, lookup):
+        """Overload existing method"""
+        return False
 
     def acquire_complete(self) -> List[Dict[str, Any]]:
         ret = {}

@@ -4,7 +4,7 @@ Queue adapter for Dask
 
 import time
 import traceback
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple, Union
 
 from .base_adapter import BaseAdapter
 
@@ -27,29 +27,10 @@ class ExecutorAdapter(BaseAdapter):
         return "<ExecutorAdapter client=<{} max_workers={}>>".format(self.client.__class__.__name__,
                                                                      self.client._max_workers)
 
-    def submit_tasks(self, tasks: Dict[str, Any]) -> List[str]:
-        ret = []
-        for spec in tasks:
-
-            tag = spec["id"]
-            if tag in self.queue:
-                continue
-
-            # Form run tuple
-            func = self.get_function(spec["spec"]["function"])
-            # Trap QCEngine Memory and CPU
-            if spec["spec"]["function"].startswith("qcengine.compute"):
-                local_options = self.qcengine_local_options
-                if local_options:
-                    task_kwargs = spec["spec"]["kwargs"]
-                    spec = spec.copy()  # Copy for safety
-                    spec["spec"]["kwargs"] = {**task_kwargs, **{"local_options": local_options}}
-            task = self.client.submit(func, *spec["spec"]["args"], **spec["spec"]["kwargs"])
-
-            self.queue[tag] = (task, spec["parser"], spec["hooks"])
-            self.logger.info("Adapter: Task submitted {}".format(tag))
-            ret.append(tag)
-        return ret
+    def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Union[str, float, int], Any]:
+        func = self.get_function(task_spec["spec"]["function"])
+        task = self.client.submit(func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
+        return task_spec["id"], task
 
     def acquire_complete(self) -> List[Dict[str, Any]]:
         ret = {}

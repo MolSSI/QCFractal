@@ -6,7 +6,7 @@ import abc
 import importlib
 import logging
 import operator
-from typing import Any, Dict, Optional, List, Callable
+from typing import Any, Dict, Optional, List, Callable, Tuple, Union
 
 
 class BaseAdapter(abc.ABC):
@@ -90,8 +90,7 @@ class BaseAdapter(abc.ABC):
             local_options["ncores"] = self.cores_per_task
         return local_options
 
-    @abc.abstractmethod
-    def submit_tasks(self, tasks: Dict[str, Any]) -> List[str]:
+    def submit_tasks(self, tasks: List[Dict[str, Any]]) -> List[str]:
         """Adds tasks to the queue
 
         Parameters
@@ -104,6 +103,26 @@ class BaseAdapter(abc.ABC):
         list of str
             The tags associated with the submitted tasks.
         """
+
+        ret = []
+        for task_spec in tasks:
+
+            tag = task_spec["id"]
+            if self._task_exists(tag):
+                continue
+
+            # Trap QCEngine Memory and CPU
+            if task_spec["spec"]["function"].startswith("qcengine.compute") and self.qcengine_local_options:
+                task_kwargs = task_spec["spec"]["kwargs"]
+                task_spec = task_spec.copy()  # Copy for safety
+                task_spec["spec"]["kwargs"] = {**task_kwargs, **{"local_options": self.qcengine_local_options}}
+
+            queue_key, task = self._submit_task(task_spec)
+
+            self.queue[queue_key] = (task, task_spec["parser"], task_spec["hooks"])
+            self.logger.info("Adapter: Task submitted {}".format(tag))
+            ret.append(tag)
+        return ret
 
     @abc.abstractmethod
     def acquire_complete(self) -> List[Dict[str, Any]]:
@@ -154,3 +173,37 @@ class BaseAdapter(abc.ABC):
         bool
             True if the closing was successful.
         """
+
+    @abc.abstractmethod
+    def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Union[str, float, int], Any]:
+        """
+        Add a specific task to the queue
+
+        Parameters
+        ----------
+        task_spec : dict
+            Full description of the task in dictionary form
+
+        Returns
+        -------
+        queue_key : str, int, float, or other Immutable
+            Identifier for the queue to use for lookup of the task
+        task
+            Submitted task object for the adapter to look up later after its formatted it
+        """
+
+    def _task_exists(self, lookup) -> bool:
+        """
+        Check if the tasks exists helper function, adapters may use something different
+
+        Parameters
+        ----------
+        lookup : key
+            Lookup key
+
+        Returns
+        -------
+        exists : bool
+
+        """
+        return lookup in self.queue
