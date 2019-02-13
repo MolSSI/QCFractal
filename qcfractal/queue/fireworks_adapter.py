@@ -3,7 +3,7 @@ Queue adapter for Fireworks
 """
 
 import logging
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Dict, List, Any, Optional, Tuple, Hashable
 
 from .base_adapter import BaseAdapter
 
@@ -16,7 +16,7 @@ class FireworksAdapter(BaseAdapter):
     def __repr__(self):
         return "<FireworksAdapter client=<LaunchPad host='{}' name='{}'>>".format(self.client.host, self.client.name)
 
-    def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Union[str, float, int], Any]:
+    def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
         import fireworks
         fw = fireworks.Firework(
             fireworks.PyTask(

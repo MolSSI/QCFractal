@@ -5,7 +5,7 @@ Queue adapter for Parsl
 import logging
 import time
 import traceback
-from typing import Callable, Dict, List, Any, Optional, Tuple, Union
+from typing import Callable, Dict, List, Any, Optional, Tuple, Hashable
 
 from .base_adapter import BaseAdapter
 
@@ -66,7 +66,7 @@ class ParslAdapter(BaseAdapter):
 
         return self.app_map[function]
 
-    def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Union[str, float, int], Any]:
+    def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
 
         # Form run tuple
         func = self.get_app(task_spec["spec"]["function"])

@@ -4,7 +4,7 @@ Queue adapter for Dask
 
 import time
 import traceback
-from typing import Dict, List, Any, Tuple, Union
+from typing import Dict, List, Any, Tuple, Hashable
 
 from .base_adapter import BaseAdapter
 
@@ -27,7 +27,7 @@ class ExecutorAdapter(BaseAdapter):
         return "<ExecutorAdapter client=<{} max_workers={}>>".format(self.client.__class__.__name__,
                                                                      self.client._max_workers)
 
-    def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Union[str, float, int], Any]:
+    def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
         func = self.get_function(task_spec["spec"]["function"])
         task = self.client.submit(func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
         return task_spec["id"], task

@@ -6,7 +6,7 @@ import abc
 import importlib
 import logging
 import operator
-from typing import Any, Dict, Optional, List, Callable, Tuple, Union
+from typing import Any, Dict, Optional, List, Callable, Tuple, Hashable
 
 
 class BaseAdapter(abc.ABC):
@@ -175,7 +175,7 @@ class BaseAdapter(abc.ABC):
         """
 
     @abc.abstractmethod
-    def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Union[str, float, int], Any]:
+    def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
         """
         Add a specific task to the queue
 
@@ -186,7 +186,7 @@ class BaseAdapter(abc.ABC):
 
         Returns
         -------
-        queue_key : str, int, float, or other Immutable
+        queue_key : Valid Dictionary Key
             Identifier for the queue to use for lookup of the task
         task
             Submitted task object for the adapter to look up later after its formatted it
