@@ -470,7 +470,7 @@ class MongoengineSocket:
 
         return ret
 
-    def get_molecules(self, molecule_ids, index="id"):
+    def get_molecules(self, molecule_ids=None, index="id"):
 
         ret = {"meta": storage_utils.get_metadata(), "data": []}
 
@@ -613,7 +613,8 @@ class MongoengineSocket:
         ret = {"data": keywords, "meta": meta}
         return ret
 
-    def get_keywords(self, id: str=None, program: str=None, hash_index: str=None, return_json: bool=True, with_ids: bool=True, limit=None):
+    def get_keywords(self, id: str=None, program: str=None, hash_index: str=None,
+                     return_json: bool=True, with_ids: bool=True, limit=None):
         """Search for one (unique) option based on the 'program'
         and the 'name'. No overwrite allowed.
 
@@ -621,8 +622,6 @@ class MongoengineSocket:
         ----------
         program : str
             program name
-        name : str
-            option name
         return_json : bool, optional
             Return the results as a json object
             Default is True
@@ -644,11 +643,11 @@ class MongoengineSocket:
 
         meta = storage_utils.get_metadata()
         query = {}
-        if program:
+        if program is not None:
             query['program'] = program
-        if hash_index:
+        if hash_index is not None:
             query['hash_index'] = hash_index
-        if id:
+        if id is not None:
             query['id'] = ObjectId(id)
         q_limit = limit if limit and limit < self._max_limit else self._max_limit
 
@@ -941,7 +940,7 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def get_results_by_id(self, id: List[str]=None, projection=None, return_json=True, with_ids=True):
+    def get_results_by_id(self, id: List[str], projection=None, return_json=True, with_ids=True):
         """
         Get list of Results using the given list of Ids
 
@@ -1041,18 +1040,18 @@ class MongoengineSocket:
         meta = storage_utils.get_metadata()
         query = {}
         parsed_query = {}
-        if program:
+        if program is not None:
             query['program'] = program
-        if method:
+        if method is not None:
             query['method'] = method
-        if basis:
-            query['basis'] = basis
-        if molecule:
+        if basis is not None:
+            query['basis'] = basis if basis != 'null' else None
+        if molecule is not None:
             query['molecule'], _ = _str_to_indices_with_errors(molecule)
-        if driver:
+        if driver is not None:
             query['driver'] = driver
-        if keywords:
-            query['keywords'] = keywords
+        if keywords is not None:
+            query['keywords'] = keywords if keywords != 'null' else None
         if status:
             query['status'] = status
 
@@ -1063,8 +1062,10 @@ class MongoengineSocket:
                 parsed_query[key] = value
             elif isinstance(value, (list, tuple)):
                 parsed_query[key + "__in"] = [v.lower() for v in value]
-            else:
+            elif isinstance(value, str):
                 parsed_query[key] = value.lower()
+            else:
+                parsed_query[key] = value
 
         q_limit = limit if limit and limit < self._max_limit else self._max_limit
 

@@ -44,7 +44,7 @@ def test_identical_mol_insert(storage_socket):
 
     water = portal.data.get_molecule("water_dimer_minima.psimol")
 
-    # Add two idential molecules
+    # Add two identical molecules
     ret1 = storage_socket.add_molecules({"w1": water.json_dict(), "w2": water.json_dict()})
     assert ret1["meta"]["success"] is True
     assert ret1["meta"]["n_inserted"] == 1
@@ -375,7 +375,7 @@ def storage_results(storage_socket):
         "molecule": mol_insert["data"]["water2"],
         "method": "M3",
         "basis": "B1",
-        "keywords": "default",
+        "keywords": None,
         "program": "P1",
         "driver": "gradient",
         "return_result": 20,
@@ -395,6 +395,19 @@ def storage_results(storage_socket):
 
     ret = storage_socket.del_molecules(list(mol_insert["data"].values()), index="id")
     assert ret == mol_insert["meta"]["n_inserted"]
+
+
+def test_empty_get(storage_results):
+
+    assert 0 == len(storage_results.get_molecules(None)["data"])
+    assert 0 == len(storage_results.get_molecules([])["data"])
+    assert 0 == len(storage_results.get_molecules("")["data"])
+    # Todo: This needs to return top limit of the table
+    assert 0 == len(storage_results.get_molecules()["data"])
+
+    assert 6 == len(storage_results.get_results()['data'])
+    assert 1 == len(storage_results.get_results(keywords='null')['data'])
+    assert 0 == len(storage_results.get_results(program='null')['data'])
 
 
 def test_results_query_total(storage_results):
