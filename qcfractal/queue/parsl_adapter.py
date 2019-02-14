@@ -5,7 +5,7 @@ Queue adapter for Parsl
 import logging
 import time
 import traceback
-from typing import Callable, Dict, List, Any, Optional
+from typing import Callable, Dict, List, Any, Optional, Tuple, Hashable
 
 from .base_adapter import BaseAdapter
 
@@ -24,8 +24,8 @@ class ParslAdapter(BaseAdapter):
     """A Adapter for Parsl
     """
 
-    def __init__(self, client: Any, logger: Optional[logging.Logger] = None):
-        BaseAdapter.__init__(self, client, logger)
+    def __init__(self, client: Any, logger: Optional[logging.Logger] = None, **kwargs):
+        BaseAdapter.__init__(self, client, logger, **kwargs)
 
         import parsl
         self.client = parsl.dataflow.dflow.DataFlowKernel(self.client)
@@ -66,22 +66,12 @@ class ParslAdapter(BaseAdapter):
 
         return self.app_map[function]
 
-    def submit_tasks(self, tasks: Dict[str, Any]) -> List[str]:
-        ret = []
-        for spec in tasks:
+    def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
 
-            tag = spec["id"]
-            if tag in self.queue:
-                continue
-
-            # Form run tuple
-            func = self.get_app(spec["spec"]["function"])
-            task = func(*spec["spec"]["args"], **spec["spec"]["kwargs"])
-
-            self.queue[tag] = (task, spec["parser"], spec["hooks"])
-            self.logger.info("Adapter: Task submitted {}".format(tag))
-            ret.append(tag)
-        return ret
+        # Form run tuple
+        func = self.get_app(task_spec["spec"]["function"])
+        task = func(*task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
+        return task_spec["id"], task
 
     def acquire_complete(self) -> List[Dict[str, Any]]:
         ret = {}

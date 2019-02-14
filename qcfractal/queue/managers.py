@@ -49,7 +49,9 @@ class QueueManager:
                  queue_tag: str=None,
                  cluster: str="unknown",
                  update_frequency: int=2,
-                 verbose: bool=True):
+                 verbose: bool=True,
+                 cores_per_task: Optional[int] = None,
+                 memory_per_task: Optional[int] = None):
         """
         Parameters
         ----------
@@ -71,6 +73,12 @@ class QueueManager:
             The cluster the manager belongs to
         update_frequency : int
             The frequency to check for new tasks in seconds
+        cores_per_task : int, optional, Default: None
+            How many CPU cores per computation task to allocate for QCEngine
+            None indicates "use however many you can detect"
+        memory_per_task: int, optional, Default: None
+            How much memory, in GiB, per computation task to allocate for QCEngine
+            None indicates "use however much you can consume"
         """
 
         # Setup logging
@@ -83,7 +91,12 @@ class QueueManager:
         self._name = self.name_data["cluster"] + "-" + self.name_data["hostname"] + "-" + self.name_data["uuid"]
 
         self.client = client
-        self.queue_adapter = build_queue_adapter(queue_client, logger=self.logger)
+        self.cores_per_task = cores_per_task
+        self.memory_per_task = memory_per_task
+        self.queue_adapter = build_queue_adapter(queue_client,
+                                                 logger=self.logger,
+                                                 cores_per_task=self.cores_per_task,
+                                                 memory_per_task=self.memory_per_task)
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag
         self.verbose = verbose
@@ -191,7 +204,7 @@ class QueueManager:
         heartbeat.start()
         self.periodic["heartbeat"] = heartbeat
 
-        # Soft quit with a keyboard interupt
+        # Soft quit with a keyboard interrupt
         self.running = True
         self.loop.start()
 
@@ -223,7 +236,7 @@ class QueueManager:
 
     def close_adapter(self) -> bool:
         """
-        Closes down the underlying adapater
+        Closes down the underlying adapter
         """
 
         return self.queue_adapter.close()
@@ -375,7 +388,7 @@ class QueueManager:
                 }, "program"],
                 "kwargs": {}
             },
-            "parser": "nothing",
+            "parser": "single",
             "hooks": []
         })
 
@@ -417,12 +430,12 @@ class QueueManager:
         self.queue_adapter.await_results()
 
         results = self.queue_adapter.acquire_complete()
-        self.logger.info("Testing results aquired.")
+        self.logger.info("Testing results acquired.")
 
         missing_programs = results.keys() - set(found_programs)
         if len(missing_programs):
             self.logger.error("Not all tasks were retrieved, missing programs {}.".format(missing_programs))
-            raise ValueError("Testing failed, not all tasks were retrived.")
+            raise ValueError("Testing failed, not all tasks were retrieved.")
         else:
             self.logger.info("All tasks retrieved successfully.")
 

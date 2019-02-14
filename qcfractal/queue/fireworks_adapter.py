@@ -3,39 +3,35 @@ Queue adapter for Fireworks
 """
 
 import logging
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple, Hashable
 
 from .base_adapter import BaseAdapter
 
 
 class FireworksAdapter(BaseAdapter):
-    def __init__(self, client: Any, logger: Optional[logging.Logger] = None):
-        BaseAdapter.__init__(self, client, logger)
+    def __init__(self, client: Any, logger: Optional[logging.Logger] = None, **kwargs):
+        BaseAdapter.__init__(self, client, logger, **kwargs)
         self.client.reset(None, require_password=False, max_reset_wo_password=int(1e8))
 
     def __repr__(self):
         return "<FireworksAdapter client=<LaunchPad host='{}' name='{}'>>".format(self.client.host, self.client.name)
 
-    def submit_tasks(self, tasks: Dict[str, Any]) -> List[str]:
-        ret = []
-
+    def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
         import fireworks
-        for task in tasks:
-            tag = task["id"]
+        fw = fireworks.Firework(
+            fireworks.PyTask(
+                func=task_spec["spec"]["function"],
+                args=task_spec["spec"]["args"],
+                kwargs=task_spec["spec"]["kwargs"],
+                stored_data_varname="fw_results"),
+            spec={"_launch_dir": "/tmp/"})
+        launches = self.client.add_wf(fw)
 
-            fw = fireworks.Firework(
-                fireworks.PyTask(
-                    func=task["spec"]["function"],
-                    args=task["spec"]["args"],
-                    kwargs=task["spec"]["kwargs"],
-                    stored_data_varname="fw_results"),
-                spec={"_launch_dir": "/tmp/"})
-            launches = self.client.add_wf(fw)
+        return list(launches.values())[0], task_spec["id"]
 
-            self.queue[list(launches.values())[0]] = (tag, task["parser"], task["hooks"])
-            ret.append(tag)
-
-        return ret
+    def _task_exists(self, lookup):
+        """Overload existing method"""
+        return False
 
     def acquire_complete(self) -> List[Dict[str, Any]]:
         ret = {}
