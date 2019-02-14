@@ -142,11 +142,7 @@ def queue_manager(client, adapter, **kwargs):
     """
     Parameterizable Queue manager safely wrapped in a context manager
     """
-    from qcfractal.queue import QueueManager
-    manager = QueueManager(client, adapter, **kwargs)
-    yield manager
-    # Close down and clean the adapter
-    manager.close_adapter()
+
 
 
 ### Background thread loops
@@ -331,15 +327,11 @@ def test_server(request):
         yield server
 
 
-def build_compute_server(mtype):
-
+def build_adapter_clients(mtype, storage_name="qcf_compute_server_test"):
     # Check mongo
     check_active_mongo_server()
 
     # Basic boot and loop information
-    storage_name = "qcf_compute_server_test"
-    sleep_time = 0.1
-
     if mtype == "pool":
         from concurrent.futures import ProcessPoolExecutor
 
@@ -361,11 +353,17 @@ def build_compute_server(mtype):
     elif mtype == "parsl":
         parsl = pytest.importorskip("parsl")
         from parsl.configs.local_ipp import config as adapter_client
-        sleep_time = 2
 
     else:
         raise TypeError("fractal_compute_server: internal parametrize error")
 
+    return adapter_client
+
+
+def build_managed_compute_server(mtype):
+
+    storage_name = "qcf_compute_server_test"
+    adapter_client = build_adapter_clients(mtype, storage_name=storage_name)
     with loop_in_thread() as loop:
         server = FractalServer(
             port=find_open_port(),
@@ -381,20 +379,19 @@ def build_compute_server(mtype):
         from qcfractal.interface import FractalClient
         client = FractalClient(server)
 
-        yield client, server, adapter_client
+        from qcfractal.queue import QueueManager
+        manager = QueueManager(client, adapter_client)
+
+        yield client, server, manager
+
+        # Close down and clean the adapter
+        manager.close_adapter()
 
 
-def build_managed_compute_server(mtype):
-    for (client, server, adapter_client) in build_compute_server(mtype):
-        with queue_manager(client, adapter_client) as manager:
-
-            # Yield the server instance
-            yield client, server, manager
-
-
-@pytest.fixture(scope="function", params=["pool", "dask", "fireworks", "parsl"])
-def parameterizable_fractal_compute_server(request):
-    yield from build_compute_server(request.param)
+@pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
+def adapter_client_fixture(request):
+    adapter_client = build_adapter_clients(request.param)
+    yield adapter_client
 
 
 @pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])

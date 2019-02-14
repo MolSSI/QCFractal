@@ -73,7 +73,7 @@ class BaseAdapter(abc.ABC):
         return self.function_map[function]
 
     @property
-    def qcengine_local_options(self) -> dict:
+    def qcengine_local_options(self) -> Dict[str, Any]:
         """
         Helper property to return the local QCEngine Options based on number of cores and memory per task
 

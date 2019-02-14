@@ -2,14 +2,12 @@
 Explicit tests for queue manipulation.
 """
 
-from numpy import allclose
 import pytest
 
 import qcfractal.interface as portal
-from qcfractal import testing
+from qcfractal import testing, QueueManager
 from qcfractal.testing import (
-    reset_server_database, queue_manager, managed_compute_server, parameterizable_fractal_compute_server)
-import json
+    reset_server_database, managed_compute_server, adapter_client_fixture)
 
 
 @testing.using_rdkit
@@ -33,13 +31,13 @@ def test_adapter_single(managed_compute_server):
     (2, 1.9)
 ])
 @testing.using_psi4
-def test_keyword_args_passing(parameterizable_fractal_compute_server, cores_per_task, memory_per_task):
+def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per_task):
     psi4_mem_buffer = 0.95  # Memory consumption buffer on psi4
-    client, server, adapter_client = parameterizable_fractal_compute_server
-    reset_server_database(server)
+    adapter_client = adapter_client_fixture
+    task_id = "123456789012345678901234"  # Placeholder ID
     tasks = [  # Emulate the QueueManager test function
-        json.loads(json.dumps({
-            "id": "123456789012345678901234",  # Placeholder ID
+        {
+            "id": task_id,
             "spec": {
                 "function":
                     "qcengine.compute",
@@ -57,21 +55,20 @@ def test_keyword_args_passing(parameterizable_fractal_compute_server, cores_per_
             "parser": "single",
             "hooks": [],
             "tag": "other"
-        }))
+        }
     ]
-    with queue_manager(client,
-                       adapter_client,
-                       cores_per_task=cores_per_task,
-                       memory_per_task=memory_per_task) as manager:
-        manager.queue_adapter.submit_tasks(tasks)
-        manager.await_results()
-        ret = client.get_results()
-        assert len(ret) == 1
-        provenance = ret[0]['provenance']
-        if cores_per_task is not None:
-            assert provenance['nthreads'] == cores_per_task
-        if memory_per_task is not None:
-            assert allclose(provenance['memory'], memory_per_task*psi4_mem_buffer)
+    # Spin up a test queue manager
+    manager = QueueManager(None, adapter_client, cores_per_task=cores_per_task, memory_per_task=memory_per_task)
+    # Operate on the adapter since there is no backend QCF Client
+    manager.queue_adapter.submit_tasks(tasks)
+    manager.queue_adapter.await_results()
+    ret = manager.queue_adapter.acquire_complete()
+    assert len(ret) == 1
+    provenance = ret[task_id][0]['provenance']
+    if cores_per_task is not None:
+        assert provenance['nthreads'] == cores_per_task
+    if memory_per_task is not None:
+        assert provenance['memory'] == pytest.approx(memory_per_task*psi4_mem_buffer)
 
 
 @testing.using_rdkit
