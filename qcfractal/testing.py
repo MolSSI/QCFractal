@@ -2,7 +2,6 @@
 Contains testing infrastructure for QCFractal
 """
 
-import logging
 import os
 import pkgutil
 import signal
@@ -20,6 +19,7 @@ from tornado.ioloop import IOLoop
 
 from .server import FractalServer
 from .storage_sockets import storage_socket_factory
+from .queue import build_queue_adapter
 
 ### Addon testing capabilities
 
@@ -135,14 +135,6 @@ def preserve_cwd():
         yield cwd
     finally:
         os.chdir(cwd)
-
-
-@contextmanager
-def queue_manager(client, adapter, **kwargs):
-    """
-    Parameterizable Queue manager safely wrapped in a context manager
-    """
-
 
 
 ### Background thread loops
@@ -392,6 +384,8 @@ def build_managed_compute_server(mtype):
 def adapter_client_fixture(request):
     adapter_client = build_adapter_clients(request.param)
     yield adapter_client
+    # Do a final close with existing tech
+    build_queue_adapter(adapter_client).close()
 
 
 @pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])

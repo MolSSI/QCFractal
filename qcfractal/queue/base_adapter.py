@@ -16,6 +16,8 @@ class BaseAdapter(abc.ABC):
     def __init__(self,
                  client: Any,
                  logger: Optional[logging.Logger] = None,
+                 cores_per_task: Optional[int] = None,
+                 memory_per_task: Optional[float] = None,
                  **kwargs):
         """
         Parameters
@@ -38,8 +40,8 @@ class BaseAdapter(abc.ABC):
 
         self.queue = {}
         self.function_map = {}
-        self.cores_per_task = kwargs.pop("cores_per_task", None)
-        self.memory_per_task = kwargs.pop("memory_per_task", None)
+        self.cores_per_task = cores_per_task
+        self.memory_per_task = memory_per_task
 
     def __repr__(self) -> str:
         return "<BaseAdapter>"
@@ -113,9 +115,8 @@ class BaseAdapter(abc.ABC):
 
             # Trap QCEngine Memory and CPU
             if task_spec["spec"]["function"].startswith("qcengine.compute") and self.qcengine_local_options:
-                task_kwargs = task_spec["spec"]["kwargs"]
                 task_spec = task_spec.copy()  # Copy for safety
-                task_spec["spec"]["kwargs"] = {**task_kwargs, **{"local_options": self.qcengine_local_options}}
+                task_spec["spec"]["kwargs"] = {**task_spec["spec"]["kwargs"], **{"local_options": self.qcengine_local_options}}
 
             queue_key, task = self._submit_task(task_spec)
 
