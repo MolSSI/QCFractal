@@ -1,22 +1,20 @@
 """
 QCPortal Database ODM
 """
-from typing import Any, Dict, List, Tuple, Union, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel
 
+from ..constants import get_scale
+from ..models.common_models import Molecule
+from ..statistics import wrap_statistics
 from .collection import Collection
 from .collection_utils import register_collection
-# from .. import client
-from .. import constants
-from .. import dict_utils
-from .. import statistics
-from ..models.common_models import Molecule
 
 
-class Entry(BaseModel):
+class MoleculeRecord(BaseModel):
     name: str
     molecule_id: str
     comment: Optional[str] = None
@@ -58,7 +56,7 @@ class Dataset(Collection):
         # If we making a new database we may need new hashes and json objects
         self._new_molecules = {}
         self._new_keywords = {}
-        self._new_entries = []
+        self._new_records = []
 
     class DataModel(Collection.DataModel):
 
@@ -68,30 +66,33 @@ class Dataset(Collection):
         default_driver: str = "energy"
         alias_keywords: Dict[str, Dict[str, str]] = {}
 
-        entries: List[Entry] = []
+        records: List[MoleculeRecord] = []
 
     def _check_state(self):
-        if self._new_molecules or self._new_keywords or self._new_entries:
-            raise ValueError("New molecules, keywords, or entries detected, run save before submitting new tasks.")
+        if self._new_molecules or self._new_keywords or self._new_records:
+            raise ValueError("New molecules, keywords, or records detected, run save before submitting new tasks.")
 
-    def _pre_save_prep(self, client):
-
-        # Preps any new molecules introduced to the Dataset before storing data.
-        mol_ret = client.add_molecules(self._new_molecules)
-
-        # Update internal molecule UUID's to servers UUID's
-        for entry in self._new_entries:
-            new_entry = entry.copy(update={"molecule_id": mol_ret[entry.molecule_id]})
-            self.data.entries.append(new_entry)
-
-        self._new_entries = []
-        self._new_molecules = {}
+    def _canonical_pre_save(self, client):
 
         for k in list(self._new_keywords.keys()):
             ret = client.add_keywords([self._new_keywords[k]])
             assert len(ret) == 1, "KeywordSet added incorrectly"
             self.data.alias_keywords[k[0]][k[1]] = ret[0]
             del self._new_keywords[k]
+
+    def _pre_save_prep(self, client):
+        self._canonical_pre_save(client)
+
+        # Preps any new molecules introduced to the Dataset before storing data.
+        mol_ret = client.add_molecules(self._new_molecules)
+
+        # Update internal molecule UUID's to servers UUID's
+        for record in self._new_records:
+            new_record = record.copy(update={"molecule_id": mol_ret[record.molecule_id]})
+            self.data.records.append(new_record)
+
+        self._new_records = []
+        self._new_molecules = {}
 
     def _default_parameters(self, driver, keywords, program):
 
@@ -137,7 +138,7 @@ class Dataset(Collection):
         ret.drop("molecule", axis=1, inplace=True)
 
         if scale:
-            ret[ret.select_dtypes(include=['number']).columns] *= constants.get_scale(scale)
+            ret[ret.select_dtypes(include=['number']).columns] *= get_scale(scale)
 
         return ret
 
@@ -180,7 +181,7 @@ class Dataset(Collection):
 
         mhash = molecule.get_hash()
         self._new_molecules[mhash] = molecule
-        self._new_entries.append(Entry(name=name, molecule_id=mhash, **kwargs))
+        self._new_records.append(MoleculeRecord(name=name, molecule_id=mhash, **kwargs))
 
     def query(self,
               method,
@@ -247,9 +248,9 @@ class Dataset(Collection):
         if local_results:
 
             data = []
-            for item in self.data.entries:
+            for record in self.data.records:
                 try:
-                    data.append([item.name, item.local_results[method]])
+                    data.append([record.name, record.local_results[method]])
                 except KeyError:
                     pass
 
@@ -258,10 +259,10 @@ class Dataset(Collection):
 
             # Convert to numeric
             if scale:
-                tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.get_scale(scale)
+                tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= get_scale(scale)
 
         else:
-            indexer = {e.name: e.molecule_id for e in self.data.entries}
+            indexer = {e.name: e.molecule_id for e in self.data.records}
 
             tmp_idx = self._query(indexer, query_keys, field=field, scale=scale)
             tmp_idx.rename(columns={"result": method + '/' + basis}, inplace=True)
@@ -307,7 +308,7 @@ class Dataset(Collection):
 
         driver, keywords, program = self._default_parameters(driver, keywords, program)
 
-        molecule_idx = [e.molecule_id for e in self.data.entries]
+        molecule_idx = [e.molecule_id for e in self.data.records]
         umols, uidx = np.unique(molecule_idx, return_index=True)
 
         ret = self.client.add_compute(program, method, basis, driver, keywords, list(umols))
@@ -323,7 +324,7 @@ class Dataset(Collection):
         ret : list of str
             The names of all reactions in the database
         """
-        return [x.name for x in self.data.entries]
+        return [x.name for x in self.data.records]
 
     # Statistical quantities
     def statistics(self, stype, value, bench="Benchmark"):
@@ -343,7 +344,7 @@ class Dataset(Collection):
         ret : pd.DataFrame, pd.Series, float
             Returns a DataFrame, Series, or float with the requested statistics depending on input.
         """
-        return statistics.wrap_statistics(stype, self.df, value, bench)
+        return wrap_statistics(stype, self.df, value, bench)
 
     # Getters
     def __getitem__(self, args):

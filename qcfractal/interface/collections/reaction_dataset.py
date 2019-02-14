@@ -3,29 +3,27 @@ QCPortal Database ODM
 """
 import itertools as it
 from enum import Enum
-from typing import Dict, List, Tuple, Union, Optional
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel
 
+from ..constants import get_scale
+from ..dict_utils import replace_dict_keys
+from ..models.common_models import Molecule
 from .collection import Collection
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
-# from .. import client
-from .. import constants
-from .. import dict_utils
-from .. import statistics
-from ..models.common_models import Molecule
 
 
-class _RxnEnum(str, Enum):
+class _ReactionTypeEnum(str, Enum):
     """Helper class for locking the reaction type into one or the other"""
     rxn = 'rxn'
     ie = 'ie'
 
 
-class Rxn(BaseModel):
+class ReactionRecord(BaseModel):
     """Data model for the `reactions` list in Dataset"""
     attributes: Dict[str, Union[int, float, str]]  # Might be overloaded key types
     reaction_results: Dict[str, dict]
@@ -81,11 +79,12 @@ class ReactionDataset(Dataset):
         # If we making a new database we may need new hashes and json objects
         self._new_molecules = {}
         self._new_keywords = {}
+        self._new_records = []
 
     class DataModel(Dataset.DataModel):
 
-        ds_type: _RxnEnum = _RxnEnum.rxn
-        entries: List[Rxn] = []
+        ds_type: _ReactionTypeEnum = _ReactionTypeEnum.rxn
+        records: List[ReactionRecord] = []
 
     def _check_state(self):
         if self._new_molecules or self._new_keywords:
@@ -94,7 +93,7 @@ class ReactionDataset(Dataset):
     def _form_index(self):
         # Unroll the index
         tmp_index = []
-        for rxn in self.data.entries:
+        for rxn in self.data.records:
             name = rxn.name
             for stoich_name in list(rxn.stoichiometry):
                 for mol_hash, coef in rxn.stoichiometry[stoich_name].items():
@@ -103,7 +102,18 @@ class ReactionDataset(Dataset):
         self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule", "coefficient"])
 
     def _pre_save_prep(self, client):
-        Dataset._pre_save_prep(self, client)
+        self._canonical_pre_save(client)
+
+        mol_ret = client.add_molecules(self._new_molecules)
+
+        # Update internal molecule UUID's to servers UUID's
+        for record in self._new_records:
+            stoichiometry = replace_dict_keys(record.stoichiometry, mol_ret)
+            new_record = record.copy(update={"stoichiometry": stoichiometry})
+            self.data.records.append(new_record)
+
+        self._new_records = []
+        self._new_molecules = {}
 
         self._form_index()
 
@@ -230,7 +240,7 @@ class ReactionDataset(Dataset):
         # # If reaction results
         if reaction_results:
             tmp_idx = pd.Series(index=self.df.index)
-            for rxn in self.data.entries:
+            for rxn in self.data.records:
                 try:
                     tmp_idx.loc[rxn.name] = rxn.reaction_results[stoich][method]
                 except KeyError:
@@ -238,7 +248,7 @@ class ReactionDataset(Dataset):
 
             # Convert to numeric
             tmp_idx = pd.to_numeric(tmp_idx, errors='ignore')
-            tmp_idx *= constants.get_scale(scale)
+            tmp_idx *= get_scale(scale)
 
             self.df[prefix + method + postfix] = tmp_idx
             return True
@@ -260,7 +270,7 @@ class ReactionDataset(Dataset):
 
         # scale
         tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
-        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.get_scale(scale)
+        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= get_scale(scale)
 
         # Apply to df
         self.df[tmp_idx.columns] = tmp_idx
@@ -348,7 +358,7 @@ class ReactionDataset(Dataset):
         """
 
         found = []
-        for num, x in enumerate(self.data.entries):
+        for num, x in enumerate(self.data.records):
             if x.name == name:
                 found.append(num)
 
@@ -358,7 +368,7 @@ class ReactionDataset(Dataset):
         if len(found) > 1:
             raise KeyError("Dataset:get_rxn: Multiple reactions of name '{}' found. Dataset failure.".format(name))
 
-        return self.data.entries[found[0]]
+        return self.data.records[found[0]]
 
     # Visualization
     def ternary(self, cvals=None):
@@ -535,9 +545,9 @@ class ReactionDataset(Dataset):
         else:
             raise TypeError("Passed in reaction_results not understood.")
 
-        rxn = Rxn(**rxn_dict)
+        rxn = ReactionRecord(**rxn_dict)
 
-        self.data.entries.append(rxn)
+        self._new_records.append(rxn)
 
         return rxn
 
