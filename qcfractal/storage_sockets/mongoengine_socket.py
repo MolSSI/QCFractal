@@ -205,9 +205,12 @@ class MongoengineSocket:
             if isinstance(mol, str):
                 id_mols[idx] = mol
             elif isinstance(mol, dict):
+                mol.pop("id", None)
                 dict_mols[idx] = mol
             elif isinstance(mol, interface.models.common_models.Molecule):
-                dict_mols[idx] = mol.json_dict()
+                mol_json = mol.json_dict()
+                mol_json.pop("id", None)
+                dict_mols[idx] = mol_json
             else:
                 meta["errors"].append((idx, "Data type not understood"))
 
@@ -774,7 +777,7 @@ class MongoengineSocket:
         try:
 
             if ("id" in data) and (data["id"] == "local"):
-                del data["id"]
+                data.pop("id", None)
 
             if overwrite:
                 # may use upsert=True to add or update
@@ -908,6 +911,7 @@ class MongoengineSocket:
         # try:
         for d in data:
 
+            d.pop("id", None)
             # search by index keywords not by all keys, much faster
             doc = Result.objects(
                 program=d['program'],
@@ -1184,8 +1188,7 @@ class MongoengineSocket:
         # try:
         for d in data:
             # search by hash index
-            if "id" in d:
-                del d["id"]
+            d.pop("id", None)
             doc = Procedure.objects(hash_index=d['hash_index'])
 
             if doc.count() == 0 or update_existing:
@@ -1405,6 +1408,9 @@ class MongoengineSocket:
         TODO: to be updated with needed
         """
 
+        if 'id' in data and data['id'] is None:
+            data.pop("id", None)
+
         update = {}
         not_allowed_keys = []
         # create safe query with allowed keys only
@@ -1444,8 +1450,7 @@ class MongoengineSocket:
         # try:
         for d in data:
             # search by hash index
-            if "id" in d:
-                del d["id"]
+            d.pop("id", None)
             doc = ServiceQueue.objects(hash_index=d['hash_index'])
 
             if doc.count() == 0 or update_existing:
@@ -1538,7 +1543,9 @@ class MongoengineSocket:
 
         match_count = 0
         modified_count = 0
-        for uid, data in updates:  # TODO: why this is replace not update?
+        for uid, data in updates:
+            if 'id' in data and data['id'] is None:
+                data.pop("id", None)
             result = self._tables["service_queue"].replace_one({"_id": ObjectId(uid)}, data)
             match_count += result.matched_count
             modified_count += result.modified_count
@@ -1595,6 +1602,7 @@ class MongoengineSocket:
                 # if d['base_result'][0] in ('results', 'procedure'):
                 #     base_result = DBRef(d['base_result'][0], d['base_result'][1])
 
+                d.pop("id", None)
                 result_obj = None
                 if d['base_result'][0] == 'results':
                     result_obj = Result(id=d['base_result'][1])
@@ -1659,10 +1667,10 @@ class MongoengineSocket:
 
         return found
 
-    def get_queue_(self, query, projection=None):
-        """TODO: to be replaced with a specific query, add limit"""
-
-        return self._get_generic(query, "task_queue", allow_generic=True, projection=projection)
+    # def get_queue_(self, query, projection=None):
+    #     """TODO: to be replaced with a specific query, add limit"""
+    #
+    #     return self._get_generic(query, "task_queue", allow_generic=True, projection=projection)
 
     def get_queue(self,
                   id=None,
