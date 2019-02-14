@@ -9,15 +9,27 @@ from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
 
 
-@testing.using_rdkit
+@testing.using_psi4
 def test_dataset_compute_gradient(fractal_compute_server):
     client = portal.FractalClient(fractal_compute_server)
 
-    ds = portal.collections.ReactionDataset("ds_energy", client, default_program="rdkit")
+    # Build a dataset
+    ds = portal.collections.Dataset("ds_energy", client, default_program="psi4", default_driver="gradient")
 
-    ds.add_ie_rxn("He1", portal.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
-    ds.add_ie_rxn("He2", portal.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
+    local = {"gradient": [0.03, 0, 0.02, -0.02, 0, -0.03]}
+    ds.add_entry("He1", portal.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"), local_results=local)
+    ds.add_entry("He2", portal.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"), local_results=local)
 
+    # Compute
+    ds.save()
+    ds.compute("HF", "sto-3g")
+    fractal_compute_server.await_results()
+
+    ds.query("HF", "sto-3g", as_array=True)
+    ds.query("gradient", None, local_results=True, as_array=True)
+
+    stats = ds.statistics("MUE", "HF/sto-3g", "gradient")
+    assert pytest.approx(stats.mean()) == 0.00984176986312362
 
 
 def test_reactiondataset_check_state(fractal_compute_server):
