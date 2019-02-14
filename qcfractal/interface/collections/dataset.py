@@ -27,7 +27,7 @@ class Entry(BaseModel):
 
 class Dataset(Collection):
     """
-    This QCA Dataset class.
+    The Dataset class for compu.
 
     Attributes
     ----------
@@ -37,8 +37,6 @@ class Dataset(Collection):
         JSON representation of the database backbone
     df : pd.DataFrame
         The underlying dataframe for the Dataset object
-    rxn_index : pd.Index
-        The unrolled reaction index for all reactions in the Dataset
     """
 
     def __init__(self, name, client=None, **kwargs):
@@ -53,9 +51,6 @@ class Dataset(Collection):
             The name of the Dataset
         client : client.FractalClient, optional
             A Portal client to connected to a server
-        ds_type : str, optional
-            The type of Dataset involved
-
         """
         super().__init__(name, client=client, **kwargs)
 
@@ -86,7 +81,7 @@ class Dataset(Collection):
         mol_ret = client.add_molecules(self._new_molecules)
 
         # Update internal molecule UUID's to servers UUID's
-        self.data.reactions = dict_utils.replace_dict_keys(self.data.reactions, mol_ret)
+        self.data.entries = dict_utils.replace_dict_keys(self.data.entries, mol_ret)
         self._new_molecules = {}
 
         for k in list(self._new_keywords.keys()):
@@ -117,7 +112,6 @@ class Dataset(Collection):
             keywords = self.data.alias_keywords[program][keywords]
 
         return driver, keywords, program
-
 
     def set_default_program(self, program: str) -> bool:
         """
@@ -263,14 +257,7 @@ class Dataset(Collection):
 
         return True
 
-    def compute(self,
-                method,
-                basis,
-                driver=None,
-                keywords=None,
-                program=None,
-                stoich="default",
-                ignore_ds_type=False):
+    def compute(self, method, basis, driver=None, keywords=None, program=None, stoich="default", ignore_ds_type=False):
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -345,8 +332,6 @@ class Dataset(Collection):
         """
         return [x.name for x in self.data.entries]
 
-
-
     # Statistical quantities
     def statistics(self, stype, value, bench="Benchmark"):
         """Summary
@@ -367,11 +352,6 @@ class Dataset(Collection):
         """
         return statistics.wrap_statistics(stype, self.df, value, bench)
 
-
-
-
-
-
     # Getters
     def __getitem__(self, args):
         """A wrapped to the underlying pd.DataFrame to access columnar data
@@ -387,5 +367,6 @@ class Dataset(Collection):
             A view of the underlying dataframe data
         """
         return self.df[args]
+
 
 register_collection(Dataset)

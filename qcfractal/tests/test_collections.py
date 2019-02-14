@@ -9,6 +9,17 @@ from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
 
 
+@testing.using_rdkit
+def test_dataset_compute_gradient(fractal_compute_server):
+    client = portal.FractalClient(fractal_compute_server)
+
+    ds = portal.collections.ReactionDataset("ds_energy", client, default_program="rdkit")
+
+    ds.add_ie_rxn("He1", portal.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
+    ds.add_ie_rxn("He2", portal.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
+
+
+
 def test_reactiondataset_check_state(fractal_compute_server):
     client = portal.FractalClient(fractal_compute_server)
     ds = portal.collections.ReactionDataset("check_state", client, ds_type="ie", default_program="rdkit")

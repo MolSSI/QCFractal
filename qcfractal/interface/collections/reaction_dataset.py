@@ -85,8 +85,7 @@ class ReactionDataset(Dataset):
     class DataModel(Dataset.DataModel):
 
         ds_type: _RxnEnum = _RxnEnum.rxn
-
-        reactions: List[Rxn] = []
+        entries: List[Rxn] = []
 
     def _check_state(self):
         if self._new_molecules or self._new_keywords:
@@ -95,7 +94,7 @@ class ReactionDataset(Dataset):
     def _form_index(self):
         # Unroll the index
         tmp_index = []
-        for rxn in self.data.reactions:
+        for rxn in self.data.entries:
             name = rxn.name
             for stoich_name in list(rxn.stoichiometry):
                 for mol_hash, coef in rxn.stoichiometry[stoich_name].items():
@@ -231,7 +230,7 @@ class ReactionDataset(Dataset):
         # # If reaction results
         if reaction_results:
             tmp_idx = pd.Series(index=self.df.index)
-            for rxn in self.data.reactions:
+            for rxn in self.data.entries:
                 try:
                     tmp_idx.loc[rxn.name] = rxn.reaction_results[stoich][method]
                 except KeyError:
@@ -332,17 +331,6 @@ class ReactionDataset(Dataset):
 
         return ret
 
-    def get_index(self):
-        """
-        Returns the current index of the database.
-
-        Returns
-        -------
-        ret : list of str
-            The names of all reactions in the database
-        """
-        return [x.name for x in self.data.reactions]
-
     def get_rxn(self, name):
         """
         Returns the JSON object of a specific reaction.
@@ -360,7 +348,7 @@ class ReactionDataset(Dataset):
         """
 
         found = []
-        for num, x in enumerate(self.data.reactions):
+        for num, x in enumerate(self.data.entries):
             if x.name == name:
                 found.append(num)
 
@@ -370,27 +358,7 @@ class ReactionDataset(Dataset):
         if len(found) > 1:
             raise KeyError("Dataset:get_rxn: Multiple reactions of name '{}' found. Dataset failure.".format(name))
 
-        return self.data.reactions[found[0]]
-
-    # Statistical quantities
-    def statistics(self, stype, value, bench="Benchmark"):
-        """Summary
-
-        Parameters
-        ----------
-        stype : str
-            The type of statistic in question
-        value : str
-            The method string to compare
-        bench : str, optional
-            The benchmark method for the comparison
-
-        Returns
-        -------
-        ret : pd.DataFrame, pd.Series, float
-            Returns a DataFrame, Series, or float with the requested statistics depending on input.
-        """
-        return statistics.wrap_statistics(stype, self.df, value, bench)
+        return self.data.entries[found[0]]
 
     # Visualization
     def ternary(self, cvals=None):
@@ -569,7 +537,7 @@ class ReactionDataset(Dataset):
 
         rxn = Rxn(**rxn_dict)
 
-        self.data.reactions.append(rxn)
+        self.data.entries.append(rxn)
 
         return rxn
 
@@ -697,21 +665,5 @@ class ReactionDataset(Dataset):
         #     ret["vmfc"] = [(mol, 1.0)]
 
         return ret
-
-    # Getters
-    def __getitem__(self, args):
-        """A wrapped to the underlying pd.DataFrame to access columnar data
-
-        Parameters
-        ----------
-        args : str
-            The column to access
-
-        Returns
-        -------
-        ret : pd.Series, pd.DataFrame
-            A view of the underlying dataframe data
-        """
-        return self.df[args]
 
 register_collection(ReactionDataset)
