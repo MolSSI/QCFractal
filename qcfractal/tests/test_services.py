@@ -152,27 +152,30 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
 
 @using_geometric
 @using_rdkit
-def test_service_gridoptimization_single(fractal_compute_server):
+def test_service_gridoptimization_single_opt(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server)
 
     # Add a HOOH
     hooh = portal.data.get_molecule("hooh.json")
-    mol_ret = client.add_molecules({"hooh": hooh})
+    initial_distance = hooh.measure([1, 2])
 
+    mol_ret = client.add_molecules({"hooh": hooh})
+    #
     # Options
     service = GridOptimizationInput(**{
         "gridoptimization_meta": {
-            "preoptimization": True,
+            "preoptimization":
+            True,
             "scans": [{
                 "type": "distance",
                 "indices": [1, 2],
-                "steps": [-0.1, 0.0, 0.1],
+                "steps": [-0.1, 0.0],
                 "step_type": "relative"
             }, {
                 "type": "dihedral",
                 "indices": [0, 1, 2, 3],
-                "steps": [90, 180],
+                "steps": [-90, 0],
                 "step_type": "absolute"
             }]
         },
@@ -194,8 +197,69 @@ def test_service_gridoptimization_single(fractal_compute_server):
     fractal_compute_server.await_services()
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
-    result = client.get_procedures({"procedure": "gridoptimization"})[0]
+    result = client.get_procedures({"hash_index": ret.hash_index})[0]
 
     assert result.starting_grid == (1, 0)
-    assert pytest.approx(result.final_energies((0, 0)), abs=1.e-4) == 0.4115125808975514
-    assert pytest.approx(result.final_energies((1, 1)), abs=1.e-4) == 0.4867717471566498
+    assert pytest.approx(result.final_energies((0, 0)), abs=1.e-4) == 0.0010044105443485617
+    assert pytest.approx(result.final_energies((1, 1)), abs=1.e-4) == 0.0026440964897817623
+
+    assert result.starting_molecule != result.initial_molecule
+
+    # Check initial vs startin molecule
+    assert result.initial_molecule == mol_ret["hooh"]
+    starting_mol = client.get_molecules([result.starting_molecule])[0]
+    assert pytest.approx(starting_mol.measure([1, 2])) != initial_distance
+    assert pytest.approx(starting_mol.measure([1, 2])) == 2.488686479260597
+
+
+@using_geometric
+@using_rdkit
+def test_service_gridoptimization_single_noopt(fractal_compute_server):
+
+    client = portal.FractalClient(fractal_compute_server)
+
+    # Add a HOOH
+    hooh = portal.data.get_molecule("hooh.json")
+    initial_distance = hooh.measure([1, 2])
+
+    # Options
+    service = GridOptimizationInput(**{
+        "gridoptimization_meta": {
+            "preoptimization": False,
+            "scans": [{
+                "type": "distance",
+                "indices": [1, 2],
+                "steps": [-0.1, 0.0],
+                "step_type": "relative"
+            }]
+        },
+        "optimization_meta": {
+            "program": "geometric",
+            "coordsys": "tric",
+        },
+        "qc_meta": {
+            "driver": "gradient",
+            "method": "UFF",
+            "basis": "",
+            "keywords": None,
+            "program": "rdkit",
+        },
+        "initial_molecule": hooh,
+    })
+
+    ret = client.add_service(service)
+    fractal_compute_server.await_services()
+    assert len(fractal_compute_server.list_current_tasks()) == 0
+
+    result = client.get_procedures({"hash_index": ret.hash_index})[0]
+
+    assert result.starting_grid == (1, )
+    assert pytest.approx(result.final_energies((0, )), abs=1.e-4) == 0.00032145876568280524
+
+    assert result.starting_molecule == result.initial_molecule
+
+    # Check initial vs startin molecule
+    assert result.initial_molecule == result.starting_molecule
+
+    mol = client.get_molecules([result.starting_molecule])[0]
+    assert pytest.approx(mol.measure([1, 2])) == initial_distance

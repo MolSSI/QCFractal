@@ -44,7 +44,7 @@ class GridOptimizationService(BaseService):
     constraint_template: str
     optimization_template: str
     # keyword_template: KeywordSet
-    starting_molecule_id: str
+    starting_molecule: Molecule
 
     class Config:
         json_encoders = json_encoders
@@ -100,15 +100,14 @@ class GridOptimizationService(BaseService):
         # Hard coded data, # TODO
         meta["dimensions"] = output.get_scan_dimensions()
 
+        meta["starting_molecule"] = service_input.initial_molecule
         if output.gridoptimization_meta.preoptimization:
             meta["iteration"] = -2
             meta["starting_grid"] = (0 for x in meta["dimensions"])
-            meta["starting_molecule_id"] = service_input.initial_molecule.id
         else:
             meta["iteration"] = 0
-            meta["starting_grid"] = self._calculate_starting_grid(output.gridoptimization_meta.scans,
-                                                                  service_input.initial_molecule)
-            meta["starting_molecule_id"] = service_input.initial_molecule.id
+            meta["starting_grid"] = GridOptimizationService._calculate_starting_grid(
+                output.gridoptimization_meta.scans, service_input.initial_molecule)
 
         return cls(**meta, storage_socket=storage_socket)
 
@@ -149,15 +148,12 @@ class GridOptimizationService(BaseService):
 
             complete_tasks = self.task_manager.get_tasks(self.storage_socket)
 
-            self.starting_molecule_id = complete_tasks["initial_opt"]["final_molecule"]
-
-            starting_mol = Molecule(**self.storage_socket.get_molecules([self.starting_molecule_id])["data"][0])
+            self.starting_molecule = Molecule(**self.storage_socket.get_molecules(
+                [complete_tasks["initial_opt"]["final_molecule"]])["data"][0])
             self.starting_grid = self._calculate_starting_grid(self.output.gridoptimization_meta.scans,
-                                                                  starting_mol)
+                                                               self.starting_molecule)
 
-            self.submit_optimization_tasks({
-                self.output.serialize_key(self.starting_grid): self.starting_molecule_id
-            })
+            self.submit_optimization_tasks({self.output.serialize_key(self.starting_grid): self.starting_molecule.id})
             self.iteration = 1
 
             return False
@@ -165,9 +161,7 @@ class GridOptimizationService(BaseService):
         # Special start iteration
         elif self.iteration == 0:
 
-            self.submit_optimization_tasks({
-                self.output.serialize_key(self.starting_grid): self.starting_molecule_id
-            })
+            self.submit_optimization_tasks({self.output.serialize_key(self.starting_grid): self.starting_molecule.id})
             self.iteration = 1
 
             return False
@@ -222,9 +216,15 @@ class GridOptimizationService(BaseService):
 
             # Construct constraints
             constraints = json.loads(self.constraint_template)
-            grid_values = self.output.get_scan_value(key)
-            for con_num, k in enumerate(grid_values):
-                constraints[con_num]["value"] = k
+
+            scan_indices = self.output.deserialize_key(key)
+            for con_num, scan in enumerate(self.output.gridoptimization_meta.scans):
+                idx = scan_indices[con_num]
+                if scan.step_type == "absolute":
+                    constraints[con_num]["value"] = scan.steps[idx]
+                else:
+                    constraints[con_num]["value"] = (scan.steps[idx] + self.starting_molecule.measure(scan.indices))
+
             packet["meta"]["keywords"]["values"]["constraints"] = {"set": constraints}
 
             # Build new molecule
@@ -239,13 +239,13 @@ class GridOptimizationService(BaseService):
         Finishes adding data to the GridOptimization object
         """
 
-        self.output.Config.allow_mutation = True
-        self.output.success = True
-        self.output.status = "COMPLETE"
+        output = self.output.copy(update={
+            "success": True,
+            "status": "COMPLETE",
+            "starting_molecule": self.starting_molecule.id,
+            "starting_grid": self.starting_grid,
+            "grid_optimizations": self.grid_optimizations,
+            "final_energy_dict": self.final_energies,
+        })
 
-        self.output.starting_grid = self.starting_grid
-        self.output.grid_optimizations = self.grid_optimizations
-        self.output.final_energy_dict = self.final_energies
-
-        self.output.Config.allow_mutation = False
-        return self.output
+        return output
