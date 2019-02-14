@@ -3,7 +3,7 @@ QCPortal Database ODM
 """
 import itertools as it
 from enum import Enum
-from typing import Dict, List, Tuple, Union, Optional
+from typing import Any, Dict, List, Tuple, Union, Optional
 
 import numpy as np
 import pandas as pd
@@ -18,18 +18,11 @@ from .. import statistics
 from ..models.common_models import Molecule
 
 
-class _RxnEnum(str, Enum):
-    """Helper class for locking the reaction type into one or the other"""
-    rxn = 'rxn'
-    ie = 'ie'
-
-
-class Rxn(BaseModel):
-    """Data model for the `reactions` list in Dataset"""
-    attributes: Dict[str, Union[int, float, str]]  # Might be overloaded key types
-    reaction_results: Dict[str, dict]
+class Entry(BaseModel):
     name: str
-    stoichiometry: Dict[str, Dict[str, float]]
+    molecule_id: str
+    comment: Optional[str] = None
+    manual_results: Dict[str, Any]
 
 
 class Dataset(Collection):
@@ -48,7 +41,7 @@ class Dataset(Collection):
         The unrolled reaction index for all reactions in the Dataset
     """
 
-    def __init__(self, name, client=None, ds_type="rxn", **kwargs):
+    def __init__(self, name, client=None, **kwargs):
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -64,57 +57,28 @@ class Dataset(Collection):
             The type of Dataset involved
 
         """
-        ds_type = ds_type.lower()
-        super().__init__(name, client=client, ds_type=ds_type, **kwargs)
-
-        # Internal data
-        self.rxn_index = pd.DataFrame()
-        self.df = pd.DataFrame()
+        super().__init__(name, client=client, **kwargs)
 
         # Initialize internal data frames
         self.df = pd.DataFrame(index=self.get_index())
-
-        self.rxn_index = None
-        self._form_index()
 
         # If we making a new database we may need new hashes and json objects
         self._new_molecules = {}
         self._new_keywords = {}
 
     class DataModel(Collection.DataModel):
-        """
-        Internal Data structure of Dataset typed by PyDantic
-
-        This structure validates input, allows server-side validation and data security,
-        and will create the information to pass back and forth between server and client
-        """
-
-        ds_type: _RxnEnum = _RxnEnum.rxn
 
         # Defaults
         default_program: Optional[str] = None
         default_keywords: Dict[str, str] = {}
         default_driver: str = "energy"
+        alias_keywords: Dict[str, Dict[str, str]] = {}
 
-        reactions: List[Rxn] = []
-        alias_keywords: Dict[str, Dict[str, str]] = {}  # program: option_name: option_id
-
-        known_compute: List[Tuple[str, Optional[str], str, Optional[str]]] = []  # method, basis, driver, keywords
+        entries: List[Entry] = []
 
     def _check_state(self):
         if self._new_molecules or self._new_keywords:
             raise ValueError("New molecules or keywords detected, run save before submitting new tasks.")
-
-    def _form_index(self):
-        # Unroll the index
-        tmp_index = []
-        for rxn in self.data.reactions:
-            name = rxn.name
-            for stoich_name in list(rxn.stoichiometry):
-                for mol_hash, coef in rxn.stoichiometry[stoich_name].items():
-                    tmp_index.append([name, stoich_name, mol_hash, coef])
-
-        self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule", "coefficient"])
 
     def _pre_save_prep(self, client):
 
@@ -130,8 +94,6 @@ class Dataset(Collection):
             assert len(ret) == 1, "KeywordSet added incorrectly"
             self.data.alias_keywords[k[0]][k[1]] = ret[0]
             del self._new_keywords[k]
-
-        self._form_index()
 
     def _default_parameters(self, driver, keywords, program):
 
@@ -156,53 +118,6 @@ class Dataset(Collection):
 
         return driver, keywords, program
 
-    def _unroll_query(self, keys, stoich, field="return_result"):
-        """Unrolls a complex query into a "flat" query for the server object
-
-        Parameters
-        ----------
-        keys : dict
-            Server query fields
-        stoich : str
-            The stoichiometry to access for the query (default/cp/cp3/etc)
-        field : str, optional
-            The results field to query on
-
-        Returns
-        -------
-        ret : pd.DataFrame
-            A DataFrame representation of the unrolled query
-        """
-        self._check_state()
-
-        tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
-        tmp_idx = tmp_idx.reset_index(drop=True)
-
-        # There could be duplicates so take the unique and save the map
-        umols, uidx = np.unique(tmp_idx["molecule"], return_index=True)
-
-        # Evaluate the overall dataframe
-        query_keys = {k: v for k, v in keys.items()}
-        query_keys["molecule"] = list(umols)
-        query_keys["projection"] = {field: True, "molecule": True}
-        values = pd.DataFrame(self.client.get_results(**query_keys), columns=["molecule", field])
-
-        # Join on molecule hash
-        tmp_idx = tmp_idx.merge(values, how="left", on="molecule")
-
-        # Apply stoich values
-        tmp_idx[field] *= tmp_idx["coefficient"]
-        tmp_idx = tmp_idx.drop(['stoichiometry', 'molecule', 'coefficient'], axis=1)
-
-        # If *any* value is null in the stoich sum, the whole thing should be Null. Pandas is being too clever
-        null_mask = tmp_idx.copy()
-        null_mask[field] = null_mask[field].isnull()
-        null_mask = null_mask.groupby(["name"]).sum() != False
-
-        tmp_idx = tmp_idx.groupby(["name"]).sum()
-        tmp_idx[null_mask] = np.nan
-
-        return tmp_idx
 
     def set_default_program(self, program: str) -> bool:
         """
@@ -245,9 +160,6 @@ class Dataset(Collection):
               driver=None,
               keywords=None,
               program=None,
-              stoich="default",
-              prefix="",
-              postfix="",
               reaction_results=False,
               scale="kcal",
               field="return_result",
@@ -431,36 +343,9 @@ class Dataset(Collection):
         ret : list of str
             The names of all reactions in the database
         """
-        return [x.name for x in self.data.reactions]
+        return [x.name for x in self.data.entries]
 
-    def get_rxn(self, name):
-        """
-        Returns the JSON object of a specific reaction.
 
-        Parameters
-        ----------
-        name : str
-            The name of the reaction to query
-
-        Returns
-        -------
-        ret : dict
-            The JSON representation of the reaction
-
-        """
-
-        found = []
-        for num, x in enumerate(self.data.reactions):
-            if x.name == name:
-                found.append(num)
-
-        if len(found) == 0:
-            raise KeyError("Dataset:get_rxn: Reaction name '{}' not found.".format(name))
-
-        if len(found) > 1:
-            raise KeyError("Dataset:get_rxn: Multiple reactions of name '{}' found. Dataset failure.".format(name))
-
-        return self.data.reactions[found[0]]
 
     # Statistical quantities
     def statistics(self, stype, value, bench="Benchmark"):
@@ -482,311 +367,10 @@ class Dataset(Collection):
         """
         return statistics.wrap_statistics(stype, self.df, value, bench)
 
-    # Visualization
-    def ternary(self, cvals=None):
-        """Plots a ternary diagram of the DataBase if available
 
-        Parameters
-        ----------
-        cvals : None, optional
-            Description
 
-        """
-        raise Exception("MPL not avail")
 
-#        return visualization.Ternary2D(self.df, cvals=cvals)
 
-# Adders
-
-    def parse_stoichiometry(self, stoichiometry):
-        """
-        Parses a stiochiometry list.
-
-        Parameters
-        ----------
-        stoichiometry : list
-            A list of tuples describing the stoichiometry.
-
-        Returns
-        -------
-        stoich : list
-            A list of formatted tuples describing the stoichiometry for use in a MongoDB.
-
-        Notes
-        -----
-        This function attempts to convert the molecule into its correspond hash. The following will happen depending on the form of the Molecule.
-            - Molecule hash - Used directly in the stoichiometry.
-            - Molecule class - Hash is obtained and the molecule will be added to the database upon saving.
-            - Molecule string - Molecule will be converted to a Molecule class and the same process as the above will occur.
-
-
-        Examples
-        --------
-
-
-        """
-
-        ret = {}
-
-        mol_hashes = []
-        mol_values = []
-
-        for line in stoichiometry:
-            if len(line) != 2:
-                raise KeyError("Dataset: Parse stoichiometry: passed in as a list must of key : value type")
-
-            # Get the values
-            try:
-                mol_values.append(float(line[1]))
-            except:
-                raise TypeError("Dataset: Parse stoichiometry: must be able to cast second value must be as float.")
-
-            # What kind of molecule is it?
-            mol = line[0]
-
-            # This is a molecule hash, should be in the database
-            if isinstance(mol, str) and (len(mol) == 40):
-                molecule_hash = mol
-
-            elif isinstance(mol, str):
-                qcf_mol = Molecule.from_data(mol)
-
-                molecule_hash = qcf_mol.get_hash()
-
-                if molecule_hash not in list(self._new_molecules):
-                    self._new_molecules[molecule_hash] = qcf_mol.json_dict()
-
-            elif isinstance(mol, Molecule):
-                molecule_hash = mol.get_hash()
-
-                if molecule_hash not in list(self._new_molecules):
-                    self._new_molecules[molecule_hash] = mol.json_dict()
-
-            else:
-                raise TypeError("Dataset: Parse stoichiometry: first value must either be a molecule hash, "
-                                "a molecule str, or a Molecule class.")
-
-            mol_hashes.append(molecule_hash)
-
-        # Sum together the coefficients of duplicates
-        ret = {}
-        for mol, coef in zip(mol_hashes, mol_values):
-            if mol in list(ret):
-                ret[mol] += coef
-            else:
-                ret[mol] = coef
-
-        return ret
-
-    def add_rxn(self, name, stoichiometry, reaction_results=None, attributes=None, other_fields=None):
-        """
-        Adds a reaction to a database object.
-
-        Parameters
-        ----------
-        name : str
-            Name of the reaction.
-        stoichiometry : list or dict
-            Either a list or dictionary of lists
-        reaction_results :  dict or None, Optional, Default: None
-            A dictionary of the computed total interaction energy results
-        attributes :  dict or None, Optional, Default: None
-            A dictionary of attributes to assign to the reaction
-        other_fields : dict or None, Optional, Default: None
-            A dictionary of additional user defined fields to add to the reaction entry
-
-        Notes
-        -----
-
-        Examples
-        --------
-
-        Returns
-        -------
-        ret : dict
-            A complete JSON specification of the reaction
-
-
-        """
-        if reaction_results is None:
-            reaction_results = {}
-        if attributes is None:
-            attributes = {}
-        if other_fields is None:
-            other_fields = {}
-        rxn_dict = {"name": name}
-
-        # Set name
-        if name in self.get_index():
-            raise KeyError("Dataset: Name '{}' already exists. "
-                           "Please either delete this entry or call the update function.".format(name))
-
-        # Set stoich
-        if isinstance(stoichiometry, dict):
-            rxn_dict["stoichiometry"] = {}
-
-            if "default" not in list(stoichiometry):
-                raise KeyError("Dataset:add_rxn: Stoichiometry dict must have a 'default' key.")
-
-            for k, v in stoichiometry.items():
-                rxn_dict["stoichiometry"][k] = self.parse_stoichiometry(v)
-
-        elif isinstance(stoichiometry, (tuple, list)):
-            rxn_dict["stoichiometry"] = {}
-            rxn_dict["stoichiometry"]["default"] = self.parse_stoichiometry(stoichiometry)
-        else:
-            raise TypeError("Dataset:add_rxn: Type of stoichiometry input was not recognized:", type(stoichiometry))
-
-        # Set attributes
-        if not isinstance(attributes, dict):
-            raise TypeError("Dataset:add_rxn: attributes must be a dictionary, not '{}'".format(type(attributes)))
-
-        rxn_dict["attributes"] = attributes
-
-        if not isinstance(other_fields, dict):
-            raise TypeError("Dataset:add_rxn: other_fields must be a dictionary, not '{}'".format(type(attributes)))
-
-        for k, v in other_fields.items():
-            rxn_dict[k] = v
-
-        if "default" in list(reaction_results):
-            rxn_dict["reaction_results"] = reaction_results
-        elif isinstance(reaction_results, dict):
-            rxn_dict["reaction_results"] = {}
-            rxn_dict["reaction_results"]["default"] = reaction_results
-        else:
-            raise TypeError("Passed in reaction_results not understood.")
-
-        rxn = Rxn(**rxn_dict)
-
-        self.data.reactions.append(rxn)
-
-        return rxn
-
-    def add_ie_rxn(self, name, mol, **kwargs):
-        """Add a interaction energy reaction entry to the database. Automatically
-        builds CP and no-CP reactions for the fragmented molecule.
-
-        Parameters
-        ----------
-        name : str
-            The name of the reaction
-        mol : Molecule
-            A molecule with multiple fragments
-        **kwargs
-            Additional kwargs to pass into `build_id_fragments`.
-
-        Returns
-        -------
-        ret : dict
-            A JSON representation of the new reaction.
-        """
-        reaction_results = kwargs.pop("reaction_results", {})
-        attributes = kwargs.pop("attributes", {})
-        other_fields = kwargs.pop("other_fields", {})
-
-        stoichiometry = self.build_ie_fragments(mol, name=name, **kwargs)
-        return self.add_rxn(
-            name, stoichiometry, reaction_results=reaction_results, attributes=attributes, other_fields=other_fields)
-
-    @staticmethod
-    def build_ie_fragments(mol, **kwargs):
-        """
-        Build the stoichiometry for an Interaction Energy.
-
-        Parameters
-        ----------
-        mol : Molecule class or str
-            Molecule to fragment.
-        do_default : bool
-            Create the default (noCP) stoichiometry.
-        do_cp : bool
-            Create the counterpoise (CP) corrected stoichiometry.
-        do_vmfc : bool
-            Create the Valiron-Mayer Function Counterpoise (VMFC) corrected stoichiometry.
-        max_nbody : int
-            What is the maximum fragment level built, if zero defaults to the maximum number of fragments.
-
-        Notes
-        -----
-
-        Examples
-        --------
-
-        Returns
-        -------
-        ret : dict
-            A JSON representation of the fragmented molecule.
-
-        """
-
-        do_default = kwargs.pop("do_default", True)
-        do_cp = kwargs.pop("do_cp", True)
-        do_vmfc = kwargs.pop("do_vmfc", False)
-        max_nbody = kwargs.pop("max_nbody", 0)
-
-        if not isinstance(mol, Molecule):
-
-            mol = Molecule.from_data(mol, **kwargs)
-
-        ret = {}
-
-        max_frag = len(mol.fragments)
-        if max_nbody == 0:
-            max_nbody = max_frag
-
-        if max_nbody < 2:
-            raise AttributeError("Dataset:build_ie_fragments: Molecule must have at least two fragments.")
-
-        # Build some info
-        fragment_range = list(range(max_frag))
-
-        # Loop over the bodis
-        for nbody in range(1, max_nbody):
-            nocp_tmp = []
-            cp_tmp = []
-            for k in range(1, nbody + 1):
-                take_nk = nCr(max_frag - k - 1, nbody - k)
-                sign = ((-1)**(nbody - k))
-                coef = take_nk * sign
-                for frag in it.combinations(fragment_range, k):
-                    if do_default:
-                        nocp_tmp.append((mol.get_fragment(frag, orient=True), coef))
-                    if do_cp:
-                        ghost = list(set(fragment_range) - set(frag))
-                        cp_tmp.append((mol.get_fragment(frag, ghost, orient=True), coef))
-
-            if do_default:
-                ret["default" + str(nbody)] = nocp_tmp
-
-            if do_cp:
-                ret["cp" + str(nbody)] = cp_tmp
-
-        # VMFC is a special beast
-        if do_vmfc:
-            raise KeyError("VMFC isnt quite ready for primetime!")
-
-            # ret.update({"vmfc" + str(nbody): [] for nbody in range(1, max_nbody)})
-            # nbody_range = list(range(1, max_nbody))
-            # for nbody in nbody_range:
-            #     for cp_combos in it.combinations(fragment_range, nbody):
-            #         basis_tuple = tuple(cp_combos)
-            #         for interior_nbody in nbody_range:
-            #             for x in it.combinations(cp_combos, interior_nbody):
-            #                 ghost = list(set(basis_tuple) - set(x))
-            #                 ret["vmfc" + str(interior_nbody)].append((mol.get_fragment(x, ghost), 1.0))
-
-        # Add in the maximal position
-        if do_default:
-            ret["default"] = [(mol, 1.0)]
-
-        if do_cp:
-            ret["cp"] = [(mol, 1.0)]
-
-        # if do_vmfc:
-        #     ret["vmfc"] = [(mol, 1.0)]
-
-        return ret
 
     # Getters
     def __getitem__(self, args):

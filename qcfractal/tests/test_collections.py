@@ -9,9 +9,9 @@ from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
 
 
-def test_dataset_check_state(fractal_compute_server):
+def test_reactiondataset_check_state(fractal_compute_server):
     client = portal.FractalClient(fractal_compute_server)
-    ds = portal.collections.Dataset("check_state", client, ds_type="ie", default_program="rdkit")
+    ds = portal.collections.ReactionDataset("check_state", client, ds_type="ie", default_program="rdkit")
     ds.add_ie_rxn("He1", portal.Molecule.from_data("He -3 0 0\n--\nHe 0 0 2"))
 
     with pytest.raises(ValueError):
@@ -33,14 +33,14 @@ def test_dataset_check_state(fractal_compute_server):
 
 
 @testing.using_psi4
-def test_compute_dataset_regression(fractal_compute_server):
+def test_compute_reactiondataset_regression(fractal_compute_server):
     """
     Tests an entire server and interaction energy dataset run
     """
 
     client = portal.FractalClient(fractal_compute_server)
     ds_name = "He_PES"
-    ds = portal.collections.Dataset(ds_name, client, ds_type="ie")
+    ds = portal.collections.ReactionDataset(ds_name, client, ds_type="ie")
 
     # Add two helium dimers to the DB at 4 and 8 bohr
     He1 = portal.Molecule.from_data([[2, 0, 0, -2], [2, 0, 0, 2]], dtype="numpy", units="bohr", frags=[1])
@@ -48,15 +48,15 @@ def test_compute_dataset_regression(fractal_compute_server):
 
     # Save the DB and re-acquire via classmethod
     r = ds.save()
-    ds = portal.collections.Dataset.from_server(client, ds_name)
+    ds = portal.collections.ReactionDataset.from_server(client, ds_name)
     ds.set_default_program("psi4")
-    assert "Dataset(" in str(ds)
+    assert "ReactionDataset(" in str(ds)
 
     # Test collection lists
     ret = client.list_collections()
-    assert ds_name in ret["dataset"]
+    assert ds_name in ret["reactiondataset"]
 
-    ret = client.list_collections("dataset")
+    ret = client.list_collections("reactiondataset")
     assert ds_name in ret
 
     He2 = portal.Molecule.from_data([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
@@ -64,7 +64,7 @@ def test_compute_dataset_regression(fractal_compute_server):
 
     # Save the DB and overwrite the result, reacquire via client
     r = ds.save(overwrite=True)
-    ds = client.get_collection("dataset", ds_name)
+    ds = client.get_collection("reactiondataset", ds_name)
 
     # Compute SCF/sto-3g
     ret = ds.compute("SCF", "STO-3G")
@@ -84,14 +84,14 @@ def test_compute_dataset_regression(fractal_compute_server):
 
 
 @testing.using_psi4
-def test_compute_dataset_keywords(fractal_compute_server):
+def test_compute_reactiondataset_keywords(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server)
 
     mol1 = portal.Molecule.from_data("He 0 0 -1.1\n--\nHe 0 0 1.1")
 
     # Build a dataset
-    ds = portal.collections.Dataset("dataset_options", client, ds_type="ie")
+    ds = portal.collections.ReactionDataset("dataset_options", client, ds_type="ie")
     ds.set_default_program("Psi4")
 
     ds.add_ie_rxn("He2", mol1)
@@ -256,4 +256,4 @@ def test_missing_collection(fractal_compute_server):
 
     client = portal.FractalClient(fractal_compute_server)
     with pytest.raises(KeyError):
-        client.get_collection("dataset", "_waffles_")
+        client.get_collection("reactiondataset", "_waffles_")
