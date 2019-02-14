@@ -1,14 +1,13 @@
 """
 QCPortal Database ODM
 """
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel
 
 from ..constants import get_scale
-from ..models.common_models import Molecule
 from ..statistics import wrap_statistics
 from .collection import Collection
 from .collection_utils import register_collection
@@ -23,7 +22,7 @@ class MoleculeRecord(BaseModel):
 
 class Dataset(Collection):
     """
-    The Dataset class for compu.
+    The Dataset class for homogeneous computations on many molecules.
 
     Attributes
     ----------

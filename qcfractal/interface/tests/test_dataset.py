@@ -82,6 +82,9 @@ def water_ds():
 
     ds.add_ie_rxn("Water dimer", dimer.to_string())
 
+    # Add unverified records (requires a active server)
+    ds.data.records = ds._new_records
+
     return ds
 
 
@@ -179,6 +182,10 @@ def nbody_ds():
             'default': {}
         }
     }
+
+    # Add unverified records (requires a active server)
+    ds.data.records = ds._new_records
+
     return ds
 
 

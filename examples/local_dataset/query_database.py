@@ -4,7 +4,7 @@ import qcfractal.interface as portal
 p = portal.FractalClient("localhost:7777", verify=False)
 
 # Pull data from the server
-ds = portal.collections.Dataset.from_server(p, "Water")
+ds = portal.collections.ReactionDataset.from_server(p, "Water")
 
 # Submit computations
 r = ds.query("SCF", "STO-3G", stoich="cp", scale="kcal", program="psi4")

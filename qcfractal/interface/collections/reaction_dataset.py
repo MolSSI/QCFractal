@@ -3,7 +3,7 @@ QCPortal Database ODM
 """
 import itertools as it
 from enum import Enum
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Union
 
 import numpy as np
 import pandas as pd
@@ -12,7 +12,6 @@ from pydantic import BaseModel
 from ..constants import get_scale
 from ..dict_utils import replace_dict_keys
 from ..models.common_models import Molecule
-from .collection import Collection
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
 
@@ -33,7 +32,7 @@ class ReactionRecord(BaseModel):
 
 class ReactionDataset(Dataset):
     """
-    This QCA Dataset class.
+    The ReactionDataset class for homogeneous computations on many reactions.
 
     Attributes
     ----------
