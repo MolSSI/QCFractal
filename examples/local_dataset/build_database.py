@@ -2,7 +2,7 @@ import qcfractal.interface as portal
 
 # Builds a blank database object
 # Tell the database we are going to build interaction energies
-ds = portal.collections.Dataset("Water", ds_type="ie")
+ds = portal.collections.ReactionDataset("Water", ds_type="ie")
 
 # Portal has some molecules stored for easy access.
 water_dimer = portal.data.get_molecule("water_dimer_minima.psimol")

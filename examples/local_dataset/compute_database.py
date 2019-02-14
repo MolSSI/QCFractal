@@ -4,7 +4,7 @@ import qcfractal.interface as portal
 p = portal.FractalClient("localhost:7777", verify=False)
 
 # Pull data from the server
-ds = portal.collections.Dataset.from_server(p, "Water")
+ds = portal.collections.ReactionDataset.from_server(p, "Water")
 print(ds.data)
 
 # Print the current data
