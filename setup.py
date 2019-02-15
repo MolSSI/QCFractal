@@ -1,10 +1,18 @@
 import setuptools
 import versioneer
 
+short_description = "A distributed compute and database platform for quantum chemistry."
+
+try:
+    with open("README.md", "r") as handle:
+        long_description = handle.read()
+except FileNotFoundError:
+    long_description = short_description
+
 if __name__ == "__main__":
     setuptools.setup(
         name='qcfractal',
-        description='A high throughput computing and database tool for quantum chemistry.',
+        description=short_description,
         author='Daniel Smith',
         author_email='dgasmith@vt.edu',
         url="https://github.com/molssi/qcfractal",
@@ -62,4 +70,6 @@ if __name__ == "__main__":
             'Programming Language :: Python :: 3',
         ],
         zip_safe=True,
+        long_description=long_description,
+        long_description_content_type="text/markdown"
     )
