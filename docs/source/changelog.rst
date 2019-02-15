@@ -15,42 +15,46 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
-0.5.0b1 / 2019-02-14
+0.5.0rc1 / 2019-02-15
 -------------------
 
 New Features
 ++++++++++++
 - (:pr:`114`) A new Collection: ``Generic``, has been added to allow semi-structured user defined data to be built without relying only on implemented collections.
-- (:pr:`125`) QCElemental common PyDantic models have been integrated throughout the QCFractal code base, making a common model repository for the prevalent ``Molecule`` object come from a single source
-  Also converted QCFractal to use pass serialized PyDantic objects between QCFractal and QCEngine to allow validation and (de)serialization of objects automatically.
-- (:pr:`130`, :pr:`142`, and :pr:`145`) PyDantic serialization has been added to all REST calls leaving and entering both QCFractal Servers and QCFractal Portals. This allows automatic REST call validation and formatting on both server and client sides.
+- (:pr:`125`) QCElemental common pydantic models have been integrated throughout the QCFractal code base, making a common model repository for the prevalent ``Molecule`` object (and others) come from a single source.
+  Also converted QCFractal to pass serialized pydantic objects between QCFractal and QCEngine to allow validation and (de)serialization of objects automatically.
+- (:pr:`130`, :pr:`142`, and :pr:`145`) Pydantic serialization has been added to all REST calls leaving and entering both QCFractal Servers and QCFractal Portals. This allows automatic REST call validation and formatting on both server and client sides.
 - (:pr:`141` and :pr:`152`) A new GridOptimization service has been added to QCFractal. This feature supports relative starting positions from the input molecule.
 
 Enhancements
 ++++++++++++
-- (:pr:`110`) QCFractal now depends on QCElemental and QCEngine to improve consistent imports
-- (:pr:`116`) Queue Manger Adapters are now more generalized and inherit more from the base classes
-- (:pr:`118`) Single and Optimization procedures have been streamlined to have simpler submission specifications and less redundancy
+
+General note: ``Options`` objects have been renamed to ``KeywordSet`` to better match their goal (See :pr:`155`.)
+
+- (:pr:`110`) QCFractal now depends on QCElemental and QCEngine to improve consistent imports.
+- (:pr:`116`) Queue Manger Adapters are now more generalized and inherit more from the base classes.
+- (:pr:`118`) Single and Optimization procedures have been streamlined to have simpler submission specifications and less redundancy.
 - (:pr:`133`) Fractal Server and Queue Manager startups are much more verbose and include version information.
-- (:pr:`135`) The TorsionDriveService has a much more regular structure based on PyDantic models and a new TorsionDrive model has been created to enforce both validation and regularity
-- (:pr:`143`) ``Task``s in the Mongo database can now be referenced by multiple ``Results`` and ``Procedures`` (i.e. a single ``Result`` or ``Procedure`` does not have ownership of a ``Task``)
-- (:pr:`147`) Services submission has been overhauled such that all services submit to a single source. Right now only one service can be submitted at a time (future feature).
-  TorsionDrive can now have multiple molecule inputs
-- (:pr:`149`) Package import logic has been reworked to reduce the boot-up time of QCFractal from 3000ms at the worst to about 600ms
-- (:pr:`150`) ``KeywordSet`` are now modeled much more consistently through PyDantic models and are consistently hashed to survive round trip serialization.
-  ``KeywordSet`` is the new name for the old ``Options`` objects to better match their goal (See :pr:`155`)
+- (:pr:`135`) The TorsionDriveService has a much more regular structure based on pydantic models and a new TorsionDrive model has been created to enforce both validation and regularity.
+- (:pr:`143`) ``Task``s in the Mongo database can now be referenced by multiple ``Results`` and ``Procedures`` (i.e. a single ``Result`` or ``Procedure`` does not have ownership of a ``Task``.)
+- (:pr:`147`) Service submission has been overhauled such that all services submit to a single source. Right now, only one service can be submitted at a time (to be expanded in a future feature.)
+  TorsionDrive can now have multiple molecule inputs.
+- (:pr:`149`) Package import logic has been reworked to reduce the boot-up time of QCFractal from 3000ms at the worst to about 600ms.
+- (:pr:`150`) ``KeywordSet``s are now modeled much more consistently through pydantic models and are consistently hashed to survive round trip serialization.
 - (:pr:`153`) Datasets now support option aliases which map to the consistent ``KeywordSet`` models from :pr:`150`.
 - (:pr:`155`) Adding multiple ``Molecule`` or ``Result`` objects to the database at the same time now always return their Database ID's if added, and order of returned list of ID's matches input order.
   This PR also renamed ``Options`` to ``KeywordSet`` to properly reflect the goal of the object.
 - (:pr:`156`) Memory and Number of Cores per Task can be specified when spinning up a Queue Manager and/or Queue Adapter objects.
-  These settings are passed on to QCEngine. These must be hard-set by users.
+  These settings are passed on to QCEngine. These must be hard-set by users and no environment inspection is done. Users may continue to choose
+  not to set these and QCEngine will consume everything it can when it lands on a compute.
 - (:pr:`162`) Services can now be saved and fetched from the database through MongoEngine with document validation on both actions.
 
 Bug Fixes
 +++++++++
-- (:pr:`132`) Fixed MongoEngine Socket bug where calling some functions before others resulted in a bug due to lack of initialized variables
-- (:pr:`133`) Molecule objects cannot be oriented once they enter the QCFractal ecosystem. Molecules also cannot be oriented by programs invoked by the QCFractal ecosystem
-- (:pr:`146`) CI environments have been simplified to make maintaining them easier and improve test coverage and find more bugs
+- (:pr:`132`) Fixed MongoEngine Socket bug where calling some functions before others resulted in an error due to lack of initialized variables.
+- (:pr:`133`) ``Molecule`` objects cannot be oriented once they enter the QCFractal ecosystem (after optional initial orientation.)
+  ``Molecule``s also cannot be oriented by programs invoked by the QCFractal ecosystem so orientation is preserved post-calculation.
+- (:pr:`146`) CI environments have been simplified to make maintaining them easier, improve test coverage, and find more bugs.
 - (:pr:`158`) Database addition documents in general will strip IDs from the input dictionary which caused issues from MongoEngine having a special treatment for the dictionary key "id".
 
 
