@@ -325,13 +325,13 @@ class ServiceQueue(CustomDynamicDocument):
     status = db.StringField()
     tag = db.StringField(default=None)
     hash_index = db.StringField(required=True)
-    # procedure = db.ReferenceField()
+    # procedure = db.ReferenceField(Procedure)
 
     meta = {
         'indexes': [
             'status',
             {'fields': ("status", "tag", "hash_index"), 'unique': False},
-            # {'fields': ('hash_index',), 'unique': True}
+            # {'fields': ('procedure',), 'unique': True}
 
         ]
     }

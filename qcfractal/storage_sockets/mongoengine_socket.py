@@ -35,13 +35,6 @@ from .. import interface
 # from bson.dbref import DBRef
 
 
-def _translate_id_index(index):
-    if index in ["id", "ids"]:
-        return "_id"
-    else:
-        raise KeyError("Id Index alias '{}' not understood".format(index))
-
-
 def _str_to_indices(ids):
     for num, x in enumerate(ids):
         if isinstance(x, str):
@@ -1353,23 +1346,32 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-    def update_services(self, updates):
+    def update_services(self, id: str, updates: dict):
+        """
+        Replace existing service
 
-        match_count = 0
-        modified_count = 0
-        for uid, data in updates:
-            if 'id' in data and data['id'] is None:
-                data.pop("id", None)
-            result = self._tables["service_queue"].replace_one({"_id": ObjectId(uid)}, data)
-            match_count += result.matched_count
-            modified_count += result.modified_count
-        return (match_count, modified_count)
+        Raises exception if the id is invalid
+
+        Parameters
+        ----------
+        id
+        updates
+
+        Returns
+        -------
+            if operation is succesful
+        """
+
+        # Make sure Id exists and valid for updates
+        updates_dict = updates.copy()
+        uid = updates_dict.pop("id", None)
+        ServiceQueue(id=ObjectId(uid), **updates_dict).save()
+
+        return True
 
     def del_services(self, values, index="id"):
 
-        index = _translate_id_index(index)
-
-        return self._del_by_index("service_queue", values, index=index)
+        return ServiceQueue.objects(id__in=values).delete()
 
 ### Mongo queue handling functions
 

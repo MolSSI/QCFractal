@@ -381,7 +381,7 @@ class FractalServer:
                 data["error_message"] = "FractalServer Service Build and Iterate Error:\n" + traceback.format_exc()
                 finished = False
 
-            self.storage.update_services([(data["id"], data)])
+            self.storage.update_services(data["id"], data)
 
             if finished is not False:
 
