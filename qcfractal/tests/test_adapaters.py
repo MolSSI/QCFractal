@@ -6,8 +6,7 @@ import pytest
 
 import qcfractal.interface as portal
 from qcfractal import testing, QueueManager
-from qcfractal.testing import (
-    reset_server_database, managed_compute_server, adapter_client_fixture)
+from qcfractal.testing import (reset_server_database, managed_compute_server, adapter_client_fixture)
 
 
 @testing.using_rdkit
@@ -29,12 +28,12 @@ def test_adapter_single(managed_compute_server):
     (None, None),
     (1, 1),
     (2, 1.9)
-])
+])  # yapf: disable
 @testing.using_psi4
 def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per_task):
     psi4_mem_buffer = 0.95  # Memory consumption buffer on psi4
     adapter_client = adapter_client_fixture
-    task_id = "123456789012345678901234"  # Placeholder ID
+    task_id = "uuid-{}-{}".format(cores_per_task, memory_per_task)
     tasks = [  # Emulate the QueueManager test function
         {
             "id": task_id,
@@ -68,7 +67,7 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
     if cores_per_task is not None:
         assert provenance['nthreads'] == cores_per_task
     if memory_per_task is not None:
-        assert provenance['memory'] == pytest.approx(memory_per_task*psi4_mem_buffer)
+        assert provenance['memory'] == pytest.approx(memory_per_task * psi4_mem_buffer)
 
 
 @testing.using_rdkit

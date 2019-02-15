@@ -344,7 +344,9 @@ def build_adapter_clients(mtype, storage_name="qcf_compute_server_test"):
 
     elif mtype == "parsl":
         parsl = pytest.importorskip("parsl")
-        from parsl.configs.local_ipp import config as adapter_client
+
+        # Must only be a single thread as we run thread unsafe applications.
+        adapter_client = parsl.config.Config(executors=[parsl.executors.threads.ThreadPoolExecutor(max_threads=1)])
 
     else:
         raise TypeError("fractal_compute_server: internal parametrize error")
@@ -380,17 +382,16 @@ def build_managed_compute_server(mtype):
         manager.close_adapter()
 
 
-# @pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
-@pytest.fixture(scope="module", params=["pool", "dask", "fireworks"])
+@pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
 def adapter_client_fixture(request):
     adapter_client = build_adapter_clients(request.param)
     yield adapter_client
+
     # Do a final close with existing tech
     build_queue_adapter(adapter_client).close()
 
 
-# @pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
-@pytest.fixture(scope="module", params=["pool", "dask", "fireworks"])
+@pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
 def managed_compute_server(request):
     """
     A FractalServer with compute associated parametrize for all managers
