@@ -9,4 +9,5 @@ Notable points that this PR has either accomplished or will accomplish.
 - [ ] Question1
 
 ## Status
+- [ ] Changelog updated
 - [ ] Ready to go
