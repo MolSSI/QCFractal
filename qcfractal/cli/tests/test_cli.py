@@ -20,7 +20,6 @@ def test_cli_server_boot():
 
 
 @testing.mark_slow
-@testing.using_fireworks
 def test_cli_server_local_boot():
     port = "--port=" + str(testing.find_open_port())
     args = ["qcfractal-server", "mydb", "--local-manager", port]

@@ -78,7 +78,6 @@ install:
   - python setup.py develop --no-deps
 
 before_script:
-  - sleep 5
   - python -V
   - mongod --version
   - conda list

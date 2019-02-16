@@ -82,11 +82,10 @@ environs = [{
     "filename": "base.yaml",
 }, {
     
-    # Tools to test out all available adapters
+    # Tools to test out all available adapters, ipy is for Parsl
     "filename": "adapters.yaml",
-    "channels": ["psi4"],
-    "dependencies": ["psi4", "rdkit", "dask", "distributed"],
-    "pip_dependencies": ["fireworks", "parsl"]
+    "dependencies": ["rdkit", "dask", "distributed", "ipyparallel", "ipykernel"],
+    "pip_dependencies": ["parsl", "fireworks"]
 }, {
 
     # Tests for the OpenFF toolchain (geometric and torsiondrive) 
