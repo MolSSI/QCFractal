@@ -216,7 +216,13 @@ class MongoengineSocket:
         ret_mols = {}
 
         # Add all new molecules
-        id_mols.update(self.add_molecules(dict_mols)["data"])
+        flat_mols = []
+        flat_mol_keys = []
+        for k, v in dict_mols.items():
+            flat_mol_keys.append(k)
+            flat_mols.append(v)
+        flat_mols = self.add_molecules(flat_mols)["data"]
+        id_mols.update({k: v for k, v in zip(flat_mol_keys, flat_mols)})
 
         # Get molecules by index and translate back to dict
         tmp = self.get_molecules(list(id_mols.values()))
@@ -331,87 +337,52 @@ class MongoengineSocket:
             Whether the operation was successful.
         """
 
-        # Build a dictionary of new molecules
-        new_mols = {}
-        for key, dmol in data.items():
+        meta = storage_utils.add_metadata()
+
+        results = []
+        # try:
+        for dmol in data:
             try:
                 dmol = dmol.dict()
             except AttributeError:
                 pass
+
             # All molecules must be fixed
             dmol["fix_com"] = True
             dmol["fix_orientation"] = True
 
             mol = interface.Molecule(**dmol, orient=False)
-            new_mols[key] = mol
+            mol_dict = mol.json_dict(exclude={"id"})
+            mol_dict.pop("id", None)  # Paranoia
 
-        new_kv_hash = {k: v.get_hash() for k, v in new_mols.items()}
-        new_vk_hash = collections.defaultdict(list)
-        for k, v in new_kv_hash.items():
-            new_vk_hash[v].append(k)
+            # Build fresh indices
+            mol_dict["molecule_hash"] = mol.get_hash()
+            mol_dict["molecular_formula"] = mol.get_molecular_formula()
 
-        # We need to filter out what is already in the database
-        old_mols = self.get_molecules(list(new_kv_hash.values()), index="hash")["data"]
+            mol_dict["identifiers"] = {}
+            mol_dict["identifiers"]["molecule_hash"] = mol_dict["molecule_hash"]
+            mol_dict["identifiers"]["molecular_formula"] = mol_dict["molecular_formula"]
 
-        # If we have hash matches check to for duplicates
-        key_mapper = {}
-        for old_mol in old_mols:
+            # search by index keywords not by all keys, much faster
+            doc = Molecule.objects(molecule_hash=mol_dict['molecule_hash'])
 
-            # This is the user provided key
-            new_mol_keys = new_vk_hash[old_mol["identifiers"]["molecule_hash"]]
-            new_mol = new_mols[new_mol_keys[0]]
-
-            if new_mol.compare(old_mol):
-                for x in new_mol_keys:
-                    del new_mols[x]
-                    key_mapper[x] = old_mol["id"]
+            if doc.count() == 0:
+                doc = doc.upsert_one(**mol_dict)
+                results.append(str(doc.id))
+                meta['n_inserted'] += 1
             else:
-                # If this happens, we need to think a bit about what to do
-                # Effectively our molecule hash index now has duplicates.
-                # This is *sort of* ok as we use uuid's for all internal projects.
-                raise KeyError("!!! WARNING !!!: Hash collision detected")
 
-        # Carefully make this flat
-        new_hashes = set()
-        new_inserts = []
-        new_keys = []
-        for new_key, new_mol in new_mols.items():
-            data = new_mol.json_dict()
-            data["identifiers"] = {}
+                id = str(doc.first().id)
+                meta['duplicates'].append(id)  # TODO
+                # If new or duplicate, add the id to the return list
+                results.append(id)
 
-            # Build new molecule hash
-            data["molecule_hash"] = new_mol.get_hash()
-            data["identifiers"]["molecule_hash"] = data["molecule_hash"]
+                # We should make sure there was not a hash collision?
+                # new_mol.compare(old_mol)
+                # raise KeyError("!!! WARNING !!!: Hash collision detected")
+        meta["success"] = True
 
-            if data["molecule_hash"] in new_hashes:
-                continue
-
-            # Build chemical identifiers
-            data["identifiers"]["molecular_formula"] = new_mol.get_molecular_formula()
-            data["molecular_formula"] = data["identifiers"]["molecular_formula"]
-
-            new_hashes |= set([data["molecule_hash"]])
-            new_inserts.append(data)
-            new_keys.append(new_key)
-
-        ret = self._add_generic(new_inserts, "molecule", return_map=True)
-        ret["meta"]["duplicates"].extend(list(key_mapper.keys()))
-        ret["meta"]["validation_errors"] = []
-
-        # If something went wrong, we cannot generate the full key map
-        # Success should always be True as we are parsing duplicate above and *not* here.
-        if ret["meta"]["success"] is False:
-            ret["meta"]["error_description"] = "Major insert error."
-            ret["data"] = key_mapper
-            return ret
-
-        # Add the new keys to the key map
-        for mol in new_inserts:
-            for x in new_vk_hash[mol["molecule_hash"]]:
-                key_mapper[x] = mol["id"]
-
-        ret["data"] = key_mapper
-
+        ret = {"data": results, "meta": meta}
         return ret
 
     def get_molecules(self, molecule_ids=None, index="id"):
