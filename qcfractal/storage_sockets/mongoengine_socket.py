@@ -14,8 +14,6 @@ except ImportError:
     raise ImportError(
         "Mongoengine_socket requires mongoengine, please install this python module or try a different db_socket.")
 
-import collections
-import json
 import logging
 from datetime import datetime as dt
 from typing import List, Union, Dict, Sequence
@@ -95,32 +93,6 @@ class MongoengineSocket:
 
         # Security
         self._bypass_security = bypass_security
-
-        # Important: this dict is Not used for creating indices
-        # To be removed and replaced by ME functions
-        self._table_indices = {
-            "collection": interface.schema.get_table_indices("collection"),
-            "options": interface.schema.get_table_indices("options"),
-            "result": interface.schema.get_table_indices("result"),
-            "molecule": interface.schema.get_table_indices("molecule"),
-            "procedure": interface.schema.get_table_indices("procedure"),
-            "service_queue": interface.schema.get_table_indices("service_queue"),
-            "task_queue": interface.schema.get_table_indices("task_queue"),
-            "user": ("username", ),
-            "queue_manager": ("name", )
-        }
-        # self._valid_tables = set(self._table_indices.keys())
-        # self._table_unique_indices = {
-        #     "collections": True,
-        #     "options": True,
-        #     "results": True,
-        #     "molecules": False,
-        #     "procedures": False,
-        #     "service_queue": False,
-        #     "task_queue": False,
-        #     "users": True,
-        #     "queue_managers": True,
-        # }
 
         self._lower_results_index = ["method", "basis", "keywords", "program"]
 

@@ -205,7 +205,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     assert result.starting_molecule != result.initial_molecule
 
     # Check initial vs startin molecule
-    assert result.initial_molecule == mol_ret["hooh"]
+    assert result.initial_molecule == mol_ret[0]
     starting_mol = client.get_molecules([result.starting_molecule])[0]
     assert pytest.approx(starting_mol.measure([1, 2])) != initial_distance
     assert pytest.approx(starting_mol.measure([1, 2])) == 2.488686479260597

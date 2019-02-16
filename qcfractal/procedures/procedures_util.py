@@ -5,8 +5,13 @@ Utility functions for on-node procedures.
 import hashlib
 import json
 
-from .. import interface
 from ..interface.models.common_models import ResultInput
+
+
+def format_result_indices(data, program=None):
+    if program is None:
+        program = data["program"]
+    return program, data["molecule"], data["driver"], data["method"], data["basis"], data["options"]
 
 
 def unpack_single_run_meta(storage, meta, molecules):
@@ -123,7 +128,7 @@ def parse_single_runs(storage, results):
 
 def single_run_hash(data, program=None):
 
-    single_keys = interface.schema.format_result_indices(data, program=program)
+    single_keys = format_result_indices(data, program=program)
     keys = {"procedure_type": "single", "single_key": single_keys}
     hash_index = hash_procedure_keys(keys)
     return keys, hash_index
