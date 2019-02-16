@@ -34,7 +34,6 @@ from . import storage_utils
 # Pull in the hashing algorithms from the client
 from .. import interface
 
-
 # from bson.dbref import DBRef
 
 
@@ -315,61 +314,6 @@ class MongoengineSocket:
 
         return (self._tables[table].delete_many({index: {"$in": hashes}})).deleted_count
 
-    def _get_generic(self, query, table, projection=None, allow_generic=False, limit=0):
-
-        # TODO parse duplicates
-        meta = storage_utils.get_metadata()
-
-        data = []
-
-        # Assume we want to lookup via unique key tuple
-        if isinstance(query, (tuple, list)):
-            keys = self._table_indices[table]
-            len_key = len(keys)
-
-            for q in query:
-                if (len(q) == len_key) and isinstance(q, (list, tuple)):
-                    q = {k: v for k, v in zip(keys, q)}
-                else:
-                    meta["errors"].append({"query": q, "error": "Malformed query"})
-                    continue
-
-                d = self._tables[table].find_one(q, projection=projection)
-                if d is None:
-                    meta["missing"].append(q)
-                else:
-                    data.append(d)
-
-        elif isinstance(query, dict):
-
-            # Handle specific ID query
-            if "id" in query:
-                ids, bad_ids = _str_to_indices_with_errors(query["id"])
-                if bad_ids:
-                    meta["errors"].append(("Bad Ids", bad_ids))
-
-                query["_id"] = ids
-                del query["id"]
-
-            for k, v in query.items():
-                if isinstance(v, (list, tuple)):
-                    query[k] = {"$in": v}
-
-            data = list(self._tables[table].find(query, projection=projection, limit=limit))
-        else:
-            meta["errors"] = "Malformed query"
-
-        meta["n_found"] = len(data)
-        if len(meta["errors"]) == 0:
-            meta["success"] = True
-
-        # Convert ID
-        for d in data:
-            d["id"] = str(d.pop("_id"))
-
-        ret = {"meta": meta, "data": data}
-        return ret
-
 ### Mongo molecule functions
 
     def add_molecules(self, data):
@@ -613,8 +557,13 @@ class MongoengineSocket:
         ret = {"data": keywords, "meta": meta}
         return ret
 
-    def get_keywords(self, id: str=None, program: str=None, hash_index: str=None,
-                     return_json: bool=True, with_ids: bool=True, limit=None):
+    def get_keywords(self,
+                     id: str=None,
+                     program: str=None,
+                     hash_index: str=None,
+                     return_json: bool=True,
+                     with_ids: bool=True,
+                     limit=None):
         """Search for one (unique) option based on the 'program'
         and the 'name'. No overwrite allowed.
 
@@ -1538,7 +1487,6 @@ class MongoengineSocket:
             data = [d.to_json_obj() for d in services]
 
         return {"data": data, "meta": meta}
-
 
     def update_services(self, updates):
 
