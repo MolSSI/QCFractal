@@ -1,6 +1,7 @@
 name: qcarchive
 channels:
   - defaults
+  - psi4
   - conda-forge
 dependencies:
   - python
@@ -23,10 +24,11 @@ dependencies:
   - rdkit
   - dask
   - distributed
+  - psi4
 
 # QCArchive includes
   - qcengine>=0.5.1
-  - qcelemental>=0.2.4
+  - qcelemental>=0.2.5
 
 # Pip includes
   - pip:

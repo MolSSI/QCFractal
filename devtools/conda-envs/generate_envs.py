@@ -30,7 +30,7 @@ dependencies:
   - pytest-cov
   - codecov
 """
-qca_ecosystem_template = ["qcengine>=0.5.1", "qcelemental>=0.2.4"]
+qca_ecosystem_template = ["qcengine>=0.5.1", "qcelemental>=0.2.5"]
 
 # Note we temporarily duplicate mongoengine as conda-forge appears to be broken
 pip_depends_template = ["mongoengine"]
@@ -78,25 +78,32 @@ def generate_yaml(filename=None, channels=None, dependencies=None, pip_dependenc
 
 
 environs = [{
+    # No extra dependancies, the base env
     "filename": "base.yaml",
 }, {
+    
+    # Tools to test out all available adapters
     "filename": "adapters.yaml",
-    "dependencies": ["rdkit", "dask", "distributed"],
+    "channels": ["psi4"],
+    "dependencies": ["rdkit", "dask", "distributed", "psi4"],
     "pip_dependencies": ["fireworks", "parsl"]
 }, {
+
+    # Tests for the OpenFF toolchain (geometric and torsiondrive) 
     "filename": "openff.yaml",
     "channels": ["psi4"],
-    "dependencies": ["psi4", "rdkit", "geometric", "torsiondrive"],
+    "dependencies": ["psi4", "rdkit", "geometric>=0.9.3", "torsiondrive"],
 }, {
-    "filename":
-    "dev_head.yaml",
+
+    # Tests for the current development heads
+    "filename": "dev_head.yaml",
     "dependencies": ["rdkit"],
     "qca_ecosystem": [],
     "pip_dependencies": [
         "git+git://github.com/MolSSI/QCEngine#egg=qcengine",
         "git+git://github.com/MolSSI/QCElemental#egg=qcelemental",
-        "git+git://github.com/lpwgroup/torsiondrive.git#egg=torsiondrive",
         "git+git://github.com/leeping/geomeTRIC#egg=geometric"
+        "git+git://github.com/lpwgroup/torsiondrive.git#egg=torsiondrive",
     ] # yapf: disable
 }]
 

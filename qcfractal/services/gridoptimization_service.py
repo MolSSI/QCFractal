@@ -2,14 +2,13 @@
 Wraps geometric procedures
 """
 
-import copy
 import json
 from typing import Dict, Set
 
 import numpy as np
 
 from qcfractal.extras import get_information
-from qcfractal.interface.models.common_models import json_encoders, Molecule, KeywordSet
+from qcfractal.interface.models.common_models import json_encoders, Molecule
 from qcfractal.interface.models.gridoptimization import GridOptimization
 from .service_util import BaseService, TaskManager, expand_ndimensional_grid
 
