@@ -479,25 +479,6 @@ class MongoengineSocket:
 
         return Molecule.objects(**query).delete()
 
-    def _doc_to_tuples(self, doc: db.Document, with_ids=True):
-        """
-        Todo: to be removed
-        """
-        if not doc:
-            return
-
-        table = doc._get_collection_name()
-
-        d_json = json.loads(doc.to_json())
-        d_json["id"] = str(doc.id)
-        del d_json["_id"]
-        ukey = tuple(str(doc[key]) for key in self._table_indices[table])
-        if with_ids:
-            rdata = (ukey, str(doc.id))
-        else:
-            rdata = ukey
-        return rdata
-
     ### Mongo options functions
 
     def add_keywords(self, data: Union[Dict, List[Dict]]):
@@ -1542,7 +1523,7 @@ class MongoengineSocket:
         meta = storage_utils.add_metadata()
 
         results = []
-        for d in data:
+        for task_num, d in enumerate(data):
             try:
                 if not isinstance(d['base_result'], tuple):
                     raise Exception("base_result must be a tuple not {}.".format(type(d['base_result'])))
@@ -1577,7 +1558,7 @@ class MongoengineSocket:
                     task.hooks.extend(d['hooks'])
                     task.save()
                 results.append(str(task.id))
-                meta['duplicates'].append(self._doc_to_tuples(task, with_ids=False))  # TODO
+                meta['duplicates'].append(task_num)
             except Exception as err:
                 meta["success"] = False
                 meta["errors"].append(str(err))
