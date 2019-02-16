@@ -103,10 +103,6 @@ def parse_single_runs(storage, results):
 
     """
 
-    # Get molecule ID's
-    mols = {k: v["molecule"] for k, v in results.items()}
-    mol_ret = storage.add_molecules(mols)["data"]
-
     for k, v in results.items():
 
         # Flatten data back out
@@ -117,7 +113,7 @@ def parse_single_runs(storage, results):
         v["keywords"] = v["qcfractal_tags"]["keywords"]
 
         # Molecule should be by ID
-        v["molecule"] = mol_ret[k]
+        v["molecule"] = storage.add_molecules([v["molecule"]])["data"][0]
 
         v["program"] = v["qcfractal_tags"]["program"]
 

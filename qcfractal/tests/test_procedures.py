@@ -21,10 +21,7 @@ def test_compute_queue_stack(fractal_compute_server):
     hydrogen = portal.Molecule.from_data([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
     helium = portal.Molecule.from_data([[2, 0, 0, 0.0]], dtype="numpy", units="bohr")
 
-    mol_ret = client.add_molecules({"hydrogen": hydrogen.json_dict(), "helium": helium.json_dict()})
-
-    hydrogen_mol_id = mol_ret["hydrogen"]
-    helium_mol_id = mol_ret["helium"]
+    hydrogen_mol_id, helium_mol_id = client.add_molecules([hydrogen, helium])
 
     kw = portal.models.KeywordSet(**{"program": "psi4", "values": {"e_convergence": 1.e-8}})
     kw_id = client.add_keywords([kw])[0]
@@ -77,7 +74,7 @@ def test_procedure_optimization(fractal_compute_server):
     # Add a hydrogen molecule
     hydrogen = portal.Molecule.from_data([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
     client = portal.FractalClient(fractal_compute_server.get_address(""))
-    mol_ret = client.add_molecules({"hydrogen": hydrogen.json_dict()})
+    mol_ret = client.add_molecules([hydrogen])
 
     # Add compute
     options = {
@@ -92,7 +89,7 @@ def test_procedure_optimization(fractal_compute_server):
     }
 
     # Ask the server to compute a new computation
-    r = client.add_procedure("optimization", "geometric", options, [mol_ret["hydrogen"]])
+    r = client.add_procedure("optimization", "geometric", options, mol_ret)
     assert len(r.ids) == 1
     compute_key = r.ids[0]
 
@@ -121,6 +118,6 @@ def test_procedure_optimization(fractal_compute_server):
             assert pytest.approx(raw_energy, 1.e-5) == energies[ind]
 
     # Check that duplicates are caught
-    r = client.add_procedure("optimization", "geometric", options, [mol_ret["hydrogen"]])
+    r = client.add_procedure("optimization", "geometric", options, [mol_ret[0]])
     assert len(r.ids) == 1
     assert len(r.existing) == 1

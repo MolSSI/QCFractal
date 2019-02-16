@@ -51,14 +51,14 @@ def test_molecule_socket(test_server):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
 
     # Add a molecule
-    r = requests.post(mol_api_addr, json={"meta": {}, "data": {"water": water.json_dict()}})
+    r = requests.post(mol_api_addr, json={"meta": {}, "data": [water.json_dict()]})
     assert r.status_code == 200
 
     pdata = r.json()
     assert pdata["meta"].keys() == meta_set
 
     # Retrieve said molecule
-    r = requests.get(mol_api_addr, json={"meta": {"index": "id"}, "data": [pdata["data"]["water"]]})
+    r = requests.get(mol_api_addr, json={"meta": {"index": "id"}, "data": [pdata["data"][0]]})
     assert r.status_code == 200
 
     gdata = r.json()

@@ -26,6 +26,7 @@ __all__ = [
 
 ### Generic and Common Models
 
+
 class RESTConfig(BaseConfig):
     json_encoders = json_encoders
 
@@ -74,7 +75,7 @@ class MoleculeGETResponse(BaseModel):
 
 class MoleculePOSTBody(BaseModel):
     meta: Dict[str, Any] = None
-    data: Dict[str, Molecule]
+    data: List[Molecule]
 
     class Config:
         json_encoders = json_encoders
@@ -82,7 +83,7 @@ class MoleculePOSTBody(BaseModel):
 
 class MoleculePOSTResponse(BaseModel):
     meta: ResponsePOSTMeta
-    data: Dict[str, str]
+    data: List[str]
 
 
 ### Keywords
@@ -181,9 +182,7 @@ class ResultGETBody(BaseModel):
     @validator("data", whole=True)
     def only_data_keys(cls, v):
         # We should throw a warning here for unused keys
-        valid_keys = {
-            "program", "molecule", "driver", "method", "basis", "keywords", "task_id", "id", "status"
-        }
+        valid_keys = {"program", "molecule", "driver", "method", "basis", "keywords", "task_id", "id", "status"}
         data = {key: v[key] for key in (v.keys() & valid_keys)}
         if "keywords" in data and data["keywords"] is None:
             data["keywords"] = 'null'
@@ -278,6 +277,7 @@ class TaskQueuePOSTResponse(BaseModel):
 
 ### Service Queue
 
+
 class ServiceQueueGETBody(BaseModel):
     meta: Dict[str, Any]
     data: Dict[str, Any]
@@ -312,8 +312,8 @@ class ServiceQueuePOSTResponse(BaseModel):
     data: Data
 
 
-
 ### Queue Manager
+
 
 class QueueManagerMeta(BaseModel):
     cluster: str = 'unknown'

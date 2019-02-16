@@ -79,11 +79,23 @@ class Dataset(Collection):
             self.data.alias_keywords[k[0]][k[1]] = ret[0]
             del self._new_keywords[k]
 
+    def _add_molecules_by_dict(self, client, molecules):
+
+        flat_map_keys = []
+        flat_map_mols = []
+        for k, v in molecules.items():
+            flat_map_keys.append(k)
+            flat_map_mols.append(v)
+
+        mol_ret = client.add_molecules(flat_map_mols)
+
+        return {k: v for k, v in zip(flat_map_keys, mol_ret)}
+
     def _pre_save_prep(self, client):
         self._canonical_pre_save(client)
 
         # Preps any new molecules introduced to the Dataset before storing data.
-        mol_ret = client.add_molecules(self._new_molecules)
+        mol_ret = self._add_molecules_by_dict(client, self._new_molecules)
 
         # Update internal molecule UUID's to servers UUID's
         for record in self._new_records:

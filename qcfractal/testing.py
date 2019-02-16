@@ -382,7 +382,8 @@ def build_managed_compute_server(mtype):
         manager.close_adapter()
 
 
-@pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
+@pytest.fixture(scope="module", params=["pool"])
+# @pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
 def adapter_client_fixture(request):
     adapter_client = build_adapter_clients(request.param)
     yield adapter_client
@@ -391,7 +392,8 @@ def adapter_client_fixture(request):
     build_queue_adapter(adapter_client).close()
 
 
-@pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
+# @pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
+@pytest.fixture(scope="module", params=["pool"])
 def managed_compute_server(request):
     """
     A FractalServer with compute associated parametrize for all managers

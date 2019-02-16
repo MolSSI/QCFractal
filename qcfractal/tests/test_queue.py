@@ -14,9 +14,8 @@ def test_queue_error(fractal_compute_server):
 
     hooh = portal.data.get_molecule("hooh.json").json_dict()
     del hooh["connectivity"]
-    mol_ret = client.add_molecules({"hooh": hooh})
 
-    compute_ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["hooh"])
+    compute_ret = client.add_compute("rdkit", "UFF", "", "energy", None, hooh)
 
     # Pull out a special iteration on the queue manager
     fractal_compute_server.update_tasks()
@@ -45,9 +44,9 @@ def test_queue_duplicate_compute(fractal_compute_server):
     client = portal.FractalClient(fractal_compute_server)
 
     hooh = portal.data.get_molecule("hooh.json").json_dict()
-    mol_ret = client.add_molecules({"hooh": hooh})
+    mol_ret = client.add_molecules([hooh])
 
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["hooh"])
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret)
     assert len(ret.ids) == 1
     assert len(ret.existing) == 0
 
@@ -56,7 +55,7 @@ def test_queue_duplicate_compute(fractal_compute_server):
 
     db = fractal_compute_server.objects["storage_socket"]
 
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["hooh"])
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret)
     assert len(ret.ids) == 1
     assert len(ret.existing) == 1
 
@@ -67,7 +66,7 @@ def test_queue_compute_mixed_molecule(fractal_compute_server):
     client = portal.FractalClient(fractal_compute_server)
 
     mol1 = portal.Molecule.from_data("He 0 0 0\nHe 0 0 2.1")
-    mol_ret = client.add_molecules({"he2.1": mol1})
+    mol_ret = client.add_molecules([mol1])
 
     mol2 = portal.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
 
@@ -82,7 +81,7 @@ def test_queue_compute_mixed_molecule(fractal_compute_server):
 
     db = fractal_compute_server.objects["storage_socket"]
 
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [mol_ret["he2.1"], "bad_id2"])
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [mol_ret[0], "bad_id2"])
     assert len(ret.ids) == 2
     assert ret.ids[1] is None
     assert len(ret.submitted) == 0
@@ -96,7 +95,7 @@ def test_queue_duplicate_procedure(fractal_compute_server):
     client = portal.FractalClient(fractal_compute_server)
 
     hooh = portal.data.get_molecule("hooh.json").json_dict()
-    mol_ret = client.add_molecules({"hooh": hooh})
+    mol_ret = client.add_molecules([hooh])
 
     geometric_options = {
         "keywords": None,
@@ -109,7 +108,7 @@ def test_queue_duplicate_procedure(fractal_compute_server):
         },
     }
 
-    ret = client.add_procedure("optimization", "geometric", geometric_options, [mol_ret["hooh"], "bad_id"])
+    ret = client.add_procedure("optimization", "geometric", geometric_options, [mol_ret[0], "bad_id"])
     assert len(ret.ids) == 2
     assert ret.ids[1] is None
     assert len(ret.submitted) == 1

@@ -17,10 +17,10 @@ def test_client_molecule(test_server):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
 
     # Test add
-    ret = client.add_molecules({"water": water})
+    ret = client.add_molecules([water])
 
     # Test get
-    get_mol = client.get_molecules(ret["water"], index="id")
+    get_mol = client.get_molecules(ret[0], index="id")
     assert water.compare(get_mol[0])
 
     # Test molecular_formula get

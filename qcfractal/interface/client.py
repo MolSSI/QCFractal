@@ -205,8 +205,7 @@ class FractalClient(object):
         else:
             return r.data
 
-    def add_molecules(self, mol_list: Dict[str, Molecule],
-                      full_return: bool=False) -> Union[List[str], Dict[str, Any]]:
+    def add_molecules(self, mol_list: List[Molecule], full_return: bool=False) -> List[str]:
         """Adds molecules to the Server
 
         Parameters
