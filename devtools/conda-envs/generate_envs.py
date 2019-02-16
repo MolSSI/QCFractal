@@ -85,7 +85,7 @@ environs = [{
     # Tools to test out all available adapters
     "filename": "adapters.yaml",
     "channels": ["psi4"],
-    "dependencies": ["rdkit", "dask", "distributed", "psi4"],
+    "dependencies": ["psi4", "rdkit", "dask", "distributed"],
     "pip_dependencies": ["fireworks", "parsl"]
 }, {
 
@@ -102,7 +102,7 @@ environs = [{
     "pip_dependencies": [
         "git+git://github.com/MolSSI/QCEngine#egg=qcengine",
         "git+git://github.com/MolSSI/QCElemental#egg=qcelemental",
-        "git+git://github.com/leeping/geomeTRIC#egg=geometric"
+        "git+git://github.com/leeping/geomeTRIC#egg=geometric",
         "git+git://github.com/lpwgroup/torsiondrive.git#egg=torsiondrive",
     ] # yapf: disable
 }]
