@@ -59,7 +59,8 @@ class TaskManager(BaseModel):
         task_query = storage_socket.get_procedures_by_id(
             id=list(self.required_tasks.values()),
             projection={"status": True,
-                        "error": True})
+                        "error": True,
+                        "hash_index": True})
 
         if len(task_query["data"]) != len(self.required_tasks):
             return False
@@ -68,6 +69,12 @@ class TaskManager(BaseModel):
             for x in task_query["data"]:
                 if x["status"] != "ERROR":
                     continue
+            tasks = storage_socket.get_queue()["data"]
+            for x in tasks:
+                if "error" not in x:
+                    continue
+                print(x["error"])
+
             raise KeyError("All tasks did not execute successfully.")
 
         return True

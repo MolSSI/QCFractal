@@ -23,13 +23,15 @@ dependencies:
   - rdkit
   - dask
   - distributed
+  - ipyparallel
+  - ipykernel
 
 # QCArchive includes
   - qcengine>=0.5.1
-  - qcelemental>=0.2.4
+  - qcelemental>=0.2.5
 
 # Pip includes
   - pip:
     - mongoengine
-    - fireworks
     - parsl
+    - fireworks

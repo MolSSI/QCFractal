@@ -2,14 +2,13 @@
 Wraps geometric procedures
 """
 
-import copy
 import json
 from typing import Dict, Set
 
 import numpy as np
 
 from qcfractal.extras import get_information
-from qcfractal.interface.models.common_models import json_encoders
+from qcfractal.interface.models.common_models import json_encoders, Molecule
 from qcfractal.interface.models.gridoptimization import GridOptimization
 from .service_util import BaseService, TaskManager, expand_ndimensional_grid
 
@@ -32,7 +31,7 @@ class GridOptimizationService(BaseService):
     seeds: Set[tuple] = set()
     complete: Set[tuple] = set()
     dimensions: tuple
-    iteration: int = 0
+    iteration: int
     starting_grid: tuple
     final_energies = {}
 
@@ -43,7 +42,8 @@ class GridOptimizationService(BaseService):
     # Templates
     constraint_template: str
     optimization_template: str
-    molecule_template: str
+    # keyword_template: KeywordSet
+    starting_molecule: Molecule
 
     class Config:
         json_encoders = json_encoders
@@ -57,6 +57,7 @@ class GridOptimizationService(BaseService):
 
         output = GridOptimization(
             **input_dict,
+            starting_molecule=input_dict["initial_molecule"],
             provenance={
                 "creator": "qcfractal",
                 "version": get_information("version"),
@@ -68,12 +69,6 @@ class GridOptimizationService(BaseService):
 
         meta = {"output": output}
 
-        # Remove identity info from molecule template
-        molecule_template = copy.deepcopy(service_input.initial_molecule.json_dict())
-        molecule_template.pop("id", None)
-        molecule_template.pop("identifiers", None)
-        meta["molecule_template"] = json.dumps(molecule_template)
-
         # Build dihedral template
         constraint_template = []
         for scan in output.gridoptimization_meta.scans:
@@ -81,12 +76,16 @@ class GridOptimizationService(BaseService):
             constraint_template.append(tmp)
 
         meta["constraint_template"] = json.dumps(constraint_template)
+        # meta["keyword_template"] = KeywordSet(program=output.optimization_meta.program, values=output.optimization_meta.dict())
 
         # Build optimization template
         meta["optimization_template"] = json.dumps({
             "meta": {
                 "procedure": "optimization",
-                "keywords": {"program": output.optimization_meta.program, "values": output.optimization_meta.dict()},
+                "keywords": {
+                    "program": output.optimization_meta.program,
+                    "values": output.optimization_meta.dict(exclude={"constraints"})
+                },
                 "program": output.optimization_meta.program,
                 "qc_meta": output.qc_meta.dict(),
                 "tag": meta.pop("tag", None)
@@ -95,42 +94,73 @@ class GridOptimizationService(BaseService):
 
         # Move around geometric data
         meta["optimization_program"] = output.optimization_meta.program
-
         meta["hash_index"] = output.hash_index
 
         # Hard coded data, # TODO
         meta["dimensions"] = output.get_scan_dimensions()
 
-        if output.gridoptimization_meta.starting_grid == "zero":
-            meta["iteration"] = 0
+        meta["starting_molecule"] = service_input.initial_molecule
+        if output.gridoptimization_meta.preoptimization:
+            meta["iteration"] = -2
             meta["starting_grid"] = (0 for x in meta["dimensions"])
-        elif output.gridoptimization_meta.starting_grid == "relative":
-            meta["iteration"] = 0
-            starting_grid = []
-            for scan in output.gridoptimization_meta.scans:
-
-                # Find closest index
-                m = service_input.initial_molecule.measure(scan.indices)
-                idx = np.abs(np.array(scan.steps) - m).argmin()
-                starting_grid.append(int(idx))
-
-            meta["starting_grid"] = tuple(starting_grid)
-
         else:
-            raise KeyError(
-                "Unknown starting_grid configuration {}.".format(output.gridoptimization_meta.starting_grid))
+            meta["iteration"] = 0
+            meta["starting_grid"] = GridOptimizationService._calculate_starting_grid(
+                output.gridoptimization_meta.scans, service_input.initial_molecule)
 
         return cls(**meta, storage_socket=storage_socket)
+
+    @staticmethod
+    def _calculate_starting_grid(scans, molecule):
+        starting_grid = []
+        for scan in scans:
+
+            # Find closest index
+            if scan.step_type == "absolute":
+                m = molecule.measure(scan.indices)
+            elif scan.step_type == "relative":
+                m = 0
+            else:
+                raise KeyError("'step_type' of '{}' not understood.".format(scan.step_type))
+
+            idx = np.abs(np.array(scan.steps) - m).argmin()
+            starting_grid.append(int(idx))
+
+        return tuple(starting_grid)
 
     def iterate(self):
 
         self.status = "RUNNING"
 
-        if self.iteration == 0:
+        # Special pre-optimization iteration
+        if self.iteration == -2:
+            packet = json.loads(self.optimization_template)
+            packet["data"] = [self.output.initial_molecule]
+            self.task_manager.submit_tasks(self.storage_socket, "optimization", {"initial_opt": packet})
 
-            self.submit_optimization_tasks({
-                self.output.serialize_key(self.starting_grid): self.output.initial_molecule
-            })
+            self.iteration = -1
+            return False
+
+        elif self.iteration == -1:
+            if self.task_manager.done(self.storage_socket) is False:
+                return False
+
+            complete_tasks = self.task_manager.get_tasks(self.storage_socket)
+
+            self.starting_molecule = Molecule(**self.storage_socket.get_molecules(
+                [complete_tasks["initial_opt"]["final_molecule"]])["data"][0])
+            self.starting_grid = self._calculate_starting_grid(self.output.gridoptimization_meta.scans,
+                                                               self.starting_molecule)
+
+            self.submit_optimization_tasks({self.output.serialize_key(self.starting_grid): self.starting_molecule.id})
+            self.iteration = 1
+
+            return False
+
+        # Special start iteration
+        elif self.iteration == 0:
+
+            self.submit_optimization_tasks({self.output.serialize_key(self.starting_grid): self.starting_molecule.id})
             self.iteration = 1
 
             return False
@@ -185,9 +215,15 @@ class GridOptimizationService(BaseService):
 
             # Construct constraints
             constraints = json.loads(self.constraint_template)
-            grid_values = self.output.get_scan_value(key)
-            for con_num, k in enumerate(grid_values):
-                constraints[con_num]["value"] = k
+
+            scan_indices = self.output.deserialize_key(key)
+            for con_num, scan in enumerate(self.output.gridoptimization_meta.scans):
+                idx = scan_indices[con_num]
+                if scan.step_type == "absolute":
+                    constraints[con_num]["value"] = scan.steps[idx]
+                else:
+                    constraints[con_num]["value"] = (scan.steps[idx] + self.starting_molecule.measure(scan.indices))
+
             packet["meta"]["keywords"]["values"]["constraints"] = {"set": constraints}
 
             # Build new molecule
@@ -202,13 +238,13 @@ class GridOptimizationService(BaseService):
         Finishes adding data to the GridOptimization object
         """
 
-        self.output.Config.allow_mutation = True
-        self.output.success = True
-        self.output.status = "COMPLETE"
+        output = self.output.copy(update={
+            "success": True,
+            "status": "COMPLETE",
+            "starting_molecule": self.starting_molecule.id,
+            "starting_grid": self.starting_grid,
+            "grid_optimizations": self.grid_optimizations,
+            "final_energy_dict": self.final_energies,
+        })
 
-        self.output.starting_grid = self.starting_grid
-        self.output.grid_optimizations = self.grid_optimizations
-        self.output.final_energy_dict = self.final_energies
-
-        self.output.Config.allow_mutation = False
-        return self.output
+        return output

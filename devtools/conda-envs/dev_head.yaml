@@ -29,5 +29,5 @@ dependencies:
     - mongoengine
     - git+git://github.com/MolSSI/QCEngine#egg=qcengine
     - git+git://github.com/MolSSI/QCElemental#egg=qcelemental
-    - git+git://github.com/lpwgroup/torsiondrive.git#egg=torsiondrive
     - git+git://github.com/leeping/geomeTRIC#egg=geometric
+    - git+git://github.com/lpwgroup/torsiondrive.git#egg=torsiondrive
