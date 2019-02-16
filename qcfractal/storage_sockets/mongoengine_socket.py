@@ -248,65 +248,6 @@ class MongoengineSocket:
 
         return {"meta": meta, "data": ret}
 
-    def _add_generic(self, data, table, return_map=True):
-        """
-        Helper function that facilitates adding a record.
-        """
-
-        meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
-
-        if len(data) == 0:
-            ret = {}
-            meta["success"] = True
-            ret["meta"] = meta
-            ret["data"] = {}
-            return ret
-
-        # Try/except for fully successful/partially unsuccessful adds
-        error_skips = []
-        try:
-            tmp = self._tables[table].insert_many(data, ordered=False)
-            meta["success"] = tmp.acknowledged
-            meta["n_inserted"] = len(tmp.inserted_ids)
-        except pymongo.errors.BulkWriteError as tmp:
-            meta["success"] = False
-            meta["n_inserted"] = tmp.details["nInserted"]
-            for error in tmp.details["writeErrors"]:
-                ukey = tuple(data[error["index"]][key] for key in self._table_indices[table])
-                # Duplicate key errors, add to meta
-                if error["code"] == 11000:
-                    meta["duplicates"].append(ukey)
-                else:
-                    meta["errors"].append({"id": str(error["op"]["_id"]), "code": error["code"], "key": ukey})
-
-                error_skips.append(error["index"])
-
-            # Only duplicates, no true errors
-            if len(meta["errors"]) == 0:
-                meta["success"] = True
-                meta["error_description"] = "Found duplicates"
-            else:
-                meta["error_description"] = "unknown"
-
-        # Convert id in-place
-        for d in data:
-            d["id"] = str(d["_id"])
-            del d["_id"]
-
-        # Add id's of new keys
-        skips = set(error_skips)
-        rdata = []
-        if return_map:
-            for x in range(len(data)):
-                if x in skips:
-                    rdata.append(None)
-                else:
-                    rdata.append(data[x]["id"])
-
-        ret = {"data": rdata, "meta": meta}
-
-        return ret
-
     def _del_by_index(self, table, hashes, index="_id"):
         """
         Helper function that facilitates deletion based on hash.
