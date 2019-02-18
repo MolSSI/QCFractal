@@ -923,6 +923,8 @@ class MongoengineSocket:
             if doc.count() == 0 or update_existing:
                 if not isinstance(d['molecule'], ObjectId):
                     d['molecule'] = ObjectId(d['molecule'])
+                d['basis'] = d['basis'] if d['basis'] is not None else ""
+                d['keywords'] = d['keywords'] if d['keywords'] is not None else ""
                 doc = doc.upsert_one(**d)
                 results.append(str(doc.id))
                 meta['n_inserted'] += 1
@@ -1193,6 +1195,7 @@ class MongoengineSocket:
             doc = Procedure.objects(hash_index=d['hash_index'])
 
             if doc.count() == 0 or update_existing:
+                d['keywords'] = d['keywords'] if d['keywords'] is not None else ""
                 doc = doc.upsert_one(**d)
                 results.append(str(doc.id))
                 meta['n_inserted'] += 1
