@@ -798,12 +798,12 @@ class MongoengineSocket:
         pass
 
     def get_results(self,
-                    program: str=NOTSET,
-                    method: str=NOTSET,
-                    basis: str=NOTSET,
-                    molecule: str=NOTSET,
-                    driver: str=NOTSET,
-                    keywords: str=NOTSET,
+                    program: str=None,
+                    method: str=None,
+                    basis: str=None,
+                    molecule: str=None,
+                    driver: str=None,
+                    keywords: str=None,
                     status: str='COMPLETE',
                     projection=None,
                     limit: int=None,
