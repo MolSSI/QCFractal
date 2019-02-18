@@ -126,17 +126,17 @@ class TorsionDrive(TorsionDriveInput):
     def _deserialize_key(self, key):
         return tuple(json.loads(key))
 
-    def dict(self, exclude=set(), include=None, by_alias=False):
-        exclude |= {"client", "cache"}
-        return super().dict(include=include, exclude=exclude, by_alias=by_alias)
+    def dict(self, *args, **kwargs):
+        kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"client", "cache"}
+        return super().dict(*args, **kwargs)
 
-    def json_dict(self):
-        return json.loads(self.json())
+    def json_dict(self, *args, **kwargs):
+        return json.loads(self.json(*args, **kwargs))
 
     def get_hash_index(self):
 
         data = self.dict(
-            include=["initial_molecule", "program", "procedure", "torsiondrive_meta", "optimization_meta", "qc_meta"])
+            include={"initial_molecule", "program", "procedure", "torsiondrive_meta", "optimization_meta", "qc_meta"})
 
         return hash_dictionary(data)
 

@@ -102,7 +102,7 @@ class GridOptimizationInput(BaseModel):
 
             mol_id = self.initial_molecule.id
 
-        data = self.dict(include=["program", "procedure", "gridoptimization_meta", "optimization_meta", "qc_meta"])
+        data = self.dict(include={"program", "procedure", "gridoptimization_meta", "optimization_meta", "qc_meta"})
         data["initial_molecule"] = mol_id
 
         return hash_dictionary(data)
@@ -201,12 +201,12 @@ class GridOptimization(GridOptimizationInput):
 
 ## Utility
 
-    def dict(self, exclude=set(), include=None, by_alias=False):
-        exclude |= {"client", "cache"}
-        return super().dict(include=include, exclude=exclude, by_alias=by_alias)
+    def dict(self, *args, **kwargs):
+        kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"client", "cache"}
+        return super().dict(*args, **kwargs)
 
-    def json_dict(self):
-        return json.loads(self.json())
+    def json_dict(self, *args, **kwargs):
+        return json.loads(self.json(*args, **kwargs))
 
 ## Query
 

@@ -41,7 +41,7 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
                 "function":
                     "qcengine.compute",
                 "args": [{
-                    "molecule": portal.data.get_molecule("hooh.json").json(as_dict=True),
+                    "molecule": portal.data.get_molecule("hooh.json").json_dict(),
                     "driver": "energy",
                     "model": {"method": "HF",
                               "basis": "sto-3g"},
