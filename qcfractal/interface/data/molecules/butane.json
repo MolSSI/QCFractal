@@ -2,7 +2,7 @@
   "name": "butuane",
   "identifiers": {
     "inchikey": "IJDNQMDRQITEOD-UHFFFAOYSA-N",
-    "standard_inchi": "InChI=1S/C4H10/c1-3-4-2/h3-4H2,1-2H3",
+    "inchi": "InChI=1S/C4H10/c1-3-4-2/h3-4H2,1-2H3",
     "canonical_explicit_hydrogen_smiles": "[H]C([H])([H])C([H])([H])C([H])([H])C([H])([H])[H]",
     "canonical_isomeric_explicit_hydrogen_mapped_smiles": "[H:5][C:1]([H:6])([H:7])[C:3]([H:11])([H:12])[C:4]([H:13])([H:14])[C:2]([H:8])([H:9])[H:10]",
     "canonical_isomeric_explicit_hydrogen_smiles": "[H]C([H])([H])C([H])([H])C([H])([H])C([H])([H])[H]",
