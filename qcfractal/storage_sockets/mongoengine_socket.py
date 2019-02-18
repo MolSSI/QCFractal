@@ -923,8 +923,6 @@ class MongoengineSocket:
             if doc.count() == 0 or update_existing:
                 if not isinstance(d['molecule'], ObjectId):
                     d['molecule'] = ObjectId(d['molecule'])
-                d['basis'] = d['basis'] if d['basis'] is not None else ""
-                d['keywords'] = d['keywords'] if d['keywords'] is not None else ""
                 doc = doc.upsert_one(**d)
                 results.append(str(doc.id))
                 meta['n_inserted'] += 1
@@ -1028,7 +1026,7 @@ class MongoengineSocket:
             (This is to avoid overloading the server)
         skip : int, default is None TODO
             skip the first 'skip' resaults. Used to paginate
-        return_json : bool, deafult is True
+        return_json : bool, default is True
             Return the results as a list of json inseated of objects
         with_ids : bool, default is True
             Include the ids in the returned objects/dicts
@@ -1195,7 +1193,6 @@ class MongoengineSocket:
             doc = Procedure.objects(hash_index=d['hash_index'])
 
             if doc.count() == 0 or update_existing:
-                d['keywords'] = d['keywords'] if d['keywords'] is not None else ""
                 doc = doc.upsert_one(**d)
                 results.append(str(doc.id))
                 meta['n_inserted'] += 1

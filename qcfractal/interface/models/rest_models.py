@@ -185,6 +185,10 @@ class ResultGETBody(BaseModel):
             "program", "molecule", "driver", "method", "basis", "keywords", "task_id", "id", "status"
         }
         data = {key: v[key] for key in (v.keys() & valid_keys)}
+        if "keywords" in data and data["keywords"] is None:
+            data["keywords"] = 'null'
+        if "basis" in data and data["basis"] is None:
+            data["basis"] = 'null'
         return data
 
 
