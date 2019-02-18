@@ -730,6 +730,8 @@ class MongoengineSocket:
             if doc.count() == 0 or update_existing:
                 if not isinstance(d['molecule'], ObjectId):
                     d['molecule'] = ObjectId(d['molecule'])
+                # d['basis'] = d['basis'] if d['basis'] is not None else ""
+                # d['keywords'] = d['keywords'] if d['keywords'] is not None else ""
                 doc = doc.upsert_one(**d)
                 results.append(str(doc.id))
                 meta['n_inserted'] += 1
@@ -1000,6 +1002,7 @@ class MongoengineSocket:
             doc = Procedure.objects(hash_index=d['hash_index'])
 
             if doc.count() == 0 or update_existing:
+                # d['keywords'] = d['keywords'] if d['keywords'] is not None else ""
                 doc = doc.upsert_one(**d)
                 results.append(str(doc.id))
                 meta['n_inserted'] += 1
@@ -1237,14 +1240,13 @@ class MongoengineSocket:
 
         return modified_count
 
-    def add_services(self, data: List[dict], update_existing: bool=False, return_json=True):
+    def add_services(self, data: List[dict], return_json=True):
         """
         Add services from a given dict.
 
         Parameters
         ----------
         data : list of dict
-        update_existing: bool, default False
 
         Returns
         -------
@@ -1261,8 +1263,14 @@ class MongoengineSocket:
             d.pop("id", None)
             doc = ServiceQueue.objects(hash_index=d['hash_index'])
 
-            if doc.count() == 0 or update_existing:
-                doc = doc.upsert_one(**d)
+            if doc.count() == 0:
+                # create stub procedure
+                proc_dict = d['output']
+                proc_dict.pop('id', None)  # if case of pydanic null id
+                procedure = Procedure(**proc_dict).save()
+                doc = ServiceQueue(**d)
+                doc.procedure_id = procedure
+                doc.save()
                 services.append(doc.hash_index)
                 meta['n_inserted'] += 1
             else:
@@ -1364,14 +1372,27 @@ class MongoengineSocket:
 
         # Make sure Id exists and valid for updates
         updates_dict = updates.copy()
-        uid = updates_dict.pop("id", None)
-        ServiceQueue(id=ObjectId(uid), **updates_dict).save()
+        updates_dict.pop("id", None)
+        updates_dict.pop('procedure_id', None)
+        # ServiceQueue(id=ObjectId(id), **updates_dict).save()
+        ServiceQueue.objects(id=ObjectId(id)).update(**updates_dict)
 
         return True
 
-    def del_services(self, values, index="id"):
+    def services_completed(self, ids, completed_procedures):
 
-        return ServiceQueue.objects(id__in=values).delete()
+        done = 0
+        procedure_ids = ServiceQueue.objects(id__in=ids).only("procedure_id").as_pymongo()
+
+        for procedure_id, data in zip(procedure_ids, completed_procedures):
+            data['status'] = "COMPLETE"
+            data.pop('id', None)
+            Procedure.objects(id=procedure_id['procedure_id']).update(**data)
+            done += 1
+
+        ServiceQueue.objects(id__in=ids).delete()
+
+        return done
 
 ### Mongo queue handling functions
 

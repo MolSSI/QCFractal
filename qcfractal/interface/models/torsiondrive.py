@@ -156,7 +156,7 @@ class TorsionDrive(TorsionDriveInput):
             # Grab procedures
             needed_ids = [x for v in self.optimization_history.values() for x in v]
             objects = self.client.get_procedures({"id": needed_ids})
-            procedures = {v._id: v for v in objects}
+            procedures = {v.id: v for v in objects}
 
             # Move procedures into the correct order
             ret = {}

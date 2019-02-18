@@ -366,7 +366,7 @@ class FractalServer:
 
         # Loop over the services and iterate
         running_services = 0
-        new_procedures = []
+        completed_procedures = []
         complete_ids = []
         for data in current_services:
 
@@ -386,14 +386,14 @@ class FractalServer:
             if finished is not False:
 
                 # Add results to procedures, remove complete_ids
-                new_procedures.append(finished.json_dict())
+                completed_procedures.append(finished.json_dict())
                 complete_ids.append(data["id"])
             else:
                 running_services += 1
 
         # Add new procedures and services
-        self.storage.add_procedures(new_procedures)
-        self.storage.del_services(complete_ids)
+        # self.storage.add_procedures(new_procedures)
+        self.storage.services_completed(complete_ids, completed_procedures)
 
         return running_services
 
