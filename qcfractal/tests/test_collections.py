@@ -249,7 +249,7 @@ def test_compute_openffworkflow(fractal_compute_server):
     final_energies = wf.list_final_energies()
     assert final_energies.keys() == {butane_id, "HOOH"}
     assert final_energies[butane_id].keys() == {"label1"}
-    assert final_energies[butane_id]["label1"] is None
+    assert final_energies[butane_id]["label1"] == {}
 
 
 def test_generic_collection(fractal_compute_server):
