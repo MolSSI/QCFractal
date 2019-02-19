@@ -79,7 +79,7 @@ def test_procedure_optimization(fractal_compute_server):
     # Add compute
     options = {
         "keywords": None,
-        "qc_meta": {
+        "qc_spec": {
             "driver": "gradient",
             "method": "HF",
             "basis": "sto-3g",

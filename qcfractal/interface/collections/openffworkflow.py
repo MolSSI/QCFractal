@@ -85,14 +85,14 @@ class OpenFFWorkflow(Collection):
             }
         }
         torsiondrive_static_options: Dict[str, Any] = {
-            "torsiondrive_meta": {},
-            "optimization_meta": {
+            "keywords": {},
+            "optimization_spec": {
                 "program": "geometric",
                 "keywords": {
                     "coordsys": "tric",
                 }
             },
-            "qc_meta": {
+            "qc_spec": {
                 "driver": "gradient",
                 "method": "UFF",
                 "basis": "",
@@ -101,13 +101,13 @@ class OpenFFWorkflow(Collection):
             }
         }
         optimization_static_options: Dict[str, Any] = {
-            "optimization_meta": {
+            "optimization_spec": {
                 "program": "geometric",
                 "keywords": {
                     "coordsys": "tric",
                 }
             },
-            "qc_meta": {
+            "qc_spec": {
                 "driver": "gradient",
                 "method": "UFF",
                 "basis": "",
@@ -214,11 +214,11 @@ class OpenFFWorkflow(Collection):
         # Build out a new service
         torsion_meta = copy.deepcopy({
             k: self.data.torsiondrive_static_options[k]
-            for k in ("torsiondrive_meta", "optimization_meta", "qc_meta")
+            for k in ("keywords", "optimization_spec", "qc_spec")
         })
 
         for k in ["grid_spacing", "dihedrals"]:
-            torsion_meta["torsiondrive_meta"][k] = packet[k]
+            torsion_meta["keywords"][k] = packet[k]
 
         # Get hash of torsion
         inp = TorsionDriveInput(**torsion_meta, initial_molecule=packet["initial_molecule"])
@@ -227,7 +227,7 @@ class OpenFFWorkflow(Collection):
         return ret.ids[0]
 
     def _add_optimize(self, packet):
-        meta = copy.deepcopy({k: self.data.optimization_static_options[k] for k in ("keywords", "qc_meta", "program")})
+        meta = copy.deepcopy({k: self.data.optimization_static_options[k] for k in ("keywords", "qc_spec", "program")})
 
         meta["keywords"] = {"values": meta.pop("keywords"), "program": meta["program"]}
         for k in ["constraints"]:

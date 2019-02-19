@@ -28,7 +28,7 @@ class Generic(Collection):
         data: Dict[str, Any] = {}
 
         class Config:
-            allow_extra = False
+            extra = "forbid"
 
     def _pre_save_prep(self, client):
         pass

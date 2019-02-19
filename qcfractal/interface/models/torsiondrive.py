@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Tuple, Union
 
 from pydantic import BaseModel
 
-from .common_models import QCMeta, Provenance, Molecule, json_encoders, hash_dictionary
+from .common_models import QCSpecification, OptimizationSpecification, Provenance, Molecule, json_encoders, hash_dictionary
 
 __all__ = ["TorsionDriveInput", "TorsionDrive"]
 
@@ -18,7 +18,7 @@ class TorsionDriveInput(BaseModel):
     A TorsionDrive Input base class
     """
 
-    class TDOptions(BaseModel):
+    class TDKeywords(BaseModel):
         """
         TorsionDrive options
         """
@@ -26,25 +26,15 @@ class TorsionDriveInput(BaseModel):
         grid_spacing: List[int]
 
         class Config:
-            allow_extra = True
-            allow_mutation = False
-
-    class OptOptions(BaseModel):
-        """
-        TorsionDrive options
-        """
-        program: str
-
-        class Config:
-            allow_extra = True
+            extra = "allow"
             allow_mutation = False
 
     program: str = "torsiondrive"
     procedure: str = "torsiondrive"
     initial_molecule: List[Union[str, Molecule]]
-    torsiondrive_meta: TDOptions
-    optimization_meta: OptOptions
-    qc_meta: QCMeta
+    keywords: TDKeywords
+    optimization_spec: OptimizationSpecification
+    qc_spec: QCSpecification
 
     def __init__(self, **data):
         mol = data["initial_molecule"]
@@ -136,7 +126,7 @@ class TorsionDrive(TorsionDriveInput):
     def get_hash_index(self):
 
         data = self.dict(
-            include={"initial_molecule", "program", "procedure", "torsiondrive_meta", "optimization_meta", "qc_meta"})
+            include={"initial_molecule", "program", "procedure", "keywords", "optimization_spec", "qc_spec"})
 
         return hash_dictionary(data)
 

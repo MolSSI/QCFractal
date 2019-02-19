@@ -202,7 +202,7 @@ class OptimizationTasks(SingleResultTasks):
         """
 
         # Unpack individual QC tasks
-        inputs, errors = procedures_util.unpack_single_run_meta(self.storage, data.meta["qc_meta"], data.data)
+        inputs, errors = procedures_util.unpack_single_run_meta(self.storage, data.meta["qc_spec"], data.data)
 
         # Unpack options
         if data.meta["keywords"] is None:
@@ -213,7 +213,7 @@ class OptimizationTasks(SingleResultTasks):
             keyword_id = keyword_set["id"]
             keyword_set = keyword_set["values"]
 
-        keyword_set["program"] = data.meta["qc_meta"]["program"]
+        keyword_set["program"] = data.meta["qc_spec"]["program"]
         template = json.dumps({"keywords": keyword_set, "qcfractal_tags": data.meta})
 
         tag = data.meta.pop("tag", None)
@@ -235,7 +235,7 @@ class OptimizationTasks(SingleResultTasks):
             packet["procedure"] = "optimization"
             packet["program"] = data.meta["program"]
 
-            single_keys = data.meta["qc_meta"].copy()
+            single_keys = data.meta["qc_spec"].copy()
             single_keys["molecule"] = packet["initial_molecule"]["id"]
 
             # Add to args document to carry through to self.storage

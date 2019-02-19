@@ -57,12 +57,6 @@ class Collection(abc.ABC):
         provenance: Dict[str, str] = {}
         id: str = 'local'
 
-        class Config:
-            # Allows extra args to prevent subclass errors, but just ignore them
-            # These might be the defaults, but make it explicit to be sure
-            allow_extra = False
-            ignore_extra = True
-
     def __str__(self) -> str:
         """
         A simple string representation of the Collection.

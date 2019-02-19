@@ -157,8 +157,7 @@ class CollectionPOSTBody(BaseModel):
             return v.lower()
 
         class Config:
-            # Maps effectively Dict[str, Any] but enforces the collection and name fields
-            allow_extra = True
+            extra = "allow"
 
     meta: Meta = Meta()
     data: Data

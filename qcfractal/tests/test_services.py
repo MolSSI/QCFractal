@@ -30,15 +30,17 @@ def torsiondrive_fixture(fractal_compute_server):
     # Geometric options
     torsiondrive_options = {
         "initial_molecule": mol_ret[0],
-        "torsiondrive_meta": {
+        "keywords": {
             "dihedrals": [[0, 1, 2, 3]],
             "grid_spacing": [90]
         },
-        "optimization_meta": {
+        "optimization_spec": {
             "program": "geometric",
-            "coordsys": "tric",
+            "keywords": {
+                "coordsys": "tric",
+            }
         },
-        "qc_meta": {
+        "qc_spec": {
             "driver": "gradient",
             "method": "UFF",
             "basis": "",
@@ -110,7 +112,7 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
 
     # Augment the input for torsion drive to yield a new hash procedure hash,
     # but not a new task set
-    id2 = spin_up_test(torsiondrive_meta={"meaningless_entry_to_change_hash": "Waffles!"}).ids[0]
+    id2 = spin_up_test(keywords={"meaningless_entry_to_change_hash": "Waffles!"}).ids[0]
 
     assert id1 != id2
     procedures = client.get_procedures({"id": [id1, id2]})
@@ -126,7 +128,7 @@ def test_service_iterate_error(torsiondrive_fixture):
     spin_up_test, client = torsiondrive_fixture
 
     # Run the test without modifications
-    ret = spin_up_test(torsiondrive_meta={"dihedrals": [[0, 1, 2, 50]]})
+    ret = spin_up_test(keywords={"dihedrals": [[0, 1, 2, 50]]})
 
     status = client.check_services({"procedure_id": ret.ids[0]})
     assert len(status) == 1
@@ -141,7 +143,7 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
     spin_up_test, client = torsiondrive_fixture
 
     # Run the test without modifications
-    ret = spin_up_test(qc_meta={"method": "waffles_crasher"})
+    ret = spin_up_test(qc_spec={"method": "waffles_crasher"})
 
     status = client.check_services({"procedure_id": ret.ids[0]})
     assert len(status) == 1
@@ -163,7 +165,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
 
     # Options
     service = GridOptimizationInput(**{
-        "gridoptimization_meta": {
+        "keywords": {
             "preoptimization":
             True,
             "scans": [{
@@ -178,11 +180,13 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
                 "step_type": "absolute"
             }]
         },
-        "optimization_meta": {
+        "optimization_spec": {
             "program": "geometric",
-            "coordsys": "tric",
+            "keywords": {
+                "coordsys": "tric",
+            }
         },
-        "qc_meta": {
+        "qc_spec": {
             "driver": "gradient",
             "method": "UFF",
             "basis": "",
@@ -223,7 +227,7 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
 
     # Options
     service = GridOptimizationInput(**{
-        "gridoptimization_meta": {
+        "keywords": {
             "preoptimization": False,
             "scans": [{
                 "type": "distance",
@@ -232,11 +236,13 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
                 "step_type": "relative"
             }]
         },
-        "optimization_meta": {
+        "optimization_spec": {
             "program": "geometric",
-            "coordsys": "tric",
+            "keywords": {
+                "coordsys": "tric",
+            }
         },
-        "qc_meta": {
+        "qc_spec": {
             "driver": "gradient",
             "method": "UFF",
             "basis": "",

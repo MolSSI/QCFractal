@@ -1327,7 +1327,7 @@ class MongoengineSocket:
         query = {}
 
         if isinstance(id, (list, tuple)):
-            query['id__in'] = _str_to_indices(id)
+            query['id__in'], _ = _str_to_indices_with_errors(id)
         elif id:
             query['id'] = ObjectId(id)
 
@@ -1337,7 +1337,7 @@ class MongoengineSocket:
             query['hash_index'] = hash_index
 
         if isinstance(procedure_id, (list, tuple)):
-            query['procedure_id__in'] = _str_to_indices(procedure_id)
+            query['procedure_id__in'], _ = _str_to_indices_with_errors(procedure_id)
         elif procedure_id:
             query['procedure_id'] = ObjectId(procedure_id)
 

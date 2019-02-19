@@ -70,9 +70,6 @@ class ServiceQueueHandler(APIHandler):
         # Grab objects
         storage = self.objects["storage_socket"]
 
-        # Figure out initial molecules
-        service_input = ServiceQueuePOSTBody.parse_raw(self.request.body).data
-
         new_services = []
         for service_input in ServiceQueuePOSTBody.parse_raw(self.request.body).data:
             # Get molecules with ids
