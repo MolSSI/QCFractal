@@ -17,9 +17,9 @@ import pymongo
 import pytest
 from tornado.ioloop import IOLoop
 
+from .queue import build_queue_adapter
 from .server import FractalServer
 from .storage_sockets import storage_socket_factory
-from .queue import build_queue_adapter
 
 ### Addon testing capabilities
 

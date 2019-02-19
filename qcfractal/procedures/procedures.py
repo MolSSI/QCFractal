@@ -5,7 +5,7 @@ All procedures tasks involved in on-node computation.
 import json
 from typing import Union
 
-from . import procedures_util
+from .procedures_util import hash_procedure_keys, parse_hooks, parse_single_tasks, unpack_single_task_spec
 
 
 class SingleResultTasks:
@@ -38,7 +38,7 @@ class SingleResultTasks:
         """
 
         # format the data
-        inputs, errors = procedures_util.unpack_single_run_meta(self.storage, data.meta, data.data)
+        inputs, errors = unpack_single_task_spec(self.storage, data.meta, data.data)
 
         # Insert new results stubs
         result_stub = json.dumps({k: data.meta[k] for k in ["driver", "method", "basis", "keywords", "program"]})
@@ -130,12 +130,12 @@ class SingleResultTasks:
                 rhooks[key] = hooks
 
         # Add results to database
-        results = procedures_util.parse_single_runs(self.storage, rdata)
+        results = parse_single_tasks(self.storage, rdata)
 
         ret = self.storage.add_results(list(results.values()), update_existing=True)
 
         # Sort out hook data
-        hook_data = procedures_util.parse_hooks(results, rhooks)
+        hook_data = parse_hooks(results, rhooks)
 
         # Create a list of (queue_id, located) to update the queue with
         completed = list(results.keys())
@@ -202,7 +202,7 @@ class OptimizationTasks(SingleResultTasks):
         """
 
         # Unpack individual QC tasks
-        inputs, errors = procedures_util.unpack_single_run_meta(self.storage, data.meta["qc_spec"], data.data)
+        inputs, errors = unpack_single_task_spec(self.storage, data.meta["qc_spec"], data.data)
 
         # Unpack options
         if data.meta["keywords"] is None:
@@ -239,7 +239,7 @@ class OptimizationTasks(SingleResultTasks):
             single_keys["molecule"] = packet["initial_molecule"]["id"]
 
             # Add to args document to carry through to self.storage
-            hash_index = procedures_util.hash_procedure_keys({
+            hash_index = hash_procedure_keys({
                 "type": "optimization",
                 "program": data.meta["program"],
                 "keywords": keyword_id,
@@ -294,7 +294,7 @@ class OptimizationTasks(SingleResultTasks):
 
             # Parse trajectory computations and add task_id
             traj_dict = {k: v for k, v in enumerate(procedure["trajectory"])}
-            results = procedures_util.parse_single_runs(self.storage, traj_dict)
+            results = parse_single_tasks(self.storage, traj_dict)
             for k, v in results.items():
                 v["task_id"] = task_id
 
@@ -322,7 +322,7 @@ class OptimizationTasks(SingleResultTasks):
         #     # errors = [(k, "Duplicate results found")]
         #     raise ValueError("TODO: Cannot yet handle queue result duplicates.")
 
-        hook_data = procedures_util.parse_hooks(new_procedures, new_hooks)
+        hook_data = parse_hooks(new_procedures, new_hooks)
 
         # return (ret, hook_data)
         return completed, errors, hook_data

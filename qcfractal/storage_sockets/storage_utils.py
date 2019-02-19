@@ -34,14 +34,14 @@ def translate_generic_index(index):
         raise KeyError("Generic Index '{}' not understood".format(index))
 
 
-def get_metadata():
+def get_metadata_template():
     """
     Returns a copy of the metadata for database getters
     """
     return json.loads(_get_metadata)
 
 
-def add_metadata():
+def add_metadata_template():
     """
     Returns a copy of the metadata for database save/updates
     """

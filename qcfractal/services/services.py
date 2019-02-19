@@ -5,7 +5,7 @@ Manipulates available services.
 from .gridoptimization_service import GridOptimizationService
 from .torsiondrive_service import TorsionDriveService
 
-__all__ = ["initializer", "build"]
+__all__ = ["initialize_service", "construct_service"]
 
 
 def _service_chooser(name):
@@ -21,7 +21,7 @@ def _service_chooser(name):
         raise KeyError("Name {} not recognized.".format(name.title()))
 
 
-def initializer(storage_socket, service_input):
+def initialize_service(storage_socket, service_input):
     """Initializes a service from a API call
 
     Parameters
@@ -45,7 +45,7 @@ def initializer(storage_socket, service_input):
     return _service_chooser(name).initialize_from_api(storage_socket, service_input)
 
 
-def build(storage_socket, data):
+def construct_service(storage_socket, data):
     """Initializes a service from a JSON blob
 
     Parameters

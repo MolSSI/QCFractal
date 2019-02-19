@@ -2,4 +2,4 @@
 Base import for services
 """
 
-from .services import build, initializer
+from .services import construct_service, initialize_service
