@@ -1379,18 +1379,19 @@ class MongoengineSocket:
 
         return True
 
-    def services_completed(self, ids, completed_procedures):
+    def services_completed(self, completed_procedures):
 
         done = 0
-        procedure_ids = ServiceQueue.objects(id__in=ids).only("procedure_id").as_pymongo()
 
-        for procedure_id, data in zip(procedure_ids, completed_procedures):
+        for service_id, data in completed_procedures:
+            procedure_id = ServiceQueue.objects(id=service_id).only("procedure_id").as_pymongo()[0]
             data['status'] = "COMPLETE"
             data.pop('id', None)
             Procedure.objects(id=procedure_id['procedure_id']).update(**data)
-            done += 1
 
-        ServiceQueue.objects(id__in=ids).delete()
+            ServiceQueue.objects(id=service_id).delete()
+
+            done += 1
 
         return done
 
