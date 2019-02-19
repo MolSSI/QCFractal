@@ -23,7 +23,7 @@ class TorsionDriveInput(BaseModel):
         TorsionDrive options
         """
         dihedrals: List[Tuple[int, int, int, int]]
-        grid_spacing: List[float]
+        grid_spacing: List[int]
 
         class Config:
             allow_extra = True

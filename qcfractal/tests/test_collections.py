@@ -190,7 +190,7 @@ def test_compute_openffworkflow(fractal_compute_server):
         "label1": {
             "type": "torsiondrive_input",
             "initial_molecule": hooh.json_dict(),
-            "grid_spacing": [120],
+            "grid_spacing": [90],
             "dihedrals": [[0, 1, 2, 3]],
         },
     }
