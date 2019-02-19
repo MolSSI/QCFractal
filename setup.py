@@ -27,7 +27,7 @@ if __name__ == "__main__":
             'cryptography',
             'numpy>=1.7',
             'pandas',
-            'pydantic>=0.19',
+            'pydantic>=0.20',
             'pymongo>=3.0',
             'requests',
             'tornado',
@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
             # QCArchive depends
             'qcengine>=0.5.1',
-            'qcelemental>=0.2.5',
+            'qcelemental>=0.2.6',
 
             # Testing
             'pytest',

@@ -31,11 +31,12 @@ class BaseService(BaseModel, abc.ABC):
         Initalizes a Service from the API
         """
 
-    def dict(self, include=None, exclude=None, by_alias=False) -> Dict[str, Any]:
-        return BaseModel.dict(self, exclude={"storage_socket"})
+    def dict(self, *args, **kwargs) -> Dict[str, Any]:
+        kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"storage_socket"}
+        return BaseModel.dict(self, *args, **kwargs)
 
-    def json_dict(self) -> str:
-        return json.loads(self.json())
+    def json_dict(self, *args, **kwargs) -> str:
+        return json.loads(self.json(*args, **kwargs))
 
     @abc.abstractmethod
     def iterate(self):
