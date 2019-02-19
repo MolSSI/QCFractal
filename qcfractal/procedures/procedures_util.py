@@ -14,7 +14,7 @@ def format_result_indices(data, program=None):
     return program, data["molecule"], data["driver"], data["method"], data["basis"], data["options"]
 
 
-def unpack_single_run_meta(storage, meta, molecules):
+def unpack_single_task_spec(storage, meta, molecules):
     """Transforms a metadata compute packet into an expanded
     QC Schema for multiple runs.
 
@@ -47,7 +47,7 @@ def unpack_single_run_meta(storage, meta, molecules):
 
     >>> molecules = [{"geometry": [0, 0, 0], "symbols" : ["He"]}]
 
-    >>> unpack_single_run_meta(storage, meta, molecules)
+    >>> unpack_single_task_spec(storage, meta, molecules)
 
     """
 
@@ -90,7 +90,7 @@ def unpack_single_run_meta(storage, meta, molecules):
     return tasks, []
 
 
-def parse_single_runs(storage, results):
+def parse_single_tasks(storage, results):
     """Summary
 
     Parameters
@@ -126,7 +126,7 @@ def parse_single_runs(storage, results):
     return results
 
 
-def single_run_hash(data, program=None):
+def hash_single_task_spec(data, program=None):
 
     single_keys = format_result_indices(data, program=program)
     keys = {"procedure_type": "single", "single_key": single_keys}

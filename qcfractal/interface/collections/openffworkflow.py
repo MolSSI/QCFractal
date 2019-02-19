@@ -2,12 +2,12 @@
 """
 
 import copy
-from typing import Dict, Any
+from typing import Any, Dict
 
-from . import collection_utils
+from ..models.torsiondrive import TorsionDrive, TorsionDriveInput
+from ..orm import OptimizationORM
 from .collection import Collection
-from .. import orm
-from ..models.torsiondrive import TorsionDriveInput, TorsionDrive
+from .collection_utils import register_collection
 
 
 class OpenFFWorkflow(Collection):
@@ -85,14 +85,14 @@ class OpenFFWorkflow(Collection):
             }
         }
         torsiondrive_static_options: Dict[str, Any] = {
-            "torsiondrive_meta": {},
-            "optimization_meta": {
+            "keywords": {},
+            "optimization_spec": {
                 "program": "geometric",
                 "keywords": {
                     "coordsys": "tric",
                 }
             },
-            "qc_meta": {
+            "qc_spec": {
                 "driver": "gradient",
                 "method": "UFF",
                 "basis": "",
@@ -101,13 +101,13 @@ class OpenFFWorkflow(Collection):
             }
         }
         optimization_static_options: Dict[str, Any] = {
-            "optimization_meta": {
+            "optimization_spec": {
                 "program": "geometric",
                 "keywords": {
                     "coordsys": "tric",
                 }
             },
-            "qc_meta": {
+            "qc_spec": {
                 "driver": "gradient",
                 "method": "UFF",
                 "basis": "",
@@ -203,7 +203,7 @@ class OpenFFWorkflow(Collection):
                 raise KeyError("{} is not an openffworklow type job".format(packet['type']))
 
             # add back to fragment data
-            packet["hash_index"] = ret
+            packet["id"] = ret
             # packet["provenance"] = provenance
             frag_data[name] = packet
 
@@ -214,20 +214,20 @@ class OpenFFWorkflow(Collection):
         # Build out a new service
         torsion_meta = copy.deepcopy({
             k: self.data.torsiondrive_static_options[k]
-            for k in ("torsiondrive_meta", "optimization_meta", "qc_meta")
+            for k in ("keywords", "optimization_spec", "qc_spec")
         })
 
         for k in ["grid_spacing", "dihedrals"]:
-            torsion_meta["torsiondrive_meta"][k] = packet[k]
+            torsion_meta["keywords"][k] = packet[k]
 
         # Get hash of torsion
         inp = TorsionDriveInput(**torsion_meta, initial_molecule=packet["initial_molecule"])
-        ret = self.client.add_service(inp)
+        ret = self.client.add_service([inp])
 
-        return ret.hash_index
+        return ret.ids[0]
 
     def _add_optimize(self, packet):
-        meta = copy.deepcopy({k: self.data.optimization_static_options[k] for k in ("keywords", "qc_meta", "program")})
+        meta = copy.deepcopy({k: self.data.optimization_static_options[k] for k in ("keywords", "qc_spec", "program")})
 
         meta["keywords"] = {"values": meta.pop("keywords"), "program": meta["program"]}
         for k in ["constraints"]:
@@ -236,9 +236,7 @@ class OpenFFWorkflow(Collection):
         # Get hash of optimization
         ret = self.client.add_procedure("optimization", meta["program"], meta, [packet["initial_molecule"]])
 
-        r = self.client.get_procedures({"id": ret.ids[0]})
-
-        return r[0].hash_index
+        return ret.ids[0]
 
     def get_fragment_data(self, fragments=None, refresh_cache=False):
         """Obtains fragment torsiondrives from server to local data.
@@ -258,14 +256,14 @@ class OpenFFWorkflow(Collection):
         # Figure out the lookup
         lookup = []
         for frag in fragments:
-            lookup.extend([v["hash_index"] for v in self.data.fragments[frag].values()])
+            lookup.extend([v["id"] for v in self.data.fragments[frag].values()])
 
         if refresh_cache is False:
             lookup = list(set(lookup) - self._torsiondrive_cache.keys())
 
         # Grab the data and update cache
-        data = self.client.get_procedures({"hash_index": lookup})
-        self._torsiondrive_cache.update({x.hash_index: x for x in data})
+        data = self.client.get_procedures({"id": lookup})
+        self._torsiondrive_cache.update({x.id: x for x in data})
 
     def list_final_energies(self, fragments=None, refresh_cache=False):
         """
@@ -295,12 +293,12 @@ class OpenFFWorkflow(Collection):
         for frag in fragments:
             tmp = {}
             for k, v in self.data.fragments[frag].items():
-                if v["hash_index"] in self._torsiondrive_cache:
+                if v["id"] in self._torsiondrive_cache:
                     # TODO figure out a better solution here
-                    obj = self._torsiondrive_cache[v["hash_index"]]
+                    obj = self._torsiondrive_cache[v["id"]]
                     if isinstance(obj, TorsionDrive):
                         tmp[k] = obj.final_energies()
-                    elif isinstance(obj, orm.OptimizationORM):
+                    elif isinstance(obj, OptimizationORM):
                         tmp[k] = obj.final_energy()
                     else:
                         raise TypeError("Internal type error encoured, buy a dev a coffee.")
@@ -339,11 +337,11 @@ class OpenFFWorkflow(Collection):
         for frag in fragments:
             tmp = {}
             for k, v in self.data.fragments[frag].items():
-                if v["hash_index"] in self._torsiondrive_cache:
-                    obj = self._torsiondrive_cache[v["hash_index"]]
+                if v["id"] in self._torsiondrive_cache:
+                    obj = self._torsiondrive_cache[v["id"]]
                     if isinstance(obj, TorsionDrive):
                         tmp[k] = obj.final_molecules()
-                    elif isinstance(obj, orm.OptimizationORM):
+                    elif isinstance(obj, OptimizationORM):
                         tmp[k] = obj.final_molecule()
                     else:
                         raise TypeError("Internal type error encoured, buy a dev a coffee.")
@@ -355,4 +353,4 @@ class OpenFFWorkflow(Collection):
         return ret
 
 
-collection_utils.register_collection(OpenFFWorkflow)
+register_collection(OpenFFWorkflow)

@@ -99,7 +99,7 @@ def test_queue_duplicate_procedure(fractal_compute_server):
 
     geometric_options = {
         "keywords": None,
-        "qc_meta": {
+        "qc_spec": {
             "driver": "gradient",
             "method": "UFF",
             "basis": "",

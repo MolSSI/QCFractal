@@ -3,23 +3,22 @@
 import json
 import os
 from collections import defaultdict
-from typing import List, Union, Dict, Any, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import requests
 
-from . import orm
 from .collections import collection_factory
-
 from .models.common_models import Molecule
-from .models.rest_models import (
-    MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
-    KeywordGETBody, KeywordGETResponse, KeywordPOSTBody, KeywordPOSTResponse,
-    CollectionGETBody, CollectionGETResponse, CollectionPOSTBody,CollectionPOSTResponse,
-    ResultGETBody, ResultGETResponse, ProcedureGETBody, ProcedureGETReponse,
-    TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse,
-    ServiceQueuePOSTBody, ServiceQueuePOSTResponse, ServiceQueueGETBody, ServiceQueueGETResponse) # yapf: disable
 from .models.gridoptimization import GridOptimizationInput
+from .models.rest_models import (CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
+                                 KeywordGETBody, KeywordGETResponse, KeywordPOSTBody, KeywordPOSTResponse,
+                                 MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
+                                 ProcedureGETBody, ProcedureGETReponse, ResultGETBody, ResultGETResponse,
+                                 ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody,
+                                 ServiceQueuePOSTResponse, TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody,
+                                 TaskQueuePOSTResponse)
 from .models.torsiondrive import TorsionDriveInput
+from .orm import build_orm
 
 
 class FractalClient(object):
@@ -371,7 +370,7 @@ class FractalClient(object):
         if return_objects:
             ret = []
             for packet in r.data:
-                tmp = orm.build_orm(packet, client=self)
+                tmp = build_orm(packet, client=self)
                 ret.append(tmp)
             return ret
         else:

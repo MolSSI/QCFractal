@@ -1,7 +1,7 @@
 """Generic Collection class
 """
 
-from typing import Dict, Any
+from typing import Any, Dict
 
 from .collection import Collection
 from .collection_utils import register_collection
@@ -28,7 +28,7 @@ class Generic(Collection):
         data: Dict[str, Any] = {}
 
         class Config:
-            allow_extra = False
+            extra = "forbid"
 
     def _pre_save_prep(self, client):
         pass

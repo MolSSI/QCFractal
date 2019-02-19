@@ -13,12 +13,13 @@ import tornado.log
 import tornado.options
 import tornado.web
 
-from . import interface
-from . import queue
-from . import services
-from . import storage_sockets
-from . import web_handlers
 from .extras import get_information
+from .interface import FractalClient
+from .queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, TaskQueueHandler
+from .services import construct_service
+from .storage_sockets import storage_socket_factory
+from .web_handlers import (CollectionHandler, InformationHandler, MoleculeHandler, OptionHandler, ProcedureHandler,
+                           ResultHandler)
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -163,7 +164,7 @@ class FractalServer:
             raise KeyError("ssl_options not understood")
 
         # Setup the database connection
-        self.storage = storage_sockets.storage_socket_factory(
+        self.storage = storage_socket_factory(
             storage_uri, project_name=storage_project_name, bypass_security=storage_bypass_security)
 
         # Pull the current loop if we need it
@@ -185,17 +186,17 @@ class FractalServer:
         endpoints = [
 
             # Generic web handlers
-            (r"/information", web_handlers.InformationHandler, self.objects),
-            (r"/molecule", web_handlers.MoleculeHandler, self.objects),
-            (r"/keyword", web_handlers.OptionHandler, self.objects),
-            (r"/collection", web_handlers.CollectionHandler, self.objects),
-            (r"/result", web_handlers.ResultHandler, self.objects),
-            (r"/procedure", web_handlers.ProcedureHandler, self.objects),
+            (r"/information", InformationHandler, self.objects),
+            (r"/molecule", MoleculeHandler, self.objects),
+            (r"/keyword", OptionHandler, self.objects),
+            (r"/collection", CollectionHandler, self.objects),
+            (r"/result", ResultHandler, self.objects),
+            (r"/procedure", ProcedureHandler, self.objects),
 
             # Queue Schedulers
-            (r"/task_queue", queue.TaskQueueHandler, self.objects),
-            (r"/service_queue", queue.ServiceQueueHandler, self.objects),
-            (r"/queue_manager", queue.QueueManagerHandler, self.objects),
+            (r"/task_queue", TaskQueueHandler, self.objects),
+            (r"/service_queue", ServiceQueueHandler, self.objects),
+            (r"/queue_manager", QueueManagerHandler, self.objects),
         ]
 
         # Build the app
@@ -253,8 +254,8 @@ class FractalServer:
         Async build the manager so it can talk to itself
         """
         # Add the socket to passed args
-        client = interface.FractalClient(self._address, verify=self.client_verify)
-        self.objects["queue_manager"] = queue.QueueManager(
+        client = FractalClient(self._address, verify=self.client_verify)
+        self.objects["queue_manager"] = QueueManager(
             client, self.queue_socket, loop=self.loop, logger=self.logger, cluster="FractalServer", verbose=False)
 
     def start(self):
@@ -371,7 +372,7 @@ class FractalServer:
 
             # Attempt to iteration and get message
             try:
-                obj = services.build(self.storage, data)
+                obj = construct_service(self.storage, data)
                 finished = obj.iterate()
                 data = obj.json_dict()
             except Exception as e:

@@ -2,11 +2,11 @@
 Models for the REST interface
 """
 from enum import Enum
-from typing import Any, Dict, List, Tuple, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseConfig, BaseModel, validator
 
-from .common_models import Molecule, KeywordSet, json_encoders
+from .common_models import KeywordSet, Molecule, json_encoders
 from .gridoptimization import GridOptimizationInput
 from .torsiondrive import TorsionDriveInput
 
@@ -157,8 +157,7 @@ class CollectionPOSTBody(BaseModel):
             return v.lower()
 
         class Config:
-            # Maps effectively Dict[str, Any] but enforces the collection and name fields
-            allow_extra = True
+            extra = "allow"
 
     meta: Meta = Meta()
     data: Data
@@ -296,7 +295,7 @@ class ServiceQueueGETResponse(BaseModel):
 
 class ServiceQueuePOSTBody(BaseModel):
     meta: Dict[str, Any]
-    data: Union[TorsionDriveInput, GridOptimizationInput]
+    data: List[Union[TorsionDriveInput, GridOptimizationInput]]
 
     class Config(RESTConfig):
         pass
@@ -305,8 +304,9 @@ class ServiceQueuePOSTBody(BaseModel):
 
 class ServiceQueuePOSTResponse(BaseModel):
     class Data(BaseModel):
-        hash_index: str
-        status: str
+        ids: List[Optional[str]]
+        submitted: List[str]
+        existing: List[str]
 
     meta: ResponsePOSTMeta
     data: Data

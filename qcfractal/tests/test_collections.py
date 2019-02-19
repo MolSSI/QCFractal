@@ -155,12 +155,14 @@ def test_compute_openffworkflow(fractal_compute_server):
         # TorsionDrive, Geometric, and QC options
         ""
         "torsiondrive_static_options": {
-            "torsiondrive_meta": {},
-            "optimization_meta": {
+            "keywords": {},
+            "optimization_spec": {
                 "program": "geometric",
-                "coordsys": "tric",
+                "keywords": {
+                    "coordsys": "tric",
+                }
             },
-            "qc_meta": {
+            "qc_spec": {
                 "driver": "gradient",
                 "method": "UFF",
                 "basis": "",
@@ -173,7 +175,7 @@ def test_compute_openffworkflow(fractal_compute_server):
             "keywords": {
                 "coordsys": "tric",
             },
-            "qc_meta": {
+            "qc_spec": {
                 "driver": "gradient",
                 "method": "UFF",
                 "basis": "",

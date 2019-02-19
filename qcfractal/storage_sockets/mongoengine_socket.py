@@ -16,23 +16,18 @@ except ImportError:
 
 import logging
 from datetime import datetime as dt
-from typing import List, Union, Dict, Sequence
+from typing import Dict, List, Sequence, Union
 
 import bcrypt
 import bson.errors
 import mongoengine as db
 import mongoengine.errors
 from bson.objectid import ObjectId
-# import models
 from mongoengine.connection import disconnect, get_db
 
-from qcfractal.storage_sockets.models import Keywords, Collection, Result, \
-    TaskQueue, Procedure, User, Molecule, QueueManager, ServiceQueue
-from . import storage_utils
-# Pull in the hashing algorithms from the client
 from .. import interface
-
-# from bson.dbref import DBRef
+from .models import Collection, Keywords, Molecule, Procedure, QueueManager, Result, ServiceQueue, TaskQueue, User
+from .storage_utils import add_metadata_template, get_metadata_template, translate_molecule_index
 
 
 def _str_to_indices(ids):
@@ -160,7 +155,7 @@ class MongoengineSocket:
         TODO: to be split into get by_id and get_by_data
         """
 
-        meta = storage_utils.get_metadata()
+        meta = get_metadata_template()
 
         ordered_mol_dict = {indx: mol for indx, mol in enumerate(data)}
         dict_mols = {}
@@ -243,7 +238,7 @@ class MongoengineSocket:
             Whether the operation was successful.
         """
 
-        meta = storage_utils.add_metadata()
+        meta = add_metadata_template()
 
         results = []
         # try:
@@ -293,10 +288,10 @@ class MongoengineSocket:
 
     def get_molecules(self, molecule_ids=None, index="id"):
 
-        ret = {"meta": storage_utils.get_metadata(), "data": []}
+        ret = {"meta": get_metadata_template(), "data": []}
 
         try:
-            index = storage_utils.translate_molecule_index(index)
+            index = translate_molecule_index(index)
         except KeyError as e:
             ret["meta"]["error_description"] = repr(e)
             return ret
@@ -347,7 +342,7 @@ class MongoengineSocket:
             Number of deleted molecules.
         """
 
-        index = storage_utils.translate_molecule_index(index)
+        index = translate_molecule_index(index)
 
         if isinstance(values, str):
             values = [values]
@@ -372,7 +367,7 @@ class MongoengineSocket:
         Returns
         -------
             A dict with keys: 'data' and 'meta'
-            (see storage_utils.add_metadata())
+            (see add_metadata_template())
             The 'data' part is a list of ids of the inserted options
             data['duplicates'] has the duplicate entries
 
@@ -385,7 +380,7 @@ class MongoengineSocket:
         if not isinstance(data, Sequence):
             data = [data]
 
-        meta = storage_utils.add_metadata()
+        meta = add_metadata_template()
 
         keywords = []
         try:
@@ -444,11 +439,11 @@ class MongoengineSocket:
         Returns
         -------
             A dict with keys: 'data' and 'meta'
-            (see storage_utils.get_metadata())
+            (see get_metadata_template())
             The 'data' part is an object of the result or None if not found
         """
 
-        meta = storage_utils.get_metadata()
+        meta = get_metadata_template()
         query = {}
         if program is not None:
             query['program'] = program
@@ -483,7 +478,7 @@ class MongoengineSocket:
         TODO: to be split into get by_id and get_by_data
         """
 
-        meta = storage_utils.get_metadata()
+        meta = get_metadata_template()
 
         ids = []
         for idx, kw in enumerate(data):
@@ -567,7 +562,7 @@ class MongoengineSocket:
         Returns
         -------
         A dict with keys: 'data' and 'meta'
-            (see storage_utils.add_metadata())
+            (see add_metadata_template())
             The 'data' part is the id of the inserted document or none
 
         Notes
@@ -578,7 +573,7 @@ class MongoengineSocket:
             be removed.
         """
 
-        meta = storage_utils.add_metadata()
+        meta = add_metadata_template()
         col_id = None
         try:
 
@@ -623,7 +618,7 @@ class MongoengineSocket:
             The data is a list of the collections found
         """
 
-        meta = storage_utils.get_metadata()
+        meta = get_metadata_template()
         query = {}
         if collection:
             query['collection'] = collection
@@ -711,7 +706,7 @@ class MongoengineSocket:
 
                 d[i] = d[i].lower()
 
-        meta = storage_utils.add_metadata()
+        meta = add_metadata_template()
 
         results = []
         # try:
@@ -770,7 +765,7 @@ class MongoengineSocket:
             Data is the objects found
         """
 
-        meta = storage_utils.get_metadata()
+        meta = get_metadata_template()
 
         data = []
         # try:
@@ -846,7 +841,7 @@ class MongoengineSocket:
             Data is the objects found
         """
 
-        meta = storage_utils.get_metadata()
+        meta = get_metadata_template()
         query = {}
         parsed_query = {}
         if program is not None:
@@ -922,7 +917,7 @@ class MongoengineSocket:
             Data is the objects found
         """
 
-        meta = storage_utils.get_metadata()
+        meta = get_metadata_template()
         query = {}
 
         if isinstance(task_id, (list, tuple)):
@@ -992,7 +987,7 @@ class MongoengineSocket:
             Data is the ids of the inserted/updated/existing docs
         """
 
-        meta = storage_utils.add_metadata()
+        meta = add_metadata_template()
 
         results = []
         # try:
@@ -1061,7 +1056,7 @@ class MongoengineSocket:
             Data is the objects found
         """
 
-        meta = storage_utils.get_metadata()
+        meta = get_metadata_template()
         query = {}
         parsed_query = {}
         if procedure:
@@ -1129,7 +1124,7 @@ class MongoengineSocket:
             Data is the objects found
         """
 
-        meta = storage_utils.get_metadata()
+        meta = get_metadata_template()
 
         query, parsed_query = {}, {}
         if id:
@@ -1187,7 +1182,7 @@ class MongoengineSocket:
             Data is the objects found
         """
 
-        meta = storage_utils.get_metadata()
+        meta = get_metadata_template()
         query = {}
 
         if isinstance(task_id, (list, tuple)):
@@ -1254,44 +1249,48 @@ class MongoengineSocket:
             Data is the hash_index of the inserted/existing docs
         """
 
-        meta = storage_utils.add_metadata()
+        meta = add_metadata_template()
 
-        services = []
-        # try:
-        for d in data:
+        procedures = []
+        for idx, d in enumerate(data):
+
+            # Add the underlying procedure
+            new_procedure = self.add_procedures([d["output"]])
+
+            # Procedure already exists
+            procedure_id = new_procedure["data"][0]
+            if new_procedure["meta"]["duplicates"]:
+                procedures.append(procedure_id)
+                meta["duplicates"].append(procedure_id)
+                continue
+
             # search by hash index
             d.pop("id", None)
             doc = ServiceQueue.objects(hash_index=d['hash_index'])
 
             if doc.count() == 0:
                 # create stub procedure
-                proc_dict = d['output']
-                proc_dict.pop('id', None)  # if case of pydanic null id
-                procedure = Procedure(**proc_dict).save()
                 doc = ServiceQueue(**d)
-                doc.procedure_id = procedure
+                doc.procedure_id = ObjectId(procedure_id)
                 doc.save()
-                services.append(doc.hash_index)
+                procedures.append(procedure_id)
                 meta['n_inserted'] += 1
             else:
-                # id = str(doc.first().id)
-                # By D2: Right now services expect hash return
-                # This and bad and should be fixed
-                hash_index = doc.first().hash_index
-                meta['duplicates'].append(hash_index)
-                # If new or duplicate, add the to the return list
-                services.append(hash_index)
+                procedures.append(None)
+                meta["errors"].append((idx, "Duplicate service, but not caught by procedure."))
+
         meta["success"] = True
         # except (mongoengine.errors.ValidationError, KeyError) as err:
         #     meta["validation_errors"].append(err)
         # except Exception as err:
         #     meta['error_description'] = err
 
-        ret = {"data": services, "meta": meta}
+        ret = {"data": procedures, "meta": meta}
         return ret
 
     def get_services(self,
                      id: Union[List[str], str]=None,
+                     procedure_id: Union[List[str], str]=None,
                      hash_index: Union[List[str], str]=None,
                      status: str=None,
                      projection=None,
@@ -1319,18 +1318,23 @@ class MongoengineSocket:
             Data is the objects found
         """
 
-        meta = storage_utils.get_metadata()
+        meta = get_metadata_template()
         query = {}
 
         if isinstance(id, (list, tuple)):
-            query['id__in'] = id
+            query['id__in'], _ = _str_to_indices_with_errors(id)
         elif id:
-            query['id'] = id
+            query['id'] = ObjectId(id)
 
         if isinstance(hash_index, (list, tuple)):
             query['hash_index__in'] = hash_index
         elif hash_index:
             query['hash_index'] = hash_index
+
+        if isinstance(procedure_id, (list, tuple)):
+            query['procedure_id__in'], _ = _str_to_indices_with_errors(procedure_id)
+        elif procedure_id:
+            query['procedure_id'] = ObjectId(procedure_id)
 
         if status:
             query['status'] = status
@@ -1428,7 +1432,7 @@ class MongoengineSocket:
             meta['duplicates'] has the duplicate tasks
         """
 
-        meta = storage_utils.add_metadata()
+        meta = add_metadata_template()
 
         results = []
         for task_num, d in enumerate(data):
@@ -1549,7 +1553,7 @@ class MongoengineSocket:
             Data is the objects found
         """
 
-        meta = storage_utils.get_metadata()
+        meta = get_metadata_template()
         query = {}
         parsed_query = {}
         if program:
@@ -1781,7 +1785,7 @@ class MongoengineSocket:
 
         data = QueueManager.objects(**query)
 
-        meta = storage_utils.get_metadata()
+        meta = get_metadata_template()
         meta["success"] = True
         meta["n_found"] = data.count()
 

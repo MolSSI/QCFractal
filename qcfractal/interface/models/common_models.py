@@ -3,13 +3,13 @@ Common models for QCPortal/Fractal
 """
 import hashlib
 import json
-import numpy as np
-from pydantic import BaseModel, validator
 from typing import Any, Dict, Optional
 
+import numpy as np
+from pydantic import BaseModel, validator
 from qcelemental.models import Molecule, Provenance, Result, ResultInput
 
-__all__ = ["QCMeta", "json_encoders", "hash_dictionary", "KeywordSet"]
+__all__ = ["QCSpecification", "OptimizationSpecification", "json_encoders", "hash_dictionary", "KeywordSet"]
 
 # Add in QCElemental models
 __all__.extend(["Molecule", "Provenance"])
@@ -60,7 +60,7 @@ def hash_dictionary(data: Dict[str, Any]) -> str:
     return m.hexdigest()
 
 
-class QCMeta(BaseModel):
+class QCSpecification(BaseModel):
     """
     The basic quantum chemistry meta specification
     """
@@ -69,6 +69,22 @@ class QCMeta(BaseModel):
     basis: Optional[str] = None
     keywords: Optional[str] = None
     program: str
+
+    class Config:
+        extra = "forbid"
+        allow_mutation = False
+
+
+class OptimizationSpecification(BaseModel):
+    """
+    GridOptimization options
+    """
+    program: str
+    keywords: Optional[Dict[str, Any]] = None
+
+    class Config:
+        extra = "forbid"
+        allow_mutation = False
 
 
 class KeywordSet(BaseModel):
@@ -83,7 +99,7 @@ class KeywordSet(BaseModel):
     exact_floats: bool = False
 
     class Config:
-        allow_extra = True
+        extra = "allow"
         allow_mutation = False
 
     def __init__(self, **data):

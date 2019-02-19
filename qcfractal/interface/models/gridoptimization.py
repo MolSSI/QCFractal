@@ -7,7 +7,8 @@ from typing import Any, Dict, List, Tuple, Union
 
 from pydantic import BaseModel, validator
 
-from .common_models import QCMeta, Provenance, Molecule, json_encoders, hash_dictionary
+from .common_models import (Molecule, OptimizationSpecification, Provenance, QCSpecification, hash_dictionary,
+                            json_encoders)
 
 __all__ = ["GridOptimizationInput", "GridOptimization"]
 
@@ -53,8 +54,12 @@ class ScanDimension(BaseModel):
 
         return v
 
+    class Config:
+        extra = "forbid"
+        allow_mutation = False
 
-class GOOptions(BaseModel):
+
+class GOKeywords(BaseModel):
     """
     GridOptimization options
     """
@@ -62,17 +67,7 @@ class GOOptions(BaseModel):
     preoptimization: bool = True
 
     class Config:
-        allow_mutation = False
-
-
-class OptOptions(BaseModel):
-    """
-    GridOptimization options
-    """
-    program: str
-
-    class Config:
-        allow_extra = True
+        extra = "forbid"
         allow_mutation = False
 
 
@@ -84,9 +79,9 @@ class GridOptimizationInput(BaseModel):
     program: str = "qcfractal"
     procedure: str = "gridoptimization"
     initial_molecule: Union[str, Molecule]
-    gridoptimization_meta: GOOptions
-    optimization_meta: OptOptions
-    qc_meta: QCMeta
+    keywords: GOKeywords
+    optimization_spec: OptimizationSpecification
+    qc_spec: QCSpecification
 
     class Config:
         allow_mutation = False
@@ -102,7 +97,7 @@ class GridOptimizationInput(BaseModel):
 
             mol_id = self.initial_molecule.id
 
-        data = self.dict(include={"program", "procedure", "gridoptimization_meta", "optimization_meta", "qc_meta"})
+        data = self.dict(include={"program", "procedure", "keywords", "optimization_meta", "qc_meta"})
         data["initial_molecule"] = mol_id
 
         return hash_dictionary(data)
@@ -126,7 +121,7 @@ class GridOptimizationInput(BaseModel):
 
         ret = []
         for n, idx in enumerate(key):
-            ret.append(self.gridoptimization_meta.scans[n].steps[idx])
+            ret.append(self.keywords.scans[n].steps[idx])
 
         return tuple(ret)
 
@@ -135,7 +130,7 @@ class GridOptimizationInput(BaseModel):
         Returns the overall dimensions of the scan.
         """
         ret = []
-        for scan in self.gridoptimization_meta.scans:
+        for scan in self.keywords.scans:
             ret.append(len(scan.steps))
 
         return tuple(ret)

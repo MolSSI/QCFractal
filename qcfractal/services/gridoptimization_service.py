@@ -7,9 +7,9 @@ from typing import Dict, Set
 
 import numpy as np
 
-from qcfractal.extras import get_information
-from qcfractal.interface.models.common_models import json_encoders, Molecule
-from qcfractal.interface.models.gridoptimization import GridOptimization
+from ..extras import get_information
+from ..interface.models.common_models import Molecule, json_encoders
+from ..interface.models.gridoptimization import GridOptimization
 from .service_util import BaseService, TaskManager, expand_ndimensional_grid
 
 __all__ = ["GridOptimizationService"]
@@ -71,42 +71,42 @@ class GridOptimizationService(BaseService):
 
         # Build dihedral template
         constraint_template = []
-        for scan in output.gridoptimization_meta.scans:
+        for scan in output.keywords.scans:
             tmp = {"type": scan.type, "indices": scan.indices}
             constraint_template.append(tmp)
 
         meta["constraint_template"] = json.dumps(constraint_template)
-        # meta["keyword_template"] = KeywordSet(program=output.optimization_meta.program, values=output.optimization_meta.dict())
+        # meta["keyword_template"] = KeywordSet(program=output.optimization_spec.program, values=output.optimization_spec.dict())
 
         # Build optimization template
         meta["optimization_template"] = json.dumps({
             "meta": {
                 "procedure": "optimization",
                 "keywords": {
-                    "program": output.optimization_meta.program,
-                    "values": output.optimization_meta.dict(exclude={"constraints"})
+                    "program": output.optimization_spec.program,
+                    "values": output.optimization_spec.keywords
                 },
-                "program": output.optimization_meta.program,
-                "qc_meta": output.qc_meta.dict(),
+                "program": output.optimization_spec.program,
+                "qc_spec": output.qc_spec.dict(),
                 "tag": meta.pop("tag", None)
             },
         })
 
         # Move around geometric data
-        meta["optimization_program"] = output.optimization_meta.program
+        meta["optimization_program"] = output.optimization_spec.program
         meta["hash_index"] = output.hash_index
 
         # Hard coded data, # TODO
         meta["dimensions"] = output.get_scan_dimensions()
 
         meta["starting_molecule"] = service_input.initial_molecule
-        if output.gridoptimization_meta.preoptimization:
+        if output.keywords.preoptimization:
             meta["iteration"] = -2
             meta["starting_grid"] = (0 for x in meta["dimensions"])
         else:
             meta["iteration"] = 0
             meta["starting_grid"] = GridOptimizationService._calculate_starting_grid(
-                output.gridoptimization_meta.scans, service_input.initial_molecule)
+                output.keywords.scans, service_input.initial_molecule)
 
         return cls(**meta, storage_socket=storage_socket)
 
@@ -149,8 +149,7 @@ class GridOptimizationService(BaseService):
 
             self.starting_molecule = Molecule(**self.storage_socket.get_molecules(
                 [complete_tasks["initial_opt"]["final_molecule"]])["data"][0])
-            self.starting_grid = self._calculate_starting_grid(self.output.gridoptimization_meta.scans,
-                                                               self.starting_molecule)
+            self.starting_grid = self._calculate_starting_grid(self.output.keywords.scans, self.starting_molecule)
 
             self.submit_optimization_tasks({self.output.serialize_key(self.starting_grid): self.starting_molecule.id})
             self.iteration = 1
@@ -217,7 +216,7 @@ class GridOptimizationService(BaseService):
             constraints = json.loads(self.constraint_template)
 
             scan_indices = self.output.deserialize_key(key)
-            for con_num, scan in enumerate(self.output.gridoptimization_meta.scans):
+            for con_num, scan in enumerate(self.output.keywords.scans):
                 idx = scan_indices[con_num]
                 if scan.step_type == "absolute":
                     constraints[con_num]["value"] = scan.steps[idx]

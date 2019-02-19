@@ -15,8 +15,33 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.5.0 / 2019-02-20
+------------------
+
+New Features
+++++++++++++
+
+- (:pr:`165`) Separates datasets into a Dataset, ReactionDataset, and OptimizationDataset for future flexability.
+- (:pr:`168`) Services now save their Procedure stubs automatically, the same as normal Procedures.
+- (:pr:`169`) ``setup.py`` now uses the README.md and conveys Markdown to PyPI.
+- (:pr:`171`) Molecule addition now takes in a flat list and returns a flat list of IDs rather than using a dictionary.
+- (:pr:`173`) Services now return their correspond Procedure ID fields.
+
+
+Enhancements
+++++++++++++
+
+- (:pr:`163`) Ignores pre-existing IDs during storage add operations.
+- (:pr:`167`) Allows empty queries to successfully return all results rather than all data in a collection.
+- (:pr:`172`) Bumps pydantic version to 0.20 and updates API.
+
+Bug Fixes
++++++++++
+
+- (:pr:`170`) Switches Parsl from IPPExecutor to ThreadExecutor to prevent some bad semaphore conflicts with PyTest.
+
 0.5.0rc1 / 2019-02-15
--------------------
+---------------------
 
 New Features
 ++++++++++++
@@ -51,6 +76,7 @@ General note: ``Options`` objects have been renamed to ``KeywordSet`` to better 
 
 Bug Fixes
 +++++++++
+
 - (:pr:`132`) Fixed MongoEngine Socket bug where calling some functions before others resulted in an error due to lack of initialized variables.
 - (:pr:`133`) ``Molecule`` objects cannot be oriented once they enter the QCFractal ecosystem (after optional initial orientation.)
   ``Molecule``s also cannot be oriented by programs invoked by the QCFractal ecosystem so orientation is preserved post-calculation.

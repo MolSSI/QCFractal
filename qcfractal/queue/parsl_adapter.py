@@ -5,7 +5,7 @@ Queue adapter for Parsl
 import logging
 import time
 import traceback
-from typing import Callable, Dict, List, Any, Optional, Tuple, Hashable
+from typing import Any, Callable, Dict, Hashable, List, Optional, Tuple
 
 from .base_adapter import BaseAdapter
 

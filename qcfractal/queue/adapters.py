@@ -2,7 +2,7 @@
 Queue backend abstraction manager.
 """
 
-from .executor_adapter import ExecutorAdapter, DaskAdapter
+from .executor_adapter import DaskAdapter, ExecutorAdapter
 from .fireworks_adapter import FireworksAdapter
 from .parsl_adapter import ParslAdapter
 

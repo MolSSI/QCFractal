@@ -113,6 +113,10 @@ class OptimizationORM:
 
         return ret
 
+    @property
+    def id(self):
+        return self._id
+
     def energies(self):
         """A list of energies along the trajectory path.
 

@@ -8,16 +8,17 @@ from typing import Any, Dict, List
 
 import numpy as np
 
+from ..interface.models.common_models import json_encoders
+from ..interface.models.torsiondrive import TorsionDrive
+from .service_util import BaseService, TaskManager
+
 try:
     import torsiondrive
     from torsiondrive import td_api
 except ImportError:
     td_api = None
 
-from qcfractal.interface.models.torsiondrive import TorsionDrive
-from qcfractal.interface.models.common_models import json_encoders
 
-from .service_util import BaseService, TaskManager
 
 __all__ = ["TorsionDriveService"]
 
@@ -84,14 +85,14 @@ class TorsionDriveService(BaseService):
 
         # Initiate torsiondrive meta
         meta["torsiondrive_state"] = td_api.create_initial_state(
-            dihedrals=output.torsiondrive_meta.dihedrals,
-            grid_spacing=output.torsiondrive_meta.grid_spacing,
+            dihedrals=output.keywords.dihedrals,
+            grid_spacing=output.keywords.grid_spacing,
             elements=molecule_template["symbols"],
             init_coords=[x.geometry for x in service_input.initial_molecule])
 
         # Build dihedral template
         dihedral_template = []
-        for idx in output.torsiondrive_meta.dihedrals:
+        for idx in output.keywords.dihedrals:
             tmp = {"type": "dihedral", "indices": idx}
             dihedral_template.append(tmp)
 
@@ -101,15 +102,18 @@ class TorsionDriveService(BaseService):
         meta["optimization_template"] = json.dumps({
             "meta": {
                 "procedure": "optimization",
-                "keywords": {"program": output.optimization_meta.program, "values": output.optimization_meta.dict()},
-                "program": output.optimization_meta.program,
-                "qc_meta": output.qc_meta.dict(),
+                "keywords": {
+                    "program": output.optimization_spec.program,
+                    "values": output.optimization_spec.keywords
+                },
+                "program": output.optimization_spec.program,
+                "qc_spec": output.qc_spec.dict(),
                 "tag": meta.pop("tag", None)
             },
         })
 
         # Move around geometric data
-        meta["optimization_program"] = output.optimization_meta.program
+        meta["optimization_program"] = output.optimization_spec.program
 
         meta["hash_index"] = output.get_hash_index()
 
