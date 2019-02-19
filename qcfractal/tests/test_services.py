@@ -53,11 +53,11 @@ def torsiondrive_fixture(fractal_compute_server):
         recursive_dict_merge(instance_options, keyword_augments)
 
         inp = TorsionDriveInput(**instance_options)
-        ret = client.add_service(inp, return_full=True)
+        ret = client.add_service([inp], return_full=True)
 
         if ret.meta.n_inserted:  # In case test already submitted
-            compute_key = ret.data.hash_index
-            status = client.check_services({"hash_index": compute_key}, return_full=True)
+            compute_key = ret.data.ids[0]
+            status = client.check_services({"procedure_id": compute_key}, return_full=True)
             assert 'READY' in status.data[0]['status']
             assert status.data[0]['id'] != compute_key  # Hash should never be id
 
@@ -76,7 +76,7 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
     ret = spin_up_test()
 
     # Get a TorsionDriveORM result and check data
-    result = client.get_procedures({"hash_index": ret.hash_index})[0]
+    result = client.get_procedures({"id": ret.ids[0]})[0]
     assert isinstance(str(result), str)  # Check that repr runs
 
     assert pytest.approx(0.002597541340221565, 1e-5) == result.final_energies(0)
@@ -96,7 +96,7 @@ def test_service_torsiondrive_multi_single(torsiondrive_fixture):
 
     ret = spin_up_test(initial_molecule=[hooh, hooh2])
 
-    result = client.get_procedures({"hash_index": ret.hash_index})[0]
+    result = client.get_procedures({"id": ret.ids[0]})[0]
     assert result.status == "COMPLETE"
 
 
@@ -106,14 +106,14 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     spin_up_test, client = torsiondrive_fixture
 
     # Run the test without modifications
-    hash_index1 = spin_up_test().hash_index
+    id1 = spin_up_test().ids[0]
 
     # Augment the input for torsion drive to yield a new hash procedure hash,
     # but not a new task set
-    hash_index2 = spin_up_test(torsiondrive_meta={"meaningless_entry_to_change_hash": "Waffles!"}).hash_index
+    id2 = spin_up_test(torsiondrive_meta={"meaningless_entry_to_change_hash": "Waffles!"}).ids[0]
 
-    assert hash_index1 != hash_index2
-    procedures = client.get_procedures({"hash_index": [hash_index1, hash_index2]})
+    assert id1 != id2
+    procedures = client.get_procedures({"id": [id1, id2]})
     assert len(procedures) == 2  # Make sure only 2 procedures are yielded
 
     base_run, duplicate_run = procedures
@@ -128,7 +128,7 @@ def test_service_iterate_error(torsiondrive_fixture):
     # Run the test without modifications
     ret = spin_up_test(torsiondrive_meta={"dihedrals": [[0, 1, 2, 50]]})
 
-    status = client.check_services({"hash_index": ret.hash_index})
+    status = client.check_services({"procedure_id": ret.ids[0]})
     assert len(status) == 1
 
     assert status[0]["status"] == "ERROR"
@@ -143,7 +143,7 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
     # Run the test without modifications
     ret = spin_up_test(qc_meta={"method": "waffles_crasher"})
 
-    status = client.check_services({"hash_index": ret.hash_index})
+    status = client.check_services({"procedure_id": ret.ids[0]})
     assert len(status) == 1
 
     assert status[0]["status"] == "ERROR"
@@ -192,11 +192,11 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
         "initial_molecule": mol_ret[0],
     })
 
-    ret = client.add_service(service)
+    ret = client.add_service([service])
     fractal_compute_server.await_services()
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
-    result = client.get_procedures({"hash_index": ret.hash_index})[0]
+    result = client.get_procedures({"id": ret.ids[0]})[0]
 
     assert result.starting_grid == (1, 0)
     assert pytest.approx(result.final_energies((0, 0)), abs=1.e-4) == 0.0010044105443485617
@@ -246,11 +246,11 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
         "initial_molecule": hooh,
     })
 
-    ret = client.add_service(service)
+    ret = client.add_service([service])
     fractal_compute_server.await_services()
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
-    result = client.get_procedures({"hash_index": ret.hash_index})[0]
+    result = client.get_procedures({"id": ret.ids[0]})[0]
 
     assert result.starting_grid == (1, )
     assert pytest.approx(result.final_energies((0, )), abs=1.e-4) == 0.00032145876568280524

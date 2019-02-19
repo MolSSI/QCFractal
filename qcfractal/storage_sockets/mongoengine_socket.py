@@ -1256,42 +1256,46 @@ class MongoengineSocket:
 
         meta = storage_utils.add_metadata()
 
-        services = []
-        # try:
-        for d in data:
+        procedures = []
+        for idx, d in enumerate(data):
+
+            # Add the underlying procedure
+            new_procedure = self.add_procedures([d["output"]])
+
+            # Procedure already exists
+            procedure_id = new_procedure["data"][0]
+            if new_procedure["meta"]["duplicates"]:
+                procedures.append(procedure_id)
+                meta["duplicates"].append(procedure_id)
+                continue
+
             # search by hash index
             d.pop("id", None)
             doc = ServiceQueue.objects(hash_index=d['hash_index'])
 
             if doc.count() == 0:
                 # create stub procedure
-                proc_dict = d['output']
-                proc_dict.pop('id', None)  # if case of pydanic null id
-                procedure = Procedure(**proc_dict).save()
                 doc = ServiceQueue(**d)
-                doc.procedure_id = procedure
+                doc.procedure_id = ObjectId(procedure_id)
                 doc.save()
-                services.append(doc.hash_index)
+                procedures.append(procedure_id)
                 meta['n_inserted'] += 1
             else:
-                # id = str(doc.first().id)
-                # By D2: Right now services expect hash return
-                # This and bad and should be fixed
-                hash_index = doc.first().hash_index
-                meta['duplicates'].append(hash_index)
-                # If new or duplicate, add the to the return list
-                services.append(hash_index)
+                procedures.append(None)
+                meta["errors"].append((idx, "Duplicate service, but not caught by procedure."))
+
         meta["success"] = True
         # except (mongoengine.errors.ValidationError, KeyError) as err:
         #     meta["validation_errors"].append(err)
         # except Exception as err:
         #     meta['error_description'] = err
 
-        ret = {"data": services, "meta": meta}
+        ret = {"data": procedures, "meta": meta}
         return ret
 
     def get_services(self,
                      id: Union[List[str], str]=None,
+                     procedure_id: Union[List[str], str]=None,
                      hash_index: Union[List[str], str]=None,
                      status: str=None,
                      projection=None,
@@ -1323,14 +1327,19 @@ class MongoengineSocket:
         query = {}
 
         if isinstance(id, (list, tuple)):
-            query['id__in'] = id
+            query['id__in'] = _str_to_indices(id)
         elif id:
-            query['id'] = id
+            query['id'] = ObjectId(id)
 
         if isinstance(hash_index, (list, tuple)):
             query['hash_index__in'] = hash_index
         elif hash_index:
             query['hash_index'] = hash_index
+
+        if isinstance(procedure_id, (list, tuple)):
+            query['procedure_id__in'] = _str_to_indices(procedure_id)
+        elif procedure_id:
+            query['procedure_id'] = ObjectId(procedure_id)
 
         if status:
             query['status'] = status

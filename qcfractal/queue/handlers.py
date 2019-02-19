@@ -72,47 +72,28 @@ class ServiceQueueHandler(APIHandler):
 
         # Figure out initial molecules
         service_input = ServiceQueuePOSTBody.parse_raw(self.request.body).data
-        meta = {
-            "validation_errors": [],
-            "duplicates": [],
-            "n_inserted": 0,
-            "success": True,
-            "errors": [],
-            "error_description": ""
-        }
 
-        # Get molecules with ids
-        if isinstance(service_input.initial_molecule, list):
-            mol_query = storage.get_add_molecules_mixed(service_input.initial_molecule)
-            molecules = [Molecule(**mol) for mol in mol_query["data"]]
-            if len(molecules) != len(service_input.initial_molecule):
-                raise KeyError("We should catch this error.")
-        else:
-            mol_query = storage.get_add_molecules_mixed([service_input.initial_molecule])
-            molecules = Molecule(**mol_query["data"][0])
-
-        # Update the input and build a service object
-        service_input = service_input.copy(update={"initial_molecule": molecules})
-        new_service = services.initializer(storage, service_input)
-
-        data = {"hash_index": new_service.hash_index, "status": None}
-
-        # Figure out complete services
-        duplicate = storage.get_procedures_by_id(
-            hash_index=new_service.hash_index, projection={"hash_index": True})["data"]
-        if duplicate:
-            data["status"] = "completed"
-            # meta["duplicates"] = duplicate
-        else:
-            # Add services to the database
-            ret = storage.add_services([new_service.json_dict()])
-            if ret["meta"]["duplicates"]:
-                data["status"] = "running"
-                meta["n_inserted"] = 1
+        new_services = []
+        for service_input in ServiceQueuePOSTBody.parse_raw(self.request.body).data:
+            # Get molecules with ids
+            if isinstance(service_input.initial_molecule, list):
+                mol_query = storage.get_add_molecules_mixed(service_input.initial_molecule)
+                molecules = [Molecule(**mol) for mol in mol_query["data"]]
+                if len(molecules) != len(service_input.initial_molecule):
+                    raise KeyError("We should catch this error.")
             else:
-                data["status"] = "submitted"
+                mol_query = storage.get_add_molecules_mixed([service_input.initial_molecule])
+                molecules = Molecule(**mol_query["data"][0])
 
-        response = ServiceQueuePOSTResponse(data=data, meta=meta)
+            # Update the input and build a service object
+            service_input = service_input.copy(update={"initial_molecule": molecules})
+            new_services.append(services.initializer(storage, service_input))
+
+        ret = storage.add_services([x.json_dict() for x in new_services])
+        ret["data"] = {"ids": ret["data"], "existing": ret["meta"]["duplicates"]}
+        ret["data"]["submitted"] = list(set(ret["data"]["ids"]) - set(ret["meta"]["duplicates"]))
+
+        response = ServiceQueuePOSTResponse(**ret)
         self.logger.info("ServiceQueue: Added {} services.\n".format(response.meta.n_inserted))
 
         self.write(response.json())

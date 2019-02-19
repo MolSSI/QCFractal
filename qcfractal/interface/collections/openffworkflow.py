@@ -203,7 +203,7 @@ class OpenFFWorkflow(Collection):
                 raise KeyError("{} is not an openffworklow type job".format(packet['type']))
 
             # add back to fragment data
-            packet["hash_index"] = ret
+            packet["id"] = ret
             # packet["provenance"] = provenance
             frag_data[name] = packet
 
@@ -222,9 +222,9 @@ class OpenFFWorkflow(Collection):
 
         # Get hash of torsion
         inp = TorsionDriveInput(**torsion_meta, initial_molecule=packet["initial_molecule"])
-        ret = self.client.add_service(inp)
+        ret = self.client.add_service([inp])
 
-        return ret.hash_index
+        return ret.ids[0]
 
     def _add_optimize(self, packet):
         meta = copy.deepcopy({k: self.data.optimization_static_options[k] for k in ("keywords", "qc_meta", "program")})
@@ -236,9 +236,7 @@ class OpenFFWorkflow(Collection):
         # Get hash of optimization
         ret = self.client.add_procedure("optimization", meta["program"], meta, [packet["initial_molecule"]])
 
-        r = self.client.get_procedures({"id": ret.ids[0]})
-
-        return r[0].hash_index
+        return ret.ids[0]
 
     def get_fragment_data(self, fragments=None, refresh_cache=False):
         """Obtains fragment torsiondrives from server to local data.
@@ -258,14 +256,14 @@ class OpenFFWorkflow(Collection):
         # Figure out the lookup
         lookup = []
         for frag in fragments:
-            lookup.extend([v["hash_index"] for v in self.data.fragments[frag].values()])
+            lookup.extend([v["id"] for v in self.data.fragments[frag].values()])
 
         if refresh_cache is False:
             lookup = list(set(lookup) - self._torsiondrive_cache.keys())
 
         # Grab the data and update cache
-        data = self.client.get_procedures({"hash_index": lookup})
-        self._torsiondrive_cache.update({x.hash_index: x for x in data})
+        data = self.client.get_procedures({"id": lookup})
+        self._torsiondrive_cache.update({x.id: x for x in data})
 
     def list_final_energies(self, fragments=None, refresh_cache=False):
         """
@@ -295,9 +293,9 @@ class OpenFFWorkflow(Collection):
         for frag in fragments:
             tmp = {}
             for k, v in self.data.fragments[frag].items():
-                if v["hash_index"] in self._torsiondrive_cache:
+                if v["id"] in self._torsiondrive_cache:
                     # TODO figure out a better solution here
-                    obj = self._torsiondrive_cache[v["hash_index"]]
+                    obj = self._torsiondrive_cache[v["id"]]
                     if isinstance(obj, TorsionDrive):
                         tmp[k] = obj.final_energies()
                     elif isinstance(obj, orm.OptimizationORM):
@@ -339,8 +337,8 @@ class OpenFFWorkflow(Collection):
         for frag in fragments:
             tmp = {}
             for k, v in self.data.fragments[frag].items():
-                if v["hash_index"] in self._torsiondrive_cache:
-                    obj = self._torsiondrive_cache[v["hash_index"]]
+                if v["id"] in self._torsiondrive_cache:
+                    obj = self._torsiondrive_cache[v["id"]]
                     if isinstance(obj, TorsionDrive):
                         tmp[k] = obj.final_molecules()
                     elif isinstance(obj, orm.OptimizationORM):

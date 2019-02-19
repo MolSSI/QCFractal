@@ -296,7 +296,7 @@ class ServiceQueueGETResponse(BaseModel):
 
 class ServiceQueuePOSTBody(BaseModel):
     meta: Dict[str, Any]
-    data: Union[TorsionDriveInput, GridOptimizationInput]
+    data: List[Union[TorsionDriveInput, GridOptimizationInput]]
 
     class Config(RESTConfig):
         pass
@@ -305,8 +305,9 @@ class ServiceQueuePOSTBody(BaseModel):
 
 class ServiceQueuePOSTResponse(BaseModel):
     class Data(BaseModel):
-        hash_index: str
-        status: str
+        ids: List[Optional[str]]
+        submitted: List[str]
+        existing: List[str]
 
     meta: ResponsePOSTMeta
     data: Data

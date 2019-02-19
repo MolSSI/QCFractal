@@ -23,6 +23,7 @@ class BaseService(BaseModel, abc.ABC):
     service: str
     program: str
     procedure: str
+    output: Any
 
     @classmethod
     @abc.abstractmethod
