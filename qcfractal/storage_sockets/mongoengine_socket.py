@@ -280,7 +280,7 @@ class MongoengineSocket:
             doc = Molecule.objects(molecule_hash=mol_dict['molecule_hash'])
 
             if doc.count() == 0:
-                doc = doc.upsert_one(**mol_dict)
+                doc = Molecule(**mol_dict).save()
                 results.append(str(doc.id))
                 meta['n_inserted'] += 1
             else:
