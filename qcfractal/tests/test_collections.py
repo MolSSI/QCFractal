@@ -190,7 +190,7 @@ def test_compute_openffworkflow(fractal_compute_server):
         "label1": {
             "type": "torsiondrive_input",
             "initial_molecule": hooh.json_dict(),
-            "grid_spacing": [120],
+            "grid_spacing": [90],
             "dihedrals": [[0, 1, 2, 3]],
         },
     }
@@ -249,7 +249,7 @@ def test_compute_openffworkflow(fractal_compute_server):
     final_energies = wf.list_final_energies()
     assert final_energies.keys() == {butane_id, "HOOH"}
     assert final_energies[butane_id].keys() == {"label1"}
-    assert final_energies[butane_id]["label1"] is None
+    assert final_energies[butane_id]["label1"] == {}
 
 
 def test_generic_collection(fractal_compute_server):

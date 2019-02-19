@@ -97,7 +97,7 @@ def test_service_torsiondrive_multi_single(torsiondrive_fixture):
     ret = spin_up_test(initial_molecule=[hooh, hooh2])
 
     result = client.get_procedures({"hash_index": ret.hash_index})[0]
-    assert result.success
+    assert result.status == "COMPLETE"
 
 
 def test_service_torsiondrive_duplicates(torsiondrive_fixture):

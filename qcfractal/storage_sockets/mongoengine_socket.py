@@ -35,13 +35,6 @@ from .. import interface
 # from bson.dbref import DBRef
 
 
-def _translate_id_index(index):
-    if index in ["id", "ids"]:
-        return "_id"
-    else:
-        raise KeyError("Id Index alias '{}' not understood".format(index))
-
-
 def _str_to_indices(ids):
     for num, x in enumerate(ids):
         if isinstance(x, str):
@@ -737,6 +730,8 @@ class MongoengineSocket:
             if doc.count() == 0 or update_existing:
                 if not isinstance(d['molecule'], ObjectId):
                     d['molecule'] = ObjectId(d['molecule'])
+                # d['basis'] = d['basis'] if d['basis'] is not None else ""
+                # d['keywords'] = d['keywords'] if d['keywords'] is not None else ""
                 doc = doc.upsert_one(**d)
                 results.append(str(doc.id))
                 meta['n_inserted'] += 1
@@ -1007,6 +1002,7 @@ class MongoengineSocket:
             doc = Procedure.objects(hash_index=d['hash_index'])
 
             if doc.count() == 0 or update_existing:
+                # d['keywords'] = d['keywords'] if d['keywords'] is not None else ""
                 doc = doc.upsert_one(**d)
                 results.append(str(doc.id))
                 meta['n_inserted'] += 1
@@ -1244,14 +1240,13 @@ class MongoengineSocket:
 
         return modified_count
 
-    def add_services(self, data: List[dict], update_existing: bool=False, return_json=True):
+    def add_services(self, data: List[dict], return_json=True):
         """
         Add services from a given dict.
 
         Parameters
         ----------
         data : list of dict
-        update_existing: bool, default False
 
         Returns
         -------
@@ -1268,8 +1263,14 @@ class MongoengineSocket:
             d.pop("id", None)
             doc = ServiceQueue.objects(hash_index=d['hash_index'])
 
-            if doc.count() == 0 or update_existing:
-                doc = doc.upsert_one(**d)
+            if doc.count() == 0:
+                # create stub procedure
+                proc_dict = d['output']
+                proc_dict.pop('id', None)  # if case of pydanic null id
+                procedure = Procedure(**proc_dict).save()
+                doc = ServiceQueue(**d)
+                doc.procedure_id = procedure
+                doc.save()
                 services.append(doc.hash_index)
                 meta['n_inserted'] += 1
             else:
@@ -1353,23 +1354,46 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-    def update_services(self, updates):
+    def update_services(self, id: str, updates: dict):
+        """
+        Replace existing service
 
-        match_count = 0
-        modified_count = 0
-        for uid, data in updates:
-            if 'id' in data and data['id'] is None:
-                data.pop("id", None)
-            result = self._tables["service_queue"].replace_one({"_id": ObjectId(uid)}, data)
-            match_count += result.matched_count
-            modified_count += result.modified_count
-        return (match_count, modified_count)
+        Raises exception if the id is invalid
 
-    def del_services(self, values, index="id"):
+        Parameters
+        ----------
+        id
+        updates
 
-        index = _translate_id_index(index)
+        Returns
+        -------
+            if operation is succesful
+        """
 
-        return self._del_by_index("service_queue", values, index=index)
+        # Make sure Id exists and valid for updates
+        updates_dict = updates.copy()
+        updates_dict.pop("id", None)
+        updates_dict.pop('procedure_id', None)
+        # ServiceQueue(id=ObjectId(id), **updates_dict).save()
+        ServiceQueue.objects(id=ObjectId(id)).update(**updates_dict)
+
+        return True
+
+    def services_completed(self, completed_procedures):
+
+        done = 0
+
+        for service_id, data in completed_procedures:
+            procedure_id = ServiceQueue.objects(id=service_id).only("procedure_id").as_pymongo()[0]
+            data['status'] = "COMPLETE"
+            data.pop('id', None)
+            Procedure.objects(id=procedure_id['procedure_id']).update(**data)
+
+            ServiceQueue.objects(id=service_id).delete()
+
+            done += 1
+
+        return done
 
 ### Mongo queue handling functions
 

@@ -366,8 +366,7 @@ class FractalServer:
 
         # Loop over the services and iterate
         running_services = 0
-        new_procedures = []
-        complete_ids = []
+        completed_procedures = []
         for data in current_services:
 
             # Attempt to iteration and get message
@@ -381,19 +380,18 @@ class FractalServer:
                 data["error_message"] = "FractalServer Service Build and Iterate Error:\n" + traceback.format_exc()
                 finished = False
 
-            self.storage.update_services([(data["id"], data)])
+            self.storage.update_services(data["id"], data)
 
             if finished is not False:
 
                 # Add results to procedures, remove complete_ids
-                new_procedures.append(finished.json_dict())
-                complete_ids.append(data["id"])
+                completed_procedures.append((data["id"], finished.json_dict()))
             else:
                 running_services += 1
 
         # Add new procedures and services
-        self.storage.add_procedures(new_procedures)
-        self.storage.del_services(complete_ids)
+        # self.storage.add_procedures(new_procedures)
+        self.storage.services_completed(completed_procedures)
 
         return running_services
 
