@@ -3,10 +3,10 @@ Common models for QCPortal/Fractal
 """
 import hashlib
 import json
-import numpy as np
-from pydantic import BaseModel, validator
 from typing import Any, Dict, Optional
 
+import numpy as np
+from pydantic import BaseModel, validator
 from qcelemental.models import Molecule, Provenance, Result, ResultInput
 
 __all__ = ["QCSpecification", "OptimizationSpecification", "json_encoders", "hash_dictionary", "KeywordSet"]

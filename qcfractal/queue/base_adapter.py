@@ -6,7 +6,7 @@ import abc
 import importlib
 import logging
 import operator
-from typing import Any, Dict, Optional, List, Callable, Tuple, Hashable
+from typing import Any, Callable, Dict, Hashable, List, Optional, Tuple
 
 
 class BaseAdapter(abc.ABC):

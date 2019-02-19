@@ -2,10 +2,9 @@
 Constructs ORMs from raw JSON
 """
 
-from .optimization_orm import OptimizationORM
 from ..models.gridoptimization import GridOptimization
-# from .torsiondrive_orm import TorsionDriveORM
 from ..models.torsiondrive import TorsionDrive
+from .optimization_orm import OptimizationORM
 
 
 def build_orm(data, procedure=None, client=None):

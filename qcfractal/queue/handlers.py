@@ -5,15 +5,13 @@ Queue backend abstraction manager.
 import collections
 import traceback
 
-from .. import procedures
-from .. import services
 from ..interface.models.common_models import Molecule
 from ..interface.models.rest_models import (
-    TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse,
-    ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
-    QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse,
-    QueueManagerPUTBody, QueueManagerPUTResponse
-)  # yapf: disable
+    QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse, QueueManagerPUTBody,
+    QueueManagerPUTResponse, ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody,
+    ServiceQueuePOSTResponse, TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse)
+from ..procedures import get_procedure_parser
+from ..services import initialize_service
 from ..web_handlers import APIHandler
 
 
@@ -33,7 +31,7 @@ class TaskQueueHandler(APIHandler):
         post = TaskQueuePOSTBody.parse_raw(self.request.body)
 
         # Format and submit tasks
-        procedure_parser = procedures.get_procedure_parser(post.meta["procedure"], storage)
+        procedure_parser = get_procedure_parser(post.meta["procedure"], storage)
         payload = procedure_parser.submit_tasks(post)
 
         response = TaskQueuePOSTResponse(**payload)
@@ -84,7 +82,7 @@ class ServiceQueueHandler(APIHandler):
 
             # Update the input and build a service object
             service_input = service_input.copy(update={"initial_molecule": molecules})
-            new_services.append(services.initialize_service(storage, service_input))
+            new_services.append(initialize_service(storage, service_input))
 
         ret = storage.add_services([x.json_dict() for x in new_services])
         ret["data"] = {"ids": ret["data"], "existing": ret["meta"]["duplicates"]}
@@ -174,7 +172,7 @@ class QueueManagerHandler(APIHandler):
         completed = []
         hooks = []
         for k, v in new_results.items():  # todo: can be merged? do they have diff k?
-            procedure_parser = procedures.get_procedure_parser(k, storage_socket)
+            procedure_parser = get_procedure_parser(k, storage_socket)
             com, err, hks = procedure_parser.parse_output(v)
             completed.extend(com)
             error_data.extend(err)
@@ -206,11 +204,13 @@ class QueueManagerHandler(APIHandler):
         # Grab new tasks and write out
         new_tasks = storage.queue_get_next(name, **queue_tags)
         response = QueueManagerGETResponse(
-            meta={"n_found": len(new_tasks),
-                  "success": True,
-                  "errors": [],
-                  "error_description": "",
-                  "missing": []},
+            meta={
+                "n_found": len(new_tasks),
+                "success": True,
+                "errors": [],
+                "error_description": "",
+                "missing": []
+            },
             data=new_tasks)
         self.write(response.json())
         self.logger.info("QueueManager: Served {} tasks.".format(response.meta.n_found))

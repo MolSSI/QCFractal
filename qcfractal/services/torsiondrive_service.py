@@ -8,16 +8,17 @@ from typing import Any, Dict, List
 
 import numpy as np
 
+from ..interface.models.common_models import json_encoders
+from ..interface.models.torsiondrive import TorsionDrive
+from .service_util import BaseService, TaskManager
+
 try:
     import torsiondrive
     from torsiondrive import td_api
 except ImportError:
     td_api = None
 
-from qcfractal.interface.models.torsiondrive import TorsionDrive
-from qcfractal.interface.models.common_models import json_encoders
 
-from .service_util import BaseService, TaskManager
 
 __all__ = ["TorsionDriveService"]
 

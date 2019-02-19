@@ -4,7 +4,7 @@ Queue adapter for Dask
 
 import time
 import traceback
-from typing import Dict, List, Any, Tuple, Hashable
+from typing import Any, Dict, Hashable, List, Tuple
 
 from .base_adapter import BaseAdapter
 

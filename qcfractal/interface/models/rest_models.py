@@ -2,11 +2,11 @@
 Models for the REST interface
 """
 from enum import Enum
-from typing import Any, Dict, List, Tuple, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseConfig, BaseModel, validator
 
-from .common_models import Molecule, KeywordSet, json_encoders
+from .common_models import KeywordSet, Molecule, json_encoders
 from .gridoptimization import GridOptimizationInput
 from .torsiondrive import TorsionDriveInput
 

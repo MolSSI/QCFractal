@@ -8,8 +8,8 @@ from typing import Any, Dict, List, Set, Tuple
 
 from pydantic import BaseModel
 
-from qcfractal.procedures import get_procedure_parser
 from ..interface.models.rest_models import TaskQueuePOSTBody
+from ..procedures import get_procedure_parser
 
 
 class BaseService(BaseModel, abc.ABC):

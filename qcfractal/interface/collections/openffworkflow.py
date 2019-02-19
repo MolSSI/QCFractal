@@ -2,12 +2,12 @@
 """
 
 import copy
-from typing import Dict, Any
+from typing import Any, Dict
 
-from . import collection_utils
+from ..models.torsiondrive import TorsionDrive, TorsionDriveInput
+from ..orm import OptimizationORM
 from .collection import Collection
-from .. import orm
-from ..models.torsiondrive import TorsionDriveInput, TorsionDrive
+from .collection_utils import register_collection
 
 
 class OpenFFWorkflow(Collection):
@@ -298,7 +298,7 @@ class OpenFFWorkflow(Collection):
                     obj = self._torsiondrive_cache[v["id"]]
                     if isinstance(obj, TorsionDrive):
                         tmp[k] = obj.final_energies()
-                    elif isinstance(obj, orm.OptimizationORM):
+                    elif isinstance(obj, OptimizationORM):
                         tmp[k] = obj.final_energy()
                     else:
                         raise TypeError("Internal type error encoured, buy a dev a coffee.")
@@ -341,7 +341,7 @@ class OpenFFWorkflow(Collection):
                     obj = self._torsiondrive_cache[v["id"]]
                     if isinstance(obj, TorsionDrive):
                         tmp[k] = obj.final_molecules()
-                    elif isinstance(obj, orm.OptimizationORM):
+                    elif isinstance(obj, OptimizationORM):
                         tmp[k] = obj.final_molecule()
                     else:
                         raise TypeError("Internal type error encoured, buy a dev a coffee.")
@@ -353,4 +353,4 @@ class OpenFFWorkflow(Collection):
         return ret
 
 
-collection_utils.register_collection(OpenFFWorkflow)
+register_collection(OpenFFWorkflow)

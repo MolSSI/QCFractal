@@ -7,9 +7,9 @@ from typing import Dict, Set
 
 import numpy as np
 
-from qcfractal.extras import get_information
-from qcfractal.interface.models.common_models import json_encoders, Molecule
-from qcfractal.interface.models.gridoptimization import GridOptimization
+from ..extras import get_information
+from ..interface.models.common_models import Molecule, json_encoders
+from ..interface.models.gridoptimization import GridOptimization
 from .service_util import BaseService, TaskManager, expand_ndimensional_grid
 
 __all__ = ["GridOptimizationService"]
