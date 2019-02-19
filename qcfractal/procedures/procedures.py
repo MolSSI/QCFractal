@@ -72,7 +72,7 @@ class SingleResultTasks:
             task = {
                 "spec": {
                     "function": "qcengine.compute",  # todo: add defaults in models
-                    "args": [json.loads(inp.json()), data.meta["program"]], # todo: json_dict should come from results
+                    "args": [json.loads(inp.json()), data.meta["program"]],  # todo: json_dict should come from results
                     "kwargs": {}  # todo: add defaults in models
                 },
                 "hooks": [],  # todo: add defaults in models
@@ -273,7 +273,6 @@ class OptimizationTasks(SingleResultTasks):
 
         return new_tasks, results_ids, existing_ids, errors
 
-
     def parse_output(self, data):
         """Save the results of the procedure.
         It must make sure to save the results in the results table
@@ -288,10 +287,10 @@ class OptimizationTasks(SingleResultTasks):
             task_id = procedure["task_id"]
 
             # Convert start/stop molecules to hash
-            mols = {"initial": procedure["initial_molecule"], "final": procedure["final_molecule"]}
-            mol_keys = self.storage.add_molecules(mols)["data"]
-            procedure["initial_molecule"] = mol_keys["initial"]
-            procedure["final_molecule"] = mol_keys["final"]
+            initial_mol, final_mol = self.storage.add_molecules(
+                [procedure["initial_molecule"], procedure["final_molecule"]])["data"]
+            procedure["initial_molecule"] = initial_mol
+            procedure["final_molecule"] = final_mol
 
             # Parse trajectory computations and add task_id
             traj_dict = {k: v for k, v in enumerate(procedure["trajectory"])}

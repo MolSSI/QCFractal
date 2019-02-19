@@ -26,7 +26,7 @@ def test_task_molecule_no_orientation(data, fractal_compute_server):
 
     mol = portal.Molecule(symbols=["H", "H"], geometry=[0, 0, 0, 0, 5, 0], connectivity=[(0, 1, 1)])
 
-    mol_id = client.add_molecules({"h2": mol})["h2"]
+    mol_id = client.add_molecules([mol])[0]
 
     program, method, basis = data
     ret = client.add_compute(program, method, basis, "energy", None, [mol_id])

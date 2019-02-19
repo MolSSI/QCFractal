@@ -78,9 +78,9 @@ def test_adapter_error_message(managed_compute_server):
     # HOOH without connectivity, RDKit should fail
     hooh = portal.data.get_molecule("hooh.json").json_dict()
     del hooh["connectivity"]
-    mol_ret = client.add_molecules({"hooh": hooh})
+    mol_ret = client.add_molecules([hooh])
 
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret["hooh"])
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret)
     queue_id = ret.submitted[0]
 
     # Nothing should have happened yet
@@ -108,10 +108,8 @@ def test_adapter_raised_error(managed_compute_server):
 
     # HOOH without connectivity, RDKit should fail
     hooh = portal.data.get_molecule("hooh.json").json_dict()
-    del hooh["connectivity"]
-    mol_ret = client.add_molecules({"hooh": hooh})
 
-    ret = client.add_compute("something_bad", "UFF", "", "energy", None, mol_ret["hooh"])
+    ret = client.add_compute("something_bad", "UFF", "", "energy", None, hooh)
     queue_id = ret.submitted[0]
 
     manager.await_results()

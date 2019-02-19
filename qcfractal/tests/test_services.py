@@ -25,11 +25,11 @@ def torsiondrive_fixture(fractal_compute_server):
 
     # Add a HOOH
     hooh = portal.data.get_molecule("hooh.json")
-    mol_ret = client.add_molecules({"hooh": hooh})
+    mol_ret = client.add_molecules([hooh])
 
     # Geometric options
     torsiondrive_options = {
-        "initial_molecule": mol_ret["hooh"],
+        "initial_molecule": mol_ret[0],
         "torsiondrive_meta": {
             "dihedrals": [[0, 1, 2, 3]],
             "grid_spacing": [90]
@@ -159,9 +159,8 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     # Add a HOOH
     hooh = portal.data.get_molecule("hooh.json")
     initial_distance = hooh.measure([1, 2])
+    mol_ret = client.add_molecules([hooh])
 
-    mol_ret = client.add_molecules({"hooh": hooh})
-    #
     # Options
     service = GridOptimizationInput(**{
         "gridoptimization_meta": {
@@ -190,7 +189,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
             "keywords": None,
             "program": "rdkit",
         },
-        "initial_molecule": mol_ret["hooh"],
+        "initial_molecule": mol_ret[0],
     })
 
     ret = client.add_service(service)
@@ -206,7 +205,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     assert result.starting_molecule != result.initial_molecule
 
     # Check initial vs startin molecule
-    assert result.initial_molecule == mol_ret["hooh"]
+    assert result.initial_molecule == mol_ret[0]
     starting_mol = client.get_molecules([result.starting_molecule])[0]
     assert pytest.approx(starting_mol.measure([1, 2])) != initial_distance
     assert pytest.approx(starting_mol.measure([1, 2])) == 2.488686479260597

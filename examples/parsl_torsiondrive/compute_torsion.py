@@ -5,11 +5,10 @@ client = portal.FractalClient("localhost:7777", verify=False)
 
 # Add a HOOH
 hooh = portal.data.get_molecule("hooh.json")
-mol_ret = client.add_molecules({"hooh": hooh})
 
 # Geometric options
 tdinput = {
-    "initial_molecule": [mol_ret["hooh"]],
+    "initial_molecule": [hooh],
     "torsiondrive_meta": {
         "dihedrals": [[0, 1, 2, 3]],
         "grid_spacing": [90]

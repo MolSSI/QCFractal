@@ -103,7 +103,7 @@ class ReactionDataset(Dataset):
     def _pre_save_prep(self, client):
         self._canonical_pre_save(client)
 
-        mol_ret = client.add_molecules(self._new_molecules)
+        mol_ret = self._add_molecules_by_dict(client, self._new_molecules)
 
         # Update internal molecule UUID's to servers UUID's
         for record in self._new_records:

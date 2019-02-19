@@ -20,10 +20,9 @@ def molecules_H4O2(storage_socket):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
 
-    ret = storage_socket.add_molecules({"water1": water.json_dict(),
-                                        "water2": water2.json_dict()})
+    ret = storage_socket.add_molecules([water, water2.json_dict()])
 
-    yield list(ret['data'].values())
+    yield list(ret['data'])
 
     storage_socket.del_molecules(water.get_hash(), index="hash")
     storage_socket.del_molecules(water2.get_hash(), index="hash")
@@ -47,8 +46,7 @@ def test_molecule(storage_socket):
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
 
     # Add Molecule using pymongo
-    ret = storage_socket.add_molecules({"water1": water.json_dict(),
-                                            "water2": water2.json_dict()})
+    ret = storage_socket.add_molecules([water, water2])
     assert ret["meta"]["success"] is True
     assert ret["meta"]["n_inserted"] == 2
 

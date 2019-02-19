@@ -72,8 +72,6 @@ class Molecule(CustomDynamicDocument):
     molecular_formula = db.StringField()
     molecule_hash = db.StringField()
     geometry = db.ListField()
-    real = db.ListField()
-    fragments = db.DynamicField()
 
     def create_hash(self):
         """ TODO: create a special hash before saving"""

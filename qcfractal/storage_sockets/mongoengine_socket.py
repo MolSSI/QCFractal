@@ -14,8 +14,6 @@ except ImportError:
     raise ImportError(
         "Mongoengine_socket requires mongoengine, please install this python module or try a different db_socket.")
 
-import collections
-import json
 import logging
 from datetime import datetime as dt
 from typing import List, Union, Dict, Sequence
@@ -33,7 +31,6 @@ from qcfractal.storage_sockets.models import Keywords, Collection, Result, \
 from . import storage_utils
 # Pull in the hashing algorithms from the client
 from .. import interface
-
 
 # from bson.dbref import DBRef
 
@@ -96,32 +93,6 @@ class MongoengineSocket:
 
         # Security
         self._bypass_security = bypass_security
-
-        # Important: this dict is Not used for creating indices
-        # To be removed and replaced by ME functions
-        self._table_indices = {
-            "collection": interface.schema.get_table_indices("collection"),
-            "options": interface.schema.get_table_indices("options"),
-            "result": interface.schema.get_table_indices("result"),
-            "molecule": interface.schema.get_table_indices("molecule"),
-            "procedure": interface.schema.get_table_indices("procedure"),
-            "service_queue": interface.schema.get_table_indices("service_queue"),
-            "task_queue": interface.schema.get_table_indices("task_queue"),
-            "user": ("username", ),
-            "queue_manager": ("name", )
-        }
-        # self._valid_tables = set(self._table_indices.keys())
-        # self._table_unique_indices = {
-        #     "collections": True,
-        #     "options": True,
-        #     "results": True,
-        #     "molecules": False,
-        #     "procedures": False,
-        #     "service_queue": False,
-        #     "task_queue": False,
-        #     "users": True,
-        #     "queue_managers": True,
-        # }
 
         self._lower_results_index = ["method", "basis", "keywords", "program"]
 
@@ -217,7 +188,13 @@ class MongoengineSocket:
         ret_mols = {}
 
         # Add all new molecules
-        id_mols.update(self.add_molecules(dict_mols)["data"])
+        flat_mols = []
+        flat_mol_keys = []
+        for k, v in dict_mols.items():
+            flat_mol_keys.append(k)
+            flat_mols.append(v)
+        flat_mols = self.add_molecules(flat_mols)["data"]
+        id_mols.update({k: v for k, v in zip(flat_mol_keys, flat_mols)})
 
         # Get molecules by index and translate back to dict
         tmp = self.get_molecules(list(id_mols.values()))
@@ -243,65 +220,6 @@ class MongoengineSocket:
 
         return {"meta": meta, "data": ret}
 
-    def _add_generic(self, data, table, return_map=True):
-        """
-        Helper function that facilitates adding a record.
-        """
-
-        meta = {"errors": [], "n_inserted": 0, "success": False, "duplicates": [], "error_description": False}
-
-        if len(data) == 0:
-            ret = {}
-            meta["success"] = True
-            ret["meta"] = meta
-            ret["data"] = {}
-            return ret
-
-        # Try/except for fully successful/partially unsuccessful adds
-        error_skips = []
-        try:
-            tmp = self._tables[table].insert_many(data, ordered=False)
-            meta["success"] = tmp.acknowledged
-            meta["n_inserted"] = len(tmp.inserted_ids)
-        except pymongo.errors.BulkWriteError as tmp:
-            meta["success"] = False
-            meta["n_inserted"] = tmp.details["nInserted"]
-            for error in tmp.details["writeErrors"]:
-                ukey = tuple(data[error["index"]][key] for key in self._table_indices[table])
-                # Duplicate key errors, add to meta
-                if error["code"] == 11000:
-                    meta["duplicates"].append(ukey)
-                else:
-                    meta["errors"].append({"id": str(error["op"]["_id"]), "code": error["code"], "key": ukey})
-
-                error_skips.append(error["index"])
-
-            # Only duplicates, no true errors
-            if len(meta["errors"]) == 0:
-                meta["success"] = True
-                meta["error_description"] = "Found duplicates"
-            else:
-                meta["error_description"] = "unknown"
-
-        # Convert id in-place
-        for d in data:
-            d["id"] = str(d["_id"])
-            del d["_id"]
-
-        # Add id's of new keys
-        skips = set(error_skips)
-        rdata = []
-        if return_map:
-            for x in range(len(data)):
-                if x in skips:
-                    rdata.append(None)
-                else:
-                    rdata.append(data[x]["id"])
-
-        ret = {"data": rdata, "meta": meta}
-
-        return ret
-
     def _del_by_index(self, table, hashes, index="_id"):
         """
         Helper function that facilitates deletion based on hash.
@@ -314,61 +232,6 @@ class MongoengineSocket:
             _str_to_indices(hashes)
 
         return (self._tables[table].delete_many({index: {"$in": hashes}})).deleted_count
-
-    def _get_generic(self, query, table, projection=None, allow_generic=False, limit=0):
-
-        # TODO parse duplicates
-        meta = storage_utils.get_metadata()
-
-        data = []
-
-        # Assume we want to lookup via unique key tuple
-        if isinstance(query, (tuple, list)):
-            keys = self._table_indices[table]
-            len_key = len(keys)
-
-            for q in query:
-                if (len(q) == len_key) and isinstance(q, (list, tuple)):
-                    q = {k: v for k, v in zip(keys, q)}
-                else:
-                    meta["errors"].append({"query": q, "error": "Malformed query"})
-                    continue
-
-                d = self._tables[table].find_one(q, projection=projection)
-                if d is None:
-                    meta["missing"].append(q)
-                else:
-                    data.append(d)
-
-        elif isinstance(query, dict):
-
-            # Handle specific ID query
-            if "id" in query:
-                ids, bad_ids = _str_to_indices_with_errors(query["id"])
-                if bad_ids:
-                    meta["errors"].append(("Bad Ids", bad_ids))
-
-                query["_id"] = ids
-                del query["id"]
-
-            for k, v in query.items():
-                if isinstance(v, (list, tuple)):
-                    query[k] = {"$in": v}
-
-            data = list(self._tables[table].find(query, projection=projection, limit=limit))
-        else:
-            meta["errors"] = "Malformed query"
-
-        meta["n_found"] = len(data)
-        if len(meta["errors"]) == 0:
-            meta["success"] = True
-
-        # Convert ID
-        for d in data:
-            d["id"] = str(d.pop("_id"))
-
-        ret = {"meta": meta, "data": data}
-        return ret
 
 ### Mongo molecule functions
 
@@ -387,87 +250,52 @@ class MongoengineSocket:
             Whether the operation was successful.
         """
 
-        # Build a dictionary of new molecules
-        new_mols = {}
-        for key, dmol in data.items():
+        meta = storage_utils.add_metadata()
+
+        results = []
+        # try:
+        for dmol in data:
             try:
                 dmol = dmol.dict()
             except AttributeError:
                 pass
+
             # All molecules must be fixed
             dmol["fix_com"] = True
             dmol["fix_orientation"] = True
 
             mol = interface.Molecule(**dmol, orient=False)
-            new_mols[key] = mol
+            mol_dict = mol.json_dict(exclude={"id"})
+            mol_dict.pop("id", None)  # Paranoia
 
-        new_kv_hash = {k: v.get_hash() for k, v in new_mols.items()}
-        new_vk_hash = collections.defaultdict(list)
-        for k, v in new_kv_hash.items():
-            new_vk_hash[v].append(k)
+            # Build fresh indices
+            mol_dict["molecule_hash"] = mol.get_hash()
+            mol_dict["molecular_formula"] = mol.get_molecular_formula()
 
-        # We need to filter out what is already in the database
-        old_mols = self.get_molecules(list(new_kv_hash.values()), index="hash")["data"]
+            mol_dict["identifiers"] = {}
+            mol_dict["identifiers"]["molecule_hash"] = mol_dict["molecule_hash"]
+            mol_dict["identifiers"]["molecular_formula"] = mol_dict["molecular_formula"]
 
-        # If we have hash matches check to for duplicates
-        key_mapper = {}
-        for old_mol in old_mols:
+            # search by index keywords not by all keys, much faster
+            doc = Molecule.objects(molecule_hash=mol_dict['molecule_hash'])
 
-            # This is the user provided key
-            new_mol_keys = new_vk_hash[old_mol["identifiers"]["molecule_hash"]]
-            new_mol = new_mols[new_mol_keys[0]]
-
-            if new_mol.compare(old_mol):
-                for x in new_mol_keys:
-                    del new_mols[x]
-                    key_mapper[x] = old_mol["id"]
+            if doc.count() == 0:
+                doc = Molecule(**mol_dict).save()
+                results.append(str(doc.id))
+                meta['n_inserted'] += 1
             else:
-                # If this happens, we need to think a bit about what to do
-                # Effectively our molecule hash index now has duplicates.
-                # This is *sort of* ok as we use uuid's for all internal projects.
-                raise KeyError("!!! WARNING !!!: Hash collision detected")
 
-        # Carefully make this flat
-        new_hashes = set()
-        new_inserts = []
-        new_keys = []
-        for new_key, new_mol in new_mols.items():
-            data = new_mol.json_dict()
-            data["identifiers"] = {}
+                id = str(doc.first().id)
+                meta['duplicates'].append(id)  # TODO
+                # If new or duplicate, add the id to the return list
+                results.append(id)
 
-            # Build new molecule hash
-            data["molecule_hash"] = new_mol.get_hash()
-            data["identifiers"]["molecule_hash"] = data["molecule_hash"]
+                # We should make sure there was not a hash collision?
+                # new_mol.compare(old_mol)
+                # raise KeyError("!!! WARNING !!!: Hash collision detected")
+        meta["success"] = True
 
-            if data["molecule_hash"] in new_hashes:
-                continue
-
-            # Build chemical identifiers
-            data["identifiers"]["molecular_formula"] = new_mol.get_molecular_formula()
-            data["molecular_formula"] = data["identifiers"]["molecular_formula"]
-
-            new_hashes |= set([data["molecule_hash"]])
-            new_inserts.append(data)
-            new_keys.append(new_key)
-
-        ret = self._add_generic(new_inserts, "molecule", return_map=True)
-        ret["meta"]["duplicates"].extend(list(key_mapper.keys()))
-        ret["meta"]["validation_errors"] = []
-
-        # If something went wrong, we cannot generate the full key map
-        # Success should always be True as we are parsing duplicate above and *not* here.
-        if ret["meta"]["success"] is False:
-            ret["meta"]["error_description"] = "Major insert error."
-            ret["data"] = key_mapper
-            return ret
-
-        # Add the new keys to the key map
-        for mol in new_inserts:
-            for x in new_vk_hash[mol["molecule_hash"]]:
-                key_mapper[x] = mol["id"]
-
-        ret["data"] = key_mapper
-
+        ret = {"data": results, "meta": meta}
         return ret
 
     def get_molecules(self, molecule_ids=None, index="id"):
@@ -535,25 +363,6 @@ class MongoengineSocket:
 
         return Molecule.objects(**query).delete()
 
-    def _doc_to_tuples(self, doc: db.Document, with_ids=True):
-        """
-        Todo: to be removed
-        """
-        if not doc:
-            return
-
-        table = doc._get_collection_name()
-
-        d_json = json.loads(doc.to_json())
-        d_json["id"] = str(doc.id)
-        del d_json["_id"]
-        ukey = tuple(str(doc[key]) for key in self._table_indices[table])
-        if with_ids:
-            rdata = (ukey, str(doc.id))
-        else:
-            rdata = ukey
-        return rdata
-
     ### Mongo options functions
 
     def add_keywords(self, data: Union[Dict, List[Dict]]):
@@ -613,8 +422,13 @@ class MongoengineSocket:
         ret = {"data": keywords, "meta": meta}
         return ret
 
-    def get_keywords(self, id: str=None, program: str=None, hash_index: str=None,
-                     return_json: bool=True, with_ids: bool=True, limit=None):
+    def get_keywords(self,
+                     id: str=None,
+                     program: str=None,
+                     hash_index: str=None,
+                     return_json: bool=True,
+                     with_ids: bool=True,
+                     limit=None):
         """Search for one (unique) option based on the 'program'
         and the 'name'. No overwrite allowed.
 
@@ -1539,7 +1353,6 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-
     def update_services(self, updates):
 
         match_count = 0
@@ -1594,7 +1407,7 @@ class MongoengineSocket:
         meta = storage_utils.add_metadata()
 
         results = []
-        for d in data:
+        for task_num, d in enumerate(data):
             try:
                 if not isinstance(d['base_result'], tuple):
                     raise Exception("base_result must be a tuple not {}.".format(type(d['base_result'])))
@@ -1629,7 +1442,7 @@ class MongoengineSocket:
                     task.hooks.extend(d['hooks'])
                     task.save()
                 results.append(str(task.id))
-                meta['duplicates'].append(self._doc_to_tuples(task, with_ids=False))  # TODO
+                meta['duplicates'].append(task_num)
             except Exception as err:
                 meta["success"] = False
                 meta["errors"].append(str(err))
