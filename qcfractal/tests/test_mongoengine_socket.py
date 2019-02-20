@@ -29,7 +29,7 @@ def molecules_H4O2(storage_socket):
 
 @pytest.fixture
 def kw_fixtures(storage_socket):
-    kw1 = portal.models.KeywordSet(**{"program": "kwf", "values": {"something": "kwfixture"}})
+    kw1 = portal.models.KeywordSet(**{"values": {"something": "kwfixture"}})
     ret = storage_socket.add_keywords([kw1.dict()])
 
     yield list(ret['data'])

@@ -102,7 +102,6 @@ class TorsionDriveService(BaseService):
             "meta": {
                 "procedure": "optimization",
                 "keywords": {
-                    "program": output.optimization_spec.program,
                     "values": output.optimization_spec.keywords
                 },
                 "program": output.optimization_spec.program,

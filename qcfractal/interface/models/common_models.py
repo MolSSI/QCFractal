@@ -92,11 +92,11 @@ class KeywordSet(BaseModel):
     An options object for the QCArchive ecosystem
     """
     id: Optional[str] = None
-    program: str
     hash_index: str
     values: Dict[str, Any]
     lowercase: bool = True
     exact_floats: bool = False
+    comments: Optional[str] = None
 
     class Config:
         extra = "allow"
@@ -122,14 +122,8 @@ class KeywordSet(BaseModel):
         if build_index:
             self.__values__["hash_index"] = self.get_hash_index()
 
-    @validator('program')
-    def check_program(cls, v):
-        return v.lower()
-
     def get_hash_index(self):
-        packet = self.values.copy()
-        packet["program"] = self.program
-        return hash_dictionary(packet)
+        return hash_dictionary(self.values.copy())
 
     def json_dict(self, *args, **kwargs):
         return json.loads(self.json(*args, **kwargs))

@@ -114,11 +114,10 @@ class Keywords(CustomDynamicDocument):
     """
 
     # TODO: pull choices from const config
-    program = db.StringField(required=True)  #, choices=['rdkit', 'psi4', 'geometric', 'torsiondrive'])
     hash_index = db.StringField(required=True)
     values = db.DynamicField()
 
-    meta = {'indexes': [{'fields': ('program', 'hash_index'), 'unique': True}]}
+    meta = {'indexes': [{'fields': ('hash_index', ), 'unique': True}]}
 
     def __str__(self):
         return str(self.id)

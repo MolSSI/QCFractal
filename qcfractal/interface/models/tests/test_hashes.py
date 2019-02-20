@@ -8,79 +8,79 @@ from ..common_models import KeywordSet
 @pytest.mark.parametrize("data, hash_index", [
 
     # Simple checks
-    ({"program": "psi4", "values": {"hi": 5}},
-     "c9ae3acb782cad09c6867d8433a2963fe7b724fd"),
+    ({"values": {"hi": 5}},
+     "53042da4ac1af059816008631e4589a0cd0c98c6"),
 
-    ({"program": "PSI4", "values": {"HI": 5}},
-     "c9ae3acb782cad09c6867d8433a2963fe7b724fd"),
+    ({"values": {"HI": 5}},
+     "53042da4ac1af059816008631e4589a0cd0c98c6"),
 
     # Check options combinations
-    ({"program": "PSI4", "values": {"HI": [1, 2, 3], "All": [1.e-5, 2.e-3, 1.e-16]}},
-     "2d93c6c81466a2c51ec2e1a4f9e53a2c6bd9e3ed"),
+    ({"values": {"HI": [1, 2, 3], "All": [1.e-5, 2.e-3, 1.e-16]}},
+     "888837dec981e2f9a1ef2ef2d33db6d239df65da"),
 
-    ({"program": "PSI4", "values": {"HI": [1, 2, 3], "All": [1.e-5, 2.e-3, 1.e-16]}, "lowercase": False},
-     "3a6a8e2fb0449ec3db81191daf5de66f9a63c088"),
+    ({"values": {"HI": [1, 2, 3], "All": [1.e-5, 2.e-3, 1.e-16]}, "lowercase": False},
+     "08f6f37fec721b753096d71f7dbbccb734e8a696"),
 
-    ({"program": "PSI4", "values": {"HI": [1, 2, 3], "All": [1.e-5, 2.e-3, 1.e-16]}, "exact_floats": True},
-     "7860429a00fe05f4e3a829c2e5680cd5a0fa94b6"),
+    ({"values": {"HI": [1, 2, 3], "All": [1.e-5, 2.e-3, 1.e-16]}, "exact_floats": True},
+     "691c86202af20868bba457514e63c83d0444142e"),
 
-    ({"program": "PSI4", "values": {"HI": [1, 2, 3], "All": [1.e-5, 2.e-3, 1.e-16]}, "exact_floats": True, "lowercase": False},
-     "f0c58a301466f29c43cc303260e044e94551bc0a"),
+    ({"values": {"HI": [1, 2, 3], "All": [1.e-5, 2.e-3, 1.e-16]}, "exact_floats": True, "lowercase": False},
+     "a3a6eea9edec3c2901a76fa8a41d4f9db9b3405f"),
 
     # Check recursive
-    ({"program": "PSI4", "values": {"d1": {"D2": [1.e-17, 5]}}},
-     "e50f3c0a580ca846b484a21a5a28058785fb8d00"),
+    ({"values": {"d1": {"D2": [1.e-17, 5]}}},
+     "55c6f1c7e610ce379feaa8a97854ea61974e0d92"),
 
-    ({"program": "PSI4", "values": {"d1": {"D2": [1.e-17, 5]}}, "exact_floats": True, "lowercase": False},
-     "ab6ce6dade7454730d2872c95e8f84449e00b321"),
+    ({"values": {"d1": {"D2": [1.e-17, 5]}}, "exact_floats": True, "lowercase": False},
+     "639d207f6a58ed2974f9737c3240ebffdf459857"),
 
     # Check hash_index build
-    ({"program": "PSI4", "values": {}, "hash_index": "waffles"},
+    ({"values": {}, "hash_index": "waffles"},
      "waffles"),
 
-    ({"program": "PSI4", "values": {}, "hash_index": "waffles", "build_index": True},
-     "10bdc0b99338761032d9d0f999ede01295185e5d"),
+    ({"values": {}, "hash_index": "waffles", "build_index": True},
+     "bf21a9e8fbc5a3846fb05b4fa0859e0917b2202f"),
 ]) # yapf: disable
-def test_option_canary_hash(data, hash_index):
+def test_keywords_canary_hash(data, hash_index):
     """
     Canary test aginst possible changes in the options hash_index
     """
 
     opt = KeywordSet(**data)
 
-    assert hash_index == opt.hash_index, opt.keywords
+    assert hash_index == opt.hash_index, opt.values
 
 
 @pytest.mark.parametrize("data1, data2", [
     # Test case sensitivity
-    ({"program": "Psi4", "values": {}},
-     {"program": "psi4", "values": {}}),
+    ({"values": {}},
+     {"values": {}}),
 
     # Test float creation
-    ({"program": "Psi4", "values": {"CAPS": 5, "other": 4.e-3}},
-     {"program": "psi4", "values": {"caps": 5, "other": 0.004}}),
+    ({"values": {"CAPS": 5, "other": 4.e-3}},
+     {"values": {"caps": 5, "other": 0.004}}),
 
-    ({"program": "Psi4", "values": {"other": 4.123e-5}},
-     {"program": "psi4", "values": {"OTHER": 0.00004123}}),
+    ({"values": {"other": 4.123e-5}},
+     {"values": {"OTHER": 0.00004123}}),
 
     # Test list of floats
-    ({"program": "S", "values": {"other": [1.11e-2, 2.22e-3]}},
-     {"program": "s", "values": {"other": [0.0111, 0.00222]}}),
+    ({"values": {"other": [1.11e-2, 2.22e-3]}},
+     {"values": {"other": [0.0111, 0.00222]}}),
 
     # Test small floats
-    ({"program": "S", "values": {"other": 1 + 1.e-17}},
-     {"program": "s", "values": {"other": 1.0 - 1.e-17}}),
+    ({"values": {"other": 1 + 1.e-17}},
+     {"values": {"other": 1.0 - 1.e-17}}),
 
     # Test dict order
-    ({"program": "S", "values": {"a": 5, "b": 6, "c": None}},
-     {"program": "s", "values": {"b": 6, "a": 5, "c": None}}),
+    ({"values": {"a": 5, "b": 6, "c": None}},
+     {"values": {"b": 6, "a": 5, "c": None}}),
 
     # Check recusive
-    ({"program": "PSI4", "values": {"d1": {"D2": [0.0, 5], "d3": (3, 1.e-17)}}},
-     {"program": "PSI4", "values": {"d1": {"d2": [1.e-17, 5], "d3": (3, 0)}}}),
+    ({"values": {"d1": {"D2": [0.0, 5], "d3": (3, 1.e-17)}}},
+     {"values": {"d1": {"d2": [1.e-17, 5], "d3": (3, 0)}}}),
 
 ]) # yapf: disable
-def test_option_comparison_hash(data1, data2):
+def test_keywords_comparison_hash(data1, data2):
     """
     Ensure the hash_index finds collisions correctly before and after serialization.
     """

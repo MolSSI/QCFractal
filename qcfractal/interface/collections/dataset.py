@@ -160,7 +160,7 @@ class Dataset(Collection):
 
         self.data.default_program = program.lower()
 
-    def add_keywords(self, alias: str, keyword: 'KeywordSet', default: bool=False) -> bool:
+    def add_keywords(self, alias: str, program: str, keyword: 'KeywordSet', default: bool=False) -> bool:
         """
         Adds an option alias to the dataset. Not that keywords are not present
         until a save call has been completed.
@@ -176,16 +176,16 @@ class Dataset(Collection):
         """
 
         alias = alias.lower()
-        if keyword.program not in self.data.alias_keywords:
-            self.data.alias_keywords[keyword.program] = {}
+        if program not in self.data.alias_keywords:
+            self.data.alias_keywords[program] = {}
 
-        if alias in self.data.alias_keywords[keyword.program]:
+        if alias in self.data.alias_keywords[program]:
             raise KeyError("Alias '{}' already set for program {}.".format(alias, keyword.program))
 
-        self._new_keywords[(keyword.program, alias)] = keyword
+        self._new_keywords[(program, alias)] = keyword
 
         if default:
-            self.data.default_keywords[keyword.program] = alias
+            self.data.default_keywords[program] = alias
         return True
 
     def add_entry(self, name, molecule, **kwargs):
