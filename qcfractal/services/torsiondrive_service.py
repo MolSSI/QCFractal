@@ -31,7 +31,6 @@ def _check_td():
 class TorsionDriveService(BaseService):
 
     # Index info
-    status: str = "READY"
     service: str = "torsiondrive"
     program: str = "torsiondrive"
     procedure: str = "torsiondrive"
@@ -124,7 +123,6 @@ class TorsionDriveService(BaseService):
         self.status = "RUNNING"
 
         # Check if tasks are done
-        print("Done", self.task_manager.done(self.storage_socket))
         if self.task_manager.done(self.storage_socket) is False:
             return False
 

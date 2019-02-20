@@ -82,7 +82,7 @@ class MongoengineSocket:
         # Security
         self._bypass_security = bypass_security
 
-        self._lower_results_index = ["method", "basis", "keywords", "program"]
+        self._lower_results_index = ["method", "basis", "program"]
 
         # disconnect from any active default connection
         disconnect()

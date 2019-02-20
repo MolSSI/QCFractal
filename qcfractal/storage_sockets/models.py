@@ -41,6 +41,7 @@ class CustomDynamicDocument(db.DynamicDocument):
         'abstract': True,
     }
 
+
 class Collection(CustomDynamicDocument):
     """
         A collection of precomuted workflows such as datasets, ..
@@ -54,10 +55,12 @@ class Collection(CustomDynamicDocument):
 
     meta = {
         'collection': 'collection',  # DB collection/table name
-        'indexes': [
-            {'fields': ('collection', 'name'), 'unique': True}
-        ]
+        'indexes': [{
+            'fields': ('collection', 'name'),
+            'unique': True
+        }]
     }
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -87,12 +90,20 @@ class Molecule(CustomDynamicDocument):
         return str(self.id)
 
     meta = {
-        'collection': 'molecule',
+        'collection':
+        'molecule',
         'indexes': [
-            {'fields': ('molecule_hash',), 'unique': False},  # should almost be unique
-            {'fields': ('molecular_formula',), 'unique': False}
+            {
+                'fields': ('molecule_hash', ),
+                'unique': False
+            },  # should almost be unique
+            {
+                'fields': ('molecular_formula', ),
+                'unique': False
+            }
         ]
     }
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -105,13 +116,9 @@ class Keywords(CustomDynamicDocument):
     # TODO: pull choices from const config
     program = db.StringField(required=True)  #, choices=['rdkit', 'psi4', 'geometric', 'torsiondrive'])
     hash_index = db.StringField(required=True)
-    keywords = db.DynamicField()
+    values = db.DynamicField()
 
-    meta = {
-        'indexes': [
-            {'fields': ('program', 'hash_index'), 'unique': True}
-        ]
-    }
+    meta = {'indexes': [{'fields': ('program', 'hash_index'), 'unique': True}]}
 
     def __str__(self):
         return str(self.id)
@@ -129,12 +136,13 @@ class BaseResult(CustomDynamicDocument):
     task_id = db.StringField()  # ObjectId, reference task_queue but without validation
     status = db.StringField(required=True, choices=['COMPLETE', 'INCOMPLETE', 'ERROR'])
 
+    created_on = db.DateTimeField(required=True)
+    modified_on = db.DateTimeField(required=True)
+
     meta = {
         'abstract': True,
         # 'allow_inheritance': True,
-        'indexes': [
-            'status'
-        ]
+        'indexes': ['status']
     }
 
     def save(self, *args, **kwargs):
@@ -143,7 +151,12 @@ class BaseResult(CustomDynamicDocument):
         if not self.status:
             self.status = 'INCOMPLETE'
 
+        self.modified_on = datetime.datetime.utcnow()
+        if not self.created_on:
+            self.created_on = datetime.datetime.utcnow()
+
         return super(BaseResult, self).save(*args, **kwargs)
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -158,9 +171,8 @@ class Result(BaseResult):
     driver = db.StringField(required=True)  # example "gradient"
     method = db.StringField(required=True)  # example "uff"
     basis = db.StringField()
-    molecule = db.ReferenceField(Molecule, required=True)   # todo: or LazyReferenceField if only ID is needed?
-    # options = db.ReferenceField(Keywords)  # ** has to be a FK or empty, can't be a string
-    keywords = db.StringField()
+    molecule = db.LazyReferenceField(Molecule, required=True)
+    keywords = db.LazyReferenceField(Keywords)
 
     # output related
     properties = db.DynamicField()  # accept any, no validation
@@ -173,25 +185,13 @@ class Result(BaseResult):
     meta = {
         'collection': 'result',
         'indexes': [
-           {'fields': ('program', 'driver', 'method', 'basis',
-                       'molecule', 'keywords'), 'unique': True},
+            {
+                'fields': ('program', 'driver', 'method', 'basis', 'molecule', 'keywords'),
+                'unique': True
+            },
         ]
     }
 
-    # not used yet
-    # or  use pre_save
-    def _save(self, *args, **kwargs):
-        """Override save to handle keywords"""
-
-        if not isinstance(self.keywords, Keywords):
-            # self.keywords = Keywords.objects(program=self.program, option_name='default')\
-            #     .modify(upsert=True, new=True, option_name='default')
-            self.keywords = Keywords.objects(program=self.program, option_name='default').first()
-            if not self.keywords:
-                self.keywords = Keywords(program=self.program, option_name='default').save()
-                # self.keywords.save()
-
-        return super(Result, self).save(*args, **kwargs)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -202,23 +202,28 @@ class Procedure(BaseResult):
     """
 
     procedure = db.StringField(required=True)
-                                    # choices=['optimization', 'torsiondrive'])
-    # Todo: change name to be different from results program
     program = db.StringField(required=True)  # example: 'Geometric'
-    keywords = db.DynamicField()  # keywords of the procedure
-
-    hash_index = db.StringField()
-    qc_meta = db.DynamicField()  # --> all inside results except mol
+    hash_index = db.StringField(required=True)
+    keywords = db.DynamicField()
 
     meta = {
-        'collection': 'procedure',
-        'allow_inheritance': True,
+        'collection':
+        'procedure',
+        'allow_inheritance':
+        True,
         'indexes': [
             # TODO: needs a unique index, + molecule?
-            {'fields': ('procedure', 'program'), 'unique': False},  # TODO: check
-            {'fields': ('hash_index',), 'unique': False}  # used in queries
+            {
+                'fields': ('procedure', 'program'),
+                'unique': False
+            },  # TODO: check
+            {
+                'fields': ('hash_index', ),
+                'unique': False
+            }  # used in queries
         ]
     }
+
 
 # ================== Types of Procedures ================== #
 
@@ -230,11 +235,8 @@ class OptimizationProcedure(Procedure):
 
     procedure = db.StringField(default='optimization', required=True)
 
-    initial_molecule = db.ReferenceField(Molecule)  # always load with select_related
-    final_molecule = db.ReferenceField(Molecule)
-
-    # output
-    # trajectory = db.ListField(Result)
+    initial_molecule = db.LazyReferenceField(Molecule)
+    final_molecule = db.LazyReferenceField(Molecule)
 
 
 class TorsiondriveProcedure(Procedure):
@@ -246,10 +248,8 @@ class TorsiondriveProcedure(Procedure):
 
     # TODO: add more fields
 
-    meta = {
-        'indexes': [
-        ]
-    }
+    meta = {'indexes': []}
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -262,7 +262,7 @@ class Spec(db.DynamicEmbeddedDocument):
     """
 
     function = db.StringField()
-    args = db.DynamicField()    # fast, can take any structure
+    args = db.DynamicField()  # fast, can take any structure
     kwargs = db.DynamicField()
 
 
@@ -280,12 +280,11 @@ class TaskQueue(CustomDynamicDocument):
     hooks = db.ListField(db.DynamicField())  # ??
     tag = db.StringField(default=None)
     parser = db.StringField(default='')
-    status = db.StringField(default='WAITING',
-                            choices=['RUNNING', 'WAITING', 'ERROR', 'COMPLETE'])
+    status = db.StringField(default='WAITING', choices=['RUNNING', 'WAITING', 'ERROR', 'COMPLETE'])
     manager = db.StringField(default=None)
 
-    created_on = db.DateTimeField(required=True, default=datetime.datetime.utcnow)
-    modified_on = db.DateTimeField(required=True, default=datetime.datetime.utcnow)
+    created_on = db.DateTimeField(required=True)
+    modified_on = db.DateTimeField(required=True)
 
     # can reference Results or any Procedure
     base_result = db.GenericLazyReferenceField(dbref=True)  # use res.id and res.document_type (class)
@@ -295,46 +294,55 @@ class TaskQueue(CustomDynamicDocument):
             'created_on',
             'status',
             'manager',
-            # {'fields': ("status", "tag", "hash_index"), 'unique': False}
-            {'fields': ('base_result',), 'unique': True},  # new
-            # {'fields': ('hash_index',), 'unique': True}
-
+            {
+                'fields': ('base_result', ),
+                'unique': True
+            },  # new
         ]
-        # 'indexes': [
-        #         '$function', # text index, not needed
-        #         '#function', # hash index
-        #         ('title', '-rating'),  # rating is descending, direction only for multi-indices
-        #     {
-        #       'fields': ('spec.function', 'tag'),
-        #       'unique': True
-        #     }
-        # ]
     }
 
     def save(self, *args, **kwargs):
         """Override save to update modified_on"""
         self.modified_on = datetime.datetime.utcnow()
+        if not self.created_on:
+            self.created_on = datetime.datetime.utcnow()
 
         return super(TaskQueue, self).save(*args, **kwargs)
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 class ServiceQueue(CustomDynamicDocument):
 
-    status = db.StringField()
+    status = db.StringField(default='WAITING', choices=['RUNNING', 'WAITING', 'ERROR', 'COMPLETE'])
     tag = db.StringField(default=None)
     hash_index = db.StringField(required=True)
-    procedure_id = db.ReferenceField(Procedure)
+    procedure_id = db.LazyReferenceField(Procedure)
+
+    # created_on = db.DateTimeField(required=True)
+    # modified_on = db.DateTimeField(required=True)
 
     meta = {
         'indexes': [
             'status',
-            {'fields': ("status", "tag", "hash_index"), 'unique': False},
+            {
+                'fields': ("status", "tag", "hash_index"),
+                'unique': False
+            },
             # {'fields': ('procedure',), 'unique': True}
-
         ]
     }
+
+    def save(self, *args, **kwargs):
+        """Override save to update modified_on"""
+        # self.modified_on = datetime.datetime.utcnow()
+        # if not self.created_on:
+        #     self.created_on = datetime.datetime.utcnow()
+
+        return super(ServiceQueue, self).save(*args, **kwargs)
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -344,9 +352,7 @@ class User(CustomDynamicDocument):
     password = db.BinaryField(required=True)
     permissions = db.ListField()
 
-    meta = {
-        'indexes': ['username']
-    }
+    meta = {'indexes': ['username']}
 
 
 class QueueManager(CustomDynamicDocument):
@@ -367,15 +373,15 @@ class QueueManager(CustomDynamicDocument):
 
     status = db.StringField(default='INACTIVE', choices=['ACTIVE', 'INACTIVE'])
 
-    created_on = db.DateTimeField(required=True, default=datetime.datetime.utcnow)
-    modified_on = db.DateTimeField(required=True, default=datetime.datetime.utcnow)
+    created_on = db.DateTimeField(required=True)
+    modified_on = db.DateTimeField(required=True)
 
-    meta = {
-        'indexes': ['status', 'name', 'modified_on']
-    }
+    meta = {'indexes': ['status', 'name', 'modified_on']}
 
     def save(self, *args, **kwargs):
         """Override save to update modified_on"""
         self.modified_on = datetime.datetime.utcnow()
+        if not self.created_on:
+            self.created_on = datetime.datetime.utcnow()
 
         return super(QueueManager, self).save(*args, **kwargs)

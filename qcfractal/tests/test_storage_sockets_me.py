@@ -247,11 +247,14 @@ def test_results_add(storage_socket):
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
     mol_insert = storage_socket.add_molecules([water, water2])
 
+    kw1 = portal.models.KeywordSet(**{"program": "a", "values": {}})
+    kwid1 = storage_socket.add_keywords([kw1.dict()])["data"][0]
+
     page1 = {
         "molecule": mol_insert["data"][0],
         "method": "M1",
         "basis": "B1",
-        "keywords": "default",
+        "keywords": kwid1,
         "program": "P1",
         "driver": "energy",
         "other_data": 5,
@@ -262,7 +265,7 @@ def test_results_add(storage_socket):
         "molecule": mol_insert["data"][1],
         "method": "M1",
         "basis": "B1",
-        "keywords": "default",
+        "keywords": kwid1,
         "program": "P1",
         "driver": "energy",
         "other_data": 10,
@@ -273,7 +276,7 @@ def test_results_add(storage_socket):
         "molecule": mol_insert["data"][1],
         "method": "M22",
         "basis": "B1",
-        "keywords": "default",
+        "keywords": None,
         "program": "P1",
         "driver": "energy",
         "other_data": 10,
@@ -311,11 +314,14 @@ def storage_results(storage_socket):
     water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
     mol_insert = storage_socket.add_molecules([water, water2])
 
+    kw1 = portal.models.KeywordSet(**{"program": "a", "values": {}})
+    kwid1 = storage_socket.add_keywords([kw1.dict()])["data"][0]
+
     page1 = {
         "molecule": mol_insert["data"][0],
         "method": "M1",
         "basis": "B1",
-        "keywords": "default",
+        "keywords": kwid1,
         "program": "P1",
         "driver": "energy",
         "return_result": 5,
@@ -327,7 +333,7 @@ def storage_results(storage_socket):
         "molecule": mol_insert["data"][1],
         "method": "M1",
         "basis": "B1",
-        "keywords": "default",
+        "keywords": kwid1,
         "program": "P1",
         "driver": "energy",
         "return_result": 10,
@@ -339,7 +345,7 @@ def storage_results(storage_socket):
         "molecule": mol_insert["data"][0],
         "method": "M1",
         "basis": "B1",
-        "keywords": "default",
+        "keywords": kwid1,
         "program": "P2",
         "driver": "gradient",
         "return_result": 15,
@@ -351,7 +357,7 @@ def storage_results(storage_socket):
         "molecule": mol_insert["data"][0],
         "method": "M2",
         "basis": "B1",
-        "keywords": "default",
+        "keywords": kwid1,
         "program": "P2",
         "driver": "gradient",
         "return_result": 15,
@@ -363,7 +369,7 @@ def storage_results(storage_socket):
         "molecule": mol_insert["data"][1],
         "method": "M2",
         "basis": "B1",
-        "keywords": "default",
+        "keywords": kwid1,
         "program": "P1",
         "driver": "gradient",
         "return_result": 20,

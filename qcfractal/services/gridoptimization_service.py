@@ -18,7 +18,6 @@ __all__ = ["GridOptimizationService"]
 class GridOptimizationService(BaseService):
 
     # Index info
-    status: str = "READY"
     service: str = "gridoptimization"
     program: str = "qcfractal"
     procedure: str = "gridoptimization"

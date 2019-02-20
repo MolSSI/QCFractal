@@ -19,7 +19,7 @@ class BaseService(BaseModel, abc.ABC):
     # Base information requiered by the class
     id: str = None
     hash_index: str
-    status: str
+    status: str = "WAITING"
     service: str
     program: str
     procedure: str

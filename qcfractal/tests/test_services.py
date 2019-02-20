@@ -60,7 +60,7 @@ def torsiondrive_fixture(fractal_compute_server):
         if ret.meta.n_inserted:  # In case test already submitted
             compute_key = ret.data.ids[0]
             status = client.check_services({"procedure_id": compute_key}, return_full=True)
-            assert 'READY' in status.data[0]['status']
+            assert 'WAITING' in status.data[0]['status']
             assert status.data[0]['id'] != compute_key  # Hash should never be id
 
         fractal_compute_server.await_services()
