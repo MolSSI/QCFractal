@@ -15,6 +15,22 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+
+0.?.? / 2019-0?-??
+------------------
+
+New Features
+++++++++++++
+
+Enhancements
+++++++++++++
+
+Bug Fixes
++++++++++
+
+- (:pr:`176`) Benchmarks folder no longer shipped with package
+
+
 0.5.0 / 2019-02-20
 ------------------
 
