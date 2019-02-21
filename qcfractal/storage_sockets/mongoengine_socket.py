@@ -16,7 +16,7 @@ except ImportError:
 
 import logging
 from datetime import datetime as dt
-from typing import Dict, List, Sequence, Union
+from typing import Container, Dict, List, Sequence, Union
 
 import bcrypt
 import bson.errors
@@ -53,6 +53,47 @@ def _str_to_indices_with_errors(ids):
         else:
             bad.append(x)
     return good, bad
+
+
+_null_keys = {"basis", "keywords"}
+_id_keys = {"id", "molecule", "keywords", "procedure_id"}
+_lower_keys = {"method", "basis", "program"}
+
+
+def format_query(**query):
+    """
+    Formats a query into a MongoEngine description.
+    """
+
+    ret = {}
+    errors = []
+    for k, v in query.items():
+        if v is None:
+            continue
+
+        # Handle None keys
+        k = k.lower()
+        if (k in _null_keys) and (v == 'null'):
+            v = None
+
+        # Handle ID conversions
+        elif k in _id_keys:
+            v, bad = _str_to_indices_with_errors(v)
+            if bad:
+                errors.append((k, bad))
+
+        if k in _lower_keys:
+            if isinstance(v, (list, tuple)):
+                v = [x.lower() for x in v]
+            else:
+                v = v.lower()
+
+        if isinstance(v, (list, tuple)):
+            ret[k + "__in"] = v
+        else:
+            ret[k] = v
+
+    return ret, errors
 
 
 class MongoengineSocket:
@@ -410,12 +451,7 @@ class MongoengineSocket:
         ret = {"data": keywords, "meta": meta}
         return ret
 
-    def get_keywords(self,
-                     id: str=None,
-                     program: str=None,
-                     hash_index: str=None,
-                     return_json: bool=True,
-                     with_ids: bool=True,
+    def get_keywords(self, id: str=None, hash_index: str=None, return_json: bool=True, with_ids: bool=True,
                      limit=None):
         """Search for one (unique) option based on the 'program'
         and the 'name'. No overwrite allowed.
@@ -444,13 +480,8 @@ class MongoengineSocket:
         """
 
         meta = get_metadata_template()
-        query = {}
-        if program is not None:
-            query['program'] = program
-        if hash_index is not None:
-            query['hash_index'] = hash_index
-        if id is not None:
-            query['id'] = ObjectId(id)
+        query, errors = format_query(id=id, hash_index=hash_index)
+
         q_limit = limit if limit and limit < self._max_limit else self._max_limit
 
         data = []
@@ -508,11 +539,11 @@ class MongoengineSocket:
                 missing.append(idx)
                 continue
 
-            try:
-                ret.append(self.get_keywords(id=id)["data"][0])
-            except bson.errors.InvalidId:
+            tmp = self.get_keywords(id=id)["data"]
+            if tmp:
+                ret.append(tmp[0])
+            else:
                 ret.append(None)
-                missing.append(idx)
 
         meta["success"] = True
         meta["n_found"] = len(ret) - len(missing)
@@ -619,11 +650,8 @@ class MongoengineSocket:
         """
 
         meta = get_metadata_template()
-        query = {}
-        if collection:
-            query['collection'] = collection
-        if name:
-            query['name'] = name
+        query, errors = format_query(name=name, collection=collection)
+
         q_limit = limit if limit and limit < self._max_limit else self._max_limit
 
         data = []
@@ -661,21 +689,7 @@ class MongoengineSocket:
 
         return Collection.objects(collection=collection, name=name).delete()
 
-    # -------------------------- Results functions ----------------------------
-    #
-    # def add_result(
-    #         self,
-    #         program: str,
-    #         method: str,
-    #         driver: str,
-    #         molecule: str,  # Molecule id
-    #         basis: str,
-    #         options: str,
-    #         data: dict,
-    #         return_json=True,
-    #         with_ids=True):
-    #     """ Add one result
-    #     """
+## Results functions
 
     def add_results(self, data: List[dict], update_existing: bool=False, return_json=True):
         """
@@ -842,43 +856,23 @@ class MongoengineSocket:
         """
 
         meta = get_metadata_template()
-        query = {}
-        parsed_query = {}
-        if program is not None:
-            query['program'] = program
-        if method is not None:
-            query['method'] = method
-        if basis is not None:
-            query['basis'] = basis if basis != 'null' else None
-        if molecule is not None:
-            query['molecule'], _ = _str_to_indices_with_errors(molecule)
-        if driver is not None:
-            query['driver'] = driver
-        if keywords is not None:
-            query['keywords'] = keywords if keywords != 'null' else None
-        if status:
-            query['status'] = status
-
-        for key, value in query.items():
-            if key == "molecule":
-                parsed_query[key + "__in"] = query[key]
-            elif key == "status":
-                parsed_query[key] = value
-            elif isinstance(value, (list, tuple)):
-                parsed_query[key + "__in"] = [v.lower() for v in value]
-            elif isinstance(value, str):
-                parsed_query[key] = value.lower()
-            else:
-                parsed_query[key] = value
+        query, error = format_query(
+            program=program,
+            method=method,
+            basis=basis,
+            molecule=molecule,
+            driver=driver,
+            keywords=keywords,
+            status=status)
 
         q_limit = limit if limit and limit < self._max_limit else self._max_limit
 
         data = []
         try:
             if projection:
-                data = Result.objects(**parsed_query).only(*projection).limit(q_limit)
+                data = Result.objects(**query).only(*projection).limit(q_limit)
             else:
-                data = Result.objects(**parsed_query).limit(q_limit)
+                data = Result.objects(**query).limit(q_limit)
 
             meta["n_found"] = data.count()
             meta["success"] = True
@@ -918,7 +912,7 @@ class MongoengineSocket:
         """
 
         meta = get_metadata_template()
-        query = {}
+        query, errors = format_query(task_id=task_id)
 
         if isinstance(task_id, (list, tuple)):
             query['task_id__in'] = task_id
@@ -1019,7 +1013,7 @@ class MongoengineSocket:
                        procedure: str=None,
                        program: str=None,
                        hash_index: str=None,
-                       ids: List[str]=None,
+                       id: str=None,
                        status: str='COMPLETE',
                        projection=None,
                        limit: int=None,
@@ -1057,35 +1051,16 @@ class MongoengineSocket:
         """
 
         meta = get_metadata_template()
-        query = {}
-        parsed_query = {}
-        if procedure:
-            query['procedure'] = procedure
-        if program:
-            query['program'] = program
-        if hash_index:
-            query['hash_index'] = hash_index
-        if ids:
-            query['ids'] = ids
-        if status:
-            query['status'] = status
-
-        for key, value in query.items():
-            if key == "status":
-                parsed_query[key] = value
-            elif isinstance(value, (list, tuple)):
-                parsed_query[key + "__in"] = [v.lower() for v in value]
-            else:
-                parsed_query[key] = value.lower()
+        query, error = format_query(procedure=procedure, program=program, hash_index=hash_index, id=id, status=status)
 
         q_limit = limit if limit and limit < self._max_limit else self._max_limit
 
         data = []
         try:
             if projection:
-                data = Procedure.objects(**parsed_query).only(*projection).limit(q_limit)
+                data = Procedure.objects(**query).only(*projection).limit(q_limit)
             else:
-                data = Procedure.objects(**parsed_query).limit(q_limit)
+                data = Procedure.objects(**query).limit(q_limit)
 
             meta["n_found"] = data.count()
             meta["success"] = True
@@ -1125,25 +1100,14 @@ class MongoengineSocket:
         """
 
         meta = get_metadata_template()
-
-        query, parsed_query = {}, {}
-        if id:
-            query['id'] = id
-        if hash_index:
-            query['hash_index'] = hash_index
-
-        for key, value in query.items():
-            if isinstance(value, (list, tuple)):
-                parsed_query[key + "__in"] = value
-            else:
-                parsed_query[key] = value
+        query, error = format_query(id=id, hash_index=hash_index)
 
         data = []
         # try:
         if projection:
-            data = Procedure.objects(**parsed_query).only(*projection).limit(self._max_limit)
+            data = Procedure.objects(**query).only(*projection).limit(self._max_limit)
         else:
-            data = Procedure.objects(**parsed_query).limit(self._max_limit)
+            data = Procedure.objects(**query).limit(self._max_limit)
 
         meta["n_found"] = data.count()
         meta["success"] = True
@@ -1183,12 +1147,7 @@ class MongoengineSocket:
         """
 
         meta = get_metadata_template()
-        query = {}
-
-        if isinstance(task_id, (list, tuple)):
-            query['task_id__in'] = task_id
-        else:
-            query['task_id'] = task_id
+        query, error = format_query(task_id=task_id)
 
         q_limit = limit if limit and limit < self._max_limit else self._max_limit
 
@@ -1319,25 +1278,7 @@ class MongoengineSocket:
         """
 
         meta = get_metadata_template()
-        query = {}
-
-        if isinstance(id, (list, tuple)):
-            query['id__in'], _ = _str_to_indices_with_errors(id)
-        elif id:
-            query['id'] = ObjectId(id)
-
-        if isinstance(hash_index, (list, tuple)):
-            query['hash_index__in'] = hash_index
-        elif hash_index:
-            query['hash_index'] = hash_index
-
-        if isinstance(procedure_id, (list, tuple)):
-            query['procedure_id__in'], _ = _str_to_indices_with_errors(procedure_id)
-        elif procedure_id:
-            query['procedure_id'] = ObjectId(procedure_id)
-
-        if status:
-            query['status'] = status
+        query, error = format_query(id=id, hash_index=hash_index, procedure_id=procedure_id, status=status)
 
         q_limit = int(limit if limit and limit < self._max_limit else self._max_limit)
 
@@ -1378,7 +1319,6 @@ class MongoengineSocket:
         updates_dict = updates.copy()
         updates_dict.pop("id", None)
         updates_dict.pop('procedure_id', None)
-        # ServiceQueue(id=ObjectId(id), **updates_dict).save()
         ServiceQueue.objects(id=ObjectId(id)).update(**updates_dict)
 
         return True
@@ -1554,31 +1494,16 @@ class MongoengineSocket:
         """
 
         meta = get_metadata_template()
-        query = {}
-        parsed_query = {}
-        if program:
-            query['program'] = program
-        if id is not None:
-            query['id'] = id
-        if hash_index:
-            query['hash_index'] = hash_index
-        if status:
-            query['status'] = status
-
-        for key, value in query.items():
-            if isinstance(value, (list, tuple)):
-                parsed_query[key + "__in"] = value
-            else:
-                parsed_query[key] = value
+        query, error = format_query(program=program, id=id, hash_index=hash_index, status=status)
 
         q_limit = limit if limit and limit < self._max_limit else self._max_limit
 
         data = []
         try:
             if projection:
-                data = TaskQueue.objects(**parsed_query).only(*projection).limit(q_limit)
+                data = TaskQueue.objects(**query).only(*projection).limit(q_limit)
             else:
-                data = TaskQueue.objects(**parsed_query).limit(q_limit)
+                data = TaskQueue.objects(**query).limit(q_limit)
 
             meta["n_found"] = data.count()
             meta["success"] = True
@@ -1775,13 +1700,9 @@ class MongoengineSocket:
 
     def get_managers(self, name: str=None, status: str=None, modified_before=None):
 
-        query = {}
-        if name:
-            query["name"] = name
+        query, error = format_query(name=name, status=status)
         if modified_before:
             query["modified_on__lt"] = modified_before
-        if status:
-            query["status"] = status
 
         data = QueueManager.objects(**query)
 

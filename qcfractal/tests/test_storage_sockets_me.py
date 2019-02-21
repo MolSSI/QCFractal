@@ -9,6 +9,8 @@ import pytest
 import qcfractal.interface as portal
 from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 
+bad_id1 = "000000000000000000000000"
+bad_id2 = "000000000000000000000001"
 
 def test_molecules_add(storage_socket):
 
@@ -99,11 +101,11 @@ def test_molecules_get(storage_socket):
 def test_molecules_mixed_add_get(storage_socket):
     water = portal.data.get_molecule("water_dimer_minima.psimol")
 
-    ret = storage_socket.get_add_molecules_mixed(["bad_id", water, "bad_id2"])
+    ret = storage_socket.get_add_molecules_mixed([bad_id1, water, bad_id2, "bad_id"])
     assert ret["data"][0] is None
     assert ret["data"][1]["identifiers"]["molecule_hash"] == water.get_hash()
     assert ret["data"][2] is None
-    assert set(ret["meta"]["missing"]) == {0, 2}
+    assert set(ret["meta"]["missing"]) == {0, 2, 3}
 
     # Cleanup adds
     ret = storage_socket.del_molecules([ret["data"][1]["id"]], index="id")
@@ -157,12 +159,13 @@ def test_keywords_mixed_add_get(storage_socket):
     id1 = storage_socket.add_keywords([opts1.json_dict()])["data"][0]
 
     opts2 = {"values": {"o": 6}}
-    opts = storage_socket.get_add_keywords_mixed([opts1, opts2, id1, "bad_id"])["data"]
+    opts = storage_socket.get_add_keywords_mixed([opts1, opts2, id1, bad_id1, "bad_id"])["data"]
     assert opts[0]["id"] == id1
     assert opts[1]["values"]["o"] == 6
     assert "id" in opts[1]
     assert opts[2]["id"] == id1
     assert opts[3] is None
+    assert opts[4] is None
 
     assert 1 == storage_socket.del_keywords(id=id1)
     assert 1 == storage_socket.del_keywords(id=opts[1]["id"])
