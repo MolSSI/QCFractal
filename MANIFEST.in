@@ -12,3 +12,5 @@ include MANIFEST.in
 
 include versioneer.py
 include qcfractal/_version.py
+
+prune benchmarks
