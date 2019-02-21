@@ -7,7 +7,7 @@ import json
 import logging
 import socket
 import uuid
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 
 import tornado.ioloop
 from qcfractal.extras import get_information
@@ -47,7 +47,7 @@ class QueueManager:
                  max_tasks: int=1000,
                  queue_tag: str=None,
                  cluster: str="unknown",
-                 update_frequency: int=2,
+                 update_frequency: Union[int, float]=2,
                  verbose: bool=True,
                  cores_per_task: Optional[int] = None,
                  memory_per_task: Optional[int] = None):
