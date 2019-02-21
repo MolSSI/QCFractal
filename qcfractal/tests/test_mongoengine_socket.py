@@ -7,9 +7,8 @@
 
 import qcfractal.interface as portal
 
-from qcfractal.storage_sockets.models import Molecule, Result, Keywords, \
-                    Procedure, OptimizationProcedure, TorsiondriveProcedure
-from qcfractal.storage_sockets.models import TaskQueue
+from qcfractal.storage_sockets.me_models import Molecule, Result, Keywords, \
+                    Procedure, OptimizationProcedure, TorsiondriveProcedure, TaskQueue
 from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 import pytest
 from bson import ObjectId
@@ -24,7 +23,7 @@ def molecules_H4O2(storage_socket):
 
     yield list(ret['data'])
 
-    r = storage_socket.del_molecules([water.get_hash(), water2.get_hash()], index="hash")
+    r = storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
     assert r == 2
 
 @pytest.fixture
@@ -82,8 +81,7 @@ def test_molecule(storage_socket):
     assert len(one_mol) == 1
 
     # Clean up
-    storage_socket.del_molecules(water.get_hash(), index="hash")
-    storage_socket.del_molecules(water2.get_hash(), index="hash")
+    storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
 
 
 def test_results(storage_socket, molecules_H4O2, kw_fixtures):

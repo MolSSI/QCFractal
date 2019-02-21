@@ -31,11 +31,11 @@ def test_molecules_add(storage_socket):
     assert ret1["data"][0] == ret2["data"][0]
 
     # Pull molecule from the DB for tests
-    db_json = storage_socket.get_molecules(water.get_hash(), index="hash")["data"][0]
+    db_json = storage_socket.get_molecules(molecule_hash=water.get_hash())["data"][0]
     water.compare(db_json)
 
     # Cleanup adds
-    ret = storage_socket.del_molecules(water.get_hash(), index="hash")
+    ret = storage_socket.del_molecules(molecule_hash=water.get_hash())
     assert ret == 1
 
 
@@ -53,10 +53,10 @@ def test_identical_mol_insert(storage_socket):
     assert ret1["data"][0] == ret1["data"][1]
 
     # Should only find one molecule
-    ret2 = storage_socket.get_molecules([water.get_hash()], index="hash")
+    ret2 = storage_socket.get_molecules(molecule_hash=[water.get_hash()])
     assert ret2["meta"]["n_found"] == 1
 
-    ret = storage_socket.del_molecules(water.get_hash(), index="hash")
+    ret = storage_socket.del_molecules(molecule_hash=water.get_hash())
     assert ret == 1
 
 
@@ -68,14 +68,14 @@ def test_molecules_add_many(storage_socket):
     assert ret["meta"]["n_inserted"] == 2
 
     # Cleanup adds
-    ret = storage_socket.del_molecules([water.get_hash(), water2.get_hash()], index="hash")
+    ret = storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
     assert ret == 2
 
     ret = storage_socket.add_molecules([water, water2])
     assert ret["meta"]["n_inserted"] == 2
 
     # Cleanup adds
-    ret = storage_socket.del_molecules(ret["data"], index="id")
+    ret = storage_socket.del_molecules(id=ret["data"])
     assert ret == 2
 
 
@@ -89,12 +89,12 @@ def test_molecules_get(storage_socket):
     water_id = ret["data"][0]
 
     # Pull molecule from the DB for tests
-    db_json = storage_socket.get_molecules(water_id, index="id")["data"][0]
+    db_json = storage_socket.get_molecules(id=water_id)["data"][0]
     water2 = portal.Molecule(**db_json)
     water2.compare(water)
 
     # Cleanup adds
-    ret = storage_socket.del_molecules(water_id, index="id")
+    ret = storage_socket.del_molecules(id=water_id)
     assert ret == 1
 
 
@@ -108,7 +108,7 @@ def test_molecules_mixed_add_get(storage_socket):
     assert set(ret["meta"]["missing"]) == {0, 2, 3}
 
     # Cleanup adds
-    ret = storage_socket.del_molecules([ret["data"][1]["id"]], index="id")
+    ret = storage_socket.del_molecules(id=ret["data"][1]["id"])
     assert ret == 1
 
 
@@ -122,14 +122,14 @@ def test_molecules_bad_get(storage_socket):
     water_id = ret["data"][0]
 
     # Pull molecule from the DB for tests
-    ret = storage_socket.get_molecules([water_id, "something", 5, (3, 2)], index="id")
+    ret = storage_socket.get_molecules(id=[water_id, "something", 5, (3, 2)])
     assert len(ret["meta"]["errors"]) == 1
-    assert ret["meta"]["errors"][0][0] == "Bad Ids"
+    assert ret["meta"]["errors"][0][0] == "id"
     assert len(ret["meta"]["errors"][0][1]) == 3
     assert ret["meta"]["n_found"] == 1
 
     # Cleanup adds
-    ret = storage_socket.del_molecules(water_id, index="id")
+    ret = storage_socket.del_molecules(id=water_id)
     assert ret == 1
 
 
@@ -303,7 +303,7 @@ def test_results_add(storage_socket):
 
     ret = storage_socket.del_results(ids)
     assert ret == 3
-    ret = storage_socket.del_molecules(mol_insert["data"], index="id")
+    ret = storage_socket.del_molecules(id=mol_insert["data"])
     assert ret == 2
 
 
@@ -402,21 +402,20 @@ def storage_results(storage_socket):
     ret = storage_socket.del_results(result_ids)
     assert ret == results_insert["meta"]["n_inserted"]
 
-    ret = storage_socket.del_molecules(mol_insert["data"], index="id")
+    ret = storage_socket.del_molecules(id=mol_insert["data"])
     assert ret == mol_insert["meta"]["n_inserted"]
 
 
 def test_empty_get(storage_results):
 
-    assert 0 == len(storage_results.get_molecules(None)["data"])
-    assert 0 == len(storage_results.get_molecules([])["data"])
-    assert 0 == len(storage_results.get_molecules("")["data"])
+    assert 0 == len(storage_results.get_molecules(id=[])["data"])
+    assert 0 == len(storage_results.get_molecules(id="")["data"])
     # Todo: This needs to return top limit of the table
-    assert 0 == len(storage_results.get_molecules()["data"])
+    assert 2 == len(storage_results.get_molecules()["data"])
 
     assert 6 == len(storage_results.get_results()['data'])
-    # assert 1 == len(storage_results.get_results(keywords='')['data'])
-    # assert 0 == len(storage_results.get_results(program='')['data'])
+    assert 1 == len(storage_results.get_results(keywords='null')['data'])
+    assert 0 == len(storage_results.get_results(program='null')['data'])
 
 
 def test_results_query_total(storage_results):

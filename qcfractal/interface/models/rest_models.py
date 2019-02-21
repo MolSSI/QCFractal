@@ -51,18 +51,10 @@ class ResponsePOSTMeta(ResponseMeta):
 ### Molecule response
 
 
-class MoleculeIndices(Enum):
-    id = "id"
-    molecule_hash = "molecule_hash"
-    molecular_formula = "molecular_formula"
-
-
 class MoleculeGETBody(BaseModel):
-    class Meta(BaseModel):
-        index: MoleculeIndices
 
-    data: List[str]
-    meta: Meta
+    data: Dict[str, Any]
+    meta: Dict[str, Any]
 
 
 class MoleculeGETResponse(BaseModel):

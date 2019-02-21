@@ -142,7 +142,7 @@ class TorsionDriveService(BaseService):
 
                 # Lookup molecules
                 mol_keys = self.storage_socket.get_molecules(
-                    [ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
+                    id=[ret["initial_molecule"], ret["final_molecule"]])["data"]
 
                 task_results[key].append((mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1]))
 

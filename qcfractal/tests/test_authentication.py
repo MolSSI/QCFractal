@@ -90,4 +90,4 @@ def test_security_auth_accept(sec_server):
     client = portal.FractalClient(sec_server, username="write", password=_users["write"]["pw"])
 
     r = client.add_molecules([])
-    r = client.get_molecules([])
+    r = client.get_molecules(id=[])

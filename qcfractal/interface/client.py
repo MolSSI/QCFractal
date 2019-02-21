@@ -10,13 +10,12 @@ import requests
 from .collections import collection_factory
 from .models.common_models import Molecule
 from .models.gridoptimization import GridOptimizationInput
-from .models.rest_models import (CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
-                                 KeywordGETBody, KeywordGETResponse, KeywordPOSTBody, KeywordPOSTResponse,
-                                 MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
-                                 ProcedureGETBody, ProcedureGETReponse, ResultGETBody, ResultGETResponse,
-                                 ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody,
-                                 ServiceQueuePOSTResponse, TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody,
-                                 TaskQueuePOSTResponse)
+from .models.rest_models import (
+    CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse, KeywordGETBody,
+    KeywordGETResponse, KeywordPOSTBody, KeywordPOSTResponse, MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody,
+    MoleculePOSTResponse, ProcedureGETBody, ProcedureGETReponse, ResultGETBody, ResultGETResponse, ServiceQueueGETBody,
+    ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse, TaskQueueGETBody, TaskQueueGETResponse,
+    TaskQueuePOSTBody, TaskQueuePOSTResponse)
 from .models.torsiondrive import TorsionDriveInput
 from .orm import build_orm
 
@@ -174,7 +173,11 @@ class FractalClient(object):
 
     ### Molecule section
 
-    def get_molecules(self, mol_list: List[str], index: str="id", full_return: bool=False) -> Dict[str, Any]:
+    def get_molecules(self,
+                      id: List[str]=None,
+                      molecule_hash: List[str]=None,
+                      molecular_formula: List[str]=None,
+                      full_return: bool=False) -> Dict[str, Any]:
         """Get molecules from the Server.
 
         Parameters
@@ -192,10 +195,8 @@ class FractalClient(object):
             Returns all found molecules.
         """
 
-        if isinstance(mol_list, str):
-            mol_list = [mol_list]
-
-        body = MoleculeGETBody(data=mol_list, meta={"index": index.lower()})
+        data = {"id": id, "molecule_hash": molecule_hash, "molecular_formula": molecular_formula}
+        body = MoleculeGETBody(data=data, meta={})
         r = self._request("get", "molecule", data=body.json())
         r = MoleculeGETResponse.parse_raw(r.text)
 

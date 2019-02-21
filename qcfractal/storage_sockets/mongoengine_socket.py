@@ -26,7 +26,7 @@ from bson.objectid import ObjectId
 from mongoengine.connection import disconnect, get_db
 
 from .. import interface
-from .models import Collection, Keywords, Molecule, Procedure, QueueManager, Result, ServiceQueue, TaskQueue, User
+from .me_models import Collection, Keywords, Molecule, Procedure, QueueManager, Result, ServiceQueue, TaskQueue, User
 from .storage_utils import add_metadata_template, get_metadata_template, translate_molecule_index
 
 
@@ -327,26 +327,14 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def get_molecules(self, molecule_ids=None, index="id"):
+    def get_molecules(self, id=None, molecule_hash=None, molecular_formula=None):
 
         ret = {"meta": get_metadata_template(), "data": []}
 
-        try:
-            index = translate_molecule_index(index)
-        except KeyError as e:
-            ret["meta"]["error_description"] = repr(e)
-            return ret
-
-        if not isinstance(molecule_ids, (list, tuple)):
-            molecule_ids = [molecule_ids]
-
-        bad_ids = []
-        if index == "id":
-            molecule_ids, bad_ids = _str_to_indices_with_errors(molecule_ids)
+        query, errors = format_query(id=id, molecule_hash=molecule_hash, molecular_formula=molecular_formula)
 
         # Don't include the hash or the molecular_formula in the returned result
         # Make the query
-        query = {index + '__in': molecule_ids}
         data = Molecule.objects(**query).exclude("molecule_hash", "molecular_formula").as_pymongo()
 
         if data is None:
@@ -356,8 +344,7 @@ class MongoengineSocket:
 
         ret["meta"]["success"] = True
         ret["meta"]["n_found"] = len(data)
-        if len(bad_ids):
-            ret["meta"]["errors"].append(("Bad Ids", bad_ids))
+        ret["meta"]["errors"].extend(errors)
 
         # Translate ID's back
         for r in data:
@@ -368,7 +355,7 @@ class MongoengineSocket:
 
         return ret
 
-    def del_molecules(self, values, index="id"):
+    def del_molecules(self, id=None, molecule_hash=None):
         """
         Removes a molecule from the database from its hash.
 
@@ -383,13 +370,7 @@ class MongoengineSocket:
             Number of deleted molecules.
         """
 
-        index = translate_molecule_index(index)
-
-        if isinstance(values, str):
-            values = [values]
-
-        query = {index + '__in': values}
-
+        query, errors = format_query(id=id, molecule_hash=molecule_hash)
         return Molecule.objects(**query).delete()
 
     ### Mongo options functions

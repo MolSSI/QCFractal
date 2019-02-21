@@ -41,7 +41,7 @@ def test_task_molecule_no_orientation(data, fractal_compute_server):
     assert ret[0]["molecule"] == mol_id
 
     # Make sure no other molecule was added
-    ret = client.get_molecules(["H2"], index="molecular_formula")
+    ret = client.get_molecules(molecular_formula=["H2"])
     assert len(ret) == 1
     assert ret[0].id == mol_id
 

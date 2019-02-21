@@ -20,11 +20,11 @@ def test_client_molecule(test_server):
     ret = client.add_molecules([water])
 
     # Test get
-    get_mol = client.get_molecules(ret[0], index="id")
+    get_mol = client.get_molecules(id=ret[0])
     assert water.compare(get_mol[0])
 
     # Test molecular_formula get
-    get_mol = client.get_molecules(["H4O2"], index="molecular_formula")
+    get_mol = client.get_molecules(molecular_formula="H4O2")
     assert water.compare(get_mol[0])
 
 

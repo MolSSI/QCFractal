@@ -164,5 +164,5 @@ class OptimizationORM:
             The optimized molecule
         """
 
-        ret = self._client.get_molecules([self._final_molecule_id], index="id")
+        ret = self._client.get_molecules(id=[self._final_molecule_id])
         return ret[0]
