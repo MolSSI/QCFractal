@@ -16,7 +16,7 @@ except ImportError:
 
 import logging
 from datetime import datetime as dt
-from typing import Container, Dict, List, Sequence, Union
+from typing import Dict, List, Sequence, Union
 
 import bcrypt
 import bson.errors
@@ -27,7 +27,7 @@ from mongoengine.connection import disconnect, get_db
 
 from .. import interface
 from .me_models import Collection, Keywords, Molecule, Procedure, QueueManager, Result, ServiceQueue, TaskQueue, User
-from .storage_utils import add_metadata_template, get_metadata_template, translate_molecule_index
+from .storage_utils import add_metadata_template, get_metadata_template
 
 
 def _str_to_indices(ids):

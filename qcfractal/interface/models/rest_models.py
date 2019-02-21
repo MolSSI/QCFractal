@@ -1,7 +1,6 @@
 """
 Models for the REST interface
 """
-from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseConfig, BaseModel, validator
