@@ -26,10 +26,9 @@ MAX_NODES = 10
 NODE_EXCLUSIVITY = True
 
 # Generic Cluster Settings
-# Additional commands to send to the command line (often used as "#SBATCH ..." headers.)
+# Additional commands to send to the command line (often used as "#SBATCH ..." or '#PBS' headers.)
 # This is a per-node type setting, not task.
 # Don't set memory or cpu or wall clock through this
-# Each element of this list is a new command-line flag
 SCHEDULER_OPTS = []
 # Additional commands to start each task with. E.g. Activating a conda environment
 TASK_STARTUP_COMMANDS = ''
@@ -85,7 +84,7 @@ cluster = SLURMCluster(
 # Setup up adaption
 # Workers are distributed down to the cores through the sub-divided processes
 # Optimization may be needed
-cluster.adapt(minimum=0, maximum=MAX_TASKS_PER_NODE)
+cluster.adapt(minimum=0, maximum=MAX_NODES)
 
 dask_client = Client(cluster)
 

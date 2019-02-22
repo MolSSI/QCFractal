@@ -8,7 +8,10 @@ import pytest
 
 from qcfractal import testing
 
-#def _run_tests()
+from tempfile import TemporaryDirectory
+
+
+# def _run_tests()
 _options = {"coverage": True, "dump_stdout": True}
 _pwd = os.path.dirname(os.path.abspath(__file__))
 
@@ -70,3 +73,48 @@ def test_manager_fireworks_config_boot(active_server):
         "qcfractal-manager", active_server.test_uri_cli, "--rapidfire", "--config-file=" + config_path, "fireworks"
     ]
     assert testing.run_process(args, **_options)
+
+
+@pytest.mark.parametrize("adapter", [
+    "dask",
+    "parsl",
+    pytest.param("fireworks", marks=pytest.mark.xfail),
+    pytest.param("executor", marks=pytest.mark.xfail)])
+@pytest.mark.parametrize("scheduler", [
+    "slurm",
+    "pbs",
+    "torque",
+    "lsf",
+    pytest.param("garbage", marks=pytest.mark.xfail)
+])
+def test_cli_template_generator(adapter, scheduler):
+
+    def ensure_test_at_bottom_and_strip(text: str):
+        split_lines = text.splitlines()
+        n_lines = len(split_lines)
+        for counter, line in enumerate(split_lines[::-1]):
+            if line.isspace():
+                continue
+            if ".test()" in line:
+                return "\n".join(split_lines[:n_lines - counter])
+            raise AssertionError("test() function not at bottom of file")
+
+    def parse_template(path):
+        with open(path, 'r') as throwaway:
+            _ = ensure_test_at_bottom_and_strip(throwaway.read())
+
+    with TemporaryDirectory() as td:
+        throwaway_path = os.path.join(td, "throwaway.py")
+        args = ["qcfractal-template", adapter, scheduler, "--test", "-o", throwaway_path]
+        try:
+            testing.run_process(args, **_options)
+        except ValueError:
+            return  # Certain not implemented items
+        # Ensure bottom of file is valid
+        # Known bad combos
+        if adapter == "parsl" and scheduler == "lsf":
+            pytest.xfail("Parsl has no LSF implementation")
+            with pytest.raises(FileNotFoundError):
+                parse_template(throwaway_path)
+        else:
+            parse_template(throwaway_path)
