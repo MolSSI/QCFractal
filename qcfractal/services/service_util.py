@@ -24,6 +24,7 @@ class BaseService(BaseModel, abc.ABC):
     program: str
     procedure: str
     output: Any
+    task_id: str = None
 
     @classmethod
     @abc.abstractmethod

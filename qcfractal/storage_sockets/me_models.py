@@ -171,6 +171,9 @@ class Result(BaseResult):
     method = db.StringField(required=True)  # example "uff"
     basis = db.StringField()
     molecule = db.LazyReferenceField(Molecule, required=True)
+
+    # This is a special case where Keywords are denormalized intentionally as they are part of the
+    # lookup for a single result and querying a result will not often request the keywords (LazyReference)
     keywords = db.LazyReferenceField(Keywords)
 
     # output related
@@ -203,6 +206,9 @@ class Procedure(BaseResult):
     procedure = db.StringField(required=True)
     program = db.StringField(required=True)  # example: 'Geometric'
     hash_index = db.StringField(required=True)
+
+    # Unlike Results Keywords are not denormalized here as a Procedure query will always want the
+    # keywords and the keywords are not part of the index.
     keywords = db.DynamicField()
 
     meta = {

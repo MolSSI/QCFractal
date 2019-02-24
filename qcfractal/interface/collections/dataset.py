@@ -1,7 +1,7 @@
 """
 QCPortal Database ODM
 """
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -18,6 +18,16 @@ class MoleculeRecord(BaseModel):
     molecule_id: str
     comment: Optional[str] = None
     local_results: Dict[str, Any] = {}
+
+
+class ContributedValues(BaseModel):
+    name: str
+    # citation: Citation
+    theory_level: Union[str, Dict[str, str]]
+    theory_level_details: Union[str, Dict[str, str]]
+    comments: Optional[str] = None
+    values: Dict[str, Any]
+    units: str
 
 
 class Dataset(Collection):
