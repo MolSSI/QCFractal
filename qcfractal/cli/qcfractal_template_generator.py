@@ -43,12 +43,18 @@ MAX_NODES = 1
 NODE_EXCLUSIVITY = True
 
 # Generic Cluster Settings
+# ========================
 # Additional commands to send to the command line (often used as "#SBATCH ..." or '#PBS' headers.)
-# This is a per-node type setting, not task.
-# Don't set memory or cpu or wall clock through this
+# This is a per-node type setting, not task. Don't set memory or cpu or wall clock through this
+# -- Note ---
+# Different Managers interpret this slightly differently, but that should not be your concern, just treat
+# each item as though it were a CLI entry and the manager block will interpret
+# ------------ 
 SCHEDULER_OPTS = []
+
 # Additional commands to start each task with. E.g. Activating a conda environment
-TASK_STARTUP_COMMANDS = ''
+# Put each command as its own item in strings
+TASK_STARTUP_COMMANDS = []
 
 {CLUSTER_QUEUE_FLAGS}
 
@@ -195,7 +201,7 @@ def dask_templates():
 
     slurm_builder = dedent("""\
         cluster = SLURMCluster(
-            name='QCFractal Dask Compute Executor',
+            name='QCFractal_Dask_Compute_Executor',
             cores=CORES_PER_NODE,
             memory=str(MEMORY_PER_NODE) + "GB",
             queue=SLURM_PARTITION,
@@ -217,7 +223,7 @@ def dask_templates():
 
     torque_builder = dedent("""\
         cluster = PBSCluster(
-            name='QCFractal Dask Compute Executor',
+            name='QCFractal_Dask_Compute_Executor',
             cores=CORES_PER_NODE,
             memory=str(MEMORY_PER_NODE) + "GB",
             queue=TORQUE_QUEUE,
@@ -240,7 +246,7 @@ def dask_templates():
 
     lsf_builder = dedent("""\
         cluster = LSFCluster(
-            name='QCFractal Dask Compute Executor',
+            name='QCFractal_Dask_Compute_Executor',
             cores=CORES_PER_NODE,
             memory=str(MEMORY_PER_NODE) + "GB",
             queue=LSF_QUEUE,
@@ -300,17 +306,19 @@ def parsl_templates():
         parsl_config = Config(
             executors=[
                 HighThroughputExecutor(
-                    label='QCFractal Compute Executor',
+                    label='QCFractal_Compute_Executor',
                     provider={PROVIDER}(
                         {PROVIDER_OPTS}
-                        scheduler_options=" ".join(SCHEDULER_OPTS),
-                        worker_init=TASK_STARTUP_COMMANDS,
+                        scheduler_options="{SCHEDULER_HEADER} " + "\n{SCHEDULER_HEADER} ".join(SCHEDULER_OPTS) + "\n"
+                        worker_init='\n'.join(TASK_STARTUP_COMMANDS),
                         walltime="00:10:00",
                         init_blocks=1,
                         max_blocks=MAX_NODES,
                         nodes_per_block=1,        # Keep one node per block, its just easier this way
                     ),
-                    workers_per_node=MAX_TASKS_PER_NODE,
+                    # workers_per_node=MAX_TASKS_PER_NODE,
+                    cores_per_worker=CORES_PER_NODE // MAX_TASKS_PER_NODE,
+                    max_workers = MAX_NODES*MAX_TASKS_PER_NODE
                 )
     
             ],
@@ -333,7 +341,8 @@ def parsl_templates():
                          exclusive=NODE_EXCLUSIVITY,"""),
                                 whitespace,
                                 # Don't indent first line, use whatever logic
-                                predicate=lambda feed: "=" in feed)}
+                                predicate=lambda feed: "=" in feed),
+                     "SCHEDULER_HEADER": "#SBATCH"}
 
     # PBS/Torque
 
@@ -346,7 +355,8 @@ def parsl_templates():
                           queue=TORQUE_QUEUE,"""),
                                  whitespace,
                                  # Don't indent first line, use whatever logic
-                                 predicate=lambda feed: "account" not in feed)}
+                                 predicate=lambda feed: "account" not in feed),
+                      "SCHEDULER_HEADER": "#PBS"}
     # Final
 
     parsl_dict = {
