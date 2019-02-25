@@ -26,6 +26,11 @@ For additional information about the {MANAGER_URL_TITLE}, please visit this site
 # Location of the Fractal Server you are connecting to
 FRACTAL_ADDRESS = "localhost:7777"
 
+# Queue Manager Settings
+# Set whether or not we are just testing the Queue Manger (no Fractal Client needed)
+TEST_RUN = {TEST_RUN}
+
+
 # How many cores per node you want your jobs to have access to
 CORES_PER_NODE = 1
 # How much memory per node (in GB) you want your jobs to have access to
@@ -74,12 +79,17 @@ if MEMORY_PER_NODE <= 0:
 {MANAGER_CLIENT_BUILDER}
 
 # Build a interface to the server
-# If testing, comment this line out and set the first argument to QueueManager to None
-# Otherwise, uncomment this line and set the first arg to this object
-{FRACTAL_TEST_COMMENT}fractal_client = portal.FractalClient(FRACTAL_ADDRESS, verify=False)
+# If testing, there is no need to point to a Fractal Client and None is passed in
+# In production, the client is needed
+if TEST_RUN:
+    fractal_client = None
+else:
+    fractal_client = portal.FractalClient(FRACTAL_ADDRESS, verify=False)
+    
+
 
 # Build a manager
-manager = qcfractal.queue.QueueManager({FRACTAL_TEST_NONE}, {MANAGER_CLIENT}, update_frequency=0.5,
+manager = qcfractal.queue.QueueManager(fractal_client, {MANAGER_CLIENT}, update_frequency=0.5,
                                        cores_per_task=CORES_PER_NODE // MAX_TASKS_PER_NODE,
                                        memory_per_task=MEMORY_PER_NODE // MAX_TASKS_PER_NODE)
 
@@ -88,7 +98,10 @@ from qcfractal.cli.cli_utils import install_signal_handlers
 install_signal_handlers(manager.loop, manager.stop)
 
 # Start or test the loop. Swap with the .test() and .start() method respectively
-manager.{TEST_OR_START}()
+if TEST_RUN:
+    manager.test()
+else:
+    manager.start()
 '''
 
 torque_helper = {
@@ -137,14 +150,10 @@ scheduler_collections = {
 
 test_helper = {
     True: {  # Tests are set, comment stuff out
-        "FRACTAL_TEST_COMMENT": "#",
-        "FRACTAL_TEST_NONE": "None",
-        "TEST_OR_START": "test"
+        "TEST_RUN": "True",
     },
     False: {  # Production, connect to Fractal
-        "FRACTAL_TEST_COMMENT": "",
-        "FRACTAL_TEST_NONE": "fractal_client",
-        "TEST_OR_START": "start"
+        "TEST_RUN": "False",
     }
 }
 

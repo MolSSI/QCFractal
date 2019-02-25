@@ -89,19 +89,23 @@ def test_manager_fireworks_config_boot(active_server):
 ])
 def test_cli_template_generator(adapter, scheduler):
 
-    def ensure_test_at_bottom_and_strip(text: str):
+    def ensure_test_is_set_and_exit_head(text: str):
+        match_string = "TEST_RUN = True"
         split_lines = text.splitlines()
-        n_lines = len(split_lines)
-        for counter, line in enumerate(split_lines[::-1]):
-            if line.isspace():
-                continue
-            if ".test()" in line:
-                return "\n".join(split_lines[:n_lines - counter])
-            raise AssertionError("test() function not at bottom of file")
+        for counter, line in enumerate(split_lines):
+            if match_string in line:
+                # This exits early, before imports and will ensure at least basic syntax is correct
+                base = "\n".join(split_lines[:counter+1])
+                base += "\nimport sys\nsys.exit()\n"
+                base += "\n".join(split_lines[counter:])
+                return base
+        # Should only reach this if no line found
+        raise AssertionError('String "{}" not found in file'.format(match_string))
 
     def parse_template(path):
         with open(path, 'r') as throwaway:
-            _ = ensure_test_at_bottom_and_strip(throwaway.read())
+            new_throw = ensure_test_is_set_and_exit_head(throwaway.read())
+        return new_throw
 
     with TemporaryDirectory() as td:
         throwaway_path = os.path.join(td, "throwaway.py")
@@ -115,6 +119,11 @@ def test_cli_template_generator(adapter, scheduler):
         if adapter == "parsl" and scheduler == "lsf":
             pytest.xfail("Parsl has no LSF implementation")
             with pytest.raises(FileNotFoundError):
-                parse_template(throwaway_path)
+                new_throw = parse_template(throwaway_path)
         else:
-            parse_template(throwaway_path)
+            new_throw = parse_template(throwaway_path)
+        new_throw_path = os.path.join(td, "new_throw.py")
+        with open(new_throw_path, 'w') as f:
+            f.write(new_throw)
+        new_args = ["python", new_throw_path]
+        assert testing.run_process(new_args, **_options)
