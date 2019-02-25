@@ -213,7 +213,10 @@ def dask_templates():
             # Not sure of the validity of this, but it seems to be the only terminal-invoking way
             # so python envs may be setup from there
             # Commands to execute before the Dask
-            env_extra=TASK_STARTUP_COMMANDS
+            env_extra=TASK_STARTUP_COMMANDS,
+            # Uncomment and set this if your cluster uses non-standard ethernet port names 
+            # for communication between the head node and your compute nodes
+            # interface="eth0"
         )
         """)
 
@@ -236,7 +239,10 @@ def dask_templates():
             # Not sure of the validity of this, but it seems to be the only terminal-invoking way
             # so python envs may be setup from there
             # Commands to execute before the Dask
-            env_extra=TASK_STARTUP_COMMANDS
+            env_extra=TASK_STARTUP_COMMANDS,
+            # Uncomment and set this if your cluster uses non-standard ethernet port names 
+            # for communication between the head node and your compute nodes
+            # interface="eth0"
         )
         """)
 
@@ -259,7 +265,10 @@ def dask_templates():
             # Not sure of the validity of this, but it seems to be the only terminal-invoking way
             # so python envs may be setup from there
             # Commands to execute before the Dask
-            env_extra=TASK_STARTUP_COMMANDS
+            env_extra=TASK_STARTUP_COMMANDS,
+            # Uncomment and set this if your cluster uses non-standard ethernet port names 
+            # for communication between the head node and your compute nodes
+            # interface="eth0"
         )
         """)
 
