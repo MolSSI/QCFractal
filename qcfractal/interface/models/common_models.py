@@ -7,12 +7,12 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 from pydantic import BaseModel, validator
-from qcelemental.models import Molecule, Optimization, OptimizationInput, Provenance, Result, ResultInput
+from qcelemental.models import Molecule, ObjectId, Optimization, OptimizationInput, Provenance, Result, ResultInput
 
 __all__ = ["QCSpecification", "OptimizationSpecification", "json_encoders", "hash_dictionary", "KeywordSet"]
 
 # Add in QCElemental models
-__all__.extend(["Molecule", "Provenance", "Result", "ResultInput", "OptimizationInput"])
+__all__.extend(["Molecule", "Provenance", "Result", "ResultInput", "OptimizationInput", ObjectId])
 
 json_encoders = {np.ndarray: lambda v: v.flatten().tolist()}
 
@@ -67,7 +67,7 @@ class QCSpecification(BaseModel):
     driver: str
     method: str
     basis: Optional[str] = None
-    keywords: Optional[str] = None
+    keywords: Optional[ObjectId] = None
     program: str
 
     class Config:
@@ -91,7 +91,7 @@ class KeywordSet(BaseModel):
     """
     An options object for the QCArchive ecosystem
     """
-    id: Optional[str] = None
+    id: Optional[ObjectId] = None
     hash_index: str
     values: Dict[str, Any]
     lowercase: bool = True

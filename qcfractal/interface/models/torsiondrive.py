@@ -4,11 +4,11 @@ A model for TorsionDrive
 
 import copy
 import json
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel
 
-from .common_models import (Molecule, OptimizationSpecification, Provenance, QCSpecification, hash_dictionary,
+from .common_models import (Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification, hash_dictionary,
                             json_encoders)
 
 __all__ = ["TorsionDriveInput", "TorsionDrive"]
@@ -59,7 +59,7 @@ class TorsionDrive(TorsionDriveInput):
     cache: Dict[str, Any] = {}
 
     # Identification
-    id: str = None
+    id: Optional[ObjectId] = None
     success: bool = False
     status: str = "INCOMPLETE"
     hash_index: str = None
@@ -67,9 +67,9 @@ class TorsionDrive(TorsionDriveInput):
     provenance: Provenance
 
     # Data pointers
-    initial_molecule: List[str]
+    initial_molecule: List[ObjectId]
     final_energy_dict: Dict[str, float]
-    optimization_history: Dict[str, List[str]]
+    optimization_history: Dict[str, List[ObjectId]]
     minimum_positions: Dict[str, int]
 
     class Config:

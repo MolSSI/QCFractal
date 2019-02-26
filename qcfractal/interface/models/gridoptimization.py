@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Tuple, Union
 
 from pydantic import BaseModel, validator
 
-from .common_models import (Molecule, OptimizationSpecification, Provenance, QCSpecification, hash_dictionary,
+from .common_models import (Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification, hash_dictionary,
                             json_encoders)
 
 __all__ = ["GridOptimizationInput", "GridOptimization"]
@@ -78,7 +78,7 @@ class GridOptimizationInput(BaseModel):
 
     program: str = "qcfractal"
     procedure: str = "gridoptimization"
-    initial_molecule: Union[str, Molecule]
+    initial_molecule: Union[ObjectId, Molecule]
     keywords: GOKeywords
     optimization_spec: OptimizationSpecification
     qc_spec: QCSpecification
@@ -154,10 +154,10 @@ class GridOptimization(GridOptimizationInput):
     provenance: Provenance
 
     # Data pointers
-    initial_molecule: str
-    starting_molecule: str
+    initial_molecule: ObjectId
+    starting_molecule: ObjectId
     final_energy_dict: Dict[str, float]
-    grid_optimizations: Dict[str, str]
+    grid_optimizations: Dict[str, ObjectId]
     starting_grid: tuple
 
     class Config:
