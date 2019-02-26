@@ -5,7 +5,7 @@ Utility functions for on-node procedures.
 import hashlib
 import json
 
-from ..interface.models.common_models import ResultInput
+from qcelemental.models import ResultInput
 
 
 def format_result_indices(data, program=None):

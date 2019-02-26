@@ -6,7 +6,8 @@ import json
 from typing import Union
 
 from .procedures_util import hash_procedure_keys, parse_hooks, parse_single_tasks, unpack_single_task_spec
-from ..interface.models.common_models import OptimizationInput
+from qcelemental.models import OptimizationInput
+from ..interface.models import OptimizationDocument
 
 
 class SingleResultTasks:
@@ -132,6 +133,7 @@ class SingleResultTasks:
 
         # Add results to database
         results = parse_single_tasks(self.storage, rdata)
+        print(list(results.values())[0].keys())
 
         ret = self.storage.add_results(list(results.values()), update_existing=True)
 
@@ -207,49 +209,41 @@ class OptimizationTasks(SingleResultTasks):
 
         # Unpack options
         if data.meta["keywords"] is None:
-            keyword_set = {}
-            keyword_id = None
+            keywords = {}
         else:
-            keyword_set = self.storage.get_add_keywords_mixed([data.meta["keywords"]])["data"][0]
-            keyword_id = keyword_set["id"]
-            keyword_set = keyword_set["values"]
+            keywords = data.meta["keywords"]
 
-        keyword_set["program"] = data.meta["qc_spec"]["program"]
-        template = json.dumps({"keywords": keyword_set, "extras": {"_qcfractal_tags": data.meta}})
+        keywords["program"] = data.meta["qc_spec"]["program"]
+        template = json.dumps({"keywords": keywords})
 
         tag = data.meta.pop("tag", None)
 
         new_tasks = []
         results_ids = []
         existing_ids = []
-        for inp in inputs:
-            if inp is None:
+        for single_input in inputs:
+            if single_input is None:
                 results_ids.append(None)
                 continue
 
-            inp = json.loads(inp.json(exclude={"id", "provenance"}))
+            single_input = single_input.json_dict(exclude={"id", "provenance"})
 
             # Coerce qc_template information
             packet = json.loads(template)
-            packet["initial_molecule"] = inp.pop("molecule")
-            packet["input_specification"] = inp
-
-            single_keys = data.meta["qc_spec"].copy()
-            single_keys["molecule"] = packet["initial_molecule"]["id"]
-
-            # Add to args document to carry through to self.storage
-            packet["hash_index"] = hash_procedure_keys({
-                "type": "optimization",
-                "program": data.meta["program"],
-                "keywords": keyword_id,
-                "single_key": single_keys,
-            })
+            packet["initial_molecule"] = single_input.pop("molecule")
+            packet["input_specification"] = single_input
             inp = OptimizationInput(**packet)
 
-            packet = inp.json_dict()
-            packet["program"] = data.meta["program"]
-            packet["procedure"] = "optimization"
-            ret = self.storage.add_procedures([packet])
+            doc = OptimizationDocument(
+                **inp.dict(exclude={"input_specification", "initial_molecule", "schema_name"}),
+                qc_spec=data.meta["qc_spec"],
+                initial_molecule=packet["initial_molecule"]["id"],
+                program=data.meta["program"],
+                success=False)
+
+            inp.__values__["hash_index"] = doc.hash_index
+
+            ret = self.storage.add_procedures([doc.json_dict()])
             base_id = ret["data"][0]
             results_ids.append(base_id)
 
@@ -305,8 +299,8 @@ class OptimizationTasks(SingleResultTasks):
             procedure["trajectory"] = ret["data"]
 
             # Coerce tags
-            procedure.update(procedure["extras"]["_qcfractal_tags"])
-            del procedure["extras"]["_qcfractal_tags"]
+            # procedure.update(procedure["extras"]["_qcfractal_tags"])
+            # del procedure["extras"]["_qcfractal_tags"]
             del procedure["input_specification"]
             # print("Adding optimization result")
             # print(json.dumps(v, indent=2))

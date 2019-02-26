@@ -372,6 +372,7 @@ class FractalClient(object):
         if return_objects:
             ret = []
             for packet in r.data:
+                print(packet)
                 tmp = build_orm(packet, client=self)
                 ret.append(tmp)
             return ret
