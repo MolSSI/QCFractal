@@ -1018,7 +1018,7 @@ class MongoengineSocket:
                        status: str='COMPLETE',
                        projection=None,
                        limit: int=None,
-                       skip: int=None,
+                       skip: int=0,
                        return_json=True,
                        with_ids=True):
         """
@@ -1038,7 +1038,7 @@ class MongoengineSocket:
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
-        skip : int, default is None TODO
+        skip : int, default is 0
             skip the first 'skip' resaults. Used to paginate
         return_json : bool, deafult is True
             Return the results as a list of json inseated of objects
@@ -1059,11 +1059,11 @@ class MongoengineSocket:
         data = []
         try:
             if projection:
-                data = Procedure.objects(**query).only(*projection).limit(q_limit)
+                data = Procedure.objects(**query).only(*projection).limit(q_limit).skip(skip)
             else:
-                data = Procedure.objects(**query).limit(q_limit)
+                data = Procedure.objects(**query).limit(q_limit).skip(skip)
 
-            meta["n_found"] = data.count()
+            meta["n_found"] = data.count()  # all data count
             meta["success"] = True
         except Exception as err:
             meta['error_description'] = str(err)
@@ -1077,6 +1077,8 @@ class MongoengineSocket:
                              id: List[str]=None,
                              hash_index: List[str]=None,
                              projection=None,
+                             limit: int=None,
+                             skip: int=0,
                              return_json=True,
                              with_ids=True):
         """
@@ -1089,6 +1091,13 @@ class MongoengineSocket:
         hash_index: List or str
         projection : list/set/tuple of keys, default is None
             The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        skip : int, default is 0
+            skip the first 'skip' resaults. Used to paginate
         return_json : bool, default is True
             Return the results as a list of json instead of objects
         with_ids: bool, default is True
@@ -1102,15 +1111,15 @@ class MongoengineSocket:
 
         meta = get_metadata_template()
         query, error = format_query(id=id, hash_index=hash_index)
-
+        q_limit = self.get_limit(limit)
         data = []
         # try:
         if projection:
-            data = Procedure.objects(**query).only(*projection).limit(self._max_limit)
+            data = Procedure.objects(**query).only(*projection).limit(q_limit).skip(skip)
         else:
-            data = Procedure.objects(**query).limit(self._max_limit)
+            data = Procedure.objects(**query).limit(q_limit).skip(skip)
 
-        meta["n_found"] = data.count()
+        meta["n_found"] = data.count() # all data count
         meta["success"] = True
         # except Exception as err:
         #     meta['error_description'] = str(err)
@@ -1124,6 +1133,7 @@ class MongoengineSocket:
                                   task_id: Union[List[str], str],
                                   projection=None,
                                   limit: int=None,
+                                  skip: int=0,
                                   return_json=True):
         """
 
@@ -1138,6 +1148,8 @@ class MongoengineSocket:
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
+        skip : int, default is 0
+            skip the first 'skip' resaults. Used to paginate
         return_json : bool, deafult is True
             Return the results as a list of json instead of objects
 
@@ -1155,11 +1167,11 @@ class MongoengineSocket:
         data = []
         try:
             if projection:
-                data = Procedure.objects(**query).only(*projection).limit(q_limit)
+                data = Procedure.objects(**query).only(*projection).limit(q_limit).skip(skip)
             else:
-                data = Procedure.objects(**query).limit(q_limit)
+                data = Procedure.objects(**query).limit(q_limit).skip(skip)
 
-            meta["n_found"] = data.count()
+            meta["n_found"] = data.count()  # all data count
             meta["success"] = True
         except Exception as err:
             meta['error_description'] = str(err)
@@ -1255,6 +1267,7 @@ class MongoengineSocket:
                      status: str=None,
                      projection=None,
                      limit: int=None,
+                     skip: int=0,
                      return_json=True):
         """
 
@@ -1269,6 +1282,8 @@ class MongoengineSocket:
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
+        skip : int, default is 0
+            skip the first 'skip' resaults. Used to paginate
         return_json : bool, deafult is True
             Return the results as a list of json instead of objects
 
@@ -1286,9 +1301,9 @@ class MongoengineSocket:
         data = []
         # try:
         if projection:
-            services = ServiceQueue.objects(**query).only(*projection).limit(q_limit)
+            services = ServiceQueue.objects(**query).only(*projection).limit(q_limit).skip(skip)
         else:
-            services = ServiceQueue.objects(**query).limit(q_limit)
+            services = ServiceQueue.objects(**query).limit(q_limit).skip(skip)
 
         meta["n_found"] = services.count()
         meta["success"] = True
@@ -1423,7 +1438,7 @@ class MongoengineSocket:
         return ret
 
     def queue_get_next(self, manager, limit=100, tag=None, as_json=True):
-        """TODO: needs to be done a transcation"""
+        """TODO: needs to be done in a transcation"""
 
         # Figure out query, tagless has no requirements
         query = {"status": "WAITING"}
@@ -1456,21 +1471,21 @@ class MongoengineSocket:
     #     return self._get_generic(query, "task_queue", allow_generic=True, projection=projection)
 
     def get_queue(self,
-                  id=None,
+                  ids=None,
                   hash_index=None,
                   program=None,
                   status: str=None,
                   projection=None,
                   limit: int=None,
-                  skip: int=None,
+                  skip: int=0,
                   return_json=True,
                   with_ids=True):
         """
         TODO: check what query keys are needs
         Parameters
         ----------
-        id : list or str
-            Id of the task
+        id : list
+            Ids of the tasks
         Hash_index
         status : bool, default is None (find all)
             The status of the task: 'COMPLETE', 'RUNNING', 'WAITING', or 'ERROR'
@@ -1481,7 +1496,7 @@ class MongoengineSocket:
             if 'limit' is greater than the global setting self._max_limit,
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
-        skip : int, default is None TODO
+        skip : int, default is None 0
             skip the first 'skip' resaults. Used to paginate
         return_json : bool, deafult is True
             Return the results as a list of json inseated of objects
@@ -1495,16 +1510,16 @@ class MongoengineSocket:
         """
 
         meta = get_metadata_template()
-        query, error = format_query(program=program, id=id, hash_index=hash_index, status=status)
+        query, error = format_query(program=program, id__in=ids, hash_index=hash_index, status=status)
 
         q_limit = self.get_limit(limit)
 
         data = []
         try:
             if projection:
-                data = TaskQueue.objects(**query).only(*projection).limit(q_limit)
+                data = TaskQueue.objects(**query).only(*projection).limit(q_limit).skip(skip)
             else:
-                data = TaskQueue.objects(**query).limit(q_limit)
+                data = TaskQueue.objects(**query).limit(q_limit).skip(skip)
 
             meta["n_found"] = data.count()
             meta["success"] = True
@@ -1517,7 +1532,11 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-    def queue_get_by_id(self, ids: List[str], limit: int=100, as_json: bool=True):
+    def queue_get_by_id(self,
+                        ids: List[str],
+                        limit: int=None,
+                        skip: int=0,
+                        as_json: bool=True):
         """Get tasks by their IDs
 
         Parameters
@@ -1535,7 +1554,7 @@ class MongoengineSocket:
         list of the found tasks
         """
 
-        found = TaskQueue.objects(id__in=ids).limit(self.get_limit(limit))
+        found = TaskQueue.objects(id__in=ids).limit(self.get_limit(limit)).skip(skip)
 
         if as_json:
             found = [task.to_json_obj() for task in found]
