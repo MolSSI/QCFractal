@@ -31,7 +31,6 @@ def _check_td():
 class TorsionDriveService(BaseService):
 
     # Index info
-    status: str = "READY"
     service: str = "torsiondrive"
     program: str = "torsiondrive"
     procedure: str = "torsiondrive"
@@ -103,7 +102,6 @@ class TorsionDriveService(BaseService):
             "meta": {
                 "procedure": "optimization",
                 "keywords": {
-                    "program": output.optimization_spec.program,
                     "values": output.optimization_spec.keywords
                 },
                 "program": output.optimization_spec.program,
@@ -124,7 +122,6 @@ class TorsionDriveService(BaseService):
         self.status = "RUNNING"
 
         # Check if tasks are done
-        print("Done", self.task_manager.done(self.storage_socket))
         if self.task_manager.done(self.storage_socket) is False:
             return False
 
@@ -145,7 +142,7 @@ class TorsionDriveService(BaseService):
 
                 # Lookup molecules
                 mol_keys = self.storage_socket.get_molecules(
-                    [ret["initial_molecule"], ret["final_molecule"]], index="id")["data"]
+                    id=[ret["initial_molecule"], ret["final_molecule"]])["data"]
 
                 task_results[key].append((mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1]))
 

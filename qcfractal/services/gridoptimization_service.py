@@ -18,7 +18,6 @@ __all__ = ["GridOptimizationService"]
 class GridOptimizationService(BaseService):
 
     # Index info
-    status: str = "READY"
     service: str = "gridoptimization"
     program: str = "qcfractal"
     procedure: str = "gridoptimization"
@@ -83,7 +82,6 @@ class GridOptimizationService(BaseService):
             "meta": {
                 "procedure": "optimization",
                 "keywords": {
-                    "program": output.optimization_spec.program,
                     "values": output.optimization_spec.keywords
                 },
                 "program": output.optimization_spec.program,
@@ -147,7 +145,7 @@ class GridOptimizationService(BaseService):
 
             complete_tasks = self.task_manager.get_tasks(self.storage_socket)
 
-            self.starting_molecule = Molecule(**self.storage_socket.get_molecules(
+            self.starting_molecule = Molecule(**self.storage_socket.get_molecules(id=
                 [complete_tasks["initial_opt"]["final_molecule"]])["data"][0])
             self.starting_grid = self._calculate_starting_grid(self.output.keywords.scans, self.starting_molecule)
 

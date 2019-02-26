@@ -23,7 +23,7 @@ def test_compute_queue_stack(fractal_compute_server):
 
     hydrogen_mol_id, helium_mol_id = client.add_molecules([hydrogen, helium])
 
-    kw = portal.models.KeywordSet(**{"program": "psi4", "values": {"e_convergence": 1.e-8}})
+    kw = portal.models.KeywordSet(**{"values": {"e_convergence": 1.e-8}})
     kw_id = client.add_keywords([kw])[0]
 
     # Add compute

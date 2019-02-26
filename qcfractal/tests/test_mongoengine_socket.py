@@ -7,9 +7,8 @@
 
 import qcfractal.interface as portal
 
-from qcfractal.storage_sockets.models import Molecule, Result, Keywords, \
-                    Procedure, OptimizationProcedure, TorsiondriveProcedure
-from qcfractal.storage_sockets.models import TaskQueue
+from qcfractal.storage_sockets.me_models import Molecule, Result, Keywords, \
+                    Procedure, OptimizationProcedure, TorsiondriveProcedure, TaskQueue
 from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 import pytest
 from bson import ObjectId
@@ -24,8 +23,18 @@ def molecules_H4O2(storage_socket):
 
     yield list(ret['data'])
 
-    storage_socket.del_molecules(water.get_hash(), index="hash")
-    storage_socket.del_molecules(water2.get_hash(), index="hash")
+    r = storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
+    assert r == 2
+
+@pytest.fixture
+def kw_fixtures(storage_socket):
+    kw1 = portal.models.KeywordSet(**{"values": {"something": "kwfixture"}})
+    ret = storage_socket.add_keywords([kw1.dict()])
+
+    yield list(ret['data'])
+
+    r = storage_socket.del_keywords(ret['data'][0])
+    assert r == 1
 
 
 def test_molecule(storage_socket):
@@ -72,24 +81,20 @@ def test_molecule(storage_socket):
     assert len(one_mol) == 1
 
     # Clean up
-    storage_socket.del_molecules(water.get_hash(), index="hash")
-    storage_socket.del_molecules(water2.get_hash(), index="hash")
+    storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
 
 
-def test_results(storage_socket, molecules_H4O2):
+def test_results(storage_socket, molecules_H4O2, kw_fixtures):
     """
         Handling results throught the ME classes
     """
 
     assert Result.objects().count() == 0
-    assert Keywords.objects().count() == 0
 
-    molecules = molecules_H4O2
-
-    assert len(molecules) == 2
+    assert len(molecules_H4O2) == 2
 
     page1 = {
-        "molecule": ObjectId(molecules[0]),
+        "molecule": molecules_H4O2[0],
         "method": "M1",
         "basis": "B1",
         "keywords": None,
@@ -99,10 +104,10 @@ def test_results(storage_socket, molecules_H4O2):
     }
 
     page2 = {
-        "molecule": ObjectId(molecules[1]),
-        "method": "M1",
+        "molecule": ObjectId(molecules_H4O2[1]),
+        "method": "M2",
         "basis": "B1",
-        "keywords": None,
+        "keywords": kw_fixtures[0],
         "program": "P1",
         "driver": "energy",
         "other_data": 10,
@@ -110,7 +115,12 @@ def test_results(storage_socket, molecules_H4O2):
 
     Result(**page1).save()
     ret = Result.objects(method='M1').first()
-    assert ret.molecule.molecular_formula == 'H4O2'
+    assert ret.molecule.fetch().molecular_formula == 'H4O2'
+    assert ret.keywords is None
+
+    Result(**page2).save()
+    ret = Result.objects(method='M2').first()
+    assert ret.molecule.fetch().molecular_formula == 'H4O2'
 
     # clean up
     Result.objects().delete()
@@ -138,6 +148,7 @@ def test_procedure(storage_socket):
             "method": "M1",
             "driver": "energy"
         },
+        "hash_index": "somethingveryunique"
     }
 
     procedure = Procedure(**data1)
@@ -166,11 +177,12 @@ def test_optimization_procedure(storage_socket, molecules_H4O2):
             "method": "M1",
             "driver": "energy"
         },
+        "hash_index": "somethingveryunique_opt1"
     }
 
     procedure = OptimizationProcedure(**data1).save()
     proc = OptimizationProcedure.objects().first()
-    assert proc.initial_molecule.molecular_formula == 'H4O2'
+    assert proc.initial_molecule.fetch().molecular_formula == 'H4O2'
 
 
 def test_torsiondrive_procedure(storage_socket):
@@ -195,6 +207,7 @@ def test_torsiondrive_procedure(storage_socket):
             "method": "M1",
             "driver": "energy"
         },
+        "hash_index": "somethingveryunique_td1"
     }
 
     procedure = TorsiondriveProcedure(**data1)
@@ -244,6 +257,7 @@ def test_add_task_queue(storage_socket, molecules_H4O2):
             "method": "M1",
             "driver": "energy"
         },
+        "hash_index": "somethingveryunique_td2"
     }
 
     tor = TorsiondriveProcedure(**data1).save()

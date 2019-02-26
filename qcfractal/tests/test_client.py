@@ -20,11 +20,11 @@ def test_client_molecule(test_server):
     ret = client.add_molecules([water])
 
     # Test get
-    get_mol = client.get_molecules(ret[0], index="id")
+    get_mol = client.get_molecules(id=ret[0])
     assert water.compare(get_mol[0])
 
     # Test molecular_formula get
-    get_mol = client.get_molecules(["H4O2"], index="molecular_formula")
+    get_mol = client.get_molecules(molecular_formula="H4O2")
     assert water.compare(get_mol[0])
 
 
@@ -32,7 +32,7 @@ def test_client_options(test_server):
 
     client = portal.FractalClient(test_server)
 
-    opt = portal.models.KeywordSet(program="psi4", values={"one": "fish", "two": "fish"})
+    opt = portal.models.KeywordSet(values={"one": "fish", "two": "fish"})
 
     # Test add
     ret = client.add_keywords([opt])
@@ -41,7 +41,7 @@ def test_client_options(test_server):
     get_kw = client.get_keywords({'id': ret[0]})
     assert opt == get_kw[0]
 
-    get_kw = client.get_keywords({"program": "psi4", "hash_index": opt.hash_index})
+    get_kw = client.get_keywords({"hash_index": opt.hash_index})
     assert opt == get_kw[0]
 
 
@@ -49,9 +49,9 @@ def test_client_duplicate_keywords(test_server):
 
     client = portal.FractalClient(test_server)
 
-    opt1 = portal.models.KeywordSet(program="psi4", values={"key": 1})
-    opt2 = portal.models.KeywordSet(program="psi4", values={"key": 2})
-    opt3 = portal.models.KeywordSet(program="psi4", values={"key": 3})
+    opt1 = portal.models.KeywordSet(values={"key": 1})
+    opt2 = portal.models.KeywordSet(values={"key": 2})
+    opt3 = portal.models.KeywordSet(values={"key": 3})
 
     # Test add
     ret = client.add_keywords([opt1, opt1])

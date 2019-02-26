@@ -362,7 +362,7 @@ class FractalServer:
         # Grab new services if we have open slots
         open_slots = max(0, self.max_active_services - len(current_services))
         if open_slots > 0:
-            new_services = self.storage.get_services(status="READY", limit=open_slots)["data"]
+            new_services = self.storage.get_services(status="WAITING", limit=open_slots)["data"]
             current_services.extend(new_services)
 
         # Loop over the services and iterate
