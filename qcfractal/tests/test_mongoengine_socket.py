@@ -267,6 +267,10 @@ def test_add_task_queue(storage_socket, molecules_H4O2):
     task.save()
     assert TaskQueue.objects().count() == 3
 
+    # cleanup
+    Result.objects.delete()
+    TaskQueue.objects.delete()
+
 
 def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
     """
@@ -330,6 +334,8 @@ def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
     # total_time = (time() - t1) * 1000 / total_results
     # print('Query {} results in {:.2f} msec /doc'.format(total_results, total_time))
 
+    # cleanup
+    Result.objects.delete()
 
 def test_queue(storage_socket):
     tasks = TaskQueue.objects(status='WAITING')\
@@ -340,4 +346,4 @@ def test_queue(storage_socket):
                 # .fields(..)
                 # .exculde(..)
                 # .no_dereference()  # don't get any of the ReferenceFields (ids) (Turning off dereferencing)
-    assert len(tasks) == 3
+    assert len(tasks) == 0
