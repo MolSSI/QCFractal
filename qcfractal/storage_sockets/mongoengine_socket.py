@@ -439,8 +439,13 @@ class MongoengineSocket:
         ret = {"data": keywords, "meta": meta}
         return ret
 
-    def get_keywords(self, id: str=None, hash_index: str=None, return_json: bool=True, with_ids: bool=True,
-                     limit=None):
+    def get_keywords(self,
+                     id: str=None,
+                     hash_index: str=None,
+                     limit: int=None,
+                     skip: int=0,
+                     return_json: bool=True,
+                     with_ids: bool=True):
         """Search for one (unique) option based on the 'program'
         and the 'name'. No overwrite allowed.
 
@@ -448,17 +453,19 @@ class MongoengineSocket:
         ----------
         program : str
             program name
+        limit : int, optional
+            Maximum number of results to return.
+            If this number is greater than the mongoengine_soket.max_limit then
+            the max_limit will be returned instead.
+            Default is to return the socket's max_limit (when limit=None or 0)
+        skip : int, optional
         return_json : bool, optional
             Return the results as a json object
             Default is True
         with_ids : bool, optional
             Include the DB ids in the returned object (names 'id')
             Default is True
-        limit : int, optional
-            Maximum number of results to return.
-            If this number is greater than the mongoengine_soket.max_limit then
-            the max_limit will be returned instead.
-            Default is to return the socket's max_limit (when limit=None or 0)
+
 
         Returns
         -------
@@ -472,7 +479,7 @@ class MongoengineSocket:
 
         data = []
         try:
-            data = Keywords.objects(**query).limit(self.get_limit(limit))
+            data = Keywords.objects(**query).limit(self.get_limit(limit)).skip(skip)
 
             meta["n_found"] = data.count()
             meta["success"] = True
