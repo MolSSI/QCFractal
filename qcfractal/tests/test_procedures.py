@@ -104,18 +104,17 @@ def test_procedure_optimization(fractal_compute_server):
     for results in [results1, results2]:
         assert len(results) == 1
         assert isinstance(str(results[0]), str)  # Check that repr runs
-        assert pytest.approx(-1.117530188962681, 1e-5) == results[0].final_energy()
+        assert pytest.approx(-1.117530188962681, 1e-5) == results[0].get_final_energy()
 
         # Check pulls
         traj = results[0].get_trajectory(projection={"properties": True})
-        energies = results[0].energies()
-        assert len(traj) == len(energies)
-        assert results[0].final_molecule().symbols == ["H", "H"]
+        assert len(traj) == len(results[0].energies)
+        assert results[0].get_final_molecule().symbols == ["H", "H"]
 
         # Check individual elements
-        for ind in range(len(results[0]._trajectory)):
+        for ind in range(len(results[0].trajectory)):
             raw_energy = traj[ind]["properties"]["return_energy"]
-            assert pytest.approx(raw_energy, 1.e-5) == energies[ind]
+            assert pytest.approx(raw_energy, 1.e-5) == results[0].energies[ind]
 
     # Check that duplicates are caught
     r = client.add_procedure("optimization", "geometric", options, [mol_ret[0]])

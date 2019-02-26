@@ -4,7 +4,8 @@ Constructs ORMs from raw JSON
 
 from ..models.gridoptimization import GridOptimization
 from ..models.torsiondrive import TorsionDrive
-from .optimization_orm import OptimizationORM
+from ..models.procedures import OptimizationDocument
+# from .optimization_orm import OptimizationORM
 
 
 def build_orm(data, procedure=None, client=None):
@@ -51,6 +52,7 @@ def build_orm(data, procedure=None, client=None):
     elif data["procedure"].lower() == "gridoptimization":
         return GridOptimization(**data, client=client)
     elif data["procedure"].lower() == "optimization":
-        return OptimizationORM.from_json(data, client=client)
+        return OptimizationDocument(**data, client=client)
+        # return OptimizationORM.from_json(data, client=client)
     else:
         raise KeyError("Service names {} not recognized.".format(data["procedure"]))

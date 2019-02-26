@@ -133,7 +133,7 @@ class SingleResultTasks:
 
         # Add results to database
         results = parse_single_tasks(self.storage, rdata)
-        print(list(results.values())[0].keys())
+        # print(list(results.values())[0].keys())
 
         ret = self.storage.add_results(list(results.values()), update_existing=True)
 
@@ -308,6 +308,7 @@ class OptimizationTasks(SingleResultTasks):
             if len(hooks):
                 new_hooks[task_id] = hooks
 
+            procedure.pop("task_id", None)
             self.storage.update_procedure(procedure["hash_index"], procedure)
 
         # Create a list of (queue_id, located) to update the queue with

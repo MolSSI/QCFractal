@@ -3,13 +3,13 @@ A model for TorsionDrive
 """
 
 import copy
+import datetime
 import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel
 
-from .common_models import (Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification, hash_dictionary,
-                            json_encoders)
+from .common_models import (Molecule, ObjectId, QCSpecification, hash_dictionary, json_encoders)
 
 from qcelemental.models import Optimization
 
@@ -28,15 +28,21 @@ class OptimizationDocument(Optimization):
     id: ObjectId = None
     procedure: str
     program: str
-    initial_molecule: ObjectId
     hash_index: Optional[str] = None
 
     qc_spec: QCSpecification
     input_specification: Any = None # Deprecated
 
     # Results
+    initial_molecule: ObjectId
     final_molecule: ObjectId = None
     trajectory: List[ObjectId] = None
+
+    task_id: ObjectId = None
+    status: str = "INCOMPLETE"
+    modified_on: datetime.datetime = None
+    created_on: datetime.datetime = None
+
 
     class Config:
         allow_mutation = False
@@ -85,5 +91,48 @@ class OptimizationDocument(Optimization):
 
         data = self.dict(
             include={"initial_molecule", "program", "procedure", "keywords", "qc_spec"})
+        print()
+        print(data)
+        print(hash_dictionary(data))
 
         return hash_dictionary(data)
+
+    def get_final_energy(self):
+        """The final energy of the geometry optimization.
+
+        Returns
+        -------
+        float
+            The optimization molecular energy.
+        """
+        return self.energies[-1]
+
+    def get_trajectory(self, projection=None):
+        """Returns the raw documents for each gradient evaluation in the trajectory.
+
+        Parameters
+        ----------
+        client : qcportal.FractalClient
+            A active client connected to a server.
+        projection : None, optional
+            A dictionary of the project to apply to the document
+
+        Returns
+        -------
+        list of dict
+            A list of results documents
+        """
+
+        return self.client.get_results(id=self.trajectory)
+
+    def get_final_molecule(self):
+        """Returns the optimized molecule
+
+        Returns
+        -------
+        Molecule
+            The optimized molecule
+        """
+
+        ret = self.client.get_molecules(id=[self.final_molecule])
+        return ret[0]

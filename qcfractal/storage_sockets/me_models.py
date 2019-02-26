@@ -35,6 +35,8 @@ class CustomDynamicDocument(db.DynamicDocument):
             data['id'] = data['_id']
         del data['_id']
 
+        data.pop("_cls", None)
+
         return data
 
     meta = {
