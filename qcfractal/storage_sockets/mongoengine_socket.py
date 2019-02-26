@@ -335,7 +335,12 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def get_molecules(self, id=None, molecule_hash=None, molecular_formula=None):
+    def get_molecules(self,
+                      id=None,
+                      molecule_hash=None,
+                      molecular_formula=None,
+                      limit: int=None,
+                      skip: int=0):
 
         ret = {"meta": get_metadata_template(), "data": []}
 
@@ -343,22 +348,16 @@ class MongoengineSocket:
 
         # Don't include the hash or the molecular_formula in the returned result
         # Make the query
-        data = Molecule.objects(**query).exclude("molecule_hash", "molecular_formula").as_pymongo()
+        data = Molecule.objects(**query).exclude("molecule_hash", "molecular_formula")\
+                                        .limit(self.get_limit(limit))\
+                                        .skip(skip)\
 
-        if data is None:
-            data = []
-        else:
-            data = list(data)
 
         ret["meta"]["success"] = True
-        ret["meta"]["n_found"] = len(data)
+        ret["meta"]["n_found"] = data.count()  # all data count, can be > len(data)
         ret["meta"]["errors"].extend(errors)
 
-        # Translate ID's back
-        for r in data:
-            r["id"] = str(r["_id"])
-            del r["_id"]
-
+        data = [d.to_json_obj() for d in data]
         ret["data"] = data
 
         return ret
