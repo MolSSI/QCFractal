@@ -440,8 +440,8 @@ class MongoengineSocket:
         return ret
 
     def get_keywords(self,
-                     id: str=None,
-                     hash_index: str=None,
+                     id: Union[str, list]=None,
+                     hash_index: Union[str, list]=None,
                      limit: int=None,
                      skip: int=0,
                      return_json: bool=True,
@@ -451,8 +451,10 @@ class MongoengineSocket:
 
         Parameters
         ----------
-        program : str
-            program name
+        id : list or str
+            Ids of the keywords
+        hash_index : list or str
+            hash index of keywords
         limit : int, optional
             Maximum number of results to return.
             If this number is greater than the mongoengine_soket.max_limit then
@@ -483,7 +485,7 @@ class MongoengineSocket:
 
             meta["n_found"] = data.count()
             meta["success"] = True
-        except Exception as err:
+        except Exception as err:  # TODO: remove 
             meta['error_description'] = str(err)
 
         if return_json:
