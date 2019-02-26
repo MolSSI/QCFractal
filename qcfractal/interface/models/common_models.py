@@ -7,12 +7,12 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 from pydantic import BaseModel, validator
-from qcelemental.models import Molecule, ObjectId, Provenance
+from qcelemental.models import Molecule, Provenance
 
-__all__ = ["QCSpecification", "OptimizationSpecification", "json_encoders", "hash_dictionary", "KeywordSet"]
+__all__ = ["QCSpecification", "OptimizationSpecification", "json_encoders", "hash_dictionary", "KeywordSet", "ObjectId"]
 
 # Add in QCElemental models
-__all__.extend(["Molecule", "Provenance", "ObjectId"])
+__all__.extend(["Molecule", "Provenance"])
 
 json_encoders = {np.ndarray: lambda v: v.flatten().tolist()}
 
@@ -58,6 +58,20 @@ def hash_dictionary(data: Dict[str, Any]) -> str:
     m = hashlib.sha1()
     m.update(json.dumps(data, sort_keys=True).encode("UTF-8"))
     return m.hexdigest()
+
+
+class ObjectId(str):
+    _valid_hex = set("0123456789abcdef")
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if (not isinstance(v, str)) or (len(v) != 24) or (not set(v) <= cls._valid_hex):
+            raise TypeError("The string {} is not a valid 24-character hexadecimal ObjectId!".format(v))
+        return v
 
 
 class QCSpecification(BaseModel):

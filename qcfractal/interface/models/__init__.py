@@ -8,4 +8,4 @@ from . import gridoptimization
 from . import rest_models
 from . import torsiondrive
 from .procedures import OptimizationDocument
-from .common_models import Molecule, KeywordSet
+from .common_models import Molecule, KeywordSet, ObjectId
