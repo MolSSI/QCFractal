@@ -318,8 +318,8 @@ def parsl_templates():
                     label='QCFractal_Compute_Executor',
                     provider={PROVIDER}(
                         {PROVIDER_OPTS}
-                        scheduler_options="{SCHEDULER_HEADER} " + "\n{SCHEDULER_HEADER} ".join(SCHEDULER_OPTS) + "\n"
-                        worker_init='\n'.join(TASK_STARTUP_COMMANDS),
+                        scheduler_options={COMBINED_SCHEDULER_OPTS}
+                        worker_init='\\n'.join(TASK_STARTUP_COMMANDS),
                         walltime="00:10:00",
                         init_blocks=1,
                         max_blocks=MAX_NODES,
@@ -339,6 +339,10 @@ def parsl_templates():
             whitespace = line[:len(line) - len(line.lstrip())]
             break
 
+    # break this out down here as the "\n" causes issues
+    # Also have to \\n otherwise dedent() detects it wrong
+    scheduler_opts = "'{SCHEDULER_HEADER} ' + '\\n{SCHEDULER_HEADER} '.join(SCHEDULER_OPTS) + '\\n',"
+
     # SLURM
 
     slurm_imports = base_dict["IMPORTS"] + "\n" + """from parsl.providers import SlurmProvider"""
@@ -351,7 +355,7 @@ def parsl_templates():
                                 whitespace,
                                 # Don't indent first line, use whatever logic
                                 predicate=lambda feed: "=" in feed),
-                     "SCHEDULER_HEADER": "#SBATCH"}
+                     "COMBINED_SCHEDULER_OPTS": scheduler_opts.format(SCHEDULER_HEADER="#SBATCH")}
 
     # PBS/Torque
 
@@ -365,7 +369,7 @@ def parsl_templates():
                                  whitespace,
                                  # Don't indent first line, use whatever logic
                                  predicate=lambda feed: "account" not in feed),
-                      "SCHEDULER_HEADER": "#PBS"}
+                      "COMBINED_SCHEDULER_OPTS": scheduler_opts.format(SCHEDULER_HEADER="#PBS")}
     # Final
 
     parsl_dict = {
