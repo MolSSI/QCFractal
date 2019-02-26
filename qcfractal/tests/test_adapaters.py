@@ -46,8 +46,6 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
                     "model": {"method": "HF",
                               "basis": "sto-3g"},
                     "keywords": {},
-                    "return_output": True,
-                    'qcfractal_tags': {'program': 'psi4', 'options': None}
                 }, "psi4"],
                 "kwargs": {}
             },

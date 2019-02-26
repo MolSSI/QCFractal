@@ -6,6 +6,7 @@ import json
 from typing import Union
 
 from .procedures_util import hash_procedure_keys, parse_hooks, parse_single_tasks, unpack_single_task_spec
+from ..interface.models.common_models import OptimizationInput
 
 
 class SingleResultTasks:
@@ -214,7 +215,7 @@ class OptimizationTasks(SingleResultTasks):
             keyword_set = keyword_set["values"]
 
         keyword_set["program"] = data.meta["qc_spec"]["program"]
-        template = json.dumps({"keywords": keyword_set, "qcfractal_tags": data.meta})
+        template = json.dumps({"keywords": keyword_set, "extras": {"_qcfractal_tags": data.meta}})
 
         tag = data.meta.pop("tag", None)
 
@@ -255,6 +256,8 @@ class OptimizationTasks(SingleResultTasks):
             if len(ret["meta"]["duplicates"]):
                 existing_ids.append(base_id)
                 continue
+
+            print(json.dumps(packet, indent=2))
 
             # Build task object
             task = {

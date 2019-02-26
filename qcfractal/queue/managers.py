@@ -383,7 +383,6 @@ class QueueManager:
                     "driver": "energy",
                     "model": {},
                     "keywords": {},
-                    "return_output": False
                 }, "program"],
                 "kwargs": {}
             },

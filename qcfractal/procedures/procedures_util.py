@@ -63,16 +63,17 @@ def unpack_single_task_spec(storage, meta, molecules):
 
     # Create the "universal header"
     task_meta = json.dumps({
-        "program": meta["program"],
         "driver": meta["driver"],
         "keywords": keyword_set,
         "model": {
             "method": meta["method"],
             "basis": meta["basis"]
         },
-        "qcfractal_tags": {
-            "program": meta["program"],
-            "keywords": meta["keywords"]
+        "extras": {
+            "_qcfractal_tags": {
+                "program": meta["program"],
+                "keywords": meta["keywords"]
+            }
         }
     })
 
@@ -115,14 +116,12 @@ def parse_single_tasks(storage, results):
         v["basis"] = v["model"]["basis"]
         del v["model"]
 
-        v["keywords"] = v["qcfractal_tags"]["keywords"]
-
         # Molecule should be by ID
         v["molecule"] = storage.add_molecules([v["molecule"]])["data"][0]
 
-        v["program"] = v["qcfractal_tags"]["program"]
-
-        del v["qcfractal_tags"]
+        v["keywords"] = v["extras"]["_qcfractal_tags"]["keywords"]
+        v["program"] = v["extras"]["_qcfractal_tags"]["program"]
+        del v["extras"]["_qcfractal_tags"]
     return results
 
 
