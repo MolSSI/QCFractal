@@ -227,27 +227,28 @@ class OptimizationTasks(SingleResultTasks):
                 results_ids.append(None)
                 continue
 
-            inp = json.loads(inp.json())
+            inp = json.loads(inp.json(exclude={"id", "provenance"}))
 
             # Coerce qc_template information
             packet = json.loads(template)
             packet["initial_molecule"] = inp.pop("molecule")
             packet["input_specification"] = inp
-            packet["procedure"] = "optimization"
-            packet["program"] = data.meta["program"]
 
             single_keys = data.meta["qc_spec"].copy()
             single_keys["molecule"] = packet["initial_molecule"]["id"]
 
             # Add to args document to carry through to self.storage
-            hash_index = hash_procedure_keys({
+            packet["hash_index"] = hash_procedure_keys({
                 "type": "optimization",
                 "program": data.meta["program"],
                 "keywords": keyword_id,
                 "single_key": single_keys,
             })
-            packet["hash_index"] = hash_index
+            inp = OptimizationInput(**packet)
 
+            packet = inp.json_dict()
+            packet["program"] = data.meta["program"]
+            packet["procedure"] = "optimization"
             ret = self.storage.add_procedures([packet])
             base_id = ret["data"][0]
             results_ids.append(base_id)
@@ -257,13 +258,11 @@ class OptimizationTasks(SingleResultTasks):
                 existing_ids.append(base_id)
                 continue
 
-            print(json.dumps(packet, indent=2))
-
             # Build task object
             task = {
                 "spec": {
                     "function": "qcengine.compute_procedure",
-                    "args": [packet, data.meta["program"]],
+                    "args": [inp.json_dict(), data.meta["program"]],
                     "kwargs": {}
                 },
                 "hooks": [],
@@ -306,9 +305,9 @@ class OptimizationTasks(SingleResultTasks):
             procedure["trajectory"] = ret["data"]
 
             # Coerce tags
-            procedure.update(procedure["qcfractal_tags"])
+            procedure.update(procedure["extras"]["_qcfractal_tags"])
+            del procedure["extras"]["_qcfractal_tags"]
             del procedure["input_specification"]
-            del procedure["qcfractal_tags"]
             # print("Adding optimization result")
             # print(json.dumps(v, indent=2))
             new_procedures[task_id] = procedure

@@ -7,12 +7,12 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 from pydantic import BaseModel, validator
-from qcelemental.models import Molecule, Provenance, Result, ResultInput, OptimizationInput, Optimization
+from qcelemental.models import Molecule, Optimization, OptimizationInput, Provenance, Result, ResultInput
 
 __all__ = ["QCSpecification", "OptimizationSpecification", "json_encoders", "hash_dictionary", "KeywordSet"]
 
 # Add in QCElemental models
-__all__.extend(["Molecule", "Provenance"])
+__all__.extend(["Molecule", "Provenance", "Result", "ResultInput", "OptimizationInput"])
 
 json_encoders = {np.ndarray: lambda v: v.flatten().tolist()}
 
