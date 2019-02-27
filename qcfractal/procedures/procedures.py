@@ -5,9 +5,9 @@ All procedures tasks involved in on-node computation.
 import json
 from typing import Union
 
-from .procedures_util import hash_procedure_keys, parse_hooks, parse_single_tasks, unpack_single_task_spec
+from .procedures_util import parse_hooks, parse_single_tasks, unpack_single_task_spec
 from qcelemental.models import OptimizationInput
-from ..interface.models import OptimizationDocument
+from ..interface.models import OptimizationModel
 
 
 class SingleResultTasks:
@@ -234,14 +234,14 @@ class OptimizationTasks(SingleResultTasks):
             packet["input_specification"] = single_input
             inp = OptimizationInput(**packet)
 
-            doc = OptimizationDocument(
+            doc = OptimizationModel(
                 **inp.dict(exclude={"input_specification", "initial_molecule", "schema_name"}),
                 qc_spec=data.meta["qc_spec"],
                 initial_molecule=packet["initial_molecule"]["id"],
                 program=data.meta["program"],
                 success=False)
 
-            inp.__values__["hash_index"] = doc.hash_index
+            inp = inp.copy(update={"hash_index": doc.hash_index})
 
             ret = self.storage.add_procedures([doc.json_dict()])
             base_id = ret["data"][0]

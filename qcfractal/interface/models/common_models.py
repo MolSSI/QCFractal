@@ -9,7 +9,9 @@ import numpy as np
 from pydantic import BaseModel, validator
 from qcelemental.models import Molecule, Provenance
 
-__all__ = ["QCSpecification", "OptimizationSpecification", "json_encoders", "hash_dictionary", "KeywordSet", "ObjectId"]
+__all__ = [
+    "QCSpecification", "OptimizationSpecification", "json_encoders", "hash_dictionary", "KeywordSet", "ObjectId"
+]
 
 # Add in QCElemental models
 __all__.extend(["Molecule", "Provenance"])

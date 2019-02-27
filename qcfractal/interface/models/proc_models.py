@@ -2,20 +2,18 @@
 A model for TorsionDrive
 """
 
-import copy
 import datetime
 import json
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
 from qcelemental.models import Optimization
 
-from .common_models import Molecule, ObjectId, QCSpecification, hash_dictionary, json_encoders
+from .common_models import ObjectId, QCSpecification, hash_dictionary, json_encoders
 
-__all__ = ["OptimizationDocument"]
+__all__ = ["OptimizationModel"]
 
 
-class OptimizationDocument(Optimization):
+class OptimizationModel(Optimization):
     """
     A TorsionDrive Input base class
     """

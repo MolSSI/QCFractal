@@ -1,8 +1,8 @@
 
 
-from .procedures import OptimizationDocument
-from .torsiondrive import TorsionDrive
 from .gridoptimization import GridOptimization
+from .proc_models import OptimizationModel
+from .torsiondrive import TorsionDrive
 
 
 def build_procedure(data, procedure=None, client=None):
@@ -49,6 +49,6 @@ def build_procedure(data, procedure=None, client=None):
     elif data["procedure"].lower() == "gridoptimization":
         return GridOptimization(**data, client=client)
     elif data["procedure"].lower() == "optimization":
-        return OptimizationDocument(**data, client=client)
+        return OptimizationModel(**data, client=client)
     else:
         raise KeyError("Service names {} not recognized.".format(data["procedure"]))

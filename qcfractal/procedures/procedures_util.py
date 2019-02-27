@@ -133,12 +133,6 @@ def hash_single_task_spec(data, program=None):
     return keys, hash_index
 
 
-def hash_procedure_keys(keys):
-    m = hashlib.sha1()
-    m.update(json.dumps(keys, sort_keys=True).encode("UTF-8"))
-    return m.hexdigest()
-
-
 def parse_hooks(rdata, rhooks):
     """Parses the hook data in a list of hooks
     TODO: this methos an has error, results is undefined
