@@ -8,8 +8,7 @@ from typing import Any, Dict, List
 
 import numpy as np
 
-from ..interface.models.common_models import json_encoders
-from ..interface.models.torsiondrive import TorsionDrive
+from ..interface.models import json_encoders, TorsionDrive
 from .service_util import BaseService, TaskManager
 
 try:

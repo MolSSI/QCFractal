@@ -8,10 +8,9 @@ import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel
-
-from .common_models import (Molecule, ObjectId, QCSpecification, hash_dictionary, json_encoders)
-
 from qcelemental.models import Optimization
+
+from .common_models import Molecule, ObjectId, QCSpecification, hash_dictionary, json_encoders
 
 __all__ = ["OptimizationDocument"]
 

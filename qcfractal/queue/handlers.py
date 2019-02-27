@@ -5,7 +5,7 @@ Queue backend abstraction manager.
 import collections
 import traceback
 
-from ..interface.models.common_models import Molecule
+from ..interface.models import Molecule
 from ..interface.models.rest_models import (
     QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse, QueueManagerPUTBody,
     QueueManagerPUTResponse, ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody,

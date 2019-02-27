@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from ..constants import get_scale
 from ..dict_utils import replace_dict_keys
-from ..models.common_models import Molecule
+from ..models import Molecule
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
 

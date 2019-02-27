@@ -50,7 +50,7 @@ def test_task_molecule_no_orientation(data, fractal_compute_server):
 def test_task_error(fractal_compute_server):
     client = portal.FractalClient(fractal_compute_server)
 
-    mol = portal.models.common_models.Molecule(**{
+    mol = portal.models.Molecule(**{
         "geometry": [0, 0, 0],
         "symbols": ["He"]
     })

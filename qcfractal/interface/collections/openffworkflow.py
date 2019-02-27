@@ -4,7 +4,7 @@
 import copy
 from typing import Any, Dict
 
-from ..models import TorsionDrive, TorsionDriveInput, OptimizationDocument
+from ..models import OptimizationDocument, TorsionDrive, TorsionDriveInput
 from .collection import Collection
 from .collection_utils import register_collection
 

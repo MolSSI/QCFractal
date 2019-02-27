@@ -3,8 +3,9 @@ Constructs ORMs from raw JSON
 """
 
 from ..models.gridoptimization import GridOptimization
-from ..models.torsiondrive import TorsionDrive
 from ..models.procedures import OptimizationDocument
+from ..models.torsiondrive import TorsionDrive
+
 # from .optimization_orm import OptimizationORM
 
 

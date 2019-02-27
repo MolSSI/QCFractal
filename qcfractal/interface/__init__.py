@@ -9,4 +9,4 @@ from . import orm
 from .client import FractalClient
 
 # Add imports here
-from .models.common_models import Molecule
+from .models import Molecule
