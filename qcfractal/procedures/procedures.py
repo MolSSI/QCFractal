@@ -239,7 +239,6 @@ class OptimizationTasks(SingleResultTasks):
                 qc_spec=data.meta["qc_spec"],
                 initial_molecule=packet["initial_molecule"]["id"],
                 program=data.meta["program"],
-                hash_index=None,
                 success=False)
 
             inp = inp.copy(update={"hash_index": doc.hash_index})

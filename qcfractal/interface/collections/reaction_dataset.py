@@ -75,19 +75,10 @@ class ReactionDataset(Dataset):
         self.rxn_index = None
         self._form_index()
 
-        # If we making a new database we may need new hashes and json objects
-        self._new_molecules = {}
-        self._new_keywords = {}
-        self._new_records = []
-
     class DataModel(Dataset.DataModel):
 
         ds_type: _ReactionTypeEnum = _ReactionTypeEnum.rxn
         records: List[ReactionRecord] = []
-
-    def _check_state(self):
-        if self._new_molecules or self._new_keywords:
-            raise ValueError("New molecules or keywords detected, run save before submitting new tasks.")
 
     def _form_index(self):
         # Unroll the index
@@ -166,14 +157,15 @@ class ReactionDataset(Dataset):
 
     def query(self,
               method,
-              basis,
+              basis=None,
+              *,
               driver=None,
               keywords=None,
               program=None,
               stoich="default",
               prefix="",
               postfix="",
-              reaction_results=False,
+              contrib=False,
               scale="kcal/mol",
               field="return_result",
               ignore_ds_type=False):
@@ -198,8 +190,8 @@ class ReactionDataset(Dataset):
             A prefix given to the resulting column names.
         postfix : str
             A postfix given to the resulting column names.
-        reaction_results : bool
-            Toggles a search between the Mongo Pages and the Databases's reaction_results field.
+        contrib : bool
+            Toggles a search between the Mongo Pages and the Databases's ContributedValues field.
         scale : str, double
             All units are based in Hartree, the default scaling is to kcal/mol.
         field : str, optional
@@ -226,8 +218,15 @@ class ReactionDataset(Dataset):
 
         driver, keywords, program = self._default_parameters(driver, keywords, program)
 
-        if not reaction_results and (self.client is None):
+        if not contrib and (self.client is None):
             raise AttributeError("DataBase: FractalClient was not set.")
+
+        # # If reaction results
+        if contrib:
+            tmp_idx = self.get_contributed_values_column(method, scale=scale)
+
+            self.df[prefix + method + postfix] = tmp_idx
+            return True
 
         query_keys = {
             "method": method.lower(),
@@ -236,24 +235,6 @@ class ReactionDataset(Dataset):
             "keywords": keywords,
             "program": program.lower(),
         }
-        # # If reaction results
-        if reaction_results:
-            tmp_idx = pd.Series(index=self.df.index)
-            for rxn in self.data.records:
-                try:
-                    tmp_idx.loc[rxn.name] = rxn.reaction_results[stoich][method]
-                except KeyError:
-                    pass
-
-            # Convert to numeric
-            tmp_idx = pd.to_numeric(tmp_idx, errors='ignore')
-            tmp_idx *= constants.conversion_factor('hartree', scale)
-
-            self.df[prefix + method + postfix] = tmp_idx
-            return True
-
-        # if self.data.ds_type.lower() == "ie":
-        #     _ie_helper(..)
 
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'

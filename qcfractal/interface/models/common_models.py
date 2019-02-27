@@ -143,3 +143,4 @@ class KeywordSet(BaseModel):
 
     def json_dict(self, *args, **kwargs):
         return json.loads(self.json(*args, **kwargs))
+

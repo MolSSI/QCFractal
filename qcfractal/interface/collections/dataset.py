@@ -22,9 +22,9 @@ class MoleculeRecord(BaseModel):
 
 class ContributedValues(BaseModel):
     name: str
-    # citation: Citation
+    doi: Optional[str] = None
     theory_level: Union[str, Dict[str, str]]
-    theory_level_details: Union[str, Dict[str, str]]
+    theory_level_details: Union[str, Dict[str, str]] = None
     comments: Optional[str] = None
     values: Dict[str, Any]
     units: str
@@ -66,6 +66,7 @@ class Dataset(Collection):
         self._new_molecules = {}
         self._new_keywords = {}
         self._new_records = []
+        self._updated_state = False
 
     class DataModel(Collection.DataModel):
 
@@ -76,9 +77,10 @@ class Dataset(Collection):
         alias_keywords: Dict[str, Dict[str, str]] = {}
 
         records: List[MoleculeRecord] = []
+        contributed_values: Dict[str, ContributedValues] = {}
 
     def _check_state(self):
-        if self._new_molecules or self._new_keywords or self._new_records:
+        if self._new_molecules or self._new_keywords or self._new_records or self._updated_state:
             raise ValueError("New molecules, keywords, or records detected, run save before submitting new tasks.")
 
     def _canonical_pre_save(self, client):
@@ -88,6 +90,7 @@ class Dataset(Collection):
             assert len(ret) == 1, "KeywordSet added incorrectly"
             self.data.alias_keywords[k[0]][k[1]] = ret[0]
             del self._new_keywords[k]
+        self._updated_state = False
 
     def _add_molecules_by_dict(self, client, molecules):
 
@@ -198,6 +201,85 @@ class Dataset(Collection):
             self.data.default_keywords[program] = alias
         return True
 
+    def add_contributed_values(self, contrib: ContributedValues, overwrite=False) -> None:
+        """Adds a ContributedValues to the database.
+
+        Parameters
+        ----------
+        contrib : ContributedValues
+            The ContributedValues to add.
+        overwrite : bool, optional
+            Forces
+
+        """
+
+        # Convert and validate
+        if isinstance(contrib, ContributedValues):
+            contrib = contrib.copy()
+        else:
+            contrib = ContributedValues(**contrib)
+
+        # Check the key
+        key = contrib.name.lower()
+        if (key in self.data.contributed_values) and (overwrite is False):
+            raise KeyError(
+                "Key '{}' already found in contributed values. Use `overwrite=True` to force an update.".format(key))
+
+        self.data.contributed_values[key] = contrib
+        self._updated_state = True
+
+    def list_contributed_values(self) -> List[str]:
+        """
+        Lists the known keys for all contributed values.
+        """
+
+        return list(self.data.contributed_values)
+
+    def get_contributed_values(self, key: str) -> ContributedValues:
+        """Returns a copy of the requested ContributedValues object.
+
+        Parameters
+        ----------
+        key : str
+            The ContributedValues object key.
+
+        Returns
+        -------
+        ContributedValues
+            The requested ContributedValues object.
+        """
+        return self.data.contributed_values[key.lower()].copy()
+
+    def get_contributed_values_column(self, key: str, scale='hartree') -> 'Series':
+        """Returns a Pandas column with the requested contributed values
+
+        Parameters
+        ----------
+        key : str
+            The ContributedValues object key.
+        scale : None, optional
+            All units are based in Hartree, the default scaling is to kcal/mol.
+
+        Returns
+        -------
+        Series
+            A pandas Series containing the request values.
+        """
+        data = self.get_contributed_values(key)
+
+        # Annoying work around to prevent some pands magic
+        if isinstance(next(iter(data.values.values())), (int, float)):
+            values = data.values
+        else:
+            values = {k: [v] for k, v in data.values.items()}
+
+        tmp_idx = pd.DataFrame.from_dict(values, orient="index", columns=[key])
+
+        # Convert to numeric
+        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor(data.units, scale)
+
+        return tmp_idx
+
     def add_entry(self, name, molecule, **kwargs):
 
         mhash = molecule.get_hash()
@@ -206,12 +288,13 @@ class Dataset(Collection):
 
     def query(self,
               method,
-              basis,
+              basis=None,
+              *,
               driver=None,
               keywords=None,
               program=None,
-              local_results=False,
-              scale="kcal",
+              contrib=False,
+              scale="kcal / mol",
               field="return_result",
               as_array=False):
         """
@@ -229,8 +312,8 @@ class Dataset(Collection):
             The option token desired
         program : str, optional
             The program to query on
-        local_results : bool
-            Toggles a search between the Mongo Pages and the Databases's reaction_results field.
+        contrib : bool
+            Toggles a search between the Mongo Pages and the Databases's ContributedValues field.
         scale : str, double
             All units are based in Hartree, the default scaling is to kcal/mol.
         field : str, optional
@@ -255,7 +338,7 @@ class Dataset(Collection):
 
         driver, keywords, program = self._default_parameters(driver, keywords, program)
 
-        if not local_results and (self.client is None):
+        if not contrib and (self.client is None):
             raise AttributeError("DataBase: FractalClient was not set.")
 
         query_keys = {
@@ -266,21 +349,8 @@ class Dataset(Collection):
             "program": program,
         }
         # # If reaction results
-        if local_results:
-
-            data = []
-            for record in self.data.records:
-                try:
-                    data.append([record.name, record.local_results[method]])
-                except KeyError:
-                    pass
-
-            tmp_idx = pd.DataFrame(data, columns=["index", method])
-            tmp_idx.set_index("index", inplace=True)
-
-            # Convert to numeric
-            if scale:
-                tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', scale)
+        if contrib:
+            tmp_idx = self.get_contributed_values_column(method, scale=scale)
 
         else:
             indexer = {e.name: e.molecule_id for e in self.data.records}
