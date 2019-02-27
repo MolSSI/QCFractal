@@ -91,9 +91,6 @@ class OptimizationDocument(Optimization):
 
         data = self.dict(
             include={"initial_molecule", "program", "procedure", "keywords", "qc_spec"})
-        print()
-        print(data)
-        print(hash_dictionary(data))
 
         return hash_dictionary(data)
 

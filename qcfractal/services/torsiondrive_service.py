@@ -101,9 +101,7 @@ class TorsionDriveService(BaseService):
         meta["optimization_template"] = json.dumps({
             "meta": {
                 "procedure": "optimization",
-                "keywords": {
-                    "values": output.optimization_spec.keywords
-                },
+                "keywords": output.optimization_spec.keywords,
                 "program": output.optimization_spec.program,
                 "qc_spec": output.qc_spec.dict(),
                 "tag": meta.pop("tag", None)
@@ -179,7 +177,7 @@ class TorsionDriveService(BaseService):
                 grid_id = td_api.grid_id_from_string(key)
                 for con_num, k in enumerate(grid_id):
                     constraints[con_num]["value"] = k
-                packet["meta"]["keywords"]["values"]["constraints"] = {"set": constraints}
+                packet["meta"]["keywords"]["constraints"] = {"set": constraints}
 
                 # Build new molecule
                 mol = json.loads(self.molecule_template)

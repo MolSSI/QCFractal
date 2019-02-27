@@ -4,8 +4,7 @@
 import copy
 from typing import Any, Dict
 
-from ..models.torsiondrive import TorsionDrive, TorsionDriveInput
-from ..orm import OptimizationORM
+from ..models import TorsionDrive, TorsionDriveInput, OptimizationDocument
 from .collection import Collection
 from .collection_utils import register_collection
 
@@ -229,9 +228,8 @@ class OpenFFWorkflow(Collection):
     def _add_optimize(self, packet):
         meta = copy.deepcopy({k: self.data.optimization_static_options[k] for k in ("keywords", "qc_spec", "program")})
 
-        meta["keywords"] = {"values": meta.pop("keywords"), "program": meta["program"]}
         for k in ["constraints"]:
-            meta["keywords"]["values"][k] = packet[k]
+            meta["keywords"][k] = packet[k]
 
         # Get hash of optimization
         ret = self.client.add_procedure("optimization", meta["program"], meta, [packet["initial_molecule"]])
@@ -298,8 +296,8 @@ class OpenFFWorkflow(Collection):
                     obj = self._torsiondrive_cache[v["id"]]
                     if isinstance(obj, TorsionDrive):
                         tmp[k] = obj.final_energies()
-                    elif isinstance(obj, OptimizationORM):
-                        tmp[k] = obj.final_energy()
+                    elif isinstance(obj, OptimizationDocument):
+                        tmp[k] = obj.get_final_energy()
                     else:
                         raise TypeError("Internal type error encoured, buy a dev a coffee.")
                 else:
@@ -341,8 +339,8 @@ class OpenFFWorkflow(Collection):
                     obj = self._torsiondrive_cache[v["id"]]
                     if isinstance(obj, TorsionDrive):
                         tmp[k] = obj.final_molecules()
-                    elif isinstance(obj, OptimizationORM):
-                        tmp[k] = obj.final_molecule()
+                    elif isinstance(obj, OptimizationDocument):
+                        tmp[k] = obj.get_final_molecule()
                     else:
                         raise TypeError("Internal type error encoured, buy a dev a coffee.")
                 else:

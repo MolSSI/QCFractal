@@ -75,15 +75,12 @@ class GridOptimizationService(BaseService):
             constraint_template.append(tmp)
 
         meta["constraint_template"] = json.dumps(constraint_template)
-        # meta["keyword_template"] = KeywordSet(program=output.optimization_spec.program, values=output.optimization_spec.dict())
 
         # Build optimization template
         meta["optimization_template"] = json.dumps({
             "meta": {
                 "procedure": "optimization",
-                "keywords": {
-                    "values": output.optimization_spec.keywords
-                },
+                "keywords": output.optimization_spec.keywords,
                 "program": output.optimization_spec.program,
                 "qc_spec": output.qc_spec.dict(),
                 "tag": meta.pop("tag", None)
@@ -221,7 +218,7 @@ class GridOptimizationService(BaseService):
                 else:
                     constraints[con_num]["value"] = (scan.steps[idx] + self.starting_molecule.measure(scan.indices))
 
-            packet["meta"]["keywords"]["values"]["constraints"] = {"set": constraints}
+            packet["meta"]["keywords"]["constraints"] = {"set": constraints}
 
             # Build new molecule
             packet["data"] = [mol]
