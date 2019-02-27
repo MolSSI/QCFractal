@@ -8,8 +8,8 @@ from typing import Dict, List, Union
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel
+from qcelemental import constants
 
-from ..constants import get_scale
 from ..dict_utils import replace_dict_keys
 from ..models import Molecule
 from .collection_utils import nCr, register_collection
@@ -174,7 +174,7 @@ class ReactionDataset(Dataset):
               prefix="",
               postfix="",
               reaction_results=False,
-              scale="kcal",
+              scale="kcal/mol",
               field="return_result",
               ignore_ds_type=False):
         """
@@ -247,7 +247,7 @@ class ReactionDataset(Dataset):
 
             # Convert to numeric
             tmp_idx = pd.to_numeric(tmp_idx, errors='ignore')
-            tmp_idx *= get_scale(scale)
+            tmp_idx *= constants.conversion_factor('hartree', scale)
 
             self.df[prefix + method + postfix] = tmp_idx
             return True
@@ -269,7 +269,7 @@ class ReactionDataset(Dataset):
 
         # scale
         tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
-        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= get_scale(scale)
+        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', scale)
 
         # Apply to df
         self.df[tmp_idx.columns] = tmp_idx

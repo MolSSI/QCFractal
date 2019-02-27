@@ -6,8 +6,8 @@ from typing import Any, Dict, List, Optional, Union
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel
+from qcelemental import constants
 
-from ..constants import get_scale
 from ..statistics import wrap_statistics
 from .collection import Collection
 from .collection_utils import register_collection
@@ -159,7 +159,7 @@ class Dataset(Collection):
         ret.drop("molecule", axis=1, inplace=True)
 
         if scale:
-            ret[ret.select_dtypes(include=['number']).columns] *= get_scale(scale)
+            ret[ret.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', scale)
 
         return ret
 
@@ -280,7 +280,7 @@ class Dataset(Collection):
 
             # Convert to numeric
             if scale:
-                tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= get_scale(scale)
+                tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', scale)
 
         else:
             indexer = {e.name: e.molecule_id for e in self.data.records}
