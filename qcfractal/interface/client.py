@@ -8,14 +8,13 @@ from typing import Any, Dict, List, Optional, Union
 import requests
 
 from .collections import collection_factory
-from .models import GridOptimizationInput, Molecule, TorsionDriveInput
+from .models import GridOptimizationInput, Molecule, TorsionDriveInput, build_procedure
 from .models.rest_models import (
     CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse, KeywordGETBody,
     KeywordGETResponse, KeywordPOSTBody, KeywordPOSTResponse, MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody,
     MoleculePOSTResponse, ProcedureGETBody, ProcedureGETReponse, ResultGETBody, ResultGETResponse, ServiceQueueGETBody,
     ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse, TaskQueueGETBody, TaskQueueGETResponse,
     TaskQueuePOSTBody, TaskQueuePOSTResponse)
-from .orm import build_orm
 
 
 class FractalClient(object):
@@ -369,7 +368,7 @@ class FractalClient(object):
         if return_objects:
             ret = []
             for packet in r.data:
-                tmp = build_orm(packet, client=self)
+                tmp = build_procedure(packet, client=self)
                 ret.append(tmp)
             return ret
         else:
