@@ -485,7 +485,7 @@ class MongoengineSocket:
 
             meta["n_found"] = data.count()
             meta["success"] = True
-        except Exception as err:  # TODO: remove 
+        except Exception as err:  # TODO: remove
             meta['error_description'] = str(err)
 
         if return_json:
@@ -862,6 +862,7 @@ class MongoengineSocket:
         """
 
         meta = get_metadata_template()
+
         query, error = format_query(
             program=program,
             method=method,
@@ -1677,6 +1678,22 @@ class MongoengineSocket:
                 status="WAITING", modified_on=dt.utcnow())
 
         return updated
+
+    def del_tasks(self, id: Union[str, list]):
+        """Delete a task from the queue. Use with cautious
+
+        Parameters
+        ----------
+        id : str or list
+            Ids of the tasks to delete
+        Returns
+        -------
+        int
+            Number of tasks deleted
+        """
+
+        return TaskQueue.objects(id__in=id).delete()
+
 
     def handle_hooks(self, hooks):
 
