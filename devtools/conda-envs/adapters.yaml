@@ -27,7 +27,7 @@ dependencies:
   - ipykernel
 
 # QCArchive includes
-  - qcengine>=0.5.1
+  - qcengine>=0.6.0
   - qcelemental>=0.3.0
 
 # Pip includes
