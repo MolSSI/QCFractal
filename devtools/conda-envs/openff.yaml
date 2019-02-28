@@ -28,7 +28,7 @@ dependencies:
 
 # QCArchive includes
   - qcengine>=0.5.1
-  - qcelemental>=0.2.6
+  - qcelemental>=0.3.0
 
 # Pip includes
   - pip:

@@ -30,7 +30,7 @@ dependencies:
   - pytest-cov
   - codecov
 """
-qca_ecosystem_template = ["qcengine>=0.5.1", "qcelemental>=0.2.6"]
+qca_ecosystem_template = ["qcengine>=0.5.1", "qcelemental>=0.3.0"]
 
 # Note we temporarily duplicate mongoengine as conda-forge appears to be broken
 pip_depends_template = ["mongoengine"]
