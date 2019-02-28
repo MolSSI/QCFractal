@@ -222,3 +222,21 @@ def test_nbody_rxn(nbody_ds):
     mh = list(ne_stoich.stoichiometry["default"])[0]
     # print(ne_stoich)
     # _compare_rxn_stoichs(nbody_ds.ne_stoich, ne_stoich)
+
+
+def test_database_history():
+    ds = portal.collections.Dataset("history_test")
+    history = [("energy", "p3", "m1", "b2", "o1"),
+               ("energy", "p1", "m1", None, "o1"),
+               ("energy", "p1", "m1", None, "o2"),
+               ("energy", "p1", "m2", "b3", "o1"),
+               ("gradient", "p1", "m2", None, None)]
+
+    for h in history:
+        ds._add_history(driver=h[0], program=h[1], method=h[2], basis=h[3], options=h[4])
+
+    assert ds.list_history().shape[0] == 5
+    assert ds.list_history(program="P1").shape[0] == 4
+    assert ds.list_history(basis=None).shape[0] == 3
+    assert ds.list_history(options=None).shape[0] == 1
+

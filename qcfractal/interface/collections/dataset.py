@@ -1,7 +1,7 @@
 """
 QCPortal Database ODM
 """
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -76,8 +76,13 @@ class Dataset(Collection):
         default_driver: str = "energy"
         alias_keywords: Dict[str, Dict[str, str]] = {}
 
+        # Data
         records: List[MoleculeRecord] = []
         contributed_values: Dict[str, ContributedValues] = {}
+
+        # History, driver, program, method (basis, options)
+        history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
+        history_keys: Tuple[str] = ("driver", "program", "method", "basis", "options")
 
     def _check_state(self):
         if self._new_molecules or self._new_keywords or self._new_records or self._updated_state:
@@ -117,6 +122,55 @@ class Dataset(Collection):
 
         self._new_records = []
         self._new_molecules = {}
+
+    def _add_history(self, **history: Dict[str, Optional[str]])->None:
+        """
+        Adds compute history to the dataset
+        """
+
+        if history.keys() != set(self.data.history_keys):
+            raise KeyError("Internal error: Incorrect history keys passed in.")
+
+        new_history = []
+        for key in self.data.history_keys:
+            value = history[key]
+            if value is not None:
+                value = value.lower()
+            new_history.append(value)
+
+        self.data.history.add(tuple(new_history))
+
+    def list_history(self, **search: Dict[str, Optional[str]]) -> 'DataFrame':
+        """
+        Lists the history of computations completed.
+
+        Parameters
+        ----------
+        **search : Dict[str, Optional[str]]
+            Allows searching to narrow down return.
+
+        Returns
+        -------
+        DataFrame
+            The computed keys.
+
+        """
+
+        if not (search.keys() <= set(self.data.history_keys)):
+            raise KeyError("Not all query keys were understood.")
+
+        df = pd.DataFrame(list(self.data.history), columns=self.data.history_keys)
+
+        for key, value in search.items():
+            if value is not None:
+                value = value.lower()
+                df = df[df[key] == value]
+            else:
+                df = df[df[key].isnull()]
+
+        df.set_index(list(self.data.history_keys[:-1]), inplace=True)
+        df.sort_index(inplace=True)
+        return df
 
     def _default_parameters(self, driver, keywords, program):
 
@@ -403,6 +457,11 @@ class Dataset(Collection):
         umols, uidx = np.unique(molecule_idx, return_index=True)
 
         ret = self.client.add_compute(program, method, basis, driver, keywords, list(umols))
+
+        self.data.history
+
+        # Update the record that this was computed
+        self.save()
 
         return ret
 
