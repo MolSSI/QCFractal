@@ -41,6 +41,8 @@ def test_dataset_compute_gradient(fractal_compute_server):
     stats = ds.statistics("MUE", "HF/sto-3g", "gradient")
     assert pytest.approx(stats.mean()) == 0.00984176986312362
 
+    assert ds.list_history().shape[0] == 1
+
 
 def test_reactiondataset_check_state(fractal_compute_server):
     client = portal.FractalClient(fractal_compute_server)
@@ -143,6 +145,7 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/STO-3G")
 
     assert isinstance(ds.to_json(), dict)
+    assert ds.list_history(keywords=None).shape[0] == 1
 
 
 @testing.using_psi4
@@ -172,6 +175,10 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     fractal_compute_server.await_results()
     assert ds.query("SCF", "STO-3G", keywords="df", prefix="df-")
     assert pytest.approx(0.38748602675524185, 1.e-5) == ds.df.loc["He2", "df-SCF/STO-3G"]
+
+    assert ds.list_history().shape[0] == 2
+    assert ds.list_history(keywords="DF").shape[0] == 1
+    assert ds.list_history(keywords="DIRECT").shape[0] == 1
 
 
 @testing.using_torsiondrive

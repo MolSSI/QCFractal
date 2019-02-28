@@ -230,13 +230,12 @@ def test_database_history():
                ("energy", "p1", "m1", None, "o1"),
                ("energy", "p1", "m1", None, "o2"),
                ("energy", "p1", "m2", "b3", "o1"),
-               ("gradient", "p1", "m2", None, None)]
+               ("gradient", "p1", "m2", None, None)] # yapf: disable
 
     for h in history:
-        ds._add_history(driver=h[0], program=h[1], method=h[2], basis=h[3], options=h[4])
+        ds._add_history(driver=h[0], program=h[1], method=h[2], basis=h[3], keywords=h[4])
 
     assert ds.list_history().shape[0] == 5
     assert ds.list_history(program="P1").shape[0] == 4
     assert ds.list_history(basis=None).shape[0] == 3
-    assert ds.list_history(options=None).shape[0] == 1
-
+    assert ds.list_history(keywords=None).shape[0] == 1

@@ -82,7 +82,7 @@ class Dataset(Collection):
 
         # History, driver, program, method (basis, options)
         history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
-        history_keys: Tuple[str] = ("driver", "program", "method", "basis", "options")
+        history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
 
     def _check_state(self):
         if self._new_molecules or self._new_keywords or self._new_records or self._updated_state:
@@ -123,11 +123,10 @@ class Dataset(Collection):
         self._new_records = []
         self._new_molecules = {}
 
-    def _add_history(self, **history: Dict[str, Optional[str]])->None:
+    def _add_history(self, **history: Dict[str, Optional[str]]) -> None:
         """
         Adds compute history to the dataset
         """
-
         if history.keys() != set(self.data.history_keys):
             raise KeyError("Internal error: Incorrect history keys passed in.")
 
@@ -184,16 +183,19 @@ class Dataset(Collection):
         if driver is None:
             driver = self.data.default_driver
 
+        keywords_alias = keywords
         if keywords is None:
             if program in self.data.default_keywords:
-                keywords = self.data.alias_keywords[program][self.data.default_keywords[program]]
+                keywords_alias = self.data.default_keywords[program]
+                keywords = self.data.alias_keywords[program][keywords_alias]
         else:
             if (program not in self.data.alias_keywords) or (keywords not in self.data.alias_keywords[program]):
                 raise KeyError("KeywordSet alias '{}' not found for program '{}'.".format(keywords, program))
 
+            keywords_alias = keywords
             keywords = self.data.alias_keywords[program][keywords]
 
-        return driver, keywords, program
+        return driver, keywords, keywords_alias, program
 
     def _query(self, indexer, query, field="return_result", scale=None):
         """
@@ -390,7 +392,7 @@ class Dataset(Collection):
 
         """
 
-        driver, keywords, program = self._default_parameters(driver, keywords, program)
+        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
 
         if not contrib and (self.client is None):
             raise AttributeError("DataBase: FractalClient was not set.")
@@ -451,16 +453,15 @@ class Dataset(Collection):
         if self.client is None:
             raise AttributeError("DataBase: Compute: Client was not set.")
 
-        driver, keywords, program = self._default_parameters(driver, keywords, program)
+        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
 
         molecule_idx = [e.molecule_id for e in self.data.records]
         umols, uidx = np.unique(molecule_idx, return_index=True)
 
         ret = self.client.add_compute(program, method, basis, driver, keywords, list(umols))
 
-        self.data.history
-
         # Update the record that this was computed
+        self._add_history(driver=driver, program=program, method=method, basis=basis, keywords=keywords_alias)
         self.save()
 
         return ret

@@ -53,9 +53,6 @@ def test_molecule_file_constructors():
 def test_water_minima_data():
     mol = portal.data.get_molecule("water_dimer_minima.psimol")
 
-    assert len(str(mol)) == 662
-    assert len(mol.to_string()) == 442
-
     assert sum(x == y for x, y in zip(mol.symbols, ['O', 'H', 'H', 'O', 'H', 'H'])) == mol.geometry.shape[0]
     assert mol.molecular_charge == 0
     assert mol.molecular_multiplicity == 1

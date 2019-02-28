@@ -3,7 +3,7 @@ QCPortal Database ODM
 """
 import itertools as it
 from enum import Enum
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -79,6 +79,10 @@ class ReactionDataset(Dataset):
 
         ds_type: _ReactionTypeEnum = _ReactionTypeEnum.rxn
         records: List[ReactionRecord] = []
+
+        history: Set[Tuple[str, str, str, Optional[str], Optional[str], str]] = set()
+        history_keys: Tuple[str, str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords",
+                                                             "stoichiometry")
 
     def _form_index(self):
         # Unroll the index
@@ -216,7 +220,7 @@ class ReactionDataset(Dataset):
 
         """
 
-        driver, keywords, program = self._default_parameters(driver, keywords, program)
+        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
 
         if not contrib and (self.client is None):
             raise AttributeError("DataBase: FractalClient was not set.")
@@ -288,7 +292,7 @@ class ReactionDataset(Dataset):
         if self.client is None:
             raise AttributeError("DataBase: Compute: Client was not set.")
 
-        driver, keywords, program = self._default_parameters(driver, keywords, program)
+        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
 
         # Figure out molecules that we need
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
@@ -318,6 +322,11 @@ class ReactionDataset(Dataset):
         compute_list = list(umols)
 
         ret = self.client.add_compute(program, method.lower(), basis.lower(), driver, keywords, compute_list)
+
+        # Update the record that this was computed
+        self._add_history(
+            driver=driver, program=program, method=method, basis=basis, keywords=keywords_alias, stoichiometry=stoich)
+        self.save()
 
         return ret
 
