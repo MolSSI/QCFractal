@@ -2,16 +2,9 @@
 Utility functions for on-node procedures.
 """
 
-import hashlib
 import json
 
 from qcelemental.models import ResultInput
-
-
-def format_result_indices(data, program=None):
-    if program is None:
-        program = data["program"]
-    return program, data["molecule"], data["driver"], data["method"], data["basis"], data["options"]
 
 
 def unpack_single_task_spec(storage, meta, molecules):
@@ -123,14 +116,6 @@ def parse_single_tasks(storage, results):
         v["program"] = v["extras"]["_qcfractal_tags"]["program"]
         del v["extras"]["_qcfractal_tags"]
     return results
-
-
-def hash_single_task_spec(data, program=None):
-
-    single_keys = format_result_indices(data, program=program)
-    keys = {"procedure_type": "single", "single_key": single_keys}
-    hash_index = hash_procedure_keys(keys)
-    return keys, hash_index
 
 
 def parse_hooks(rdata, rhooks):

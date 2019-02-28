@@ -55,16 +55,19 @@ def has_module(name):
     return _programs[name]
 
 
+def _build_pytest_skip(program):
+    import_message = "Not detecting module {}. Install package if necessary to enable tests."
+    return pytest.mark.skipif(has_module(program) is False, reason=import_message.format(program))
+
+
 # Add a number of module testing options
-using_fireworks = pytest.mark.skipif(has_module('fireworks') is False, reason=_import_message.format('fireworks'))
-using_dask = pytest.mark.skipif(
-    has_module('dask.distributed') is False, reason=_import_message.format('dask.distributed'))
-using_psi4 = pytest.mark.skipif(has_module('psi4') is False, reason=_import_message.format('psi4'))
-using_parsl = pytest.mark.skipif(has_module('parsl') is False, reason=_import_message.format('parsl'))
-using_rdkit = pytest.mark.skipif(has_module('rdkit') is False, reason=_import_message.format('rdkit'))
-using_geometric = pytest.mark.skipif(has_module('geometric') is False, reason=_import_message.format('geometric'))
-using_torsiondrive = pytest.mark.skipif(
-    has_module('torsiondrive') is False, reason=_import_message.format('torsiondrive'))
+using_dask = _build_pytest_skip('dask.distributed')
+using_fireworks = _build_pytest_skip('fireworks')
+using_geometric = _build_pytest_skip('geometric')
+using_parsl = _build_pytest_skip('parsl')
+using_psi4 = _build_pytest_skip('psi4')
+using_rdkit = _build_pytest_skip('rdkit')
+using_torsiondrive = _build_pytest_skip('torsiondrive')
 using_unix = pytest.mark.skipif(
     os.name.lower() != 'posix', reason='Not on Unix operating system, '
     'assuming Bash is not present')
