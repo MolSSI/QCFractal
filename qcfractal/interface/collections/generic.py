@@ -39,7 +39,7 @@ class Generic(Collection):
     def __getitem__(self, key):
         return self.data.data[key]
 
-    def get_data(self, copy: bool=True):
+    def get_data(self, copy: bool = True):
         """Returns a copy of the underlying data object.
 
         Parameters

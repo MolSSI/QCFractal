@@ -4,7 +4,7 @@ Explicit tests for queue manipulation.
 
 import qcfractal.interface as portal
 from qcfractal import testing
-from qcfractal.testing import fractal_compute_server
+from qcfractal.testing import fractal_compute_server, reset_server_database
 
 
 @testing.using_rdkit
@@ -40,6 +40,7 @@ def test_queue_error(fractal_compute_server):
 
 @testing.using_rdkit
 def test_queue_duplicate_compute(fractal_compute_server):
+    reset_server_database(fractal_compute_server)
 
     client = portal.FractalClient(fractal_compute_server)
 
@@ -55,9 +56,24 @@ def test_queue_duplicate_compute(fractal_compute_server):
 
     db = fractal_compute_server.objects["storage_socket"]
 
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret)
+    ret = client.add_compute("RDKIT", "uff", None, "energy", None, mol_ret)
     assert len(ret.ids) == 1
     assert len(ret.existing) == 1
+
+    ret = client.add_compute("rdkit", "uFf", "", "energy", None, mol_ret)
+    assert len(ret.ids) == 1
+    assert len(ret.existing) == 1
+
+    assert len(client.get_results(program="RDKIT")) == 1
+    assert len(client.get_results(program="RDKit")) == 1
+
+    assert len(client.get_results(method="UFF")) == 1
+    assert len(client.get_results(method="uff")) == 1
+
+    assert len(client.get_results(basis=None)) == 1
+    assert len(client.get_results(basis="")) == 1
+
+    assert len(client.get_results(keywords=None)) == 1
 
 
 @testing.using_rdkit

@@ -4,12 +4,11 @@ Models for the REST interface
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseConfig, BaseModel, validator
-from qcelemental.models import Result, Optimization
 
-from .common_models import KeywordSet, Molecule, json_encoders
+from .common_models import KeywordSet, Molecule
 from .gridoptimization import GridOptimizationInput
+from .model_utils import json_encoders
 from .torsiondrive import TorsionDriveInput
-
 
 __all__ = [
     "ResponseGETMeta",
@@ -178,7 +177,7 @@ class ResultGETBody(BaseModel):
         data = {key: v[key] for key in (v.keys() & valid_keys)}
         if "keywords" in data and data["keywords"] is None:
             data["keywords"] = 'null'
-        if "basis" in data and data["basis"] is None:
+        if "basis" in data and ((data["basis"] is None) or (data["basis"] == "")):
             data["basis"] = 'null'
         return data
 

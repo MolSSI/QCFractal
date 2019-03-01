@@ -60,10 +60,11 @@ class TaskManager(BaseModel):
             return True
 
         task_query = storage_socket.get_procedures_by_id(
-            id=list(self.required_tasks.values()),
-            projection={"status": True,
-                        "error": True,
-                        "hash_index": True})
+            id=list(self.required_tasks.values()), projection={
+                "status": True,
+                "error": True,
+                "hash_index": True
+            })
 
         if len(task_query["data"]) != len(self.required_tasks):
             return False

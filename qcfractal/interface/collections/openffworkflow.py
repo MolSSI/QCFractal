@@ -211,10 +211,9 @@ class OpenFFWorkflow(Collection):
 
     def _add_torsiondrive(self, packet):
         # Build out a new service
-        torsion_meta = copy.deepcopy({
-            k: self.data.torsiondrive_static_options[k]
-            for k in ("keywords", "optimization_spec", "qc_spec")
-        })
+        torsion_meta = copy.deepcopy(
+            {k: self.data.torsiondrive_static_options[k]
+             for k in ("keywords", "optimization_spec", "qc_spec")})
 
         for k in ["grid_spacing", "dihedrals"]:
             torsion_meta["keywords"][k] = packet[k]

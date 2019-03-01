@@ -4,9 +4,9 @@ A command line interface to the qcfractal server.
 
 import argparse
 
+import qcfractal
 import tornado.log
 
-import qcfractal
 from . import cli_utils
 
 __all__ = ["main"]
@@ -113,8 +113,8 @@ def main(args=None):
         queue_client = ProcessPoolExecutor(max_workers=args["nprocs"])
 
     else:
-        raise KeyError(
-            "Unknown adapter type '{}', available options: 'fireworks', 'dask', .".format(args["adapter_type"]))
+        raise KeyError("Unknown adapter type '{}', available options: 'fireworks', 'dask', .".format(
+            args["adapter_type"]))
 
     # Quick logging
     if args["logfile_prefix"] is not None:

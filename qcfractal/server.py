@@ -418,6 +418,7 @@ class FractalServer:
 
         return self.storage.get_managers(status=status, name=name)["data"]
 
+
 ### Functions only available if using a local queue_adapter
 
     def _check_manager(self, func_name):

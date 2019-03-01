@@ -26,6 +26,7 @@ from bson.objectid import ObjectId
 from mongoengine.connection import disconnect, get_db
 
 from .. import interface
+from ..interface.models import prepare_basis
 from .me_models import Collection, Keywords, Molecule, Procedure, QueueManager, Result, ServiceQueue, TaskQueue, User
 from .storage_utils import add_metadata_template, get_metadata_template
 
@@ -57,7 +58,8 @@ def _str_to_indices_with_errors(ids):
 
 _null_keys = {"basis", "keywords"}
 _id_keys = {"id", "molecule", "keywords", "procedure_id"}
-_lower_keys = {"method", "basis", "program"}
+_lower_func = lambda x: x.lower()
+_prepare_keys = {"program": _lower_func, "basis": prepare_basis, "method": _lower_func, "procedure": _lower_func}
 
 
 def format_query(**query):
@@ -78,15 +80,19 @@ def format_query(**query):
 
         # Handle ID conversions
         elif k in _id_keys:
-            v, bad = _str_to_indices_with_errors(v)
-            if bad:
-                errors.append((k, bad))
-
-        if k in _lower_keys:
             if isinstance(v, (list, tuple)):
-                v = [x.lower() for x in v]
+                v, bad = _str_to_indices_with_errors(v)
+                if bad:
+                    errors.append((k, bad))
             else:
-                v = v.lower()
+                v = ObjectId(v)
+
+        if k in _prepare_keys:
+            f = _prepare_keys[k]
+            if isinstance(v, (list, tuple)):
+                v = [f(x) for x in v]
+            else:
+                v = f(v)
 
         if isinstance(v, (list, tuple)):
             ret[k + "__in"] = v
@@ -150,8 +156,10 @@ class MongoengineSocket:
                 "Choosing to stop instead of assuming version is at least 3.2.".format(uri))
         except RuntimeError:
             # Trap low version
-            raise RuntimeError("Connected MongoDB at URL {} needs to be at least version 3.2, found version {}.".
-                               format(uri, self.client.server_info()['version']))
+            raise RuntimeError(
+                "Connected MongoDB at URL {} needs to be at least version 3.2, found version {}.".format(
+                    uri,
+                    self.client.server_info()['version']))
 
         # Isolate objects to this single project DB
         self._project_name = project
@@ -335,12 +343,7 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def get_molecules(self,
-                      id=None,
-                      molecule_hash=None,
-                      molecular_formula=None,
-                      limit: int=None,
-                      skip: int=0):
+    def get_molecules(self, id=None, molecule_hash=None, molecular_formula=None, limit: int = None, skip: int = 0):
 
         ret = {"meta": get_metadata_template(), "data": []}
 
@@ -351,7 +354,6 @@ class MongoengineSocket:
         data = Molecule.objects(**query).exclude("molecule_hash", "molecular_formula")\
                                         .limit(self.get_limit(limit))\
                                         .skip(skip)\
-
 
         ret["meta"]["success"] = True
         ret["meta"]["n_found"] = data.count()  # all data count, can be > len(data)
@@ -440,12 +442,12 @@ class MongoengineSocket:
         return ret
 
     def get_keywords(self,
-                     id: Union[str, list]=None,
-                     hash_index: Union[str, list]=None,
-                     limit: int=None,
-                     skip: int=0,
-                     return_json: bool=True,
-                     with_ids: bool=True):
+                     id: Union[str, list] = None,
+                     hash_index: Union[str, list] = None,
+                     limit: int = None,
+                     skip: int = 0,
+                     return_json: bool = True,
+                     with_ids: bool = True):
         """Search for one (unique) option based on the 'program'
         and the 'name'. No overwrite allowed.
 
@@ -574,7 +576,7 @@ class MongoengineSocket:
     ### Mongo database functions
 
     # def add_collection(self, data, overwrite=False):
-    def add_collection(self, collection: str, name: str, data, overwrite: bool=False):
+    def add_collection(self, collection: str, name: str, data, overwrite: bool = False):
         """Add (or update) a collection to the database.
 
         Parameters
@@ -623,11 +625,11 @@ class MongoengineSocket:
 
     # def get_collections(self, keys, projection=None):
     def get_collections(self,
-                        collection: str=None,
-                        name: str=None,
-                        return_json: bool=True,
-                        with_ids: bool=True,
-                        limit: int=None):
+                        collection: str = None,
+                        name: str = None,
+                        return_json: bool = True,
+                        with_ids: bool = True,
+                        limit: int = None):
         """Get collection by collection and/or name
 
         Parameters
@@ -684,7 +686,7 @@ class MongoengineSocket:
 
 ## Results functions
 
-    def add_results(self, data: List[dict], update_existing: bool=False, return_json=True):
+    def add_results(self, data: List[dict], update_existing: bool = False, return_json=True):
         """
         Add results from a given dict. The dict should have all the required
         keys of a result.
@@ -707,11 +709,9 @@ class MongoengineSocket:
         """
 
         for d in data:
-            for i in self._lower_results_index:
-                if d[i] is None:
-                    continue
-
-                d[i] = d[i].lower()
+            d["program"] = d["program"].lower()
+            d["method"] = d["method"].lower()
+            d["basis"] = prepare_basis(d["basis"])
 
         meta = add_metadata_template()
 
@@ -720,10 +720,9 @@ class MongoengineSocket:
         for d in data:
 
             d.pop("id", None)
-            # search by index keywords not by all keys, much faster
             doc = Result.objects(
                 program=d['program'],
-                name=d['driver'],
+                driver=d['driver'],
                 method=d['method'],
                 basis=d['basis'],
                 keywords=d['keywords'],
@@ -754,8 +753,8 @@ class MongoengineSocket:
     def get_results_by_id(self,
                           id: List[str],
                           projection=None,
-                          limit: int=None,
-                          skip: int=0,
+                          limit: int = None,
+                          skip: int = 0,
                           return_json=True,
                           with_ids=True):
         """
@@ -815,16 +814,16 @@ class MongoengineSocket:
         pass
 
     def get_results(self,
-                    program: str=None,
-                    method: str=None,
-                    basis: str=None,
-                    molecule: str=None,
-                    driver: str=None,
-                    keywords: str=None,
-                    status: str='COMPLETE',
+                    program: str = None,
+                    method: str = None,
+                    basis: str = None,
+                    molecule: str = None,
+                    driver: str = None,
+                    keywords: str = None,
+                    status: str = 'COMPLETE',
                     projection=None,
-                    limit: int=None,
-                    skip: int=0,
+                    limit: int = None,
+                    skip: int = 0,
                     return_json=True,
                     with_ids=True):
         """
@@ -894,8 +893,8 @@ class MongoengineSocket:
     def get_results_by_task_id(self,
                                task_id: Union[List[str], str],
                                projection=None,
-                               limit: int=None,
-                               skip: int=0,
+                               limit: int = None,
+                               skip: int = 0,
                                return_json=True):
         """
 
@@ -970,7 +969,7 @@ class MongoengineSocket:
 
 ### Mongo procedure/service functions
 
-    def add_procedures(self, data: List[dict], update_existing: bool=False, return_json=True):
+    def add_procedures(self, data: List[dict], update_existing: bool = False, return_json=True):
         """
         Add procedures from a given dict. The dict should have all the required
         keys of a result.
@@ -1020,14 +1019,14 @@ class MongoengineSocket:
         return ret
 
     def get_procedures(self,
-                       procedure: str=None,
-                       program: str=None,
-                       hash_index: str=None,
-                       id: str=None,
-                       status: str='COMPLETE',
+                       procedure: str = None,
+                       program: str = None,
+                       hash_index: str = None,
+                       id: str = None,
+                       status: str = 'COMPLETE',
                        projection=None,
-                       limit: int=None,
-                       skip: int=0,
+                       limit: int = None,
+                       skip: int = 0,
                        return_json=True,
                        with_ids=True):
         """
@@ -1083,11 +1082,11 @@ class MongoengineSocket:
         return {"data": data, "meta": meta}
 
     def get_procedures_by_id(self,
-                             id: List[str]=None,
-                             hash_index: List[str]=None,
+                             id: List[str] = None,
+                             hash_index: List[str] = None,
                              projection=None,
-                             limit: int=None,
-                             skip: int=0,
+                             limit: int = None,
+                             skip: int = 0,
                              return_json=True,
                              with_ids=True):
         """
@@ -1128,7 +1127,7 @@ class MongoengineSocket:
         else:
             data = Procedure.objects(**query).limit(q_limit).skip(skip)
 
-        meta["n_found"] = data.count() # all data count
+        meta["n_found"] = data.count()  # all data count
         meta["success"] = True
         # except Exception as err:
         #     meta['error_description'] = str(err)
@@ -1141,8 +1140,8 @@ class MongoengineSocket:
     def get_procedures_by_task_id(self,
                                   task_id: Union[List[str], str],
                                   projection=None,
-                                  limit: int=None,
-                                  skip: int=0,
+                                  limit: int = None,
+                                  skip: int = 0,
                                   return_json=True):
         """
 
@@ -1270,13 +1269,13 @@ class MongoengineSocket:
         return ret
 
     def get_services(self,
-                     id: Union[List[str], str]=None,
-                     procedure_id: Union[List[str], str]=None,
-                     hash_index: Union[List[str], str]=None,
-                     status: str=None,
+                     id: Union[List[str], str] = None,
+                     procedure_id: Union[List[str], str] = None,
+                     hash_index: Union[List[str], str] = None,
+                     status: str = None,
                      projection=None,
-                     limit: int=None,
-                     skip: int=0,
+                     limit: int = None,
+                     skip: int = 0,
                      return_json=True):
         """
 
@@ -1483,10 +1482,10 @@ class MongoengineSocket:
                   ids=None,
                   hash_index=None,
                   program=None,
-                  status: str=None,
+                  status: str = None,
                   projection=None,
-                  limit: int=None,
-                  skip: int=0,
+                  limit: int = None,
+                  skip: int = 0,
                   return_json=True,
                   with_ids=True):
         """
@@ -1541,11 +1540,7 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-    def queue_get_by_id(self,
-                        ids: List[str],
-                        limit: int=None,
-                        skip: int=0,
-                        as_json: bool=True):
+    def queue_get_by_id(self, ids: List[str], limit: int = None, skip: int = 0, as_json: bool = True):
         """Get tasks by their IDs
 
         Parameters
@@ -1636,7 +1631,7 @@ class MongoengineSocket:
 
         return ret
 
-    def queue_reset_status(self, manager: str, reset_running: bool=True, reset_error: bool=False) -> int:
+    def queue_reset_status(self, manager: str, reset_running: bool = True, reset_error: bool = False) -> int:
         """
         Reset the status of the tasks that a manager owns from Running to Waiting
         If reset_error is True, then also reset errored tasks AND its results/proc
@@ -1694,7 +1689,6 @@ class MongoengineSocket:
 
         return TaskQueue.objects(id__in=id).delete()
 
-
     def handle_hooks(self, hooks):
 
         # Very dangerous, we need to modify this substatially
@@ -1742,7 +1736,7 @@ class MongoengineSocket:
 
         return num_updated == 1
 
-    def get_managers(self, name: str=None, status: str=None, modified_before=None):
+    def get_managers(self, name: str = None, status: str = None, modified_before=None):
 
         query, error = format_query(name=name, status=status)
         if modified_before:
@@ -1757,6 +1751,7 @@ class MongoengineSocket:
         data = [x.to_json_obj(with_id=False) for x in data]
 
         return {"data": data, "meta": meta}
+
 
 ### Users
 

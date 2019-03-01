@@ -8,7 +8,6 @@ import logging
 import socket
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Union
-from pydantic import BaseModel
 
 import tornado.ioloop
 from qcfractal.extras import get_information
@@ -43,13 +42,13 @@ class QueueManager:
     def __init__(self,
                  client: Any,
                  queue_client: Any,
-                 loop: Any=None,
-                 logger: Optional[logging.Logger]=None,
-                 max_tasks: int=1000,
-                 queue_tag: str=None,
-                 cluster: str="unknown",
-                 update_frequency: Union[int, float]=2,
-                 verbose: bool=True,
+                 loop: Any = None,
+                 logger: Optional[logging.Logger] = None,
+                 max_tasks: int = 1000,
+                 queue_tag: str = None,
+                 cluster: str = "unknown",
+                 update_frequency: Union[int, float] = 2,
+                 verbose: bool = True,
                  cores_per_task: Optional[int] = None,
                  memory_per_task: Optional[int] = None):
         """
@@ -93,10 +92,8 @@ class QueueManager:
         self.client = client
         self.cores_per_task = cores_per_task
         self.memory_per_task = memory_per_task
-        self.queue_adapter = build_queue_adapter(queue_client,
-                                                 logger=self.logger,
-                                                 cores_per_task=self.cores_per_task,
-                                                 memory_per_task=self.memory_per_task)
+        self.queue_adapter = build_queue_adapter(
+            queue_client, logger=self.logger, cores_per_task=self.cores_per_task, memory_per_task=self.memory_per_task)
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag
         self.verbose = verbose
@@ -241,6 +238,7 @@ class QueueManager:
 
         return self.queue_adapter.close()
 
+
 ## Queue Manager functions
 
     def heartbeat(self) -> None:
@@ -296,7 +294,7 @@ class QueueManager:
         """
         self.exit_callbacks.append((callback, args, kwargs))
 
-    def update(self, new_tasks: bool=True) -> bool:
+    def update(self, new_tasks: bool = True) -> bool:
         """Examines the queue for completed tasks and adds successful completions to the database
         while unsuccessful are logged for future inspection
 

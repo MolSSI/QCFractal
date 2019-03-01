@@ -8,8 +8,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel
 
-from .common_models import (Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification, hash_dictionary,
-                            json_encoders)
+from .common_models import Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification
+from .model_utils import hash_dictionary, json_encoders, recursive_normalizer
 
 __all__ = ["TorsionDriveInput", "TorsionDrive"]
 
@@ -41,6 +41,8 @@ class TorsionDriveInput(BaseModel):
         mol = data["initial_molecule"]
         if isinstance(mol, (str, dict, Molecule)):
             data["initial_molecule"] = [mol]
+
+        data["keywords"] = recursive_normalizer(data["keywords"])
 
         BaseModel.__init__(self, **data)
 
@@ -130,6 +132,7 @@ class TorsionDrive(TorsionDriveInput):
             include={"initial_molecule", "program", "procedure", "keywords", "optimization_spec", "qc_spec"})
 
         return hash_dictionary(data)
+
 
 ## Query
 

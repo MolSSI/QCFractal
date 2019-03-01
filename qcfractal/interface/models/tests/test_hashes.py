@@ -3,6 +3,9 @@ import json
 import pytest
 
 from ..common_models import KeywordSet, Molecule
+from ..gridoptimization import GridOptimizationInput
+from ..proc_models import OptimizationModel
+from ..torsiondrive import TorsionDrive
 
 ## Molecule hashes
 
@@ -42,6 +45,7 @@ def test_molecule_geometry_canary_hash(geom, hash_index):
     mol = Molecule(geometry=geom, symbols=["H", "H"])
 
     assert mol.get_hash() == hash_index
+
 
 ## Keyword Set hash
 
@@ -136,3 +140,215 @@ def test_keywords_comparison_hash(data1, data2):
     assert opt1.hash_index == opt2s.hash_index
     assert opt1s.hash_index == opt2.hash_index
     assert opt1s.hash_index == opt2s.hash_index
+
+
+## Optimization hashes
+_qc_spec = {"driver": "gradient", "method": "HF", "basis": "sto-3g", "keywords": None, "program": "prog"}
+_base_opt = {
+    "keywords": {},
+    "program": "prog2",
+    "initial_molecule": "5c7896fb95d592ad07a2fe3b",
+    "success": False,
+    "qc_spec": _qc_spec
+}
+@pytest.mark.parametrize("data, hash_index", [
+
+    # Check same
+    ({},
+     "254de59f1598570d0c31aa2d3d84b601c9da12b9"),
+
+    ({"program": "PROG2"},
+     "254de59f1598570d0c31aa2d3d84b601c9da12b9"),
+
+    ({"qc_spec": {**_qc_spec, **{"program": "prog"}}},
+     "254de59f1598570d0c31aa2d3d84b601c9da12b9"),
+
+    ({"qc_spec": {**_qc_spec, **{"method": "HF"}}},
+     "254de59f1598570d0c31aa2d3d84b601c9da12b9"),
+
+    # Check tolerances
+    ({"keywords": {"tol": 1.e-12}},
+     "8ab52bff9430f7759323e6a547afc58725422c47"),
+
+    ({"keywords": {"tol": 0.0}},
+     "8ab52bff9430f7759323e6a547afc58725422c47"),
+
+    ({"keywords": {"tol": 1.e-9}},
+     "1628caf9a29c9bf17a66cb55b13106e7f2704e51"),
+
+    # Check fields
+    ({"initial_molecule": "5c78987e95d592ad07a2fe3c"},
+     "3c20c8f7b1be857460f2d71d74680dd19e9d9113"),
+
+    # Check basis preps
+    ({"qc_spec": {**_qc_spec, **{"basis": None}}},
+     "3489e0c47144ebedb4fdcc2bfab61f7aa4dc947c"),
+
+    ({"qc_spec": {**_qc_spec, **{"basis": ""}}},
+     "3489e0c47144ebedb4fdcc2bfab61f7aa4dc947c"),
+]) # yapf: disable
+
+def test_optimization_canary_hash(data, hash_index):
+
+    opt = OptimizationModel(**{**_base_opt, **data})
+
+    assert hash_index == opt.hash_index, data
+
+
+## GridOptimization hashes
+_opt_spec = {
+    "program": "geometric",
+    "keywords": {
+        "coordsys": "tric",
+    }
+}
+
+_scan_spec = {
+        "type": "distance",
+        "indices": [1, 2],
+        "steps": [-0.1, 0.0],
+        "step_type": "relative"
+    } # yapf: disable
+
+_base_gridopt = {
+    "keywords": {
+        "preoptimization": False,
+        "scans": [_scan_spec]
+    },
+    "optimization_spec": _opt_spec,
+    "qc_spec": _qc_spec,
+    "initial_molecule": "5c7896fb95d592ad07a2fe3b",
+}
+
+
+@pytest.mark.parametrize(
+    "data, hash_index",
+    [
+
+        # Check same
+        ({}, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+        ({
+            "keywords": {
+                "preoptimization": False,
+                "scans": [{
+                    **_scan_spec,
+                    **{
+                        "steps": [-0.1 + 1e-12, 0.0 - 1.e-12]
+                    }
+                }]
+            }
+        }, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+
+        # Check opt keywords stability
+        ({
+            "optimization_spec": {
+                **_opt_spec,
+                **{
+                    "keywords": {
+                        "tol": 1.e-12
+                    }
+                }
+            }
+        }, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+        ({
+            "optimization_spec": {
+                **_opt_spec,
+                **{
+                    "keywords": {
+                        "tol": 0
+                    }
+                }
+            }
+        }, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+
+        # Check fields
+        ({
+            "initial_molecule": "5c78987e95d592ad07a2fe3c"
+        }, "5b00f25ce8a81950754faf65b1643896837ea0ec"),
+    ])
+def test_gridoptimization_canary_hash(data, hash_index):
+
+    gridopt = GridOptimizationInput(**{**_base_gridopt, **data})
+
+    assert hash_index == gridopt.get_hash_index(), data
+
+
+## TorsionDrive hashes
+
+_base_torsion = {
+    "keywords": {
+        "dihedrals": [[0, 1, 2, 3]],
+        "grid_spacing": [10]
+    },
+    "optimization_spec": _opt_spec,
+    "qc_spec": _qc_spec,
+    "initial_molecule": ["5c7896fb95d592ad07a2fe3b"],
+    "final_energy_dict": {},
+    "optimization_history": {},
+    "minimum_positions": {},
+    "provenance": {
+        "creator": ""
+    }
+}
+
+
+@pytest.mark.parametrize(
+    "data, hash_index",
+    [
+
+        # Check same
+        ({}, "539022b987b84a8888a88789224c42096f11f5fc"),
+        ({
+            "keywords": {
+                "dihedrals": [[0, 1, 2, 3]],
+                "grid_spacing": [10],
+                "tol": 1.e-12
+            }
+        }, "972c731248b800a4e8984820333ed2b0fd3ac372"),
+        ({
+            "keywords": {
+                "dihedrals": [[0, 1, 2, 3]],
+                "grid_spacing": [10],
+                "tol": 0
+            }
+        }, "972c731248b800a4e8984820333ed2b0fd3ac372"),
+        ({
+            "keywords": {
+                "dihedrals": [[0, 1, 2, 3]],
+                "grid_spacing": [10],
+                "tol": 1.e-9
+            }
+        }, "f0d09cb058501e18001c7e454dafe42944d5f45e"),
+
+        # Check opt keywords stability
+        ({
+            "optimization_spec": {
+                **_opt_spec,
+                **{
+                    "keywords": {
+                        "tol": 1.e-12
+                    }
+                }
+            }
+        }, "c4cf09b80f6cb77bb3d5f41a3888d7b877205ef4"),
+        ({
+            "optimization_spec": {
+                **_opt_spec,
+                **{
+                    "keywords": {
+                        "tol": 0
+                    }
+                }
+            }
+        }, "c4cf09b80f6cb77bb3d5f41a3888d7b877205ef4"),
+
+        # Check fields
+        ({
+            "initial_molecule": ["5c78987e95d592ad07a2fe3c"]
+        }, "e37272983b3c2f6dcca74bb45f823f33d0cb3b11"),
+    ])
+def test_torsiondrive_canary_hash(data, hash_index):
+
+    td = TorsionDrive(**{**_base_torsion, **data})
+
+    assert hash_index == td.get_hash_index(), data

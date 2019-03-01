@@ -3,10 +3,9 @@ Explicit tests for queue manipulation.
 """
 
 import pytest
-
 import qcfractal.interface as portal
-from qcfractal import testing, QueueManager
-from qcfractal.testing import (reset_server_database, managed_compute_server, adapter_client_fixture)
+from qcfractal import QueueManager, testing
+from qcfractal.testing import adapter_client_fixture, managed_compute_server, reset_server_database
 
 
 @testing.using_rdkit
@@ -39,12 +38,14 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
             "id": task_id,
             "spec": {
                 "function":
-                    "qcengine.compute",
+                "qcengine.compute",
                 "args": [{
                     "molecule": portal.data.get_molecule("hooh.json").json_dict(),
                     "driver": "energy",
-                    "model": {"method": "HF",
-                              "basis": "sto-3g"},
+                    "model": {
+                        "method": "HF",
+                        "basis": "sto-3g"
+                    },
                     "keywords": {},
                 }, "psi4"],
                 "kwargs": {}

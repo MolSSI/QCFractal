@@ -5,11 +5,9 @@ Tests the on-node procedures compute capabilities.
 import copy
 
 import pytest
-
-from qcfractal.testing import fractal_compute_server, recursive_dict_merge, using_geometric, using_rdkit
-
 import qcfractal.interface as portal
 from qcfractal.interface.models import GridOptimizationInput, TorsionDriveInput
+from qcfractal.testing import fractal_compute_server, recursive_dict_merge, using_geometric, using_rdkit
 
 
 @pytest.fixture(scope="module")
@@ -46,7 +44,7 @@ def torsiondrive_fixture(fractal_compute_server):
             "keywords": None,
             "program": "rdkit",
         },
-    }
+    } # yapf: disable
 
     def spin_up_test(**keyword_augments):
 
@@ -193,7 +191,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
             "program": "rdkit",
         },
         "initial_molecule": mol_ret[0],
-    })
+    }) # yapf: disable
 
     ret = client.add_service([service])
     fractal_compute_server.await_services()
@@ -249,7 +247,7 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
             "program": "rdkit",
         },
         "initial_molecule": hooh,
-    })
+    }) # yapf: disable
 
     ret = client.add_service([service])
     fractal_compute_server.await_services()

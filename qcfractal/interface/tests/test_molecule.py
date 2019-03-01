@@ -27,7 +27,8 @@ def test_molecule_constructors():
     neon_from_psi = portal.data.get_molecule("neon_tetramer.psimol")
     ele = np.array([10, 10, 10, 10]).reshape(-1, 1)
     npneon = np.hstack((ele, neon_from_psi.geometry))
-    neon_from_np = portal.Molecule.from_data(npneon, name="neon tetramer", dtype="numpy", frags=[1, 2, 3], units="bohr")
+    neon_from_np = portal.Molecule.from_data(
+        npneon, name="neon tetramer", dtype="numpy", frags=[1, 2, 3], units="bohr")
 
     assert neon_from_psi.compare(neon_from_psi, neon_from_np)
 
@@ -63,8 +64,12 @@ def test_water_minima_data():
     assert hasattr(mol, "provenance")
     assert np.allclose(
         mol.geometry,
-        [[2.81211080, 0.1255717, 0.], [3.48216664, -1.55439981, 0.], [1.00578203, -0.1092573, 0.],
-         [-2.6821528, -0.12325075, 0.], [-3.27523824, 0.81341093, 1.43347255], [-3.27523824, 0.81341093, -1.43347255]])
+        [[2.81211080, 0.1255717, 0.],
+         [3.48216664, -1.55439981, 0.],
+         [1.00578203, -0.1092573, 0.],
+         [-2.6821528, -0.12325075, 0.],
+         [-3.27523824, 0.81341093, 1.43347255],
+         [-3.27523824, 0.81341093, -1.43347255]]) # yapf: disable
     assert mol.get_hash() == "b41f1e38bc4be5482fcd1d4dd53ca7c65146ab91"
 
 
@@ -146,13 +151,16 @@ def test_molecule_errors():
 
 def test_molecule_repeated_hashing():
 
-    mol = portal.Molecule(**{
-        'symbols': ['H', 'O', 'O', 'H'],
-        'geometry': [
-            1.73178198, 1.29095807, 1.03716028, 1.31566305, -0.007440200000000001, -0.28074722, -1.3143081, 0.00849608,
-            -0.27416914, -1.7241109, -1.30793432, 1.02770172
-        ]
-    })
+    mol = portal.Molecule(
+        **{
+            'symbols': ['H', 'O', 'O', 'H'],
+            'geometry': [
+                 1.73178198, 1.29095807, 1.03716028,
+                 1.31566305, -0.007440200000000001, -0.28074722,
+                -1.3143081, 0.00849608, -0.27416914,
+                -1.7241109, -1.30793432, 1.02770172
+            ]
+        }) # yapf: disable
 
     h1 = mol.get_hash()
     assert mol.get_molecular_formula() == "H2O2"

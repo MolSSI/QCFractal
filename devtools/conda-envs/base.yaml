@@ -13,6 +13,7 @@ dependencies:
   - bcrypt
   - cryptography
   - pydantic
+  - mongoengine
 
 # Test depends
   - pytest
@@ -22,7 +23,3 @@ dependencies:
 # QCArchive includes
   - qcengine>=0.6.0
   - qcelemental>=0.3.0
-
-# Pip includes
-  - pip:
-    - mongoengine

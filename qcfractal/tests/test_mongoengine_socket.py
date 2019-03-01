@@ -5,14 +5,14 @@
 
 """
 
-import qcfractal.interface as portal
-
-from qcfractal.storage_sockets.me_models import Molecule, Result, Keywords, \
-                    Procedure, OptimizationProcedure, TorsiondriveProcedure, TaskQueue
-from qcfractal.testing import mongoengine_socket_fixture as storage_socket
-import pytest
-from bson import ObjectId
 from time import time
+
+import pytest
+import qcfractal.interface as portal
+from bson import ObjectId
+from qcfractal.storage_sockets.me_models import (Molecule, OptimizationProcedure, Procedure, Result,
+                                                 TaskQueue, TorsiondriveProcedure)
+from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 
 
 @pytest.fixture
@@ -26,6 +26,7 @@ def molecules_H4O2(storage_socket):
 
     r = storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
     assert r == 2
+
 
 @pytest.fixture
 def kw_fixtures(storage_socket):
@@ -77,8 +78,7 @@ def test_molecule(storage_socket):
     assert len(result_list) == 2
 
     # get unique by hash and formula
-    one_mol = Molecule.objects(molecule_hash=water_mol.molecule_hash,
-                               molecular_formula=water_mol.molecular_formula)
+    one_mol = Molecule.objects(molecule_hash=water_mol.molecule_hash, molecular_formula=water_mol.molecular_formula)
     assert len(one_mol) == 1
 
     # Clean up
@@ -292,7 +292,7 @@ def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
     t1 = time()
 
     total_results = 1000
-    first_half = int(total_results/2)
+    first_half = int(total_results / 2)
     limit = 100
     skip = 50
 
@@ -337,13 +337,14 @@ def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
     # cleanup
     Result.objects.delete()
 
+
 def test_queue(storage_socket):
     tasks = TaskQueue.objects(status='WAITING')\
                 .limit(1000)\
                 .order_by('-created_on')\
                 .select_related()   # *** no lazy load of ReferenceField, get them now (trurns of dereferencing, max_depth=1)
-                # .only(projections_list)
-                # .fields(..)
-                # .exculde(..)
-                # .no_dereference()  # don't get any of the ReferenceFields (ids) (Turning off dereferencing)
+    # .only(projections_list)
+    # .fields(..)
+    # .exculde(..)
+    # .no_dereference()  # don't get any of the ReferenceFields (ids) (Turning off dereferencing)
     assert len(tasks) == 0

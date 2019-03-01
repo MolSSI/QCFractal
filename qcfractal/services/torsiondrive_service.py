@@ -8,7 +8,7 @@ from typing import Any, Dict, List
 
 import numpy as np
 
-from ..interface.models import json_encoders, TorsionDrive
+from ..interface.models import TorsionDrive, json_encoders
 from .service_util import BaseService, TaskManager
 
 try:
@@ -16,8 +16,6 @@ try:
     from torsiondrive import td_api
 except ImportError:
     td_api = None
-
-
 
 __all__ = ["TorsionDriveService"]
 
