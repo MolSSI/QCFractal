@@ -555,7 +555,7 @@ def test_storage_queue_roundtrip(storage_results):
 
     assert len(found) == 1
     assert found[0]["status"] == "COMPLETE"
-    res = storage_results.get_results_by_task_id(queue_id)['data'][0]
+    res = storage_results.get_results(task_id=queue_id)['data'][0]
     assert res['status'] == 'COMPLETE'
 
     # Check queue is empty
