@@ -2,12 +2,14 @@
 A model for TorsionDrive
 """
 
+import abc
 import datetime
 import json
-from typing import Any, Dict, List, Optional
+from enum import Enum
+from typing import Any, Dict, List, Optional, Union
 
-from pydantic import validator
-from qcelemental.models import Optimization
+import qcelemental as qcel
+from pydantic import BaseModel, validator, constr
 
 from .common_models import ObjectId, QCSpecification
 from .model_utils import hash_dictionary, json_encoders, recursive_normalizer
@@ -15,7 +17,71 @@ from .model_utils import hash_dictionary, json_encoders, recursive_normalizer
 __all__ = ["OptimizationRecord"]
 
 
-class OptimizationRecord(Optimization):
+class StatusEnum(str, Enum):
+    complete = "COMPLETE"
+    incomplete = "INCOMPLETE"
+    running = "RUNNING"
+    error = "ERROR"
+
+
+class Record(BaseModel, abc.ABC):
+
+    # Base identification
+    id: ObjectId = None
+    version: int
+
+    # Extra fields
+    stdout: Optional[ObjectId] = None
+    stderr: Optional[ObjectId] = None
+
+    # Compute status
+    task_id: ObjectId = None
+    status: StatusEnum = "INCOMPLETE"
+    modified_on: datetime.datetime = datetime.datetime.utcnow()
+    created_on: datetime.datetime = datetime.datetime.utcnow()
+
+    def dict(self, *args, **kwargs):
+        kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"client", "cache"}
+        kwargs["skip_defaults"] = True
+        return super().dict(*args, **kwargs)
+
+    def json_dict(self, *args, **kwargs):
+        return json.loads(self.json(*args, **kwargs))
+
+    class Config:
+        json_encoders = json_encoders
+        extra = "forbid"
+
+
+class ResultRecord(Record):
+
+    # Version data
+    version: int = 1
+
+    # Input data
+    program: str
+    driver: str
+    method: str
+    basis: Optional[str] = None
+    molecule: ObjectId
+    keywords: Optional[ObjectId] = None
+
+    # Carry-ons
+    extras: Dict[str, Any] = {}
+    provenance: qcel.models.Provenance = None
+
+    # Output data
+    return_results: Union[float, List[float], Dict[str, Any]] = None
+    properties: qcel.models.ResultProperties = None
+    error: qcel.models.ComputeError = None
+
+
+# class ProcedureRecord(Record):
+
+#     procedure: str
+
+
+class OptimizationRecord(qcel.models.Optimization):
     """
     A TorsionDrive Input base class
     """
@@ -24,8 +90,7 @@ class OptimizationRecord(Optimization):
     client: Any = None
     cache: Dict[str, Any] = {}
 
-    id: ObjectId = None
-    procedure: str = "optimization"
+    procedure: constr(strip_whitespace=True, regex="optimization") = "optimization"
     program: str
     hash_index: Optional[str] = None
 
@@ -36,11 +101,6 @@ class OptimizationRecord(Optimization):
     initial_molecule: ObjectId
     final_molecule: ObjectId = None
     trajectory: List[ObjectId] = None
-
-    task_id: ObjectId = None
-    status: str = "INCOMPLETE"
-    modified_on: datetime.datetime = None
-    created_on: datetime.datetime = None
 
     class Config:
         allow_mutation = False
@@ -86,14 +146,6 @@ class OptimizationRecord(Optimization):
         ret += "success='{}', ".format(self.success)
         ret += "initial_molecule='{}') ".format(self.initial_molecule)
         return ret
-
-    def dict(self, *args, **kwargs):
-        kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"client", "cache"}
-        kwargs["skip_defaults"] = True
-        return super().dict(*args, **kwargs)
-
-    def json_dict(self, *args, **kwargs):
-        return json.loads(self.json(*args, **kwargs))
 
     def get_hash_index(self):
 
