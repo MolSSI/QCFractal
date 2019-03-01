@@ -55,6 +55,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
     'sphinx.ext.extlinks',
+    'sphinx_automodapi.automodapi',
+    'sphinx_automodapi.automodsumm',
 ]
 
 napoleon_google_docstring = False
@@ -201,10 +203,13 @@ extlinks = {
 # -- Keywords for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {
-    'python': ('https://docs.python.org/', None),
-    'numpy': ('http://docs.scipy.org/doc/numpy/', None),
-}
+intersphinx_mapping = {'python': ('https://docs.python.org/3.7', None),
+                       'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+                       'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
+                       'matplotlib': ('https://matplotlib.org/', None),
+                       'qcelemental': ('https://qcelemental.readthedocs.io/en/latest/', None),
+                       'qcengine': ('https://qcengine.readthedocs.io/en/latest/', None),
+                      }
 
 # -- Keywords for todo extension ----------------------------------------------
 
