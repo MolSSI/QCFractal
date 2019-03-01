@@ -64,12 +64,15 @@ class Record(BaseModel, abc.ABC):
     class Config:
         json_encoders = json_encoders
         extra = "forbid"
+        build_hash_index = True
 
     def __init__(self, **data):
+        # Make sure several fields are available and written to prevent sparse dic
+
         super().__init__(**data)
 
         # Set hash index if not present
-        if self.hash_index is None:
+        if self.Config.build_hash_index and (self.hash_index is None):
             self.hash_index = self.get_hash_index()
 
     def get_hash_index(self):
@@ -89,6 +92,9 @@ class Record(BaseModel, abc.ABC):
 
 class ResultRecord(Record):
 
+    # Classdata
+    _hash_indices = {"driver", "method", "basis", "molecule", "keywords", "program"}
+
     # Version data
     version: int = 1
     procedure: constr(strip_whitespace=True, regex="single") = "single"
@@ -96,8 +102,8 @@ class ResultRecord(Record):
     # Input data
     driver: DriverEnum
     method: str
-    basis: Optional[str] = None
     molecule: ObjectId
+    basis: Optional[str] = None
     keywords: Optional[ObjectId] = None
 
     # Output data
@@ -106,7 +112,11 @@ class ResultRecord(Record):
     error: qcel.models.ComputeError = None
 
     class Config(Record.Config):
-        pass
+        build_hash_index = False
+
+    @validator('method')
+    def check_method(cls, v):
+        return v.lower()
 
     @validator('basis')
     def check_basis(cls, v):
@@ -201,8 +211,6 @@ class OptimizationRecord(Record):
         ret += "success='{}', ".format(self.success)
         ret += "initial_molecule='{}') ".format(self.initial_molecule)
         return ret
-
-
 
     def get_final_energy(self):
         """The final energy of the geometry optimization.

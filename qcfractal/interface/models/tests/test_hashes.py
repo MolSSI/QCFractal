@@ -4,7 +4,7 @@ import pytest
 
 from ..common_models import KeywordSet, Molecule
 from ..gridoptimization import GridOptimizationInput
-from ..records import OptimizationRecord
+from ..records import ResultRecord, OptimizationRecord
 from ..torsiondrive import TorsionDrive
 
 ## Molecule hashes
@@ -142,6 +142,54 @@ def test_keywords_comparison_hash(data1, data2):
     assert opt1s.hash_index == opt2.hash_index
     assert opt1s.hash_index == opt2s.hash_index
 
+## Record hashes
+_base_result = {
+    "driver": "gradient",
+    "method": "hf",
+    "basis": "sto-3g",
+    "keywords": None,
+    "program": "prog",
+    "molecule": "5c7896fb95d592ad07a2fe3b"
+}
+@pytest.mark.parametrize("data, hash_index", [
+
+    # Check same
+    ({}, "fbdfa9b915413aed4702b6896935043766ca477d"),
+
+    ({"program": "PROG"},
+     "fbdfa9b915413aed4702b6896935043766ca477d"),
+
+    ({"method": "HF"},
+     "fbdfa9b915413aed4702b6896935043766ca477d"),
+
+    # All different
+    ({"program": "prog2"},
+     "474defaed8c3e8cd8ea9cbfeeb746dc91e38efe8"),
+
+    ({"driver": "energy"},
+     "92c00a1af143af87ede20b81d4208ce5b9626ebc"),
+
+    ({"keywords": "5c7896fb95d592ad07a2fe3b"},
+     "c560f2d74f85132e669521d50449c0c04acccb6f"),
+
+    # Check same
+    ({"basis": ""},
+     "10b055b270cd88ba802fd8ffd85e26ff76152ef0"),
+
+    ({"basis": "null"},
+     "10b055b270cd88ba802fd8ffd85e26ff76152ef0"),
+
+    ({"basis": None},
+     "10b055b270cd88ba802fd8ffd85e26ff76152ef0"),
+
+]) # yapf: disable
+
+def test_result_record_canary_hash(data, hash_index):
+
+    opt = ResultRecord(**{**_base_result, **data})
+
+    assert hash_index == opt.get_hash_index(), data
+    assert opt.hash_index is None # Not set
 
 ## Optimization hashes
 _qc_spec = {"driver": "gradient", "method": "HF", "basis": "sto-3g", "keywords": None, "program": "prog"}
@@ -188,7 +236,7 @@ _base_opt = {
      "5a1d18ee1373230f83268faef7cd0b3ed9617b19"),
 ]) # yapf: disable
 
-def test_optimization_canary_hash(data, hash_index):
+def test_optimization_record_canary_hash(data, hash_index):
 
     opt = OptimizationRecord(**{**_base_opt, **data})
 
