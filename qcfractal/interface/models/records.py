@@ -11,13 +11,13 @@ from typing import Any, Dict, List, Optional, Union
 import qcelemental as qcel
 from pydantic import BaseModel, validator, constr
 
-from .common_models import ObjectId, QCSpecification
-from .model_utils import hash_dictionary, json_encoders, recursive_normalizer
+from .common_models import DriverEnum, ObjectId, QCSpecification
+from .model_utils import hash_dictionary, prepare_basis, json_encoders, recursive_normalizer
 
-__all__ = ["OptimizationRecord"]
+__all__ = ["OptimizationRecord", "ResultRecord", "ProcedureRecord", "OptimizationRecord"]
 
 
-class StatusEnum(str, Enum):
+class RecordStatusEnum(str, Enum):
     complete = "COMPLETE"
     incomplete = "INCOMPLETE"
     running = "RUNNING"
@@ -25,20 +25,27 @@ class StatusEnum(str, Enum):
 
 
 class Record(BaseModel, abc.ABC):
+    """
+    Record objects for Results and Procedures tables
+    """
 
     # Base identification
     id: ObjectId = None
     version: int
 
     # Extra fields
+    extras: Dict[str, Any] = {}
     stdout: Optional[ObjectId] = None
     stderr: Optional[ObjectId] = None
 
     # Compute status
     task_id: ObjectId = None
-    status: StatusEnum = "INCOMPLETE"
+    status: RecordStatusEnum = "INCOMPLETE"
     modified_on: datetime.datetime = datetime.datetime.utcnow()
     created_on: datetime.datetime = datetime.datetime.utcnow()
+
+    # Carry-ons
+    provenance: qcel.models.Provenance = None
 
     def dict(self, *args, **kwargs):
         kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"client", "cache"}
@@ -60,45 +67,56 @@ class ResultRecord(Record):
 
     # Input data
     program: str
-    driver: str
+    driver: DriverEnum
     method: str
     basis: Optional[str] = None
     molecule: ObjectId
     keywords: Optional[ObjectId] = None
 
-    # Carry-ons
-    extras: Dict[str, Any] = {}
-    provenance: qcel.models.Provenance = None
 
     # Output data
     return_results: Union[float, List[float], Dict[str, Any]] = None
     properties: qcel.models.ResultProperties = None
     error: qcel.models.ComputeError = None
 
+    class Config:
+        json_encoders = json_encoders
+        extra = "forbid"
 
-# class ProcedureRecord(Record):
+    @validator('program')
+    def check_program(cls, v):
+        return v.lower()
 
-#     procedure: str
+    @validator('basis')
+    def check_basis(cls, v):
+        return prepare_basis(v)
 
 
-class OptimizationRecord(qcel.models.Optimization):
+class ProcedureRecord(Record):
+
+    program: str
+    hash_index: Optional[str] = None
+
+
+class OptimizationRecord(ProcedureRecord):
     """
     A TorsionDrive Input base class
     """
 
-    # Client and local data
-    client: Any = None
-    cache: Dict[str, Any] = {}
-
+    # Version data
+    version: int = 1
     procedure: constr(strip_whitespace=True, regex="optimization") = "optimization"
-    program: str
-    hash_index: Optional[str] = None
+    schema_version: int = 1
+    success: bool = False
 
+    # Input data
+    initial_molecule: ObjectId
     qc_spec: QCSpecification
     input_specification: Any = None  # Deprecated
+    keywords: Dict[str, Any] = {}
 
     # Results
-    initial_molecule: ObjectId
+    energies: List[float] = None
     final_molecule: ObjectId = None
     trajectory: List[ObjectId] = None
 
@@ -118,7 +136,6 @@ class OptimizationRecord(qcel.models.Optimization):
         return v
 
     def __init__(self, **data):
-        data["procedure"] = "optimization"
         super().__init__(**data)
 
         # Set hash index if not present

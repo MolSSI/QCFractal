@@ -35,6 +35,7 @@ class DriverEnum(str, Enum):
     energy = 'energy'
     gradient = 'gradient'
     hessian = 'hessian'
+    properties = 'properties'
 
 
 class QCSpecification(BaseModel):
