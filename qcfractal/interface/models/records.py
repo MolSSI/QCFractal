@@ -12,10 +12,10 @@ from qcelemental.models import Optimization
 from .common_models import ObjectId, QCSpecification
 from .model_utils import hash_dictionary, json_encoders, recursive_normalizer
 
-__all__ = ["OptimizationModel"]
+__all__ = ["OptimizationRecord"]
 
 
-class OptimizationModel(Optimization):
+class OptimizationRecord(Optimization):
     """
     A TorsionDrive Input base class
     """

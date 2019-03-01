@@ -4,7 +4,7 @@ import pytest
 
 from ..common_models import KeywordSet, Molecule
 from ..gridoptimization import GridOptimizationInput
-from ..proc_models import OptimizationModel
+from ..records import OptimizationRecord
 from ..torsiondrive import TorsionDrive
 
 ## Molecule hashes
@@ -190,7 +190,7 @@ _base_opt = {
 
 def test_optimization_canary_hash(data, hash_index):
 
-    opt = OptimizationModel(**{**_base_opt, **data})
+    opt = OptimizationRecord(**{**_base_opt, **data})
 
     assert hash_index == opt.hash_index, data
 

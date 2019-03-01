@@ -4,7 +4,7 @@
 import copy
 from typing import Any, Dict
 
-from ..models import OptimizationModel, TorsionDrive, TorsionDriveInput
+from ..models import OptimizationRecord, TorsionDrive, TorsionDriveInput
 from .collection import Collection
 from .collection_utils import register_collection
 
@@ -295,7 +295,7 @@ class OpenFFWorkflow(Collection):
                     obj = self._torsiondrive_cache[v["id"]]
                     if isinstance(obj, TorsionDrive):
                         tmp[k] = obj.final_energies()
-                    elif isinstance(obj, OptimizationModel):
+                    elif isinstance(obj, OptimizationRecord):
                         tmp[k] = obj.get_final_energy()
                     else:
                         raise TypeError("Internal type error encoured, buy a dev a coffee.")
@@ -338,7 +338,7 @@ class OpenFFWorkflow(Collection):
                     obj = self._torsiondrive_cache[v["id"]]
                     if isinstance(obj, TorsionDrive):
                         tmp[k] = obj.final_molecules()
-                    elif isinstance(obj, OptimizationModel):
+                    elif isinstance(obj, OptimizationRecord):
                         tmp[k] = obj.get_final_molecule()
                     else:
                         raise TypeError("Internal type error encoured, buy a dev a coffee.")

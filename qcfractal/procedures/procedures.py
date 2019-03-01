@@ -7,7 +7,7 @@ from typing import Union
 
 from qcelemental.models import OptimizationInput
 
-from ..interface.models import OptimizationModel
+from ..interface.models import OptimizationRecord
 from .procedures_util import parse_hooks, parse_single_tasks, unpack_single_task_spec
 
 
@@ -235,7 +235,7 @@ class OptimizationTasks(SingleResultTasks):
             packet["input_specification"] = single_input
             inp = OptimizationInput(**packet)
 
-            doc = OptimizationModel(
+            doc = OptimizationRecord(
                 **inp.dict(exclude={"input_specification", "initial_molecule", "schema_name"}),
                 qc_spec=data.meta["qc_spec"],
                 initial_molecule=packet["initial_molecule"]["id"],
