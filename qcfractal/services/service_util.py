@@ -59,7 +59,7 @@ class TaskManager(BaseModel):
         if len(self.required_tasks) == 0:
             return True
 
-        task_query = storage_socket.get_procedures_by_id(
+        task_query = storage_socket.get_procedures(
             id=list(self.required_tasks.values()), projection={
                 "status": True,
                 "error": True,
@@ -90,7 +90,7 @@ class TaskManager(BaseModel):
 
         ret = {}
         for k, id in self.required_tasks.items():
-            ret[k] = storage_socket.get_procedures_by_id(id=id)["data"][0]
+            ret[k] = storage_socket.get_procedures(id=id)["data"][0]
 
         return ret
 
