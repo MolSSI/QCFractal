@@ -18,11 +18,14 @@ class FireworksAdapter(BaseAdapter):
 
     def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
         import fireworks
+
+        kwargs = task_spec["spec"]["kwargs"]
+        kwargs["return_dict"] = True
         fw = fireworks.Firework(
             fireworks.PyTask(
                 func=task_spec["spec"]["function"],
                 args=task_spec["spec"]["args"],
-                kwargs=task_spec["spec"]["kwargs"],
+                kwargs=kwargs,
                 stored_data_varname="fw_results"),
             spec={"_launch_dir": "/tmp/"})
         launches = self.client.add_wf(fw)

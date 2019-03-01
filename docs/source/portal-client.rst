@@ -9,8 +9,8 @@ section.
 
 .. code-block:: python
 
-    >>> import qcfractal.interface as portal
-    >>> client = portal.FractalClient("localhost:8888")
+    >>> import qcportal as ptl
+    >>> client = ptl.FractalClient("localhost:8888")
     >>> client
     FractalClient(server='http://localhost:8888/', username='None')
 
@@ -37,7 +37,12 @@ database.
 
 .. code-block:: python
 
-    >>> hooh = portal.data.get_molecule("hooh.json")
+    >>> hooh = ptl.Molecule("""
+    >>>        H          1.8486716127,  1.472346669,  0.644643566
+    >>>        O          1.3127881568, -0.130419379, -0.211892270
+    >>>        O         -1.3127927010,  0.133418733, -0.211896415
+    >>>        H         -1.8386801669, -1.482348324,  0.644636970
+    >>>        """)
     >>> hooh
         Geometry (in Angstrom), charge = 0.0, multiplicity = 1:
 
@@ -49,9 +54,9 @@ database.
                H         -0.972396644160    -0.787126321701     0.424194864034
 
 
-    >>> data = client.add_molecules({"hooh": hooh})
+    >>> data = client.add_molecules([hooh])
     >>> data
-    {'hooh': '5b882c957b87878925ffaf22'}
+    ['5b882c957b87878925ffaf22']
 
 .. note::
 
@@ -60,17 +65,17 @@ database.
 
     .. code-block:: python
 
-        >>> data = client.add_molecules({"hooh": hooh})
+        >>> data = client.add_molecules([hooh])
         >>> data
-        {'hooh': '5b882c957b87878925ffaf22'}
+        [5b882c957b87878925ffaf22']
 
 Molecules can either be queried from their Molecule ID or Molecule
 hash:
 
 .. code-block:: python
 
-    >>> client.get_molecules([hooh.get_hash()], index="hash")[0]["id"]
+    >>> client.get_molecules([hooh.get_hash()], index="hash")[0].id
     '5b882c957b87878925ffaf22'
 
-    >>> client.get_molecules([data["hooh"]], index="id")[0]["id"]
+    >>> client.get_molecules(data, index="id")[0].id
     '5b882c957b87878925ffaf22'

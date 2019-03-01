@@ -22,8 +22,7 @@ dependencies:
   - codecov
 
 # Environment specific includes
-  - psi4=1.2
-  - libint=1.2.1=h87b9b30_4
+  - psi4
   - rdkit
   - geometric>=0.9.3
   - torsiondrive
