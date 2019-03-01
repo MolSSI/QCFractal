@@ -7,8 +7,8 @@ from typing import Any, Dict, List, Tuple, Union
 
 from pydantic import BaseModel, validator
 
-from .common_models import (Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification, hash_dictionary,
-                            json_encoders)
+from .common_models import (Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification)
+from .model_utils import hash_dictionary, json_encoders, recursive_normalizer
 
 __all__ = ["GridOptimizationInput", "GridOptimization"]
 
@@ -22,8 +22,13 @@ class ScanDimension(BaseModel):
     steps: List[float]
     step_type: str
 
+    class Config:
+        extra = "forbid"
+        allow_mutation = False
+
     @validator('type')
     def check_type(cls, v):
+        v = v.lower()
         possibilities = {"distance", "angle", "dihedral"}
         if v not in possibilities:
             raise TypeError("Type '{}' found, can only be one of {}.".format(v, possibilities))
@@ -40,9 +45,11 @@ class ScanDimension(BaseModel):
         return v
 
     @validator('steps', whole=True)
-    def check_steps_monotonic(cls, v):
+    def check_steps(cls, v):
         if not (all(x < y for x, y in zip(v, v[1:])) or all(x > y for x, y in zip(v, v[1:]))):
             raise ValueError("Steps are not strictly monotonically increasing or decreasing.")
+
+        v = recursive_normalizer(v)
 
         return v
 

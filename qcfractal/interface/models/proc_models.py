@@ -8,7 +8,8 @@ from typing import Any, Dict, List, Optional
 
 from qcelemental.models import Optimization
 
-from .common_models import ObjectId, QCSpecification, hash_dictionary, json_encoders
+from .common_models import ObjectId, QCSpecification
+from .model_utils import hash_dictionary, json_encoders
 
 __all__ = ["OptimizationModel"]
 

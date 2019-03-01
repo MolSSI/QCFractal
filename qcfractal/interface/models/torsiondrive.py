@@ -8,8 +8,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel
 
-from .common_models import (Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification, hash_dictionary,
-                            json_encoders)
+from .common_models import (Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification)
+from .model_utils import hash_dictionary, json_encoders
 
 __all__ = ["TorsionDriveInput", "TorsionDrive"]
 

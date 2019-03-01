@@ -694,7 +694,7 @@ def test_results_pagination(storage_socket):
     }
 
     # Save (~ 1 msec/doc)
-    t1 = time()
+    # t1 = time()
 
     total_results = 1000
     first_half = int(total_results/2)

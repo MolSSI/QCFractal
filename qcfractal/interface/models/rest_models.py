@@ -6,9 +6,10 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 from pydantic import BaseConfig, BaseModel, validator
 from qcelemental.models import Result, Optimization
 
-from .common_models import KeywordSet, Molecule, json_encoders
+from .common_models import KeywordSet, Molecule
 from .gridoptimization import GridOptimizationInput
 from .torsiondrive import TorsionDriveInput
+from .model_utils import hash_dictionary, json_encoders
 
 
 __all__ = [

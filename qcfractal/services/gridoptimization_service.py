@@ -10,6 +10,7 @@ import numpy as np
 from ..extras import get_information
 from ..interface.models import Molecule, json_encoders, GridOptimization
 from .service_util import BaseService, TaskManager, expand_ndimensional_grid
+from enum import Enum
 
 __all__ = ["GridOptimizationService"]
 
