@@ -6,7 +6,7 @@ import abc
 import datetime
 import json
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Set, Optional, Union
 
 import qcelemental as qcel
 from pydantic import BaseModel, validator, constr
@@ -29,8 +29,18 @@ class Record(BaseModel, abc.ABC):
     Record objects for Results and Procedures tables
     """
 
+    # Classdata
+    _hash_indices: Set[str]
+
+    # Helper data
+    client: Any = None
+    cache: Dict[str, Any] = {}
+
     # Base identification
     id: ObjectId = None
+    hash_index: Optional[str] = None
+    procedure: str
+    program: str
     version: int
 
     # Extra fields
@@ -47,6 +57,27 @@ class Record(BaseModel, abc.ABC):
     # Carry-ons
     provenance: qcel.models.Provenance = None
 
+    @validator('program')
+    def check_program(cls, v):
+        return v.lower()
+
+    class Config:
+        json_encoders = json_encoders
+        extra = "forbid"
+
+    def __init__(self, **data):
+        super().__init__(**data)
+
+        # Set hash index if not present
+        if self.hash_index is None:
+            self.hash_index = self.get_hash_index()
+
+    def get_hash_index(self):
+
+        data = self.json_dict(include=self._hash_indices)
+
+        return hash_dictionary(data)
+
     def dict(self, *args, **kwargs):
         kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"client", "cache"}
         kwargs["skip_defaults"] = True
@@ -55,53 +86,40 @@ class Record(BaseModel, abc.ABC):
     def json_dict(self, *args, **kwargs):
         return json.loads(self.json(*args, **kwargs))
 
-    class Config:
-        json_encoders = json_encoders
-        extra = "forbid"
-
 
 class ResultRecord(Record):
 
     # Version data
     version: int = 1
+    procedure: constr(strip_whitespace=True, regex="single") = "single"
 
     # Input data
-    program: str
     driver: DriverEnum
     method: str
     basis: Optional[str] = None
     molecule: ObjectId
     keywords: Optional[ObjectId] = None
 
-
     # Output data
     return_results: Union[float, List[float], Dict[str, Any]] = None
     properties: qcel.models.ResultProperties = None
     error: qcel.models.ComputeError = None
 
-    class Config:
-        json_encoders = json_encoders
-        extra = "forbid"
-
-    @validator('program')
-    def check_program(cls, v):
-        return v.lower()
+    class Config(Record.Config):
+        pass
 
     @validator('basis')
     def check_basis(cls, v):
         return prepare_basis(v)
 
 
-class ProcedureRecord(Record):
-
-    program: str
-    hash_index: Optional[str] = None
-
-
-class OptimizationRecord(ProcedureRecord):
+class OptimizationRecord(Record):
     """
     A TorsionDrive Input base class
     """
+
+    # Classdata
+    _hash_indices = {"initial_molecule", "program", "procedure", "keywords", "qc_spec"}
 
     # Version data
     version: int = 1
@@ -120,14 +138,12 @@ class OptimizationRecord(ProcedureRecord):
     final_molecule: ObjectId = None
     trajectory: List[ObjectId] = None
 
-    class Config:
-        allow_mutation = False
-        json_encoders = json_encoders
-        extra = "forbid"
+    class Config(Record.Config):
+        pass
 
-    @validator('program')
-    def check_program(cls, v):
-        return v.lower()
+    # @validator('program')
+    # def check_program(cls, v):
+    #     return v.lower()
 
     @validator('keywords')
     def check_keywords(cls, v):
@@ -135,12 +151,34 @@ class OptimizationRecord(ProcedureRecord):
             v = recursive_normalizer(v)
         return v
 
-    def __init__(self, **data):
-        super().__init__(**data)
+## QCSchema constructors
 
-        # Set hash index if not present
-        if self.hash_index is None:
-            self.__values__["hash_index"] = self.get_hash_index()
+    def build_schema_input(self,
+                           initial_molecule: 'Molecule',
+                           qc_keywords: Optional['KeywordsSet']=None,
+                           checks: bool=True) -> 'OptimizationInput':
+        """
+        Creates a OptimizationInput schema.
+        """
+
+        if checks:
+            assert self.initial_molecule == initial_molecule.id
+            if self.qc_spec.keywords:
+                assert self.qc_spec.keywords == qc_keywords.id
+
+        qcinput_spec = self.qc_spec.form_schema_object(keywords=qc_keywords, checks=checks)
+        qcinput_spec.pop("program", None)
+
+        model = qcel.models.OptimizationInput(
+            id=self.id,
+            initial_molecule=initial_molecule,
+            keywords=self.keywords,
+            extras=self.extras,
+            hash_index=self.hash_index,
+            input_specification=qcinput_spec)
+        return model
+
+## Standard function
 
     def __str__(self):
         """
@@ -164,11 +202,7 @@ class OptimizationRecord(ProcedureRecord):
         ret += "initial_molecule='{}') ".format(self.initial_molecule)
         return ret
 
-    def get_hash_index(self):
 
-        data = self.dict(include={"initial_molecule", "program", "procedure", "keywords", "qc_spec"})
-
-        return hash_dictionary(data)
 
     def get_final_energy(self):
         """The final energy of the geometry optimization.

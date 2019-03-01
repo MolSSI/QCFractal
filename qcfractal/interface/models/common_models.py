@@ -64,6 +64,27 @@ class QCSpecification(BaseModel):
         extra = "forbid"
         allow_mutation = False
 
+    def form_schema_object(self, keywords: Optional['KeywordSet']=None, checks=True) -> Dict[str, Any]:
+        if checks and self.keywords:
+            assert keywords.id == self.keywords
+
+        ret = {
+            "driver": str(self.driver.name),
+            "program": self.program,
+            "model": {
+                "method": self.method
+            }
+        } # yapf: disable
+        if self.basis:
+            ret["model"]["basis"] = self.basis
+
+        if keywords:
+            ret["keywords"] = keywords.values
+        else:
+            ret["keywords"] = {}
+
+        return ret
+
 
 class OptimizationSpecification(BaseModel):
     """

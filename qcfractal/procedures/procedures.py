@@ -5,9 +5,9 @@ All procedures tasks involved in on-node computation.
 import json
 from typing import Union
 
-from qcelemental.models import OptimizationInput
+from qcelemental.models import OptimizationInput, Molecule
 
-from ..interface.models import OptimizationRecord
+from ..interface.models import OptimizationRecord, QCSpecification
 from .procedures_util import parse_hooks, parse_single_tasks, unpack_single_task_spec
 
 
@@ -205,44 +205,44 @@ class OptimizationTasks(SingleResultTasks):
 
         """
 
-        # Unpack individual QC tasks
-        inputs, errors = unpack_single_task_spec(self.storage, data.meta["qc_spec"], data.data)
+        # Unpack all molecules
+        intitial_moleucle_list = self.storage.get_add_molecules_mixed(data.data)["data"]
 
-        # Unpack options
+        # Unpack keywords
         if data.meta["keywords"] is None:
-            keywords = {}
+            opt_keywords = {}
         else:
-            keywords = data.meta["keywords"]
+            opt_keywords = data.meta["keywords"]
+        opt_keywords["program"] = data.meta["qc_spec"]["program"]
 
-        keywords["program"] = data.meta["qc_spec"]["program"]
-        template = json.dumps({"keywords": keywords})
+        qc_spec = QCSpecification(**data.meta["qc_spec"])
+        if qc_spec.keywords:
+            qc_keywords = self.storage.get_add_keywords_mixed([meta["keywords"]])["data"][0]
+            qc_keywords = keyword_set["values"]
+
+        else:
+            qc_keywords = None
 
         tag = data.meta.pop("tag", None)
 
         new_tasks = []
         results_ids = []
         existing_ids = []
-        for single_input in inputs:
-            if single_input is None:
+        for initial_molecule in intitial_moleucle_list:
+            if initial_molecule is None:
                 results_ids.append(None)
                 continue
+            initial_molecule = Molecule(**initial_molecule)
 
-            single_input = single_input.json_dict(exclude={"id", "provenance"})
-
-            # Coerce qc_template information
-            packet = json.loads(template)
-            packet["initial_molecule"] = single_input.pop("molecule")
-            packet["input_specification"] = single_input
-            inp = OptimizationInput(**packet)
 
             doc = OptimizationRecord(
-                **inp.dict(exclude={"input_specification", "initial_molecule", "schema_name"}),
-                qc_spec=data.meta["qc_spec"],
-                initial_molecule=packet["initial_molecule"]["id"],
-                program=data.meta["program"],
-                success=False)
+                initial_molecule=initial_molecule.id,
+                qc_spec=qc_spec,
+                keywords=opt_keywords,
+                program=data.meta["program"])
 
-            inp = inp.copy(update={"hash_index": doc.hash_index})
+            inp = doc.build_schema_input(initial_molecule=initial_molecule, qc_keywords=qc_keywords)
+            inp.input_specification.extras["_qcfractal_tags"] = {"program": qc_spec.program, "keywords": qc_spec.keywords}
 
             ret = self.storage.add_procedures([doc.json_dict()])
             base_id = ret["data"][0]
@@ -268,7 +268,7 @@ class OptimizationTasks(SingleResultTasks):
 
             new_tasks.append(task)
 
-        return new_tasks, results_ids, existing_ids, errors
+        return new_tasks, results_ids, existing_ids, []
 
     def parse_output(self, data):
         """Save the results of the procedure.
