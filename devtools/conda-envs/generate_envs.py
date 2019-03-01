@@ -24,6 +24,7 @@ dependencies:
   - bcrypt
   - cryptography
   - pydantic
+  - mongoengine
 
 # Test depends
   - pytest
@@ -33,7 +34,7 @@ dependencies:
 qca_ecosystem_template = ["qcengine>=0.6.0", "qcelemental>=0.3.0"]
 
 # Note we temporarily duplicate mongoengine as conda-forge appears to be broken
-pip_depends_template = ["mongoengine"]
+pip_depends_template = []
 
 
 def generate_yaml(filename=None, channels=None, dependencies=None, pip_dependencies=None, qca_ecosystem=None):
@@ -69,9 +70,10 @@ def generate_yaml(filename=None, channels=None, dependencies=None, pip_dependenc
     pip_env = copy.deepcopy(pip_depends_template)
     if pip_dependencies is not None:
         pip_env.extend(pip_dependencies)
-    offset = len(env["dependencies"])
-    env["dependencies"].yaml_set_comment_before_after_key(offset, before="\nPip includes")
-    env["dependencies"].extend([{"pip": pip_env}])
+    if len(pip_env):
+        offset = len(env["dependencies"])
+        env["dependencies"].yaml_set_comment_before_after_key(offset, before="\nPip includes")
+        env["dependencies"].extend([{"pip": pip_env}])
 
     with open(filename, "w") as handle:
         yaml.dump(env, handle)
@@ -91,7 +93,7 @@ environs = [{
     # Tests for the OpenFF toolchain (geometric and torsiondrive) 
     "filename": "openff.yaml",
     "channels": ["psi4"],
-    "dependencies": ["psi4", "rdkit", "geometric>=0.9.3", "torsiondrive"],
+    "dependencies": ["psi4=1.2", "libint=1.2.1=h87b9b30_4", "rdkit", "geometric>=0.9.3", "torsiondrive"],
 }, {
 
     # Tests for the current development heads

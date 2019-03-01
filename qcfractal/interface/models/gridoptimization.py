@@ -61,9 +61,6 @@ class ScanDimension(BaseModel):
 
         return v
 
-    class Config:
-        extra = "forbid"
-        allow_mutation = False
 
 
 class GOKeywords(BaseModel):

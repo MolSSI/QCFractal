@@ -10,7 +10,7 @@ from pydantic import validator
 from qcelemental.models import Optimization
 
 from .common_models import ObjectId, QCSpecification
-from .model_utils import hash_dictionary, json_encoders, prepare_basis, recursive_normalizer
+from .model_utils import hash_dictionary, json_encoders, recursive_normalizer
 
 __all__ = ["OptimizationModel"]
 

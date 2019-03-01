@@ -3,7 +3,6 @@ Wraps geometric procedures
 """
 
 import json
-from enum import Enum
 from typing import Dict, Set
 
 import numpy as np

@@ -13,6 +13,7 @@ dependencies:
   - bcrypt
   - cryptography
   - pydantic
+  - mongoengine
 
 # Test depends
   - pytest
@@ -32,6 +33,5 @@ dependencies:
 
 # Pip includes
   - pip:
-    - mongoengine
     - parsl
     - fireworks

@@ -14,6 +14,7 @@ dependencies:
   - bcrypt
   - cryptography
   - pydantic
+  - mongoengine
 
 # Test depends
   - pytest
@@ -21,7 +22,8 @@ dependencies:
   - codecov
 
 # Environment specific includes
-  - psi4
+  - psi4=1.2
+  - libint=1.2.1=h87b9b30_4
   - rdkit
   - geometric>=0.9.3
   - torsiondrive
@@ -29,7 +31,3 @@ dependencies:
 # QCArchive includes
   - qcengine>=0.6.0
   - qcelemental>=0.3.0
-
-# Pip includes
-  - pip:
-    - mongoengine

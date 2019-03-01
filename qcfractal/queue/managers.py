@@ -10,7 +10,6 @@ import uuid
 from typing import Any, Callable, Dict, List, Optional, Union
 
 import tornado.ioloop
-from pydantic import BaseModel
 from qcfractal.extras import get_information
 
 import qcengine

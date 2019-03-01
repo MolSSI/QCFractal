@@ -10,7 +10,7 @@ from time import time
 import pytest
 import qcfractal.interface as portal
 from bson import ObjectId
-from qcfractal.storage_sockets.me_models import (Keywords, Molecule, OptimizationProcedure, Procedure, Result,
+from qcfractal.storage_sockets.me_models import (Molecule, OptimizationProcedure, Procedure, Result,
                                                  TaskQueue, TorsiondriveProcedure)
 from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 
