@@ -3,6 +3,7 @@ import json
 import pytest
 
 from ..common_models import KeywordSet, Molecule
+from ..proc_models import OptimizationModel
 
 ## Molecule hashes
 
@@ -136,3 +137,62 @@ def test_keywords_comparison_hash(data1, data2):
     assert opt1.hash_index == opt2s.hash_index
     assert opt1s.hash_index == opt2.hash_index
     assert opt1s.hash_index == opt2s.hash_index
+
+
+## Optimization hashes
+_qc_spec =  {
+        "driver": "gradient",
+        "method": "HF",
+        "basis": "sto-3g",
+        "keywords": None,
+        "program": "prog"
+    }
+_base_opt = {
+    "keywords": {},
+    "program": "prog2",
+    "initial_molecule": "5c7896fb95d592ad07a2fe3b",
+    "success": False,
+    "qc_spec": _qc_spec
+}
+@pytest.mark.parametrize("data, hash_index", [
+
+    # Check same
+    ({},
+     "254de59f1598570d0c31aa2d3d84b601c9da12b9"),
+
+    ({"program": "PROG2"},
+     "254de59f1598570d0c31aa2d3d84b601c9da12b9"),
+
+    ({"qc_spec": {**_qc_spec, **{"program": "prog"}}},
+     "254de59f1598570d0c31aa2d3d84b601c9da12b9"),
+
+    ({"qc_spec": {**_qc_spec, **{"method": "HF"}}},
+     "254de59f1598570d0c31aa2d3d84b601c9da12b9"),
+
+    # Check tolerances
+    ({"keywords": {"tol": 1.e-12}},
+     "8ab52bff9430f7759323e6a547afc58725422c47"),
+
+    ({"keywords": {"tol": 0.0}},
+     "8ab52bff9430f7759323e6a547afc58725422c47"),
+
+    ({"keywords": {"tol": 1.e-9}},
+     "1628caf9a29c9bf17a66cb55b13106e7f2704e51"),
+
+    # Check fields
+    ({"initial_molecule": "5c78987e95d592ad07a2fe3c"},
+     "3c20c8f7b1be857460f2d71d74680dd19e9d9113"),
+
+    # Check basis preps
+    ({"qc_spec": {**_qc_spec, **{"basis": None}}},
+     "3489e0c47144ebedb4fdcc2bfab61f7aa4dc947c"),
+
+    ({"qc_spec": {**_qc_spec, **{"basis": ""}}},
+     "3489e0c47144ebedb4fdcc2bfab61f7aa4dc947c"),
+])
+
+def test_optimization_canary_hash(data, hash_index):
+
+    opt = OptimizationModel(**{**_base_opt, **data})
+
+    assert hash_index == opt.hash_index, data

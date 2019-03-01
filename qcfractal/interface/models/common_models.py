@@ -55,6 +55,10 @@ class QCSpecification(BaseModel):
     def check_program(cls, v):
         return v.lower()
 
+    @validator('method')
+    def check_method(cls, v):
+        return v.lower()
+
     class Config:
         extra = "forbid"
         allow_mutation = False
