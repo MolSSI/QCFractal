@@ -2,13 +2,12 @@ Setup Compute
 =============
 
 Once a QCFractal server is running, compute can be attached to it by spinning
-up ``qcfractal-manager``. These ``qcfractal-manager`` connect to your FractalServer instance,
-adds tasks to a distributed workflow manager, and pushes complete tasks back
-to the ``qcfractal-server`` instance. These ``qcfractal-manager`` should be run on either the
-machine that is executing the computations or on the head nodes of
-supercomputers and local clusters.
+up ``qcfractal-manager``. These ``qcfractal-manager`` connect to your
+FractalServer instance, adds tasks to a distributed workflow manager, and
+pushes complete tasks back to the ``qcfractal-server`` instance. These
+``qcfractal-manager`` should be run on either the machine that is executing
+the computations or on the head nodes of supercomputers and local clusters.
 
-:func:`~qcfractal.QueueManager`
 
 Distributed Workflow Engines
 ----------------------------
@@ -21,13 +20,16 @@ on. In general, we recommend the following:
 - For laptops and single nodes: ProcessPoolExecutor
 - For local clusters: Dask
 
-The ProcessPoolExecutor uses built-in Python types and requires no additional libraries while Dask requires ``dask``, ``dask.distributed``, and ``dask_jobqueue``.
+The ProcessPoolExecutor uses built-in Python types and requires no additional
+libraries while Dask requires ``dask``, ``dask.distributed``, and
+``dask_jobqueue``.
 
 Using the Command Line
 ----------------------
 
-At the moment only ProcessPoolExecutor ``qcfractal-manager`` can be spun up from the command line
-as other distributed workflow managers require additional setup.
+At the moment only ProcessPoolExecutor ``qcfractal-manager`` can be spun up
+from the command line as other distributed workflow managers require
+additional setup.
 
 Launching a ``qcfractal-manager`` using a ProcessPoolExecutor:
 
@@ -65,8 +67,51 @@ The connected ``qcfractal-server`` instance can be controlled by:
 
 .. note::
 
-    The ``--name`` argument is useful for change the name of the manager reported back to the ``qcfractal-server`` instance. In addition, the ``--queue-tag`` will
-    limit the acquisition of tasks to only the desired ``qcfractal-server`` task tags.
+    The ``--name`` argument is useful for change the name of the manager
+    reported back to the ``qcfractal-server`` instance. In addition, the
+    ``--queue-tag`` will limit the acquisition of tasks to only the desired
+    ``qcfractal-server`` task tags.
+
+Using the Template Generator
+----------------------------
+
+Due to the complexity of setting up various distributed workflow managers a
+``qcfractal-template`` CLI is available to generate ``qcfractal-manager``
+scripts that will both setup a distributed workflow system and a ``qcfractal-
+manager``.
+
+To setup a Dask with the SLURM queue manager the following command can be run:
+
+.. code-block:: console
+
+    $ qcfractal-template parsl slurm
+    $ cat manager_template.py
+
+    """
+    Dask Distributed Manager Helper
+
+    Conditions:
+    - Dask Distributed and Dask Job Queue (dask_jobqueue in Conda/pip)
+    - Manager running on the head node
+    - SLURM manager
+
+    For additional information about the Dask Job Queue, please visit this site:
+    https://jobqueue.dask.org/en/latest/
+    """
+
+    # Fractal Settings
+    # Location of the Fractal Server you are connecting to
+    FRACTAL_ADDRESS = "localhost:7777"
+    ...
+
+The generated script has a small tutorial on how to correct fill in the
+relevant data.
+
+
+.. note::
+
+    This is a temporary solution to this complex problem, we will be moving to
+    configuration files in the future.
 
 
 Using the Python API
@@ -77,19 +122,19 @@ Using the Python API
 
 .. note::
 
-    This is for advanced users and special care needs to be taken to ensure that both the manager and the workflow tool
-    need to understand the number of cores and memory available to prevent oversubscription of compute.
+    This is for advanced users and special care needs to be taken to ensure
+    that both the manager and the workflow tool need to understand the number
+    of cores and memory available to prevent oversubscription of compute.
 
 .. code-block:: python
 
     from qcfractal.interface import FractalClient
     from qcfractal import QueueManager
 
-    import dask
-    from dask.distributed import Client
+    import dask import distributed
 
     fractal_client = FractalClient("localhost:7777")
-    workflow_client = dask.distributed.Client("tcp://10.0.1.40:8786")
+    workflow_client = distributed.Client("tcp://10.0.1.40:8786")
 
     ncores = 4
     memory_per_task = 2
