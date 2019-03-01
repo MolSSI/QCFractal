@@ -3,14 +3,14 @@ Wraps geometric procedures
 """
 
 import json
+from enum import Enum
 from typing import Dict, Set
 
 import numpy as np
 
 from ..extras import get_information
-from ..interface.models import Molecule, json_encoders, GridOptimization
+from ..interface.models import GridOptimization, Molecule, json_encoders
 from .service_util import BaseService, TaskManager, expand_ndimensional_grid
-from enum import Enum
 
 __all__ = ["GridOptimizationService"]
 
@@ -142,8 +142,8 @@ class GridOptimizationService(BaseService):
 
             complete_tasks = self.task_manager.get_tasks(self.storage_socket)
 
-            self.starting_molecule = Molecule(**self.storage_socket.get_molecules(id=
-                [complete_tasks["initial_opt"]["final_molecule"]])["data"][0])
+            self.starting_molecule = Molecule(**self.storage_socket.get_molecules(
+                id=[complete_tasks["initial_opt"]["final_molecule"]])["data"][0])
             self.starting_grid = self._calculate_starting_grid(self.output.keywords.scans, self.starting_molecule)
 
             self.submit_optimization_tasks({self.output.serialize_key(self.starting_grid): self.starting_molecule.id})
@@ -232,13 +232,14 @@ class GridOptimizationService(BaseService):
         Finishes adding data to the GridOptimization object
         """
 
-        output = self.output.copy(update={
-            "success": True,
-            "status": "COMPLETE",
-            "starting_molecule": self.starting_molecule.id,
-            "starting_grid": self.starting_grid,
-            "grid_optimizations": self.grid_optimizations,
-            "final_energy_dict": self.final_energies,
-        })
+        output = self.output.copy(
+            update={
+                "success": True,
+                "status": "COMPLETE",
+                "starting_molecule": self.starting_molecule.id,
+                "starting_grid": self.starting_grid,
+                "grid_optimizations": self.grid_optimizations,
+                "final_energy_dict": self.final_energies,
+            })
 
         return output

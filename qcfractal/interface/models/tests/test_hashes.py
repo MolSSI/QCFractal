@@ -3,8 +3,8 @@ import json
 import pytest
 
 from ..common_models import KeywordSet, Molecule
-from ..proc_models import OptimizationModel
 from ..gridoptimization import GridOptimizationInput
+from ..proc_models import OptimizationModel
 from ..torsiondrive import TorsionDrive
 
 ## Molecule hashes
@@ -219,39 +219,61 @@ _base_gridopt = {
     "qc_spec": _qc_spec,
     "initial_molecule": "5c7896fb95d592ad07a2fe3b",
 }
-@pytest.mark.parametrize("data, hash_index", [
-
-    # Check same
-    ({},
-     "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
-
-    ({"keywords": {
-        "preoptimization": False,
-        "scans": [{**_scan_spec, **{"steps": [-0.1 + 1e-12, 0.0 - 1.e-12]}}]
-    }},
-     "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
 
 
-    # Check opt keywords stability
-    ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 1.e-12}}}},
-     "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+@pytest.mark.parametrize(
+    "data, hash_index",
+    [
 
-    ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 0}}}},
-     "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+        # Check same
+        ({}, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+        ({
+            "keywords": {
+                "preoptimization": False,
+                "scans": [{
+                    **_scan_spec,
+                    **{
+                        "steps": [-0.1 + 1e-12, 0.0 - 1.e-12]
+                    }
+                }]
+            }
+        }, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
 
-    # Check fields
-    ({"initial_molecule": "5c78987e95d592ad07a2fe3c"},
-     "5b00f25ce8a81950754faf65b1643896837ea0ec"),
+        # Check opt keywords stability
+        ({
+            "optimization_spec": {
+                **_opt_spec,
+                **{
+                    "keywords": {
+                        "tol": 1.e-12
+                    }
+                }
+            }
+        }, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+        ({
+            "optimization_spec": {
+                **_opt_spec,
+                **{
+                    "keywords": {
+                        "tol": 0
+                    }
+                }
+            }
+        }, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
 
-])
+        # Check fields
+        ({
+            "initial_molecule": "5c78987e95d592ad07a2fe3c"
+        }, "5b00f25ce8a81950754faf65b1643896837ea0ec"),
+    ])
 def test_gridoptimization_canary_hash(data, hash_index):
 
     gridopt = GridOptimizationInput(**{**_base_gridopt, **data})
 
     assert hash_index == gridopt.get_hash_index(), data
 
-## TorsionDrive hashes
 
+## TorsionDrive hashes
 
 _base_torsion = {
     "keywords": {
@@ -264,48 +286,67 @@ _base_torsion = {
     "final_energy_dict": {},
     "optimization_history": {},
     "minimum_positions": {},
-    "provenance": {"creator": ""}
+    "provenance": {
+        "creator": ""
+    }
 }
 
-@pytest.mark.parametrize("data, hash_index", [
 
-    # Check same
-    ({},
-     "539022b987b84a8888a88789224c42096f11f5fc"),
+@pytest.mark.parametrize(
+    "data, hash_index",
+    [
 
-    ({"keywords": {
-        "dihedrals": [[0, 1, 2, 3]],
-        "grid_spacing": [10],
-        "tol": 1.e-12
-    }},
-     "972c731248b800a4e8984820333ed2b0fd3ac372"),
+        # Check same
+        ({}, "539022b987b84a8888a88789224c42096f11f5fc"),
+        ({
+            "keywords": {
+                "dihedrals": [[0, 1, 2, 3]],
+                "grid_spacing": [10],
+                "tol": 1.e-12
+            }
+        }, "972c731248b800a4e8984820333ed2b0fd3ac372"),
+        ({
+            "keywords": {
+                "dihedrals": [[0, 1, 2, 3]],
+                "grid_spacing": [10],
+                "tol": 0
+            }
+        }, "972c731248b800a4e8984820333ed2b0fd3ac372"),
+        ({
+            "keywords": {
+                "dihedrals": [[0, 1, 2, 3]],
+                "grid_spacing": [10],
+                "tol": 1.e-9
+            }
+        }, "f0d09cb058501e18001c7e454dafe42944d5f45e"),
 
-    ({"keywords": {
-        "dihedrals": [[0, 1, 2, 3]],
-        "grid_spacing": [10],
-        "tol": 0
-    }},
-     "972c731248b800a4e8984820333ed2b0fd3ac372"),
+        # Check opt keywords stability
+        ({
+            "optimization_spec": {
+                **_opt_spec,
+                **{
+                    "keywords": {
+                        "tol": 1.e-12
+                    }
+                }
+            }
+        }, "c4cf09b80f6cb77bb3d5f41a3888d7b877205ef4"),
+        ({
+            "optimization_spec": {
+                **_opt_spec,
+                **{
+                    "keywords": {
+                        "tol": 0
+                    }
+                }
+            }
+        }, "c4cf09b80f6cb77bb3d5f41a3888d7b877205ef4"),
 
-    ({"keywords": {
-        "dihedrals": [[0, 1, 2, 3]],
-        "grid_spacing": [10],
-        "tol": 1.e-9
-    }},
-     "f0d09cb058501e18001c7e454dafe42944d5f45e"),
-
-    # Check opt keywords stability
-    ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 1.e-12}}}},
-     "c4cf09b80f6cb77bb3d5f41a3888d7b877205ef4"),
-
-    ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 0}}}},
-     "c4cf09b80f6cb77bb3d5f41a3888d7b877205ef4"),
-
-    # Check fields
-    ({"initial_molecule": ["5c78987e95d592ad07a2fe3c"]},
-     "e37272983b3c2f6dcca74bb45f823f33d0cb3b11"),
-
-])
+        # Check fields
+        ({
+            "initial_molecule": ["5c78987e95d592ad07a2fe3c"]
+        }, "e37272983b3c2f6dcca74bb45f823f33d0cb3b11"),
+    ])
 def test_torsiondrive_canary_hash(data, hash_index):
 
     td = TorsionDrive(**{**_base_torsion, **data})

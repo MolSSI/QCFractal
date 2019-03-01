@@ -1,15 +1,15 @@
 """
 Common models for QCPortal/Fractal
 """
-from enum import Enum
 import hashlib
 import json
+from enum import Enum
 from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, validator
 from qcelemental.models import Molecule, Provenance
 
-from .model_utils import recursive_normalizer, hash_dictionary, prepare_basis
+from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
 __all__ = ["QCSpecification", "OptimizationSpecification", "KeywordSet", "ObjectId"]
 

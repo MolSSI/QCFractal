@@ -2,9 +2,9 @@
 Tests the interface portal adapter to the REST API
 """
 
+import pytest
 import qcfractal.interface as portal
 from qcfractal.testing import test_server
-import pytest
 
 # All tests should import test_server, but not use it
 # Make PyTest aware that this module needs the server

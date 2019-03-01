@@ -135,8 +135,9 @@ class Collection(abc.ABC):
             raise KeyError("Attempted to create Collection from JSON, but no `collection` field found.")
 
         if data["collection"] != class_name:
-            raise KeyError("Attempted to create Collection from JSON with class {}, but found collection type of {}.".
-                           format(class_name, data["collection"]))
+            raise KeyError(
+                "Attempted to create Collection from JSON with class {}, but found collection type of {}.".format(
+                    class_name, data["collection"]))
 
         # Attempt to build class
         # First make sure external source provides ALL keys, including "optional" ones
@@ -155,7 +156,7 @@ class Collection(abc.ABC):
         # Allow PyDantic to handle type validation
         return cls(name, client=client, **data)
 
-    def to_json(self, filename: Optional[str]=None):
+    def to_json(self, filename: Optional[str] = None):
         """
         If a filename is provided, dumps the file to disk. Otherwise returns a copy of the current data.
 
@@ -193,7 +194,7 @@ class Collection(abc.ABC):
         pass
 
     # Setters
-    def save(self, client=None, overwrite: bool=False):
+    def save(self, client=None, overwrite: bool = False):
         """Uploads the overall structure of the Collection (indices, options, new molecules, etc)
         to the server.
 

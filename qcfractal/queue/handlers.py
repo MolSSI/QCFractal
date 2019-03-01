@@ -149,8 +149,8 @@ class QueueManagerHandler(APIHandler):
                         error = result["error"]
 
                     logger.warning("Computation key {key} did not complete successfully:\n"
-                                "error_type: {error_type}\nerror_message: {error_message}".format(
-                                    key=str(key), **error))
+                                   "error_type: {error_type}\nerror_message: {error_message}".format(
+                                       key=str(key), **error))
 
                     error_data.append((key, error))
                     task_failures += 1
@@ -200,11 +200,13 @@ class QueueManagerHandler(APIHandler):
         # Grab new tasks and write out
         new_tasks = storage.queue_get_next(name, **queue_tags)
         response = QueueManagerGETResponse(
-            meta={"n_found": len(new_tasks),
-                  "success": True,
-                  "errors": [],
-                  "error_description": "",
-                  "missing": []},
+            meta={
+                "n_found": len(new_tasks),
+                "success": True,
+                "errors": [],
+                "error_description": "",
+                "missing": []
+            },
             data=new_tasks)
         self.write(response.json())
         self.logger.info("QueueManager: Served {} tasks.".format(response.meta.n_found))

@@ -5,7 +5,6 @@ All tests should be atomic, that is create and cleanup their data
 """
 
 import pytest
-
 import qcfractal.interface as portal
 from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 
@@ -697,7 +696,7 @@ def test_results_pagination(storage_socket):
     # t1 = time()
 
     total_results = 1000
-    first_half = int(total_results/2)
+    first_half = int(total_results / 2)
     limit = 100
     skip = 50
 
@@ -736,7 +735,6 @@ def test_results_pagination(storage_socket):
     # get the last page when with fewer than limit are remaining
     ret = storage_socket.get_results(method='M1', skip=(int(first_half - limit / 2)), status=None)
     assert len(ret['data']) == limit / 2
-
 
     # cleanup
     storage_socket.del_results(inserted['data'])
@@ -781,8 +779,10 @@ def test_mol_pagination(storage_socket):
     """
 
     assert len(storage_socket.get_molecules()['data']) == 0
-    mol_names = ['water_dimer_minima.psimol', 'water_dimer_stretch.psimol',
-                 'water_dimer_stretch2.psimol', 'neon_tetramer.psimol']
+    mol_names = [
+        'water_dimer_minima.psimol', 'water_dimer_stretch.psimol', 'water_dimer_stretch2.psimol',
+        'neon_tetramer.psimol'
+    ]
 
     total = len(mol_names)
     molecules = []
@@ -795,10 +795,10 @@ def test_mol_pagination(storage_socket):
     assert inserted['meta']['n_inserted'] == total
 
     ret = storage_socket.get_molecules(skip=1)
-    assert len(ret['data']) == total -1
+    assert len(ret['data']) == total - 1
     assert ret['meta']['n_found'] == total
 
-    ret = storage_socket.get_molecules(skip=total+1)
+    ret = storage_socket.get_molecules(skip=total + 1)
     assert len(ret['data']) == 0
     assert ret['meta']['n_found'] == total
 

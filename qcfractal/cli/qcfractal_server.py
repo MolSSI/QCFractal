@@ -5,6 +5,7 @@ A command line interface to the qcfractal server.
 import argparse
 
 import qcfractal
+
 from . import cli_utils
 
 

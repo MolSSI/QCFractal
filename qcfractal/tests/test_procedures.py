@@ -3,9 +3,8 @@ Tests the server compute capabilities.
 """
 
 import pytest
-import requests
-
 import qcfractal.interface as portal
+import requests
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
 

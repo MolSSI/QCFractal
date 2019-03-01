@@ -51,16 +51,20 @@ def water_ds():
     ds.add_rxn(
         "Water Dimer, nocp", [(dimer, 1.0), (frag_0, -1.0), (frag_1, -1.0)],
         attributes={"R": "Minima"},
-        reaction_results={"Benchmark": -20.0,
-                          "DFT": -10.0})
+        reaction_results={
+            "Benchmark": -20.0,
+            "DFT": -10.0
+        })
 
     dimer_string = dimer.to_string()
     # Add single stoich from strings, not a valid set
     ds.add_rxn(
         "Water Dimer, dimer - str (invalid)", [(dimer_string, 1.0), (dimer_string.splitlines()[-5], 0.0)],
         attributes={"R": "Minima"},
-        reaction_results={"Benchmark": -20.0,
-                          "DFT": -10.0})
+        reaction_results={
+            "Benchmark": -20.0,
+            "DFT": -10.0
+        })
 
     # Add single stoich rxn via hashes
     ds.add_rxn(
@@ -99,12 +103,13 @@ def nbody_ds():
     frag_0_1 = dimer.get_fragment(0, 1, orient=True)
     frag_1_0 = dimer.get_fragment(1, 0, orient=True)
 
-    ds.add_rxn("Water Dimer, bench", {
-        "cp1": [(frag_0_1, 1.0), (frag_1_0, 1.0)],
-        "default1": [(frag_0, 1.0), (frag_1, 1.0)],
-        "cp": [(dimer, 1.0)],
-        "default": [(dimer, 1.0)],
-    })
+    ds.add_rxn(
+        "Water Dimer, bench", {
+            "cp1": [(frag_0_1, 1.0), (frag_1_0, 1.0)],
+            "default1": [(frag_0, 1.0), (frag_1, 1.0)],
+            "cp": [(dimer, 1.0)],
+            "default": [(dimer, 1.0)],
+        })
 
     ds.add_ie_rxn("Water Dimer", dimer.to_string())
     ds.add_ie_rxn("Ne Tetramer", portal.data.get_molecule("neon_tetramer.psimol"))

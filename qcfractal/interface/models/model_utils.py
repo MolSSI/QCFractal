@@ -1,8 +1,8 @@
 import hashlib
 import json
-import numpy as np
-
 from typing import Any, Dict, Optional
+
+import numpy as np
 
 json_encoders = {np.ndarray: lambda v: v.flatten().tolist()}
 

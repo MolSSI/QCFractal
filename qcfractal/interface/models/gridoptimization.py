@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Tuple, Union
 
 from pydantic import BaseModel, validator
 
-from .common_models import (Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification)
+from .common_models import Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification
 from .model_utils import hash_dictionary, json_encoders, recursive_normalizer
 
 __all__ = ["GridOptimizationInput", "GridOptimization"]
@@ -209,6 +209,7 @@ class GridOptimization(GridOptimizationInput):
 
     def json_dict(self, *args, **kwargs):
         return json.loads(self.json(*args, **kwargs))
+
 
 ## Query
 

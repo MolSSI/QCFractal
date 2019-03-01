@@ -5,8 +5,8 @@ A model for TorsionDrive
 import datetime
 import json
 from typing import Any, Dict, List, Optional
-from pydantic import validator
 
+from pydantic import validator
 from qcelemental.models import Optimization
 
 from .common_models import ObjectId, QCSpecification

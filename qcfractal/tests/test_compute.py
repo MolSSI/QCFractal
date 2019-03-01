@@ -3,9 +3,8 @@ Tests the server compute capabilities.
 """
 
 import pytest
-import requests
-
 import qcfractal.interface as portal
+import requests
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server, reset_server_database, using_psi4, using_rdkit
 
@@ -50,10 +49,7 @@ def test_task_molecule_no_orientation(data, fractal_compute_server):
 def test_task_error(fractal_compute_server):
     client = portal.FractalClient(fractal_compute_server)
 
-    mol = portal.models.Molecule(**{
-        "geometry": [0, 0, 0],
-        "symbols": ["He"]
-    })
+    mol = portal.models.Molecule(**{"geometry": [0, 0, 0], "symbols": ["He"]})
     # Cookiemonster is an invalid method
     ret = client.add_compute("rdkit", "cookiemonster", "", "energy", None, [mol])
 

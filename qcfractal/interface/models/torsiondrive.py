@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel
 
-from .common_models import (Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification)
+from .common_models import Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification
 from .model_utils import hash_dictionary, json_encoders, recursive_normalizer
 
 __all__ = ["TorsionDriveInput", "TorsionDrive"]
@@ -132,6 +132,7 @@ class TorsionDrive(TorsionDriveInput):
             include={"initial_molecule", "program", "procedure", "keywords", "optimization_spec", "qc_spec"})
 
         return hash_dictionary(data)
+
 
 ## Query
 

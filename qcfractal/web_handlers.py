@@ -6,12 +6,9 @@ import json
 import tornado.web
 
 from .interface.models.rest_models import (
-    MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse,
-    KeywordGETBody, KeywordGETResponse, KeywordPOSTBody, KeywordPOSTResponse,
-    CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
-    ResultGETBody, ResultGETResponse,
-    ProcedureGETBody, ProcedureGETReponse
-)
+    MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse, KeywordGETBody, KeywordGETResponse,
+    KeywordPOSTBody, KeywordPOSTResponse, CollectionGETBody, CollectionGETResponse, CollectionPOSTBody,
+    CollectionPOSTResponse, ResultGETBody, ResultGETResponse, ProcedureGETBody, ProcedureGETReponse)
 
 
 class APIHandler(tornado.web.RequestHandler):
@@ -194,10 +191,11 @@ class CollectionHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         body = CollectionPOSTBody.parse_raw(self.request.body)
-        ret = storage.add_collection(body.data.collection,
-                                     body.data.name,
-                                     body.data.dict(exclude={"collection", "name"}),
-                                     overwrite=body.meta.overwrite)
+        ret = storage.add_collection(
+            body.data.collection,
+            body.data.name,
+            body.data.dict(exclude={"collection", "name"}),
+            overwrite=body.meta.overwrite)
 
         response = CollectionPOSTResponse(**ret)
 
@@ -254,4 +252,3 @@ class ProcedureHandler(APIHandler):
         self.logger.info("GET: Procedures - {} pulls.".format(len(response.data)))
 
         self.write(response.json())
-

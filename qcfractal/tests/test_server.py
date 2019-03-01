@@ -5,13 +5,13 @@ Tests the DQM Server class
 import threading
 
 import pytest
-import requests
-
 import qcfractal.interface as portal
+import requests
 from qcfractal import FractalServer
-from qcfractal.testing import pristine_loop, find_open_port, check_active_mongo_server, test_server
+from qcfractal.testing import check_active_mongo_server, find_open_port, pristine_loop, test_server
 
 meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
+
 
 @pytest.mark.skip(reason="Hangs on Travis for some reason")
 def test_start_stop():
@@ -20,8 +20,7 @@ def test_start_stop():
     with pristine_loop() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(
-            port=find_open_port(), storage_project_name="something", loop=loop, ssl_options=False)
+        server = FractalServer(port=find_open_port(), storage_project_name="something", loop=loop, ssl_options=False)
 
         thread = threading.Thread(target=server.start, name="test IOLoop")
         thread.daemon = True
@@ -36,6 +35,7 @@ def test_start_stop():
             thread.join(timeout=5)
         except:
             pass
+
 
 def test_server_information(test_server):
 
@@ -115,7 +115,14 @@ def test_storage_socket(test_server):
     assert pdata["meta"].keys() == meta_set
     assert pdata["meta"]["n_inserted"] == 1
 
-    r = requests.get(storage_api_addr, json={"meta": {}, "data": {"collection": storage["collection"], "name": storage["name"]}})
+    r = requests.get(
+        storage_api_addr, json={
+            "meta": {},
+            "data": {
+                "collection": storage["collection"],
+                "name": storage["name"]
+            }
+        })
     assert r.status_code == 200
 
     pdata = r.json()

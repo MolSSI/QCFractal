@@ -1,5 +1,3 @@
-
-
 from .gridoptimization import GridOptimization
 from .proc_models import OptimizationModel
 from .torsiondrive import TorsionDrive
