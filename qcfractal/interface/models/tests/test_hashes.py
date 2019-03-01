@@ -4,6 +4,7 @@ import pytest
 
 from ..common_models import KeywordSet, Molecule
 from ..proc_models import OptimizationModel
+from ..gridoptimization import GridOptimizationInput
 
 ## Molecule hashes
 
@@ -43,6 +44,7 @@ def test_molecule_geometry_canary_hash(geom, hash_index):
     mol = Molecule(geometry=geom, symbols=["H", "H"])
 
     assert mol.get_hash() == hash_index
+
 
 ## Keyword Set hash
 
@@ -140,13 +142,7 @@ def test_keywords_comparison_hash(data1, data2):
 
 
 ## Optimization hashes
-_qc_spec =  {
-        "driver": "gradient",
-        "method": "HF",
-        "basis": "sto-3g",
-        "keywords": None,
-        "program": "prog"
-    }
+_qc_spec = {"driver": "gradient", "method": "HF", "basis": "sto-3g", "keywords": None, "program": "prog"}
 _base_opt = {
     "keywords": {},
     "program": "prog2",
@@ -189,10 +185,66 @@ _base_opt = {
 
     ({"qc_spec": {**_qc_spec, **{"basis": ""}}},
      "3489e0c47144ebedb4fdcc2bfab61f7aa4dc947c"),
-])
+]) # yapf: disable
 
 def test_optimization_canary_hash(data, hash_index):
 
     opt = OptimizationModel(**{**_base_opt, **data})
 
     assert hash_index == opt.hash_index, data
+
+
+## GridOptimization hashes
+_opt_spec = {
+    "program": "geometric",
+    "keywords": {
+        "coordsys": "tric",
+    }
+}
+
+_scan_spec = {
+        "type": "distance",
+        "indices": [1, 2],
+        "steps": [-0.1, 0.0],
+        "step_type": "relative"
+    } # yapf: disable
+
+_base_gridopt = {
+    "keywords": {
+        "preoptimization": False,
+        "scans": [_scan_spec]
+    },
+    "optimization_spec": _opt_spec,
+    "qc_spec": _qc_spec,
+    "initial_molecule": "5c7896fb95d592ad07a2fe3b",
+}
+@pytest.mark.parametrize("data, hash_index", [
+
+    # Check same
+    ({},
+     "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+
+    ({"keywords": {
+        "preoptimization": False,
+        "scans": [{**_scan_spec, **{"steps": [-0.1 + 1e-12, 0.0 - 1.e-12]}}]
+    }},
+     "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+
+
+    # Check opt keywords stability
+    ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 1.e-12}}}},
+     "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+
+    ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 0}}}},
+     "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+
+    # Check fields
+    ({"initial_molecule": "5c78987e95d592ad07a2fe3c"},
+     "5b00f25ce8a81950754faf65b1643896837ea0ec"),
+
+])
+def test_gridoptimization_canary_hash(data, hash_index):
+
+    gridopt = GridOptimizationInput(**{**_base_gridopt, **data})
+
+    assert hash_index == gridopt.get_hash_index(), data
