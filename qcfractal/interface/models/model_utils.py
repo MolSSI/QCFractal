@@ -7,26 +7,20 @@ from typing import Any, Dict, Optional
 json_encoders = {np.ndarray: lambda v: v.flatten().tolist()}
 
 
-def prepare_program(program: str) -> str:
-    """
-    Prepares a program string for the database
-    """
-
-    return program.lower()
-
-
 def prepare_basis(basis: Optional[str]) -> Optional[str]:
     """
     Prepares a basis set string
     """
     if basis is None:
-        return v
+        return basis
 
-    basis = basis.lower()
     if basis == "":
-        basis = None
+        return None
 
-    return basis
+    if basis == "null":
+        return None
+
+    return basis.lower()
 
 
 def recursive_normalizer(value: Any, **kwargs: Dict[str, Any]) -> Any:

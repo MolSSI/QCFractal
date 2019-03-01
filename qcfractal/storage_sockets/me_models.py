@@ -5,6 +5,8 @@ from collections.abc import Iterable
 import bson
 import mongoengine as db
 
+from ..interface.models import prepare_basis
+
 
 class CustomDynamicDocument(db.DynamicDocument):
     """
@@ -196,6 +198,14 @@ class Result(BaseResult):
         ]
     }
 
+    def save(self, *args, **kwargs):
+
+        self.program = self.program.lower()
+        if self.basis:
+            self.basis = prepare_basis(self.basis)
+
+        return super(Result, self).save(*args, **kwargs)
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -228,6 +238,13 @@ class Procedure(BaseResult):
             }  # used in queries
         ]
     }
+
+    def save(self, *args, **kwargs):
+
+        self.program = self.program.lower()
+        self.procedure = self.program.lower()
+
+        return super(Procedure, self).save(*args, **kwargs)
 
 
 # ================== Types of Procedures ================== #

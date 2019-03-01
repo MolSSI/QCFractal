@@ -160,7 +160,7 @@ def test_keywords_mixed_add_get(storage_socket):
     id1 = storage_socket.add_keywords([opts1.json_dict()])["data"][0]
 
     opts2 = {"values": {"o": 6}}
-    opts = storage_socket.get_add_keywords_mixed([opts1, opts2, id1, bad_id1, "bad_id"])["data"]
+    opts = storage_socket.get_add_keywords_mixed([opts1, opts2, id1, bad_id1, bad_id2])["data"]
     assert opts[0]["id"] == id1
     assert opts[1]["values"]["o"] == 6
     assert "id" in opts[1]
@@ -413,7 +413,7 @@ def storage_results(storage_socket):
 def test_empty_get(storage_results):
 
     assert 0 == len(storage_results.get_molecules(id=[])["data"])
-    assert 0 == len(storage_results.get_molecules(id="")["data"])
+    assert 0 == len(storage_results.get_molecules(id=bad_id1)["data"])
     # Todo: This needs to return top limit of the table
     assert 2 == len(storage_results.get_molecules()["data"])
 
@@ -751,7 +751,7 @@ def test_procedure_pagination(storage_socket):
     assert len(storage_socket.get_procedures()['data']) == 0
 
     proc_template = {
-        "procedure": "Optimization",
+        "procedure": "optimization",
         "program": "P1",
     }
 
@@ -766,7 +766,7 @@ def test_procedure_pagination(storage_socket):
     inserted = storage_socket.add_procedures(procedures)
     assert inserted['meta']['n_inserted'] == total
 
-    ret = storage_socket.get_procedures(procedure='Optimization', status=None, skip=400)
+    ret = storage_socket.get_procedures(procedure='optimization', status=None, skip=400)
 
     # count is total, but actual data size is the limit
     assert ret['meta']['n_found'] == total

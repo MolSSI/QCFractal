@@ -5,11 +5,12 @@ A model for TorsionDrive
 import datetime
 import json
 from typing import Any, Dict, List, Optional
+from pydantic import validator
 
 from qcelemental.models import Optimization
 
 from .common_models import ObjectId, QCSpecification
-from .model_utils import hash_dictionary, json_encoders
+from .model_utils import hash_dictionary, json_encoders, prepare_basis, recursive_normalizer
 
 __all__ = ["OptimizationModel"]
 
@@ -24,12 +25,12 @@ class OptimizationModel(Optimization):
     cache: Dict[str, Any] = {}
 
     id: ObjectId = None
-    procedure: str
+    procedure: str = "optimization"
     program: str
     hash_index: Optional[str] = None
 
     qc_spec: QCSpecification
-    input_specification: Any = None # Deprecated
+    input_specification: Any = None  # Deprecated
 
     # Results
     initial_molecule: ObjectId
@@ -41,11 +42,20 @@ class OptimizationModel(Optimization):
     modified_on: datetime.datetime = None
     created_on: datetime.datetime = None
 
-
     class Config:
         allow_mutation = False
         json_encoders = json_encoders
         extra = "forbid"
+
+    @validator('program')
+    def check_program(cls, v):
+        return v.lower()
+
+    @validator('keywords')
+    def check_keywords(cls, v):
+        if v is not None:
+            v = recursive_normalizer(v)
+        return v
 
     def __init__(self, **data):
         data["procedure"] = "optimization"
@@ -87,8 +97,7 @@ class OptimizationModel(Optimization):
 
     def get_hash_index(self):
 
-        data = self.dict(
-            include={"initial_molecule", "program", "procedure", "keywords", "qc_spec"})
+        data = self.dict(include={"initial_molecule", "program", "procedure", "keywords", "qc_spec"})
 
         return hash_dictionary(data)
 

@@ -179,7 +179,7 @@ class ResultGETBody(BaseModel):
         data = {key: v[key] for key in (v.keys() & valid_keys)}
         if "keywords" in data and data["keywords"] is None:
             data["keywords"] = 'null'
-        if "basis" in data and data["basis"] is None:
+        if "basis" in data and ((data["basis"] is None) or (data["basis"] == "")):
             data["basis"] = 'null'
         return data
 

@@ -9,7 +9,7 @@ from typing import Any, Dict, Optional
 from pydantic import BaseModel, validator
 from qcelemental.models import Molecule, Provenance
 
-from .model_utils import recursive_normalizer, hash_dictionary, prepare_basis, prepare_program
+from .model_utils import recursive_normalizer, hash_dictionary, prepare_basis
 
 __all__ = ["QCSpecification", "OptimizationSpecification", "KeywordSet", "ObjectId"]
 
@@ -30,10 +30,12 @@ class ObjectId(str):
             raise TypeError("The string {} is not a valid 24-character hexadecimal ObjectId!".format(v))
         return v
 
+
 class DriverEnum(str, Enum):
     energy = 'energy'
     gradient = 'gradient'
     hessian = 'hessian'
+
 
 class QCSpecification(BaseModel):
     """
@@ -51,7 +53,7 @@ class QCSpecification(BaseModel):
 
     @validator('program')
     def check_program(cls, v):
-        return prepare_program(v)
+        return v.lower()
 
     class Config:
         extra = "forbid"
@@ -67,7 +69,7 @@ class OptimizationSpecification(BaseModel):
 
     @validator('program')
     def check_program(cls, v):
-        return prepare_program(v)
+        return v.lower()
 
     @validator('keywords')
     def check_keywords(cls, v):

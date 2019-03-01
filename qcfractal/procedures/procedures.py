@@ -7,7 +7,7 @@ from typing import Union
 
 from .procedures_util import parse_hooks, parse_single_tasks, unpack_single_task_spec
 from qcelemental.models import OptimizationInput
-from ..interface.models import OptimizationModel
+from ..interface.models import OptimizationModel, prepare_basis
 
 
 class SingleResultTasks:

@@ -60,7 +60,7 @@ def unpack_single_task_spec(storage, meta, molecules):
         "keywords": keyword_set,
         "model": {
             "method": meta["method"],
-            "basis": prepare_basis(meta["basis"])
+            "basis": meta["basis"]
         },
         "extras": {
             "_qcfractal_tags": {

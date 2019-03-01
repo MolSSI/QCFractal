@@ -26,6 +26,7 @@ from bson.objectid import ObjectId
 from mongoengine.connection import disconnect, get_db
 
 from .. import interface
+from ..interface.models import prepare_basis
 from .me_models import Collection, Keywords, Molecule, Procedure, QueueManager, Result, ServiceQueue, TaskQueue, User
 from .storage_utils import add_metadata_template, get_metadata_template
 
@@ -57,7 +58,8 @@ def _str_to_indices_with_errors(ids):
 
 _null_keys = {"basis", "keywords"}
 _id_keys = {"id", "molecule", "keywords", "procedure_id"}
-_lower_keys = {"method", "basis", "program"}
+_lower_func = lambda x: x.lower()
+_prepare_keys = {"program": _lower_func, "basis": prepare_basis, "method": _lower_func, "procedure": _lower_func}
 
 
 def format_query(**query):
@@ -78,15 +80,19 @@ def format_query(**query):
 
         # Handle ID conversions
         elif k in _id_keys:
-            v, bad = _str_to_indices_with_errors(v)
-            if bad:
-                errors.append((k, bad))
-
-        if k in _lower_keys:
             if isinstance(v, (list, tuple)):
-                v = [x.lower() for x in v]
+                v, bad = _str_to_indices_with_errors(v)
+                if bad:
+                    errors.append((k, bad))
             else:
-                v = v.lower()
+                v = ObjectId(v)
+
+        if k in _prepare_keys:
+            f = _prepare_keys[k]
+            if isinstance(v, (list, tuple)):
+                v = [f(x) for x in v]
+            else:
+                v = f(v)
 
         if isinstance(v, (list, tuple)):
             ret[k + "__in"] = v
@@ -707,11 +713,9 @@ class MongoengineSocket:
         """
 
         for d in data:
-            for i in self._lower_results_index:
-                if d[i] is None:
-                    continue
-
-                d[i] = d[i].lower()
+            d["program"] = d["program"].lower()
+            d["method"] = d["method"].lower()
+            d["basis"] = prepare_basis(d["basis"])
 
         meta = add_metadata_template()
 
@@ -720,10 +724,9 @@ class MongoengineSocket:
         for d in data:
 
             d.pop("id", None)
-            # search by index keywords not by all keys, much faster
             doc = Result.objects(
                 program=d['program'],
-                name=d['driver'],
+                driver=d['driver'],
                 method=d['method'],
                 basis=d['basis'],
                 keywords=d['keywords'],
