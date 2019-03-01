@@ -36,9 +36,10 @@ def test_molecule_water_canary_hash():
     assert frag_1.get_hash() == "feb5c6127ca54d715b999c15ea1ea1772ada8c5d"
 
 @pytest.mark.parametrize("geom, hash_index", [
-    ([0, 0, 0, 0, 0, 1], "6000063f9d7631a27e00a4b54d0b6b28a0a5b591"),
-    ([0, 0, 0, 0, 0, 1 + 1.e-12], "6000063f9d7631a27e00a4b54d0b6b28a0a5b591"),
-    ([0, 0, 0, 0, 0, 1 + 1.e-7], "7df4e4c420e2c5b3ef0f18b8e5b65c91e8370064"),
+    ([0, 0, 0, 0, 0, 0], "78c135e2e81bb84bdcbbcb9ee3f1a031b4b5501a"),
+    ([0, 0, 0, 0, 0, 0 + 1.e-12], "78c135e2e81bb84bdcbbcb9ee3f1a031b4b5501a"),
+    ([0, 0, 0, 0, 0, 0 - 1.e-12], "78c135e2e81bb84bdcbbcb9ee3f1a031b4b5501a"),
+    ([0, 0, 0, 0, 0, 0 + 1.e-7], "78c135e2e81bb84bdcbbcb9ee3f1a031b4b5501a"),
 ]) # yapf: disable
 def test_molecule_geometry_canary_hash(geom, hash_index):
 
@@ -154,8 +155,7 @@ _base_opt = {
 @pytest.mark.parametrize("data, hash_index", [
 
     # Check same
-    ({},
-     "254de59f1598570d0c31aa2d3d84b601c9da12b9"),
+    ({}, "254de59f1598570d0c31aa2d3d84b601c9da12b9"),
 
     ({"program": "PROG2"},
      "254de59f1598570d0c31aa2d3d84b601c9da12b9"),
@@ -221,51 +221,27 @@ _base_gridopt = {
 }
 
 
-@pytest.mark.parametrize(
-    "data, hash_index",
-    [
+@pytest.mark.parametrize("data, hash_index", [
 
-        # Check same
-        ({}, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
-        ({
-            "keywords": {
-                "preoptimization": False,
-                "scans": [{
-                    **_scan_spec,
-                    **{
-                        "steps": [-0.1 + 1e-12, 0.0 - 1.e-12]
-                    }
-                }]
-            }
-        }, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+    # Check same
+    ({}, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+    ({"keywords": {
+            "preoptimization": False,
+            "scans": [{**_scan_spec, **{"steps": [-0.1 + 1e-12, 0.0 - 1.e-12]}}]
+        }
+    }, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
 
-        # Check opt keywords stability
-        ({
-            "optimization_spec": {
-                **_opt_spec,
-                **{
-                    "keywords": {
-                        "tol": 1.e-12
-                    }
-                }
-            }
-        }, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
-        ({
-            "optimization_spec": {
-                **_opt_spec,
-                **{
-                    "keywords": {
-                        "tol": 0
-                    }
-                }
-            }
-        }, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+    # Check opt keywords stability
+    ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 1.e-12}}}
+    }, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
 
-        # Check fields
-        ({
-            "initial_molecule": "5c78987e95d592ad07a2fe3c"
-        }, "5b00f25ce8a81950754faf65b1643896837ea0ec"),
-    ])
+    ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 0}}}
+    }, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+
+    # Check fields
+    ({"initial_molecule": "5c78987e95d592ad07a2fe3c"},
+     "5b00f25ce8a81950754faf65b1643896837ea0ec"),
+]) # yapf: disable
 def test_gridoptimization_canary_hash(data, hash_index):
 
     gridopt = GridOptimizationInput(**{**_base_gridopt, **data})
@@ -292,61 +268,32 @@ _base_torsion = {
 }
 
 
-@pytest.mark.parametrize(
-    "data, hash_index",
-    [
+@pytest.mark.parametrize("data, hash_index", [
 
-        # Check same
-        ({}, "539022b987b84a8888a88789224c42096f11f5fc"),
-        ({
-            "keywords": {
-                "dihedrals": [[0, 1, 2, 3]],
-                "grid_spacing": [10],
-                "tol": 1.e-12
-            }
-        }, "972c731248b800a4e8984820333ed2b0fd3ac372"),
-        ({
-            "keywords": {
-                "dihedrals": [[0, 1, 2, 3]],
-                "grid_spacing": [10],
-                "tol": 0
-            }
-        }, "972c731248b800a4e8984820333ed2b0fd3ac372"),
-        ({
-            "keywords": {
-                "dihedrals": [[0, 1, 2, 3]],
-                "grid_spacing": [10],
-                "tol": 1.e-9
-            }
-        }, "f0d09cb058501e18001c7e454dafe42944d5f45e"),
+    # Check same
+    ({}, "539022b987b84a8888a88789224c42096f11f5fc"),
 
-        # Check opt keywords stability
-        ({
-            "optimization_spec": {
-                **_opt_spec,
-                **{
-                    "keywords": {
-                        "tol": 1.e-12
-                    }
-                }
-            }
-        }, "c4cf09b80f6cb77bb3d5f41a3888d7b877205ef4"),
-        ({
-            "optimization_spec": {
-                **_opt_spec,
-                **{
-                    "keywords": {
-                        "tol": 0
-                    }
-                }
-            }
-        }, "c4cf09b80f6cb77bb3d5f41a3888d7b877205ef4"),
+    ({"keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10], "tol": 1.e-12}},
+     "972c731248b800a4e8984820333ed2b0fd3ac372"),
 
-        # Check fields
-        ({
-            "initial_molecule": ["5c78987e95d592ad07a2fe3c"]
-        }, "e37272983b3c2f6dcca74bb45f823f33d0cb3b11"),
-    ])
+    ({"keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10], "tol": 0}},
+     "972c731248b800a4e8984820333ed2b0fd3ac372"),
+
+    ({"keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10], "tol": 1.e-9}},
+     "f0d09cb058501e18001c7e454dafe42944d5f45e"),
+
+    # Check opt keywords stability
+    ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 0.0}}}},
+      "c4cf09b80f6cb77bb3d5f41a3888d7b877205ef4"),
+
+    ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 1.e-12}}}},
+      "c4cf09b80f6cb77bb3d5f41a3888d7b877205ef4"),
+
+    # Check fields
+    ({"initial_molecule": ["5c78987e95d592ad07a2fe3c"]},
+     "e37272983b3c2f6dcca74bb45f823f33d0cb3b11"),
+
+]) # yapf disable
 def test_torsiondrive_canary_hash(data, hash_index):
 
     td = TorsionDrive(**{**_base_torsion, **data})
