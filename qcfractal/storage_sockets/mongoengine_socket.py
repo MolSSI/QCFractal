@@ -215,7 +215,7 @@ class MongoengineSocket:
             elif isinstance(mol, dict):
                 mol.pop("id", None)
                 dict_mols[idx] = mol
-            elif isinstance(mol, interface.models.common_models.Molecule):
+            elif isinstance(mol, interface.models.Molecule):
                 mol_json = mol.json_dict()
                 mol_json.pop("id", None)
                 dict_mols[idx] = mol_json
@@ -514,12 +514,12 @@ class MongoengineSocket:
             # New dictionary construct and add
             elif isinstance(kw, dict):
 
-                kw = interface.models.common_models.KeywordSet(**kw)
+                kw = interface.models.KeywordSet(**kw)
 
                 new_id = self.add_keywords([kw.json_dict()])["data"][0]
                 ids.append(new_id)
 
-            elif isinstance(kw, interface.models.common_models.KeywordSet):
+            elif isinstance(kw, interface.models.KeywordSet):
                 new_id = self.add_keywords([kw.json_dict()])["data"][0]
                 ids.append(new_id)
             else:

@@ -7,9 +7,11 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 from pydantic import BaseModel, validator
-from qcelemental.models import Molecule, Provenance, Result, ResultInput
+from qcelemental.models import Molecule, Provenance
 
-__all__ = ["QCSpecification", "OptimizationSpecification", "json_encoders", "hash_dictionary", "KeywordSet"]
+__all__ = [
+    "QCSpecification", "OptimizationSpecification", "json_encoders", "hash_dictionary", "KeywordSet", "ObjectId"
+]
 
 # Add in QCElemental models
 __all__.extend(["Molecule", "Provenance"])
@@ -60,6 +62,20 @@ def hash_dictionary(data: Dict[str, Any]) -> str:
     return m.hexdigest()
 
 
+class ObjectId(str):
+    _valid_hex = set("0123456789abcdef")
+
+    @classmethod
+    def __get_validators__(cls):
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v):
+        if (not isinstance(v, str)) or (len(v) != 24) or (not set(v) <= cls._valid_hex):
+            raise TypeError("The string {} is not a valid 24-character hexadecimal ObjectId!".format(v))
+        return v
+
+
 class QCSpecification(BaseModel):
     """
     The basic quantum chemistry meta specification
@@ -67,7 +83,7 @@ class QCSpecification(BaseModel):
     driver: str
     method: str
     basis: Optional[str] = None
-    keywords: Optional[str] = None
+    keywords: Optional[ObjectId] = None
     program: str
 
     class Config:
@@ -91,7 +107,7 @@ class KeywordSet(BaseModel):
     """
     An options object for the QCArchive ecosystem
     """
-    id: Optional[str] = None
+    id: Optional[ObjectId] = None
     hash_index: str
     values: Dict[str, Any]
     lowercase: bool = True
@@ -127,3 +143,4 @@ class KeywordSet(BaseModel):
 
     def json_dict(self, *args, **kwargs):
         return json.loads(self.json(*args, **kwargs))
+

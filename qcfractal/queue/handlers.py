@@ -5,7 +5,7 @@ Queue backend abstraction manager.
 import collections
 import traceback
 
-from ..interface.models.common_models import Molecule
+from ..interface.models import Molecule
 from ..interface.models.rest_models import (
     QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse, QueueManagerPUTBody,
     QueueManagerPUTResponse, ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody,
@@ -143,18 +143,14 @@ class QueueManagerHandler(APIHandler):
 
                 # Failed task
                 else:
-                    if "error" in result:
-                        logger.warning(
-                            "Found old-style error field, please change to 'error_message'. Will be deprecated")
-                        error = result["error"]
-                        result["error_message"] = error
-                    elif "error_message" in result:
-                        error = result["error_message"]
+                    if "error" not in result:
+                        error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
                     else:
-                        error = "No error supplied"
+                        error = result["error"]
 
-                    logger.info("Computation key did not complete successfully:\n\t{}\n"
-                                "Because: {}".format(str(key), error))
+                    logger.warning("Computation key {key} did not complete successfully:\n"
+                                "error_type: {error_type}\nerror_message: {error_message}".format(
+                                    key=str(key), **error))
 
                     error_data.append((key, error))
                     task_failures += 1
@@ -204,13 +200,11 @@ class QueueManagerHandler(APIHandler):
         # Grab new tasks and write out
         new_tasks = storage.queue_get_next(name, **queue_tags)
         response = QueueManagerGETResponse(
-            meta={
-                "n_found": len(new_tasks),
-                "success": True,
-                "errors": [],
-                "error_description": "",
-                "missing": []
-            },
+            meta={"n_found": len(new_tasks),
+                  "success": True,
+                  "errors": [],
+                  "error_description": "",
+                  "missing": []},
             data=new_tasks)
         self.write(response.json())
         self.logger.info("QueueManager: Served {} tasks.".format(response.meta.n_found))

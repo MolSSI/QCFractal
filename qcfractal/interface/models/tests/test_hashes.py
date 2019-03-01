@@ -2,8 +2,48 @@ import json
 
 import pytest
 
-from ..common_models import KeywordSet
+from ..common_models import KeywordSet, Molecule
 
+## Molecule hashes
+
+
+def test_molecule_water_canary_hash():
+
+    water_dimer_minima = Molecule.from_data(
+        """
+    0 1
+    O  -1.551007  -0.114520   0.000000
+    H  -1.934259   0.762503   0.000000
+    H  -0.599677   0.040712   0.000000
+    --
+    O   1.350625   0.111469   0.000000
+    H   1.680398  -0.373741  -0.758561
+    H   1.680398  -0.373741   0.758561
+    """,
+        dtype="psi4")
+    assert water_dimer_minima.get_hash() == "e816b396c7b00e49ef2d9c8b670c955df0a410c7"
+
+    # Check orientation
+    mol = water_dimer_minima.orient_molecule()
+    assert mol.get_hash() == "b9bbe6028825d2e61c1ccfcdd0f4be4c3fa6efda"
+
+    frag_0 = mol.get_fragment(0, orient=True)
+    frag_1 = mol.get_fragment(1, orient=True)
+    assert frag_0.get_hash() == "d8975ddd917a57f468596b54968b0dffe52c7487"
+    assert frag_1.get_hash() == "feb5c6127ca54d715b999c15ea1ea1772ada8c5d"
+
+@pytest.mark.parametrize("geom, hash_index", [
+    ([0, 0, 0, 0, 0, 1], "6000063f9d7631a27e00a4b54d0b6b28a0a5b591"),
+    ([0, 0, 0, 0, 0, 1 + 1.e-12], "6000063f9d7631a27e00a4b54d0b6b28a0a5b591"),
+    ([0, 0, 0, 0, 0, 1 + 1.e-7], "7df4e4c420e2c5b3ef0f18b8e5b65c91e8370064"),
+]) # yapf: disable
+def test_molecule_geometry_canary_hash(geom, hash_index):
+
+    mol = Molecule(geometry=geom, symbols=["H", "H"])
+
+    assert mol.get_hash() == hash_index
+
+## Keyword Set hash
 
 @pytest.mark.parametrize("data, hash_index", [
 

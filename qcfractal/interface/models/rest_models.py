@@ -4,10 +4,12 @@ Models for the REST interface
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseConfig, BaseModel, validator
+from qcelemental.models import Result, Optimization
 
 from .common_models import KeywordSet, Molecule, json_encoders
 from .gridoptimization import GridOptimizationInput
 from .torsiondrive import TorsionDriveInput
+
 
 __all__ = [
     "ResponseGETMeta",
@@ -336,6 +338,9 @@ class QueueManagerGETResponse(BaseModel):
 class QueueManagerPOSTBody(BaseModel):
     meta: QueueManagerMeta
     data: Dict[str, Any]
+
+    class Config:
+        json_encoders = json_encoders
 
 
 class QueueManagerPOSTResponse(BaseModel):

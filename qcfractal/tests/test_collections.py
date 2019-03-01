@@ -16,9 +16,19 @@ def test_dataset_compute_gradient(fractal_compute_server):
     # Build a dataset
     ds = portal.collections.Dataset("ds_energy", client, default_program="psi4", default_driver="gradient")
 
-    local = {"gradient": [0.03, 0, 0.02, -0.02, 0, -0.03]}
-    ds.add_entry("He1", portal.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"), local_results=local)
-    ds.add_entry("He2", portal.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"), local_results=local)
+    ds.add_entry("He1", portal.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
+    ds.add_entry("He2", portal.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"))
+
+    contrib = {
+        "name": "gradient",
+        "theory_level": "pseudo-random values",
+        "values": {
+            "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
+            "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
+        },
+        "units": "hartree"
+    }
+    ds.add_contributed_values(contrib)
 
     # Compute
     ds.save()
@@ -26,10 +36,12 @@ def test_dataset_compute_gradient(fractal_compute_server):
     fractal_compute_server.await_results()
 
     ds.query("HF", "sto-3g", as_array=True)
-    ds.query("gradient", None, local_results=True, as_array=True)
+    ds.query("gradient", None, contrib=True, as_array=True)
 
     stats = ds.statistics("MUE", "HF/sto-3g", "gradient")
     assert pytest.approx(stats.mean()) == 0.00984176986312362
+
+    assert ds.list_history().shape[0] == 1
 
 
 def test_reactiondataset_check_state(fractal_compute_server):
@@ -54,6 +66,23 @@ def test_reactiondataset_check_state(fractal_compute_server):
     ds.save()
     assert ds.query("SCF", "STO-3G")
 
+    contrib = {
+        "name": "Benchmark",
+        "doi": None,
+        "theory_level": "very high",
+        "values": {
+            "He1": 0.0009608501557,
+            "He2": -0.00001098794749
+        },
+        "units": "hartree"
+    }
+    ds.add_contributed_values(contrib)
+    with pytest.raises(ValueError):
+        ds.query("SCF", "STO-3G")
+
+    assert "benchmark" in ds.list_contributed_values()
+    assert ds.get_contributed_values("benchmark").name == "Benchmark"
+
 
 @testing.using_psi4
 def test_compute_reactiondataset_regression(fractal_compute_server):
@@ -67,7 +96,7 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
 
     # Add two helium dimers to the DB at 4 and 8 bohr
     He1 = portal.Molecule.from_data([[2, 0, 0, -2], [2, 0, 0, 2]], dtype="numpy", units="bohr", frags=[1])
-    ds.add_ie_rxn("He1", He1, attributes={"r": 4}, reaction_results={"default": {"Benchmark": 0.0009608501557}})
+    ds.add_ie_rxn("He1", He1, attributes={"r": 4})
 
     # Save the DB and re-acquire via classmethod
     r = ds.save()
@@ -83,7 +112,19 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     assert ds_name in ret
 
     He2 = portal.Molecule.from_data([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
-    ds.add_ie_rxn("He2", He2, attributes={"r": 4}, reaction_results={"default": {"Benchmark": -0.00001098794749}})
+    ds.add_ie_rxn("He2", He2, attributes={"r": 4})
+
+    contrib = {
+        "name": "Benchmark",
+        "doi": None,
+        "theory_level": "very high",
+        "values": {
+            "He1": 0.0009608501557,
+            "He2": -0.00001098794749
+        },
+        "units": "hartree"
+    }
+    ds.add_contributed_values(contrib)
 
     # Save the DB and overwrite the result, reacquire via client
     r = ds.save(overwrite=True)
@@ -100,10 +141,11 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     assert pytest.approx(-0.006895035942673289, 1.e-5) == ds.df.loc["He2", "SCF/STO-3G"]
 
     # Check results
-    assert ds.query("Benchmark", "", reaction_results=True)
+    assert ds.query("Benchmark", contrib=True)
     assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/STO-3G")
 
     assert isinstance(ds.to_json(), dict)
+    assert ds.list_history(keywords=None).shape[0] == 1
 
 
 @testing.using_psi4
@@ -133,6 +175,10 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     fractal_compute_server.await_results()
     assert ds.query("SCF", "STO-3G", keywords="df", prefix="df-")
     assert pytest.approx(0.38748602675524185, 1.e-5) == ds.df.loc["He2", "df-SCF/STO-3G"]
+
+    assert ds.list_history().shape[0] == 2
+    assert ds.list_history(keywords="DF").shape[0] == 1
+    assert ds.list_history(keywords="DIRECT").shape[0] == 1
 
 
 @testing.using_torsiondrive

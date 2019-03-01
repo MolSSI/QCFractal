@@ -6,11 +6,10 @@ import copy
 
 import pytest
 
-import qcfractal.interface as portal
 from qcfractal.testing import fractal_compute_server, recursive_dict_merge, using_geometric, using_rdkit
 
-from qcfractal.interface.models.gridoptimization import GridOptimizationInput
-from qcfractal.interface.models.torsiondrive import TorsionDriveInput
+import qcfractal.interface as portal
+from qcfractal.interface.models import GridOptimizationInput, TorsionDriveInput
 
 
 @pytest.fixture(scope="module")

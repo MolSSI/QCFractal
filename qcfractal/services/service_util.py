@@ -76,7 +76,7 @@ class TaskManager(BaseModel):
             for x in tasks:
                 if "error" not in x:
                     continue
-                print(x["error"])
+                print(x["error"]["error_message"])
 
             raise KeyError("All tasks did not execute successfully.")
 

@@ -8,6 +8,7 @@ import logging
 import socket
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Union
+from pydantic import BaseModel
 
 import tornado.ioloop
 from qcfractal.extras import get_information
@@ -306,6 +307,18 @@ class QueueManager:
         results = self.queue_adapter.acquire_complete()
         if len(results):
             payload = self._payload_template()
+
+            # # Serialize base_models:
+            # results_payload = {}
+            # for k, v in results.items():
+            #     if hasattr(v[0], "json_dict"):
+            #         results_payload[k] = (v[0].json_dict(), v[1], v[2])
+            #     elif hasattr(v[0], "dict"):
+            #         results_payload[k] = (v[0].dict(), v[1], v[2])
+            #     else:
+            #         results_payload[k] = v
+
+            # Upload new results
             payload["data"] = results
             body = QueueManagerPOSTBody(**payload)
             r = self.client._request("post", "queue_manager", data=body.json(), noraise=True)
@@ -383,7 +396,6 @@ class QueueManager:
                     "driver": "energy",
                     "model": {},
                     "keywords": {},
-                    "return_output": False
                 }, "program"],
                 "kwargs": {}
             },
@@ -440,7 +452,7 @@ class QueueManager:
 
         failures = 0
         for k, result in results.items():
-            if result[0]["success"]:
+            if result[0].success:
                 self.logger.info("  {} - PASSED".format(k))
             else:
                 self.logger.error("  {} - FAILED!".format(k))

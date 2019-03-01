@@ -46,8 +46,6 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
                     "model": {"method": "HF",
                               "basis": "sto-3g"},
                     "keywords": {},
-                    "return_output": True,
-                    'qcfractal_tags': {'program': 'psi4', 'options': None}
                 }, "psi4"],
                 "kwargs": {}
             },
@@ -63,11 +61,11 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
     manager.queue_adapter.await_results()
     ret = manager.queue_adapter.acquire_complete()
     assert len(ret) == 1
-    provenance = ret[task_id][0]['provenance']
+    provenance = ret[task_id][0].provenance
     if cores_per_task is not None:
-        assert provenance['nthreads'] == cores_per_task
+        assert provenance.nthreads == cores_per_task
     if memory_per_task is not None:
-        assert provenance['memory'] == pytest.approx(memory_per_task * psi4_mem_buffer)
+        assert provenance.memory == pytest.approx(memory_per_task * psi4_mem_buffer)
 
 
 @testing.using_rdkit

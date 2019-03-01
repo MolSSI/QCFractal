@@ -3,15 +3,15 @@ QCPortal Database ODM
 """
 import itertools as it
 from enum import Enum
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel
+from qcelemental import constants
 
-from ..constants import get_scale
 from ..dict_utils import replace_dict_keys
-from ..models.common_models import Molecule
+from ..models import Molecule
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
 
@@ -75,19 +75,14 @@ class ReactionDataset(Dataset):
         self.rxn_index = None
         self._form_index()
 
-        # If we making a new database we may need new hashes and json objects
-        self._new_molecules = {}
-        self._new_keywords = {}
-        self._new_records = []
-
     class DataModel(Dataset.DataModel):
 
         ds_type: _ReactionTypeEnum = _ReactionTypeEnum.rxn
         records: List[ReactionRecord] = []
 
-    def _check_state(self):
-        if self._new_molecules or self._new_keywords:
-            raise ValueError("New molecules or keywords detected, run save before submitting new tasks.")
+        history: Set[Tuple[str, str, str, Optional[str], Optional[str], str]] = set()
+        history_keys: Tuple[str, str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords",
+                                                             "stoichiometry")
 
     def _form_index(self):
         # Unroll the index
@@ -166,15 +161,16 @@ class ReactionDataset(Dataset):
 
     def query(self,
               method,
-              basis,
+              basis=None,
+              *,
               driver=None,
               keywords=None,
               program=None,
               stoich="default",
               prefix="",
               postfix="",
-              reaction_results=False,
-              scale="kcal",
+              contrib=False,
+              scale="kcal/mol",
               field="return_result",
               ignore_ds_type=False):
         """
@@ -198,8 +194,8 @@ class ReactionDataset(Dataset):
             A prefix given to the resulting column names.
         postfix : str
             A postfix given to the resulting column names.
-        reaction_results : bool
-            Toggles a search between the Mongo Pages and the Databases's reaction_results field.
+        contrib : bool
+            Toggles a search between the Mongo Pages and the Databases's ContributedValues field.
         scale : str, double
             All units are based in Hartree, the default scaling is to kcal/mol.
         field : str, optional
@@ -224,10 +220,17 @@ class ReactionDataset(Dataset):
 
         """
 
-        driver, keywords, program = self._default_parameters(driver, keywords, program)
+        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
 
-        if not reaction_results and (self.client is None):
+        if not contrib and (self.client is None):
             raise AttributeError("DataBase: FractalClient was not set.")
+
+        # # If reaction results
+        if contrib:
+            tmp_idx = self.get_contributed_values_column(method, scale=scale)
+
+            self.df[prefix + method + postfix] = tmp_idx
+            return True
 
         query_keys = {
             "method": method.lower(),
@@ -236,24 +239,6 @@ class ReactionDataset(Dataset):
             "keywords": keywords,
             "program": program.lower(),
         }
-        # # If reaction results
-        if reaction_results:
-            tmp_idx = pd.Series(index=self.df.index)
-            for rxn in self.data.records:
-                try:
-                    tmp_idx.loc[rxn.name] = rxn.reaction_results[stoich][method]
-                except KeyError:
-                    pass
-
-            # Convert to numeric
-            tmp_idx = pd.to_numeric(tmp_idx, errors='ignore')
-            tmp_idx *= get_scale(scale)
-
-            self.df[prefix + method + postfix] = tmp_idx
-            return True
-
-        # if self.data.ds_type.lower() == "ie":
-        #     _ie_helper(..)
 
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
@@ -269,7 +254,7 @@ class ReactionDataset(Dataset):
 
         # scale
         tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
-        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= get_scale(scale)
+        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', scale)
 
         # Apply to df
         self.df[tmp_idx.columns] = tmp_idx
@@ -307,7 +292,7 @@ class ReactionDataset(Dataset):
         if self.client is None:
             raise AttributeError("DataBase: Compute: Client was not set.")
 
-        driver, keywords, program = self._default_parameters(driver, keywords, program)
+        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
 
         # Figure out molecules that we need
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
@@ -337,6 +322,11 @@ class ReactionDataset(Dataset):
         compute_list = list(umols)
 
         ret = self.client.add_compute(program, method.lower(), basis.lower(), driver, keywords, compute_list)
+
+        # Update the record that this was computed
+        self._add_history(
+            driver=driver, program=program, method=method, basis=basis, keywords=keywords_alias, stoichiometry=stoich)
+        self.save()
 
         return ret
 
