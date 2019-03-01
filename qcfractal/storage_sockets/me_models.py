@@ -212,10 +212,8 @@ class Procedure(BaseResult):
     keywords = db.DynamicField()
 
     meta = {
-        'collection':
-        'procedure',
-        'allow_inheritance':
-        True,
+        'collection': 'procedure',
+        'allow_inheritance': True,
         'indexes': [
             # TODO: needs a unique index, + molecule?
             {

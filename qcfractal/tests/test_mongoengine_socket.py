@@ -12,6 +12,7 @@ from qcfractal.storage_sockets.me_models import Molecule, Result, Keywords, \
 from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 import pytest
 from bson import ObjectId
+from time import time
 
 
 @pytest.fixture
@@ -266,6 +267,75 @@ def test_add_task_queue(storage_socket, molecules_H4O2):
     task.save()
     assert TaskQueue.objects().count() == 3
 
+    # cleanup
+    Result.objects.delete()
+    TaskQueue.objects.delete()
+
+
+def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
+    """
+        Test results pagination
+    """
+
+    assert Result.objects().count() == 0
+
+    result_template = {
+        "molecule": ObjectId(molecules_H4O2[0]),
+        "method": "M1",
+        "basis": "B1",
+        "keywords": kw_fixtures[0],
+        "program": "P1",
+        "driver": "energy",
+    }
+
+    # Save (~ 1 msec/doc)
+    t1 = time()
+
+    total_results = 1000
+    first_half = int(total_results/2)
+    limit = 100
+    skip = 50
+
+    for i in range(first_half):
+        result_template['basis'] = str(i)
+        Result(**result_template).save()
+
+    result_template['method'] = 'M2'
+    for i in range(first_half, total_results):
+        result_template['basis'] = str(i)
+        Result(**result_template).save()
+
+    # total_time = (time() - t1) * 1000 / total_results
+    # print('Inserted {} results in {:.2f} msec / doc'.format(total_results, total_time))
+
+    # query (~ 0.13 msec/doc)
+    t1 = time()
+
+    ret1 = Result.objects(method='M1')
+    ret2 = Result.objects(method='M2').limit(limit).skip(skip)
+
+    data1 = [d.to_json_obj() for d in ret1]
+    data2 = [d.to_json_obj() for d in ret2]
+
+    # count is total, but actual data size is the limit
+    assert ret1.count() == first_half
+    assert len(data1) == first_half
+
+    assert ret2.count() == total_results - first_half
+    assert len(ret2) == limit
+    assert len(data2) == limit
+
+    assert int(data2[0]['basis']) == first_half + skip
+
+    # get the last page when with fewer than limit are remaining
+    ret = Result.objects(method='M1').limit(limit).skip(int(first_half - limit / 2))
+    assert len(ret) == limit / 2
+
+    # total_time = (time() - t1) * 1000 / total_results
+    # print('Query {} results in {:.2f} msec /doc'.format(total_results, total_time))
+
+    # cleanup
+    Result.objects.delete()
 
 def test_queue(storage_socket):
     tasks = TaskQueue.objects(status='WAITING')\
@@ -276,4 +346,4 @@ def test_queue(storage_socket):
                 # .fields(..)
                 # .exculde(..)
                 # .no_dereference()  # don't get any of the ReferenceFields (ids) (Turning off dereferencing)
-    assert len(tasks) == 3
+    assert len(tasks) == 0

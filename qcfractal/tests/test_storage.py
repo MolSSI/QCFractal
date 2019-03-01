@@ -12,6 +12,7 @@ from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 bad_id1 = "000000000000000000000000"
 bad_id2 = "000000000000000000000001"
 
+
 def test_molecules_add(storage_socket):
 
     water = portal.data.get_molecule("water_dimer_minima.psimol")
@@ -46,7 +47,7 @@ def test_identical_mol_insert(storage_socket):
 
     water = portal.data.get_molecule("water_dimer_minima.psimol")
 
-    # Add two idential molecules
+    # Add two identical molecules
     ret1 = storage_socket.add_molecules([water, water])
     assert ret1["meta"]["success"] is True
     assert ret1["meta"]["n_inserted"] == 1
@@ -310,7 +311,7 @@ def test_results_add(storage_socket):
 ### Build out a set of query tests
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope="function")
 def storage_results(storage_socket):
     # Add two waters
     water = portal.data.get_molecule("water_dimer_minima.psimol")
@@ -404,6 +405,9 @@ def storage_results(storage_socket):
 
     ret = storage_socket.del_molecules(id=mol_insert["data"])
     assert ret == mol_insert["meta"]["n_inserted"]
+
+    all_tasks = storage_socket.get_queue()['data']
+    storage_socket.del_tasks(id=[task['id'] for task in all_tasks])
 
 
 def test_empty_get(storage_results):
@@ -549,6 +553,7 @@ def test_storage_queue_roundtrip(storage_results):
 
     # Check results
     found = storage_results.queue_get_by_id([queue_id])
+
     assert len(found) == 1
     assert found[0]["status"] == "COMPLETE"
     res = storage_results.get_results_by_task_id(queue_id)['data'][0]
@@ -664,3 +669,138 @@ def test_user_permissions_admin(storage_socket):
 
 def test_project_name(storage_socket):
     assert 'test' in storage_socket.get_project_name()
+
+
+def test_results_pagination(storage_socket):
+    """
+        Test results pagination
+    """
+
+    # results = storage_socket.get_results()['data']
+    # storage_socket.del_results([result['id'] for result in results])
+
+    assert len(storage_socket.get_results()['data']) == 0
+
+    water = portal.data.get_molecule("water_dimer_minima.psimol")
+    mol = storage_socket.add_molecules([water])['data'][0]
+
+    result_template = {
+        "molecule": mol,
+        "method": "M1",
+        "basis": "B1",
+        "keywords": None,
+        "program": "P1",
+        "driver": "energy",
+    }
+
+    # Save (~ 1 msec/doc)
+    t1 = time()
+
+    total_results = 1000
+    first_half = int(total_results/2)
+    limit = 100
+    skip = 50
+
+    results = []
+    for i in range(first_half):
+        tmp = result_template.copy()
+        tmp['basis'] = str(i)
+        results.append(tmp)
+
+    result_template['method'] = 'M2'
+    for i in range(first_half, total_results):
+        tmp = result_template.copy()
+        tmp['basis'] = str(i)
+        results.append(tmp)
+
+    inserted = storage_socket.add_results(results)
+    assert inserted['meta']['n_inserted'] == total_results
+
+    # total_time = (time() - t1) * 1000 / total_results
+    # print('Inserted {} results in {:.2f} msec / doc'.format(total_results, total_time))
+
+    # query (~ 0.05 msec/doc)
+    # t1 = time()
+
+    ret = storage_socket.get_results(method='M2', status=None, limit=limit, skip=skip)
+
+    # total_time = (time() - t1) * 1000 / first_half
+    # print('Query {} results in {:.2f} msec /doc'.format(first_half, total_time))
+
+    # count is total, but actual data size is the limit
+    assert ret['meta']['n_found'] == total_results - first_half
+    assert len(ret['data']) == limit
+
+    assert int(ret['data'][0]['basis']) == first_half + skip
+
+    # get the last page when with fewer than limit are remaining
+    ret = storage_socket.get_results(method='M1', skip=(int(first_half - limit / 2)), status=None)
+    assert len(ret['data']) == limit / 2
+
+
+    # cleanup
+    storage_socket.del_results(inserted['data'])
+    storage_socket.del_molecules(mol)
+
+
+def test_procedure_pagination(storage_socket):
+    """
+        Test procedure pagination
+    """
+
+    assert len(storage_socket.get_procedures()['data']) == 0
+
+    proc_template = {
+        "procedure": "Optimization",
+        "program": "P1",
+    }
+
+    total = 1000
+
+    procedures = []
+    for i in range(total):
+        tmp = proc_template.copy()
+        tmp['hash_index'] = str(i)
+        procedures.append(tmp)
+
+    inserted = storage_socket.add_procedures(procedures)
+    assert inserted['meta']['n_inserted'] == total
+
+    ret = storage_socket.get_procedures(procedure='Optimization', status=None, skip=400)
+
+    # count is total, but actual data size is the limit
+    assert ret['meta']['n_found'] == total
+    assert len(ret['data']) == storage_socket._max_limit - 400
+
+    # cleanup
+
+
+def test_mol_pagination(storage_socket):
+    """
+        Test Molecule pagination
+    """
+
+    assert len(storage_socket.get_molecules()['data']) == 0
+    mol_names = ['water_dimer_minima.psimol', 'water_dimer_stretch.psimol',
+                 'water_dimer_stretch2.psimol', 'neon_tetramer.psimol']
+
+    total = len(mol_names)
+    molecules = []
+    for mol_name in mol_names:
+        mol = portal.data.get_molecule(mol_name).json_dict()
+        molecules.append(mol)
+
+    inserted = storage_socket.add_molecules(molecules)
+
+    assert inserted['meta']['n_inserted'] == total
+
+    ret = storage_socket.get_molecules(skip=1)
+    assert len(ret['data']) == total -1
+    assert ret['meta']['n_found'] == total
+
+    ret = storage_socket.get_molecules(skip=total+1)
+    assert len(ret['data']) == 0
+    assert ret['meta']['n_found'] == total
+
+    # cleanup
+    storage_socket.del_molecules(inserted['data'])
