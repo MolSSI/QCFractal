@@ -12,7 +12,7 @@ QCFractal
 Workflows
 ---------
 QCFractal supports several high-throughput contexts:
- - Ensembles of single point quantum chemistry comptuations.
+ - Ensembles of single point quantum chemistry computations.
  - Procedures such as geometry optimization, finite different gradients and Hessians, and complete basis set extrapolations.
  - Complex scenarios such as the `OpenFF <http://openforcefield.org>`_ torsion scan workflow:
 
@@ -107,6 +107,7 @@ Contains in-depth developer documentation.
 
    qcarchive_overview
    api
+   database_design
    glossary
    dev_guidelines
    changelog
