@@ -201,6 +201,7 @@ class Result(BaseResult):
     def save(self, *args, **kwargs):
 
         self.program = self.program.lower()
+        self.method = self.method.lower()
         if self.basis:
             self.basis = prepare_basis(self.basis)
 

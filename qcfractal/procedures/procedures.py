@@ -136,7 +136,9 @@ class SingleResultTasks:
         results = parse_single_tasks(self.storage, rdata)
         # print(list(results.values())[0].keys())
 
-        ret = self.storage.add_results(list(results.values()), update_existing=True)
+        # TODO: sometimes it should be update, and others its add
+        ret = self.storage.update_results(list(results.values()))
+        # ret = self.storage.add_results(list(results.values()), update_existing=False)
 
         # Sort out hook data
         hook_data = parse_hooks(results, rhooks)
@@ -144,12 +146,13 @@ class SingleResultTasks:
         # Create a list of (queue_id, located) to update the queue with
         completed = list(results.keys())
 
-        errors = []
-        if len(ret["meta"]["errors"]):
-            # errors = [(k, "Duplicate results found")]
-            raise ValueError("TODO: Cannot yet handle queue result duplicates.")
+        # TODO: we are not looking for duplicates when updating!
+        # errors = []
+        # if len(ret["meta"]["errors"]):
+        #     # errors = [(k, "Duplicate results found")]
+        #     raise ValueError("TODO: Cannot yet handle queue result duplicates.")
 
-        return completed, errors, hook_data
+        return completed, [], hook_data
 
 
 # ----------------------------------------------------------------------------

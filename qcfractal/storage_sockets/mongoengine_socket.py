@@ -693,7 +693,7 @@ class MongoengineSocket:
 
 ## Results functions
 
-    def add_results(self, data: List[dict], update_existing: bool = False, return_json=True):
+    def add_results(self, data: List[dict]):
         """
         Add results from a given dict. The dict should have all the required
         keys of a result.
@@ -706,8 +706,6 @@ class MongoengineSocket:
             Where molecule is the molecule id in the DB
             In addition, it should have the other attributes that it needs
             to store
-        update_existing : bool (default False)
-            Update existing results
 
         Returns
         -------
@@ -735,12 +733,12 @@ class MongoengineSocket:
                 keywords=d['keywords'],
                 molecule=d['molecule'])
 
-            if doc.count() == 0 or update_existing:
+            if doc.count() == 0:
                 if not isinstance(d['molecule'], ObjectId):
                     d['molecule'] = ObjectId(d['molecule'])
                 # d['basis'] = d['basis'] if d['basis'] is not None else ""
                 # d['keywords'] = d['keywords'] if d['keywords'] is not None else ""
-                doc = doc.upsert_one(**d)
+                doc = Result(**d).save()
                 results.append(str(doc.id))
                 meta['n_inserted'] += 1
             else:
@@ -756,6 +754,42 @@ class MongoengineSocket:
 
         ret = {"data": results, "meta": meta}
         return ret
+
+    def update_results(self, id: List[str], data: List[dict]):
+        """
+        Update results from a given dict (replace existing)
+
+        Parameters
+        ----------
+        id : list of str
+            Ids of the results to update, must exist in the DB
+        data : list of dict
+            Data that needs to be updated
+            Shouldn't update:
+            program, driver, method, basis, options, molecule
+
+        Returns
+        -------
+            number of records updated
+        """
+
+        # try:
+        updated_count = 0
+        for result_id, update_data in zip(id, data):
+
+            # will replace the record with result_id with the given data
+            upd = update_data.copy()
+            upd.pop('id', None)
+
+            Result(id=result_id, **upd).save()
+            updated_count += 1
+
+        # except (mongoengine.errors.ValidationError, KeyError) as err:
+        #     meta["validation_errors"].append(err)
+        # except Exception as err:
+        #     meta['error_description'] = err
+
+        return updated_count
 
     def get_results_count(self):
         """
@@ -1000,7 +1034,7 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-    def update_procedure(self, hash_index, data):
+    def update_procedure(self, hash_index: str, data: dict):
         """
         TODO: to be updated with needed
         """
