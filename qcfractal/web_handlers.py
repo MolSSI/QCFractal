@@ -217,7 +217,7 @@ class ResultHandler(APIHandler):
         body = ResultGETBody.parse_raw(self.request.body)
         proj = body.meta.projection
         if 'id' in body.data:
-            ret = storage.get_results_by_id(body.data['id'], projection=proj)
+            ret = storage.get_results(id=body.data['id'], projection=proj)
         elif 'task_id' in body.data:
             ret = storage.get_results_by_task_id(body.data['task_id'], projection=proj)
         else:
