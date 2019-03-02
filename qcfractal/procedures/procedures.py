@@ -142,7 +142,7 @@ class SingleResultTasks:
             completed_tasks.append(data["task_id"])
 
         # TODO: sometimes it should be update, and others its add
-        ret = self.storage.update_results(updates)
+        self.storage.update_results(updates)
 
         return completed_tasks, [], []
 
@@ -212,8 +212,7 @@ class OptimizationTasks(SingleResultTasks):
 
         qc_spec = QCSpecification(**data.meta["qc_spec"])
         if qc_spec.keywords:
-            qc_keywords = self.storage.get_add_keywords_mixed([meta["keywords"]])["data"][0]
-            qc_keywords = keyword_set["values"]
+            qc_keywords = self.storage.get_add_keywords_mixed([meta["keywords"]])["data"][0]["values"]
 
         else:
             qc_keywords = None
@@ -271,8 +270,6 @@ class OptimizationTasks(SingleResultTasks):
         including the task_id in the TaskQueue table
         """
 
-        new_procedures = {}
-
         completed_tasks = []
         updates = []
         for output in opt_outputs:
@@ -310,8 +307,7 @@ class OptimizationTasks(SingleResultTasks):
             updates.append(rec)
             completed_tasks.append(output["task_id"])
 
-        # TODO: sometimes it should be update, and others its add
-        ret = self.storage.update_procedures(updates)
+        self.storage.update_procedures(updates)
 
         return completed_tasks, [], []
 

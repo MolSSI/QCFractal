@@ -38,6 +38,11 @@ or use ``pip`` for a local install::
 
     pip install -e .
 
+It is recommended to setup a testing environment using ``conda``. This can be accomplished by::
+
+    cd qcfractal
+    python devtools/scripts/conda_env.py -n=qcf_test -p=3.7 devtools/conda-envs/openff.yaml
+
 
 Test
 ----

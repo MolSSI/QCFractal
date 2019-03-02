@@ -14,7 +14,7 @@ from pydantic import BaseModel, constr, validator
 from .common_models import DriverEnum, ObjectId, QCSpecification
 from .model_utils import hash_dictionary, json_encoders, prepare_basis, recursive_normalizer
 
-__all__ = ["OptimizationRecord", "ResultRecord", "ProcedureRecord", "OptimizationRecord"]
+__all__ = ["OptimizationRecord", "ResultRecord", "OptimizationRecord"]
 
 
 class RecordStatusEnum(str, Enum):
