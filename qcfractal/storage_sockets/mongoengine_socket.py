@@ -16,7 +16,7 @@ except ImportError:
 
 import logging
 from datetime import datetime as dt
-from typing import Dict, List, Sequence, Union
+from typing import Any, Dict, List, Optional, Union
 
 import bcrypt
 import bson.errors
@@ -25,19 +25,13 @@ import mongoengine.errors
 from bson.objectid import ObjectId
 from mongoengine.connection import disconnect, get_db
 
-from .. import interface
-from ..interface.models import Molecule, prepare_basis
-from .me_models import CollectionORM, KeywordsORM, MoleculeORM, ProcedureORM, QueueManagerORM, ResultORM, ServiceQueueORM, TaskQueueORM, UserORM
+from .me_models import CollectionORM, KeywordsORM, MoleculeORM, ProcedureORM, QueueManagerORM, ResultORM, \
+    ServiceQueueORM, TaskQueueORM, UserORM
 from .storage_utils import add_metadata_template, get_metadata_template
+from ..interface.models import Molecule, ResultRecord, KeywordSet, prepare_basis
 
 
-def _str_to_indices(ids):
-    for num, x in enumerate(ids):
-        if isinstance(x, str):
-            ids[num] = ObjectId(x)
-
-
-def _str_to_indices_with_errors(ids):
+def _str_to_indices_with_errors(ids: List[Union[str, ObjectId]]):
     if isinstance(ids, (str, ObjectId)):
         ids = [ids]
 
@@ -62,7 +56,7 @@ _lower_func = lambda x: x.lower()
 _prepare_keys = {"program": _lower_func, "basis": prepare_basis, "method": _lower_func, "procedure": _lower_func}
 
 
-def format_query(**query):
+def format_query(**query: Dict[str, Union[str, List[str]]]) -> Dict[str, Union[str, List[str]]]:
     """
     Formats a query into a MongoEngine description.
     """
@@ -108,13 +102,13 @@ class MongoengineSocket:
     """
 
     def __init__(self,
-                 uri,
-                 project="molssidb",
-                 bypass_security=False,
-                 authMechanism="SCRAM-SHA-1",
-                 authSource=None,
-                 logger=None,
-                 max_limit=1000):
+                 uri: str,
+                 project: str="molssidb",
+                 bypass_security: bool=False,
+                 authMechanism: str="SCRAM-SHA-1",
+                 authSource: str=None,
+                 logger: 'Logger'=None,
+                 max_limit: int=1000):
         """
         Constructs a new socket where url and port points towards a Mongod instance.
 
@@ -156,10 +150,8 @@ class MongoengineSocket:
                 "Choosing to stop instead of assuming version is at least 3.2.".format(uri))
         except RuntimeError:
             # Trap low version
-            raise RuntimeError(
-                "Connected MongoDB at URL {} needs to be at least version 3.2, found version {}.".format(
-                    uri,
-                    self.client.server_info()['version']))
+            raise RuntimeError("Connected MongoDB at URL {} needs to be at least version 3.2, found version {}.".
+                               format(uri, self.client.server_info()['version']))
 
         # Isolate objects to this single project DB
         self._project_name = project
@@ -168,7 +160,7 @@ class MongoengineSocket:
 
     ### Mongo meta functions
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "<MongoSocket: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._tables_name))
 
     def _clear_db(self, db_name: str):
@@ -192,10 +184,10 @@ class MongoengineSocket:
 
         QueueManagerORM.objects(name='').first()  # init
 
-    def get_project_name(self):
+    def get_project_name(self) -> str:
         return self._project_name
 
-    def get_limit(self, limit):
+    def get_limit(self, limit: Optional[int]) -> int:
         """Get the allowed limit on results to return in queries based on the
          given `limit`. If this number is greater than the
          mongoengine_soket.max_limit then the max_limit will be returned instead.
@@ -203,7 +195,7 @@ class MongoengineSocket:
 
         return limit if limit and limit < self._max_limit else self._max_limit
 
-    def get_add_molecules_mixed(self, data):
+    def get_add_molecules_mixed(self, data: List[Union[str, Molecule]]) -> List[Molecule]:
         """
         Get or add the given molecules (if they don't exit).
         MoleculeORMs are given in a mixed format, either as a dict of mol data
@@ -259,19 +251,6 @@ class MongoengineSocket:
                 ret.append(None)
 
         return {"meta": meta, "data": ret}
-
-    def _del_by_index(self, table, hashes, index="_id"):
-        """
-        Helper function that facilitates deletion based on hash.
-        """
-
-        if isinstance(hashes, str):
-            hashes = [hashes]
-
-        if index == "_id":
-            _str_to_indices(hashes)
-
-        return (self._tables[table].delete_many({index: {"$in": hashes}})).deleted_count
 
 ### Mongo molecule functions
 
@@ -330,12 +309,7 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def get_molecules(self,
-                      id=None,
-                      molecule_hash=None,
-                      molecular_formula=None,
-                      limit: int = None,
-                      skip: int = 0):
+    def get_molecules(self, id=None, molecule_hash=None, molecular_formula=None, limit: int=None, skip: int=0):
 
         ret = {"meta": get_metadata_template(), "data": []}
 
@@ -356,7 +330,7 @@ class MongoengineSocket:
 
         return ret
 
-    def del_molecules(self, id=None, molecule_hash=None):
+    def del_molecules(self, id:List[str]=None, molecule_hash:List[str]=None):
         """
         Removes a molecule from the database from its hash.
 
@@ -376,16 +350,13 @@ class MongoengineSocket:
 
     ### Mongo options functions
 
-    def add_keywords(self, data: Union[Dict, List[Dict]]):
-        """Add one option uniqely identified by 'program' and the 'name'.
+    def add_keywords(self, keyword_sets: List[KeywordSet]):
+        """Add one KeywordSet uniquly identified by 'program' and the 'name'.
 
         Parameters
         ----------
-         data : dict or List[dict]
-            The attribites of the 'option' or options to be inserted.
-            Must include for each 'option':
-                program : str, program name
-                name : str, option name
+         data
+            A list of KeywordSets to be inserted.
 
         Returns
         -------
@@ -400,46 +371,35 @@ class MongoengineSocket:
 
         """
 
-        if not isinstance(data, Sequence):
-            data = [data]
-
         meta = add_metadata_template()
 
         keywords = []
-        for d in data:
-            try:
-                # search by index keywords not by all keys, much faster
-                found = KeywordsORM.objects(hash_index=d['hash_index']).first()
-                if not found:
+        for kw in keyword_sets:
 
-                    # Make sure ID does not exists and is generated by Mongo
-                    d = d.copy()
-                    d.pop("id", None)
+            kw_dict = kw.json_dict(exclude={"id"})
 
-                    doc = KeywordsORM(**d).save()
-                    keywords.append(str(doc.id))
-                    meta['n_inserted'] += 1
-                else:
-                    meta['duplicates'].append(d["hash_index"])  # TODO
-                    keywords.append(str(found.id))
-                meta["success"] = True
-            except (mongoengine.errors.ValidationError, KeyError) as err:
-                meta["validation_errors"].append(str(err))
-                keywords.append(None)
-            except Exception as err:
-                meta['error_description'] = err
-                keywords.append(None)
+            # search by index keywords not by all keys, much faster
+            found = KeywordsORM.objects(hash_index=kw_dict['hash_index']).first()
+            if not found:
+
+                doc = KeywordsORM(**kw_dict).save()
+                keywords.append(str(doc.id))
+                meta['n_inserted'] += 1
+            else:
+                meta['duplicates'].append(str(found.id))  # TODO
+                keywords.append(str(found.id))
+            meta["success"] = True
 
         ret = {"data": keywords, "meta": meta}
         return ret
 
     def get_keywords(self,
-                     id: Union[str, list] = None,
-                     hash_index: Union[str, list] = None,
-                     limit: int = None,
-                     skip: int = 0,
-                     return_json: bool = True,
-                     with_ids: bool = True):
+                     id: Union[str, list]=None,
+                     hash_index: Union[str, list]=None,
+                     limit: int=None,
+                     skip: int=0,
+                     return_json: bool=True,
+                     with_ids: bool=True) -> List[KeywordSet]:
         """Search for one (unique) option based on the 'program'
         and the 'name'. No overwrite allowed.
 
@@ -483,7 +443,7 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-            rdata = [d.to_json_obj(with_ids) for d in data]
+            rdata = [KeywordSet(**d.to_json_obj(with_ids)) for d in data]
         else:
             rdata = data
 
@@ -505,16 +465,8 @@ class MongoengineSocket:
             if isinstance(kw, str):
                 ids.append(kw)
 
-            # New dictionary construct and add
-            elif isinstance(kw, dict):
-
-                kw = interface.models.KeywordSet(**kw)
-
-                new_id = self.add_keywords([kw.json_dict()])["data"][0]
-                ids.append(new_id)
-
-            elif isinstance(kw, interface.models.KeywordSet):
-                new_id = self.add_keywords([kw.json_dict()])["data"][0]
+            elif isinstance(kw, KeywordSet):
+                new_id = self.add_keywords([kw])["data"][0]
                 ids.append(new_id)
             else:
                 meta["errors"].append((idx, "Data type not understood"))
@@ -540,7 +492,7 @@ class MongoengineSocket:
 
         return {"meta": meta, "data": ret}
 
-    def del_keywords(self, id):
+    def del_keywords(self, id:str) -> int:
         """
         Removes a option set from the database based on its keys.
 
@@ -568,7 +520,7 @@ class MongoengineSocket:
     ### Mongo database functions
 
     # def add_collection(self, data, overwrite=False):
-    def add_collection(self, collection: str, name: str, data, overwrite: bool = False):
+    def add_collection(self, collection: str, name: str, data:Dict[str, Any], overwrite: bool=False):
         """Add (or update) a collection to the database.
 
         Parameters
@@ -617,12 +569,12 @@ class MongoengineSocket:
 
     # def get_collections(self, keys, projection=None):
     def get_collections(self,
-                        collection: str = None,
-                        name: str = None,
-                        return_json: bool = True,
-                        with_ids: bool = True,
-                        limit: int = None,
-                        skip: int = 0):
+                        collection: str=None,
+                        name: str=None,
+                        return_json: bool=True,
+                        with_ids: bool=True,
+                        limit: int=None,
+                        skip: int=0) -> Dict[str, Any]:
         """Get collection by collection and/or name
 
         Parameters
@@ -659,7 +611,7 @@ class MongoengineSocket:
 
         return {"data": rdata, "meta": meta}
 
-    def del_collection(self, collection: str, name: str):
+    def del_collection(self, collection: str, name: str) -> bool:
         """
         Remove a collection from the database from its keys.
 
@@ -680,7 +632,7 @@ class MongoengineSocket:
 
 ## ResultORMs functions
 
-    def add_results(self, data: List[dict]):
+    def add_results(self, record_list: List[ResultRecord]):
         """
         Add results from a given dict. The dict should have all the required
         keys of a result.
@@ -700,49 +652,35 @@ class MongoengineSocket:
             Data is the ids of the inserted/updated/existing docs
         """
 
-        for d in data:
-            d["program"] = d["program"].lower()
-            d["method"] = d["method"].lower()
-            d["basis"] = prepare_basis(d["basis"])
-
         meta = add_metadata_template()
 
-        results = []
+        result_ids = []
         # try:
-        for d in data:
+        for result in record_list:
 
-            d.pop("id", None)
             doc = ResultORM.objects(
-                program=d['program'],
-                driver=d['driver'],
-                method=d['method'],
-                basis=d['basis'],
-                keywords=d['keywords'],
-                molecule=d['molecule'])
+                program=result.program,
+                driver=result.driver,
+                method=result.method,
+                basis=result.basis,
+                keywords=result.keywords,
+                molecule=result.molecule)
 
             if doc.count() == 0:
-                if not isinstance(d['molecule'], ObjectId):
-                    d['molecule'] = ObjectId(d['molecule'])
-                # d['basis'] = d['basis'] if d['basis'] is not None else ""
-                # d['keywords'] = d['keywords'] if d['keywords'] is not None else ""
-                doc = ResultORM(**d).save()
-                results.append(str(doc.id))
+                doc = ResultORM(**result.json_dict(exclude={"id"})).save()
+                result_ids.append(str(doc.id))
                 meta['n_inserted'] += 1
             else:
                 id = str(doc.first().id)
                 meta['duplicates'].append(id)  # TODO
                 # If new or duplicate, add the id to the return list
-                results.append(id)
+                result_ids.append(id)
         meta["success"] = True
-        # except (mongoengine.errors.ValidationError, KeyError) as err:
-        #     meta["validation_errors"].append(err)
-        # except Exception as err:
-        #     meta['error_description'] = err
 
-        ret = {"data": results, "meta": meta}
+        ret = {"data": result_ids, "meta": meta}
         return ret
 
-    def update_results(self, data: List[dict]):
+    def update_results(self, record_list: List[ResultRecord]):
         """
         Update results from a given dict (replace existing)
 
@@ -762,19 +700,14 @@ class MongoengineSocket:
 
         # try:
         updated_count = 0
-        for upd in data:
+        for result in record_list:
 
-            # Must have ID
-            if "id" not in upd:
+            if result.id is None:
+                logger.error("Attempted update without ID, skipping")
                 continue
 
-            ResultORM(**upd).save()
+            ResultORM(**result.json_dict()).save()
             updated_count += 1
-
-        # except (mongoengine.errors.ValidationError, KeyError) as err:
-        #     meta["validation_errors"].append(err)
-        # except Exception as err:
-        #     meta['error_description'] = err
 
         return updated_count
 
@@ -789,18 +722,18 @@ class MongoengineSocket:
         pass
 
     def get_results(self,
-                    id: Union[str, List] = None,
-                    program: str = None,
-                    method: str = None,
-                    basis: str = None,
-                    molecule: str = None,
-                    driver: str = None,
-                    keywords: str = None,
-                    task_id: Union[str, List] = None,
-                    status: str = 'COMPLETE',
+                    id: Union[str, List]=None,
+                    program: str=None,
+                    method: str=None,
+                    basis: str=None,
+                    molecule: str=None,
+                    driver: str=None,
+                    keywords: str=None,
+                    task_id: Union[str, List]=None,
+                    status: str='COMPLETE',
                     projection=None,
-                    limit: int = None,
-                    skip: int = 0,
+                    limit: int=None,
+                    skip: int=0,
                     return_json=True,
                     with_ids=True):
         """
@@ -897,7 +830,7 @@ class MongoengineSocket:
 
 ### Mongo procedure/service functions
 
-    def add_procedures(self, data: List[dict], update_existing: bool = False, return_json=True):
+    def add_procedures(self, record_list: List['BaseRecord']):
         """
         Add procedures from a given dict. The dict should have all the required
         keys of a result.
@@ -920,42 +853,33 @@ class MongoengineSocket:
 
         meta = add_metadata_template()
 
-        results = []
-        # try:
-        for d in data:
-            # search by hash index
-            d.pop("id", None)
-            doc = ProcedureORM.objects(hash_index=d['hash_index'])
+        procedure_ids = []
+        for procedure in record_list:
+            doc = ProcedureORM.objects(hash_index=procedure.hash_index)
 
-            if doc.count() == 0 or update_existing:
-                # d['keywords'] = d['keywords'] if d['keywords'] is not None else ""
-                doc = doc.upsert_one(**d)
-                results.append(str(doc.id))
+            if doc.count() == 0:
+                doc = doc.upsert_one(**procedure.json_dict(exclude={"id"}))
+                procedure_ids.append(str(doc.id))
                 meta['n_inserted'] += 1
             else:
                 id = str(doc.first().id)
                 meta['duplicates'].append(id)  # TODO
-                # If new or duplicate, add the id to the return list
-                results.append(id)
+                procedure_ids.append(id)
         meta["success"] = True
-        # except (mongoengine.errors.ValidationError, KeyError) as err:
-        #     meta["validation_errors"].append(err)
-        # except Exception as err:
-        #     meta['error_description'] = err
 
-        ret = {"data": results, "meta": meta}
+        ret = {"data": procedure_ids, "meta": meta}
         return ret
 
     def get_procedures(self,
-                       id: Union[str, List] = None,
-                       procedure: str = None,
-                       program: str = None,
-                       hash_index: str = None,
-                       task_id: Union[str, List] = None,
-                       status: str = 'COMPLETE',
+                       id: Union[str, List]=None,
+                       procedure: str=None,
+                       program: str=None,
+                       hash_index: str=None,
+                       task_id: Union[str, List]=None,
+                       status: str='COMPLETE',
                        projection=None,
-                       limit: int = None,
-                       skip: int = 0,
+                       limit: int=None,
+                       skip: int=0,
                        return_json=True,
                        with_ids=True):
         """
@@ -995,12 +919,7 @@ class MongoengineSocket:
             status = None
 
         query, error = format_query(
-            id=id,
-            procedure=procedure,
-            program=program,
-            hash_index=hash_index,
-            task_id=task_id,
-            status=status)
+            id=id, procedure=procedure, program=program, hash_index=hash_index, task_id=task_id, status=status)
 
         q_limit = self.get_limit(limit)
 
@@ -1021,26 +940,25 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-    def update_procedures(self, data: dict):
+    def update_procedures(self, records_list: dict):
         """
         TODO: to be updated with needed
         """
 
-
         updated_count = 0
-        for upd in data:
+        for procedure in records_list:
 
             # Must have ID
-            if "id" not in upd:
+            if procedure.id is None:
+                self.logger.error("No procedure id found on update (hash_index={}), skipping.".format(procedure.hash_index))
                 continue
 
-            p = ProcedureORM(**upd).save()
+            ProcedureORM(**procedure.json_dict()).save()
             updated_count += 1
-
 
         return updated_count
 
-    def add_services(self, data: List[dict], return_json=True):
+    def add_services(self, service_list: List['BaseService']):
         """
         Add services from a given dict.
 
@@ -1056,51 +974,45 @@ class MongoengineSocket:
 
         meta = add_metadata_template()
 
-        procedures = []
-        for idx, d in enumerate(data):
+        procedure_ids = []
+        for service in service_list:
 
             # Add the underlying procedure
-            new_procedure = self.add_procedures([d["output"]])
+            new_procedure = self.add_procedures([service.output])
 
             # ProcedureORM already exists
-            procedure_id = new_procedure["data"][0]
+            proc_id = new_procedure["data"][0]
             if new_procedure["meta"]["duplicates"]:
-                procedures.append(procedure_id)
-                meta["duplicates"].append(procedure_id)
+                procedure_ids.append(proc_id)
+                meta["duplicates"].append(proc_id)
                 continue
 
             # search by hash index
-            d.pop("id", None)
-            doc = ServiceQueueORM.objects(hash_index=d['hash_index'])
+            doc = ServiceQueueORM.objects(hash_index=service.hash_index)
+            service.procedure_id = proc_id
 
             if doc.count() == 0:
-                # create stub procedure
-                doc = ServiceQueueORM(**d)
-                doc.procedure_id = ObjectId(procedure_id)
+                doc = ServiceQueueORM(**service.json_dict(exclude={"id"}))
                 doc.save()
-                procedures.append(procedure_id)
+                procedure_ids.append(proc_id)
                 meta['n_inserted'] += 1
             else:
-                procedures.append(None)
+                procedure_ids.append(None)
                 meta["errors"].append((idx, "Duplicate service, but not caught by procedure."))
 
         meta["success"] = True
-        # except (mongoengine.errors.ValidationError, KeyError) as err:
-        #     meta["validation_errors"].append(err)
-        # except Exception as err:
-        #     meta['error_description'] = err
 
-        ret = {"data": procedures, "meta": meta}
+        ret = {"data": procedure_ids, "meta": meta}
         return ret
 
     def get_services(self,
-                     id: Union[List[str], str] = None,
-                     procedure_id: Union[List[str], str] = None,
-                     hash_index: Union[List[str], str] = None,
-                     status: str = None,
+                     id: Union[List[str], str]=None,
+                     procedure_id: Union[List[str], str]=None,
+                     hash_index: Union[List[str], str]=None,
+                     status: str=None,
                      projection=None,
-                     limit: int = None,
-                     skip: int = 0,
+                     limit: int=None,
+                     skip: int=0,
                      return_json=True):
         """
 
@@ -1175,12 +1087,10 @@ class MongoengineSocket:
     def services_completed(self, completed_procedures):
 
         done = 0
-
-        for service_id, data in completed_procedures:
-            procedure_id = ServiceQueueORM.objects(id=service_id).only("procedure_id").as_pymongo()[0]
-            data['status'] = "COMPLETE"
-            data.pop('id', None)
-            ProcedureORM.objects(id=procedure_id['procedure_id']).update(**data)
+        for service_id, procedure in completed_procedures:
+            procedure_id = ServiceQueueORM.objects(id=service_id).only("procedure_id").as_pymongo()
+            procedure.id = str(procedure_id[0]["procedure_id"])
+            self.update_procedures([procedure])
 
             ServiceQueueORM.objects(id=service_id).delete()
 
@@ -1307,10 +1217,10 @@ class MongoengineSocket:
                   ids=None,
                   hash_index=None,
                   program=None,
-                  status: str = None,
+                  status: str=None,
                   projection=None,
-                  limit: int = None,
-                  skip: int = 0,
+                  limit: int=None,
+                  skip: int=0,
                   return_json=True,
                   with_ids=True):
         """
@@ -1364,7 +1274,7 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-    def queue_get_by_id(self, ids: List[str], limit: int = None, skip: int = 0, as_json: bool = True):
+    def queue_get_by_id(self, ids: List[str], limit: int=None, skip: int=0, as_json: bool=True):
         """Get tasks by their IDs
 
         Parameters
@@ -1455,7 +1365,7 @@ class MongoengineSocket:
 
         return ret
 
-    def queue_reset_status(self, manager: str, reset_running: bool = True, reset_error: bool = False) -> int:
+    def queue_reset_status(self, manager: str, reset_running: bool=True, reset_error: bool=False) -> int:
         """
         Reset the status of the tasks that a manager owns from Running to Waiting
         If reset_error is True, then also reset errored tasks AND its results/proc
@@ -1560,7 +1470,7 @@ class MongoengineSocket:
 
         return num_updated == 1
 
-    def get_managers(self, name: str = None, status: str = None, modified_before=None):
+    def get_managers(self, name: str=None, status: str=None, modified_before=None):
 
         query, error = format_query(name=name, status=status)
         if modified_before:
@@ -1575,7 +1485,6 @@ class MongoengineSocket:
         data = [x.to_json_obj(with_id=False) for x in data]
 
         return {"data": data, "meta": meta}
-
 
 ### UserORMs
 

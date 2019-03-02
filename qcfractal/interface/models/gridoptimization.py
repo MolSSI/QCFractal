@@ -3,12 +3,12 @@ A model for GridOptimization
 """
 
 import json
-from typing import Any, Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 from pydantic import BaseModel, constr, validator
 
-from .common_models import Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification
-from .model_utils import hash_dictionary, json_encoders, recursive_normalizer
+from .common_models import Molecule, ObjectId, OptimizationSpecification, QCSpecification
+from .model_utils import json_encoders, recursive_normalizer
 from .records import RecordBase
 
 __all__ = ["GridOptimizationInput", "GridOptimizationRecord"]

@@ -386,7 +386,7 @@ class FractalServer:
             if finished is not False:
 
                 # Add results to procedures, remove complete_ids
-                completed_procedures.append((data["id"], finished.json_dict()))
+                completed_procedures.append((data["id"], finished))
             else:
                 running_services += 1
 

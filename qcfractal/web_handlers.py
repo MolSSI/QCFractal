@@ -160,7 +160,7 @@ class OptionHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         body = KeywordPOSTBody.parse_raw(self.request.body)
-        ret = storage.add_keywords([x.json_dict() for x in body.data])
+        ret = storage.add_keywords(body.data)
         response = KeywordPOSTResponse(**ret)
 
         self.logger.info("POST: Keywords - {} inserted.".format(response.meta.n_inserted))

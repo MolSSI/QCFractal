@@ -140,7 +140,7 @@ class ResultRecord(RecordBase):
         if checks:
             assert self.molecule == molecule.id
             if self.keywords:
-                assert self.keywords == keywords["id"]
+                assert self.keywords == keywords.id
 
         model = {"method": self.method}
         if self.basis:
@@ -149,7 +149,7 @@ class ResultRecord(RecordBase):
         if not self.keywords:
             keywords = {}
         else:
-            keywords = keywords["values"]
+            keywords = keywords.values
 
         model = qcel.models.ResultInput(
             id=self.id,

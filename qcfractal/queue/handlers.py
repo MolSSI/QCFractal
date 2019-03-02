@@ -82,7 +82,7 @@ class ServiceQueueHandler(APIHandler):
             service_input = service_input.copy(update={"initial_molecule": molecules})
             new_services.append(initialize_service(storage, self.logger, service_input))
 
-        ret = storage.add_services([x.json_dict() for x in new_services])
+        ret = storage.add_services(new_services)
         ret["data"] = {"ids": ret["data"], "existing": ret["meta"]["duplicates"]}
         ret["data"]["submitted"] = list(set(ret["data"]["ids"]) - set(ret["meta"]["duplicates"]))
 

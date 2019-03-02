@@ -1,7 +1,6 @@
 """
 Common models for QCPortal/Fractal
 """
-import hashlib
 import json
 from enum import Enum
 from typing import Any, Dict, Optional

@@ -8,7 +8,7 @@
 from time import time
 
 import pytest
-import qcfractal.interface as portal
+import qcfractal.interface as ptl
 from bson import ObjectId
 from qcfractal.storage_sockets.me_models import (MoleculeORM, OptimizationProcedureORM, ProcedureORM, ResultORM,
                                                  TaskQueueORM, TorsiondriveProcedureORM)
@@ -17,8 +17,8 @@ from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 
 @pytest.fixture
 def molecules_H4O2(storage_socket):
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
-    water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
 
     ret = storage_socket.add_molecules([water, water2])
 
@@ -30,8 +30,8 @@ def molecules_H4O2(storage_socket):
 
 @pytest.fixture
 def kw_fixtures(storage_socket):
-    kw1 = portal.models.KeywordSet(**{"values": {"something": "kwfixture"}})
-    ret = storage_socket.add_keywords([kw1.dict()])
+    kw1 = ptl.models.KeywordSet(**{"values": {"something": "kwfixture"}})
+    ret = storage_socket.add_keywords([kw1])
 
     yield list(ret['data'])
 
@@ -53,8 +53,8 @@ def test_molecule(storage_socket):
     # MoleculeORM.objects().delete()
     assert num_mol_in_db == 0
 
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
-    water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
 
     # Add MoleculeORM using pymongo
     ret = storage_socket.add_molecules([water, water2])
@@ -96,22 +96,24 @@ def test_results(storage_socket, molecules_H4O2, kw_fixtures):
 
     page1 = {
         "molecule": molecules_H4O2[0],
-        "method": "M1",
-        "basis": "B1",
+        "method": "m1",
+        "basis": "b1",
         "keywords": None,
-        "program": "P1",
+        "program": "p1",
         "driver": "energy",
         "other_data": 5,
+        "status": "COMPLETE",
     }
 
     page2 = {
         "molecule": ObjectId(molecules_H4O2[1]),
-        "method": "M2",
-        "basis": "B1",
+        "method": "m2",
+        "basis": "b1",
         "keywords": kw_fixtures[0],
-        "program": "P1",
+        "program": "p1",
         "driver": "energy",
         "other_data": 10,
+        "status": "COMPLETE",
     }
 
     ResultORM(**page1).save()
@@ -143,14 +145,15 @@ def test_procedure(storage_socket):
         # "molecule": molecules[0],
         "procedure": "undefined",
         "keywords": None,
-        "program": "P5",
+        "program": "p5",
         "qc_meta": {
-            "basis": "B1",
-            "program": "P1",
-            "method": "M1",
+            "basis": "b1",
+            "program": "p1",
+            "method": "11",
             "driver": "energy"
         },
-        "hash_index": "somethingveryunique"
+        "hash_index": "somethingveryunique",
+        "status": "COMPLETE",
     }
 
     procedure = ProcedureORM(**data1)
@@ -172,14 +175,15 @@ def test_optimization_procedure(storage_socket, molecules_H4O2):
         "initial_molecule": ObjectId(molecules_H4O2[0]),
         # "procedure_type": None,
         "keywords": None,
-        "program": "P7",
+        "program": "p7",
         "qc_meta": {
-            "basis": "B1",
-            "program": "P1",
-            "method": "M1",
+            "basis": "b1",
+            "program": "p1",
+            "method": "m1",
             "driver": "energy"
         },
-        "hash_index": "somethingveryunique_opt1"
+        "hash_index": "somethingveryunique_opt1",
+        "status": "COMPLETE",
     }
 
     procedure = OptimizationProcedureORM(**data1).save()
@@ -202,14 +206,15 @@ def test_torsiondrive_procedure(storage_socket):
         # "molecule": molecules[0],
         # "procedure": None,
         "keywords": None,
-        "program": "P9",
+        "program": "p9",
         "qc_meta": {
-            "basis": "B1",
-            "program": "P1",
-            "method": "M1",
+            "basis": "b1",
+            "program": "p1",
+            "method": "m1",
             "driver": "energy"
         },
-        "hash_index": "somethingveryunique_td1"
+        "hash_index": "somethingveryunique_td1",
+        "status": "COMPLETE",
     }
 
     procedure = TorsiondriveProcedureORM(**data1)
@@ -228,12 +233,13 @@ def test_add_task_queue(storage_socket, molecules_H4O2):
 
     page1 = {
         "molecule": ObjectId(molecules_H4O2[0]),
-        "method": "M1",
-        "basis": "B1",
+        "method": "m1",
+        "basis": "b1",
         "keywords": None,
-        "program": "P1",
+        "program": "p1",
         "driver": "energy",
         "other_data": 5,
+        "status": "COMPLETE",
     }
     # add a task that reference results
     result = ResultORM(**page1).save()
@@ -254,12 +260,13 @@ def test_add_task_queue(storage_socket, molecules_H4O2):
         "keywords": None,
         "program": "P9",
         "qc_meta": {
-            "basis": "B1",
-            "program": "P1",
-            "method": "M1",
+            "basis": "b1",
+            "program": "p1",
+            "method": "m1",
             "driver": "energy"
         },
-        "hash_index": "somethingveryunique_td2"
+        "hash_index": "somethingveryunique_td2",
+        "status": "COMPLETE",
     }
 
     tor = TorsiondriveProcedureORM(**data1).save()
@@ -282,11 +289,12 @@ def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
 
     result_template = {
         "molecule": ObjectId(molecules_H4O2[0]),
-        "method": "M1",
-        "basis": "B1",
+        "method": "m1",
+        "basis": "b1",
         "keywords": kw_fixtures[0],
-        "program": "P1",
+        "program": "p1",
         "driver": "energy",
+        "status": "COMPLETE",
     }
 
     # Save (~ 1 msec/doc)

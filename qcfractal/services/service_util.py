@@ -4,10 +4,11 @@ Utilities and base functions for Services.
 
 import abc
 import json
-from typing import Any, Dict, List, Set, Tuple
+from typing import Any, Dict, List, Set, Tuple, Optional
 
 from pydantic import BaseModel
 
+from ..interface.models import ObjectId
 from ..interface.models.rest_models import TaskQueuePOSTBody
 from ..procedures import get_procedure_parser
 
@@ -96,13 +97,16 @@ class BaseService(BaseModel, abc.ABC):
     logger: Any
 
     # Base identification
-    id: str = None
+    id: Optional[ObjectId] = None
     hash_index: str
     service: str
     program: str
     procedure: str
     output: Any
-    task_id: str = None
+
+    # Links
+    task_id: Optional[ObjectId] = None
+    procedure_id: Optional[ObjectId] = None
 
     # Task manager
     task_manager: TaskManager = TaskManager()

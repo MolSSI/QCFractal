@@ -7,9 +7,9 @@ from typing import Dict, Set
 
 import numpy as np
 
+from .service_util import BaseService, expand_ndimensional_grid
 from ..extras import get_information
 from ..interface.models import GridOptimizationRecord, Molecule, json_encoders
-from .service_util import BaseService, TaskManager, expand_ndimensional_grid
 
 __all__ = ["GridOptimizationService"]
 

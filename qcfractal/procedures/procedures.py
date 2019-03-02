@@ -2,13 +2,12 @@
 All procedures tasks involved in on-node computation.
 """
 
-import json
 from typing import Union
 
-from qcelemental.models import OptimizationInput, Molecule
+from qcelemental.models import Molecule
 
+from .procedures_util import parse_single_tasks
 from ..interface.models import OptimizationRecord, ResultRecord, QCSpecification
-from .procedures_util import parse_hooks, parse_single_tasks, unpack_single_task_spec
 
 
 class SingleResultTasks:
@@ -50,7 +49,6 @@ class SingleResultTasks:
         else:
             keywords = None
 
-
         # Grab the tag if available
         tag = data.meta.pop("tag", None)
 
@@ -67,7 +65,7 @@ class SingleResultTasks:
             inp = record.build_schema_input(mol, keywords)
             inp.extras["_qcfractal_tags"] = {"program": record.program, "keywords": record.keywords}
 
-            ret = self.storage.add_results([record.json_dict()])
+            ret = self.storage.add_results([record])
 
             base_id = ret["data"][0]
             results_ids.append(base_id)
@@ -126,18 +124,18 @@ class SingleResultTasks:
 
         return results
 
-    def parse_output(self, data):
+    def parse_output(self, result_outputs):
 
         # Add new runs to database
         # Parse out hooks and data to same key/value
         completed_tasks = []
         updates = []
-        for d in data:
-            r = self.storage.get_results(id=d["base_result"]["id"])["data"][0]
-            r = ResultRecord(**r)
-            r.consume_output(d["result"])
-            updates.append(r.json_dict())
-            completed_tasks.append(d["task_id"])
+        for data in result_outputs:
+            result = self.storage.get_results(id=data["base_result"]["id"])["data"][0]
+            result = ResultRecord(**result)
+            result.consume_output(data["result"])
+            updates.append(result)
+            completed_tasks.append(data["task_id"])
 
         # TODO: sometimes it should be update, and others its add
         ret = self.storage.update_results(updates)
@@ -226,7 +224,6 @@ class OptimizationTasks(SingleResultTasks):
                 results_ids.append(None)
                 continue
 
-
             doc = OptimizationRecord(
                 initial_molecule=initial_molecule.id,
                 qc_spec=qc_spec,
@@ -234,9 +231,12 @@ class OptimizationTasks(SingleResultTasks):
                 program=data.meta["program"])
 
             inp = doc.build_schema_input(initial_molecule=initial_molecule, qc_keywords=qc_keywords)
-            inp.input_specification.extras["_qcfractal_tags"] = {"program": qc_spec.program, "keywords": qc_spec.keywords}
+            inp.input_specification.extras["_qcfractal_tags"] = {
+                "program": qc_spec.program,
+                "keywords": qc_spec.keywords
+            }
 
-            ret = self.storage.add_procedures([doc.json_dict()])
+            ret = self.storage.add_procedures([doc])
             base_id = ret["data"][0]
             results_ids.append(base_id)
 
@@ -270,7 +270,6 @@ class OptimizationTasks(SingleResultTasks):
 
         new_procedures = {}
 
-
         completed_tasks = []
         updates = []
         for output in opt_outputs:
@@ -282,7 +281,8 @@ class OptimizationTasks(SingleResultTasks):
             # Add initial and final molecules
             update_dict = {}
             initial_mol, final_mol = self.storage.add_molecules(
-                [Molecule(**procedure["initial_molecule"]), Molecule(**procedure["final_molecule"])])["data"]
+                [Molecule(**procedure["initial_molecule"]),
+                 Molecule(**procedure["final_molecule"])])["data"]
             assert initial_mol == rec.initial_molecule
             update_dict["final_molecule"] = final_mol
 
@@ -291,22 +291,23 @@ class OptimizationTasks(SingleResultTasks):
             results = parse_single_tasks(self.storage, traj_dict)
             for k, v in results.items():
                 v["task_id"] = output["task_id"]
-                res = ResultRecord(**v)
+                results[k] = ResultRecord(**v)
 
             # Add trajectory results and return ids
             ret = self.storage.add_results(list(results.values()))
             update_dict["trajectory"] = ret["data"]
             update_dict["energies"] = procedure["energies"]
+            update_dict["stdout"] = procedure["stdout"]
+            update_dict["stderr"] = procedure["stderr"]
 
             rec = OptimizationRecord(**{**rec.dict(), **update_dict})
-            updates.append(rec.json_dict())
+            updates.append(rec)
             completed_tasks.append(output["task_id"])
 
         # TODO: sometimes it should be update, and others its add
         ret = self.storage.update_procedures(updates)
 
         return completed_tasks, [], []
-
 
 
 # ----------------------------------------------------------------------------

@@ -5,8 +5,6 @@ from collections.abc import Iterable
 import bson
 import mongoengine as db
 
-from ..interface.models import prepare_basis
-
 
 class CustomDynamicDocument(db.DynamicDocument):
     """
@@ -151,9 +149,6 @@ class BaseResultORM(CustomDynamicDocument):
     def save(self, *args, **kwargs):
         """Override save to set defaults"""
 
-        if not self.status:
-            self.status = 'INCOMPLETE'
-
         self.modified_on = datetime.datetime.utcnow()
         if not self.created_on:
             self.created_on = datetime.datetime.utcnow()
@@ -197,15 +192,6 @@ class ResultORM(BaseResultORM):
             },
         ]
     }
-
-    def save(self, *args, **kwargs):
-
-        self.program = self.program.lower()
-        self.method = self.method.lower()
-        if self.basis:
-            self.basis = prepare_basis(self.basis)
-
-        return super(ResultORM, self).save(*args, **kwargs)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -315,6 +301,7 @@ class TaskQueueORM(CustomDynamicDocument):
     base_result = db.GenericLazyReferenceField(dbref=True)  # use res.id and res.document_type (class)
 
     meta = {
+        'collection': 'task_queue',
         'indexes': [
             'created_on',
             'status',
@@ -349,6 +336,8 @@ class ServiceQueueORM(CustomDynamicDocument):
     # modified_on = db.DateTimeField(required=True)
 
     meta = {
+        'collection':
+        'service_queue',
         'indexes': [
             'status',
             {
@@ -377,7 +366,7 @@ class UserORM(CustomDynamicDocument):
     password = db.BinaryField(required=True)
     permissions = db.ListField()
 
-    meta = {'indexes': ['username']}
+    meta = {'collection': 'user', 'indexes': ['username']}
 
 
 class QueueManagerORM(CustomDynamicDocument):
@@ -401,7 +390,7 @@ class QueueManagerORM(CustomDynamicDocument):
     created_on = db.DateTimeField(required=True)
     modified_on = db.DateTimeField(required=True)
 
-    meta = {'indexes': ['status', 'name', 'modified_on']}
+    meta = {'collection': 'queue_manager', 'indexes': ['status', 'name', 'modified_on']}
 
     def save(self, *args, **kwargs):
         """Override save to update modified_on"""
