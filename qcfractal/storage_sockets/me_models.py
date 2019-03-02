@@ -294,7 +294,6 @@ class TaskQueueORM(CustomDynamicDocument):
     spec = db.DynamicField()
 
     # others
-    hooks = db.ListField(db.DynamicField())  # ??
     tag = db.StringField(default=None)
     parser = db.StringField(default='')
     status = db.StringField(default='WAITING', choices=['RUNNING', 'WAITING', 'ERROR', 'COMPLETE'])

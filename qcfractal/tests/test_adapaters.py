@@ -51,7 +51,6 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
                 "kwargs": {}
             },
             "parser": "single",
-            "hooks": [],
             "tag": "other"
         }
     ]

@@ -1179,7 +1179,6 @@ class MongoengineSocket:
             A task is a dict, with the following fields:
             - hash_index: idx, not used anymore
             - spec: dynamic field (dict-like), can have any structure
-            - hooks: list of any objects representing listeners (for now)
             - tag: str
             - base_results: tuple (required), first value is the class type
              of the result, {'results' or 'procedure'). The second value is
@@ -1228,9 +1227,6 @@ class MongoengineSocket:
                 # If base_result is stored as a ResultORM or ProcedureORM class, get it with:
                 task = TaskQueueORM.objects(base_result=result_obj).first()
                 self.logger.warning('queue_submit got a duplicate task: ', task.to_mongo())
-                if d['hooks']:  # merge hooks
-                    task.hooks.extend(d['hooks'])
-                    task.save()
                 results.append(str(task.id))
                 meta['duplicates'].append(task_num)
             except Exception as err:
@@ -1485,28 +1481,6 @@ class MongoengineSocket:
         """
 
         return TaskQueueORM.objects(id__in=id).delete()
-
-    def handle_hooks(self, hooks):
-
-        # Very dangerous, we need to modify this substatially
-        # Does not currently handle multiple identical commands
-        # Only handles service updates
-
-        bulk_commands = []
-        for hook_list in hooks:
-            for hook in hook_list:
-                commands = {}
-                for com in hook["updates"]:
-                    commands["$" + com[0]] = {com[1]: com[2]}
-
-                upd = pymongo.UpdateOne({"_id": ObjectId(hook["document"][1])}, commands)
-                bulk_commands.append(upd)
-
-        if len(bulk_commands) == 0:
-            return
-
-        ret = self._tables["service_queue"].bulk_write(bulk_commands, ordered=False)
-        return ret
 
 ### QueueManagerORMs
 

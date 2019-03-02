@@ -76,7 +76,7 @@ class ParslAdapter(BaseAdapter):
     def acquire_complete(self) -> List[Dict[str, Any]]:
         ret = {}
         del_keys = []
-        for key, (future, parser, hooks) in self.queue.items():
+        for key, future in self.queue.items():
             if future.done():
                 ret[key] = _get_future(future)
                 del_keys.append(key)

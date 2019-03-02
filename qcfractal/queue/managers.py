@@ -398,7 +398,6 @@ class QueueManager:
                 "kwargs": {}
             },
             "parser": "single",
-            "hooks": []
         })
 
         programs = {

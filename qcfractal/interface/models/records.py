@@ -94,6 +94,47 @@ class RecordBase(BaseModel, abc.ABC):
     def json_dict(self, *args, **kwargs):
         return json.loads(self.json(*args, **kwargs))
 
+class ResultProperties(BaseModel):
+    """
+    Copy of QCElemental.ResultProperties wil updates trickle through. Remove ASAP.
+    """
+
+    # Calcinfo
+    calcinfo_nbasis: int = None
+    calcinfo_nmo: int = None
+    calcinfo_nalpha: int = None
+    calcinfo_nbeta: int = None
+    calcinfo_natom: int = None
+
+    # Canonical
+    nuclear_repulsion_energy: float = None
+    return_energy: float = None
+
+    # SCF Keywords
+    scf_one_electron_energy: float = None
+    scf_two_electron_energy: float = None
+    scf_vv10_energy: float = None
+    scf_xc_energy: float = None
+    scf_dispersion_correction_energy: float = None
+    scf_dipole_moment: List[float] = None
+    scf_total_energy: float = None
+    scf_iterations: int = None
+
+    # MP2 Keywords
+    mp2_same_spin_correlation_energy: float = None
+    mp2_opposite_spin_correlation_energy: float = None
+    mp2_singles_energy: float = None
+    mp2_doubles_energy: float = None
+    mp2_total_correlation_energy: float = None
+    mp2_total_energy: float = None
+
+    class Config:
+        allow_mutation = False
+        extra = "forbid"
+
+    def dict(self, *args, **kwargs):
+        return super().dict(*args, **{**kwargs, **{"skip_defaults": True}})
+
 
 class ResultRecord(RecordBase):
 
@@ -113,7 +154,7 @@ class ResultRecord(RecordBase):
 
     # Output data
     return_result: Union[float, List[float], Dict[str, Any]] = None
-    properties: qcel.models.ResultProperties = None
+    properties: ResultProperties = None # deprecate for qcel.models.ResultProperties
     error: qcel.models.ComputeError = None
 
     class Config(RecordBase.Config):

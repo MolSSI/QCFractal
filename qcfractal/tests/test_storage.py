@@ -249,7 +249,9 @@ def test_results_add(storage_socket):
         "keywords": kwid1,
         "program": "P1",
         "driver": "energy",
-        "extras": {"other_data": 5},
+        "extras": {
+            "other_data": 5
+        },
         "hash_index": 0,
     })
 
@@ -260,7 +262,9 @@ def test_results_add(storage_socket):
         "keywords": kwid1,
         "program": "P1",
         "driver": "energy",
-        "extras": {"other_data": 10},
+        "extras": {
+            "other_data": 10
+        },
         "hash_index": 1,
     })
 
@@ -271,7 +275,9 @@ def test_results_add(storage_socket):
         "keywords": None,
         "program": "P1",
         "driver": "energy",
-        "extras": {"other_data": 10},
+        "extras": {
+            "other_data": 10
+        },
         "hash_index": 2,
     })
     ids = []
@@ -486,7 +492,6 @@ def test_queue_submit(storage_results):
             }],
             "kwargs": {},
         },
-        "hooks": [("service", "x")],
         "tag": None,
         "base_result": ('results', result1['id'])
     }
@@ -497,7 +502,6 @@ def test_queue_submit(storage_results):
     assert ret['meta']['n_inserted'] == 1
 
     # submit a duplicate task with a hook
-    task1['hooks'] = [('service', 'y')]
     ret = storage_results.queue_submit([task1])
     assert len(ret["data"]) == 1
     assert ret['meta']['n_inserted'] == 0
@@ -521,7 +525,6 @@ def test_storage_queue_roundtrip(storage_results):
             }],
             "kwargs": {},
         },
-        "hooks": [("service", "")],
         "tag": None,
         "base_result": ('results', result1['id'])
     }
@@ -550,42 +553,6 @@ def test_storage_queue_roundtrip(storage_results):
     # Check queue is empty
     r = storage_results.queue_get_next("test_manager")
     assert len(r) == 0
-
-
-def test_storage_queue_duplicate(storage_results):
-
-    result1 = storage_results.get_results()['data'][2]
-    task1 = {
-        # "hash_index": idx,
-        "spec": {},
-        "hooks": [("service", "123")],
-        "tag": None,
-        "base_result": ('results', result1['id'])
-    }
-    r = storage_results.queue_submit([task1])
-    assert len(r["data"]) == 1
-    queue_id = r["data"][0]
-
-    # Put the first task in a waiting state
-    r = storage_results.queue_get_next("test_manager")
-    assert len(r) == 1
-
-    # Change hooks, only one submission due to hash_index conflict
-    task1["hooks"] = [("service", "456")]
-    r = storage_results.queue_submit([task1])
-    assert r["meta"]["n_inserted"] == 0
-
-    # Pull out the data and check the hooks
-    r = storage_results.queue_get_by_id([queue_id])
-    hooks = r[0]["hooks"]
-    assert len(hooks) == 2
-    assert hooks[0][0] == "service"
-    assert hooks[1][0] == "service"
-    assert {"123", "456"} == {hooks[0][1], hooks[1][1]}
-
-    # Cleanup
-    r = storage_results.queue_mark_complete([queue_id])
-    assert r == 1
 
 
 def test_queue_submit_many_order(storage_results):

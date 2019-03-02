@@ -9,7 +9,7 @@ from .base_adapter import BaseAdapter
 
 
 class FireworksAdapter(BaseAdapter):
-    def __init__(self, client: Any, logger: Optional[logging.Logger] = None, **kwargs):
+    def __init__(self, client: Any, logger: Optional[logging.Logger]=None, **kwargs):
         BaseAdapter.__init__(self, client, logger, **kwargs)
         self.client.reset(None, require_password=False, max_reset_wo_password=int(1e8))
 
@@ -59,7 +59,7 @@ class FireworksAdapter(BaseAdapter):
         for tmp_data in cursor:
             key = self.queue.pop(tmp_data["fw_id"])
             if tmp_data["state"] == "COMPLETED":
-                ret[key] = (tmp_data["action"]["stored_data"]["fw_results"], parser, hooks)
+                ret[key] = tmp_data["action"]["stored_data"]["fw_results"]
             else:
                 blob = tmp_data["action"]["stored_data"]["_task"]["args"][0]
                 msg = tmp_data["action"]["stored_data"]["_exception"]["_stacktrace"]

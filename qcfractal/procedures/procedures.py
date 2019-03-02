@@ -82,7 +82,6 @@ class SingleResultTasks:
                     "args": [inp.json_dict(), data.meta["program"]],  # todo: json_dict should come from results
                     "kwargs": {}  # todo: add defaults in models
                 },
-                "hooks": [],  # todo: add defaults in models
                 "tag": tag,
                 "parser": "single",
                 "base_result": ("results", base_id)
@@ -127,7 +126,6 @@ class SingleResultTasks:
     def parse_output(self, result_outputs):
 
         # Add new runs to database
-        # Parse out hooks and data to same key/value
         completed_tasks = []
         updates = []
         for data in result_outputs:
@@ -258,7 +256,6 @@ class OptimizationTasks(SingleResultTasks):
                     "args": [inp.json_dict(), data.meta["program"]],
                     "kwargs": {}
                 },
-                "hooks": [],
                 "tag": tag,
                 "parser": "optimization",
                 "base_result": ("procedure", base_id)
@@ -281,7 +278,6 @@ class OptimizationTasks(SingleResultTasks):
         for output in opt_outputs:
             rec = self.storage.get_procedures(id=output["base_result"]["id"])["data"][0]
             rec = OptimizationRecord(**rec)
-            print(rec.status)
 
             procedure = output["result"]
 
@@ -302,7 +298,6 @@ class OptimizationTasks(SingleResultTasks):
 
             # Save stdout/stderr
             stdout, stderr = self.storage.add_kvstore([procedure["stdout"], procedure["stderr"]])["data"]
-            print(procedure["stdout"])
             update_dict["stdout"] = stdout
             update_dict["stderr"] = stderr
 
@@ -310,9 +305,6 @@ class OptimizationTasks(SingleResultTasks):
             ret = self.storage.add_results(list(results.values()))
             update_dict["trajectory"] = ret["data"]
             update_dict["energies"] = procedure["energies"]
-            print(update_dict.keys())
-            print(update_dict)
-            print(rec.dict(skip_defaults=True).keys())
 
             rec = OptimizationRecord(**{**rec.dict(), **update_dict})
             updates.append(rec)
