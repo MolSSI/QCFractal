@@ -76,6 +76,7 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
 
     # Get a TorsionDriveORM result and check data
     result = client.get_procedures({"id": ret.ids[0]})[0]
+    assert result.status == "COMPLETE"
     assert isinstance(str(result), str)  # Check that repr runs
 
     assert pytest.approx(0.002597541340221565, 1e-5) == result.final_energies(0)
@@ -199,6 +200,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
 
     result = client.get_procedures({"id": ret.ids[0]})[0]
 
+    assert result.status == "COMPLETE"
     assert result.starting_grid == (1, 0)
     assert pytest.approx(result.final_energies((0, 0)), abs=1.e-4) == 0.0010044105443485617
     assert pytest.approx(result.final_energies((1, 1)), abs=1.e-4) == 0.0026440964897817623
@@ -255,6 +257,7 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
 
     result = client.get_procedures({"id": ret.ids[0]})[0]
 
+    assert result.status == "COMPLETE"
     assert result.starting_grid == (1, )
     assert pytest.approx(result.final_energies((0, )), abs=1.e-4) == 0.00032145876568280524
 

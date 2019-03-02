@@ -35,7 +35,6 @@ class GridOptimizationService(BaseService):
 
     # Task helpers
     task_map: Dict[str, str] = {}
-    task_manager: TaskManager = TaskManager()
 
     # Templates
     constraint_template: str
@@ -46,8 +45,9 @@ class GridOptimizationService(BaseService):
     class Config:
         json_encoders = json_encoders
 
+
     @classmethod
-    def initialize_from_api(cls, storage_socket, service_input):
+    def initialize_from_api(cls, storage_socket, logger, service_input):
 
         # Build the results object
         input_dict = service_input.dict()
@@ -102,7 +102,7 @@ class GridOptimizationService(BaseService):
             meta["starting_grid"] = GridOptimizationService._calculate_starting_grid(
                 output.keywords.scans, service_input.initial_molecule)
 
-        return cls(**meta, storage_socket=storage_socket)
+        return cls(**meta, storage_socket=storage_socket, logger=logger)
 
     @staticmethod
     def _calculate_starting_grid(scans, molecule):
@@ -130,16 +130,16 @@ class GridOptimizationService(BaseService):
         if self.iteration == -2:
             packet = json.loads(self.optimization_template)
             packet["data"] = [self.output.initial_molecule]
-            self.task_manager.submit_tasks(self.storage_socket, "optimization", {"initial_opt": packet})
+            self.task_manager.submit_tasks("optimization", {"initial_opt": packet})
 
             self.iteration = -1
             return False
 
         elif self.iteration == -1:
-            if self.task_manager.done(self.storage_socket) is False:
+            if self.task_manager.done() is False:
                 return False
 
-            complete_tasks = self.task_manager.get_tasks(self.storage_socket)
+            complete_tasks = self.task_manager.get_tasks()
 
             self.starting_molecule = Molecule(**self.storage_socket.get_molecules(
                 id=[complete_tasks["initial_opt"]["final_molecule"]])["data"][0])
@@ -159,11 +159,11 @@ class GridOptimizationService(BaseService):
             return False
 
         # Check if tasks are done
-        if self.task_manager.done(self.storage_socket) is False:
+        if self.task_manager.done() is False:
             return False
 
         # Obtain complete tasks and figure out future tasks
-        complete_tasks = self.task_manager.get_tasks(self.storage_socket)
+        complete_tasks = self.task_manager.get_tasks()
         for k, v in complete_tasks.items():
             self.final_energies[k] = v["energies"][-1]
 
@@ -224,7 +224,7 @@ class GridOptimizationService(BaseService):
 
             new_tasks[key] = packet
 
-        self.task_manager.submit_tasks(self.storage_socket, "optimization", new_tasks)
+        self.task_manager.submit_tasks("optimization", new_tasks)
 
     def finalize(self):
         """

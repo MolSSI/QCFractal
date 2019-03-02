@@ -372,7 +372,7 @@ class FractalServer:
 
             # Attempt to iteration and get message
             try:
-                obj = construct_service(self.storage, data)
+                obj = construct_service(self.storage, self.logger, data)
                 finished = obj.iterate()
                 data = obj.json_dict()
             except Exception as e:

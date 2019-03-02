@@ -52,7 +52,7 @@ class TorsionDriveService(BaseService):
         json_encoders = json_encoders
 
     @classmethod
-    def initialize_from_api(cls, storage_socket, service_input):
+    def initialize_from_api(cls, storage_socket, logger, service_input):
         _check_td()
 
         # Build the results object
@@ -110,17 +110,17 @@ class TorsionDriveService(BaseService):
 
         meta["hash_index"] = output.get_hash_index()
 
-        return cls(**meta, storage_socket=storage_socket)
+        return cls(**meta, storage_socket=storage_socket, logger=logger)
 
     def iterate(self):
 
         self.status = "RUNNING"
 
         # Check if tasks are done
-        if self.task_manager.done(self.storage_socket) is False:
+        if self.task_manager.done() is False:
             return False
 
-        complete_tasks = self.task_manager.get_tasks(self.storage_socket)
+        complete_tasks = self.task_manager.get_tasks()
 
         # Populate task results
         task_results = {}
@@ -186,7 +186,7 @@ class TorsionDriveService(BaseService):
 
                 task_map[key].append(task_key)
 
-        self.task_manager.submit_tasks(self.storage_socket, "optimization", new_tasks)
+        self.task_manager.submit_tasks("optimization", new_tasks)
         self.task_map = task_map
 
     def finalize(self):
