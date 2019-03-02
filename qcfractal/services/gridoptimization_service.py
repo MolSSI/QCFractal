@@ -8,7 +8,7 @@ from typing import Dict, Set
 import numpy as np
 
 from ..extras import get_information
-from ..interface.models import GridOptimization, Molecule, json_encoders
+from ..interface.models import GridOptimizationRecord, Molecule, json_encoders
 from .service_util import BaseService, TaskManager, expand_ndimensional_grid
 
 __all__ = ["GridOptimizationService"]
@@ -22,7 +22,7 @@ class GridOptimizationService(BaseService):
     procedure: str = "gridoptimization"
 
     # Output
-    output: GridOptimization
+    output: GridOptimizationRecord
 
     # Temporaries
     grid_optimizations: Dict[str, str] = {}
@@ -53,7 +53,7 @@ class GridOptimizationService(BaseService):
         input_dict = service_input.dict()
         input_dict["initial_molecule"] = input_dict["initial_molecule"]["id"]
 
-        output = GridOptimization(
+        output = GridOptimizationRecord(
             **input_dict,
             starting_molecule=input_dict["initial_molecule"],
             provenance={
@@ -228,7 +228,7 @@ class GridOptimizationService(BaseService):
 
     def finalize(self):
         """
-        Finishes adding data to the GridOptimization object
+        Finishes adding data to the GridOptimizationRecord object
         """
 
         output = self.output.copy(

@@ -1,4 +1,4 @@
-from .gridoptimization import GridOptimization
+from .gridoptimization import GridOptimizationRecord
 from .records import OptimizationRecord
 from .torsiondrive import TorsionDrive
 
@@ -45,7 +45,7 @@ def build_procedure(data, procedure=None, client=None):
     if data["procedure"].lower() == "torsiondrive":
         return TorsionDrive(**data, client=client)
     elif data["procedure"].lower() == "gridoptimization":
-        return GridOptimization(**data, client=client)
+        return GridOptimizationRecord(**data, client=client)
     elif data["procedure"].lower() == "optimization":
         return OptimizationRecord(**data, client=client)
     else:

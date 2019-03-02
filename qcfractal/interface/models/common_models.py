@@ -88,7 +88,7 @@ class QCSpecification(BaseModel):
 
 class OptimizationSpecification(BaseModel):
     """
-    GridOptimization options
+    GridOptimizationRecord options
     """
     program: str
     keywords: Optional[Dict[str, Any]] = None

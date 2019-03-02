@@ -65,7 +65,7 @@ New Features
 - (:pr:`125`) QCElemental common pydantic models have been integrated throughout the QCFractal code base, making a common model repository for the prevalent ``Molecule`` object (and others) come from a single source.
   Also converted QCFractal to pass serialized pydantic objects between QCFractal and QCEngine to allow validation and (de)serialization of objects automatically.
 - (:pr:`130`, :pr:`142`, and :pr:`145`) Pydantic serialization has been added to all REST calls leaving and entering both QCFractal Servers and QCFractal Portals. This allows automatic REST call validation and formatting on both server and client sides.
-- (:pr:`141` and :pr:`152`) A new GridOptimization service has been added to QCFractal. This feature supports relative starting positions from the input molecule.
+- (:pr:`141` and :pr:`152`) A new GridOptimizationRecord service has been added to QCFractal. This feature supports relative starting positions from the input molecule.
 
 Enhancements
 ++++++++++++

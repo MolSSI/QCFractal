@@ -24,7 +24,7 @@ class RecordStatusEnum(str, Enum):
     error = "ERROR"
 
 
-class Record(BaseModel, abc.ABC):
+class RecordBase(BaseModel, abc.ABC):
     """
     Record objects for Results and Procedures tables
     """
@@ -55,7 +55,7 @@ class Record(BaseModel, abc.ABC):
     created_on: datetime.datetime = datetime.datetime.utcnow()
 
     # Carry-ons
-    provenance: qcel.models.Provenance = None
+    provenance: Optional[qcel.models.Provenance] = None
 
     @validator('program')
     def check_program(cls, v):
@@ -75,22 +75,26 @@ class Record(BaseModel, abc.ABC):
         if self.Config.build_hash_index and (self.hash_index is None):
             self.hash_index = self.get_hash_index()
 
+    @classmethod
+    def get_hash_fields(cls):
+        return cls._hash_indices | {"procedure", "program"}
+
     def get_hash_index(self):
 
-        data = self.json_dict(include=self._hash_indices)
+        data = self.json_dict(include=self.get_hash_fields())
 
         return hash_dictionary(data)
 
     def dict(self, *args, **kwargs):
         kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"client", "cache"}
-        kwargs["skip_defaults"] = True
+        # kwargs["skip_defaults"] = True
         return super().dict(*args, **kwargs)
 
     def json_dict(self, *args, **kwargs):
         return json.loads(self.json(*args, **kwargs))
 
 
-class ResultRecord(Record):
+class ResultRecord(RecordBase):
 
     # Classdata
     _hash_indices = {"driver", "method", "basis", "molecule", "keywords", "program"}
@@ -111,7 +115,7 @@ class ResultRecord(Record):
     properties: qcel.models.ResultProperties = None
     error: qcel.models.ComputeError = None
 
-    class Config(Record.Config):
+    class Config(RecordBase.Config):
         build_hash_index = False
 
     @validator('method')
@@ -123,13 +127,13 @@ class ResultRecord(Record):
         return prepare_basis(v)
 
 
-class OptimizationRecord(Record):
+class OptimizationRecord(RecordBase):
     """
     A TorsionDrive Input base class
     """
 
     # Classdata
-    _hash_indices = {"initial_molecule", "program", "procedure", "keywords", "qc_spec"}
+    _hash_indices = {"initial_molecule", "keywords", "qc_spec"}
 
     # Version data
     version: int = 1
@@ -148,7 +152,7 @@ class OptimizationRecord(Record):
     final_molecule: ObjectId = None
     trajectory: List[ObjectId] = None
 
-    class Config(Record.Config):
+    class Config(RecordBase.Config):
         pass
 
     # @validator('program')
