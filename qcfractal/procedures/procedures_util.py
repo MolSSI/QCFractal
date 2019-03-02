@@ -115,6 +115,14 @@ def parse_single_tasks(storage, results):
         v["keywords"] = v["extras"]["_qcfractal_tags"]["keywords"]
         v["program"] = v["extras"]["_qcfractal_tags"]["program"]
         del v["extras"]["_qcfractal_tags"]
+        del v["schema_name"]
+        del v["schema_version"]
+
+        if v.pop("success"):
+            v["status"] = "COMPLETE"
+        else:
+            v["status"] = "ERROR"
+
     return results
 
 

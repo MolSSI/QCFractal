@@ -1034,31 +1034,24 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-    def update_procedure(self, hash_index: str, data: dict):
+    def update_procedures(self, data: dict):
         """
         TODO: to be updated with needed
         """
 
-        if 'id' in data and data['id'] is None:
-            data.pop("id", None)
 
-        update = {}
-        not_allowed_keys = []
-        # create safe query with allowed keys only
-        # shouldn't be allowed to update status manually
-        for key, value in data.items():
-            if key not in ['procedure', 'program', 'status', 'task_id']:  # FIXME: what else?
-                update[key] = value
-            else:
-                not_allowed_keys.append(key)
+        updated_count = 0
+        for upd in data:
 
-        if not_allowed_keys:
-            logging.warning('Trying to update Procedure immutable keywords ' +
-                            '"{}", skipping'.format(not_allowed_keys))
+            # Must have ID
+            if "id" not in upd:
+                continue
 
-        modified_count = Procedure.objects(hash_index=hash_index).update(**update, modified_on=dt.utcnow())
+            p = Procedure(**upd).save()
+            updated_count += 1
 
-        return modified_count
+
+        return updated_count
 
     def add_services(self, data: List[dict], return_json=True):
         """

@@ -245,7 +245,7 @@ class Procedure(BaseResult):
     def save(self, *args, **kwargs):
 
         self.program = self.program.lower()
-        self.procedure = self.program.lower()
+        self.procedure = self.procedure.lower()
 
         return super(Procedure, self).save(*args, **kwargs)
 

@@ -17,8 +17,9 @@ class SingleResultTasks:
      and program.
     """
 
-    def __init__(self, storage):
+    def __init__(self, storage, logger):
         self.storage = storage
+        self.logger = logger
 
     def parse_input(self, data):
         """Parse input json into internally appropriate format
@@ -271,55 +272,44 @@ class OptimizationTasks(SingleResultTasks):
         """
 
         new_procedures = {}
-        new_hooks = {}
 
-        # Each optimization is a unique entry:
-        for procedure, hooks in data:
-            task_id = procedure["task_id"]
 
-            # Convert start/stop molecules to hash
+        completed_tasks = []
+        updates = []
+        for d in data:
+            rec = self.storage.get_procedures(id=d["base_result"]["id"])["data"][0]
+            rec = OptimizationRecord(**rec)
+
+            procedure = d["result"]
+
+            # Add initial and final molecules
+            update_dict = {}
             initial_mol, final_mol = self.storage.add_molecules(
                 [procedure["initial_molecule"], procedure["final_molecule"]])["data"]
-            procedure["initial_molecule"] = initial_mol
-            procedure["final_molecule"] = final_mol
+            assert initial_mol == rec.initial_molecule
+            update_dict["final_molecule"] = final_mol
 
             # Parse trajectory computations and add task_id
             traj_dict = {k: v for k, v in enumerate(procedure["trajectory"])}
             results = parse_single_tasks(self.storage, traj_dict)
             for k, v in results.items():
-                v["task_id"] = task_id
+                v["task_id"] = d["task_id"]
+                res = ResultRecord(**v)
 
             # Add trajectory results and return ids
             ret = self.storage.add_results(list(results.values()))
-            procedure["trajectory"] = ret["data"]
-            # print(procedure["error"])
-            procedure.pop("schema_name", None)
+            update_dict["trajectory"] = ret["data"]
+            update_dict["energies"] = procedure["energies"]
 
-            # Coerce tags
-            # procedure.update(procedure["extras"]["_qcfractal_tags"])
-            # del procedure["extras"]["_qcfractal_tags"]
-            del procedure["input_specification"]
-            # print("Adding optimization result")
-            # print(json.dumps(v, indent=2))
-            new_procedures[task_id] = procedure
-            if len(hooks):
-                new_hooks[task_id] = hooks
+            rec = OptimizationRecord(**{**rec.dict(), **update_dict})
+            updates.append(rec.json_dict())
+            completed_tasks.append(d["task_id"])
 
-            procedure.pop("task_id", None)
-            self.storage.update_procedure(procedure["hash_index"], procedure)
+        # TODO: sometimes it should be update, and others its add
+        ret = self.storage.update_procedures(updates)
 
-        # Create a list of (queue_id, located) to update the queue with
-        completed = list(new_procedures.keys())
+        return completed_tasks, [], []
 
-        errors = []
-        # if len(ret["meta"]["errors"]):
-        #     # errors = [(k, "Duplicate results found")]
-        #     raise ValueError("TODO: Cannot yet handle queue result duplicates.")
-
-        hook_data = parse_hooks(new_procedures, new_hooks)
-
-        # return (ret, hook_data)
-        return completed, errors, hook_data
 
 
 # ----------------------------------------------------------------------------
@@ -327,7 +317,7 @@ class OptimizationTasks(SingleResultTasks):
 supported_procedures = Union[SingleResultTasks, OptimizationTasks]
 
 
-def get_procedure_parser(procedure_type: str, storage) -> supported_procedures:
+def get_procedure_parser(procedure_type: str, storage, logger) -> supported_procedures:
     """A factory methods that returns the approperiate parser class
     for the supported procedure types (like single and optimization)
 
@@ -345,8 +335,8 @@ def get_procedure_parser(procedure_type: str, storage) -> supported_procedures:
     """
 
     if procedure_type == 'single':
-        return SingleResultTasks(storage)
+        return SingleResultTasks(storage, logger)
     elif procedure_type == 'optimization':
-        return OptimizationTasks(storage)
+        return OptimizationTasks(storage, logger)
     else:
         raise KeyError("Procedure type ({}) is not suported yet.".format(procedure_type))

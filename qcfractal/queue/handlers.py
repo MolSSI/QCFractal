@@ -31,7 +31,7 @@ class TaskQueueHandler(APIHandler):
         post = TaskQueuePOSTBody.parse_raw(self.request.body)
 
         # Format and submit tasks
-        procedure_parser = get_procedure_parser(post.meta["procedure"], storage)
+        procedure_parser = get_procedure_parser(post.meta["procedure"], storage, self.logger)
         payload = procedure_parser.submit_tasks(post)
 
         response = TaskQueuePOSTResponse(**payload)
@@ -178,7 +178,7 @@ class QueueManagerHandler(APIHandler):
         completed = []
         hooks = []
         for k, v in new_results.items():
-            procedure_parser = get_procedure_parser(k, storage_socket)
+            procedure_parser = get_procedure_parser(k, storage_socket, logger)
             com, err, hks = procedure_parser.parse_output(v)
             completed.extend(com)
             error_data.extend(err)
