@@ -4,7 +4,7 @@
 import copy
 from typing import Any, Dict
 
-from ..models import OptimizationRecord, TorsionDrive, TorsionDriveInput
+from ..models import OptimizationRecord, TorsionDriveRecord, TorsionDriveInput
 from .collection import Collection
 from .collection_utils import register_collection
 
@@ -293,7 +293,7 @@ class OpenFFWorkflow(Collection):
                 if v["id"] in self._torsiondrive_cache:
                     # TODO figure out a better solution here
                     obj = self._torsiondrive_cache[v["id"]]
-                    if isinstance(obj, TorsionDrive):
+                    if isinstance(obj, TorsionDriveRecord):
                         tmp[k] = obj.final_energies()
                     elif isinstance(obj, OptimizationRecord):
                         tmp[k] = obj.get_final_energy()
@@ -336,7 +336,7 @@ class OpenFFWorkflow(Collection):
             for k, v in self.data.fragments[frag].items():
                 if v["id"] in self._torsiondrive_cache:
                     obj = self._torsiondrive_cache[v["id"]]
-                    if isinstance(obj, TorsionDrive):
+                    if isinstance(obj, TorsionDriveRecord):
                         tmp[k] = obj.final_molecules()
                     elif isinstance(obj, OptimizationRecord):
                         tmp[k] = obj.get_final_molecule()

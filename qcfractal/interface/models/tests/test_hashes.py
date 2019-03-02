@@ -5,7 +5,7 @@ import pytest
 from ..common_models import KeywordSet, Molecule
 from ..gridoptimization import GridOptimizationRecord
 from ..records import ResultRecord, OptimizationRecord
-from ..torsiondrive import TorsionDrive
+from ..torsiondrive import TorsionDriveRecord
 
 ## Molecule hashes
 
@@ -308,7 +308,7 @@ def test_gridoptimization_canary_hash(data, hash_index):
     assert hash_index == gridopt.get_hash_index(), data
 
 
-## TorsionDrive hashes
+## TorsionDriveRecord hashes
 
 _base_torsion = {
     "keywords": {
@@ -355,6 +355,6 @@ _base_torsion = {
 ]) # yapf disable
 def test_torsiondrive_canary_hash(data, hash_index):
 
-    td = TorsionDrive(**{**_base_torsion, **data})
+    td = TorsionDriveRecord(**{**_base_torsion, **data})
 
     assert hash_index == td.get_hash_index(), data

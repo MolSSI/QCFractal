@@ -12,12 +12,12 @@ from .common_models import Molecule, ObjectId, OptimizationSpecification, Proven
 from .model_utils import hash_dictionary, json_encoders, recursive_normalizer
 from .records import RecordBase
 
-__all__ = ["TorsionDriveInput", "TorsionDrive"]
+__all__ = ["TorsionDriveInput", "TorsionDriveRecord"]
 
 
 class TDKeywords(BaseModel):
     """
-    TorsionDrive options
+    TorsionDriveRecord options
     """
     dihedrals: List[Tuple[int, int, int, int]]
     grid_spacing: List[int]
@@ -36,7 +36,7 @@ _qcfractal_constr = constr(strip_whitespace=True, regex="qcfractal")
 
 class TorsionDriveInput(BaseModel):
     """
-    A TorsionDrive Input base class
+    A TorsionDriveRecord Input base class
     """
 
     program: _td_constr = "torsiondrive"
@@ -57,9 +57,9 @@ class TorsionDriveInput(BaseModel):
         json_encoders = json_encoders
 
 
-class TorsionDrive(RecordBase):
+class TorsionDriveRecord(RecordBase):
     """
-    A interface to the raw JSON data of a TorsionDrive torsion scan run.
+    A interface to the raw JSON data of a TorsionDriveRecord torsion scan run.
     """
 
     # Classdata
@@ -91,16 +91,16 @@ class TorsionDrive(RecordBase):
         Returns
         -------
         ret : str
-            A representation of the current TorsionDrive status.
+            A representation of the current TorsionDriveRecord status.
 
         Examples
         --------
 
         >>> repr(torsiondrive_obj)
-        TorsionDrive(id='5b7f1fd57b87872d2c5d0a6d', success=True, molecule_id='5b7f1fd57b87872d2c5d0a6c')
+        TorsionDriveRecord(id='5b7f1fd57b87872d2c5d0a6d', success=True, molecule_id='5b7f1fd57b87872d2c5d0a6c')
         """
 
-        ret = "TorsionDrive("
+        ret = "TorsionDriveRecord("
         ret += "id='{}', ".format(self.id)
         ret += "status='{}', ".format(self.status)
         ret += "initial_molecule='{}')".format(self.initial_molecule)

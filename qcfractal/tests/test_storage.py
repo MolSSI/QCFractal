@@ -181,7 +181,7 @@ def test_keywords_error(storage_socket):
 
 def test_collections_add(storage_socket):
 
-    collection = 'TorsionDrive'
+    collection = 'TorsionDriveRecord'
     name = 'Torsion123'
     db = {"something": "else", "array": ["54321"]}
 
@@ -205,7 +205,7 @@ def test_collections_add(storage_socket):
 
 def test_collections_overwrite(storage_socket):
 
-    collection = "TorsionDrive"
+    collection = "TorsionDriveRecord"
     name = "Torsion123"
     db = {"something": "else", "array": ["54321"]}
 
@@ -218,7 +218,7 @@ def test_collections_overwrite(storage_socket):
 
     db_update = {
         # "id": ret["data"][0]["id"],
-        "collection": "TorsionDrive",  # no need to include
+        "collection": "TorsionDriveRecord",  # no need to include
         "name": "Torsion123",  # no need to include
         "something": "New",
         "something2": "else",

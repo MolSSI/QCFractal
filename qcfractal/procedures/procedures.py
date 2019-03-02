@@ -7,7 +7,7 @@ from typing import Union
 
 from qcelemental.models import OptimizationInput, Molecule
 
-from ..interface.models import OptimizationRecord, QCSpecification
+from ..interface.models import OptimizationRecord, ResultRecord, QCSpecification
 from .procedures_util import parse_hooks, parse_single_tasks, unpack_single_task_spec
 
 
@@ -40,11 +40,16 @@ class SingleResultTasks:
 
         """
 
-        # format the data
-        inputs, errors = unpack_single_task_spec(self.storage, data.meta, data.data)
+        # Unpack all molecules
+        moleucle_list = self.storage.get_add_molecules_mixed(data.data)["data"]
 
-        # Insert new results stubs
-        result_stub = json.dumps({k: data.meta[k] for k in ["driver", "method", "basis", "keywords", "program"]})
+        if data.meta["keywords"]:
+            keywords = self.storage.get_add_keywords_mixed([data.meta["keywords"]])["data"][0]
+            keywords = keyword_set["values"]
+
+        else:
+            keywords = None
+
 
         # Grab the tag if available
         tag = data.meta.pop("tag", None)
@@ -53,15 +58,18 @@ class SingleResultTasks:
         new_tasks = []
         results_ids = []
         existing_ids = []
-        for inp in inputs:
-            if inp is None:
+        for mol in moleucle_list:
+            if mol is None:
                 results_ids.append(None)
                 continue
 
-            # Build stub
-            result_obj = json.loads(result_stub)
-            result_obj["molecule"] = str(inp.molecule.id)
-            ret = self.storage.add_results([result_obj])
+            mol = Molecule(**mol)
+
+            record = ResultRecord(**data.meta, molecule=mol.id)
+            inp = record.build_schema_input(mol, keywords)
+            inp.extras["_qcfractal_tags"] = {"program": record.program, "keywords": record.keywords}
+
+            ret = self.storage.add_results([record.json_dict()])
 
             base_id = ret["data"][0]
             results_ids.append(base_id)
@@ -75,7 +83,7 @@ class SingleResultTasks:
             task = {
                 "spec": {
                     "function": "qcengine.compute",  # todo: add defaults in models
-                    "args": [json.loads(inp.json()), data.meta["program"]],  # todo: json_dict should come from results
+                    "args": [inp.json_dict(), data.meta["program"]],  # todo: json_dict should come from results
                     "kwargs": {}  # todo: add defaults in models
                 },
                 "hooks": [],  # todo: add defaults in models
@@ -86,7 +94,7 @@ class SingleResultTasks:
 
             new_tasks.append(task)
 
-        return new_tasks, results_ids, existing_ids, errors
+        return new_tasks, results_ids, existing_ids, []
 
     def submit_tasks(self, data):
 
@@ -134,6 +142,7 @@ class SingleResultTasks:
 
         # Add results to database
         results = parse_single_tasks(self.storage, rdata)
+        print(results)
         # print(list(results.values())[0].keys())
 
         # TODO: sometimes it should be update, and others its add
@@ -209,7 +218,7 @@ class OptimizationTasks(SingleResultTasks):
         """
 
         # Unpack all molecules
-        intitial_moleucle_list = self.storage.get_add_molecules_mixed(data.data)["data"]
+        intitial_molecule_list = self.storage.get_add_molecules_mixed(data.data)["data"]
 
         # Unpack keywords
         if data.meta["keywords"] is None:
@@ -231,7 +240,7 @@ class OptimizationTasks(SingleResultTasks):
         new_tasks = []
         results_ids = []
         existing_ids = []
-        for initial_molecule in intitial_moleucle_list:
+        for initial_molecule in intitial_molecule_list:
             if initial_molecule is None:
                 results_ids.append(None)
                 continue

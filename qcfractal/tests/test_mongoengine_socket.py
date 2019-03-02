@@ -115,13 +115,14 @@ def test_results(storage_socket, molecules_H4O2, kw_fixtures):
     }
 
     Result(**page1).save()
-    ret = Result.objects(method='M1').first()
+    ret = Result.objects(method='m1').first()
     assert ret.molecule.fetch().molecular_formula == 'H4O2'
     assert ret.keywords is None
 
     Result(**page2).save()
-    ret = Result.objects(method='M2').first()
+    ret = Result.objects(method='m2').first()
     assert ret.molecule.fetch().molecular_formula == 'H4O2'
+    assert ret.method == "m2"
 
     # clean up
     Result.objects().delete()
@@ -300,7 +301,7 @@ def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
         result_template['basis'] = str(i)
         Result(**result_template).save()
 
-    result_template['method'] = 'M2'
+    result_template['method'] = 'm2'
     for i in range(first_half, total_results):
         result_template['basis'] = str(i)
         Result(**result_template).save()
@@ -311,8 +312,8 @@ def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
     # query (~ 0.13 msec/doc)
     t1 = time()
 
-    ret1 = Result.objects(method='M1')
-    ret2 = Result.objects(method='M2').limit(limit).skip(skip)
+    ret1 = Result.objects(method='m1')
+    ret2 = Result.objects(method='m2').limit(limit).skip(skip)
 
     data1 = [d.to_json_obj() for d in ret1]
     data2 = [d.to_json_obj() for d in ret2]
@@ -328,7 +329,7 @@ def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
     assert int(data2[0]['basis']) == first_half + skip
 
     # get the last page when with fewer than limit are remaining
-    ret = Result.objects(method='M1').limit(limit).skip(int(first_half - limit / 2))
+    ret = Result.objects(method='m1').limit(limit).skip(int(first_half - limit / 2))
     assert len(ret) == limit / 2
 
     # total_time = (time() - t1) * 1000 / total_results

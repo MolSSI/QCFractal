@@ -8,7 +8,7 @@ from typing import Any, Dict, List
 
 import numpy as np
 
-from ..interface.models import TorsionDrive, json_encoders
+from ..interface.models import TorsionDriveRecord, json_encoders
 from .service_util import BaseService, TaskManager
 
 try:
@@ -22,7 +22,7 @@ __all__ = ["TorsionDriveService"]
 
 def _check_td():
     if td_api is None:
-        raise ImportError("Unable to find TorsionDrive which must be installed to use the TorsionDriveService")
+        raise ImportError("Unable to find TorsionDriveRecord which must be installed to use the TorsionDriveService")
 
 
 class TorsionDriveService(BaseService):
@@ -33,7 +33,7 @@ class TorsionDriveService(BaseService):
     procedure: str = "torsiondrive"
 
     # Output
-    output: TorsionDrive
+    output: TorsionDriveRecord
 
     # Temporaries
     torsiondrive_state: Dict[str, Any]
@@ -60,7 +60,7 @@ class TorsionDriveService(BaseService):
         input_dict["initial_molecule"] = [x["id"] for x in input_dict["initial_molecule"]]
 
         # Validate input
-        output = TorsionDrive(
+        output = TorsionDriveRecord(
             **input_dict,
             provenance={
                 "creator": "torsiondrive",
@@ -191,7 +191,7 @@ class TorsionDriveService(BaseService):
 
     def finalize(self):
         """
-        Finishes adding data to the TorsionDrive object
+        Finishes adding data to the TorsionDriveRecord object
         """
 
         # # Get lowest energies and positions
