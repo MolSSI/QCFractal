@@ -10,7 +10,7 @@ from qcfractal.testing import fractal_compute_server, reset_server_database, usi
 
 
 @pytest.mark.parametrize("data", [
-    # pytest.param(("psi4", "HF", "sto-3g"), id="psi4", marks=using_psi4),
+    pytest.param(("psi4", "HF", "sto-3g"), id="psi4", marks=using_psi4),
     pytest.param(("rdkit", "UFF", None), id="rdkit", marks=using_rdkit)
 ])
 def test_task_molecule_no_orientation(data, fractal_compute_server):

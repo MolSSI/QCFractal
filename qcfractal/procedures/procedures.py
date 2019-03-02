@@ -45,7 +45,6 @@ class SingleResultTasks:
 
         if data.meta["keywords"]:
             keywords = self.storage.get_add_keywords_mixed([data.meta["keywords"]])["data"][0]
-            keywords = keyword_set["values"]
 
         else:
             keywords = None
@@ -132,36 +131,19 @@ class SingleResultTasks:
 
         # Add new runs to database
         # Parse out hooks and data to same key/value
-        rdata = {}
-        rhooks = {}
-        for data, hooks in data:
-            key = data["task_id"]
-            rdata[key] = data
-            if len(hooks):
-                rhooks[key] = hooks
-
-        # Add results to database
-        results = parse_single_tasks(self.storage, rdata)
-        print(results)
-        # print(list(results.values())[0].keys())
+        completed_tasks = []
+        updates = []
+        for d in data:
+            r = self.storage.get_results(id=d["base_result"]["id"])["data"][0]
+            r = ResultRecord(**r)
+            r.consume_output(d["result"])
+            updates.append(r.json_dict())
+            completed_tasks.append(d["task_id"])
 
         # TODO: sometimes it should be update, and others its add
-        ret = self.storage.update_results(list(results.values()))
-        # ret = self.storage.add_results(list(results.values()), update_existing=False)
+        ret = self.storage.update_results(updates)
 
-        # Sort out hook data
-        hook_data = parse_hooks(results, rhooks)
-
-        # Create a list of (queue_id, located) to update the queue with
-        completed = list(results.keys())
-
-        # TODO: we are not looking for duplicates when updating!
-        # errors = []
-        # if len(ret["meta"]["errors"]):
-        #     # errors = [(k, "Duplicate results found")]
-        #     raise ValueError("TODO: Cannot yet handle queue result duplicates.")
-
-        return completed, [], hook_data
+        return completed_tasks, [], []
 
 
 # ----------------------------------------------------------------------------

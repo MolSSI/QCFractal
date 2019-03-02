@@ -755,7 +755,7 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def update_results(self, id: List[str], data: List[dict]):
+    def update_results(self, data: List[dict]):
         """
         Update results from a given dict (replace existing)
 
@@ -775,13 +775,13 @@ class MongoengineSocket:
 
         # try:
         updated_count = 0
-        for result_id, update_data in zip(id, data):
+        for upd in data:
 
-            # will replace the record with result_id with the given data
-            upd = update_data.copy()
-            upd.pop('id', None)
+            # Must have ID
+            if "id" not in upd:
+                continue
 
-            Result(id=result_id, **upd).save()
+            Result(**upd).save()
             updated_count += 1
 
         # except (mongoengine.errors.ValidationError, KeyError) as err:
@@ -1380,8 +1380,7 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-            if return_json:
-                data = [d.to_json_obj(with_ids) for d in data]
+            data = [d.to_json_obj(with_ids) for d in data]
 
         return {"data": data, "meta": meta}
 

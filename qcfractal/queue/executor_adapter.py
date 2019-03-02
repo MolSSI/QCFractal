@@ -35,9 +35,9 @@ class ExecutorAdapter(BaseAdapter):
     def acquire_complete(self) -> List[Dict[str, Any]]:
         ret = {}
         del_keys = []
-        for key, (future, parser, hooks) in self.queue.items():
+        for key, future in self.queue.items():
             if future.done():
-                ret[key] = (_get_future(future), parser, hooks)
+                ret[key] = _get_future(future)
                 del_keys.append(key)
 
         for key in del_keys:
@@ -47,14 +47,14 @@ class ExecutorAdapter(BaseAdapter):
 
     def await_results(self) -> bool:
         for future in self.queue.values():
-            while future[0].done() is False:
+            while future.done() is False:
                 time.sleep(0.1)
 
         return True
 
     def close(self) -> bool:
         for future in self.queue.values():
-            future[0].cancel()
+            future.cancel()
 
         self.client.shutdown()
         return True
@@ -70,8 +70,7 @@ class DaskAdapter(ExecutorAdapter):
 
     def await_results(self) -> bool:
         from dask.distributed import wait
-        futures = [f[0] for f in self.queue.values()]
-        wait(futures)
+        wait(self.queue.values())
         return True
 
     def close(self) -> bool:

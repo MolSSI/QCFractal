@@ -57,7 +57,7 @@ class FireworksAdapter(BaseAdapter):
         })
 
         for tmp_data in cursor:
-            key, parser, hooks = self.queue.pop(tmp_data["fw_id"])
+            key = self.queue.pop(tmp_data["fw_id"])
             if tmp_data["state"] == "COMPLETED":
                 ret[key] = (tmp_data["action"]["stored_data"]["fw_results"], parser, hooks)
             else:
@@ -65,7 +65,7 @@ class FireworksAdapter(BaseAdapter):
                 msg = tmp_data["action"]["stored_data"]["_exception"]["_stacktrace"]
                 blob["error_message"] = msg
                 blob["success"] = False
-                ret[key] = (blob, parser, hooks)
+                ret[key] = blob
 
         return ret
 

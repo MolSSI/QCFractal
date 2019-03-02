@@ -127,22 +127,19 @@ class QueueManagerHandler(APIHandler):
     def insert_complete_tasks(storage_socket, results, logger):
         # Pivot data so that we group all results in categories
         new_results = collections.defaultdict(list)
+
+        queue = storage_socket.get_queue(ids=results.keys())["data"]
+        queue = {v["id"]: v for v in queue}
+
         error_data = []
 
         task_success = 0
         task_failures = 0
         task_totals = len(results.items())
-        for key, (result, parser, hooks) in results.items():
+        for key, result in results.items():
             try:
-
                 # Successful task
-                if result["success"] is True:
-                    result["task_id"] = key
-                    new_results[parser].append((result, hooks))
-                    task_success += 1
-
-                # Failed task
-                else:
+                if result["success"] is False:
                     if "error" not in result:
                         error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
                     else:
@@ -154,6 +151,19 @@ class QueueManagerHandler(APIHandler):
 
                     error_data.append((key, error))
                     task_failures += 1
+
+                # Failed task
+                elif key not in queue:
+                    logger.warning(f"Computation key {key} completed successfully, but not found in queue.")
+                    error_data.append((key, "Internal Error: Queue key not found."))
+                    task_failures += 1
+
+                # Success!
+                else:
+                    parser = queue[key]["parser"]
+                    new_results[parser].append({"result": result, "task_id": key, "base_result": queue[key]["base_result"]})
+                    task_success += 1
+
             except Exception as e:
                 msg = "Internal FractalServer Error:\n" + traceback.format_exc()
                 logger.warning("update: ERROR\n{}".format(msg))
@@ -167,15 +177,15 @@ class QueueManagerHandler(APIHandler):
         # Run output parsers
         completed = []
         hooks = []
-        for k, v in new_results.items():  # todo: can be merged? do they have diff k?
+        for k, v in new_results.items():
             procedure_parser = get_procedure_parser(k, storage_socket)
             com, err, hks = procedure_parser.parse_output(v)
             completed.extend(com)
             error_data.extend(err)
-            hooks.extend(hks)
+            # hooks.extend(hks)
 
         # Handle hooks and complete tasks
-        storage_socket.handle_hooks(hooks)
+        # storage_socket.handle_hooks(hooks)
         storage_socket.queue_mark_complete(completed)
         storage_socket.queue_mark_error(error_data)
         return len(completed), len(error_data)

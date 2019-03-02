@@ -112,7 +112,7 @@ class ResultRecord(RecordBase):
     keywords: Optional[ObjectId] = None
 
     # Output data
-    return_results: Union[float, List[float], Dict[str, Any]] = None
+    return_result: Union[float, List[float], Dict[str, Any]] = None
     properties: qcel.models.ResultProperties = None
     error: qcel.models.ComputeError = None
 
@@ -127,10 +127,54 @@ class ResultRecord(RecordBase):
     def check_basis(cls, v):
         return prepare_basis(v)
 
+## QCSchema constructors
+
+    def build_schema_input(self,
+                           molecule: 'Molecule',
+                           keywords: Optional['KeywordsSet']=None,
+                           checks: bool=True) -> 'ResultInput':
+        """
+        Creates a OptimizationInput schema.
+        """
+
+        if checks:
+            assert self.molecule == molecule.id
+            if self.keywords:
+                assert self.keywords == keywords["id"]
+
+        model = {"method": self.method}
+        if self.basis:
+            model["basis"] = self.basis
+
+        if not self.keywords:
+            keywords = {}
+        else:
+            keywords = keywords["values"]
+
+        model = qcel.models.ResultInput(
+            id=self.id,
+            driver=self.driver.name,
+            model=model,
+            molecule=molecule,
+            keywords=keywords,
+            extras=self.extras)
+        return model
+
+    def consume_output(self, data:Dict[str, Any], checks: bool=True):
+        assert self.method == data["model"]["method"]
+
+        self.extras = data["extras"]
+        self.return_result = data["return_result"]
+        self.properties = data["properties"]
+        self.error = data["error"]
+        self.stdout = data["stdout"]
+        self.stderr = data["stderr"]
+        self.status = "COMPLETE"
+
 
 class OptimizationRecord(RecordBase):
     """
-    A TorsionDrive Input base class
+    A OptimizationRecord for all optimization procedure data.
     """
 
     # Classdata
