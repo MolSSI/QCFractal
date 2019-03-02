@@ -45,8 +45,8 @@ class RecordBase(BaseModel, abc.ABC):
 
     # Extra fields
     extras: Dict[str, Any] = {}
-    stdout: Optional[str] = None
-    stderr: Optional[str] = None
+    stdout: Optional[ObjectId] = None
+    stderr: Optional[ObjectId] = None
 
     # Compute status
     task_id: ObjectId = None
@@ -184,12 +184,10 @@ class OptimizationRecord(RecordBase):
     version: int = 1
     procedure: constr(strip_whitespace=True, regex="optimization") = "optimization"
     schema_version: int = 1
-    success: bool = False
 
     # Input data
     initial_molecule: ObjectId
     qc_spec: QCSpecification
-    input_specification: Any = None  # Deprecated
     keywords: Dict[str, Any] = {}
 
     # Results
@@ -253,7 +251,7 @@ class OptimizationRecord(RecordBase):
 
         ret = "Optimization("
         ret += "id='{}', ".format(self.id)
-        ret += "success='{}', ".format(self.success)
+        ret += "status='{}', ".format(self.status)
         ret += "initial_molecule='{}') ".format(self.initial_molecule)
         return ret
 

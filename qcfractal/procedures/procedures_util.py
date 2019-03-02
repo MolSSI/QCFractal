@@ -103,6 +103,9 @@ def parse_single_tasks(storage, results):
     """
 
     for k, v in results.items():
+        stdout, stderr = storage.add_kvstore([v["stdout"], v["stderr"]])["data"]
+        v["stdout"] = stdout
+        v["stderr"] = stderr
 
         # Flatten data back out
         v["method"] = v["model"]["method"]
@@ -111,6 +114,7 @@ def parse_single_tasks(storage, results):
 
         # Molecule should be by ID
         v["molecule"] = storage.add_molecules([Molecule(**v["molecule"])])["data"][0]
+
 
         v["keywords"] = v["extras"]["_qcfractal_tags"]["keywords"]
         v["program"] = v["extras"]["_qcfractal_tags"]["program"]

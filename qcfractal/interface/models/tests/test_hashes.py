@@ -203,7 +203,6 @@ _base_opt = {
     "keywords": {},
     "program": "prog2",
     "initial_molecule": "5c7896fb95d592ad07a2fe3b",
-    "success": False,
     "qc_spec": _qc_spec
 }
 @pytest.mark.parametrize("data, hash_index", [

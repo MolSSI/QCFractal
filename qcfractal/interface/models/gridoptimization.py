@@ -142,7 +142,7 @@ class GridOptimizationRecord(RecordBase):
 
         ret = "GridOptimizationRecord("
         ret += "id='{}', ".format(self.id)
-        ret += "success='{}', ".format(self.status)
+        ret += "status='{}', ".format(self.status)
         ret += "initial_molecule='{}')".format(self.initial_molecule)
 
         return ret

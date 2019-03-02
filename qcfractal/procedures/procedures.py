@@ -133,7 +133,13 @@ class SingleResultTasks:
         for data in result_outputs:
             result = self.storage.get_results(id=data["base_result"]["id"])["data"][0]
             result = ResultRecord(**result)
-            result.consume_output(data["result"])
+
+            rdata = data["result"]
+            stdout, stderr = self.storage.add_kvstore([rdata["stdout"], rdata["stderr"]])["data"]
+            rdata["stdout"] = stdout
+            rdata["stderr"] = stderr
+
+            result.consume_output(rdata)
             updates.append(result)
             completed_tasks.append(data["task_id"])
 
@@ -275,6 +281,7 @@ class OptimizationTasks(SingleResultTasks):
         for output in opt_outputs:
             rec = self.storage.get_procedures(id=output["base_result"]["id"])["data"][0]
             rec = OptimizationRecord(**rec)
+            print(rec.status)
 
             procedure = output["result"]
 
@@ -293,12 +300,19 @@ class OptimizationTasks(SingleResultTasks):
                 v["task_id"] = output["task_id"]
                 results[k] = ResultRecord(**v)
 
+            # Save stdout/stderr
+            stdout, stderr = self.storage.add_kvstore([procedure["stdout"], procedure["stderr"]])["data"]
+            print(procedure["stdout"])
+            update_dict["stdout"] = stdout
+            update_dict["stderr"] = stderr
+
             # Add trajectory results and return ids
             ret = self.storage.add_results(list(results.values()))
             update_dict["trajectory"] = ret["data"]
             update_dict["energies"] = procedure["energies"]
-            update_dict["stdout"] = procedure["stdout"]
-            update_dict["stderr"] = procedure["stderr"]
+            print(update_dict.keys())
+            print(update_dict)
+            print(rec.dict(skip_defaults=True).keys())
 
             rec = OptimizationRecord(**{**rec.dict(), **update_dict})
             updates.append(rec)
