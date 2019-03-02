@@ -343,7 +343,12 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def get_molecules(self, id=None, molecule_hash=None, molecular_formula=None, limit: int = None, skip: int = 0):
+    def get_molecules(self,
+                      id=None,
+                      molecule_hash=None,
+                      molecular_formula=None,
+                      limit: int = None,
+                      skip: int = 0):
 
         ret = {"meta": get_metadata_template(), "data": []}
 
@@ -629,7 +634,8 @@ class MongoengineSocket:
                         name: str = None,
                         return_json: bool = True,
                         with_ids: bool = True,
-                        limit: int = None):
+                        limit: int = None,
+                        skip: int = 0):
         """Get collection by collection and/or name
 
         Parameters
@@ -639,6 +645,7 @@ class MongoengineSocket:
         return_json : bool
         with_ids : bool
         limit : int
+        skip : int
 
         Returns
         -------
@@ -651,7 +658,7 @@ class MongoengineSocket:
 
         data = []
         try:
-            data = Collection.objects(**query).limit(self.get_limit(limit))
+            data = Collection.objects(**query).limit(self.get_limit(limit)).skip(skip)
 
             meta["n_found"] = data.count()
             meta["success"] = True
@@ -750,59 +757,6 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def get_results_by_id(self,
-                          id: List[str],
-                          projection=None,
-                          limit: int = None,
-                          skip: int = 0,
-                          return_json=True,
-                          with_ids=True):
-        """
-        Get list of Results using the given list of Ids
-
-        Parameters
-        ----------
-        id : List of str
-            Ids of the results in the DB
-        projection : list/set/tuple of keys, default is None
-            The fields to return, default to return all
-        limit : int, default is None
-            maximum number of results to return
-            if 'limit' is greater than the global setting self._max_limit,
-            the self._max_limit will be returned instead
-        skip : int, default is 0
-        return_json : bool, default is True
-            Return the results as a list of json inseated of objects
-        with_ids: bool, default is True
-            Include the ids in the returned objects/dicts
-
-        Returns
-        -------
-        Dict with keys: data, meta
-            Data is the objects found
-        """
-
-        meta = get_metadata_template()
-
-        q_limit = self.get_limit(limit)
-
-        data = []
-        # try:
-        if projection:
-            data = Result.objects(id__in=id).only(*projection).limit(q_limit).skip(skip)
-        else:
-            data = Result.objects(id__in=id).limit(q_limit).skip(skip)
-
-        meta["n_found"] = data.count()
-        meta["success"] = True
-        # except Exception as err:
-        #     meta['error_description'] = str(err)
-
-        if return_json:
-            data = [d.to_json_obj(with_ids) for d in data]
-
-        return {"data": data, "meta": meta}
-
     def get_results_count(self):
         """
         TODO: just return the count, used for big queries
@@ -814,12 +768,14 @@ class MongoengineSocket:
         pass
 
     def get_results(self,
+                    id: Union[str, List] = None,
                     program: str = None,
                     method: str = None,
                     basis: str = None,
                     molecule: str = None,
                     driver: str = None,
                     keywords: str = None,
+                    task_id: Union[str, List] = None,
                     status: str = 'COMPLETE',
                     projection=None,
                     limit: int = None,
@@ -830,6 +786,7 @@ class MongoengineSocket:
 
         Parameters
         ----------
+        id : str or list
         program : str
         method : str
         basis : str
@@ -838,6 +795,8 @@ class MongoengineSocket:
         driver : str
         keywords : str
             The id of the option in the DB
+        task_id : List of str or str
+            Task id that ran the results
         status : bool, default is 'COMPLETE'
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
         projection : list/set/tuple of keys, default is None
@@ -862,7 +821,12 @@ class MongoengineSocket:
 
         meta = get_metadata_template()
 
+        # Ignore status if Id or task_id is present
+        if id is not None or task_id is not None:
+            status = None
+
         query, error = format_query(
+            id=id,
             program=program,
             method=method,
             basis=basis,
@@ -887,63 +851,6 @@ class MongoengineSocket:
 
         if return_json:
             data = [d.to_json_obj(with_ids) for d in data]
-
-        return {"data": data, "meta": meta}
-
-    def get_results_by_task_id(self,
-                               task_id: Union[List[str], str],
-                               projection=None,
-                               limit: int = None,
-                               skip: int = 0,
-                               return_json=True):
-        """
-
-        Parameters
-        ----------
-        task_id : List of str or str
-            Task id that ran the results
-        projection : list/set/tuple of keys, default is None
-            The fields to return, default to return all
-        limit : int, default is None
-            maximum number of results to return
-            if 'limit' is greater than the global setting self._max_limit,
-            the self._max_limit will be returned instead
-            (This is to avoid overloading the server)
-        skip : int, default is 0
-            skip the first 'skip' results. Used to paginate
-        return_json : bool, deafult is True
-            Return the results as a list of json instead of objects
-
-        Returns
-        -------
-        Dict with keys: data, meta
-            Data is the objects found
-        """
-
-        meta = get_metadata_template()
-        query, errors = format_query(task_id=task_id)
-
-        if isinstance(task_id, (list, tuple)):
-            query['task_id__in'] = task_id
-        else:
-            query['task_id'] = task_id
-
-        q_limit = self.get_limit(limit)
-
-        data = []
-        try:
-            if projection:
-                data = Result.objects(**query).only(*projection).limit(q_limit).skip(skip)
-            else:
-                data = Result.objects(**query).limit(q_limit)
-
-            meta["n_found"] = data.count()  # all data count, can be < len(data)
-            meta["success"] = True
-        except Exception as err:
-            meta['error_description'] = str(err)
-
-        if return_json:
-            data = [d.to_json_obj() for d in data]
 
         return {"data": data, "meta": meta}
 
@@ -1019,10 +926,11 @@ class MongoengineSocket:
         return ret
 
     def get_procedures(self,
+                       id: Union[str, List] = None,
                        procedure: str = None,
                        program: str = None,
                        hash_index: str = None,
-                       id: str = None,
+                       task_id: Union[str, List] = None,
                        status: str = 'COMPLETE',
                        projection=None,
                        limit: int = None,
@@ -1033,10 +941,11 @@ class MongoengineSocket:
 
         Parameters
         ----------
+        id : str or list
         procedure : str
         program : str
         hash_index : str
-        ids : str
+        task_id : str or list
         status : bool, default is 'COMPLETE'
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
         projection : list/set/tuple of keys, default is None
@@ -1060,7 +969,17 @@ class MongoengineSocket:
         """
 
         meta = get_metadata_template()
-        query, error = format_query(procedure=procedure, program=program, hash_index=hash_index, id=id, status=status)
+
+        if id is not None or task_id is not None:
+            status = None
+
+        query, error = format_query(
+            id=id,
+            procedure=procedure,
+            program=program,
+            hash_index=hash_index,
+            task_id=task_id,
+            status=status)
 
         q_limit = self.get_limit(limit)
 
@@ -1078,114 +997,6 @@ class MongoengineSocket:
 
         if return_json:
             data = [d.to_json_obj(with_ids) for d in data]
-
-        return {"data": data, "meta": meta}
-
-    def get_procedures_by_id(self,
-                             id: List[str] = None,
-                             hash_index: List[str] = None,
-                             projection=None,
-                             limit: int = None,
-                             skip: int = 0,
-                             return_json=True,
-                             with_ids=True):
-        """
-        Get list of Procedures using the given list of Ids
-
-        Parameters
-        ----------
-        id : List of str
-            Ids of the results in the DB
-        hash_index: List or str
-        projection : list/set/tuple of keys, default is None
-            The fields to return, default to return all
-        limit : int, default is None
-            maximum number of results to return
-            if 'limit' is greater than the global setting self._max_limit,
-            the self._max_limit will be returned instead
-            (This is to avoid overloading the server)
-        skip : int, default is 0
-            skip the first 'skip' resaults. Used to paginate
-        return_json : bool, default is True
-            Return the results as a list of json instead of objects
-        with_ids: bool, default is True
-            Include the ids in the returned objects/dicts
-
-        Returns
-        -------
-        Dict with keys: data, meta
-            Data is the objects found
-        """
-
-        meta = get_metadata_template()
-        query, error = format_query(id=id, hash_index=hash_index)
-        q_limit = self.get_limit(limit)
-        data = []
-        # try:
-        if projection:
-            data = Procedure.objects(**query).only(*projection).limit(q_limit).skip(skip)
-        else:
-            data = Procedure.objects(**query).limit(q_limit).skip(skip)
-
-        meta["n_found"] = data.count()  # all data count
-        meta["success"] = True
-        # except Exception as err:
-        #     meta['error_description'] = str(err)
-
-        if return_json:
-            data = [d.to_json_obj(with_ids) for d in data]
-
-        return {"data": data, "meta": meta}
-
-    def get_procedures_by_task_id(self,
-                                  task_id: Union[List[str], str],
-                                  projection=None,
-                                  limit: int = None,
-                                  skip: int = 0,
-                                  return_json=True):
-        """
-
-        Parameters
-        ----------
-        task_id : List of str or str
-            Task id that ran the procedure
-        projection : list/set/tuple of keys, default is None
-            The fields to return, default to return all
-        limit : int, default is None
-            maximum number of results to return
-            if 'limit' is greater than the global setting self._max_limit,
-            the self._max_limit will be returned instead
-            (This is to avoid overloading the server)
-        skip : int, default is 0
-            skip the first 'skip' resaults. Used to paginate
-        return_json : bool, deafult is True
-            Return the results as a list of json instead of objects
-
-        Returns
-        -------
-        Dict with keys: data, meta
-            Data is the objects found
-        """
-
-        meta = get_metadata_template()
-        query, error = format_query(task_id=task_id)
-
-        q_limit = self.get_limit(limit)
-
-        data = []
-        try:
-            if projection:
-                data = Procedure.objects(**query).only(*projection).limit(q_limit).skip(skip)
-            else:
-                data = Procedure.objects(**query).limit(q_limit).skip(skip)
-
-            meta["n_found"] = data.count()  # all data count
-            meta["success"] = True
-        except Exception as err:
-            meta['error_description'] = str(err)
-
-        if return_json:
-            data = [d.to_json_obj() for d in data]
 
         return {"data": data, "meta": meta}
 

@@ -217,9 +217,9 @@ class ResultHandler(APIHandler):
         body = ResultGETBody.parse_raw(self.request.body)
         proj = body.meta.projection
         if 'id' in body.data:
-            ret = storage.get_results_by_id(body.data['id'], projection=proj)
+            ret = storage.get_results(id=body.data['id'], projection=proj)
         elif 'task_id' in body.data:
-            ret = storage.get_results_by_task_id(body.data['task_id'], projection=proj)
+            ret = storage.get_results(task_id=body.data['task_id'], projection=proj)
         else:
             ret = storage.get_results(**body.data, projection=proj)
         result = ResultGETResponse(**ret)
@@ -239,14 +239,7 @@ class ProcedureHandler(APIHandler):
 
         body = ProcedureGETBody.parse_raw(self.request.body)
 
-        if "id" in body.data:
-            ret = storage.get_procedures_by_id(id=body.data["id"])
-        elif "hash_index" in body.data:
-            ret = storage.get_procedures_by_id(hash_index=body.data["hash_index"])
-        elif 'task_id' in body.data:
-            ret = storage.get_procedures_by_task_id(body.data["task_id"])
-        else:
-            ret = storage.get_procedures(**body.data)
+        ret = storage.get_procedures(**body.data)
 
         response = ProcedureGETReponse(**ret)
         self.logger.info("GET: Procedures - {} pulls.".format(len(response.data)))

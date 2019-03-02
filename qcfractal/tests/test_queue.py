@@ -26,7 +26,7 @@ def test_queue_error(fractal_compute_server):
 
     db = fractal_compute_server.objects["storage_socket"]
     queue_ret = db.get_queue(status="ERROR")["data"]
-    result = db.get_results_by_id(compute_ret.ids)['data'][0]
+    result = db.get_results(id=compute_ret.ids)['data'][0]
 
     assert len(queue_ret) == 1
     assert "connectivity graph" in queue_ret[0]["error"]["error_message"]
@@ -34,7 +34,7 @@ def test_queue_error(fractal_compute_server):
 
     # Force a complete mark and test
     fractal_compute_server.objects["storage_socket"].queue_mark_complete([queue_ret[0]["id"]])
-    result = db.get_results_by_id(compute_ret.ids)['data'][0]
+    result = db.get_results(id=compute_ret.ids)['data'][0]
     assert result['status'] == 'COMPLETE'
 
 
