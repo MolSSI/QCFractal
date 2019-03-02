@@ -147,7 +147,6 @@ class GridOptimizationRecord(RecordBase):
 
         return ret
 
-
 ## Utility
 
     def serialize_key(self, key):
@@ -182,6 +181,7 @@ class GridOptimizationRecord(RecordBase):
             ret.append(len(scan.steps))
 
         return tuple(ret)
+
 
 ## Query
 

@@ -118,6 +118,7 @@ class TorsionDriveRecord(RecordBase):
     def _deserialize_key(self, key):
         return tuple(json.loads(key))
 
+
 ## Query
 
     def get_history(self):

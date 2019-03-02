@@ -63,7 +63,7 @@ class QCSpecification(BaseModel):
         extra = "forbid"
         allow_mutation = False
 
-    def form_schema_object(self, keywords: Optional['KeywordSet']=None, checks=True) -> Dict[str, Any]:
+    def form_schema_object(self, keywords: Optional['KeywordSet'] = None, checks=True) -> Dict[str, Any]:
         if checks and self.keywords:
             assert keywords.id == self.keywords
 

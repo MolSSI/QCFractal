@@ -7,7 +7,7 @@ from typing import Union
 from qcelemental.models import Molecule
 
 from .procedures_util import parse_single_tasks
-from ..interface.models import OptimizationRecord, ResultRecord, QCSpecification
+from ..interface.models import OptimizationRecord, QCSpecification, ResultRecord
 
 
 class SingleResultTasks:

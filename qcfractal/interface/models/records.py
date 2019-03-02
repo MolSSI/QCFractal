@@ -6,13 +6,13 @@ import abc
 import datetime
 import json
 from enum import Enum
-from typing import Any, Dict, List, Set, Optional, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 import qcelemental as qcel
-from pydantic import BaseModel, validator, constr
+from pydantic import BaseModel, constr, validator
 
 from .common_models import DriverEnum, ObjectId, QCSpecification
-from .model_utils import hash_dictionary, prepare_basis, json_encoders, recursive_normalizer
+from .model_utils import hash_dictionary, json_encoders, prepare_basis, recursive_normalizer
 
 __all__ = ["OptimizationRecord", "ResultRecord", "ProcedureRecord", "OptimizationRecord"]
 
@@ -94,6 +94,7 @@ class RecordBase(BaseModel, abc.ABC):
     def json_dict(self, *args, **kwargs):
         return json.loads(self.json(*args, **kwargs))
 
+
 class ResultProperties(BaseModel):
     """
     Copy of QCElemental.ResultProperties wil updates trickle through. Remove ASAP.
@@ -154,7 +155,7 @@ class ResultRecord(RecordBase):
 
     # Output data
     return_result: Union[float, List[float], Dict[str, Any]] = None
-    properties: ResultProperties = None # deprecate for qcel.models.ResultProperties
+    properties: ResultProperties = None  # deprecate for qcel.models.ResultProperties
     error: qcel.models.ComputeError = None
 
     class Config(RecordBase.Config):
@@ -168,12 +169,11 @@ class ResultRecord(RecordBase):
     def check_basis(cls, v):
         return prepare_basis(v)
 
+
 ## QCSchema constructors
 
-    def build_schema_input(self,
-                           molecule: 'Molecule',
-                           keywords: Optional['KeywordsSet']=None,
-                           checks: bool=True) -> 'ResultInput':
+    def build_schema_input(self, molecule: 'Molecule', keywords: Optional['KeywordsSet'] = None,
+                           checks: bool = True) -> 'ResultInput':
         """
         Creates a OptimizationInput schema.
         """
@@ -193,15 +193,10 @@ class ResultRecord(RecordBase):
             keywords = keywords.values
 
         model = qcel.models.ResultInput(
-            id=self.id,
-            driver=self.driver.name,
-            model=model,
-            molecule=molecule,
-            keywords=keywords,
-            extras=self.extras)
+            id=self.id, driver=self.driver.name, model=model, molecule=molecule, keywords=keywords, extras=self.extras)
         return model
 
-    def consume_output(self, data:Dict[str, Any], checks: bool=True):
+    def consume_output(self, data: Dict[str, Any], checks: bool = True):
         assert self.method == data["model"]["method"]
 
         self.extras = data["extras"]
@@ -249,8 +244,8 @@ class OptimizationRecord(RecordBase):
 
     def build_schema_input(self,
                            initial_molecule: 'Molecule',
-                           qc_keywords: Optional['KeywordsSet']=None,
-                           checks: bool=True) -> 'OptimizationInput':
+                           qc_keywords: Optional['KeywordsSet'] = None,
+                           checks: bool = True) -> 'OptimizationInput':
         """
         Creates a OptimizationInput schema.
         """
@@ -271,6 +266,7 @@ class OptimizationRecord(RecordBase):
             hash_index=self.hash_index,
             input_specification=qcinput_spec)
         return model
+
 
 ## Standard function
 

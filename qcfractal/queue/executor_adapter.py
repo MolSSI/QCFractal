@@ -70,7 +70,7 @@ class DaskAdapter(ExecutorAdapter):
 
     def await_results(self) -> bool:
         from dask.distributed import wait
-        wait(self.queue.values())
+        wait(list(self.queue.values()))
         return True
 
     def close(self) -> bool:
