@@ -25,7 +25,7 @@ import mongoengine.errors
 from bson.objectid import ObjectId
 from mongoengine.connection import disconnect, get_db
 
-from .me_models import CollectionORM, KeywordsORM, MoleculeORM, ProcedureORM, QueueManagerORM, ResultORM, \
+from .me_models import CollectionORM, KeywordsORM, KVStoreORM, MoleculeORM, ProcedureORM, QueueManagerORM, ResultORM, \
     ServiceQueueORM, TaskQueueORM, UserORM
 from .storage_utils import add_metadata_template, get_metadata_template
 from ..interface.models import Molecule, ResultRecord, KeywordSet, prepare_basis
@@ -195,6 +195,70 @@ class MongoengineSocket:
 
         return limit if limit and limit < self._max_limit else self._max_limit
 
+### KV Functions
+
+    def add_kvstore(self, blobs_list: List[Any]):
+        """
+        Adds to the key/value store table.
+
+        Parameters
+        ----------
+        blobs_list : List[Any]
+            A list of data blobs to add.
+
+        Returns
+        -------
+        TYPE
+
+            Description
+        """
+
+        meta = add_metadata_template()
+        blob_ids = []
+        for blob in blobs_list:
+            if blob is None:
+                blob_ids.append(None)
+                continue
+
+            doc = KVStoreORM(value=blob)
+            doc.save()
+            blob_ids.append(str(doc.id))
+            meta['n_inserted'] += 1
+
+        meta["success"] = True
+
+        return {"data": blob_ids, "meta": meta}
+
+    def get_kvstore(self, id: List[str]):
+        """
+        Pulls from the key/value store table.
+
+        Parameters
+        ----------
+        id : List[str]
+            A list of ids to query
+
+        Returns
+        -------
+        TYPE
+            Description
+        """
+
+        meta = get_metadata_template()
+
+        query, errors = format_query(id=id)
+
+        data = KVStoreORM.objects(**query)
+
+        ret["meta"]["success"] = True
+        ret["meta"]["n_found"] = data.count()  # all data count, can be > len(data)
+        ret["meta"]["errors"].extend(errors)
+
+        data = [d.to_json_obj() for d in data]
+        return {"data": data, "meta": meta}
+
+### Molecule functions
+
     def get_add_molecules_mixed(self, data: List[Union[str, Molecule]]) -> List[Molecule]:
         """
         Get or add the given molecules (if they don't exit).
@@ -251,8 +315,6 @@ class MongoengineSocket:
                 ret.append(None)
 
         return {"meta": meta, "data": ret}
-
-### Mongo molecule functions
 
     def add_molecules(self, molecules: List[Molecule]):
         """
@@ -330,7 +392,7 @@ class MongoengineSocket:
 
         return ret
 
-    def del_molecules(self, id:List[str]=None, molecule_hash:List[str]=None):
+    def del_molecules(self, id: List[str]=None, molecule_hash: List[str]=None):
         """
         Removes a molecule from the database from its hash.
 
@@ -492,7 +554,7 @@ class MongoengineSocket:
 
         return {"meta": meta, "data": ret}
 
-    def del_keywords(self, id:str) -> int:
+    def del_keywords(self, id: str) -> int:
         """
         Removes a option set from the database based on its keys.
 
@@ -520,7 +582,7 @@ class MongoengineSocket:
     ### Mongo database functions
 
     # def add_collection(self, data, overwrite=False):
-    def add_collection(self, collection: str, name: str, data:Dict[str, Any], overwrite: bool=False):
+    def add_collection(self, collection: str, name: str, data: Dict[str, Any], overwrite: bool=False):
         """Add (or update) a collection to the database.
 
         Parameters
@@ -950,7 +1012,8 @@ class MongoengineSocket:
 
             # Must have ID
             if procedure.id is None:
-                self.logger.error("No procedure id found on update (hash_index={}), skipping.".format(procedure.hash_index))
+                self.logger.error(
+                    "No procedure id found on update (hash_index={}), skipping.".format(procedure.hash_index))
                 continue
 
             ProcedureORM(**procedure.json_dict()).save()

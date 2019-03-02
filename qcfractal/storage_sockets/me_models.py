@@ -43,6 +43,12 @@ class CustomDynamicDocument(db.DynamicDocument):
         'abstract': True,
     }
 
+class KVStoreORM(CustomDynamicDocument):
+
+    value = db.DynamicField(required=True)
+    meta = {
+        'collection': 'kv_store',
+    }
 
 class CollectionORM(CustomDynamicDocument):
     """
