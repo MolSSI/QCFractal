@@ -4,7 +4,7 @@ Utility functions for on-node procedures.
 
 import json
 
-from qcelemental.models import ResultInput
+from qcelemental.models import Molecule, ResultInput
 
 
 def unpack_single_task_spec(storage, meta, molecules):
@@ -110,7 +110,7 @@ def parse_single_tasks(storage, results):
         del v["model"]
 
         # Molecule should be by ID
-        v["molecule"] = storage.add_molecules([v["molecule"]])["data"][0]
+        v["molecule"] = storage.add_molecules([Molecule(**v["molecule"])])["data"][0]
 
         v["keywords"] = v["extras"]["_qcfractal_tags"]["keywords"]
         v["program"] = v["extras"]["_qcfractal_tags"]["program"]

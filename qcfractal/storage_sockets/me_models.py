@@ -46,7 +46,7 @@ class CustomDynamicDocument(db.DynamicDocument):
     }
 
 
-class Collection(CustomDynamicDocument):
+class CollectionORM(CustomDynamicDocument):
     """
         A collection of precomuted workflows such as datasets, ..
 
@@ -69,7 +69,7 @@ class Collection(CustomDynamicDocument):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class Molecule(CustomDynamicDocument):
+class MoleculeORM(CustomDynamicDocument):
     """
         The molecule DB collection is managed by pymongo, so far
     """
@@ -88,7 +88,7 @@ class Molecule(CustomDynamicDocument):
         """Override save to add molecule_hash"""
         # self.molecule_hash = self.create_hash()
 
-        return super(Molecule, self).save(*args, **kwargs)
+        return super(MoleculeORM, self).save(*args, **kwargs)
 
     def __str__(self):
         return str(self.id)
@@ -112,9 +112,9 @@ class Molecule(CustomDynamicDocument):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class Keywords(CustomDynamicDocument):
+class KeywordsORM(CustomDynamicDocument):
     """
-        Keywords are unique for a specific program and name
+        KeywordsORM are unique for a specific program and name
     """
 
     # TODO: pull choices from const config
@@ -130,9 +130,9 @@ class Keywords(CustomDynamicDocument):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class BaseResult(CustomDynamicDocument):
+class BaseResultORM(CustomDynamicDocument):
     """
-        Abstract Base class for Results and Procedures
+        Abstract Base class for ResultORMs and ProcedureORMs
     """
 
     # queue related
@@ -158,13 +158,13 @@ class BaseResult(CustomDynamicDocument):
         if not self.created_on:
             self.created_on = datetime.datetime.utcnow()
 
-        return super(BaseResult, self).save(*args, **kwargs)
+        return super(BaseResultORM, self).save(*args, **kwargs)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class Result(BaseResult):
+class ResultORM(BaseResultORM):
     """
         Hold the result of an atomic single calculation
     """
@@ -174,11 +174,11 @@ class Result(BaseResult):
     driver = db.StringField(required=True)  # example "gradient"
     method = db.StringField(required=True)  # example "uff"
     basis = db.StringField()
-    molecule = db.LazyReferenceField(Molecule, required=True)
+    molecule = db.LazyReferenceField(MoleculeORM, required=True)
 
-    # This is a special case where Keywords are denormalized intentionally as they are part of the
+    # This is a special case where KeywordsORM are denormalized intentionally as they are part of the
     # lookup for a single result and querying a result will not often request the keywords (LazyReference)
-    keywords = db.LazyReferenceField(Keywords)
+    keywords = db.LazyReferenceField(KeywordsORM)
 
     # output related
     properties = db.DynamicField()  # accept any, no validation
@@ -205,13 +205,13 @@ class Result(BaseResult):
         if self.basis:
             self.basis = prepare_basis(self.basis)
 
-        return super(Result, self).save(*args, **kwargs)
+        return super(ResultORM, self).save(*args, **kwargs)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class Procedure(BaseResult):
+class ProcedureORM(BaseResultORM):
     """
         A procedure is a group of related results applied to a list of molecules
     """
@@ -220,7 +220,7 @@ class Procedure(BaseResult):
     program = db.StringField(required=True)  # example: 'Geometric'
     hash_index = db.StringField(required=True)
 
-    # Unlike Results Keywords are not denormalized here as a Procedure query will always want the
+    # Unlike ResultORMs KeywordsORM are not denormalized here as a ProcedureORM query will always want the
     # keywords and the keywords are not part of the index.
     keywords = db.DynamicField()
 
@@ -247,24 +247,24 @@ class Procedure(BaseResult):
         self.program = self.program.lower()
         self.procedure = self.procedure.lower()
 
-        return super(Procedure, self).save(*args, **kwargs)
+        return super(ProcedureORM, self).save(*args, **kwargs)
 
 
-# ================== Types of Procedures ================== #
+# ================== Types of ProcedureORMs ================== #
 
 
-class OptimizationProcedure(Procedure):
+class OptimizationProcedureORM(ProcedureORM):
     """
         An Optimization  procedure
     """
 
     procedure = db.StringField(default='optimization', required=True)
 
-    initial_molecule = db.LazyReferenceField(Molecule)
-    final_molecule = db.LazyReferenceField(Molecule)
+    initial_molecule = db.LazyReferenceField(MoleculeORM)
+    final_molecule = db.LazyReferenceField(MoleculeORM)
 
 
-class TorsiondriveProcedure(Procedure):
+class TorsiondriveProcedureORM(ProcedureORM):
     """
         An torsion drive  procedure
     """
@@ -291,7 +291,7 @@ class Spec(db.DynamicEmbeddedDocument):
     kwargs = db.DynamicField()
 
 
-class TaskQueue(CustomDynamicDocument):
+class TaskQueueORM(CustomDynamicDocument):
     """A queue of tasks corresponding to a procedure
 
        Notes: don't sort query results without having the index sorted
@@ -311,7 +311,7 @@ class TaskQueue(CustomDynamicDocument):
     created_on = db.DateTimeField(required=True)
     modified_on = db.DateTimeField(required=True)
 
-    # can reference Results or any Procedure
+    # can reference ResultORMs or any ProcedureORM
     base_result = db.GenericLazyReferenceField(dbref=True)  # use res.id and res.document_type (class)
 
     meta = {
@@ -332,18 +332,18 @@ class TaskQueue(CustomDynamicDocument):
         if not self.created_on:
             self.created_on = datetime.datetime.utcnow()
 
-        return super(TaskQueue, self).save(*args, **kwargs)
+        return super(TaskQueueORM, self).save(*args, **kwargs)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class ServiceQueue(CustomDynamicDocument):
+class ServiceQueueORM(CustomDynamicDocument):
 
     status = db.StringField(default='WAITING', choices=['RUNNING', 'WAITING', 'ERROR', 'COMPLETE'])
     tag = db.StringField(default=None)
     hash_index = db.StringField(required=True)
-    procedure_id = db.LazyReferenceField(Procedure)
+    procedure_id = db.LazyReferenceField(ProcedureORM)
 
     # created_on = db.DateTimeField(required=True)
     # modified_on = db.DateTimeField(required=True)
@@ -365,13 +365,13 @@ class ServiceQueue(CustomDynamicDocument):
         # if not self.created_on:
         #     self.created_on = datetime.datetime.utcnow()
 
-        return super(ServiceQueue, self).save(*args, **kwargs)
+        return super(ServiceQueueORM, self).save(*args, **kwargs)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class User(CustomDynamicDocument):
+class UserORM(CustomDynamicDocument):
 
     username = db.StringField(required=True, unique=True)
     password = db.BinaryField(required=True)
@@ -380,7 +380,7 @@ class User(CustomDynamicDocument):
     meta = {'indexes': ['username']}
 
 
-class QueueManager(CustomDynamicDocument):
+class QueueManagerORM(CustomDynamicDocument):
     """
     """
 
@@ -409,4 +409,4 @@ class QueueManager(CustomDynamicDocument):
         if not self.created_on:
             self.created_on = datetime.datetime.utcnow()
 
-        return super(QueueManager, self).save(*args, **kwargs)
+        return super(QueueManagerORM, self).save(*args, **kwargs)

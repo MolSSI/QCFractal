@@ -89,8 +89,7 @@ def test_molecules_get(storage_socket):
     water_id = ret["data"][0]
 
     # Pull molecule from the DB for tests
-    db_json = storage_socket.get_molecules(id=water_id)["data"][0]
-    water2 = portal.Molecule(**db_json)
+    water2 = storage_socket.get_molecules(id=water_id)["data"][0]
     water2.compare(water)
 
     # Cleanup adds
@@ -103,12 +102,12 @@ def test_molecules_mixed_add_get(storage_socket):
 
     ret = storage_socket.get_add_molecules_mixed([bad_id1, water, bad_id2, "bad_id"])
     assert ret["data"][0] is None
-    assert ret["data"][1]["identifiers"]["molecule_hash"] == water.get_hash()
+    assert ret["data"][1].identifiers.molecule_hash == water.get_hash()
     assert ret["data"][2] is None
     assert set(ret["meta"]["missing"]) == {0, 2, 3}
 
     # Cleanup adds
-    ret = storage_socket.del_molecules(id=ret["data"][1]["id"])
+    ret = storage_socket.del_molecules(id=ret["data"][1].id)
     assert ret == 1
 
 
@@ -118,7 +117,6 @@ def test_molecules_bad_get(storage_socket):
 
     # Add once
     ret = storage_socket.add_molecules([water])
-    assert ret["meta"]["n_inserted"] == 1
     water_id = ret["data"][0]
 
     # Pull molecule from the DB for tests
@@ -787,7 +785,7 @@ def test_mol_pagination(storage_socket):
     total = len(mol_names)
     molecules = []
     for mol_name in mol_names:
-        mol = portal.data.get_molecule(mol_name).json_dict()
+        mol = portal.data.get_molecule(mol_name)
         molecules.append(mol)
 
     inserted = storage_socket.add_molecules(molecules)

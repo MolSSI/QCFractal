@@ -72,13 +72,11 @@ class ServiceQueueHandler(APIHandler):
         for service_input in ServiceQueuePOSTBody.parse_raw(self.request.body).data:
             # Get molecules with ids
             if isinstance(service_input.initial_molecule, list):
-                mol_query = storage.get_add_molecules_mixed(service_input.initial_molecule)
-                molecules = [Molecule(**mol) for mol in mol_query["data"]]
+                molecules = storage.get_add_molecules_mixed(service_input.initial_molecule)["data"]
                 if len(molecules) != len(service_input.initial_molecule):
                     raise KeyError("We should catch this error.")
             else:
-                mol_query = storage.get_add_molecules_mixed([service_input.initial_molecule])
-                molecules = Molecule(**mol_query["data"][0])
+                molecules = storage.get_add_molecules_mixed([service_input.initial_molecule])["data"][0]
 
             # Update the input and build a service object
             service_input = service_input.copy(update={"initial_molecule": molecules})

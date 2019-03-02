@@ -55,13 +55,10 @@ class TorsionDriveService(BaseService):
     def initialize_from_api(cls, storage_socket, logger, service_input):
         _check_td()
 
-        # Build the results object
-        input_dict = service_input.dict()
-        input_dict["initial_molecule"] = [x["id"] for x in input_dict["initial_molecule"]]
-
-        # Validate input
+        # Build the record
         output = TorsionDriveRecord(
-            **input_dict,
+            **service_input.dict(exclude={"initial_molecule"}),
+            initial_molecule=[x.id for x in service_input.initial_molecule],
             provenance={
                 "creator": "torsiondrive",
                 "version": torsiondrive.__version__,
@@ -139,7 +136,7 @@ class TorsionDriveService(BaseService):
                 mol_keys = self.storage_socket.get_molecules(id=[ret["initial_molecule"],
                                                                  ret["final_molecule"]])["data"]
 
-                task_results[key].append((mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1]))
+                task_results[key].append((mol_keys[0].geometry, mol_keys[1].geometry, ret["energies"][-1]))
 
                 # Update history
                 self.optimization_history[key].append(ret["id"])
