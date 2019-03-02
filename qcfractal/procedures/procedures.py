@@ -298,6 +298,8 @@ class OptimizationTasks(SingleResultTasks):
             # Add trajectory results and return ids
             ret = self.storage.add_results(list(results.values()))
             procedure["trajectory"] = ret["data"]
+            # print(procedure["error"])
+            procedure.pop("schema_name", None)
 
             # Coerce tags
             # procedure.update(procedure["extras"]["_qcfractal_tags"])

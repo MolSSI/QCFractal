@@ -233,7 +233,6 @@ class GridOptimizationService(BaseService):
 
         output = self.output.copy(
             update={
-                "success": True,
                 "status": "COMPLETE",
                 "starting_molecule": self.starting_molecule.id,
                 "starting_grid": self.starting_grid,

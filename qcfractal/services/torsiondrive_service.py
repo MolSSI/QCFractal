@@ -136,8 +136,8 @@ class TorsionDriveService(BaseService):
                 ret = complete_tasks[task_id]
 
                 # Lookup molecules
-                mol_keys = self.storage_socket.get_molecules(
-                    id=[ret["initial_molecule"], ret["final_molecule"]])["data"]
+                mol_keys = self.storage_socket.get_molecules(id=[ret["initial_molecule"],
+                                                                 ret["final_molecule"]])["data"]
 
                 task_results[key].append((mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1]))
 
@@ -194,21 +194,21 @@ class TorsionDriveService(BaseService):
         Finishes adding data to the TorsionDrive object
         """
 
-        self.output.Config.allow_mutation = True
-        self.output.success = True
-        self.output.status = "COMPLETE"
-
         # # Get lowest energies and positions
+        min_positions = {}
+        final_energy = {}
         for k, v in self.torsiondrive_state["grid_status"].items():
-            min_pos = int(np.argmin([x[2] for x in v]))
+            idx = int(np.argmin([x[2] for x in v]))
             key = json.dumps(td_api.grid_id_from_string(k))
-            self.output.minimum_positions[key] = min_pos
-            self.output.final_energy_dict[key] = v[min_pos][2]
+            min_positions[key] = idx
+            final_energy[key] = v[idx][2]
 
-        self.output.optimization_history = {
-            json.dumps(td_api.grid_id_from_string(k)): v
-            for k, v in self.optimization_history.items()
-        }
+        history = {json.dumps(td_api.grid_id_from_string(k)): v for k, v in self.optimization_history.items()}
 
-        self.output.Config.allow_mutation = False
-        return self.output
+        ret = self.output.copy(update={
+            "status": "COMPLETE",
+            "minimum_positions": min_positions,
+            "final_energy_dict": final_energy,
+            "optimization_history": history
+        })
+        return ret

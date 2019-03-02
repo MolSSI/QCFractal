@@ -45,26 +45,27 @@ class RecordBase(BaseModel, abc.ABC):
 
     # Extra fields
     extras: Dict[str, Any] = {}
-    stdout: Optional[ObjectId] = None
-    stderr: Optional[ObjectId] = None
+    stdout: Optional[str] = None
+    stderr: Optional[str] = None
 
     # Compute status
     task_id: ObjectId = None
     status: RecordStatusEnum = "INCOMPLETE"
     modified_on: datetime.datetime = datetime.datetime.utcnow()
     created_on: datetime.datetime = datetime.datetime.utcnow()
+    error: Optional[Any] = None
 
     # Carry-ons
     provenance: Optional[qcel.models.Provenance] = None
-
-    @validator('program')
-    def check_program(cls, v):
-        return v.lower()
 
     class Config:
         json_encoders = json_encoders
         extra = "forbid"
         build_hash_index = True
+
+    @validator('program')
+    def check_program(cls, v):
+        return v.lower()
 
     def __init__(self, **data):
         # Make sure several fields are available and written to prevent sparse dic
@@ -154,10 +155,6 @@ class OptimizationRecord(RecordBase):
 
     class Config(RecordBase.Config):
         pass
-
-    # @validator('program')
-    # def check_program(cls, v):
-    #     return v.lower()
 
     @validator('keywords')
     def check_keywords(cls, v):

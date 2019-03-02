@@ -108,8 +108,6 @@ class GridOptimizationRecord(RecordBase):
     version: int = 1
     procedure: _gridopt_constr = "gridoptimization"
     program: _qcfractal_constr = "qcfractal"
-    schema_version: int = 1
-    success: bool = False
 
     # Input data
     initial_molecule: ObjectId
@@ -144,19 +142,11 @@ class GridOptimizationRecord(RecordBase):
 
         ret = "GridOptimizationRecord("
         ret += "id='{}', ".format(self.id)
-        ret += "success='{}', ".format(self.success)
+        ret += "success='{}', ".format(self.status)
         ret += "initial_molecule='{}')".format(self.initial_molecule)
 
         return ret
 
-## Utility
-
-    def dict(self, *args, **kwargs):
-        kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"client", "cache"}
-        return super().dict(*args, **kwargs)
-
-    def json_dict(self, *args, **kwargs):
-        return json.loads(self.json(*args, **kwargs))
 
 ## Utility
 
