@@ -20,3 +20,11 @@ def get_information(key):
         raise KeyError("Information key '{}' not understood.".format(key))
 
     return __info[key]
+
+
+def provenance_stamp(routine):
+    """Return dictionary satisfying QCSchema,
+   generating routine's name is passed in through `routine`.
+
+   """
+    return {'creator': 'QCFractal', 'version': get_information('version'), 'routine': routine}

@@ -49,7 +49,7 @@ NODE_EXCLUSIVITY = True
 # -- Note ---
 # Different Managers interpret this slightly differently, but that should not be your concern, just treat
 # each item as though it were a CLI entry and the manager block will interpret
-# ------------ 
+# ------------
 SCHEDULER_OPTS = []
 
 # Additional commands to start each task with. E.g. Activating a conda environment
@@ -91,7 +91,7 @@ if TEST_RUN:
     fractal_client = None
 else:
     fractal_client = portal.FractalClient(FRACTAL_ADDRESS, verify=False)
-    
+
 
 
 # Build a manager
@@ -179,15 +179,15 @@ def dask_templates():
 
     code_skeletal = dedent("""\
         {BUILDER}
-    
+
         # Setup up adaption
         # Workers are distributed down to the cores through the sub-divided processes
         # Optimization may be needed
         cluster.adapt(minimum=0, maximum=MAX_NODES)
-    
+
         # Integrate cluster with client
         dask_client = Client(cluster)
-    
+
         """)
 
     # SLURM
@@ -207,16 +207,17 @@ def dask_templates():
             queue=SLURM_PARTITION,
             processes=MAX_TASKS_PER_NODE,  # This subdivides the cores by the number of processes we expect to run
             walltime="00:10:00",
-    
+
             # Additional queue submission flags to set
             job_extra=SCHEDULER_OPTS,
             # Not sure of the validity of this, but it seems to be the only terminal-invoking way
             # so python envs may be setup from there
             # Commands to execute before the Dask
             env_extra=TASK_STARTUP_COMMANDS,
-            # Uncomment and set this if your cluster uses non-standard ethernet port names 
+            # Uncomment and set this if your cluster uses non-standard ethernet port names
             # for communication between the head node and your compute nodes
             # interface="eth0"
+            extra=['--resources process=1'],
         )
         """)
 
@@ -233,16 +234,17 @@ def dask_templates():
             project=TORQUE_ACCOUNT,
             processes=MAX_TASKS_PER_NODE,  # This subdivides the cores by the number of processes we expect to run
             walltime="00:10:00",
-    
+
             # Additional queue submission flags to set
             job_extra=SCHEDULER_OPTS,
             # Not sure of the validity of this, but it seems to be the only terminal-invoking way
             # so python envs may be setup from there
             # Commands to execute before the Dask
             env_extra=TASK_STARTUP_COMMANDS,
-            # Uncomment and set this if your cluster uses non-standard ethernet port names 
+            # Uncomment and set this if your cluster uses non-standard ethernet port names
             # for communication between the head node and your compute nodes
             # interface="eth0"
+            extra=['--resources process=1'],
         )
         """)
 
@@ -259,16 +261,17 @@ def dask_templates():
             project=LSF_PROJECT,
             processes=MAX_TASKS_PER_NODE,  # This subdivides the cores by the number of processes we expect to run
             walltime="00:10:00",
-    
+
             # Additional queue submission flags to set
             job_extra=SCHEDULER_OPTS,
             # Not sure of the validity of this, but it seems to be the only terminal-invoking way
             # so python envs may be setup from there
             # Commands to execute before the Dask
             env_extra=TASK_STARTUP_COMMANDS,
-            # Uncomment and set this if your cluster uses non-standard ethernet port names 
+            # Uncomment and set this if your cluster uses non-standard ethernet port names
             # for communication between the head node and your compute nodes
             # interface="eth0"
+            extra=['--resources process=1'],
         )
         """)
 
@@ -329,7 +332,7 @@ def parsl_templates():
                     cores_per_worker=CORES_PER_NODE // MAX_TASKS_PER_NODE,
                     max_workers = MAX_NODES*MAX_TASKS_PER_NODE
                 )
-    
+
             ],
         )"""
                            )

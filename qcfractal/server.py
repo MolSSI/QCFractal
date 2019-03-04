@@ -18,8 +18,8 @@ from .interface import FractalClient
 from .queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, TaskQueueHandler
 from .services import construct_service
 from .storage_sockets import storage_socket_factory
-from .web_handlers import (CollectionHandler, InformationHandler, MoleculeHandler, OptionHandler, ProcedureHandler,
-                           ResultHandler)
+from .web_handlers import (CollectionHandler, InformationHandler, KVStoreHandler, MoleculeHandler, OptionHandler,
+                           ProcedureHandler, ResultHandler)
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -187,6 +187,7 @@ class FractalServer:
 
             # Generic web handlers
             (r"/information", InformationHandler, self.objects),
+            (r"/kvstore", KVStoreHandler, self.objects),
             (r"/molecule", MoleculeHandler, self.objects),
             (r"/keyword", OptionHandler, self.objects),
             (r"/collection", CollectionHandler, self.objects),
@@ -367,32 +368,31 @@ class FractalServer:
 
         # Loop over the services and iterate
         running_services = 0
-        completed_procedures = []
+        completed_services = []
         for data in current_services:
 
             # Attempt to iteration and get message
             try:
-                obj = construct_service(self.storage, data)
-                finished = obj.iterate()
-                data = obj.json_dict()
+                service = construct_service(self.storage, self.logger, data)
+                finished = service.iterate()
             except Exception as e:
-                print(traceback.format_exc())
-                data["status"] = "ERROR"
-                data["error_message"] = "FractalServer Service Build and Iterate Error:\n" + traceback.format_exc()
+                error_message = "FractalServer Service Build and Iterate Error:\n{}".format(traceback.format_exc())
+                self.logger.error(error_message)
+                service.status = "ERROR"
+                service.error = {"error_type": "iteration_error", "error_message": error_message}
                 finished = False
 
-            self.storage.update_services(data["id"], data)
+            self.storage.update_services([service])
 
             if finished is not False:
 
                 # Add results to procedures, remove complete_ids
-                completed_procedures.append((data["id"], finished.json_dict()))
+                completed_services.append(service)
             else:
                 running_services += 1
 
         # Add new procedures and services
-        # self.storage.add_procedures(new_procedures)
-        self.storage.services_completed(completed_procedures)
+        self.storage.services_completed(completed_services)
 
         return running_services
 
@@ -417,7 +417,6 @@ class FractalServer:
         """
 
         return self.storage.get_managers(status=status, name=name)["data"]
-
 
 ### Functions only available if using a local queue_adapter
 

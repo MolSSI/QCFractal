@@ -334,7 +334,7 @@ def build_adapter_clients(mtype, storage_name="qcf_compute_server_test"):
 
     elif mtype == "dask":
         dd = pytest.importorskip("dask.distributed")
-        adapter_client = dd.Client(n_workers=2, threads_per_worker=1)
+        adapter_client = dd.Client(n_workers=2, threads_per_worker=1, resources={"process": 1})
 
         # Not super happy about this line, but shuts up dangling reference errors
         adapter_client._should_close_loop = False

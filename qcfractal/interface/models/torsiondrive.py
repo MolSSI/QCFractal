@@ -4,86 +4,85 @@ A model for TorsionDrive
 
 import copy
 import json
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, constr, validator
 
-from .common_models import Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification
-from .model_utils import hash_dictionary, json_encoders, recursive_normalizer
+from .common_models import Molecule, ObjectId, OptimizationSpecification, QCSpecification
+from .model_utils import json_encoders, recursive_normalizer
+from .records import RecordBase
 
-__all__ = ["TorsionDriveInput", "TorsionDrive"]
+__all__ = ["TorsionDriveInput", "TorsionDriveRecord"]
+
+
+class TDKeywords(BaseModel):
+    """
+    TorsionDriveRecord options
+    """
+    dihedrals: List[Tuple[int, int, int, int]]
+    grid_spacing: List[int]
+
+    def __init__(self, **kwargs):
+        super().__init__(**recursive_normalizer(kwargs))
+
+    class Config:
+        extra = "allow"
+        allow_mutation = False
+
+
+_td_constr = constr(strip_whitespace=True, regex="torsiondrive")
+_qcfractal_constr = constr(strip_whitespace=True, regex="qcfractal")
 
 
 class TorsionDriveInput(BaseModel):
     """
-    A TorsionDrive Input base class
+    A TorsionDriveRecord Input base class
     """
 
-    class TDKeywords(BaseModel):
-        """
-        TorsionDrive options
-        """
-        dihedrals: List[Tuple[int, int, int, int]]
-        grid_spacing: List[int]
-
-        class Config:
-            extra = "allow"
-            allow_mutation = False
-
-    program: str = "torsiondrive"
-    procedure: str = "torsiondrive"
-    initial_molecule: List[Union[str, Molecule]]
+    program: _td_constr = "torsiondrive"
+    procedure: _td_constr = "torsiondrive"
+    initial_molecule: List[Union[ObjectId, Molecule]]
     keywords: TDKeywords
     optimization_spec: OptimizationSpecification
     qc_spec: QCSpecification
 
-    def __init__(self, **data):
-        mol = data["initial_molecule"]
-        if isinstance(mol, (str, dict, Molecule)):
-            data["initial_molecule"] = [mol]
-
-        data["keywords"] = recursive_normalizer(data["keywords"])
-
-        BaseModel.__init__(self, **data)
+    @validator('initial_molecule', pre=True, whole=True)
+    def check_initial_molecules(cls, v):
+        if isinstance(v, (str, dict, Molecule)):
+            v = [v]
+        return v
 
     class Config:
         allow_mutation = False
         json_encoders = json_encoders
 
 
-class TorsionDrive(TorsionDriveInput):
+class TorsionDriveRecord(RecordBase):
     """
-    A interface to the raw JSON data of a TorsionDrive torsion scan run.
+    A interface to the raw JSON data of a TorsionDriveRecord torsion scan run.
     """
 
-    # Client and local data
-    client: Any = None
-    cache: Dict[str, Any] = {}
+    # Classdata
+    _hash_indices = {"initial_molecule", "keywords", "optimization_spec", "qc_spec"}
 
-    # Identification
-    id: Optional[ObjectId] = None
-    success: bool = False
-    status: str = "INCOMPLETE"
-    hash_index: str = None
+    # Version data
+    version: int = 1
+    procedure: _td_constr = "torsiondrive"
+    program: _td_constr = "torsiondrive"
 
-    provenance: Provenance
-
-    # Data pointers
+    # Input data
     initial_molecule: List[ObjectId]
+    keywords: TDKeywords
+    optimization_spec: OptimizationSpecification
+    qc_spec: QCSpecification
+
+    # Output data
     final_energy_dict: Dict[str, float]
     optimization_history: Dict[str, List[ObjectId]]
     minimum_positions: Dict[str, int]
 
-    class Config:
-        allow_mutation = False
-        json_encoders = json_encoders
-
-    def __init__(self, **data):
-        super().__init__(**data)
-
-        # Set hash index if not present
-        if self.hash_index is None:
-            self.__values__["hash_index"] = self.get_hash_index()
+    class Config(RecordBase.Config):
+        pass
 
     def __str__(self):
         """
@@ -92,18 +91,18 @@ class TorsionDrive(TorsionDriveInput):
         Returns
         -------
         ret : str
-            A representation of the current TorsionDrive status.
+            A representation of the current TorsionDriveRecord status.
 
         Examples
         --------
 
         >>> repr(torsiondrive_obj)
-        TorsionDrive(id='5b7f1fd57b87872d2c5d0a6d', success=True, molecule_id='5b7f1fd57b87872d2c5d0a6c')
+        TorsionDriveRecord(id='5b7f1fd57b87872d2c5d0a6d', success=True, molecule_id='5b7f1fd57b87872d2c5d0a6c')
         """
 
-        ret = "TorsionDrive("
+        ret = "TorsionDriveRecord("
         ret += "id='{}', ".format(self.id)
-        ret += "success='{}', ".format(self.success)
+        ret += "status='{}', ".format(self.status)
         ret += "initial_molecule='{}')".format(self.initial_molecule)
 
         return ret
@@ -118,20 +117,6 @@ class TorsionDrive(TorsionDriveInput):
 
     def _deserialize_key(self, key):
         return tuple(json.loads(key))
-
-    def dict(self, *args, **kwargs):
-        kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"client", "cache"}
-        return super().dict(*args, **kwargs)
-
-    def json_dict(self, *args, **kwargs):
-        return json.loads(self.json(*args, **kwargs))
-
-    def get_hash_index(self):
-
-        data = self.dict(
-            include={"initial_molecule", "program", "procedure", "keywords", "optimization_spec", "qc_spec"})
-
-        return hash_dictionary(data)
 
 
 ## Query

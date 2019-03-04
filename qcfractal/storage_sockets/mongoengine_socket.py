@@ -16,7 +16,7 @@ except ImportError:
 
 import logging
 from datetime import datetime as dt
-from typing import Dict, List, Sequence, Union
+from typing import Any, Dict, List, Optional, Union
 
 import bcrypt
 import bson.errors
@@ -25,19 +25,13 @@ import mongoengine.errors
 from bson.objectid import ObjectId
 from mongoengine.connection import disconnect, get_db
 
-from .. import interface
-from ..interface.models import prepare_basis
-from .me_models import Collection, Keywords, Molecule, Procedure, QueueManager, Result, ServiceQueue, TaskQueue, User
+from .me_models import (CollectionORM, KeywordsORM, KVStoreORM, MoleculeORM, ProcedureORM, QueueManagerORM, ResultORM,
+                        ServiceQueueORM, TaskQueueORM, UserORM)
 from .storage_utils import add_metadata_template, get_metadata_template
+from ..interface.models import KeywordSet, Molecule, ResultRecord, prepare_basis
 
 
-def _str_to_indices(ids):
-    for num, x in enumerate(ids):
-        if isinstance(x, str):
-            ids[num] = ObjectId(x)
-
-
-def _str_to_indices_with_errors(ids):
+def _str_to_indices_with_errors(ids: List[Union[str, ObjectId]]):
     if isinstance(ids, (str, ObjectId)):
         ids = [ids]
 
@@ -62,7 +56,7 @@ _lower_func = lambda x: x.lower()
 _prepare_keys = {"program": _lower_func, "basis": prepare_basis, "method": _lower_func, "procedure": _lower_func}
 
 
-def format_query(**query):
+def format_query(**query: Dict[str, Union[str, List[str]]]) -> Dict[str, Union[str, List[str]]]:
     """
     Formats a query into a MongoEngine description.
     """
@@ -108,13 +102,13 @@ class MongoengineSocket:
     """
 
     def __init__(self,
-                 uri,
-                 project="molssidb",
-                 bypass_security=False,
-                 authMechanism="SCRAM-SHA-1",
-                 authSource=None,
-                 logger=None,
-                 max_limit=1000):
+                 uri: str,
+                 project: str="molssidb",
+                 bypass_security: bool=False,
+                 authMechanism: str="SCRAM-SHA-1",
+                 authSource: str=None,
+                 logger: 'Logger'=None,
+                 max_limit: int=1000):
         """
         Constructs a new socket where url and port points towards a Mongod instance.
 
@@ -156,10 +150,8 @@ class MongoengineSocket:
                 "Choosing to stop instead of assuming version is at least 3.2.".format(uri))
         except RuntimeError:
             # Trap low version
-            raise RuntimeError(
-                "Connected MongoDB at URL {} needs to be at least version 3.2, found version {}.".format(
-                    uri,
-                    self.client.server_info()['version']))
+            raise RuntimeError("Connected MongoDB at URL {} needs to be at least version 3.2, found version {}.".
+                               format(uri, self.client.server_info()['version']))
 
         # Isolate objects to this single project DB
         self._project_name = project
@@ -168,34 +160,35 @@ class MongoengineSocket:
 
     ### Mongo meta functions
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "<MongoSocket: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._tables_name))
 
     def _clear_db(self, db_name: str):
         """Dangerous, make sure you are deleting the right DB"""
 
-        logging.warning("Clearing database '{}' and dropping all tables.".format(db_name))
+        self.logger.warning("Clearing database '{}' and dropping all tables.".format(db_name))
 
         # make sure it's the right DB
         if get_db().name == db_name:
-            logging.info('Clearing database: {}'.format(db_name))
-            Result.drop_collection()
-            Molecule.drop_collection()
-            Keywords.drop_collection()
-            Collection.drop_collection()
-            TaskQueue.drop_collection()
-            QueueManager.drop_collection()
-            Procedure.drop_collection()
-            User.drop_collection()
+            self.logger.info('Clearing database: {}'.format(db_name))
+            ResultORM.drop_collection()
+            MoleculeORM.drop_collection()
+            KeywordsORM.drop_collection()
+            KVStoreORM.drop_collection()
+            CollectionORM.drop_collection()
+            TaskQueueORM.drop_collection()
+            QueueManagerORM.drop_collection()
+            ProcedureORM.drop_collection()
+            UserORM.drop_collection()
 
             self.client.drop_database(db_name)
 
-        QueueManager.objects(name='').first()  # init
+        QueueManagerORM.objects(name='').first()  # init
 
-    def get_project_name(self):
+    def get_project_name(self) -> str:
         return self._project_name
 
-    def get_limit(self, limit):
+    def get_limit(self, limit: Optional[int]) -> int:
         """Get the allowed limit on results to return in queries based on the
          given `limit`. If this number is greater than the
          mongoengine_soket.max_limit then the max_limit will be returned instead.
@@ -203,10 +196,75 @@ class MongoengineSocket:
 
         return limit if limit and limit < self._max_limit else self._max_limit
 
-    def get_add_molecules_mixed(self, data):
+### KV Functions
+
+    def add_kvstore(self, blobs_list: List[Any]):
+        """
+        Adds to the key/value store table.
+
+        Parameters
+        ----------
+        blobs_list : List[Any]
+            A list of data blobs to add.
+
+        Returns
+        -------
+        TYPE
+
+            Description
+        """
+
+        meta = add_metadata_template()
+        blob_ids = []
+        for blob in blobs_list:
+            if blob is None:
+                blob_ids.append(None)
+                continue
+
+            doc = KVStoreORM(value=blob)
+            doc.save()
+            blob_ids.append(str(doc.id))
+            meta['n_inserted'] += 1
+
+        meta["success"] = True
+
+        return {"data": blob_ids, "meta": meta}
+
+    def get_kvstore(self, id: List[str]):
+        """
+        Pulls from the key/value store table.
+
+        Parameters
+        ----------
+        id : List[str]
+            A list of ids to query
+
+        Returns
+        -------
+        TYPE
+            Description
+        """
+
+        meta = get_metadata_template()
+
+        query, errors = format_query(id=id)
+
+        data = KVStoreORM.objects(**query)
+
+        meta["success"] = True
+        meta["n_found"] = data.count()  # all data count, can be > len(data)
+        meta["errors"].extend(errors)
+
+        data = [d.to_json_obj() for d in data]
+        data = {d["id"]: d["value"] for d in data}
+        return {"data": data, "meta": meta}
+
+### Molecule functions
+
+    def get_add_molecules_mixed(self, data: List[Union[str, Molecule]]) -> List[Molecule]:
         """
         Get or add the given molecules (if they don't exit).
-        Molecules are given in a mixed format, either as a dict of mol data
+        MoleculeORMs are given in a mixed format, either as a dict of mol data
         or as existing mol id
 
         TODO: to be split into get by_id and get_by_data
@@ -215,18 +273,13 @@ class MongoengineSocket:
         meta = get_metadata_template()
 
         ordered_mol_dict = {indx: mol for indx, mol in enumerate(data)}
-        dict_mols = {}
+        new_molecules = {}
         id_mols = {}
         for idx, mol in ordered_mol_dict.items():
             if isinstance(mol, str):
                 id_mols[idx] = mol
-            elif isinstance(mol, dict):
-                mol.pop("id", None)
-                dict_mols[idx] = mol
-            elif isinstance(mol, interface.models.Molecule):
-                mol_json = mol.json_dict()
-                mol_json.pop("id", None)
-                dict_mols[idx] = mol_json
+            elif isinstance(mol, Molecule):
+                new_molecules[idx] = mol
             else:
                 meta["errors"].append((idx, "Data type not understood"))
 
@@ -235,7 +288,7 @@ class MongoengineSocket:
         # Add all new molecules
         flat_mols = []
         flat_mol_keys = []
-        for k, v in dict_mols.items():
+        for k, v in new_molecules.items():
             flat_mol_keys.append(k)
             flat_mols.append(v)
         flat_mols = self.add_molecules(flat_mols)["data"]
@@ -249,7 +302,7 @@ class MongoengineSocket:
         inv_id_mols = {v: k for k, v in id_mols.items()}
 
         for mol in id_mols_list:
-            ret_mols[inv_id_mols[mol["id"]]] = mol
+            ret_mols[inv_id_mols[mol.id]] = mol
 
         meta["success"] = True
         meta["n_found"] = len(ret_mols)
@@ -265,22 +318,7 @@ class MongoengineSocket:
 
         return {"meta": meta, "data": ret}
 
-    def _del_by_index(self, table, hashes, index="_id"):
-        """
-        Helper function that facilitates deletion based on hash.
-        """
-
-        if isinstance(hashes, str):
-            hashes = [hashes]
-
-        if index == "_id":
-            _str_to_indices(hashes)
-
-        return (self._tables[table].delete_many({index: {"$in": hashes}})).deleted_count
-
-### Mongo molecule functions
-
-    def add_molecules(self, data):
+    def add_molecules(self, molecules: List[Molecule]):
         """
         Adds molecules to the database.
 
@@ -298,34 +336,26 @@ class MongoengineSocket:
         meta = add_metadata_template()
 
         results = []
-        # try:
-        for dmol in data:
-            try:
-                dmol = dmol.dict()
-            except AttributeError:
-                pass
+        for dmol in molecules:
 
-            # All molecules must be fixed
-            dmol["fix_com"] = True
-            dmol["fix_orientation"] = True
+            mol_dict = dmol.json_dict(exclude={"id"})
 
-            mol = interface.Molecule(**dmol, orient=False)
-            mol_dict = mol.json_dict(exclude={"id"})
-            mol_dict.pop("id", None)  # Paranoia
+            mol_dict["fix_com"] = True
+            mol_dict["fix_orientation"] = True
 
             # Build fresh indices
-            mol_dict["molecule_hash"] = mol.get_hash()
-            mol_dict["molecular_formula"] = mol.get_molecular_formula()
+            mol_dict["molecule_hash"] = dmol.get_hash()
+            mol_dict["molecular_formula"] = dmol.get_molecular_formula()
 
             mol_dict["identifiers"] = {}
             mol_dict["identifiers"]["molecule_hash"] = mol_dict["molecule_hash"]
             mol_dict["identifiers"]["molecular_formula"] = mol_dict["molecular_formula"]
 
             # search by index keywords not by all keys, much faster
-            doc = Molecule.objects(molecule_hash=mol_dict['molecule_hash'])
+            doc = MoleculeORM.objects(molecule_hash=mol_dict['molecule_hash'])
 
             if doc.count() == 0:
-                doc = Molecule(**mol_dict).save()
+                doc = MoleculeORM(**mol_dict).save()
                 results.append(str(doc.id))
                 meta['n_inserted'] += 1
             else:
@@ -343,12 +373,7 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def get_molecules(self,
-                      id=None,
-                      molecule_hash=None,
-                      molecular_formula=None,
-                      limit: int = None,
-                      skip: int = 0):
+    def get_molecules(self, id=None, molecule_hash=None, molecular_formula=None, limit: int=None, skip: int=0):
 
         ret = {"meta": get_metadata_template(), "data": []}
 
@@ -356,7 +381,7 @@ class MongoengineSocket:
 
         # Don't include the hash or the molecular_formula in the returned result
         # Make the query
-        data = Molecule.objects(**query).exclude("molecule_hash", "molecular_formula")\
+        data = MoleculeORM.objects(**query).exclude("molecule_hash", "molecular_formula")\
                                         .limit(self.get_limit(limit))\
                                         .skip(skip)\
 
@@ -364,12 +389,12 @@ class MongoengineSocket:
         ret["meta"]["n_found"] = data.count()  # all data count, can be > len(data)
         ret["meta"]["errors"].extend(errors)
 
-        data = [d.to_json_obj() for d in data]
+        data = [Molecule(**d.to_json_obj()) for d in data]
         ret["data"] = data
 
         return ret
 
-    def del_molecules(self, id=None, molecule_hash=None):
+    def del_molecules(self, id: List[str]=None, molecule_hash: List[str]=None):
         """
         Removes a molecule from the database from its hash.
 
@@ -385,20 +410,17 @@ class MongoengineSocket:
         """
 
         query, errors = format_query(id=id, molecule_hash=molecule_hash)
-        return Molecule.objects(**query).delete()
+        return MoleculeORM.objects(**query).delete()
 
     ### Mongo options functions
 
-    def add_keywords(self, data: Union[Dict, List[Dict]]):
-        """Add one option uniqely identified by 'program' and the 'name'.
+    def add_keywords(self, keyword_sets: List[KeywordSet]):
+        """Add one KeywordSet uniquly identified by 'program' and the 'name'.
 
         Parameters
         ----------
-         data : dict or List[dict]
-            The attribites of the 'option' or options to be inserted.
-            Must include for each 'option':
-                program : str, program name
-                name : str, option name
+         data
+            A list of KeywordSets to be inserted.
 
         Returns
         -------
@@ -413,46 +435,35 @@ class MongoengineSocket:
 
         """
 
-        if not isinstance(data, Sequence):
-            data = [data]
-
         meta = add_metadata_template()
 
         keywords = []
-        for d in data:
-            try:
-                # search by index keywords not by all keys, much faster
-                found = Keywords.objects(hash_index=d['hash_index']).first()
-                if not found:
+        for kw in keyword_sets:
 
-                    # Make sure ID does not exists and is generated by Mongo
-                    d = d.copy()
-                    d.pop("id", None)
+            kw_dict = kw.json_dict(exclude={"id"})
 
-                    doc = Keywords(**d).save()
-                    keywords.append(str(doc.id))
-                    meta['n_inserted'] += 1
-                else:
-                    meta['duplicates'].append(d["hash_index"])  # TODO
-                    keywords.append(str(found.id))
-                meta["success"] = True
-            except (mongoengine.errors.ValidationError, KeyError) as err:
-                meta["validation_errors"].append(str(err))
-                keywords.append(None)
-            except Exception as err:
-                meta['error_description'] = err
-                keywords.append(None)
+            # search by index keywords not by all keys, much faster
+            found = KeywordsORM.objects(hash_index=kw_dict['hash_index']).first()
+            if not found:
+
+                doc = KeywordsORM(**kw_dict).save()
+                keywords.append(str(doc.id))
+                meta['n_inserted'] += 1
+            else:
+                meta['duplicates'].append(str(found.id))  # TODO
+                keywords.append(str(found.id))
+            meta["success"] = True
 
         ret = {"data": keywords, "meta": meta}
         return ret
 
     def get_keywords(self,
-                     id: Union[str, list] = None,
-                     hash_index: Union[str, list] = None,
-                     limit: int = None,
-                     skip: int = 0,
-                     return_json: bool = True,
-                     with_ids: bool = True):
+                     id: Union[str, list]=None,
+                     hash_index: Union[str, list]=None,
+                     limit: int=None,
+                     skip: int=0,
+                     return_json: bool=True,
+                     with_ids: bool=True) -> List[KeywordSet]:
         """Search for one (unique) option based on the 'program'
         and the 'name'. No overwrite allowed.
 
@@ -488,7 +499,7 @@ class MongoengineSocket:
 
         data = []
         try:
-            data = Keywords.objects(**query).limit(self.get_limit(limit)).skip(skip)
+            data = KeywordsORM.objects(**query).limit(self.get_limit(limit)).skip(skip)
 
             meta["n_found"] = data.count()
             meta["success"] = True
@@ -496,7 +507,7 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-            rdata = [d.to_json_obj(with_ids) for d in data]
+            rdata = [KeywordSet(**d.to_json_obj(with_ids)) for d in data]
         else:
             rdata = data
 
@@ -505,7 +516,7 @@ class MongoengineSocket:
     def get_add_keywords_mixed(self, data):
         """
         Get or add the given options (if they don't exit).
-        Keywords are given in a mixed format, either as a dict of mol data
+        KeywordsORM are given in a mixed format, either as a dict of mol data
         or as existing mol id
 
         TODO: to be split into get by_id and get_by_data
@@ -518,16 +529,8 @@ class MongoengineSocket:
             if isinstance(kw, str):
                 ids.append(kw)
 
-            # New dictionary construct and add
-            elif isinstance(kw, dict):
-
-                kw = interface.models.KeywordSet(**kw)
-
-                new_id = self.add_keywords([kw.json_dict()])["data"][0]
-                ids.append(new_id)
-
-            elif isinstance(kw, interface.models.KeywordSet):
-                new_id = self.add_keywords([kw.json_dict()])["data"][0]
+            elif isinstance(kw, KeywordSet):
+                new_id = self.add_keywords([kw])["data"][0]
                 ids.append(new_id)
             else:
                 meta["errors"].append((idx, "Data type not understood"))
@@ -553,7 +556,7 @@ class MongoengineSocket:
 
         return {"meta": meta, "data": ret}
 
-    def del_keywords(self, id):
+    def del_keywords(self, id: str) -> int:
         """
         Removes a option set from the database based on its keys.
 
@@ -572,7 +575,7 @@ class MongoengineSocket:
 
         # monogoengine
         count = 0
-        kw = Keywords.objects(id=ObjectId(id))
+        kw = KeywordsORM.objects(id=ObjectId(id))
         if kw:
             count = kw.delete()
 
@@ -581,7 +584,7 @@ class MongoengineSocket:
     ### Mongo database functions
 
     # def add_collection(self, data, overwrite=False):
-    def add_collection(self, collection: str, name: str, data, overwrite: bool = False):
+    def add_collection(self, collection: str, name: str, data: Dict[str, Any], overwrite: bool=False):
         """Add (or update) a collection to the database.
 
         Parameters
@@ -615,9 +618,9 @@ class MongoengineSocket:
 
             if overwrite:
                 # may use upsert=True to add or update
-                col = Collection.objects(collection=collection, name=name).update_one(**data)
+                col = CollectionORM.objects(collection=collection, name=name).update_one(**data)
             else:
-                col = Collection(collection=collection, name=name, **data).save()
+                col = CollectionORM(collection=collection, name=name, **data).save()
 
             meta['success'] = True
             meta['n_inserted'] = 1
@@ -630,12 +633,12 @@ class MongoengineSocket:
 
     # def get_collections(self, keys, projection=None):
     def get_collections(self,
-                        collection: str = None,
-                        name: str = None,
-                        return_json: bool = True,
-                        with_ids: bool = True,
-                        limit: int = None,
-                        skip: int = 0):
+                        collection: str=None,
+                        name: str=None,
+                        return_json: bool=True,
+                        with_ids: bool=True,
+                        limit: int=None,
+                        skip: int=0) -> Dict[str, Any]:
         """Get collection by collection and/or name
 
         Parameters
@@ -658,7 +661,7 @@ class MongoengineSocket:
 
         data = []
         try:
-            data = Collection.objects(**query).limit(self.get_limit(limit)).skip(skip)
+            data = CollectionORM.objects(**query).limit(self.get_limit(limit)).skip(skip)
 
             meta["n_found"] = data.count()
             meta["success"] = True
@@ -672,16 +675,16 @@ class MongoengineSocket:
 
         return {"data": rdata, "meta": meta}
 
-    def del_collection(self, collection: str, name: str):
+    def del_collection(self, collection: str, name: str) -> bool:
         """
         Remove a collection from the database from its keys.
 
         Parameters
         ----------
         collection: str
-            Collection type
+            CollectionORM type
         name : str
-            Collection name
+            CollectionORM name
 
         Returns
         -------
@@ -689,11 +692,11 @@ class MongoengineSocket:
             Number of documents deleted
         """
 
-        return Collection.objects(collection=collection, name=name).delete()
+        return CollectionORM.objects(collection=collection, name=name).delete()
 
-## Results functions
+## ResultORMs functions
 
-    def add_results(self, data: List[dict], update_existing: bool = False, return_json=True):
+    def add_results(self, record_list: List[ResultRecord]):
         """
         Add results from a given dict. The dict should have all the required
         keys of a result.
@@ -706,8 +709,6 @@ class MongoengineSocket:
             Where molecule is the molecule id in the DB
             In addition, it should have the other attributes that it needs
             to store
-        update_existing : bool (default False)
-            Update existing results
 
         Returns
         -------
@@ -715,47 +716,64 @@ class MongoengineSocket:
             Data is the ids of the inserted/updated/existing docs
         """
 
-        for d in data:
-            d["program"] = d["program"].lower()
-            d["method"] = d["method"].lower()
-            d["basis"] = prepare_basis(d["basis"])
-
         meta = add_metadata_template()
 
-        results = []
+        result_ids = []
         # try:
-        for d in data:
+        for result in record_list:
 
-            d.pop("id", None)
-            doc = Result.objects(
-                program=d['program'],
-                driver=d['driver'],
-                method=d['method'],
-                basis=d['basis'],
-                keywords=d['keywords'],
-                molecule=d['molecule'])
+            doc = ResultORM.objects(
+                program=result.program,
+                driver=result.driver,
+                method=result.method,
+                basis=result.basis,
+                keywords=result.keywords,
+                molecule=result.molecule)
 
-            if doc.count() == 0 or update_existing:
-                if not isinstance(d['molecule'], ObjectId):
-                    d['molecule'] = ObjectId(d['molecule'])
-                # d['basis'] = d['basis'] if d['basis'] is not None else ""
-                # d['keywords'] = d['keywords'] if d['keywords'] is not None else ""
-                doc = doc.upsert_one(**d)
-                results.append(str(doc.id))
+            if doc.count() == 0:
+                doc = ResultORM(**result.json_dict(exclude={"id"})).save()
+                result_ids.append(str(doc.id))
                 meta['n_inserted'] += 1
             else:
                 id = str(doc.first().id)
                 meta['duplicates'].append(id)  # TODO
                 # If new or duplicate, add the id to the return list
-                results.append(id)
+                result_ids.append(id)
         meta["success"] = True
-        # except (mongoengine.errors.ValidationError, KeyError) as err:
-        #     meta["validation_errors"].append(err)
-        # except Exception as err:
-        #     meta['error_description'] = err
 
-        ret = {"data": results, "meta": meta}
+        ret = {"data": result_ids, "meta": meta}
         return ret
+
+    def update_results(self, record_list: List[ResultRecord]):
+        """
+        Update results from a given dict (replace existing)
+
+        Parameters
+        ----------
+        id : list of str
+            Ids of the results to update, must exist in the DB
+        data : list of dict
+            Data that needs to be updated
+            Shouldn't update:
+            program, driver, method, basis, options, molecule
+
+        Returns
+        -------
+            number of records updated
+        """
+
+        # try:
+        updated_count = 0
+        for result in record_list:
+
+            if result.id is None:
+                logger.error("Attempted update without ID, skipping")
+                continue
+
+            ResultORM(**result.json_dict()).save()
+            updated_count += 1
+
+        return updated_count
 
     def get_results_count(self):
         """
@@ -768,18 +786,18 @@ class MongoengineSocket:
         pass
 
     def get_results(self,
-                    id: Union[str, List] = None,
-                    program: str = None,
-                    method: str = None,
-                    basis: str = None,
-                    molecule: str = None,
-                    driver: str = None,
-                    keywords: str = None,
-                    task_id: Union[str, List] = None,
-                    status: str = 'COMPLETE',
+                    id: Union[str, List]=None,
+                    program: str=None,
+                    method: str=None,
+                    basis: str=None,
+                    molecule: str=None,
+                    driver: str=None,
+                    keywords: str=None,
+                    task_id: Union[str, List]=None,
+                    status: str='COMPLETE',
                     projection=None,
-                    limit: int = None,
-                    skip: int = 0,
+                    limit: int=None,
+                    skip: int=0,
                     return_json=True,
                     with_ids=True):
         """
@@ -791,7 +809,7 @@ class MongoengineSocket:
         method : str
         basis : str
         molecule : str
-            Molecule id in the DB
+            MoleculeORM id in the DB
         driver : str
         keywords : str
             The id of the option in the DB
@@ -840,9 +858,9 @@ class MongoengineSocket:
         data = []
         try:
             if projection:
-                data = Result.objects(**query).only(*projection).limit(q_limit).skip(skip)
+                data = ResultORM.objects(**query).only(*projection).limit(q_limit).skip(skip)
             else:
-                data = Result.objects(**query).limit(q_limit).skip(skip)
+                data = ResultORM.objects(**query).limit(q_limit).skip(skip)
 
             meta["n_found"] = data.count()  # total number found, can be >len(data)
             meta["success"] = True
@@ -872,11 +890,11 @@ class MongoengineSocket:
 
         obj_ids = [ObjectId(x) for x in ids]
 
-        return Result.objects(id__in=obj_ids).delete()
+        return ResultORM.objects(id__in=obj_ids).delete()
 
 ### Mongo procedure/service functions
 
-    def add_procedures(self, data: List[dict], update_existing: bool = False, return_json=True):
+    def add_procedures(self, record_list: List['BaseRecord']):
         """
         Add procedures from a given dict. The dict should have all the required
         keys of a result.
@@ -899,42 +917,33 @@ class MongoengineSocket:
 
         meta = add_metadata_template()
 
-        results = []
-        # try:
-        for d in data:
-            # search by hash index
-            d.pop("id", None)
-            doc = Procedure.objects(hash_index=d['hash_index'])
+        procedure_ids = []
+        for procedure in record_list:
+            doc = ProcedureORM.objects(hash_index=procedure.hash_index)
 
-            if doc.count() == 0 or update_existing:
-                # d['keywords'] = d['keywords'] if d['keywords'] is not None else ""
-                doc = doc.upsert_one(**d)
-                results.append(str(doc.id))
+            if doc.count() == 0:
+                doc = doc.upsert_one(**procedure.json_dict(exclude={"id"}))
+                procedure_ids.append(str(doc.id))
                 meta['n_inserted'] += 1
             else:
                 id = str(doc.first().id)
                 meta['duplicates'].append(id)  # TODO
-                # If new or duplicate, add the id to the return list
-                results.append(id)
+                procedure_ids.append(id)
         meta["success"] = True
-        # except (mongoengine.errors.ValidationError, KeyError) as err:
-        #     meta["validation_errors"].append(err)
-        # except Exception as err:
-        #     meta['error_description'] = err
 
-        ret = {"data": results, "meta": meta}
+        ret = {"data": procedure_ids, "meta": meta}
         return ret
 
     def get_procedures(self,
-                       id: Union[str, List] = None,
-                       procedure: str = None,
-                       program: str = None,
-                       hash_index: str = None,
-                       task_id: Union[str, List] = None,
-                       status: str = 'COMPLETE',
+                       id: Union[str, List]=None,
+                       procedure: str=None,
+                       program: str=None,
+                       hash_index: str=None,
+                       task_id: Union[str, List]=None,
+                       status: str='COMPLETE',
                        projection=None,
-                       limit: int = None,
-                       skip: int = 0,
+                       limit: int=None,
+                       skip: int=0,
                        return_json=True,
                        with_ids=True):
         """
@@ -974,21 +983,16 @@ class MongoengineSocket:
             status = None
 
         query, error = format_query(
-            id=id,
-            procedure=procedure,
-            program=program,
-            hash_index=hash_index,
-            task_id=task_id,
-            status=status)
+            id=id, procedure=procedure, program=program, hash_index=hash_index, task_id=task_id, status=status)
 
         q_limit = self.get_limit(limit)
 
         data = []
         try:
             if projection:
-                data = Procedure.objects(**query).only(*projection).limit(q_limit).skip(skip)
+                data = ProcedureORM.objects(**query).only(*projection).limit(q_limit).skip(skip)
             else:
-                data = Procedure.objects(**query).limit(q_limit).skip(skip)
+                data = ProcedureORM.objects(**query).limit(q_limit).skip(skip)
 
             meta["n_found"] = data.count()  # all data count
             meta["success"] = True
@@ -1000,33 +1004,26 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-    def update_procedure(self, hash_index, data):
+    def update_procedures(self, records_list: List['BaseRecord']):
         """
         TODO: to be updated with needed
         """
 
-        if 'id' in data and data['id'] is None:
-            data.pop("id", None)
+        updated_count = 0
+        for procedure in records_list:
 
-        update = {}
-        not_allowed_keys = []
-        # create safe query with allowed keys only
-        # shouldn't be allowed to update status manually
-        for key, value in data.items():
-            if key not in ['procedure', 'program', 'status', 'task_id']:  # FIXME: what else?
-                update[key] = value
-            else:
-                not_allowed_keys.append(key)
+            # Must have ID
+            if procedure.id is None:
+                self.logger.error(
+                    "No procedure id found on update (hash_index={}), skipping.".format(procedure.hash_index))
+                continue
 
-        if not_allowed_keys:
-            logging.warning('Trying to update Procedure immutable keywords ' +
-                            '"{}", skipping'.format(not_allowed_keys))
+            ProcedureORM(**procedure.json_dict()).save()
+            updated_count += 1
 
-        modified_count = Procedure.objects(hash_index=hash_index).update(**update, modified_on=dt.utcnow())
+        return updated_count
 
-        return modified_count
-
-    def add_services(self, data: List[dict], return_json=True):
+    def add_services(self, service_list: List['BaseService']):
         """
         Add services from a given dict.
 
@@ -1042,51 +1039,45 @@ class MongoengineSocket:
 
         meta = add_metadata_template()
 
-        procedures = []
-        for idx, d in enumerate(data):
+        procedure_ids = []
+        for service in service_list:
 
             # Add the underlying procedure
-            new_procedure = self.add_procedures([d["output"]])
+            new_procedure = self.add_procedures([service.output])
 
-            # Procedure already exists
-            procedure_id = new_procedure["data"][0]
+            # ProcedureORM already exists
+            proc_id = new_procedure["data"][0]
             if new_procedure["meta"]["duplicates"]:
-                procedures.append(procedure_id)
-                meta["duplicates"].append(procedure_id)
+                procedure_ids.append(proc_id)
+                meta["duplicates"].append(proc_id)
                 continue
 
             # search by hash index
-            d.pop("id", None)
-            doc = ServiceQueue.objects(hash_index=d['hash_index'])
+            doc = ServiceQueueORM.objects(hash_index=service.hash_index)
+            service.procedure_id = proc_id
 
             if doc.count() == 0:
-                # create stub procedure
-                doc = ServiceQueue(**d)
-                doc.procedure_id = ObjectId(procedure_id)
+                doc = ServiceQueueORM(**service.json_dict(exclude={"id"}))
                 doc.save()
-                procedures.append(procedure_id)
+                procedure_ids.append(proc_id)
                 meta['n_inserted'] += 1
             else:
-                procedures.append(None)
+                procedure_ids.append(None)
                 meta["errors"].append((idx, "Duplicate service, but not caught by procedure."))
 
         meta["success"] = True
-        # except (mongoengine.errors.ValidationError, KeyError) as err:
-        #     meta["validation_errors"].append(err)
-        # except Exception as err:
-        #     meta['error_description'] = err
 
-        ret = {"data": procedures, "meta": meta}
+        ret = {"data": procedure_ids, "meta": meta}
         return ret
 
     def get_services(self,
-                     id: Union[List[str], str] = None,
-                     procedure_id: Union[List[str], str] = None,
-                     hash_index: Union[List[str], str] = None,
-                     status: str = None,
+                     id: Union[List[str], str]=None,
+                     procedure_id: Union[List[str], str]=None,
+                     hash_index: Union[List[str], str]=None,
+                     status: str=None,
                      projection=None,
-                     limit: int = None,
-                     skip: int = 0,
+                     limit: int=None,
+                     skip: int=0,
                      return_json=True):
         """
 
@@ -1120,9 +1111,9 @@ class MongoengineSocket:
         data = []
         # try:
         if projection:
-            services = ServiceQueue.objects(**query).only(*projection).limit(q_limit).skip(skip)
+            services = ServiceQueueORM.objects(**query).only(*projection).limit(q_limit).skip(skip)
         else:
-            services = ServiceQueue.objects(**query).limit(q_limit).skip(skip)
+            services = ServiceQueueORM.objects(**query).limit(q_limit).skip(skip)
 
         meta["n_found"] = services.count()
         meta["success"] = True
@@ -1134,7 +1125,7 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-    def update_services(self, id: str, updates: dict):
+    def update_services(self, records_list: List["BaseService"]) -> int:
         """
         Replace existing service
 
@@ -1150,25 +1141,32 @@ class MongoengineSocket:
             if operation is succesful
         """
 
-        # Make sure Id exists and valid for updates
-        updates_dict = updates.copy()
-        updates_dict.pop("id", None)
-        updates_dict.pop('procedure_id', None)
-        ServiceQueue.objects(id=ObjectId(id)).update(**updates_dict)
+        updated_count = 0
+        for service in records_list:
+            if service.id is None:
+                self.logger.error(
+                    "No service id found on update (hash_index={}), skipping.".format(service.hash_index))
+                continue
 
-        return True
+            ServiceQueueORM(**service.json_dict()).save()
+            updated_count += 1
 
-    def services_completed(self, completed_procedures):
+        return updated_count
+
+    def services_completed(self, records_list: List["BaseService"]) -> int:
 
         done = 0
+        for service in records_list:
+            if service.id is None:
+                self.logger.error(
+                    "No service id found on completion (hash_index={}), skipping.".format(service.hash_index))
+                continue
 
-        for service_id, data in completed_procedures:
-            procedure_id = ServiceQueue.objects(id=service_id).only("procedure_id").as_pymongo()[0]
-            data['status'] = "COMPLETE"
-            data.pop('id', None)
-            Procedure.objects(id=procedure_id['procedure_id']).update(**data)
+            procedure = service.output
+            procedure.id = service.procedure_id
+            self.update_procedures([procedure])
 
-            ServiceQueue.objects(id=service_id).delete()
+            ServiceQueueORM.objects(id=ObjectId(service.id)).delete()
 
             done += 1
 
@@ -1192,7 +1190,6 @@ class MongoengineSocket:
             A task is a dict, with the following fields:
             - hash_index: idx, not used anymore
             - spec: dynamic field (dict-like), can have any structure
-            - hooks: list of any objects representing listeners (for now)
             - tag: str
             - base_results: tuple (required), first value is the class type
              of the result, {'results' or 'procedure'). The second value is
@@ -1222,13 +1219,13 @@ class MongoengineSocket:
                 d.pop("id", None)
                 result_obj = None
                 if d['base_result'][0] == 'results':
-                    result_obj = Result(id=d['base_result'][1])
+                    result_obj = ResultORM(id=d['base_result'][1])
                 elif d['base_result'][0] == 'procedure':
-                    result_obj = Procedure(id=d['base_result'][1])
+                    result_obj = ProcedureORM(id=d['base_result'][1])
                 else:
                     raise TypeError("Base_result type must be 'results' or 'procedure',"
                                     " {} is given.".format(d['base_result'][0]))
-                task = TaskQueue(**d)
+                task = TaskQueueORM(**d)
                 task.base_result = result_obj
                 task.save()
                 result_obj.update(task_id=str(task.id))  # update bidirectional rel
@@ -1236,14 +1233,11 @@ class MongoengineSocket:
                 meta['n_inserted'] += 1
             except mongoengine.errors.NotUniqueError as err:  # rare case
                 # If results is stored as DBRef, get it with:
-                # task = TaskQueue.objects(__raw__={'base_result': base_result}).first()  # avoid
+                # task = TaskQueueORM.objects(__raw__={'base_result': base_result}).first()  # avoid
 
-                # If base_result is stored as a Result or Procedure class, get it with:
-                task = TaskQueue.objects(base_result=result_obj).first()
+                # If base_result is stored as a ResultORM or ProcedureORM class, get it with:
+                task = TaskQueueORM.objects(base_result=result_obj).first()
                 self.logger.warning('queue_submit got a duplicate task: ', task.to_mongo())
-                if d['hooks']:  # merge hooks
-                    task.hooks.extend(d['hooks'])
-                    task.save()
                 results.append(str(task.id))
                 meta['duplicates'].append(task_num)
             except Exception as err:
@@ -1264,12 +1258,12 @@ class MongoengineSocket:
         if tag is not None:
             query["tag"] = tag
 
-        found = TaskQueue.objects(**query).limit(limit).order_by('created_on')
+        found = TaskQueueORM.objects(**query).limit(limit).order_by('created_on')
 
         query = {"_id": {"$in": [x.id for x in found]}}
 
         # update_many using pymongo in one DB access
-        upd = TaskQueue._get_collection().update_many(
+        upd = TaskQueueORM._get_collection().update_many(
             query, {"$set": {
                 "status": "RUNNING",
                 "modified_on": dt.utcnow(),
@@ -1293,10 +1287,10 @@ class MongoengineSocket:
                   ids=None,
                   hash_index=None,
                   program=None,
-                  status: str = None,
+                  status: str=None,
                   projection=None,
-                  limit: int = None,
-                  skip: int = 0,
+                  limit: int=None,
+                  skip: int=0,
                   return_json=True,
                   with_ids=True):
         """
@@ -1336,9 +1330,9 @@ class MongoengineSocket:
         data = []
         try:
             if projection:
-                data = TaskQueue.objects(**query).only(*projection).limit(q_limit).skip(skip)
+                data = TaskQueueORM.objects(**query).only(*projection).limit(q_limit).skip(skip)
             else:
-                data = TaskQueue.objects(**query).limit(q_limit).skip(skip)
+                data = TaskQueueORM.objects(**query).limit(q_limit).skip(skip)
 
             meta["n_found"] = data.count()
             meta["success"] = True
@@ -1346,12 +1340,11 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-            if return_json:
-                data = [d.to_json_obj(with_ids) for d in data]
+            data = [d.to_json_obj(with_ids) for d in data]
 
         return {"data": data, "meta": meta}
 
-    def queue_get_by_id(self, ids: List[str], limit: int = None, skip: int = 0, as_json: bool = True):
+    def queue_get_by_id(self, ids: List[str], limit: int=None, skip: int=0, as_json: bool=True):
         """Get tasks by their IDs
 
         Parameters
@@ -1369,7 +1362,7 @@ class MongoengineSocket:
         list of the found tasks
         """
 
-        found = TaskQueue.objects(id__in=ids).limit(self.get_limit(limit)).skip(skip)
+        found = TaskQueueORM.objects(id__in=ids).limit(self.get_limit(limit)).skip(skip)
 
         if as_json:
             found = [task.to_json_obj() for task in found]
@@ -1398,20 +1391,20 @@ class MongoengineSocket:
         #         # automatically calls ClientSession.commit_transaction().
         #         # If the block exits with an exception, the transaction
         #         # automatically calls ClientSession.abort_transaction().
-        #           found = TaskQueue._get_collection().update_many(
+        #           found = TaskQueueORM._get_collection().update_many(
         #                               {'id': {'$in': task_ids}},
         #                               {'$set': {'status': 'COMPLETE'}},
         #                               session=session)
         #         # next, Update results
 
-        tasks = TaskQueue.objects(id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
-        results = Result.objects(task_id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
-        procedures = Procedure.objects(task_id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
+        tasks = TaskQueueORM.objects(id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
+        results = ResultORM.objects(task_id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
+        procedures = ProcedureORM.objects(task_id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
 
         # This should not happen unless there is data inconsistency in the DB
         if results + procedures < tasks:
-            logging.error("Some tasks don't reference results or procedures correctly!"
-                          "Tasks: {}, Results: {}, procedures: {}. ".format(tasks, results, procedures))
+            self.logger.error("Some tasks don't reference results or procedures correctly!"
+                          "Tasks: {}, ResultORMs: {}, procedures: {}. ".format(tasks, results, procedures))
         return tasks
 
     def queue_mark_error(self, data):
@@ -1421,8 +1414,10 @@ class MongoengineSocket:
         """
 
         bulk_commands = []
+        bulk_commands_records = []
         task_ids = []
         for task_id, msg in data:
+            task_ids.append(task_id)
             update = {
                 "$set": {
                     "status": "ERROR",
@@ -1431,18 +1426,32 @@ class MongoengineSocket:
                 }
             }
             bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(task_id)}, update))
-            task_ids.append(task_id)
+
+            # Update the objects as well, different from mark complete as these are not processed the same way
+            # This design should be overhauled...
+            error_id = self.add_kvstore([msg])["data"][0]
+            update = {
+                "$set": {
+                    "status": "ERROR",
+                    "error": error_id,
+                    "modified_on": dt.utcnow(),
+                }
+            }
+            # Task id is held as a string here... don't move to ObjectId
+            bulk_commands_records.append(pymongo.UpdateOne({"task_id": task_id}, update))
 
         if len(bulk_commands) == 0:
             return
 
-        ret = TaskQueue._get_collection().bulk_write(bulk_commands, ordered=False).modified_count
-        Result.objects(task_id__in=task_ids).update(status='ERROR', modified_on=dt.utcnow())
-        Procedure.objects(task_id__in=task_ids).update(status='ERROR', modified_on=dt.utcnow())
+        task_mod = TaskQueueORM._get_collection().bulk_write(bulk_commands, ordered=False).modified_count
+        rec_mod = ResultORM._get_collection().bulk_write(bulk_commands_records, ordered=False).modified_count
+        rec_mod += ProcedureORM._get_collection().bulk_write(bulk_commands_records, ordered=False).modified_count
+        if task_mod != rec_mod:
+            self.logger.error("Queue Mark Error: Number of tasks updates {}, does not match the number of records updates {}.".format(task_mod, rec_mod))
 
-        return ret
+        return task_mod
 
-    def queue_reset_status(self, manager: str, reset_running: bool = True, reset_error: bool = False) -> int:
+    def queue_reset_status(self, manager: str, reset_running: bool=True, reset_error: bool=False) -> int:
         """
         Reset the status of the tasks that a manager owns from Running to Waiting
         If reset_error is True, then also reset errored tasks AND its results/proc
@@ -1469,9 +1478,9 @@ class MongoengineSocket:
 
         # Update results and procedures if reset_error
         if reset_error:
-            task_ids = TaskQueue.objects(manager=manager, status="ERROR").only('id')
-            Result.objects(task_id__in=task_ids).update(status='INCOMPLETE', modified_on=dt.utcnow())
-            Procedure.objects(task_id__in=task_ids).update(status='INCOMPLETE', modified_on=dt.utcnow())
+            task_ids = TaskQueueORM.objects(manager=manager, status="ERROR").only('id')
+            ResultORM.objects(task_id__in=task_ids).update(status='INCOMPLETE', modified_on=dt.utcnow())
+            ProcedureORM.objects(task_id__in=task_ids).update(status='INCOMPLETE', modified_on=dt.utcnow())
 
         status = []
         if reset_running:
@@ -1479,7 +1488,7 @@ class MongoengineSocket:
         if reset_error:
             status.append("ERROR")
 
-        updated = TaskQueue.objects(
+        updated = TaskQueueORM.objects(
             manager=manager, status__in=status).update(
                 status="WAITING", modified_on=dt.utcnow())
 
@@ -1498,31 +1507,9 @@ class MongoengineSocket:
             Number of tasks deleted
         """
 
-        return TaskQueue.objects(id__in=id).delete()
+        return TaskQueueORM.objects(id__in=id).delete()
 
-    def handle_hooks(self, hooks):
-
-        # Very dangerous, we need to modify this substatially
-        # Does not currently handle multiple identical commands
-        # Only handles service updates
-
-        bulk_commands = []
-        for hook_list in hooks:
-            for hook in hook_list:
-                commands = {}
-                for com in hook["updates"]:
-                    commands["$" + com[0]] = {com[1]: com[2]}
-
-                upd = pymongo.UpdateOne({"_id": ObjectId(hook["document"][1])}, commands)
-                bulk_commands.append(upd)
-
-        if len(bulk_commands) == 0:
-            return
-
-        ret = self._tables["service_queue"].bulk_write(bulk_commands, ordered=False)
-        return ret
-
-### QueueManagers
+### QueueManagerORMs
 
     def manager_update(self, name, **kwargs):
 
@@ -1534,26 +1521,26 @@ class MongoengineSocket:
             "inc__failures": kwargs.pop("failures", 0)
         }
 
-        upd = {key: kwargs[key] for key in QueueManager._fields_ordered if key in kwargs}
+        upd = {key: kwargs[key] for key in QueueManagerORM._fields_ordered if key in kwargs}
 
-        QueueManager.objects()  # init
-        manager = QueueManager.objects(name=name)
+        QueueManagerORM.objects()  # init
+        manager = QueueManagerORM.objects(name=name)
         if manager:  # existing
             upd.update(inc_count)
             num_updated = manager.update(**upd, modified_on=dt.utcnow())
         else:  # create new, ensures defaults and validations
-            QueueManager(name=name, **upd).save()
+            QueueManagerORM(name=name, **upd).save()
             num_updated = 1
 
         return num_updated == 1
 
-    def get_managers(self, name: str = None, status: str = None, modified_before=None):
+    def get_managers(self, name: str=None, status: str=None, modified_before=None):
 
         query, error = format_query(name=name, status=status)
         if modified_before:
             query["modified_on__lt"] = modified_before
 
-        data = QueueManager.objects(**query)
+        data = QueueManagerORM.objects(**query)
 
         meta = get_metadata_template()
         meta["success"] = True
@@ -1563,8 +1550,7 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-
-### Users
+### UserORMs
 
     def add_user(self, username, password, permissions=["read"]):
         """
@@ -1589,7 +1575,7 @@ class MongoengineSocket:
 
         hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
         try:
-            User(username=username, password=hashed, permissions=permissions).save()
+            UserORM(username=username, password=hashed, permissions=permissions).save()
             return True
         except mongoengine.errors.NotUniqueError:
             return False
@@ -1630,7 +1616,7 @@ class MongoengineSocket:
         if self._bypass_security:
             return (True, "Success")
 
-        data = User.objects(username=username).first()
+        data = UserORM.objects(username=username).first()
         if data is None:
             return (False, "User not found.")
 
@@ -1657,4 +1643,4 @@ class MongoengineSocket:
         bool
             If the operation was successful or not.
         """
-        return User.objects(username=username).delete() == 1
+        return UserORM.objects(username=username).delete() == 1

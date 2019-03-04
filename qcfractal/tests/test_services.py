@@ -52,11 +52,11 @@ def torsiondrive_fixture(fractal_compute_server):
         recursive_dict_merge(instance_options, keyword_augments)
 
         inp = TorsionDriveInput(**instance_options)
-        ret = client.add_service([inp], return_full=True)
+        ret = client.add_service([inp], full_return=True)
 
         if ret.meta.n_inserted:  # In case test already submitted
             compute_key = ret.data.ids[0]
-            status = client.check_services({"procedure_id": compute_key}, return_full=True)
+            status = client.check_services({"procedure_id": compute_key}, full_return=True)
             assert 'WAITING' in status.data[0]['status']
             assert status.data[0]['id'] != compute_key  # Hash should never be id
 
@@ -76,6 +76,7 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
 
     # Get a TorsionDriveORM result and check data
     result = client.get_procedures({"id": ret.ids[0]})[0]
+    assert result.status == "COMPLETE"
     assert isinstance(str(result), str)  # Check that repr runs
 
     assert pytest.approx(0.002597541340221565, 1e-5) == result.final_energies(0)
@@ -131,7 +132,7 @@ def test_service_iterate_error(torsiondrive_fixture):
     assert len(status) == 1
 
     assert status[0]["status"] == "ERROR"
-    assert "Service Build" in status[0]["error_message"]
+    assert "Service Build" in status[0]["error"]["error_message"]
 
 
 def test_service_torsiondrive_compute_error(torsiondrive_fixture):
@@ -146,7 +147,7 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
     assert len(status) == 1
 
     assert status[0]["status"] == "ERROR"
-    assert "All tasks" in status[0]["error_message"]
+    assert "All tasks" in status[0]["error"]["error_message"]
 
 
 @using_geometric
@@ -199,6 +200,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
 
     result = client.get_procedures({"id": ret.ids[0]})[0]
 
+    assert result.status == "COMPLETE"
     assert result.starting_grid == (1, 0)
     assert pytest.approx(result.final_energies((0, 0)), abs=1.e-4) == 0.0010044105443485617
     assert pytest.approx(result.final_energies((1, 1)), abs=1.e-4) == 0.0026440964897817623
@@ -255,6 +257,7 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
 
     result = client.get_procedures({"id": ret.ids[0]})[0]
 
+    assert result.status == "COMPLETE"
     assert result.starting_grid == (1, )
     assert pytest.approx(result.final_energies((0, )), abs=1.e-4) == 0.00032145876568280524
 

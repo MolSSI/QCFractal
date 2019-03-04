@@ -8,8 +8,8 @@ from typing import Any, Dict, List
 
 import numpy as np
 
-from ..interface.models import TorsionDrive, json_encoders
 from .service_util import BaseService, TaskManager
+from ..interface.models import TorsionDriveRecord, json_encoders
 
 try:
     import torsiondrive
@@ -22,7 +22,7 @@ __all__ = ["TorsionDriveService"]
 
 def _check_td():
     if td_api is None:
-        raise ImportError("Unable to find TorsionDrive which must be installed to use the TorsionDriveService")
+        raise ImportError("Unable to find TorsionDriveRecord which must be installed to use the TorsionDriveService")
 
 
 class TorsionDriveService(BaseService):
@@ -33,7 +33,7 @@ class TorsionDriveService(BaseService):
     procedure: str = "torsiondrive"
 
     # Output
-    output: TorsionDrive
+    output: TorsionDriveRecord
 
     # Temporaries
     torsiondrive_state: Dict[str, Any]
@@ -52,16 +52,13 @@ class TorsionDriveService(BaseService):
         json_encoders = json_encoders
 
     @classmethod
-    def initialize_from_api(cls, storage_socket, service_input):
+    def initialize_from_api(cls, storage_socket, logger, service_input):
         _check_td()
 
-        # Build the results object
-        input_dict = service_input.dict()
-        input_dict["initial_molecule"] = [x["id"] for x in input_dict["initial_molecule"]]
-
-        # Validate input
-        output = TorsionDrive(
-            **input_dict,
+        # Build the record
+        output = TorsionDriveRecord(
+            **service_input.dict(exclude={"initial_molecule"}),
+            initial_molecule=[x.id for x in service_input.initial_molecule],
             provenance={
                 "creator": "torsiondrive",
                 "version": torsiondrive.__version__,
@@ -110,17 +107,17 @@ class TorsionDriveService(BaseService):
 
         meta["hash_index"] = output.get_hash_index()
 
-        return cls(**meta, storage_socket=storage_socket)
+        return cls(**meta, storage_socket=storage_socket, logger=logger)
 
     def iterate(self):
 
         self.status = "RUNNING"
 
         # Check if tasks are done
-        if self.task_manager.done(self.storage_socket) is False:
+        if self.task_manager.done() is False:
             return False
 
-        complete_tasks = self.task_manager.get_tasks(self.storage_socket)
+        complete_tasks = self.task_manager.get_tasks()
 
         # Populate task results
         task_results = {}
@@ -136,10 +133,10 @@ class TorsionDriveService(BaseService):
                 ret = complete_tasks[task_id]
 
                 # Lookup molecules
-                mol_keys = self.storage_socket.get_molecules(
-                    id=[ret["initial_molecule"], ret["final_molecule"]])["data"]
+                mol_keys = self.storage_socket.get_molecules(id=[ret["initial_molecule"],
+                                                                 ret["final_molecule"]])["data"]
 
-                task_results[key].append((mol_keys[0]["geometry"], mol_keys[1]["geometry"], ret["energies"][-1]))
+                task_results[key].append((mol_keys[0].geometry, mol_keys[1].geometry, ret["energies"][-1]))
 
                 # Update history
                 self.optimization_history[key].append(ret["id"])
@@ -186,29 +183,29 @@ class TorsionDriveService(BaseService):
 
                 task_map[key].append(task_key)
 
-        self.task_manager.submit_tasks(self.storage_socket, "optimization", new_tasks)
+        self.task_manager.submit_tasks("optimization", new_tasks)
         self.task_map = task_map
 
     def finalize(self):
         """
-        Finishes adding data to the TorsionDrive object
+        Finishes adding data to the TorsionDriveRecord object
         """
 
-        self.output.Config.allow_mutation = True
-        self.output.success = True
-        self.output.status = "COMPLETE"
-
         # # Get lowest energies and positions
+        min_positions = {}
+        final_energy = {}
         for k, v in self.torsiondrive_state["grid_status"].items():
-            min_pos = int(np.argmin([x[2] for x in v]))
+            idx = int(np.argmin([x[2] for x in v]))
             key = json.dumps(td_api.grid_id_from_string(k))
-            self.output.minimum_positions[key] = min_pos
-            self.output.final_energy_dict[key] = v[min_pos][2]
+            min_positions[key] = idx
+            final_energy[key] = v[idx][2]
 
-        self.output.optimization_history = {
-            json.dumps(td_api.grid_id_from_string(k)): v
-            for k, v in self.optimization_history.items()
-        }
+        history = {json.dumps(td_api.grid_id_from_string(k)): v for k, v in self.optimization_history.items()}
 
-        self.output.Config.allow_mutation = False
-        return self.output
+        self.output = self.output.copy(update={
+            "status": "COMPLETE",
+            "minimum_positions": min_positions,
+            "final_energy_dict": final_energy,
+            "optimization_history": history
+        })
+        return True

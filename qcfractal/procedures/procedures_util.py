@@ -4,7 +4,7 @@ Utility functions for on-node procedures.
 
 import json
 
-from qcelemental.models import ResultInput
+from qcelemental.models import Molecule, ResultInput
 
 
 def unpack_single_task_spec(storage, meta, molecules):
@@ -103,6 +103,10 @@ def parse_single_tasks(storage, results):
     """
 
     for k, v in results.items():
+        stdout, stderr, error = storage.add_kvstore([v["stdout"], v["stderr"], v["error"]])["data"]
+        v["stdout"] = stdout
+        v["stderr"] = stderr
+        v["error"] = error
 
         # Flatten data back out
         v["method"] = v["model"]["method"]
@@ -110,52 +114,17 @@ def parse_single_tasks(storage, results):
         del v["model"]
 
         # Molecule should be by ID
-        v["molecule"] = storage.add_molecules([v["molecule"]])["data"][0]
+        v["molecule"] = storage.add_molecules([Molecule(**v["molecule"])])["data"][0]
 
         v["keywords"] = v["extras"]["_qcfractal_tags"]["keywords"]
         v["program"] = v["extras"]["_qcfractal_tags"]["program"]
         del v["extras"]["_qcfractal_tags"]
+        del v["schema_name"]
+        del v["schema_version"]
+
+        if v.pop("success"):
+            v["status"] = "COMPLETE"
+        else:
+            v["status"] = "ERROR"
+
     return results
-
-
-def parse_hooks(rdata, rhooks):
-    """Parses the hook data in a list of hooks
-    TODO: this methos an has error, results is undefined
-
-    Parameters
-    ----------
-    rdata : dict
-        A {uid : results} dictionary of results to pull id's from
-    rhooks : dict
-        A {uid : hook} dictionary to apply the hooks too
-
-    Returns
-    -------
-    TYPE
-        Description
-    """
-    hook_data = []
-    for k, hook in rhooks.items():
-
-        # If no hooks skip it
-        if len(hook) == 0:
-            continue
-
-        # Loop over hooks
-        for h in hook:
-            # Loop over individual commands
-            for command in h["updates"]:
-                # Custom commands
-                if not isinstance(command[-1], str):
-                    continue
-                elif "$" not in command[-1]:
-                    continue
-                elif command[-1] == "$task_id":
-                    command[-1] = results[k]["id"]
-                elif command[-1] == "$hash_index":
-                    command[-1] = results[k]["hash_index"]
-                else:
-                    raise KeyError("Hook command `{}` not understood.".format(command))
-
-        hook_data.append(hook)
-    return hook_data

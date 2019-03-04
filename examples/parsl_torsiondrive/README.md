@@ -1,4 +1,4 @@
-# TorsionDrive example using the Parsl backend
+# TorsionDriveRecord example using the Parsl backend
 
 This example computes a torsiondrive using a custom Parsl configuration.  As
 Parsl is not currently available to be configured from the command line this

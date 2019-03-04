@@ -3,14 +3,15 @@ A model for GridOptimization
 """
 
 import json
-from typing import Any, Dict, List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, constr, validator
 
-from .common_models import Molecule, ObjectId, OptimizationSpecification, Provenance, QCSpecification
-from .model_utils import hash_dictionary, json_encoders, recursive_normalizer
+from .common_models import Molecule, ObjectId, OptimizationSpecification, QCSpecification
+from .model_utils import json_encoders, recursive_normalizer
+from .records import RecordBase
 
-__all__ = ["GridOptimizationInput", "GridOptimization"]
+__all__ = ["GridOptimizationInput", "GridOptimizationRecord"]
 
 
 class ScanDimension(BaseModel):
@@ -62,10 +63,9 @@ class ScanDimension(BaseModel):
         return v
 
 
-
 class GOKeywords(BaseModel):
     """
-    GridOptimization options
+    GridOptimizationRecord options
     """
     scans: List[ScanDimension]
     preoptimization: bool = True
@@ -75,13 +75,17 @@ class GOKeywords(BaseModel):
         allow_mutation = False
 
 
+_gridopt_constr = constr(strip_whitespace=True, regex="gridoptimization")
+_qcfractal_constr = constr(strip_whitespace=True, regex="qcfractal")
+
+
 class GridOptimizationInput(BaseModel):
     """
-    A GridOptimization Input base class
+    A GridOptimizationRecord Input base class
     """
 
-    program: str = "qcfractal"
-    procedure: str = "gridoptimization"
+    program: _qcfractal_constr = "qcfractal"
+    procedure: _gridopt_constr = "gridoptimization"
     initial_molecule: Union[ObjectId, Molecule]
     keywords: GOKeywords
     optimization_spec: OptimizationSpecification
@@ -91,20 +95,59 @@ class GridOptimizationInput(BaseModel):
         allow_mutation = False
         json_encoders = json_encoders
 
-    def get_hash_index(self):
-        if isinstance(self.initial_molecule, str):
-            mol_id = self.initial_molecule
 
-        else:
-            if self.initial_molecule.id is None:
-                raise ValueError("Cannot get the hash_index without a valid intial_molecule.id field.")
+class GridOptimizationRecord(RecordBase):
+    """
+    A interface to the raw JSON data of a GridOptimizationRecord torsion scan run.
+    """
 
-            mol_id = self.initial_molecule.id
+    # Classdata
+    _hash_indices = {"initial_molecule", "keywords", "optimization_meta", "qc_meta"}
 
-        data = self.dict(include={"program", "procedure", "keywords", "optimization_meta", "qc_meta"})
-        data["initial_molecule"] = mol_id
+    # Version data
+    version: int = 1
+    procedure: _gridopt_constr = "gridoptimization"
+    program: _qcfractal_constr = "qcfractal"
 
-        return hash_dictionary(data)
+    # Input data
+    initial_molecule: ObjectId
+    keywords: GOKeywords
+    optimization_spec: OptimizationSpecification
+    qc_spec: QCSpecification
+
+    # Output data
+    starting_molecule: ObjectId
+    final_energy_dict: Dict[str, float]
+    grid_optimizations: Dict[str, ObjectId]
+    starting_grid: tuple
+
+    class Config(RecordBase.Config):
+        pass
+
+    def __str__(self):
+        """
+        Simplified gridoptimization string representation.
+
+        Returns
+        -------
+        ret : str
+            A representation of the current GridOptimizationRecord status.
+
+        Examples
+        --------
+
+        >>> repr(torsiondrive_obj)
+        GridOptimizationRecord(id='5b7f1fd57b87872d2c5d0a6d', success=True, molecule_id='5b7f1fd57b87872d2c5d0a6c')
+        """
+
+        ret = "GridOptimizationRecord("
+        ret += "id='{}', ".format(self.id)
+        ret += "status='{}', ".format(self.status)
+        ret += "initial_molecule='{}')".format(self.initial_molecule)
+
+        return ret
+
+## Utility
 
     def serialize_key(self, key):
         if isinstance(key, (int, float)):
@@ -138,74 +181,6 @@ class GridOptimizationInput(BaseModel):
             ret.append(len(scan.steps))
 
         return tuple(ret)
-
-
-class GridOptimization(GridOptimizationInput):
-    """
-    A interface to the raw JSON data of a GridOptimization torsion scan run.
-    """
-
-    # Client and local data
-    client: Any = None
-    cache: Dict[str, Any] = {}
-
-    # Identification
-    id: str = None
-    success: bool = False
-    status: str = "INCOMPLETE"
-    hash_index: str = None
-
-    provenance: Provenance
-
-    # Data pointers
-    initial_molecule: ObjectId
-    starting_molecule: ObjectId
-    final_energy_dict: Dict[str, float]
-    grid_optimizations: Dict[str, ObjectId]
-    starting_grid: tuple
-
-    class Config:
-        allow_mutation = False
-        json_encoders = json_encoders
-
-    def __init__(self, **data):
-        super().__init__(**data)
-
-        # Set hash index if not present
-        if self.hash_index is None:
-            self.__values__["hash_index"] = self.get_hash_index()
-
-    def __str__(self):
-        """
-        Simplified gridoptimization string representation.
-
-        Returns
-        -------
-        ret : str
-            A representation of the current GridOptimization status.
-
-        Examples
-        --------
-
-        >>> repr(torsiondrive_obj)
-        GridOptimization(id='5b7f1fd57b87872d2c5d0a6d', success=True, molecule_id='5b7f1fd57b87872d2c5d0a6c')
-        """
-
-        ret = "GridOptimization("
-        ret += "id='{}', ".format(self.id)
-        ret += "success='{}', ".format(self.success)
-        ret += "initial_molecule='{}')".format(self.initial_molecule)
-
-        return ret
-
-## Utility
-
-    def dict(self, *args, **kwargs):
-        kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"client", "cache"}
-        return super().dict(*args, **kwargs)
-
-    def json_dict(self, *args, **kwargs):
-        return json.loads(self.json(*args, **kwargs))
 
 
 ## Query

@@ -1,7 +1,6 @@
-from .gridoptimization import GridOptimization
-from .proc_models import OptimizationModel
-from .torsiondrive import TorsionDrive
-
+from .gridoptimization import GridOptimizationRecord
+from .records import OptimizationRecord
+from .torsiondrive import TorsionDriveRecord
 
 def build_procedure(data, procedure=None, client=None):
     """
@@ -34,7 +33,7 @@ def build_procedure(data, procedure=None, client=None):
     }
 
     >>> build_orm(data)
-    TorsionDrive(id='5b7f1fd57b87872d2c5d0a6c', state='RUNNING', molecule_id='5b7f1fd57b87872d2c5d0a6c', molecule_name='HOOH')
+    TorsionDriveRecord(id='5b7f1fd57b87872d2c5d0a6c', state='RUNNING', molecule_id='5b7f1fd57b87872d2c5d0a6c', molecule_name='HOOH')
     """
 
     if ("procedure" not in data) and (procedure is None):
@@ -43,10 +42,10 @@ def build_procedure(data, procedure=None, client=None):
     # import json
     # print(json.dumps(data, indent=2))
     if data["procedure"].lower() == "torsiondrive":
-        return TorsionDrive(**data, client=client)
+        return TorsionDriveRecord(**data, client=client)
     elif data["procedure"].lower() == "gridoptimization":
-        return GridOptimization(**data, client=client)
+        return GridOptimizationRecord(**data, client=client)
     elif data["procedure"].lower() == "optimization":
-        return OptimizationModel(**data, client=client)
+        return OptimizationRecord(**data, client=client)
     else:
         raise KeyError("Service names {} not recognized.".format(data["procedure"]))

@@ -8,19 +8,19 @@
 from time import time
 
 import pytest
-import qcfractal.interface as portal
+import qcfractal.interface as ptl
 from bson import ObjectId
-from qcfractal.storage_sockets.me_models import (Molecule, OptimizationProcedure, Procedure, Result,
-                                                 TaskQueue, TorsiondriveProcedure)
+from qcfractal.storage_sockets.me_models import (MoleculeORM, OptimizationProcedureORM, ProcedureORM, ResultORM,
+                                                 TaskQueueORM, TorsiondriveProcedureORM)
 from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 
 
 @pytest.fixture
 def molecules_H4O2(storage_socket):
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
-    water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
 
-    ret = storage_socket.add_molecules([water, water2.json_dict()])
+    ret = storage_socket.add_molecules([water, water2])
 
     yield list(ret['data'])
 
@@ -30,8 +30,8 @@ def molecules_H4O2(storage_socket):
 
 @pytest.fixture
 def kw_fixtures(storage_socket):
-    kw1 = portal.models.KeywordSet(**{"values": {"something": "kwfixture"}})
-    ret = storage_socket.add_keywords([kw1.dict()])
+    kw1 = ptl.models.KeywordSet(**{"values": {"something": "kwfixture"}})
+    ret = storage_socket.add_keywords([kw1])
 
     yield list(ret['data'])
 
@@ -41,44 +41,44 @@ def kw_fixtures(storage_socket):
 
 def test_molecule(storage_socket):
     """
-        Test the use of the ME class Molecule
+        Test the use of the ME class MoleculeORM
 
         Note:
-            creation of a Molecule using ME is not implemented yet
-            Should create a Molecule using: mongoengine_socket.add_molecules
+            creation of a MoleculeORM using ME is not implemented yet
+            Should create a MoleculeORM using: mongoengine_socket.add_molecules
     """
 
-    # don't use len(Molecule.objects), slow
-    num_mol_in_db = Molecule.objects().count()
-    # Molecule.objects().delete()
+    # don't use len(MoleculeORM.objects), slow
+    num_mol_in_db = MoleculeORM.objects().count()
+    # MoleculeORM.objects().delete()
     assert num_mol_in_db == 0
 
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
-    water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
 
-    # Add Molecule using pymongo
+    # Add MoleculeORM using pymongo
     ret = storage_socket.add_molecules([water, water2])
     assert ret["meta"]["success"] is True
     assert ret["meta"]["n_inserted"] == 2
 
     # Use the ORM class
-    water_mol = Molecule.objects().first()
+    water_mol = MoleculeORM.objects().first()
     assert water_mol.molecular_formula == "H4O2"
     assert water_mol.molecular_charge == 0
 
     # print(water_mol.json_dict())
 
     # Query with fields in the model
-    result_list = Molecule.objects(molecular_formula="H4O2")
+    result_list = MoleculeORM.objects(molecular_formula="H4O2")
     assert len(result_list) == 2
     assert result_list[0].molecular_multiplicity == 1
 
     # Query with fields NOT in the model. works too!
-    result_list = Molecule.objects(molecular_charge=0)
+    result_list = MoleculeORM.objects(molecular_charge=0)
     assert len(result_list) == 2
 
     # get unique by hash and formula
-    one_mol = Molecule.objects(molecule_hash=water_mol.molecule_hash, molecular_formula=water_mol.molecular_formula)
+    one_mol = MoleculeORM.objects(molecule_hash=water_mol.molecule_hash, molecular_formula=water_mol.molecular_formula)
     assert len(one_mol) == 1
 
     # Clean up
@@ -90,41 +90,44 @@ def test_results(storage_socket, molecules_H4O2, kw_fixtures):
         Handling results throught the ME classes
     """
 
-    assert Result.objects().count() == 0
+    assert ResultORM.objects().count() == 0
 
     assert len(molecules_H4O2) == 2
 
     page1 = {
         "molecule": molecules_H4O2[0],
-        "method": "M1",
-        "basis": "B1",
+        "method": "m1",
+        "basis": "b1",
         "keywords": None,
-        "program": "P1",
+        "program": "p1",
         "driver": "energy",
         "other_data": 5,
+        "status": "COMPLETE",
     }
 
     page2 = {
         "molecule": ObjectId(molecules_H4O2[1]),
-        "method": "M2",
-        "basis": "B1",
+        "method": "m2",
+        "basis": "b1",
         "keywords": kw_fixtures[0],
-        "program": "P1",
+        "program": "p1",
         "driver": "energy",
         "other_data": 10,
+        "status": "COMPLETE",
     }
 
-    Result(**page1).save()
-    ret = Result.objects(method='M1').first()
+    ResultORM(**page1).save()
+    ret = ResultORM.objects(method='m1').first()
     assert ret.molecule.fetch().molecular_formula == 'H4O2'
     assert ret.keywords is None
 
-    Result(**page2).save()
-    ret = Result.objects(method='M2').first()
+    ResultORM(**page2).save()
+    ret = ResultORM.objects(method='m2').first()
     assert ret.molecule.fetch().molecular_formula == 'H4O2'
+    assert ret.method == "m2"
 
     # clean up
-    Result.objects().delete()
+    ResultORM.objects().delete()
 
 
 def test_procedure(storage_socket):
@@ -132,30 +135,31 @@ def test_procedure(storage_socket):
         Handling procedure throught the ME classes
     """
 
-    assert Procedure.objects().count() == 0
+    assert ProcedureORM.objects().count() == 0
     # assert Keywords.objects().count() == 0
 
-    # molecules = Molecule.objects(molecular_formula='H4O2')
+    # molecules = MoleculeORM.objects(molecular_formula='H4O2')
     # assert molecules.count() == 2
 
     data1 = {
         # "molecule": molecules[0],
         "procedure": "undefined",
         "keywords": None,
-        "program": "P5",
+        "program": "p5",
         "qc_meta": {
-            "basis": "B1",
-            "program": "P1",
-            "method": "M1",
+            "basis": "b1",
+            "program": "p1",
+            "method": "11",
             "driver": "energy"
         },
-        "hash_index": "somethingveryunique"
+        "hash_index": "somethingveryunique",
+        "status": "COMPLETE",
     }
 
-    procedure = Procedure(**data1)
+    procedure = ProcedureORM(**data1)
     procedure.save()
     assert procedure.id
-    # print('Procedure After save: ', procedure.json_dict())
+    # print('ProcedureORM After save: ', procedure.json_dict())
     # assert procedure.molecule.molecular_formula == 'H4O2'
 
 
@@ -164,25 +168,26 @@ def test_optimization_procedure(storage_socket, molecules_H4O2):
         Optimization procedure
     """
 
-    assert OptimizationProcedure.objects().count() == 0
+    assert OptimizationProcedureORM.objects().count() == 0
     # assert Keywords.objects().count() == 0
 
     data1 = {
         "initial_molecule": ObjectId(molecules_H4O2[0]),
         # "procedure_type": None,
         "keywords": None,
-        "program": "P7",
+        "program": "p7",
         "qc_meta": {
-            "basis": "B1",
-            "program": "P1",
-            "method": "M1",
+            "basis": "b1",
+            "program": "p1",
+            "method": "m1",
             "driver": "energy"
         },
-        "hash_index": "somethingveryunique_opt1"
+        "hash_index": "somethingveryunique_opt1",
+        "status": "COMPLETE",
     }
 
-    procedure = OptimizationProcedure(**data1).save()
-    proc = OptimizationProcedure.objects().first()
+    procedure = OptimizationProcedureORM(**data1).save()
+    proc = OptimizationProcedureORM.objects().first()
     assert proc.initial_molecule.fetch().molecular_formula == 'H4O2'
 
 
@@ -191,29 +196,30 @@ def test_torsiondrive_procedure(storage_socket):
         Torsiondrive procedure
     """
 
-    assert TorsiondriveProcedure.objects().count() == 0
+    assert TorsiondriveProcedureORM.objects().count() == 0
     # assert Keywords.objects().count() == 0
 
-    # molecules = Molecule.objects(molecular_formula='H4O2')
+    # molecules = MoleculeORM.objects(molecular_formula='H4O2')
     # assert molecules.count() == 2
 
     data1 = {
         # "molecule": molecules[0],
         # "procedure": None,
         "keywords": None,
-        "program": "P9",
+        "program": "p9",
         "qc_meta": {
-            "basis": "B1",
-            "program": "P1",
-            "method": "M1",
+            "basis": "b1",
+            "program": "p1",
+            "method": "m1",
             "driver": "energy"
         },
-        "hash_index": "somethingveryunique_td1"
+        "hash_index": "somethingveryunique_td1",
+        "status": "COMPLETE",
     }
 
-    procedure = TorsiondriveProcedure(**data1)
+    procedure = TorsiondriveProcedureORM(**data1)
     procedure.save()
-    # print('TorsiondriveProcedure After save: ', procedure.json_dict())
+    # print('TorsiondriveProcedureORM After save: ', procedure.json_dict())
 
 
 def test_add_task_queue(storage_socket, molecules_H4O2):
@@ -222,54 +228,56 @@ def test_add_task_queue(storage_socket, molecules_H4O2):
         in QCFractal, tasks should be added using storage_socket
     """
 
-    assert TaskQueue.objects.count() == 0
-    TaskQueue.objects().delete()
+    assert TaskQueueORM.objects.count() == 0
+    TaskQueueORM.objects().delete()
 
     page1 = {
         "molecule": ObjectId(molecules_H4O2[0]),
-        "method": "M1",
-        "basis": "B1",
+        "method": "m1",
+        "basis": "b1",
         "keywords": None,
-        "program": "P1",
+        "program": "p1",
         "driver": "energy",
         "other_data": 5,
+        "status": "COMPLETE",
     }
     # add a task that reference results
-    result = Result(**page1).save()
+    result = ResultORM(**page1).save()
 
-    task = TaskQueue(base_result=result)
+    task = TaskQueueORM(base_result=result)
     task.save()
-    assert TaskQueue.objects().count() == 1
+    assert TaskQueueORM.objects().count() == 1
 
-    # add a task that reference Optimization Procedure
-    opt = OptimizationProcedure.objects().first()
+    # add a task that reference Optimization ProcedureORM
+    opt = OptimizationProcedureORM.objects().first()
 
-    task = TaskQueue(base_result=opt)
+    task = TaskQueueORM(base_result=opt)
     task.save()
-    assert TaskQueue.objects().count() == 2
+    assert TaskQueueORM.objects().count() == 2
 
-    # add a task that reference Torsiondrive Procedure
+    # add a task that reference Torsiondrive ProcedureORM
     data1 = {
         "keywords": None,
         "program": "P9",
         "qc_meta": {
-            "basis": "B1",
-            "program": "P1",
-            "method": "M1",
+            "basis": "b1",
+            "program": "p1",
+            "method": "m1",
             "driver": "energy"
         },
-        "hash_index": "somethingveryunique_td2"
+        "hash_index": "somethingveryunique_td2",
+        "status": "COMPLETE",
     }
 
-    tor = TorsiondriveProcedure(**data1).save()
+    tor = TorsiondriveProcedureORM(**data1).save()
 
-    task = TaskQueue(base_result=tor)
+    task = TaskQueueORM(base_result=tor)
     task.save()
-    assert TaskQueue.objects().count() == 3
+    assert TaskQueueORM.objects().count() == 3
 
     # cleanup
-    Result.objects.delete()
-    TaskQueue.objects.delete()
+    ResultORM.objects.delete()
+    TaskQueueORM.objects.delete()
 
 
 def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
@@ -277,15 +285,16 @@ def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
         Test results pagination
     """
 
-    assert Result.objects().count() == 0
+    assert ResultORM.objects().count() == 0
 
     result_template = {
         "molecule": ObjectId(molecules_H4O2[0]),
-        "method": "M1",
-        "basis": "B1",
+        "method": "m1",
+        "basis": "b1",
         "keywords": kw_fixtures[0],
-        "program": "P1",
+        "program": "p1",
         "driver": "energy",
+        "status": "COMPLETE",
     }
 
     # Save (~ 1 msec/doc)
@@ -298,12 +307,12 @@ def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
 
     for i in range(first_half):
         result_template['basis'] = str(i)
-        Result(**result_template).save()
+        ResultORM(**result_template).save()
 
-    result_template['method'] = 'M2'
+    result_template['method'] = 'm2'
     for i in range(first_half, total_results):
         result_template['basis'] = str(i)
-        Result(**result_template).save()
+        ResultORM(**result_template).save()
 
     # total_time = (time() - t1) * 1000 / total_results
     # print('Inserted {} results in {:.2f} msec / doc'.format(total_results, total_time))
@@ -311,8 +320,8 @@ def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
     # query (~ 0.13 msec/doc)
     t1 = time()
 
-    ret1 = Result.objects(method='M1')
-    ret2 = Result.objects(method='M2').limit(limit).skip(skip)
+    ret1 = ResultORM.objects(method='m1')
+    ret2 = ResultORM.objects(method='m2').limit(limit).skip(skip)
 
     data1 = [d.to_json_obj() for d in ret1]
     data2 = [d.to_json_obj() for d in ret2]
@@ -328,18 +337,18 @@ def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
     assert int(data2[0]['basis']) == first_half + skip
 
     # get the last page when with fewer than limit are remaining
-    ret = Result.objects(method='M1').limit(limit).skip(int(first_half - limit / 2))
+    ret = ResultORM.objects(method='m1').limit(limit).skip(int(first_half - limit / 2))
     assert len(ret) == limit / 2
 
     # total_time = (time() - t1) * 1000 / total_results
     # print('Query {} results in {:.2f} msec /doc'.format(total_results, total_time))
 
     # cleanup
-    Result.objects.delete()
+    ResultORM.objects.delete()
 
 
 def test_queue(storage_socket):
-    tasks = TaskQueue.objects(status='WAITING')\
+    tasks = TaskQueueORM.objects(status='WAITING')\
                 .limit(1000)\
                 .order_by('-created_on')\
                 .select_related()   # *** no lazy load of ReferenceField, get them now (trurns of dereferencing, max_depth=1)

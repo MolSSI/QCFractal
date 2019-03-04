@@ -7,9 +7,9 @@ from typing import Dict, Set
 
 import numpy as np
 
+from .service_util import BaseService, expand_ndimensional_grid
 from ..extras import get_information
-from ..interface.models import GridOptimization, Molecule, json_encoders
-from .service_util import BaseService, TaskManager, expand_ndimensional_grid
+from ..interface.models import GridOptimizationRecord, Molecule, json_encoders
 
 __all__ = ["GridOptimizationService"]
 
@@ -22,7 +22,7 @@ class GridOptimizationService(BaseService):
     procedure: str = "gridoptimization"
 
     # Output
-    output: GridOptimization
+    output: GridOptimizationRecord
 
     # Temporaries
     grid_optimizations: Dict[str, str] = {}
@@ -35,7 +35,6 @@ class GridOptimizationService(BaseService):
 
     # Task helpers
     task_map: Dict[str, str] = {}
-    task_manager: TaskManager = TaskManager()
 
     # Templates
     constraint_template: str
@@ -47,15 +46,13 @@ class GridOptimizationService(BaseService):
         json_encoders = json_encoders
 
     @classmethod
-    def initialize_from_api(cls, storage_socket, service_input):
+    def initialize_from_api(cls, storage_socket, logger, service_input):
 
-        # Build the results object
-        input_dict = service_input.dict()
-        input_dict["initial_molecule"] = input_dict["initial_molecule"]["id"]
-
-        output = GridOptimization(
-            **input_dict,
-            starting_molecule=input_dict["initial_molecule"],
+        # Build the record
+        output = GridOptimizationRecord(
+            **service_input.dict(exclude={"initial_molecule"}),
+            initial_molecule=service_input.initial_molecule.id,
+            starting_molecule=service_input.initial_molecule.id,
             provenance={
                 "creator": "qcfractal",
                 "version": get_information("version"),
@@ -102,7 +99,7 @@ class GridOptimizationService(BaseService):
             meta["starting_grid"] = GridOptimizationService._calculate_starting_grid(
                 output.keywords.scans, service_input.initial_molecule)
 
-        return cls(**meta, storage_socket=storage_socket)
+        return cls(**meta, storage_socket=storage_socket, logger=logger)
 
     @staticmethod
     def _calculate_starting_grid(scans, molecule):
@@ -130,19 +127,19 @@ class GridOptimizationService(BaseService):
         if self.iteration == -2:
             packet = json.loads(self.optimization_template)
             packet["data"] = [self.output.initial_molecule]
-            self.task_manager.submit_tasks(self.storage_socket, "optimization", {"initial_opt": packet})
+            self.task_manager.submit_tasks("optimization", {"initial_opt": packet})
 
             self.iteration = -1
             return False
 
         elif self.iteration == -1:
-            if self.task_manager.done(self.storage_socket) is False:
+            if self.task_manager.done() is False:
                 return False
 
-            complete_tasks = self.task_manager.get_tasks(self.storage_socket)
+            complete_tasks = self.task_manager.get_tasks()
 
-            self.starting_molecule = Molecule(**self.storage_socket.get_molecules(
-                id=[complete_tasks["initial_opt"]["final_molecule"]])["data"][0])
+            self.starting_molecule = self.storage_socket.get_molecules(
+                id=[complete_tasks["initial_opt"]["final_molecule"]])["data"][0]
             self.starting_grid = self._calculate_starting_grid(self.output.keywords.scans, self.starting_molecule)
 
             self.submit_optimization_tasks({self.output.serialize_key(self.starting_grid): self.starting_molecule.id})
@@ -159,11 +156,11 @@ class GridOptimizationService(BaseService):
             return False
 
         # Check if tasks are done
-        if self.task_manager.done(self.storage_socket) is False:
+        if self.task_manager.done() is False:
             return False
 
         # Obtain complete tasks and figure out future tasks
-        complete_tasks = self.task_manager.get_tasks(self.storage_socket)
+        complete_tasks = self.task_manager.get_tasks()
         for k, v in complete_tasks.items():
             self.final_energies[k] = v["energies"][-1]
 
@@ -224,21 +221,19 @@ class GridOptimizationService(BaseService):
 
             new_tasks[key] = packet
 
-        self.task_manager.submit_tasks(self.storage_socket, "optimization", new_tasks)
+        self.task_manager.submit_tasks("optimization", new_tasks)
 
     def finalize(self):
         """
-        Finishes adding data to the GridOptimization object
+        Finishes adding data to the GridOptimizationRecord object
         """
 
-        output = self.output.copy(
-            update={
-                "success": True,
-                "status": "COMPLETE",
-                "starting_molecule": self.starting_molecule.id,
-                "starting_grid": self.starting_grid,
-                "grid_optimizations": self.grid_optimizations,
-                "final_energy_dict": self.final_energies,
-            })
+        self.output = self.output.copy(update={
+            "status": "COMPLETE",
+            "starting_molecule": self.starting_molecule.id,
+            "starting_grid": self.starting_grid,
+            "grid_optimizations": self.grid_optimizations,
+            "final_energy_dict": self.final_energies,
+        })
 
-        return output
+        return True

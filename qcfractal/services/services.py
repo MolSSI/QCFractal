@@ -21,7 +21,7 @@ def _service_chooser(name):
         raise KeyError("Name {} not recognized.".format(name.title()))
 
 
-def initialize_service(storage_socket, service_input):
+def initialize_service(storage_socket, logger, service_input):
     """Initializes a service from a API call
 
     Parameters
@@ -42,10 +42,10 @@ def initialize_service(storage_socket, service_input):
 
     """
     name = service_input.procedure
-    return _service_chooser(name).initialize_from_api(storage_socket, service_input)
+    return _service_chooser(name).initialize_from_api(storage_socket, logger, service_input)
 
 
-def construct_service(storage_socket, data):
+def construct_service(storage_socket, logger, data):
     """Initializes a service from a JSON blob
 
     Parameters
@@ -62,4 +62,4 @@ def construct_service(storage_socket, data):
 
     """
     name = data["service"]
-    return _service_chooser(name)(**data, storage_socket=storage_socket)
+    return _service_chooser(name)(**data, storage_socket=storage_socket, logger=logger)

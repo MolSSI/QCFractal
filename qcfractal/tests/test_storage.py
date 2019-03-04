@@ -5,7 +5,7 @@ All tests should be atomic, that is create and cleanup their data
 """
 
 import pytest
-import qcfractal.interface as portal
+import qcfractal.interface as ptl
 from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 
 bad_id1 = "000000000000000000000000"
@@ -14,7 +14,7 @@ bad_id2 = "000000000000000000000001"
 
 def test_molecules_add(storage_socket):
 
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
     ret1 = storage_socket.add_molecules([water])
@@ -44,7 +44,7 @@ def test_identical_mol_insert(storage_socket):
     Tests as edge case where to identical molecules are added under different tags.
     """
 
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
 
     # Add two identical molecules
     ret1 = storage_socket.add_molecules([water, water])
@@ -61,8 +61,8 @@ def test_identical_mol_insert(storage_socket):
 
 
 def test_molecules_add_many(storage_socket):
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
-    water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
 
     ret = storage_socket.add_molecules([water, water2])
     assert ret["meta"]["n_inserted"] == 2
@@ -81,7 +81,7 @@ def test_molecules_add_many(storage_socket):
 
 def test_molecules_get(storage_socket):
 
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
     ret = storage_socket.add_molecules([water])
@@ -89,8 +89,7 @@ def test_molecules_get(storage_socket):
     water_id = ret["data"][0]
 
     # Pull molecule from the DB for tests
-    db_json = storage_socket.get_molecules(id=water_id)["data"][0]
-    water2 = portal.Molecule(**db_json)
+    water2 = storage_socket.get_molecules(id=water_id)["data"][0]
     water2.compare(water)
 
     # Cleanup adds
@@ -99,26 +98,25 @@ def test_molecules_get(storage_socket):
 
 
 def test_molecules_mixed_add_get(storage_socket):
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
 
     ret = storage_socket.get_add_molecules_mixed([bad_id1, water, bad_id2, "bad_id"])
     assert ret["data"][0] is None
-    assert ret["data"][1]["identifiers"]["molecule_hash"] == water.get_hash()
+    assert ret["data"][1].identifiers.molecule_hash == water.get_hash()
     assert ret["data"][2] is None
     assert set(ret["meta"]["missing"]) == {0, 2, 3}
 
     # Cleanup adds
-    ret = storage_socket.del_molecules(id=ret["data"][1]["id"])
+    ret = storage_socket.del_molecules(id=ret["data"][1].id)
     assert ret == 1
 
 
 def test_molecules_bad_get(storage_socket):
 
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
     ret = storage_socket.add_molecules([water])
-    assert ret["meta"]["n_inserted"] == 1
     water_id = ret["data"][0]
 
     # Pull molecule from the DB for tests
@@ -135,53 +133,44 @@ def test_molecules_bad_get(storage_socket):
 
 def test_keywords_add(storage_socket):
 
-    opts = {"values": {"o": 5}, "hash_index": "something_unique"}
+    kw = ptl.models.KeywordSet(**{"values": {"o": 5}, "hash_index": "something_unique"})
 
-    ret = storage_socket.add_keywords([opts, opts.copy()])
+    ret = storage_socket.add_keywords([kw, kw.copy()])
     assert len(ret["data"]) == 2
     assert ret["meta"]["n_inserted"] == 1
     assert ret["data"][0] == ret["data"][1]
 
-    ret = storage_socket.add_keywords(opts)
+    ret = storage_socket.add_keywords([kw])
     assert ret["meta"]["n_inserted"] == 0
 
     ret = storage_socket.get_keywords(hash_index="something_unique")
-    opts["id"] = ret["data"][0]["id"]
+    ret_kw = ret["data"][0]
     assert ret["meta"]["n_found"] == 1
-    assert ret["data"][0] == opts
+    assert ret_kw.values == kw.values
 
-    assert 1 == storage_socket.del_keywords(id=opts["id"])
+    assert 1 == storage_socket.del_keywords(id=ret_kw.id)
 
 
 def test_keywords_mixed_add_get(storage_socket):
 
-    opts1 = portal.models.KeywordSet(**{"values": {"o": 5}})
-    id1 = storage_socket.add_keywords([opts1.json_dict()])["data"][0]
+    opts1 = ptl.models.KeywordSet(values={"o": 5})
+    id1 = storage_socket.add_keywords([opts1])["data"][0]
 
-    opts2 = {"values": {"o": 6}}
+    opts2 = ptl.models.KeywordSet(values={"o": 6})
     opts = storage_socket.get_add_keywords_mixed([opts1, opts2, id1, bad_id1, bad_id2])["data"]
-    assert opts[0]["id"] == id1
-    assert opts[1]["values"]["o"] == 6
-    assert "id" in opts[1]
-    assert opts[2]["id"] == id1
+    assert opts[0].id == id1
+    assert opts[1].values["o"] == 6
+    assert opts[2].id == id1
     assert opts[3] is None
     assert opts[4] is None
 
     assert 1 == storage_socket.del_keywords(id=id1)
-    assert 1 == storage_socket.del_keywords(id=opts[1]["id"])
-
-
-def test_keywords_error(storage_socket):
-    opts = {}
-
-    ret = storage_socket.add_keywords(opts)
-    assert ret["meta"]["n_inserted"] == 0
-    assert len(ret["meta"]["validation_errors"]) == 1
+    assert 1 == storage_socket.del_keywords(id=opts[1].id)
 
 
 def test_collections_add(storage_socket):
 
-    collection = 'TorsionDrive'
+    collection = 'TorsionDriveRecord'
     name = 'Torsion123'
     db = {"something": "else", "array": ["54321"]}
 
@@ -205,7 +194,7 @@ def test_collections_add(storage_socket):
 
 def test_collections_overwrite(storage_socket):
 
-    collection = "TorsionDrive"
+    collection = "TorsionDriveRecord"
     name = "Torsion123"
     db = {"something": "else", "array": ["54321"]}
 
@@ -218,7 +207,7 @@ def test_collections_overwrite(storage_socket):
 
     db_update = {
         # "id": ret["data"][0]["id"],
-        "collection": "TorsionDrive",  # no need to include
+        "collection": "TorsionDriveRecord",  # no need to include
         "name": "Torsion123",  # no need to include
         "something": "New",
         "something2": "else",
@@ -246,45 +235,51 @@ def test_collections_overwrite(storage_socket):
 def test_results_add(storage_socket):
 
     # Add two waters
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
-    water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
     mol_insert = storage_socket.add_molecules([water, water2])
 
-    kw1 = portal.models.KeywordSet(**{"program": "a", "values": {}})
-    kwid1 = storage_socket.add_keywords([kw1.dict()])["data"][0]
+    kw1 = ptl.models.KeywordSet(**{"program": "a", "values": {}})
+    kwid1 = storage_socket.add_keywords([kw1])["data"][0]
 
-    page1 = {
+    page1 = ptl.models.ResultRecord(**{
         "molecule": mol_insert["data"][0],
         "method": "M1",
         "basis": "B1",
         "keywords": kwid1,
         "program": "P1",
         "driver": "energy",
-        "other_data": 5,
+        "extras": {
+            "other_data": 5
+        },
         "hash_index": 0,
-    }
+    })
 
-    page2 = {
+    page2 = ptl.models.ResultRecord(**{
         "molecule": mol_insert["data"][1],
         "method": "M1",
         "basis": "B1",
         "keywords": kwid1,
         "program": "P1",
         "driver": "energy",
-        "other_data": 10,
+        "extras": {
+            "other_data": 10
+        },
         "hash_index": 1,
-    }
+    })
 
-    page3 = {
+    page3 = ptl.models.ResultRecord(**{
         "molecule": mol_insert["data"][1],
         "method": "M22",
         "basis": "B1",
         "keywords": None,
         "program": "P1",
         "driver": "energy",
-        "other_data": 10,
+        "extras": {
+            "other_data": 10
+        },
         "hash_index": 2,
-    }
+    })
     ids = []
     ret = storage_socket.add_results([page1, page2])
     assert ret["meta"]["n_inserted"] == 2
@@ -313,14 +308,14 @@ def test_results_add(storage_socket):
 @pytest.fixture(scope="function")
 def storage_results(storage_socket):
     # Add two waters
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
-    water2 = portal.data.get_molecule("water_dimer_stretch.psimol")
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
     mol_insert = storage_socket.add_molecules([water, water2])
 
-    kw1 = portal.models.KeywordSet(**{"program": "a", "values": {}})
-    kwid1 = storage_socket.add_keywords([kw1.dict()])["data"][0]
+    kw1 = ptl.models.KeywordSet(**{"program": "a", "values": {}})
+    kwid1 = storage_socket.add_keywords([kw1])["data"][0]
 
-    page1 = {
+    page1 = ptl.models.ResultRecord(**{
         "molecule": mol_insert["data"][0],
         "method": "M1",
         "basis": "B1",
@@ -330,9 +325,9 @@ def storage_results(storage_socket):
         "return_result": 5,
         "hash_index": 0,
         "status": 'COMPLETE'
-    }
+    })
 
-    page2 = {
+    page2 = ptl.models.ResultRecord(**{
         "molecule": mol_insert["data"][1],
         "method": "M1",
         "basis": "B1",
@@ -342,9 +337,9 @@ def storage_results(storage_socket):
         "return_result": 10,
         "hash_index": 1,
         "status": 'COMPLETE'
-    }
+    })
 
-    page3 = {
+    page3 = ptl.models.ResultRecord(**{
         "molecule": mol_insert["data"][0],
         "method": "M1",
         "basis": "B1",
@@ -354,9 +349,9 @@ def storage_results(storage_socket):
         "return_result": 15,
         "hash_index": 2,
         "status": 'COMPLETE'
-    }
+    })
 
-    page4 = {
+    page4 = ptl.models.ResultRecord(**{
         "molecule": mol_insert["data"][0],
         "method": "M2",
         "basis": "B1",
@@ -366,9 +361,9 @@ def storage_results(storage_socket):
         "return_result": 15,
         "hash_index": 3,
         "status": 'COMPLETE'
-    }
+    })
 
-    page5 = {
+    page5 = ptl.models.ResultRecord(**{
         "molecule": mol_insert["data"][1],
         "method": "M2",
         "basis": "B1",
@@ -378,9 +373,9 @@ def storage_results(storage_socket):
         "return_result": 20,
         "hash_index": 4,
         "status": 'COMPLETE'
-    }
+    })
 
-    page6 = {
+    page6 = ptl.models.ResultRecord(**{
         "molecule": mol_insert["data"][1],
         "method": "M3",
         "basis": "B1",
@@ -390,7 +385,7 @@ def storage_results(storage_socket):
         "return_result": 20,
         "hash_index": 5,
         "status": 'COMPLETE'
-    }
+    })
 
     results_insert = storage_socket.add_results([page1, page2, page3, page4, page5, page6])
     assert results_insert["meta"]["n_inserted"] == 6
@@ -497,7 +492,6 @@ def test_queue_submit(storage_results):
             }],
             "kwargs": {},
         },
-        "hooks": [("service", "x")],
         "tag": None,
         "base_result": ('results', result1['id'])
     }
@@ -508,7 +502,6 @@ def test_queue_submit(storage_results):
     assert ret['meta']['n_inserted'] == 1
 
     # submit a duplicate task with a hook
-    task1['hooks'] = [('service', 'y')]
     ret = storage_results.queue_submit([task1])
     assert len(ret["data"]) == 1
     assert ret['meta']['n_inserted'] == 0
@@ -532,7 +525,6 @@ def test_storage_queue_roundtrip(storage_results):
             }],
             "kwargs": {},
         },
-        "hooks": [("service", "")],
         "tag": None,
         "base_result": ('results', result1['id'])
     }
@@ -561,42 +553,6 @@ def test_storage_queue_roundtrip(storage_results):
     # Check queue is empty
     r = storage_results.queue_get_next("test_manager")
     assert len(r) == 0
-
-
-def test_storage_queue_duplicate(storage_results):
-
-    result1 = storage_results.get_results()['data'][2]
-    task1 = {
-        # "hash_index": idx,
-        "spec": {},
-        "hooks": [("service", "123")],
-        "tag": None,
-        "base_result": ('results', result1['id'])
-    }
-    r = storage_results.queue_submit([task1])
-    assert len(r["data"]) == 1
-    queue_id = r["data"][0]
-
-    # Put the first task in a waiting state
-    r = storage_results.queue_get_next("test_manager")
-    assert len(r) == 1
-
-    # Change hooks, only one submission due to hash_index conflict
-    task1["hooks"] = [("service", "456")]
-    r = storage_results.queue_submit([task1])
-    assert r["meta"]["n_inserted"] == 0
-
-    # Pull out the data and check the hooks
-    r = storage_results.queue_get_by_id([queue_id])
-    hooks = r[0]["hooks"]
-    assert len(hooks) == 2
-    assert hooks[0][0] == "service"
-    assert hooks[1][0] == "service"
-    assert {"123", "456"} == {hooks[0][1], hooks[1][1]}
-
-    # Cleanup
-    r = storage_results.queue_mark_complete([queue_id])
-    assert r == 1
 
 
 def test_queue_submit_many_order(storage_results):
@@ -680,7 +636,7 @@ def test_results_pagination(storage_socket):
 
     assert len(storage_socket.get_results()['data']) == 0
 
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
     mol = storage_socket.add_molecules([water])['data'][0]
 
     result_template = {
@@ -704,13 +660,13 @@ def test_results_pagination(storage_socket):
     for i in range(first_half):
         tmp = result_template.copy()
         tmp['basis'] = str(i)
-        results.append(tmp)
+        results.append(ptl.models.ResultRecord(**tmp))
 
     result_template['method'] = 'M2'
     for i in range(first_half, total_results):
         tmp = result_template.copy()
         tmp['basis'] = str(i)
-        results.append(tmp)
+        results.append(ptl.models.ResultRecord(**tmp))
 
     inserted = storage_socket.add_results(results)
     assert inserted['meta']['n_inserted'] == total_results
@@ -749,8 +705,15 @@ def test_procedure_pagination(storage_socket):
     assert len(storage_socket.get_procedures()['data']) == 0
 
     proc_template = {
-        "procedure": "optimization",
-        "program": "P1",
+        "initial_molecule": bad_id1,
+        "program": "something",
+        "qc_spec": {
+            "driver": "gradient",
+            "method": "HF",
+            "basis": "sto-3g",
+            "keywords": None,
+            "program": "psi4"
+        },
     }
 
     total = 1000
@@ -759,7 +722,7 @@ def test_procedure_pagination(storage_socket):
     for i in range(total):
         tmp = proc_template.copy()
         tmp['hash_index'] = str(i)
-        procedures.append(tmp)
+        procedures.append(ptl.models.OptimizationRecord(**tmp))
 
     inserted = storage_socket.add_procedures(procedures)
     assert inserted['meta']['n_inserted'] == total
@@ -769,8 +732,6 @@ def test_procedure_pagination(storage_socket):
     # count is total, but actual data size is the limit
     assert ret['meta']['n_found'] == total
     assert len(ret['data']) == storage_socket._max_limit - 400
-
-    # cleanup
 
 
 def test_mol_pagination(storage_socket):
@@ -787,7 +748,7 @@ def test_mol_pagination(storage_socket):
     total = len(mol_names)
     molecules = []
     for mol_name in mol_names:
-        mol = portal.data.get_molecule(mol_name).json_dict()
+        mol = ptl.data.get_molecule(mol_name)
         molecules.append(mol)
 
     inserted = storage_socket.add_molecules(molecules)

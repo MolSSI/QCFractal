@@ -5,7 +5,6 @@ Queue backend abstraction manager.
 import collections
 import traceback
 
-from ..interface.models import Molecule
 from ..interface.models.rest_models import (
     QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse, QueueManagerPUTBody,
     QueueManagerPUTResponse, ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody,
@@ -31,7 +30,7 @@ class TaskQueueHandler(APIHandler):
         post = TaskQueuePOSTBody.parse_raw(self.request.body)
 
         # Format and submit tasks
-        procedure_parser = get_procedure_parser(post.meta["procedure"], storage)
+        procedure_parser = get_procedure_parser(post.meta["procedure"], storage, self.logger)
         payload = procedure_parser.submit_tasks(post)
 
         response = TaskQueuePOSTResponse(**payload)
@@ -48,7 +47,6 @@ class TaskQueueHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         body = TaskQueueGETBody.parse_raw(self.request.body)
-
         tasks = storage.get_queue(**body.data, projection=body.meta.projection)
         response = TaskQueueGETResponse(**tasks)
 
@@ -72,19 +70,17 @@ class ServiceQueueHandler(APIHandler):
         for service_input in ServiceQueuePOSTBody.parse_raw(self.request.body).data:
             # Get molecules with ids
             if isinstance(service_input.initial_molecule, list):
-                mol_query = storage.get_add_molecules_mixed(service_input.initial_molecule)
-                molecules = [Molecule(**mol) for mol in mol_query["data"]]
+                molecules = storage.get_add_molecules_mixed(service_input.initial_molecule)["data"]
                 if len(molecules) != len(service_input.initial_molecule):
                     raise KeyError("We should catch this error.")
             else:
-                mol_query = storage.get_add_molecules_mixed([service_input.initial_molecule])
-                molecules = Molecule(**mol_query["data"][0])
+                molecules = storage.get_add_molecules_mixed([service_input.initial_molecule])["data"][0]
 
             # Update the input and build a service object
             service_input = service_input.copy(update={"initial_molecule": molecules})
-            new_services.append(initialize_service(storage, service_input))
+            new_services.append(initialize_service(storage, self.logger, service_input))
 
-        ret = storage.add_services([x.json_dict() for x in new_services])
+        ret = storage.add_services(new_services)
         ret["data"] = {"ids": ret["data"], "existing": ret["meta"]["duplicates"]}
         ret["data"]["submitted"] = list(set(ret["data"]["ids"]) - set(ret["meta"]["duplicates"]))
 
@@ -103,7 +99,7 @@ class ServiceQueueHandler(APIHandler):
 
         body = ServiceQueueGETBody.parse_raw(self.request.body)
 
-        projection = {x: True for x in ["status", "error_message", "tag"]}
+        projection = {x: True for x in ["status", "error", "tag"]}
         ret = storage.get_services(**body.data, projection=projection)
         response = ServiceQueueGETResponse(**ret)
 
@@ -127,22 +123,19 @@ class QueueManagerHandler(APIHandler):
     def insert_complete_tasks(storage_socket, results, logger):
         # Pivot data so that we group all results in categories
         new_results = collections.defaultdict(list)
+
+        queue = storage_socket.get_queue(ids=results.keys())["data"]
+        queue = {v["id"]: v for v in queue}
+
         error_data = []
 
         task_success = 0
         task_failures = 0
         task_totals = len(results.items())
-        for key, (result, parser, hooks) in results.items():
+        for key, result in results.items():
             try:
-
                 # Successful task
-                if result["success"] is True:
-                    result["task_id"] = key
-                    new_results[parser].append((result, hooks))
-                    task_success += 1
-
-                # Failed task
-                else:
+                if result["success"] is False:
                     if "error" not in result:
                         error = {"error_type": "not_supplied", "error_message": "No error message found on task."}
                     else:
@@ -154,6 +147,19 @@ class QueueManagerHandler(APIHandler):
 
                     error_data.append((key, error))
                     task_failures += 1
+
+                # Failed task
+                elif key not in queue:
+                    logger.warning(f"Computation key {key} completed successfully, but not found in queue.")
+                    error_data.append((key, "Internal Error: Queue key not found."))
+                    task_failures += 1
+
+                # Success!
+                else:
+                    parser = queue[key]["parser"]
+                    new_results[parser].append({"result": result, "task_id": key, "base_result": queue[key]["base_result"]})
+                    task_success += 1
+
             except Exception as e:
                 msg = "Internal FractalServer Error:\n" + traceback.format_exc()
                 logger.warning("update: ERROR\n{}".format(msg))
@@ -166,16 +172,13 @@ class QueueManagerHandler(APIHandler):
 
         # Run output parsers
         completed = []
-        hooks = []
-        for k, v in new_results.items():  # todo: can be merged? do they have diff k?
-            procedure_parser = get_procedure_parser(k, storage_socket)
+        for k, v in new_results.items():
+            procedure_parser = get_procedure_parser(k, storage_socket, logger)
             com, err, hks = procedure_parser.parse_output(v)
             completed.extend(com)
             error_data.extend(err)
-            hooks.extend(hks)
 
-        # Handle hooks and complete tasks
-        storage_socket.handle_hooks(hooks)
+        # Handle complete tasks
         storage_socket.queue_mark_complete(completed)
         storage_socket.queue_mark_error(error_data)
         return len(completed), len(error_data)

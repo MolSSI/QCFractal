@@ -2,13 +2,12 @@
 All procedures tasks involved in on-node computation.
 """
 
-import json
 from typing import Union
 
-from qcelemental.models import OptimizationInput
+from qcelemental.models import Molecule
 
-from ..interface.models import OptimizationModel
-from .procedures_util import parse_hooks, parse_single_tasks, unpack_single_task_spec
+from .procedures_util import parse_single_tasks
+from ..interface.models import OptimizationRecord, QCSpecification, ResultRecord
 
 
 class SingleResultTasks:
@@ -17,8 +16,9 @@ class SingleResultTasks:
      and program.
     """
 
-    def __init__(self, storage):
+    def __init__(self, storage, logger):
         self.storage = storage
+        self.logger = logger
 
     def parse_input(self, data):
         """Parse input json into internally appropriate format
@@ -40,11 +40,14 @@ class SingleResultTasks:
 
         """
 
-        # format the data
-        inputs, errors = unpack_single_task_spec(self.storage, data.meta, data.data)
+        # Unpack all molecules
+        molecule_list = self.storage.get_add_molecules_mixed(data.data)["data"]
 
-        # Insert new results stubs
-        result_stub = json.dumps({k: data.meta[k] for k in ["driver", "method", "basis", "keywords", "program"]})
+        if data.meta["keywords"]:
+            keywords = self.storage.get_add_keywords_mixed([data.meta["keywords"]])["data"][0]
+
+        else:
+            keywords = None
 
         # Grab the tag if available
         tag = data.meta.pop("tag", None)
@@ -53,15 +56,16 @@ class SingleResultTasks:
         new_tasks = []
         results_ids = []
         existing_ids = []
-        for inp in inputs:
-            if inp is None:
+        for mol in molecule_list:
+            if mol is None:
                 results_ids.append(None)
                 continue
 
-            # Build stub
-            result_obj = json.loads(result_stub)
-            result_obj["molecule"] = str(inp.molecule.id)
-            ret = self.storage.add_results([result_obj])
+            record = ResultRecord(**data.meta, molecule=mol.id)
+            inp = record.build_schema_input(mol, keywords)
+            inp.extras["_qcfractal_tags"] = {"program": record.program, "keywords": record.keywords}
+
+            ret = self.storage.add_results([record])
 
             base_id = ret["data"][0]
             results_ids.append(base_id)
@@ -75,10 +79,9 @@ class SingleResultTasks:
             task = {
                 "spec": {
                     "function": "qcengine.compute",  # todo: add defaults in models
-                    "args": [json.loads(inp.json()), data.meta["program"]],  # todo: json_dict should come from results
+                    "args": [inp.json_dict(), data.meta["program"]],  # todo: json_dict should come from results
                     "kwargs": {}  # todo: add defaults in models
                 },
-                "hooks": [],  # todo: add defaults in models
                 "tag": tag,
                 "parser": "single",
                 "base_result": ("results", base_id)
@@ -86,7 +89,7 @@ class SingleResultTasks:
 
             new_tasks.append(task)
 
-        return new_tasks, results_ids, existing_ids, errors
+        return new_tasks, results_ids, existing_ids, []
 
     def submit_tasks(self, data):
 
@@ -120,36 +123,29 @@ class SingleResultTasks:
 
         return results
 
-    def parse_output(self, data):
+    def parse_output(self, result_outputs):
 
         # Add new runs to database
-        # Parse out hooks and data to same key/value
-        rdata = {}
-        rhooks = {}
-        for data, hooks in data:
-            key = data["task_id"]
-            rdata[key] = data
-            if len(hooks):
-                rhooks[key] = hooks
+        completed_tasks = []
+        updates = []
+        for data in result_outputs:
+            result = self.storage.get_results(id=data["base_result"]["id"])["data"][0]
+            result = ResultRecord(**result)
 
-        # Add results to database
-        results = parse_single_tasks(self.storage, rdata)
-        # print(list(results.values())[0].keys())
+            rdata = data["result"]
+            stdout, stderr, error = self.storage.add_kvstore([rdata["stdout"], rdata["stderr"], rdata["error"]])["data"]
+            rdata["stdout"] = stdout
+            rdata["stderr"] = stderr
+            rdata["error"] = error
 
-        ret = self.storage.add_results(list(results.values()), update_existing=True)
+            result.consume_output(rdata)
+            updates.append(result)
+            completed_tasks.append(data["task_id"])
 
-        # Sort out hook data
-        hook_data = parse_hooks(results, rhooks)
+        # TODO: sometimes it should be update, and others its add
+        self.storage.update_results(updates)
 
-        # Create a list of (queue_id, located) to update the queue with
-        completed = list(results.keys())
-
-        errors = []
-        if len(ret["meta"]["errors"]):
-            # errors = [(k, "Duplicate results found")]
-            raise ValueError("TODO: Cannot yet handle queue result duplicates.")
-
-        return completed, errors, hook_data
+        return completed_tasks, [], []
 
 
 # ----------------------------------------------------------------------------
@@ -205,46 +201,46 @@ class OptimizationTasks(SingleResultTasks):
 
         """
 
-        # Unpack individual QC tasks
-        inputs, errors = unpack_single_task_spec(self.storage, data.meta["qc_spec"], data.data)
+        # Unpack all molecules
+        intitial_molecule_list = self.storage.get_add_molecules_mixed(data.data)["data"]
 
-        # Unpack options
+        # Unpack keywords
         if data.meta["keywords"] is None:
-            keywords = {}
+            opt_keywords = {}
         else:
-            keywords = data.meta["keywords"]
+            opt_keywords = data.meta["keywords"]
+        opt_keywords["program"] = data.meta["qc_spec"]["program"]
 
-        keywords["program"] = data.meta["qc_spec"]["program"]
-        template = json.dumps({"keywords": keywords})
+        qc_spec = QCSpecification(**data.meta["qc_spec"])
+        if qc_spec.keywords:
+            qc_keywords = self.storage.get_add_keywords_mixed([meta["keywords"]])["data"][0]["values"]
+
+        else:
+            qc_keywords = None
 
         tag = data.meta.pop("tag", None)
 
         new_tasks = []
         results_ids = []
         existing_ids = []
-        for single_input in inputs:
-            if single_input is None:
+        for initial_molecule in intitial_molecule_list:
+            if initial_molecule is None:
                 results_ids.append(None)
                 continue
 
-            single_input = single_input.json_dict(exclude={"id", "provenance"})
+            doc = OptimizationRecord(
+                initial_molecule=initial_molecule.id,
+                qc_spec=qc_spec,
+                keywords=opt_keywords,
+                program=data.meta["program"])
 
-            # Coerce qc_template information
-            packet = json.loads(template)
-            packet["initial_molecule"] = single_input.pop("molecule")
-            packet["input_specification"] = single_input
-            inp = OptimizationInput(**packet)
+            inp = doc.build_schema_input(initial_molecule=initial_molecule, qc_keywords=qc_keywords)
+            inp.input_specification.extras["_qcfractal_tags"] = {
+                "program": qc_spec.program,
+                "keywords": qc_spec.keywords
+            }
 
-            doc = OptimizationModel(
-                **inp.dict(exclude={"input_specification", "initial_molecule", "schema_name"}),
-                qc_spec=data.meta["qc_spec"],
-                initial_molecule=packet["initial_molecule"]["id"],
-                program=data.meta["program"],
-                success=False)
-
-            inp = inp.copy(update={"hash_index": doc.hash_index})
-
-            ret = self.storage.add_procedures([doc.json_dict()])
+            ret = self.storage.add_procedures([doc])
             base_id = ret["data"][0]
             results_ids.append(base_id)
 
@@ -260,7 +256,6 @@ class OptimizationTasks(SingleResultTasks):
                     "args": [inp.json_dict(), data.meta["program"]],
                     "kwargs": {}
                 },
-                "hooks": [],
                 "tag": tag,
                 "parser": "optimization",
                 "base_result": ("procedure", base_id)
@@ -268,62 +263,55 @@ class OptimizationTasks(SingleResultTasks):
 
             new_tasks.append(task)
 
-        return new_tasks, results_ids, existing_ids, errors
+        return new_tasks, results_ids, existing_ids, []
 
-    def parse_output(self, data):
+    def parse_output(self, opt_outputs):
         """Save the results of the procedure.
         It must make sure to save the results in the results table
         including the task_id in the TaskQueue table
         """
 
-        new_procedures = {}
-        new_hooks = {}
+        completed_tasks = []
+        updates = []
+        for output in opt_outputs:
+            rec = self.storage.get_procedures(id=output["base_result"]["id"])["data"][0]
+            rec = OptimizationRecord(**rec)
 
-        # Each optimization is a unique entry:
-        for procedure, hooks in data:
-            task_id = procedure["task_id"]
+            procedure = output["result"]
 
-            # Convert start/stop molecules to hash
+            # Add initial and final molecules
+            update_dict = {}
             initial_mol, final_mol = self.storage.add_molecules(
-                [procedure["initial_molecule"], procedure["final_molecule"]])["data"]
-            procedure["initial_molecule"] = initial_mol
-            procedure["final_molecule"] = final_mol
+                [Molecule(**procedure["initial_molecule"]),
+                 Molecule(**procedure["final_molecule"])])["data"]
+            assert initial_mol == rec.initial_molecule
+            update_dict["final_molecule"] = final_mol
 
             # Parse trajectory computations and add task_id
             traj_dict = {k: v for k, v in enumerate(procedure["trajectory"])}
             results = parse_single_tasks(self.storage, traj_dict)
             for k, v in results.items():
-                v["task_id"] = task_id
+                v["task_id"] = output["task_id"]
+                results[k] = ResultRecord(**v)
+
+            # Save stdout/stderr
+            stdout, stderr, error = self.storage.add_kvstore([procedure["stdout"], procedure["stderr"], procedure["error"]])["data"]
+            update_dict["stdout"] = stdout
+            update_dict["stderr"] = stderr
+            update_dict["error"] = error
 
             # Add trajectory results and return ids
             ret = self.storage.add_results(list(results.values()))
-            procedure["trajectory"] = ret["data"]
+            update_dict["trajectory"] = ret["data"]
+            update_dict["energies"] = procedure["energies"]
 
-            # Coerce tags
-            # procedure.update(procedure["extras"]["_qcfractal_tags"])
-            # del procedure["extras"]["_qcfractal_tags"]
-            del procedure["input_specification"]
-            # print("Adding optimization result")
-            # print(json.dumps(v, indent=2))
-            new_procedures[task_id] = procedure
-            if len(hooks):
-                new_hooks[task_id] = hooks
+            rec = OptimizationRecord(**{**rec.dict(), **update_dict})
+            updates.append(rec)
+            completed_tasks.append(output["task_id"])
 
-            procedure.pop("task_id", None)
-            self.storage.update_procedure(procedure["hash_index"], procedure)
+        self.storage.update_procedures(updates)
 
-        # Create a list of (queue_id, located) to update the queue with
-        completed = list(new_procedures.keys())
-
-        errors = []
-        # if len(ret["meta"]["errors"]):
-        #     # errors = [(k, "Duplicate results found")]
-        #     raise ValueError("TODO: Cannot yet handle queue result duplicates.")
-
-        hook_data = parse_hooks(new_procedures, new_hooks)
-
-        # return (ret, hook_data)
-        return completed, errors, hook_data
+        return completed_tasks, [], []
 
 
 # ----------------------------------------------------------------------------
@@ -331,7 +319,7 @@ class OptimizationTasks(SingleResultTasks):
 supported_procedures = Union[SingleResultTasks, OptimizationTasks]
 
 
-def get_procedure_parser(procedure_type: str, storage) -> supported_procedures:
+def get_procedure_parser(procedure_type: str, storage, logger) -> supported_procedures:
     """A factory methods that returns the approperiate parser class
     for the supported procedure types (like single and optimization)
 
@@ -349,8 +337,8 @@ def get_procedure_parser(procedure_type: str, storage) -> supported_procedures:
     """
 
     if procedure_type == 'single':
-        return SingleResultTasks(storage)
+        return SingleResultTasks(storage, logger)
     elif procedure_type == 'optimization':
-        return OptimizationTasks(storage)
+        return OptimizationTasks(storage, logger)
     else:
         raise KeyError("Procedure type ({}) is not suported yet.".format(procedure_type))

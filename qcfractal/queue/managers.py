@@ -398,7 +398,6 @@ class QueueManager:
                 "kwargs": {}
             },
             "parser": "single",
-            "hooks": []
         })
 
         programs = {
@@ -450,7 +449,7 @@ class QueueManager:
 
         failures = 0
         for k, result in results.items():
-            if result[0].success:
+            if result.success:
                 self.logger.info("  {} - PASSED".format(k))
             else:
                 self.logger.error("  {} - FAILED!".format(k))
