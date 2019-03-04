@@ -174,6 +174,7 @@ class MongoengineSocket:
             ResultORM.drop_collection()
             MoleculeORM.drop_collection()
             KeywordsORM.drop_collection()
+            KVStoreORM.drop_collection()
             CollectionORM.drop_collection()
             TaskQueueORM.drop_collection()
             QueueManagerORM.drop_collection()

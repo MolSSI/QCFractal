@@ -2,7 +2,6 @@ from .gridoptimization import GridOptimizationRecord
 from .records import OptimizationRecord
 from .torsiondrive import TorsionDriveRecord
 
-
 def build_procedure(data, procedure=None, client=None):
     """
     Constructs a Service ORM from incoming JSON data.
