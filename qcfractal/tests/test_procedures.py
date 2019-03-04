@@ -57,12 +57,14 @@ def test_compute_queue_stack(fractal_compute_server):
 
     assert len(results) == 2
     for r in results:
-        if r["molecule"] == hydrogen_mol_id:
-            assert pytest.approx(-1.0660263371078127, 1e-5) == r["properties"]["scf_total_energy"]
-        elif r["molecule"] == helium_mol_id:
-            assert pytest.approx(-2.807913354492941, 1e-5) == r["properties"]["scf_total_energy"]
+        if r.molecule == hydrogen_mol_id:
+            assert pytest.approx(-1.0660263371078127, 1e-5) == r.properties.scf_total_energy
+        elif r.molecule == helium_mol_id:
+            assert pytest.approx(-2.807913354492941, 1e-5) == r.properties.scf_total_energy
         else:
             raise KeyError("Returned unexpected Molecule ID.")
+
+    assert "RHF Reference" in results[0].get_stdout()
 
 
 ### Tests the compute queue stack
@@ -112,10 +114,17 @@ def test_procedure_optimization(fractal_compute_server):
 
         # Check individual elements
         for ind in range(len(results[0].trajectory)):
-            raw_energy = traj[ind]["properties"]["return_energy"]
+            raw_energy = traj[ind].properties.return_energy
             assert pytest.approx(raw_energy, 1.e-5) == results[0].energies[ind]
+
+        # Check result stdout
+        assert "RHF Reference" in traj[0].get_stdout()
+
+    # Check stdout
+    assert "internal coordinates" in results[0].get_stdout()
 
     # Check that duplicates are caught
     r = client.add_procedure("optimization", "geometric", options, [mol_ret[0]])
     assert len(r.ids) == 1
     assert len(r.existing) == 1
+

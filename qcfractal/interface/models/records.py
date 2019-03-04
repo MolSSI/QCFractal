@@ -76,6 +76,8 @@ class RecordBase(BaseModel, abc.ABC):
         if self.Config.build_hash_index and (self.hash_index is None):
             self.hash_index = self.get_hash_index()
 
+### Serialization helpers
+
     @classmethod
     def get_hash_fields(cls):
         return cls._hash_indices | {"procedure", "program"}
@@ -93,6 +95,25 @@ class RecordBase(BaseModel, abc.ABC):
 
     def json_dict(self, *args, **kwargs):
         return json.loads(self.json(*args, **kwargs))
+
+### Checkers
+
+    def check_client(self):
+        if self.client is None:
+            raise ValueError("Requested method requires a client, but client was '{}'.".format(self.client))
+
+### Getters
+
+    def get_stdout(self):
+        self.check_client()
+
+        if self.stdout is None:
+            return self.stdout
+
+        if "stdout" not in self.cache:
+            self.cache["stdout"] = self.client.get_kvstore([self.stdout])[self.stdout]
+
+        return self.cache["stdout"]
 
 
 class ResultProperties(BaseModel):
@@ -169,11 +190,10 @@ class ResultRecord(RecordBase):
     def check_basis(cls, v):
         return prepare_basis(v)
 
-
 ## QCSchema constructors
 
-    def build_schema_input(self, molecule: 'Molecule', keywords: Optional['KeywordsSet'] = None,
-                           checks: bool = True) -> 'ResultInput':
+    def build_schema_input(self, molecule: 'Molecule', keywords: Optional['KeywordsSet']=None,
+                           checks: bool=True) -> 'ResultInput':
         """
         Creates a OptimizationInput schema.
         """
@@ -196,7 +216,7 @@ class ResultRecord(RecordBase):
             id=self.id, driver=self.driver.name, model=model, molecule=molecule, keywords=keywords, extras=self.extras)
         return model
 
-    def consume_output(self, data: Dict[str, Any], checks: bool = True):
+    def consume_output(self, data: Dict[str, Any], checks: bool=True):
         assert self.method == data["model"]["method"]
 
         self.extras = data["extras"]
@@ -244,8 +264,8 @@ class OptimizationRecord(RecordBase):
 
     def build_schema_input(self,
                            initial_molecule: 'Molecule',
-                           qc_keywords: Optional['KeywordsSet'] = None,
-                           checks: bool = True) -> 'OptimizationInput':
+                           qc_keywords: Optional['KeywordsSet']=None,
+                           checks: bool=True) -> 'OptimizationInput':
         """
         Creates a OptimizationInput schema.
         """
@@ -266,7 +286,6 @@ class OptimizationRecord(RecordBase):
             hash_index=self.hash_index,
             input_specification=qcinput_spec)
         return model
-
 
 ## Standard function
 

@@ -411,6 +411,11 @@ class FractalClient(object):
         r = self._request("get", "result", data=body.json())
         r = ResultGETResponse.parse_raw(r.text)
 
+        # Add references back to the client
+        if not projection:
+            for result in r.data:
+                result.client = self
+
         if full_return:
             return r
         else:

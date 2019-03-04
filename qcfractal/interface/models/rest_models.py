@@ -9,6 +9,7 @@ from .common_models import KeywordSet, Molecule, ObjectId
 from .gridoptimization import GridOptimizationInput
 from .model_utils import json_encoders
 from .torsiondrive import TorsionDriveInput
+from .records import ResultRecord
 
 __all__ = [
     "ResponseGETMeta",
@@ -197,7 +198,8 @@ class ResultGETBody(BaseModel):
 
 class ResultGETResponse(BaseModel):
     meta: ResponseGETMeta
-    data: List[Dict[str, Any]]
+    # Either a record or dict depending if projection
+    data: Union[List[ResultRecord], List[Dict[str, Any]]]
 
     @validator("data", whole=True, pre=True)
     def ensure_list_of_dict(cls, v):
