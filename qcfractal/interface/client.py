@@ -11,10 +11,10 @@ from .collections import collection_factory
 from .models import GridOptimizationInput, Molecule, TorsionDriveInput, build_procedure
 from .models.rest_models import (
     CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse, KeywordGETBody,
-    KeywordGETResponse, KeywordPOSTBody, KeywordPOSTResponse, MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody,
-    MoleculePOSTResponse, ProcedureGETBody, ProcedureGETReponse, ResultGETBody, ResultGETResponse, ServiceQueueGETBody,
-    ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse, TaskQueueGETBody, TaskQueueGETResponse,
-    TaskQueuePOSTBody, TaskQueuePOSTResponse)
+    KeywordGETResponse, KeywordPOSTBody, KeywordPOSTResponse, KVStoreGETBody, KVStoreGETResponse, MoleculeGETBody,
+    MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse, ProcedureGETBody, ProcedureGETReponse, ResultGETBody,
+    ResultGETResponse, ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
+    TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse)
 
 
 class FractalClient(object):
@@ -179,13 +179,39 @@ class FractalClient(object):
         """
         return json.loads(json.dumps(self.server_info))
 
+### KVStore section
+
+    def get_kvstore(self, id: List[str], full_return: bool=False) -> List[Dict[str, Any]]:
+        """Queries items from the database's KVStore
+
+        Parameters
+        ----------
+        id : List[str]
+            A list of KVStore id's
+        full_return : bool, optional
+            Optionally returns the full request result including the ``meta`` field.
+
+        Returns
+        -------
+        List[Dict[str, Any]]
+            A list of found KVStore objects in {"id": "value"} format
+        """
+        body = KVStoreGETBody(data=id, meta={})
+        r = self._request("get", "kvstore", data=body.json())
+        r = KVStoreGETResponse.parse_raw(r.text)
+
+        if full_return:
+            return r
+        else:
+            return r.data
+
 ### Molecule section
 
     def get_molecules(self,
                       id: Optional[List[str]]=None,
                       molecule_hash: Optional[List[str]]=None,
                       molecular_formula: Optional[List[str]]=None,
-                      full_return: Optional[bool]=False) -> 'Dict[str, Molecule]':
+                      full_return: bool=False) -> 'Dict[str, Molecule]':
         """Queries molecules from the database.
 
         Parameters
@@ -196,7 +222,7 @@ class FractalClient(object):
             Queries the Molecule ``molecule_hash`` field.
         molecular_formula : Optional[List[str]], optional
             Queries the Molecule ``molecular_formula`` field.
-        full_return : Optional[bool], optional
+        full_return : bool, optional
             Optionally returns the full request result including the ``meta`` field.
 
         Returns
@@ -240,7 +266,7 @@ class FractalClient(object):
         else:
             return r.data
 
-    ### Keywords section
+### Keywords section
 
     def get_keywords(self, id: List[str], full_return: bool=False) -> 'List[KeywordSet]':
         """Obtains KeywordSets from the server using keyword ids.

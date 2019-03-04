@@ -252,11 +252,12 @@ class MongoengineSocket:
 
         data = KVStoreORM.objects(**query)
 
-        ret["meta"]["success"] = True
-        ret["meta"]["n_found"] = data.count()  # all data count, can be > len(data)
-        ret["meta"]["errors"].extend(errors)
+        meta["success"] = True
+        meta["n_found"] = data.count()  # all data count, can be > len(data)
+        meta["errors"].extend(errors)
 
         data = [d.to_json_obj() for d in data]
+        data = {d["id"]: d["value"] for d in data}
         return {"data": data, "meta": meta}
 
 ### Molecule functions

@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseConfig, BaseModel, validator
 
-from .common_models import KeywordSet, Molecule
+from .common_models import KeywordSet, Molecule, ObjectId
 from .gridoptimization import GridOptimizationInput
 from .model_utils import json_encoders
 from .torsiondrive import TorsionDriveInput
@@ -47,6 +47,19 @@ class ResponsePOSTMeta(ResponseMeta):
     duplicates: Union[List[str], List[Tuple[str, str]]]
     validation_errors: List[str]
 
+### KVStore
+
+class KVStoreGETBody(BaseModel):
+    data: List[ObjectId]
+    meta: Dict[str, Any]
+
+
+class KVStoreGETResponse(BaseModel):
+    meta: ResponseGETMeta
+    data: Dict[str, Any]
+
+    class Config:
+        json_encoders = json_encoders
 
 ### Molecule response
 

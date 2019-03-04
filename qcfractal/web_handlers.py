@@ -5,10 +5,11 @@ import json
 
 import tornado.web
 
-from .interface.models.rest_models import (
-    MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse, KeywordGETBody, KeywordGETResponse,
-    KeywordPOSTBody, KeywordPOSTResponse, CollectionGETBody, CollectionGETResponse, CollectionPOSTBody,
-    CollectionPOSTResponse, ResultGETBody, ResultGETResponse, ProcedureGETBody, ProcedureGETReponse)
+from .interface.models.rest_models import (MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody,
+                                           MoleculePOSTResponse, KeywordGETBody, KeywordGETResponse, KeywordPOSTBody,
+                                           KeywordPOSTResponse, KVStoreGETBody, KVStoreGETResponse, CollectionGETBody,
+                                           CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
+                                           ResultGETBody, ResultGETResponse, ProcedureGETBody, ProcedureGETReponse)
 
 
 class APIHandler(tornado.web.RequestHandler):
@@ -65,6 +66,42 @@ class InformationHandler(APIHandler):
         self.logger.info("GET: Information")
 
         self.write(self.objects["public_information"])
+
+
+class KVStoreHandler(APIHandler):
+    """
+    A handler to push and get molecules.
+    """
+
+    def get(self):
+        """
+
+        Experimental documentation, need to find a decent format.
+
+        Request:
+            "data" - A list of key requests
+
+        Returns:
+            "meta" - Metadata associated with the query
+                - "errors" - A list of errors in (index, error_id) format.
+                - "n_found" - The number of molecule found.
+                - "success" - If the query was successful or not.
+                - "error_description" - A string based description of the error or False
+                - "missing" - A list of keys that were not found.
+            "data" - A dictionary of {key : value} dictionary of the results
+
+        """
+        self.authenticate("read")
+
+        storage = self.objects["storage_socket"]
+
+        body = KVStoreGETBody.parse_raw(self.request.body)
+
+        ret = storage.get_kvstore(body.data)
+        self.logger.info("GET: KVStore - {} pulls.".format(len(ret["data"])))
+
+        ret = KVStoreGETResponse(**ret)
+        self.write(ret.json())
 
 
 class MoleculeHandler(APIHandler):
