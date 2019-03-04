@@ -16,14 +16,26 @@ Changelog
 .. +++++++++
 
 
-0.?.? / 2019-0?-??
+0.5.1 / 2019-03-04
 ------------------
 
 New Features
 ++++++++++++
+- (:pr:`177`) Adds a new ``qcfractal-template`` command to generate ``qcfractal-manager`` scripts.
+- (:pr:`181`) Pagination is added to queries, defaults to 1000 matches.
+- (:pr:`185`) Begins setup documentation.
+- (:pr:`186`) Begins database design documentation.
+- (:pr:`187`) Results add/update is now simplified to always store entire objects rather than update partials.
+- (:pr:`189`) All database compute records now go through a single ``BaseRecord`` class that validates and hashes the objects.
 
 Enhancements
 ++++++++++++
+
+- (:pr:`175`) Refactors query massaging logic to a single function, ensures all program queries are lowercase, etc.
+- (:pr:`175`) Keywords are now lazy reference fields.
+- (:pr:`182`) Reworks models to have strict fields, and centralizes object hashing with many tests.
+- (:pr:`183`) Centralizes duplicate checking so that accidental mixed case duplicate results could go through.
+- (:pr:`190`) Adds QCArchive sphinx theme to the documentation.
 
 Bug Fixes
 +++++++++
