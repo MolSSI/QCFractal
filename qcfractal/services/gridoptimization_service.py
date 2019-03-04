@@ -228,7 +228,7 @@ class GridOptimizationService(BaseService):
         Finishes adding data to the GridOptimizationRecord object
         """
 
-        output = self.output.copy(update={
+        self.output = self.output.copy(update={
             "status": "COMPLETE",
             "starting_molecule": self.starting_molecule.id,
             "starting_grid": self.starting_grid,
@@ -236,4 +236,4 @@ class GridOptimizationService(BaseService):
             "final_energy_dict": self.final_energies,
         })
 
-        return output
+        return True

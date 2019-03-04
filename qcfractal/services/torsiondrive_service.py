@@ -202,10 +202,10 @@ class TorsionDriveService(BaseService):
 
         history = {json.dumps(td_api.grid_id_from_string(k)): v for k, v in self.optimization_history.items()}
 
-        ret = self.output.copy(update={
+        self.output = self.output.copy(update={
             "status": "COMPLETE",
             "minimum_positions": min_positions,
             "final_energy_dict": final_energy,
             "optimization_history": history
         })
-        return ret
+        return True

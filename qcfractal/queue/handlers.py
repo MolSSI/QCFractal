@@ -100,7 +100,7 @@ class ServiceQueueHandler(APIHandler):
 
         body = ServiceQueueGETBody.parse_raw(self.request.body)
 
-        projection = {x: True for x in ["status", "error_message", "tag"]}
+        projection = {x: True for x in ["status", "error", "tag"]}
         ret = storage.get_services(**body.data, projection=projection)
         response = ServiceQueueGETResponse(**ret)
 

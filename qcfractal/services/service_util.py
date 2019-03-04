@@ -12,6 +12,8 @@ from ..interface.models import ObjectId
 from ..interface.models.rest_models import TaskQueuePOSTBody
 from ..procedures import get_procedure_parser
 
+from qcelemental.models import ComputeError
+
 
 class TaskManager(BaseModel):
 
@@ -44,11 +46,12 @@ class TaskManager(BaseModel):
             for x in task_query["data"]:
                 if x["status"] != "ERROR":
                     continue
+            self.logger.error("Error in service compute as follows:")
             tasks = self.storage_socket.get_queue()["data"]
             for x in tasks:
                 if "error" not in x:
                     continue
-                print(x["error"]["error_message"])
+                self.logger.error(x["error"]["error_message"])
 
             raise KeyError("All tasks did not execute successfully.")
 
@@ -112,6 +115,7 @@ class BaseService(BaseModel, abc.ABC):
     task_manager: TaskManager = TaskManager()
 
     status: str = "WAITING"
+    error: Optional[ComputeError] = None
 
     def __init__(self, **data):
         super().__init__(**data)

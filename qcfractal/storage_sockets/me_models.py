@@ -129,9 +129,6 @@ class KeywordsORM(CustomDynamicDocument):
 
     meta = {'indexes': [{'fields': ('hash_index', ), 'unique': True}]}
 
-    def __str__(self):
-        return str(self.id)
-
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -235,13 +232,6 @@ class ProcedureORM(BaseResultORM):
             }  # used in queries
         ]
     }
-
-    def save(self, *args, **kwargs):
-
-        self.program = self.program.lower()
-        self.procedure = self.procedure.lower()
-
-        return super(ProcedureORM, self).save(*args, **kwargs)
 
 
 # ================== Types of ProcedureORMs ================== #
@@ -354,14 +344,6 @@ class ServiceQueueORM(CustomDynamicDocument):
             # {'fields': ('procedure',), 'unique': True}
         ]
     }
-
-    def save(self, *args, **kwargs):
-        """Override save to update modified_on"""
-        # self.modified_on = datetime.datetime.utcnow()
-        # if not self.created_on:
-        #     self.created_on = datetime.datetime.utcnow()
-
-        return super(ServiceQueueORM, self).save(*args, **kwargs)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

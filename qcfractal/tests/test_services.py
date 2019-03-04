@@ -132,7 +132,7 @@ def test_service_iterate_error(torsiondrive_fixture):
     assert len(status) == 1
 
     assert status[0]["status"] == "ERROR"
-    assert "Service Build" in status[0]["error_message"]
+    assert "Service Build" in status[0]["error"]["error_message"]
 
 
 def test_service_torsiondrive_compute_error(torsiondrive_fixture):
@@ -147,7 +147,7 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
     assert len(status) == 1
 
     assert status[0]["status"] == "ERROR"
-    assert "All tasks" in status[0]["error_message"]
+    assert "All tasks" in status[0]["error"]["error_message"]
 
 
 @using_geometric

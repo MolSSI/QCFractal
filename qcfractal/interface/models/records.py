@@ -47,6 +47,7 @@ class RecordBase(BaseModel, abc.ABC):
     extras: Dict[str, Any] = {}
     stdout: Optional[ObjectId] = None
     stderr: Optional[ObjectId] = None
+    error: Optional[ObjectId] = None
 
     # Compute status
     task_id: ObjectId = None
@@ -177,7 +178,6 @@ class ResultRecord(RecordBase):
     # Output data
     return_result: Union[float, List[float], Dict[str, Any]] = None
     properties: ResultProperties = None  # deprecate for qcel.models.ResultProperties
-    error: qcel.models.ComputeError = None
 
     class Config(RecordBase.Config):
         build_hash_index = False
