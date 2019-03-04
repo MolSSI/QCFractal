@@ -56,11 +56,11 @@ def test_task_error(fractal_compute_server):
     fractal_compute_server.await_results()
 
     # Check for error
-    ret = client.check_results(id=ret.submitted)
+    results = client.get_results(id=ret.submitted)
+    assert len(results) == 1
+    assert results[0].status == "ERROR"
 
-    assert len(ret) == 1
-    assert ret[0]["status"] == "ERROR"
-    # assert "run_rdkit" in ret[0]["error"]["error_message"]
+    assert "connectivity" in results[0].get_error().error_message
 
 
 @testing.using_rdkit
@@ -81,6 +81,7 @@ def test_queue_error(fractal_compute_server):
     fractal_compute_server.await_results()
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
+    # Pull from database, raw JSON
     db = fractal_compute_server.objects["storage_socket"]
     queue_ret = db.get_queue(status="ERROR")["data"]
     result = db.get_results(id=compute_ret.ids)['data'][0]

@@ -103,18 +103,57 @@ class RecordBase(BaseModel, abc.ABC):
         if self.client is None:
             raise ValueError("Requested method requires a client, but client was '{}'.".format(self.client))
 
-### Getters
+### KVStore Getters
 
-    def get_stdout(self):
+    def _kvstore_getter(self, field_name):
+        """
+        Internal KVStore getting object
+        """
         self.check_client()
 
-        if self.stdout is None:
-            return self.stdout
+        oid = self.__values__[field_name]
+        if oid is None:
+            return None
 
-        if "stdout" not in self.cache:
-            self.cache["stdout"] = self.client.get_kvstore([self.stdout])[self.stdout]
+        if field_name not in self.cache:
+            self.cache[field_name] = self.client.get_kvstore([oid])[oid]
 
-        return self.cache["stdout"]
+        return self.cache[field_name]
+
+    def get_stdout(self) -> Optional[str]:
+        """Pulls the stdout from the denormalized KVStore and returns it to the user.
+
+        Returns
+        -------
+        Optional[str]
+            The requested stdout, none if no stderr present.
+        """
+        return self._kvstore_getter("stdout")
+
+    def get_stderr(self) -> Optional[str]:
+        """Pulls the stderr from the denormalized KVStore and returns it to the user.
+
+        Returns
+        -------
+        Optional[str]
+            The requested stderr, none if no stderr present.
+        """
+
+        return self._kvstore_getter("stderr")
+
+    def get_error(self) -> Optional[qcel.models.ComputeError]:
+        """Pulls the stderr from the denormalized KVStore and returns it to the user.
+
+        Returns
+        -------
+        Optional[qcel.models.ComputeError]
+            The requested compute error, none if no error present.
+        """
+        value = self._kvstore_getter("error")
+        if value:
+            return qcel.models.ComputeError(**value)
+        else:
+            return value
 
 
 class ResultProperties(BaseModel):

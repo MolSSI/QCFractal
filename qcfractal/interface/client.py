@@ -402,6 +402,7 @@ class FractalClient(object):
     def get_results(self, **kwargs):
         projection = kwargs.pop("projection", None)
         full_return = kwargs.pop("full_return", False)
+        print("I am here")
 
         payload = {"meta": {}, "data": kwargs}
         if projection is not None:

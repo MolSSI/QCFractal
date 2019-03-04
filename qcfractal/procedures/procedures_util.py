@@ -103,9 +103,10 @@ def parse_single_tasks(storage, results):
     """
 
     for k, v in results.items():
-        stdout, stderr = storage.add_kvstore([v["stdout"], v["stderr"]])["data"]
+        stdout, stderr, error = storage.add_kvstore([v["stdout"], v["stderr"], v["error"]])["data"]
         v["stdout"] = stdout
         v["stderr"] = stderr
+        v["error"] = error
 
         # Flatten data back out
         v["method"] = v["model"]["method"]

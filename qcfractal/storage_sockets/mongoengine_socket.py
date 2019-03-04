@@ -166,11 +166,11 @@ class MongoengineSocket:
     def _clear_db(self, db_name: str):
         """Dangerous, make sure you are deleting the right DB"""
 
-        logging.warning("Clearing database '{}' and dropping all tables.".format(db_name))
+        self.logger.warning("Clearing database '{}' and dropping all tables.".format(db_name))
 
         # make sure it's the right DB
         if get_db().name == db_name:
-            logging.info('Clearing database: {}'.format(db_name))
+            self.logger.info('Clearing database: {}'.format(db_name))
             ResultORM.drop_collection()
             MoleculeORM.drop_collection()
             KeywordsORM.drop_collection()
@@ -1124,7 +1124,7 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-    def update_services(self, records_list: List["BaseServices"]) -> int:
+    def update_services(self, records_list: List["BaseService"]) -> int:
         """
         Replace existing service
 
@@ -1152,7 +1152,7 @@ class MongoengineSocket:
 
         return updated_count
 
-    def services_completed(self, records_list: List["BaseServices"]) -> int:
+    def services_completed(self, records_list: List["BaseService"]) -> int:
 
         done = 0
         for service in records_list:
@@ -1402,7 +1402,7 @@ class MongoengineSocket:
 
         # This should not happen unless there is data inconsistency in the DB
         if results + procedures < tasks:
-            logging.error("Some tasks don't reference results or procedures correctly!"
+            self.logger.error("Some tasks don't reference results or procedures correctly!"
                           "Tasks: {}, ResultORMs: {}, procedures: {}. ".format(tasks, results, procedures))
         return tasks
 
@@ -1413,8 +1413,10 @@ class MongoengineSocket:
         """
 
         bulk_commands = []
+        bulk_commands_records = []
         task_ids = []
         for task_id, msg in data:
+            task_ids.append(task_id)
             update = {
                 "$set": {
                     "status": "ERROR",
@@ -1423,16 +1425,30 @@ class MongoengineSocket:
                 }
             }
             bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(task_id)}, update))
-            task_ids.append(task_id)
+
+            # Update the objects as well, different from mark complete as these are not processed the same way
+            # This design should be overhauled...
+            error_id = self.add_kvstore([msg])["data"][0]
+            update = {
+                "$set": {
+                    "status": "ERROR",
+                    "error": error_id,
+                    "modified_on": dt.utcnow(),
+                }
+            }
+            # Task id is held as a string here... don't move to ObjectId
+            bulk_commands_records.append(pymongo.UpdateOne({"task_id": task_id}, update))
 
         if len(bulk_commands) == 0:
             return
 
-        ret = TaskQueueORM._get_collection().bulk_write(bulk_commands, ordered=False).modified_count
-        ResultORM.objects(task_id__in=task_ids).update(status='ERROR', modified_on=dt.utcnow())
-        ProcedureORM.objects(task_id__in=task_ids).update(status='ERROR', modified_on=dt.utcnow())
+        task_mod = TaskQueueORM._get_collection().bulk_write(bulk_commands, ordered=False).modified_count
+        rec_mod = ResultORM._get_collection().bulk_write(bulk_commands_records, ordered=False).modified_count
+        rec_mod += ProcedureORM._get_collection().bulk_write(bulk_commands_records, ordered=False).modified_count
+        if task_mod != rec_mod:
+            self.logger.error("Queue Mark Error: Number of tasks updates {}, does not match the number of records updates {}.".format(task_mod, rec_mod))
 
-        return ret
+        return task_mod
 
     def queue_reset_status(self, manager: str, reset_running: bool=True, reset_error: bool=False) -> int:
         """

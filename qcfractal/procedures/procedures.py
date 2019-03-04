@@ -133,9 +133,10 @@ class SingleResultTasks:
             result = ResultRecord(**result)
 
             rdata = data["result"]
-            stdout, stderr = self.storage.add_kvstore([rdata["stdout"], rdata["stderr"]])["data"]
+            stdout, stderr, error = self.storage.add_kvstore([rdata["stdout"], rdata["stderr"], rdata["error"]])["data"]
             rdata["stdout"] = stdout
             rdata["stderr"] = stderr
+            rdata["error"] = error
 
             result.consume_output(rdata)
             updates.append(result)
@@ -294,9 +295,10 @@ class OptimizationTasks(SingleResultTasks):
                 results[k] = ResultRecord(**v)
 
             # Save stdout/stderr
-            stdout, stderr = self.storage.add_kvstore([procedure["stdout"], procedure["stderr"]])["data"]
+            stdout, stderr, error = self.storage.add_kvstore([procedure["stdout"], procedure["stderr"], procedure["error"]])["data"]
             update_dict["stdout"] = stdout
             update_dict["stderr"] = stderr
+            update_dict["error"] = error
 
             # Add trajectory results and return ids
             ret = self.storage.add_results(list(results.values()))
