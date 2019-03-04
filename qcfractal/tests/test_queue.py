@@ -86,7 +86,7 @@ def test_queue_compute_mixed_molecule(fractal_compute_server):
 
     mol2 = portal.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
 
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [mol1, mol2, "bad_id"], return_full=True)
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [mol1, mol2, "bad_id"], full_return=True)
     assert len(ret.data.ids) == 3
     assert ret.data.ids[2] is None
     assert len(ret.data.submitted) == 2

@@ -375,7 +375,7 @@ class FractalClient(object):
 
     def get_results(self, **kwargs):
         projection = kwargs.pop("projection", None)
-        return_full = kwargs.pop("return_full", False)
+        full_return = kwargs.pop("full_return", False)
 
         payload = {"meta": {}, "data": kwargs}
         if projection is not None:
@@ -385,7 +385,7 @@ class FractalClient(object):
         r = self._request("get", "result", data=body.json())
         r = ResultGETResponse.parse_raw(r.text)
 
-        if return_full:
+        if full_return:
             return r
         else:
             return r.data
@@ -424,7 +424,7 @@ class FractalClient(object):
                     driver: str,
                     keywords: Union[str, None],
                     molecule_id: Union[str, Molecule, List[Union[str, Molecule]]],
-                    return_full: bool=False,
+                    full_return: bool=False,
                     tag: str=None) -> Union[TaskQueuePOSTResponse, TaskQueuePOSTResponse.Data]:
 
         # Always a list
@@ -449,7 +449,7 @@ class FractalClient(object):
         r = self._request("post", "task_queue", data=body.json())
         r = TaskQueuePOSTResponse.parse_raw(r.text)
 
-        if return_full:
+        if full_return:
             return r
         else:
             return r.data
@@ -459,7 +459,7 @@ class FractalClient(object):
                       program: str,
                       program_options: Dict[str, Any],
                       molecule_id: List[str],
-                      return_full: bool=False):
+                      full_return: bool=False):
 
         # Always a list
         if isinstance(molecule_id, str):
@@ -477,12 +477,12 @@ class FractalClient(object):
         r = self._request("post", "task_queue", payload)
         r = TaskQueuePOSTResponse.parse_raw(r.text)
 
-        if return_full:
+        if full_return:
             return r
         else:
             return r.data
 
-    def check_tasks(self, query: Dict[str, Any], projection: Optional[Dict[str, Any]]=None, return_full: bool=False):
+    def check_tasks(self, query: Dict[str, Any], projection: Optional[Dict[str, Any]]=None, full_return: bool=False):
         """Checks the status of tasks in the Fractal queue.
 
         Parameters
@@ -491,7 +491,7 @@ class FractalClient(object):
             A query to find tasks
         projection: dict, optional
             Projection of data to call from the database
-        return_full : bool, optional
+        full_return : bool, optional
             Returns the full JSON return if True
 
         Returns
@@ -510,31 +510,31 @@ class FractalClient(object):
         r = self._request("get", "task_queue", data=body.json())
         r = TaskQueueGETResponse.parse_raw(r.text)
 
-        if return_full:
+        if full_return:
             return r
         else:
             return r.data
 
-    def add_service(self, service: Union[GridOptimizationInput, TorsionDriveInput], return_full: bool=False):
+    def add_service(self, service: Union[GridOptimizationInput, TorsionDriveInput], full_return: bool=False):
 
         body = ServiceQueuePOSTBody(meta={}, data=service)
 
         r = self._request("post", "service_queue", data=body.json())
         r = ServiceQueuePOSTResponse.parse_raw(r.text)
 
-        if return_full:
+        if full_return:
             return r
         else:
             return r.data
 
-    def check_services(self, query: Dict[str, Any], return_full: bool=False):
+    def check_services(self, query: Dict[str, Any], full_return: bool=False):
         """Checks the status of services in the Fractal queue.
 
         Parameters
         ----------
         query : dict
             A query to find services
-        return_full : bool, optional
+        full_return : bool, optional
             Returns the full JSON return if True
 
         Returns
@@ -554,7 +554,7 @@ class FractalClient(object):
         r = self._request("get", "service_queue", data=body.json())
         r = ServiceQueueGETResponse.parse_raw(r.text)
 
-        if return_full:
+        if full_return:
             return r
         else:
             return r.data

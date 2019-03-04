@@ -41,7 +41,7 @@ class SingleResultTasks:
         """
 
         # Unpack all molecules
-        moleucle_list = self.storage.get_add_molecules_mixed(data.data)["data"]
+        molecule_list = self.storage.get_add_molecules_mixed(data.data)["data"]
 
         if data.meta["keywords"]:
             keywords = self.storage.get_add_keywords_mixed([data.meta["keywords"]])["data"][0]
@@ -56,7 +56,7 @@ class SingleResultTasks:
         new_tasks = []
         results_ids = []
         existing_ids = []
-        for mol in moleucle_list:
+        for mol in molecule_list:
             if mol is None:
                 results_ids.append(None)
                 continue
