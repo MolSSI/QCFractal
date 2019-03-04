@@ -68,6 +68,13 @@ class DaskAdapter(ExecutorAdapter):
 
         return "<DaskAdapter client={}>".format(self.client)
 
+    def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
+        func = self.get_function(task_spec["spec"]["function"])
+
+        # Watch out out for thread unsafe tasks and our own constraints
+        task = self.client.submit(func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"], resources={"process": 1})
+        return task_spec["id"], task
+
     def await_results(self) -> bool:
         from dask.distributed import wait
         wait(list(self.queue.values()))
