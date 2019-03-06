@@ -294,16 +294,17 @@ class OptimizationTasks(SingleResultTasks):
                 v["task_id"] = output["task_id"]
                 results[k] = ResultRecord(**v)
 
+            ret = self.storage.add_results(list(results.values()))
+            update_dict["trajectory"] = ret["data"]
+            update_dict["energies"] = procedure["energies"]
+
             # Save stdout/stderr
             stdout, stderr, error = self.storage.add_kvstore([procedure["stdout"], procedure["stderr"], procedure["error"]])["data"]
             update_dict["stdout"] = stdout
             update_dict["stderr"] = stderr
             update_dict["error"] = error
+            update_dict["provenance"] = procedure["provenance"]
 
-            # Add trajectory results and return ids
-            ret = self.storage.add_results(list(results.values()))
-            update_dict["trajectory"] = ret["data"]
-            update_dict["energies"] = procedure["energies"]
 
             rec = OptimizationRecord(**{**rec.dict(), **update_dict})
             updates.append(rec)
