@@ -44,7 +44,7 @@ class QueueManager:
                  queue_client: Any,
                  loop: Any = None,
                  logger: Optional[logging.Logger] = None,
-                 max_tasks: int = 1000,
+                 max_tasks: int = 200,
                  queue_tag: str = None,
                  cluster: str = "unknown",
                  update_frequency: Union[int, float] = 2,
@@ -106,11 +106,6 @@ class QueueManager:
         # Pull the current loop if we need it
         self.loop = loop or tornado.ioloop.IOLoop.current()
 
-        # Build a meta header
-        meta_packet = self.name_data.copy()
-        meta_packet["tag"] = self.queue_tag
-        meta_packet["max_tasks"] = self.max_tasks
-        self.meta_packet = json.dumps(meta_packet)
 
         self.logger.info("QueueManager:")
         self.logger.info("    Version:         {}\n".format(get_information("version")))
@@ -134,6 +129,10 @@ class QueueManager:
             self.server_info = client.server_information()
             self.server_name = self.server_info["name"]
             self.server_version = self.server_info["version"]
+            self.server_query_limit = self.server_info["query_limit"]
+            if self.max_tasks > self.server_query_limit:
+                self.max_tasks = self.server_query_limit
+                self.logger.warning("Max tasks was larger than server query limit of {}, reducing to match query limit.".format(self.server_query_limit))
             self.heartbeat_frequency = self.server_info["heartbeat_frequency"]
 
             # Tell the server we are up and running
@@ -155,8 +154,13 @@ class QueueManager:
             self.logger.info("    QCFractal server information:")
             self.logger.info("        Not connected, some actions will not be available")
 
+
     def _payload_template(self):
-        return {"meta": json.loads(self.meta_packet), "data": {}}
+        meta = self.name_data.copy()
+        meta["tag"] = self.queue_tag
+        meta["max_tasks"] = self.max_tasks
+
+        return {"meta": meta, "data": {}}
 
 ## Accessors
 
