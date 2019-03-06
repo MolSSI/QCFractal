@@ -92,6 +92,7 @@ class FractalServer:
             # Database options
             storage_uri: str="mongodb://localhost",
             storage_project_name: str="molssistorage",
+            query_limit: int=1000,
 
             # Log options
             logfile_prefix: str=None,
@@ -174,7 +175,8 @@ class FractalServer:
             storage_uri,
             project_name=storage_project_name,
             bypass_security=storage_bypass_security,
-            allow_read=allow_read)
+            allow_read=allow_read,
+            max_limit=query_limit)
 
         # Pull the current loop if we need it
         self.loop = loop or tornado.ioloop.IOLoop.current()
@@ -189,7 +191,8 @@ class FractalServer:
         self.objects["public_information"] = {
             "name": self.name,
             "heartbeat_frequency": self.heartbeat_frequency,
-            "version": get_information("version")
+            "version": get_information("version"),
+            "query_limit": self.storage.get_limit(1.e9),
         }
 
         endpoints = [
@@ -229,10 +232,12 @@ class FractalServer:
         self.exit_callbacks = []
 
         self.logger.info("FractalServer:")
+        self.logger.info("    Name:          {}".format(self.name))
         self.logger.info("    Version:       {}".format(get_information("version")))
         self.logger.info("    Address:       {}".format(self._address))
         self.logger.info("    Database URI:  {}".format(storage_uri))
-        self.logger.info("    Database Name: {}\n".format(storage_project_name))
+        self.logger.info("    Database Name: {}".format(storage_project_name))
+        self.logger.info("    Query Limit:   {}\n".format(self.storage.get_limit(1.e9)))
         self.loop_active = False
 
         # Queue manager if direct build
