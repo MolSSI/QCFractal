@@ -41,7 +41,7 @@ class TaskQueueHandler(APIHandler):
     def get(self):
         """Posts new services to the service queue
         """
-        self.authenticate("read")
+        self.authenticate("compute")
 
         # Grab objects
         storage = self.objects["storage_socket"]
@@ -92,7 +92,7 @@ class ServiceQueueHandler(APIHandler):
     def get(self):
         """Gets services from the service queue
         """
-        self.authenticate("read")
+        self.authenticate("compute")
 
         # Grab objects
         storage = self.objects["storage_socket"]

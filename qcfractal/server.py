@@ -13,6 +13,8 @@ import tornado.log
 import tornado.options
 import tornado.web
 
+from typing import Optional, Dict
+
 from .extras import get_information
 from .interface import FractalClient
 from .queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, TaskQueueHandler
@@ -78,23 +80,26 @@ class FractalServer:
             self,
 
             # Server info options
-            name="QCFractal Server",
-            port=8888,
-            loop=None,
-            security=None,
-            ssl_options=None,
+            name: str="QCFractal Server",
+            port: int=7777,
+            loop: 'IOLoop'=None,
+
+            # Security
+            security: Optional[str]=None,
+            allow_read: bool=False,
+            ssl_options: Optional[Dict[str, str]]=None,
 
             # Database options
-            storage_uri="mongodb://localhost",
-            storage_project_name="molssistorage",
+            storage_uri: str="mongodb://localhost",
+            storage_project_name: str="molssistorage",
 
             # Log options
-            logfile_prefix=None,
+            logfile_prefix: str=None,
 
             # Queue options
-            queue_socket=None,
-            max_active_services=10,
-            heartbeat_frequency=300):
+            queue_socket: 'queue_adapter'=None,
+            max_active_services: int=10,
+            heartbeat_frequency: int=300):
 
         # Save local options
         self.name = name
@@ -132,8 +137,9 @@ class FractalServer:
             cert, key = _build_ssl()
 
             # Add quick names
-            cert_name = storage_project_name + "_ssl.crt"
-            key_name = storage_project_name + "_ssl.key"
+            ssl_name = name.lower().replace(" ", "_")
+            cert_name = ssl_name + "_ssl.crt"
+            key_name = ssl_name + "_ssl.key"
 
             ssl_options = {"crt": cert_name, "key": key_name}
 
@@ -165,7 +171,10 @@ class FractalServer:
 
         # Setup the database connection
         self.storage = storage_socket_factory(
-            storage_uri, project_name=storage_project_name, bypass_security=storage_bypass_security)
+            storage_uri,
+            project_name=storage_project_name,
+            bypass_security=storage_bypass_security,
+            allow_read=allow_read)
 
         # Pull the current loop if we need it
         self.loop = loop or tornado.ioloop.IOLoop.current()

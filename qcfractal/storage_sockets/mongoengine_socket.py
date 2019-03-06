@@ -105,6 +105,7 @@ class MongoengineSocket:
                  uri: str,
                  project: str="molssidb",
                  bypass_security: bool=False,
+                 allow_read: bool=True,
                  authMechanism: str="SCRAM-SHA-1",
                  authSource: str=None,
                  logger: 'Logger'=None,
@@ -122,6 +123,7 @@ class MongoengineSocket:
 
         # Security
         self._bypass_security = bypass_security
+        self._allow_read = allow_read
 
         self._lower_results_index = ["method", "basis", "program"]
 
@@ -1404,7 +1406,7 @@ class MongoengineSocket:
         # This should not happen unless there is data inconsistency in the DB
         if results + procedures < tasks:
             self.logger.error("Some tasks don't reference results or procedures correctly!"
-                          "Tasks: {}, ResultORMs: {}, procedures: {}. ".format(tasks, results, procedures))
+                              "Tasks: {}, ResultORMs: {}, procedures: {}. ".format(tasks, results, procedures))
         return tasks
 
     def queue_mark_error(self, data):
@@ -1447,7 +1449,9 @@ class MongoengineSocket:
         rec_mod = ResultORM._get_collection().bulk_write(bulk_commands_records, ordered=False).modified_count
         rec_mod += ProcedureORM._get_collection().bulk_write(bulk_commands_records, ordered=False).modified_count
         if task_mod != rec_mod:
-            self.logger.error("Queue Mark Error: Number of tasks updates {}, does not match the number of records updates {}.".format(task_mod, rec_mod))
+            self.logger.error(
+                "Queue Mark Error: Number of tasks updates {}, does not match the number of records updates {}.".
+                format(task_mod, rec_mod))
 
         return task_mod
 
@@ -1572,6 +1576,11 @@ class MongoengineSocket:
         tuple
             Successful insert or not
         """
+        valid_permissions = {'read', 'write', 'compute', 'queue', 'admin'}
+
+        # Make sure permissions are valid
+        if not valid_permissions >= set(permissions):
+            raise KeyError("Permissions settings not understood: {}".format(set(permissions) - valid_permissions))
 
         hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
         try:
@@ -1613,7 +1622,7 @@ class MongoengineSocket:
 
         """
 
-        if self._bypass_security:
+        if self._bypass_security or (self._allow_read and (permission == "read")):
             return (True, "Success")
 
         data = UserORM.objects(username=username).first()
