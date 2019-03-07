@@ -358,7 +358,7 @@ class Dataset(Collection):
               field="return_result",
               as_array=False):
         """
-        Queries the local Portal for the requested keys and stoichiometry.
+        Queries the local Portal for the requested keys.
 
         Parameters
         ----------
@@ -426,7 +426,7 @@ class Dataset(Collection):
 
         return True
 
-    def compute(self, method, basis, driver=None, keywords=None, program=None, stoich="default", ignore_ds_type=False):
+    def compute(self, method, basis, driver=None, keywords=None, program=None, ignore_ds_type=False):
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -438,8 +438,6 @@ class Dataset(Collection):
             The computational basis to compute (6-31G)
         driver : str, optional
             The type of computation to run (energy, gradient, etc)
-        stoich : str, optional
-            The stoichiometry of the requested compute (cp/nocp/etc)
         keywords : str, optional
             The keyword alias for the requested compute
         program : str, optional
