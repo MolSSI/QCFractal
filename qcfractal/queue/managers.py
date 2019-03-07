@@ -42,15 +42,15 @@ class QueueManager:
     def __init__(self,
                  client: Any,
                  queue_client: Any,
-                 loop: Any = None,
-                 logger: Optional[logging.Logger] = None,
-                 max_tasks: int = 200,
-                 queue_tag: str = None,
-                 cluster: str = "unknown",
-                 update_frequency: Union[int, float] = 2,
-                 verbose: bool = True,
-                 cores_per_task: Optional[int] = None,
-                 memory_per_task: Optional[int] = None):
+                 loop: Any=None,
+                 logger: Optional[logging.Logger]=None,
+                 max_tasks: int=200,
+                 queue_tag: str=None,
+                 cluster: str="unknown",
+                 update_frequency: Union[int, float]=2,
+                 verbose: bool=True,
+                 cores_per_task: Optional[int]=None,
+                 memory_per_task: Optional[int]=None):
         """
         Parameters
         ----------
@@ -106,7 +106,6 @@ class QueueManager:
         # Pull the current loop if we need it
         self.loop = loop or tornado.ioloop.IOLoop.current()
 
-
         self.logger.info("QueueManager:")
         self.logger.info("    Version:         {}\n".format(get_information("version")))
 
@@ -121,7 +120,9 @@ class QueueManager:
 
         if self.verbose:
             self.logger.info("    QCEngine:")
-            self.logger.info("        Version:    {}\n".format(qcengine.__version__))
+            self.logger.info("        Version:     {}".format(qcengine.__version__))
+            self.logger.info("        Task Cores:  {}".format(self.cores_per_task))
+            self.logger.info("        Task Mem:    {}\n".format(self.memory_per_task))
 
         # DGAS Note: Note super happy about how this if/else turned out. Looking for alternatives.
         if self.connected():
@@ -132,7 +133,9 @@ class QueueManager:
             self.server_query_limit = self.server_info["query_limit"]
             if self.max_tasks > self.server_query_limit:
                 self.max_tasks = self.server_query_limit
-                self.logger.warning("Max tasks was larger than server query limit of {}, reducing to match query limit.".format(self.server_query_limit))
+                self.logger.warning(
+                    "Max tasks was larger than server query limit of {}, reducing to match query limit.".format(
+                        self.server_query_limit))
             self.heartbeat_frequency = self.server_info["heartbeat_frequency"]
 
             # Tell the server we are up and running
@@ -153,7 +156,6 @@ class QueueManager:
         else:
             self.logger.info("    QCFractal server information:")
             self.logger.info("        Not connected, some actions will not be available")
-
 
     def _payload_template(self):
         meta = self.name_data.copy()
@@ -242,7 +244,6 @@ class QueueManager:
 
         return self.queue_adapter.close()
 
-
 ## Queue Manager functions
 
     def heartbeat(self) -> None:
@@ -298,7 +299,7 @@ class QueueManager:
         """
         self.exit_callbacks.append((callback, args, kwargs))
 
-    def update(self, new_tasks: bool = True) -> bool:
+    def update(self, new_tasks: bool=True) -> bool:
         """Examines the queue for completed tasks and adds successful completions to the database
         while unsuccessful are logged for future inspection
 

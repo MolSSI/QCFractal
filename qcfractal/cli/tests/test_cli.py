@@ -9,7 +9,6 @@ import pytest
 
 from qcfractal import testing
 
-
 # def _run_tests()
 _options = {"coverage": True, "dump_stdout": True}
 _pwd = os.path.dirname(os.path.abspath(__file__))
@@ -41,53 +40,27 @@ def active_server(request):
 
 @testing.mark_slow
 def test_manager_local_testing_process():
-    assert testing.run_process(["qcfractal-manager", "--test", "executor"], **_options)
+    assert testing.run_process(["qcfractal-manager", "--test", "--ntasks=2"], **_options)
 
 
 @testing.mark_slow
 def test_manager_executor_manager_boot(active_server):
-    args = ["qcfractal-manager", active_server.test_uri_cli, "executor", "--nprocs=1"]
+    args = ["qcfractal-manager", active_server.test_uri_cli, "--ntasks=1"]
     assert testing.run_process(args, interupt_after=7, **_options)
 
 
 @testing.mark_slow
-@testing.using_dask
-def test_manager_dask_manager_local_boot(active_server):
-    args = ["qcfractal-manager", active_server.test_uri_cli, "dask", "--local-cluster", "--local-workers=1"]
-    assert testing.run_process(args, interupt_after=7, **_options)
-
-
-@testing.mark_slow
-@testing.using_fireworks
-def test_manager_fireworks_boot(active_server):
-    args = ["qcfractal-manager", active_server.test_uri_cli, "fireworks"]
-    assert testing.run_process(args, interupt_after=5, **_options)
-
-
-@testing.mark_slow
-@testing.using_fireworks
-def test_manager_fireworks_config_boot(active_server):
-    config_path = os.path.join(_pwd, "fw_config_boot.yaml")
-    args = [
-        "qcfractal-manager", active_server.test_uri_cli, "--rapidfire", "--config-file=" + config_path, "fireworks"
-    ]
-    assert testing.run_process(args, **_options)
-
-
-@testing.mark_slow
-@pytest.mark.parametrize("adapter", [
-    "dask",
-    "parsl",
-    # pytest.param("fireworks", marks=pytest.mark.xfail),
-    # pytest.param("executor", marks=pytest.mark.xfail)
-])
-@pytest.mark.parametrize("scheduler", [
-    "slurm",
-    "pbs",
-    "torque",
-    "lsf",
-    pytest.param("garbage", marks=pytest.mark.xfail)
-])
+@pytest.mark.parametrize(
+    "adapter",
+    [
+        "dask",
+        "parsl",
+        # pytest.param("fireworks", marks=pytest.mark.xfail),
+        # pytest.param("executor", marks=pytest.mark.xfail)
+    ])
+@pytest.mark.parametrize("scheduler",
+                         ["slurm", "pbs", "torque", "lsf",
+                          pytest.param("garbage", marks=pytest.mark.xfail)])
 def test_cli_template_generator(adapter, scheduler, tmp_path):
     if adapter == "parsl" and scheduler == "lsf":
         pytest.xfail("Parsl has no LSF implementation")
