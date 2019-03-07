@@ -9,25 +9,26 @@ hooh = portal.data.get_molecule("hooh.json")
 # Geometric options
 tdinput = {
     "initial_molecule": [hooh],
-    "torsiondrive_meta": {
+    "keywords": {
         "dihedrals": [[0, 1, 2, 3]],
         "grid_spacing": [90]
     },
-    "optimization_meta": {
+    "optimization_spec": {
         "program": "geometric",
-        "coordsys": "tric",
+        "keywords": {
+            "coordsys": "tric",
+        }
     },
-    "qc_meta": {
+    "qc_spec": {
         "driver": "gradient",
         "method": "UFF",
         "basis": None,
-        "options": None,
+        "keywords": None,
         "program": "rdkit",
     },
 }
-# )
 
 # Compute!
-ret = client.add_service(tdinput)
+ret = client.add_service([tdinput])
 
 print(ret)
