@@ -129,6 +129,9 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     r = ds.save()
     ds = client.get_collection("reactiondataset", ds_name)
 
+    with pytest.raises(KeyError):
+        ret = ds.compute("SCF", "STO-3G", stoich="nocp") # Should be 'default' not 'nocp'
+
     # Compute SCF/sto-3g
     ret = ds.compute("SCF", "STO-3G")
     assert len(ret.submitted) == 3
