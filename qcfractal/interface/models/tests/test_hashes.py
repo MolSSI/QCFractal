@@ -32,14 +32,14 @@ def test_molecule_water_canary_hash():
 
     frag_0 = mol.get_fragment(0, orient=True)
     frag_1 = mol.get_fragment(1, orient=True)
-    assert frag_0.get_hash() == "d8975ddd917a57f468596b54968b0dffe52c7487"
-    assert frag_1.get_hash() == "feb5c6127ca54d715b999c15ea1ea1772ada8c5d"
+    assert frag_0.get_hash() == "f701c1724e645f52c09dbf36d01fe17d9d882a8a"
+    assert frag_1.get_hash() == "4469ff05895a6375a91ce9a225f96e3f9938450b"
 
 @pytest.mark.parametrize("geom, hash_index", [
-    ([0, 0, 0, 0, 0, 0], "78c135e2e81bb84bdcbbcb9ee3f1a031b4b5501a"),
-    ([0, 0, 0, 0, 0, 0 + 1.e-12], "78c135e2e81bb84bdcbbcb9ee3f1a031b4b5501a"),
-    ([0, 0, 0, 0, 0, 0 - 1.e-12], "78c135e2e81bb84bdcbbcb9ee3f1a031b4b5501a"),
-    ([0, 0, 0, 0, 0, 0 + 1.e-7], "78c135e2e81bb84bdcbbcb9ee3f1a031b4b5501a"),
+    ([0, 0, 0, 0, 5, 0], "ba76b68bb11e042712b2444d6b42ebbf92b944fc"),
+    ([0, 0, 0, 0, 5, 0 + 1.e-12], "ba76b68bb11e042712b2444d6b42ebbf92b944fc"),
+    ([0, 0, 0, 0, 5, 0 - 1.e-12], "ba76b68bb11e042712b2444d6b42ebbf92b944fc"),
+    ([0, 0, 0, 0, 5, 0 + 1.e-7], "ba76b68bb11e042712b2444d6b42ebbf92b944fc"),
 ]) # yapf: disable
 def test_molecule_geometry_canary_hash(geom, hash_index):
 
