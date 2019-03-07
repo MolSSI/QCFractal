@@ -135,9 +135,8 @@ class Collection(abc.ABC):
             raise KeyError("Attempted to create Collection from JSON, but no `collection` field found.")
 
         if data["collection"] != class_name:
-            raise KeyError(
-                "Attempted to create Collection from JSON with class {}, but found collection type of {}.".format(
-                    class_name, data["collection"]))
+            raise KeyError("Attempted to create Collection from JSON with class {}, but found collection type of {}.".
+                           format(class_name, data["collection"]))
 
         # Attempt to build class
         # First make sure external source provides ALL keys, including "optional" ones
@@ -156,7 +155,7 @@ class Collection(abc.ABC):
         # Allow PyDantic to handle type validation
         return cls(name, client=client, **data)
 
-    def to_json(self, filename: Optional[str] = None):
+    def to_json(self, filename: Optional[str]=None):
         """
         If a filename is provided, dumps the file to disk. Otherwise returns a copy of the current data.
 
@@ -194,7 +193,7 @@ class Collection(abc.ABC):
         pass
 
     # Setters
-    def save(self, client=None, overwrite: bool = False):
+    def save(self, client=None):
         """Uploads the overall structure of the Collection (indices, options, new molecules, etc)
         to the server.
 
@@ -216,10 +215,12 @@ class Collection(abc.ABC):
                                      "instance and one was not passed in.".format(class_name))
             client = self.client
 
-        if overwrite and (self.data.id == self.data.fields['id'].default):
-            raise KeyError("Attempting to overwrite the {} class on the server, but no ID found.".format(class_name))
-
         self._pre_save_prep(client)
 
         # Add the database
-        return client.add_collection(self.data.dict(), overwrite=overwrite)
+        if (self.data.id == self.data.fields['id'].default):
+            self.data.id = client.add_collection(self.data.dict(), overwrite=False)
+        else:
+            client.add_collection(self.data.dict(), overwrite=True)
+
+        return self.data.id

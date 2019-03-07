@@ -207,7 +207,7 @@ class OpenFFWorkflow(Collection):
             frag_data[name] = packet
 
         # Push collection data back to server
-        self.save(overwrite=True)
+        self.save()
 
     def _add_torsiondrive(self, packet):
         # Build out a new service

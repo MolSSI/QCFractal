@@ -126,7 +126,7 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     ds.add_contributed_values(contrib)
 
     # Save the DB and overwrite the result, reacquire via client
-    r = ds.save(overwrite=True)
+    r = ds.save()
     ds = client.get_collection("reactiondataset", ds_name)
 
     # Compute SCF/sto-3g
@@ -163,6 +163,7 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     ds.add_keywords("df", "psi4", portal.models.KeywordSet(values={"scf_type": "df"}))
 
     ds.save()
+    ds = client.get_collection("reactiondataset", "dataset_options")
 
     # Compute, should default to direct options
     r = ds.compute("SCF", "STO-3G")
@@ -178,6 +179,10 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     assert ds.list_history().shape[0] == 2
     assert ds.list_history(keywords="DF").shape[0] == 1
     assert ds.list_history(keywords="DIRECT").shape[0] == 1
+
+    ds = client.get_collection("reactiondataset", "dataset_options")
+    assert ds.list_history().shape[0] == 2
+    assert {"df", "direct"} == set(ds.list_history().reset_index()["keywords"])
 
 
 @testing.using_torsiondrive

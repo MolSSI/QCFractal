@@ -172,6 +172,9 @@ class Dataset(Collection):
         return df
 
     def _default_parameters(self, driver, keywords, program):
+        """
+        Takes raw input parsed parameters and applies defaults to them.
+        """
 
         if program is None:
             if self.data.default_program is None:
@@ -245,6 +248,7 @@ class Dataset(Collection):
         """
 
         alias = alias.lower()
+        program = program.lower()
         if program not in self.data.alias_keywords:
             self.data.alias_keywords[program] = {}
 
