@@ -31,6 +31,7 @@ def parse_args():
         "--security", type=str, default=None, choices=[None, "local"], help="The security protocol to use")
     security.add_argument(
         "--allow-read", type=bool, default=True, help="Allow read-only queries or not if security is active.")
+    security.add_argument("--disable-ssl", type=bool, default=False, help="Disables SSL if present, if False a SSL cert will be created for you")
     security.add_argument("--tls-cert", type=str, default=None, help="Certificate file for TLS (in PEM format)")
     security.add_argument("--tls-key", type=str, default=None, help="Private key file for TLS (in PEM format)")
 
@@ -61,13 +62,16 @@ def main(args=None):
         args = parse_args()
 
     # Handle SSL
-    ssl_certs = sum(args[x] is not None for x in ["tls_key", "tls_cert"])
-    if ssl_certs == 0:
-        ssl_options = None
-    elif ssl_certs == 2:
-        ssl_options = {"crt": args["tls_cert"], "key": args["tls_key"]}
+    if args["disable_ssl"]:
+        ssl_options = False
     else:
-        raise KeyError("Both tls-cert and tls-key must be passed in.")
+        ssl_certs = sum(args[x] is not None for x in ["tls_key", "tls_cert"])
+        if ssl_certs == 0:
+            ssl_options = None
+        elif ssl_certs == 2:
+            ssl_options = {"crt": args["tls_cert"], "key": args["tls_key"]}
+        else:
+            raise KeyError("Both tls-cert and tls-key must be passed in.")
 
     # Handle Adapters/QueueManagers
     exit_callbacks = []
