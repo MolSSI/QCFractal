@@ -18,7 +18,11 @@ from .models.rest_models import (
 
 
 class FractalClient(object):
-    def __init__(self, address: Any, username: Optional[str]=None, password: Optional[str]=None, verify: bool=True):
+    def __init__(self,
+                 address: Union[str, 'FractalServer']='api.qcarchive.molssi.org:443',
+                 username: Optional[str]=None,
+                 password: Optional[str]=None,
+                 verify: bool=True):
         """Initializes a FractalClient instance from an address and verification information.
 
         Parameters
