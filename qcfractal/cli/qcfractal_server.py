@@ -49,8 +49,7 @@ def parse_args():
     args = vars(parser.parse_args())
     if args["config_file"] is not None:
         data = cli_utils.read_config_file(args["config_file"])
-
-        args = cli_utils.argparse_config_merge(parse, args, data)
+        args = cli_utils.argparse_config_merge(parser, args, data)
 
     return args
 

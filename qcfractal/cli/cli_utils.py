@@ -62,7 +62,7 @@ def argparse_config_merge(parser, parsed_options, config_options, parser_default
             config_options[k] = v
 
         # Add in missing defaults
-        if v not in config_options:
+        if k not in config_options:
             config_options[k] = v
 
     return config_options
