@@ -258,9 +258,13 @@ class ResultRecord(RecordBase):
     def consume_output(self, data: Dict[str, Any], checks: bool=True):
         assert self.method == data["model"]["method"]
 
+        # Result specific
         self.extras = data["extras"]
         self.return_result = data["return_result"]
         self.properties = data["properties"]
+
+        # Standard blocks
+        self.provenance = data["provenance"]
         self.error = data["error"]
         self.stdout = data["stdout"]
         self.stderr = data["stderr"]

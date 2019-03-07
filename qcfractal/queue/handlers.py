@@ -19,10 +19,11 @@ class TaskQueueHandler(APIHandler):
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
     """
 
+    _required_auth = "compute"
+
     def post(self):
         """Summary
         """
-        self.authenticate("compute")
 
         # Grab objects
         storage = self.objects["storage_socket"]
@@ -41,7 +42,6 @@ class TaskQueueHandler(APIHandler):
     def get(self):
         """Posts new services to the service queue
         """
-        self.authenticate("read")
 
         # Grab objects
         storage = self.objects["storage_socket"]
@@ -58,10 +58,11 @@ class ServiceQueueHandler(APIHandler):
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
     """
 
+    _required_auth = "compute"
+
     def post(self):
         """Posts new services to the service queue
         """
-        self.authenticate("compute")
 
         # Grab objects
         storage = self.objects["storage_socket"]
@@ -92,7 +93,6 @@ class ServiceQueueHandler(APIHandler):
     def get(self):
         """Gets services from the service queue
         """
-        self.authenticate("read")
 
         # Grab objects
         storage = self.objects["storage_socket"]
@@ -111,6 +111,7 @@ class QueueManagerHandler(APIHandler):
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
     Manages the external
     """
+    _required_auth = "queue"
 
     def _get_name_from_metadata(self, meta):
         """
@@ -157,7 +158,11 @@ class QueueManagerHandler(APIHandler):
                 # Success!
                 else:
                     parser = queue[key]["parser"]
-                    new_results[parser].append({"result": result, "task_id": key, "base_result": queue[key]["base_result"]})
+                    new_results[parser].append({
+                        "result": result,
+                        "task_id": key,
+                        "base_result": queue[key]["base_result"]
+                    })
                     task_success += 1
 
             except Exception as e:
@@ -186,7 +191,6 @@ class QueueManagerHandler(APIHandler):
     def get(self):
         """Pulls new tasks from the Servers queue
         """
-        self.authenticate("queue")
 
         # Grab objects
         storage = self.objects["storage_socket"]
@@ -203,13 +207,11 @@ class QueueManagerHandler(APIHandler):
         # Grab new tasks and write out
         new_tasks = storage.queue_get_next(name, **queue_tags)
         response = QueueManagerGETResponse(
-            meta={
-                "n_found": len(new_tasks),
-                "success": True,
-                "errors": [],
-                "error_description": "",
-                "missing": []
-            },
+            meta={"n_found": len(new_tasks),
+                  "success": True,
+                  "errors": [],
+                  "error_description": "",
+                  "missing": []},
             data=new_tasks)
         self.write(response.json())
         self.logger.info("QueueManager: Served {} tasks.".format(response.meta.n_found))
@@ -220,7 +222,6 @@ class QueueManagerHandler(APIHandler):
     def post(self):
         """Posts complete tasks to the Servers queue
         """
-        self.authenticate("queue")
 
         # Grab objects
         storage = self.objects["storage_socket"]
@@ -249,7 +250,6 @@ class QueueManagerHandler(APIHandler):
         """
         Various manager manipulation operations
         """
-        self.authenticate("queue")
 
         storage = self.objects["storage_socket"]
         ret = True

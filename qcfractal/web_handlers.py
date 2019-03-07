@@ -17,6 +17,9 @@ class APIHandler(tornado.web.RequestHandler):
     A requests handler for API calls, build
     """
 
+    # Admin authentication required by default
+    _required_auth = "admin"
+
     def initialize(self, **objects):
         """
         Initializes the request to JSON, adds objects, and logging.
@@ -26,7 +29,10 @@ class APIHandler(tornado.web.RequestHandler):
         self.objects = objects
         self.logger = objects["logger"]
 
-        #print(self.request.headers["Content-Type"])
+    def prepare(self):
+        if self._required_auth:
+            self.authenticate(self._required_auth)
+
         self.json = json.loads(self.request.body.decode("UTF-8"))
 
     def authenticate(self, permission):
@@ -57,11 +63,12 @@ class InformationHandler(APIHandler):
     A handler that returns public server information
     """
 
+    _required_auth = "read"
+
     def get(self):
         """
 
         """
-        self.authenticate("read")
 
         self.logger.info("GET: Information")
 
@@ -72,6 +79,8 @@ class KVStoreHandler(APIHandler):
     """
     A handler to push and get molecules.
     """
+
+    _required_auth = "read"
 
     def get(self):
         """
@@ -91,7 +100,6 @@ class KVStoreHandler(APIHandler):
             "data" - A dictionary of {key : value} dictionary of the results
 
         """
-        self.authenticate("read")
 
         storage = self.objects["storage_socket"]
 
@@ -108,6 +116,8 @@ class MoleculeHandler(APIHandler):
     """
     A handler to push and get molecules.
     """
+
+    _required_auth = "read"
 
     def get(self):
         """
@@ -129,7 +139,6 @@ class MoleculeHandler(APIHandler):
             "data" - A dictionary of {key : molecule JSON} results
 
         """
-        self.authenticate("read")
 
         storage = self.objects["storage_socket"]
 
@@ -178,8 +187,9 @@ class OptionHandler(APIHandler):
     A handler to push and get molecules.
     """
 
+    _required_auth = "read"
+
     def get(self):
-        self.authenticate("read")
 
         storage = self.objects["storage_socket"]
 
@@ -210,8 +220,9 @@ class CollectionHandler(APIHandler):
     A handler to push and get molecules.
     """
 
+    _required_auth = "read"
+
     def get(self):
-        self.authenticate("read")
 
         storage = self.objects["storage_socket"]
 
@@ -246,8 +257,9 @@ class ResultHandler(APIHandler):
     A handler to push and get molecules.
     """
 
+    _required_auth = "read"
+
     def get(self):
-        self.authenticate("read")
 
         storage = self.objects["storage_socket"]
 
@@ -269,8 +281,9 @@ class ProcedureHandler(APIHandler):
     A handler to push and get molecules.
     """
 
+    _required_auth = "read"
+
     def get(self):
-        self.authenticate("read")
 
         storage = self.objects["storage_socket"]
 

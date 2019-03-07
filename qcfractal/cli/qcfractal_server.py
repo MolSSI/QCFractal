@@ -12,7 +12,7 @@ from . import cli_utils
 def parse_args():
     parser = argparse.ArgumentParser(description='A CLI for the QCFractalServer.')
 
-    manager = parser.add_argument_group('QueueManager Settings (optional)')
+    manager = parser.add_argument_group('Local QueueManager Settings (optional)')
     # This option defaults to None if option not present, -1 if present, or value if provided
     manager.add_argument(
         '--local-manager',
@@ -23,17 +23,26 @@ def parse_args():
         type=int,
         help='Creates a local pool QueueManager')
 
-    server = parser.add_argument_group('QCFractalServer Settings')
-    server.add_argument("name", type=str, help="The name of the FractalServer and its associated database")
-    server.add_argument("--log-prefix", type=str, default=None, help="The logfile prefix to use")
-    server.add_argument("--port", type=int, default=7777, help="The server port")
-    server.add_argument(
+    manager = parser.add_argument_group('Manager Settings')
+    manager.add_argument("--heartbeat-frequency", type=int, default=300, help="The manager heartbeat frequency.")
+
+    security = parser.add_argument_group('Security Settings')
+    security.add_argument(
         "--security", type=str, default=None, choices=[None, "local"], help="The security protocol to use")
-    server.add_argument("--database-uri", type=str, default="mongodb://localhost", help="The database URI to use")
-    server.add_argument("--tls-cert", type=str, default=None, help="Certificate file for TLS (in PEM format)")
-    server.add_argument("--tls-key", type=str, default=None, help="Private key file for TLS (in PEM format)")
-    server.add_argument("--config-file", type=str, default=None, help="A configuration file to use")
-    server.add_argument("--heartbeat-frequency", type=int, default=300, help="The manager heartbeat frequency.")
+    security.add_argument(
+        "--allow-read", type=bool, default=True, help="Allow read-only queries or not if security is active.")
+    security.add_argument("--disable-ssl", type=bool, default=False, help="Disables SSL if present, if False a SSL cert will be created for you")
+    security.add_argument("--tls-cert", type=str, default=None, help="Certificate file for TLS (in PEM format)")
+    security.add_argument("--tls-key", type=str, default=None, help="Private key file for TLS (in PEM format)")
+
+    general = parser.add_argument_group('General Settings')
+    general.add_argument("database_name", type=str, help="The name of the database to use with the storage socket")
+    general.add_argument("--server-name", type=str, default="QCFractal Server", help="The server name to broadcast")
+    general.add_argument("--query-limit", type=int, default=1000, help="The maximum query size to server")
+    general.add_argument("--log-prefix", type=str, default=None, help="The logfile prefix to use")
+    general.add_argument("--database-uri", type=str, default="mongodb://localhost", help="The database URI to use")
+    general.add_argument("--port", type=int, default=7777, help="The server port")
+    general.add_argument("--config-file", type=str, default=None, help="A configuration file to use")
 
     parser._action_groups.reverse()
 
@@ -53,13 +62,16 @@ def main(args=None):
         args = parse_args()
 
     # Handle SSL
-    ssl_certs = sum(args[x] is not None for x in ["tls_key", "tls_cert"])
-    if ssl_certs == 0:
-        ssl_options = None
-    elif ssl_certs == 2:
-        ssl_options = {"crt": args["tls_cert"], "key": args["tls_key"]}
+    if args["disable_ssl"]:
+        ssl_options = False
     else:
-        raise KeyError("Both tls-cert and tls-key must be passed in.")
+        ssl_certs = sum(args[x] is not None for x in ["tls_key", "tls_cert"])
+        if ssl_certs == 0:
+            ssl_options = None
+        elif ssl_certs == 2:
+            ssl_options = {"crt": args["tls_cert"], "key": args["tls_key"]}
+        else:
+            raise KeyError("Both tls-cert and tls-key must be passed in.")
 
     # Handle Adapters/QueueManagers
     exit_callbacks = []
@@ -79,12 +91,23 @@ def main(args=None):
 
     # Build the server itself
     server = qcfractal.FractalServer(
+        name=args["server_name"],
         port=args["port"],
+
+        # Security
         security=args["security"],
+        allow_read=args["allow_read"],
         ssl_options=ssl_options,
+
+        # Database
         storage_uri=args["database_uri"],
-        storage_project_name=args["name"],
+        storage_project_name=args["database_name"],
+        query_limit=args["query_limit"],
+
+        # Log options
         logfile_prefix=args["log_prefix"],
+
+        # Queue options
         heartbeat_frequency=args["heartbeat_frequency"],
         queue_socket=adapter)
 

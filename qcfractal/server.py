@@ -13,6 +13,8 @@ import tornado.log
 import tornado.options
 import tornado.web
 
+from typing import Optional, Dict
+
 from .extras import get_information
 from .interface import FractalClient
 from .queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, TaskQueueHandler
@@ -78,23 +80,27 @@ class FractalServer:
             self,
 
             # Server info options
-            name="QCFractal Server",
-            port=8888,
-            loop=None,
-            security=None,
-            ssl_options=None,
+            name: str="QCFractal Server",
+            port: int=7777,
+            loop: 'IOLoop'=None,
+
+            # Security
+            security: Optional[str]=None,
+            allow_read: bool=False,
+            ssl_options: Optional[Dict[str, str]]=None,
 
             # Database options
-            storage_uri="mongodb://localhost",
-            storage_project_name="molssistorage",
+            storage_uri: str="mongodb://localhost",
+            storage_project_name: str="molssistorage",
+            query_limit: int=1000,
 
             # Log options
-            logfile_prefix=None,
+            logfile_prefix: str=None,
 
             # Queue options
-            queue_socket=None,
-            max_active_services=10,
-            heartbeat_frequency=300):
+            queue_socket: 'queue_adapter'=None,
+            max_active_services: int=10,
+            heartbeat_frequency: int=300):
 
         # Save local options
         self.name = name
@@ -132,8 +138,9 @@ class FractalServer:
             cert, key = _build_ssl()
 
             # Add quick names
-            cert_name = storage_project_name + "_ssl.crt"
-            key_name = storage_project_name + "_ssl.key"
+            ssl_name = name.lower().replace(" ", "_")
+            cert_name = ssl_name + "_ssl.crt"
+            key_name = ssl_name + "_ssl.key"
 
             ssl_options = {"crt": cert_name, "key": key_name}
 
@@ -165,7 +172,11 @@ class FractalServer:
 
         # Setup the database connection
         self.storage = storage_socket_factory(
-            storage_uri, project_name=storage_project_name, bypass_security=storage_bypass_security)
+            storage_uri,
+            project_name=storage_project_name,
+            bypass_security=storage_bypass_security,
+            allow_read=allow_read,
+            max_limit=query_limit)
 
         # Pull the current loop if we need it
         self.loop = loop or tornado.ioloop.IOLoop.current()
@@ -180,7 +191,8 @@ class FractalServer:
         self.objects["public_information"] = {
             "name": self.name,
             "heartbeat_frequency": self.heartbeat_frequency,
-            "version": get_information("version")
+            "version": get_information("version"),
+            "query_limit": self.storage.get_limit(1.e9),
         }
 
         endpoints = [
@@ -220,10 +232,12 @@ class FractalServer:
         self.exit_callbacks = []
 
         self.logger.info("FractalServer:")
+        self.logger.info("    Name:          {}".format(self.name))
         self.logger.info("    Version:       {}".format(get_information("version")))
         self.logger.info("    Address:       {}".format(self._address))
         self.logger.info("    Database URI:  {}".format(storage_uri))
-        self.logger.info("    Database Name: {}\n".format(storage_project_name))
+        self.logger.info("    Database Name: {}".format(storage_project_name))
+        self.logger.info("    Query Limit:   {}\n".format(self.storage.get_limit(1.e9)))
         self.loop_active = False
 
         # Queue manager if direct build

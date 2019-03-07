@@ -57,6 +57,7 @@ def test_compute_queue_stack(fractal_compute_server):
 
     assert len(results) == 2
     for r in results:
+        assert r.provenance.creator.lower() == "psi4"
         if r.molecule == hydrogen_mol_id:
             assert pytest.approx(-1.0660263371078127, 1e-5) == r.properties.scf_total_energy
         elif r.molecule == helium_mol_id:
@@ -104,12 +105,16 @@ def test_procedure_optimization(fractal_compute_server):
 
     for results in [results1, results2]:
         assert len(results) == 1
+        assert isinstance(results[0].provenance.creator, str) # TODO: Bug in QCEngine, see molssi/qcengine#42
         assert isinstance(str(results[0]), str)  # Check that repr runs
         assert pytest.approx(-1.117530188962681, 1e-5) == results[0].get_final_energy()
 
         # Check pulls
         traj = results[0].get_trajectory(projection={"properties": True})
         assert len(traj) == len(results[0].energies)
+        assert traj[0].provenance.creator.lower() == "psi4"
+
+
         assert results[0].get_final_molecule().symbols == ["H", "H"]
 
         # Check individual elements

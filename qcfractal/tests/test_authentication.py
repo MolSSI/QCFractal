@@ -4,7 +4,7 @@ Tests the on-node procedures compute capabilities.
 
 import pytest
 import qcfractal
-import qcfractal.interface as portal
+import qcfractal.interface as ptl
 import requests
 from qcfractal import testing
 
@@ -51,17 +51,32 @@ def sec_server(request):
         yield server
 
 
+@pytest.fixture(scope="module")
+def sec_server_allow_read(sec_server):
+    """
+    New sec server with read allowed
+    """
+
+    yield qcfractal.FractalServer(
+        name="qcf_server_allow_read",
+        port=testing.find_open_port(),
+        storage_project_name=sec_server.storage.get_project_name(),
+        loop=sec_server.loop,
+        security="local",
+        allow_read=True)
+
+
 ### Tests the compute queue stack
 def test_security_auth_decline_none(sec_server):
     with pytest.raises(requests.exceptions.HTTPError) as excinfo:
-        client = portal.FractalClient(sec_server)
+        client = ptl.FractalClient(sec_server)
 
     assert "user not found" in str(excinfo.value).lower()
 
 
 def test_security_auth_bad_ssl(sec_server):
     with pytest.raises(requests.exceptions.SSLError) as excinfo:
-        client = portal.FractalClient.from_file({
+        client = ptl.FractalClient.from_file({
             "address": sec_server.get_address(),
             "username": "read",
             "password": _users["write"]["pw"],
@@ -74,7 +89,7 @@ def test_security_auth_bad_ssl(sec_server):
 
 def test_security_auth_decline_bad_user(sec_server):
     with pytest.raises(requests.exceptions.HTTPError) as excinfo:
-        client = portal.FractalClient.from_file({
+        client = ptl.FractalClient.from_file({
             "address": sec_server.get_address(),
             "username": "hello",
             "password": "something",
@@ -86,7 +101,19 @@ def test_security_auth_decline_bad_user(sec_server):
 
 def test_security_auth_accept(sec_server):
 
-    client = portal.FractalClient(sec_server, username="write", password=_users["write"]["pw"])
+    client = ptl.FractalClient(sec_server, username="write", password=_users["write"]["pw"])
 
     r = client.add_molecules([])
     r = client.get_molecules(id=[])
+
+
+def test_security_auth_allow_read(sec_server_allow_read):
+    client = ptl.FractalClient(sec_server_allow_read)
+
+
+def test_security_auth_allow_read_block_add(sec_server_allow_read):
+    client = ptl.FractalClient(sec_server_allow_read)
+
+    with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+        client.add_molecules([ptl.Molecule.from_data("He 0 0 0")])
+    assert "user not found" in str(excinfo.value).lower()

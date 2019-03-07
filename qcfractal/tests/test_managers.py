@@ -118,6 +118,13 @@ def test_queue_manager_heartbeat(compute_adapter_fixture):
         assert sman[0]["status"] == "INACTIVE"
 
 
+def test_manager_max_tasks_limiter(compute_adapter_fixture):
+    client, server, adapter = compute_adapter_fixture
+
+    manager = queue.QueueManager(client, adapter, queue_tag="stuff", max_tasks=1.e9)
+    assert manager.max_tasks < 1.e9
+
+
 def test_queue_manager_testing():
 
     with ProcessPoolExecutor(max_workers=2) as adapter:
