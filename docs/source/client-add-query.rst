@@ -9,7 +9,7 @@ Adding Objects
 --------------
 
 Adding objects to the server uses the ``client.add_*`` commands and takes in a
-list of objects to add and returns the :term:`DB ID` of the object.
+list of objects to add and returns the :term:`ObjectId` of the object.
 
 .. code-block:: python
 
@@ -17,7 +17,7 @@ list of objects to add and returns the :term:`DB ID` of the object.
     >>> data = client.add_molecules([helium])
     ['5b882c957b87878925ffaf22']
 
-Adding the same molecule again will not add a new molecule and will always return the same :term:`DB ID`:
+Adding the same molecule again will not add a new molecule and will always return the same :term:`ObjectId`:
 
 .. code-block:: python
 
@@ -25,23 +25,23 @@ Adding the same molecule again will not add a new molecule and will always retur
     >>> data = client.add_molecules([helium, helium])
     ['5b882c957b87878925ffaf22', '5b882c957b87878925ffaf22']
 
-The order of :term:`DB ID` returned is identical to the order of molecules added.
+The order of :term:`ObjectId` returned is identical to the order of molecules added.
 
 .. note::
 
-    The :term:`DB ID` changes and is unique to a particular database.
+    The :term:`ObjectId` changes and is unique to a particular database.
 
 Querying Objects
 ----------------
 
 Each objects has a set of fields that can be queried to obtain the objects in
-addition to their :term:`DB ID`. All queries will return a list of objects.
+addition to their :term:`ObjectId`. All queries will return a list of objects.
 
 Molecules
 ---------
 
 As an example, we can use a molecule that comes with QCPortal and adds it to
-the database as shown. Please note that the Molecule ID (a :term:`DB ID`)
+the database as shown. Please note that the Molecule ID (a :term:`ObjectId`)
 shown below will not be the same as your result and is unique to every
 database.
 
