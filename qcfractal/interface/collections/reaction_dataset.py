@@ -73,6 +73,7 @@ class ReactionDataset(Dataset):
         self.df = pd.DataFrame(index=self.get_index())
 
         self.rxn_index = None
+        self.valid_stoich = None
         self._form_index()
 
     class DataModel(Dataset.DataModel):
@@ -94,6 +95,11 @@ class ReactionDataset(Dataset):
                     tmp_index.append([name, stoich_name, mol_hash, coef])
 
         self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule", "coefficient"])
+        self.valid_stoich = set(self.rxn_index["stoichiometry"].unique())
+
+    def _validate_stoich(self, stoich):
+        if stoich.lower() not in self.valid_stoich:
+            raise KeyError("Stoichiometry not understood, valid keys are {}.".format(self.valid_stoich))
 
     def _pre_save_prep(self, client):
         self._canonical_pre_save(client)
@@ -219,11 +225,13 @@ class ReactionDataset(Dataset):
         ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
 
         """
-
-        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
+        self._check_state()
 
         if not contrib and (self.client is None):
             raise AttributeError("DataBase: FractalClient was not set.")
+
+        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
+        self._validate_stoich(stoich)
 
         # # If reaction results
         if contrib:
@@ -290,9 +298,10 @@ class ReactionDataset(Dataset):
         self._check_state()
 
         if self.client is None:
-            raise AttributeError("DataBase: Compute: Client was not set.")
+            raise AttributeError("Dataset: Compute: Client was not set.")
 
         driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
+        self._validate_stoich(stoich)
 
         # Figure out molecules that we need
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
@@ -370,7 +379,6 @@ class ReactionDataset(Dataset):
 
         """
         raise Exception("MPL not avail")
-
 
 #        return visualization.Ternary2D(self.df, cvals=cvals)
 

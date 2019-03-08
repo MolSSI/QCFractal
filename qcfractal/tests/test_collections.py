@@ -126,8 +126,11 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     ds.add_contributed_values(contrib)
 
     # Save the DB and overwrite the result, reacquire via client
-    r = ds.save(overwrite=True)
+    r = ds.save()
     ds = client.get_collection("reactiondataset", ds_name)
+
+    with pytest.raises(KeyError):
+        ret = ds.compute("SCF", "STO-3G", stoich="nocp")  # Should be 'default' not 'nocp'
 
     # Compute SCF/sto-3g
     ret = ds.compute("SCF", "STO-3G")
@@ -163,6 +166,7 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     ds.add_keywords("df", "psi4", portal.models.KeywordSet(values={"scf_type": "df"}))
 
     ds.save()
+    ds = client.get_collection("reactiondataset", "dataset_options")
 
     # Compute, should default to direct options
     r = ds.compute("SCF", "STO-3G")
@@ -178,6 +182,15 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     assert ds.list_history().shape[0] == 2
     assert ds.list_history(keywords="DF").shape[0] == 1
     assert ds.list_history(keywords="DIRECT").shape[0] == 1
+
+    # Check saved history
+    ds = client.get_collection("reactiondataset", "dataset_options")
+    assert ds.list_history().shape[0] == 2
+    assert {"df", "direct"} == set(ds.list_history().reset_index()["keywords"])
+
+    # Check keywords
+    kw = ds.get_keywords("df", "psi4")
+    assert kw.values["scf_type"] == "df"
 
 
 @testing.using_torsiondrive

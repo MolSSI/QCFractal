@@ -18,7 +18,11 @@ from .models.rest_models import (
 
 
 class FractalClient(object):
-    def __init__(self, address: Any, username: Optional[str]=None, password: Optional[str]=None, verify: bool=True):
+    def __init__(self,
+                 address: Union[str, 'FractalServer']='api.qcarchive.molssi.org:443',
+                 username: Optional[str]=None,
+                 password: Optional[str]=None,
+                 verify: bool=True):
         """Initializes a FractalClient instance from an address and verification information.
 
         Parameters
@@ -268,7 +272,7 @@ class FractalClient(object):
 
 ### Keywords section
 
-    def get_keywords(self, id: List[str], full_return: bool=False) -> 'List[KeywordSet]':
+    def get_keywords(self, id: List[str]=None, *, hash_index: List[str]=None, full_return: bool=False) -> 'List[KeywordSet]':
         """Obtains KeywordSets from the server using keyword ids.
 
         Parameters
@@ -283,7 +287,8 @@ class FractalClient(object):
         List[KeywordSet]
             The requested KeywordSet objects.
         """
-        body = KeywordGETBody(meta={}, data=id)
+        data = {"id": id, "hash_index": hash_index}
+        body = KeywordGETBody(meta={}, data=data)
         r = self._request("get", "keyword", data=body.json())
         r = KeywordGETResponse.parse_raw(r.text)
 

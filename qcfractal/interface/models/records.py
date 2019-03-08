@@ -260,6 +260,7 @@ class ResultRecord(RecordBase):
 
         # Result specific
         self.extras = data["extras"]
+        self.extras.pop("_qcfractal_tags", None)
         self.return_result = data["return_result"]
         self.properties = data["properties"]
 

@@ -172,6 +172,9 @@ class Dataset(Collection):
         return df
 
     def _default_parameters(self, driver, keywords, program):
+        """
+        Takes raw input parsed parameters and applies defaults to them.
+        """
 
         if program is None:
             if self.data.default_program is None:
@@ -229,7 +232,7 @@ class Dataset(Collection):
 
         self.data.default_program = program.lower()
 
-    def add_keywords(self, alias: str, program: str, keyword: 'KeywordSet', default: bool = False) -> bool:
+    def add_keywords(self, alias: str, program: str, keyword: 'KeywordSet', default: bool=False) -> bool:
         """
         Adds an option alias to the dataset. Not that keywords are not present
         until a save call has been completed.
@@ -245,6 +248,7 @@ class Dataset(Collection):
         """
 
         alias = alias.lower()
+        program = program.lower()
         if program not in self.data.alias_keywords:
             self.data.alias_keywords[program] = {}
 
@@ -256,6 +260,19 @@ class Dataset(Collection):
         if default:
             self.data.default_keywords[program] = alias
         return True
+
+    def get_keywords(self, alias: str, program: str) -> 'KeywordSet':
+
+        if self.client is None:
+            raise AttributeError("Dataset: Client was not set.")
+
+        alias = alias.lower()
+        program = program.lower()
+        if (program not in self.data.alias_keywords) or (alias not in self.data.alias_keywords[program]):
+            raise KeyError("Keywords {}: {} not found.".format(program, alias))
+
+        kwid = self.data.alias_keywords[program][alias]
+        return self.client.get_keywords([kwid])[0]
 
     def add_contributed_values(self, contrib: ContributedValues, overwrite=False) -> None:
         """Adds a ContributedValues to the database.
@@ -354,7 +371,7 @@ class Dataset(Collection):
               field="return_result",
               as_array=False):
         """
-        Queries the local Portal for the requested keys and stoichiometry.
+        Queries the local Portal for the requested keys.
 
         Parameters
         ----------
@@ -422,7 +439,7 @@ class Dataset(Collection):
 
         return True
 
-    def compute(self, method, basis, driver=None, keywords=None, program=None, stoich="default", ignore_ds_type=False):
+    def compute(self, method, basis, driver=None, keywords=None, program=None, ignore_ds_type=False):
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -434,8 +451,6 @@ class Dataset(Collection):
             The computational basis to compute (6-31G)
         driver : str, optional
             The type of computation to run (energy, gradient, etc)
-        stoich : str, optional
-            The stoichiometry of the requested compute (cp/nocp/etc)
         keywords : str, optional
             The keyword alias for the requested compute
         program : str, optional
@@ -451,7 +466,7 @@ class Dataset(Collection):
         self._check_state()
 
         if self.client is None:
-            raise AttributeError("DataBase: Compute: Client was not set.")
+            raise AttributeError("Dataset: Compute: Client was not set.")
 
         driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
 

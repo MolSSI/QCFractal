@@ -38,10 +38,10 @@ def test_client_options(test_server):
     ret = client.add_keywords([opt])
 
     # Test get
-    get_kw = client.get_keywords({'id': ret[0]})
+    get_kw = client.get_keywords([ret[0]])
     assert opt == get_kw[0]
 
-    get_kw = client.get_keywords({"hash_index": opt.hash_index})
+    get_kw = client.get_keywords(hash_index=[opt.hash_index])
     assert opt == get_kw[0]
 
 
