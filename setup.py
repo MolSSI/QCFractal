@@ -36,8 +36,8 @@ if __name__ == "__main__":
             'mongoengine',
 
             # QCArchive depends
-            'qcengine>=0.6.0',
-            'qcelemental>=0.3.0',
+            'qcengine>=0.6.2',
+            'qcelemental>=0.3.1',
 
             # Testing
             'pytest',

@@ -28,5 +28,5 @@ dependencies:
   - torsiondrive
 
 # QCArchive includes
-  - qcengine>=0.6.0
-  - qcelemental>=0.3.0
+  - qcengine>=0.6.2
+  - qcelemental>=0.3.1
