@@ -74,10 +74,10 @@ hash:
 
 .. code-block:: python
 
-    >>> client.get_molecules(molecule_hash=[hooh.get_hash()])[0].id
+    >>> client.query_molecules(molecule_hash=[hooh.get_hash()])[0].id
     '5c82c51895d5923b946989c1'
 
-    >>> client.get_molecules(id=data)[0].id
+    >>> client.query_molecules(id=data)[0].id
     '5c82c51895d5923b946989c1'
 
 

@@ -116,7 +116,7 @@ class RecordBase(BaseModel, abc.ABC):
             return None
 
         if field_name not in self.cache:
-            self.cache[field_name] = self.client.get_kvstore([oid])[oid]
+            self.cache[field_name] = self.client.query_kvstore([oid])[oid]
 
         return self.cache[field_name]
 
@@ -381,7 +381,7 @@ class OptimizationRecord(RecordBase):
             A list of results documents
         """
 
-        return self.client.get_results(id=self.trajectory)
+        return self.client.query_results(id=self.trajectory)
 
     def get_final_molecule(self):
         """Returns the optimized molecule
@@ -392,5 +392,5 @@ class OptimizationRecord(RecordBase):
             The optimized molecule
         """
 
-        ret = self.client.get_molecules(id=[self.final_molecule])
+        ret = self.client.query_molecules(id=[self.final_molecule])
         return ret[0]

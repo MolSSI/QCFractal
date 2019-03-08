@@ -20,11 +20,11 @@ def test_client_molecule(test_server):
     ret = client.add_molecules([water])
 
     # Test get
-    get_mol = client.get_molecules(id=ret[0])
+    get_mol = client.query_molecules(id=ret[0])
     assert water.compare(get_mol[0])
 
     # Test molecular_formula get
-    get_mol = client.get_molecules(molecular_formula="H4O2")
+    get_mol = client.query_molecules(molecular_formula="H4O2")
     assert water.compare(get_mol[0])
 
 
@@ -38,10 +38,10 @@ def test_client_options(test_server):
     ret = client.add_keywords([opt])
 
     # Test get
-    get_kw = client.get_keywords([ret[0]])
+    get_kw = client.query_keywords([ret[0]])
     assert opt == get_kw[0]
 
-    get_kw = client.get_keywords(hash_index=[opt.hash_index])
+    get_kw = client.query_keywords(hash_index=[opt.hash_index])
     assert opt == get_kw[0]
 
 

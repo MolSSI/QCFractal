@@ -19,7 +19,7 @@ def test_adapter_single(managed_compute_server):
 
     # Force manager compute and get results
     manager.await_results()
-    ret = client.get_results()
+    ret = client.query_results()
     assert len(ret) == 1
 
 

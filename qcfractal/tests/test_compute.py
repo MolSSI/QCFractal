@@ -33,13 +33,13 @@ def test_task_molecule_no_orientation(data, fractal_compute_server):
     fractal_compute_server.await_results()
 
     # Check for the single result
-    ret = client.get_results(id=ret.submitted)
+    ret = client.query_results(id=ret.submitted)
     assert len(ret) == 1
     assert ret[0].status == "COMPLETE"
     assert ret[0].molecule == mol_id
 
     # Make sure no other molecule was added
-    ret = client.get_molecules(molecular_formula=["H2"])
+    ret = client.query_molecules(molecular_formula=["H2"])
     assert len(ret) == 1
     assert ret[0].id == mol_id
 
@@ -56,7 +56,7 @@ def test_task_error(fractal_compute_server):
     fractal_compute_server.await_results()
 
     # Check for error
-    results = client.get_results(id=ret.submitted)
+    results = client.query_results(id=ret.submitted)
     assert len(results) == 1
     assert results[0].status == "ERROR"
 
@@ -122,16 +122,16 @@ def test_queue_duplicate_compute(fractal_compute_server):
     assert len(ret.ids) == 1
     assert len(ret.existing) == 1
 
-    assert len(client.get_results(program="RDKIT")) == 1
-    assert len(client.get_results(program="RDKit")) == 1
+    assert len(client.query_results(program="RDKIT")) == 1
+    assert len(client.query_results(program="RDKit")) == 1
 
-    assert len(client.get_results(method="UFF")) == 1
-    assert len(client.get_results(method="uff")) == 1
+    assert len(client.query_results(method="UFF")) == 1
+    assert len(client.query_results(method="uff")) == 1
 
-    assert len(client.get_results(basis=None)) == 1
-    assert len(client.get_results(basis="")) == 1
+    assert len(client.query_results(basis=None)) == 1
+    assert len(client.query_results(basis="")) == 1
 
-    assert len(client.get_results(keywords=None)) == 1
+    assert len(client.query_results(keywords=None)) == 1
 
 
 @testing.using_rdkit

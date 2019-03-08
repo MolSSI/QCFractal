@@ -14,10 +14,10 @@ Add/Query Objects
 -----------------
 
 .. autosummary::
-    get_kvstore
-    get_molecules
+    query_kvstore
+    query_molecules
     add_molecules
-    get_keywords
+    query_keywords
     add_keywords
     list_collections
     get_collection
@@ -27,8 +27,8 @@ Records Querying
 ----------------
 
 .. autosummary::
-    get_results
-    get_procedures
+    query_results
+    query_procedures
 
 New Compute Tasks
 -----------------
@@ -50,13 +50,13 @@ Function Definitions
 
 .. autofunction:: server_information
 
-.. autofunction:: get_kvstore
+.. autofunction:: query_kvstore
 
-.. autofunction:: get_molecules
+.. autofunction:: query_molecules
 
 .. autofunction:: add_molecules
 
-.. autofunction:: get_keywords
+.. autofunction:: query_keywords
 
 .. autofunction:: add_keywords
 
@@ -66,11 +66,11 @@ Function Definitions
 
 .. autofunction:: add_collection
 
-.. autofunction:: get_results
+.. autofunction:: query_results
 
 .. autofunction:: check_results
 
-.. autofunction:: get_procedures
+.. autofunction:: query_procedures
 
 .. autofunction:: add_compute
 

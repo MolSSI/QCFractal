@@ -35,12 +35,12 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
 
     # Computer with the incorrect tag
     manager_stuff.await_results()
-    ret = client.get_results()
+    ret = client.query_results()
     assert len(ret) == 0
 
     # Computer with the correct tag
     manager_other.await_results()
-    ret = client.get_results()
+    ret = client.query_results()
     assert len(ret) == 1
 
     # Check the logs to make sure
@@ -79,7 +79,7 @@ def test_queue_manager_shutdown(compute_adapter_fixture):
     # Boot new manager and await results
     manager = queue.QueueManager(client, adapter)
     manager.await_results()
-    ret = client.get_results()
+    ret = client.query_results()
     assert len(ret) == 1
 
 

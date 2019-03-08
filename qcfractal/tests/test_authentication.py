@@ -104,7 +104,7 @@ def test_security_auth_accept(sec_server):
     client = ptl.FractalClient(sec_server, username="write", password=_users["write"]["pw"])
 
     r = client.add_molecules([])
-    r = client.get_molecules(id=[])
+    r = client.query_molecules(id=[])
 
 
 def test_security_auth_allow_read(sec_server_allow_read):

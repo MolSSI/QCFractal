@@ -211,7 +211,7 @@ class Dataset(Collection):
         query["molecule"] = set(indexer.values())
 
         query["projection"] = {"molecule": True, field: True}
-        records = pd.DataFrame(self.client.get_results(**query), columns=["molecule", field])
+        records = pd.DataFrame(self.client.query_results(**query), columns=["molecule", field])
 
         ret = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule"])
         ret.reset_index(inplace=True)
@@ -272,7 +272,7 @@ class Dataset(Collection):
             raise KeyError("Keywords {}: {} not found.".format(program, alias))
 
         kwid = self.data.alias_keywords[program][alias]
-        return self.client.get_keywords([kwid])[0]
+        return self.client.query_keywords([kwid])[0]
 
     def add_contributed_values(self, contrib: ContributedValues, overwrite=False) -> None:
         """Adds a ContributedValues to the database.

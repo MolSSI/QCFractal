@@ -146,7 +146,7 @@ class ReactionDataset(Dataset):
         query_keys = {k: v for k, v in keys.items()}
         query_keys["molecule"] = list(umols)
         query_keys["projection"] = {field: True, "molecule": True}
-        values = pd.DataFrame(self.client.get_results(**query_keys), columns=["molecule", field])
+        values = pd.DataFrame(self.client.query_results(**query_keys), columns=["molecule", field])
 
         # Join on molecule hash
         tmp_idx = tmp_idx.merge(values, how="left", on="molecule")
@@ -317,7 +317,7 @@ class ReactionDataset(Dataset):
         # There could be duplicates so take the unique and save the map
         umols, uidx = np.unique(tmp_idx["molecule"], return_index=True)
 
-        complete_values = self.client.get_results(
+        complete_values = self.client.query_results(
             molecule=list(umols),
             driver=driver,
             keywords=keywords,
