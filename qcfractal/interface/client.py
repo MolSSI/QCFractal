@@ -272,7 +272,7 @@ class FractalClient(object):
 
 ### Keywords section
 
-    def get_keywords(self, id: List[str], full_return: bool=False) -> 'List[KeywordSet]':
+    def get_keywords(self, id: List[str]=None, *, hash_index: List[str]=None, full_return: bool=False) -> 'List[KeywordSet]':
         """Obtains KeywordSets from the server using keyword ids.
 
         Parameters
@@ -287,7 +287,8 @@ class FractalClient(object):
         List[KeywordSet]
             The requested KeywordSet objects.
         """
-        body = KeywordGETBody(meta={}, data=id)
+        data = {"id": id, "hash_index": hash_index}
+        body = KeywordGETBody(meta={}, data=data)
         r = self._request("get", "keyword", data=body.json())
         r = KeywordGETResponse.parse_raw(r.text)
 

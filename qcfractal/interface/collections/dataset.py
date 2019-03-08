@@ -232,7 +232,7 @@ class Dataset(Collection):
 
         self.data.default_program = program.lower()
 
-    def add_keywords(self, alias: str, program: str, keyword: 'KeywordSet', default: bool = False) -> bool:
+    def add_keywords(self, alias: str, program: str, keyword: 'KeywordSet', default: bool=False) -> bool:
         """
         Adds an option alias to the dataset. Not that keywords are not present
         until a save call has been completed.
@@ -260,6 +260,19 @@ class Dataset(Collection):
         if default:
             self.data.default_keywords[program] = alias
         return True
+
+    def get_keywords(self, alias: str, program: str) -> 'KeywordSet':
+
+        if self.client is None:
+            raise AttributeError("Dataset: Client was not set.")
+
+        alias = alias.lower()
+        program = program.lower()
+        if (program not in self.data.alias_keywords) or (alias not in self.data.alias_keywords[program]):
+            raise KeyError("Keywords {}: {} not found.".format(program, alias))
+
+        kwid = self.data.alias_keywords[program][alias]
+        return self.client.get_keywords([kwid])[0]
 
     def add_contributed_values(self, contrib: ContributedValues, overwrite=False) -> None:
         """Adds a ContributedValues to the database.
@@ -453,7 +466,7 @@ class Dataset(Collection):
         self._check_state()
 
         if self.client is None:
-            raise AttributeError("DataBase: Compute: Client was not set.")
+            raise AttributeError("Dataset: Compute: Client was not set.")
 
         driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
 

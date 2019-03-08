@@ -225,12 +225,13 @@ class ReactionDataset(Dataset):
         ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
 
         """
-
-        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
-        self._validate_stoich(stoich)
+        self._check_state()
 
         if not contrib and (self.client is None):
             raise AttributeError("DataBase: FractalClient was not set.")
+
+        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
+        self._validate_stoich(stoich)
 
         # # If reaction results
         if contrib:
@@ -297,7 +298,7 @@ class ReactionDataset(Dataset):
         self._check_state()
 
         if self.client is None:
-            raise AttributeError("DataBase: Compute: Client was not set.")
+            raise AttributeError("Dataset: Compute: Client was not set.")
 
         driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
         self._validate_stoich(stoich)
