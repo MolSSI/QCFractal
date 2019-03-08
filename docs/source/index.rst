@@ -47,6 +47,7 @@ Index
 
 * :doc:`install`
 * :doc:`setup_compute`
+* :doc:`setup_server`
 * :doc:`community`
 * :doc:`roadmap`
 
@@ -58,6 +59,7 @@ Index
    install
    community
    setup_compute
+   setup_server
    roadmap
 
 **Portal Documentation**
