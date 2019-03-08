@@ -29,7 +29,7 @@ Enhancements
 - (:pr:`195`) Read-only access has been granted to many objects separate from their write access.
   This is in contrast to the previous model where either there was no access security, or
   everything was access secure.
-- (:pr:`197`) Unknown reactions are no longer allowed in the ``ReactionDataset``
+- (:pr:`197`) Unknown stoichiometry are no longer allowed in the ``ReactionDataset``
 - (:pr:`197`) CLI for FractalServer uses Executor only to encourage using the
   Template Generator introduced in :pr:`177`.
 - (:pr:`197`) ``Dataset`` objects can now query keywords from aliases as well.
