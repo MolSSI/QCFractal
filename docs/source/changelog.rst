@@ -15,6 +15,39 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.5.2 / 2019-03-08
+------------------
+
+New Features
+++++++++++++
+
+- (:pr:`197`) New ``FractalClient`` instances will automatically connect to the central MolSSI Fractal Server
+
+Enhancements
+++++++++++++
+
+- (:pr:`195`) Read-only access has been granted to many objects separate from their write access.
+  This is in contrast to the previous model where either there was no access security, or
+  everything was access secure.
+- (:pr:`197`) Unknown stoichiometry are no longer allowed in the ``ReactionDataset``
+- (:pr:`197`) CLI for FractalServer uses Executor only to encourage using the
+  Template Generator introduced in :pr:`177`.
+- (:pr:`197`) ``Dataset`` objects can now query keywords from aliases as well.
+
+
+Bug Fixes
++++++++++
+
+- (:pr:`195`) Manager cannot pull too many tasks and potentially loose data due to query limits.
+- (:pr:`195`) ``Records`` now correctly adds Provenance information
+- (:pr:`196`) ``compute_torsion`` example update to reflect API changes
+- (:pr:`197`) Fixed an issue where CLI input flags were not correctly overwriting default values
+- (:pr:`197`) Fixed an issue where ``Collections`` were not correctly updating when the ``save`` function was called
+  on existing objects in the database.
+- (:pr:`197`) ``_qcfractal_tags`` are no longer carried through the ``Records`` objects in errant.
+- (:pr:`197`) Stoichiometry information is no longer accepted in the ``Dataset`` object since this is not
+  used in this class of object anymore (see ``ReactionDataset``).
+
 
 0.5.1 / 2019-03-04
 ------------------
