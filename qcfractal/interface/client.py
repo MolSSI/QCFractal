@@ -215,7 +215,7 @@ class FractalClient(object):
                       id: Optional[List[str]]=None,
                       molecule_hash: Optional[List[str]]=None,
                       molecular_formula: Optional[List[str]]=None,
-                      full_return: bool=False) -> 'Dict[str, Molecule]':
+                      full_return: bool=False) -> 'List[Molecule]':
         """Queries molecules from the database.
 
         Parameters
