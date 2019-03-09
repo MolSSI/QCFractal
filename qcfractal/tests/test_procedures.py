@@ -53,7 +53,7 @@ def test_compute_queue_stack(fractal_compute_server):
         "method": compute["meta"]["method"],
         "basis": compute["meta"]["basis"]
     }
-    results = client.get_results(**results_query)
+    results = client.query_results(**results_query)
 
     assert len(results) == 2
     for r in results:
@@ -100,8 +100,8 @@ def test_procedure_optimization(fractal_compute_server):
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
     # # Query result and check against out manual pul
-    results1 = client.get_procedures({"program": "geometric"})
-    results2 = client.get_procedures({"id": compute_key})
+    results1 = client.query_procedures({"program": "geometric"})
+    results2 = client.query_procedures({"id": compute_key})
 
     for results in [results1, results2]:
         assert len(results) == 1

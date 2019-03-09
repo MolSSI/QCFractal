@@ -47,6 +47,7 @@ Index
 
 * :doc:`install`
 * :doc:`setup_compute`
+* :doc:`setup_server`
 * :doc:`community`
 * :doc:`roadmap`
 
@@ -55,27 +56,26 @@ Index
    :hidden:
    :caption: Getting Started
 
-   install
-   community
-   setup_compute
-   roadmap
+   install.rst
+   community.rst
+   setup_compute.rst
+   setup_server.rst
+   roadmap.rst
 
 **Portal Documentation**
 
 Portal is the primary user interface to a Fractal server instance.
 
-* :doc:`portal-client`
-* :doc:`portal-collections`
-* :doc:`portal-molecule`
+* :doc:`client`
+* :doc:`collections`
 
 .. toctree::
    :maxdepth: 2
    :hidden:
    :caption: Portal Documentation
 
-   portal-client
-   portal-collections
-   portal-molecule
+   client.rst
+   collections.rst
 
 **Fractal Documentation**
 
@@ -91,10 +91,10 @@ Fractal contains the sever instance, database, and distributed compute queue.
    :hidden:
    :caption: Fractal Documentation
 
-   fractal-results
-   fractal-procedures
-   fractal-services
-   fractal-flow
+   fractal-results.rst
+   fractal-procedures.rst
+   fractal-services.rst
+   fractal-flow.rst
 
 **Developer Documentation**
 
@@ -105,10 +105,10 @@ Contains in-depth developer documentation.
    :hidden:
    :caption: Developer Documentation
 
-   qcarchive_overview
-   api
-   database_design
-   glossary
-   dev_guidelines
-   changelog
+   qcarchive_overview.rst
+   api.rst
+   database_design.rst
+   glossary.rst
+   dev_guidelines.rst
+   changelog.rst
 

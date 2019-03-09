@@ -416,7 +416,7 @@ def test_empty_get(storage_results):
     assert 0 == len(storage_results.get_results(program='null')['data'])
 
 
-def test_results_query_total(storage_results):
+def test_results_get_total(storage_results):
 
     assert 6 == len(storage_results.get_results()["data"])
 
@@ -433,7 +433,7 @@ def test_get_results_by_ids(storage_results):
     assert ret['data'][0].keys() == {'id', 'status'}
 
 
-def test_results_query_method(storage_results):
+def test_results_get_method(storage_results):
 
     ret = storage_results.get_results(method=["M2", "M1"])
     assert ret["meta"]["n_found"] == 5
@@ -445,7 +445,7 @@ def test_results_query_method(storage_results):
     assert ret["meta"]["n_found"] == 2
 
 
-def test_results_query_dual(storage_results):
+def test_results_get_dual(storage_results):
 
     ret = storage_results.get_results(method=["M2", "M1"], program=["P1", "P2"])
     assert ret["meta"]["n_found"] == 5
@@ -457,7 +457,7 @@ def test_results_query_dual(storage_results):
     assert ret["meta"]["n_found"] == 1
 
 
-def test_results_query_project(storage_results):
+def test_results_get_project(storage_results):
     """See new changes in design here"""
 
     ret = storage_results.get_results(method="M2", program="P2", projection={"return_result"})["data"][0]
@@ -470,7 +470,7 @@ def test_results_query_project(storage_results):
     assert set(ret.keys()) == {"return_result"}
 
 
-def test_results_query_driver(storage_results):
+def test_results_get_driver(storage_results):
     ret = storage_results.get_results(driver="energy")
     assert ret["meta"]["n_found"] == 2
 

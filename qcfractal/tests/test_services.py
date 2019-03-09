@@ -75,7 +75,7 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
     ret = spin_up_test()
 
     # Get a TorsionDriveORM result and check data
-    result = client.get_procedures({"id": ret.ids[0]})[0]
+    result = client.query_procedures({"id": ret.ids[0]})[0]
     assert result.status == "COMPLETE"
     assert isinstance(str(result), str)  # Check that repr runs
 
@@ -96,7 +96,7 @@ def test_service_torsiondrive_multi_single(torsiondrive_fixture):
 
     ret = spin_up_test(initial_molecule=[hooh, hooh2])
 
-    result = client.get_procedures({"id": ret.ids[0]})[0]
+    result = client.query_procedures({"id": ret.ids[0]})[0]
     assert result.status == "COMPLETE"
 
 
@@ -113,7 +113,7 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     id2 = spin_up_test(keywords={"meaningless_entry_to_change_hash": "Waffles!"}).ids[0]
 
     assert id1 != id2
-    procedures = client.get_procedures({"id": [id1, id2]})
+    procedures = client.query_procedures({"id": [id1, id2]})
     assert len(procedures) == 2  # Make sure only 2 procedures are yielded
 
     base_run, duplicate_run = procedures
@@ -198,7 +198,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     fractal_compute_server.await_services()
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
-    result = client.get_procedures({"id": ret.ids[0]})[0]
+    result = client.query_procedures({"id": ret.ids[0]})[0]
 
     assert result.status == "COMPLETE"
     assert result.starting_grid == (1, 0)
@@ -209,7 +209,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
 
     # Check initial vs startin molecule
     assert result.initial_molecule == mol_ret[0]
-    starting_mol = client.get_molecules(id=result.starting_molecule)[0]
+    starting_mol = client.query_molecules(id=result.starting_molecule)[0]
     assert pytest.approx(starting_mol.measure([1, 2])) != initial_distance
     assert pytest.approx(starting_mol.measure([1, 2])) == 2.488686479260597
 
@@ -255,7 +255,7 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
     fractal_compute_server.await_services()
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
-    result = client.get_procedures({"id": ret.ids[0]})[0]
+    result = client.query_procedures({"id": ret.ids[0]})[0]
 
     assert result.status == "COMPLETE"
     assert result.starting_grid == (1, )
@@ -266,5 +266,5 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
     # Check initial vs startin molecule
     assert result.initial_molecule == result.starting_molecule
 
-    mol = client.get_molecules(id=result.starting_molecule)[0]
+    mol = client.query_molecules(id=result.starting_molecule)[0]
     assert pytest.approx(mol.measure([1, 2])) == initial_distance

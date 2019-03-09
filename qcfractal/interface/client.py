@@ -185,7 +185,7 @@ class FractalClient(object):
 
 ### KVStore section
 
-    def get_kvstore(self, id: List[str], full_return: bool=False) -> List[Dict[str, Any]]:
+    def query_kvstore(self, id: List[str], full_return: bool=False) -> Dict[str, Any]:
         """Queries items from the database's KVStore
 
         Parameters
@@ -197,7 +197,7 @@ class FractalClient(object):
 
         Returns
         -------
-        List[Dict[str, Any]]
+        Dict[str, Any]
             A list of found KVStore objects in {"id": "value"} format
         """
         body = KVStoreGETBody(data=id, meta={})
@@ -211,11 +211,11 @@ class FractalClient(object):
 
 ### Molecule section
 
-    def get_molecules(self,
-                      id: Optional[List[str]]=None,
-                      molecule_hash: Optional[List[str]]=None,
-                      molecular_formula: Optional[List[str]]=None,
-                      full_return: bool=False) -> 'Dict[str, Molecule]':
+    def query_molecules(self,
+                        id: Optional[List[str]]=None,
+                        molecule_hash: Optional[List[str]]=None,
+                        molecular_formula: Optional[List[str]]=None,
+                        full_return: bool=False) -> 'List[Molecule]':
         """Queries molecules from the database.
 
         Parameters
@@ -272,7 +272,7 @@ class FractalClient(object):
 
 ### Keywords section
 
-    def get_keywords(self, id: List[str]=None, *, hash_index: List[str]=None, full_return: bool=False) -> 'List[KeywordSet]':
+    def query_keywords(self, id: List[str]=None, *, hash_index: List[str]=None, full_return: bool=False) -> 'List[KeywordSet]':
         """Obtains KeywordSets from the server using keyword ids.
 
         Parameters
@@ -404,7 +404,7 @@ class FractalClient(object):
 
 ### Results section
 
-    def get_results(self, **kwargs):
+    def query_results(self, **kwargs):
         projection = kwargs.pop("projection", None)
         full_return = kwargs.pop("full_return", False)
 
@@ -433,9 +433,9 @@ class FractalClient(object):
             kwargs["projection"]["status"] = True
         else:
             kwargs["projection"] = {"status": True}
-        return self.get_results(**kwargs)
+        return self.query_results(**kwargs)
 
-    def get_procedures(self, procedure_query: Dict[str, Any], return_objects: bool=True):
+    def query_procedures(self, procedure_query: Dict[str, Any], return_objects: bool=True):
 
         body = ProcedureGETBody(data=procedure_query)
         r = self._request("get", "procedure", data=body.json())

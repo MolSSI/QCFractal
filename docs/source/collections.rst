@@ -1,5 +1,5 @@
-Portal Collections
-==================
+Collections
+===========
 
 Collections are an organizational objects that keeps track of collections of results
 results, provides the ability to analyize and visualize these results, and is
