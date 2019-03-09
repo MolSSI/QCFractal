@@ -30,6 +30,11 @@ Glossary
       A DB Index (or Database Index) is a commonly queried field used to speed up
       searches in a :term:`DB Table`.
 
+    Hash Index
+      A index that hashes the information contained in the object
+      in a reproducible manner. This hash index is only used to find duplicates
+      and should not be relied upon as it may change in the future.
+
     ObjectId
       A ObjectId (or Database ID) is a unique ID for a given row (a document or
       entry) in the database that uniquely defines that particular row in a
