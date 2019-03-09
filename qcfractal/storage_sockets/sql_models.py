@@ -1,0 +1,410 @@
+import datetime
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, Text, DateTime, \
+    ForeignKey, LargeBinary, Binary, ARRAY
+from sqlalchemy.orm import relationship
+from sqlalchemy_utils.types.choice import ChoiceType
+
+
+# pip install sqlalchemy psycopg2 sqlalchemy_utils
+
+Base = declarative_base()
+
+
+class KVStoreORM(Base):
+    __tablename__ = "kv_store"
+
+    id = Column(Integer, primary_key=True)
+    value = Column(Text, nullable=False)
+
+
+class CollectionORM(Base):
+    """
+        A collection of precomuted workflows such as datasets, ..
+
+        This is a dynamic document, so it will accept any number of
+        extra fields (expandable and uncontrolled schema)
+    """
+
+    __tablename__ = "collection"
+
+    id = Column(Integer, primary_key=True)
+
+    collection = Column(String(100), nullable=False)
+    name = Column(String(100), nullable=False)  # Example 'water'
+
+    # meta = {
+    #     'indexes': [{
+    #         'fields': ('collection', 'name'),
+    #         'unique': True
+    #     }]
+    # }
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+class MoleculeORM(Base):
+    """
+        The molecule DB collection is managed by pymongo, so far
+    """
+
+    __tablename__ = "molecule"
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String)
+    symbols = Column(ARRAY(String))
+    molecular_formula = Column(String)
+    molecule_hash = Column(String)
+    geometry = Column(ARRAY(String))
+
+    def create_hash(self):
+        """ TODO: create a special hash before saving"""
+        return ''
+
+    # def save(self, *args, **kwargs):
+    #     """Override save to add molecule_hash"""
+    #     # self.molecule_hash = self.create_hash()
+    #
+    #     return super(MoleculeORM, self).save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.id)
+
+    # meta = {
+    #
+    #     'indexes': [
+    #         {
+    #             'fields': ('molecule_hash', ),
+    #             'unique': False
+    #         },  # should almost be unique
+    #         {
+    #             'fields': ('molecular_formula', ),
+    #             'unique': False
+    #         }
+    #     ]
+    # }
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+class KeywordsORM(Base):
+    """
+        KeywordsORM are unique for a specific program and name
+    """
+
+    __tablename__ = "keywords"
+
+    id = Column(Integer, primary_key=True)
+    hash_index = Column(String, nullable=False)
+    values = Column(LargeBinary)
+
+    # meta = {'indexes': [{'fields': ('hash_index', ), 'unique': True}]}
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+class BaseResultORM(Base):
+    """
+        Abstract Base class for ResultORMs and ProcedureORMs
+    """
+
+    __abstract__ = True
+
+    # queue related
+    id = Column(Integer, primary_key=True)
+
+    task_id = Column(String)  # ObjectId, reference task_queue but without validation
+    status = Column(ChoiceType([('COMPLETE', 'COMPLETE'),
+                                ('INCOMPLETE', 'INCOMPLETE'),
+                                ('ERROR', 'ERROR')]), nullable=False)
+
+    created_on = Column(DateTime, nullable=False)
+    modified_on = Column(DateTime, nullable=False)
+
+    # meta = {
+    #     # 'allow_inheritance': True,
+    #     'indexes': ['status']
+    # }
+
+    # def save(self, *args, **kwargs):
+    #     """Override save to set defaults"""
+    #
+    #     self.modified_on = datetime.datetime.utcnow()
+    #     if not self.created_on:
+    #         self.created_on = datetime.datetime.utcnow()
+    #
+    #     return super(BaseResultORM, self).save(*args, **kwargs)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+class ResultORM(BaseResultORM):
+    """
+        Hold the result of an atomic single calculation
+    """
+
+    __tablename__ = "result"
+
+    # uniquely identifying a result
+    program = Column(String(100), nullable=False)  # example "rdkit", is it the same as program in keywords?
+    driver = Column(String(100), nullable=False)  # example "gradient"
+    method = Column(String(100), nullable=False)  # example "uff"
+    basis = Column(String(100))
+    molecule_id = Column(Integer, ForeignKey('molecule.id'))
+    molecule = relationship("MoleculeORM", lazy=True)
+
+    # This is a special case where KeywordsORM are denormalized intentionally as they are part of the
+    # lookup for a single result and querying a result will not often request the keywords (LazyReference)
+    keywords_id = Column(Integer, ForeignKey('keywords.id'))
+    keywords = relationship("KeywordsORM")
+
+    # output related
+    properties = Column(LargeBinary)  # accept any, no validation
+    return_result = Column(LargeBinary)
+    provenance = Column(LargeBinary)  # or an Embedded Documents with a structure?
+
+    schema_name = Column(String)  # default="qc_ret_data_output"??
+    schema_version = Column(Integer)
+
+    # meta = {
+    #     # 'collection': 'result',
+    #     'indexes': [
+    #         {
+    #             'fields': ('program', 'driver', 'method', 'basis', 'molecule', 'keywords'),
+    #             'unique': True
+    #         },
+    #     ]
+    # }
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'result',
+    }
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+class ProcedureORM(BaseResultORM):
+    """
+        A procedure is a group of related results applied to a list of molecules
+    """
+
+    __tablename__ = "procedure"
+
+    # used to define procedure type class by sqlalchemy, set automatically
+    procedure_type = Column(String, nullable=False)
+
+    program = Column(String, nullable=False)  # example: 'Geometric'
+    hash_index = Column(String, nullable=False)
+
+    # Unlike ResultORMs KeywordsORM are not denormalized here as a ProcedureORM query will always want the
+    # keywords and the keywords are not part of the index.
+    keywords = Column(LargeBinary)
+
+    # meta = {
+    #     'indexes': [
+    #         # TODO: needs a unique index, + molecule?
+    #         {
+    #             'fields': ('procedure', 'program'),
+    #             'unique': False
+    #         },  # TODO: check
+    #         {
+    #             'fields': ('hash_index', ),
+    #             'unique': False
+    #         }  # used in queries
+    #     ]
+    # }
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'procedure',
+        'polymorphic_on': 'procedure_type'
+    }
+
+
+# ================== Types of ProcedureORMs ================== #
+
+
+class OptimizationProcedureORM(ProcedureORM):
+    """
+        An Optimization  procedure
+    """
+    # procedure = Column(String, default='optimization', nullable=False)
+
+    initial_molecule_id = Column(Integer, ForeignKey('molecule.id'))
+    initial_molecule = relationship("MoleculeORM", lazy=True)
+
+    final_molecule_id = Column(Integer, ForeignKey('molecule.id'))
+    final_molecule = relationship("MoleculeORM", lazy=True)
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'optimization',
+    }
+
+
+class TorsiondriveProcedureORM(ProcedureORM):
+    """
+        An torsion drive  procedure
+    """
+
+    # procedure = Column(String, default='torsiondrive', nullable=False)
+
+    # TODO: add more fields
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'torsiondrive',
+    }
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# class Spec(db.DynamicEmbeddedDocument):
+#     """ The spec of a task in the queue
+#         This is an embedded document, meaning that it will be embedded
+#         in the task_queue collection and won't be stored as a seperate
+#         collection/table --> for faster parsing
+#     """
+#
+#     function = Column(String)
+#     args = Column(LargeBinary)  # fast, can take any structure
+#     kwargs = Column(LargeBinary)
+
+TASK_STATUS = [
+    ('RUNNING', 'RUNNING'),
+    ('WAITING', 'WAITING'),
+    ('ERROR', 'ERROR'),
+    ('COMPLETE', 'COMPLETE')
+]
+
+class TaskQueueORM(Base):
+    """A queue of tasks corresponding to a procedure
+
+       Notes: don't sort query results without having the index sorted
+              will impact the performce
+    """
+
+    __tablename__ = "task_queue"
+
+    id = Column(Integer, primary_key=True)
+
+    spec = Column(LargeBinary)
+
+    # others
+    tag = Column(String, default=None)
+    parser = Column(String, default='')
+    status = Column(ChoiceType(TASK_STATUS), default='WAITING')
+    manager = Column(String, default=None)
+
+    created_on = Column(DateTime, nullable=False)
+    modified_on = Column(DateTime, nullable=False)
+
+    # can reference ResultORMs or any ProcedureORM
+    base_result_id = Column(Integer, ForeignKey("base_result.id"))  # todo:
+    base_result = relationship("BaseResult")
+
+    # meta = {
+    #     'indexes': [
+    #         'created_on',
+    #         'status',
+    #         'manager',
+    #         {
+    #             'fields': ('base_result', ),
+    #             'unique': True
+    #         },  # new
+    #     ]
+    # }
+
+    # def save(self, *args, **kwargs):
+    #     """Override save to update modified_on"""
+    #     self.modified_on = datetime.datetime.utcnow()
+    #     if not self.created_on:
+    #         self.created_on = datetime.datetime.utcnow()
+    #
+    #     return super(TaskQueueORM, self).save(*args, **kwargs)
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+class ServiceQueueORM(Base):
+
+    __tablename__ = "service_queue"
+
+    id = Column(Integer, primary_key=True)
+
+    status = Column(ChoiceType(TASK_STATUS), default='WAITING')
+    tag = Column(String, default=None)
+    hash_index = Column(String, nullable=False)
+
+    procedure_id = Column(Integer, ForeignKey("procedure.id"))
+    procedure = relationship("ProcedureORM")
+
+    # created_on = Column(DateTime, nullable=False)
+    # modified_on = Column(DateTime, nullable=False)
+
+    # meta = {
+    #     'indexes': [
+    #         'status',
+    #         {
+    #             'fields': ("status", "tag", "hash_index"),
+    #             'unique': False
+    #         },
+    #         # {'fields': ('procedure',), 'unique': True}
+    #     ]
+    # }
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+class UserORM(Base):
+
+    __tablename__ = "user"
+
+    id = Column(Integer, primary_key=True)
+
+    username = Column(String, nullable=False, unique=True)
+    password = Column(Binary, nullable=False)
+    permissions = Column(ARRAY(String))
+
+    # meta = {'collection': 'user', 'indexes': ['username']}
+
+
+class QueueManagerORM(Base):
+    """
+    """
+
+    __tablename__ = "queue_manager"
+
+    id = Column(Integer, primary_key=True)
+
+    name = Column(String, unique=True)
+    cluster = Column(String)
+    hostname = Column(String)
+    uuid = Column(String)
+    tag = Column(String)
+
+    # counts
+    completed = Column(Integer, default=0)
+    submitted = Column(Integer, default=0)
+    failures = Column(Integer, default=0)
+    returned = Column(Integer, default=0)
+
+    status = Column(ChoiceType([('ACTIVE', 'ACTIVE'), ('INACTIVE', 'INACTIVE')]),
+                    default='INACTIVE')
+
+    created_on = Column(DateTime, nullable=False)
+    modified_on = Column(DateTime, nullable=False)
+
+    # meta = {'collection': 'queue_manager', 'indexes': ['status', 'name', 'modified_on']}
+
+    # def save(self, *args, **kwargs):
+    #     """Override save to update modified_on"""
+    #     self.modified_on = datetime.datetime.utcnow()
+    #     if not self.created_on:
+    #         self.created_on = datetime.datetime.utcnow()
+    #
+    #     return super(QueueManagerORM, self).save(*args, **kwargs)
