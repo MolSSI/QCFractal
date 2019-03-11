@@ -269,7 +269,7 @@ class ReactionDataset(Dataset):
 
         return True
 
-    def compute(self, method, basis, driver=None, keywords=None, program=None, stoich="default", ignore_ds_type=False):
+    def compute(self, method, basis, driver=None, keywords=None, program=None, stoich="default", ignore_ds_type=False, tag=None):
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -289,6 +289,8 @@ class ReactionDataset(Dataset):
             The underlying QC program
         ignore_ds_type : bool, optional
             Optionally only compute the "default" geometry
+        tag : str, optional
+            The queue tag to use when submitting compute requests.
 
         Returns
         -------
@@ -330,7 +332,7 @@ class ReactionDataset(Dataset):
         umols = np.setdiff1d(umols, complete_mols)
         compute_list = list(umols)
 
-        ret = self.client.add_compute(program, method.lower(), basis.lower(), driver, keywords, compute_list)
+        ret = self.client.add_compute(program, method.lower(), basis.lower(), driver, keywords, compute_list, tag=tag)
 
         # Update the record that this was computed
         self._add_history(

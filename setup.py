@@ -13,7 +13,7 @@ if __name__ == "__main__":
     setuptools.setup(
         name='qcfractal',
         description=short_description,
-        author='Daniel Smith',
+        author='The Molecular Sciences Software Institute',
         author_email='dgasmith@vt.edu',
         url="https://github.com/molssi/qcfractal",
         license='BSD-3C',
