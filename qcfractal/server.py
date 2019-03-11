@@ -83,6 +83,7 @@ class FractalServer:
             name: str="QCFractal Server",
             port: int=7777,
             loop: 'IOLoop'=None,
+            compress_response: bool=True,
 
             # Security
             security: Optional[str]=None,
@@ -214,9 +215,7 @@ class FractalServer:
 
         # Build the app
         app_settings = {
-            "compress_response": True,
-            "serve_traceback": True,
-            # "debug": True,
+            "compress_response": compress_response,
         }
         self.app = tornado.web.Application(endpoints, **app_settings)
         self.endpoints = set([v[0].replace("/", "", 1) for v in endpoints])

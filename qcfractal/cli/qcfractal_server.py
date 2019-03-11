@@ -42,6 +42,7 @@ def parse_args():
     general.add_argument("--log-prefix", type=str, default=None, help="The logfile prefix to use")
     general.add_argument("--database-uri", type=str, default="mongodb://localhost", help="The database URI to use")
     general.add_argument("--port", type=int, default=7777, help="The server port")
+    general.add_argument("--compress-response", type=bool, default=True, help="Compress the response or not")
     general.add_argument("--config-file", type=str, default=None, help="A configuration file to use")
 
     parser._action_groups.reverse()
@@ -92,6 +93,7 @@ def main(args=None):
     server = qcfractal.FractalServer(
         name=args["server_name"],
         port=args["port"],
+        compress_response=args["compress_response"],
 
         # Security
         security=args["security"],
