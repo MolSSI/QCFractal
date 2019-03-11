@@ -7,6 +7,23 @@ import qcfractal.interface as portal
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
 
+def test_collection_query(fractal_compute_server):
+    client = portal.FractalClient(fractal_compute_server)
+
+    ds = portal.collections.Dataset("CAPITAL", client)
+    ds.save()
+
+    cols = client.list_collections()
+    assert 'Dataset' in cols
+    assert 'CAPITAL' in cols["Dataset"]
+
+    ds = client.get_collection("dataset", "capital")
+    assert ds.name == "CAPITAL"
+
+    ds = client.get_collection("DATAset", "CAPital")
+    assert ds.name == "CAPITAL"
+
+
 
 @testing.using_psi4
 def test_dataset_compute_gradient(fractal_compute_server):
@@ -105,7 +122,7 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
 
     # Test collection lists
     ret = client.list_collections()
-    assert ds_name in ret["reactiondataset"]
+    assert ds_name in ret["ReactionDataset"]
 
     ret = client.list_collections("reactiondataset")
     assert ds_name in ret

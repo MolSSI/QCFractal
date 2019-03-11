@@ -7,9 +7,9 @@ Helper
 import abc
 import copy
 import json
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 
 class Collection(abc.ABC):
@@ -55,6 +55,8 @@ class Collection(abc.ABC):
         name: str
         collection: str = None
         provenance: Dict[str, str] = {}
+        tagline: str = None
+        tags: List[str] = []
         id: str = 'local'
 
     def __str__(self) -> str:
@@ -84,6 +86,10 @@ class Collection(abc.ABC):
         ret += "client='{}') ".format(client)
 
         return ret
+
+    @property
+    def name(self):
+        return self.data.name
 
     @classmethod
     def from_server(cls, client, name):
