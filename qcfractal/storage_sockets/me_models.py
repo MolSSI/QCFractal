@@ -61,12 +61,12 @@ class CollectionORM(CustomDynamicDocument):
     """
 
     collection = db.StringField(required=True)  # , choices=['dataset', '?'])
-    name = db.StringField(required=True)  # Example 'water'
+    lname = db.StringField(required=True)  # Example 'water'
 
     meta = {
         'collection': 'collection',  # DB collection/table name
         'indexes': [{
-            'fields': ('collection', 'name'),
+            'fields': ('collection', 'lname'),
             'unique': True
         }]
     }
