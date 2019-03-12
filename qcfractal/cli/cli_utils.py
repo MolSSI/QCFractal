@@ -10,12 +10,14 @@ import signal
 import yaml
 
 
-def import_module(module):
+def import_module(module, package=None):
     """Protected import of a module
     """
     try:
-        ret = importlib.import_module(module)
+        ret = importlib.import_module(module, package=package)
     except ImportError:
+        if package is not None:
+            raise ImportError("Requested module/package '{}/{}' not found.".format(module, package))
         raise ImportError("Requested module '{}' not found.".format(module))
 
     return ret
@@ -44,13 +46,14 @@ def argparse_config_merge(parser, parsed_options, config_options, parser_default
     ----------
     parser : ArgumentParser
     config_options : dict
-    parser_default : None, optional
+    parser_default : List, Optional
     """
     config_options = copy.deepcopy(config_options)
 
     default_options = vars(parser.parse_args(args=parser_default))
     diff = config_options.keys() - default_options.keys()
     if diff:
+        import argparse
         raise argparse.ArgumentError(None,
                                      "Unknown arguments found in configuration file: {}.".format(", ".join(diff)))
 

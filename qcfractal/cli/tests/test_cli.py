@@ -34,7 +34,7 @@ def active_server(request):
     with testing.popen(args, **_options) as server:
         time.sleep(2)
 
-        server.test_uri_cli = "--fractal-uri=localhost:" + port
+        server.test_uri_cli = "--fractal-address=localhost:" + port
         yield server
 
 
