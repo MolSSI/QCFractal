@@ -15,8 +15,7 @@ except ImportError:
         "Mongoengine_socket requires mongoengine, please install this python module or try a different db_socket.")
 
 import logging
-import random
-import string
+import secrets
 from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Union
 
@@ -1600,7 +1599,7 @@ class MongoengineSocket:
 
         return_password = False
         if password is None:
-            password = ''.join(random.SystemRandom().choice(string.ascii_letters + string.digits) for _ in range(32))
+            password = secrets.token_urlsafe(32)
             return_password = True
 
         hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
