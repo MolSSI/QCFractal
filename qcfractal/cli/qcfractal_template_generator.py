@@ -24,11 +24,19 @@ For additional information about the {MANAGER_URL_TITLE}, please visit this site
 
 # Fractal Settings
 # Location of the Fractal Server you are connecting to
-FRACTAL_ADDRESS = "localhost:7777"
+FRACTAL_ADDRESS = "localhost:7777"  # QCArchive is at: api.qcarchive.molssi.org:443
+# Authentication with the Fractal Server
+USERNAME = None
+PASSWORD = None
+VERIFY_SSL = False
+
 
 # Queue Manager Settings
 # Set whether or not we are just testing the Queue Manger (no Fractal Client needed)
 TEST_RUN = {TEST_RUN}
+# Tell the manager to only pull jobs with this tag
+QUEUE_TAG = None
+
 
 
 # How many cores per node you want your jobs to have access to
@@ -90,14 +98,18 @@ if MEMORY_PER_NODE <= 0:
 if TEST_RUN:
     fractal_client = None
 else:
-    fractal_client = portal.FractalClient(FRACTAL_ADDRESS, verify=False)
+    fractal_client = portal.FractalClient(FRACTAL_ADDRESS, 
+                                          username=USERNAME,
+                                          password=PASSWORD,
+                                          verify=VERIFY_SSL)
 
 
 
 # Build a manager
 manager = qcfractal.queue.QueueManager(fractal_client, {MANAGER_CLIENT}, update_frequency=0.5,
                                        cores_per_task=CORES_PER_NODE // MAX_TASKS_PER_NODE,
-                                       memory_per_task=MEMORY_PER_NODE // MAX_TASKS_PER_NODE)
+                                       memory_per_task=MEMORY_PER_NODE // MAX_TASKS_PER_NODE,
+                                       queue_tag=QUEUE_TAG)
 
 # Important for a calm shutdown
 from qcfractal.cli.cli_utils import install_signal_handlers
