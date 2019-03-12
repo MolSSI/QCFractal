@@ -228,7 +228,6 @@ def test_compute_openffworkflow(fractal_compute_server):
         "torsiondrive_input": {},
 
         # TorsionDriveRecord, Geometric, and QC options
-        ""
         "torsiondrive_static_options": {
             "keywords": {},
             "optimization_spec": {

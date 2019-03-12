@@ -9,7 +9,7 @@ import copy
 import json
 from typing import Dict, List, Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel
 
 
 class Collection(abc.ABC):
