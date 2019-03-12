@@ -144,19 +144,6 @@ class Collection(abc.ABC):
             raise KeyError("Attempted to create Collection from JSON with class {}, but found collection type of {}.".
                            format(class_name, data["collection"]))
 
-        # Attempt to build class
-        # First make sure external source provides ALL keys, including "optional" ones
-        # Assumption here is that incoming source should have all this from a previous instance
-        # and will not have missing fields. Also enforces that no default values are *assumed* from
-        # external input.
-        # PyDantic can only enforce required on init entries, but lets everything else have defaults,
-        # this check asserts all fields are present, even if their default values are chosen
-        # Also provides consistency check in case defaults ever change in the future.
-        # This check could be removed though without any code failures
-        req_fields = cls.DataModel.__fields__.keys()
-        missing = req_fields - data.keys()
-        if len(missing):
-            raise KeyError("For class {} the following fields are missing {}.".format(class_name, missing))
         name = data.pop('name')
         # Allow PyDantic to handle type validation
         return cls(name, client=client, **data)
