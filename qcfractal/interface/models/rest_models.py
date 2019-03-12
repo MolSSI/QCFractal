@@ -133,7 +133,10 @@ class CollectionGETBody(BaseModel):
         def cast_to_lower(cls, v):
             return v.lower()
 
-    meta: Dict[str, Any] = None
+    class Meta(BaseModel):
+        projection: Dict[str, Any] = None
+
+    meta: Meta = None
     data: Data
 
 

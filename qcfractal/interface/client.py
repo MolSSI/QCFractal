@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import requests
 
-from .collections import collection_factory
+from .collections import collection_factory, collections_name_map
 from .models import GridOptimizationInput, Molecule, TorsionDriveInput, build_procedure
 from .models.rest_models import (
     CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse, KeywordGETBody,
@@ -346,9 +346,13 @@ class FractalClient(object):
         r = self._request("get", "collection", payload)
 
         if collection_type is None:
+            repl_name_map = collections_name_map()
             ret = defaultdict(list)
             for entry in r.json()["data"]:
-                ret[entry["collection"]].append(entry["name"])
+                colname = entry["collection"]
+                if colname in repl_name_map:
+                    colname = repl_name_map[colname]
+                ret[colname].append(entry["name"])
             return dict(ret)
         else:
             return [x["name"] for x in r.json()["data"]]
@@ -372,7 +376,7 @@ class FractalClient(object):
 
         """
 
-        body = CollectionGETBody(meta={}, data={"collection": collection_type, "name": name})
+        body = CollectionGETBody(meta={}, data={"collection": collection_type, "name": name.lower()})
         r = self._request("get", "collection", data=body.json())
         cols = CollectionGETResponse.parse_raw(r.text)
         if full_return:

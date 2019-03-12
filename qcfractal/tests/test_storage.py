@@ -172,9 +172,9 @@ def test_collections_add(storage_socket):
 
     collection = 'TorsionDriveRecord'
     name = 'Torsion123'
-    db = {"something": "else", "array": ["54321"]}
+    db = {"collection": collection, "name": name, "something": "else", "array": ["54321"]}
 
-    ret = storage_socket.add_collection(collection, name, db)
+    ret = storage_socket.add_collection(db)
 
     assert ret["meta"]["n_inserted"] == 1
 
@@ -194,11 +194,11 @@ def test_collections_add(storage_socket):
 
 def test_collections_overwrite(storage_socket):
 
-    collection = "TorsionDriveRecord"
-    name = "Torsion123"
-    db = {"something": "else", "array": ["54321"]}
+    collection = 'TorsionDriveRecord'
+    name = 'Torsion123'
+    db = {"collection": collection, "name": name, "something": "else", "array": ["54321"]}
 
-    ret = storage_socket.add_collection(collection, name, db)
+    ret = storage_socket.add_collection(db)
 
     assert ret["meta"]["n_inserted"] == 1
 
@@ -213,7 +213,7 @@ def test_collections_overwrite(storage_socket):
         "something2": "else",
         "array2": ["54321"]
     }
-    ret = storage_socket.add_collection(collection, name, db_update, overwrite=True)
+    ret = storage_socket.add_collection(db_update, overwrite=True)
     assert ret["meta"]["success"] == True
 
     ret = storage_socket.get_collections(collection, name)

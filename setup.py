@@ -13,8 +13,8 @@ if __name__ == "__main__":
     setuptools.setup(
         name='qcfractal',
         description=short_description,
-        author='Daniel Smith',
-        author_email='dgasmith@vt.edu',
+        author='The QCArchive Development Team',
+        author_email='qcarchive@molssi.org',
         url="https://github.com/molssi/qcfractal",
         license='BSD-3C',
         include_package_data=True,

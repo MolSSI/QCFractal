@@ -4,9 +4,33 @@
 import copy
 from typing import Any, Dict
 
-from ..models import OptimizationRecord, TorsionDriveRecord, TorsionDriveInput
+from pydantic import BaseModel
+
+from ..models import OptimizationRecord, OptimizationSpecification, TorsionDriveRecord, TorsionDriveInput, QCSpecification
 from .collection import Collection
 from .collection_utils import register_collection
+
+
+class TorsionDriveStaticOptions(BaseModel):
+
+    keywords: Dict[str, Any]
+    optimization_spec: OptimizationSpecification
+    qc_spec: QCSpecification
+
+    class Config:
+        extra = "forbid"
+        allow_mutation = False
+
+
+class OptimizationStaticOptions(BaseModel):
+
+    program: str
+    keywords: Dict[str, Any] = {}
+    qc_spec: QCSpecification
+
+    class Config:
+        extra = "forbid"
+        allow_mutation = False
 
 
 class OpenFFWorkflow(Collection):
@@ -83,37 +107,8 @@ class OpenFFWorkflow(Collection):
                 "interval": 5
             }
         }
-        torsiondrive_static_options: Dict[str, Any] = {
-            "keywords": {},
-            "optimization_spec": {
-                "program": "geometric",
-                "keywords": {
-                    "coordsys": "tric",
-                }
-            },
-            "qc_spec": {
-                "driver": "gradient",
-                "method": "UFF",
-                "basis": "",
-                "keywords": None,
-                "program": "rdkit",
-            }
-        }
-        optimization_static_options: Dict[str, Any] = {
-            "optimization_spec": {
-                "program": "geometric",
-                "keywords": {
-                    "coordsys": "tric",
-                }
-            },
-            "qc_spec": {
-                "driver": "gradient",
-                "method": "UFF",
-                "basis": "",
-                "keywords": None,
-                "program": "rdkit",
-            },
-        }
+        torsiondrive_static_options: TorsionDriveStaticOptions
+        optimization_static_options: OptimizationStaticOptions
 
     # Valid options which can be fetched from the get_options method
     # Kept as separate list to be easier to read for devs
@@ -199,21 +194,17 @@ class OpenFFWorkflow(Collection):
             elif packet['type'] == 'optimization_input':
                 ret = self._add_optimize(packet)
             else:
-                raise KeyError("{} is not an openffworklow type job".format(packet['type']))
+                raise KeyError("{} is not an OpenFFWorkflow type job".format(packet['type']))
 
             # add back to fragment data
-            packet["id"] = ret
-            # packet["provenance"] = provenance
-            frag_data[name] = packet
+            frag_data[name] = ret
 
         # Push collection data back to server
         self.save()
 
     def _add_torsiondrive(self, packet):
         # Build out a new service
-        torsion_meta = copy.deepcopy(
-            {k: self.data.torsiondrive_static_options[k]
-             for k in ("keywords", "optimization_spec", "qc_spec")})
+        torsion_meta = self.data.torsiondrive_static_options.copy(deep=True).dict()
 
         for k in ["grid_spacing", "dihedrals"]:
             torsion_meta["keywords"][k] = packet[k]
@@ -225,7 +216,7 @@ class OpenFFWorkflow(Collection):
         return ret.ids[0]
 
     def _add_optimize(self, packet):
-        meta = copy.deepcopy({k: self.data.optimization_static_options[k] for k in ("keywords", "qc_spec", "program")})
+        meta = self.data.optimization_static_options.copy(deep=True).dict()
 
         for k in ["constraints"]:
             meta["keywords"][k] = packet[k]
@@ -253,7 +244,7 @@ class OpenFFWorkflow(Collection):
         # Figure out the lookup
         lookup = []
         for frag in fragments:
-            lookup.extend([v["id"] for v in self.data.fragments[frag].values()])
+            lookup.extend(list(self.data.fragments[frag].values()))
 
         if refresh_cache is False:
             lookup = list(set(lookup) - self._torsiondrive_cache.keys())
@@ -290,9 +281,9 @@ class OpenFFWorkflow(Collection):
         for frag in fragments:
             tmp = {}
             for k, v in self.data.fragments[frag].items():
-                if v["id"] in self._torsiondrive_cache:
+                if v in self._torsiondrive_cache:
                     # TODO figure out a better solution here
-                    obj = self._torsiondrive_cache[v["id"]]
+                    obj = self._torsiondrive_cache[v]
                     if isinstance(obj, TorsionDriveRecord):
                         tmp[k] = obj.final_energies()
                     elif isinstance(obj, OptimizationRecord):
@@ -334,8 +325,8 @@ class OpenFFWorkflow(Collection):
         for frag in fragments:
             tmp = {}
             for k, v in self.data.fragments[frag].items():
-                if v["id"] in self._torsiondrive_cache:
-                    obj = self._torsiondrive_cache[v["id"]]
+                if v in self._torsiondrive_cache:
+                    obj = self._torsiondrive_cache[v]
                     if isinstance(obj, TorsionDriveRecord):
                         tmp[k] = obj.final_molecules()
                     elif isinstance(obj, OptimizationRecord):

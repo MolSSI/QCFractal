@@ -227,7 +227,7 @@ class CollectionHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         body = CollectionGETBody.parse_raw(self.request.body)
-        cols = storage.get_collections(**body.data.dict())
+        cols = storage.get_collections(**body.data.dict(), projection=body.meta.projection)
         response = CollectionGETResponse(**cols)
         self.logger.info("GET: Keywords - {} pulls.".format(len(response.data)))
 
@@ -240,9 +240,7 @@ class CollectionHandler(APIHandler):
 
         body = CollectionPOSTBody.parse_raw(self.request.body)
         ret = storage.add_collection(
-            body.data.collection,
-            body.data.name,
-            body.data.dict(exclude={"collection", "name"}),
+            body.data.dict(),
             overwrite=body.meta.overwrite)
 
         response = CollectionPOSTResponse(**ret)

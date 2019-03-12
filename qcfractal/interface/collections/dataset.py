@@ -439,7 +439,7 @@ class Dataset(Collection):
 
         return True
 
-    def compute(self, method, basis, driver=None, keywords=None, program=None, ignore_ds_type=False):
+    def compute(self, method, basis, driver=None, keywords=None, program=None, ignore_ds_type=False, tag=None):
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -457,6 +457,8 @@ class Dataset(Collection):
             The underlying QC program
         ignore_ds_type : bool, optional
             Optionally only compute the "default" geometry
+        tag : str, optional
+            The queue tag to use when submitting compute requests.
 
         Returns
         -------
@@ -473,7 +475,7 @@ class Dataset(Collection):
         molecule_idx = [e.molecule_id for e in self.data.records]
         umols, uidx = np.unique(molecule_idx, return_index=True)
 
-        ret = self.client.add_compute(program, method, basis, driver, keywords, list(umols))
+        ret = self.client.add_compute(program, method, basis, driver, keywords, list(umols), tag=tag)
 
         # Update the record that this was computed
         self._add_history(driver=driver, program=program, method=method, basis=basis, keywords=keywords_alias)

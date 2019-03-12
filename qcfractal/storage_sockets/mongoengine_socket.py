@@ -586,7 +586,7 @@ class MongoengineSocket:
     ### Mongo database functions
 
     # def add_collection(self, data, overwrite=False):
-    def add_collection(self, collection: str, name: str, data: Dict[str, Any], overwrite: bool=False):
+    def add_collection(self, data: Dict[str, Any], overwrite: bool=False):
         """Add (or update) a collection to the database.
 
         Parameters
@@ -617,12 +617,14 @@ class MongoengineSocket:
 
             if ("id" in data) and (data["id"] == "local"):
                 data.pop("id", None)
+            lname = data.get("name").lower()
+            collection = data.pop("collection").lower()
 
             if overwrite:
                 # may use upsert=True to add or update
-                col = CollectionORM.objects(collection=collection, name=name).update_one(**data)
+                col = CollectionORM.objects(collection=collection, lname=lname).update_one(**data)
             else:
-                col = CollectionORM(collection=collection, name=name, **data).save()
+                col = CollectionORM(collection=collection, lname=lname, **data).save()
 
             meta['success'] = True
             meta['n_inserted'] = 1
@@ -640,6 +642,7 @@ class MongoengineSocket:
                         return_json: bool=True,
                         with_ids: bool=True,
                         limit: int=None,
+                        projection: Dict[str, Any]=None,
                         skip: int=0) -> Dict[str, Any]:
         """Get collection by collection and/or name
 
@@ -659,11 +662,18 @@ class MongoengineSocket:
         """
 
         meta = get_metadata_template()
-        query, errors = format_query(name=name, collection=collection)
+        if name:
+            name = name.lower()
+        if collection:
+            collection = collection.lower()
+        query, errors = format_query(lname=name, collection=collection)
 
         data = []
         try:
-            data = CollectionORM.objects(**query).limit(self.get_limit(limit)).skip(skip)
+            if projection:
+                data = CollectionORM.objects(**query).only(*projection).limit(self.get_limit(limit)).skip(skip)
+            else:
+                data = CollectionORM.objects(**query).exclude("lname").limit(self.get_limit(limit)).skip(skip)
 
             meta["n_found"] = data.count()
             meta["success"] = True
@@ -693,8 +703,7 @@ class MongoengineSocket:
         int
             Number of documents deleted
         """
-
-        return CollectionORM.objects(collection=collection, name=name).delete()
+        return CollectionORM.objects(collection=collection.lower(), lname=name.lower()).delete()
 
 ## ResultORMs functions
 
