@@ -229,7 +229,7 @@ class CollectionHandler(APIHandler):
         body = CollectionGETBody.parse_raw(self.request.body)
         cols = storage.get_collections(**body.data.dict(), projection=body.meta.projection)
         response = CollectionGETResponse(**cols)
-        self.logger.info("GET: Keywords - {} pulls.".format(len(response.data)))
+        self.logger.info("GET: Collections - {} pulls.".format(len(response.data)))
 
         self.write(response.json())
 
