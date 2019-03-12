@@ -3,7 +3,6 @@ A command line interface to the qcfractal server.
 """
 
 import argparse
-from collections import defaultdict
 from enum import Enum
 from typing import List
 import os
@@ -18,6 +17,7 @@ from . import cli_utils
 __all__ = ["main"]
 
 QCA_RESOURCE_STRING = '--resources process=1'
+MANAGER_CONFIG_NAME = "qcf_manager_config.yaml"
 
 
 class SettingsCommonConfig:
@@ -129,9 +129,6 @@ class ManagerSettings(BaseModel):
     server: FractalServerSettings = FractalServerSettings()
     cluster: ClusterSettings = ClusterSettings()
     dask_jobqueue: DaskJobQueueSettings = DaskJobQueueSettings()
-
-
-MANAGER_CONFIG_NAME = "qcf_manager_config.yaml"
 
 
 def parse_args():
