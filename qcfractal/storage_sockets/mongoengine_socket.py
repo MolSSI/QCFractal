@@ -164,7 +164,7 @@ class MongoengineSocket:
     ### Mongo meta functions
 
     def __str__(self) -> str:
-        return "<MongoSocket: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._tables_name))
+        return "<MongoSocket: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._project_name))
 
     def _clear_db(self, db_name: str):
         """Dangerous, make sure you are deleting the right DB"""
