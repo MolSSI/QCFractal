@@ -107,6 +107,31 @@ def test_security_auth_accept(sec_server):
     r = client.query_molecules(id=[])
 
 
+def test_security_auth_password_gen(sec_server):
+
+    pw = sec_server.storage.add_user("autogenpw", None, ["read"])
+    assert sec_server.storage.verify_user("autogenpw", pw, "read")[0]
+    assert isinstance(pw, str)
+    assert len(pw) > 20
+
+
+def test_security_auth_overwrite(sec_server):
+
+    user = "auth_overwrite"
+    pw1 = sec_server.storage.add_user(user, None, ["read"])
+    assert sec_server.storage.verify_user(user, pw1, "read")[0]
+
+    pw2 = sec_server.storage.add_user(user, None, ["read"], overwrite=True)
+    assert isinstance(pw2, str)
+    assert pw1 != pw2
+
+    assert sec_server.storage.verify_user(user, pw1, "read")[0] is False
+    assert sec_server.storage.verify_user(user, pw2, "read")[0]
+
+
+## Allow read tests
+
+
 def test_security_auth_allow_read(sec_server_allow_read):
     client = ptl.FractalClient(sec_server_allow_read)
 

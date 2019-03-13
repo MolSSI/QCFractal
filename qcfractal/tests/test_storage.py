@@ -12,6 +12,11 @@ bad_id1 = "000000000000000000000000"
 bad_id2 = "000000000000000000000001"
 
 
+def test_storage_repr(storage_socket):
+
+    assert isinstance(repr(storage_socket), str)
+
+
 def test_molecules_add(storage_socket):
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")

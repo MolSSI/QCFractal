@@ -15,6 +15,7 @@ except ImportError:
         "Mongoengine_socket requires mongoengine, please install this python module or try a different db_socket.")
 
 import logging
+import secrets
 from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Union
 
@@ -163,7 +164,7 @@ class MongoengineSocket:
     ### Mongo meta functions
 
     def __str__(self) -> str:
-        return "<MongoSocket: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._tables_name))
+        return "<MongoSocket: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._project_name))
 
     def _clear_db(self, db_name: str):
         """Dangerous, make sure you are deleting the right DB"""
@@ -1565,7 +1566,12 @@ class MongoengineSocket:
 
 ### UserORMs
 
-    def add_user(self, username, password, permissions=["read"]):
+    def add_user(self,
+                 username: str,
+                 password: Optional[str]=None,
+                 permissions: List[str]=["read"],
+                 *,
+                 overwrite: bool=False) -> Union[bool, str]:
         """
         Adds a new user and associated permissions.
 
@@ -1591,12 +1597,31 @@ class MongoengineSocket:
         if not valid_permissions >= set(permissions):
             raise KeyError("Permissions settings not understood: {}".format(set(permissions) - valid_permissions))
 
+        return_password = False
+        if password is None:
+            password = secrets.token_urlsafe(32)
+            return_password = True
+
         hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
-        try:
-            UserORM(username=username, password=hashed, permissions=permissions).save()
-            return True
-        except mongoengine.errors.NotUniqueError:
-            return False
+        blob = {"username": username, "password": hashed, "permissions": permissions}
+
+        success = False
+        if overwrite:
+            doc = UserORM.objects(username=username)
+            doc.upsert_one(**blob)
+            success = True
+
+        else:
+            try:
+                UserORM(**blob).save()
+                success = True
+            except mongoengine.errors.NotUniqueError:
+                success = False
+
+        if return_password and success:
+            return password
+        else:
+            return success
 
     def verify_user(self, username, password, permission):
         """

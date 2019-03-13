@@ -36,13 +36,13 @@ class TaskManager(BaseModel):
 
         task_query = self.storage_socket.get_procedures(
             id=list(self.required_tasks.values()), projection={"status": True,
-                                                               "error": True,
-                                                               "hash_index": True})
+                                                               "error": True})
 
-        if len(task_query["data"]) != len(self.required_tasks):
-            return False
+        status_values = set(x["status"] for x in task_query["data"])
+        if status_values == {"COMPLETE"}:
+            return True
 
-        elif "ERROR" in set(x["status"] for x in task_query["data"]):
+        elif "ERROR" in status_values:
             for x in task_query["data"]:
                 if x["status"] != "ERROR":
                     continue
@@ -54,8 +54,8 @@ class TaskManager(BaseModel):
                 self.logger.error(x["error"]["error_message"])
 
             raise KeyError("All tasks did not execute successfully.")
-
-        return True
+        else:
+            return False
 
     def get_tasks(self) -> Dict[str, Any]:
         """

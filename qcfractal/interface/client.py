@@ -376,7 +376,7 @@ class FractalClient(object):
 
         """
 
-        body = CollectionGETBody(meta={}, data={"collection": collection_type, "name": name.lower()})
+        body = CollectionGETBody(meta={}, data={"collection": collection_type.lower(), "name": name.lower()})
         r = self._request("get", "collection", data=body.json())
         cols = CollectionGETResponse.parse_raw(r.text)
         if full_return:
