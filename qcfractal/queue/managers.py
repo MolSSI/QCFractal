@@ -46,11 +46,11 @@ class QueueManager:
                  logger: Optional[logging.Logger]=None,
                  max_tasks: int=200,
                  queue_tag: str=None,
-                 cluster: str="unknown",
+                 manager_name: str= "unlabled",
                  update_frequency: Union[int, float]=2,
                  verbose: bool=True,
                  cores_per_task: Optional[int]=None,
-                 memory_per_task: Optional[int]=None):
+                 memory_per_task: Optional[Union[int, float]]=None):
         """
         Parameters
         ----------
@@ -68,7 +68,7 @@ class QueueManager:
             The maximum number of tasks to hold at any given time
         queue_tag : str
             Allows managers to pull from specific tags
-        cluster : str
+        manager_name : str
             The cluster the manager belongs to
         update_frequency : int
             The frequency to check for new tasks in seconds
@@ -86,7 +86,7 @@ class QueueManager:
         else:
             self.logger = logging.getLogger('QueueManager')
 
-        self.name_data = {"cluster": cluster, "hostname": socket.gethostname(), "uuid": str(uuid.uuid4())}
+        self.name_data = {"cluster": manager_name, "hostname": socket.gethostname(), "uuid": str(uuid.uuid4())}
         self._name = self.name_data["cluster"] + "-" + self.name_data["hostname"] + "-" + self.name_data["uuid"]
 
         self.client = client

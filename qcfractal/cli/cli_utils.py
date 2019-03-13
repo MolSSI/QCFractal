@@ -2,6 +2,7 @@
 Utilities for CLI programs
 """
 
+import argparse
 import copy
 import importlib
 import json
@@ -10,14 +11,15 @@ import signal
 import yaml
 
 
-def import_module(module):
+def import_module(module, package=None):
     """Protected import of a module
     """
     try:
-        ret = importlib.import_module(module)
-    except ImportError:
-        raise ImportError("Requested module '{}' not found.".format(module))
-
+        ret = importlib.import_module(module, package=package)
+    except ModuleNotFoundError:
+        if package is not None:
+            raise ModuleNotFoundError("Requested module/package '{}/{}' not found.".format(module, package))
+        raise ModuleNotFoundError("Requested module '{}' not found.".format(module))
     return ret
 
 
@@ -31,28 +33,32 @@ def read_config_file(fname):
     else:
         raise TypeError("Did not understand file type {}.".format(fname))
 
-    with open(fname, "r") as handle:
-        ret = rfunc(handle)
+    try:
+        with open(fname, "r") as handle:
+            ret = rfunc(handle)
+    except FileNotFoundError:
+        raise FileNotFoundError("No config file found at {}.".format(config_file))
 
     return ret
 
 
-def argparse_config_merge(parser, parsed_options, config_options, parser_default=None):
+def argparse_config_merge(parser, parsed_options, config_options, parser_default=None, check=True):
     """Merges options between a configuration file and a parser
 
     Parameters
     ----------
     parser : ArgumentParser
     config_options : dict
-    parser_default : None, optional
+    parser_default : List, Optional
     """
     config_options = copy.deepcopy(config_options)
 
-    default_options = vars(parser.parse_args(args=parser_default))
-    diff = config_options.keys() - default_options.keys()
-    if diff:
-        raise argparse.ArgumentError(None,
-                                     "Unknown arguments found in configuration file: {}.".format(", ".join(diff)))
+    if check:
+        default_options = vars(parser.parse_args(args=parser_default))
+        diff = config_options.keys() - default_options.keys()
+        if diff:
+            raise argparse.ArgumentError(None,
+                                         "Unknown arguments found in configuration file: {}.".format(", ".join(diff)))
 
     # Add in parsed options
     for k, v in parsed_options.items():
