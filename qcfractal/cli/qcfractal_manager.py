@@ -4,8 +4,7 @@ A command line interface to the qcfractal server.
 
 import argparse
 from enum import Enum
-from typing import List
-import os
+from typing import List, Optional
 
 from pydantic import BaseSettings, validator, BaseModel, conint, confloat
 import qcfractal
@@ -35,7 +34,7 @@ class CommonManagerSettings(BaseSettings):
     cores: int = qcng.config.get_global("ncores")
     memory: confloat(gt=0) = qcng.config.get_global("memory")
     max_tasks: conint(gt=0) = 200
-    manager_name: str = "unknown"
+    manager_name: str = "unlabeled"
     update_frequency: float = 30
     test: bool = False
     adapter: AdapterEnum = AdapterEnum.pool
@@ -47,8 +46,7 @@ class CommonManagerSettings(BaseSettings):
 
 
 class FractalServerSettings(BaseSettings):
-    file: str = None
-    address: str = None
+    uri: str = "localhost:7777"
     username: str = None
     password: str = None
     verify: bool = None
@@ -56,17 +54,16 @@ class FractalServerSettings(BaseSettings):
     class Config(SettingsCommonConfig):
         pass
 
-    @validator("file")
-    def file_stands_alone(cls, v, values, **kwargs):
-        if any(other is not None for other in values):
-            raise ValueError("Either specify a Fractal Server config `file` location or manually set the "
-                             "(address, username, password), but not both!")
-        return v
-
     @property
-    def specified(self):
-        """Helper function to determine if something was set manually"""
-        return any(x is not None for x in [self.address, self.username, self.password, self.verify])
+    def client_kwargs_map(self):
+        """Helper function to generate the client kwargs"""
+        kwargs = self.dict()
+        construct = {"address": kwargs["uri"],
+                     "username": kwargs["username"],
+                     "password": kwargs["password"]}
+        if kwargs["verify"] is not None:  # Allow client to accept the default
+            construct["verify"] = kwargs["verify"]
+        return construct
 
 
 class SchedulerEnum(str, Enum):
@@ -116,7 +113,6 @@ class DaskJobQueueSettings(_DaskJobQueueSettingsNoCheck):
                                         "env_extra",
                                         "qca_resource_string"
                                         }
-
         if bad_set:
             raise KeyError("The following items were set as part of dask_jobqueue, however, "
                            "there are other config items which control these in more generic "
@@ -127,21 +123,17 @@ class DaskJobQueueSettings(_DaskJobQueueSettingsNoCheck):
 class ManagerSettings(BaseModel):
     common: CommonManagerSettings = CommonManagerSettings()
     server: FractalServerSettings = FractalServerSettings()
-    cluster: ClusterSettings = ClusterSettings()
-    dask_jobqueue: DaskJobQueueSettings = DaskJobQueueSettings()
+    cluster: Optional[ClusterSettings] = None
+    dask_jobqueue: Optional[DaskJobQueueSettings] = None
 
 
 def parse_args():
     parser = argparse.ArgumentParser(
         description='A CLI for a QCFractal QueueManager with a ProcessPoolExecutor or a Dask backend. '
                     'The Dask backend *requires* a config file due to the complexity of its setup. If a config '
-                    'file is specified, the remaining options serve as CLI overwrites of the config.'
-                    'Config files are searched for in working directory and ~/.qca/ for "{}"'
-                    ''.format(MANAGER_CONFIG_NAME))
+                    'file is specified, the remaining options serve as CLI overwrites of the config.')
 
-    parser.add_argument("config_file", nargs="?", type=str,
-                        default=[os.path.join(os.path.realpath("."), MANAGER_CONFIG_NAME),
-                                 os.path.join(os.path.expanduser("~"), ".qca", MANAGER_CONFIG_NAME)])
+    parser.add_argument("config_file", type=str, nargs="?", default=None)
     # Keywords for ProcessPoolExecutor
     executor = parser.add_argument_group('Executor settings')
     executor.add_argument(
@@ -154,12 +146,14 @@ def parse_args():
     # FractalClient options
     server = parser.add_argument_group('FractalServer connection settings')
     server.add_argument(
-        "--fractal-address", type=str, help="FractalServer location to pull from")
+        "--fractal-uri", type=str, help="FractalServer location to pull from")
     server.add_argument("-u", "--username", type=str, help="FractalServer username")
     server.add_argument("-p", "--password", type=str, help="FractalServer password")
-    server.add_argument("--no-verify", action="store_true", help="Don't verify the SSL certificate")
-    server.add_argument("--server-config-file", type=str,
-                        help="A Fractal Server configuration file to use")
+    verify = server.add_mutually_exclusive_group()
+    verify.add_argument("--no-verify", action="store_true",
+                        help="Don't verify the SSL certificate, exclusive with `verify`")
+    verify.add_argument("--verify", action="store_true",
+                        help="Do verify the SSL certificate, exclusive with `no-verify`")
 
     # QueueManager options
     manager = parser.add_argument_group("QueueManager settings")
@@ -190,24 +184,18 @@ def main(args=None):
 
     # Try to read a config file first
     config_file = args["config_file"]
-    if type(config_file) is str:  # Cast to unified code for same list
-        config_file = [config_file]
     data = {}
-    fail_count = 0
-    for path in config_file:  # Multiple searchable paths if defaults
+    if config_file is not None:
         try:
-            data = cli_utils.read_config_file(path)
-            print("Found config file at {}".format(path))
-            break  # Found a config file, stop trying
+            data = cli_utils.read_config_file(config_file)
+            print("Found config file at {}".format(config_file))
+            if data == {} or data is None:
+                print("Found a config file found at {}, but it appeared empty. Relying on CLI input only.\n"
+                      "This can only create Pool Executors with limited options".format(config_file))
+                data = {}  # Ensures data is a dict in case empty yaml, which returns None
         except FileNotFoundError:
-            fail_count += 1
-    if fail_count == len(config_file):
-        print("No config file found at {}, relying on CLI input only.\n"
-              "This can only create Pool Executors with limited options".format(config_file))
-    elif data == {} or data is None:
-        print("Found a config file found at {}, but it appeared empty. Relying on CLI input only.\n"
-              "This can only create Pool Executors with limited options".format(config_file))
-        data = {}  # Ensures data is a dict in case empty yaml, which returns None
+            print("No config file found at {}, relying on CLI input only.\n"
+                  "This can only create Pool Executors with limited options".format(config_file))
 
     # Handle CLI/args mappings
     # Handle the Manager settings
@@ -221,16 +209,17 @@ def main(args=None):
     # Handle Fractal Server (have to map the CLI onto the Pydantic)
     if "server" not in data:
         data["server"] = {}
-    for arg, var in [("fractal-address", "address"),
+    for arg, var in [("fractal_uri", "uri"),
                      ("username", "username"),
-                     ("password", "password"),
-                     ("server_config_file", "file"),
-                     ("no_verify", "verify")]:
+                     ("password", "password")]:
         if arg in args and args[arg] is not None:
-            v = args[arg]
-            if arg.startswith("no_"):  # Negation
-                v = not v
-            data["server"][var] = v
+            data["server"][var] = args[arg]
+    # Handle the verify, don't need to check both true as argparse handled that
+    if args["no_verify"]:
+        data["server"]["verify"] = False
+    elif args["verify"]:
+        data["server"]["verify"] = True
+    # Else case here is default of None,
 
     # Construct object
     settings = ManagerSettings(**data)
@@ -240,18 +229,12 @@ def main(args=None):
     tornado.log.enable_pretty_logging()
 
     if settings.common.test:
-        # Test, nothing needed
+        # Test this manager, no client needed
         client = None
-    elif settings.server.file is not None:
-        # Gave a file? Neat!
-        client = qcfractal.interface.FractalClient.from_file(settings.server.file)
-    elif settings.server.specified:
-        # Specified something? Okay!
-        client = qcfractal.interface.FractalClient(settings.server.dict(exclude={"file"}, skip_defaults=True))
     else:
-        # Finally, fall back and assume the user has a config file in the default path
+        # Connect to a specified fractal server
         # somewhere that FractalClient knows about!
-        client = qcfractal.interface.FractalClient()
+        client = qcfractal.interface.FractalClient(**settings.server.client_kwargs_map)
 
     # Figure out per-task data
     cores_per_task = settings.common.cores // settings.common.ntasks

@@ -101,7 +101,7 @@ To setup a Dask with the SLURM queue manager the following command can be run:
 
     # Fractal Settings
     # Location of the Fractal Server you are connecting to
-    FRACTAL_ADDRESS = "localhost:7777"
+    FRACTAL_URI = "localhost:7777"
     ...
 
 The generated script has a small tutorial on how to correct fill in the

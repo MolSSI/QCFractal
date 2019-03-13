@@ -24,7 +24,7 @@ For additional information about the {MANAGER_URL_TITLE}, please visit this site
 
 # Fractal Settings
 # Location of the Fractal Server you are connecting to
-FRACTAL_ADDRESS = "localhost:7777"  # QCArchive is at: api.qcarchive.molssi.org:443
+FRACTAL_URI = "localhost:7777"  # QCArchive is at: api.qcarchive.molssi.org:443
 # Authentication with the Fractal Server
 USERNAME = None
 PASSWORD = None
@@ -98,7 +98,7 @@ if MEMORY_PER_NODE <= 0:
 if TEST_RUN:
     fractal_client = None
 else:
-    fractal_client = portal.FractalClient(FRACTAL_ADDRESS, 
+    fractal_client = portal.FractalClient(FRACTAL_URI, 
                                           username=USERNAME,
                                           password=PASSWORD,
                                           verify=VERIFY_SSL)

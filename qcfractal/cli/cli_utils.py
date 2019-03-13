@@ -2,6 +2,7 @@
 Utilities for CLI programs
 """
 
+import argparse
 import copy
 import importlib
 import json
@@ -15,11 +16,10 @@ def import_module(module, package=None):
     """
     try:
         ret = importlib.import_module(module, package=package)
-    except ImportError:
+    except ModuleNotFoundError:
         if package is not None:
-            raise ImportError("Requested module/package '{}/{}' not found.".format(module, package))
-        raise ImportError("Requested module '{}' not found.".format(module))
-
+            raise ModuleNotFoundError("Requested module/package '{}/{}' not found.".format(module, package))
+        raise ModuleNotFoundError("Requested module '{}' not found.".format(module))
     return ret
 
 
@@ -53,7 +53,6 @@ def argparse_config_merge(parser, parsed_options, config_options, parser_default
     default_options = vars(parser.parse_args(args=parser_default))
     diff = config_options.keys() - default_options.keys()
     if diff:
-        import argparse
         raise argparse.ArgumentError(None,
                                      "Unknown arguments found in configuration file: {}.".format(", ".join(diff)))
 
