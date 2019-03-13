@@ -15,6 +15,48 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.5.3 / 2019-03-13
+------------------
+
+New Features
+++++++++++++
+
+- (:pr:`207`) All compute operations can now be augmented with a ``tag`` which can be later consumed by different
+  ``QueueManager``s to only carry out computations with specified tags.
+- (:pr:`210`) Passwords in the database can now be generated for new users and user information can be updated (server-side only)
+- (:pr:`210`) ``Collections`` can now be updated automatically from the defaults
+- (:pr:`211`) The ``qcfractal-manager`` CLI command now accepts a config file for more complex managers through Dask JobQueue.
+  As such, many of the command line flags have been altered and can be used to either spin up a PoolExecutor, or overwrite the
+  config file on-the-fly. As of this PR, the Dask Jobqueue component has been untested. Future updates will indicate
+  when this has been tested.
+
+
+Enhancements
+++++++++++++
+
+- (:pr:`203`) ``FractalClient``'s ``get_X`` methods have been renamed to ``query_X`` to better reflect what they actually do.
+  An exception to this is the ``get_collections`` method which is still a true ``get``.
+- (:pr:`207`) ``FractalClient.list_collections`` now respects show case sensitive results and queries are case
+  insensitive
+- (:pr:`207`) ``FractalServer`` can now compress responses to reduce the amount of data transmitted over the serialization.
+  The main benefactor here is the ``OpenFFWorkflow`` collection which has significant transfer speed improvements due to compression.
+- (:pr:`207`) The ``OpenFFWorkflow`` collection now has better validation on input and output data.
+- (:pr:`210`) The ``OpenFFWorkflow`` collection only stores database ``id`` to reduce duplication and data transfer quantities.
+  This results in about a 50x duplication reduction.
+- (:pr:`211`) The ``qcfractal-template`` command now has fields for Fractal username and password.
+- (:pr:`212`) The docs for QCFractal and QCPortal have been split into separate structures. They will be hosted on
+  separate (although linked) pages, but their content will all be kept in the QCFractal source code. QCPortal's docs
+  are for most users whereas QCFractal docs will be for those creating their own managers, Fractal instances, and
+  developers.
+
+Bug Fixes
++++++++++
+
+- (:pr:`207`) ``FractalClient.get_collections`` is now correctly case insensitive.
+- (:pr:`210`) Fixed a bug in the ``iterate`` method of services which returned the wrong status if everything completed right away.
+- (:pr:`210`) The ``repr`` of the MongoEngine Socket now displays correctly instead of crashing the socket due to missing attribute
+
+
 0.5.2 / 2019-03-08
 ------------------
 
