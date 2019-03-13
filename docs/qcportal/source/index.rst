@@ -37,6 +37,40 @@ Index
 
    install.rst
 
+
+**Collections**
+
+Collections are the primary way of viewing and generating new data.
+
+* :doc:`collections`
+* :doc:`collection-dataset`
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Collections
+
+   collections.rst
+   collection-dataset
+
+**Model Documentation**
+
+Documentation for models and compute records.
+
+* :doc:`record-overview`
+* :doc:`results`
+* :doc:`procedures`
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Records Documentation
+
+   record-overview.rst
+   results.rst
+   procedures.rst
+
+
 **Fractal Client**
 
 A Client is the primary user interface to a Fractal server instance.
@@ -58,20 +92,6 @@ A Client is the primary user interface to a Fractal server instance.
    client-new-compute.rst
    client-api.rst
 
-**Collections**
-
-Portal is the primary user interface to a Fractal server instance.
-
-* :doc:`collections`
-* :doc:`collection-dataset`
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: Collections
-
-   collections.rst
-   collection-dataset
 
 **Developer Documentation**
 

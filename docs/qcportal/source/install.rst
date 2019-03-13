@@ -1,37 +1,39 @@
-Install QCFractal
+Install QCPortal
 =================
 
-You can install qcportal with ``conda``, with ``pip``, or by installing from source.
+You can install ``qcportal`` with ``conda``, with ``pip``, or by installing from source.
 
 Conda
 -----
 
-You can update qcportal using `conda <https://www.anaconda.com/download/>`_::
+You can install or update ``qcportal`` using `conda <https://www.anaconda.com/download/>`_::
 
     conda install qcportal -c conda-forge
 
-This installs qcportal and the NumPy dependancy.
-
-The qcportal package is maintained on the
+The ``qcportal`` package is maintained on the
 `conda-forge channel <https://conda-forge.github.io/>`_.
 
 
 Pip
 ---
 
-To install qcportal with ``pip`` there are a few options, depending on which
-dependencies you would like to keep up to date:
+To install or update ``qcportal`` with ``pip``::
 
-*   ``pip install qcportal``
+    pip install -U qcportal
 
 Developer Install
 -----------------
 
-QCPortal is part of the QCFractal project and is the ``qcfractal.interface``
-folder. To install QCFractal from source, clone the repository from `github
-<https://github.com/molssi/qcfractal>`_::
+The QCPortal package is part of the QCFractal package and is the
+``qcfractal.interface`` folder. To install QCFractal from source, clone the
+repository from `GitHub <https://github.com/molssi/qcfractal>`_::
 
-    git clone https://github.com/molssi/qcfractal.git
+    git clone https://github.com/MolSSI/QCFractal.git
     cd qcfractal
     pip install -e .
 
+A developer version of ``qcportal`` can then be imported as:
+
+.. code-block:: python
+
+    >>> import qcfractal.interface as ptl

@@ -74,7 +74,7 @@ The records created from adding additional compute.
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Fractal Documentation
+   :caption: Records Documentation
 
    results.rst
    procedures.rst
