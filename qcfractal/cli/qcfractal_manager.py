@@ -16,7 +16,6 @@ from . import cli_utils
 __all__ = ["main"]
 
 QCA_RESOURCE_STRING = '--resources process=1'
-MANAGER_CONFIG_NAME = "qcf_manager_config.yaml"
 
 
 class SettingsCommonConfig:
@@ -103,7 +102,8 @@ class DaskQueueSettings(BaseSettings):
         super().__init__(**kwargs)
 
     class Config(SettingsCommonConfig):
-        pass
+        # This overwrites the base config to allow other keywords to be fed in
+        extra = "allow"
 
 
 class ManagerSettings(BaseModel):
@@ -176,7 +176,6 @@ def parse_args():
         "manager": _build_subset(args, {"max_tasks", "manager_name", "queue_tag", "log_file_prefix", "update_frequency", "test"}),
     } # yapf: disable
 
-
     if args["config_file"] is not None:
         config_data = cli_utils.read_config_file(args["config_file"])
         for name, subparser in [("common", common), ("server", server), ("manager", manager)]:
@@ -243,7 +242,7 @@ def main(args=None):
         _cluster_loaders = {"slurm": "SLURMCluster", "pbs": "PBSCluster", "torque": "PBSCluster"}
 
         # Create one construct to quickly merge dicts with a final check
-        dask_construct = _DaskQueueSettingsNoCheck(
+        dask_construct = dict(
             name="QCFractal_Dask_Compute_Executor",
             cores=settings.common.cores,
             memory=str(settings.common.memory) + "GB",
@@ -257,7 +256,7 @@ def main(args=None):
         from dask.distributed import Client
         cluster_class = cli_utils.import_module("dask_jobqueue", package=_cluster_loaders[settings.cluster.scheduler])
 
-        cluster = cluster_class(**dask_construct.dict())
+        cluster = cluster_class(**dask_construct)
 
         # Setup up adaption
         # Workers are distributed down to the cores through the sub-divided processes

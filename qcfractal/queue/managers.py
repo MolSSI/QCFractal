@@ -46,7 +46,7 @@ class QueueManager:
                  logger: Optional[logging.Logger]=None,
                  max_tasks: int=200,
                  queue_tag: str=None,
-                 manager_name: str= "unknown",
+                 manager_name: str= "unlabled",
                  update_frequency: Union[int, float]=2,
                  verbose: bool=True,
                  cores_per_task: Optional[int]=None,
