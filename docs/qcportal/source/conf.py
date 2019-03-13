@@ -14,6 +14,7 @@ import qcfractal
 
 # A little magic to make interface look like qcportal
 import qcfractal.interface as qcportal
+sys.modules["qcportal"] = qcportal
 
 # -- Path setup --------------------------------------------------------------
 

@@ -27,13 +27,5 @@ a version control system. Creation from file uses the classmethod
 ``qcportal_config.yaml`` file in either the current working directory or from
 the canonical ``~/.qca`` folder.
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-
-   client-add-query.rst
-   client-record-query.rst
-   client-new-compute.rst
-   client-api.rst
 
 

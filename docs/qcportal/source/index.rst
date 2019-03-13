@@ -37,29 +37,50 @@ Index
 
    install.rst
 
-**Client**
+**Fractal Client**
 
-Portal is the primary user interface to a Fractal server instance.
+A Client is the primary user interface to a Fractal server instance.
 
 * :doc:`client`
+* :doc:`client-add-query`
+* :doc:`client-record-query`
+* :doc:`client-new-compute`
+* :doc:`client-api`
 
 .. toctree::
    :maxdepth: 2
    :hidden:
-   :caption: Portal Documentation
+   :caption: Fractal Client
 
    client.rst
+   client-add-query.rst
+   client-record-query.rst
+   client-new-compute.rst
+   client-api.rst
 
 **Collections**
 
 Portal is the primary user interface to a Fractal server instance.
 
 * :doc:`collections`
+* :doc:`collection-dataset`
 
 .. toctree::
    :maxdepth: 2
    :hidden:
-   :caption: Portal Documentation
+   :caption: Collections
 
    collections.rst
+   collection-dataset
 
+**Developer Documentation**
+
+Contains in-depth developer documentation.
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Developer Documentation
+
+   glossary.rst
+   changelog.rst
