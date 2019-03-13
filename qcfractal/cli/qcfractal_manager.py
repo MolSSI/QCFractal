@@ -6,7 +6,7 @@ import argparse
 from enum import Enum
 from typing import List, Optional
 
-from pydantic import BaseSettings, validator, BaseModel, conint, confloat
+from pydantic import BaseSettings, BaseModel, conint, confloat
 import qcfractal
 import tornado.log
 import qcengine as qcng
@@ -62,7 +62,6 @@ class QueueManagerSettings(BaseSettings):
 
 class SchedulerEnum(str, Enum):
     slurm = "slurm"
-    torque = "torque"
     pbs = "pbs"
     sge = "sge"
     moab = "moab"
@@ -75,14 +74,6 @@ class ClusterSettings(BaseSettings):
     scheduler_options: List[str] = []
     task_startup_commands: List[str] = []
     walltime: str = "00:10:00"
-
-    @validator("scheduler")
-    def remap_torque_to_pbs(cls, v):
-        if v == "torque":
-            print('WARING: Remapping `scheduler` option "torque" to "pbs" as Dask does not have a Torque scheduler but '
-                  'may be close enough to work. Compatibility not assured.')
-            v = 'pbs'
-        return v
 
     class Config(SettingsCommonConfig):
         pass
@@ -242,19 +233,18 @@ def main(args=None):
         if settings.cluster.node_exclusivity and "--exclusive" not in scheduler_opts:
             scheduler_opts.append("--exclusive")
 
-        _cluster_loaders = {"slurm": "SLURMCluster", "pbs": "PBSCluster", "torque": "PBSCluster", "moab": "MoabCluster",
-                            "sge": "SGECluster"}
+        _cluster_loaders = {"slurm": "SLURMCluster", "pbs": "PBSCluster", "moab": "MoabCluster", "sge": "SGECluster"}
 
         # Create one construct to quickly merge dicts with a final check
-        dask_construct = dict(
-            name="QCFractal_Dask_Compute_Executor",
-            cores=settings.common.cores,
-            memory=str(settings.common.memory) + "GB",
-            processes=settings.common.ntasks,
-            walltime=settings.cluster.walltime,
-            job_extra=scheduler_opts,
-            env_exta=settings.cluster.task_startup_commands,
-            **dask_settings)
+        dask_construct = {
+            "name": "QCFractal_Dask_Compute_Executor",
+            "cores": settings.common.cores,
+            "memory": str(settings.common.memory) + "GB",
+            "processes": settings.common.ntasks,
+            "walltime": settings.cluster.walltime,
+            "job_extra": scheduler_opts,
+            "env_exta": settings.cluster.task_startup_commands,
+            **dask_settings}
 
         # Import the dask things we need
         from dask.distributed import Client
