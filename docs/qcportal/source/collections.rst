@@ -31,9 +31,3 @@ Below is a complete list of collections available from QCPortal:
 
 * :doc:`collection-dataset` - A collection for running a single set of reactions under many methods.
 
-.. toctree::
-   :maxdepth: 1
-   :hidden:
-   :caption: Portal Collections
-
-   collection-dataset

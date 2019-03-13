@@ -1,7 +1,7 @@
 API
 ===
 
-.. currentmodule:: qcfractal.interface.FractalClient
+.. currentmodule:: qcportal.FractalClient
 
 Generics
 --------
@@ -44,7 +44,7 @@ New Compute Tasks
 Function Definitions
 --------------------
 
-.. currentmodule:: qcfractal.interface.FractalClient
+.. currentmodule:: qcportal.FractalClient
 
 .. autofunction:: from_file
 
