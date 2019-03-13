@@ -24,24 +24,14 @@ dependencies you would like to keep up to date:
 
 *   ``pip install qcportal``
 
-Install from Source
--------------------
+Developer Install
+-----------------
 
-To install qcportal from source, clone the repository from `github
-<https://github.com/molssi/qcportal>`_::
+QCPortal is part of the QCFractal project and is the ``qcfractal.interface``
+folder. To install QCFractal from source, clone the repository from `github
+<https://github.com/molssi/qcfractal>`_::
 
-    git clone https://github.com/molssi/qcportal.git
-    cd qcportal
-    python setup.py install
-
-or use ``pip`` for a local install::
-
+    git clone https://github.com/molssi/qcfractal.git
+    cd qcfractal
     pip install -e .
 
-Test
-----
-
-Test qcportal with ``pytest``::
-
-    cd qcportal
-    pytest

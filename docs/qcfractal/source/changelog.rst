@@ -139,8 +139,7 @@ Bug Fixes
 +++++++++
 
 - (:pr:`132`) Fixed MongoEngine Socket bug where calling some functions before others resulted in an error due to lack of initialized variables.
-- (:pr:`133`) ``Molecule`` objects cannot be oriented once they enter the QCFractal ecosystem (after optional initial orientation.)
-  ``Molecule``s also cannot be oriented by programs invoked by the QCFractal ecosystem so orientation is preserved post-calculation.
+- (:pr:`133`) ``Molecule`` objects cannot be oriented once they enter the QCFractal ecosystem (after optional initial orientation.) ``Molecule``s also cannot be oriented by programs invoked by the QCFractal ecosystem so orientation is preserved post-calculation.
 - (:pr:`146`) CI environments have been simplified to make maintaining them easier, improve test coverage, and find more bugs.
 - (:pr:`158`) Database addition documents in general will strip IDs from the input dictionary which caused issues from MongoEngine having a special treatment for the dictionary key "id".
 

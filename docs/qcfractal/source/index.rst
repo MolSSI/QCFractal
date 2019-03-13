@@ -62,39 +62,24 @@ Index
    setup_server.rst
    roadmap.rst
 
-**Portal Documentation**
+**Records Documentation**
 
-Portal is the primary user interface to a Fractal server instance.
+The records created from adding additional compute.
 
-* :doc:`client`
-* :doc:`collections`
-
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-   :caption: Portal Documentation
-
-   client.rst
-   collections.rst
-
-**Fractal Documentation**
-
-Fractal contains the sever instance, database, and distributed compute queue.
-
-* :doc:`fractal-results`
-* :doc:`fractal-procedures`
-* :doc:`fractal-services`
-* :doc:`fractal-flow`
+* :doc:`results`
+* :doc:`procedures`
+* :doc:`services`
+* :doc:`flow`
 
 .. toctree::
    :maxdepth: 1
    :hidden:
    :caption: Fractal Documentation
 
-   fractal-results.rst
-   fractal-procedures.rst
-   fractal-services.rst
-   fractal-flow.rst
+   results.rst
+   procedures.rst
+   services.rst
+   flow.rst
 
 **Developer Documentation**
 
