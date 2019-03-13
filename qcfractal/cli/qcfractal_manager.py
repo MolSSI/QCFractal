@@ -64,6 +64,8 @@ class SchedulerEnum(str, Enum):
     slurm = "slurm"
     torque = "torque"
     pbs = "pbs"
+    sge = "sge"
+    moab = "moab"
 
 
 class ClusterSettings(BaseSettings):
@@ -75,10 +77,11 @@ class ClusterSettings(BaseSettings):
     walltime: str = "00:10:00"
 
     @validator("scheduler")
-    def remap_pbs_to_torque(cls, v):
-        if v == "pbs":
-            print('Remapping `scheduler` option "pbs" to "torque"')
-            v = 'torque'
+    def remap_torque_to_pbs(cls, v):
+        if v == "torque":
+            print('WARING: Remapping `scheduler` option "torque" to "pbs" as Dask does not have a Torque scheduler but '
+                  'may be close enough to work. Compatibility not assured.')
+            v = 'pbs'
         return v
 
     class Config(SettingsCommonConfig):
@@ -239,7 +242,8 @@ def main(args=None):
         if settings.cluster.node_exclusivity and "--exclusive" not in scheduler_opts:
             scheduler_opts.append("--exclusive")
 
-        _cluster_loaders = {"slurm": "SLURMCluster", "pbs": "PBSCluster", "torque": "PBSCluster"}
+        _cluster_loaders = {"slurm": "SLURMCluster", "pbs": "PBSCluster", "torque": "PBSCluster", "moab": "MoabCluster",
+                            "sge": "SGECluster"}
 
         # Create one construct to quickly merge dicts with a final check
         dask_construct = dict(
