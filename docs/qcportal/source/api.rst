@@ -1,0 +1,5 @@
+=============
+QCFractal API
+=============
+
+.. automodapi:: qcportal
