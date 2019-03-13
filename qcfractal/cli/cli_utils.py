@@ -33,13 +33,16 @@ def read_config_file(fname):
     else:
         raise TypeError("Did not understand file type {}.".format(fname))
 
-    with open(fname, "r") as handle:
-        ret = rfunc(handle)
+    try:
+        with open(fname, "r") as handle:
+            ret = rfunc(handle)
+    except FileNotFoundError:
+        raise FileNotFoundError("No config file found at {}.".format(config_file))
 
     return ret
 
 
-def argparse_config_merge(parser, parsed_options, config_options, parser_default=None):
+def argparse_config_merge(parser, parsed_options, config_options, parser_default=None, check=True):
     """Merges options between a configuration file and a parser
 
     Parameters
@@ -50,11 +53,12 @@ def argparse_config_merge(parser, parsed_options, config_options, parser_default
     """
     config_options = copy.deepcopy(config_options)
 
-    default_options = vars(parser.parse_args(args=parser_default))
-    diff = config_options.keys() - default_options.keys()
-    if diff:
-        raise argparse.ArgumentError(None,
-                                     "Unknown arguments found in configuration file: {}.".format(", ".join(diff)))
+    if check:
+        default_options = vars(parser.parse_args(args=parser_default))
+        diff = config_options.keys() - default_options.keys()
+        if diff:
+            raise argparse.ArgumentError(None,
+                                         "Unknown arguments found in configuration file: {}.".format(", ".join(diff)))
 
     # Add in parsed options
     for k, v in parsed_options.items():

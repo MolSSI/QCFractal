@@ -40,12 +40,33 @@ def active_server(request):
 
 @testing.mark_slow
 def test_manager_local_testing_process():
-    assert testing.run_process(["qcfractal-manager", "--test", "--ntasks=2"], **_options)
+    assert testing.run_process(["qcfractal-manager", "--adapter=pool", "--test", "--ntasks=2"], **_options)
 
 
 @testing.mark_slow
 def test_manager_executor_manager_boot(active_server):
-    args = ["qcfractal-manager", active_server.test_uri_cli, "--ntasks=1", "--no-verify"]
+    args = ["qcfractal-manager", active_server.test_uri_cli, "--adapter=pool", "--ntasks=1", "--verify=False"]
+    assert testing.run_process(args, interupt_after=7, **_options)
+
+
+@testing.mark_slow
+def test_manager_executor_manager_boot_from_file(active_server, tmp_path):
+
+    yaml_file = """
+    common:
+        adapter: pool
+        ntasks: 4
+        cores: 4
+    server:
+        fractal_uri: {}
+        verify: False
+    """.format(active_server.test_uri_cli.split("=")[1])
+    print(yaml_file)
+
+    p = tmp_path / "config.yaml"
+    p.write_text(yaml_file)
+
+    args = ["qcfractal-manager", "--config-file={}".format(p)]
     assert testing.run_process(args, interupt_after=7, **_options)
 
 
