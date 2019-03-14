@@ -464,8 +464,9 @@ class FractalClient(object):
                     driver: str,
                     keywords: Union[str, None],
                     molecule_id: Union[str, Molecule, List[Union[str, Molecule]]],
-                    full_return: bool=False,
-                    tag: str=None) -> Union[TaskQueuePOSTResponse, TaskQueuePOSTResponse.Data]:
+                    priority: str=None,
+                    tag: str=None,
+                    full_return: bool=False) -> Union[TaskQueuePOSTResponse, TaskQueuePOSTResponse.Data]:
 
         # Always a list
         if not isinstance(molecule_id, list):
@@ -480,6 +481,7 @@ class FractalClient(object):
                 "basis": basis,
                 "keywords": keywords,
                 "tag": tag,
+                "priority": priority,
             },
             "data": molecule_id
         }
@@ -499,6 +501,8 @@ class FractalClient(object):
                       program: str,
                       program_options: Dict[str, Any],
                       molecule_id: List[str],
+                      tag: str=None,
+                      priority: str=None,
                       full_return: bool=False):
 
         # Always a list
@@ -509,6 +513,8 @@ class FractalClient(object):
             "meta": {
                 "procedure": procedure,
                 "program": program,
+                "tag": tag,
+                "priority": priority,
             },
             "data": molecule_id
         }

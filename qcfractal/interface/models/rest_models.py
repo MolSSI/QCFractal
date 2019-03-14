@@ -8,6 +8,7 @@ from pydantic import BaseConfig, BaseModel, validator
 from .common_models import KeywordSet, Molecule, ObjectId
 from .gridoptimization import GridOptimizationInput
 from .model_utils import json_encoders
+from .task_models import PriorityEnum
 from .torsiondrive import TorsionDriveInput
 from .records import ResultRecord
 
@@ -264,6 +265,7 @@ class TaskQueueGETResponse(BaseModel):
 
 
 class TaskQueuePOSTBody(BaseModel):
+
     meta: Dict[str, Any]
     data: List[Union[str, Molecule]]
 

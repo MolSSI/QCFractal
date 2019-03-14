@@ -51,7 +51,7 @@ class TaskRecord(BaseModel):
     manager: Optional[str] = None
 
     # Sortables
-    priority: PriorityEnum = 1
+    priority: PriorityEnum = PriorityEnum.NORMAL
     tag: Optional[str] = None
 
     # Link back to the base Result
@@ -61,10 +61,12 @@ class TaskRecord(BaseModel):
     modified_on: datetime.datetime = datetime.datetime.utcnow()
     created_on: datetime.datetime = datetime.datetime.utcnow()
 
-    @validator('priority')
+    @validator('priority', pre=True)
     def munge_priority(cls, v):
         if isinstance(v, str):
-            v = TaskStatusEnum[v.upper()]
+            v = PriorityEnum[v.upper()]
+        elif v is None:
+            v = PriorityEnum.NORMAL
         return v
 
     @validator('program')

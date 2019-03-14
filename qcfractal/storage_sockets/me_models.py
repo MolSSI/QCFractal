@@ -283,7 +283,7 @@ class TaskQueueORM(CustomDynamicDocument):
     tag = db.StringField(default=None)
 
     # can reference ResultORMs or any ProcedureORM
-    base_result = db.GenericLazyReferenceField(dbref=False)  # use res.id and res.document_type (class)
+    base_result = db.GenericLazyReferenceField(dbref=True)  # use res.id and res.document_type (class)
 
     created_on = db.DateTimeField(required=True)
     modified_on = db.DateTimeField(required=True)

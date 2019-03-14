@@ -1231,7 +1231,7 @@ class MongoengineSocket:
                 else:
                     raise TypeError("Base_result type must be 'results' or 'procedure',"
                                     " {} is given.".format(record.base_result.ref))
-                task = TaskQueueORM(**record.json_dict(exclude={"id"}))
+                task = TaskQueueORM(**record.json_dict(exclude={"id", "base_result"}))
                 task.base_result = result_obj
                 task.save()
 
@@ -1244,10 +1244,11 @@ class MongoengineSocket:
 
                 # If base_result is stored as a ResultORM or ProcedureORM class, get it with:
                 task = TaskQueueORM.objects(base_result=result_obj).first()
-                self.logger.warning('queue_submit got a duplicate task: ', task.to_mongo())
+                self.logger.warning('queue_submit got a duplicate task: {}'.format(task.to_mongo()))
                 results.append(str(task.id))
                 meta['duplicates'].append(task_num)
             except Exception as err:
+                self.logger.warning('queue_submit submission error: {}'.format(str(err)))
                 meta["success"] = False
                 meta["errors"].append(str(err))
                 results.append(None)
@@ -1257,19 +1258,19 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def queue_get_next(self, manager, available_programs, available_procedures, limit=100, tag=None, as_json=True) -> List[TaskRecord]:
+    def queue_get_next(self, manager, available_programs, available_procedures, limit=100, tag=None,
+                       as_json=True) -> List[TaskRecord]:
         """TODO: needs to be done in a transcation"""
 
         # Figure out query, tagless has no requirements
-        query = {
-            "status": "WAITING",
-            "program__in": available_programs,
-            "procedures__in": available_procedures + [None], # Procedue can be none, explicitly include
-        }
-        if tag is not None:
-            query["tag"] = tag
+        query, error = format_query(
+            status="WAITING",
+            program=available_programs,
+            procedure=available_procedures,  # Procedue can be none, explicitly include
+            tag=tag)
+        query["procedure__in"].append(None)
 
-        found = TaskQueueORM.objects(**query).limit(limit).order_by('priority', 'created_on')
+        found = TaskQueueORM.objects(**query).limit(limit).order_by('-priority', 'created_on')
 
         query = {"_id": {"$in": [x.id for x in found]}}
 

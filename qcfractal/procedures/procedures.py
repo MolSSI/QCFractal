@@ -102,6 +102,7 @@ class SingleResultTasks(BaseTasks):
 
         # Grab the tag if available
         tag = data.meta.pop("tag", None)
+        priority = data.meta.pop("priority", None)
 
         # Construct full tasks
         new_tasks = []
@@ -136,6 +137,7 @@ class SingleResultTasks(BaseTasks):
                 "parser": "single",
                 "program": data.meta["program"],
                 "tag": tag,
+                "priority": priority,
                 "base_result": {"ref": "result", "id": base_id}
             })
 
@@ -249,6 +251,7 @@ class OptimizationTasks(BaseTasks):
             qc_keywords = None
 
         tag = data.meta.pop("tag", None)
+        priority = data.meta.pop("priority", None)
 
         new_tasks = []
         results_ids = []
@@ -280,7 +283,7 @@ class OptimizationTasks(BaseTasks):
                 continue
 
             # Build task object
-            TaskRecord(**{
+            task = TaskRecord(**{
                 "spec": {
                     "function": "qcengine.compute_procedure",
                     "args": [inp.json_dict(), data.meta["program"]],
@@ -290,6 +293,7 @@ class OptimizationTasks(BaseTasks):
                 "program": qc_spec.program,
                 "procedure": data.meta["program"],
                 "tag": tag,
+                "priority": priority,
                 "base_result": {"ref": "procedure", "id": base_id}
             })
 
