@@ -68,7 +68,7 @@ def sec_server_allow_read(sec_server):
 
 ### Tests the compute queue stack
 def test_security_auth_decline_none(sec_server):
-    with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+    with pytest.raises(IOError) as excinfo:
         client = ptl.FractalClient(sec_server)
 
     assert "user not found" in str(excinfo.value).lower()
@@ -88,7 +88,7 @@ def test_security_auth_bad_ssl(sec_server):
 
 
 def test_security_auth_decline_bad_user(sec_server):
-    with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+    with pytest.raises(IOError) as excinfo:
         client = ptl.FractalClient.from_file({
             "address": sec_server.get_address(),
             "username": "hello",
@@ -139,6 +139,6 @@ def test_security_auth_allow_read(sec_server_allow_read):
 def test_security_auth_allow_read_block_add(sec_server_allow_read):
     client = ptl.FractalClient(sec_server_allow_read)
 
-    with pytest.raises(requests.exceptions.HTTPError) as excinfo:
+    with pytest.raises(IOError) as excinfo:
         client.add_molecules([ptl.Molecule.from_data("He 0 0 0")])
     assert "user not found" in str(excinfo.value).lower()

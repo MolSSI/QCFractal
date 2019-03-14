@@ -42,7 +42,7 @@ class BaseTasks:
             },
             "data": {
                 "ids": results_ids,
-                "submitted": [x.base_result[1] for x in new_tasks],
+                "submitted": [x.base_result.id for x in new_tasks],
                 "existing": existing_ids,
             }
         }
@@ -66,7 +66,7 @@ class SingleResultTasks(BaseTasks):
     """
 
     def verify_input(self, data):
-        if data.meta["program"] not in qcng.list_available_programs():
+        if data.meta["program"].lower() not in qcng.list_available_programs():
             return "Program '{}' not available in QCEngine.".format(data.meta["program"])
 
         return True
@@ -136,7 +136,7 @@ class SingleResultTasks(BaseTasks):
                 "parser": "single",
                 "program": data.meta["program"],
                 "tag": tag,
-                "base_result": ("result", base_id)
+                "base_result": {"ref": "result", "id": base_id}
             })
 
             new_tasks.append(task)
@@ -178,10 +178,10 @@ class OptimizationTasks(BaseTasks):
     """
 
     def verify_input(self, data):
-        if data.meta["program"] not in qcng.list_available_procedures():
+        if data.meta["program"].lower() not in qcng.list_available_procedures():
             return "Procedure '{}' not available in QCEngine.".format(data.meta["program"])
 
-        if data.meta["qc_spec"]["program"] not in qcng.list_available_programs():
+        if data.meta["qc_spec"]["program"].lower() not in qcng.list_available_programs():
             return "Program '{}' not available in QCEngine.".format(data.meta["qc_spec"]["program"])
 
         return True
@@ -290,7 +290,7 @@ class OptimizationTasks(BaseTasks):
                 "program": qc_spec.program,
                 "procedure": data.meta["program"],
                 "tag": tag,
-                "base_result": ("procedure", base_id)
+                "base_result": {"ref": "procedure", "id": base_id}
             })
 
             new_tasks.append(task)

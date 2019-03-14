@@ -1224,13 +1224,13 @@ class MongoengineSocket:
             try:
 
                 result_obj = None
-                if record.base_result[0] == 'result':
-                    result_obj = ResultORM(id=record.base_result[1])
-                elif record.base_result[0] == 'procedure':
-                    result_obj = ProcedureORM(id=record.base_result[1])
+                if record.base_result.ref == 'result':
+                    result_obj = ResultORM(id=record.base_result.id)
+                elif record.base_result.ref == 'procedure':
+                    result_obj = ProcedureORM(id=record.base_result.id)
                 else:
                     raise TypeError("Base_result type must be 'results' or 'procedure',"
-                                    " {} is given.".format(record.base_result[0]))
+                                    " {} is given.".format(record.base_result.ref))
                 task = TaskQueueORM(**record.json_dict(exclude={"id"}))
                 task.base_result = result_obj
                 task.save()
@@ -1257,7 +1257,7 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def queue_get_next(self, manager, available_programs, available_procedures, limit=100, tag=None, as_json=True):
+    def queue_get_next(self, manager, available_programs, available_procedures, limit=100, tag=None, as_json=True) -> List[TaskRecord]:
         """TODO: needs to be done in a transcation"""
 
         # Figure out query, tagless has no requirements
@@ -1282,7 +1282,7 @@ class MongoengineSocket:
             }})
 
         if as_json:
-            found = [task.to_json_obj() for task in found]
+            found = [TaskRecord(**task.to_json_obj()) for task in found]
 
         if upd.modified_count != len(found):
             self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
@@ -1351,7 +1351,7 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-            data = [d.to_json_obj(with_ids) for d in data]
+            data = [TaskRecord(**task.to_json_obj()) for task in data]
 
         return {"data": data, "meta": meta}
 
@@ -1376,7 +1376,7 @@ class MongoengineSocket:
         found = TaskQueueORM.objects(id__in=ids).limit(self.get_limit(limit)).skip(skip)
 
         if as_json:
-            found = [task.to_json_obj() for task in found]
+            found = [TaskRecord(**task.to_json_obj()) for task in found]
 
         return found
 

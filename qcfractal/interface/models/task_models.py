@@ -8,11 +8,17 @@ from pydantic import BaseModel, validator
 from .common_models import ObjectId
 
 
+class DBRef(BaseModel):
+    ref: str
+    id: ObjectId
+
+
 class TaskStatusEnum(str, Enum):
     running = "RUNNING"
     waiting = "WAITING"
     error = "ERROR"
     complete = "COMPLETE"
+
 
 class PriorityEnum(int, Enum):
     HIGH = 2
@@ -49,7 +55,7 @@ class TaskRecord(BaseModel):
     tag: Optional[str] = None
 
     # Link back to the base Result
-    base_result: Tuple[BaseResultEnum, ObjectId]
+    base_result: DBRef
 
     # Modified data
     modified_on: datetime.datetime = datetime.datetime.utcnow()
@@ -58,8 +64,16 @@ class TaskRecord(BaseModel):
     @validator('priority')
     def munge_priority(cls, v):
         if isinstance(v, str):
-            v =  TaskStatusEnum[v.upper()]
+            v = TaskStatusEnum[v.upper()]
         return v
+
+    @validator('program')
+    def check_program(cls, v):
+        return v.lower()
+
+    @validator('procedure')
+    def check_procedure(cls, v):
+        return v.lower()
 
     def json_dict(self, *args, **kwargs):
         return json.loads(self.json(*args, **kwargs))
