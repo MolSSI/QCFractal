@@ -52,7 +52,7 @@ class TorsionDriveService(BaseService):
         json_encoders = json_encoders
 
     @classmethod
-    def initialize_from_api(cls, storage_socket, logger, service_input):
+    def initialize_from_api(cls, storage_socket, logger, service_input, tag=None, priority=None):
         _check_td()
 
         # Build the record
@@ -107,6 +107,8 @@ class TorsionDriveService(BaseService):
 
         meta["hash_index"] = output.get_hash_index()
 
+        meta["task_tag"] = tag
+        meta["task_priority"] = priority
         return cls(**meta, storage_socket=storage_socket, logger=logger)
 
     def iterate(self):

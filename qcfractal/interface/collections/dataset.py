@@ -439,7 +439,15 @@ class Dataset(Collection):
 
         return True
 
-    def compute(self, method, basis, driver=None, keywords=None, program=None, ignore_ds_type=False, tag=None):
+    def compute(self,
+                method: str,
+                *,
+                basis: Optional[str]=None,
+                driver: Optional[str]=None,
+                keywords: Optional[str]=None,
+                program: Optional[str]=None,
+                tag: Optional[str]=None,
+                priority: Optional[str]=None):
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -447,23 +455,24 @@ class Dataset(Collection):
         ----------
         method : str
             The computational method to compute (B3LYP)
-        basis : str
+        basis : Optional[str], optional
             The computational basis to compute (6-31G)
-        driver : str, optional
+        driver : Optional[str], optional
             The type of computation to run (energy, gradient, etc)
-        keywords : str, optional
+        keywords : Optional[str], optional
             The keyword alias for the requested compute
-        program : str, optional
+        program : Optional[str], optional
             The underlying QC program
-        ignore_ds_type : bool, optional
-            Optionally only compute the "default" geometry
-        tag : str, optional
+        tag : Optional[str], optional
             The queue tag to use when submitting compute requests.
+        priority : Optional[str], optional
+            The priority of the jobs low, medium, or high.
 
         Returns
         -------
         ret : dict
             A dictionary of the keys for all requested computations
+
         """
         self._check_state()
 
@@ -475,7 +484,8 @@ class Dataset(Collection):
         molecule_idx = [e.molecule_id for e in self.data.records]
         umols, uidx = np.unique(molecule_idx, return_index=True)
 
-        ret = self.client.add_compute(program, method, basis, driver, keywords, list(umols), tag=tag)
+        ret = self.client.add_compute(
+            program, method, basis, driver, keywords, list(umols), tag=tag, priority=priority)
 
         # Update the record that this was computed
         self._add_history(driver=driver, program=program, method=method, basis=basis, keywords=keywords_alias)

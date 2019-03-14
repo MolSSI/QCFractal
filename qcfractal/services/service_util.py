@@ -6,10 +6,11 @@ import abc
 import json
 from typing import Any, Dict, List, Set, Tuple, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 
 from ..interface.models import ObjectId
 from ..interface.models.rest_models import TaskQueuePOSTBody
+from ..interface.models.task_models import PriorityEnum
 from ..procedures import get_procedure_parser
 
 from qcelemental.models import ComputeError
@@ -21,6 +22,8 @@ class TaskManager(BaseModel):
     logger: Any = None
 
     required_tasks: Dict[str, str] = {}
+    tag: Optional[str] = None
+    priority: PriorityEnum = PriorityEnum.HIGH
 
     def dict(self, *args, **kwargs) -> Dict[str, Any]:
         kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"storage_socket", "logger"}
@@ -78,6 +81,7 @@ class TaskManager(BaseModel):
 
         # Add in all new tasks
         for key, packet in tasks.items():
+            packet["meta"].update({"tag": self.tag, "priority": self.priority})
             packet = TaskQueuePOSTBody(**packet)
 
             # Turn packet into a full task, if there are duplicates, get the ID
@@ -112,6 +116,8 @@ class BaseService(BaseModel, abc.ABC):
     procedure_id: Optional[ObjectId] = None
 
     # Task manager
+    task_tag: Optional[str] = None
+    task_priority: PriorityEnum
     task_manager: TaskManager = TaskManager()
 
     status: str = "WAITING"
@@ -121,10 +127,20 @@ class BaseService(BaseModel, abc.ABC):
         super().__init__(**data)
         self.task_manager.logger = self.logger
         self.task_manager.storage_socket = self.storage_socket
+        self.task_manager.tag = self.task_tag
+        self.task_manager.priority = self.task_priority
+
+    @validator('task_priority', pre=True)
+    def munge_priority(cls, v):
+        if isinstance(v, str):
+            v = PriorityEnum[v.upper()]
+        elif v is None:
+            v = PriorityEnum.HIGH
+        return v
 
     @classmethod
     @abc.abstractmethod
-    def initialize_from_api(cls, storage_socket, meta, molecule):
+    def initialize_from_api(cls, storage_socket, meta, molecule, tag=None, priority=None):
         """
         Initalizes a Service from the API
         """

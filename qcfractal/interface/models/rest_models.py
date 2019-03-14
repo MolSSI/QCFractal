@@ -8,7 +8,7 @@ from pydantic import BaseConfig, BaseModel, validator
 from .common_models import KeywordSet, Molecule, ObjectId
 from .gridoptimization import GridOptimizationInput
 from .model_utils import json_encoders
-from .task_models import PriorityEnum
+from .task_models import PriorityEnum, TaskRecord
 from .torsiondrive import TorsionDriveInput
 from .records import ResultRecord
 
@@ -31,6 +31,7 @@ __all__ = [
 
 class RESTConfig(BaseConfig):
     json_encoders = json_encoders
+    extra = "forbid"
 
 
 class ResponseMeta(BaseModel):
@@ -255,7 +256,7 @@ class TaskQueueGETBody(BaseModel):
 
 class TaskQueueGETResponse(BaseModel):
     meta: ResponseGETMeta
-    data: List[Dict[str, Any]]
+    data: Union[List[TaskRecord], List[Dict[str, Any]]]
 
     @validator("data", whole=True, pre=True)
     def ensure_list_of_dict(cls, v):
@@ -309,12 +310,15 @@ class ServiceQueueGETResponse(BaseModel):
 
 
 class ServiceQueuePOSTBody(BaseModel):
-    meta: Dict[str, Any]
+    class Meta(BaseModel):
+        tag: Optional[str] = None
+        priority: Union[str, int, None] = None
+
+    meta: Meta
     data: List[Union[TorsionDriveInput, GridOptimizationInput]]
 
     class Config(RESTConfig):
         pass
-        # json_encoders = json_encoders
 
 
 class ServiceQueuePOSTResponse(BaseModel):
@@ -325,6 +329,9 @@ class ServiceQueuePOSTResponse(BaseModel):
 
     meta: ResponsePOSTMeta
     data: Data
+
+    class Config(RESTConfig):
+        pass
 
 
 ### Queue Manager
@@ -348,6 +355,9 @@ class QueueManagerMeta(BaseModel):
     procedures: List[str]
     tag: Optional[str] = None
 
+    class Config(RESTConfig):
+        pass
+
 
 class QueueManagerGETBody(BaseModel):
     class Data(BaseModel):
@@ -355,6 +365,9 @@ class QueueManagerGETBody(BaseModel):
 
     meta: QueueManagerMeta
     data: Data
+
+    class Config(RESTConfig):
+        pass
 
 
 class QueueManagerGETResponse(BaseModel):

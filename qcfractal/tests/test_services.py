@@ -194,7 +194,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
         "initial_molecule": mol_ret[0],
     }) # yapf: disable
 
-    ret = client.add_service([service])
+    ret = client.add_service([service], tag="gridopt", priority="low")
     fractal_compute_server.await_services()
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
@@ -212,6 +212,16 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     starting_mol = client.query_molecules(id=result.starting_molecule)[0]
     assert pytest.approx(starting_mol.measure([1, 2])) != initial_distance
     assert pytest.approx(starting_mol.measure([1, 2])) == 2.488686479260597
+
+
+    # Check tags on individual procedures
+    proc_id = list(result.grid_optimizations.values())[0]
+    opt = client.query_procedures({"id": proc_id})[0]
+
+    task = client.check_tasks({"id": opt.task_id}, projection={})[0]
+    assert task.priority == 0
+    assert task.tag == "gridopt"
+
 
 
 @using_geometric

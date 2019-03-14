@@ -562,9 +562,27 @@ class FractalClient(object):
         else:
             return r.data
 
-    def add_service(self, service: Union[GridOptimizationInput, TorsionDriveInput], full_return: bool=False):
+    def add_service(self, service: Union[GridOptimizationInput, TorsionDriveInput], full_return: bool=False, tag:Optional[str]=None, priority:Optional[str]=None):
+        """Summary
 
-        body = ServiceQueuePOSTBody(meta={}, data=service)
+        Parameters
+        ----------
+        service : Union[GridOptimizationInput, TorsionDriveInput]
+            An available service input
+        full_return : bool, optional
+
+            Returns the full JSON return if True
+        tag : Optional[str], optional
+            Description
+        priority : Optional[str], optional
+            Description
+
+        Returns
+        -------
+        TYPE
+            Description
+        """
+        body = ServiceQueuePOSTBody(meta={"tag": tag, "priority": priority}, data=service)
 
         r = self._request("post", "service_queue", data=body.json())
         r = ServiceQueuePOSTResponse.parse_raw(r.text)

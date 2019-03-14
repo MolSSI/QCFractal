@@ -78,8 +78,10 @@ class ServiceQueueHandler(APIHandler):
         # Grab objects
         storage = self.objects["storage_socket"]
 
+        body = ServiceQueuePOSTBody.parse_raw(self.request.body)
+
         new_services = []
-        for service_input in ServiceQueuePOSTBody.parse_raw(self.request.body).data:
+        for service_input in body.data:
             # Get molecules with ids
             if isinstance(service_input.initial_molecule, list):
                 molecules = storage.get_add_molecules_mixed(service_input.initial_molecule)["data"]
@@ -90,7 +92,7 @@ class ServiceQueueHandler(APIHandler):
 
             # Update the input and build a service object
             service_input = service_input.copy(update={"initial_molecule": molecules})
-            new_services.append(initialize_service(storage, self.logger, service_input))
+            new_services.append(initialize_service(storage, self.logger, service_input, tag=body.meta.tag, priority=body.meta.priority))
 
         ret = storage.add_services(new_services)
         ret["data"] = {"ids": ret["data"], "existing": ret["meta"]["duplicates"]}
@@ -136,8 +138,8 @@ class QueueManagerHandler(APIHandler):
         # Pivot data so that we group all results in categories
         new_results = collections.defaultdict(list)
 
-        queue = storage_socket.get_queue(ids=results.keys())["data"]
-        queue = {v["id"]: v for v in queue}
+        queue = storage_socket.get_queue(id=list(results.keys()))["data"]
+        queue = {v.id: v for v in queue}
 
         error_data = []
 
@@ -168,11 +170,11 @@ class QueueManagerHandler(APIHandler):
 
                 # Success!
                 else:
-                    parser = queue[key]["parser"]
+                    parser = queue[key].parser
                     new_results[parser].append({
                         "result": result,
                         "task_id": key,
-                        "base_result": queue[key]["base_result"]
+                        "base_result": queue[key].base_result
                     })
                     task_success += 1
 

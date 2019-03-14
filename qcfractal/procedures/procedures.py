@@ -151,7 +151,7 @@ class SingleResultTasks(BaseTasks):
         completed_tasks = []
         updates = []
         for data in result_outputs:
-            result = self.storage.get_results(id=data["base_result"]["id"])["data"][0]
+            result = self.storage.get_results(id=data["base_result"].id)["data"][0]
             result = ResultRecord(**result)
 
             rdata = data["result"]
@@ -310,7 +310,7 @@ class OptimizationTasks(BaseTasks):
         completed_tasks = []
         updates = []
         for output in opt_outputs:
-            rec = self.storage.get_procedures(id=output["base_result"]["id"])["data"][0]
+            rec = self.storage.get_procedures(id=output["base_result"].id)["data"][0]
             rec = OptimizationRecord(**rec)
 
             procedure = output["result"]

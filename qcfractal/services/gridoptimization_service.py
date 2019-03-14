@@ -46,7 +46,7 @@ class GridOptimizationService(BaseService):
         json_encoders = json_encoders
 
     @classmethod
-    def initialize_from_api(cls, storage_socket, logger, service_input):
+    def initialize_from_api(cls, storage_socket, logger, service_input, tag=None, priority=None):
 
         # Build the record
         output = GridOptimizationRecord(
@@ -99,6 +99,8 @@ class GridOptimizationService(BaseService):
             meta["starting_grid"] = GridOptimizationService._calculate_starting_grid(
                 output.keywords.scans, service_input.initial_molecule)
 
+        meta["task_tag"] = tag
+        meta["task_priority"] = priority
         return cls(**meta, storage_socket=storage_socket, logger=logger)
 
     @staticmethod
@@ -163,6 +165,7 @@ class GridOptimizationService(BaseService):
         complete_tasks = self.task_manager.get_tasks()
         for k, v in complete_tasks.items():
             self.final_energies[k] = v["energies"][-1]
+            self.grid_optimizations[k] = v["id"]
 
         # Build out nthe new set of seeds
         complete_seeds = set(tuple(json.loads(k)) for k in complete_tasks.keys())

@@ -1290,13 +1290,8 @@ class MongoengineSocket:
 
         return found
 
-    # def get_queue_(self, query, projection=None):
-    #     """TODO: to be replaced with a specific query, add limit"""
-    #
-    #     return self._get_generic(query, "task_queue", allow_generic=True, projection=projection)
-
     def get_queue(self,
-                  ids=None,
+                  id=None,
                   hash_index=None,
                   program=None,
                   status: str=None,
@@ -1335,7 +1330,7 @@ class MongoengineSocket:
         """
 
         meta = get_metadata_template()
-        query, error = format_query(program=program, id__in=ids, hash_index=hash_index, status=status)
+        query, error = format_query(program=program, id=id, hash_index=hash_index, status=status)
 
         q_limit = self.get_limit(limit)
 
@@ -1356,12 +1351,12 @@ class MongoengineSocket:
 
         return {"data": data, "meta": meta}
 
-    def queue_get_by_id(self, ids: List[str], limit: int=None, skip: int=0, as_json: bool=True):
+    def queue_get_by_id(self, id: List[str], limit: int=None, skip: int=0, as_json: bool=True):
         """Get tasks by their IDs
 
         Parameters
         ----------
-        ids : list of str
+        id : list of str
             List of the task Ids in the DB
         limit : int (optional)
             max number of returned tasks. If limit > max_limit, max_limit
@@ -1374,7 +1369,7 @@ class MongoengineSocket:
         list of the found tasks
         """
 
-        found = TaskQueueORM.objects(id__in=ids).limit(self.get_limit(limit)).skip(skip)
+        found = TaskQueueORM.objects(id__in=id).limit(self.get_limit(limit)).skip(skip)
 
         if as_json:
             found = [TaskRecord(**task.to_json_obj()) for task in found]
