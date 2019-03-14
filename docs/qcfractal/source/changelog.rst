@@ -15,6 +15,15 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.5.? / 2019-??-??
+------------------
+
+Bug Fixes
++++++++++
+
+- (:pr:`215`) Dask Jobqueue for the ``qcfractal-manager`` is now tested and working. This resolve the outstanding issue
+  introduced in :pr:`211` and pushed in v0.5.3.
+
 0.5.3 / 2019-03-13
 ------------------
 
