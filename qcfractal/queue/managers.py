@@ -103,6 +103,10 @@ class QueueManager:
         self.active = 0
         self.exit_callbacks = []
 
+        # QCEngine data
+        self.available_programs = qcng.list_available_programs()
+        self.available_procedures = qcng.list_available_procedures()
+
         # Pull the current loop if we need it
         self.loop = loop or tornado.ioloop.IOLoop.current()
 
@@ -122,7 +126,9 @@ class QueueManager:
             self.logger.info("    QCEngine:")
             self.logger.info("        Version:     {}".format(qcng.__version__))
             self.logger.info("        Task Cores:  {}".format(self.cores_per_task))
-            self.logger.info("        Task Mem:    {}\n".format(self.memory_per_task))
+            self.logger.info("        Task Mem:    {}".format(self.memory_per_task))
+            self.logger.info("        Programs:    {}".format(self.available_programs))
+            self.logger.info("        Procedures:  {}\n".format(self.available_procedures))
 
         # DGAS Note: Note super happy about how this if/else turned out. Looking for alternatives.
         if self.connected():
@@ -161,6 +167,8 @@ class QueueManager:
         meta = self.name_data.copy()
         meta["tag"] = self.queue_tag
         meta["max_tasks"] = self.max_tasks
+        meta["programs"] = self.available_programs
+        meta["procedures"] = self.available_procedures
 
         return {"meta": meta, "data": {}}
 
@@ -260,6 +268,9 @@ class QueueManager:
         if r.status_code != 200:
             # TODO something as we didnt successfully add the data
             self.logger.warning("Heartbeat was not successful.")
+        else:
+            self.logger.info("Heartbeat was successful.")
+
 
         _ = QueueManagerPUTResponse.parse_raw(r.text)  # Validate
 
@@ -305,21 +316,12 @@ class QueueManager:
 
         """
 
+        self.logger.info("Starting update.")
         self.assert_connected()
 
         results = self.queue_adapter.acquire_complete()
         if len(results):
             payload = self._payload_template()
-
-            # # Serialize base_models:
-            # results_payload = {}
-            # for k, v in results.items():
-            #     if hasattr(v[0], "json_dict"):
-            #         results_payload[k] = (v[0].json_dict(), v[1], v[2])
-            #     elif hasattr(v[0], "dict"):
-            #         results_payload[k] = (v[0].dict(), v[1], v[2])
-            #     else:
-            #         results_payload[k] = v
 
             # Upload new results
             payload["data"] = results
@@ -330,6 +332,7 @@ class QueueManager:
                 self.logger.warning("Post complete tasks was not successful. Data may be lost.")
 
             _ = QueueManagerPOSTResponse.parse_raw(r.text)  # Ensure validation from server
+            self.logger.info("Pushed {} complete tasks to the server.".format(len(results)))
 
             self.active -= len(results)
 
@@ -349,6 +352,8 @@ class QueueManager:
 
         response = QueueManagerGETResponse.parse_raw(r.text)
         new_tasks = response.data
+
+        self.logger.info("Acquired {} new tasks.".format(len(new_tasks)))
 
         # Add new tasks to queue
         self.queue_adapter.submit_tasks(new_tasks)
