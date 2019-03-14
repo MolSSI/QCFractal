@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, List, Optional, Union
 import tornado.ioloop
 from qcfractal.extras import get_information
 
-import qcengine
+import qcengine as qcng
 
 from ..interface.data import get_molecule
 from ..interface.models.rest_models import (QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody,
@@ -120,7 +120,7 @@ class QueueManager:
 
         if self.verbose:
             self.logger.info("    QCEngine:")
-            self.logger.info("        Version:     {}".format(qcengine.__version__))
+            self.logger.info("        Version:     {}".format(qcng.__version__))
             self.logger.info("        Task Cores:  {}".format(self.cores_per_task))
             self.logger.info("        Task Mem:    {}\n".format(self.memory_per_task))
 
