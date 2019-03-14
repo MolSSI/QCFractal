@@ -217,6 +217,7 @@ class QueueManagerHandler(APIHandler):
         self.logger.info("QueueManager: Served {} tasks.".format(response.meta.n_found))
 
         # Update manager logs
+        print(body.meta.dict())
         storage.manager_update(name, submitted=len(new_tasks), **body.meta.dict())
 
     def post(self):

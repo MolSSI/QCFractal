@@ -37,6 +37,7 @@ class TaskRecord(BaseModel):
     # Compute blockers and prevention
     program: str
     procedure: Optional[str] = None
+    manager: Optional[str] = None
 
     # Sortables
     priority: int = 0

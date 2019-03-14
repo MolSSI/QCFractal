@@ -263,18 +263,6 @@ class TorsiondriveProcedureORM(ProcedureORM):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class Spec(db.DynamicEmbeddedDocument):
-    """ The spec of a task in the queue
-        This is an embedded document, meaning that it will be embedded
-        in the task_queue collection and won't be stored as a seperate
-        collection/table --> for faster parsing
-    """
-
-    function = db.StringField()
-    args = db.DynamicField()  # fast, can take any structure
-    kwargs = db.DynamicField()
-
-
 class TaskQueueORM(CustomDynamicDocument):
     """A queue of tasks corresponding to a procedure
 
@@ -366,7 +354,14 @@ class QueueManagerORM(CustomDynamicDocument):
     cluster = db.StringField()
     hostname = db.StringField()
     uuid = db.StringField()
+
+    username = db.StringField()
+    qcengine_version = db.StringField()
+    manager_version = db.StringField()
+
     tag = db.StringField()
+    programs = db.DynamicField()
+    procedures = db.DynamicField()
 
     # counts
     completed = db.IntField(default=0)

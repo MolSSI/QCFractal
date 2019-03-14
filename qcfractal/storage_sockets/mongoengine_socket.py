@@ -392,7 +392,8 @@ class MongoengineSocket:
         ret["meta"]["n_found"] = data.count()  # all data count, can be > len(data)
         ret["meta"]["errors"].extend(errors)
 
-        data = [Molecule(**d.to_json_obj()) for d in data]
+        # Data verified going in
+        data = [Molecule(**d.to_json_obj(), verify=False) for d in data]
         ret["data"] = data
 
         return ret

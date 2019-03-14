@@ -15,7 +15,7 @@ from qcfractal.extras import get_information
 import qcengine as qcng
 
 from ..interface.data import get_molecule
-from ..interface.models.rest_models import (QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody,
+from ..interface.models.rest_models import (QueueManagerMeta, QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody,
                                             QueueManagerPOSTResponse, QueueManagerPUTBody, QueueManagerPUTResponse)
 from .adapters import build_queue_adapter
 
@@ -164,11 +164,20 @@ class QueueManager:
             self.logger.info("        Not connected, some actions will not be available")
 
     def _payload_template(self):
-        meta = self.name_data.copy()
-        meta["tag"] = self.queue_tag
-        meta["max_tasks"] = self.max_tasks
-        meta["programs"] = self.available_programs
-        meta["procedures"] = self.available_procedures
+        meta = QueueManagerMeta(**self.name_data.copy(),
+
+            # Version info
+            qcengine_version=qcng.__version__,
+            manager_version=get_information("version"),
+
+            # User info
+            username=self.client.username,
+
+            # Pull info
+            programs=self.available_programs,
+            procedures=self.available_procedures,
+            tag=self.queue_tag,
+            )
 
         return {"meta": meta, "data": {}}
 

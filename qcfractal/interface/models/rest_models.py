@@ -326,19 +326,30 @@ class ServiceQueuePOSTResponse(BaseModel):
 
 
 class QueueManagerMeta(BaseModel):
-    cluster: str = 'unknown'
+    # Name data
+    cluster: str
     hostname: str
     uuid: str
-    tag: Union[str, None] = None
-    max_tasks: int = 1000
+
+    # Username
+    username: Optional[str] = None
+
+    # Version info
+    qcengine_version: str
+    manager_version: str
+
+    # search info
+    programs: List[str]
+    procedures: List[str]
+    tag: Optional[str] = None
 
 
 class QueueManagerGETBody(BaseModel):
     class Data(BaseModel):
-        limit: int = 100
+        limit: int
 
     meta: QueueManagerMeta
-    data: Data = Data()
+    data: Data
 
 
 class QueueManagerGETResponse(BaseModel):
