@@ -1,8 +1,11 @@
+import datetime
 import json
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel
+
+from .common_models import ObjectId
 
 
 class TaskStatusEnum(str, Enum):
@@ -17,7 +20,7 @@ class BaseResultEnum(str, Enum):
     procedure = "procedure"
 
 
-class PythonSpec(BaseModel):
+class PythonComputeSpec(BaseModel):
     function: str
     args: List[Any]
     kwargs: Dict[str, Any]
@@ -25,7 +28,9 @@ class PythonSpec(BaseModel):
 
 class TaskRecord(BaseModel):
 
-    spec: PythonSpec
+    id: ObjectId = None
+
+    spec: PythonComputeSpec
     parser: str
     status: TaskStatusEnum = "WAITING"
 
@@ -43,3 +48,6 @@ class TaskRecord(BaseModel):
     # Modified data
     modified_on: datetime.datetime = datetime.datetime.utcnow()
     created_on: datetime.datetime = datetime.datetime.utcnow()
+
+    def json_dict(self, *args, **kwargs):
+        return json.loads(self.json(*args, **kwargs))

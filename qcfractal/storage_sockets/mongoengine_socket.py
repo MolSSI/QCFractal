@@ -29,7 +29,7 @@ from mongoengine.connection import disconnect, get_db
 from .me_models import (CollectionORM, KeywordsORM, KVStoreORM, MoleculeORM, ProcedureORM, QueueManagerORM, ResultORM,
                         ServiceQueueORM, TaskQueueORM, UserORM)
 from .storage_utils import add_metadata_template, get_metadata_template
-from ..interface.models import KeywordSet, Molecule, ResultRecord, prepare_basis
+from ..interface.models import KeywordSet, Molecule, ResultRecord, TaskRecord, prepare_basis
 
 
 def _str_to_indices_with_errors(ids: List[Union[str, ObjectId]]):
@@ -1186,7 +1186,7 @@ class MongoengineSocket:
 
 ### Mongo queue handling functions
 
-    def queue_submit(self, data: List[Dict]):
+    def queue_submit(self, data: List[TaskRecord]):
         """Submit a list of tasks to the queue.
         Tasks are unique by their base_result, which should be inserted into
         the DB first before submitting it's corresponding task to the queue
@@ -1219,27 +1219,21 @@ class MongoengineSocket:
         meta = add_metadata_template()
 
         results = []
-        for task_num, d in enumerate(data):
+        for task_num, record in enumerate(data):
             try:
-                if not isinstance(d['base_result'], tuple):
-                    raise Exception("base_result must be a tuple not {}.".format(type(d['base_result'])))
 
-                # If saved as DBRef, then use raw query to retrieve (avoid this)
-                # if d['base_result'][0] in ('results', 'procedure'):
-                #     base_result = DBRef(d['base_result'][0], d['base_result'][1])
-
-                d.pop("id", None)
                 result_obj = None
-                if d['base_result'][0] == 'results':
-                    result_obj = ResultORM(id=d['base_result'][1])
-                elif d['base_result'][0] == 'procedure':
-                    result_obj = ProcedureORM(id=d['base_result'][1])
+                if record.base_result[0] == 'result':
+                    result_obj = ResultORM(id=record.base_result[1])
+                elif record.base_result[0] == 'procedure':
+                    result_obj = ProcedureORM(id=record.base_result[1])
                 else:
                     raise TypeError("Base_result type must be 'results' or 'procedure',"
-                                    " {} is given.".format(d['base_result'][0]))
-                task = TaskQueueORM(**d)
+                                    " {} is given.".format(record.base_result[0]))
+                task = TaskQueueORM(**record.json_dict(exclude={"id"}))
                 task.base_result = result_obj
                 task.save()
+
                 result_obj.update(task_id=str(task.id))  # update bidirectional rel
                 results.append(str(task.id))
                 meta['n_inserted'] += 1

@@ -109,11 +109,12 @@ def test_queue_duplicate_compute(fractal_compute_server):
     assert len(ret.ids) == 1
     assert len(ret.existing) == 0
 
-    # Pull out fireworks launchpad and queue nanny
+    # Wait for the compute to execute
     fractal_compute_server.await_results()
 
     db = fractal_compute_server.objects["storage_socket"]
 
+    # Should catch duplicates both ways
     ret = client.add_compute("RDKIT", "uff", None, "energy", None, mol_ret)
     assert len(ret.ids) == 1
     assert len(ret.existing) == 1
@@ -122,6 +123,7 @@ def test_queue_duplicate_compute(fractal_compute_server):
     assert len(ret.ids) == 1
     assert len(ret.existing) == 1
 
+    # Multiple queries
     assert len(client.query_results(program="RDKIT")) == 1
     assert len(client.query_results(program="RDKit")) == 1
 

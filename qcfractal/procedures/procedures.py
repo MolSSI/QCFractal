@@ -7,18 +7,58 @@ from typing import Union
 from qcelemental.models import Molecule
 
 from .procedures_util import parse_single_tasks
-from ..interface.models import OptimizationRecord, QCSpecification, ResultRecord
+from ..interface.models import OptimizationRecord, QCSpecification, ResultRecord, TaskRecord
 
 
-class SingleResultTasks:
+class BaseTasks:
+    def __init__(self, storage, logger):
+        self.storage = storage
+        self.logger = logger
+
+    def submit_tasks(self, data):
+
+        new_tasks, results_ids, existing_ids, errors = self.parse_input(data)
+
+        self.storage.queue_submit(new_tasks)
+
+        n_inserted = 0
+        missing = []
+        for num, x in enumerate(results_ids):
+            if x is None:
+                missing.append(num)
+            else:
+                n_inserted += 1
+
+        results = {
+            "meta": {
+                "n_inserted": n_inserted,
+                "duplicates": [],
+                "validation_errors": [],
+                "success": True,
+                "error_description": False,
+                "errors": errors
+            },
+            "data": {
+                "ids": results_ids,
+                "submitted": [x.base_result[1] for x in new_tasks],
+                "existing": existing_ids,
+            }
+        }
+
+        return results
+
+    def parse_input(self, data):
+        raise TypeError("parse_input not defined")
+
+    def parse_input(self, data):
+        raise TypeError("parse_input not defined")
+
+
+class SingleResultTasks(BaseTasks):
     """Single is a simple Result
      Unique by: driver, method, basis, option (the name in the options table),
      and program.
     """
-
-    def __init__(self, storage, logger):
-        self.storage = storage
-        self.logger = logger
 
     def parse_input(self, data):
         """Parse input json into internally appropriate format
@@ -76,52 +116,23 @@ class SingleResultTasks:
                 continue
 
             # Build task object
-            task = {
+            task = TaskRecord(**{
                 "spec": {
                     "function": "qcengine.compute",  # todo: add defaults in models
                     "args": [inp.json_dict(), data.meta["program"]],  # todo: json_dict should come from results
                     "kwargs": {}  # todo: add defaults in models
                 },
-                "tag": tag,
                 "parser": "single",
-                "base_result": ("results", base_id)
-            }
+
+                "program": data.meta["program"],
+                "tag": tag,
+
+                "base_result": ("result", base_id)
+            })
 
             new_tasks.append(task)
 
         return new_tasks, results_ids, existing_ids, []
-
-    def submit_tasks(self, data):
-
-        new_tasks, results_ids, existing_ids, errors = self.parse_input(data)
-
-        self.storage.queue_submit(new_tasks)
-
-        n_inserted = 0
-        missing = []
-        for num, x in enumerate(results_ids):
-            if x is None:
-                missing.append(num)
-            else:
-                n_inserted += 1
-
-        results = {
-            "meta": {
-                "n_inserted": n_inserted,
-                "duplicates": [],
-                "validation_errors": [],
-                "success": True,
-                "error_description": False,
-                "errors": errors
-            },
-            "data": {
-                "ids": results_ids,
-                "submitted": [x["base_result"][1] for x in new_tasks],
-                "existing": existing_ids,
-            }
-        }
-
-        return results
 
     def parse_output(self, result_outputs):
 
@@ -133,7 +144,8 @@ class SingleResultTasks:
             result = ResultRecord(**result)
 
             rdata = data["result"]
-            stdout, stderr, error = self.storage.add_kvstore([rdata["stdout"], rdata["stderr"], rdata["error"]])["data"]
+            stdout, stderr, error = self.storage.add_kvstore([rdata["stdout"], rdata["stderr"],
+                                                              rdata["error"]])["data"]
             rdata["stdout"] = stdout
             rdata["stderr"] = stderr
             rdata["error"] = error
@@ -151,7 +163,7 @@ class SingleResultTasks:
 # ----------------------------------------------------------------------------
 
 
-class OptimizationTasks(SingleResultTasks):
+class OptimizationTasks(BaseTasks):
     """
     Optimization task manipulation
     """
@@ -250,16 +262,20 @@ class OptimizationTasks(SingleResultTasks):
                 continue
 
             # Build task object
-            task = {
+            TaskRecord(**{
                 "spec": {
                     "function": "qcengine.compute_procedure",
                     "args": [inp.json_dict(), data.meta["program"]],
                     "kwargs": {}
                 },
-                "tag": tag,
                 "parser": "optimization",
+
+                "program": qc_spec.program,
+                "procedure": data.meta["program"],
+
+                "tag": tag,
                 "base_result": ("procedure", base_id)
-            }
+            })
 
             new_tasks.append(task)
 
@@ -299,12 +315,12 @@ class OptimizationTasks(SingleResultTasks):
             update_dict["energies"] = procedure["energies"]
 
             # Save stdout/stderr
-            stdout, stderr, error = self.storage.add_kvstore([procedure["stdout"], procedure["stderr"], procedure["error"]])["data"]
+            stdout, stderr, error = self.storage.add_kvstore(
+                [procedure["stdout"], procedure["stderr"], procedure["error"]])["data"]
             update_dict["stdout"] = stdout
             update_dict["stderr"] = stderr
             update_dict["error"] = error
             update_dict["provenance"] = procedure["provenance"]
-
 
             rec = OptimizationRecord(**{**rec.dict(), **update_dict})
             updates.append(rec)
