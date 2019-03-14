@@ -441,8 +441,8 @@ class Dataset(Collection):
 
     def compute(self,
                 method: str,
-                *,
                 basis: Optional[str]=None,
+                *,
                 driver: Optional[str]=None,
                 keywords: Optional[str]=None,
                 program: Optional[str]=None,

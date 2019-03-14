@@ -406,7 +406,7 @@ def storage_results(storage_socket):
     assert ret == mol_insert["meta"]["n_inserted"]
 
     all_tasks = storage_socket.get_queue()['data']
-    storage_socket.del_tasks(id=[task['id'] for task in all_tasks])
+    storage_socket.del_tasks(id=[task.id for task in all_tasks])
 
 
 def test_empty_get(storage_results):
@@ -488,7 +488,7 @@ def test_queue_submit(storage_results):
 
     result1 = storage_results.get_results()['data'][0]
 
-    task1 = {
+    task1 = ptl.models.TaskRecord(**{
         # "hash_index": idx,  # not used anymore
         "spec": {
             "function": "qcengine.compute_procedure",
@@ -498,8 +498,10 @@ def test_queue_submit(storage_results):
             "kwargs": {},
         },
         "tag": None,
-        "base_result": ('results', result1['id'])
-    }
+        "program": "p1",
+        "parser": "",
+        "base_result": {"ref": 'result', "id": result1['id']}
+    })
 
     # Submit a new task
     ret = storage_results.queue_submit([task1])
@@ -521,7 +523,7 @@ def test_queue_submit(storage_results):
 def test_storage_queue_roundtrip(storage_results):
 
     result1 = storage_results.get_results()['data'][1]
-    task1 = {
+    task1 = ptl.models.TaskRecord(**{
         # "hash_index": idx,
         "spec": {
             "function": "qcengine.compute_procedure",
@@ -531,17 +533,20 @@ def test_storage_queue_roundtrip(storage_results):
             "kwargs": {},
         },
         "tag": None,
-        "base_result": ('results', result1['id'])
-    }
+        "program": "P1",
+        "procedure": "P1",
+        "parser": "",
+        "base_result": {"ref": 'result', "id": result1['id']}
+    })
 
     # Submit a task
     r = storage_results.queue_submit([task1])
     assert len(r["data"]) == 1
 
     # Query for next tasks
-    r = storage_results.queue_get_next("test_manager")
-    assert r[0]["spec"]["function"] == task1["spec"]["function"]
-    queue_id = r[0]["id"]
+    r = storage_results.queue_get_next("test_manager", ["p1"], ["p1"])
+    assert r[0].spec.function == task1.spec.function
+    queue_id = r[0].id
 
     # Mark task as done
     r = storage_results.queue_mark_complete([queue_id])
@@ -551,12 +556,12 @@ def test_storage_queue_roundtrip(storage_results):
     found = storage_results.queue_get_by_id([queue_id])
 
     assert len(found) == 1
-    assert found[0]["status"] == "COMPLETE"
+    assert found[0].status == "COMPLETE"
     res = storage_results.get_results(task_id=queue_id)['data'][0]
-    assert res['status'] == 'COMPLETE'
+    assert res["status"] == 'COMPLETE'
 
     # Check queue is empty
-    r = storage_results.queue_get_next("test_manager")
+    r = storage_results.queue_get_next("test_manager", ["p1"], ["p1"])
     assert len(r) == 0
 
 
@@ -564,9 +569,25 @@ def test_queue_submit_many_order(storage_results):
 
     results = storage_results.get_results()['data']
 
-    task1 = {"base_result": ('results', results[3]['id'])}
-    task2 = {"base_result": ('results', results[4]['id'])}
-    task3 = {"base_result": ('results', results[5]['id'])}
+    task_template = {
+        # "hash_index": idx,
+        "spec": {
+            "function": "qcengine.compute_procedure",
+            "args": [{
+                "json_blob": "data"
+            }],
+            "kwargs": {},
+        },
+        "tag": None,
+        "program": "P1",
+        "procedure": "P1",
+        "parser": "",
+    }
+
+
+    task1 = ptl.models.TaskRecord(**task_template, base_result={"ref": 'result', "id": results[3]['id']})
+    task2 = ptl.models.TaskRecord(**task_template, base_result={"ref": 'result', "id": results[4]['id']})
+    task3 = ptl.models.TaskRecord(**task_template, base_result={"ref": 'result', "id": results[5]['id']})
 
     # Submit tasks
     ret = storage_results.queue_submit([task1, task2, task3])
@@ -574,10 +595,10 @@ def test_queue_submit_many_order(storage_results):
     assert ret['meta']['n_inserted'] == 3
 
     # Get task
-    r = storage_results.queue_get_next("test_manager", limit=1)
+    r = storage_results.queue_get_next("test_manager", ["p1"], ["p1"], limit=1)
     assert len(r) == 1
     # will get the first submitted result first
-    assert r[0]['base_result']['id'] == results[3]['id']
+    assert r[0].base_result.id == results[3]["id"]
 
     # Todo: test more scenarios
 

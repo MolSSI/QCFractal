@@ -202,7 +202,7 @@ class OpenFFWorkflow(Collection):
         # Push collection data back to server
         self.save()
 
-    def _add_torsiondrive(self, packet):
+    def _add_torsiondrive(self, packet, tag, priority):
         # Build out a new service
         torsion_meta = self.data.torsiondrive_static_options.copy(deep=True).dict()
 

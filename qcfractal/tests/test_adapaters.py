@@ -102,7 +102,7 @@ def test_adapter_error_message(managed_compute_server):
     ret = db.get_queue(status="ERROR")["data"]
 
     assert len(ret) == 1
-    assert "connectivity graph" in ret[0]["error"]["error_message"]
+    assert "connectivity graph" in ret[0].error.error_message
     server.objects["storage_socket"].queue_mark_complete([queue_id])
 
 
@@ -123,5 +123,5 @@ def test_adapter_raised_error(managed_compute_server):
     ret = db.get_queue(status="ERROR")["data"]
 
     assert len(ret) == 1
-    assert "QCEngine Call Error" in ret[0]["error"]["error_message"]
+    assert "QCEngine Call Error" in ret[0].error.error_message
     server.objects["storage_socket"].queue_mark_complete([queue_id])

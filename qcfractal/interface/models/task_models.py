@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple
 
 from pydantic import BaseModel, validator
+from qcelemental.models import ComputeError
 
 from .common_models import ObjectId
 
@@ -56,10 +57,15 @@ class TaskRecord(BaseModel):
 
     # Link back to the base Result
     base_result: DBRef
+    error: Optional[ComputeError] = None
 
     # Modified data
     modified_on: datetime.datetime = datetime.datetime.utcnow()
     created_on: datetime.datetime = datetime.datetime.utcnow()
+
+
+    class Config:
+        extra = "forbid"
 
     @validator('priority', pre=True)
     def munge_priority(cls, v):
