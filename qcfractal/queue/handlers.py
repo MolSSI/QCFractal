@@ -5,11 +5,13 @@ Queue backend abstraction manager.
 import collections
 import traceback
 
+import tornado.web
+
 from ..interface.models.rest_models import (
     QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse, QueueManagerPUTBody,
     QueueManagerPUTResponse, ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody,
     ServiceQueuePOSTResponse, TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse)
-from ..procedures import get_procedure_parser
+from ..procedures import get_procedure_parser, check_procedure_available
 from ..services import initialize_service
 from ..web_handlers import APIHandler
 
@@ -31,7 +33,16 @@ class TaskQueueHandler(APIHandler):
         post = TaskQueuePOSTBody.parse_raw(self.request.body)
 
         # Format and submit tasks
+        if not check_procedure_available(post.meta["procedure"]):
+            raise tornado.web.HTTPError(status_code=400, reason="Unknown procedure {}.".format(post.meta["procedure"]))
+
         procedure_parser = get_procedure_parser(post.meta["procedure"], storage, self.logger)
+
+        # Verify the procedure
+        verify = procedure_parser.verify_input(post)
+        if verify is not True:
+            raise tornado.web.HTTPError(status_code=400, reason=verify)
+
         payload = procedure_parser.submit_tasks(post)
 
         response = TaskQueuePOSTResponse(**payload)
@@ -199,13 +210,10 @@ class QueueManagerHandler(APIHandler):
 
         # Figure out metadata and kwargs
         name = self._get_name_from_metadata(body.meta)
-        queue_tags = {
-            "limit": body.data.limit,
-            "tag": body.meta.tag,
-        }  # yapf: disable
 
         # Grab new tasks and write out
-        new_tasks = storage.queue_get_next(name, **queue_tags)
+        new_tasks = storage.queue_get_next(
+            name, body.meta.programs, body.meta.procedures, limit=body.data.limit, tag=body.meta.tag)
         response = QueueManagerGETResponse(
             meta={"n_found": len(new_tasks),
                   "success": True,
@@ -217,7 +225,6 @@ class QueueManagerHandler(APIHandler):
         self.logger.info("QueueManager: Served {} tasks.".format(response.meta.n_found))
 
         # Update manager logs
-        print(body.meta.dict())
         storage.manager_update(name, submitted=len(new_tasks), **body.meta.dict())
 
     def post(self):

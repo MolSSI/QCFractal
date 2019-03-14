@@ -48,7 +48,9 @@ class ResponsePOSTMeta(ResponseMeta):
     duplicates: Union[List[str], List[Tuple[str, str]]]
     validation_errors: List[str]
 
+
 ### KVStore
+
 
 class KVStoreGETBody(BaseModel):
     data: List[ObjectId]
@@ -61,6 +63,7 @@ class KVStoreGETResponse(BaseModel):
 
     class Config:
         json_encoders = json_encoders
+
 
 ### Molecule response
 

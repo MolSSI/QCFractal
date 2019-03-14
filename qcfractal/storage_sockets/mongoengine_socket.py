@@ -392,8 +392,8 @@ class MongoengineSocket:
         ret["meta"]["n_found"] = data.count()  # all data count, can be > len(data)
         ret["meta"]["errors"].extend(errors)
 
-        # Data verified going in
-        data = [Molecule(**d.to_json_obj(), verify=False) for d in data]
+        # Data validated going in
+        data = [Molecule(**d.to_json_obj(), validate=False) for d in data]
         ret["data"] = data
 
         return ret
@@ -1257,15 +1257,19 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def queue_get_next(self, manager, limit=100, tag=None, as_json=True):
+    def queue_get_next(self, manager, available_programs, available_procedures, limit=100, tag=None, as_json=True):
         """TODO: needs to be done in a transcation"""
 
         # Figure out query, tagless has no requirements
-        query = {"status": "WAITING"}
+        query = {
+            "status": "WAITING",
+            "program__in": available_programs,
+            "procedures__in": available_procedures + [None], # Procedue can be none, explicitly include
+        }
         if tag is not None:
             query["tag"] = tag
 
-        found = TaskQueueORM.objects(**query).limit(limit).order_by('created_on')
+        found = TaskQueueORM.objects(**query).limit(limit).order_by('priority', 'created_on')
 
         query = {"_id": {"$in": [x.id for x in found]}}
 

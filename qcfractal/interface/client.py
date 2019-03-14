@@ -111,7 +111,7 @@ class FractalClient(object):
             raise requests.exceptions.ConnectionError(error_msg)
 
         if (r.status_code != 200) and (not noraise):
-            raise requests.exceptions.HTTPError("Server communication failure. Reason: {}".format(r.reason))
+            raise IOError("Server communication failure. Reason: {}".format(r.reason))
 
         return r
 
@@ -514,7 +514,8 @@ class FractalClient(object):
         }
         payload["meta"].update(program_options)
 
-        r = self._request("post", "task_queue", payload)
+        body = TaskQueuePOSTBody(**payload)
+        r = self._request("post", "task_queue", data=body.json())
         r = TaskQueuePOSTResponse.parse_raw(r.text)
 
         if full_return:

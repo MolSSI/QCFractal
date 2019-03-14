@@ -3,6 +3,7 @@ Tests the server compute capabilities.
 """
 
 import pytest
+
 import qcfractal.interface as portal
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server, reset_server_database, using_psi4, using_rdkit
@@ -146,7 +147,7 @@ def test_queue_compute_mixed_molecule(fractal_compute_server):
 
     mol2 = portal.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
 
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [mol1, mol2, "bad_id"], full_return=True)
+    ret = client.add_compute("RDKIT", "UFF", "", "energy", None, [mol1, mol2, "bad_id"], full_return=True)
     assert len(ret.data.ids) == 3
     assert ret.data.ids[2] is None
     assert len(ret.data.submitted) == 2
@@ -202,3 +203,52 @@ def test_queue_duplicate_procedure(fractal_compute_server):
     assert len(ret2.existing) == 1
 
     assert ret.ids[0] == ret2.ids[1]
+
+
+def test_queue_bad_compute_method(fractal_compute_server):
+
+    client = portal.FractalClient(fractal_compute_server)
+
+    mol1 = portal.Molecule.from_data("He 0 0 0\nHe 0 0 2.1")
+
+    with pytest.raises(IOError) as exc:
+        ret = client.add_compute("badprogram", "UFF", "", "energy", None, [mol1], full_return=True)
+
+    assert 'not avail' in str(exc.value)
+
+
+def test_queue_bad_procedure_method(fractal_compute_server):
+
+    client = portal.FractalClient(fractal_compute_server)
+    mol1 = portal.Molecule.from_data("He 0 0 0\nHe 0 0 2.1")
+
+    geometric_options = {
+        "keywords": None,
+        "qc_spec": {
+            "driver": "gradient",
+            "method": "UFF",
+            "basis": "",
+            "keywords": None,
+            "program": "rdkit"
+        },
+    }
+
+    # Test bad procedure
+    with pytest.raises(IOError) as exc:
+        ret = client.add_procedure("optimization", "badproc", geometric_options, [mol1])
+
+    assert 'not avail' in str(exc.value)
+
+    # Test procedure class
+    with pytest.raises(IOError) as exc:
+        ret = client.add_procedure("badprocedure", "geometric", geometric_options, [mol1])
+
+    assert 'Unknown procedure' in str(exc.value)
+
+    # Test bad program
+    with pytest.raises(IOError) as exc:
+        geometric_options["qc_spec"]["program"] = "badqc"
+        ret = client.add_procedure("optimization", "geometric", geometric_options, [mol1])
+
+    assert 'not avail' in str(exc.value)
+    assert 'badqc' in str(exc.value)

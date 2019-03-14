@@ -2,12 +2,14 @@
 All procedures tasks involved in on-node computation.
 """
 
-from typing import Union
+from typing import List, Union
 
 from qcelemental.models import Molecule
 
 from .procedures_util import parse_single_tasks
 from ..interface.models import OptimizationRecord, QCSpecification, ResultRecord, TaskRecord
+
+import qcengine as qcng
 
 
 class BaseTasks:
@@ -47,11 +49,14 @@ class BaseTasks:
 
         return results
 
-    def parse_input(self, data):
-        raise TypeError("parse_input not defined")
+    def verify_input(self, data):
+        raise TypeError("verify_input not defined")
 
     def parse_input(self, data):
         raise TypeError("parse_input not defined")
+
+    def parse_output(self, data):
+        raise TypeError("parse_output not defined")
 
 
 class SingleResultTasks(BaseTasks):
@@ -59,6 +64,12 @@ class SingleResultTasks(BaseTasks):
      Unique by: driver, method, basis, option (the name in the options table),
      and program.
     """
+
+    def verify_input(self, data):
+        if data.meta["program"] not in qcng.list_available_programs():
+            return "Program '{}' not available in QCEngine.".format(data.meta["program"])
+
+        return True
 
     def parse_input(self, data):
         """Parse input json into internally appropriate format
@@ -123,10 +134,8 @@ class SingleResultTasks(BaseTasks):
                     "kwargs": {}  # todo: add defaults in models
                 },
                 "parser": "single",
-
                 "program": data.meta["program"],
                 "tag": tag,
-
                 "base_result": ("result", base_id)
             })
 
@@ -167,6 +176,15 @@ class OptimizationTasks(BaseTasks):
     """
     Optimization task manipulation
     """
+
+    def verify_input(self, data):
+        if data.meta["program"] not in qcng.list_available_procedures():
+            return "Procedure '{}' not available in QCEngine.".format(data.meta["program"])
+
+        if data.meta["qc_spec"]["program"] not in qcng.list_available_programs():
+            return "Program '{}' not available in QCEngine.".format(data.meta["qc_spec"]["program"])
+
+        return True
 
     def parse_input(self, data, duplicate_id="hash_index"):
         """
@@ -269,10 +287,8 @@ class OptimizationTasks(BaseTasks):
                     "kwargs": {}
                 },
                 "parser": "optimization",
-
                 "program": qc_spec.program,
                 "procedure": data.meta["program"],
-
                 "tag": tag,
                 "base_result": ("procedure", base_id)
             })
@@ -334,6 +350,14 @@ class OptimizationTasks(BaseTasks):
 # ----------------------------------------------------------------------------
 
 supported_procedures = Union[SingleResultTasks, OptimizationTasks]
+__procedure_map = {"single": SingleResultTasks, "optimization": OptimizationTasks}
+
+
+def check_procedure_available(procedure: str) -> List[str]:
+    """
+    Lists all available procedures
+    """
+    return procedure.lower() in __procedure_map
 
 
 def get_procedure_parser(procedure_type: str, storage, logger) -> supported_procedures:
@@ -353,9 +377,7 @@ def get_procedure_parser(procedure_type: str, storage, logger) -> supported_proc
         'optimization' --> OptimizationTasks
     """
 
-    if procedure_type == 'single':
-        return SingleResultTasks(storage, logger)
-    elif procedure_type == 'optimization':
-        return OptimizationTasks(storage, logger)
-    else:
+    try:
+        return __procedure_map[procedure_type.lower()](storage, logger)
+    except KeyError:
         raise KeyError("Procedure type ({}) is not suported yet.".format(procedure_type))
