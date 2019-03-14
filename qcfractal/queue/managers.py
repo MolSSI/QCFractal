@@ -383,7 +383,7 @@ class QueueManager:
         """
         return self.queue_adapter.list_tasks()
 
-    def test(self) -> bool:
+    def test(self, n=1) -> bool:
         """
         Tests all known programs with simple inputs to check if the Adapter is correctly instantiated.
         """
@@ -425,17 +425,20 @@ class QueueManager:
         for program, model in programs.items():
             if testing.has_module(program):
                 self.logger.info("Found program {}, adding to testing queue.".format(program))
-                found_programs.append(program)
             else:
                 self.logger.warning("Could not find program {}, skipping tests.".format(program))
                 continue
+            for x in range(n):
 
-            task = json.loads(task_base)
-            task["id"] = program
-            task["spec"]["args"][0]["model"] = model
-            task["spec"]["args"][1] = program
+                task = json.loads(task_base)
+                program_id = program + str(x)
+                task["id"] = program_id
+                task["spec"]["args"][0]["model"] = model
+                task["spec"]["args"][0]["keywords"] = {"e_convergence": (x * 1.e-6 + 1.e-6)}
+                task["spec"]["args"][1] = program
 
-            tasks.append(task)
+                tasks.append(task)
+                found_programs.append(program_id)
 
         self.queue_adapter.submit_tasks(tasks)
 
@@ -444,6 +447,7 @@ class QueueManager:
 
         results = self.queue_adapter.acquire_complete()
         self.logger.info("Testing results acquired.")
+
 
         missing_programs = results.keys() - set(found_programs)
         if len(missing_programs):

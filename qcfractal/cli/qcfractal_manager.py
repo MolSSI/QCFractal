@@ -58,6 +58,7 @@ class QueueManagerSettings(BaseSettings):
     log_file_prefix: str = None
     update_frequency: float = 30
     test: bool = False
+    ntests: int = 1
 
 
 class SchedulerEnum(str, Enum):
@@ -86,9 +87,10 @@ class DaskQueueSettings(BaseSettings):
 
     def __init__(self, **kwargs):
         """Enforce that the keys we are going to set remain untouched"""
-        bad_set = set(kwargs.keys()) - {
-            "name", "cores", "memory", "queue", "processes", "walltime", "env_extra", "qca_resource_string"
+        forbidden_set = {
+            "name", "cores", "memory", "processes", "walltime", "env_extra", "qca_resource_string"
         }
+        bad_set = set(kwargs.keys()) & forbidden_set
         if bad_set:
             raise KeyError("The following items were set as part of dask_jobqueue, however, "
                            "there are other config items which control these in more generic "
@@ -148,6 +150,7 @@ def parse_args():
     # Additional args
     optional = parser.add_argument_group('Optional Settings')
     optional.add_argument("--test", action="store_true", help="Boot and run a short test suite to validate setup")
+    optional.add_argument("--ntests", type=int, help="How many tests per found program to run, does nothing without --test set")
 
     # Move into nested namespace
     args = vars(parser.parse_args())
@@ -167,7 +170,7 @@ def parse_args():
     data = {
         "common": _build_subset(args, {"adapter", "ntasks", "cores", "memory"}),
         "server": _build_subset(args, {"fractal_uri", "password", "username", "verify"}),
-        "manager": _build_subset(args, {"max_tasks", "manager_name", "queue_tag", "log_file_prefix", "update_frequency", "test"}),
+        "manager": _build_subset(args, {"max_tasks", "manager_name", "queue_tag", "log_file_prefix", "update_frequency", "test", "ntests"}),
     } # yapf: disable
 
     if args["config_file"] is not None:
@@ -193,7 +196,6 @@ def main(args=None):
     exit_callbacks = []
 
     # Construct object
-
     settings = ManagerSettings(**args)
 
     if settings.manager.log_file_prefix is not None:
@@ -205,7 +207,13 @@ def main(args=None):
         client = None
     else:
         # Connect to a specified fractal server
-        print(settings.server.fractal_uri, settings.server.dict(skip_defaults=True, exclude={"fractal_uri"}))
+        print_string = "Attempting to connect to FractalClient at: {}".format(settings.server.fractal_uri)
+        other_data = settings.server.dict(skip_defaults=True, exclude={"fractal_uri"})
+        if "password" in other_data:
+            other_data["password"] = "{provided}"
+        if other_data:
+            print_string += "\n   With credentials: {}".format(other_data)
+        print(print_string)
         client = qcfractal.interface.FractalClient(
             address=settings.server.fractal_uri, **settings.server.dict(skip_defaults=True, exclude={"fractal_uri"}))
 
@@ -222,7 +230,7 @@ def main(args=None):
 
     elif settings.common.adapter == "dask":
 
-        dask_settings = settings.dask_jobqueue.dict(skip_defaults=True)
+        dask_settings = settings.dask.dict(skip_defaults=True)
         # Checks
         if "extra" not in dask_settings:
             dask_settings["extra"] = []
@@ -240,7 +248,7 @@ def main(args=None):
             "name": "QCFractal_Dask_Compute_Executor",
             "cores": settings.common.cores,
             "memory": str(settings.common.memory) + "GB",
-            "processes": settings.common.ntasks,
+            "processes": settings.common.ntasks, # Number of workers to generate == tasks
             "walltime": settings.cluster.walltime,
             "job_extra": scheduler_opts,
             "env_exta": settings.cluster.task_startup_commands,
@@ -248,14 +256,15 @@ def main(args=None):
 
         # Import the dask things we need
         from dask.distributed import Client
-        cluster_class = cli_utils.import_module("dask_jobqueue", package=_cluster_loaders[settings.cluster.scheduler])
+        cluster_module = cli_utils.import_module("dask_jobqueue", package=_cluster_loaders[settings.cluster.scheduler])
+        cluster_class = getattr(cluster_module, _cluster_loaders[settings.cluster.scheduler])
 
         cluster = cluster_class(**dask_construct)
 
         # Setup up adaption
         # Workers are distributed down to the cores through the sub-divided processes
         # Optimization may be needed
-        cluster.adapt(minimum=0, maximum=settings.cluster.max_nodes)
+        cluster.adapt(minimum=0, maximum=settings.common.ntasks * settings.cluster.max_nodes, interval="10s")
 
         queue_client = Client(cluster)
 
@@ -286,7 +295,7 @@ def main(args=None):
 
     # Either startup the manager or run until complete
     if settings.manager.test:
-        success = manager.test()
+        success = manager.test(settings.manager.ntests)
         if success is False:
             raise ValueError("Testing was not successful, failing.")
     else:

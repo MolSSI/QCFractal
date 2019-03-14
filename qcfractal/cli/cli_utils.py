@@ -7,6 +7,7 @@ import copy
 import importlib
 import json
 import signal
+from functools import partial
 
 import yaml
 
@@ -27,7 +28,10 @@ def read_config_file(fname):
     """Reads a JSON or YAML file.
     """
     if fname.endswith(".yaml") or fname.endswith(".yml"):
-        rfunc = yaml.load
+        try:
+            rfunc = partial(yaml.load, Loader=yaml.FullLoader)
+        except AttributeError:
+            rfunc = yaml.load
     elif fname.endswith(".json"):
         rfunc = json.load
     else:
@@ -37,7 +41,7 @@ def read_config_file(fname):
         with open(fname, "r") as handle:
             ret = rfunc(handle)
     except FileNotFoundError:
-        raise FileNotFoundError("No config file found at {}.".format(config_file))
+        raise FileNotFoundError("No config file found at {}.".format(fname))
 
     return ret
 
