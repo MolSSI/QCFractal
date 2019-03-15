@@ -57,13 +57,14 @@ def torsiondrive_fixture(fractal_compute_server):
 
         if ret.meta.n_inserted:  # In case test already submitted
             compute_key = ret.data.ids[0]
-            status = client.check_services({"procedure_id": compute_key}, full_return=True)
+            status = client.query_services(procedure_id=compute_key, projection={"status": True}, full_return=True)
             assert 'WAITING' in status.data[0]['status']
             assert status.data[0]['id'] != compute_key  # Hash should never be id
 
         fractal_compute_server.await_services()
         assert len(fractal_compute_server.list_current_tasks()) == 0
         return ret.data
+
 
     yield spin_up_test, client
 
@@ -129,7 +130,7 @@ def test_service_iterate_error(torsiondrive_fixture):
     # Run the test without modifications
     ret = spin_up_test(keywords={"dihedrals": [[0, 1, 2, 50]]})
 
-    status = client.check_services({"procedure_id": ret.ids[0]})
+    status = client.query_services(procedure_id=ret.ids[0])
     assert len(status) == 1
 
     assert status[0]["status"] == "ERROR"
@@ -144,7 +145,7 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
     # Run the test without modifications
     ret = spin_up_test(qc_spec={"method": "waffles_crasher"})
 
-    status = client.check_services({"procedure_id": ret.ids[0]})
+    status = client.query_services(procedure_id=ret.ids[0])
     assert len(status) == 1
 
     assert status[0]["status"] == "ERROR"

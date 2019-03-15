@@ -28,6 +28,10 @@ __all__ = [
 
 ### Generic and Common Models
 
+QueryStr = Optional[Union[List[str], str]]
+QueryInt = Optional[Union[List[int], int]]
+QueryObjectId = Optional[Union[List[ObjectId], ObjectId]]
+
 
 class RESTConfig(BaseConfig):
     json_encoders = json_encoders
@@ -286,9 +290,17 @@ class TaskQueuePOSTResponse(BaseModel):
 
 
 class ServiceQueueGETBody(BaseModel):
-    meta: Dict[str, Any]
-    data: Dict[str, Any]
+    class Meta(BaseModel):
+        projection: Optional[Dict[str, bool]] = None
 
+    class Data(BaseModel):
+        id: QueryObjectId = None
+        procedure_id: QueryObjectId = None
+        hash_index: QueryStr = None
+        status: QueryStr = None
+
+    meta: Meta
+    data: Data
 
 class ServiceQueueGETResponse(BaseModel):
     meta: ResponseGETMeta
