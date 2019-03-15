@@ -8,7 +8,7 @@ from pydantic import BaseConfig, BaseModel, validator
 from .common_models import KeywordSet, Molecule, ObjectId
 from .gridoptimization import GridOptimizationInput
 from .model_utils import json_encoders
-from .task_models import PriorityEnum, TaskRecord
+from .task_models import TaskRecord
 from .torsiondrive import TorsionDriveInput
 from .records import ResultRecord
 
@@ -237,18 +237,10 @@ class ProcedureGETReponse(BaseModel):
 
 ### Task Queue
 
-default_task_projection = {x: True for x in ["status", "error", "tag"]}  # Not Pydantic attr
-
 
 class TaskQueueGETBody(BaseModel):
     class Meta(BaseModel):
-        projection: Dict[str, Any] = default_task_projection  # Is Pydantic attr
-
-        @validator("projection", pre=True, whole=True)
-        def projection_default(cls, v):
-            if v is None:
-                return default_task_projection
-            return v
+        projection: Dict[str, Any] = None
 
     meta: Meta = Meta()
     data: Dict[str, Any]

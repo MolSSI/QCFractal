@@ -1,7 +1,7 @@
 import datetime
 import json
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, validator
 from qcelemental.models import ComputeError

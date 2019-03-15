@@ -286,8 +286,7 @@ class QueueManagerHandler(APIHandler):
 
         else:
             msg = "Operation '{}' not understood.".format(op)
-            from tornado.web import HTTPError
-            raise HTTPError(status_code=400, reason=msg)
+            raise tornado.web.HTTPError(status_code=400, reason=msg)
 
         response = QueueManagerPUTResponse(meta={}, data=ret)
         self.write(response.json())
