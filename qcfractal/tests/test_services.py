@@ -220,7 +220,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     proc_id = list(result.grid_optimizations.values())[0]
     opt = client.query_procedures({"id": proc_id})[0]
 
-    task = client.check_tasks({"id": opt.task_id}, projection={})[0]
+    task = client.query_tasks(id=opt.task_id)[0]
     assert task.priority == 0
     assert task.tag == "gridopt"
 

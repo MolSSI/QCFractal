@@ -58,7 +58,7 @@ class TaskQueueHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         body = TaskQueueGETBody.parse_raw(self.request.body)
-        tasks = storage.get_queue(**body.data, projection=body.meta.projection)
+        tasks = storage.get_queue(**body.data.dict(), projection=body.meta.projection)
         response = TaskQueueGETResponse(**tasks)
 
         self.write(response.json())

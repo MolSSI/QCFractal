@@ -21,6 +21,7 @@ QueryInt = Optional[Union[List[int], int]]
 QueryObjectId = Optional[Union[List[ObjectId], ObjectId]]
 QueryProjection = Optional[Dict[str, bool]]
 
+
 class FractalClient(object):
     def __init__(self,
                  address: Union[str, 'FractalServer']='api.qcarchive.molssi.org:443',
@@ -276,7 +277,8 @@ class FractalClient(object):
 
 ### Keywords section
 
-    def query_keywords(self, id: List[str]=None, *, hash_index: List[str]=None, full_return: bool=False) -> 'List[KeywordSet]':
+    def query_keywords(self, id: List[str]=None, *, hash_index: List[str]=None,
+                       full_return: bool=False) -> 'List[KeywordSet]':
         """Obtains KeywordSets from the server using keyword ids.
 
         Parameters
@@ -524,15 +526,25 @@ class FractalClient(object):
         else:
             return r.data
 
-    def check_tasks(self, query: Dict[str, Any], projection: Optional[Dict[str, Any]]=None, full_return: bool=False):
+    def query_tasks(self,
+                    id: QueryObjectId=None,
+                    hash_index: QueryStr=None,
+                    program: QueryStr=None,
+                    status: QueryStr=None,
+                    projection: QueryProjection=None,
+                    full_return: bool=False):
         """Checks the status of tasks in the Fractal queue.
 
         Parameters
         ----------
-        query : dict
-            A query to find tasks
-        projection: dict, optional
-            Projection of data to call from the database
+        id : QueryObjectId, optional
+            Queries the Services ``id`` field.
+        hash_index : QueryStr, optional
+            Queries the Services ``procedure_id`` field.
+        status : QueryStr, optional
+            Queries the Services ``status`` field.
+        projection : QueryProjection, optional
+            Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
             Returns the full JSON return if True
 
@@ -542,12 +554,22 @@ class FractalClient(object):
             A dictionary of each match that contains the current status
             and, if an error has occured, the error message.
 
-        >>> client.check_tasks({"id": "5bd35af47b878715165f8225"})
+        >>> client.check_tasks(id="5bd35af47b878715165f8225", projection={"status": True})
         [{"status": "WAITING"}]
+
         """
 
-        payload = {"meta": {"projection": projection}, "data": query}
-        body = TaskQueueGETBody(**payload)
+        body = TaskQueueGETBody(**{
+            "meta": {
+                "projection": projection
+            },
+            "data": {
+                "id": id,
+                "hash_index": hash_index,
+                "program": program,
+                "status": status
+            }
+        })
 
         r = self._request("get", "task_queue", data=body.json())
         r = TaskQueueGETResponse.parse_raw(r.text)
@@ -609,6 +631,8 @@ class FractalClient(object):
             Queries the Services ``procedure_id`` field.
         status : QueryStr, optional
             Queries the Services ``status`` field.
+        projection : QueryProjection, optional
+            Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
             Returns the full JSON return if True
 

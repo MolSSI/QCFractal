@@ -54,6 +54,13 @@ class ResponsePOSTMeta(ResponseMeta):
     duplicates: Union[List[str], List[Tuple[str, str]]]
     validation_errors: List[str]
 
+class QueryMeta(BaseModel):
+    projection: Optional[Dict[str, bool]] = None
+    limit: Optional[int] = None
+    skip: Optional[int] = None
+
+    class Config:
+        extra = "forbid"
 
 ### KVStore
 
@@ -243,11 +250,15 @@ class ProcedureGETReponse(BaseModel):
 
 
 class TaskQueueGETBody(BaseModel):
-    class Meta(BaseModel):
-        projection: Dict[str, Any] = None
 
-    meta: Meta = Meta()
-    data: Dict[str, Any]
+    class Data(BaseModel):
+        id: QueryObjectId = None
+        hash_index: QueryStr = None
+        program: QueryStr = None
+        status: QueryStr = None
+
+    meta: QueryMeta
+    data: Data
 
 
 class TaskQueueGETResponse(BaseModel):
@@ -290,16 +301,13 @@ class TaskQueuePOSTResponse(BaseModel):
 
 
 class ServiceQueueGETBody(BaseModel):
-    class Meta(BaseModel):
-        projection: Optional[Dict[str, bool]] = None
-
     class Data(BaseModel):
         id: QueryObjectId = None
         procedure_id: QueryObjectId = None
         hash_index: QueryStr = None
         status: QueryStr = None
 
-    meta: Meta
+    meta: QueryMeta
     data: Data
 
 class ServiceQueueGETResponse(BaseModel):
