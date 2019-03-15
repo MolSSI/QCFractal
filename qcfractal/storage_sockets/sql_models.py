@@ -1,7 +1,7 @@
 import datetime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Text, DateTime, \
-    ForeignKey, LargeBinary, Binary, ARRAY
+    ForeignKey, Binary, ARRAY
 from sqlalchemy.orm import relationship
 from sqlalchemy_utils.types.choice import ChoiceType
 
@@ -9,6 +9,13 @@ from sqlalchemy_utils.types.choice import ChoiceType
 # pip install sqlalchemy psycopg2 sqlalchemy_utils
 
 Base = declarative_base()
+
+
+class KVStoreORM(Base):
+    __tablename__ = "kv_store"
+
+    id = Column(Integer, primary_key=True)
+    value = Column(Text, nullable=False)
 
 
 class KVStoreORM(Base):
@@ -98,7 +105,7 @@ class KeywordsORM(Base):
 
     id = Column(Integer, primary_key=True)
     hash_index = Column(String, nullable=False)
-    values = Column(LargeBinary)
+    values = Column(Binary)
 
     # meta = {'indexes': [{'fields': ('hash_index', ), 'unique': True}]}
 
@@ -163,9 +170,9 @@ class ResultORM(BaseResultORM):
     keywords = relationship("KeywordsORM")
 
     # output related
-    properties = Column(LargeBinary)  # accept any, no validation
-    return_result = Column(LargeBinary)
-    provenance = Column(LargeBinary)  # or an Embedded Documents with a structure?
+    properties = Column(Binary)  # accept any, no validation
+    return_result = Column(Binary)
+    provenance = Column(Binary)  # or an Embedded Documents with a structure?
 
     schema_name = Column(String)  # default="qc_ret_data_output"??
     schema_version = Column(Integer)
@@ -202,7 +209,7 @@ class ProcedureORM(BaseResultORM):
 
     # Unlike ResultORMs KeywordsORM are not denormalized here as a ProcedureORM query will always want the
     # keywords and the keywords are not part of the index.
-    keywords = Column(LargeBinary)
+    keywords = Column(Binary)
 
     # meta = {
     #     'indexes': [
@@ -239,6 +246,8 @@ class OptimizationProcedureORM(ProcedureORM):
     final_molecule_id = Column(Integer, ForeignKey('molecule.id'))
     final_molecule = relationship("MoleculeORM", lazy=True)
 
+    # trajectory
+
     __mapper_args__ = {
         'polymorphic_identity': 'optimization',
     }
@@ -269,8 +278,8 @@ class TorsiondriveProcedureORM(ProcedureORM):
 #     """
 #
 #     function = Column(String)
-#     args = Column(LargeBinary)  # fast, can take any structure
-#     kwargs = Column(LargeBinary)
+#     args = Column(Binary)  # fast, can take any structure
+#     kwargs = Column(Binary)
 
 TASK_STATUS = [
     ('RUNNING', 'RUNNING'),
@@ -290,7 +299,7 @@ class TaskQueueORM(Base):
 
     id = Column(Integer, primary_key=True)
 
-    spec = Column(LargeBinary)
+    spec = Column(Binary)
 
     # others
     tag = Column(String, default=None)
