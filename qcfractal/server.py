@@ -100,7 +100,7 @@ class FractalServer:
 
             # Queue options
             queue_socket: 'queue_adapter'=None,
-            max_active_services: int=10,
+            max_active_services: int=20,
             heartbeat_frequency: int=300):
 
         # Save local options
@@ -272,7 +272,7 @@ class FractalServer:
         self.objects["queue_manager"] = QueueManager(
             client, self.queue_socket, loop=self.loop, logger=self.logger, manager_name="FractalServer", verbose=False)
 
-    def start(self):
+    def start(self, start_loop=True):
         """
         Starts up all IOLoops and processes
         """
@@ -297,10 +297,11 @@ class FractalServer:
 
         # Soft quit with a keyboard interrupt
         self.logger.info("FractalServer successfully started.\n")
-        self.loop_active = True
-        self.loop.start()
+        if start_loop:
+            self.loop_active = True
+            self.loop.start()
 
-    def stop(self):
+    def stop(self, stop_loop=True):
         """
         Shuts down all IOLoops and periodic updates
         """
@@ -324,13 +325,17 @@ class FractalServer:
         for func, args, kwargs in self.exit_callbacks:
             func(*args, **kwargs)
 
+        if self.executor is not None:
+            self.executor.shutdown()
+
         # Shutdown IOLoop if needed
-        if asyncio.get_event_loop().is_running():
+        if (asyncio.get_event_loop().is_running()) and stop_loop:
             self.loop.stop()
         self.loop_active = False
 
         # Final shutdown
-        self.loop.close(all_fds=True)
+        if stop_loop:
+            self.loop.close(all_fds=True)
         self.logger.info("FractalServer stopping gracefully. Stopped IOLoop.\n")
 
     def add_exit_callback(self, callback, *args, **kwargs):
