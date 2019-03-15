@@ -66,8 +66,9 @@ class SingleResultTasks(BaseTasks):
     """
 
     def verify_input(self, data):
-        if data.meta["program"].lower() not in qcng.list_available_programs():
-            return "Program '{}' not available in QCEngine.".format(data.meta["program"])
+        program = data.meta["program"].lower()
+        if program not in qcng.list_all_programs():
+            return "Program '{}' not available in QCEngine.".format(program)
 
         return True
 
@@ -138,7 +139,10 @@ class SingleResultTasks(BaseTasks):
                 "program": data.meta["program"],
                 "tag": tag,
                 "priority": priority,
-                "base_result": {"ref": "result", "id": base_id}
+                "base_result": {
+                    "ref": "result",
+                    "id": base_id
+                }
             })
 
             new_tasks.append(task)
@@ -180,11 +184,13 @@ class OptimizationTasks(BaseTasks):
     """
 
     def verify_input(self, data):
-        if data.meta["program"].lower() not in qcng.list_available_procedures():
-            return "Procedure '{}' not available in QCEngine.".format(data.meta["program"])
+        program = data.meta["program"].lower()
+        if program not in qcng.list_all_procedures():
+            return "Procedure '{}' not available in QCEngine.".format(program)
 
-        if data.meta["qc_spec"]["program"].lower() not in qcng.list_available_programs():
-            return "Program '{}' not available in QCEngine.".format(data.meta["qc_spec"]["program"])
+        program = data.meta["qc_spec"]["program"].lower()
+        if program not in qcng.list_all_programs():
+            return "Program '{}' not available in QCEngine.".format(program)
 
         return True
 
@@ -294,7 +300,10 @@ class OptimizationTasks(BaseTasks):
                 "procedure": data.meta["program"],
                 "tag": tag,
                 "priority": priority,
-                "base_result": {"ref": "procedure", "id": base_id}
+                "base_result": {
+                    "ref": "procedure",
+                    "id": base_id
+                }
             })
 
             new_tasks.append(task)
