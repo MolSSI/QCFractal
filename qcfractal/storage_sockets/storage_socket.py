@@ -30,5 +30,8 @@ def storage_socket_factory(uri, project_name, logger=None, db_type='mongoengine'
     if db_type == "mongoengine":
         from . import mongoengine_socket
         return mongoengine_socket.MongoengineSocket(uri, project=project_name, logger=logger, **kwargs)
+    elif db_type == "sqlalchemy":
+        from . import sqlalchemy_socket
+        return sqlalchemy_socket.SQLAlcehmySocket(uri, project=project_name, logger=logger, **kwargs)
     else:
         raise KeyError("DBType {} not understood".format(db_type))

@@ -18,8 +18,8 @@ class KVStoreORM(Base):
     value = Column(Text, nullable=False)
 
 
-class KVStoreORM(Base):
-    __tablename__ = "kv_store"
+class ErrorsORM(Base):
+    __tablename__ = "errors"
 
     id = Column(Integer, primary_key=True)
     value = Column(Text, nullable=False)

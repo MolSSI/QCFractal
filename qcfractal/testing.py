@@ -432,7 +432,6 @@ def fractal_compute_server(request):
         reset_server_database(server)
         yield server
 
-
 def build_socket_fixture(stype):
     print("")
 
@@ -443,6 +442,14 @@ def build_socket_fixture(stype):
     # IP/port/drop table is specific to build
     if stype in ["pymongo", "mongoengine"]:
         storage = storage_socket_factory("mongodb://localhost", storage_name, db_type=stype)
+
+        # Clean and re-init the database
+        storage._clear_db(storage_name)
+
+    elif stype == 'sqlalchemy':
+        # storage = storage_socket_factory('postgresql+psycopg2://test:mypass@localhost:5432/test',
+        #                                  storage_name, db_type=stype)
+        storage = storage_socket_factory('sqlite:///:memory:', storage_name, db_type=stype)
 
         # Clean and re-init the database
         storage._clear_db(storage_name)
@@ -461,3 +468,8 @@ def build_socket_fixture(stype):
 def mongoengine_socket_fixture(request):
 
     yield from build_socket_fixture("mongoengine")
+
+@pytest.fixture(scope="module")
+def sqlalchemy_socket_fixture(request):
+
+    yield from build_socket_fixture("sqlalchemy")
