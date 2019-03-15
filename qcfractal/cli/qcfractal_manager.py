@@ -207,13 +207,6 @@ def main(args=None):
         client = None
     else:
         # Connect to a specified fractal server
-        print_string = "Attempting to connect to FractalClient at: {}".format(settings.server.fractal_uri)
-        other_data = settings.server.dict(skip_defaults=True, exclude={"fractal_uri"})
-        if "password" in other_data:
-            other_data["password"] = "{provided}"
-        if other_data:
-            print_string += "\n   With credentials: {}".format(other_data)
-        print(print_string)
         client = qcfractal.interface.FractalClient(
             address=settings.server.fractal_uri, **settings.server.dict(skip_defaults=True, exclude={"fractal_uri"}))
 
