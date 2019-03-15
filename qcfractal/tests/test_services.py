@@ -5,7 +5,8 @@ Tests the on-node procedures compute capabilities.
 import copy
 
 import pytest
-import qcfractal.interface as portal
+
+import qcfractal.interface as ptl
 from qcfractal.interface.models import GridOptimizationInput, TorsionDriveInput
 from qcfractal.testing import fractal_compute_server, recursive_dict_merge, using_geometric, using_rdkit
 
@@ -18,10 +19,10 @@ def torsiondrive_fixture(fractal_compute_server):
     pytest.importorskip("geometric")
     pytest.importorskip("rdkit")
 
-    client = portal.FractalClient(fractal_compute_server)
+    client = ptl.FractalClient(fractal_compute_server)
 
     # Add a HOOH
-    hooh = portal.data.get_molecule("hooh.json")
+    hooh = ptl.data.get_molecule("hooh.json")
     mol_ret = client.add_molecules([hooh])
 
     # Geometric options
@@ -90,7 +91,7 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
 def test_service_torsiondrive_multi_single(torsiondrive_fixture):
     spin_up_test, client = torsiondrive_fixture
 
-    hooh = portal.data.get_molecule("hooh.json")
+    hooh = ptl.data.get_molecule("hooh.json")
     hooh2 = hooh.copy(deep=True)
     hooh2.geometry[0] += 0.0004
 
@@ -154,10 +155,10 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
 @using_rdkit
 def test_service_gridoptimization_single_opt(fractal_compute_server):
 
-    client = portal.FractalClient(fractal_compute_server)
+    client = ptl.FractalClient(fractal_compute_server)
 
     # Add a HOOH
-    hooh = portal.data.get_molecule("hooh.json")
+    hooh = ptl.data.get_molecule("hooh.json")
     initial_distance = hooh.measure([1, 2])
     mol_ret = client.add_molecules([hooh])
 
@@ -228,10 +229,10 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
 @using_rdkit
 def test_service_gridoptimization_single_noopt(fractal_compute_server):
 
-    client = portal.FractalClient(fractal_compute_server)
+    client = ptl.FractalClient(fractal_compute_server)
 
     # Add a HOOH
-    hooh = portal.data.get_molecule("hooh.json")
+    hooh = ptl.data.get_molecule("hooh.json")
     initial_distance = hooh.measure([1, 2])
 
     # Options

@@ -5,6 +5,7 @@ All tests should be atomic, that is create and cleanup their data
 """
 
 import pytest
+
 import qcfractal.interface as ptl
 from qcfractal.testing import mongoengine_socket_fixture as storage_socket
 

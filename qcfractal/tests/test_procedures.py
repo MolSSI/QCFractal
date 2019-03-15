@@ -3,8 +3,9 @@ Tests the server compute capabilities.
 """
 
 import pytest
-import qcfractal.interface as portal
 import requests
+
+import qcfractal.interface as ptl
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
 
@@ -14,15 +15,15 @@ from qcfractal.testing import fractal_compute_server
 def test_compute_queue_stack(fractal_compute_server):
 
     # Build a client
-    client = portal.FractalClient(fractal_compute_server)
+    client = ptl.FractalClient(fractal_compute_server)
 
     # Add a hydrogen and helium molecule
-    hydrogen = portal.Molecule.from_data([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
-    helium = portal.Molecule.from_data([[2, 0, 0, 0.0]], dtype="numpy", units="bohr")
+    hydrogen = ptl.Molecule.from_data([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
+    helium = ptl.Molecule.from_data([[2, 0, 0, 0.0]], dtype="numpy", units="bohr")
 
     hydrogen_mol_id, helium_mol_id = client.add_molecules([hydrogen, helium])
 
-    kw = portal.models.KeywordSet(**{"values": {"e_convergence": 1.e-8}})
+    kw = ptl.models.KeywordSet(**{"values": {"e_convergence": 1.e-8}})
     kw_id = client.add_keywords([kw])[0]
 
     # Add compute
@@ -74,8 +75,8 @@ def test_compute_queue_stack(fractal_compute_server):
 def test_procedure_optimization(fractal_compute_server):
 
     # Add a hydrogen molecule
-    hydrogen = portal.Molecule.from_data([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
-    client = portal.FractalClient(fractal_compute_server.get_address(""))
+    hydrogen = ptl.Molecule.from_data([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
+    client = ptl.FractalClient(fractal_compute_server.get_address(""))
     mol_ret = client.add_molecules([hydrogen])
 
     # Add compute
@@ -132,4 +133,3 @@ def test_procedure_optimization(fractal_compute_server):
     r = client.add_procedure("optimization", "geometric", options, [mol_ret[0]])
     assert len(r.ids) == 1
     assert len(r.existing) == 1
-

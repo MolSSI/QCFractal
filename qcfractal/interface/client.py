@@ -430,15 +430,6 @@ class FractalClient(object):
         else:
             return r.data
 
-    def check_results(self, **kwargs):
-
-        kwargs["status"] = None
-        if "projection" in kwargs:
-            kwargs["projection"]["status"] = True
-        else:
-            kwargs["projection"] = {"status": True}
-        return self.query_results(**kwargs)
-
     def query_procedures(self, procedure_query: Dict[str, Any], return_objects: bool=True):
 
         body = ProcedureGETBody(data=procedure_query)
@@ -570,7 +561,6 @@ class FractalClient(object):
         service : Union[GridOptimizationInput, TorsionDriveInput]
             An available service input
         full_return : bool, optional
-
             Returns the full JSON return if True
         tag : Optional[str], optional
             Description

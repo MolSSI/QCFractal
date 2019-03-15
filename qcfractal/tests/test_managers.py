@@ -6,7 +6,8 @@ import time
 from concurrent.futures import ProcessPoolExecutor
 
 import pytest
-import qcfractal.interface as portal
+
+import qcfractal.interface as ptl
 from qcfractal import FractalServer, queue, testing
 from qcfractal.testing import reset_server_database, test_server
 
@@ -14,7 +15,7 @@ from qcfractal.testing import reset_server_database, test_server
 @pytest.fixture(scope="module")
 def compute_adapter_fixture(test_server):
 
-    client = portal.FractalClient(test_server)
+    client = ptl.FractalClient(test_server)
 
     with ProcessPoolExecutor(max_workers=2) as adapter:
 
@@ -30,7 +31,7 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
     manager_other = queue.QueueManager(client, adapter, queue_tag="other")
 
     # Add compute
-    hooh = portal.data.get_molecule("hooh.json")
+    hooh = ptl.data.get_molecule("hooh.json")
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
 
     # Computer with the incorrect tag
@@ -64,7 +65,7 @@ def test_queue_manager_shutdown(compute_adapter_fixture):
 
     manager = queue.QueueManager(client, adapter)
 
-    hooh = portal.data.get_molecule("hooh.json")
+    hooh = ptl.data.get_molecule("hooh.json")
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
 
     # Pull job to manager and shutdown
@@ -102,7 +103,7 @@ def test_queue_manager_heartbeat(compute_adapter_fixture):
         # Clean and re-init the database
         testing.reset_server_database(server)
 
-        client = portal.FractalClient(server)
+        client = ptl.FractalClient(server)
         manager = queue.QueueManager(client, adapter)
 
         sman = server.list_managers(name=manager.name())

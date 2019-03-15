@@ -3,9 +3,10 @@ Tests the on-node procedures compute capabilities.
 """
 
 import pytest
+import requests
+
 import qcfractal
 import qcfractal.interface as ptl
-import requests
 from qcfractal import testing
 
 _users = {

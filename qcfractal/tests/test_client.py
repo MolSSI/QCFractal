@@ -3,7 +3,8 @@ Tests the interface portal adapter to the REST API
 """
 
 import pytest
-import qcfractal.interface as portal
+
+import qcfractal.interface as ptl
 from qcfractal.testing import test_server
 
 # All tests should import test_server, but not use it
@@ -12,9 +13,9 @@ from qcfractal.testing import test_server
 
 def test_client_molecule(test_server):
 
-    client = portal.FractalClient(test_server)
+    client = ptl.FractalClient(test_server)
 
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
 
     # Test add
     ret = client.add_molecules([water])
@@ -30,9 +31,9 @@ def test_client_molecule(test_server):
 
 def test_client_options(test_server):
 
-    client = portal.FractalClient(test_server)
+    client = ptl.FractalClient(test_server)
 
-    opt = portal.models.KeywordSet(values={"one": "fish", "two": "fish"})
+    opt = ptl.models.KeywordSet(values={"one": "fish", "two": "fish"})
 
     # Test add
     ret = client.add_keywords([opt])
@@ -47,11 +48,11 @@ def test_client_options(test_server):
 
 def test_client_duplicate_keywords(test_server):
 
-    client = portal.FractalClient(test_server)
+    client = ptl.FractalClient(test_server)
 
-    opt1 = portal.models.KeywordSet(values={"key": 1})
-    opt2 = portal.models.KeywordSet(values={"key": 2})
-    opt3 = portal.models.KeywordSet(values={"key": 3})
+    opt1 = ptl.models.KeywordSet(values={"key": 1})
+    opt2 = ptl.models.KeywordSet(values={"key": 2})
+    opt3 = ptl.models.KeywordSet(values={"key": 3})
 
     # Test add
     ret = client.add_keywords([opt1, opt1])
@@ -71,7 +72,7 @@ def test_collection_portal(test_server):
 
     db = {"collection": "torsiondrive", "name": "Torsion123", "something": "else", "array": ["54321"]}
 
-    client = portal.FractalClient(test_server)
+    client = ptl.FractalClient(test_server)
 
     # Test add
     _ = client.add_collection(db)
