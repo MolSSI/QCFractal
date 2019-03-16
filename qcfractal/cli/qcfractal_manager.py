@@ -3,13 +3,16 @@ A command line interface to the qcfractal server.
 """
 
 import argparse
+import signal
 from enum import Enum
+from functools import partial
 from typing import List, Optional
 
-from pydantic import BaseSettings, BaseModel, conint, confloat
-import qcfractal
 import tornado.log
+
 import qcengine as qcng
+import qcfractal
+from pydantic import BaseModel, BaseSettings, confloat, conint
 
 from . import cli_utils
 
@@ -292,7 +295,8 @@ def main(args=None):
             raise ValueError("Testing was not successful, failing.")
     else:
 
-        cli_utils.install_signal_handlers(manager.loop, manager.stop)
+        for signame in {"SIGHUP", "SIGINT", "SIGTERM"}:
+            signal.signal(getattr(signal, signame), partial(manager.stop, signame))
 
         # Blocks until keyboard interrupt
         manager.start()
