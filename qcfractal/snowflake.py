@@ -11,6 +11,8 @@ from tornado.ioloop import IOLoop
 from typing import Optional
 
 from .server import FractalServer
+from .interface import FractalClient
+from .queue import QueueManager
 
 
 def _find_port() -> int:
@@ -34,7 +36,11 @@ def _background_process(args, **kwargs):
 
 
 class FractalSnowflake(FractalServer):
-    def __init__(self, max_workers: Optional[int]=1, max_active_services: int=20):
+    def __init__(self,
+                 max_workers: Optional[int]=2,
+                 storage_uri: Optional[str]=None,
+                 storage_project_name: str="temporary_snowflake",
+                 max_active_services: int=20):
         """A temporary FractalServer that can be used to run complex workflows or try
 
 
@@ -44,34 +50,48 @@ class FractalSnowflake(FractalServer):
         ----------
         max_workers : Optional[int], optional
             The maximum number of ProcessPoolExecutor to spin up.
+        storage_uri : Optional[str], optional
+            A database URI to connect to, otherwise builds a default instance in a
+            tempory directory
+        storage_project_name : str, optional
+            The database name
         max_active_services : int, optional
-            Description
+            The maximum number of active services
         """
-        # Startup a MongoDB in background thread and in custom folder.
-        mongod_port = _find_port()
-        self._mongod_tmpdir = tempfile.TemporaryDirectory()
-        self._mongod_proc = _background_process(
-            [shutil.which("mongod"), f"--port={mongod_port}", f"--dbpath={self._mongod_tmpdir.name}"])
 
+        # Startup a MongoDB in background thread and in custom folder.
+        if storage_uri is None:
+            mongod_port = _find_port()
+            self._mongod_tmpdir = tempfile.TemporaryDirectory()
+            self._mongod_proc = _background_process(
+                [shutil.which("mongod"), f"--port={mongod_port}", f"--dbpath={self._mongod_tmpdir.name}"])
+            storage_uri = f"mongodb://localhost:{mongod_port}"
+
+        # Boot workers if needed
         queue_socket = None
         if max_workers:
             queue_socket = ProcessPoolExecutor(max_workers=max_workers)
 
+        # Add the loop to a background thread and init the server
         self.loop = IOLoop()
-        self.loop_thread = ThreadPoolExecutor(max_workers=1)
-        self.loop_future = self.loop_thread.submit(self.loop.start)
+        self.loop_thread = ThreadPoolExecutor(max_workers=3)
+
+        self.logfile = tempfile.NamedTemporaryFile()
 
         super().__init__(
             name="QCFractal Snowflake Instance",
             port=_find_port(),
             loop=self.loop,
-            storage_uri=f"mongodb://localhost:{mongod_port}",
-            storage_project_name="temporary_snowflake",
+            storage_uri=storage_uri,
+            storage_project_name=storage_project_name,
+            ssl_options=False,
             max_active_services=max_active_services,
             queue_socket=queue_socket,
+            logfile_prefix=self.logfile.name,
             query_limit=int(1.e6))
 
         self.start(start_loop=False)
+        self.loop_future = self.loop_thread.submit(self.loop.start)
 
         self._active = True
 

@@ -6,6 +6,7 @@ import asyncio
 import datetime
 import logging
 import ssl
+import time
 import traceback
 
 import tornado.ioloop
@@ -248,7 +249,7 @@ class FractalServer:
 
             # Create the executor
             from concurrent.futures import ThreadPoolExecutor
-            self.executor = ThreadPoolExecutor(max_workers=2)
+            self.executor = ThreadPoolExecutor(max_workers=1)
 
             # Build the queue manager, will not run until loop starts
             self.objects["queue_manager_future"] = self._run_in_thread(self._build_manager)
@@ -268,32 +269,27 @@ class FractalServer:
         Async build the manager so it can talk to itself
         """
         # Add the socket to passed args
-        client = FractalClient(self._address, verify=self.client_verify)
+        client = FractalClient(self)
         self.objects["queue_manager"] = QueueManager(
-            client, self.queue_socket, loop=self.loop, logger=self.logger, manager_name="FractalServer", verbose=False)
+            client, self.queue_socket, logger=self.logger, manager_name="FractalServer", verbose=False)
+        self.objects["queue_manager"].start()
+
+## Start/stop functionality
 
     def start(self, start_loop=True):
         """
         Starts up all IOLoops and processes
         """
 
-        # If we have a queue socket start up the nanny
-        if self.queue_socket is not None:
-
-            # Add canonical queue callback
-            manager = tornado.ioloop.PeriodicCallback(self.update_tasks, 2000)
-            manager.start()
-            self.periodic["queue_manager_update"] = manager
-
         # Add services callback
-        nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, 2000)
-        nanny_services.start()
-        self.periodic["update_services"] = nanny_services
+        # nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, 2000)
+        # nanny_services.start()
+        # self.periodic["update_services"] = nanny_services
 
-        # Add Manager heartbeats
-        heartbeats = tornado.ioloop.PeriodicCallback(self.check_manager_heartbeats, self.heartbeat_frequency * 1000)
-        heartbeats.start()
-        self.periodic["heartbeats"] = heartbeats
+        # # Add Manager heartbeats
+        # heartbeats = tornado.ioloop.PeriodicCallback(self.check_manager_heartbeats, self.heartbeat_frequency * 1000)
+        # heartbeats.start()
+        # self.periodic["heartbeats"] = heartbeats
 
         # Soft quit with a keyboard interrupt
         self.logger.info("FractalServer successfully started.\n")
@@ -308,14 +304,9 @@ class FractalServer:
 
         # Shut down queue manager
         if self.queue_socket is not None:
-            if self.loop_active:
-                # This currently doesn't work, we need to rethink
-                # how the background thread works
-                pass
-                # self._run_in_thread(self.objects["queue_manager"].shutdown)
-            else:
-                self.objects["queue_manager"].shutdown()
-                self.objects["queue_manager"].close_adapter()
+            if "queue_manager" in self.objects:
+                self.objects["queue_manager"].stop()
+            self.objects["queue_manager_future"].cancel()
 
         # Close down periodics
         for cb in self.periodic.values():
@@ -353,6 +344,8 @@ class FractalServer:
         """
         self.exit_callbacks.append((callback, args, kwargs))
 
+## Helpers
+
     def get_address(self, endpoint=None):
         """Obtains the full URI for a given function on the FractalServer
 
@@ -370,6 +363,8 @@ class FractalServer:
             return self._address + endpoint
         else:
             return self._address
+
+## Updates
 
     def update_services(self):
         """Runs through all active services and examines their current status.
@@ -443,11 +438,16 @@ class FractalServer:
             raise AttributeError(
                 "{} is only available if the server was initialized with a queue manager.".format(func_name))
 
-        # Pull the manager and delete
-        if "queue_manager_future" in self.objects:
+        # Wait up to one second for the queue manager to build
+        if "queue_manager" not in self.objects:
             self.logger.info("Waiting on queue_manager to build.")
-            self.objects["queue_manager_future"].result()
-            del self.objects["queue_manager_future"]
+            for x in range(10):
+                time.sleep(0.1)
+                if "queue_manager" in self.objects:
+                    break
+
+            if "queue_manager" not in self.objects:
+                raise AttributeError("QueueManager never constructed.")
 
     def update_tasks(self):
         """Pulls tasks from the queue_adapter, inserts them into the database,

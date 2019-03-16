@@ -90,8 +90,7 @@ class DaskQueueSettings(BaseSettings):
 
     def __init__(self, **kwargs):
         """Enforce that the keys we are going to set remain untouched"""
-        forbidden_set = {
-            "name", "ncores", "memory", "processes", "walltime", "env_extra", "qca_resource_string"}
+        forbidden_set = {"name", "ncores", "memory", "processes", "walltime", "env_extra", "qca_resource_string"}
         bad_set = set(kwargs.keys()) & forbidden_set
         if bad_set:
             raise KeyError("The following items were set as part of dask_jobqueue, however, "
@@ -152,7 +151,8 @@ def parse_args():
     # Additional args
     optional = parser.add_argument_group('Optional Settings')
     optional.add_argument("--test", action="store_true", help="Boot and run a short test suite to validate setup")
-    optional.add_argument("--ntests", type=int, help="How many tests per found program to run, does nothing without --test set")
+    optional.add_argument(
+        "--ntests", type=int, help="How many tests per found program to run, does nothing without --test set")
 
     # Move into nested namespace
     args = vars(parser.parse_args())
