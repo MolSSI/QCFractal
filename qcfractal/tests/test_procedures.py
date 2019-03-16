@@ -79,6 +79,9 @@ def test_procedure_optimization(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server.get_address(""))
     mol_ret = client.add_molecules([hydrogen])
 
+    kw = ptl.models.KeywordSet(values={"scf_properties": ["quadrupole", "wiberg_lowdin_indices"]})
+    kw_id = client.add_keywords([kw])[0]
+
     # Add compute
     options = {
         "keywords": None,
@@ -86,7 +89,7 @@ def test_procedure_optimization(fractal_compute_server):
             "driver": "gradient",
             "method": "HF",
             "basis": "sto-3g",
-            "keywords": None,
+            "keywords": kw_id,
             "program": "psi4"
         },
     }
@@ -115,8 +118,15 @@ def test_procedure_optimization(fractal_compute_server):
         assert len(traj) == len(results[0].energies)
         assert traj[0].provenance.creator.lower() == "psi4"
 
+        # Check keywords went through
+        assert "SCF QUADRUPOLE XY" in traj[0].extras["local_qcvars"]
+        assert "WIBERG_LOWDIN_INDICES" in traj[0].extras["local_qcvars"]
+
+        # Make sure extra was popped
+        assert "_qcfractal_tags" not in traj[0].extras
 
         assert results[0].get_final_molecule().symbols == ["H", "H"]
+
 
         # Check individual elements
         for ind in range(len(results[0].trajectory)):
