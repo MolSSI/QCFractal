@@ -2,7 +2,6 @@
 Queue adapter for Dask
 """
 
-import time
 import traceback
 from typing import Any, Dict, Hashable, List, Tuple
 

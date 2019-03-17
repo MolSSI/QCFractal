@@ -242,9 +242,7 @@ class CollectionHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         body = CollectionPOSTBody.parse_raw(self.request.body)
-        ret = storage.add_collection(
-            body.data.dict(),
-            overwrite=body.meta.overwrite)
+        ret = storage.add_collection(body.data.dict(), overwrite=body.meta.overwrite)
 
         response = CollectionPOSTResponse(**ret)
 

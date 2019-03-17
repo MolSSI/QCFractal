@@ -1,3 +1,4 @@
+import asyncio
 import atexit
 import shutil
 import socket
@@ -11,8 +12,6 @@ from tornado.ioloop import IOLoop
 from typing import Optional
 
 from .server import FractalServer
-from .interface import FractalClient
-from .queue import QueueManager
 
 
 def _find_port() -> int:
@@ -77,6 +76,8 @@ class FractalSnowflake(FractalServer):
             self.queue_socket = ProcessPoolExecutor(max_workers=max_workers)
 
         # Add the loop to a background thread and init the server
+        self.aioloop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.aioloop)
         IOLoop.clear_instance()
         IOLoop.clear_current()
         loop = IOLoop()
@@ -94,7 +95,7 @@ class FractalSnowflake(FractalServer):
             ssl_options=False,
             max_active_services=max_active_services,
             queue_socket=self.queue_socket,
-            # logfile_prefix=self.logfile.name,
+            logfile_prefix=self.logfile.name,
             query_limit=int(1.e6))
 
         if self._mongod_proc:

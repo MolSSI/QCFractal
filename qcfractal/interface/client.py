@@ -230,7 +230,7 @@ class FractalClient(object):
                         id: Optional[List[str]]=None,
                         molecule_hash: Optional[List[str]]=None,
                         molecular_formula: Optional[List[str]]=None,
-                        full_return: bool=False) -> 'List[Molecule]':
+                        full_return: bool=False) -> List[Molecule]:
         """Queries molecules from the database.
 
         Parameters
@@ -452,7 +452,7 @@ class FractalClient(object):
                       keywords: QueryObjectId=None,
                       status: QueryStr="COMPLETE",
                       projection: QueryProjection=None,
-                      full_return: bool=False) -> Union[List[RecordResult], Dict[str, Any]]:
+                      full_return: bool=False) -> Union[List['RecordResult'], Dict[str, Any]]:
         """Queries ResultRecords from the database.
 
         Parameters
@@ -486,7 +486,7 @@ class FractalClient(object):
             Returns a List of found RecordResult's without projection, or a
             dictionary of results with projection.
         """
-        body = ResultGETBody({
+        body = ResultGETBody(**{
             "meta": {
                 "projection": projection
             },
@@ -499,7 +499,7 @@ class FractalClient(object):
                 "method": method,
                 "basis": basis,
                 "keywords": keywords,
-                "status": stats,
+                "status": status,
             }
         })
         r = self._request("get", "result", data=body.json())

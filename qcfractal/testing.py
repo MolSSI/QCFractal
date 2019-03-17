@@ -35,6 +35,8 @@ def _plugin_import(plug):
 
 _import_message = "Not detecting module {}. Install package if necessary and add to envvar PYTHONPATH"
 
+_adapter_testing = ["pool", "dask", "fireworks", "parsl"]
+
 # Figure out what is imported
 _programs = {
     "fireworks": _plugin_import("fireworks"),
@@ -316,9 +318,12 @@ def test_server(request):
     with FractalSnowflake(
             max_workers=0, storage_project_name=storage_name, storage_uri="mongodb://localhost:27017",
             start_server=False) as server:
+        print(server)
 
         # Clean and re-init the database
+        print("Resetting")
         reset_server_database(server)
+        print("Yielding")
         yield server
 
 
@@ -386,9 +391,10 @@ def build_managed_compute_server(mtype):
 
         # Close down and clean the adapter
         manager.close_adapter()
+        manager.stop()
 
 
-@pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
+@pytest.fixture(scope="module", params=_adapter_testing)
 def adapter_client_fixture(request):
     adapter_client = build_adapter_clients(request.param)
     yield adapter_client
@@ -397,7 +403,7 @@ def adapter_client_fixture(request):
     build_queue_adapter(adapter_client).close()
 
 
-@pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
+@pytest.fixture(scope="module", params=_adapter_testing)
 def managed_compute_server(request):
     """
     A FractalServer with compute associated parametrize for all managers
