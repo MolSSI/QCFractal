@@ -8,6 +8,16 @@ from qcfractal import testing
 
 _pwd = os.path.abspath(os.path.dirname(__file__))
 
+def wait_true(wait_time, func, *args, **kwargs):
+
+    periods = wait_time // 4
+    for period in range(periods):
+        ret = func(*args, **kwargs)
+        if ret:
+            return True
+        time.sleep(4)
+
+    return False
 
 @testing.using_psi4
 @testing.using_unix
@@ -28,8 +38,8 @@ def test_local_server_example():
             assert testing.run_process(["python", "build_database.py"], **kwargs)
             assert testing.run_process(["python", "compute_database.py"], **kwargs)
 
-            time.sleep(8)  # Ensure all tasks are completed
-            assert testing.run_process(["python", "query_database.py"], **kwargs)
+            assert wait_true(40, testing.run_process, ["python", "query_database.py"], **kwargs)
+
 
 
 @testing.using_parsl
@@ -55,6 +65,4 @@ def test_parsl_server_example():
             with testing.popen(manager_args, **kwargs) as manager:
 
                 assert testing.run_process(["python", "compute_torsion.py"], **kwargs)
-                time.sleep(30)  # Ensure all tasks are gathered
-
-                assert testing.run_process(["python", "query_torsion.py"], **kwargs)
+                assert wait_true(40, testing.run_process, ["python", "query_torsion.py"], **kwargs)

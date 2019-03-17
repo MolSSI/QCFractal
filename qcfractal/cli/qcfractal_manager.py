@@ -88,7 +88,7 @@ class DaskQueueSettings(BaseSettings):
     def __init__(self, **kwargs):
         """Enforce that the keys we are going to set remain untouched"""
         forbidden_set = {
-            "name", "ncores", "memory", "processes", "walltime", "env_extra", "qca_resource_string"
+            "name", "ncores", "memory", "processes", "walltime", "env_extra", "qca_resource_string"}
         bad_set = set(kwargs.keys()) & forbidden_set
         if bad_set:
             raise KeyError("The following items were set as part of dask_jobqueue, however, "

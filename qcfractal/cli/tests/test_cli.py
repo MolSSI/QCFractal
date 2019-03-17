@@ -56,7 +56,7 @@ def test_manager_executor_manager_boot_from_file(active_server, tmp_path):
     common:
         adapter: pool
         ntasks: 4
-        cores: 4
+        ncores: 4
     server:
         fractal_uri: {}
         verify: False
