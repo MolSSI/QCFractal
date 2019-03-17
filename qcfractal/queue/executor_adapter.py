@@ -46,9 +46,8 @@ class ExecutorAdapter(BaseAdapter):
         return ret
 
     def await_results(self) -> bool:
-        for future in self.queue.values():
-            while future.done() is False:
-                time.sleep(0.1)
+        from concurrent.futures import wait
+        wait(list(self.queue.values()))
 
         return True
 
@@ -72,7 +71,8 @@ class DaskAdapter(ExecutorAdapter):
         func = self.get_function(task_spec["spec"]["function"])
 
         # Watch out out for thread unsafe tasks and our own constraints
-        task = self.client.submit(func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"], resources={"process": 1})
+        task = self.client.submit(
+            func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"], resources={"process": 1})
         return task_spec["id"], task
 
     def await_results(self) -> bool:

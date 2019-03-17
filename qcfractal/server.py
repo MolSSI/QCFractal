@@ -243,6 +243,7 @@ class FractalServer:
         # Queue manager if direct build
         self.queue_socket = queue_socket
         self.executor = None
+        self.futures = []
         if (self.queue_socket is not None):
             if security == "local":
                 raise ValueError("Cannot yet use local security with a internal QueueManager")
@@ -272,7 +273,6 @@ class FractalServer:
         client = FractalClient(self)
         self.objects["queue_manager"] = QueueManager(
             client, self.queue_socket, logger=self.logger, manager_name="FractalServer", verbose=False)
-        self.objects["queue_manager"].start()
 
 ## Start/stop functionality
 
@@ -280,16 +280,19 @@ class FractalServer:
         """
         Starts up all IOLoops and processes
         """
+        if "queue_manager_future" in self.objects:
+            self._check_manager()
+            self.objects["queue_manager"].start()
 
         # Add services callback
-        # nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, 2000)
-        # nanny_services.start()
-        # self.periodic["update_services"] = nanny_services
+        nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, 2000)
+        nanny_services.start()
+        self.periodic["update_services"] = nanny_services
 
-        # # Add Manager heartbeats
-        # heartbeats = tornado.ioloop.PeriodicCallback(self.check_manager_heartbeats, self.heartbeat_frequency * 1000)
-        # heartbeats.start()
-        # self.periodic["heartbeats"] = heartbeats
+        # Add Manager heartbeats
+        heartbeats = tornado.ioloop.PeriodicCallback(self.check_manager_heartbeats, self.heartbeat_frequency * 1000)
+        heartbeats.start()
+        self.periodic["heartbeats"] = heartbeats
 
         # Soft quit with a keyboard interrupt
         self.logger.info("FractalServer successfully started.\n")
@@ -303,9 +306,10 @@ class FractalServer:
         """
 
         # Shut down queue manager
-        if self.queue_socket is not None:
-            if "queue_manager" in self.objects:
-                self.objects["queue_manager"].stop()
+        if "queue_manager" in self.objects:
+            self.objects["queue_manager"].stop()
+
+        if "queue_manager_future" in self.objects:
             self.objects["queue_manager_future"].cancel()
 
         # Close down periodics

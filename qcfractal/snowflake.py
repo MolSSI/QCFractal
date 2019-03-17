@@ -40,11 +40,12 @@ class FractalSnowflake(FractalServer):
                  max_workers: Optional[int]=2,
                  storage_uri: Optional[str]=None,
                  storage_project_name: str="temporary_snowflake",
-                 max_active_services: int=20):
+                 max_active_services: int=20,
+                 start_server: bool=True):
         """A temporary FractalServer that can be used to run complex workflows or try
 
 
-        ! Warning ! All data is lost when the server is shutdown
+        ! Warning ! All data is lost when the server is shutdown.
 
         Parameters
         ----------
@@ -66,15 +67,21 @@ class FractalSnowflake(FractalServer):
             self._mongod_proc = _background_process(
                 [shutil.which("mongod"), f"--port={mongod_port}", f"--dbpath={self._mongod_tmpdir.name}"])
             storage_uri = f"mongodb://localhost:{mongod_port}"
+        else:
+            self._mongod_tmpdir = None
+            self._mongod_proc = None
 
         # Boot workers if needed
-        queue_socket = None
+        self.queue_socket = None
         if max_workers:
-            queue_socket = ProcessPoolExecutor(max_workers=max_workers)
+            self.queue_socket = ProcessPoolExecutor(max_workers=max_workers)
 
         # Add the loop to a background thread and init the server
-        self.loop = IOLoop()
-        self.loop_thread = ThreadPoolExecutor(max_workers=3)
+        IOLoop.clear_instance()
+        IOLoop.clear_current()
+        loop = IOLoop()
+        self.loop = loop
+        self.loop_thread = ThreadPoolExecutor(max_workers=2)
 
         self.logfile = tempfile.NamedTemporaryFile()
 
@@ -86,11 +93,16 @@ class FractalSnowflake(FractalServer):
             storage_project_name=storage_project_name,
             ssl_options=False,
             max_active_services=max_active_services,
-            queue_socket=queue_socket,
+            queue_socket=self.queue_socket,
             logfile_prefix=self.logfile.name,
             query_limit=int(1.e6))
 
-        self.start(start_loop=False)
+        if self._mongod_proc:
+            self.logger.warning("Warning! This is a temporary instance, data will be lost upon shutdown.")
+
+        if start_server:
+            self.start(start_loop=False)
+
         self.loop_future = self.loop_thread.submit(self.loop.start)
 
         self._active = True
@@ -108,11 +120,16 @@ class FractalSnowflake(FractalServer):
 
         super().stop(stop_loop=False)
         self.loop.add_callback(self.loop.stop)
+
         self.loop_thread.shutdown()
 
         if self._mongod_proc is not None:
             self._mongod_proc.kill()
             self._mongod_proc = None
+
+        if self.queue_socket is not None:
+            self.queue_socket.shutdown(wait=False)
+            self.queue_socket = None
 
         # Closed down
         self._active = False
@@ -124,3 +141,10 @@ class FractalSnowflake(FractalServer):
         """
 
         self.stop()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
+        return False

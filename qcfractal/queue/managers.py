@@ -218,7 +218,6 @@ class QueueManager:
             self.heartbeat()
             self.scheduler.enter(heartbeat_time, 1, scheduler_heartbeat)
 
-
         self.logger.info("QueueManager successfully started.\n")
 
         self.scheduler.enter(0, 1, scheduler_update)
@@ -235,8 +234,10 @@ class QueueManager:
         """
         self.logger.info("QueueManager recieved shutdown signal: {}.\n".format(signame))
 
-        for event in self.scheduler.queue:
-            self.scheduler.cancel(event)
+        # Cancel all events
+        if self.scheduler is not None:
+            for event in self.scheduler.queue:
+                self.scheduler.cancel(event)
 
         # Push data back to the server
         self.shutdown()

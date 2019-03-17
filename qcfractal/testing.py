@@ -19,6 +19,7 @@ from tornado.ioloop import IOLoop
 
 from .queue import build_queue_adapter
 from .server import FractalServer
+from .snowflake import FractalSnowflake
 from .storage_sockets import storage_socket_factory
 
 ### Addon testing capabilities
@@ -412,24 +413,15 @@ def fractal_compute_server(request):
     # Check mongo
     check_active_mongo_server()
 
-    # Basic boot and loop information
+    # Storage name
     storage_name = "qcf_compute_server_test"
-    from concurrent.futures import ProcessPoolExecutor
 
-    with ProcessPoolExecutor(max_workers=2) as adapter_client:
-        with loop_in_thread() as loop:
-            server = FractalServer(
-                port=find_open_port(),
-                storage_project_name=storage_name,
-                loop=loop,
-                queue_socket=adapter_client,
-                ssl_options=False)
+    with FractalSnowflake(
+            max_workers=2, storage_project_name=storage_name, storage_uri="mongodb://localhost:27017",
+            start_server=False) as server:
 
-            # Clean and re-init the databse
-            reset_server_database(server)
-
-            # Yield the server instance
-            yield server
+        reset_server_database(server)
+        yield server
 
 
 def build_socket_fixture(stype):
