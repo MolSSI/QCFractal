@@ -250,10 +250,15 @@ class FractalServer:
 
             # Create the executor
             from concurrent.futures import ThreadPoolExecutor
-            self.executor = ThreadPoolExecutor(max_workers=1)
+            self.executor = ThreadPoolExecutor(max_workers=2)
+
+            def _build_manager():
+                client = FractalClient(self)
+                self.objects["queue_manager"] = QueueManager(
+                    client, self.queue_socket, logger=self.logger, manager_name="FractalServer", verbose=False)
 
             # Build the queue manager, will not run until loop starts
-            self.objects["queue_manager_future"] = self._run_in_thread(self._build_manager)
+            self.objects["queue_manager_future"] = self._run_in_thread(_build_manager)
 
     def _run_in_thread(self, func, timeout=5):
         """
@@ -262,17 +267,9 @@ class FractalServer:
         if self.executor is None:
             raise AttributeError("No Executor was created, but run_in_thread was called.")
 
-        fut = self.executor.submit(func)
+        fut = self.loop.run_in_executor(self.executor, func)
         return fut
 
-    def _build_manager(self):
-        """
-        Async build the manager so it can talk to itself
-        """
-        # Add the socket to passed args
-        client = FractalClient(self)
-        self.objects["queue_manager"] = QueueManager(
-            client, self.queue_socket, logger=self.logger, manager_name="FractalServer", verbose=False)
 
 ## Start/stop functionality
 
@@ -281,8 +278,12 @@ class FractalServer:
         Starts up all IOLoops and processes
         """
         if "queue_manager_future" in self.objects:
-            self._check_manager()
-            self.objects["queue_manager"].start()
+            def start_manager():
+                self._check_manager("manager_build")
+                self.objects["queue_manager"].start()
+
+            # Call this after the loop has started
+            self._run_in_thread(start_manager)
 
         # Add services callback
         nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, 2000)
@@ -307,10 +308,7 @@ class FractalServer:
 
         # Shut down queue manager
         if "queue_manager" in self.objects:
-            self.objects["queue_manager"].stop()
-
-        if "queue_manager_future" in self.objects:
-            self.objects["queue_manager_future"].cancel()
+            fut = self._run_in_thread(self.objects["queue_manager"].stop)
 
         # Close down periodics
         for cb in self.periodic.values():
@@ -319,6 +317,10 @@ class FractalServer:
         # Call exit callbacks
         for func, args, kwargs in self.exit_callbacks:
             func(*args, **kwargs)
+
+        # Shutdown executor and futures
+        if "queue_manager_future" in self.objects:
+            self.objects["queue_manager_future"].cancel()
 
         if self.executor is not None:
             self.executor.shutdown()
@@ -445,7 +447,7 @@ class FractalServer:
         # Wait up to one second for the queue manager to build
         if "queue_manager" not in self.objects:
             self.logger.info("Waiting on queue_manager to build.")
-            for x in range(10):
+            for x in range(20):
                 time.sleep(0.1)
                 if "queue_manager" in self.objects:
                     break

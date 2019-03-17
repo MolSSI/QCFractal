@@ -223,10 +223,7 @@ class QueueManager:
         self.scheduler.enter(0, 1, scheduler_update)
         self.scheduler.enter(0, 2, scheduler_heartbeat)
 
-        try:
-            self.scheduler.run()
-        except KeyboardInterrupt:
-            self.stop(signame="Interrupt")
+        self.scheduler.run()
 
     def stop(self, signame="Not provided", signum=None, stack=None) -> None:
         """
@@ -290,7 +287,7 @@ class QueueManager:
         payload = self._payload_template()
         payload["data"]["operation"] = "shutdown"
         put_body = QueueManagerPUTBody(**payload)
-        r = self.client._request("put", "queue_manager", data=put_body.json(), noraise=True)
+        r = self.client._request("put", "queue_manager", data=put_body.json(), noraise=True, timeout=2)
 
         if r.status_code != 200:
             # TODO something as we didnt successfully add the data

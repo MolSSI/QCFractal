@@ -92,17 +92,30 @@ class FractalClient(object):
             self.server_name, self.address, self.username)
         return ret
 
-    def _request(self, method: str, service: str, payload: Dict[str, Any]=None, *, data: str=None,
-                 noraise: bool=False):
+    def _request(self,
+                 method: str,
+                 service: str,
+                 payload: Dict[str, Any]=None,
+                 *,
+                 data: str=None,
+                 noraise: bool=False,
+                 timeout=None):
 
         addr = self.address + service
+        kwargs = {
+            "json": payload,
+            "data": data,
+            "timeout": timeout,
+            "headers": self._headers,
+            "verify": self._verify,
+        }
         try:
             if method == "get":
-                r = requests.get(addr, json=payload, data=data, headers=self._headers, verify=self._verify)
+                r = requests.get(addr, **kwargs)
             elif method == "post":
-                r = requests.post(addr, json=payload, data=data, headers=self._headers, verify=self._verify)
+                r = requests.post(addr, **kwargs)
             elif method == "put":
-                r = requests.put(addr, json=payload, data=data, headers=self._headers, verify=self._verify)
+                r = requests.put(addr, **kwargs)
             else:
                 raise KeyError("Method not understood: '{}'".format(method))
         except requests.exceptions.SSLError as exc:

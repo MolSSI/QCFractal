@@ -296,10 +296,18 @@ def main(args=None):
     else:
 
         for signame in {"SIGHUP", "SIGINT", "SIGTERM"}:
-            signal.signal(getattr(signal, signame), partial(manager.stop, signame))
 
-        # Blocks until keyboard interrupt
-        manager.start()
+            def stop(*args, **kwargs):
+                manager.stop(signame)
+                raise KeyboardInterrupt()
+
+            signal.signal(getattr(signal, signame), stop)
+
+        # Blocks until signal
+        try:
+            manager.start()
+        except KeyboardInterrupt:
+            pass
 
 
 if __name__ == '__main__':

@@ -94,7 +94,7 @@ class FractalSnowflake(FractalServer):
             ssl_options=False,
             max_active_services=max_active_services,
             queue_socket=self.queue_socket,
-            logfile_prefix=self.logfile.name,
+            # logfile_prefix=self.logfile.name,
             query_limit=int(1.e6))
 
         if self._mongod_proc:
