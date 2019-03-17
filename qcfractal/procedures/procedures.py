@@ -251,8 +251,7 @@ class OptimizationTasks(BaseTasks):
 
         qc_spec = QCSpecification(**data.meta["qc_spec"])
         if qc_spec.keywords:
-            qc_keywords = self.storage.get_add_keywords_mixed([meta["keywords"]])["data"][0]["values"]
-
+            qc_keywords = self.storage.get_add_keywords_mixed([qc_spec.keywords])["data"][0]
         else:
             qc_keywords = None
 

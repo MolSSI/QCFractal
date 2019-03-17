@@ -8,6 +8,7 @@ from qcfractal import testing
 
 _pwd = os.path.abspath(os.path.dirname(__file__))
 
+
 def wait_true(wait_time, func, *args, **kwargs):
 
     periods = wait_time // 4

@@ -16,10 +16,7 @@ from .models.rest_models import (
     ResultGETResponse, ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
     TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse)
 
-QueryStr = Optional[Union[List[str], str]]
-QueryInt = Optional[Union[List[int], int]]
-QueryObjectId = Optional[Union[List[ObjectId], ObjectId]]
-QueryProjection = Optional[Dict[str, bool]]
+from .models.rest_models import QueryStr, QueryInt, QueryObjectId, QueryNullObjectId, QueryProjection
 
 
 class FractalClient(object):
@@ -92,17 +89,30 @@ class FractalClient(object):
             self.server_name, self.address, self.username)
         return ret
 
-    def _request(self, method: str, service: str, payload: Dict[str, Any]=None, *, data: str=None,
-                 noraise: bool=False):
+    def _request(self,
+                 method: str,
+                 service: str,
+                 payload: Dict[str, Any]=None,
+                 *,
+                 data: str=None,
+                 noraise: bool=False,
+                 timeout=None):
 
         addr = self.address + service
+        kwargs = {
+            "json": payload,
+            "data": data,
+            "timeout": timeout,
+            "headers": self._headers,
+            "verify": self._verify,
+        }
         try:
             if method == "get":
-                r = requests.get(addr, json=payload, data=data, headers=self._headers, verify=self._verify)
+                r = requests.get(addr, **kwargs)
             elif method == "post":
-                r = requests.post(addr, json=payload, data=data, headers=self._headers, verify=self._verify)
+                r = requests.post(addr, **kwargs)
             elif method == "put":
-                r = requests.put(addr, json=payload, data=data, headers=self._headers, verify=self._verify)
+                r = requests.put(addr, **kwargs)
             else:
                 raise KeyError("Method not understood: '{}'".format(method))
         except requests.exceptions.SSLError as exc:
@@ -220,7 +230,7 @@ class FractalClient(object):
                         id: Optional[List[str]]=None,
                         molecule_hash: Optional[List[str]]=None,
                         molecular_formula: Optional[List[str]]=None,
-                        full_return: bool=False) -> 'List[Molecule]':
+                        full_return: bool=False) -> List[Molecule]:
         """Queries molecules from the database.
 
         Parameters
@@ -394,8 +404,25 @@ class FractalClient(object):
             else:
                 raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
 
-    def add_collection(self, collection: Dict[str, Any], overwrite: bool=False, full_return: bool=False):
+    def add_collection(self, collection: Dict[str, Any], overwrite: bool=False,
+                       full_return: bool=False) -> List[ObjectId]:
+        """Summary
 
+        Parameters
+        ----------
+        collection : Dict[str, Any]
+            The full collection data representation.
+        overwrite : bool, optional
+            Overwrites the collection if it already exists in the database, used for updating collection.
+        full_return : bool, optional
+            If False, returns a Collection object otherwise returns raw JSON
+
+        Returns
+        -------
+        List[ObjectId]
+            The ObjectId's of the added collection.
+
+        """
         # Can take in either molecule or lists
 
         if overwrite and ("id" not in collection or collection['id'] == 'local'):
@@ -414,15 +441,67 @@ class FractalClient(object):
 
 ### Results section
 
-    def query_results(self, **kwargs):
-        projection = kwargs.pop("projection", None)
-        full_return = kwargs.pop("full_return", False)
+    def query_results(self,
+                      id: QueryObjectId=None,
+                      task_id: QueryObjectId=None,
+                      program: QueryStr=None,
+                      molecule: QueryObjectId=None,
+                      driver: QueryStr=None,
+                      method: QueryStr=None,
+                      basis: QueryStr=None,
+                      keywords: QueryObjectId=None,
+                      status: QueryStr="COMPLETE",
+                      projection: QueryProjection=None,
+                      full_return: bool=False) -> Union[List['RecordResult'], Dict[str, Any]]:
+        """Queries ResultRecords from the database.
 
-        payload = {"meta": {}, "data": kwargs}
-        if projection is not None:
-            payload["meta"]["projection"] = projection
+        Parameters
+        ----------
+        id : QueryObjectId, optional
+            Queries the Result ``id`` field.
+        task_id : QueryObjectId, optional
+            Queries the Result ``task_id`` field.
+        program : QueryStr, optional
+            Queries the Result ``program`` field.
+        molecule : QueryObjectId, optional
+            Queries the Result ``molecule`` field.
+        driver : QueryStr, optional
+            Queries the Result ``driver`` field.
+        method : QueryStr, optional
+            Queries the Result ``method`` field.
+        basis : QueryStr, optional
+            Queries the Result ``basis`` field.
+        keywords : QueryObjectId, optional
+            Queries the Result ``keywords`` field.
+        status : QueryStr, optional
+            Queries the Result ``status`` field.
+        projection : QueryProjection, optional
+            Filters the returned fields, will return a dictionary rather than an object.
+        full_return : bool, optional
+            If False, returns a Collection object otherwise returns raw JSON
 
-        body = ResultGETBody(**payload)
+        Returns
+        -------
+        Union[List[RecordResult], Dict[str, Any]]
+            Returns a List of found RecordResult's without projection, or a
+            dictionary of results with projection.
+        """
+        body = ResultGETBody(**{
+            "meta": {
+                "projection": projection
+            },
+            "data": {
+                "id": id,
+                "task_id": task_id,
+                "program": program,
+                "molecule": molecule,
+                "driver": driver,
+                "method": method,
+                "basis": basis,
+                "keywords": keywords,
+                "status": status,
+            }
+        })
         r = self._request("get", "result", data=body.json())
         r = ResultGETResponse.parse_raw(r.text)
 

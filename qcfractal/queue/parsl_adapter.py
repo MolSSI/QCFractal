@@ -87,7 +87,7 @@ class ParslAdapter(BaseAdapter):
         return ret
 
     def await_results(self) -> bool:
-        for future in self.queue.values():
+        for future in list(self.queue.values()):
             while future.done() is False:
                 time.sleep(0.1)
 

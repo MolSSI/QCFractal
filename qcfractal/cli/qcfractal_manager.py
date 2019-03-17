@@ -3,13 +3,16 @@ A command line interface to the qcfractal server.
 """
 
 import argparse
+import signal
 from enum import Enum
+from functools import partial
 from typing import List, Optional
 
-from pydantic import BaseSettings, BaseModel, conint, confloat
-import qcfractal
 import tornado.log
+
 import qcengine as qcng
+import qcfractal
+from pydantic import BaseModel, BaseSettings, confloat, conint
 
 from . import cli_utils
 
@@ -87,8 +90,7 @@ class DaskQueueSettings(BaseSettings):
 
     def __init__(self, **kwargs):
         """Enforce that the keys we are going to set remain untouched"""
-        forbidden_set = {
-            "name", "ncores", "memory", "processes", "walltime", "env_extra", "qca_resource_string"}
+        forbidden_set = {"name", "ncores", "memory", "processes", "walltime", "env_extra", "qca_resource_string"}
         bad_set = set(kwargs.keys()) & forbidden_set
         if bad_set:
             raise KeyError("The following items were set as part of dask_jobqueue, however, "
@@ -149,7 +151,8 @@ def parse_args():
     # Additional args
     optional = parser.add_argument_group('Optional Settings')
     optional.add_argument("--test", action="store_true", help="Boot and run a short test suite to validate setup")
-    optional.add_argument("--ntests", type=int, help="How many tests per found program to run, does nothing without --test set")
+    optional.add_argument(
+        "--ntests", type=int, help="How many tests per found program to run, does nothing without --test set")
 
     # Move into nested namespace
     args = vars(parser.parse_args())
@@ -292,10 +295,19 @@ def main(args=None):
             raise ValueError("Testing was not successful, failing.")
     else:
 
-        cli_utils.install_signal_handlers(manager.loop, manager.stop)
+        for signame in {"SIGHUP", "SIGINT", "SIGTERM"}:
 
-        # Blocks until keyboard interrupt
-        manager.start()
+            def stop(*args, **kwargs):
+                manager.stop(signame)
+                raise KeyboardInterrupt()
+
+            signal.signal(getattr(signal, signame), stop)
+
+        # Blocks until signal
+        try:
+            manager.start()
+        except KeyboardInterrupt:
+            pass
 
 
 if __name__ == '__main__':

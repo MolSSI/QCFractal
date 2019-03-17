@@ -242,9 +242,7 @@ class CollectionHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         body = CollectionPOSTBody.parse_raw(self.request.body)
-        ret = storage.add_collection(
-            body.data.dict(),
-            overwrite=body.meta.overwrite)
+        ret = storage.add_collection(body.data.dict(), overwrite=body.meta.overwrite)
 
         response = CollectionPOSTResponse(**ret)
 
@@ -266,12 +264,7 @@ class ResultHandler(APIHandler):
 
         body = ResultGETBody.parse_raw(self.request.body)
         proj = body.meta.projection
-        if 'id' in body.data:
-            ret = storage.get_results(id=body.data['id'], projection=proj)
-        elif 'task_id' in body.data:
-            ret = storage.get_results(task_id=body.data['task_id'], projection=proj)
-        else:
-            ret = storage.get_results(**body.data, projection=proj)
+        ret = storage.get_results(**body.data.dict(), projection=proj)
         result = ResultGETResponse(**ret)
         self.logger.info("GET: Results - {} pulls.".format(len(result.data)))
         self.write(result.json())

@@ -19,6 +19,7 @@ from tornado.ioloop import IOLoop
 
 from .queue import build_queue_adapter
 from .server import FractalServer
+from .snowflake import FractalSnowflake
 from .storage_sockets import storage_socket_factory
 
 ### Addon testing capabilities
@@ -33,6 +34,8 @@ def _plugin_import(plug):
 
 
 _import_message = "Not detecting module {}. Install package if necessary and add to envvar PYTHONPATH"
+
+_adapter_testing = ["pool", "dask", "fireworks", "parsl"]
 
 # Figure out what is imported
 _programs = {
@@ -311,14 +314,16 @@ def test_server(request):
 
     storage_name = "qcf_local_server_test"
 
-    with loop_in_thread() as loop:
-
-        # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(port=find_open_port(), storage_project_name=storage_name, loop=loop, ssl_options=False)
+    # with loop_in_thread() as loop:
+    with FractalSnowflake(
+            max_workers=0, storage_project_name=storage_name, storage_uri="mongodb://localhost:27017",
+            start_server=False) as server:
+        print(server)
 
         # Clean and re-init the database
+        print("Resetting")
         reset_server_database(server)
-
+        print("Yielding")
         yield server
 
 
@@ -361,6 +366,9 @@ def build_managed_compute_server(mtype):
 
     storage_name = "qcf_compute_server_test"
     adapter_client = build_adapter_clients(mtype, storage_name=storage_name)
+
+    # Build a server with the thread in a outer context loop
+    # Not all adapters play well with internal loops
     with loop_in_thread() as loop:
         server = FractalServer(
             port=find_open_port(),
@@ -383,9 +391,10 @@ def build_managed_compute_server(mtype):
 
         # Close down and clean the adapter
         manager.close_adapter()
+        manager.stop()
 
 
-@pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
+@pytest.fixture(scope="module", params=_adapter_testing)
 def adapter_client_fixture(request):
     adapter_client = build_adapter_clients(request.param)
     yield adapter_client
@@ -394,7 +403,7 @@ def adapter_client_fixture(request):
     build_queue_adapter(adapter_client).close()
 
 
-@pytest.fixture(scope="module", params=["pool", "dask", "fireworks", "parsl"])
+@pytest.fixture(scope="module", params=_adapter_testing)
 def managed_compute_server(request):
     """
     A FractalServer with compute associated parametrize for all managers
@@ -412,24 +421,15 @@ def fractal_compute_server(request):
     # Check mongo
     check_active_mongo_server()
 
-    # Basic boot and loop information
+    # Storage name
     storage_name = "qcf_compute_server_test"
-    from concurrent.futures import ProcessPoolExecutor
 
-    with ProcessPoolExecutor(max_workers=2) as adapter_client:
-        with loop_in_thread() as loop:
-            server = FractalServer(
-                port=find_open_port(),
-                storage_project_name=storage_name,
-                loop=loop,
-                queue_socket=adapter_client,
-                ssl_options=False)
+    with FractalSnowflake(
+            max_workers=2, storage_project_name=storage_name, storage_uri="mongodb://localhost:27017",
+            start_server=False) as server:
 
-            # Clean and re-init the databse
-            reset_server_database(server)
-
-            # Yield the server instance
-            yield server
+        reset_server_database(server)
+        yield server
 
 
 def build_socket_fixture(stype):

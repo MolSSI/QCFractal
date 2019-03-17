@@ -5,19 +5,20 @@ Queue backend abstraction manager.
 import asyncio
 import json
 import logging
+import sched
 import socket
+import time
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Union
 
-import tornado.ioloop
+import qcengine as qcng
 from qcfractal.extras import get_information
 
-import qcengine as qcng
-
-from ..interface.data import get_molecule
-from ..interface.models.rest_models import (QueueManagerMeta, QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody,
-                                            QueueManagerPOSTResponse, QueueManagerPUTBody, QueueManagerPUTResponse)
 from .adapters import build_queue_adapter
+from ..interface.data import get_molecule
+from ..interface.models.rest_models import (QueueManagerGETBody, QueueManagerGETResponse, QueueManagerMeta,
+                                            QueueManagerPOSTBody, QueueManagerPOSTResponse, QueueManagerPUTBody,
+                                            QueueManagerPUTResponse)
 
 __all__ = ["QueueManager"]
 
@@ -42,11 +43,10 @@ class QueueManager:
     def __init__(self,
                  client: Any,
                  queue_client: Any,
-                 loop: Any=None,
                  logger: Optional[logging.Logger]=None,
                  max_tasks: int=200,
                  queue_tag: str=None,
-                 manager_name: str= "unlabled",
+                 manager_name: str="unlabled",
                  update_frequency: Union[int, float]=2,
                  verbose: bool=True,
                  cores_per_task: Optional[int]=None,
@@ -60,8 +60,6 @@ class QueueManager:
             The DBAdapter class for queue abstraction
         storage_socket : DBSocket
             A socket for the backend database
-        loop : IOLoop
-            The running Tornado IOLoop
         logger : logging.Logger, Optional. Default: None
             A logger for the QueueManager
         max_tasks : int
@@ -98,6 +96,7 @@ class QueueManager:
         self.queue_tag = queue_tag
         self.verbose = verbose
 
+        self.scheduler = None
         self.update_frequency = update_frequency
         self.periodic = {}
         self.active = 0
@@ -106,9 +105,6 @@ class QueueManager:
         # QCEngine data
         self.available_programs = qcng.list_available_programs()
         self.available_procedures = qcng.list_available_procedures()
-
-        # Pull the current loop if we need it
-        self.loop = loop or tornado.ioloop.IOLoop.current()
 
         self.logger.info("QueueManager:")
         self.logger.info("    Version:         {}\n".format(get_information("version")))
@@ -164,7 +160,8 @@ class QueueManager:
             self.logger.info("        Not connected, some actions will not be available")
 
     def _payload_template(self):
-        meta = QueueManagerMeta(**self.name_data.copy(),
+        meta = QueueManagerMeta(
+            **self.name_data.copy(),
 
             # Version info
             qcengine_version=qcng.__version__,
@@ -176,8 +173,7 @@ class QueueManager:
             # Pull info
             programs=self.available_programs,
             procedures=self.available_procedures,
-            tag=self.queue_tag,
-            )
+            tag=self.queue_tag, )
 
         return {"meta": meta, "data": {}}
 
@@ -211,27 +207,34 @@ class QueueManager:
 
         self.assert_connected()
 
-        self.logger.info("QueueManager successfully started. Starting IOLoop.\n")
+        self.scheduler = sched.scheduler(time.time, time.sleep)
+        heartbeat_time = int(0.8 * self.heartbeat_frequency)
 
-        # Add services callback, cb freq is given in milliseconds
-        update = tornado.ioloop.PeriodicCallback(self.update, 1000 * self.update_frequency)
-        update.start()
-        self.periodic["update"] = update
+        def scheduler_update():
+            self.update()
+            self.scheduler.enter(self.update_frequency, 1, scheduler_update)
 
-        # Add heartbeat
-        heartbeat_frequency = int(0.8 * 1000 * self.heartbeat_frequency)  # Beat at 80% of cutoff time
-        heartbeat = tornado.ioloop.PeriodicCallback(self.heartbeat, heartbeat_frequency)
-        heartbeat.start()
-        self.periodic["heartbeat"] = heartbeat
+        def scheduler_heartbeat():
+            self.heartbeat()
+            self.scheduler.enter(heartbeat_time, 1, scheduler_heartbeat)
 
-        # Soft quit with a keyboard interrupt
-        self.running = True
-        self.loop.start()
+        self.logger.info("QueueManager successfully started.\n")
 
-    def stop(self) -> None:
+        self.scheduler.enter(0, 1, scheduler_update)
+        self.scheduler.enter(0, 2, scheduler_heartbeat)
+
+        self.scheduler.run()
+
+    def stop(self, signame="Not provided", signum=None, stack=None) -> None:
         """
         Shuts down all IOLoops and periodic updates
         """
+        self.logger.info("QueueManager recieved shutdown signal: {}.\n".format(signame))
+
+        # Cancel all events
+        if self.scheduler is not None:
+            for event in self.scheduler.queue:
+                self.scheduler.cancel(event)
 
         # Push data back to the server
         self.shutdown()
@@ -239,20 +242,11 @@ class QueueManager:
         # Close down the adapter
         self.close_adapter()
 
-        # Stop callbacks
-        for cb in self.periodic.values():
-            cb.stop()
-
         # Call exit callbacks
         for func, args, kwargs in self.exit_callbacks:
             func(*args, **kwargs)
 
-        # Stop loop
-        if not asyncio.get_event_loop().is_running():  # Only works on Py3
-            self.loop.stop()
-
-        self.loop.close(all_fds=True)
-        self.logger.info("QueueManager stopping gracefully. Stopped IOLoop.\n")
+        self.logger.info("QueueManager stopping gracefully.\n")
 
     def close_adapter(self) -> bool:
         """
@@ -280,7 +274,6 @@ class QueueManager:
         else:
             self.logger.info("Heartbeat was successful.")
 
-
         _ = QueueManagerPUTResponse.parse_raw(r.text)  # Validate
 
     def shutdown(self) -> Dict[str, Any]:
@@ -289,10 +282,12 @@ class QueueManager:
         """
         self.assert_connected()
 
+        self.update(new_tasks=False)
+
         payload = self._payload_template()
         payload["data"]["operation"] = "shutdown"
         put_body = QueueManagerPUTBody(**payload)
-        r = self.client._request("put", "queue_manager", data=put_body.json(), noraise=True)
+        r = self.client._request("put", "queue_manager", data=put_body.json(), noraise=True, timeout=2)
 
         if r.status_code != 200:
             # TODO something as we didnt successfully add the data
@@ -325,7 +320,6 @@ class QueueManager:
 
         """
 
-        self.logger.info("Starting update.")
         self.assert_connected()
 
         results = self.queue_adapter.acquire_complete()
@@ -341,9 +335,10 @@ class QueueManager:
                 self.logger.warning("Post complete tasks was not successful. Data may be lost.")
 
             _ = QueueManagerPOSTResponse.parse_raw(r.text)  # Ensure validation from server
-            self.logger.info("Pushed {} complete tasks to the server.".format(len(results)))
 
             self.active -= len(results)
+
+        self.logger.info("Pushed {} complete tasks to the server.".format(len(results)))
 
         open_slots = max(0, self.max_tasks - self.active)
 
@@ -461,7 +456,6 @@ class QueueManager:
 
         results = self.queue_adapter.acquire_complete()
         self.logger.info("Testing results acquired.")
-
 
         missing_programs = results.keys() - set(found_programs)
         if len(missing_programs):

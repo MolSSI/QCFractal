@@ -3,7 +3,7 @@ Models for the REST interface
 """
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from pydantic import BaseConfig, BaseModel, validator
+from pydantic import BaseConfig, BaseModel, constr, validator
 
 from .common_models import KeywordSet, Molecule, ObjectId
 from .gridoptimization import GridOptimizationInput
@@ -28,9 +28,13 @@ __all__ = [
 
 ### Generic and Common Models
 
+nullstr = constr(regex='null')
+
 QueryStr = Optional[Union[List[str], str]]
 QueryInt = Optional[Union[List[int], int]]
 QueryObjectId = Optional[Union[List[ObjectId], ObjectId]]
+QueryNullObjectId = Optional[Union[List[ObjectId], ObjectId, List[nullstr], nullstr]]
+QueryProjection = Optional[Dict[str, bool]]
 
 
 class RESTConfig(BaseConfig):
@@ -54,6 +58,7 @@ class ResponsePOSTMeta(ResponseMeta):
     duplicates: Union[List[str], List[Tuple[str, str]]]
     validation_errors: List[str]
 
+
 class QueryMeta(BaseModel):
     projection: Optional[Dict[str, bool]] = None
     limit: Optional[int] = None
@@ -61,6 +66,7 @@ class QueryMeta(BaseModel):
 
     class Config:
         extra = "forbid"
+
 
 ### KVStore
 
@@ -197,22 +203,42 @@ class CollectionPOSTResponse(BaseModel):
 
 
 class ResultGETBody(BaseModel):
+    class Data(BaseModel):
+        id: QueryObjectId = None
+        task_id: QueryObjectId = None
+
+        program: QueryStr = None
+        molecule: QueryObjectId = None
+        driver: QueryStr = None
+        method: QueryStr = None
+        basis: QueryStr = None
+        keywords: QueryNullObjectId = None
+
+        status: QueryStr = "COMPLETE"
+
+        class Config(RESTConfig):
+            pass
+
+        @validator('keywords', pre=True)
+        def validate_keywords(cls, v):
+            if v is None:
+                v = 'null'
+            return v
+
+        @validator('basis', pre=True)
+        def validate_basis(cls, v):
+            if (v is None) or (v == ""):
+                v = 'null'
+            return v
+
     class Meta(BaseModel):
         projection: Dict[str, Any] = None
 
-    meta: Meta = Meta()
-    data: Dict[str, Any]
+        class Config(RESTConfig):
+            pass
 
-    @validator("data", whole=True)
-    def only_data_keys(cls, v):
-        # We should throw a warning here for unused keys
-        valid_keys = {"program", "molecule", "driver", "method", "basis", "keywords", "task_id", "id", "status"}
-        data = {key: v[key] for key in (v.keys() & valid_keys)}
-        if "keywords" in data and data["keywords"] is None:
-            data["keywords"] = 'null'
-        if "basis" in data and ((data["basis"] is None) or (data["basis"] == "")):
-            data["basis"] = 'null'
-        return data
+    meta: Meta = Meta()
+    data: Data
 
 
 class ResultGETResponse(BaseModel):
@@ -250,7 +276,6 @@ class ProcedureGETReponse(BaseModel):
 
 
 class TaskQueueGETBody(BaseModel):
-
     class Data(BaseModel):
         id: QueryObjectId = None
         hash_index: QueryStr = None
@@ -309,6 +334,7 @@ class ServiceQueueGETBody(BaseModel):
 
     meta: QueryMeta
     data: Data
+
 
 class ServiceQueueGETResponse(BaseModel):
     meta: ResponseGETMeta
