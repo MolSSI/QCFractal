@@ -312,14 +312,13 @@ def test_server(request):
 
     storage_name = "qcf_local_server_test"
 
-    with loop_in_thread() as loop:
-
-        # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(port=find_open_port(), storage_project_name=storage_name, loop=loop, ssl_options=False)
+    # with loop_in_thread() as loop:
+    with FractalSnowflake(
+            max_workers=0, storage_project_name=storage_name, storage_uri="mongodb://localhost:27017",
+            start_server=False) as server:
 
         # Clean and re-init the database
         reset_server_database(server)
-
         yield server
 
 
@@ -362,6 +361,9 @@ def build_managed_compute_server(mtype):
 
     storage_name = "qcf_compute_server_test"
     adapter_client = build_adapter_clients(mtype, storage_name=storage_name)
+
+    # Build a server with the thread in a outer context loop
+    # Not all adapters play well with internal loops
     with loop_in_thread() as loop:
         server = FractalServer(
             port=find_open_port(),

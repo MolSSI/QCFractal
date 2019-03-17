@@ -120,6 +120,7 @@ class FractalSnowflake(FractalServer):
 
         super().stop(stop_loop=False)
         self.loop.add_callback(self.loop.stop)
+        self.loop_future.result()
 
         self.loop_thread.shutdown()
 
