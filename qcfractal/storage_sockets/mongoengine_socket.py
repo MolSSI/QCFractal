@@ -29,7 +29,7 @@ from mongoengine.connection import disconnect, get_db
 from .me_models import (CollectionORM, KeywordsORM, KVStoreORM, MoleculeORM, ProcedureORM, QueueManagerORM, ResultORM,
                         ServiceQueueORM, TaskQueueORM, UserORM)
 from .storage_utils import add_metadata_template, get_metadata_template
-from ..interface.models import KeywordSet, Molecule, ResultRecord, prepare_basis
+from ..interface.models import KeywordSet, Molecule, ResultRecord, TaskRecord, prepare_basis
 
 
 def _str_to_indices_with_errors(ids: List[Union[str, ObjectId]]):
@@ -392,7 +392,8 @@ class MongoengineSocket:
         ret["meta"]["n_found"] = data.count()  # all data count, can be > len(data)
         ret["meta"]["errors"].extend(errors)
 
-        data = [Molecule(**d.to_json_obj()) for d in data]
+        # Data validated going in
+        data = [Molecule(**d.to_json_obj(), validate=False) for d in data]
         ret["data"] = data
 
         return ret
@@ -1186,7 +1187,7 @@ class MongoengineSocket:
 
 ### Mongo queue handling functions
 
-    def queue_submit(self, data: List[Dict]):
+    def queue_submit(self, data: List[TaskRecord]):
         """Submit a list of tasks to the queue.
         Tasks are unique by their base_result, which should be inserted into
         the DB first before submitting it's corresponding task to the queue
@@ -1219,27 +1220,21 @@ class MongoengineSocket:
         meta = add_metadata_template()
 
         results = []
-        for task_num, d in enumerate(data):
+        for task_num, record in enumerate(data):
             try:
-                if not isinstance(d['base_result'], tuple):
-                    raise Exception("base_result must be a tuple not {}.".format(type(d['base_result'])))
 
-                # If saved as DBRef, then use raw query to retrieve (avoid this)
-                # if d['base_result'][0] in ('results', 'procedure'):
-                #     base_result = DBRef(d['base_result'][0], d['base_result'][1])
-
-                d.pop("id", None)
                 result_obj = None
-                if d['base_result'][0] == 'results':
-                    result_obj = ResultORM(id=d['base_result'][1])
-                elif d['base_result'][0] == 'procedure':
-                    result_obj = ProcedureORM(id=d['base_result'][1])
+                if record.base_result.ref == 'result':
+                    result_obj = ResultORM(id=record.base_result.id)
+                elif record.base_result.ref == 'procedure':
+                    result_obj = ProcedureORM(id=record.base_result.id)
                 else:
                     raise TypeError("Base_result type must be 'results' or 'procedure',"
-                                    " {} is given.".format(d['base_result'][0]))
-                task = TaskQueueORM(**d)
+                                    " {} is given.".format(record.base_result.ref))
+                task = TaskQueueORM(**record.json_dict(exclude={"id", "base_result"}))
                 task.base_result = result_obj
                 task.save()
+
                 result_obj.update(task_id=str(task.id))  # update bidirectional rel
                 results.append(str(task.id))
                 meta['n_inserted'] += 1
@@ -1249,10 +1244,11 @@ class MongoengineSocket:
 
                 # If base_result is stored as a ResultORM or ProcedureORM class, get it with:
                 task = TaskQueueORM.objects(base_result=result_obj).first()
-                self.logger.warning('queue_submit got a duplicate task: ', task.to_mongo())
+                self.logger.warning('queue_submit got a duplicate task: {}'.format(task.to_mongo()))
                 results.append(str(task.id))
                 meta['duplicates'].append(task_num)
             except Exception as err:
+                self.logger.warning('queue_submit submission error: {}'.format(str(err)))
                 meta["success"] = False
                 meta["errors"].append(str(err))
                 results.append(None)
@@ -1262,15 +1258,19 @@ class MongoengineSocket:
         ret = {"data": results, "meta": meta}
         return ret
 
-    def queue_get_next(self, manager, limit=100, tag=None, as_json=True):
+    def queue_get_next(self, manager, available_programs, available_procedures, limit=100, tag=None,
+                       as_json=True) -> List[TaskRecord]:
         """TODO: needs to be done in a transcation"""
 
         # Figure out query, tagless has no requirements
-        query = {"status": "WAITING"}
-        if tag is not None:
-            query["tag"] = tag
+        query, error = format_query(
+            status="WAITING",
+            program=available_programs,
+            procedure=available_procedures,  # Procedue can be none, explicitly include
+            tag=tag)
+        query["procedure__in"].append(None)
 
-        found = TaskQueueORM.objects(**query).limit(limit).order_by('created_on')
+        found = TaskQueueORM.objects(**query).limit(limit).order_by('-priority', 'created_on')
 
         query = {"_id": {"$in": [x.id for x in found]}}
 
@@ -1283,20 +1283,15 @@ class MongoengineSocket:
             }})
 
         if as_json:
-            found = [task.to_json_obj() for task in found]
+            found = [TaskRecord(**task.to_json_obj()) for task in found]
 
         if upd.modified_count != len(found):
             self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
 
         return found
 
-    # def get_queue_(self, query, projection=None):
-    #     """TODO: to be replaced with a specific query, add limit"""
-    #
-    #     return self._get_generic(query, "task_queue", allow_generic=True, projection=projection)
-
     def get_queue(self,
-                  ids=None,
+                  id=None,
                   hash_index=None,
                   program=None,
                   status: str=None,
@@ -1335,7 +1330,7 @@ class MongoengineSocket:
         """
 
         meta = get_metadata_template()
-        query, error = format_query(program=program, id__in=ids, hash_index=hash_index, status=status)
+        query, error = format_query(program=program, id=id, hash_index=hash_index, status=status)
 
         q_limit = self.get_limit(limit)
 
@@ -1352,16 +1347,16 @@ class MongoengineSocket:
             meta['error_description'] = str(err)
 
         if return_json:
-            data = [d.to_json_obj(with_ids) for d in data]
+            data = [TaskRecord(**task.to_json_obj()) for task in data]
 
         return {"data": data, "meta": meta}
 
-    def queue_get_by_id(self, ids: List[str], limit: int=None, skip: int=0, as_json: bool=True):
+    def queue_get_by_id(self, id: List[str], limit: int=None, skip: int=0, as_json: bool=True):
         """Get tasks by their IDs
 
         Parameters
         ----------
-        ids : list of str
+        id : list of str
             List of the task Ids in the DB
         limit : int (optional)
             max number of returned tasks. If limit > max_limit, max_limit
@@ -1374,10 +1369,10 @@ class MongoengineSocket:
         list of the found tasks
         """
 
-        found = TaskQueueORM.objects(id__in=ids).limit(self.get_limit(limit)).skip(skip)
+        found = TaskQueueORM.objects(id__in=id).limit(self.get_limit(limit)).skip(skip)
 
         if as_json:
-            found = [task.to_json_obj() for task in found]
+            found = [TaskRecord(**task.to_json_obj()) for task in found]
 
         return found
 

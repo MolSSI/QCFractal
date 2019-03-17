@@ -28,6 +28,7 @@ class APIHandler(tornado.web.RequestHandler):
         self.set_header("Content-Type", "application/json")
         self.objects = objects
         self.logger = objects["logger"]
+        self.username = None
 
     def prepare(self):
         if self._required_auth:
@@ -52,6 +53,8 @@ class APIHandler(tornado.web.RequestHandler):
         else:
             username = None
             password = None
+
+        self.username = username
 
         verified, msg = self.objects["storage_socket"].verify_user(username, password, permission)
         if verified is False:

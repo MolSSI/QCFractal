@@ -269,33 +269,50 @@ class ReactionDataset(Dataset):
 
         return True
 
-    def compute(self, method, basis, driver=None, keywords=None, program=None, stoich="default", ignore_ds_type=False, tag=None):
+    def compute(self,
+                method: Optional[str],
+                basis: Optional[str]=None,
+                *,
+                driver: Optional[str]=None,
+                keywords: Optional[str]=None,
+                program: Optional[str]=None,
+                stoich: str="default",
+                ignore_ds_type: bool=False,
+                tag: Optional[str]=None,
+                priority: Optional[str]=None):
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
         Parameters
         ----------
-        method : str
+        method : Optional[str]
             The computational method to compute (B3LYP)
-        basis : str
+        basis : Optional[str], optional
             The computational basis to compute (6-31G)
-        driver : str, optional
+        driver : Optional[str], optional
             The type of computation to run (energy, gradient, etc)
+        keywords : Optional[str], optional
+            The keyword alias for the requested compute
+        program : Optional[str], optional
+            The underlying QC program
         stoich : str, optional
             The stoichiometry of the requested compute (cp/nocp/etc)
-        keywords : str, optional
-            The keyword alias for the requested compute
-        program : str, optional
-            The underlying QC program
         ignore_ds_type : bool, optional
             Optionally only compute the "default" geometry
-        tag : str, optional
+        tag : Optional[str], optional
             The queue tag to use when submitting compute requests.
+        priority : Optional[str], optional
+            The priority of the jobs low, medium, or high.
 
         Returns
         -------
         ret : dict
             A dictionary of the keys for all requested computations
+
+        Raises
+        ------
+        AttributeError
+            Description
         """
         self._check_state()
 
@@ -332,7 +349,8 @@ class ReactionDataset(Dataset):
         umols = np.setdiff1d(umols, complete_mols)
         compute_list = list(umols)
 
-        ret = self.client.add_compute(program, method.lower(), basis.lower(), driver, keywords, compute_list, tag=tag)
+        ret = self.client.add_compute(
+            program, method, basis, driver, keywords, compute_list, tag=tag, priority=priority)
 
         # Update the record that this was computed
         self._add_history(

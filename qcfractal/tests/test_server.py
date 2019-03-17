@@ -5,8 +5,9 @@ Tests the DQM Server class
 import threading
 
 import pytest
-import qcfractal.interface as portal
 import requests
+
+import qcfractal.interface as ptl
 from qcfractal import FractalServer
 from qcfractal.testing import check_active_mongo_server, find_open_port, pristine_loop, test_server
 
@@ -39,7 +40,7 @@ def test_start_stop():
 
 def test_server_information(test_server):
 
-    client = portal.FractalClient(test_server)
+    client = ptl.FractalClient(test_server)
 
     server_info = client.server_information()
     assert {"name", "heartbeat_frequency"} <= server_info.keys()
@@ -48,7 +49,7 @@ def test_server_information(test_server):
 def test_molecule_socket(test_server):
 
     mol_api_addr = test_server.get_address("molecule")
-    water = portal.data.get_molecule("water_dimer_minima.psimol")
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
 
     # Add a molecule
     r = requests.post(mol_api_addr, json={"meta": {}, "data": [water.json_dict()]})

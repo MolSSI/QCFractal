@@ -8,13 +8,18 @@ from typing import Any, Dict, List, Optional, Union
 import requests
 
 from .collections import collection_factory, collections_name_map
-from .models import GridOptimizationInput, Molecule, TorsionDriveInput, build_procedure
+from .models import GridOptimizationInput, Molecule, ObjectId, TorsionDriveInput, build_procedure
 from .models.rest_models import (
     CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse, KeywordGETBody,
     KeywordGETResponse, KeywordPOSTBody, KeywordPOSTResponse, KVStoreGETBody, KVStoreGETResponse, MoleculeGETBody,
     MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse, ProcedureGETBody, ProcedureGETReponse, ResultGETBody,
     ResultGETResponse, ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
     TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse)
+
+QueryStr = Optional[Union[List[str], str]]
+QueryInt = Optional[Union[List[int], int]]
+QueryObjectId = Optional[Union[List[ObjectId], ObjectId]]
+QueryProjection = Optional[Dict[str, bool]]
 
 
 class FractalClient(object):
@@ -111,7 +116,7 @@ class FractalClient(object):
             raise requests.exceptions.ConnectionError(error_msg)
 
         if (r.status_code != 200) and (not noraise):
-            raise requests.exceptions.HTTPError("Server communication failure. Reason: {}".format(r.reason))
+            raise IOError("Server communication failure. Reason: {}".format(r.reason))
 
         return r
 
@@ -272,7 +277,8 @@ class FractalClient(object):
 
 ### Keywords section
 
-    def query_keywords(self, id: List[str]=None, *, hash_index: List[str]=None, full_return: bool=False) -> 'List[KeywordSet]':
+    def query_keywords(self, id: List[str]=None, *, hash_index: List[str]=None,
+                       full_return: bool=False) -> 'List[KeywordSet]':
         """Obtains KeywordSets from the server using keyword ids.
 
         Parameters
@@ -430,15 +436,6 @@ class FractalClient(object):
         else:
             return r.data
 
-    def check_results(self, **kwargs):
-
-        kwargs["status"] = None
-        if "projection" in kwargs:
-            kwargs["projection"]["status"] = True
-        else:
-            kwargs["projection"] = {"status": True}
-        return self.query_results(**kwargs)
-
     def query_procedures(self, procedure_query: Dict[str, Any], return_objects: bool=True):
 
         body = ProcedureGETBody(data=procedure_query)
@@ -464,8 +461,9 @@ class FractalClient(object):
                     driver: str,
                     keywords: Union[str, None],
                     molecule_id: Union[str, Molecule, List[Union[str, Molecule]]],
-                    full_return: bool=False,
-                    tag: str=None) -> Union[TaskQueuePOSTResponse, TaskQueuePOSTResponse.Data]:
+                    priority: str=None,
+                    tag: str=None,
+                    full_return: bool=False) -> Union[TaskQueuePOSTResponse, TaskQueuePOSTResponse.Data]:
 
         # Always a list
         if not isinstance(molecule_id, list):
@@ -480,6 +478,7 @@ class FractalClient(object):
                 "basis": basis,
                 "keywords": keywords,
                 "tag": tag,
+                "priority": priority,
             },
             "data": molecule_id
         }
@@ -499,6 +498,8 @@ class FractalClient(object):
                       program: str,
                       program_options: Dict[str, Any],
                       molecule_id: List[str],
+                      tag: str=None,
+                      priority: str=None,
                       full_return: bool=False):
 
         # Always a list
@@ -509,12 +510,15 @@ class FractalClient(object):
             "meta": {
                 "procedure": procedure,
                 "program": program,
+                "tag": tag,
+                "priority": priority,
             },
             "data": molecule_id
         }
         payload["meta"].update(program_options)
 
-        r = self._request("post", "task_queue", payload)
+        body = TaskQueuePOSTBody(**payload)
+        r = self._request("post", "task_queue", data=body.json())
         r = TaskQueuePOSTResponse.parse_raw(r.text)
 
         if full_return:
@@ -522,15 +526,25 @@ class FractalClient(object):
         else:
             return r.data
 
-    def check_tasks(self, query: Dict[str, Any], projection: Optional[Dict[str, Any]]=None, full_return: bool=False):
+    def query_tasks(self,
+                    id: QueryObjectId=None,
+                    hash_index: QueryStr=None,
+                    program: QueryStr=None,
+                    status: QueryStr=None,
+                    projection: QueryProjection=None,
+                    full_return: bool=False):
         """Checks the status of tasks in the Fractal queue.
 
         Parameters
         ----------
-        query : dict
-            A query to find tasks
-        projection: dict, optional
-            Projection of data to call from the database
+        id : QueryObjectId, optional
+            Queries the Services ``id`` field.
+        hash_index : QueryStr, optional
+            Queries the Services ``procedure_id`` field.
+        status : QueryStr, optional
+            Queries the Services ``status`` field.
+        projection : QueryProjection, optional
+            Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
             Returns the full JSON return if True
 
@@ -540,12 +554,22 @@ class FractalClient(object):
             A dictionary of each match that contains the current status
             and, if an error has occured, the error message.
 
-        >>> client.check_tasks({"id": "5bd35af47b878715165f8225"})
+        >>> client.check_tasks(id="5bd35af47b878715165f8225", projection={"status": True})
         [{"status": "WAITING"}]
+
         """
 
-        payload = {"meta": {"projection": projection}, "data": query}
-        body = TaskQueueGETBody(**payload)
+        body = TaskQueueGETBody(**{
+            "meta": {
+                "projection": projection
+            },
+            "data": {
+                "id": id,
+                "hash_index": hash_index,
+                "program": program,
+                "status": status
+            }
+        })
 
         r = self._request("get", "task_queue", data=body.json())
         r = TaskQueueGETResponse.parse_raw(r.text)
@@ -555,9 +579,30 @@ class FractalClient(object):
         else:
             return r.data
 
-    def add_service(self, service: Union[GridOptimizationInput, TorsionDriveInput], full_return: bool=False):
+    def add_service(self,
+                    service: Union[GridOptimizationInput, TorsionDriveInput],
+                    full_return: bool=False,
+                    tag: Optional[str]=None,
+                    priority: Optional[str]=None):
+        """Summary
 
-        body = ServiceQueuePOSTBody(meta={}, data=service)
+        Parameters
+        ----------
+        service : Union[GridOptimizationInput, TorsionDriveInput]
+            An available service input
+        full_return : bool, optional
+            Returns the full JSON return if True
+        tag : Optional[str], optional
+            The compute tag to add the service under.
+        priority : Optional[str], optional
+            The priority of the job within the compute queue.
+
+        Returns
+        -------
+        TYPE
+            Description
+        """
+        body = ServiceQueuePOSTBody(meta={"tag": tag, "priority": priority}, data=service)
 
         r = self._request("post", "service_queue", data=body.json())
         r = ServiceQueuePOSTResponse.parse_raw(r.text)
@@ -567,13 +612,27 @@ class FractalClient(object):
         else:
             return r.data
 
-    def check_services(self, query: Dict[str, Any], full_return: bool=False):
+    def query_services(self,
+                       id: QueryObjectId=None,
+                       procedure_id: QueryObjectId=None,
+                       hash_index: QueryStr=None,
+                       status: QueryStr=None,
+                       projection: QueryProjection=None,
+                       full_return: bool=False):
         """Checks the status of services in the Fractal queue.
 
         Parameters
         ----------
-        query : dict
-            A query to find services
+        id : QueryObjectId, optional
+            Queries the Services ``id`` field.
+        procedure_id : QueryObjectId, optional
+            Queries the Services ``procedure_id`` field, or the ObjectId of the procedure associated with the service.
+        hash_index : QueryStr, optional
+            Queries the Services ``procedure_id`` field.
+        status : QueryStr, optional
+            Queries the Services ``status`` field.
+        projection : QueryProjection, optional
+            Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
             Returns the full JSON return if True
 
@@ -583,13 +642,22 @@ class FractalClient(object):
             A dictionary of each match that contains the current status
             and, if an error has occurred, the error message.
 
-        >>> client.check_services({"id": "5bd35af47b878715165f8225"})
+        >>> client.check_services(id="5bd35af47b878715165f8225", projection={"status": True})
         [{"status": "RUNNING"}]
+
         """
 
-        payload = {"meta": {}, "data": query}
-
-        body = ServiceQueueGETBody(**payload)
+        body = ServiceQueueGETBody(**{
+            "meta": {
+                "projection": projection
+            },
+            "data": {
+                "id": id,
+                "procedure_id": procedure_id,
+                "hash_index": hash_index,
+                "status": status
+            }
+        })
 
         r = self._request("get", "service_queue", data=body.json())
         r = ServiceQueueGETResponse.parse_raw(r.text)

@@ -126,7 +126,7 @@ class BaseAdapter(abc.ABC):
             queue_key, task = self._submit_task(task_spec)
 
             self.queue[queue_key] = task
-            self.logger.info("Adapter: Task submitted {}".format(tag))
+            # self.logger.info("Adapter: Task submitted {}".format(tag))
             ret.append(tag)
         return ret
 

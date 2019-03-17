@@ -5,11 +5,13 @@ Queue backend abstraction manager.
 import collections
 import traceback
 
+import tornado.web
+
 from ..interface.models.rest_models import (
     QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse, QueueManagerPUTBody,
     QueueManagerPUTResponse, ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody,
     ServiceQueuePOSTResponse, TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse)
-from ..procedures import get_procedure_parser
+from ..procedures import get_procedure_parser, check_procedure_available
 from ..services import initialize_service
 from ..web_handlers import APIHandler
 
@@ -31,7 +33,16 @@ class TaskQueueHandler(APIHandler):
         post = TaskQueuePOSTBody.parse_raw(self.request.body)
 
         # Format and submit tasks
+        if not check_procedure_available(post.meta["procedure"]):
+            raise tornado.web.HTTPError(status_code=400, reason="Unknown procedure {}.".format(post.meta["procedure"]))
+
         procedure_parser = get_procedure_parser(post.meta["procedure"], storage, self.logger)
+
+        # Verify the procedure
+        verify = procedure_parser.verify_input(post)
+        if verify is not True:
+            raise tornado.web.HTTPError(status_code=400, reason=verify)
+
         payload = procedure_parser.submit_tasks(post)
 
         response = TaskQueuePOSTResponse(**payload)
@@ -47,7 +58,7 @@ class TaskQueueHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         body = TaskQueueGETBody.parse_raw(self.request.body)
-        tasks = storage.get_queue(**body.data, projection=body.meta.projection)
+        tasks = storage.get_queue(**body.data.dict(), projection=body.meta.projection)
         response = TaskQueueGETResponse(**tasks)
 
         self.write(response.json())
@@ -67,8 +78,10 @@ class ServiceQueueHandler(APIHandler):
         # Grab objects
         storage = self.objects["storage_socket"]
 
+        body = ServiceQueuePOSTBody.parse_raw(self.request.body)
+
         new_services = []
-        for service_input in ServiceQueuePOSTBody.parse_raw(self.request.body).data:
+        for service_input in body.data:
             # Get molecules with ids
             if isinstance(service_input.initial_molecule, list):
                 molecules = storage.get_add_molecules_mixed(service_input.initial_molecule)["data"]
@@ -79,7 +92,7 @@ class ServiceQueueHandler(APIHandler):
 
             # Update the input and build a service object
             service_input = service_input.copy(update={"initial_molecule": molecules})
-            new_services.append(initialize_service(storage, self.logger, service_input))
+            new_services.append(initialize_service(storage, self.logger, service_input, tag=body.meta.tag, priority=body.meta.priority))
 
         ret = storage.add_services(new_services)
         ret["data"] = {"ids": ret["data"], "existing": ret["meta"]["duplicates"]}
@@ -99,8 +112,7 @@ class ServiceQueueHandler(APIHandler):
 
         body = ServiceQueueGETBody.parse_raw(self.request.body)
 
-        projection = {x: True for x in ["status", "error", "tag"]}
-        ret = storage.get_services(**body.data, projection=projection)
+        ret = storage.get_services(**body.data.dict(), projection=body.meta.projection)
         response = ServiceQueueGETResponse(**ret)
 
         self.write(response.json())
@@ -125,8 +137,8 @@ class QueueManagerHandler(APIHandler):
         # Pivot data so that we group all results in categories
         new_results = collections.defaultdict(list)
 
-        queue = storage_socket.get_queue(ids=results.keys())["data"]
-        queue = {v["id"]: v for v in queue}
+        queue = storage_socket.get_queue(id=list(results.keys()))["data"]
+        queue = {v.id: v for v in queue}
 
         error_data = []
 
@@ -157,11 +169,11 @@ class QueueManagerHandler(APIHandler):
 
                 # Success!
                 else:
-                    parser = queue[key]["parser"]
+                    parser = queue[key].parser
                     new_results[parser].append({
                         "result": result,
                         "task_id": key,
-                        "base_result": queue[key]["base_result"]
+                        "base_result": queue[key].base_result
                     })
                     task_success += 1
 
@@ -199,13 +211,10 @@ class QueueManagerHandler(APIHandler):
 
         # Figure out metadata and kwargs
         name = self._get_name_from_metadata(body.meta)
-        queue_tags = {
-            "limit": body.data.limit,
-            "tag": body.meta.tag,
-        }  # yapf: disable
 
         # Grab new tasks and write out
-        new_tasks = storage.queue_get_next(name, **queue_tags)
+        new_tasks = storage.queue_get_next(
+            name, body.meta.programs, body.meta.procedures, limit=body.data.limit, tag=body.meta.tag)
         response = QueueManagerGETResponse(
             meta={"n_found": len(new_tasks),
                   "success": True,
@@ -276,8 +285,7 @@ class QueueManagerHandler(APIHandler):
 
         else:
             msg = "Operation '{}' not understood.".format(op)
-            from tornado.web import HTTPError
-            raise HTTPError(status_code=400, reason=msg)
+            raise tornado.web.HTTPError(status_code=400, reason=msg)
 
         response = QueueManagerPUTResponse(meta={}, data=ret)
         self.write(response.json())

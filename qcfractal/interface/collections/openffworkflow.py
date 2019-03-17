@@ -149,7 +149,7 @@ class OpenFFWorkflow(Collection):
         """
         return list(self.data.fragments)
 
-    def add_fragment(self, fragment_id, data, provenance=None):
+    def add_fragment(self, fragment_id, data, provenance=None, tag=None, priority=None):
         """
         Adds a new fragment to the workflow along with the associated input required.
 
@@ -190,9 +190,9 @@ class OpenFFWorkflow(Collection):
                 print("Already found label {} for fragment_ID {}, skipping.".format(name, fragment_id))
                 continue
             if packet['type'] == 'torsiondrive_input':
-                ret = self._add_torsiondrive(packet)
+                ret = self._add_torsiondrive(packet, tag, priority)
             elif packet['type'] == 'optimization_input':
-                ret = self._add_optimize(packet)
+                ret = self._add_optimize(packet, tag, priority)
             else:
                 raise KeyError("{} is not an OpenFFWorkflow type job".format(packet['type']))
 
@@ -202,7 +202,7 @@ class OpenFFWorkflow(Collection):
         # Push collection data back to server
         self.save()
 
-    def _add_torsiondrive(self, packet):
+    def _add_torsiondrive(self, packet, tag, priority):
         # Build out a new service
         torsion_meta = self.data.torsiondrive_static_options.copy(deep=True).dict()
 
@@ -211,18 +211,19 @@ class OpenFFWorkflow(Collection):
 
         # Get hash of torsion
         inp = TorsionDriveInput(**torsion_meta, initial_molecule=packet["initial_molecule"])
-        ret = self.client.add_service([inp])
+        ret = self.client.add_service([inp], tag=tag, priority=priority)
 
         return ret.ids[0]
 
-    def _add_optimize(self, packet):
+    def _add_optimize(self, packet, tag, priority):
         meta = self.data.optimization_static_options.copy(deep=True).dict()
 
         for k in ["constraints"]:
             meta["keywords"][k] = packet[k]
 
         # Get hash of optimization
-        ret = self.client.add_procedure("optimization", meta["program"], meta, [packet["initial_molecule"]])
+        ret = self.client.add_procedure(
+            "optimization", meta["program"], meta, [packet["initial_molecule"]], tag=tag, priority=priority)
 
         return ret.ids[0]
 

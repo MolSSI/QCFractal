@@ -263,18 +263,6 @@ class TorsiondriveProcedureORM(ProcedureORM):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class Spec(db.DynamicEmbeddedDocument):
-    """ The spec of a task in the queue
-        This is an embedded document, meaning that it will be embedded
-        in the task_queue collection and won't be stored as a seperate
-        collection/table --> for faster parsing
-    """
-
-    function = db.StringField()
-    args = db.DynamicField()  # fast, can take any structure
-    kwargs = db.DynamicField()
-
-
 class TaskQueueORM(CustomDynamicDocument):
     """A queue of tasks corresponding to a procedure
 
@@ -282,27 +270,41 @@ class TaskQueueORM(CustomDynamicDocument):
               will impact the performce
     """
 
-    # spec = db.EmbeddedDocumentField(Spec, default=Spec)
     spec = db.DynamicField()
+    parser = db.StringField()
+    status = db.StringField(default='WAITING', choices=['RUNNING', 'WAITING', 'ERROR', 'COMPLETE'])
+
+    program = db.StringField()
+    procedure = db.StringField()
+    manager = db.StringField()
 
     # others
+    priority: db.IntField(default=1)
     tag = db.StringField(default=None)
-    parser = db.StringField(default='')
-    status = db.StringField(default='WAITING', choices=['RUNNING', 'WAITING', 'ERROR', 'COMPLETE'])
-    manager = db.StringField(default=None)
+
+    # can reference ResultORMs or any ProcedureORM
+    base_result = db.GenericLazyReferenceField(dbref=True)  # use res.id and res.document_type (class)
 
     created_on = db.DateTimeField(required=True)
     modified_on = db.DateTimeField(required=True)
 
-    # can reference ResultORMs or any ProcedureORM
-    base_result = db.GenericLazyReferenceField(dbref=True)  # use res.id and res.document_type (class)
 
     meta = {
         'collection': 'task_queue',
         'indexes': [
             'created_on',
             'status',
+
+            # Specification fields
+            {
+                'fields': ('program', 'procedure'),
+            },  # new
             'manager',
+
+            # order effects
+            'tag',
+            'priority',
+
             {
                 'fields': ('base_result', ),
                 'unique': True
@@ -366,7 +368,14 @@ class QueueManagerORM(CustomDynamicDocument):
     cluster = db.StringField()
     hostname = db.StringField()
     uuid = db.StringField()
+
+    username = db.StringField()
+    qcengine_version = db.StringField()
+    manager_version = db.StringField()
+
     tag = db.StringField()
+    programs = db.DynamicField()
+    procedures = db.DynamicField()
 
     # counts
     completed = db.IntField(default=0)

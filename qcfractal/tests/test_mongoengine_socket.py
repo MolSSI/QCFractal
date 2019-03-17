@@ -8,8 +8,9 @@
 from time import time
 
 import pytest
-import qcfractal.interface as ptl
 from bson import ObjectId
+
+import qcfractal.interface as ptl
 from qcfractal.storage_sockets.me_models import (MoleculeORM, OptimizationProcedureORM, ProcedureORM, ResultORM,
                                                  TaskQueueORM, TorsiondriveProcedureORM)
 from qcfractal.testing import mongoengine_socket_fixture as storage_socket

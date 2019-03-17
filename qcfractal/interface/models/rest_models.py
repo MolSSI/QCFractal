@@ -8,6 +8,7 @@ from pydantic import BaseConfig, BaseModel, validator
 from .common_models import KeywordSet, Molecule, ObjectId
 from .gridoptimization import GridOptimizationInput
 from .model_utils import json_encoders
+from .task_models import TaskRecord
 from .torsiondrive import TorsionDriveInput
 from .records import ResultRecord
 
@@ -27,9 +28,14 @@ __all__ = [
 
 ### Generic and Common Models
 
+QueryStr = Optional[Union[List[str], str]]
+QueryInt = Optional[Union[List[int], int]]
+QueryObjectId = Optional[Union[List[ObjectId], ObjectId]]
+
 
 class RESTConfig(BaseConfig):
     json_encoders = json_encoders
+    extra = "forbid"
 
 
 class ResponseMeta(BaseModel):
@@ -48,7 +54,16 @@ class ResponsePOSTMeta(ResponseMeta):
     duplicates: Union[List[str], List[Tuple[str, str]]]
     validation_errors: List[str]
 
+class QueryMeta(BaseModel):
+    projection: Optional[Dict[str, bool]] = None
+    limit: Optional[int] = None
+    skip: Optional[int] = None
+
+    class Config:
+        extra = "forbid"
+
 ### KVStore
+
 
 class KVStoreGETBody(BaseModel):
     data: List[ObjectId]
@@ -61,6 +76,7 @@ class KVStoreGETResponse(BaseModel):
 
     class Config:
         json_encoders = json_encoders
+
 
 ### Molecule response
 
@@ -232,26 +248,22 @@ class ProcedureGETReponse(BaseModel):
 
 ### Task Queue
 
-default_task_projection = {x: True for x in ["status", "error", "tag"]}  # Not Pydantic attr
-
 
 class TaskQueueGETBody(BaseModel):
-    class Meta(BaseModel):
-        projection: Dict[str, Any] = default_task_projection  # Is Pydantic attr
 
-        @validator("projection", pre=True, whole=True)
-        def projection_default(cls, v):
-            if v is None:
-                return default_task_projection
-            return v
+    class Data(BaseModel):
+        id: QueryObjectId = None
+        hash_index: QueryStr = None
+        program: QueryStr = None
+        status: QueryStr = None
 
-    meta: Meta = Meta()
-    data: Dict[str, Any]
+    meta: QueryMeta
+    data: Data
 
 
 class TaskQueueGETResponse(BaseModel):
     meta: ResponseGETMeta
-    data: List[Dict[str, Any]]
+    data: Union[List[TaskRecord], List[Dict[str, Any]]]
 
     @validator("data", whole=True, pre=True)
     def ensure_list_of_dict(cls, v):
@@ -261,6 +273,7 @@ class TaskQueueGETResponse(BaseModel):
 
 
 class TaskQueuePOSTBody(BaseModel):
+
     meta: Dict[str, Any]
     data: List[Union[str, Molecule]]
 
@@ -288,9 +301,14 @@ class TaskQueuePOSTResponse(BaseModel):
 
 
 class ServiceQueueGETBody(BaseModel):
-    meta: Dict[str, Any]
-    data: Dict[str, Any]
+    class Data(BaseModel):
+        id: QueryObjectId = None
+        procedure_id: QueryObjectId = None
+        hash_index: QueryStr = None
+        status: QueryStr = None
 
+    meta: QueryMeta
+    data: Data
 
 class ServiceQueueGETResponse(BaseModel):
     meta: ResponseGETMeta
@@ -304,12 +322,15 @@ class ServiceQueueGETResponse(BaseModel):
 
 
 class ServiceQueuePOSTBody(BaseModel):
-    meta: Dict[str, Any]
+    class Meta(BaseModel):
+        tag: Optional[str] = None
+        priority: Union[str, int, None] = None
+
+    meta: Meta
     data: List[Union[TorsionDriveInput, GridOptimizationInput]]
 
     class Config(RESTConfig):
         pass
-        # json_encoders = json_encoders
 
 
 class ServiceQueuePOSTResponse(BaseModel):
@@ -321,24 +342,44 @@ class ServiceQueuePOSTResponse(BaseModel):
     meta: ResponsePOSTMeta
     data: Data
 
+    class Config(RESTConfig):
+        pass
+
 
 ### Queue Manager
 
 
 class QueueManagerMeta(BaseModel):
-    cluster: str = 'unknown'
+    # Name data
+    cluster: str
     hostname: str
     uuid: str
-    tag: Union[str, None] = None
-    max_tasks: int = 1000
+
+    # Username
+    username: Optional[str] = None
+
+    # Version info
+    qcengine_version: str
+    manager_version: str
+
+    # search info
+    programs: List[str]
+    procedures: List[str]
+    tag: Optional[str] = None
+
+    class Config(RESTConfig):
+        pass
 
 
 class QueueManagerGETBody(BaseModel):
     class Data(BaseModel):
-        limit: int = 100
+        limit: int
 
     meta: QueueManagerMeta
-    data: Data = Data()
+    data: Data
+
+    class Config(RESTConfig):
+        pass
 
 
 class QueueManagerGETResponse(BaseModel):

@@ -2,23 +2,75 @@
 All procedures tasks involved in on-node computation.
 """
 
-from typing import Union
+from typing import List, Union
 
 from qcelemental.models import Molecule
 
 from .procedures_util import parse_single_tasks
-from ..interface.models import OptimizationRecord, QCSpecification, ResultRecord
+from ..interface.models import OptimizationRecord, QCSpecification, ResultRecord, TaskRecord
+
+import qcengine as qcng
 
 
-class SingleResultTasks:
+class BaseTasks:
+    def __init__(self, storage, logger):
+        self.storage = storage
+        self.logger = logger
+
+    def submit_tasks(self, data):
+
+        new_tasks, results_ids, existing_ids, errors = self.parse_input(data)
+
+        self.storage.queue_submit(new_tasks)
+
+        n_inserted = 0
+        missing = []
+        for num, x in enumerate(results_ids):
+            if x is None:
+                missing.append(num)
+            else:
+                n_inserted += 1
+
+        results = {
+            "meta": {
+                "n_inserted": n_inserted,
+                "duplicates": [],
+                "validation_errors": [],
+                "success": True,
+                "error_description": False,
+                "errors": errors
+            },
+            "data": {
+                "ids": results_ids,
+                "submitted": [x.base_result.id for x in new_tasks],
+                "existing": existing_ids,
+            }
+        }
+
+        return results
+
+    def verify_input(self, data):
+        raise TypeError("verify_input not defined")
+
+    def parse_input(self, data):
+        raise TypeError("parse_input not defined")
+
+    def parse_output(self, data):
+        raise TypeError("parse_output not defined")
+
+
+class SingleResultTasks(BaseTasks):
     """Single is a simple Result
      Unique by: driver, method, basis, option (the name in the options table),
      and program.
     """
 
-    def __init__(self, storage, logger):
-        self.storage = storage
-        self.logger = logger
+    def verify_input(self, data):
+        program = data.meta["program"].lower()
+        if program not in qcng.list_all_programs():
+            return "Program '{}' not available in QCEngine.".format(program)
+
+        return True
 
     def parse_input(self, data):
         """Parse input json into internally appropriate format
@@ -51,6 +103,7 @@ class SingleResultTasks:
 
         # Grab the tag if available
         tag = data.meta.pop("tag", None)
+        priority = data.meta.pop("priority", None)
 
         # Construct full tasks
         new_tasks = []
@@ -76,52 +129,25 @@ class SingleResultTasks:
                 continue
 
             # Build task object
-            task = {
+            task = TaskRecord(**{
                 "spec": {
                     "function": "qcengine.compute",  # todo: add defaults in models
                     "args": [inp.json_dict(), data.meta["program"]],  # todo: json_dict should come from results
                     "kwargs": {}  # todo: add defaults in models
                 },
-                "tag": tag,
                 "parser": "single",
-                "base_result": ("results", base_id)
-            }
+                "program": data.meta["program"],
+                "tag": tag,
+                "priority": priority,
+                "base_result": {
+                    "ref": "result",
+                    "id": base_id
+                }
+            })
 
             new_tasks.append(task)
 
         return new_tasks, results_ids, existing_ids, []
-
-    def submit_tasks(self, data):
-
-        new_tasks, results_ids, existing_ids, errors = self.parse_input(data)
-
-        self.storage.queue_submit(new_tasks)
-
-        n_inserted = 0
-        missing = []
-        for num, x in enumerate(results_ids):
-            if x is None:
-                missing.append(num)
-            else:
-                n_inserted += 1
-
-        results = {
-            "meta": {
-                "n_inserted": n_inserted,
-                "duplicates": [],
-                "validation_errors": [],
-                "success": True,
-                "error_description": False,
-                "errors": errors
-            },
-            "data": {
-                "ids": results_ids,
-                "submitted": [x["base_result"][1] for x in new_tasks],
-                "existing": existing_ids,
-            }
-        }
-
-        return results
 
     def parse_output(self, result_outputs):
 
@@ -129,11 +155,12 @@ class SingleResultTasks:
         completed_tasks = []
         updates = []
         for data in result_outputs:
-            result = self.storage.get_results(id=data["base_result"]["id"])["data"][0]
+            result = self.storage.get_results(id=data["base_result"].id)["data"][0]
             result = ResultRecord(**result)
 
             rdata = data["result"]
-            stdout, stderr, error = self.storage.add_kvstore([rdata["stdout"], rdata["stderr"], rdata["error"]])["data"]
+            stdout, stderr, error = self.storage.add_kvstore([rdata["stdout"], rdata["stderr"],
+                                                              rdata["error"]])["data"]
             rdata["stdout"] = stdout
             rdata["stderr"] = stderr
             rdata["error"] = error
@@ -151,10 +178,21 @@ class SingleResultTasks:
 # ----------------------------------------------------------------------------
 
 
-class OptimizationTasks(SingleResultTasks):
+class OptimizationTasks(BaseTasks):
     """
     Optimization task manipulation
     """
+
+    def verify_input(self, data):
+        program = data.meta["program"].lower()
+        if program not in qcng.list_all_procedures():
+            return "Procedure '{}' not available in QCEngine.".format(program)
+
+        program = data.meta["qc_spec"]["program"].lower()
+        if program not in qcng.list_all_programs():
+            return "Program '{}' not available in QCEngine.".format(program)
+
+        return True
 
     def parse_input(self, data, duplicate_id="hash_index"):
         """
@@ -219,6 +257,7 @@ class OptimizationTasks(SingleResultTasks):
             qc_keywords = None
 
         tag = data.meta.pop("tag", None)
+        priority = data.meta.pop("priority", None)
 
         new_tasks = []
         results_ids = []
@@ -250,16 +289,22 @@ class OptimizationTasks(SingleResultTasks):
                 continue
 
             # Build task object
-            task = {
+            task = TaskRecord(**{
                 "spec": {
                     "function": "qcengine.compute_procedure",
                     "args": [inp.json_dict(), data.meta["program"]],
                     "kwargs": {}
                 },
-                "tag": tag,
                 "parser": "optimization",
-                "base_result": ("procedure", base_id)
-            }
+                "program": qc_spec.program,
+                "procedure": data.meta["program"],
+                "tag": tag,
+                "priority": priority,
+                "base_result": {
+                    "ref": "procedure",
+                    "id": base_id
+                }
+            })
 
             new_tasks.append(task)
 
@@ -274,7 +319,7 @@ class OptimizationTasks(SingleResultTasks):
         completed_tasks = []
         updates = []
         for output in opt_outputs:
-            rec = self.storage.get_procedures(id=output["base_result"]["id"])["data"][0]
+            rec = self.storage.get_procedures(id=output["base_result"].id)["data"][0]
             rec = OptimizationRecord(**rec)
 
             procedure = output["result"]
@@ -299,12 +344,12 @@ class OptimizationTasks(SingleResultTasks):
             update_dict["energies"] = procedure["energies"]
 
             # Save stdout/stderr
-            stdout, stderr, error = self.storage.add_kvstore([procedure["stdout"], procedure["stderr"], procedure["error"]])["data"]
+            stdout, stderr, error = self.storage.add_kvstore(
+                [procedure["stdout"], procedure["stderr"], procedure["error"]])["data"]
             update_dict["stdout"] = stdout
             update_dict["stderr"] = stderr
             update_dict["error"] = error
             update_dict["provenance"] = procedure["provenance"]
-
 
             rec = OptimizationRecord(**{**rec.dict(), **update_dict})
             updates.append(rec)
@@ -318,6 +363,14 @@ class OptimizationTasks(SingleResultTasks):
 # ----------------------------------------------------------------------------
 
 supported_procedures = Union[SingleResultTasks, OptimizationTasks]
+__procedure_map = {"single": SingleResultTasks, "optimization": OptimizationTasks}
+
+
+def check_procedure_available(procedure: str) -> List[str]:
+    """
+    Lists all available procedures
+    """
+    return procedure.lower() in __procedure_map
 
 
 def get_procedure_parser(procedure_type: str, storage, logger) -> supported_procedures:
@@ -337,9 +390,7 @@ def get_procedure_parser(procedure_type: str, storage, logger) -> supported_proc
         'optimization' --> OptimizationTasks
     """
 
-    if procedure_type == 'single':
-        return SingleResultTasks(storage, logger)
-    elif procedure_type == 'optimization':
-        return OptimizationTasks(storage, logger)
-    else:
+    try:
+        return __procedure_map[procedure_type.lower()](storage, logger)
+    except KeyError:
         raise KeyError("Procedure type ({}) is not suported yet.".format(procedure_type))

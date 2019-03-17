@@ -8,4 +8,6 @@ from .gridoptimization import GridOptimizationInput, GridOptimizationRecord
 from .model_builder import build_procedure
 from .model_utils import hash_dictionary, json_encoders, prepare_basis
 from .records import OptimizationRecord, ResultRecord
+from .task_models import PythonComputeSpec, TaskRecord
 from .torsiondrive import TorsionDriveInput, TorsionDriveRecord
+

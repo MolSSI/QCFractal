@@ -23,7 +23,7 @@ def test_cli_server_boot():
 @testing.mark_slow
 def test_cli_server_local_boot():
     port = "--port=" + str(testing.find_open_port())
-    args = ["qcfractal-server", "mydb", "--local-manager", port]
+    args = ["qcfractal-server", "mydb", "--local-manager=2", port]
     assert testing.run_process(args, interupt_after=10, **_options)
 
 
@@ -45,7 +45,7 @@ def test_manager_local_testing_process():
 
 @testing.mark_slow
 def test_manager_executor_manager_boot(active_server):
-    args = ["qcfractal-manager", active_server.test_uri_cli, "--adapter=pool", "--ntasks=1", "--verify=False"]
+    args = ["qcfractal-manager", active_server.test_uri_cli, "--adapter=pool", "--ntasks=2", "--verify=False"]
     assert testing.run_process(args, interupt_after=7, **_options)
 
 
@@ -56,12 +56,11 @@ def test_manager_executor_manager_boot_from_file(active_server, tmp_path):
     common:
         adapter: pool
         ntasks: 4
-        cores: 4
+        ncores: 4
     server:
         fractal_uri: {}
         verify: False
     """.format(active_server.test_uri_cli.split("=")[1])
-    print(yaml_file)
 
     p = tmp_path / "config.yaml"
     p.write_text(yaml_file)

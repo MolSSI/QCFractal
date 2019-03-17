@@ -5,7 +5,8 @@ Tests the on-node procedures compute capabilities.
 import copy
 
 import pytest
-import qcfractal.interface as portal
+
+import qcfractal.interface as ptl
 from qcfractal.interface.models import GridOptimizationInput, TorsionDriveInput
 from qcfractal.testing import fractal_compute_server, recursive_dict_merge, using_geometric, using_rdkit
 
@@ -18,10 +19,10 @@ def torsiondrive_fixture(fractal_compute_server):
     pytest.importorskip("geometric")
     pytest.importorskip("rdkit")
 
-    client = portal.FractalClient(fractal_compute_server)
+    client = ptl.FractalClient(fractal_compute_server)
 
     # Add a HOOH
-    hooh = portal.data.get_molecule("hooh.json")
+    hooh = ptl.data.get_molecule("hooh.json")
     mol_ret = client.add_molecules([hooh])
 
     # Geometric options
@@ -56,13 +57,14 @@ def torsiondrive_fixture(fractal_compute_server):
 
         if ret.meta.n_inserted:  # In case test already submitted
             compute_key = ret.data.ids[0]
-            status = client.check_services({"procedure_id": compute_key}, full_return=True)
+            status = client.query_services(procedure_id=compute_key, projection={"status": True}, full_return=True)
             assert 'WAITING' in status.data[0]['status']
             assert status.data[0]['id'] != compute_key  # Hash should never be id
 
         fractal_compute_server.await_services()
         assert len(fractal_compute_server.list_current_tasks()) == 0
         return ret.data
+
 
     yield spin_up_test, client
 
@@ -90,7 +92,7 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
 def test_service_torsiondrive_multi_single(torsiondrive_fixture):
     spin_up_test, client = torsiondrive_fixture
 
-    hooh = portal.data.get_molecule("hooh.json")
+    hooh = ptl.data.get_molecule("hooh.json")
     hooh2 = hooh.copy(deep=True)
     hooh2.geometry[0] += 0.0004
 
@@ -128,7 +130,7 @@ def test_service_iterate_error(torsiondrive_fixture):
     # Run the test without modifications
     ret = spin_up_test(keywords={"dihedrals": [[0, 1, 2, 50]]})
 
-    status = client.check_services({"procedure_id": ret.ids[0]})
+    status = client.query_services(procedure_id=ret.ids[0])
     assert len(status) == 1
 
     assert status[0]["status"] == "ERROR"
@@ -143,7 +145,7 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
     # Run the test without modifications
     ret = spin_up_test(qc_spec={"method": "waffles_crasher"})
 
-    status = client.check_services({"procedure_id": ret.ids[0]})
+    status = client.query_services(procedure_id=ret.ids[0])
     assert len(status) == 1
 
     assert status[0]["status"] == "ERROR"
@@ -154,10 +156,10 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
 @using_rdkit
 def test_service_gridoptimization_single_opt(fractal_compute_server):
 
-    client = portal.FractalClient(fractal_compute_server)
+    client = ptl.FractalClient(fractal_compute_server)
 
     # Add a HOOH
-    hooh = portal.data.get_molecule("hooh.json")
+    hooh = ptl.data.get_molecule("hooh.json")
     initial_distance = hooh.measure([1, 2])
     mol_ret = client.add_molecules([hooh])
 
@@ -194,7 +196,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
         "initial_molecule": mol_ret[0],
     }) # yapf: disable
 
-    ret = client.add_service([service])
+    ret = client.add_service([service], tag="gridopt", priority="low")
     fractal_compute_server.await_services()
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
@@ -214,14 +216,24 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     assert pytest.approx(starting_mol.measure([1, 2])) == 2.488686479260597
 
 
+    # Check tags on individual procedures
+    proc_id = list(result.grid_optimizations.values())[0]
+    opt = client.query_procedures({"id": proc_id})[0]
+
+    task = client.query_tasks(id=opt.task_id)[0]
+    assert task.priority == 0
+    assert task.tag == "gridopt"
+
+
+
 @using_geometric
 @using_rdkit
 def test_service_gridoptimization_single_noopt(fractal_compute_server):
 
-    client = portal.FractalClient(fractal_compute_server)
+    client = ptl.FractalClient(fractal_compute_server)
 
     # Add a HOOH
-    hooh = portal.data.get_molecule("hooh.json")
+    hooh = ptl.data.get_molecule("hooh.json")
     initial_distance = hooh.measure([1, 2])
 
     # Options

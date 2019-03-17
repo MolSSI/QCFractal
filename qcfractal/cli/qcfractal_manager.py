@@ -33,7 +33,7 @@ class CommonManagerSettings(BaseSettings):
     # Task settings
     adapter: AdapterEnum = AdapterEnum.pool
     ntasks: int = 1
-    cores: int = qcng.config.get_global("ncores")
+    ncores: int = qcng.config.get_global("ncores")
     memory: confloat(gt=0) = qcng.config.get_global("memory")
 
     class Config(SettingsCommonConfig):
@@ -88,8 +88,7 @@ class DaskQueueSettings(BaseSettings):
     def __init__(self, **kwargs):
         """Enforce that the keys we are going to set remain untouched"""
         forbidden_set = {
-            "name", "cores", "memory", "processes", "walltime", "env_extra", "qca_resource_string"
-        }
+            "name", "ncores", "memory", "processes", "walltime", "env_extra", "qca_resource_string"}
         bad_set = set(kwargs.keys()) & forbidden_set
         if bad_set:
             raise KeyError("The following items were set as part of dask_jobqueue, however, "
@@ -126,7 +125,7 @@ def parse_args():
         "--ntasks",
         type=int,
         help="The number of simultaneous tasks for the executor to run, resources will be divided evenly.")
-    common.add_argument("--cores", type=int, help="The number of process for the executor")
+    common.add_argument("--ncores", type=int, help="The number of process for the executor")
     common.add_argument("--memory", type=int, help="The total amount of memory on the system in GB")
 
     # FractalClient options
@@ -168,7 +167,7 @@ def parse_args():
 
     # Stupid we cannot inspect groups
     data = {
-        "common": _build_subset(args, {"adapter", "ntasks", "cores", "memory"}),
+        "common": _build_subset(args, {"adapter", "ntasks", "ncores", "memory"}),
         "server": _build_subset(args, {"fractal_uri", "password", "username", "verify"}),
         "manager": _build_subset(args, {"max_tasks", "manager_name", "queue_tag", "log_file_prefix", "update_frequency", "test", "ntests"}),
     } # yapf: disable
@@ -211,7 +210,7 @@ def main(args=None):
             address=settings.server.fractal_uri, **settings.server.dict(skip_defaults=True, exclude={"fractal_uri"}))
 
     # Figure out per-task data
-    cores_per_task = settings.common.cores // settings.common.ntasks
+    cores_per_task = settings.common.ncores // settings.common.ntasks
     memory_per_task = settings.common.memory / settings.common.ntasks
     if cores_per_task < 1:
         raise ValueError("Cores per task must be larger than one!")

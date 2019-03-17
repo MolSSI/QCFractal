@@ -3,7 +3,8 @@ Explicit tests for queue manipulation.
 """
 
 import pytest
-import qcfractal.interface as portal
+
+import qcfractal.interface as ptl
 from qcfractal import QueueManager, testing
 from qcfractal.testing import adapter_client_fixture, managed_compute_server, reset_server_database
 
@@ -14,7 +15,7 @@ def test_adapter_single(managed_compute_server):
     reset_server_database(server)
 
     # Add compute
-    hooh = portal.data.get_molecule("hooh.json")
+    hooh = ptl.data.get_molecule("hooh.json")
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
 
     # Force manager compute and get results
@@ -40,7 +41,7 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
                 "function":
                 "qcengine.compute",
                 "args": [{
-                    "molecule": portal.data.get_molecule("hooh.json").json_dict(),
+                    "molecule": ptl.data.get_molecule("hooh.json").json_dict(),
                     "driver": "energy",
                     "model": {
                         "method": "HF",
@@ -81,7 +82,7 @@ def test_adapter_error_message(managed_compute_server):
     reset_server_database(server)
 
     # HOOH without connectivity, RDKit should fail
-    hooh = portal.data.get_molecule("hooh.json").json_dict()
+    hooh = ptl.data.get_molecule("hooh.json").json_dict()
     del hooh["connectivity"]
     mol_ret = client.add_molecules([hooh])
 
@@ -102,7 +103,7 @@ def test_adapter_error_message(managed_compute_server):
     ret = db.get_queue(status="ERROR")["data"]
 
     assert len(ret) == 1
-    assert "connectivity graph" in ret[0]["error"]["error_message"]
+    assert "connectivity graph" in ret[0].error.error_message
     server.objects["storage_socket"].queue_mark_complete([queue_id])
 
 
@@ -112,9 +113,9 @@ def test_adapter_raised_error(managed_compute_server):
     reset_server_database(server)
 
     # HOOH without connectivity, RDKit should fail
-    hooh = portal.data.get_molecule("hooh.json").json_dict()
+    hooh = ptl.data.get_molecule("hooh.json").json_dict()
 
-    ret = client.add_compute("something_bad", "UFF", "", "energy", None, hooh)
+    ret = client.add_compute("rdkit", "UFF", "", "hessian", None, hooh)
     queue_id = ret.submitted[0]
 
     manager.await_results()
@@ -123,5 +124,5 @@ def test_adapter_raised_error(managed_compute_server):
     ret = db.get_queue(status="ERROR")["data"]
 
     assert len(ret) == 1
-    assert "QCEngine Call Error" in ret[0]["error"]["error_message"]
+    assert "QCEngine Call Error" in ret[0].error.error_message
     server.objects["storage_socket"].queue_mark_complete([queue_id])
