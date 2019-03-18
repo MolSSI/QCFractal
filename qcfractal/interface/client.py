@@ -5,14 +5,13 @@ import os
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Union
 
+from pydantic import ValidationError
+
 import requests
 
 from .collections import collection_factory, collections_name_map
 from .models import GridOptimizationInput, Molecule, ObjectId, TorsionDriveInput, build_procedure
-from .models.rest_models import (rest_model, TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody,
-                                 TaskQueuePOSTResponse, ComputeResponse)
-
-from .models.rest_models import QueryStr, QueryObjectId, QueryProjection
+from .models.rest_models import ComputeResponse, rest_model, QueryStr, QueryObjectId, QueryProjection
 
 ### Common docs
 
@@ -153,7 +152,12 @@ class FractalClient(object):
         """
         body_model, response_model = rest_model(name, rest)
 
-        payload = body_model(**payload)
+        # Provide a reasonable traceback
+        try:
+            payload = body_model(**payload)
+        except ValidationError as exc:
+            raise TypeError(str(exc))
+
         r = self._request(rest, name, data=payload.json())
         response = response_model.parse_raw(r.text)
 
@@ -630,8 +634,8 @@ class FractalClient(object):
         """
 
         # Always a list
-        if not isinstance(molecule_id, list):
-            molecule_id = [molecule_id]
+        if not isinstance(molecule, list):
+            molecule = [molecule]
 
         payload = {
             "meta": {
@@ -644,7 +648,7 @@ class FractalClient(object):
                 "tag": tag,
                 "priority": priority,
             },
-            "data": molecule_id
+            "data": molecule
         }
 
         return self._automodel_request("task_queue", "post", payload, full_return=full_return)
@@ -653,7 +657,7 @@ class FractalClient(object):
                       procedure: str,
                       program: str,
                       program_options: Dict[str, Any],
-                      molecule: List[ObjectId, Molecule],
+                      molecule: Union[ObjectId, Molecule, List[Union[str, Molecule]]],
                       priority: str=None,
                       tag: str=None,
                       full_return: bool=False) -> ComputeResponse:
@@ -666,7 +670,7 @@ class FractalClient(object):
             The program to use for the given procedure (e.g., "geomeTRIC")
         program_options : Dict[str, Any]
             Additional options and specifications for the given procedure.
-        molecule : List[ObjectId, Molecule]
+        molecule : Union[ObjectId, Molecule, List[Union[str, Molecule]]]
             The Molecules or Molecule ObjectId's to compute with the above methods
         priority : str, optional
             The priority of the job {"HIGH", "MEDIUM", "LOW"}. Default is "MEDIUM".
@@ -677,7 +681,7 @@ class FractalClient(object):
             to denote different projects.
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
-        
+
         Returns
         -------
         ComputeResponse
@@ -685,12 +689,12 @@ class FractalClient(object):
               - ids: The ObjectId's of the task in the order of input molecules
               - submitted: A list of ObjectId's that were submitted to the compute queue
               - existing: A list of ObjectId's of tasks already in the database
-        
+
         """
 
         # Always a list
         if isinstance(molecule, str):
-            molecule_id = [molecule]
+            molecule = [molecule]
 
         payload = {
             "meta": {

@@ -8,6 +8,8 @@ import qcfractal.interface as ptl
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server, reset_server_database, using_psi4, using_rdkit
 
+bad_id1 = "000000000000000000000000"
+bad_id2 = "000000000000000000000001"
 
 @pytest.mark.parametrize("data", [
     pytest.param(("psi4", "HF", "sto-3g"), id="psi4", marks=using_psi4),
@@ -147,7 +149,7 @@ def test_queue_compute_mixed_molecule(fractal_compute_server):
 
     mol2 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
 
-    ret = client.add_compute("RDKIT", "UFF", "", "energy", None, [mol1, mol2, "bad_id"], full_return=True)
+    ret = client.add_compute("RDKIT", "UFF", "", "energy", None, [mol1, mol2, bad_id1], full_return=True)
     assert len(ret.data.ids) == 3
     assert ret.data.ids[2] is None
     assert len(ret.data.submitted) == 2
@@ -158,7 +160,7 @@ def test_queue_compute_mixed_molecule(fractal_compute_server):
 
     db = fractal_compute_server.objects["storage_socket"]
 
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [mol_ret[0], "bad_id2"])
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [mol_ret[0], bad_id2])
     assert len(ret.ids) == 2
     assert ret.ids[1] is None
     assert len(ret.submitted) == 0
@@ -185,7 +187,7 @@ def test_queue_duplicate_procedure(fractal_compute_server):
         },
     }
 
-    ret = client.add_procedure("optimization", "geometric", geometric_options, [mol_ret[0], "bad_id"])
+    ret = client.add_procedure("optimization", "geometric", geometric_options, [mol_ret[0], bad_id1])
     assert len(ret.ids) == 2
     assert ret.ids[1] is None
     assert len(ret.submitted) == 1
@@ -196,7 +198,7 @@ def test_queue_duplicate_procedure(fractal_compute_server):
 
     db = fractal_compute_server.objects["storage_socket"]
 
-    ret2 = client.add_procedure("optimization", "geometric", geometric_options, ["bad_id", hooh])
+    ret2 = client.add_procedure("optimization", "geometric", geometric_options, [bad_id1, hooh])
     assert len(ret2.ids) == 2
     assert ret2.ids[0] is None
     assert len(ret2.submitted) == 0

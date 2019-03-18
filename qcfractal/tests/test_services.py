@@ -77,7 +77,7 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
     ret = spin_up_test()
 
     # Get a TorsionDriveORM result and check data
-    result = client.query_procedures({"id": ret.ids[0]})[0]
+    result = client.query_procedures(id=ret.ids)[0]
     assert result.status == "COMPLETE"
     assert isinstance(str(result), str)  # Check that repr runs
 
@@ -98,7 +98,7 @@ def test_service_torsiondrive_multi_single(torsiondrive_fixture):
 
     ret = spin_up_test(initial_molecule=[hooh, hooh2])
 
-    result = client.query_procedures({"id": ret.ids[0]})[0]
+    result = client.query_procedures(id=ret.ids)[0]
     assert result.status == "COMPLETE"
 
 
@@ -115,7 +115,7 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     id2 = spin_up_test(keywords={"meaningless_entry_to_change_hash": "Waffles!"}).ids[0]
 
     assert id1 != id2
-    procedures = client.query_procedures({"id": [id1, id2]})
+    procedures = client.query_procedures(id=[id1, id2])
     assert len(procedures) == 2  # Make sure only 2 procedures are yielded
 
     base_run, duplicate_run = procedures
@@ -130,7 +130,7 @@ def test_service_iterate_error(torsiondrive_fixture):
     # Run the test without modifications
     ret = spin_up_test(keywords={"dihedrals": [[0, 1, 2, 50]]})
 
-    status = client.query_services(procedure_id=ret.ids[0])
+    status = client.query_services(procedure_id=ret.ids)
     assert len(status) == 1
 
     assert status[0]["status"] == "ERROR"
@@ -145,7 +145,7 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
     # Run the test without modifications
     ret = spin_up_test(qc_spec={"method": "waffles_crasher"})
 
-    status = client.query_services(procedure_id=ret.ids[0])
+    status = client.query_services(procedure_id=ret.ids)
     assert len(status) == 1
 
     assert status[0]["status"] == "ERROR"
@@ -200,7 +200,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     fractal_compute_server.await_services()
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
-    result = client.query_procedures(id=ret.ids[0])[0]
+    result = client.query_procedures(id=ret.ids)[0]
 
     assert result.status == "COMPLETE"
     assert result.starting_grid == (1, 0)
@@ -267,7 +267,7 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
     fractal_compute_server.await_services()
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
-    result = client.query_procedures(id=ret.ids[0])[0]
+    result = client.query_procedures(id=ret.ids)[0]
 
     assert result.status == "COMPLETE"
     assert result.starting_grid == (1, )
