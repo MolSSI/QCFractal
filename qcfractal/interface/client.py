@@ -10,10 +10,8 @@ import requests
 from .collections import collection_factory, collections_name_map
 from .models import GridOptimizationInput, Molecule, ObjectId, TorsionDriveInput, build_procedure
 from .models.rest_models import (
-    rest_model, CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse, KeywordGETBody,
-    KeywordGETResponse, KeywordPOSTBody, KeywordPOSTResponse, KVStoreGETBody, KVStoreGETResponse, MoleculeGETBody,
-    MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse, ProcedureGETBody, ProcedureGETReponse, ResultGETBody,
-    ResultGETResponse, ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
+    rest_model,
+    ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
     TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse)
 
 from .models.rest_models import QueryStr, QueryObjectId, QueryProjection
@@ -518,21 +516,70 @@ class FractalClient(object):
         else:
             return response.data
 
-    def query_procedures(self, procedure_query: Dict[str, Any], return_objects: bool=True):
+    def query_procedures(self,
+                         id: QueryObjectId=None,
+                         task_id: QueryObjectId=None,
+                         procedure: QueryStr=None,
+                         program: QueryStr=None,
+                         hash_index: QueryStr=None,
+                         status: QueryStr="COMPLETE",
+                         projection: QueryProjection=None,
+                         full_return: bool=False) -> Union[List['RecordBase'], Dict[str, Any]]:
+        """
+        Parameters
+        ----------
+        id : QueryObjectId, optional
+            Queries the Procedure ``id`` field.
+        task_id : QueryObjectId, optional
+            Queries the Procedure ``task_id`` field.
+        procedure : QueryStr, optional
+            Queries the Procedure ``procedure`` field.
+        program : QueryStr, optional
+            Queries the Procedure ``program`` field.
+        hash_index : QueryStr, optional
+            Queries the Procedure ``hash_index`` field.
+        status : QueryStr, optional
+            Queries the Procedure ``status`` field.
+        projection : QueryProjection, optional
+            Filters the returned fields, will return a dictionary rather than an object.
+        full_return : bool, optional
+            Description
 
-        body = ProcedureGETBody(data=procedure_query)
-        r = self._request("get", "procedure", data=body.json())
-        r = ProcedureGETReponse.parse_raw(r.text)
+        Returns
+        -------
+        Union[List['RecordBase'], Dict[str, Any]]
+            Returns a List of found RecordResult's without projection, or a
+            dictionary of results with projection.
 
-        if return_objects:
-            ret = []
-            for packet in r.data:
-                tmp = build_procedure(packet, client=self)
-                ret.append(tmp)
-            return ret
+        Deleted Parameters
+        ------------------
+        return_full : bool, optional
+            If False, returns a Collection object otherwise returns raw JSON
+        """
+
+        payload = {
+            "meta": {
+                "projection": projection
+            },
+            "data": {
+                "id": id,
+                "task_id": task_id,
+                "program": program,
+                "procedure": procedure,
+                "hash_index": hash_index,
+                "status": status,
+            }
+        }
+        response = self._automodel_request("procedure", "get", payload, full_return=True)
+
+        if not projection:
+            for ind in range(len(response.data)):
+                response.data[ind] = build_procedure(response.data[ind], client=self)
+
+        if full_return:
+            return response
         else:
-            # Equivalent to full_return from other gets
-            return r
+            return response.data
 
     ### Compute section
 
@@ -565,15 +612,7 @@ class FractalClient(object):
             "data": molecule_id
         }
 
-        body = TaskQueuePOSTBody(**payload)
-
-        r = self._request("post", "task_queue", data=body.json())
-        r = TaskQueuePOSTResponse.parse_raw(r.text)
-
-        if full_return:
-            return r
-        else:
-            return r.data
+        return self._automodel_request("task_queue", "post", payload, full_return=full_return)
 
     def add_procedure(self,
                       procedure: str,
@@ -598,6 +637,7 @@ class FractalClient(object):
             "data": molecule_id
         }
         payload["meta"].update(program_options)
+
 
         body = TaskQueuePOSTBody(**payload)
         r = self._request("post", "task_queue", data=body.json())

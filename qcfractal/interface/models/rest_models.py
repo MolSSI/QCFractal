@@ -394,18 +394,40 @@ class ResultGETResponse(BaseModel):
     class Config(RESTConfig):
         pass
 
-register_model("result", "GET", ResultGETBody, ResultGETResponse)
 
+register_model("result", "GET", ResultGETBody, ResultGETResponse)
 
 ### Procedures
 
 
 class ProcedureGETBody(BaseModel):
-    meta: Dict[str, Any] = {}
-    data: Dict[str, Any]
+    class Data(BaseModel):
+        id: QueryObjectId = None
+        task_id: QueryObjectId = None
+
+        procedure: QueryStr = None
+        program: QueryStr = None
+        hash_index: QueryStr = None
+
+        status: QueryStr = "COMPLETE"
+
+        class Config(RESTConfig):
+            pass
+
+    class Meta(BaseModel):
+        projection: Dict[str, Any] = None
+
+        class Config(RESTConfig):
+            pass
+
+    meta: Meta = Meta()
+    data: Data
+
+    class Config(RESTConfig):
+        pass
 
 
-class ProcedureGETReponse(BaseModel):
+class ProcedureGETResponse(BaseModel):
     meta: ResponseGETMeta
     data: List[Dict[str, Any]]
 
@@ -415,6 +437,11 @@ class ProcedureGETReponse(BaseModel):
             return [v]
         return v
 
+    class Config(RESTConfig):
+        pass
+
+
+register_model("procedure", "GET", ProcedureGETBody, ProcedureGETResponse)
 
 ### Task Queue
 
@@ -440,6 +467,7 @@ class TaskQueueGETResponse(BaseModel):
             return [v]
         return v
 
+register_model("task_queue", "GET", TaskQueueGETBody, TaskQueueGETResponse)
 
 class TaskQueuePOSTBody(BaseModel):
 
@@ -464,6 +492,8 @@ class TaskQueuePOSTResponse(BaseModel):
 
     meta: ResponsePOSTMeta
     data: Data
+
+register_model("task_queue", "POST", TaskQueuePOSTBody, TaskQueuePOSTResponse)
 
 
 ### Service Queue

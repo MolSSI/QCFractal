@@ -9,7 +9,7 @@ from .interface.models.rest_models import (MoleculeGETBody, MoleculeGETResponse,
                                            MoleculePOSTResponse, KeywordGETBody, KeywordGETResponse, KeywordPOSTBody,
                                            KeywordPOSTResponse, KVStoreGETBody, KVStoreGETResponse, CollectionGETBody,
                                            CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
-                                           ResultGETBody, ResultGETResponse, ProcedureGETBody, ProcedureGETReponse)
+                                           ResultGETBody, ResultGETResponse, ProcedureGETBody, ProcedureGETResponse)
 
 
 class APIHandler(tornado.web.RequestHandler):
@@ -283,9 +283,9 @@ class ProcedureHandler(APIHandler):
 
         body = ProcedureGETBody.parse_raw(self.request.body)
 
-        ret = storage.get_procedures(**body.data)
+        ret = storage.get_procedures(**body.data.dict())
 
-        response = ProcedureGETReponse(**ret)
+        response = ProcedureGETResponse(**ret)
         self.logger.info("GET: Procedures - {} pulls.".format(len(response.data)))
 
         self.write(response.json())
