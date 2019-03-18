@@ -38,6 +38,7 @@ class CommonManagerSettings(BaseSettings):
     ntasks: int = 1
     ncores: int = qcng.config.get_global("ncores")
     memory: confloat(gt=0) = qcng.config.get_global("memory")
+    scratch_directory: str = None
 
     class Config(SettingsCommonConfig):
         pass
@@ -90,7 +91,7 @@ class DaskQueueSettings(BaseSettings):
 
     def __init__(self, **kwargs):
         """Enforce that the keys we are going to set remain untouched"""
-        forbidden_set = {"name", "ncores", "memory", "processes", "walltime", "env_extra", "qca_resource_string"}
+        forbidden_set = {"name", "cores", "memory", "processes", "walltime", "env_extra", "qca_resource_string"}
         bad_set = set(kwargs.keys()) & forbidden_set
         if bad_set:
             raise KeyError("The following items were set as part of dask_jobqueue, however, "
@@ -129,6 +130,7 @@ def parse_args():
         help="The number of simultaneous tasks for the executor to run, resources will be divided evenly.")
     common.add_argument("--ncores", type=int, help="The number of process for the executor")
     common.add_argument("--memory", type=int, help="The total amount of memory on the system in GB")
+    common.add_argument("--scratch-directory", type=str, help="Scratch directory location")
 
     # FractalClient options
     server = parser.add_argument_group('FractalServer connection settings')
@@ -170,9 +172,10 @@ def parse_args():
 
     # Stupid we cannot inspect groups
     data = {
-        "common": _build_subset(args, {"adapter", "ntasks", "ncores", "memory"}),
+        "common": _build_subset(args, {"adapter", "ntasks", "ncores", "memory", "scratch_directory"}),
         "server": _build_subset(args, {"fractal_uri", "password", "username", "verify"}),
-        "manager": _build_subset(args, {"max_tasks", "manager_name", "queue_tag", "log_file_prefix", "update_frequency", "test", "ntests"}),
+        "manager": _build_subset(args, {"max_tasks", "manager_name", "queue_tag", "log_file_prefix", "update_frequency",
+                                        "test", "ntests"}),
     } # yapf: disable
 
     if args["config_file"] is not None:
@@ -241,7 +244,7 @@ def main(args=None):
         # Create one construct to quickly merge dicts with a final check
         dask_construct = {
             "name": "QCFractal_Dask_Compute_Executor",
-            "cores": settings.common.cores,
+            "cores": settings.common.ncores,
             "memory": str(settings.common.memory) + "GB",
             "processes": settings.common.ntasks, # Number of workers to generate == tasks
             "walltime": settings.cluster.walltime,
@@ -282,7 +285,9 @@ def main(args=None):
         manager_name=settings.manager.manager_name,
         update_frequency=settings.manager.update_frequency,
         cores_per_task=cores_per_task,
-        memory_per_task=memory_per_task)
+        memory_per_task=memory_per_task,
+        scratch_directory=settings.common.scratch_directory
+    )
 
     # Add exit callbacks
     for cb in exit_callbacks:
