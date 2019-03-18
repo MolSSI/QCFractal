@@ -286,7 +286,7 @@ def main(args=None):
         update_frequency=settings.manager.update_frequency,
         cores_per_task=cores_per_task,
         memory_per_task=memory_per_task,
-        scratch_directory=settings.manager.scratch_directory
+        scratch_directory=settings.common.scratch_directory
     )
 
     # Add exit callbacks
