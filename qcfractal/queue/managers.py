@@ -208,7 +208,7 @@ class QueueManager:
         self.assert_connected()
 
         self.scheduler = sched.scheduler(time.time, time.sleep)
-        heartbeat_time = int(0.8 * self.heartbeat_frequency)
+        heartbeat_time = int(0.4 * self.heartbeat_frequency)
 
         def scheduler_update():
             self.update()

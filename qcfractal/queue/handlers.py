@@ -236,6 +236,8 @@ class QueueManagerHandler(APIHandler):
         storage = self.objects["storage_socket"]
 
         body = QueueManagerPOSTBody.parse_raw(self.request.body)
+        name = self._get_name_from_metadata(body.meta)
+        self.logger.info("QueueManager: Recieved completed task packet from {}.".format(name))
         ret = self.insert_complete_tasks(storage, body.data, self.logger)
 
         response = QueueManagerPOSTResponse(
@@ -249,7 +251,7 @@ class QueueManagerHandler(APIHandler):
             },
             data=True)
         self.write(response.json())
-        self.logger.info("QueueManager: Acquired {} complete tasks.".format(len(body.data)))
+        self.logger.info("QueueManager: Inserted {} complete tasks.".format(len(body.data)))
 
         # Update manager logs
         name = self._get_name_from_metadata(body.meta)
