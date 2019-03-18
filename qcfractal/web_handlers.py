@@ -147,7 +147,7 @@ class MoleculeHandler(APIHandler):
 
         body = MoleculeGETBody.parse_raw(self.request.body)
 
-        molecules = storage.get_molecules(**body.data)
+        molecules = storage.get_molecules(**body.data.dict())
         self.logger.info("GET: Molecule - {} pulls.".format(len(molecules["data"])))
 
         ret = MoleculeGETResponse(**molecules)

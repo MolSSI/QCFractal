@@ -29,7 +29,8 @@ __all__ = [
 
 __rest_models = {}
 
-def register_model(name:str, rest:str, body: 'BaseModel', response: 'BaseModel') -> None:
+
+def register_model(name: str, rest: str, body: 'BaseModel', response: 'BaseModel') -> None:
     """
     Register a REST model.
 
@@ -57,7 +58,8 @@ def register_model(name:str, rest:str, body: 'BaseModel', response: 'BaseModel')
 
     __rest_models[name][rest] = (body, response)
 
-def rest_model(name:str, rest:str) -> Tuple['BaseModel', 'BaseModel']:
+
+def rest_model(name: str, rest: str) -> Tuple['BaseModel', 'BaseModel']:
     """Aquires a REST Model
 
     Parameters
@@ -94,10 +96,11 @@ class RESTConfig(BaseConfig):
     json_encoders = json_encoders
     extra = "forbid"
 
-class EmptyMeta(BaseModel):
 
+class EmptyMeta(BaseModel):
     class Config(RESTConfig):
         pass
+
 
 class ResponseMeta(BaseModel):
     errors: List[Tuple[str, str]]
@@ -138,8 +141,8 @@ class QueryMeta(BaseModel):
 
 
 class KVStoreGETBody(BaseModel):
-    data: List[ObjectId]
     meta: EmptyMeta = {}
+    data: List[ObjectId]
 
     class Config(RESTConfig):
         pass
@@ -152,23 +155,23 @@ class KVStoreGETResponse(BaseModel):
     class Config(RESTConfig):
         pass
 
+
 register_model("kvstore", "GET", KVStoreGETBody, KVStoreGETResponse)
 
 ### Molecule response
 
 
 class MoleculeGETBody(BaseModel):
-    class Data:
-        id: QueryObjectId=None
-        molecule_hash: QueryStr=None
-        molecular_formula: QueryStr=None
+    class Data(BaseModel):
+        id: QueryObjectId = None
+        molecule_hash: QueryStr = None
+        molecular_formula: QueryStr = None
 
         class Config(RESTConfig):
             pass
 
-
-    data: Dict[str, Any]
-    meta: Dict[str, Any] = None
+    meta: EmptyMeta = {}
+    data: Data
 
     class Config(RESTConfig):
         pass
@@ -181,10 +184,12 @@ class MoleculeGETResponse(BaseModel):
     class Config(RESTConfig):
         pass
 
+
 register_model("molecule", "GET", MoleculeGETBody, MoleculeGETResponse)
 
+
 class MoleculePOSTBody(BaseModel):
-    meta: Dict[str, Any] = None
+    meta: EmptyMeta = {}
     data: List[Molecule]
 
     class Config(RESTConfig):
@@ -198,37 +203,55 @@ class MoleculePOSTResponse(BaseModel):
     class Config(RESTConfig):
         pass
 
-register_model("molecule", "POST", MoleculePOSTBody, MoleculePOSTResponse)
 
+register_model("molecule", "POST", MoleculePOSTBody, MoleculePOSTResponse)
 
 ### Keywords
 
 
 class KeywordGETBody(BaseModel):
-    meta: Dict[str, Any] = None
+    class Data(BaseModel):
+        id: QueryObjectId = None
+        hash_index: QueryStr = None
+
+        class Config(RESTConfig):
+            pass
+
+    meta: EmptyMeta = {}
     data: Dict[str, Any]
+
+    class Config(RESTConfig):
+        pass
 
 
 class KeywordGETResponse(BaseModel):
     meta: ResponseGETMeta
     data: List[KeywordSet]
 
+    class Config(RESTConfig):
+        pass
+
+
+register_model("keyword", "GET", KeywordGETBody, KeywordGETResponse)
+
 
 class KeywordPOSTBody(BaseModel):
-    meta: Dict[str, Any] = None
+    meta: EmptyMeta = {}
     data: List[KeywordSet]
 
-    # @validator("data", whole=True, pre=True)
-    # def ensure_list_of_dict(cls, v):
-    #     if isinstance(v, dict):
-    #         return [v]
-    #     return v
+    class Config(RESTConfig):
+        pass
 
 
 class KeywordPOSTResponse(BaseModel):
-    data: List[Optional[str]]
+    data: List[Optional[ObjectId]]
     meta: ResponsePOSTMeta
 
+    class Config(RESTConfig):
+        pass
+
+
+register_model("keyword", "POST", KeywordPOSTBody, KeywordPOSTResponse)
 
 ### Collections
 
@@ -242,11 +265,20 @@ class CollectionGETBody(BaseModel):
         def cast_to_lower(cls, v):
             return v.lower()
 
+        class Config(RESTConfig):
+            pass
+
     class Meta(BaseModel):
         projection: Dict[str, Any] = None
 
+        class Config(RESTConfig):
+            pass
+
     meta: Meta = None
     data: Data
+
+    class Config(RESTConfig):
+        pass
 
 
 class CollectionGETResponse(BaseModel):
@@ -260,10 +292,19 @@ class CollectionGETResponse(BaseModel):
                 raise ValueError("Dicts in 'data' must have both 'collection' and 'name'")
         return v
 
+    class Config(RESTConfig):
+        pass
+
+
+register_model("collection", "GET", CollectionGETBody, CollectionGETResponse)
+
 
 class CollectionPOSTBody(BaseModel):
     class Meta(BaseModel):
         overwrite: bool = False
+
+        class Config(RESTConfig):
+            pass
 
     class Data(BaseModel):
         id: str = "local"  # Auto blocks overwriting in mongoengine_socket
@@ -274,17 +315,25 @@ class CollectionPOSTBody(BaseModel):
         def cast_to_lower(cls, v):
             return v.lower()
 
-        class Config:
+        class Config(RESTConfig):
             extra = "allow"
 
     meta: Meta = Meta()
     data: Data
+
+    class Config(RESTConfig):
+        pass
 
 
 class CollectionPOSTResponse(BaseModel):
     data: Union[str, None]
     meta: ResponsePOSTMeta
 
+    class Config(RESTConfig):
+        pass
+
+
+register_model("collection", "POST", CollectionPOSTBody, CollectionPOSTResponse)
 
 ### Result
 
@@ -327,6 +376,9 @@ class ResultGETBody(BaseModel):
     meta: Meta = Meta()
     data: Data
 
+    class Config(RESTConfig):
+        pass
+
 
 class ResultGETResponse(BaseModel):
     meta: ResponseGETMeta
@@ -338,6 +390,11 @@ class ResultGETResponse(BaseModel):
         if isinstance(v, dict):
             return [v]
         return v
+
+    class Config(RESTConfig):
+        pass
+
+register_model("result", "GET", ResultGETBody, ResultGETResponse)
 
 
 ### Procedures

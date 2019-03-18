@@ -5,7 +5,6 @@ A command line interface to the qcfractal server.
 import argparse
 import signal
 from enum import Enum
-from functools import partial
 from typing import List, Optional
 
 import tornado.log
