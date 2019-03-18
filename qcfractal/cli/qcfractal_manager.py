@@ -241,7 +241,7 @@ def main(args=None):
         # Create one construct to quickly merge dicts with a final check
         dask_construct = {
             "name": "QCFractal_Dask_Compute_Executor",
-            "cores": settings.common.cores,
+            "cores": settings.common.ncores,
             "memory": str(settings.common.memory) + "GB",
             "processes": settings.common.ntasks, # Number of workers to generate == tasks
             "walltime": settings.cluster.walltime,
