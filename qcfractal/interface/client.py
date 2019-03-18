@@ -144,11 +144,19 @@ class FractalClient(object):
             The input dictionary
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
+        noraise : bool, optional
+            Optionally do not raise error if
+            Description
 
         Returns
         -------
         Any
             The REST response object
+
+        Raises
+        ------
+        TypeError
+            Description
         """
         body_model, response_model = rest_model(name, rest)
 

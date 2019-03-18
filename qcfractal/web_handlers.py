@@ -5,11 +5,9 @@ import json
 
 import tornado.web
 
-from .interface.models.rest_models import (MoleculeGETBody, MoleculeGETResponse, MoleculePOSTBody,
-                                           MoleculePOSTResponse, KeywordGETBody, KeywordGETResponse, KeywordPOSTBody,
-                                           KeywordPOSTResponse, KVStoreGETBody, KVStoreGETResponse, CollectionGETBody,
-                                           CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse,
-                                           ResultGETBody, ResultGETResponse, ProcedureGETBody, ProcedureGETResponse)
+from pydantic import ValidationError
+
+from .interface.models.rest_models import rest_model
 
 
 class APIHandler(tornado.web.RequestHandler):
@@ -27,6 +25,7 @@ class APIHandler(tornado.web.RequestHandler):
 
         self.set_header("Content-Type", "application/json")
         self.objects = objects
+        self.storage = self.objects["storage_socket"]
         self.logger = objects["logger"]
         self.username = None
 
@@ -59,6 +58,13 @@ class APIHandler(tornado.web.RequestHandler):
         verified, msg = self.objects["storage_socket"].verify_user(username, password, permission)
         if verified is False:
             raise tornado.web.HTTPError(status_code=401, reason=msg)
+
+    def parse_bodymodel(self, model):
+
+        try:
+            return model.parse_raw(self.request.body)
+        except ValidationError as exc:
+            raise tornado.web.HTTPError(status_code=401, reason="Invalid REST Input")
 
 
 class InformationHandler(APIHandler):
@@ -104,14 +110,13 @@ class KVStoreHandler(APIHandler):
 
         """
 
-        storage = self.objects["storage_socket"]
+        body_model, response_model = rest_model("kvstore", "get")
+        body = self.parse_bodymodel(body_model)
 
-        body = KVStoreGETBody.parse_raw(self.request.body)
+        ret = self.storage.get_kvstore(body.data)
+        ret = response_model(**ret)
 
-        ret = storage.get_kvstore(body.data)
-        self.logger.info("GET: KVStore - {} pulls.".format(len(ret["data"])))
-
-        ret = KVStoreGETResponse(**ret)
+        self.logger.info("GET: KVStore - {} pulls.".format(len(ret.data)))
         self.write(ret.json())
 
 
@@ -143,14 +148,13 @@ class MoleculeHandler(APIHandler):
 
         """
 
-        storage = self.objects["storage_socket"]
+        body_model, response_model = rest_model("molecule", "get")
+        body = self.parse_bodymodel(body_model)
 
-        body = MoleculeGETBody.parse_raw(self.request.body)
+        molecules = self.storage.get_molecules(**body.data.dict())
+        ret = response_model(**molecules)
 
-        molecules = storage.get_molecules(**body.data.dict())
-        self.logger.info("GET: Molecule - {} pulls.".format(len(molecules["data"])))
-
-        ret = MoleculeGETResponse(**molecules)
+        self.logger.info("GET: Molecule - {} pulls.".format(len(ret.data)))
         self.write(ret.json())
 
     def post(self):
@@ -174,18 +178,17 @@ class MoleculeHandler(APIHandler):
 
         self.authenticate("write")
 
-        storage = self.objects["storage_socket"]
+        body_model, response_model = rest_model("molecule", "post")
+        body = self.parse_bodymodel(body_model)
 
-        body = MoleculePOSTBody.parse_raw(self.request.body)
-        ret = storage.add_molecules(body.data)
-        response = MoleculePOSTResponse(**ret)
+        ret = self.storage.add_molecules(body.data)
+        response = response_model(**ret)
 
         self.logger.info("POST: Molecule - {} inserted.".format(response.meta.n_inserted))
-
         self.write(response.json())
 
 
-class OptionHandler(APIHandler):
+class KeywordHandler(APIHandler):
     """
     A handler to push and get molecules.
     """
@@ -196,25 +199,25 @@ class OptionHandler(APIHandler):
 
         storage = self.objects["storage_socket"]
 
-        body = KeywordGETBody.parse_raw(self.request.body)
-        ret = storage.get_keywords(**body.data, with_ids=False)
-        kw = KeywordGETResponse(**ret)
+        body_model, response_model = rest_model("keyword", "get")
+        body = self.parse_bodymodel(body_model)
 
-        self.logger.info("GET: Keywords - {} pulls.".format(len(kw.data)))
+        ret = storage.get_keywords(**body.data.dict(), with_ids=False)
+        response = response_model(**ret)
 
-        self.write(kw.json())
+        self.logger.info("GET: Keywords - {} pulls.".format(len(response.data)))
+        self.write(response.json())
 
     def post(self):
         self.authenticate("write")
 
-        storage = self.objects["storage_socket"]
+        body_model, response_model = rest_model("keyword", "post")
+        body = self.parse_bodymodel(body_model)
 
-        body = KeywordPOSTBody.parse_raw(self.request.body)
-        ret = storage.add_keywords(body.data)
-        response = KeywordPOSTResponse(**ret)
+        ret = self.storage.add_keywords(body.data)
+        response = response_model(**ret)
 
         self.logger.info("POST: Keywords - {} inserted.".format(response.meta.n_inserted))
-
         self.write(response.json())
 
 
@@ -227,27 +230,26 @@ class CollectionHandler(APIHandler):
 
     def get(self):
 
-        storage = self.objects["storage_socket"]
 
-        body = CollectionGETBody.parse_raw(self.request.body)
-        cols = storage.get_collections(**body.data.dict(), projection=body.meta.projection)
-        response = CollectionGETResponse(**cols)
+        body_model, response_model = rest_model("collection", "get")
+        body = self.parse_bodymodel(body_model)
+
+        cols = self.storage.get_collections(**body.data.dict(), projection=body.meta.projection)
+        response = response_model(**cols)
+
         self.logger.info("GET: Collections - {} pulls.".format(len(response.data)))
-
         self.write(response.json())
 
     def post(self):
         self.authenticate("write")
 
-        storage = self.objects["storage_socket"]
+        body_model, response_model = rest_model("collection", "post")
+        body = self.parse_bodymodel(body_model)
 
-        body = CollectionPOSTBody.parse_raw(self.request.body)
-        ret = storage.add_collection(body.data.dict(), overwrite=body.meta.overwrite)
-
-        response = CollectionPOSTResponse(**ret)
+        ret = self.storage.add_collection(body.data.dict(), overwrite=body.meta.overwrite)
+        response = response_model(**ret)
 
         self.logger.info("POST: Collections - {} inserted.".format(response.meta.n_inserted))
-
         self.write(response.json())
 
 
@@ -260,12 +262,12 @@ class ResultHandler(APIHandler):
 
     def get(self):
 
-        storage = self.objects["storage_socket"]
+        body_model, response_model = rest_model("result", "get")
+        body = self.parse_bodymodel(body_model)
 
-        body = ResultGETBody.parse_raw(self.request.body)
-        proj = body.meta.projection
-        ret = storage.get_results(**body.data.dict(), projection=proj)
-        result = ResultGETResponse(**ret)
+        ret = self.storage.get_results(**body.data.dict(), projection=body.meta.projection)
+        result = response_model(**ret)
+
         self.logger.info("GET: Results - {} pulls.".format(len(result.data)))
         self.write(result.json())
 
@@ -279,13 +281,11 @@ class ProcedureHandler(APIHandler):
 
     def get(self):
 
-        storage = self.objects["storage_socket"]
+        body_model, response_model = rest_model("procedure", "get")
+        body = self.parse_bodymodel(body_model)
 
-        body = ProcedureGETBody.parse_raw(self.request.body)
+        ret = self.storage.get_procedures(**body.data.dict())
+        response = response_model(**ret)
 
-        ret = storage.get_procedures(**body.data.dict())
-
-        response = ProcedureGETResponse(**ret)
         self.logger.info("GET: Procedures - {} pulls.".format(len(response.data)))
-
         self.write(response.json())

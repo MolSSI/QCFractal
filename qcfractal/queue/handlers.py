@@ -7,10 +7,7 @@ import traceback
 
 import tornado.web
 
-from ..interface.models.rest_models import (
-    QueueManagerGETBody, QueueManagerGETResponse, QueueManagerPOSTBody, QueueManagerPOSTResponse, QueueManagerPUTBody,
-    QueueManagerPUTResponse, ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody,
-    ServiceQueuePOSTResponse, TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse)
+from ..interface.models.rest_models import rest_model
 from ..procedures import get_procedure_parser, check_procedure_available
 from ..services import initialize_service
 from ..web_handlers import APIHandler
@@ -27,40 +24,37 @@ class TaskQueueHandler(APIHandler):
         """Summary
         """
 
-        # Grab objects
-        storage = self.objects["storage_socket"]
-
-        post = TaskQueuePOSTBody.parse_raw(self.request.body)
+        body_model, response_model = rest_model("task_queue", "post")
+        body = self.parse_bodymodel(body_model)
 
         # Format and submit tasks
-        if not check_procedure_available(post.meta["procedure"]):
-            raise tornado.web.HTTPError(status_code=400, reason="Unknown procedure {}.".format(post.meta["procedure"]))
+        if not check_procedure_available(body.meta["procedure"]):
+            raise tornado.web.HTTPError(status_code=400, reason="Unknown procedure {}.".format(body.meta["procedure"]))
 
-        procedure_parser = get_procedure_parser(post.meta["procedure"], storage, self.logger)
+        procedure_parser = get_procedure_parser(body.meta["procedure"], self.storage, self.logger)
 
         # Verify the procedure
-        verify = procedure_parser.verify_input(post)
+        verify = procedure_parser.verify_input(body)
         if verify is not True:
             raise tornado.web.HTTPError(status_code=400, reason=verify)
 
-        payload = procedure_parser.submit_tasks(post)
+        payload = procedure_parser.submit_tasks(body)
+        response = response_model(**payload)
 
-        response = TaskQueuePOSTResponse(**payload)
-        self.logger.info("TaskQueue: Added {} tasks.".format(response.meta.n_inserted))
-
+        self.logger.info("POST: TaskQueue -  Added {} tasks.".format(response.meta.n_inserted))
         self.write(response.json())
 
     def get(self):
         """Posts new services to the service queue
         """
 
-        # Grab objects
-        storage = self.objects["storage_socket"]
+        body_model, response_model = rest_model("task_queue", "get")
+        body = self.parse_bodymodel(body_model)
 
-        body = TaskQueueGETBody.parse_raw(self.request.body)
-        tasks = storage.get_queue(**body.data.dict(), projection=body.meta.projection)
+        tasks = self.storage.get_queue(**body.data.dict(), projection=body.meta.projection)
         response = TaskQueueGETResponse(**tasks)
 
+        self.logger.info("GET: TaskQueue - {} pulls.".format(len(response.data)))
         self.write(response.json())
 
 
@@ -75,46 +69,44 @@ class ServiceQueueHandler(APIHandler):
         """Posts new services to the service queue
         """
 
-        # Grab objects
-        storage = self.objects["storage_socket"]
-
-        body = ServiceQueuePOSTBody.parse_raw(self.request.body)
+        body_model, response_model = rest_model("service_queue", "post")
+        body = self.parse_bodymodel(body_model)
 
         new_services = []
         for service_input in body.data:
             # Get molecules with ids
             if isinstance(service_input.initial_molecule, list):
-                molecules = storage.get_add_molecules_mixed(service_input.initial_molecule)["data"]
+                molecules = self.storage.get_add_molecules_mixed(service_input.initial_molecule)["data"]
                 if len(molecules) != len(service_input.initial_molecule):
                     raise KeyError("We should catch this error.")
             else:
-                molecules = storage.get_add_molecules_mixed([service_input.initial_molecule])["data"][0]
+                molecules = self.storage.get_add_molecules_mixed([service_input.initial_molecule])["data"][0]
 
             # Update the input and build a service object
             service_input = service_input.copy(update={"initial_molecule": molecules})
-            new_services.append(initialize_service(storage, self.logger, service_input, tag=body.meta.tag, priority=body.meta.priority))
+            new_services.append(
+                initialize_service(
+                    self.storage, self.logger, service_input, tag=body.meta.tag, priority=body.meta.priority))
 
-        ret = storage.add_services(new_services)
+        ret = self.storage.add_services(new_services)
         ret["data"] = {"ids": ret["data"], "existing": ret["meta"]["duplicates"]}
         ret["data"]["submitted"] = list(set(ret["data"]["ids"]) - set(ret["meta"]["duplicates"]))
+        response = response_model(**ret)
 
-        response = ServiceQueuePOSTResponse(**ret)
-        self.logger.info("ServiceQueue: Added {} services.\n".format(response.meta.n_inserted))
-
+        self.logger.info("POST: ServiceQueue -  Added {} services.\n".format(response.meta.n_inserted))
         self.write(response.json())
 
     def get(self):
         """Gets services from the service queue
         """
 
-        # Grab objects
-        storage = self.objects["storage_socket"]
+        body_model, response_model = rest_model("service_queue", "get")
+        body = self.parse_bodymodel(body_model)
 
-        body = ServiceQueueGETBody.parse_raw(self.request.body)
+        ret = self.storage.get_services(**body.data.dict(), projection=body.meta.projection)
+        response = response_model(**ret)
 
-        ret = storage.get_services(**body.data.dict(), projection=body.meta.projection)
-        response = ServiceQueueGETResponse(**ret)
-
+        self.logger.info("GET: ServiceQueue - {} pulls.\n".format(len(response.data)))
         self.write(response.json())
 
 
@@ -204,44 +196,45 @@ class QueueManagerHandler(APIHandler):
         """Pulls new tasks from the Servers queue
         """
 
-        # Grab objects
-        storage = self.objects["storage_socket"]
-
-        body = QueueManagerGETBody.parse_raw(self.request.body)
+        body_model, response_model = rest_model("queue_manager", "get")
+        body = self.parse_bodymodel(body_model)
 
         # Figure out metadata and kwargs
         name = self._get_name_from_metadata(body.meta)
 
         # Grab new tasks and write out
-        new_tasks = storage.queue_get_next(
+        new_tasks = self.storage.queue_get_next(
             name, body.meta.programs, body.meta.procedures, limit=body.data.limit, tag=body.meta.tag)
-        response = QueueManagerGETResponse(
-            meta={"n_found": len(new_tasks),
-                  "success": True,
-                  "errors": [],
-                  "error_description": "",
-                  "missing": []},
-            data=new_tasks)
+        response = response_model(**{
+            "meta": {
+                "n_found": len(new_tasks),
+                "success": True,
+                "errors": [],
+                "error_description": "",
+                "missing": []
+            },
+            "data": new_tasks
+        })
         self.write(response.json())
+
         self.logger.info("QueueManager: Served {} tasks.".format(response.meta.n_found))
 
         # Update manager logs
-        storage.manager_update(name, submitted=len(new_tasks), **body.meta.dict())
+        self.storage.manager_update(name, submitted=len(new_tasks), **body.meta.dict())
 
     def post(self):
         """Posts complete tasks to the Servers queue
         """
 
-        # Grab objects
-        storage = self.objects["storage_socket"]
+        body_model, response_model = rest_model("queue_manager", "post")
+        body = self.parse_bodymodel(body_model)
 
-        body = QueueManagerPOSTBody.parse_raw(self.request.body)
         name = self._get_name_from_metadata(body.meta)
         self.logger.info("QueueManager: Recieved completed task packet from {}.".format(name))
-        ret = self.insert_complete_tasks(storage, body.data, self.logger)
+        ret = self.insert_complete_tasks(self.storage, body.data, self.logger)
 
-        response = QueueManagerPOSTResponse(
-            meta={
+        response = response_model(**{
+            "meta": {
                 "n_inserted": ret[0],
                 "duplicates": [],
                 "validation_errors": [],
@@ -249,32 +242,34 @@ class QueueManagerHandler(APIHandler):
                 "errors": [],
                 "error_description": "" if not ret[1] else "{} errors".format(ret[1])
             },
-            data=True)
+            "data": True
+        })
         self.write(response.json())
         self.logger.info("QueueManager: Inserted {} complete tasks.".format(len(body.data)))
 
         # Update manager logs
         name = self._get_name_from_metadata(body.meta)
-        storage.manager_update(name, completed=len(body.data), **body.meta.dict())
+        self.storage.manager_update(name, completed=len(body.data), **body.meta.dict())
 
     def put(self):
         """
         Various manager manipulation operations
         """
 
-        storage = self.objects["storage_socket"]
         ret = True
 
-        body = QueueManagerPUTBody.parse_raw(self.request.body)
+        body_model, response_model = rest_model("queue_manager", "put")
+        body = self.parse_bodymodel(body_model)
+
         name = self._get_name_from_metadata(body.meta)
         op = body.data.operation
         if op == "startup":
-            storage.manager_update(name, status="ACTIVE", **body.meta.dict())
+            self.storage.manager_update(name, status="ACTIVE", **body.meta.dict())
             self.logger.info("QueueManager: New active manager {} detected.".format(name))
 
         elif op == "shutdown":
-            nshutdown = storage.queue_reset_status(name)
-            storage.manager_update(name, returned=nshutdown, status="INACTIVE", **body.meta.dict())
+            nshutdown = self.storage.queue_reset_status(name)
+            self.storage.manager_update(name, returned=nshutdown, status="INACTIVE", **body.meta.dict())
 
             self.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(
                 name, nshutdown))
@@ -282,14 +277,14 @@ class QueueManagerHandler(APIHandler):
             ret = {"nshutdown": nshutdown}
 
         elif op == "heartbeat":
-            storage.manager_update(name, status="ACTIVE", **body.meta.dict())
+            self.storage.manager_update(name, status="ACTIVE", **body.meta.dict())
             self.logger.info("QueueManager: Heartbeat of manager {} detected.".format(name))
 
         else:
             msg = "Operation '{}' not understood.".format(op)
             raise tornado.web.HTTPError(status_code=400, reason=msg)
 
-        response = QueueManagerPUTResponse(meta={}, data=ret)
+        response = response_model(**{"meta": {}, "data": ret})
         self.write(response.json())
 
         # Update manager logs

@@ -21,7 +21,7 @@ from .interface import FractalClient
 from .queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, TaskQueueHandler
 from .services import construct_service
 from .storage_sockets import storage_socket_factory
-from .web_handlers import (CollectionHandler, InformationHandler, KVStoreHandler, MoleculeHandler, OptionHandler,
+from .web_handlers import (CollectionHandler, InformationHandler, KVStoreHandler, MoleculeHandler, KeywordHandler,
                            ProcedureHandler, ResultHandler)
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -203,7 +203,7 @@ class FractalServer:
             (r"/information", InformationHandler, self.objects),
             (r"/kvstore", KVStoreHandler, self.objects),
             (r"/molecule", MoleculeHandler, self.objects),
-            (r"/keyword", OptionHandler, self.objects),
+            (r"/keyword", KeywordHandler, self.objects),
             (r"/collection", CollectionHandler, self.objects),
             (r"/result", ResultHandler, self.objects),
             (r"/procedure", ProcedureHandler, self.objects),

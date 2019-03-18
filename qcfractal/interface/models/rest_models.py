@@ -598,6 +598,9 @@ class QueueManagerGETResponse(BaseModel):
     data: List[Dict[str, Any]]
 
 
+register_model("queue_manager", "GET", QueueManagerGETBody, QueueManagerGETResponse)
+
+
 class QueueManagerPOSTBody(BaseModel):
     meta: QueueManagerMeta
     data: Dict[str, Any]
@@ -609,6 +612,9 @@ class QueueManagerPOSTBody(BaseModel):
 class QueueManagerPOSTResponse(BaseModel):
     meta: ResponsePOSTMeta
     data: bool
+
+
+register_model("queue_manager", "POST", QueueManagerPOSTBody, QueueManagerPOSTResponse)
 
 
 class QueueManagerPUTBody(BaseModel):
@@ -625,3 +631,6 @@ class QueueManagerPUTResponse(BaseModel):
     # Python can resolve dict -> bool since it passes a `is` test. Will not cast bool -> dict[str, int], so make Dict[]
     # check first
     data: Union[Dict[str, int], bool]
+
+
+register_model("queue_manager", "PUT", QueueManagerPUTBody, QueueManagerPUTResponse)
