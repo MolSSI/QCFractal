@@ -25,8 +25,61 @@ __all__ = [
     "QueueManagerPUTBody", "QueueManagerPUTResponse"
 ]  # yapf: disable
 
+### Utility functions
 
-### Generic and Common Models
+__rest_models = {}
+
+def register_model(name:str, rest:str, body: 'BaseModel', response: 'BaseModel') -> None:
+    """
+    Register a REST model.
+
+    Parameters
+    ----------
+    name : str
+        The REST endpoint name.
+    rest : str
+        The REST endpoint type.
+    body : BaseModel
+        The REST query body model.
+    response : BaseModel
+        The REST query response model.
+
+    """
+
+    name = name.lower()
+    rest = rest.upper()
+
+    if (name in __rest_models) and (rest in __rest_models[name]):
+        raise KeyError(f"Model name {name} already registered.")
+
+    if name not in __rest_models:
+        __rest_models[name] = {}
+
+    __rest_models[name][rest] = (body, response)
+
+def rest_model(name:str, rest:str) -> Tuple['BaseModel', 'BaseModel']:
+    """Aquires a REST Model
+
+    Parameters
+    ----------
+    name : str
+        The REST endpoint name.
+    rest : str
+        The REST endpoint type.
+
+    Returns
+    -------
+    Tuple['BaseModel', 'BaseModel']
+        The (body, response) models of the REST request.
+
+    """
+    try:
+        return __rest_models[name.lower()][rest.upper()]
+    except KeyError:
+        raise KeyError(f"REST Model {name.lower()}:{rest.upper()} could not be found.")
+
+
+### Generic Types and Common Models
 
 nullstr = constr(regex='null')
 
@@ -41,16 +94,26 @@ class RESTConfig(BaseConfig):
     json_encoders = json_encoders
     extra = "forbid"
 
+class EmptyMeta(BaseModel):
+
+    class Config(RESTConfig):
+        pass
 
 class ResponseMeta(BaseModel):
     errors: List[Tuple[str, str]]
     success: bool
     error_description: Union[str, bool]
 
+    class Config(RESTConfig):
+        pass
+
 
 class ResponseGETMeta(ResponseMeta):
     missing: List[str]
     n_found: int
+
+    class Config(RESTConfig):
+        pass
 
 
 class ResponsePOSTMeta(ResponseMeta):
@@ -58,14 +121,17 @@ class ResponsePOSTMeta(ResponseMeta):
     duplicates: Union[List[str], List[Tuple[str, str]]]
     validation_errors: List[str]
 
+    class Config(RESTConfig):
+        pass
+
 
 class QueryMeta(BaseModel):
     projection: Optional[Dict[str, bool]] = None
     limit: Optional[int] = None
     skip: Optional[int] = None
 
-    class Config:
-        extra = "forbid"
+    class Config(RESTConfig):
+        pass
 
 
 ### KVStore
@@ -73,45 +139,66 @@ class QueryMeta(BaseModel):
 
 class KVStoreGETBody(BaseModel):
     data: List[ObjectId]
-    meta: Dict[str, Any]
+    meta: EmptyMeta = {}
+
+    class Config(RESTConfig):
+        pass
 
 
 class KVStoreGETResponse(BaseModel):
     meta: ResponseGETMeta
     data: Dict[str, Any]
 
-    class Config:
-        json_encoders = json_encoders
+    class Config(RESTConfig):
+        pass
 
+register_model("kvstore", "GET", KVStoreGETBody, KVStoreGETResponse)
 
 ### Molecule response
 
 
 class MoleculeGETBody(BaseModel):
+    class Data:
+        id: QueryObjectId=None
+        molecule_hash: QueryStr=None
+        molecular_formula: QueryStr=None
+
+        class Config(RESTConfig):
+            pass
+
 
     data: Dict[str, Any]
-    meta: Dict[str, Any]
+    meta: Dict[str, Any] = None
+
+    class Config(RESTConfig):
+        pass
 
 
 class MoleculeGETResponse(BaseModel):
     meta: ResponseGETMeta
     data: List[Molecule]
 
-    class Config:
-        json_encoders = json_encoders
+    class Config(RESTConfig):
+        pass
 
+register_model("molecule", "GET", MoleculeGETBody, MoleculeGETResponse)
 
 class MoleculePOSTBody(BaseModel):
     meta: Dict[str, Any] = None
     data: List[Molecule]
 
-    class Config:
-        json_encoders = json_encoders
+    class Config(RESTConfig):
+        pass
 
 
 class MoleculePOSTResponse(BaseModel):
     meta: ResponsePOSTMeta
-    data: List[str]
+    data: List[ObjectId]
+
+    class Config(RESTConfig):
+        pass
+
+register_model("molecule", "POST", MoleculePOSTBody, MoleculePOSTResponse)
 
 
 ### Keywords
