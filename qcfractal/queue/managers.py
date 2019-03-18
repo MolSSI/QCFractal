@@ -50,7 +50,8 @@ class QueueManager:
                  update_frequency: Union[int, float]=2,
                  verbose: bool=True,
                  cores_per_task: Optional[int]=None,
-                 memory_per_task: Optional[Union[int, float]]=None):
+                 memory_per_task: Optional[Union[int, float]]=None,
+                 scratch_directory: Optional[str]=None):
         """
         Parameters
         ----------
@@ -76,6 +77,9 @@ class QueueManager:
         memory_per_task: int, optional, Default: None
             How much memory, in GiB, per computation task to allocate for QCEngine
             None indicates "use however much you can consume"
+        scratch_directory: str, optional, Default: None
+            Scratch directory location to do QCEngine compute
+            None indicates "wherever the system default is"
         """
 
         # Setup logging
@@ -90,8 +94,11 @@ class QueueManager:
         self.client = client
         self.cores_per_task = cores_per_task
         self.memory_per_task = memory_per_task
+        self.scratch_directory = scratch_directory
         self.queue_adapter = build_queue_adapter(
-            queue_client, logger=self.logger, cores_per_task=self.cores_per_task, memory_per_task=self.memory_per_task)
+            queue_client, logger=self.logger, cores_per_task=self.cores_per_task, memory_per_task=self.memory_per_task,
+            scratch_directory=self.scratch_directory
+        )
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag
         self.verbose = verbose
@@ -123,6 +130,7 @@ class QueueManager:
             self.logger.info("        Version:     {}".format(qcng.__version__))
             self.logger.info("        Task Cores:  {}".format(self.cores_per_task))
             self.logger.info("        Task Mem:    {}".format(self.memory_per_task))
+            self.logger.info("        Scratch Dir: {}".format(self.scratch_directory))
             self.logger.info("        Programs:    {}".format(self.available_programs))
             self.logger.info("        Procedures:  {}\n".format(self.available_procedures))
 

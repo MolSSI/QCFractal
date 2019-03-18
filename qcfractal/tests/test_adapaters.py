@@ -24,13 +24,13 @@ def test_adapter_single(managed_compute_server):
     assert len(ret) == 1
 
 
-@pytest.mark.parametrize("cores_per_task,memory_per_task", [
-    (None, None),
-    (1, 1),
-    (2, 1.9)
+@pytest.mark.parametrize("cores_per_task,memory_per_task,scratch_dir", [
+    (None, None, None),
+    (1, 1, "."),
+    (2, 1.9, ".")
 ])  # yapf: disable
 @testing.using_psi4
-def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per_task):
+def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per_task, scratch_dir):
     psi4_mem_buffer = 0.95  # Memory consumption buffer on psi4
     adapter_client = adapter_client_fixture
     task_id = "uuid-{}-{}".format(cores_per_task, memory_per_task)
@@ -56,7 +56,10 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
         }
     ]
     # Spin up a test queue manager
-    manager = QueueManager(None, adapter_client, cores_per_task=cores_per_task, memory_per_task=memory_per_task)
+    manager = QueueManager(None, adapter_client,
+                           cores_per_task=cores_per_task,
+                           memory_per_task=memory_per_task,
+                           scratch_directory=scratch_dir)
     # Operate on the adapter since there is no backend QCF Client
     manager.queue_adapter.submit_tasks(tasks)
     manager.queue_adapter.await_results()
@@ -74,6 +77,8 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
         assert provenance["nthreads"] == cores_per_task
     if memory_per_task is not None:
         assert provenance["memory"] == pytest.approx(memory_per_task * psi4_mem_buffer)
+    if scratch_dir is not None:
+        assert manager.queue_adapter.qcengine_local_options["scratch_directory"] == scratch_dir
 
 
 @testing.using_rdkit

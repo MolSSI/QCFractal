@@ -18,6 +18,7 @@ class BaseAdapter(abc.ABC):
                  logger: Optional[logging.Logger] = None,
                  cores_per_task: Optional[int] = None,
                  memory_per_task: Optional[float] = None,
+                 scratch_directory: Optional[str] = None,
                  **kwargs):
         """
         Parameters
@@ -34,6 +35,9 @@ class BaseAdapter(abc.ABC):
             How much memory, in GiB, per computation task to allocate for QCEngine
             None indicates "use however much you can consume"
             It is up to the specific Adapter implementation to handle this option
+        scratch_directory: str, optional, Default: None
+            Location of the scratch directory to compute QCEngine tasks in
+            It is up to the specific Adapter implementation to handle this option
         """
         self.client = client
         self.logger = logger or logging.getLogger(self.__class__.__name__)
@@ -42,6 +46,7 @@ class BaseAdapter(abc.ABC):
         self.function_map = {}
         self.cores_per_task = cores_per_task
         self.memory_per_task = memory_per_task
+        self.scratch_directory = scratch_directory
 
     def __repr__(self) -> str:
         return "<BaseAdapter>"
@@ -90,6 +95,8 @@ class BaseAdapter(abc.ABC):
             local_options["memory"] = self.memory_per_task
         if self.cores_per_task is not None:
             local_options["ncores"] = self.cores_per_task
+        if self.scratch_directory is not None:
+            local_options["scratch_directory"] = self.scratch_directory
         return local_options
 
     def submit_tasks(self, tasks: List[Dict[str, Any]]) -> List[str]:
