@@ -200,7 +200,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     fractal_compute_server.await_services()
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
-    result = client.query_procedures({"id": ret.ids[0]})[0]
+    result = client.query_procedures(id=ret.ids[0])[0]
 
     assert result.status == "COMPLETE"
     assert result.starting_grid == (1, 0)
@@ -218,7 +218,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
 
     # Check tags on individual procedures
     proc_id = list(result.grid_optimizations.values())[0]
-    opt = client.query_procedures({"id": proc_id})[0]
+    opt = client.query_procedures(id=proc_id)[0]
 
     task = client.query_tasks(id=opt.task_id)[0]
     assert task.priority == 0
@@ -267,7 +267,7 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
     fractal_compute_server.await_services()
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
-    result = client.query_procedures({"id": ret.ids[0]})[0]
+    result = client.query_procedures(id=ret.ids[0])[0]
 
     assert result.status == "COMPLETE"
     assert result.starting_grid == (1, )

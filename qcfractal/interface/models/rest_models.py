@@ -137,6 +137,15 @@ class QueryMeta(BaseModel):
         pass
 
 
+class ComputeResponse(BaseModel):
+    ids: List[Optional[str]]
+    submitted: List[str]
+    existing: List[str]
+
+    class Config(RESTConfig):
+        pass
+
+
 ### KVStore
 
 
@@ -431,12 +440,6 @@ class ProcedureGETResponse(BaseModel):
     meta: ResponseGETMeta
     data: List[Dict[str, Any]]
 
-    @validator("data", whole=True, pre=True)
-    def ensure_list_of_dict(cls, v):
-        if isinstance(v, dict):
-            return [v]
-        return v
-
     class Config(RESTConfig):
         pass
 
@@ -453,6 +456,9 @@ class TaskQueueGETBody(BaseModel):
         program: QueryStr = None
         status: QueryStr = None
 
+        class Config(RESTConfig):
+            pass
+
     meta: QueryMeta
     data: Data
 
@@ -461,40 +467,41 @@ class TaskQueueGETResponse(BaseModel):
     meta: ResponseGETMeta
     data: Union[List[TaskRecord], List[Dict[str, Any]]]
 
-    @validator("data", whole=True, pre=True)
-    def ensure_list_of_dict(cls, v):
-        if isinstance(v, dict):
-            return [v]
-        return v
+    class Config(RESTConfig):
+        pass
+
 
 register_model("task_queue", "GET", TaskQueueGETBody, TaskQueueGETResponse)
 
+
 class TaskQueuePOSTBody(BaseModel):
+    class Data(BaseModel):
+        procedure: str
+        program: str
+
+        tag: Optional[str] = None
+        priority: Union[str, int, None] = None
+
+        class Config(RESTConfig):
+            allow_extra = "allow"
 
     meta: Dict[str, Any]
-    data: List[Union[str, Molecule]]
+    data: List[Union[ObjectId, Molecule]]
 
-    class Config:
-        json_encoders = json_encoders
-
-    @validator("data", whole=True, pre=True)
-    def ensure_list_of_dict(cls, v):
-        if not isinstance(v, list):
-            return [v]
-        return v
+    class Config(RESTConfig):
+        pass
 
 
 class TaskQueuePOSTResponse(BaseModel):
-    class Data(BaseModel):
-        ids: List[Optional[str]]
-        submitted: List[str]
-        existing: List[str]
 
     meta: ResponsePOSTMeta
-    data: Data
+    data: ComputeResponse
+
+    class Config(RESTConfig):
+        pass
+
 
 register_model("task_queue", "POST", TaskQueuePOSTBody, TaskQueuePOSTResponse)
-
 
 ### Service Queue
 
@@ -509,22 +516,28 @@ class ServiceQueueGETBody(BaseModel):
     meta: QueryMeta
     data: Data
 
+    class Config(RESTConfig):
+        pass
+
 
 class ServiceQueueGETResponse(BaseModel):
     meta: ResponseGETMeta
     data: List[Dict[str, Any]]
 
-    @validator("data", whole=True, pre=True)
-    def ensure_list_of_dict(cls, v):
-        if isinstance(v, dict):
-            return [v]
-        return v
+    class Config(RESTConfig):
+        pass
+
+
+register_model("service_queue", "GET", ServiceQueueGETBody, ServiceQueueGETResponse)
 
 
 class ServiceQueuePOSTBody(BaseModel):
     class Meta(BaseModel):
         tag: Optional[str] = None
         priority: Union[str, int, None] = None
+
+        class Config(RESTConfig):
+            pass
 
     meta: Meta
     data: List[Union[TorsionDriveInput, GridOptimizationInput]]
@@ -534,17 +547,15 @@ class ServiceQueuePOSTBody(BaseModel):
 
 
 class ServiceQueuePOSTResponse(BaseModel):
-    class Data(BaseModel):
-        ids: List[Optional[str]]
-        submitted: List[str]
-        existing: List[str]
 
     meta: ResponsePOSTMeta
-    data: Data
+    data: ComputeResponse
 
     class Config(RESTConfig):
         pass
 
+
+register_model("service_queue", "POST", ServiceQueuePOSTBody, ServiceQueuePOSTResponse)
 
 ### Queue Manager
 
@@ -585,12 +596,6 @@ class QueueManagerGETBody(BaseModel):
 class QueueManagerGETResponse(BaseModel):
     meta: ResponseGETMeta
     data: List[Dict[str, Any]]
-
-    @validator("data", whole=True, pre=True)
-    def ensure_list_of_dict(cls, v):
-        if isinstance(v, dict):
-            return [v]
-        return v
 
 
 class QueueManagerPOSTBody(BaseModel):
