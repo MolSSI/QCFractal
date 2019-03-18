@@ -241,11 +241,11 @@ class ReactionDataset(Dataset):
             return True
 
         query_keys = {
-            "method": method.lower(),
-            "basis": basis.lower(),
-            "driver": driver.lower(),
+            "method": method,
+            "basis": basis,
+            "driver": driver,
             "keywords": keywords,
-            "program": program.lower(),
+            "program": program,
         }
 
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
