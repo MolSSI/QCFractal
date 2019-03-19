@@ -251,7 +251,7 @@ class OpenFFWorkflow(Collection):
             lookup = list(set(lookup) - self._torsiondrive_cache.keys())
 
         # Grab the data and update cache
-        data = self.client.query_procedures({"id": lookup})
+        data = self.client.query_procedures(id=lookup)
         self._torsiondrive_cache.update({x.id: x for x in data})
 
     def list_final_energies(self, fragments=None, refresh_cache=False):

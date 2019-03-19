@@ -5,12 +5,13 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
+
 from pydantic import BaseModel
 from qcelemental import constants
 
-from ..statistics import wrap_statistics
 from .collection import Collection
 from .collection_utils import register_collection
+from ..statistics import wrap_statistics
 
 
 class MoleculeRecord(BaseModel):
@@ -44,7 +45,7 @@ class Dataset(Collection):
         The underlying dataframe for the Dataset object
     """
 
-    def __init__(self, name, client=None, **kwargs):
+    def __init__(self, name: str, client: Optional['FractalClient']=None, **kwargs: Dict[str, Any]):
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -54,8 +55,10 @@ class Dataset(Collection):
         ----------
         name : str
             The name of the Dataset
-        client : client.FractalClient, optional
+        client : Opational['FractalClient'], optional
             A Portal client to connected to a server
+        **kwargs : Dict[str, Any]
+            Additional kwargs to pass to the collection
         """
         super().__init__(name, client=client, **kwargs)
 
@@ -171,7 +174,7 @@ class Dataset(Collection):
         df.sort_index(inplace=True)
         return df
 
-    def _default_parameters(self, driver, keywords, program):
+    def _default_parameters(self, driver: str, keywords: Optional[str], program: str) -> Tuple[str, str, str, str]:
         """
         Takes raw input parsed parameters and applies defaults to them.
         """
@@ -200,9 +203,25 @@ class Dataset(Collection):
 
         return driver, keywords, keywords_alias, program
 
-    def _query(self, indexer, query, field="return_result", scale=None):
+    def _query(self, indexer: str, query: Dict[str, Any], field: str="return_result", scale: str=None) -> 'Series':
         """
         Runs a query based on an indexer which is index : molecule_id
+
+        Parameters
+        ----------
+        indexer : str
+            The primary index of the query
+        query : Dict[str, Any]
+            A results query
+        field : str, optional
+            The field to pull from the ResultRecords
+        scale : str, optional
+            The scale of the computation
+
+        Returns
+        -------
+        Series
+            A Series of the data results
         """
         self._check_state()
 
@@ -228,6 +247,11 @@ class Dataset(Collection):
     def set_default_program(self, program: str) -> bool:
         """
         Sets the default program.
+
+        Parameters
+        ----------
+        program : str
+            The program to default to.
         """
 
         self.data.default_program = program.lower()
@@ -241,10 +265,13 @@ class Dataset(Collection):
         ----------
         alias : str
             The alias of the option
+        program : str
+            The compute program the alias is for
         keyword : KeywordSet
             The Keywords object to use.
-        default : bool
+        default : bool, optional
             Sets this option as the default for the program
+
         """
 
         alias = alias.lower()
@@ -262,7 +289,21 @@ class Dataset(Collection):
         return True
 
     def get_keywords(self, alias: str, program: str) -> 'KeywordSet':
+        """Pulls the keywords alias from the server for inspection.
 
+        Parameters
+        ----------
+        alias : str
+            The keywords alias.
+        program : str
+            The program the keywords correspond to.
+
+        Returns
+        -------
+        KeywordSet
+            The requested KeywordSet
+
+        """
         if self.client is None:
             raise AttributeError("Dataset: Client was not set.")
 
@@ -282,8 +323,7 @@ class Dataset(Collection):
         contrib : ContributedValues
             The ContributedValues to add.
         overwrite : bool, optional
-            Forces
-
+            Overwrites pre-existing values
         """
 
         # Convert and validate
@@ -304,6 +344,11 @@ class Dataset(Collection):
     def list_contributed_values(self) -> List[str]:
         """
         Lists the known keys for all contributed values.
+
+        Returns
+        -------
+        List[str]
+            A list of all known contributed values.
         """
 
         return list(self.data.contributed_values)
@@ -392,21 +437,15 @@ class Dataset(Collection):
         field : str, optional
             The result field to query on
 
-
         Returns
         -------
         success : bool
             Returns True if the requested query was successful or not.
 
-        Notes
-        -----
-
-
         Examples
         --------
 
-        ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
-
+        >>> ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
         """
 
         driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
@@ -493,19 +532,19 @@ class Dataset(Collection):
 
         return ret
 
-    def get_index(self):
+    def get_index(self) -> List[str]:
         """
         Returns the current index of the database.
 
         Returns
         -------
-        ret : list of str
+        ret : List[str]
             The names of all reactions in the database
         """
         return [x.name for x in self.data.records]
 
     # Statistical quantities
-    def statistics(self, stype, value, bench="Benchmark"):
+    def statistics(self, stype: str, value: str, bench: str="Benchmark"):
         """Summary
 
         Parameters
@@ -525,7 +564,7 @@ class Dataset(Collection):
         return wrap_statistics(stype, self.df, value, bench)
 
     # Getters
-    def __getitem__(self, args):
+    def __getitem__(self, args: str) -> 'Series':
         """A wrapped to the underlying pd.DataFrame to access columnar data
 
         Parameters

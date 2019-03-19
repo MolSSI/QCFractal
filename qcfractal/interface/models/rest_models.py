@@ -8,25 +8,69 @@ from pydantic import BaseConfig, BaseModel, constr, validator
 from .common_models import KeywordSet, Molecule, ObjectId
 from .gridoptimization import GridOptimizationInput
 from .model_utils import json_encoders
+from .records import ResultRecord
 from .task_models import TaskRecord
 from .torsiondrive import TorsionDriveInput
-from .records import ResultRecord
 
-__all__ = [
-    "ResponseGETMeta",
-    "MoleculeGETBody", "MoleculeGETResponse", "MoleculePOSTBody", "MoleculePOSTResponse",
-    "KeywordGETBody", "KeywordGETResponse", "KeywordPOSTBody", "KeywordPOSTResponse",
-    "CollectionGETBody", "CollectionGETResponse", "CollectionPOSTBody", "CollectionPOSTResponse",
-    "ResultGETBody", "ResultGETResponse",
-    "ProcedureGETBody", "ProcedureGETReponse",
-    "TaskQueueGETBody", "TaskQueueGETResponse", "TaskQueuePOSTBody", "TaskQueuePOSTResponse",
-    "ServiceQueueGETBody", "ServiceQueueGETResponse", "ServiceQueuePOSTBody", "ServiceQueuePOSTResponse",
-    "QueueManagerGETBody", "QueueManagerGETResponse", "QueueManagerPOSTBody", "QueueManagerPOSTResponse",
-    "QueueManagerPUTBody", "QueueManagerPUTResponse"
-]  # yapf: disable
+__all__ = ["ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryProjection"]
+
+### Utility functions
+
+__rest_models = {}
 
 
-### Generic and Common Models
+def register_model(name: str, rest: str, body: 'BaseModel', response: 'BaseModel') -> None:
+    """
+    Register a REST model.
+
+    Parameters
+    ----------
+    name : str
+        The REST endpoint name.
+    rest : str
+        The REST endpoint type.
+    body : BaseModel
+        The REST query body model.
+    response : BaseModel
+        The REST query response model.
+
+    """
+
+    name = name.lower()
+    rest = rest.upper()
+
+    if (name in __rest_models) and (rest in __rest_models[name]):
+        raise KeyError(f"Model name {name} already registered.")
+
+    if name not in __rest_models:
+        __rest_models[name] = {}
+
+    __rest_models[name][rest] = (body, response)
+
+
+def rest_model(name: str, rest: str) -> Tuple['BaseModel', 'BaseModel']:
+    """Aquires a REST Model
+
+    Parameters
+    ----------
+    name : str
+        The REST endpoint name.
+    rest : str
+        The REST endpoint type.
+
+    Returns
+    -------
+    Tuple['BaseModel', 'BaseModel']
+        The (body, response) models of the REST request.
+
+    """
+    try:
+        return __rest_models[name.lower()][rest.upper()]
+    except KeyError:
+        raise KeyError(f"REST Model {name.lower()}:{rest.upper()} could not be found.")
+
+
+### Generic Types and Common Models
 
 nullstr = constr(regex='null')
 
@@ -42,15 +86,26 @@ class RESTConfig(BaseConfig):
     extra = "forbid"
 
 
+class EmptyMeta(BaseModel):
+    class Config(RESTConfig):
+        pass
+
+
 class ResponseMeta(BaseModel):
     errors: List[Tuple[str, str]]
     success: bool
     error_description: Union[str, bool]
 
+    class Config(RESTConfig):
+        pass
+
 
 class ResponseGETMeta(ResponseMeta):
     missing: List[str]
     n_found: int
+
+    class Config(RESTConfig):
+        pass
 
 
 class ResponsePOSTMeta(ResponseMeta):
@@ -58,90 +113,143 @@ class ResponsePOSTMeta(ResponseMeta):
     duplicates: Union[List[str], List[Tuple[str, str]]]
     validation_errors: List[str]
 
+    class Config(RESTConfig):
+        pass
+
 
 class QueryMeta(BaseModel):
     projection: Optional[Dict[str, bool]] = None
     limit: Optional[int] = None
     skip: Optional[int] = None
 
-    class Config:
-        extra = "forbid"
+    class Config(RESTConfig):
+        pass
+
+
+class ComputeResponse(BaseModel):
+    ids: List[Optional[str]]
+    submitted: List[str]
+    existing: List[str]
+
+    class Config(RESTConfig):
+        pass
 
 
 ### KVStore
 
 
 class KVStoreGETBody(BaseModel):
+    meta: EmptyMeta = {}
     data: List[ObjectId]
-    meta: Dict[str, Any]
+
+    class Config(RESTConfig):
+        pass
 
 
 class KVStoreGETResponse(BaseModel):
     meta: ResponseGETMeta
     data: Dict[str, Any]
 
-    class Config:
-        json_encoders = json_encoders
+    class Config(RESTConfig):
+        pass
 
+
+register_model("kvstore", "GET", KVStoreGETBody, KVStoreGETResponse)
 
 ### Molecule response
 
 
 class MoleculeGETBody(BaseModel):
+    class Data(BaseModel):
+        id: QueryObjectId = None
+        molecule_hash: QueryStr = None
+        molecular_formula: QueryStr = None
 
-    data: Dict[str, Any]
-    meta: Dict[str, Any]
+        class Config(RESTConfig):
+            pass
+
+    meta: EmptyMeta = {}
+    data: Data
+
+    class Config(RESTConfig):
+        pass
 
 
 class MoleculeGETResponse(BaseModel):
     meta: ResponseGETMeta
     data: List[Molecule]
 
-    class Config:
-        json_encoders = json_encoders
+    class Config(RESTConfig):
+        pass
+
+
+register_model("molecule", "GET", MoleculeGETBody, MoleculeGETResponse)
 
 
 class MoleculePOSTBody(BaseModel):
-    meta: Dict[str, Any] = None
+    meta: EmptyMeta = {}
     data: List[Molecule]
 
-    class Config:
-        json_encoders = json_encoders
+    class Config(RESTConfig):
+        pass
 
 
 class MoleculePOSTResponse(BaseModel):
     meta: ResponsePOSTMeta
-    data: List[str]
+    data: List[ObjectId]
 
+    class Config(RESTConfig):
+        pass
+
+
+register_model("molecule", "POST", MoleculePOSTBody, MoleculePOSTResponse)
 
 ### Keywords
 
 
 class KeywordGETBody(BaseModel):
-    meta: Dict[str, Any] = None
-    data: Dict[str, Any]
+    class Data(BaseModel):
+        id: QueryObjectId = None
+        hash_index: QueryStr = None
+
+        class Config(RESTConfig):
+            pass
+
+    meta: EmptyMeta = {}
+    data: Data
+
+    class Config(RESTConfig):
+        pass
 
 
 class KeywordGETResponse(BaseModel):
     meta: ResponseGETMeta
     data: List[KeywordSet]
 
+    class Config(RESTConfig):
+        pass
+
+
+register_model("keyword", "GET", KeywordGETBody, KeywordGETResponse)
+
 
 class KeywordPOSTBody(BaseModel):
-    meta: Dict[str, Any] = None
+    meta: EmptyMeta = {}
     data: List[KeywordSet]
 
-    # @validator("data", whole=True, pre=True)
-    # def ensure_list_of_dict(cls, v):
-    #     if isinstance(v, dict):
-    #         return [v]
-    #     return v
+    class Config(RESTConfig):
+        pass
 
 
 class KeywordPOSTResponse(BaseModel):
-    data: List[Optional[str]]
+    data: List[Optional[ObjectId]]
     meta: ResponsePOSTMeta
 
+    class Config(RESTConfig):
+        pass
+
+
+register_model("keyword", "POST", KeywordPOSTBody, KeywordPOSTResponse)
 
 ### Collections
 
@@ -155,11 +263,20 @@ class CollectionGETBody(BaseModel):
         def cast_to_lower(cls, v):
             return v.lower()
 
+        class Config(RESTConfig):
+            pass
+
     class Meta(BaseModel):
         projection: Dict[str, Any] = None
 
+        class Config(RESTConfig):
+            pass
+
     meta: Meta = None
     data: Data
+
+    class Config(RESTConfig):
+        pass
 
 
 class CollectionGETResponse(BaseModel):
@@ -173,10 +290,19 @@ class CollectionGETResponse(BaseModel):
                 raise ValueError("Dicts in 'data' must have both 'collection' and 'name'")
         return v
 
+    class Config(RESTConfig):
+        pass
+
+
+register_model("collection", "GET", CollectionGETBody, CollectionGETResponse)
+
 
 class CollectionPOSTBody(BaseModel):
     class Meta(BaseModel):
         overwrite: bool = False
+
+        class Config(RESTConfig):
+            pass
 
     class Data(BaseModel):
         id: str = "local"  # Auto blocks overwriting in mongoengine_socket
@@ -187,17 +313,25 @@ class CollectionPOSTBody(BaseModel):
         def cast_to_lower(cls, v):
             return v.lower()
 
-        class Config:
+        class Config(RESTConfig):
             extra = "allow"
 
     meta: Meta = Meta()
     data: Data
+
+    class Config(RESTConfig):
+        pass
 
 
 class CollectionPOSTResponse(BaseModel):
     data: Union[str, None]
     meta: ResponsePOSTMeta
 
+    class Config(RESTConfig):
+        pass
+
+
+register_model("collection", "POST", CollectionPOSTBody, CollectionPOSTResponse)
 
 ### Result
 
@@ -240,6 +374,9 @@ class ResultGETBody(BaseModel):
     meta: Meta = Meta()
     data: Data
 
+    class Config(RESTConfig):
+        pass
+
 
 class ResultGETResponse(BaseModel):
     meta: ResponseGETMeta
@@ -252,25 +389,51 @@ class ResultGETResponse(BaseModel):
             return [v]
         return v
 
+    class Config(RESTConfig):
+        pass
+
+
+register_model("result", "GET", ResultGETBody, ResultGETResponse)
 
 ### Procedures
 
 
 class ProcedureGETBody(BaseModel):
-    meta: Dict[str, Any] = {}
-    data: Dict[str, Any]
+    class Data(BaseModel):
+        id: QueryObjectId = None
+        task_id: QueryObjectId = None
+
+        procedure: QueryStr = None
+        program: QueryStr = None
+        hash_index: QueryStr = None
+
+        status: QueryStr = "COMPLETE"
+
+        class Config(RESTConfig):
+            pass
+
+    class Meta(BaseModel):
+        projection: Dict[str, Any] = None
+
+        class Config(RESTConfig):
+            pass
+
+    meta: Meta = Meta()
+    data: Data
+
+    class Config(RESTConfig):
+        pass
 
 
-class ProcedureGETReponse(BaseModel):
+class ProcedureGETResponse(BaseModel):
     meta: ResponseGETMeta
     data: List[Dict[str, Any]]
 
-    @validator("data", whole=True, pre=True)
-    def ensure_list_of_dict(cls, v):
-        if isinstance(v, dict):
-            return [v]
-        return v
+    class Config(RESTConfig):
+        pass
 
+
+register_model("procedure", "GET", ProcedureGETBody, ProcedureGETResponse)
 
 ### Task Queue
 
@@ -282,6 +445,9 @@ class TaskQueueGETBody(BaseModel):
         program: QueryStr = None
         status: QueryStr = None
 
+        class Config(RESTConfig):
+            pass
+
     meta: QueryMeta
     data: Data
 
@@ -290,37 +456,41 @@ class TaskQueueGETResponse(BaseModel):
     meta: ResponseGETMeta
     data: Union[List[TaskRecord], List[Dict[str, Any]]]
 
-    @validator("data", whole=True, pre=True)
-    def ensure_list_of_dict(cls, v):
-        if isinstance(v, dict):
-            return [v]
-        return v
+    class Config(RESTConfig):
+        pass
+
+
+register_model("task_queue", "GET", TaskQueueGETBody, TaskQueueGETResponse)
 
 
 class TaskQueuePOSTBody(BaseModel):
+    class Data(BaseModel):
+        procedure: str
+        program: str
+
+        tag: Optional[str] = None
+        priority: Union[str, int, None] = None
+
+        class Config(RESTConfig):
+            allow_extra = "allow"
 
     meta: Dict[str, Any]
-    data: List[Union[str, Molecule]]
+    data: List[Union[ObjectId, Molecule]]
 
-    class Config:
-        json_encoders = json_encoders
-
-    @validator("data", whole=True, pre=True)
-    def ensure_list_of_dict(cls, v):
-        if not isinstance(v, list):
-            return [v]
-        return v
+    class Config(RESTConfig):
+        pass
 
 
 class TaskQueuePOSTResponse(BaseModel):
-    class Data(BaseModel):
-        ids: List[Optional[str]]
-        submitted: List[str]
-        existing: List[str]
 
     meta: ResponsePOSTMeta
-    data: Data
+    data: ComputeResponse
 
+    class Config(RESTConfig):
+        pass
+
+
+register_model("task_queue", "POST", TaskQueuePOSTBody, TaskQueuePOSTResponse)
 
 ### Service Queue
 
@@ -335,22 +505,28 @@ class ServiceQueueGETBody(BaseModel):
     meta: QueryMeta
     data: Data
 
+    class Config(RESTConfig):
+        pass
+
 
 class ServiceQueueGETResponse(BaseModel):
     meta: ResponseGETMeta
     data: List[Dict[str, Any]]
 
-    @validator("data", whole=True, pre=True)
-    def ensure_list_of_dict(cls, v):
-        if isinstance(v, dict):
-            return [v]
-        return v
+    class Config(RESTConfig):
+        pass
+
+
+register_model("service_queue", "GET", ServiceQueueGETBody, ServiceQueueGETResponse)
 
 
 class ServiceQueuePOSTBody(BaseModel):
     class Meta(BaseModel):
         tag: Optional[str] = None
         priority: Union[str, int, None] = None
+
+        class Config(RESTConfig):
+            pass
 
     meta: Meta
     data: List[Union[TorsionDriveInput, GridOptimizationInput]]
@@ -360,17 +536,15 @@ class ServiceQueuePOSTBody(BaseModel):
 
 
 class ServiceQueuePOSTResponse(BaseModel):
-    class Data(BaseModel):
-        ids: List[Optional[str]]
-        submitted: List[str]
-        existing: List[str]
 
     meta: ResponsePOSTMeta
-    data: Data
+    data: ComputeResponse
 
     class Config(RESTConfig):
         pass
 
+
+register_model("service_queue", "POST", ServiceQueuePOSTBody, ServiceQueuePOSTResponse)
 
 ### Queue Manager
 
@@ -412,11 +586,8 @@ class QueueManagerGETResponse(BaseModel):
     meta: ResponseGETMeta
     data: List[Dict[str, Any]]
 
-    @validator("data", whole=True, pre=True)
-    def ensure_list_of_dict(cls, v):
-        if isinstance(v, dict):
-            return [v]
-        return v
+
+register_model("queue_manager", "GET", QueueManagerGETBody, QueueManagerGETResponse)
 
 
 class QueueManagerPOSTBody(BaseModel):
@@ -430,6 +601,9 @@ class QueueManagerPOSTBody(BaseModel):
 class QueueManagerPOSTResponse(BaseModel):
     meta: ResponsePOSTMeta
     data: bool
+
+
+register_model("queue_manager", "POST", QueueManagerPOSTBody, QueueManagerPOSTResponse)
 
 
 class QueueManagerPUTBody(BaseModel):
@@ -446,3 +620,6 @@ class QueueManagerPUTResponse(BaseModel):
     # Python can resolve dict -> bool since it passes a `is` test. Will not cast bool -> dict[str, int], so make Dict[]
     # check first
     data: Union[Dict[str, int], bool]
+
+
+register_model("queue_manager", "PUT", QueueManagerPUTBody, QueueManagerPUTResponse)

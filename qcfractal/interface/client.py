@@ -5,18 +5,19 @@ import os
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Union
 
+from pydantic import ValidationError
+
 import requests
 
 from .collections import collection_factory, collections_name_map
 from .models import GridOptimizationInput, Molecule, ObjectId, TorsionDriveInput, build_procedure
-from .models.rest_models import (
-    CollectionGETBody, CollectionGETResponse, CollectionPOSTBody, CollectionPOSTResponse, KeywordGETBody,
-    KeywordGETResponse, KeywordPOSTBody, KeywordPOSTResponse, KVStoreGETBody, KVStoreGETResponse, MoleculeGETBody,
-    MoleculeGETResponse, MoleculePOSTBody, MoleculePOSTResponse, ProcedureGETBody, ProcedureGETReponse, ResultGETBody,
-    ResultGETResponse, ServiceQueueGETBody, ServiceQueueGETResponse, ServiceQueuePOSTBody, ServiceQueuePOSTResponse,
-    TaskQueueGETBody, TaskQueueGETResponse, TaskQueuePOSTBody, TaskQueuePOSTResponse)
+from .models.rest_models import ComputeResponse, rest_model, QueryStr, QueryObjectId, QueryProjection
 
-from .models.rest_models import QueryStr, QueryInt, QueryObjectId, QueryNullObjectId, QueryProjection
+### Common docs
+
+_common_docs = {"full_return": "Returns the full server response if True that contains additional metadata."}
+
+### Fractal Client
 
 
 class FractalClient(object):
@@ -130,6 +131,59 @@ class FractalClient(object):
 
         return r
 
+    def _automodel_request(self,
+                           name: str,
+                           rest: str,
+                           payload: Dict[str, Any],
+                           full_return: bool=False,
+                           timeout: int=None) -> Any:
+        """Automatic model request profiling and creation using rest_models
+
+        Parameters
+        ----------
+        name : str
+            The name of the REST endpoint
+        rest : str
+            The type of REST endpoint
+        payload : Dict[str, Any]
+            The input dictionary
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+        timeout : int, optional
+            Timeout time
+
+        Returns
+        -------
+        Any
+            The REST response object
+
+        Raises
+        ------
+        TypeError
+            Description
+
+        Deleted Parameters
+        ------------------
+        noraise : bool, optional
+            Optionally do not raise error if
+            Description
+        """
+        body_model, response_model = rest_model(name, rest)
+
+        # Provide a reasonable traceback
+        try:
+            payload = body_model(**payload)
+        except ValidationError as exc:
+            raise TypeError(str(exc))
+
+        r = self._request(rest, name, data=payload.json(), timeout=timeout)
+        response = response_model.parse_raw(r.text)
+
+        if full_return:
+            return response
+        else:
+            return response.data
+
     @classmethod
     def from_file(cls, load_path: Optional[str]=None) -> 'FractalClient':
         """Creates a new FractalClient from file. If no path is passed in searches
@@ -200,64 +254,60 @@ class FractalClient(object):
 
 ### KVStore section
 
-    def query_kvstore(self, id: List[str], full_return: bool=False) -> Dict[str, Any]:
+    def query_kvstore(self, id: QueryObjectId, full_return: bool=False) -> Dict[str, Any]:
         """Queries items from the database's KVStore
 
         Parameters
         ----------
-        id : List[str]
+        id : QueryObjectId
             A list of KVStore id's
         full_return : bool, optional
-            Optionally returns the full request result including the ``meta`` field.
+            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
         Dict[str, Any]
             A list of found KVStore objects in {"id": "value"} format
         """
-        body = KVStoreGETBody(data=id, meta={})
-        r = self._request("get", "kvstore", data=body.json())
-        r = KVStoreGETResponse.parse_raw(r.text)
 
-        if full_return:
-            return r
-        else:
-            return r.data
+        return self._automodel_request("kvstore", "get", {"meta": {}, "data": id}, full_return=full_return)
 
 ### Molecule section
 
     def query_molecules(self,
-                        id: Optional[List[str]]=None,
-                        molecule_hash: Optional[List[str]]=None,
-                        molecular_formula: Optional[List[str]]=None,
+                        id: QueryObjectId=None,
+                        molecule_hash: QueryStr=None,
+                        molecular_formula: QueryStr=None,
                         full_return: bool=False) -> List[Molecule]:
         """Queries molecules from the database.
 
         Parameters
         ----------
-        id : Optional[List[str]], optional
+        id : QueryObjectId, optional
             Queries the Molecule ``id`` field.
-        molecule_hash : Optional[List[str]], optional
+        molecule_hash : QueryStr, optional
             Queries the Molecule ``molecule_hash`` field.
-        molecular_formula : Optional[List[str]], optional
+        molecular_formula : QueryStr, optional
             Queries the Molecule ``molecular_formula`` field.
         full_return : bool, optional
-            Optionally returns the full request result including the ``meta`` field.
+            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
-        Dict[str, 'Molecule']
+        List[Molecule]
             A list of found molecules.
         """
-        data = {"id": id, "molecule_hash": molecule_hash, "molecular_formula": molecular_formula}
-        body = MoleculeGETBody(data=data, meta={})
-        r = self._request("get", "molecule", data=body.json())
-        r = MoleculeGETResponse.parse_raw(r.text)
 
-        if full_return:
-            return r
-        else:
-            return r.data
+        payload = {
+            "meta": {},
+            "data": {
+                "id": id,
+                "molecule_hash": molecule_hash,
+                "molecular_formula": molecular_formula
+            }
+        }
+        response = self._automodel_request("molecule", "get", payload, full_return=full_return)
+        return response
 
     def add_molecules(self, mol_list: List[Molecule], full_return: bool=False) -> List[str]:
         """Adds molecules to the Server.
@@ -267,7 +317,7 @@ class FractalClient(object):
         mol_list : List[Molecule]
             A list of Molecules to add to the server.
         full_return : bool, optional
-            Optionally returns the full request result including the ``meta`` field.
+            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
@@ -276,42 +326,31 @@ class FractalClient(object):
 
         """
 
-        body = MoleculePOSTBody(meta={}, data=mol_list)
-        r = self._request("post", "molecule", data=body.json())
-        r = MoleculePOSTResponse.parse_raw(r.text)
-
-        if full_return:
-            return r
-        else:
-            return r.data
+        return self._automodel_request("molecule", "post", {"meta": {}, "data": mol_list}, full_return=full_return)
 
 ### Keywords section
 
-    def query_keywords(self, id: List[str]=None, *, hash_index: List[str]=None,
+    def query_keywords(self, id: QueryObjectId=None, *, hash_index: QueryStr=None,
                        full_return: bool=False) -> 'List[KeywordSet]':
         """Obtains KeywordSets from the server using keyword ids.
 
         Parameters
         ----------
-        id : List[str]
+        id : QueryObjectId, optional
             A list of ids to query.
+        hash_index : QueryStr, optional
+            The hash index to look up
         full_return : bool, optional
-            Optionally returns the full request result including the ``meta`` field.
+            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
         List[KeywordSet]
             The requested KeywordSet objects.
         """
-        data = {"id": id, "hash_index": hash_index}
-        body = KeywordGETBody(meta={}, data=data)
-        r = self._request("get", "keyword", data=body.json())
-        r = KeywordGETResponse.parse_raw(r.text)
 
-        if full_return:
-            return r
-        else:
-            return r.data
+        payload = {"meta": {}, "data": {"id": id, "hash_index": hash_index}}
+        return self._automodel_request("keyword", "get", payload, full_return=full_return)
 
     def add_keywords(self, keywords: 'List[KeywordSet]', full_return: bool=False) -> List[str]:
         """Adds KeywordSets to the server.
@@ -321,21 +360,14 @@ class FractalClient(object):
         keywords : List[KeywordSet]
             A list of KeywordSets to add.
         full_return : bool, optional
-            Optionally returns the full request result including the ``meta`` field.
+            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
         List[str]
             A list of KeywordSet id's in the sent order, can be None where issues occured.
         """
-        body = KeywordPOSTBody(meta={}, data=keywords)
-        r = self._request("post", "keyword", data=body.json())
-        r = KeywordPOSTResponse.parse_raw(r.text)
-
-        if full_return:
-            return r
-        else:
-            return r.data
+        return self._automodel_request("keyword", "post", {"meta": {}, "data": keywords}, full_return=full_return)
 
 ### Collections section
 
@@ -359,19 +391,19 @@ class FractalClient(object):
             query = {"collection": collection_type.lower()}
 
         payload = {"meta": {"projection": {"name": True, "collection": True}}, "data": query}
-        r = self._request("get", "collection", payload)
+        response = self._automodel_request("collection", "get", payload, full_return=False)
 
         if collection_type is None:
             repl_name_map = collections_name_map()
             ret = defaultdict(list)
-            for entry in r.json()["data"]:
+            for entry in response:
                 colname = entry["collection"]
                 if colname in repl_name_map:
                     colname = repl_name_map[colname]
                 ret[colname].append(entry["name"])
             return dict(ret)
         else:
-            return [x["name"] for x in r.json()["data"]]
+            return [x["name"] for x in response]
 
     def get_collection(self, collection_type: str, name: str, full_return: bool=False) -> 'Collection':
         """Acquires a given collection from the server
@@ -383,7 +415,7 @@ class FractalClient(object):
         name : str
             The name of the collection to be accessed
         full_return : bool, optional
-            If False, returns a Collection object otherwise returns raw JSON
+            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
@@ -392,17 +424,17 @@ class FractalClient(object):
 
         """
 
-        body = CollectionGETBody(meta={}, data={"collection": collection_type.lower(), "name": name.lower()})
-        r = self._request("get", "collection", data=body.json())
-        cols = CollectionGETResponse.parse_raw(r.text)
+        payload = {"meta": {}, "data": {"collection": collection_type, "name": name}}
+        response = self._automodel_request("collection", "get", payload, full_return=True)
+
         if full_return:
-            return cols
+            return response
+
+        # Watching for nothing found
+        if len(response.data):
+            return collection_factory(response.data[0], client=self)
         else:
-            # If nothing found
-            if len(cols.data):
-                return collection_factory(cols.data[0], client=self)
-            else:
-                raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
+            raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
 
     def add_collection(self, collection: Dict[str, Any], overwrite: bool=False,
                        full_return: bool=False) -> List[ObjectId]:
@@ -415,7 +447,7 @@ class FractalClient(object):
         overwrite : bool, optional
             Overwrites the collection if it already exists in the database, used for updating collection.
         full_return : bool, optional
-            If False, returns a Collection object otherwise returns raw JSON
+            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
@@ -429,15 +461,7 @@ class FractalClient(object):
             raise KeyError("Attempting to overwrite collection, but no server ID found (cannot use 'local').")
 
         payload = {"meta": {"overwrite": overwrite}, "data": collection}
-        body = CollectionPOSTBody(**payload)
-        r = self._request("post", "collection", data=body.json())
-        assert r.status_code == 200
-        r = CollectionPOSTResponse.parse_raw(r.text)
-
-        if full_return:
-            return r
-        else:
-            return r.data
+        return self._automodel_request("collection", "post", payload, full_return=full_return)
 
 ### Results section
 
@@ -478,7 +502,7 @@ class FractalClient(object):
         projection : QueryProjection, optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
-            If False, returns a Collection object otherwise returns raw JSON
+            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
@@ -486,7 +510,7 @@ class FractalClient(object):
             Returns a List of found RecordResult's without projection, or a
             dictionary of results with projection.
         """
-        body = ResultGETBody(**{
+        payload = {
             "meta": {
                 "projection": projection
             },
@@ -501,35 +525,83 @@ class FractalClient(object):
                 "keywords": keywords,
                 "status": status,
             }
-        })
-        r = self._request("get", "result", data=body.json())
-        r = ResultGETResponse.parse_raw(r.text)
+        }
+        response = self._automodel_request("result", "get", payload, full_return=True)
 
         # Add references back to the client
         if not projection:
-            for result in r.data:
+            for result in response.data:
                 result.client = self
 
         if full_return:
-            return r
+            return response
         else:
-            return r.data
+            return response.data
 
-    def query_procedures(self, procedure_query: Dict[str, Any], return_objects: bool=True):
+    def query_procedures(self,
+                         id: QueryObjectId=None,
+                         task_id: QueryObjectId=None,
+                         procedure: QueryStr=None,
+                         program: QueryStr=None,
+                         hash_index: QueryStr=None,
+                         status: QueryStr="COMPLETE",
+                         projection: QueryProjection=None,
+                         full_return: bool=False) -> Union[List['RecordBase'], Dict[str, Any]]:
+        """
+        Parameters
+        ----------
+        id : QueryObjectId, optional
+            Queries the Procedure ``id`` field.
+        task_id : QueryObjectId, optional
+            Queries the Procedure ``task_id`` field.
+        procedure : QueryStr, optional
+            Queries the Procedure ``procedure`` field.
+        program : QueryStr, optional
+            Queries the Procedure ``program`` field.
+        hash_index : QueryStr, optional
+            Queries the Procedure ``hash_index`` field.
+        status : QueryStr, optional
+            Queries the Procedure ``status`` field.
+        projection : QueryProjection, optional
+            Filters the returned fields, will return a dictionary rather than an object.
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
 
-        body = ProcedureGETBody(data=procedure_query)
-        r = self._request("get", "procedure", data=body.json())
-        r = ProcedureGETReponse.parse_raw(r.text)
+        Returns
+        -------
+        Union[List['RecordBase'], Dict[str, Any]]
+            Returns a List of found RecordResult's without projection, or a
+            dictionary of results with projection.
 
-        if return_objects:
-            ret = []
-            for packet in r.data:
-                tmp = build_procedure(packet, client=self)
-                ret.append(tmp)
-            return ret
+        Deleted Parameters
+        ------------------
+        return_full : bool, optional
+            If False, returns a Collection object otherwise returns raw JSON
+        """
+
+        payload = {
+            "meta": {
+                "projection": projection
+            },
+            "data": {
+                "id": id,
+                "task_id": task_id,
+                "program": program,
+                "procedure": procedure,
+                "hash_index": hash_index,
+                "status": status,
+            }
+        }
+        response = self._automodel_request("procedure", "get", payload, full_return=True)
+
+        if not projection:
+            for ind in range(len(response.data)):
+                response.data[ind] = build_procedure(response.data[ind], client=self)
+
+        if full_return:
+            return response
         else:
-            # Equivalent to full_return from other gets
-            return r
+            return response.data
 
     ### Compute section
 
@@ -538,15 +610,50 @@ class FractalClient(object):
                     method: str,
                     basis: str,
                     driver: str,
-                    keywords: Union[str, None],
-                    molecule_id: Union[str, Molecule, List[Union[str, Molecule]]],
+                    keywords: Union[ObjectId, None],
+                    molecule: Union[ObjectId, Molecule, List[Union[str, Molecule]]],
                     priority: str=None,
                     tag: str=None,
-                    full_return: bool=False) -> Union[TaskQueuePOSTResponse, TaskQueuePOSTResponse.Data]:
+                    full_return: bool=False) -> ComputeResponse:
+        """
+        Adds "single" compute to the server. That is
+
+        Parameters
+        ----------
+        program : str
+            The computational program to execute the result with (e.g., "rdkit", "psi4").
+        method : str
+            The computational method to use (e.g., "B3LYP", "PBE")
+        basis : str
+            The basis to apply to the computation (e.g., "cc-pVDZ", "6-31G")
+        driver : str
+            The primary result that the compute will aquire {"energy", "gradient", "hessian", "properties"}
+        keywords : Union[str, None]
+            The KeywordSet ObjectId to use with the given compute
+        molecule : Union[str, Molecule, List[Union[str, Molecule]]]
+            The Molecules or Molecule ObjectId's to compute with the above methods
+        priority : str, optional
+            The priority of the job {"HIGH", "MEDIUM", "LOW"}. Default is "MEDIUM".
+        tag : str, optional
+            The computational tag to add to your compute, managers can optionally only pulled
+            based off the strings tags. These tags are arbitrary, but several examples are to
+            use "large", "medium", "small" to denote the size of the job or "project1", "project2"
+            to denote different projects.
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        ComputeResponse
+            An object that contains the submitted ObjectIds of the new compute. This object has the following fields:
+              - ids: The ObjectId's of the task in the order of input molecules
+              - submitted: A list of ObjectId's that were submitted to the compute queue
+              - existing: A list of ObjectId's of tasks already in the database
+        """
 
         # Always a list
-        if not isinstance(molecule_id, list):
-            molecule_id = [molecule_id]
+        if not isinstance(molecule, list):
+            molecule = [molecule]
 
         payload = {
             "meta": {
@@ -559,31 +666,53 @@ class FractalClient(object):
                 "tag": tag,
                 "priority": priority,
             },
-            "data": molecule_id
+            "data": molecule
         }
 
-        body = TaskQueuePOSTBody(**payload)
-
-        r = self._request("post", "task_queue", data=body.json())
-        r = TaskQueuePOSTResponse.parse_raw(r.text)
-
-        if full_return:
-            return r
-        else:
-            return r.data
+        return self._automodel_request("task_queue", "post", payload, full_return=full_return)
 
     def add_procedure(self,
                       procedure: str,
                       program: str,
                       program_options: Dict[str, Any],
-                      molecule_id: List[str],
-                      tag: str=None,
+                      molecule: Union[ObjectId, Molecule, List[Union[str, Molecule]]],
                       priority: str=None,
-                      full_return: bool=False):
+                      tag: str=None,
+                      full_return: bool=False) -> ComputeResponse:
+        """
+        Parameters
+        ----------
+        procedure : str
+            The computational procedure to spawn {"optimization"}
+        program : str
+            The program to use for the given procedure (e.g., "geomeTRIC")
+        program_options : Dict[str, Any]
+            Additional options and specifications for the given procedure.
+        molecule : Union[ObjectId, Molecule, List[Union[str, Molecule]]]
+            The Molecules or Molecule ObjectId's to compute with the above methods
+        priority : str, optional
+            The priority of the job {"HIGH", "MEDIUM", "LOW"}. Default is "MEDIUM".
+        tag : str, optional
+            The computational tag to add to your compute, managers can optionally only pulled
+            based off the strings tags. These tags are arbitrary, but several examples are to
+            use "large", "medium", "small" to denote the size of the job or "project1", "project2"
+            to denote different projects.
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        ComputeResponse
+            An object that contains the submitted ObjectIds of the new compute. This object has the following fields:
+              - ids: The ObjectId's of the task in the order of input molecules
+              - submitted: A list of ObjectId's that were submitted to the compute queue
+              - existing: A list of ObjectId's of tasks already in the database
+
+        """
 
         # Always a list
-        if isinstance(molecule_id, str):
-            molecule_id = [molecule_id]
+        if isinstance(molecule, str):
+            molecule = [molecule]
 
         payload = {
             "meta": {
@@ -592,18 +721,10 @@ class FractalClient(object):
                 "tag": tag,
                 "priority": priority,
             },
-            "data": molecule_id
+            "data": molecule
         }
         payload["meta"].update(program_options)
-
-        body = TaskQueuePOSTBody(**payload)
-        r = self._request("post", "task_queue", data=body.json())
-        r = TaskQueuePOSTResponse.parse_raw(r.text)
-
-        if full_return:
-            return r
-        else:
-            return r.data
+        return self._automodel_request("task_queue", "post", payload, full_return=full_return)
 
     def query_tasks(self,
                     id: QueryObjectId=None,
@@ -620,12 +741,14 @@ class FractalClient(object):
             Queries the Services ``id`` field.
         hash_index : QueryStr, optional
             Queries the Services ``procedure_id`` field.
+        program : QueryStr, optional
+            Queries the Services ``program`` field.
         status : QueryStr, optional
             Queries the Services ``status`` field.
         projection : QueryProjection, optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
-            Returns the full JSON return if True
+            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
@@ -638,7 +761,7 @@ class FractalClient(object):
 
         """
 
-        body = TaskQueueGETBody(**{
+        payload = {
             "meta": {
                 "projection": projection
             },
@@ -648,48 +771,42 @@ class FractalClient(object):
                 "program": program,
                 "status": status
             }
-        })
+        }
 
-        r = self._request("get", "task_queue", data=body.json())
-        r = TaskQueueGETResponse.parse_raw(r.text)
-
-        if full_return:
-            return r
-        else:
-            return r.data
+        return self._automodel_request("task_queue", "get", payload, full_return=full_return)
 
     def add_service(self,
                     service: Union[GridOptimizationInput, TorsionDriveInput],
-                    full_return: bool=False,
                     tag: Optional[str]=None,
-                    priority: Optional[str]=None):
+                    priority: Optional[str]=None,
+                    full_return: bool=False):
         """Summary
 
         Parameters
         ----------
         service : Union[GridOptimizationInput, TorsionDriveInput]
             An available service input
-        full_return : bool, optional
-            Returns the full JSON return if True
         tag : Optional[str], optional
             The compute tag to add the service under.
         priority : Optional[str], optional
             The priority of the job within the compute queue.
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
         TYPE
             Description
         """
-        body = ServiceQueuePOSTBody(meta={"tag": tag, "priority": priority}, data=service)
+        payload = {
+            "meta": {
+                "tag": tag,
+                "priority": priority
+            },
+            "data": service,
+        }
 
-        r = self._request("post", "service_queue", data=body.json())
-        r = ServiceQueuePOSTResponse.parse_raw(r.text)
-
-        if full_return:
-            return r
-        else:
-            return r.data
+        return self._automodel_request("service_queue", "post", payload, full_return=full_return)
 
     def query_services(self,
                        id: QueryObjectId=None,
@@ -713,7 +830,7 @@ class FractalClient(object):
         projection : QueryProjection, optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
-            Returns the full JSON return if True
+            Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
@@ -725,8 +842,7 @@ class FractalClient(object):
         [{"status": "RUNNING"}]
 
         """
-
-        body = ServiceQueueGETBody(**{
+        payload = {
             "meta": {
                 "projection": projection
             },
@@ -736,12 +852,5 @@ class FractalClient(object):
                 "hash_index": hash_index,
                 "status": status
             }
-        })
-
-        r = self._request("get", "service_queue", data=body.json())
-        r = ServiceQueueGETResponse.parse_raw(r.text)
-
-        if full_return:
-            return r
-        else:
-            return r.data
+        }
+        return self._automodel_request("service_queue", "get", payload, full_return=full_return)

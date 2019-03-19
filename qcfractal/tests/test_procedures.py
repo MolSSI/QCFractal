@@ -104,8 +104,8 @@ def test_procedure_optimization(fractal_compute_server):
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
     # # Query result and check against out manual pul
-    results1 = client.query_procedures({"program": "geometric"})
-    results2 = client.query_procedures({"id": compute_key})
+    results1 = client.query_procedures(program="geometric")
+    results2 = client.query_procedures(id=compute_key)
 
     for results in [results1, results2]:
         assert len(results) == 1
