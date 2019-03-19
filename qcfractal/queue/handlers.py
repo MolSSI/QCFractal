@@ -52,7 +52,7 @@ class TaskQueueHandler(APIHandler):
         body = self.parse_bodymodel(body_model)
 
         tasks = self.storage.get_queue(**body.data.dict(), projection=body.meta.projection)
-        response = TaskQueueGETResponse(**tasks)
+        response = response_model(**tasks)
 
         self.logger.info("GET: TaskQueue - {} pulls.".format(len(response.data)))
         self.write(response.json())

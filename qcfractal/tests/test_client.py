@@ -29,7 +29,7 @@ def test_client_molecule(test_server):
     assert water.compare(get_mol[0])
 
 
-def test_client_options(test_server):
+def test_client_keywords(test_server):
 
     client = ptl.FractalClient(test_server)
 

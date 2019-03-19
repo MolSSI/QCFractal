@@ -64,7 +64,7 @@ class APIHandler(tornado.web.RequestHandler):
         try:
             return model.parse_raw(self.request.body)
         except ValidationError as exc:
-            raise tornado.web.HTTPError(status_code=401, reason="Invalid REST Input")
+            raise tornado.web.HTTPError(status_code=401, reason="Invalid REST")
 
 
 class InformationHandler(APIHandler):

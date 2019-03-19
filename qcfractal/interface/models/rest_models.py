@@ -8,9 +8,9 @@ from pydantic import BaseConfig, BaseModel, constr, validator
 from .common_models import KeywordSet, Molecule, ObjectId
 from .gridoptimization import GridOptimizationInput
 from .model_utils import json_encoders
+from .records import ResultRecord
 from .task_models import TaskRecord
 from .torsiondrive import TorsionDriveInput
-from .records import ResultRecord
 
 __all__ = [
     "ResponseGETMeta",
@@ -227,7 +227,7 @@ class KeywordGETBody(BaseModel):
             pass
 
     meta: EmptyMeta = {}
-    data: Dict[str, Any]
+    data: Data
 
     class Config(RESTConfig):
         pass

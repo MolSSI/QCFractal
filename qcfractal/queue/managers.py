@@ -16,9 +16,6 @@ from qcfractal.extras import get_information
 
 from .adapters import build_queue_adapter
 from ..interface.data import get_molecule
-from ..interface.models.rest_models import (QueueManagerGETBody, QueueManagerGETResponse, QueueManagerMeta,
-                                            QueueManagerPOSTBody, QueueManagerPOSTResponse, QueueManagerPUTBody,
-                                            QueueManagerPUTResponse)
 
 __all__ = ["QueueManager"]
 
@@ -143,9 +140,8 @@ class QueueManager:
             # Tell the server we are up and running
             payload = self._payload_template()
             payload["data"]["operation"] = "startup"
-            put_body = QueueManagerPUTBody(**payload)
-            r = self.client._request("put", "queue_manager", data=put_body.json())
-            _ = QueueManagerPUTResponse.parse_raw(r.text)  # Validate
+
+            response = self.client._automodel_request("queue_manager", "put", payload)
 
             if self.verbose:
                 self.logger.info("    Connected:")
@@ -160,20 +156,20 @@ class QueueManager:
             self.logger.info("        Not connected, some actions will not be available")
 
     def _payload_template(self):
-        meta = QueueManagerMeta(
+        meta = {
             **self.name_data.copy(),
 
             # Version info
-            qcengine_version=qcng.__version__,
-            manager_version=get_information("version"),
+            "qcengine_version": qcng.__version__,
+            "manager_version": get_information("version"),
 
             # User info
-            username=self.client.username,
+            "username": self.client.username,
 
             # Pull info
-            programs=self.available_programs,
-            procedures=self.available_procedures,
-            tag=self.queue_tag, )
+            "programs": self.available_programs,
+            "procedures": self.available_procedures,
+            "tag": self.queue_tag}
 
         return {"meta": meta, "data": {}}
 
@@ -266,15 +262,11 @@ class QueueManager:
 
         payload = self._payload_template()
         payload["data"]["operation"] = "heartbeat"
-        put_body = QueueManagerPUTBody(**payload)
-        r = self.client._request("put", "queue_manager", data=put_body.json(), noraise=True)
-        if r.status_code != 200:
-            # TODO something as we didnt successfully add the data
-            self.logger.warning("Heartbeat was not successful.")
-        else:
+        try:
+            response = self.client._automodel_request("queue_manager", "put", payload)
             self.logger.info("Heartbeat was successful.")
-
-        _ = QueueManagerPUTResponse.parse_raw(r.text)  # Validate
+        except IOError:
+            self.logger.warning("Heartbeat was not successful.")
 
     def shutdown(self) -> Dict[str, Any]:
         """
@@ -286,18 +278,16 @@ class QueueManager:
 
         payload = self._payload_template()
         payload["data"]["operation"] = "shutdown"
-        put_body = QueueManagerPUTBody(**payload)
-        r = self.client._request("put", "queue_manager", data=put_body.json(), noraise=True, timeout=2)
-
-        if r.status_code != 200:
+        try:
+            response = self.client._automodel_request("queue_manager", "put", payload)
+        except IOError:
             # TODO something as we didnt successfully add the data
             self.logger.warning("Shutdown was not successful. This may delay queued tasks.")
             return {"nshutdown": 0}
 
-        response = QueueManagerPUTResponse.parse_raw(r.text)
-        nshutdown = response.data["nshutdown"]
+        nshutdown = response["nshutdown"]
         self.logger.info("Shutdown was successful, {} tasks returned to master queue.".format(nshutdown))
-        return response.data
+        return response
 
     def add_exit_callback(self, callback: Callable, *args: List[Any], **kwargs: Dict[Any, Any]) -> None:
         """Adds additional callbacks to perform when closing down the server
@@ -328,13 +318,11 @@ class QueueManager:
 
             # Upload new results
             payload["data"] = results
-            body = QueueManagerPOSTBody(**payload)
-            r = self.client._request("post", "queue_manager", data=body.json(), noraise=True)
-            if r.status_code != 200:
+            try:
+                response = self.client._automodel_request("queue_manager", "post", payload)
+            except IOError:
                 # TODO something as we didnt successfully add the data
                 self.logger.warning("Post complete tasks was not successful. Data may be lost.")
-
-            _ = QueueManagerPOSTResponse.parse_raw(r.text)  # Ensure validation from server
 
             self.active -= len(results)
 
@@ -348,14 +336,12 @@ class QueueManager:
         # Get new tasks
         payload = self._payload_template()
         payload["data"]["limit"] = open_slots
-        body = QueueManagerGETBody(**payload)
-        r = self.client._request("get", "queue_manager", data=body.json(), noraise=True)
-        if r.status_code != 200:
+        try:
+            new_tasks = self.client._automodel_request("queue_manager", "get", payload)
+        except IOError as exc:
             # TODO something as we didnt successfully get data
             self.logger.warning("Acquisition of new tasks was not successful.")
-
-        response = QueueManagerGETResponse.parse_raw(r.text)
-        new_tasks = response.data
+            return False
 
         self.logger.info("Acquired {} new tasks.".format(len(new_tasks)))
 
