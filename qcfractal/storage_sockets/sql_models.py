@@ -6,6 +6,8 @@ from sqlalchemy.orm import relationship
 # from sqlalchemy_utils.types.choice import ChoiceType
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum
+from sqlalchemy.ext.declarative import declared_attr
+
 
 # pip install sqlalchemy psycopg2 sqlalchemy_utils
 
@@ -69,7 +71,7 @@ class MoleculeORM(Base):
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    symbols = Column(ARRAY(String))
+    symbols = Column(ARRAY(String(5)))
     molecular_formula = Column(String)
     molecule_hash = Column(String)
     geometry = Column(ARRAY(String))
@@ -198,12 +200,12 @@ class ResultORM(BaseResultORM):
     method = Column(String(100), nullable=False)  # example "uff"
     basis = Column(String(100))
     molecule_id = Column(Integer, ForeignKey('molecule.id'))
-    molecule = relationship("MoleculeORM", lazy=True)
+    molecule = relationship(MoleculeORM, lazy=True)
 
     # This is a special case where KeywordsORM are denormalized intentionally as they are part of the
     # lookup for a single result and querying a result will not often request the keywords (LazyReference)
     keywords_id = Column(Integer, ForeignKey('keywords.id'))
-    keywords = relationship("KeywordsORM")
+    keywords = relationship(KeywordsORM)
 
     # output related
     return_result = Column(Binary)  # one of 3 types
@@ -231,69 +233,81 @@ class ResultORM(BaseResultORM):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-# class ProcedureORM(Base):
-#     """
-#         A procedure is a group of related results applied to a list of molecules
-#     """
-#
-#     __abstract__ = True
-#
-#     id = Column(Integer, ForeignKey('base_result.id'), primary_key=True)
-#
-#     __mapper_args__ = {
-#         # 'polymorphic_on': 'procedure_type'
-#     }
+class ProcedureMixin:
+    """
+        A procedure mixin to be used by specific procedure types
+    """
+
+    @declared_attr
+    def id(self):
+        return Column(Integer, ForeignKey('base_result.id'), primary_key=True)
+
+    @declared_attr
+    def initial_molecule_id(self):
+        return Column(Integer, ForeignKey('molecule.id'))
+
+    @declared_attr
+    def initial_molecule(self):
+        return relationship(MoleculeORM, lazy=True,
+                            foreign_keys=self.initial_molecule_id)
+
+    qc_spec = Column(Binary)
 
 
 # ================== Types of ProcedureORMs ================== #
 
 
-class OptimizationProcedureORM(BaseResultORM):
+class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     """
         An Optimization  procedure
     """
 
     __tablename__ = 'optimization_procedure'
 
-    id = Column(Integer, ForeignKey('base_result.id'), primary_key=True)
+    def __init__(self, **kwargs):
+        kwargs.setdefault("version", 1)
+        self.procedure = "optimization"
+        super().__init__(**kwargs)
 
-    # Version data
-    version = Column(Integer, default=1)
-    # procedure = Column(String(100), default="optimization")
     schema_version = Column(Integer, default=1)
-
-    # Input data
-    initial_molecule_id = Column(Integer, ForeignKey('molecule.id'))
-    initial_molecule = relationship("MoleculeORM", lazy=True,
-                                    foreign_keys=[initial_molecule_id])
-
-    qc_spec = Column(Binary)
 
     # Results
     energies = Column(ARRAY(Float))
     final_molecule_id = Column(Integer, ForeignKey('molecule.id'))
-    final_molecule = relationship("MoleculeORM", lazy=True,
-                                  foreign_keys=[final_molecule_id])
+    final_molecule = relationship(MoleculeORM, lazy=True,
+                                  foreign_keys=final_molecule_id)
 
-    # # array of objects (results)
-    # trajectory = relationship("BaseResultORM", lazy=False,
-    #                           foreign_keys="[parent_id]")
+    # array of objects (results)
+    trajectory = relationship(BaseResultORM, lazy=False,
+                              foreign_keys="BaseResultORM.parent_id")
 
     __mapper_args__ = {
         'polymorphic_identity': 'optimization_procedure',
     }
 
 
-class TorsiondriveProcedureORM(BaseResultORM):
+class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
     """
-        An torsion drive  procedure
+        A torsion drive  procedure
     """
 
     __tablename__ = 'torsiondrive_procedure'
 
-    id = Column(Integer, ForeignKey('base_result.id'), primary_key=True)
+    def __init__(self, **kwargs):
+        kwargs.setdefault("version", 1)
+        self.procedure = "torsiondrive"
+        self.program = "torsiondrive"
+        super().__init__(**kwargs)
 
-    # TODO: add more fields
+    # input data (along with the mixin)
+    keywords = Column(Binary)  # TODO: same as BaseRecord!!!
+    optimization_spec = Column(Binary)
+
+    # Output data
+    final_energy_dict = Column(Binary)
+    minimum_positions = Column(Binary)
+    optimization_history = relationship(BaseResultORM, lazy=False,
+                                        foreign_keys="BaseResultORM.parent_id")
 
     __mapper_args__ = {
         'polymorphic_identity': 'torsiondrive_procedure',

@@ -25,9 +25,9 @@ from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Union
 
 
-
-from .sql_models import (CollectionORM, KeywordsORM, KVStoreORM, MoleculeORM, ProcedureORM, QueueManagerORM, ResultORM,
-                        ServiceQueueORM, TaskQueueORM, UserORM)
+from .sql_models import (CollectionORM, KeywordsORM, LogsORM, MoleculeORM,
+                         OptimizationProcedureORM, QueueManagerORM, ResultORM,
+                         ServiceQueueORM, TaskQueueORM, UserORM)
 from .storage_utils import add_metadata_template, get_metadata_template
 from ..interface.models import KeywordSet, Molecule, ResultRecord, prepare_basis
 
@@ -71,14 +71,17 @@ class SQLAlcehmySocket:
         # disconnect()
 
         # Connect to DB and create session
+        self.engine = create_engine(uri,
+                                    echo=True,  # echo for logging into python logging
+                                    pool_size=5  # 5 is the default, 0 means unlimited
+                                    )
+        self.logger.info('Connected SQLAlchemy to DB dialect {} with driver {}'.format(
+            self.engine.dialect.name, self.engine.driver))
 
-        # echo for logging into python logging
-        engine = create_engine(uri, echo=True)
-
-        self.Session = sessionmaker(bind=engine)
+        self.Session = sessionmaker(bind=self.engine)
 
         # actually create the tables
-        Base.metadata.create_all(engine)
+        Base.metadata.create_all(self.engine)
 
         # if expanded_uri["password"] is not None:
         #     # connect to mongoengine
@@ -129,17 +132,25 @@ class SQLAlcehmySocket:
 
         self.logger.warning("Clearing database '{}' and dropping all tables.".format(db_name))
 
-        with self.session_scope() as session:
-            session.query(ResultORM).delete()
-            session.query(MoleculeORM).delete()
-            session.query(KeywordsORM).delete()
-            session.query(KVStoreORM).delete()
-            session.query(CollectionORM).delete()
-            session.query(TaskQueueORM).delete()
-            session.query(ServiceQueueORM).delete()
-            session.query(QueueManagerORM).delete()
-            session.query(ProcedureORM).delete()
-            session.query(UserORM).delete()
+        # drop all tables that it knows about
+        Base.metadata.drop_all(self.engine)
+
+        # create the tables again
+        Base.metadata.create_all(self.engine)
+
+        # with self.session_scope() as session:
+            # session.query(ResultORM).delete()
+            # session.query(MoleculeORM).delete()
+            # session.query(KeywordsORM).delete()
+            # session.query(KVStoreORM).delete()
+            # session.query(CollectionORM).delete()
+            # session.query(TaskQueueORM).delete()
+            # session.query(ServiceQueueORM).delete()
+            # session.query(QueueManagerORM).delete()
+            # session.query(ProcedureORM).delete()
+            # session.query(UserORM).delete()
+
+
 
             # self.client.drop_database(db_name)
 
@@ -153,4 +164,67 @@ class SQLAlcehmySocket:
         """
 
         return limit if limit and limit < self._max_limit else self._max_limit
+
+### KV Functions
+
+    def add_kvstore(self, blobs_list: List[Any]):
+        """
+        Adds to the key/value store table.
+
+        Parameters
+        ----------
+        blobs_list : List[Any]
+            A list of data blobs to add.
+
+        Returns
+        -------
+        TYPE
+
+            Description
+        """
+
+        meta = add_metadata_template()
+        blob_ids = []
+        for blob in blobs_list:
+            if blob is None:
+                blob_ids.append(None)
+                continue
+
+            doc = KVStoreORM(value=blob)
+            doc.save()
+            blob_ids.append(str(doc.id))
+            meta['n_inserted'] += 1
+
+        meta["success"] = True
+
+        return {"data": blob_ids, "meta": meta}
+
+    def get_kvstore(self, id: List[str]):
+        """
+        Pulls from the key/value store table.
+
+        Parameters
+        ----------
+        id : List[str]
+            A list of ids to query
+
+        Returns
+        -------
+        TYPE
+            Description
+        """
+
+        meta = get_metadata_template()
+
+        query, errors = format_query(id=id)
+
+        data = KVStoreORM.objects(**query)
+
+        meta["success"] = True
+        meta["n_found"] = data.count()  # all data count, can be > len(data)
+        meta["errors"].extend(errors)
+
+        data = [d.to_json_obj() for d in data]
+        data = {d["id"]: d["value"] for d in data}
+        return {"data": data, "meta": meta}
 

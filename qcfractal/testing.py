@@ -447,9 +447,10 @@ def build_socket_fixture(stype):
         storage._clear_db(storage_name)
 
     elif stype == 'sqlalchemy':
-        # storage = storage_socket_factory('postgresql+psycopg2://test:mypass@localhost:5432/test',
-        #                                  storage_name, db_type=stype)
-        storage = storage_socket_factory('sqlite:///:memory:', storage_name, db_type=stype)
+        storage = storage_socket_factory('postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb',
+                                         storage_name, db_type=stype)
+        # storage = storage_socket_factory('sqlite:///:memory:', storage_name, db_type=stype)
+        # storage = storage_socket_factory('sqlite:///path_to_db', storage_name, db_type=stype)
 
         # Clean and re-init the database
         storage._clear_db(storage_name)
@@ -460,6 +461,9 @@ def build_socket_fixture(stype):
 
     if stype in ["pymongo", "mongoengine"]:
         storage.client.drop_database(storage_name)
+    elif stype == "sqlalchemy":
+        # todo: drop db
+        pass
     else:
         raise KeyError("Storage type {} not understood".format(stype))
 

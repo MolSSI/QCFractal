@@ -50,7 +50,7 @@ class RecordBase(BaseModel, abc.ABC):
     error: Optional[ObjectId] = None
 
     # Compute status
-    # task_id: ObjectId = None
+    task_id: ObjectId = None
     status: RecordStatusEnum = "INCOMPLETE"
     modified_on: datetime.datetime = datetime.datetime.utcnow()
     created_on: datetime.datetime = datetime.datetime.utcnow()
@@ -243,7 +243,7 @@ class OptimizationRecord(RecordBase):
     _hash_indices = {"initial_molecule", "keywords", "qc_spec"}
 
     # Version data
-    version: int = 1  # TODO: defined before in Base
+    version: int = 1
     procedure: constr(strip_whitespace=True, regex="optimization") = "optimization"
     schema_version: int = 1  # TODO: why not in Base
 
