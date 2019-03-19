@@ -3,17 +3,18 @@ QCPortal Database ODM
 """
 import itertools as it
 from enum import Enum
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
+
 from pydantic import BaseModel
 from qcelemental import constants
 
-from ..dict_utils import replace_dict_keys
-from ..models import Molecule
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
+from ..dict_utils import replace_dict_keys
+from ..models import Molecule
 
 
 class _ReactionTypeEnum(str, Enum):
@@ -38,8 +39,8 @@ class ReactionDataset(Dataset):
     ----------
     client : client.FractalClient
         A optional server portal to connect the database
-    data : dict
-        JSON representation of the database backbone
+    data : DataModel
+        A Model representation of the database backbone
     df : pd.DataFrame
         The underlying dataframe for the Dataset object
     rxn_index : pd.Index
@@ -117,12 +118,12 @@ class ReactionDataset(Dataset):
 
         self._form_index()
 
-    def _unroll_query(self, keys, stoich, field="return_result"):
+    def _unroll_query(self, keys: Dict[str, Any], stoich: str, field: str="return_result") -> 'Series':
         """Unrolls a complex query into a "flat" query for the server object
 
         Parameters
         ----------
-        keys : dict
+        keys : Dict[str, Any]
             Server query fields
         stoich : str
             The stoichiometry to access for the query (default/cp/cp3/etc)
@@ -131,7 +132,7 @@ class ReactionDataset(Dataset):
 
         Returns
         -------
-        ret : pd.DataFrame
+        ret : Series
             A DataFrame representation of the unrolled query
         """
         self._check_state()
@@ -167,18 +168,18 @@ class ReactionDataset(Dataset):
 
     def query(self,
               method,
-              basis=None,
+              basis: Optional[str]=None,
               *,
-              driver=None,
-              keywords=None,
-              program=None,
-              stoich="default",
-              prefix="",
-              postfix="",
-              contrib=False,
-              scale="kcal/mol",
-              field="return_result",
-              ignore_ds_type=False):
+              driver: Optional[str]=None,
+              keywords: Optional[str]=None,
+              program: Optional[str]=None,
+              stoich: str="default",
+              prefix: str="",
+              postfix: str="",
+              contrib: bool=False,
+              scale: str="kcal/mol",
+              field: str="return_result",
+              ignore_ds_type: bool=False):
         """
         Queries the local Portal for the requested keys and stoichiometry.
 
@@ -186,27 +187,27 @@ class ReactionDataset(Dataset):
         ----------
         method : str
             The computational method to query on (B3LYP)
-        basis : str
+        basis : Optional[str], optional
             The computational basis query on (6-31G)
-        driver : str, optional
+        driver : Optional[str], optional
             Search within energy, gradient, etc computations
-        keywords : str, optional
+        keywords : Optional[str], optional
             The option token desired
-        program : str, optional
+        program : Optional[str], optional
             The program to query on
-        stoich : str
+        stoich : str, optional
             The given stoichiometry to compute.
-        prefix : str
+        prefix : str, optional
             A prefix given to the resulting column names.
-        postfix : str
+        postfix : str, optional
             A postfix given to the resulting column names.
-        contrib : bool
+        contrib : bool, optional
             Toggles a search between the Mongo Pages and the Databases's ContributedValues field.
-        scale : str, double
+        scale : str, optional
             All units are based in Hartree, the default scaling is to kcal/mol.
         field : str, optional
             The result field to query on
-        ignore_ds_type : bool
+        ignore_ds_type : bool, optional
             Override of "ie" for "rxn" db types.
 
 
@@ -359,7 +360,7 @@ class ReactionDataset(Dataset):
 
         return ret
 
-    def get_rxn(self, name):
+    def get_rxn(self, name: str) -> ReactionRecord:
         """
         Returns the JSON object of a specific reaction.
 
