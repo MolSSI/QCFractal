@@ -18,7 +18,7 @@ __all__ = [
     "KeywordGETBody", "KeywordGETResponse", "KeywordPOSTBody", "KeywordPOSTResponse",
     "CollectionGETBody", "CollectionGETResponse", "CollectionPOSTBody", "CollectionPOSTResponse",
     "ResultGETBody", "ResultGETResponse",
-    "ProcedureGETBody", "ProcedureGETReponse",
+    "ProcedureGETBody", "ProcedureGETResponse",
     "TaskQueueGETBody", "TaskQueueGETResponse", "TaskQueuePOSTBody", "TaskQueuePOSTResponse",
     "ServiceQueueGETBody", "ServiceQueueGETResponse", "ServiceQueuePOSTBody", "ServiceQueuePOSTResponse",
     "QueueManagerGETBody", "QueueManagerGETResponse", "QueueManagerPOSTBody", "QueueManagerPOSTResponse",

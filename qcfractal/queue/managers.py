@@ -279,7 +279,7 @@ class QueueManager:
         payload = self._payload_template()
         payload["data"]["operation"] = "shutdown"
         try:
-            response = self.client._automodel_request("queue_manager", "put", payload)
+            response = self.client._automodel_request("queue_manager", "put", payload, timeout=2)
         except IOError:
             # TODO something as we didnt successfully add the data
             self.logger.warning("Shutdown was not successful. This may delay queued tasks.")

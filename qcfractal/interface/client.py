@@ -131,7 +131,12 @@ class FractalClient(object):
 
         return r
 
-    def _automodel_request(self, name: str, rest: str, payload: Dict[str, Any], full_return: bool=False) -> Any:
+    def _automodel_request(self,
+                           name: str,
+                           rest: str,
+                           payload: Dict[str, Any],
+                           full_return: bool=False,
+                           timeout: int=None) -> Any:
         """Automatic model request profiling and creation using rest_models
 
         Parameters
@@ -144,9 +149,8 @@ class FractalClient(object):
             The input dictionary
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
-        noraise : bool, optional
-            Optionally do not raise error if
-            Description
+        timeout : int, optional
+            Timeout time
 
         Returns
         -------
@@ -157,6 +161,12 @@ class FractalClient(object):
         ------
         TypeError
             Description
+
+        Deleted Parameters
+        ------------------
+        noraise : bool, optional
+            Optionally do not raise error if
+            Description
         """
         body_model, response_model = rest_model(name, rest)
 
@@ -166,7 +176,7 @@ class FractalClient(object):
         except ValidationError as exc:
             raise TypeError(str(exc))
 
-        r = self._request(rest, name, data=payload.json())
+        r = self._request(rest, name, data=payload.json(), timeout=timeout)
         response = response_model.parse_raw(r.text)
 
         if full_return:
