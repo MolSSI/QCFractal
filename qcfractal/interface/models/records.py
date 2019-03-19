@@ -50,11 +50,10 @@ class RecordBase(BaseModel, abc.ABC):
     error: Optional[ObjectId] = None
 
     # Compute status
-    task_id: ObjectId = None
+    # task_id: ObjectId = None
     status: RecordStatusEnum = "INCOMPLETE"
     modified_on: datetime.datetime = datetime.datetime.utcnow()
     created_on: datetime.datetime = datetime.datetime.utcnow()
-    error: Optional[Any] = None
 
     # Carry-ons
     provenance: Optional[qcel.models.Provenance] = None
@@ -244,14 +243,14 @@ class OptimizationRecord(RecordBase):
     _hash_indices = {"initial_molecule", "keywords", "qc_spec"}
 
     # Version data
-    version: int = 1
+    version: int = 1  # TODO: defined before in Base
     procedure: constr(strip_whitespace=True, regex="optimization") = "optimization"
-    schema_version: int = 1
+    schema_version: int = 1  # TODO: why not in Base
 
     # Input data
     initial_molecule: ObjectId
     qc_spec: QCSpecification
-    keywords: Dict[str, Any] = {}
+    keywords: Dict[str, Any] = {}  # TODO: defined in Base
 
     # Results
     energies: List[float] = None

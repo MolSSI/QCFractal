@@ -21,6 +21,10 @@ class TaskStatusEnum(str, Enum):
     complete = "COMPLETE"
 
 
+class ManagerStatusEnum(str, Enum):
+    active = 'ACTIVE'
+    inactive = 'INACTIVE'
+
 class PriorityEnum(int, Enum):
     HIGH = 2
     NORMAL = 1

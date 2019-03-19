@@ -1,25 +1,34 @@
 import datetime
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Text, DateTime, \
-    ForeignKey, Binary, ARRAY
+from sqlalchemy import (Column, Integer, String, Text, DateTime,
+                        ForeignKey, Binary, ARRAY, JSON, Enum, Float)
 from sqlalchemy.orm import relationship
-from sqlalchemy_utils.types.choice import ChoiceType
-
+# from sqlalchemy_utils.types.choice import ChoiceType
+from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
+from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum
 
 # pip install sqlalchemy psycopg2 sqlalchemy_utils
 
 Base = declarative_base()
 
+class AccessLogORM(Base):
+    __tablename__ = 'access_log'
 
-class KVStoreORM(Base):
-    __tablename__ = "kv_store"
+    id = Column(Integer, primary_key=True)
+    ip_address = Column(String)
+    date = Column(DateTime, default=datetime.datetime.utcnow)
+    type = Column(String)
+
+
+class LogsORM(Base):
+    __tablename__ = "logs"
 
     id = Column(Integer, primary_key=True)
     value = Column(Text, nullable=False)
 
 
-class ErrorsORM(Base):
-    __tablename__ = "errors"
+class ErrorORM(Base):
+    __tablename__ = "error"
 
     id = Column(Integer, primary_key=True)
     value = Column(Text, nullable=False)
@@ -65,9 +74,6 @@ class MoleculeORM(Base):
     molecule_hash = Column(String)
     geometry = Column(ARRAY(String))
 
-    def create_hash(self):
-        """ TODO: create a special hash before saving"""
-        return ''
 
     # def save(self, *args, **kwargs):
     #     """Override save to add molecule_hash"""
@@ -118,18 +124,43 @@ class BaseResultORM(Base):
         Abstract Base class for ResultORMs and ProcedureORMs
     """
 
-    __abstract__ = True
+    __tablename__ = 'base_result'
 
-    # queue related
+    # for SQL
+    result_type = Column(Integer)  # for inheritance
+    parent_id = Column(Integer, ForeignKey('base_result.id'))
+
+    # Base identification
     id = Column(Integer, primary_key=True)
+    # hash_index = Column(String) # TODO
+    procedure = Column(String(100))  # TODO: may remove
+    program = Column(String(100))
+    version = Column(Integer)
 
-    task_id = Column(String)  # ObjectId, reference task_queue but without validation
-    status = Column(ChoiceType([('COMPLETE', 'COMPLETE'),
-                                ('INCOMPLETE', 'INCOMPLETE'),
-                                ('ERROR', 'ERROR')]), nullable=False)
+    # Extra fields
+    extras = Column(Binary)
+    stdout_id = Column(Integer, ForeignKey('logs.id'))
+    stdout = relationship(LogsORM, lazy=True, foreign_keys=stdout_id,
+                          cascade="all, delete-orphan", single_parent=True)
 
-    created_on = Column(DateTime, nullable=False)
-    modified_on = Column(DateTime, nullable=False)
+    stderr_id = Column(Integer, ForeignKey('logs.id'))
+    stderr = relationship(LogsORM, lazy=True, foreign_keys=stderr_id,
+                          cascade="all, delete-orphan", single_parent=True)
+
+    error_id = Column(Integer, ForeignKey('error.id'))
+    error = relationship(ErrorORM, lazy=True, cascade="all, delete-orphan",
+                         single_parent=True)
+
+    # Compute status
+    # task_id: ObjectId = None  # Removed in SQL
+    status = Column(Enum(RecordStatusEnum), nullable=False,
+                    default=RecordStatusEnum.incomplete)
+
+    created_on = Column(DateTime, default=datetime.datetime.utcnow)
+    modified_on = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Carry-ons
+    provenance = Column(Binary)
 
     # meta = {
     #     # 'allow_inheritance': True,
@@ -145,6 +176,9 @@ class BaseResultORM(Base):
     #
     #     return super(BaseResultORM, self).save(*args, **kwargs)
 
+    __mapper_args__ = {
+        'polymorphic_on': 'result_type'
+    }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -156,9 +190,11 @@ class ResultORM(BaseResultORM):
 
     __tablename__ = "result"
 
+    id = Column(Integer, ForeignKey('base_result.id'), primary_key=True)
+
     # uniquely identifying a result
-    program = Column(String(100), nullable=False)  # example "rdkit", is it the same as program in keywords?
-    driver = Column(String(100), nullable=False)  # example "gradient"
+    # program = Column(String(100), nullable=False)  # example "rdkit", is it the same as program in keywords?
+    driver = Column(String, Enum(DriverEnum), nullable=False)
     method = Column(String(100), nullable=False)  # example "uff"
     basis = Column(String(100))
     molecule_id = Column(Integer, ForeignKey('molecule.id'))
@@ -170,12 +206,13 @@ class ResultORM(BaseResultORM):
     keywords = relationship("KeywordsORM")
 
     # output related
-    properties = Column(Binary)  # accept any, no validation
-    return_result = Column(Binary)
-    provenance = Column(Binary)  # or an Embedded Documents with a structure?
+    return_result = Column(Binary)  # one of 3 types
+    properties = Column(JSON)  # TODO: may use JSONB in the future
 
-    schema_name = Column(String)  # default="qc_ret_data_output"??
-    schema_version = Column(Integer)
+
+    # TODO: Do they still exist?
+    # schema_name = Column(String)  # default="qc_ret_data_output"??
+    # schema_version = Column(Integer)
 
     # meta = {
     #     # 'collection': 'result',
@@ -194,76 +231,72 @@ class ResultORM(BaseResultORM):
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-class ProcedureORM(BaseResultORM):
-    """
-        A procedure is a group of related results applied to a list of molecules
-    """
-
-    __tablename__ = "procedure"
-
-    # used to define procedure type class by sqlalchemy, set automatically
-    procedure_type = Column(String, nullable=False)
-
-    program = Column(String, nullable=False)  # example: 'Geometric'
-    hash_index = Column(String, nullable=False)
-
-    # Unlike ResultORMs KeywordsORM are not denormalized here as a ProcedureORM query will always want the
-    # keywords and the keywords are not part of the index.
-    keywords = Column(Binary)
-
-    # meta = {
-    #     'indexes': [
-    #         # TODO: needs a unique index, + molecule?
-    #         {
-    #             'fields': ('procedure', 'program'),
-    #             'unique': False
-    #         },  # TODO: check
-    #         {
-    #             'fields': ('hash_index', ),
-    #             'unique': False
-    #         }  # used in queries
-    #     ]
-    # }
-
-    __mapper_args__ = {
-        'polymorphic_identity': 'procedure',
-        'polymorphic_on': 'procedure_type'
-    }
+# class ProcedureORM(Base):
+#     """
+#         A procedure is a group of related results applied to a list of molecules
+#     """
+#
+#     __abstract__ = True
+#
+#     id = Column(Integer, ForeignKey('base_result.id'), primary_key=True)
+#
+#     __mapper_args__ = {
+#         # 'polymorphic_on': 'procedure_type'
+#     }
 
 
 # ================== Types of ProcedureORMs ================== #
 
 
-class OptimizationProcedureORM(ProcedureORM):
+class OptimizationProcedureORM(BaseResultORM):
     """
         An Optimization  procedure
     """
-    # procedure = Column(String, default='optimization', nullable=False)
 
+    __tablename__ = 'optimization_procedure'
+
+    id = Column(Integer, ForeignKey('base_result.id'), primary_key=True)
+
+    # Version data
+    version = Column(Integer, default=1)
+    # procedure = Column(String(100), default="optimization")
+    schema_version = Column(Integer, default=1)
+
+    # Input data
     initial_molecule_id = Column(Integer, ForeignKey('molecule.id'))
-    initial_molecule = relationship("MoleculeORM", lazy=True)
+    initial_molecule = relationship("MoleculeORM", lazy=True,
+                                    foreign_keys=[initial_molecule_id])
 
+    qc_spec = Column(Binary)
+
+    # Results
+    energies = Column(ARRAY(Float))
     final_molecule_id = Column(Integer, ForeignKey('molecule.id'))
-    final_molecule = relationship("MoleculeORM", lazy=True)
+    final_molecule = relationship("MoleculeORM", lazy=True,
+                                  foreign_keys=[final_molecule_id])
 
-    # trajectory
+    # # array of objects (results)
+    # trajectory = relationship("BaseResultORM", lazy=False,
+    #                           foreign_keys="[parent_id]")
 
     __mapper_args__ = {
-        'polymorphic_identity': 'optimization',
+        'polymorphic_identity': 'optimization_procedure',
     }
 
 
-class TorsiondriveProcedureORM(ProcedureORM):
+class TorsiondriveProcedureORM(BaseResultORM):
     """
         An torsion drive  procedure
     """
 
-    # procedure = Column(String, default='torsiondrive', nullable=False)
+    __tablename__ = 'torsiondrive_procedure'
+
+    id = Column(Integer, ForeignKey('base_result.id'), primary_key=True)
 
     # TODO: add more fields
 
     __mapper_args__ = {
-        'polymorphic_identity': 'torsiondrive',
+        'polymorphic_identity': 'torsiondrive_procedure',
     }
 
 
@@ -281,12 +314,6 @@ class TorsiondriveProcedureORM(ProcedureORM):
 #     args = Column(Binary)  # fast, can take any structure
 #     kwargs = Column(Binary)
 
-TASK_STATUS = [
-    ('RUNNING', 'RUNNING'),
-    ('WAITING', 'WAITING'),
-    ('ERROR', 'ERROR'),
-    ('COMPLETE', 'COMPLETE')
-]
 
 class TaskQueueORM(Base):
     """A queue of tasks corresponding to a procedure
@@ -304,7 +331,7 @@ class TaskQueueORM(Base):
     # others
     tag = Column(String, default=None)
     parser = Column(String, default='')
-    status = Column(ChoiceType(TASK_STATUS), default='WAITING')
+    status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.waiting)
     manager = Column(String, default=None)
 
     created_on = Column(DateTime, nullable=False)
@@ -312,7 +339,7 @@ class TaskQueueORM(Base):
 
     # can reference ResultORMs or any ProcedureORM
     base_result_id = Column(Integer, ForeignKey("base_result.id"))  # todo:
-    base_result = relationship("BaseResult")
+    base_result = relationship("BaseResultORM")
 
     # meta = {
     #     'indexes': [
@@ -344,12 +371,12 @@ class ServiceQueueORM(Base):
 
     id = Column(Integer, primary_key=True)
 
-    status = Column(ChoiceType(TASK_STATUS), default='WAITING')
+    status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.waiting)
     tag = Column(String, default=None)
     hash_index = Column(String, nullable=False)
 
-    procedure_id = Column(Integer, ForeignKey("procedure.id"))
-    procedure = relationship("ProcedureORM")
+    procedure_id = Column(Integer, ForeignKey("base_result.id"))
+    procedure = relationship("BaseResultORM")
 
     # created_on = Column(DateTime, nullable=False)
     # modified_on = Column(DateTime, nullable=False)
@@ -402,8 +429,8 @@ class QueueManagerORM(Base):
     failures = Column(Integer, default=0)
     returned = Column(Integer, default=0)
 
-    status = Column(ChoiceType([('ACTIVE', 'ACTIVE'), ('INACTIVE', 'INACTIVE')]),
-                    default='INACTIVE')
+    status = Column(Enum(ManagerStatusEnum),
+                    default=ManagerStatusEnum.inactive)
 
     created_on = Column(DateTime, nullable=False)
     modified_on = Column(DateTime, nullable=False)
