@@ -289,7 +289,7 @@ class Dataset(Collection):
         return True
 
     def get_keywords(self, alias: str, program: str) -> 'KeywordSet':
-        """Pulls the keywords alias from the server for inspection.s
+        """Pulls the keywords alias from the server for inspection.
 
         Parameters
         ----------
