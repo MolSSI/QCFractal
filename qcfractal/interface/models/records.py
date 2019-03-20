@@ -83,7 +83,6 @@ class RecordBase(BaseModel, abc.ABC):
     def __repr__(self) -> str:
         return f"<{self}>"
 
-
 ### Serialization helpers
 
     @classmethod
@@ -227,7 +226,6 @@ class ResultRecord(RecordBase):
 
     class Config(RecordBase.Config):
         build_hash_index = False
-
 
     @validator('method')
     def check_method(cls, v):

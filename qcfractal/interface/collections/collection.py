@@ -229,3 +229,19 @@ class Collection(abc.ABC):
             client.add_collection(self.data.dict(), overwrite=True)
 
         return self.data.id
+
+
+### General helpers
+
+    @staticmethod
+    def _add_molecules_by_dict(client, molecules):
+
+        flat_map_keys = []
+        flat_map_mols = []
+        for k, v in molecules.items():
+            flat_map_keys.append(k)
+            flat_map_mols.append(v)
+
+        mol_ret = client.add_molecules(flat_map_mols)
+
+        return {k: v for k, v in zip(flat_map_keys, mol_ret)}

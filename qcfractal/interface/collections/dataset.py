@@ -12,11 +12,12 @@ from qcelemental import constants
 from .collection import Collection
 from .collection_utils import register_collection
 from ..statistics import wrap_statistics
+from ..models import ObjectId
 
 
 class MoleculeRecord(BaseModel):
     name: str
-    molecule_id: str
+    molecule_id: ObjectId
     comment: Optional[str] = None
     local_results: Dict[str, Any] = {}
 
@@ -99,18 +100,6 @@ class Dataset(Collection):
             self.data.alias_keywords[k[0]][k[1]] = ret[0]
             del self._new_keywords[k]
         self._updated_state = False
-
-    def _add_molecules_by_dict(self, client, molecules):
-
-        flat_map_keys = []
-        flat_map_mols = []
-        for k, v in molecules.items():
-            flat_map_keys.append(k)
-            flat_map_mols.append(v)
-
-        mol_ret = client.add_molecules(flat_map_mols)
-
-        return {k: v for k, v in zip(flat_map_keys, mol_ret)}
 
     def _pre_save_prep(self, client):
         self._canonical_pre_save(client)
