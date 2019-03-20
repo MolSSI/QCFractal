@@ -109,7 +109,8 @@ class Dataset(Collection):
 
         # Update internal molecule UUID's to servers UUID's
         for record in self._new_records:
-            new_record = record.copy(update={"molecule_id": mol_ret[record.molecule_id]})
+            molecule_hash = record.pop("molecule_hash")
+            new_record = MoleculeRecord(molecule_id=mol_ret[molecule_hash], **record)
             self.data.records.append(new_record)
 
         self._new_records = []
@@ -391,7 +392,7 @@ class Dataset(Collection):
 
         mhash = molecule.get_hash()
         self._new_molecules[mhash] = molecule
-        self._new_records.append(MoleculeRecord(name=name, molecule_id=mhash, **kwargs))
+        self._new_records.append({"name": name, "molecule_hash": mhash, **kwargs})
 
     def query(self,
               method,

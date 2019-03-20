@@ -45,7 +45,7 @@ class TorsionDriveDataset(Collection):
 
     class DataModel(Collection.DataModel):
 
-        records: List[TDRecord] = []
+        records: Dict[str, TDRecord] = {}
         history: Set[str] = set()
         td_specs: Dict[str, TorsionDriveSpecification] = {}
 
@@ -54,7 +54,7 @@ class TorsionDriveDataset(Collection):
 
     def _get_index(self):
 
-        return [x.name for x in self.data.records]
+        return list(self.data.records)
 
     def add_specification(self,
                           name: str,
@@ -141,7 +141,11 @@ class TorsionDriveDataset(Collection):
 
         record = TDRecord(name=name, initial_molecules=molecule_ids, td_keywords=td_keywords, attributes=attributes)
 
-        self.data.records.append(record)
+        lname = name.lower()
+        if lname in self.data.records:
+            raise KeyError(f"Record {name} already in the dataset.")
+
+        self.data.records[lname] = record
 
     def compute(self, specification: str, tag: Optional[str]=None, priority: Optional[str]=None) -> int:
         """Computes a specification for all records in the dataset.
@@ -164,7 +168,7 @@ class TorsionDriveDataset(Collection):
         spec = self.get_specification(specification)
 
         submitted = 0
-        for rec in self.data.records:
+        for rec in self.data.records.values():
             if specification in rec.torsiondrives:
                 continue
 
@@ -179,7 +183,7 @@ class TorsionDriveDataset(Collection):
         self.data.history.add(specification)
         return submitted
 
-    def query(self, specification: str)-> None:
+    def query(self, specification: str) -> None:
         """Queries a given specification from the server
 
         Parameters
@@ -193,7 +197,7 @@ class TorsionDriveDataset(Collection):
         specification = specification.lower()
         query_ids = []
         mapper = {}
-        for rec in self.data.records:
+        for rec in self.data.records.values():
             try:
                 td_id = rec.torsiondrives[specification]
                 query_ids.append(td_id)
