@@ -42,8 +42,7 @@ class FractalSnowflake(FractalServer):
                  max_active_services: int=20,
                  logging: Union[bool, str]=False,
                  start_server: bool=True):
-        """A temporary FractalServer that can be used to run complex workflows or try
-
+        """A temporary FractalServer that can be used to run complex workflows or try new computations.
 
         ! Warning ! All data is lost when the server is shutdown.
 

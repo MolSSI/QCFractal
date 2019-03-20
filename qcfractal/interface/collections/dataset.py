@@ -534,7 +534,7 @@ class Dataset(Collection):
         return [x.name for x in self.data.records]
 
     # Statistical quantities
-    def statistics(self, stype: str, value: str, bench: str="Benchmark"):
+    def statistics(self, stype: str, value: str, bench: str="Benchmark", **kwargs: Dict[str, Any]):
         """Summary
 
         Parameters
@@ -545,13 +545,16 @@ class Dataset(Collection):
             The method string to compare
         bench : str, optional
             The benchmark method for the comparison
+        kwargs: Dict[str, Any]
+            Additional kwargs to pass to the statistics functions
+
 
         Returns
         -------
         ret : pd.DataFrame, pd.Series, float
             Returns a DataFrame, Series, or float with the requested statistics depending on input.
         """
-        return wrap_statistics(stype, self.df, value, bench)
+        return wrap_statistics(stype.upper(), self.df, value, bench, **kwargs)
 
     # Getters
     def __getitem__(self, args: str) -> 'Series':
