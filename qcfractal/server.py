@@ -14,7 +14,7 @@ import tornado.log
 import tornado.options
 import tornado.web
 
-from typing import Optional, Dict
+from typing import Any, Dict, List, Optional, Union
 
 from .extras import get_information
 from .interface import FractalClient
@@ -89,7 +89,7 @@ class FractalServer:
             # Security
             security: Optional[str]=None,
             allow_read: bool=False,
-            ssl_options: Optional[Dict[str, str]]=None,
+            ssl_options: Union[bool, Dict[str, str]]=True,
 
             # Database options
             storage_uri: str="mongodb://localhost",
@@ -100,9 +100,45 @@ class FractalServer:
             logfile_prefix: str=None,
 
             # Queue options
-            queue_socket: 'queue_adapter'=None,
+            queue_socket: 'BaseAdapter'=None,
             max_active_services: int=20,
             heartbeat_frequency: int=300):
+        """QCFractal initialization
+
+        Parameters
+        ----------
+        name : str, optional
+            The name of the server itself, provided when users query /information
+        port : int, optional
+            The port the server will listen on.
+        loop : IOLoop, optional
+            Provide an IOLoop to use for the server
+        compress_response : bool, optional
+            Automatic compression of responses, turn on unless behind a proxy that
+            provides this capability.
+        security : Optional[str], optional
+            The security options for the server {None, "local"}. The local security
+            option uses the database to cache users.
+        allow_read : bool, optional
+            Allow unregistered to perform GET operations on Molecule/KeywordSets/KVStore/Results/Procedures
+        ssl_options : Optional[Dict[str, str]], optional
+            True, automatically creates self-signed SSL certificates. False, turns off SSL entirely. A user can also supply a dictionary of valid certificates.
+        storage_uri : str, optional
+            The database URI that the underlying storage socket will connect to.
+        storage_project_name : str, optional
+            The project name to use on the database.
+        query_limit : int, optional
+            The maximum number of entries a query will return.
+        logfile_prefix : str, optional
+            The logfile to use for logging.
+        queue_socket : BaseAdapter, optional
+            An optional Adapter to provide for server to have limited local compute.
+            Should only be used for testing and interactive sessions.
+        max_active_services : int, optional
+            The maximum number of active Services that can be running at any given time.
+        heartbeat_frequency : int, optional
+            The time (in seconds) of the heartbeat manager frequency.
+        """
 
         # Save local options
         self.name = name
@@ -133,7 +169,7 @@ class FractalServer:
         # Handle SSL
         ssl_ctx = None
         self.client_verify = True
-        if ssl_options is None:
+        if ssl_options is True:
             self.logger.warning("No SSL files passed in, generating self-signed SSL certificate.")
             self.logger.warning("Clients must use `verify=False` when connecting.\n")
 
@@ -260,6 +296,10 @@ class FractalServer:
             # Build the queue manager, will not run until loop starts
             self.objects["queue_manager_future"] = self._run_in_thread(_build_manager)
 
+    def __repr__(self):
+
+        return f"FractalServer(name='{self.name}' uri='{self._address}')"
+
     def _run_in_thread(self, func, timeout=5):
         """
         Runs a function in a background thread
@@ -270,14 +310,22 @@ class FractalServer:
         fut = self.loop.run_in_executor(self.executor, func)
         return fut
 
-
 ## Start/stop functionality
 
-    def start(self, start_loop=True):
+    def start(self, start_loop: bool=True, start_periodics: bool=True) -> None:
         """
-        Starts up all IOLoops and processes
+        Starts up the IOLoop and periodic calls
+
+        Parameters
+        ----------
+        start_loop : bool, optional
+            If False, does not start the IOLoop
+        start_periodics : bool, optional
+            If False, does not start the server periodic updates such as
+            Service iterations and Manager heartbeat checking.
         """
         if "queue_manager_future" in self.objects:
+
             def start_manager():
                 self._check_manager("manager_build")
                 self.objects["queue_manager"].start()
@@ -286,14 +334,16 @@ class FractalServer:
             self._run_in_thread(start_manager)
 
         # Add services callback
-        nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, 2000)
-        nanny_services.start()
-        self.periodic["update_services"] = nanny_services
+        if start_periodics:
+            nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, 2000)
+            nanny_services.start()
+            self.periodic["update_services"] = nanny_services
 
-        # Add Manager heartbeats
-        heartbeats = tornado.ioloop.PeriodicCallback(self.check_manager_heartbeats, self.heartbeat_frequency * 1000)
-        heartbeats.start()
-        self.periodic["heartbeats"] = heartbeats
+            # Add Manager heartbeats
+            heartbeats = tornado.ioloop.PeriodicCallback(self.check_manager_heartbeats,
+                                                         self.heartbeat_frequency * 1000)
+            heartbeats.start()
+            self.periodic["heartbeats"] = heartbeats
 
         # Soft quit with a keyboard interrupt
         self.logger.info("FractalServer successfully started.\n")
@@ -301,9 +351,14 @@ class FractalServer:
             self.loop_active = True
             self.loop.start()
 
-    def stop(self, stop_loop=True):
+    def stop(self, stop_loop: bool=True) -> None:
         """
-        Shuts down all IOLoops and periodic updates
+        Shuts down the IOLoop and periodic updates.
+
+        Parameters
+        ----------
+        stop_loop : bool, optional
+            If False, does not shut down the IOLoop. Useful if the IOLoop is externally managed.
         """
 
         # Shut down queue manager
@@ -352,13 +407,18 @@ class FractalServer:
 
 ## Helpers
 
-    def get_address(self, endpoint=None):
+    def get_address(self, endpoint: Optional[str]=None) -> str:
         """Obtains the full URI for a given function on the FractalServer
 
         Parameters
         ----------
-        endpoint : str, optional
-            Specifies a endpoint to provide the URI to
+        endpoint : Optional[str], optional
+            Specifies a endpoint to provide the URI for. If None returns the server address.
+
+        Returns
+        -------
+        str
+            The endpoint URI
 
         """
 
@@ -372,7 +432,7 @@ class FractalServer:
 
 ## Updates
 
-    def update_services(self):
+    def update_services(self) -> int:
         """Runs through all active services and examines their current status.
         """
 
@@ -415,9 +475,9 @@ class FractalServer:
 
         return running_services
 
-    def check_manager_heartbeats(self):
+    def check_manager_heartbeats(self) -> None:
         """
-        Checks the heartbeats and kills off managers that have not been heard from
+        Checks the heartbeats and kills off managers that have not been heard from.
         """
 
         dt = datetime.datetime.utcnow() - datetime.timedelta(seconds=self.heartbeat_frequency)
@@ -430,16 +490,28 @@ class FractalServer:
             self.logger.info("Hearbeat missing from {}. Shutting down, recycling {} incomplete tasks.".format(
                 blob["name"], nshutdown))
 
-    def list_managers(self, status=None, name=None):
+    def list_managers(self, status: Optional[str]=None, name: Optional[str]=None) -> List[Dict[str, Any]]:
         """
         Provides a list of managers associated with the server both active and inactive
+
+        Parameters
+        ----------
+        status : Optional[str], optional
+            Filters managers by status.
+        name : Optional[str], optional
+            Filters managers by name
+
+        Returns
+        -------
+        List[Dict[str, Any]]
+            The requested Manager data.
         """
 
         return self.storage.get_managers(status=status, name=name)["data"]
 
 ### Functions only available if using a local queue_adapter
 
-    def _check_manager(self, func_name):
+    def _check_manager(self, func_name: str) -> None:
         if self.queue_socket is None:
             raise AttributeError(
                 "{} is only available if the server was initialized with a queue manager.".format(func_name))
@@ -455,7 +527,7 @@ class FractalServer:
             if "queue_manager" not in self.objects:
                 raise AttributeError("QueueManager never constructed.")
 
-    def update_tasks(self):
+    def update_tasks(self) -> bool:
         """Pulls tasks from the queue_adapter, inserts them into the database,
         and fills the queue_adapter with new tasks.
 
@@ -474,7 +546,7 @@ class FractalServer:
 
         return True
 
-    def await_results(self):
+    def await_results(self) -> bool:
         """A synchronous method for testing or small launches
         that awaits task completion before adding all queued results
         to the database and returning.
@@ -489,14 +561,21 @@ class FractalServer:
         self.logger.info("Updating tasks")
         return self.objects["queue_manager"].await_results()
 
-    def await_services(self, max_iter=10):
+    def await_services(self, max_iter: int=10) -> bool:
         """A synchronous method that awaits the completion of all services
         before returning.
+
+        Parameters
+        ----------
+        max_iter : int, optional
+            The maximum number of service iterations the server will run through. Will
+            terminate early if all services have completed.
 
         Returns
         -------
         bool
             Return True if the operation completed successfully
+
         """
         self._check_manager("await_services")
 
@@ -510,7 +589,7 @@ class FractalServer:
 
         return True
 
-    def list_current_tasks(self):
+    def list_current_tasks(self) -> List[Any]:
         """Provides a list of tasks currently in the queue along
         with the associated keys
 

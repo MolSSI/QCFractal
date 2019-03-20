@@ -9,7 +9,7 @@ import tempfile
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from tornado.ioloop import IOLoop
 
-from typing import Optional
+from typing import Optional, Union
 
 from .server import FractalServer
 
@@ -40,6 +40,7 @@ class FractalSnowflake(FractalServer):
                  storage_uri: Optional[str]=None,
                  storage_project_name: str="temporary_snowflake",
                  max_active_services: int=20,
+                 logging: Union[bool, str]=False,
                  start_server: bool=True):
         """A temporary FractalServer that can be used to run complex workflows or try
 
@@ -57,6 +58,12 @@ class FractalSnowflake(FractalServer):
             The database name
         max_active_services : int, optional
             The maximum number of active services
+        logging : Union[bool, str], optional
+            If True, prints logging information to stdout. If False, hides all logging output. If a filename string is provided the logging will be
+            written to this file.
+        start_server : bool, optional
+            Starts the background asyncio loop or not.
+
         """
 
         # Startup a MongoDB in background thread and in custom folder.
@@ -84,7 +91,14 @@ class FractalSnowflake(FractalServer):
         self.loop = loop
         self.loop_thread = ThreadPoolExecutor(max_workers=2)
 
-        self.logfile = tempfile.NamedTemporaryFile()
+        if logging is False:
+            self.logfile = tempfile.NamedTemporaryFile()
+        elif logging is True:
+            self.logfile = None
+        elif isinstance(logging, str):
+            self.logfile = logging
+        else:
+            raise KeyError(f"Logfile type not recognized {type(logfile)}.")
 
         super().__init__(
             name="QCFractal Snowflake Instance",
@@ -95,7 +109,7 @@ class FractalSnowflake(FractalServer):
             ssl_options=False,
             max_active_services=max_active_services,
             queue_socket=self.queue_socket,
-            logfile_prefix=self.logfile.name,
+            # logfile_prefix=self.logfile.name,
             query_limit=int(1.e6))
 
         if self._mongod_proc:

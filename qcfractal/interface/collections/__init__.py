@@ -7,3 +7,4 @@ from .dataset import Dataset
 from .generic import Generic
 from .openffworkflow import OpenFFWorkflow
 from .reaction_dataset import ReactionDataset
+from .torsiondrive_dataset import TorsionDriveDataset

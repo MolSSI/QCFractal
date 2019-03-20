@@ -124,29 +124,6 @@ class GridOptimizationRecord(RecordBase):
     class Config(RecordBase.Config):
         pass
 
-    def __str__(self):
-        """
-        Simplified gridoptimization string representation.
-
-        Returns
-        -------
-        ret : str
-            A representation of the current GridOptimizationRecord status.
-
-        Examples
-        --------
-
-        >>> repr(torsiondrive_obj)
-        GridOptimizationRecord(id='5b7f1fd57b87872d2c5d0a6d', success=True, molecule_id='5b7f1fd57b87872d2c5d0a6c')
-        """
-
-        ret = "GridOptimizationRecord("
-        ret += "id='{}', ".format(self.id)
-        ret += "status='{}', ".format(self.status)
-        ret += "initial_molecule='{}')".format(self.initial_molecule)
-
-        return ret
-
 ## Utility
 
     def serialize_key(self, key):
@@ -181,7 +158,6 @@ class GridOptimizationRecord(RecordBase):
             ret.append(len(scan.steps))
 
         return tuple(ret)
-
 
 ## Query
 

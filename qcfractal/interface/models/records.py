@@ -77,6 +77,12 @@ class RecordBase(BaseModel, abc.ABC):
         if self.Config.build_hash_index and (self.hash_index is None):
             self.hash_index = self.get_hash_index()
 
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}(id='{self.id}' status='{self.status}')"
+
+    def __repr__(self) -> str:
+        return f"<{self}>"
+
 ### Serialization helpers
 
     @classmethod
@@ -332,28 +338,6 @@ class OptimizationRecord(RecordBase):
         return model
 
 ## Standard function
-
-    def __str__(self):
-        """
-        Simplified optimization string representation.
-
-        Returns
-        -------
-        ret : str
-            A representation of the current Optimization status.
-
-        Examples
-        --------
-
-        >>> repr(optimization_obj)
-        Optimization(id='5b7f1fd57b87872d2c5d0a6d', status='FINISHED', molecule_id='5b7f1fd57b87872d2c5d0a6c', molecule_name='HOOH')
-        """
-
-        ret = "Optimization("
-        ret += "id='{}', ".format(self.id)
-        ret += "status='{}', ".format(self.status)
-        ret += "initial_molecule='{}') ".format(self.initial_molecule)
-        return ret
 
     def get_final_energy(self):
         """The final energy of the geometry optimization.

@@ -20,6 +20,7 @@ def wait_true(wait_time, func, *args, **kwargs):
 
     return False
 
+
 @testing.using_psi4
 @testing.using_unix
 @testing.mark_example
@@ -40,7 +41,6 @@ def test_local_server_example():
             assert testing.run_process(["python", "compute_database.py"], **kwargs)
 
             assert wait_true(40, testing.run_process, ["python", "query_database.py"], **kwargs)
-
 
 
 @testing.using_parsl
