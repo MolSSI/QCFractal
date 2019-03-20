@@ -14,7 +14,7 @@ import tornado.log
 import tornado.options
 import tornado.web
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from .extras import get_information
 from .interface import FractalClient
@@ -89,7 +89,7 @@ class FractalServer:
             # Security
             security: Optional[str]=None,
             allow_read: bool=False,
-            ssl_options: Optional[Dict[str, str]]=None,
+            ssl_options: Union[bool, Dict[str, str]]=True,
 
             # Database options
             storage_uri: str="mongodb://localhost",
@@ -122,7 +122,7 @@ class FractalServer:
         allow_read : bool, optional
             Allow unregistered to perform GET operations on Molecule/KeywordSets/KVStore/Results/Procedures
         ssl_options : Optional[Dict[str, str]], optional
-            None, automatically creates self-signed SSL certificates. False, turns off SSL entirely. A user can also supply a dictionary of valid certificates.
+            True, automatically creates self-signed SSL certificates. False, turns off SSL entirely. A user can also supply a dictionary of valid certificates.
         storage_uri : str, optional
             The database URI that the underlying storage socket will connect to.
         storage_project_name : str, optional
@@ -169,7 +169,7 @@ class FractalServer:
         # Handle SSL
         ssl_ctx = None
         self.client_verify = True
-        if ssl_options is None:
+        if ssl_options is True:
             self.logger.warning("No SSL files passed in, generating self-signed SSL certificate.")
             self.logger.warning("Clients must use `verify=False` when connecting.\n")
 
@@ -432,7 +432,7 @@ class FractalServer:
 
 ## Updates
 
-    def update_services(self) -> None:
+    def update_services(self) -> int:
         """Runs through all active services and examines their current status.
         """
 

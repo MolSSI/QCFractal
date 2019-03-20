@@ -67,7 +67,7 @@ def main(args=None):
     else:
         ssl_certs = sum(args[x] is not None for x in ["tls_key", "tls_cert"])
         if ssl_certs == 0:
-            ssl_options = None
+            ssl_options = True
         elif ssl_certs == 2:
             ssl_options = {"crt": args["tls_cert"], "key": args["tls_key"]}
         else:

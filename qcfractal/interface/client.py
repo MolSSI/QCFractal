@@ -11,7 +11,7 @@ import requests
 
 from .collections import collection_factory, collections_name_map
 from .models import GridOptimizationInput, Molecule, ObjectId, TorsionDriveInput, build_procedure
-from .models.rest_models import ComputeResponse, rest_model, QueryStr, QueryObjectId, QueryProjection
+from .models.rest_models import ComputeResponse, rest_model
 
 ### Common docs
 
