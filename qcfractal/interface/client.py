@@ -254,7 +254,7 @@ class FractalClient(object):
 
 ### KVStore section
 
-    def query_kvstore(self, id: QueryObjectId, full_return: bool=False) -> Dict[str, Any]:
+    def query_kvstore(self, id: 'QueryObjectId', full_return: bool=False) -> Dict[str, Any]:
         """Queries items from the database's KVStore
 
         Parameters
@@ -275,9 +275,9 @@ class FractalClient(object):
 ### Molecule section
 
     def query_molecules(self,
-                        id: QueryObjectId=None,
-                        molecule_hash: QueryStr=None,
-                        molecular_formula: QueryStr=None,
+                        id: 'QueryObjectId'=None,
+                        molecule_hash: 'QueryStr'=None,
+                        molecular_formula: 'QueryStr'=None,
                         full_return: bool=False) -> List[Molecule]:
         """Queries molecules from the database.
 
@@ -330,7 +330,7 @@ class FractalClient(object):
 
 ### Keywords section
 
-    def query_keywords(self, id: QueryObjectId=None, *, hash_index: QueryStr=None,
+    def query_keywords(self, id: 'QueryObjectId'=None, *, hash_index: 'QueryStr'=None,
                        full_return: bool=False) -> 'List[KeywordSet]':
         """Obtains KeywordSets from the server using keyword ids.
 
@@ -352,7 +352,7 @@ class FractalClient(object):
         payload = {"meta": {}, "data": {"id": id, "hash_index": hash_index}}
         return self._automodel_request("keyword", "get", payload, full_return=full_return)
 
-    def add_keywords(self, keywords: 'List[KeywordSet]', full_return: bool=False) -> List[str]:
+    def add_keywords(self, keywords: List['KeywordSet'], full_return: bool=False) -> List[str]:
         """Adds KeywordSets to the server.
 
         Parameters
@@ -466,16 +466,16 @@ class FractalClient(object):
 ### Results section
 
     def query_results(self,
-                      id: QueryObjectId=None,
-                      task_id: QueryObjectId=None,
-                      program: QueryStr=None,
-                      molecule: QueryObjectId=None,
-                      driver: QueryStr=None,
-                      method: QueryStr=None,
-                      basis: QueryStr=None,
-                      keywords: QueryObjectId=None,
-                      status: QueryStr="COMPLETE",
-                      projection: QueryProjection=None,
+                      id: 'QueryObjectId'=None,
+                      task_id: 'QueryObjectId'=None,
+                      program: 'QueryStr'=None,
+                      molecule: 'QueryObjectId'=None,
+                      driver: 'QueryStr'=None,
+                      method: 'QueryStr'=None,
+                      basis: 'QueryStr'=None,
+                      keywords: 'QueryObjectId'=None,
+                      status: 'QueryStr'="COMPLETE",
+                      projection: 'QueryProjection'=None,
                       full_return: bool=False) -> Union[List['RecordResult'], Dict[str, Any]]:
         """Queries ResultRecords from the database.
 
@@ -539,13 +539,13 @@ class FractalClient(object):
             return response.data
 
     def query_procedures(self,
-                         id: QueryObjectId=None,
-                         task_id: QueryObjectId=None,
-                         procedure: QueryStr=None,
-                         program: QueryStr=None,
-                         hash_index: QueryStr=None,
-                         status: QueryStr="COMPLETE",
-                         projection: QueryProjection=None,
+                         id: 'QueryObjectId'=None,
+                         task_id: 'QueryObjectId'=None,
+                         procedure: 'QueryStr'=None,
+                         program: 'QueryStr'=None,
+                         hash_index: 'QueryStr'=None,
+                         status: 'QueryStr'="COMPLETE",
+                         projection: 'QueryProjection'=None,
                          full_return: bool=False) -> Union[List['RecordBase'], Dict[str, Any]]:
         """
         Parameters
@@ -727,11 +727,11 @@ class FractalClient(object):
         return self._automodel_request("task_queue", "post", payload, full_return=full_return)
 
     def query_tasks(self,
-                    id: QueryObjectId=None,
-                    hash_index: QueryStr=None,
-                    program: QueryStr=None,
-                    status: QueryStr=None,
-                    projection: QueryProjection=None,
+                    id: 'QueryObjectId'=None,
+                    hash_index: 'QueryStr'=None,
+                    program: 'QueryStr'=None,
+                    status: 'QueryStr'=None,
+                    projection: 'QueryProjection'=None,
                     full_return: bool=False):
         """Checks the status of tasks in the Fractal queue.
 
@@ -809,11 +809,11 @@ class FractalClient(object):
         return self._automodel_request("service_queue", "post", payload, full_return=full_return)
 
     def query_services(self,
-                       id: QueryObjectId=None,
-                       procedure_id: QueryObjectId=None,
-                       hash_index: QueryStr=None,
-                       status: QueryStr=None,
-                       projection: QueryProjection=None,
+                       id: 'QueryObjectId'=None,
+                       procedure_id: 'QueryObjectId'=None,
+                       hash_index: 'QueryStr'=None,
+                       status: 'QueryStr'=None,
+                       projection: 'QueryProjection'=None,
                        full_return: bool=False):
         """Checks the status of services in the Fractal queue.
 

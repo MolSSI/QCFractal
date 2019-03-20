@@ -296,6 +296,10 @@ class FractalServer:
             # Build the queue manager, will not run until loop starts
             self.objects["queue_manager_future"] = self._run_in_thread(_build_manager)
 
+    def __repr__(self):
+
+        return f"FractalServer(name='{self.name}' uri='{self._address}')"
+
     def _run_in_thread(self, func, timeout=5):
         """
         Runs a function in a background thread

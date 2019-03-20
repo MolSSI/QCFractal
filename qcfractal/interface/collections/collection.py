@@ -7,13 +7,13 @@ Helper
 import abc
 import copy
 import json
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
 
 class Collection(abc.ABC):
-    def __init__(self, name: str, **kwargs):
+    def __init__(self, name: str, client: 'FractalClient'=None, **kwargs: Dict[str, Any]):
         """
         Initializer for the Collections objects. If no Portal is supplied or the Collection name
         is not present on the server that the Portal is connected to a blank Collection will be
@@ -23,14 +23,19 @@ class Collection(abc.ABC):
         ----------
         name : str
             The name of the Collection object as ID'ed on the storage backend.
-        client : client.FractalClient, optional
+        client : FractalClient, optional
             A Portal client to connect to a server
-        **kwargs
+        **kwargs : Dict[str, Any]
             Additional keywords which are passed to the Collection and the initial data constructor
             It is up to the individual implementations of the Collection to do things with that data
+
+        Raises
+        ------
+        TypeError
+            Description
         """
 
-        self.client = kwargs.pop("client", None)
+        self.client = client
         if (self.client is not None) and not (self.client.__class__.__name__ == "FractalClient"):
             raise TypeError("Expected FractalClient as `client` kwarg, found {}.".format(type(self.client)))
 
@@ -87,17 +92,20 @@ class Collection(abc.ABC):
 
         return ret
 
+    def __repr__(self) -> str:
+        return f"<{self}>"
+
     @property
-    def name(self):
+    def name(self) -> str:
         return self.data.name
 
     @classmethod
-    def from_server(cls, client, name):
+    def from_server(cls, client: 'FractalClient', name: str) -> 'Collection':
         """Creates a new class from a server
 
         Parameters
         ----------
-        client : client.FractalClient
+        client : FractalClient
             A Portal client to connected to a server
         name : str
             The name of the collection to pull from.
@@ -105,7 +113,8 @@ class Collection(abc.ABC):
         Returns
         -------
         Collection
-            A ODM of the data.
+            A constructed collection.
+
         """
 
         if not (client.__class__.__name__ == "FractalClient"):
@@ -119,20 +128,20 @@ class Collection(abc.ABC):
         return cls.from_json(tmp_data.data[0], client=client)
 
     @classmethod
-    def from_json(cls, data, client=None):
+    def from_json(cls, data: Dict[str, Any], client: 'FractalClient'=None) -> 'Collection':
         """Creates a new class from a JSON blob
 
         Parameters
         ----------
-        data : dict
+        data : Dict[str, Any]
             The JSON blob to create a new class from.
-        client : client.FractalClient
+        client : FractalClient, optional
             A Portal client to connected to a server
 
         Returns
         -------
         Collection
-            A ODM of the data.
+            A constructed collection.
 
         """
         # Check we are building the correct object
@@ -170,7 +179,7 @@ class Collection(abc.ABC):
             return copy.deepcopy(data)
 
     @abc.abstractmethod
-    def _pre_save_prep(self, client):
+    def _pre_save_prep(self, client: 'FractalClient'):
         """
         Additional actions to take before saving, done as the last step before data is written.
 
@@ -186,16 +195,19 @@ class Collection(abc.ABC):
         pass
 
     # Setters
-    def save(self, client=None):
+    def save(self, client: 'FractalClient'=None) -> 'ObjectId':
         """Uploads the overall structure of the Collection (indices, options, new molecules, etc)
         to the server.
 
         Parameters
         ----------
-        client : None, optional
+        client : FractalClient, optional
             A Portal object to the server to upload to
-        overwrite : bool, optional
-            Overwrite the data in the server on not
+
+        Returns
+        -------
+        ObjectId
+            The ObjectId of the saved collection.
 
         """
         class_name = self.__class__.__name__.lower()
