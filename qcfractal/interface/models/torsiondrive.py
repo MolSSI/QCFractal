@@ -84,29 +84,6 @@ class TorsionDriveRecord(RecordBase):
     class Config(RecordBase.Config):
         pass
 
-    def __str__(self):
-        """
-        Simplified torsiondrive string representation.
-
-        Returns
-        -------
-        ret : str
-            A representation of the current TorsionDriveRecord status.
-
-        Examples
-        --------
-
-        >>> repr(torsiondrive_obj)
-        TorsionDriveRecord(id='5b7f1fd57b87872d2c5d0a6d', success=True, molecule_id='5b7f1fd57b87872d2c5d0a6c')
-        """
-
-        ret = "TorsionDriveRecord("
-        ret += "id='{}', ".format(self.id)
-        ret += "status='{}', ".format(self.status)
-        ret += "initial_molecule='{}')".format(self.initial_molecule)
-
-        return ret
-
 ## Utility
 
     def _serialize_key(self, key):
@@ -117,7 +94,6 @@ class TorsionDriveRecord(RecordBase):
 
     def _deserialize_key(self, key):
         return tuple(json.loads(key))
-
 
 ## Query
 
