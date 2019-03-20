@@ -3,6 +3,7 @@ Tests the server collection compute capabilities.
 """
 
 import pytest
+import numpy as np
 
 import qcfractal.interface as ptl
 from qcfractal import testing
@@ -24,7 +25,6 @@ def test_collection_query(fractal_compute_server):
 
     ds = client.get_collection("DATAset", "CAPital")
     assert ds.name == "CAPITAL"
-
 
 
 @testing.using_psi4
@@ -358,3 +358,52 @@ def test_missing_collection(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
     with pytest.raises(KeyError):
         client.get_collection("reactiondataset", "_waffles_")
+
+
+def test_torsiondrive_service(fractal_compute_server):
+
+    client = ptl.FractalClient(fractal_compute_server)
+
+    ds = ptl.collections.TorsionDriveDataset("testing", client=client)
+
+    hooh1 = ptl.data.get_molecule("hooh.json")
+    hooh2 = hooh1.copy(update={"geometry": hooh1.geometry + np.array([0, 0, 0.2])})
+
+    ds.add_entry("hooh1", [hooh1], [[0, 1, 2, 3]], [90], attributes={"something": "hooh1"})
+    ds.add_entry("hooh2", [hooh2], [[0, 1, 2, 3]], [90], attributes={"something": "hooh2"})
+
+    optimization_spec = {
+        "program": "geometric",
+        "keywords": {
+            "coordsys": "tric",
+        }
+    }
+    qc_spec = {
+        "driver": "gradient",
+        "method": "UFF",
+        "basis": "",
+        "keywords": None,
+        "program": "rdkit",
+    }
+
+    ds.add_specification("spec1", optimization_spec, qc_spec, description="This is a really cool spec")
+
+    ds.compute("spec1")
+
+    ds.save()
+
+    fractal_compute_server.await_services(max_iter=5)
+
+    ds = client.get_collection("torsiondrivedataset", "testing")
+    ds.query("spec1")
+
+    # Add another fake set, should instantly return
+    ds.add_specification("spec2", optimization_spec, qc_spec, description="This is a really cool spec")
+    ds.compute("spec2")
+    ds.query("spec2")
+
+    # We effectively computed the same thing twice with two duplicate specs
+    for row in ["hooh1", "hooh2"]:
+        for spec in ["spec1", "spec2"]:
+            assert pytest.approx(ds.df.loc["hooh1", "spec2"].final_energies(90), 1.e-5) == 0.00015655375994799847
+

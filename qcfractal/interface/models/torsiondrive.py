@@ -53,6 +53,7 @@ class TorsionDriveInput(BaseModel):
         return v
 
     class Config:
+        extras = "forbid"
         allow_mutation = False
         json_encoders = json_encoders
 

@@ -14,7 +14,7 @@ from qcelemental import constants
 from .collection_utils import nCr, register_collection
 from .collection import Collection
 from ..dict_utils import replace_dict_keys
-from ..models import ObjectId, Molecule, OptimizationSpecification, QCSpecification
+from ..models import ObjectId, Molecule, OptimizationSpecification, QCSpecification, TorsionDriveInput
 from ..models.torsiondrive import TDKeywords
 
 
@@ -24,6 +24,7 @@ class TDRecord(BaseModel):
     initial_molecules: List[ObjectId]
     td_keywords: TDKeywords
     attributes: Dict[str, Union[int, float, str]]  # Might be overloaded key types
+    torsiondrives: Dict[str, ObjectId] = {}
 
 
 class TorsionDriveSpecification(BaseModel):
@@ -40,20 +41,23 @@ class TorsionDriveDataset(Collection):
 
         super().__init__(name, client=client, **kwargs)
 
-    class DataModel(BaseModel):
+        self.df = pd.DataFrame(index=self._get_index())
+
+    class DataModel(Collection.DataModel):
 
         records: List[TDRecord] = []
-
-        history: Set[Tuple[str]] = set()
-        history_keys: Tuple[str] = ("torsiondrive_specification", )
-
-        td_specs = Dict[str, TorsionDriveSpecification] = {}
+        history: Set[str] = set()
+        td_specs: Dict[str, TorsionDriveSpecification] = {}
 
     def _pre_save_prep(self, client: 'FractalClient') -> None:
         pass
 
+    def _get_index(self):
+
+        return [x.name for x in self.data.records]
+
     def add_specification(self,
-                          name,
+                          name: str,
                           optimization_spec: OptimizationSpecification,
                           qc_spec: QCSpecification,
                           description: str=None,
@@ -61,7 +65,7 @@ class TorsionDriveDataset(Collection):
         """
         Parameters
         ----------
-        name : TYPE
+        name : str
             The name of the specification
         optimization_spec : OptimizationSpecification
             A full optimization specification for TorsionDrive
@@ -75,14 +79,14 @@ class TorsionDriveDataset(Collection):
         """
 
         lname = name.lower()
-        if (lname in td_specs) and (not overwrite):
+        if (lname in self.data.td_specs) and (not overwrite):
             raise KeyError(f"TorsionDriveSpecification '{name}' already present, use `overwrite=True` to replace.")
 
         spec = TorsionDriveSpecification(
             name=lname, optimization_spec=optimization_spec, qc_spec=qc_spec, description=description)
-        self.data.td_specs.append(spec)
+        self.data.td_specs[lname] = spec
 
-    def get_specification(self, name:str) -> TorsionDriveSpecification:
+    def get_specification(self, name: str) -> TorsionDriveSpecification:
         """
         Parameters
         ----------
@@ -138,6 +142,75 @@ class TorsionDriveDataset(Collection):
         record = TDRecord(name=name, initial_molecules=molecule_ids, td_keywords=td_keywords, attributes=attributes)
 
         self.data.records.append(record)
+
+    def compute(self, specification: str, tag: Optional[str]=None, priority: Optional[str]=None) -> int:
+        """Computes a specification for all records in the dataset.
+
+        Parameters
+        ----------
+        specification : str
+            The specification name
+        tag : Optional[str], optional
+            The queue tag to use when submitting compute requests.
+        priority : Optional[str], optional
+            The priority of the jobs low, medium, or high.
+
+        Returns
+        -------
+        int
+            The number of submitted torsiondrives
+        """
+        specification = specification.lower()
+        spec = self.get_specification(specification)
+
+        submitted = 0
+        for rec in self.data.records:
+            if specification in rec.torsiondrives:
+                continue
+
+            service = TorsionDriveInput(
+                initial_molecule=rec.initial_molecules,
+                keywords=rec.td_keywords,
+                optimization_spec=spec.optimization_spec,
+                qc_spec=spec.qc_spec)
+
+            rec.torsiondrives[specification] = self.client.add_service([service], tag=tag, priority=priority).ids[0]
+
+        self.data.history.add(specification)
+        return submitted
+
+    def query(self, specification: str)-> None:
+        """Queries a given specification from the server
+
+        Parameters
+        ----------
+        specification : str
+            The specification name to query
+        """
+        # Try to get the specification, will throw if not found.
+        self.get_specification(specification)
+
+        specification = specification.lower()
+        query_ids = []
+        mapper = {}
+        for rec in self.data.records:
+            try:
+                td_id = rec.torsiondrives[specification]
+                query_ids.append(td_id)
+                mapper[td_id] = rec.name
+            except KeyError:
+                pass
+
+        torsiondrives = self.client.query_procedures(id=query_ids)
+
+        data = []
+        for td in torsiondrives:
+            data.append([mapper[td.id], td])
+
+        df = pd.DataFrame(data, columns=["index", specification])
+        df.set_index("index", inplace=True)
+
+        self.df[specification] = df
 
 
 register_collection(TorsionDriveDataset)
