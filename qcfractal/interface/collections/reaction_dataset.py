@@ -170,7 +170,6 @@ class ReactionDataset(Dataset):
               method,
               basis: Optional[str]=None,
               *,
-              driver: Optional[str]=None,
               keywords: Optional[str]=None,
               program: Optional[str]=None,
               stoich: str="default",
@@ -188,8 +187,6 @@ class ReactionDataset(Dataset):
             The computational method to query on (B3LYP)
         basis : Optional[str], optional
             The computational basis query on (6-31G)
-        driver : Optional[str], optional
-            Search within energy, gradient, etc computations
         keywords : Optional[str], optional
             The option token desired
         program : Optional[str], optional
@@ -230,7 +227,7 @@ class ReactionDataset(Dataset):
         if not contrib and (self.client is None):
             raise AttributeError("DataBase: FractalClient was not set.")
 
-        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
+        driver, keywords, keywords_alias, program = self._default_parameters(keywords, program)
         self._validate_stoich(stoich)
 
         # # If reaction results
@@ -273,7 +270,6 @@ class ReactionDataset(Dataset):
                 method: Optional[str],
                 basis: Optional[str]=None,
                 *,
-                driver: Optional[str]=None,
                 keywords: Optional[str]=None,
                 program: Optional[str]=None,
                 stoich: str="default",
@@ -289,8 +285,6 @@ class ReactionDataset(Dataset):
             The computational method to compute (B3LYP)
         basis : Optional[str], optional
             The computational basis to compute (6-31G)
-        driver : Optional[str], optional
-            The type of computation to run (energy, gradient, etc)
         keywords : Optional[str], optional
             The keyword alias for the requested compute
         program : Optional[str], optional
@@ -319,7 +313,7 @@ class ReactionDataset(Dataset):
         if self.client is None:
             raise AttributeError("Dataset: Compute: Client was not set.")
 
-        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
+        driver, keywords, keywords_alias, program = self._default_parameters(keywords, program)
         self._validate_stoich(stoich)
 
         # Figure out molecules that we need

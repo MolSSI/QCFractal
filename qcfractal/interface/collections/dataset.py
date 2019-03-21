@@ -134,6 +134,7 @@ class Dataset(Collection):
 
         self.data.history.add(tuple(new_history))
 
+
     def list_history(self, **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """
         Lists the history of computations completed.
@@ -166,20 +167,21 @@ class Dataset(Collection):
         df.sort_index(inplace=True)
         return df
 
-    def _default_parameters(self, driver: str, keywords: Optional[str], program: str) -> Tuple[str, str, str, str]:
+    def _default_parameters(self, keywords: Optional[str], program: str, stoich=None) -> Tuple[str, str, str, str]:
         """
         Takes raw input parsed parameters and applies defaults to them.
         """
 
+        default_name = {}
         if program is None:
             if self.data.default_program is None:
                 raise KeyError("No default program was set and none was provided.")
             program = self.data.default_program
         else:
             program = program.lower()
+            default_name["program"] = program.title()
 
-        if driver is None:
-            driver = self.data.default_driver
+        driver = self.data.default_driver
 
         keywords_alias = keywords
         if keywords is None:
@@ -409,7 +411,6 @@ class Dataset(Collection):
               method,
               basis=None,
               *,
-              driver=None,
               keywords=None,
               program=None,
               contrib=False,
@@ -424,8 +425,6 @@ class Dataset(Collection):
             The computational method to query on (B3LYP)
         basis : str
             The computational basis query on (6-31G)
-        driver : str, optional
-            Search within energy, gradient, etc computations
         keywords : str, optional
             The option token desired
         program : str, optional
@@ -448,7 +447,7 @@ class Dataset(Collection):
         >>> ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
         """
 
-        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
+        driver, keywords, keywords_alias, program = self._default_parameters(keywords, program)
 
         if not contrib and (self.client is None):
             raise AttributeError("DataBase: FractalClient was not set.")
@@ -482,7 +481,6 @@ class Dataset(Collection):
                 method: str,
                 basis: Optional[str]=None,
                 *,
-                driver: Optional[str]=None,
                 keywords: Optional[str]=None,
                 program: Optional[str]=None,
                 tag: Optional[str]=None,
@@ -496,8 +494,6 @@ class Dataset(Collection):
             The computational method to compute (B3LYP)
         basis : Optional[str], optional
             The computational basis to compute (6-31G)
-        driver : Optional[str], optional
-            The type of computation to run (energy, gradient, etc)
         keywords : Optional[str], optional
             The keyword alias for the requested compute
         program : Optional[str], optional
@@ -518,7 +514,7 @@ class Dataset(Collection):
         if self.client is None:
             raise AttributeError("Dataset: Compute: Client was not set.")
 
-        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
+        driver, keywords, keywords_alias, program = self._default_parameters(keywords, program)
 
         molecule_idx = [e.molecule_id for e in self.data.records]
         umols, uidx = np.unique(molecule_idx, return_index=True)
