@@ -1,17 +1,40 @@
 import datetime
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import (Column, Integer, String, Text, DateTime,
-                        ForeignKey, Binary, ARRAY, JSON, Enum, Float)
+# from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import (Column, Integer, String, Text, DateTime, Boolean,
+                        ForeignKey, JSON, Enum, Float)
 from sqlalchemy.orm import relationship
 # from sqlalchemy_utils.types.choice import ChoiceType
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum
 from sqlalchemy.ext.declarative import declared_attr
+from sqlalchemy.ext.declarative import as_declarative
 
 
 # pip install sqlalchemy psycopg2 sqlalchemy_utils
 
-Base = declarative_base()
+# Base = declarative_base()
+
+
+@as_declarative()
+class Base:
+    """Base declarative class of all ORM models"""
+
+    def to_dict(self, with_id=True, exclude=None):
+        dict_obj = self.__dict__.copy()
+        del dict_obj['_sa_instance_state']
+        if not with_id:
+            del dict_obj['id']
+        if exclude:
+            for key in exclude:
+                del dict_obj[key]
+        return dict_obj
+
+    def col(self):
+        return self.__table__.c
+
+    def __str__(self):
+        return str(self.id)
+
 
 class AccessLogORM(Base):
     __tablename__ = 'access_log'
@@ -70,21 +93,46 @@ class MoleculeORM(Base):
     __tablename__ = "molecule"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
-    symbols = Column(ARRAY(String(5)))
     molecular_formula = Column(String)
     molecule_hash = Column(String)
-    geometry = Column(ARRAY(String))
 
+    # Required data
+    schema_name = Column(String)
+    schema_version = Column(Integer, default=2)
+    symbols = Column(JSON)  # Column(ARRAY(String))
+    geometry =  Column(JSON)  # Column(ARRAY(Float))
 
-    # def save(self, *args, **kwargs):
-    #     """Override save to add molecule_hash"""
-    #     # self.molecule_hash = self.create_hash()
-    #
-    #     return super(MoleculeORM, self).save(*args, **kwargs)
+    # Molecule data
+    name = Column(String, default="")
+    identifiers = Column(JSON)
+    comment = Column(String)
+    molecular_charge = Column(Float, default=0)
+    molecular_multiplicity = Column(Integer, default=1)
 
-    def __str__(self):
-        return str(self.id)
+    # Atom data
+    masses = Column(JSON)  # Column(ARRAY(Float))
+    real = Column(JSON)  # Column(ARRAY(Boolean))
+    atom_labels = Column(JSON)  # Column(ARRAY(String))
+    atomic_numbers = Column(JSON)  # Column(ARRAY(Integer))
+    mass_numbers = Column(JSON)  # Column(ARRAY(Integer))
+
+    # Fragment and connection data
+    connectivity = Column(JSON)
+    fragments = Column(JSON)
+    fragment_charges = Column(JSON)  # Column(ARRAY(Float))
+    fragment_multiplicities = Column(JSON)  # Column(ARRAY(Integer))
+
+    # Orientation
+    fix_com = Column(Boolean, default=False)
+    fix_orientation = Column(Boolean, default=False)
+    fix_symmetry = Column(String)
+
+    # Extra
+    provenance = Column(JSON)
+    extras = Column(JSON)
+
+    # def __str__(self):
+    #     return str(self.id)
 
     # meta = {
     #
@@ -113,7 +161,7 @@ class KeywordsORM(Base):
 
     id = Column(Integer, primary_key=True)
     hash_index = Column(String, nullable=False)
-    values = Column(Binary)
+    values = Column(JSON)
 
     # meta = {'indexes': [{'fields': ('hash_index', ), 'unique': True}]}
 
@@ -140,7 +188,7 @@ class BaseResultORM(Base):
     version = Column(Integer)
 
     # Extra fields
-    extras = Column(Binary)
+    extras = Column(JSON)
     stdout_id = Column(Integer, ForeignKey('logs.id'))
     stdout = relationship(LogsORM, lazy=True, foreign_keys=stdout_id,
                           cascade="all, delete-orphan", single_parent=True)
@@ -162,7 +210,7 @@ class BaseResultORM(Base):
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
     # Carry-ons
-    provenance = Column(Binary)
+    provenance = Column(JSON)
 
     # meta = {
     #     # 'allow_inheritance': True,
@@ -208,7 +256,7 @@ class ResultORM(BaseResultORM):
     keywords = relationship(KeywordsORM)
 
     # output related
-    return_result = Column(Binary)  # one of 3 types
+    return_result = Column(JSON)  # one of 3 types
     properties = Column(JSON)  # TODO: may use JSONB in the future
 
 
@@ -251,7 +299,7 @@ class ProcedureMixin:
         return relationship(MoleculeORM, lazy=True,
                             foreign_keys=self.initial_molecule_id)
 
-    qc_spec = Column(Binary)
+    qc_spec = Column(JSON)
 
 
 # ================== Types of ProcedureORMs ================== #
@@ -272,7 +320,7 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     schema_version = Column(Integer, default=1)
 
     # Results
-    energies = Column(ARRAY(Float))
+    energies =  Column(JSON)  #Column(ARRAY(Float))
     final_molecule_id = Column(Integer, ForeignKey('molecule.id'))
     final_molecule = relationship(MoleculeORM, lazy=True,
                                   foreign_keys=final_molecule_id)
@@ -300,12 +348,12 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
         super().__init__(**kwargs)
 
     # input data (along with the mixin)
-    keywords = Column(Binary)  # TODO: same as BaseRecord!!!
-    optimization_spec = Column(Binary)
+    keywords = Column(JSON)  # TODO: same as BaseRecord!!!
+    optimization_spec = Column(JSON)
 
     # Output data
-    final_energy_dict = Column(Binary)
-    minimum_positions = Column(Binary)
+    final_energy_dict = Column(JSON)
+    minimum_positions = Column(JSON)
     optimization_history = relationship(BaseResultORM, lazy=False,
                                         foreign_keys="BaseResultORM.parent_id")
 
@@ -325,8 +373,8 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 #     """
 #
 #     function = Column(String)
-#     args = Column(Binary)  # fast, can take any structure
-#     kwargs = Column(Binary)
+#     args = Column(JSON)  # fast, can take any structure
+#     kwargs = Column(JSON)
 
 
 class TaskQueueORM(Base):
@@ -340,7 +388,7 @@ class TaskQueueORM(Base):
 
     id = Column(Integer, primary_key=True)
 
-    spec = Column(Binary)
+    spec = Column(JSON)
 
     # others
     tag = Column(String, default=None)
@@ -352,8 +400,8 @@ class TaskQueueORM(Base):
     modified_on = Column(DateTime, nullable=False)
 
     # can reference ResultORMs or any ProcedureORM
-    base_result_id = Column(Integer, ForeignKey("base_result.id"))  # todo:
-    base_result = relationship("BaseResultORM")
+    base_result_id = Column(Integer, ForeignKey("base_result.id"))
+    base_result = relationship(BaseResultORM)
 
     # meta = {
     #     'indexes': [
@@ -390,7 +438,7 @@ class ServiceQueueORM(Base):
     hash_index = Column(String, nullable=False)
 
     procedure_id = Column(Integer, ForeignKey("base_result.id"))
-    procedure = relationship("BaseResultORM")
+    procedure = relationship(BaseResultORM)
 
     # created_on = Column(DateTime, nullable=False)
     # modified_on = Column(DateTime, nullable=False)
@@ -417,8 +465,8 @@ class UserORM(Base):
     id = Column(Integer, primary_key=True)
 
     username = Column(String, nullable=False, unique=True)
-    password = Column(Binary, nullable=False)
-    permissions = Column(ARRAY(String))
+    password = Column(JSON, nullable=False)
+    permissions = Column(JSON)  # Column(ARRAY(String))
 
     # meta = {'collection': 'user', 'indexes': ['username']}
 
