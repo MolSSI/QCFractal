@@ -2,6 +2,8 @@
 Misc information and runtime information.
 """
 
+from importlib.util import find_spec
+
 from . import _version
 
 __all__ = ["get_information"]
@@ -28,6 +30,10 @@ def _isnotebook():
 
 
 __info["isnotebook"] = _isnotebook()
+
+
+def find_module(name):
+    return find_spec(name)
 
 
 def get_information(key):
