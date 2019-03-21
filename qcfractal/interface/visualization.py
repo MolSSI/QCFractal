@@ -44,12 +44,83 @@ def check_plotly():
         _ipycheck = True
 
 
-import plotly.plotly as py
-import plotly.graph_objs as go
+def bar_plot(traces: 'List[Series]', title=None, ylabel=None, dtype="bar") -> 'plotly.Figure':
+    """Renders a plotly bar plot
 
+    Parameters
+    ----------
+    traces : List[Series]
+        A list of bar plots to show, if more than one series the resulting graph will be grouped.
+    title : None, optional
+        The title of the graph
+    ylabel : None, optional
+        The y axis label
 
-def bar():
+    Returns
+    -------
+    plotly.Figure
+        The requested bar plot.
+    """
 
     check_plotly()
+    import plotly.graph_objs as go
 
-    plotly.offline.plot
+    data = [go.Bar(x=trace.index, y=trace, name=trace.name) for trace in traces]
+
+    layout = {}
+    if title:
+        layout["title"] = title
+    if ylabel:
+        layout["yaxis"] = {"title": ylabel}
+    layout = go.Layout(layout)
+    figure = go.Figure(data=data, layout=layout)
+
+    return figure
+
+
+def violin_plot(traces: 'DataFrame', negative: 'DataFrame'=None, title=None, points=False,
+                ylabel=None) -> 'plotly.Figure':
+    """Renders a plotly violin plot
+
+    Parameters
+    ----------
+    traces : DataFrame
+        Pandas DataFrame of points to plot, will create a violin plot of each column.
+    negative : DataFrame, optional
+        A comparison violin plot, these columns will present the right hand side.
+    title : None, optional
+        The title of the graph
+    points : None, optional
+        Show points or not, this option is not available for comparison violin plots.
+    ylabel : None, optional
+        The y axis label
+
+    Returns
+    -------
+    plotly.Figure
+        The requested violin plot.
+    """
+    check_plotly()
+    import plotly.graph_objs as go
+
+    data = []
+    if negative is not None:
+
+        for trace, side in zip([traces, negative], ["positive", "negative"]):
+            p = {"name": trace.name, "type": "violin", "box": {"visible": True}}
+            p["y"] = trace.stack()
+            p["x"] = trace.stack().reset_index().level_1
+            p["side"] = side
+
+            data.append(p)
+    else:
+        for name, series in traces.items():
+            p = {"name": name, "type": "violin", "box": {"visible": True}}
+            p["y"] = series
+
+            data.append(p)
+
+    layout = go.Layout({"title": title, "yaxis": {"title": ylabel}})
+    figure = go.Figure(data=data, layout=layout)
+
+    return figure
