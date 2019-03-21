@@ -1487,7 +1487,8 @@ class MongoengineSocket:
 
         # Update results and procedures if reset_error
         if reset_error:
-            task_ids = TaskQueueORM.objects(manager=manager, status="ERROR").only('id')
+            task_objs = TaskQueueORM.objects(manager=manager, status="ERROR").only('id')
+            task_ids = [x.id for x in task_objs]
             ResultORM.objects(task_id__in=task_ids).update(status='INCOMPLETE', modified_on=dt.utcnow())
             ProcedureORM.objects(task_id__in=task_ids).update(status='INCOMPLETE', modified_on=dt.utcnow())
 
