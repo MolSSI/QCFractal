@@ -15,14 +15,40 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
-0.5.? / 2019-??-??
+0.5.4 / 2019-03-21
 ------------------
+
+New Features
+++++++++++++
+
+- (:pr:`216`) Jobs submitted to the queue can now be assigned a priority to be served out to the managers.
+- (:pr:`219`) Temporary, pop-up, local instances of ``FractalServer`` can now be created through the
+  ``FractalSnowflake``. This creates an instance of ``FractalServer``, with its database structure, which is entirely
+  held in temporary storage and memory, all of which is deleted upon exit/stop. This feature is designed for those
+  who want to tinker with Fractal without needed to create their own database or connect to a production
+  ``FractalServer``.
+- (:pr:`220`) Queue managers can now set the ``scratch_directory`` variable that is passed to QCEngine and its workers.
+
+Enhancements
+++++++++++++
+
+- (:pr:`216`) Queue managers now report what programs and procedures they have access to and will only pull jobs they
+  think they can execute.
+- (:pr:`222`) All of ``FractalClient``'s methods now have full docstrings and type annotations for clairy
+- (:pr:`222`) Massive overhaul to the REST interface to simplify internal calls from the client and server side.
+- (:pr:`223`) ``TorsionDriveDataset`` objects are modeled through pydantic objects to allow easier interface with the
+  database back end and data validation.
 
 Bug Fixes
 +++++++++
 
 - (:pr:`215`) Dask Jobqueue for the ``qcfractal-manager`` is now tested and working. This resolve the outstanding issue
   introduced in :pr:`211` and pushed in v0.5.3.
+- (:pr:`216`) Tasks are now stored as ``TaskRecord`` pydantic objects which now preempts a bug introduced
+  from providing the wrong schema.
+- (:pr:`217`) Standalone QCPortal installs now report the correct version
+- (:pr:`221`) Fixed a bug in ``ReactionDataset.query`` where passing in ``None`` was treated as a string.
+
 
 0.5.3 / 2019-03-13
 ------------------

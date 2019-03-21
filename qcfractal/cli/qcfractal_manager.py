@@ -90,6 +90,8 @@ class DaskQueueSettings(BaseSettings):
 
     def __init__(self, **kwargs):
         """Enforce that the keys we are going to set remain untouched"""
+        # This set blocks the Dask Jobqueue `Cluster` keywords which we set, so the names of the keywords align
+        # to those classes' kwargs, not whatever Fractal chooses to use as keywords.
         forbidden_set = {"name", "cores", "memory", "processes", "walltime", "env_extra", "qca_resource_string"}
         bad_set = set(kwargs.keys()) & forbidden_set
         if bad_set:
