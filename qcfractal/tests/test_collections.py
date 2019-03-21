@@ -38,7 +38,7 @@ def test_dataset_compute_gradient(fractal_compute_server):
     ds.add_entry("He2", ptl.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"))
 
     contrib = {
-        "name": "gradient",
+        "name": "Gradient",
         "theory_level": "pseudo-random values",
         "values": {
             "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
@@ -57,10 +57,10 @@ def test_dataset_compute_gradient(fractal_compute_server):
     ds.query("gradient", None, contrib=True, as_array=True)
 
     # Test out some statistics
-    stats = ds.statistics("MUE", "HF/sto-3g", "gradient")
+    stats = ds.statistics("MUE", "HF/sto-3g", "Gradient")
     assert pytest.approx(stats.mean(), 1.e-5) == 0.00984176986312362
 
-    stats = ds.statistics("UE", "HF/sto-3g", "gradient")
+    stats = ds.statistics("UE", "HF/sto-3g", "Gradient")
     assert pytest.approx(stats.loc["He1"].mean(), 1.e-5) == 0.01635020639
     assert pytest.approx(stats.loc["He2"].mean(), 1.e-5) == 0.00333333333
 
@@ -163,22 +163,22 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
 
     # Query computed results
     assert ds.query("SCF", "STO-3G")
-    assert pytest.approx(0.6024530476, 1.e-5) == ds.df.loc["He1", "SCF/STO-3G"]
-    assert pytest.approx(-0.0068950359, 1.e-5) == ds.df.loc["He2", "SCF/STO-3G"]
+    assert pytest.approx(0.6024530476, 1.e-5) == ds.df.loc["He1", "SCF/sto-3g"]
+    assert pytest.approx(-0.0068950359, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g"]
 
     # Check results
     assert ds.query("Benchmark", contrib=True)
-    assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/STO-3G")
+    assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/sto-3g")
 
-    assert pytest.approx([0.081193, 7.9533e-05], 1.e-4) == list(ds.statistics("URE", "SCF/STO-3G"))
-    assert pytest.approx(0.0406367, 1.e-5) == ds.statistics("MURE", "SCF/STO-3G")
-    assert pytest.approx(0.002447793, 1.e-5) == ds.statistics("MURE", "SCF/STO-3G", floor=10)
+    assert pytest.approx([0.081193, 7.9533e-05], 1.e-4) == list(ds.statistics("URE", "SCF/sto-3g"))
+    assert pytest.approx(0.0406367, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g")
+    assert pytest.approx(0.002447793, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g", floor=10)
 
     assert isinstance(ds.to_json(), dict)
     assert ds.list_history(keywords=None).shape[0] == 1
 
     ds.units = "eV"
-    assert pytest.approx(0.00010614635, 1.e-5) == ds.statistics("MURE", "SCF/STO-3G", floor=10)
+    assert pytest.approx(0.00010614635, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g", floor=10)
 
 
 
@@ -204,12 +204,12 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     r = ds.compute("SCF", "STO-3G")
     fractal_compute_server.await_results()
     assert ds.query("SCF", "STO-3G")
-    assert pytest.approx(0.39323818102293856, 1.e-5) == ds.df.loc["He2", "SCF/STO-3G"]
+    assert pytest.approx(0.39323818102293856, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g"]
 
-    r = ds.compute("SCF", "STO-3G", keywords="df")
+    r = ds.compute("SCF", "sto-3g", keywords="df")
     fractal_compute_server.await_results()
-    assert ds.query("SCF", "STO-3G", keywords="df", prefix="df-")
-    assert pytest.approx(0.38748602675524185, 1.e-5) == ds.df.loc["He2", "df-SCF/STO-3G"]
+    assert ds.query("SCF", "sto-3g", keywords="df",)
+    assert pytest.approx(0.38748602675524185, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g-df"]
 
     assert ds.list_history().shape[0] == 2
     assert ds.list_history(keywords="DF").shape[0] == 1

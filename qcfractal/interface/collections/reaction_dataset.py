@@ -173,11 +173,10 @@ class ReactionDataset(Dataset):
               keywords: Optional[str]=None,
               program: Optional[str]=None,
               stoich: str="default",
-              prefix: str="",
-              postfix: str="",
               contrib: bool=False,
-              field: str="return_result",
-              ignore_ds_type: bool=False):
+              field: Optional[str]=None,
+              ignore_ds_type: bool=False,
+              force: bool=False):
         """
         Queries the local Portal for the requested keys and stoichiometry.
 
@@ -193,27 +192,19 @@ class ReactionDataset(Dataset):
             The program to query on
         stoich : str, optional
             The given stoichiometry to compute.
-        prefix : str, optional
-            A prefix given to the resulting column names.
-        postfix : str, optional
-            A postfix given to the resulting column names.
         contrib : bool, optional
             Toggles a search between the Mongo Pages and the Databases's ContributedValues field.
-        scale : str, optional
-            All units are based in Hartree, the default scaling is to kcal/mol.
-        field : str, optional
+        field : Optional[str], optional
             The result field to query on
         ignore_ds_type : bool, optional
             Override of "ie" for "rxn" db types.
-
+        force : bool, optional
+            Forces a requery if data is already present
 
         Returns
         -------
         success : bool
             Returns True if the requested query was successful or not.
-
-        Notes
-        -----
 
 
         Examples
@@ -221,48 +212,51 @@ class ReactionDataset(Dataset):
 
         ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
 
+
+
         """
         self._check_state()
 
         if not contrib and (self.client is None):
             raise AttributeError("DataBase: FractalClient was not set.")
 
-        driver, keywords, keywords_alias, program = self._default_parameters(keywords, program)
         self._validate_stoich(stoich)
+        name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=stoich)
+
+        if field is None:
+            field = "return_result"
+        else:
+            name = "{}-{}".format(name, field)
+
+        if (name in self.df) and (force is False):
+            return True
 
         # # If reaction results
         if contrib:
             tmp_idx = self.get_contributed_values_column(method)
 
-            self.df[prefix + method + postfix] = tmp_idx
+            self.df[tmp_idx.columns[0]] = tmp_idx
             return True
-
-        query_keys = {
-            "method": method,
-            "basis": basis,
-            "driver": driver,
-            "keywords": keywords,
-            "program": program,
-        }
 
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
-            tmp_idx_complex = self._unroll_query(query_keys, stoich, field=field)
-            tmp_idx_monomers = self._unroll_query(query_keys, monomer_stoich, field=field)
+            tmp_idx_complex = self._unroll_query(dbkeys, stoich, field=field)
+            tmp_idx_monomers = self._unroll_query(dbkeys, monomer_stoich, field=field)
 
             # Combine
             tmp_idx = tmp_idx_complex - tmp_idx_monomers
 
         else:
-            tmp_idx = self._unroll_query(query_keys, stoich, field=field)
-        tmp_idx.columns = [prefix + method + '/' + basis + postfix for _ in tmp_idx.columns]
+            tmp_idx = self._unroll_query(dbkeys, stoich, field=field)
+        tmp_idx.columns = [name]
 
         # scale
         tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
-        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', self.units)
+        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor(
+            'hartree', self.units)
 
         # Apply to df
-        self.df[tmp_idx.columns] = tmp_idx
+        self.df[name] = tmp_idx
 
         return True
 
@@ -313,8 +307,8 @@ class ReactionDataset(Dataset):
         if self.client is None:
             raise AttributeError("Dataset: Compute: Client was not set.")
 
-        driver, keywords, keywords_alias, program = self._default_parameters(keywords, program)
         self._validate_stoich(stoich)
+        name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=stoich)
 
         # Figure out molecules that we need
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
@@ -330,25 +324,24 @@ class ReactionDataset(Dataset):
         # There could be duplicates so take the unique and save the map
         umols, uidx = np.unique(tmp_idx["molecule"], return_index=True)
 
-        complete_values = self.client.query_results(
-            molecule=list(umols),
-            driver=driver,
-            keywords=keywords,
-            program=program,
-            method=method,
-            basis=basis,
-            projection={"molecule": True})
+        complete_values = self.client.query_results(**dbkeys, molecule=list(umols), projection={"molecule": True})
 
         complete_mols = np.array([x["molecule"] for x in complete_values])
         umols = np.setdiff1d(umols, complete_mols)
         compute_list = list(umols)
 
         ret = self.client.add_compute(
-            program, method, basis, driver, keywords, compute_list, tag=tag, priority=priority)
+            dbkeys["program"],
+            dbkeys["method"],
+            dbkeys["basis"],
+            dbkeys["driver"],
+            dbkeys["keywords"],
+            compute_list,
+            tag=tag,
+            priority=priority)
 
         # Update the record that this was computed
-        self._add_history(
-            driver=driver, program=program, method=method, basis=basis, keywords=keywords_alias, stoichiometry=stoich)
+        self._add_history(**history, stoichiometry=stoich)
         self.save()
 
         return ret

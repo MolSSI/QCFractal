@@ -134,7 +134,6 @@ class Dataset(Collection):
 
         self.data.history.add(tuple(new_history))
 
-
     def list_history(self, **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """
         Lists the history of computations completed.
@@ -167,7 +166,12 @@ class Dataset(Collection):
         df.sort_index(inplace=True)
         return df
 
-    def _default_parameters(self, keywords: Optional[str], program: str, stoich=None) -> Tuple[str, str, str, str]:
+    def _default_parameters(self,
+                            program: str,
+                            method: str,
+                            basis: Optional[str],
+                            keywords: Optional[str],
+                            stoich: Optional[str]=None) -> Tuple[str, str, str, str]:
         """
         Takes raw input parsed parameters and applies defaults to them.
         """
@@ -194,8 +198,25 @@ class Dataset(Collection):
 
             keywords_alias = keywords
             keywords = self.data.alias_keywords[program][keywords]
+            default_name["keywords"] = keywords_alias
 
-        return driver, keywords, keywords_alias, program
+        if basis is not None:
+            name = f"{method.upper()}/{basis.lower()}"
+        else:
+            name = method.upper()
+
+
+        if "keywords" in default_name:
+            name += "-{}".format(default_name["keywords"])
+        if "program" in default_name:
+            name += "-{}".format(default_name["program"])
+        if (stoich is not None) and (stoich != "default"):
+            name = "{}-{}".format(stoich, name)
+
+        dbkeys = {"driver": driver, "program": program, "method": method, "basis": basis, "keywords": keywords}
+        history = {**dbkeys, **{"keywords": keywords_alias}}
+
+        return name, dbkeys, history
 
     def _query(self, indexer: str, query: Dict[str, Any], field: str="return_result") -> 'Series':
         """
@@ -394,10 +415,11 @@ class Dataset(Collection):
         else:
             values = {k: [v] for k, v in data.values.items()}
 
-        tmp_idx = pd.DataFrame.from_dict(values, orient="index", columns=[key])
+        tmp_idx = pd.DataFrame.from_dict(values, orient="index", columns=[data.name])
 
         # Convert to numeric
-        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor(data.units, self.units)
+        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor(
+            data.units, self.units)
 
         return tmp_idx
 
@@ -408,14 +430,15 @@ class Dataset(Collection):
         self._new_records.append({"name": name, "molecule_hash": mhash, **kwargs})
 
     def query(self,
-              method,
-              basis=None,
+              method:str,
+              basis:Optional[str]=None,
               *,
-              keywords=None,
-              program=None,
-              contrib=False,
-              field="return_result",
-              as_array=False):
+              keywords:Optional[str]=None,
+              program:Optional[str]=None,
+              contrib:bool=False,
+              field:str=None,
+              as_array:bool=False,
+              force:bool=False):
         """
         Queries the local Portal for the requested keys.
 
@@ -423,18 +446,20 @@ class Dataset(Collection):
         ----------
         method : str
             The computational method to query on (B3LYP)
-        basis : str
+        basis : Optional[str], optional
             The computational basis query on (6-31G)
-        keywords : str, optional
+        keywords : Optional[str], optional
             The option token desired
-        program : str, optional
+        program : Optional[str], optional
             The program to query on
-        contrib : bool
+        contrib : bool, optional
             Toggles a search between the Mongo Pages and the Databases's ContributedValues field.
-        scale : str, double
-            All units are based in Hartree, the default scaling is to kcal/mol.
         field : str, optional
             The result field to query on
+        as_array : bool, optional
+            Converts the returned values to NumPy arrays
+        force : bool, optional
+            Forces a requery if data is already present
 
         Returns
         -------
@@ -445,20 +470,22 @@ class Dataset(Collection):
         --------
 
         >>> ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
+
         """
 
-        driver, keywords, keywords_alias, program = self._default_parameters(keywords, program)
+        name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
+
+        if field is None:
+            field = "return_result"
+        else:
+            name = "{}-{}".format(name, field)
+
+        if (name in self.df) and (force is False):
+            return True
 
         if not contrib and (self.client is None):
             raise AttributeError("DataBase: FractalClient was not set.")
 
-        query_keys = {
-            "method": method,
-            "basis": basis,
-            "driver": driver,
-            "keywords": keywords,
-            "program": program,
-        }
         # # If reaction results
         if contrib:
             tmp_idx = self.get_contributed_values_column(method)
@@ -466,8 +493,8 @@ class Dataset(Collection):
         else:
             indexer = {e.name: e.molecule_id for e in self.data.records}
 
-            tmp_idx = self._query(indexer, query_keys, field=field)
-            tmp_idx.rename(columns={"result": method + '/' + basis}, inplace=True)
+            tmp_idx = self._query(indexer, dbkeys, field=field)
+            tmp_idx.rename(columns={"result": name}, inplace=True)
 
         if as_array:
             tmp_idx[tmp_idx.columns[0]] = tmp_idx[tmp_idx.columns[0]].apply(lambda x: np.array(x))
@@ -514,16 +541,23 @@ class Dataset(Collection):
         if self.client is None:
             raise AttributeError("Dataset: Compute: Client was not set.")
 
-        driver, keywords, keywords_alias, program = self._default_parameters(keywords, program)
+        name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
 
         molecule_idx = [e.molecule_id for e in self.data.records]
         umols, uidx = np.unique(molecule_idx, return_index=True)
 
         ret = self.client.add_compute(
-            program, method, basis, driver, keywords, list(umols), tag=tag, priority=priority)
+            dbkeys["program"],
+            dbkeys["method"],
+            dbkeys["basis"],
+            dbkeys["driver"],
+            dbkeys["keywords"],
+            list(umols),
+            tag=tag,
+            priority=priority)
 
         # Update the record that this was computed
-        self._add_history(driver=driver, program=program, method=method, basis=basis, keywords=keywords_alias)
+        self._add_history(**history)
         self.save()
 
         return ret
