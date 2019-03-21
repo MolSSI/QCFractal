@@ -177,7 +177,6 @@ class ReactionDataset(Dataset):
               prefix: str="",
               postfix: str="",
               contrib: bool=False,
-              scale: str="kcal/mol",
               field: str="return_result",
               ignore_ds_type: bool=False):
         """
@@ -236,7 +235,7 @@ class ReactionDataset(Dataset):
 
         # # If reaction results
         if contrib:
-            tmp_idx = self.get_contributed_values_column(method, scale=scale)
+            tmp_idx = self.get_contributed_values_column(method)
 
             self.df[prefix + method + postfix] = tmp_idx
             return True
@@ -263,7 +262,7 @@ class ReactionDataset(Dataset):
 
         # scale
         tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
-        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', scale)
+        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', self.units)
 
         # Apply to df
         self.df[tmp_idx.columns] = tmp_idx

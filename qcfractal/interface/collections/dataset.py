@@ -65,6 +65,7 @@ class Dataset(Collection):
 
         # Initialize internal data frames
         self.df = pd.DataFrame(index=self.get_index())
+        self._units = self.data.default_units
 
         # If we making a new database we may need new hashes and json objects
         self._new_molecules = {}
@@ -79,6 +80,7 @@ class Dataset(Collection):
         default_keywords: Dict[str, str] = {}
         default_driver: str = "energy"
         alias_keywords: Dict[str, Dict[str, str]] = {}
+        default_units: str = "kcal / mol"
 
         # Data
         records: List[MoleculeRecord] = []
@@ -193,7 +195,7 @@ class Dataset(Collection):
 
         return driver, keywords, keywords_alias, program
 
-    def _query(self, indexer: str, query: Dict[str, Any], field: str="return_result", scale: str=None) -> 'Series':
+    def _query(self, indexer: str, query: Dict[str, Any], field: str="return_result") -> 'Series':
         """
         Runs a query based on an indexer which is index : molecule_id
 
@@ -229,10 +231,19 @@ class Dataset(Collection):
         ret.set_index("index", inplace=True)
         ret.drop("molecule", axis=1, inplace=True)
 
-        if scale:
-            ret[ret.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', scale)
+        ret[ret.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', self.units)
 
         return ret
+
+    @property
+    def units(self):
+        return self._units
+
+    @units.setter
+    def units(self, value):
+
+        self.df *= constants.conversion_factor(self._units, value)
+        self._units = value
 
     def set_default_program(self, program: str) -> bool:
         """
@@ -358,7 +369,7 @@ class Dataset(Collection):
         """
         return self.data.contributed_values[key.lower()].copy()
 
-    def get_contributed_values_column(self, key: str, scale='hartree') -> 'Series':
+    def get_contributed_values_column(self, key: str) -> 'Series':
         """Returns a Pandas column with the requested contributed values
 
         Parameters
@@ -384,7 +395,7 @@ class Dataset(Collection):
         tmp_idx = pd.DataFrame.from_dict(values, orient="index", columns=[key])
 
         # Convert to numeric
-        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor(data.units, scale)
+        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor(data.units, self.units)
 
         return tmp_idx
 
@@ -402,7 +413,6 @@ class Dataset(Collection):
               keywords=None,
               program=None,
               contrib=False,
-              scale="kcal / mol",
               field="return_result",
               as_array=False):
         """
@@ -452,12 +462,12 @@ class Dataset(Collection):
         }
         # # If reaction results
         if contrib:
-            tmp_idx = self.get_contributed_values_column(method, scale=scale)
+            tmp_idx = self.get_contributed_values_column(method)
 
         else:
             indexer = {e.name: e.molecule_id for e in self.data.records}
 
-            tmp_idx = self._query(indexer, query_keys, field=field, scale=scale)
+            tmp_idx = self._query(indexer, query_keys, field=field)
             tmp_idx.rename(columns={"result": method + '/' + basis}, inplace=True)
 
         if as_array:

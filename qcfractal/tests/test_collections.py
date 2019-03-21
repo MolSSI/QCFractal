@@ -32,7 +32,7 @@ def test_dataset_compute_gradient(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
 
     # Build a dataset
-    ds = ptl.collections.Dataset("ds_energy", client, default_program="psi4", default_driver="gradient")
+    ds = ptl.collections.Dataset("ds_energy", client, default_program="psi4", default_driver="gradient", default_units="hartree")
 
     ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
     ds.add_entry("He2", ptl.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"))
@@ -176,6 +176,10 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
 
     assert isinstance(ds.to_json(), dict)
     assert ds.list_history(keywords=None).shape[0] == 1
+
+    ds.units = "eV"
+    assert pytest.approx(0.00010614635, 1.e-5) == ds.statistics("MURE", "SCF/STO-3G", floor=10)
+
 
 
 @testing.using_psi4
