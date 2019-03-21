@@ -163,6 +163,10 @@ class KeywordsORM(Base):
     hash_index = Column(String, nullable=False)
     values = Column(JSON)
 
+    lowercase = Column(Boolean, default=True)
+    exact_floats = Column(Boolean, default=False)
+    comments = Column(String)
+
     # meta = {'indexes': [{'fields': ('hash_index', ), 'unique': True}]}
 
 
@@ -177,7 +181,7 @@ class BaseResultORM(Base):
     __tablename__ = 'base_result'
 
     # for SQL
-    result_type = Column(Integer)  # for inheritance
+    result_type = Column(String)  # for inheritance
     parent_id = Column(Integer, ForeignKey('base_result.id'))
 
     # Base identification
@@ -190,15 +194,15 @@ class BaseResultORM(Base):
     # Extra fields
     extras = Column(JSON)
     stdout_id = Column(Integer, ForeignKey('logs.id'))
-    stdout = relationship(LogsORM, lazy=True, foreign_keys=stdout_id,
+    stdout = relationship(LogsORM, lazy='raise', foreign_keys=stdout_id,
                           cascade="all, delete-orphan", single_parent=True)
 
     stderr_id = Column(Integer, ForeignKey('logs.id'))
-    stderr = relationship(LogsORM, lazy=True, foreign_keys=stderr_id,
+    stderr = relationship(LogsORM, lazy='raise', foreign_keys=stderr_id,
                           cascade="all, delete-orphan", single_parent=True)
 
     error_id = Column(Integer, ForeignKey('error.id'))
-    error = relationship(ErrorORM, lazy=True, cascade="all, delete-orphan",
+    error = relationship(ErrorORM, lazy='raise', cascade="all, delete-orphan",
                          single_parent=True)
 
     # Compute status
@@ -248,12 +252,12 @@ class ResultORM(BaseResultORM):
     method = Column(String(100), nullable=False)  # example "uff"
     basis = Column(String(100))
     molecule_id = Column(Integer, ForeignKey('molecule.id'))
-    molecule = relationship(MoleculeORM, lazy=True)
+    molecule = relationship(MoleculeORM, lazy='raise')
 
     # This is a special case where KeywordsORM are denormalized intentionally as they are part of the
     # lookup for a single result and querying a result will not often request the keywords (LazyReference)
     keywords_id = Column(Integer, ForeignKey('keywords.id'))
-    keywords = relationship(KeywordsORM)
+    keywords = relationship(KeywordsORM, lazy='raise')
 
     # output related
     return_result = Column(JSON)  # one of 3 types
@@ -296,9 +300,10 @@ class ProcedureMixin:
 
     @declared_attr
     def initial_molecule(self):
-        return relationship(MoleculeORM, lazy=True,
+        return relationship(MoleculeORM, lazy='raise',
                             foreign_keys=self.initial_molecule_id)
 
+    keywords = Column(JSON)
     qc_spec = Column(JSON)
 
 
@@ -322,11 +327,11 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     # Results
     energies =  Column(JSON)  #Column(ARRAY(Float))
     final_molecule_id = Column(Integer, ForeignKey('molecule.id'))
-    final_molecule = relationship(MoleculeORM, lazy=True,
+    final_molecule = relationship(MoleculeORM, lazy='raise',
                                   foreign_keys=final_molecule_id)
 
     # array of objects (results)
-    trajectory = relationship(BaseResultORM, lazy=False,
+    trajectory = relationship(BaseResultORM, lazy='joined',
                               foreign_keys="BaseResultORM.parent_id")
 
     __mapper_args__ = {
@@ -354,7 +359,7 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
     # Output data
     final_energy_dict = Column(JSON)
     minimum_positions = Column(JSON)
-    optimization_history = relationship(BaseResultORM, lazy=False,
+    optimization_history = relationship(BaseResultORM, lazy='joined',
                                         foreign_keys="BaseResultORM.parent_id")
 
     __mapper_args__ = {
@@ -396,12 +401,12 @@ class TaskQueueORM(Base):
     status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.waiting)
     manager = Column(String, default=None)
 
-    created_on = Column(DateTime, nullable=False)
-    modified_on = Column(DateTime, nullable=False)
+    created_on = Column(DateTime, default=datetime.datetime.utcnow)
+    modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
     # can reference ResultORMs or any ProcedureORM
     base_result_id = Column(Integer, ForeignKey("base_result.id"))
-    base_result = relationship(BaseResultORM)
+    base_result = relationship(BaseResultORM, lazy='joined')  # or 'select'?
 
     # meta = {
     #     'indexes': [
@@ -438,7 +443,7 @@ class ServiceQueueORM(Base):
     hash_index = Column(String, nullable=False)
 
     procedure_id = Column(Integer, ForeignKey("base_result.id"))
-    procedure = relationship(BaseResultORM)
+    procedure = relationship(BaseResultORM, lazy='joined')
 
     # created_on = Column(DateTime, nullable=False)
     # modified_on = Column(DateTime, nullable=False)

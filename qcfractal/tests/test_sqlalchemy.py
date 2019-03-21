@@ -9,12 +9,14 @@ from time import time
 
 import pytest
 import qcfractal.interface as ptl
+from sqlalchemy.orm import joinedload
+from sqlalchemy.exc import InvalidRequestError
 from qcfractal.storage_sockets.sql_models import (MoleculeORM, OptimizationProcedureORM, ResultORM,
                                                  TaskQueueORM, TorsionDriveProcedureORM, LogsORM)
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
 
 
-@pytest.fixture
+@pytest.fixture(scope='function')
 def session(storage_socket):
 
     session = storage_socket.Session()
@@ -64,7 +66,7 @@ def test_logs(storage_socket, session):
 
 
 # @pytest.mark.skip
-def test_molecule_sql(storage_socket):
+def test_molecule_sql(storage_socket, session):
     """
         Test the use of the ME class MoleculeORM
 
@@ -73,7 +75,6 @@ def test_molecule_sql(storage_socket):
             Should create a MoleculeORM using: mongoengine_socket.add_molecules
     """
 
-    session = storage_socket.Session()
     num_mol_in_db = session.query(MoleculeORM).count()
     # MoleculeORM.objects().delete()
     assert num_mol_in_db == 0
@@ -90,146 +91,145 @@ def test_molecule_sql(storage_socket):
 
     assert ret['meta']['n_found'] == 2
 
-    # # Use the ORM class
-    # water_mol = MoleculeORM.objects().first()
-    # assert water_mol.molecular_formula == "H4O2"
-    # assert water_mol.molecular_charge == 0
+    # Use the ORM class
+    water_mol = session.query(MoleculeORM).first()
+    assert water_mol.molecular_formula == "H4O2"
+    assert water_mol.molecular_charge == 0
+
+    # print(water_mol.json_dict())
     #
-    # # print(water_mol.json_dict())
-    #
-    # # Query with fields in the model
-    # result_list = MoleculeORM.objects(molecular_formula="H4O2")
-    # assert len(result_list) == 2
-    # assert result_list[0].molecular_multiplicity == 1
-    #
-    # # Query with fields NOT in the model. works too!
-    # result_list = MoleculeORM.objects(molecular_charge=0)
-    # assert len(result_list) == 2
-    #
-    # # get unique by hash and formula
-    # one_mol = MoleculeORM.objects(molecule_hash=water_mol.molecule_hash, molecular_formula=water_mol.molecular_formula)
-    # assert len(one_mol) == 1
-    #
-    # # Clean up
-    # storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
+    # Query with fields in the model
+    result_list = session.query(MoleculeORM).filter_by(molecular_formula="H4O2").all()
+    assert len(result_list) == 2
+    assert result_list[0].molecular_multiplicity == 1
+
+    # Query with fields NOT in the model. works too!
+    result_list = session.query(MoleculeORM).filter_by(molecular_charge=0).all()
+    assert len(result_list) == 2
+
+    # get unique by hash and formula
+    one_mol = session.query(MoleculeORM).filter_by(molecule_hash=water_mol.molecule_hash,
+                                                   molecular_formula=water_mol.molecular_formula)
+    assert len(one_mol.all()) == 1
+
+    # Clean up
+    storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
 
 
-@pytest.mark.skip
-def test_results(storage_socket, molecules_H4O2, kw_fixtures):
+def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
     """
         Handling results throught the ME classes
     """
 
-    assert ResultORM.objects().count() == 0
+
+    assert session.query(ResultORM).count() == 0
 
     assert len(molecules_H4O2) == 2
+    assert len(kw_fixtures) == 1
 
     page1 = {
-        "molecule": molecules_H4O2[0],
+        "molecule_id": molecules_H4O2[0],
         "method": "m1",
         "basis": "b1",
         "keywords": None,
         "program": "p1",
         "driver": "energy",
-        "other_data": 5,
         "status": "COMPLETE",
     }
 
     page2 = {
-        "molecule": ObjectId(molecules_H4O2[1]),
+        "molecule_id": molecules_H4O2[1],
         "method": "m2",
         "basis": "b1",
-        "keywords": kw_fixtures[0],
+        "keywords_id": kw_fixtures[0],
         "program": "p1",
         "driver": "energy",
-        "other_data": 10,
         "status": "COMPLETE",
     }
 
-    ResultORM(**page1).save()
-    ret = ResultORM.objects(method='m1').first()
-    assert ret.molecule.fetch().molecular_formula == 'H4O2'
-    assert ret.keywords is None
+    result = ResultORM(**page1)
+    session.add(result)
+    session.commit()
 
-    ResultORM(**page2).save()
-    ret = ResultORM.objects(method='m2').first()
-    assert ret.molecule.fetch().molecular_formula == 'H4O2'
+    # IMPORTANT: To be able to access lazy loading children use joinedload
+    ret = session.query(ResultORM).options(joinedload('molecule')).filter_by(method='m1').first()
+    assert ret.molecule.molecular_formula == 'H4O2'
+    # shouldn't access lazy loading
+    with pytest.raises(InvalidRequestError):
+        assert ret.keywords == None
+
+    result2 = ResultORM(**page2)
+    session.add(result2)
+    session.commit()
+    ret = session.query(ResultORM).options(joinedload('molecule')).filter_by(method='m2').first()
+    assert ret.molecule.molecular_formula == 'H4O2'
     assert ret.method == "m2"
 
     # clean up
-    ResultORM.objects().delete()
+    session.query(ResultORM).delete(synchronize_session=False)
+    session.commit()  # must have it
 
 
-@pytest.mark.skip
-def test_procedure(storage_socket):
-    """
-        Handling procedure throught the ME classes
-    """
-
-    assert ProcedureORM.objects().count() == 0
-    # assert Keywords.objects().count() == 0
-
-    # molecules = MoleculeORM.objects(molecular_formula='H4O2')
-    # assert molecules.count() == 2
-
-    data1 = {
-        # "molecule": molecules[0],
-        "procedure": "undefined",
-        "keywords": None,
-        "program": "p5",
-        "qc_meta": {
-            "basis": "b1",
-            "program": "p1",
-            "method": "11",
-            "driver": "energy"
-        },
-        "hash_index": "somethingveryunique",
-        "status": "COMPLETE",
-    }
-
-    procedure = ProcedureORM(**data1)
-    procedure.save()
-    assert procedure.id
-    # print('ProcedureORM After save: ', procedure.json_dict())
-    # assert procedure.molecule.molecular_formula == 'H4O2'
-
-
-@pytest.mark.skip
-def test_optimization_procedure(storage_socket, molecules_H4O2):
+def test_optimization_procedure(storage_socket, session, molecules_H4O2):
     """
         Optimization procedure
     """
 
-    assert OptimizationProcedureORM.objects().count() == 0
+    assert session.query(OptimizationProcedureORM).count() == 0
     # assert Keywords.objects().count() == 0
 
     data1 = {
-        "initial_molecule": ObjectId(molecules_H4O2[0]),
-        # "procedure_type": None,
+        "initial_molecule_id": molecules_H4O2[0],
         "keywords": None,
         "program": "p7",
-        "qc_meta": {
+        "qc_spec": {
             "basis": "b1",
             "program": "p1",
             "method": "m1",
             "driver": "energy"
         },
-        "hash_index": "somethingveryunique_opt1",
         "status": "COMPLETE",
     }
 
-    procedure = OptimizationProcedureORM(**data1).save()
-    proc = OptimizationProcedureORM.objects().first()
-    assert proc.initial_molecule.fetch().molecular_formula == 'H4O2'
+    result1 = {
+        "molecule_id": molecules_H4O2[0],
+        "method": "m1",
+        "basis": "b1",
+        "keywords": None,
+        "program": "p1",
+        "driver": "energy",
+        "status": "COMPLETE",
+    }
+
+    procedure = OptimizationProcedureORM(**data1)
+    session.add(procedure)
+    session.commit()
+    proc = session.query(OptimizationProcedureORM).options(joinedload('initial_molecule')).first()
+    assert proc.initial_molecule.molecular_formula == 'H4O2'
+    assert proc.procedure == 'optimization'
+
+    # add a trajectory result
+    result = ResultORM(**result1, parent_id=proc.id)
+    session.add(result)
+    session.commit()
+    assert result.id
+
+    # Now proc.trajectory should link with its results
+    session.refresh(proc)
+    assert proc.trajectory
+
+    # clean up
+    session.query(ResultORM).delete()
+    session.query(OptimizationProcedureORM).delete()
+    session.commit()
 
 
-@pytest.mark.skip
-def test_torsiondrive_procedure(storage_socket):
+def test_torsiondrive_procedure(storage_socket, session):
     """
         Torsiondrive procedure
     """
 
-    assert TorsiondriveProcedureORM.objects().count() == 0
+    assert session.query(TorsionDriveProcedureORM).count() == 0
     # assert Keywords.objects().count() == 0
 
     # molecules = MoleculeORM.objects(molecular_formula='H4O2')
@@ -237,102 +237,96 @@ def test_torsiondrive_procedure(storage_socket):
 
     data1 = {
         # "molecule": molecules[0],
-        # "procedure": None,
         "keywords": None,
         "program": "p9",
-        "qc_meta": {
+        "qc_spec": {
             "basis": "b1",
             "program": "p1",
             "method": "m1",
             "driver": "energy"
         },
-        "hash_index": "somethingveryunique_td1",
         "status": "COMPLETE",
     }
 
-    procedure = TorsiondriveProcedureORM(**data1)
-    procedure.save()
-    # print('TorsiondriveProcedureORM After save: ', procedure.json_dict())
+    torj_proc = TorsionDriveProcedureORM(**data1)
+    session.add(torj_proc)
+    session.commit()
+
+    # Add optimization_history
+
+    opt_proc = OptimizationProcedureORM(**data1, parent_id=torj_proc.id)
+    session.add(opt_proc)
+    session.commit()
+    assert opt_proc.id
+
+    session.refresh(torj_proc)
+    assert torj_proc.optimization_history
+
+    # clean up
+    session.query(OptimizationProcedureORM).delete()
+    session.query(TorsionDriveProcedureORM).delete()
+    session.commit()
 
 
-@pytest.mark.skip
-def test_add_task_queue(storage_socket, molecules_H4O2):
+def test_add_task_queue(storage_socket, session, molecules_H4O2):
     """
-        Simple test of adding a task using the ME classes
+        Simple test of adding a task using the SQL classes
         in QCFractal, tasks should be added using storage_socket
     """
 
-    assert TaskQueueORM.objects.count() == 0
-    TaskQueueORM.objects().delete()
+    assert session.query(TaskQueueORM).count() == 0
+    # TaskQueueORM.objects().delete()
 
     page1 = {
-        "molecule": ObjectId(molecules_H4O2[0]),
+        "molecule_id": molecules_H4O2[0],
         "method": "m1",
         "basis": "b1",
         "keywords": None,
         "program": "p1",
         "driver": "energy",
-        "other_data": 5,
-        "status": "COMPLETE",
     }
     # add a task that reference results
-    result = ResultORM(**page1).save()
+    result = ResultORM(**page1)
+    session.add(result)
+    session.commit()
 
     task = TaskQueueORM(base_result=result)
-    task.save()
-    assert TaskQueueORM.objects().count() == 1
+    session.add(task)
+    session.commit()
 
-    # add a task that reference Optimization ProcedureORM
-    opt = OptimizationProcedureORM.objects().first()
+    ret = session.query(TaskQueueORM)
+    assert  ret.count() == 1
 
-    task = TaskQueueORM(base_result=opt)
-    task.save()
-    assert TaskQueueORM.objects().count() == 2
-
-    # add a task that reference Torsiondrive ProcedureORM
-    data1 = {
-        "keywords": None,
-        "program": "P9",
-        "qc_meta": {
-            "basis": "b1",
-            "program": "p1",
-            "method": "m1",
-            "driver": "energy"
-        },
-        "hash_index": "somethingveryunique_td2",
-        "status": "COMPLETE",
-    }
-
-    tor = TorsiondriveProcedureORM(**data1).save()
-
-    task = TaskQueueORM(base_result=tor)
-    task.save()
-    assert TaskQueueORM.objects().count() == 3
+    task = ret.first()
+    assert task.status == 'WAITING'
+    assert task.base_result.status == 'INCOMPLETE'
 
     # cleanup
-    ResultORM.objects.delete()
-    TaskQueueORM.objects.delete()
+    session.query(ResultORM).delete()
+    session.query(TaskQueueORM).delete()
+    session.commit()
 
 
-@pytest.mark.skip
-def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
+
+def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures):
     """
         Test results pagination
     """
 
-    assert ResultORM.objects().count() == 0
+    assert session.query(ResultORM).count() == 0
 
     result_template = {
-        "molecule": ObjectId(molecules_H4O2[0]),
+        "molecule_id": molecules_H4O2[0],
         "method": "m1",
         "basis": "b1",
-        "keywords": kw_fixtures[0],
+        "keywords_id": kw_fixtures[0],
         "program": "p1",
         "driver": "energy",
-        "status": "COMPLETE",
     }
 
-    # Save (~ 1 msec/doc)
+
+    # Save ~ 1 msec/doc in ME, 0.5 msec/doc in SQL
+    # ------------------------------------------
     t1 = time()
 
     total_results = 1000
@@ -342,44 +336,50 @@ def test_results_pagination(storage_socket, molecules_H4O2, kw_fixtures):
 
     for i in range(first_half):
         result_template['basis'] = str(i)
-        ResultORM(**result_template).save()
+        r = ResultORM(**result_template)
+        session.add(r)
 
     result_template['method'] = 'm2'
     for i in range(first_half, total_results):
         result_template['basis'] = str(i)
-        ResultORM(**result_template).save()
+        r = ResultORM(**result_template)
+        session.add(r)
 
-    # total_time = (time() - t1) * 1000 / total_results
-    # print('Inserted {} results in {:.2f} msec / doc'.format(total_results, total_time))
+    session.commit()  # must commit outside the loop, 10 times faster
 
-    # query (~ 0.13 msec/doc)
+    total_time = (time() - t1) * 1000 / total_results
+    print('Inserted {} results in {:.2f} msec / doc'.format(total_results, total_time))
+
+    # query (~ 0.13 msec/doc) in ME,
+    # ----------------------------------------
     t1 = time()
 
-    ret1 = ResultORM.objects(method='m1')
-    ret2 = ResultORM.objects(method='m2').limit(limit).skip(skip)
+    ret1 = session.query(ResultORM).filter_by(method='m1')
+    ret2 = session.query(ResultORM).filter_by(method='m2').limit(limit).offset(skip)
 
-    data1 = [d.to_json_obj() for d in ret1]
-    data2 = [d.to_json_obj() for d in ret2]
+    data1 = [d.to_dict() for d in ret1]
+    data2 = [d.to_dict() for d in ret2]
 
     # count is total, but actual data size is the limit
     assert ret1.count() == first_half
     assert len(data1) == first_half
 
-    assert ret2.count() == total_results - first_half
-    assert len(ret2) == limit
-    assert len(data2) == limit
+    # assert ret2.count() == total_results - first_half
+    # assert len(ret2) == limit
+    # assert len(data2) == limit
+    #
+    # assert int(data2[0]['basis']) == first_half + skip
+    #
+    # # get the last page when with fewer than limit are remaining
+    # ret = session.query(ResultORM).filter_by(method='m1').limit(limit).offset(int(first_half - limit / 2))
+    # assert len(ret) == limit / 2
 
-    assert int(data2[0]['basis']) == first_half + skip
-
-    # get the last page when with fewer than limit are remaining
-    ret = ResultORM.objects(method='m1').limit(limit).skip(int(first_half - limit / 2))
-    assert len(ret) == limit / 2
-
-    # total_time = (time() - t1) * 1000 / total_results
-    # print('Query {} results in {:.2f} msec /doc'.format(total_results, total_time))
+    total_time = (time() - t1) * 1000 / total_results
+    print('Query {} results in {:.2f} msec /doc'.format(total_results, total_time))
 
     # cleanup
-    ResultORM.objects.delete()
+    session.query(ResultORM).delete()
+    session.commit()
 
 
 @pytest.mark.skip

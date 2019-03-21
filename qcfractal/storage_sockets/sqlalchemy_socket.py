@@ -64,7 +64,8 @@ def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[st
                 v = f(v)
 
         if isinstance(v, (list, tuple)):
-            ret.append(getattr(ORMClass, k + "__in" == v))
+            col = getattr(ORMClass, k)
+            ret.append(getattr(col, "in_")(v))
         else:
             ret.append(getattr(ORMClass, k) == v)
 
@@ -185,7 +186,7 @@ class SQLAlchemySocket:
 
         return limit if limit and limit < self._max_limit else self._max_limit
 
-### KV Functions
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logs (KV store) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def add_logs(self, blobs_list: List[Any]):
         """
@@ -248,7 +249,7 @@ class SQLAlchemySocket:
         data = {d["id"]: d["value"] for d in data}
         return {"data": data, "meta": meta}
 
-### Molecule functions
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Molecule ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def get_add_molecules_mixed(self, data: List[Union[str, Molecule]]) -> List[Molecule]:
         """
@@ -306,6 +307,7 @@ class SQLAlchemySocket:
                 ret.append(None)
 
         return {"meta": meta, "data": ret}
+
 
     def add_molecules(self, molecules: List[Molecule]):
         """
@@ -378,19 +380,22 @@ class SQLAlchemySocket:
         #          MoleculeORM.molecular_formula == molecular_formula
         # ]
 
-
         # Make the query
         with self.session_scope() as session:
             data = session.query(MoleculeORM).filter(*query)\
                                         .limit(self.get_limit(limit))\
-                                        .offset(skip).all()
+                                        .offset(skip)
 
             ret["meta"]["success"] = True
-            ret["meta"]["n_found"] = len(data)  # TODO: should return count(*)
+            ret["meta"]["n_found"] = data.count()  # TODO: should return count(*)
             # ret["meta"]["errors"].extend(errors)
-
+            data = data.all()
 
             # Don't include the hash or the molecular_formula in the returned result
+            # Todo: tobe removed after bug is fixed in elemental
+            for d in data:
+                if d.connectivity is None:
+                    d.connectivity = []
             data = [Molecule(**d.to_dict(exclude=['molecule_hash', 'molecular_formula']), validate=False)
                     for d in data]
             ret["data"] = data
@@ -412,5 +417,180 @@ class SQLAlchemySocket:
             Number of deleted molecules.
         """
 
-        query, errors = format_query(id=id, molecule_hash=molecule_hash)
-        return MoleculeORM.objects(**query).delete()
+        query = format_query(MoleculeORM, id=id, molecule_hash=molecule_hash)
+
+        with self.session_scope() as session:
+            ret = session.query(MoleculeORM).filter(*query)\
+                .delete(synchronize_session=False)
+
+        return ret
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~ Keywords ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def add_keywords(self, keyword_sets: List[KeywordSet]):
+        """Add one KeywordSet uniquly identified by 'program' and the 'name'.
+
+        Parameters
+        ----------
+         data
+            A list of KeywordSets to be inserted.
+
+        Returns
+        -------
+            A dict with keys: 'data' and 'meta'
+            (see add_metadata_template())
+            The 'data' part is a list of ids of the inserted options
+            data['duplicates'] has the duplicate entries
+
+        Notes
+        ------
+            Duplicates are not considered errors.
+
+        """
+
+        meta = add_metadata_template()
+
+        keywords = []
+        with self.session_scope() as session:
+            for kw in keyword_sets:
+
+                kw_dict = kw.json_dict(exclude={"id"})
+
+                # search by index keywords not by all keys, much faster
+                found = session.query(KeywordsORM).filter_by(hash_index=kw_dict['hash_index']).first()
+                if not found:
+                    doc = KeywordsORM(**kw_dict)
+                    session.add(doc)
+                    session.commit()
+                    keywords.append(str(doc.id))
+                    meta['n_inserted'] += 1
+                else:
+                    meta['duplicates'].append(str(found.id))  # TODO
+                    keywords.append(str(found.id))
+                meta["success"] = True
+
+        ret = {"data": keywords, "meta": meta}
+
+        return ret
+
+    def get_keywords(self,
+                     id: Union[str, list]=None,
+                     hash_index: Union[str, list]=None,
+                     limit: int=None,
+                     skip: int=0,
+                     return_json: bool=True,
+                     with_ids: bool=True) -> List[KeywordSet]:
+        """Search for one (unique) option based on the 'program'
+        and the 'name'. No overwrite allowed.
+
+        Parameters
+        ----------
+        id : list or str
+            Ids of the keywords
+        hash_index : list or str
+            hash index of keywords
+        limit : int, optional
+            Maximum number of results to return.
+            If this number is greater than the mongoengine_soket.max_limit then
+            the max_limit will be returned instead.
+            Default is to return the socket's max_limit (when limit=None or 0)
+        skip : int, optional
+        return_json : bool, optional
+            Return the results as a json object
+            Default is True
+        with_ids : bool, optional
+            Include the DB ids in the returned object (names 'id')
+            Default is True
+
+
+        Returns
+        -------
+            A dict with keys: 'data' and 'meta'
+            (see get_metadata_template())
+            The 'data' part is an object of the result or None if not found
+        """
+
+        meta = get_metadata_template()
+        query = format_query(KeywordsORM, id=id, hash_index=hash_index)
+
+        with self.session_scope() as session:
+            data = session.query(KeywordsORM).filter(*query)\
+                                             .limit(self.get_limit(limit))\
+                                             .offset(skip)
+
+            meta["n_found"] = data.count()
+            meta["success"] = True
+
+            # meta['error_description'] = str(err)
+            data = data.all()
+            if return_json:
+                rdata = [KeywordSet(**d.to_json_obj(with_ids)) for d in data]
+            else:
+                rdata = data
+
+        return {"data": rdata, "meta": meta}
+
+    def get_add_keywords_mixed(self, data):
+        """
+        Get or add the given options (if they don't exit).
+        KeywordsORM are given in a mixed format, either as a dict of mol data
+        or as existing mol id
+
+        TODO: to be split into get by_id and get_by_data
+        """
+
+        meta = get_metadata_template()
+
+        ids = []
+        for idx, kw in enumerate(data):
+            if isinstance(kw, str):
+                ids.append(kw)
+
+            elif isinstance(kw, KeywordSet):
+                new_id = self.add_keywords([kw])["data"][0]
+                ids.append(new_id)
+            else:
+                meta["errors"].append((idx, "Data type not understood"))
+                ids.append(None)
+
+        missing = []
+        ret = []
+        for idx, id in enumerate(ids):
+            if id is None:
+                ret.append(None)
+                missing.append(idx)
+                continue
+
+            tmp = self.get_keywords(id=id)["data"]
+            if tmp:
+                ret.append(tmp[0])
+            else:
+                ret.append(None)
+
+        meta["success"] = True
+        meta["n_found"] = len(ret) - len(missing)
+        meta["missing"] = missing
+
+        return {"meta": meta, "data": ret}
+
+    def del_keywords(self, id: str) -> int:
+        """
+        Removes a option set from the database based on its id.
+
+        Parameters
+        ----------
+        id : str
+            id of the keyword
+
+        Returns
+        -------
+        int
+           number of deleted documents
+        """
+
+        count = 0
+        with self.session_scope() as session:
+            count = session.query(KeywordsORM).filter_by(id=id).delete(synchronize_session=False)
+
+        return count
