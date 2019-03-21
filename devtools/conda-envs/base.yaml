@@ -15,8 +15,7 @@ dependencies:
   - pydantic
   - mongoengine
   - sqlalchemy
-  - psycopg2-binary
-  - sqlalchemy_utils
+  - psycopg2
   - plotly
 
 # Test depends
