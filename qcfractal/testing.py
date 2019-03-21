@@ -448,7 +448,7 @@ def build_socket_fixture(stype):
 
     elif stype == 'sqlalchemy':
         storage = storage_socket_factory('postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb',
-                                         storage_name, db_type=stype)
+                                         storage_name, db_type=stype, sql_echo=False)
         # storage = storage_socket_factory('sqlite:///:memory:', storage_name, db_type=stype)
         # storage = storage_socket_factory('sqlite:///path_to_db', storage_name, db_type=stype)
 
@@ -463,6 +463,7 @@ def build_socket_fixture(stype):
         storage.client.drop_database(storage_name)
     elif stype == "sqlalchemy":
         # todo: drop db
+        # storage._clear_db(storage_name)
         pass
     else:
         raise KeyError("Storage type {} not understood".format(stype))
