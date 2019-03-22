@@ -110,6 +110,9 @@ class ManagerSettings(BaseModel):
     cluster: Optional[ClusterSettings] = None
     dask: Optional[DaskQueueSettings] = None
 
+    class Config:
+        extra = "forbid"
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
