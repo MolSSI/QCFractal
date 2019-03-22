@@ -11,7 +11,7 @@ import tornado.log
 
 import qcengine as qcng
 import qcfractal
-from pydantic import BaseModel, BaseSettings, confloat, conint
+from pydantic import BaseModel, BaseSettings, confloat, conint, validator
 
 from . import cli_utils
 
@@ -78,10 +78,14 @@ class ClusterSettings(BaseSettings):
     scheduler: SchedulerEnum = None
     scheduler_options: List[str] = []
     task_startup_commands: List[str] = []
-    walltime: str = "00:10:00"
+    walltime: str = "06:00:00"
 
     class Config(SettingsCommonConfig):
         pass
+
+    @validator('scheduler', pre=True)
+    def scheduler_lcase(cls, v):
+        return v.lower()
 
 
 class DaskQueueSettings(BaseSettings):
