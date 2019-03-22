@@ -69,6 +69,7 @@ class SchedulerEnum(str, Enum):
     pbs = "pbs"
     sge = "sge"
     moab = "moab"
+    lsf = "lsf"
 
 
 class ClusterSettings(BaseSettings):
@@ -240,7 +241,8 @@ def main(args=None):
         if settings.cluster.node_exclusivity and "--exclusive" not in scheduler_opts:
             scheduler_opts.append("--exclusive")
 
-        _cluster_loaders = {"slurm": "SLURMCluster", "pbs": "PBSCluster", "moab": "MoabCluster", "sge": "SGECluster"}
+        _cluster_loaders = {"slurm": "SLURMCluster", "pbs": "PBSCluster", "moab": "MoabCluster", "sge": "SGECluster",
+                            "lsf": "LSFCluster"}
 
         # Create one construct to quickly merge dicts with a final check
         dask_construct = {
