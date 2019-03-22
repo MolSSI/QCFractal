@@ -12,7 +12,7 @@ from qcelemental import constants
 from .collection import Collection
 from .collection_utils import register_collection
 from ..statistics import wrap_statistics
-from ..models import ObjectId
+from ..models import ObjectId, Molecule
 from ..visualization import bar_plot
 
 
@@ -64,8 +64,6 @@ class Dataset(Collection):
         """
         super().__init__(name, client=client, **kwargs)
 
-        # Initialize internal data frames
-        self.df = pd.DataFrame(index=self.get_index())
         self._units = self.data.default_units
 
         # If we making a new database we may need new hashes and json objects
@@ -73,6 +71,14 @@ class Dataset(Collection):
         self._new_keywords = {}
         self._new_records = []
         self._updated_state = False
+
+        # Initialize internal data frames and load in contrib
+        self.df = pd.DataFrame(index=self.get_index())
+
+        # Inherited classes need to call this themselves
+        if self.__class__.__name__ == "Dataset":
+            for cv in self.data.contributed_values.keys():
+                self.query(cv, contrib=True)
 
     class DataModel(Collection.DataModel):
 
@@ -172,7 +178,7 @@ class Dataset(Collection):
         df.sort_index(inplace=True)
         return df
 
-    def get_history(self, **search: Dict[str, Optional[str]]) -> 'DataFrame':
+    def _get_history(self, **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """Queries for all history that matches the search
 
         Parameters
@@ -199,6 +205,34 @@ class Dataset(Collection):
             queries.loc[name, "name"] = self.query(query.pop("method"), **query)
 
         return queries
+
+    def get_history(self,
+                    method: Optional[str]=None,
+                    basis: Optional[str]=None,
+                    keywords: Optional[str]=None,
+                    program: Optional[str]=None) -> 'DataFrame':
+        """ Queries known history from the search paramaters provided. Defaults to the standard
+        programs and keywords if not provided.
+
+        Parameters
+        ----------
+        method : Optional[str]
+            The computational method to compute (B3LYP)
+        basis : Optional[str], optional
+            The computational basis to compute (6-31G)
+        keywords : Optional[str], optional
+            The keyword alias for the requested compute
+        program : Optional[str], optional
+            The underlying QC program
+
+        Returns
+        -------
+        DataFrame
+            A DataFrame of the queried parameters
+        """
+
+        name, dbkeys, history = self._default_parameters(program, "something", basis, keywords)
+        return self._get_history(**history)
 
     def visualize(self, metric="MUE", bench="Benchmark", return_figure=False,
                   **search: Dict[str, Optional[str]]) -> 'plotly.Figure':
@@ -485,8 +519,18 @@ class Dataset(Collection):
 
         return tmp_idx
 
-    def add_entry(self, name, molecule, **kwargs):
+    def add_entry(self, name: str, molecule: Molecule, **kwargs: Dict[str, Any]):
+        """Adds a new entry to the Datset
 
+        Parameters
+        ----------
+        name : str
+            The name of the record
+        molecule : Molecule
+            The Molecule associated with this record
+        **kwargs : Dict[str, Any]
+            Additional arguements to pass to the record
+        """
         mhash = molecule.get_hash()
         self._new_molecules[mhash] = molecule
         self._new_records.append({"name": name, "molecule_hash": mhash, **kwargs})

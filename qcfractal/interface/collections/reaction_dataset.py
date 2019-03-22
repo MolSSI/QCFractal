@@ -68,14 +68,13 @@ class ReactionDataset(Dataset):
 
         # Internal data
         self.rxn_index = pd.DataFrame()
-        self.df = pd.DataFrame()
-
-        # Initialize internal data frames
-        self.df = pd.DataFrame(index=self.get_index())
 
         self.rxn_index = None
         self.valid_stoich = None
         self._form_index()
+
+        for cv in self.data.contributed_values.keys():
+            self.query(cv, contrib=True)
 
     class DataModel(Dataset.DataModel):
 
@@ -165,6 +164,38 @@ class ReactionDataset(Dataset):
         tmp_idx[null_mask] = np.nan
 
         return tmp_idx
+
+    def get_history(self,
+                    method: Optional[str]=None,
+                    basis: Optional[str]=None,
+                    keywords: Optional[str]=None,
+                    program: Optional[str]=None,
+                    stoich: str="default") -> 'DataFrame':
+        """ Queries known history from the search paramaters provided. Defaults to the standard
+        programs and keywords if not provided.
+
+        Parameters
+        ----------
+        method : Optional[str]
+            The computational method to compute (B3LYP)
+        basis : Optional[str], optional
+            The computational basis to compute (6-31G)
+        keywords : Optional[str], optional
+            The keyword alias for the requested compute
+        program : Optional[str], optional
+            The underlying QC program
+        stoich : str, optional
+            The given stoichiometry to compute.
+
+        Returns
+        -------
+        DataFrame
+            A DataFrame of the queried parameters
+        """
+
+        self._validate_stoich(stoich)
+        name, dbkeys, history = self._default_parameters(program, "something", basis, keywords, stoich=stoich)
+        return self._get_history(**history)
 
     def query(self,
               method,
