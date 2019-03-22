@@ -204,7 +204,8 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
     procedure = OptimizationProcedureORM(**data1)
     session.add(procedure)
     session.commit()
-    proc = session.query(OptimizationProcedureORM).options(joinedload('initial_molecule')).first()
+    proc = session.query(OptimizationProcedureORM).options(
+                         joinedload('initial_molecule')).first()
     assert proc.initial_molecule.molecular_formula == 'H4O2'
     assert proc.procedure == 'optimization'
 
@@ -215,7 +216,9 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
     assert result.id
 
     # Now proc.trajectory should link with its results
-    session.refresh(proc)
+    # session.refresh(proc)
+    proc = session.query(OptimizationProcedureORM).options(
+                         joinedload('trajectory')).first()
     assert proc.trajectory
 
     # clean up
@@ -259,7 +262,7 @@ def test_torsiondrive_procedure(storage_socket, session):
     session.commit()
     assert opt_proc.id
 
-    session.refresh(torj_proc)
+    torj_proc = session.query(TorsionDriveProcedureORM).options(joinedload('optimization_history')).first()
     assert torj_proc.optimization_history
 
     # clean up
@@ -350,12 +353,12 @@ def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures
     total_time = (time() - t1) * 1000 / total_results
     print('Inserted {} results in {:.2f} msec / doc'.format(total_results, total_time))
 
-    # query (~ 0.13 msec/doc) in ME,
+    # query (~ 0.13 msec/doc) in ME, and ~0.02 msec/doc in SQL
     # ----------------------------------------
     t1 = time()
 
     ret1 = session.query(ResultORM).filter_by(method='m1')
-    ret2 = session.query(ResultORM).filter_by(method='m2').limit(limit).offset(skip)
+    ret2 = session.query(ResultORM).filter_by(method='m2') .limit(limit) #.offset(skip)
 
     data1 = [d.to_dict() for d in ret1]
     data2 = [d.to_dict() for d in ret2]
@@ -375,21 +378,9 @@ def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures
     # assert len(ret) == limit / 2
 
     total_time = (time() - t1) * 1000 / total_results
-    print('Query {} results in {:.2f} msec /doc'.format(total_results, total_time))
+    print('Query {} results in {:.3f} msec /doc'.format(total_results, total_time))
 
     # cleanup
     session.query(ResultORM).delete()
     session.commit()
 
-
-@pytest.mark.skip
-def test_queue(storage_socket):
-    tasks = TaskQueueORM.objects(status='WAITING')\
-                .limit(1000)\
-                .order_by('-created_on')\
-                .select_related()   # *** no lazy load of ReferenceField, get them now (trurns of dereferencing, max_depth=1)
-    # .only(projections_list)
-    # .fields(..)
-    # .exculde(..)
-    # .no_dereference()  # don't get any of the ReferenceFields (ids) (Turning off dereferencing)
-    assert len(tasks) == 0

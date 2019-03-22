@@ -331,7 +331,7 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
                                   foreign_keys=final_molecule_id)
 
     # array of objects (results)
-    trajectory = relationship(BaseResultORM, lazy='joined',
+    trajectory = relationship(BaseResultORM, lazy='raise',
                               foreign_keys="BaseResultORM.parent_id")
 
     __mapper_args__ = {
@@ -359,7 +359,7 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
     # Output data
     final_energy_dict = Column(JSON)
     minimum_positions = Column(JSON)
-    optimization_history = relationship(BaseResultORM, lazy='joined',
+    optimization_history = relationship(BaseResultORM, lazy='raise',
                                         foreign_keys="BaseResultORM.parent_id")
 
     __mapper_args__ = {
