@@ -208,7 +208,7 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
 
     r = ds.compute("SCF", "sto-3g", keywords="df")
     fractal_compute_server.await_results()
-    assert ds.query("SCF", "sto-3g", keywords="df",)
+    assert ds.query("SCF", "sto-3g", keywords="df") == "SCF/sto-3g-df"
     assert pytest.approx(0.38748602675524185, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g-df"]
 
     assert ds.list_history().shape[0] == 2

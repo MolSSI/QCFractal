@@ -13,6 +13,7 @@ from .collection import Collection
 from .collection_utils import register_collection
 from ..statistics import wrap_statistics
 from ..models import ObjectId
+from ..visualization import bar_plot
 
 
 class MoleculeRecord(BaseModel):
@@ -171,26 +172,58 @@ class Dataset(Collection):
         df.sort_index(inplace=True)
         return df
 
-    def get_history(self, **search: Dict[str, Optional[str]]) -> None:
+    def get_history(self, **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """Queries for all history that matches the search
 
         Parameters
         ----------
         **search : Dict[str, Optional[str]]
             History query paramters
+
+        Returns
+        -------
+        DataFrame
+            A DataFrame of the queried parameters
         """
 
         queries = self.list_history(**search).reset_index()
         if queries.shape[0] > 10:
             raise TypeError("More than 10 queries formed, please narrow the search.")
 
+        # queries["name"] = None
         for name, query in queries.iterrows():
             query = query.to_dict()
             query.pop("driver")
             if "stoichiometry" in query:
                 query["stoich"] = query.pop("stoichiometry")
-            self.query(query.pop("method"), **query)
+            queries.loc[name, "name"] = self.query(query.pop("method"), **query)
 
+        return queries
+
+    def visualize(self, metric="MUE", bench="Benchmark", return_figure=False,
+                  **search: Dict[str, Optional[str]]) -> 'plotly.Figure':
+
+        list_queries = [k for k, v in search.items() if isinstance(v, (list, tuple))]
+        if len(list_queries) > 2:
+            raise TypeError("A maximum of two lists are allowed.")
+
+        queries = self.get_history(**search)
+
+        # Check metric
+        metric = metric.upper()
+        if metric == "MUE":
+            ylabel = f"MUE [{self.units}]"
+        elif metric == "MURE":
+            ylabel = "MURE [%]"
+        else:
+            raise KeyError('Metric {} not understood, available metrics {"MUE", "MURE"}'.format(metric))
+
+        title = f"Dataset {self.data.name} Statistics"
+
+        series = self.statistics(metric, list(queries["name"]), bench=bench)
+        series.sort_index(inplace=True)
+
+        return bar_plot([series], title=title, ylabel=ylabel, return_figure=return_figure)
 
     def _default_parameters(self,
                             program: str,
@@ -227,14 +260,13 @@ class Dataset(Collection):
             keywords = self.data.alias_keywords[program][keywords]
 
             default_kw = self.data.default_keywords.get(program, None)
-            if ("program" in default_name) and (default_kw != keywords_alias):
+            if (default_kw != keywords_alias):
                 default_name["keywords"] = keywords_alias
 
         if basis is not None:
             name = f"{method.upper()}/{basis.lower()}"
         else:
             name = method.upper()
-
 
         if "keywords" in default_name:
             name += "-{}".format(default_name["keywords"])
@@ -460,15 +492,15 @@ class Dataset(Collection):
         self._new_records.append({"name": name, "molecule_hash": mhash, **kwargs})
 
     def query(self,
-              method:str,
-              basis:Optional[str]=None,
+              method: str,
+              basis: Optional[str]=None,
               *,
-              keywords:Optional[str]=None,
-              program:Optional[str]=None,
-              contrib:bool=False,
-              field:str=None,
-              as_array:bool=False,
-              force:bool=False):
+              keywords: Optional[str]=None,
+              program: Optional[str]=None,
+              contrib: bool=False,
+              field: str=None,
+              as_array: bool=False,
+              force: bool=False) -> str:
         """
         Queries the local Portal for the requested keys.
 
@@ -494,7 +526,7 @@ class Dataset(Collection):
         Returns
         -------
         success : bool
-            Returns True if the requested query was successful or not.
+            The name of the queried column
 
         Examples
         --------
@@ -511,7 +543,7 @@ class Dataset(Collection):
             name = "{}-{}".format(name, field)
 
         if (name in self.df) and (force is False):
-            return True
+            return name
 
         if not contrib and (self.client is None):
             raise AttributeError("DataBase: FractalClient was not set.")
@@ -532,7 +564,7 @@ class Dataset(Collection):
         # Apply to df
         self.df[tmp_idx.columns] = tmp_idx
 
-        return True
+        return tmp_idx.columns[0]
 
     def compute(self,
                 method: str,

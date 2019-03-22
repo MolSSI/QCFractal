@@ -176,7 +176,7 @@ class ReactionDataset(Dataset):
               contrib: bool=False,
               field: Optional[str]=None,
               ignore_ds_type: bool=False,
-              force: bool=False):
+              force: bool=False) -> str:
         """
         Queries the local Portal for the requested keys and stoichiometry.
 
@@ -203,15 +203,14 @@ class ReactionDataset(Dataset):
 
         Returns
         -------
-        success : bool
-            Returns True if the requested query was successful or not.
+        str
+            The name of the queried column
 
 
         Examples
         --------
 
         ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
-
 
 
         """
@@ -229,14 +228,14 @@ class ReactionDataset(Dataset):
             name = "{}-{}".format(name, field)
 
         if (name in self.df) and (force is False):
-            return True
+            return name
 
         # # If reaction results
         if contrib:
             tmp_idx = self.get_contributed_values_column(method)
 
             self.df[tmp_idx.columns[0]] = tmp_idx
-            return True
+            return tmp_idx.columns[0]
 
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
@@ -258,7 +257,7 @@ class ReactionDataset(Dataset):
         # Apply to df
         self.df[name] = tmp_idx
 
-        return True
+        return name
 
     def compute(self,
                 method: Optional[str],

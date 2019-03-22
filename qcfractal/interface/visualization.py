@@ -45,7 +45,7 @@ def check_plotly():
         _ipycheck = True
 
 
-def bar_plot(traces: 'List[Series]', title=None, ylabel=None, dtype="bar") -> 'plotly.Figure':
+def bar_plot(traces: 'List[Series]', title=None, ylabel=None, dtype="bar", return_figure=True) -> 'plotly.Figure':
     """Renders a plotly bar plot
 
     Parameters
@@ -65,6 +65,7 @@ def bar_plot(traces: 'List[Series]', title=None, ylabel=None, dtype="bar") -> 'p
 
     check_plotly()
     import plotly.graph_objs as go
+    import plotly
 
     data = [go.Bar(x=trace.index, y=trace, name=trace.name) for trace in traces]
 
@@ -76,7 +77,10 @@ def bar_plot(traces: 'List[Series]', title=None, ylabel=None, dtype="bar") -> 'p
     layout = go.Layout(layout)
     figure = go.Figure(data=data, layout=layout)
 
-    return figure
+    if return_figure:
+        return figure
+    else:
+        return plotly.offline.iplot(figure, filename='qcportal-bar')
 
 
 def violin_plot(traces: 'DataFrame', negative: 'DataFrame'=None, title=None, points=False,
