@@ -111,7 +111,7 @@ class KeywordSet(BaseModel):
     """
     An options object for the QCArchive ecosystem
     """
-    id: Optional[ObjectId] = None
+    id: Optional[int] = None
     hash_index: str
     values: Dict[str, Any]
     lowercase: bool = True

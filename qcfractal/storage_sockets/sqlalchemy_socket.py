@@ -23,10 +23,10 @@ import secrets
 from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Union
 from sqlalchemy.sql import select, column
-
+from sqlalchemy.sql.expression import func
 from .sql_models import (CollectionORM, KeywordsORM, LogsORM, MoleculeORM,
                          OptimizationProcedureORM, QueueManagerORM, ResultORM,
-                         ServiceQueueORM, TaskQueueORM, UserORM)
+                         ServiceQueueORM, TaskQueueORM, UserORM, TorsionDriveProcedureORM)
 from .storage_utils import add_metadata_template, get_metadata_template
 from ..interface.models import KeywordSet, Molecule, ResultRecord, prepare_basis
 
@@ -70,6 +70,20 @@ def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[st
             ret.append(getattr(ORMClass, k) == v)
 
     return ret
+
+def get_count_fast(query):
+    """
+    returns rttal count of the query using:
+        Fast: SELECT COUNT(*) FROM TestModel WHERE ...
+
+    Not like q.count():
+        Slow: SELECT COUNT(*) FROM (SELECT ... FROM TestModel WHERE ...) ...
+    """
+
+    count_q = query.statement.with_only_columns([func.count()]).order_by(None)
+    count = query.session.execute(count_q).scalar()
+
+    return count
 
 
 class SQLAlchemySocket:
@@ -186,6 +200,20 @@ class SQLAlchemySocket:
 
         return limit if limit and limit < self._max_limit else self._max_limit
 
+    def get_query_projection(self, className, query, projection, limit, skip):
+
+        with self.session_scope as session:
+            if projection:
+                proj = [getattr(className, i) for i in projection]
+                data = session.query(*proj).filter(*query).limit(self.get_limit(limit)).offset(skip)
+                n_found = get_count_fast(data)
+                rdata = [dict(zip(projection, row)) for row in data]
+            else:
+                data = session.query(className).filter(*query).limit(self.get_limit(limit)).offset(skip)
+                n_found = get_count_fast(data)
+                rdata = [d.to_dict() for d in data.all()]
+
+        return rdata, n_found
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logs (KV store) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def add_logs(self, blobs_list: List[Any]):
@@ -384,10 +412,10 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
             data = session.query(MoleculeORM).filter(*query)\
                                         .limit(self.get_limit(limit))\
-                                        .offset(skip)
+                                        .offset(skip)  # TODO: don't use offset, slow for large data
 
             ret["meta"]["success"] = True
-            ret["meta"]["n_found"] = data.count()  # TODO: should return count(*)
+            ret["meta"]["n_found"] = get_count_fast(data)
             # ret["meta"]["errors"].extend(errors)
             data = data.all()
 
@@ -421,7 +449,7 @@ class SQLAlchemySocket:
 
         with self.session_scope() as session:
             ret = session.query(MoleculeORM).filter(*query)\
-                .delete(synchronize_session=False)
+                                            .delete(synchronize_session=False)
 
         return ret
 
@@ -519,13 +547,13 @@ class SQLAlchemySocket:
                                              .limit(self.get_limit(limit))\
                                              .offset(skip)
 
-            meta["n_found"] = data.count()
+            meta["n_found"] = get_count_fast(data)
             meta["success"] = True
 
             # meta['error_description'] = str(err)
             data = data.all()
             if return_json:
-                rdata = [KeywordSet(**d.to_json_obj(with_ids)) for d in data]
+                rdata = [KeywordSet(**d.to_dict(with_id=with_ids)) for d in data]
             else:
                 rdata = data
 
@@ -591,6 +619,1107 @@ class SQLAlchemySocket:
 
         count = 0
         with self.session_scope() as session:
-            count = session.query(KeywordsORM).filter_by(id=id).delete(synchronize_session=False)
+            count = session.query(KeywordsORM).filter_by(id=id)\
+                                              .delete(synchronize_session=False)
 
         return count
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
+
+### Mongo database functions
+
+    # def add_collection(self, data, overwrite=False):
+    def add_collection(self, data: Dict[str, Any], overwrite: bool=False):
+        """Add (or update) a collection to the database.
+
+        Parameters
+        ----------
+        collection : str
+        name : str
+        data : dict
+        overwrite : bool
+            Update existing collection
+
+        Returns
+        -------
+        A dict with keys: 'data' and 'meta'
+            (see add_metadata_template())
+            The 'data' part is the id of the inserted document or none
+
+        Notes
+        -----
+        ** Change: The data doesn't have to include the ID, the document
+        is identified by the (collection, name) pairs.
+        ** Change: New fields will be added to the collection, but existing won't
+            be removed.
+        """
+
+        meta = add_metadata_template()
+        col_id = None
+        try:
+
+            if ("id" in data) and (data["id"] == "local"):
+                data.pop("id", None)
+            lname = data.get("name").lower()
+            collection = data.pop("collection").lower()
+
+            with self.session_scope() as session:
+                col = CollectionORM(collection=collection, lname=lname, **data)
+                if overwrite:
+                    session.merge(col)
+                    # may use upsert=True to add or update
+                    # col = CollectionORM.objects(collection=collection, lname=lname).update_one(**data)
+                else:
+                    session.add(col)
+                    # col = CollectionORM(collection=collection, lname=lname, **data).save()
+                session.commit()
+
+            meta['success'] = True
+            meta['n_inserted'] = 1
+            col_id = str(col.id)
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+        ret = {'data': col_id, 'meta': meta}
+        return ret
+
+    # def get_collections(self, keys, projection=None):
+    def get_collections(self,
+                        collection: str=None,
+                        name: str=None,
+                        return_json: bool=True,
+                        with_ids: bool=True,
+                        limit: int=None,
+                        projection: Dict[str, Any]=None,
+                        skip: int=0) -> Dict[str, Any]:
+        """Get collection by collection and/or name
+
+        Parameters
+        ----------
+        collection : str, optional
+        name : str, optional
+        return_json : bool
+        with_ids : bool
+        limit : int
+        skip : int
+
+        Returns
+        -------
+        A dict with keys: 'data' and 'meta'
+            The data is a list of the collections found
+        """
+
+        meta = get_metadata_template()
+        if name:
+            name = name.lower()
+        if collection:
+            collection = collection.lower()
+        query = format_query(CollectionORM, name=name, collection=collection)
+
+        try:
+            rdata, meta['n_found'] = self.get_query_projection(CollectionORM, query, projection, limit, skip)
+
+            meta["success"] = True
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+        return {"data": rdata, "meta": meta}
+
+    def del_collection(self, collection: str, name: str) -> bool:
+        """
+        Remove a collection from the database from its keys.
+
+        Parameters
+        ----------
+        collection: str
+            CollectionORM type
+        name : str
+            CollectionORM name
+
+        Returns
+        -------
+        int
+            Number of documents deleted
+        """
+
+        with self.session_scope() as session:
+            count = session.query(CollectionORM).filter_by(collection=collection.lower(), lname=name.lower())\
+                                                .delete(synchronize_session=False)
+        return count
+
+## ResultORMs functions
+
+    def add_results(self, record_list: List[ResultRecord]):
+        """
+        Add results from a given dict. The dict should have all the required
+        keys of a result.
+
+        Parameters
+        ----------
+        data : list of dict
+            Each dict must have:
+            program, driver, method, basis, options, molecule
+            Where molecule is the molecule id in the DB
+            In addition, it should have the other attributes that it needs
+            to store
+
+        Returns
+        -------
+            Dict with keys: data, meta
+            Data is the ids of the inserted/updated/existing docs
+        """
+
+        meta = add_metadata_template()
+
+        result_ids = []
+        with self.session_scope() as session:
+            for result in record_list:
+
+                doc = session.query(ResultORM).filter_by(
+                    program=result.program,
+                    driver=result.driver,
+                    method=result.method,
+                    basis=result.basis,
+                    keywords=result.keywords,
+                    molecule=result.molecule)
+
+                if doc.count() == 0:
+                    doc = ResultORM(**result.json_dict(exclude={"id"}))
+                    session.add(doc)
+                    session.commit()  # TODO: faster if done in bulk
+                    result_ids.append(str(doc.id))
+                    meta['n_inserted'] += 1
+                else:
+                    id = str(doc.first().id)
+                    meta['duplicates'].append(id)  # TODO
+                    # If new or duplicate, add the id to the return list
+                    result_ids.append(id)
+        meta["success"] = True
+
+        ret = {"data": result_ids, "meta": meta}
+        return ret
+
+    def update_results(self, record_list: List[ResultRecord]):
+        """
+        Update results from a given dict (replace existing)
+
+        Parameters
+        ----------
+        id : list of str
+            Ids of the results to update, must exist in the DB
+        data : list of dict
+            Data that needs to be updated
+            Shouldn't update:
+            program, driver, method, basis, options, molecule
+
+        Returns
+        -------
+            number of records updated
+        """
+
+        # try:
+        updated_count = 0
+        for result in record_list:
+
+            if result.id is None:
+                self.logger.error("Attempted update without ID, skipping")
+                continue
+            with self.session_scope() as session:
+                rec = ResultORM(**result.json_dict())
+                session.merge(rec)
+                session.commit()
+            updated_count += 1
+
+        return updated_count
+
+    def get_results_count(self):
+        """
+        TODO: just return the count, used for big queries
+
+        Returns
+        -------
+
+        """
+        pass
+
+    def get_results(self,
+                    id: Union[str, List]=None,
+                    program: str=None,
+                    method: str=None,
+                    basis: str=None,
+                    molecule: str=None,
+                    driver: str=None,
+                    keywords: str=None,
+                    task_id: Union[str, List]=None,
+                    status: str='COMPLETE',
+                    projection=None,
+                    limit: int=None,
+                    skip: int=0,
+                    return_json=True,
+                    with_ids=True):
+        """
+
+        Parameters
+        ----------
+        id : str or list
+        program : str
+        method : str
+        basis : str
+        molecule : str
+            MoleculeORM id in the DB
+        driver : str
+        keywords : str
+            The id of the option in the DB
+        task_id : List of str or str
+            Task id that ran the results
+        status : bool, default is 'COMPLETE'
+            The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        skip : int, default is 0
+            skip the first 'skip' results. Used to paginate
+        return_json : bool, default is True
+            Return the results as a list of json inseated of objects
+        with_ids : bool, default is True
+            Include the ids in the returned objects/dicts
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = get_metadata_template()
+
+        # Ignore status if Id or task_id is present
+        if id is not None or task_id is not None:
+            status = None
+
+        query = format_query(
+            ResultORM,
+            id=id,
+            program=program,
+            method=method,
+            basis=basis,
+            molecule=molecule,
+            driver=driver,
+            keywords=keywords,
+            status=status)
+
+
+        data = []
+        try:
+            data, meta['n_found'] = self.get_query_projection(ResultORM, query, projection, limit, skip)
+            meta["success"] = True
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+        return {"data": data, "meta": meta}
+
+    def del_results(self, ids: List[str]):
+        """
+        Removes results from the database using their ids
+        (Should be cautious! other tables maybe referencing results)
+
+        Parameters
+        ----------
+        ids : list of str
+            The Ids of the results to be deleted
+
+        Returns
+        -------
+        int
+            number of results deleted
+        """
+
+        with self.session_scope() as session:
+            count = session.query(ResultORM).filter(ResultORM.id.in_(ids))\
+                                            .delete(synchronize_session=False)
+
+        return count
+
+### Mongo procedure/service functions
+
+    def add_procedures(self, record_list: List['BaseRecord']):
+        """
+        Add procedures from a given dict. The dict should have all the required
+        keys of a result.
+
+        Parameters
+        ----------
+        data : list of dict
+            Each dict must have:
+            procedure, program, keywords, qc_meta, hash_index
+            In addition, it should have the other attributes that it needs
+            to store
+        update_existing : bool (default False)
+            Update existing results
+
+        Returns
+        -------
+            Dict with keys: data, meta
+            Data is the ids of the inserted/updated/existing docs
+        """
+
+        meta = add_metadata_template()
+
+        procedure_ids = []
+        for procedure in record_list:
+            doc = ProcedureORM.objects(hash_index=procedure.hash_index)
+
+            if doc.count() == 0:
+                doc = doc.upsert_one(**procedure.json_dict(exclude={"id"}))
+                procedure_ids.append(str(doc.id))
+                meta['n_inserted'] += 1
+            else:
+                id = str(doc.first().id)
+                meta['duplicates'].append(id)  # TODO
+                procedure_ids.append(id)
+        meta["success"] = True
+
+        ret = {"data": procedure_ids, "meta": meta}
+        return ret
+
+    def get_procedures(self,
+                       id: Union[str, List]=None,
+                       procedure: str=None,
+                       program: str=None,
+                       hash_index: str=None,
+                       task_id: Union[str, List]=None,
+                       status: str='COMPLETE',
+                       projection=None,
+                       limit: int=None,
+                       skip: int=0,
+                       return_json=True,
+                       with_ids=True):
+        """
+
+        Parameters
+        ----------
+        id : str or list
+        procedure : str
+        program : str
+        hash_index : str
+        task_id : str or list
+        status : bool, default is 'COMPLETE'
+            The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        skip : int, default is 0
+            skip the first 'skip' resaults. Used to paginate
+        return_json : bool, deafult is True
+            Return the results as a list of json inseated of objects
+        with_ids : bool, default is True
+            Include the ids in the returned objects/dicts
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = get_metadata_template()
+
+        if id is not None or task_id is not None:
+            status = None
+
+        query, error = format_query(
+            id=id, procedure=procedure, program=program, hash_index=hash_index, task_id=task_id, status=status)
+
+
+        data = []
+        try:
+            # TODO: decide a way to find the right type
+            if procedure == 'optimization':
+                className = OptimizationProcedureORM
+            elif procedure == 'torsiondrive':
+                className = TorsionDriveProcedureORM
+            data, meta['n_found'] = self.get_query_projection(className, query, projection, limit, skip)
+            meta["success"] = True
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+
+        return {"data": data, "meta": meta}
+
+    def update_procedures(self, records_list: List['BaseRecord']):
+        """
+        TODO: needs to be of specific type
+        """
+
+        updated_count = 0
+        for procedure in records_list:
+
+            # Must have ID
+            if procedure.id is None:
+                self.logger.error(
+                    "No procedure id found on update (hash_index={}), skipping.".format(procedure.hash_index))
+                continue
+
+            with self.session_scope() as session:
+                rec = OptimizationProcedureORM(**records_list.json_dict())
+                session.merge(rec)
+                session.commit()
+            updated_count += 1
+
+        return updated_count
+
+    def add_services(self, service_list: List['BaseService']):
+        """
+        Add services from a given dict.
+
+        Parameters
+        ----------
+        data : list of dict
+
+        Returns
+        -------
+            Dict with keys: data, meta
+            Data is the hash_index of the inserted/existing docs
+        """
+
+        meta = add_metadata_template()
+
+        procedure_ids = []
+        with self.session_scope() as session:
+            for service in service_list:
+
+                # Add the underlying procedure
+                new_procedure = self.add_procedures([service.output])
+
+                # ProcedureORM already exists
+                proc_id = new_procedure["data"][0]
+                if new_procedure["meta"]["duplicates"]:
+                    procedure_ids.append(proc_id)
+                    meta["duplicates"].append(proc_id)
+                    continue
+
+                # search by hash index
+                doc = session.query(ServiceQueueORM).filter_by(hash_index=service.hash_index)
+                service.procedure_id = proc_id
+
+                if doc.count() == 0:
+                    doc = ServiceQueueORM(**service.json_dict(exclude={"id"}))
+                    session.add(doc)
+                    session.commit()  # TODO
+                    procedure_ids.append(proc_id)
+                    meta['n_inserted'] += 1
+                else:
+                    procedure_ids.append(None)
+                    meta["errors"].append((idx, "Duplicate service, but not caught by procedure."))
+
+        meta["success"] = True
+
+        ret = {"data": procedure_ids, "meta": meta}
+        return ret
+
+    def get_services(self,
+                     id: Union[List[str], str]=None,
+                     procedure_id: Union[List[str], str]=None,
+                     hash_index: Union[List[str], str]=None,
+                     status: str=None,
+                     projection=None,
+                     limit: int=None,
+                     skip: int=0,
+                     return_json=True):
+        """
+
+        Parameters
+        ----------
+        id / hash_index : List of str or str
+            service id / hash_index that ran the results
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        skip : int, default is 0
+            skip the first 'skip' resaults. Used to paginate
+        return_json : bool, deafult is True
+            Return the results as a list of json instead of objects
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = get_metadata_template()
+        query, error = format_query(id=id, hash_index=hash_index, procedure_id=procedure_id, status=status)
+
+        data = []
+        # try:
+        data, meta['n_found'] = self.get_query_projection(ServiceQueueORM, query, projection, limit, skip)
+        meta["success"] = True
+
+        meta["success"] = True
+        # except Exception as err:
+        #     meta['error_description'] = str(err)
+
+
+        return {"data": data, "meta": meta}
+
+    def update_services(self, records_list: List["BaseService"]) -> int:
+        """
+        Replace existing service
+
+        Raises exception if the id is invalid
+
+        Parameters
+        ----------
+        id
+        updates
+
+        Returns
+        -------
+            if operation is succesful
+        """
+
+        updated_count = 0
+        for service in records_list:
+            if service.id is None:
+                self.logger.error(
+                    "No service id found on update (hash_index={}), skipping.".format(service.hash_index))
+                continue
+
+            with self.session_scope() as session:
+                service = ServiceQueueORM(**service.json_dict())
+                session.merge(service)
+                session.commit()
+                
+            updated_count += 1
+
+        return updated_count
+
+    def services_completed(self, records_list: List["BaseService"]) -> int:
+
+        done = 0
+        for service in records_list:
+            if service.id is None:
+                self.logger.error(
+                    "No service id found on completion (hash_index={}), skipping.".format(service.hash_index))
+                continue
+
+            procedure = service.output
+            procedure.id = service.procedure_id
+            self.update_procedures([procedure])
+
+            ServiceQueueORM.objects(id=ObjectId(service.id)).delete()
+
+            done += 1
+
+        return done
+
+### Mongo queue handling functions
+
+    def queue_submit(self, data: List[TaskRecord]):
+        """Submit a list of tasks to the queue.
+        Tasks are unique by their base_result, which should be inserted into
+        the DB first before submitting it's corresponding task to the queue
+        (with result.status='INCOMPLETE' as the default)
+        The default task.status is 'WAITING'
+
+        Duplicate tasks sould be a rare case.
+        Hooks are merged if the task already exists
+
+        Parameters
+        ----------
+        data : list of tasks (dict)
+            A task is a dict, with the following fields:
+            - hash_index: idx, not used anymore
+            - spec: dynamic field (dict-like), can have any structure
+            - tag: str
+            - base_results: tuple (required), first value is the class type
+             of the result, {'results' or 'procedure'). The second value is
+             the ID of the result in the DB. Example:
+             "base_result": ('results', result_id)
+
+        Returns
+        -------
+        dict (data and meta)
+            'data' is a list of the IDs of the tasks IN ORDER, including
+            duplicates. An errored task has 'None' in its ID
+            meta['duplicates'] has the duplicate tasks
+        """
+
+        meta = add_metadata_template()
+
+        results = []
+        for task_num, record in enumerate(data):
+            try:
+
+                result_obj = None
+                if record.base_result.ref == 'result':
+                    result_obj = ResultORM(id=record.base_result.id)
+                elif record.base_result.ref == 'procedure':
+                    result_obj = ProcedureORM(id=record.base_result.id)
+                else:
+                    raise TypeError("Base_result type must be 'results' or 'procedure',"
+                                    " {} is given.".format(record.base_result.ref))
+                task = TaskQueueORM(**record.json_dict(exclude={"id", "base_result"}))
+                task.base_result = result_obj
+                task.save()
+
+                result_obj.update(task_id=str(task.id))  # update bidirectional rel
+                results.append(str(task.id))
+                meta['n_inserted'] += 1
+            except mongoengine.errors.NotUniqueError as err:  # rare case
+                # If results is stored as DBRef, get it with:
+                # task = TaskQueueORM.objects(__raw__={'base_result': base_result}).first()  # avoid
+
+                # If base_result is stored as a ResultORM or ProcedureORM class, get it with:
+                task = TaskQueueORM.objects(base_result=result_obj).first()
+                self.logger.warning('queue_submit got a duplicate task: {}'.format(task.to_mongo()))
+                results.append(str(task.id))
+                meta['duplicates'].append(task_num)
+            except Exception as err:
+                self.logger.warning('queue_submit submission error: {}'.format(str(err)))
+                meta["success"] = False
+                meta["errors"].append(str(err))
+                results.append(None)
+
+        meta["success"] = True
+
+        ret = {"data": results, "meta": meta}
+        return ret
+
+    def queue_get_next(self, manager, available_programs, available_procedures, limit=100, tag=None,
+                       as_json=True) -> List[TaskRecord]:
+        """TODO: needs to be done in a transcation"""
+
+        # Figure out query, tagless has no requirements
+        query, error = format_query(
+            status="WAITING",
+            program=available_programs,
+            procedure=available_procedures,  # Procedue can be none, explicitly include
+            tag=tag)
+        query["procedure__in"].append(None)
+
+        found = TaskQueueORM.objects(**query).limit(limit).order_by('-priority', 'created_on')
+
+        query = {"_id": {"$in": [x.id for x in found]}}
+
+        # update_many using pymongo in one DB access
+        upd = TaskQueueORM._get_collection().update_many(
+            query, {"$set": {
+                "status": "RUNNING",
+                "modified_on": dt.utcnow(),
+                "manager": manager,
+            }})
+
+        if as_json:
+            found = [TaskRecord(**task.to_json_obj()) for task in found]
+
+        if upd.modified_count != len(found):
+            self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
+
+        return found
+
+    def get_queue(self,
+                  id=None,
+                  hash_index=None,
+                  program=None,
+                  status: str=None,
+                  projection=None,
+                  limit: int=None,
+                  skip: int=0,
+                  return_json=True,
+                  with_ids=True):
+        """
+        TODO: check what query keys are needs
+        Parameters
+        ----------
+        id : list
+            Ids of the tasks
+        Hash_index
+        status : bool, default is None (find all)
+            The status of the task: 'COMPLETE', 'RUNNING', 'WAITING', or 'ERROR'
+        projection : list/set/tuple of keys, default is None
+            The fields to return, default to return all
+        limit : int, default is None
+            maximum number of results to return
+            if 'limit' is greater than the global setting self._max_limit,
+            the self._max_limit will be returned instead
+            (This is to avoid overloading the server)
+        skip : int, default is None 0
+            skip the first 'skip' resaults. Used to paginate
+        return_json : bool, deafult is True
+            Return the results as a list of json inseated of objects
+        with_ids : bool, default is True
+            Include the ids in the returned objects/dicts
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = get_metadata_template()
+        query, error = format_query(program=program, id=id, hash_index=hash_index, status=status)
+
+        q_limit = self.get_limit(limit)
+
+        data = []
+        try:
+            if projection:
+                data = TaskQueueORM.objects(**query).only(*projection).limit(q_limit).skip(skip)
+            else:
+                data = TaskQueueORM.objects(**query).limit(q_limit).skip(skip)
+
+            meta["n_found"] = data.count()
+            meta["success"] = True
+        except Exception as err:
+            meta['error_description'] = str(err)
+
+        if return_json:
+            data = [TaskRecord(**task.to_json_obj()) for task in data]
+
+        return {"data": data, "meta": meta}
+
+    def queue_get_by_id(self, id: List[str], limit: int=None, skip: int=0, as_json: bool=True):
+        """Get tasks by their IDs
+
+        Parameters
+        ----------
+        id : list of str
+            List of the task Ids in the DB
+        limit : int (optional)
+            max number of returned tasks. If limit > max_limit, max_limit
+            will be returned instead (safe query)
+        as_json : bool
+            Return tasks as JSON
+
+        Returns
+        -------
+        list of the found tasks
+        """
+
+        found = TaskQueueORM.objects(id__in=id).limit(self.get_limit(limit)).skip(skip)
+
+        if as_json:
+            found = [TaskRecord(**task.to_json_obj()) for task in found]
+
+        return found
+
+    def queue_mark_complete(self, task_ids: List[str]) -> int:
+        """Update the given tasks as complete
+        Note that each task is already pointing to its result location
+        Mark the corresponding result/procedure as complete
+
+        Parameters
+        ----------
+        task_ids : list
+            IDs of the tasks to mark as COMPLETE
+
+        Returns
+        -------
+        int
+            Updated count
+        """
+
+        # If using replica sets, we can use as a transcation:
+        # with self.client.start_session() as session:
+        #     with session.start_transaction():
+        #         # automatically calls ClientSession.commit_transaction().
+        #         # If the block exits with an exception, the transaction
+        #         # automatically calls ClientSession.abort_transaction().
+        #           found = TaskQueueORM._get_collection().update_many(
+        #                               {'id': {'$in': task_ids}},
+        #                               {'$set': {'status': 'COMPLETE'}},
+        #                               session=session)
+        #         # next, Update results
+
+        tasks = TaskQueueORM.objects(id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
+        results = ResultORM.objects(task_id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
+        procedures = ProcedureORM.objects(task_id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
+
+        # This should not happen unless there is data inconsistency in the DB
+        if results + procedures < tasks:
+            self.logger.error("Some tasks don't reference results or procedures correctly!"
+                              "Tasks: {}, ResultORMs: {}, procedures: {}. ".format(tasks, results, procedures))
+        return tasks
+
+    def queue_mark_error(self, data):
+        """update the given tasks as errored
+        Mark the corresponding result/procedure as complete
+
+        """
+
+        bulk_commands = []
+        bulk_commands_records = []
+        task_ids = []
+        for task_id, msg in data:
+            task_ids.append(task_id)
+            update = {
+                "$set": {
+                    "status": "ERROR",
+                    "error": msg,
+                    "modified_on": dt.utcnow(),
+                }
+            }
+            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(task_id)}, update))
+
+            # Update the objects as well, different from mark complete as these are not processed the same way
+            # This design should be overhauled...
+            error_id = self.add_kvstore([msg])["data"][0]
+            update = {
+                "$set": {
+                    "status": "ERROR",
+                    "error": error_id,
+                    "modified_on": dt.utcnow(),
+                }
+            }
+            # Task id is held as a string here... don't move to ObjectId
+            bulk_commands_records.append(pymongo.UpdateOne({"task_id": task_id}, update))
+
+        if len(bulk_commands) == 0:
+            return
+
+        task_mod = TaskQueueORM._get_collection().bulk_write(bulk_commands, ordered=False).modified_count
+        rec_mod = ResultORM._get_collection().bulk_write(bulk_commands_records, ordered=False).modified_count
+        rec_mod += ProcedureORM._get_collection().bulk_write(bulk_commands_records, ordered=False).modified_count
+        if task_mod != rec_mod:
+            self.logger.error(
+                "Queue Mark Error: Number of tasks updates {}, does not match the number of records updates {}.".
+                format(task_mod, rec_mod))
+
+        return task_mod
+
+    def queue_reset_status(self, manager: str, reset_running: bool=True, reset_error: bool=False) -> int:
+        """
+        Reset the status of the tasks that a manager owns from Running to Waiting
+        If reset_error is True, then also reset errored tasks AND its results/proc
+
+        Parameters
+        ----------
+        manager : str
+            The manager name to reset the status of
+        reset_running : str (optional), default is True
+            If True, reset running tasks to be waiting
+        reset_error : str (optional), default is False
+            If True, also reset errored tasks to be waiting,
+            also update results/proc to be INCOMPLETE
+
+        Returns
+        -------
+        int
+            Updated count
+        """
+
+        if not (reset_running or reset_error):
+            # nothing to do
+            return 0
+
+        # Update results and procedures if reset_error
+        if reset_error:
+            task_ids = TaskQueueORM.objects(manager=manager, status="ERROR").only('id')
+            ResultORM.objects(task_id__in=task_ids).update(status='INCOMPLETE', modified_on=dt.utcnow())
+            ProcedureORM.objects(task_id__in=task_ids).update(status='INCOMPLETE', modified_on=dt.utcnow())
+
+        status = []
+        if reset_running:
+            status.append("RUNNING")
+        if reset_error:
+            status.append("ERROR")
+
+        updated = TaskQueueORM.objects(
+            manager=manager, status__in=status).update(
+                status="WAITING", modified_on=dt.utcnow())
+
+        return updated
+
+    def del_tasks(self, id: Union[str, list]):
+        """Delete a task from the queue. Use with cautious
+
+        Parameters
+        ----------
+        id : str or list
+            Ids of the tasks to delete
+        Returns
+        -------
+        int
+            Number of tasks deleted
+        """
+
+        with self.session_scope() as session:
+            count = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(id))\
+                                              .delete(synchronize_session=False)
+
+        return count
+
+### QueueManagerORMs
+
+    def manager_update(self, name, **kwargs):
+
+        inc_count = {
+            # Increment relevant data
+            "inc__submitted": kwargs.pop("submitted", 0),
+            "inc__completed": kwargs.pop("completed", 0),
+            "inc__returned": kwargs.pop("returned", 0),
+            "inc__failures": kwargs.pop("failures", 0)
+        }
+
+        upd = {key: kwargs[key] for key in QueueManagerORM._fields_ordered if key in kwargs}
+
+        QueueManagerORM.objects()  # init
+        manager = QueueManagerORM.objects(name=name)
+        if manager:  # existing
+            upd.update(inc_count)
+            num_updated = manager.update(**upd, modified_on=dt.utcnow())
+        else:  # create new, ensures defaults and validations
+            QueueManagerORM(name=name, **upd).save()
+            num_updated = 1
+
+        return num_updated == 1
+
+    def get_managers(self, name: str=None, status: str=None, modified_before=None):
+
+        query, error = format_query(name=name, status=status)
+        if modified_before:
+            query["modified_on__lt"] = modified_before
+
+        data = QueueManagerORM.objects(**query)
+
+        meta = get_metadata_template()
+        meta["success"] = True
+        meta["n_found"] = data.count()
+
+        data = [x.to_json_obj(with_id=False) for x in data]
+
+        return {"data": data, "meta": meta}
+
+### UserORMs
+
+    def add_user(self,
+                 username: str,
+                 password: Optional[str]=None,
+                 permissions: List[str]=["read"],
+                 *,
+                 overwrite: bool=False) -> Union[bool, str]:
+        """
+        Adds a new user and associated permissions.
+
+        Passwords are stored using bcrypt.
+
+        Parameters
+        ----------
+        username : str
+            New user's username
+        password : str
+            The user's password
+        permissions : list of str, optional
+            The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
+
+        Returns
+        -------
+        tuple
+            Successful insert or not
+        """
+        valid_permissions = {'read', 'write', 'compute', 'queue', 'admin'}
+
+        # Make sure permissions are valid
+        if not valid_permissions >= set(permissions):
+            raise KeyError("Permissions settings not understood: {}".format(set(permissions) - valid_permissions))
+
+        return_password = False
+        if password is None:
+            password = secrets.token_urlsafe(32)
+            return_password = True
+
+        hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
+        blob = {"username": username, "password": hashed, "permissions": permissions}
+
+        success = False
+        if overwrite:
+            doc = UserORM.objects(username=username)
+            doc.upsert_one(**blob)
+            success = True
+
+        else:
+            try:
+                UserORM(**blob).save()
+                success = True
+            except mongoengine.errors.NotUniqueError:
+                success = False
+
+        if return_password and success:
+            return password
+        else:
+            return success
+
+    def verify_user(self, username, password, permission):
+        """
+        Verifies if a user has the requested permissions or not.
+
+        Passwords are store and verified using bcrypt.
+
+        Parameters
+        ----------
+        username : str
+            The username to verify
+        password : str
+            The password associated with the username
+        permission : str
+            The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
+
+        Returns
+        -------
+        tuple
+            A tuple of (success flag, failure string)
+
+        Examples
+        --------
+
+        >>> db.add_user("george", "shortpw")
+
+        >>> db.verify_user("george", "shortpw", "read")
+        True
+
+        >>> db.verify_user("george", "shortpw", "admin")
+        False
+
+        """
+
+        if self._bypass_security or (self._allow_read and (permission == "read")):
+            return (True, "Success")
+
+        data = UserORM.objects(username=username).first()
+        if data is None:
+            return (False, "User not found.")
+
+        pwcheck = bcrypt.checkpw(password.encode("UTF-8"), data.password)
+        if pwcheck is False:
+            return (False, "Incorrect password.")
+
+        # Admin has access to everything
+        if (permission.lower() not in data.permissions) and ("admin" not in data.permissions):
+            return (False, "User has insufficient permissions.")
+
+        return (True, "Success")
+
+    def remove_user(self, username):
+        """Removes a user from the MongoDB Tables
+
+        Parameters
+        ----------
+        username : str
+            The username to remove
+
+        Returns
+        -------
+        bool
+            If the operation was successful or not.
+        """
+        return UserORM.objects(username=username).delete() == 1
