@@ -54,7 +54,8 @@ def _str_to_indices_with_errors(ids: List[Union[str, ObjectId]]):
 _null_keys = {"basis", "keywords"}
 _id_keys = {"id", "molecule", "keywords", "procedure_id"}
 _lower_func = lambda x: x.lower()
-_prepare_keys = {"program": _lower_func, "basis": prepare_basis, "method": _lower_func, "procedure": _lower_func}
+_upper_func = lambda x: x.upper()
+_prepare_keys = {"program": _lower_func, "basis": prepare_basis, "method": _lower_func, "procedure": _lower_func, "status": _upper_func}
 
 
 def format_query(**query: Dict[str, Union[str, List[str]]]) -> Dict[str, Union[str, List[str]]]:
