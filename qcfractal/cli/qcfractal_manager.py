@@ -11,7 +11,7 @@ import tornado.log
 
 import qcengine as qcng
 import qcfractal
-from pydantic import BaseModel, BaseSettings, confloat, conint
+from pydantic import BaseModel, BaseSettings, confloat, conint, validator
 
 from . import cli_utils
 
@@ -69,6 +69,7 @@ class SchedulerEnum(str, Enum):
     pbs = "pbs"
     sge = "sge"
     moab = "moab"
+    lsf = "lsf"
 
 
 class ClusterSettings(BaseSettings):
@@ -77,10 +78,14 @@ class ClusterSettings(BaseSettings):
     scheduler: SchedulerEnum = None
     scheduler_options: List[str] = []
     task_startup_commands: List[str] = []
-    walltime: str = "00:10:00"
+    walltime: str = "06:00:00"
 
     class Config(SettingsCommonConfig):
         pass
+
+    @validator('scheduler', pre=True)
+    def scheduler_lcase(cls, v):
+        return v.lower()
 
 
 class DaskQueueSettings(BaseSettings):
@@ -240,7 +245,8 @@ def main(args=None):
         if settings.cluster.node_exclusivity and "--exclusive" not in scheduler_opts:
             scheduler_opts.append("--exclusive")
 
-        _cluster_loaders = {"slurm": "SLURMCluster", "pbs": "PBSCluster", "moab": "MoabCluster", "sge": "SGECluster"}
+        _cluster_loaders = {"slurm": "SLURMCluster", "pbs": "PBSCluster", "moab": "MoabCluster", "sge": "SGECluster",
+                            "lsf": "LSFCluster"}
 
         # Create one construct to quickly merge dicts with a final check
         dask_construct = {
