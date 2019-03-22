@@ -49,7 +49,7 @@ class TorsionDriveDataset(Collection):
 
     def _get_index(self):
 
-        return list(self.data.records)
+        return [x.name for x in self.data.records.values()]
 
     def add_specification(self,
                           name: str,
@@ -209,7 +209,7 @@ class TorsionDriveDataset(Collection):
         df = pd.DataFrame(data, columns=["index", specification])
         df.set_index("index", inplace=True)
 
-        self.df[specification] = df
+        self.df[specification] = df[specification]
 
 
 register_collection(TorsionDriveDataset)
