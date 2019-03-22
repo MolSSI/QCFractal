@@ -39,8 +39,8 @@ def register_collection(collection: 'Collection') -> None:
     """
 
     class_name = collection.__name__.lower()
-    if class_name in __registered_collections:
-        raise KeyError("Collection type '{}' already registered".format(class_name))
+    # if class_name in __registered_collections:
+    #     raise KeyError("Collection type '{}' already registered".format(class_name))
     __registered_collections[class_name] = collection
 
 

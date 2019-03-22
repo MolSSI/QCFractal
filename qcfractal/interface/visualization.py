@@ -38,6 +38,7 @@ def check_plotly():
     if _plotly_found is False:
         raise ModuleNotFoundError("Plotly is required for this function. Please ")
 
+    global _ipycheck
     if _ipycheck is False:
         import plotly
         plotly.offline.init_notebook_mode(connected=True)

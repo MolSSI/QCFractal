@@ -156,15 +156,41 @@ class Dataset(Collection):
         df = pd.DataFrame(list(self.data.history), columns=self.data.history_keys)
 
         for key, value in search.items():
-            if value is not None:
+            if value is None:
+                df = df[df[key].isnull()]
+            elif isinstance(value, str):
                 value = value.lower()
                 df = df[df[key] == value]
+            elif isinstance(value, (list, tuple)):
+                query = [x.lower() for x in value]
+                df = df[df[key].isin(query)]
             else:
-                df = df[df[key].isnull()]
+                raise TypeError(f"Search type {type(value)} not understood.")
 
         df.set_index(list(self.data.history_keys[:-1]), inplace=True)
         df.sort_index(inplace=True)
         return df
+
+    def get_history(self, **search: Dict[str, Optional[str]]) -> None:
+        """Queries for all history that matches the search
+
+        Parameters
+        ----------
+        **search : Dict[str, Optional[str]]
+            History query paramters
+        """
+
+        queries = self.list_history(**search).reset_index()
+        if queries.shape[0] > 10:
+            raise TypeError("More than 10 queries formed, please narrow the search.")
+
+        for name, query in queries.iterrows():
+            query = query.to_dict()
+            query.pop("driver")
+            if "stoichiometry" in query:
+                query["stoich"] = query.pop("stoichiometry")
+            self.query(query.pop("method"), **query)
+
 
     def _default_parameters(self,
                             program: str,
@@ -183,7 +209,8 @@ class Dataset(Collection):
             program = self.data.default_program
         else:
             program = program.lower()
-            default_name["program"] = program.title()
+            if program != self.data.default_program:
+                default_name["program"] = program.title()
 
         driver = self.data.default_driver
 
@@ -198,7 +225,10 @@ class Dataset(Collection):
 
             keywords_alias = keywords
             keywords = self.data.alias_keywords[program][keywords]
-            default_name["keywords"] = keywords_alias
+
+            default_kw = self.data.default_keywords.get(program, None)
+            if ("program" in default_name) and (default_kw != keywords_alias):
+                default_name["keywords"] = keywords_alias
 
         if basis is not None:
             name = f"{method.upper()}/{basis.lower()}"
