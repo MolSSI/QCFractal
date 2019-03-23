@@ -41,7 +41,7 @@ class TorsionDriveInput(BaseModel):
 
     program: _td_constr = "torsiondrive"
     procedure: _td_constr = "torsiondrive"
-    initial_molecule: List[Union[ObjectId, Molecule]]
+    initial_molecule: List[Union[ObjectId, Molecule, int]]
     keywords: TDKeywords
     optimization_spec: OptimizationSpecification
     qc_spec: QCSpecification

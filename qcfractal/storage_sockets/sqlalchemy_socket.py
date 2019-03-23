@@ -780,8 +780,8 @@ class SQLAlchemySocket:
                     driver=result.driver,
                     method=result.method,
                     basis=result.basis,
-                    keywords_id=result.keywords_id,
-                    molecule_id=result.molecule_id)
+                    keywords=result.keywords,
+                    molecule=result.molecule)
 
                 if doc.count() == 0:
                     doc = ResultORM(**result.json_dict(exclude={"id"}))

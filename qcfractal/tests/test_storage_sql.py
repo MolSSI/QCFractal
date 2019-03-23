@@ -280,7 +280,7 @@ def test_results_add(storage_socket):
     })
 
     page3 = ptl.models.ResultRecord(**{
-        "molecule_id": mol_insert["data"][1],
+        "molecule": mol_insert["data"][1],
         "method": "M22",
         "basis": "B1",
         "keywords": None,

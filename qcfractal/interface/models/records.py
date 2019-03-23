@@ -37,7 +37,7 @@ class RecordBase(BaseModel, abc.ABC):
     cache: Dict[str, Any] = {}
 
     # Base identification
-    id: int = None
+    id: Union[ObjectId, int] = None
     hash_index: Optional[str] = None
     procedure: str
     program: str
@@ -45,9 +45,9 @@ class RecordBase(BaseModel, abc.ABC):
 
     # Extra fields
     extras: Dict[str, Any] = {}
-    stdout: Optional[ObjectId] = None
-    stderr: Optional[ObjectId] = None
-    error: Optional[ObjectId] = None
+    stdout: Optional[Union[ObjectId, int]] = None
+    stderr: Optional[Union[ObjectId, int]] = None
+    error: Optional[Union[ObjectId, int]] = None
 
     # Compute status
     # task_id: ObjectId = None
@@ -172,9 +172,9 @@ class ResultRecord(RecordBase):
     # Input data
     driver: DriverEnum
     method: str
-    molecule: int
+    molecule: Union[ObjectId, int]
     basis: Optional[str] = None
-    keywords: Optional[int] = None
+    keywords: Optional[Union[ObjectId, int]] = None
 
     # Output data
     return_result: Union[float, List[float], Dict[str, Any]] = None
