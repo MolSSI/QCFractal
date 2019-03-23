@@ -202,7 +202,7 @@ class SQLAlchemySocket:
 
     def get_query_projection(self, className, query, projection, limit, skip):
 
-        with self.session_scope as session:
+        with self.session_scope() as session:
             if projection:
                 proj = [getattr(className, i) for i in projection]
                 data = session.query(*proj).filter(*query).limit(self.get_limit(limit)).offset(skip)
@@ -895,8 +895,8 @@ class SQLAlchemySocket:
         meta = get_metadata_template()
 
         # # Ignore status if Id or task_id is present
-        # if id is not None or task_id is not None:
-        #     status = None
+        if id is not None:
+            status = None
 
         query = format_query(
             ResultORM,
@@ -911,11 +911,12 @@ class SQLAlchemySocket:
 
 
         data = []
-        try:
-            data, meta['n_found'] = self.get_query_projection(ResultORM, query, projection, limit, skip)
-            meta["success"] = True
-        except Exception as err:
-            meta['error_description'] = str(err)
+
+        # try:
+        data, meta['n_found'] = self.get_query_projection(ResultORM, query, projection, limit, skip)
+        meta["success"] = True
+        # except Exception as err:
+        #     meta['error_description'] = str(err)
 
         return {"data": data, "meta": meta}
 
@@ -1365,24 +1366,15 @@ class SQLAlchemySocket:
         """
 
         meta = get_metadata_template()
-        query, error = format_query(program=program, id=id, hash_index=hash_index, status=status)
-
-        q_limit = self.get_limit(limit)
+        query = format_query(TaskQueueORM, program=program, id=id, hash_index=hash_index, status=status)
 
         data = []
         try:
-            if projection:
-                data = TaskQueueORM.objects(**query).only(*projection).limit(q_limit).skip(skip)
-            else:
-                data = TaskQueueORM.objects(**query).limit(q_limit).skip(skip)
-
-            meta["n_found"] = data.count()
+            data, meta['n_found'] = self.get_query_projection(ResultORM, query, projection, limit, skip)
             meta["success"] = True
         except Exception as err:
             meta['error_description'] = str(err)
 
-        if return_json:
-            data = [TaskRecord(**task.to_json_obj()) for task in data]
 
         return {"data": data, "meta": meta}
 

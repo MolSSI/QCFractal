@@ -250,7 +250,6 @@ def test_results_add(storage_socket):
     mol_insert = storage_socket.add_molecules([water, water2])
 
     kw1 = ptl.models.KeywordSet(**{"comments": "a", "values": {}})
-    print(kw1)
     kwid1 = storage_socket.add_keywords([kw1])["data"][0]
 
     page1 = ptl.models.ResultRecord(**{
@@ -323,7 +322,7 @@ def storage_results(storage_socket):
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
     mol_insert = storage_socket.add_molecules([water, water2])
 
-    kw1 = ptl.models.KeywordSet(**{"program": "a", "values": {}})
+    kw1 = ptl.models.KeywordSet(**{"values": {}})
     kwid1 = storage_socket.add_keywords([kw1])["data"][0]
 
     page1 = ptl.models.ResultRecord(**{
