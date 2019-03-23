@@ -195,22 +195,14 @@ class ReactionDataset(Dataset):
 
         self._validate_stoich(stoich)
 
-        pop_method = False
-        if method is None:
-            method = "something"
-            pop_method = True
+        name, dbkeys, history = self._default_parameters(program, "nan", "nan", keywords, stoich=stoich)
 
-        pop_basis = False
-        if basis is None:
-            basis = "something"
-            pop_basis = True
+        for k, v in [("method", method), ("basis", basis)]:
 
-        name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=stoich)
-
-        if pop_method:
-            history.pop("method")
-        if pop_basis:
-            history.pop("basis")
+            if v is not None:
+                history[k] = v
+            else:
+                history.pop(k, None)
 
         return self._get_history(**history)
 

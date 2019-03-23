@@ -233,24 +233,15 @@ class Dataset(Collection):
             A DataFrame of the queried parameters
         """
 
-        pop_method = False
-        if method is None:
-            method = "something"
-            pop_method = True
+        # Get default program/keywords
+        name, dbkeys, history = self._default_parameters(program, "nan", "nan", keywords)
 
-        pop_basis = False
-        if basis is None:
-            basis = "something"
-            pop_basis = True
+        for k, v in [("method", method), ("basis", basis)]:
 
-
-        name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
-
-        if pop_method:
-            history.pop("method")
-
-        if pop_basis:
-            history.pop("basis")
+            if v is not None:
+                history[k] = v
+            else:
+                history.pop(k, None)
 
         return self._get_history(**history)
 
@@ -273,6 +264,8 @@ class Dataset(Collection):
 
         title = f"Dataset {self.data.name} Statistics"
 
+        if len(queries) == 0:
+            raise KeyError("No query matches, nothing to visualize!")
         series = self.statistics(metric, list(queries["name"]), bench=bench)
         series.sort_index(inplace=True)
 
@@ -287,7 +280,7 @@ class Dataset(Collection):
                   bench=None):
 
         query = {"method": method, "basis": basis, "keywords": keywords, "program": program}
-        query = {k:v for k, v in query.items() if v is not None}
+        query = {k: v for k, v in query.items() if v is not None}
 
         return self._visualize(metric, bench, query=query)
 
