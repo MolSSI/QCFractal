@@ -376,7 +376,7 @@ def test_missing_collection(fractal_compute_server):
 @testing.using_torsiondrive
 @testing.using_geometric
 @testing.using_rdkit
-def test_torsiondrive_service(fractal_compute_server):
+def test_torsiondrive_dataset(fractal_compute_server):
 
     client = ptl.FractalClient(fractal_compute_server)
 

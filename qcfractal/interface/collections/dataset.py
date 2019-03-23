@@ -86,8 +86,10 @@ class Dataset(Collection):
         default_program: Optional[str] = None
         default_keywords: Dict[str, str] = {}
         default_driver: str = "energy"
-        alias_keywords: Dict[str, Dict[str, str]] = {}
         default_units: str = "kcal / mol"
+        default_benchmark: str = None
+
+        alias_keywords: Dict[str, Dict[str, str]] = {}
 
         # Data
         records: List[MoleculeRecord] = []
@@ -231,17 +233,34 @@ class Dataset(Collection):
             A DataFrame of the queried parameters
         """
 
-        name, dbkeys, history = self._default_parameters(program, "something", basis, keywords)
+        pop_method = False
+        if method is None:
+            method = "something"
+            pop_method = True
+
+        pop_basis = False
+        if basis is None:
+            basis = "something"
+            pop_basis = True
+
+
+        name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
+
+        if pop_method:
+            history.pop("method")
+
+        if pop_basis:
+            history.pop("basis")
+
         return self._get_history(**history)
 
-    def visualize(self, metric="MUE", bench="Benchmark", return_figure=False,
-                  **search: Dict[str, Optional[str]]) -> 'plotly.Figure':
+    def _visualize(self, metric, bench, query: Dict[str, Optional[str]], return_figure=False) -> 'plotly.Figure':
 
-        list_queries = [k for k, v in search.items() if isinstance(v, (list, tuple))]
+        list_queries = [k for k, v in query.items() if isinstance(v, (list, tuple))]
         if len(list_queries) > 2:
             raise TypeError("A maximum of two lists are allowed.")
 
-        queries = self.get_history(**search)
+        queries = self.get_history(**query)
 
         # Check metric
         metric = metric.upper()
@@ -259,6 +278,19 @@ class Dataset(Collection):
 
         return bar_plot([series], title=title, ylabel=ylabel, return_figure=return_figure)
 
+    def visualize(self,
+                  method: Optional[str]=None,
+                  basis: Optional[str]=None,
+                  keywords: Optional[str]=None,
+                  program: Optional[str]=None,
+                  metric="MUE",
+                  bench=None):
+
+        query = {"method": method, "basis": basis, "keywords": keywords, "program": program}
+        query = {k:v for k, v in query.items() if v is not None}
+
+        return self._visualize(metric, bench, query=query)
+
     def _default_parameters(self,
                             program: str,
                             method: str,
@@ -269,6 +301,7 @@ class Dataset(Collection):
         Takes raw input parsed parameters and applies defaults to them.
         """
 
+        # Handle default program
         default_name = {}
         if program is None:
             if self.data.default_program is None:
@@ -281,6 +314,7 @@ class Dataset(Collection):
 
         driver = self.data.default_driver
 
+        # Handle keywords
         keywords_alias = keywords
         if keywords is None:
             if program in self.data.default_keywords:
@@ -297,6 +331,7 @@ class Dataset(Collection):
             if (default_kw != keywords_alias):
                 default_name["keywords"] = keywords_alias
 
+        # Construct name
         if basis is not None:
             name = f"{method.upper()}/{basis.lower()}"
         else:
@@ -306,11 +341,15 @@ class Dataset(Collection):
             name += "-{}".format(default_name["keywords"])
         if "program" in default_name:
             name += "-{}".format(default_name["program"])
+
         if (stoich is not None) and (stoich != "default"):
             name = "{}-{}".format(stoich, name)
 
+        # Form database and history keys
         dbkeys = {"driver": driver, "program": program, "method": method, "basis": basis, "keywords": keywords}
         history = {**dbkeys, **{"keywords": keywords_alias}}
+        if stoich is not None:
+            history["stoichiometry"] = stoich
 
         return name, dbkeys, history
 

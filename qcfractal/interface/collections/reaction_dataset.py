@@ -194,7 +194,24 @@ class ReactionDataset(Dataset):
         """
 
         self._validate_stoich(stoich)
-        name, dbkeys, history = self._default_parameters(program, "something", basis, keywords, stoich=stoich)
+
+        pop_method = False
+        if method is None:
+            method = "something"
+            pop_method = True
+
+        pop_basis = False
+        if basis is None:
+            basis = "something"
+            pop_basis = True
+
+        name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=stoich)
+
+        if pop_method:
+            history.pop("method")
+        if pop_basis:
+            history.pop("basis")
+
         return self._get_history(**history)
 
     def query(self,
@@ -371,7 +388,7 @@ class ReactionDataset(Dataset):
             priority=priority)
 
         # Update the record that this was computed
-        self._add_history(**history, stoichiometry=stoich)
+        self._add_history(**history)
         self.save()
 
         return ret
