@@ -87,7 +87,7 @@ class Dataset(Collection):
         default_keywords: Dict[str, str] = {}
         default_driver: str = "energy"
         default_units: str = "kcal / mol"
-        default_benchmark: str = None
+        default_benchmark: Optional[str] = None
 
         alias_keywords: Dict[str, Dict[str, str]] = {}
 
@@ -245,13 +245,17 @@ class Dataset(Collection):
 
         return self._get_history(**history)
 
-    def _visualize(self, metric, bench, query: Dict[str, Optional[str]], return_figure=False) -> 'plotly.Figure':
+    def _visualize(self,
+                   metric,
+                   bench,
+                   query: Dict[str, Optional[str]],
+                   groupby: Optional[str]=None,
+                   return_figure=False) -> 'plotly.Figure':
 
+        # Validate query dimensions
         list_queries = [k for k, v in query.items() if isinstance(v, (list, tuple))]
         if len(list_queries) > 2:
             raise TypeError("A maximum of two lists are allowed.")
-
-        queries = self.get_history(**query)
 
         # Check metric
         metric = metric.upper()
@@ -262,27 +266,100 @@ class Dataset(Collection):
         else:
             raise KeyError('Metric {} not understood, available metrics {"MUE", "MURE"}'.format(metric))
 
+        # Are we a groupby?
+        _valid_groupby = {"method", "basis", "keywords", "program", "stoich"}
+        if groupby is not None:
+            groupby = groupby.lower()
+            if groupby not in _valid_groupby:
+                raise KeyError(f"Groupby option {groupby} not understood.")
+            if groupby not in query:
+                raise KeyError(
+                    f"Groupby option {groupby} not found in query, must provide a search on this parameter.")
+
+            if not isinstance(query[groupby], (tuple, list)):
+                raise KeyError(f"Groupby option {groupby} must be a list.")
+
+            query_names = []
+            queries = []
+            for gb in query[groupby]:
+                gb_query = query.copy()
+                gb_query[groupby] = gb
+
+                queries.append(self.get_history(**gb_query))
+                query_names.append(self._canonical_name(**{groupby: gb}))
+
+        else:
+            queries = [self.get_history(**query)]
+            query_names = ["Stats"]
+
         title = f"Dataset {self.data.name} Statistics"
 
-        if len(queries) == 0:
-            raise KeyError("No query matches, nothing to visualize!")
-        series = self.statistics(metric, list(queries["name"]), bench=bench)
-        series.sort_index(inplace=True)
+        series = []
+        for q, name in zip(queries, query_names):
 
-        return bar_plot([series], title=title, ylabel=ylabel, return_figure=return_figure)
+            if len(q) == 0:
+                raise KeyError("No query matches, nothing to visualize!")
+            stat = self.statistics(metric, list(q["name"]), bench=bench)
+            stat.sort_index(inplace=True)
+            stat.name = name
+
+            col_names = {}
+            for record in  q.to_dict(orient="records"):
+                if groupby:
+                    record[groupby] = None
+                index_name = self._canonical_name(record["program"], record["method"], record["basis"], record["keywords"], stoich=record.get("stoichiometry"))
+
+                col_names[record["name"]] = index_name
+
+            stat.index = [col_names[x] for x in stat.index]
+
+            series.append(stat)
+
+        return bar_plot(series, title=title, ylabel=ylabel, return_figure=return_figure)
 
     def visualize(self,
                   method: Optional[str]=None,
                   basis: Optional[str]=None,
                   keywords: Optional[str]=None,
                   program: Optional[str]=None,
+                  groupby: Optional[str]=None,
                   metric="MUE",
                   bench=None):
 
         query = {"method": method, "basis": basis, "keywords": keywords, "program": program}
         query = {k: v for k, v in query.items() if v is not None}
 
-        return self._visualize(metric, bench, query=query)
+        return self._visualize(metric, bench, query=query, groupby=groupby)
+
+    def _canonical_name(self,
+                        program: Optional[str]=None,
+                        method: Optional[str]=None,
+                        basis: Optional[str]=None,
+                        keywords: Optional[str]=None,
+                        stoich: Optional[str]=None) -> str:
+        """
+        Attempts to build a canonical name for a DataFrame column
+        """
+
+        name = ""
+        if method:
+            name = method.upper()
+
+        if basis and name:
+            name = f"{name}/{basis.lower()}"
+        elif basis:
+            name = f"{basis.lower()}"
+
+        if keywords and (keywords != self.data.default_keywords.get(program, None)):
+            name = f"{name}-{keywords}"
+
+        if program and (program.lower() != self.data.default_program):
+            name = f"{name}-{program.title()}"
+
+        if stoich and (stoich.lower() != "default"):
+            name = f"{stoich.lower()}-name"
+
+        return name
 
     def _default_parameters(self,
                             program: str,
@@ -295,15 +372,12 @@ class Dataset(Collection):
         """
 
         # Handle default program
-        default_name = {}
         if program is None:
             if self.data.default_program is None:
                 raise KeyError("No default program was set and none was provided.")
             program = self.data.default_program
         else:
             program = program.lower()
-            if program != self.data.default_program:
-                default_name["program"] = program.title()
 
         driver = self.data.default_driver
 
@@ -320,29 +394,13 @@ class Dataset(Collection):
             keywords_alias = keywords
             keywords = self.data.alias_keywords[program][keywords]
 
-            default_kw = self.data.default_keywords.get(program, None)
-            if (default_kw != keywords_alias):
-                default_name["keywords"] = keywords_alias
-
-        # Construct name
-        if basis is not None:
-            name = f"{method.upper()}/{basis.lower()}"
-        else:
-            name = method.upper()
-
-        if "keywords" in default_name:
-            name += "-{}".format(default_name["keywords"])
-        if "program" in default_name:
-            name += "-{}".format(default_name["program"])
-
-        if (stoich is not None) and (stoich != "default"):
-            name = "{}-{}".format(stoich, name)
-
         # Form database and history keys
         dbkeys = {"driver": driver, "program": program, "method": method, "basis": basis, "keywords": keywords}
         history = {**dbkeys, **{"keywords": keywords_alias}}
         if stoich is not None:
             history["stoichiometry"] = stoich
+
+        name = self._canonical_name(program, method, basis, keywords_alias, stoich)
 
         return name, dbkeys, history
 
