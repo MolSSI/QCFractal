@@ -3,6 +3,7 @@ A command line interface to the qcfractal server.
 """
 
 import argparse
+import inspect
 import signal
 from enum import Enum
 from typing import List, Optional
@@ -263,6 +264,22 @@ def main(args=None):
         from dask.distributed import Client
         cluster_module = cli_utils.import_module("dask_jobqueue", package=_cluster_loaders[settings.cluster.scheduler])
         cluster_class = getattr(cluster_module, _cluster_loaders[settings.cluster.scheduler])
+
+        from dask_jobqueue import SGECluster
+
+        class SGEClusterWithJobQueue(SGECluster):
+            """Helper class until Dask Jobqueue fixes #256"""
+            def __init__(self, job_extra=None, **kwargs):
+                super().__init__(**kwargs)
+                if job_extra is not None:
+                    more_header = ["#$ %s" % arg for arg in job_extra]
+                    self.job_header += "\n" + "\n".join(more_header)
+
+        # Temporary fix until Dask Jobqueue fixes #256
+        if cluster_class is SGECluster and 'job_extra' not in inspect.getfullargspec(SGECluster.__init__).args:
+            # Should the SGECluster ever get fixed, this if statement should automatically ensure we stop
+            # using the custom class
+            cluster_class = SGEClusterWithJobQueue
 
         cluster = cluster_class(**dask_construct)
 
