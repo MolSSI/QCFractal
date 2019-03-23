@@ -37,7 +37,7 @@ class RecordBase(BaseModel, abc.ABC):
     cache: Dict[str, Any] = {}
 
     # Base identification
-    id: ObjectId = None
+    id: int = None
     hash_index: Optional[str] = None
     procedure: str
     program: str
@@ -50,7 +50,7 @@ class RecordBase(BaseModel, abc.ABC):
     error: Optional[ObjectId] = None
 
     # Compute status
-    task_id: ObjectId = None
+    # task_id: ObjectId = None
     status: RecordStatusEnum = "INCOMPLETE"
     modified_on: datetime.datetime = datetime.datetime.utcnow()
     created_on: datetime.datetime = datetime.datetime.utcnow()
@@ -172,9 +172,9 @@ class ResultRecord(RecordBase):
     # Input data
     driver: DriverEnum
     method: str
-    molecule: ObjectId
+    molecule: int
     basis: Optional[str] = None
-    keywords: Optional[ObjectId] = None
+    keywords: Optional[int] = None
 
     # Output data
     return_result: Union[float, List[float], Dict[str, Any]] = None
@@ -248,14 +248,14 @@ class OptimizationRecord(RecordBase):
     schema_version: int = 1  # TODO: why not in Base
 
     # Input data
-    initial_molecule: ObjectId
+    initial_molecule: int
     qc_spec: QCSpecification
     keywords: Dict[str, Any] = {}  # TODO: defined in Base
 
     # Results
     energies: List[float] = None
-    final_molecule: ObjectId = None
-    trajectory: List[ObjectId] = None
+    final_molecule: int = None
+    trajectory: List[int] = None
 
     class Config(RecordBase.Config):
         pass

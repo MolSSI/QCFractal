@@ -249,7 +249,8 @@ def test_results_add(storage_socket):
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
     mol_insert = storage_socket.add_molecules([water, water2])
 
-    kw1 = ptl.models.KeywordSet(**{"program": "a", "values": {}})
+    kw1 = ptl.models.KeywordSet(**{"comments": "a", "values": {}})
+    print(kw1)
     kwid1 = storage_socket.add_keywords([kw1])["data"][0]
 
     page1 = ptl.models.ResultRecord(**{
@@ -259,9 +260,9 @@ def test_results_add(storage_socket):
         "keywords": kwid1,
         "program": "P1",
         "driver": "energy",
-        "extras": {
-            "other_data": 5
-        },
+        # "extras": {
+        #     "other_data": 5
+        # },
         "hash_index": 0,
     })
 
@@ -272,22 +273,22 @@ def test_results_add(storage_socket):
         "keywords": kwid1,
         "program": "P1",
         "driver": "energy",
-        "extras": {
-            "other_data": 10
-        },
+        # "extras": {
+        #     "other_data": 10
+        # },
         "hash_index": 1,
     })
 
     page3 = ptl.models.ResultRecord(**{
-        "molecule": mol_insert["data"][1],
+        "molecule_id": mol_insert["data"][1],
         "method": "M22",
         "basis": "B1",
         "keywords": None,
         "program": "P1",
         "driver": "energy",
-        "extras": {
-            "other_data": 10
-        },
+        # "extras": {
+        #     "other_data": 10
+        # },
         "hash_index": 2,
     })
     ids = []

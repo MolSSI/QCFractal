@@ -186,23 +186,23 @@ class BaseResultORM(Base):
 
     # Base identification
     id = Column(Integer, primary_key=True)
-    # hash_index = Column(String) # TODO
+    hash_index = Column(String) # TODO
     procedure = Column(String(100))  # TODO: may remove
     program = Column(String(100))
     version = Column(Integer)
 
     # Extra fields
     extras = Column(JSON)
-    stdout_id = Column(Integer, ForeignKey('logs.id'))
-    stdout = relationship(LogsORM, lazy='raise', foreign_keys=stdout_id,
+    stdout = Column(Integer, ForeignKey('logs.id'))
+    stdout_obj = relationship(LogsORM, lazy='raise', foreign_keys=stdout,
                           cascade="all, delete-orphan", single_parent=True)
 
-    stderr_id = Column(Integer, ForeignKey('logs.id'))
-    stderr = relationship(LogsORM, lazy='raise', foreign_keys=stderr_id,
+    stderr = Column(Integer, ForeignKey('logs.id'))
+    stderr_obj = relationship(LogsORM, lazy='raise', foreign_keys=stderr,
                           cascade="all, delete-orphan", single_parent=True)
 
-    error_id = Column(Integer, ForeignKey('error.id'))
-    error = relationship(ErrorORM, lazy='raise', cascade="all, delete-orphan",
+    error = Column(Integer, ForeignKey('error.id'))
+    error_obj = relationship(ErrorORM, lazy='raise', cascade="all, delete-orphan",
                          single_parent=True)
 
     # Compute status
@@ -251,13 +251,13 @@ class ResultORM(BaseResultORM):
     driver = Column(String, Enum(DriverEnum), nullable=False)
     method = Column(String(100), nullable=False)  # example "uff"
     basis = Column(String(100))
-    molecule_id = Column(Integer, ForeignKey('molecule.id'))
-    molecule = relationship(MoleculeORM, lazy='raise')
+    molecule = Column(Integer, ForeignKey('molecule.id'))
+    molecule_obj = relationship(MoleculeORM, lazy='raise')
 
     # This is a special case where KeywordsORM are denormalized intentionally as they are part of the
     # lookup for a single result and querying a result will not often request the keywords (LazyReference)
-    keywords_id = Column(Integer, ForeignKey('keywords.id'))
-    keywords = relationship(KeywordsORM, lazy='raise')
+    keywords = Column(Integer, ForeignKey('keywords.id'))
+    keywords_obj = relationship(KeywordsORM, lazy='raise')
 
     # output related
     return_result = Column(JSON)  # one of 3 types
@@ -295,13 +295,13 @@ class ProcedureMixin:
         return Column(Integer, ForeignKey('base_result.id'), primary_key=True)
 
     @declared_attr
-    def initial_molecule_id(self):
+    def initial_molecule(self):
         return Column(Integer, ForeignKey('molecule.id'))
 
     @declared_attr
-    def initial_molecule(self):
+    def initial_molecule_obj(self):
         return relationship(MoleculeORM, lazy='raise',
-                            foreign_keys=self.initial_molecule_id)
+                            foreign_keys=self.initial_molecule)
 
     keywords = Column(JSON)
     qc_spec = Column(JSON)
@@ -326,9 +326,9 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
 
     # Results
     energies =  Column(JSON)  #Column(ARRAY(Float))
-    final_molecule_id = Column(Integer, ForeignKey('molecule.id'))
-    final_molecule = relationship(MoleculeORM, lazy='raise',
-                                  foreign_keys=final_molecule_id)
+    final_molecule = Column(Integer, ForeignKey('molecule.id'))
+    final_molecule_obj = relationship(MoleculeORM, lazy='raise',
+                                  foreign_keys=final_molecule)
 
     # array of objects (results)
     trajectory = relationship(BaseResultORM, lazy='raise',
@@ -405,8 +405,8 @@ class TaskQueueORM(Base):
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
     # can reference ResultORMs or any ProcedureORM
-    base_result_id = Column(Integer, ForeignKey("base_result.id"))
-    base_result = relationship(BaseResultORM, lazy='joined')  # or 'select'?
+    base_result = Column(Integer, ForeignKey("base_result.id"))
+    base_result_obj = relationship(BaseResultORM, lazy='joined')  # or 'select'?
 
     # meta = {
     #     'indexes': [

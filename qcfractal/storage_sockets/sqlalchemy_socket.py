@@ -28,7 +28,7 @@ from .sql_models import (CollectionORM, KeywordsORM, LogsORM, MoleculeORM,
                          OptimizationProcedureORM, QueueManagerORM, ResultORM,
                          ServiceQueueORM, TaskQueueORM, UserORM, TorsionDriveProcedureORM)
 from .storage_utils import add_metadata_template, get_metadata_template
-from ..interface.models import KeywordSet, Molecule, ResultRecord, prepare_basis
+from ..interface.models import KeywordSet, Molecule, ResultRecord, TaskRecord, prepare_basis
 
 
 _null_keys = {"basis", "keywords"}
@@ -780,8 +780,8 @@ class SQLAlchemySocket:
                     driver=result.driver,
                     method=result.method,
                     basis=result.basis,
-                    keywords=result.keywords,
-                    molecule=result.molecule)
+                    keywords_id=result.keywords_id,
+                    molecule_id=result.molecule_id)
 
                 if doc.count() == 0:
                     doc = ResultORM(**result.json_dict(exclude={"id"}))
@@ -850,7 +850,7 @@ class SQLAlchemySocket:
                     molecule: str=None,
                     driver: str=None,
                     keywords: str=None,
-                    task_id: Union[str, List]=None,
+                    # task_id: Union[str, List]=None,
                     status: str='COMPLETE',
                     projection=None,
                     limit: int=None,
@@ -870,8 +870,6 @@ class SQLAlchemySocket:
         driver : str
         keywords : str
             The id of the option in the DB
-        task_id : List of str or str
-            Task id that ran the results
         status : bool, default is 'COMPLETE'
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
         projection : list/set/tuple of keys, default is None
@@ -896,9 +894,9 @@ class SQLAlchemySocket:
 
         meta = get_metadata_template()
 
-        # Ignore status if Id or task_id is present
-        if id is not None or task_id is not None:
-            status = None
+        # # Ignore status if Id or task_id is present
+        # if id is not None or task_id is not None:
+        #     status = None
 
         query = format_query(
             ResultORM,
@@ -1198,7 +1196,7 @@ class SQLAlchemySocket:
                 service = ServiceQueueORM(**service.json_dict())
                 session.merge(service)
                 session.commit()
-                
+
             updated_count += 1
 
         return updated_count

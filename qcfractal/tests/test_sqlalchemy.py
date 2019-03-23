@@ -128,7 +128,7 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
     assert len(kw_fixtures) == 1
 
     page1 = {
-        "molecule_id": molecules_H4O2[0],
+        "molecule": molecules_H4O2[0],
         "method": "m1",
         "basis": "b1",
         "keywords": None,
@@ -138,10 +138,10 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
     }
 
     page2 = {
-        "molecule_id": molecules_H4O2[1],
+        "molecule": molecules_H4O2[1],
         "method": "m2",
         "basis": "b1",
-        "keywords_id": kw_fixtures[0],
+        "keywords": kw_fixtures[0],
         "program": "p1",
         "driver": "energy",
         "status": "COMPLETE",
@@ -152,17 +152,17 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
     session.commit()
 
     # IMPORTANT: To be able to access lazy loading children use joinedload
-    ret = session.query(ResultORM).options(joinedload('molecule')).filter_by(method='m1').first()
-    assert ret.molecule.molecular_formula == 'H4O2'
+    ret = session.query(ResultORM).options(joinedload('molecule_obj')).filter_by(method='m1').first()
+    assert ret.molecule_obj.molecular_formula == 'H4O2'
     # shouldn't access lazy loading
     with pytest.raises(InvalidRequestError):
-        assert ret.keywords == None
+        assert ret.keywords_obj == None
 
     result2 = ResultORM(**page2)
     session.add(result2)
     session.commit()
-    ret = session.query(ResultORM).options(joinedload('molecule')).filter_by(method='m2').first()
-    assert ret.molecule.molecular_formula == 'H4O2'
+    ret = session.query(ResultORM).options(joinedload('molecule_obj')).filter_by(method='m2').first()
+    assert ret.molecule_obj.molecular_formula == 'H4O2'
     assert ret.method == "m2"
 
     # clean up
@@ -179,7 +179,7 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
     # assert Keywords.objects().count() == 0
 
     data1 = {
-        "initial_molecule_id": molecules_H4O2[0],
+        "initial_molecule": molecules_H4O2[0],
         "keywords": None,
         "program": "p7",
         "qc_spec": {
@@ -192,7 +192,7 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
     }
 
     result1 = {
-        "molecule_id": molecules_H4O2[0],
+        "molecule": molecules_H4O2[0],
         "method": "m1",
         "basis": "b1",
         "keywords": None,
@@ -205,8 +205,8 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
     session.add(procedure)
     session.commit()
     proc = session.query(OptimizationProcedureORM).options(
-                         joinedload('initial_molecule')).first()
-    assert proc.initial_molecule.molecular_formula == 'H4O2'
+                         joinedload('initial_molecule_obj')).first()
+    assert proc.initial_molecule_obj.molecular_formula == 'H4O2'
     assert proc.procedure == 'optimization'
 
     # add a trajectory result
@@ -281,7 +281,7 @@ def test_add_task_queue(storage_socket, session, molecules_H4O2):
     # TaskQueueORM.objects().delete()
 
     page1 = {
-        "molecule_id": molecules_H4O2[0],
+        "molecule": molecules_H4O2[0],
         "method": "m1",
         "basis": "b1",
         "keywords": None,
@@ -293,7 +293,7 @@ def test_add_task_queue(storage_socket, session, molecules_H4O2):
     session.add(result)
     session.commit()
 
-    task = TaskQueueORM(base_result=result)
+    task = TaskQueueORM(base_result_obj=result)
     session.add(task)
     session.commit()
 
@@ -302,7 +302,7 @@ def test_add_task_queue(storage_socket, session, molecules_H4O2):
 
     task = ret.first()
     assert task.status == 'WAITING'
-    assert task.base_result.status == 'INCOMPLETE'
+    assert task.base_result_obj.status == 'INCOMPLETE'
 
     # cleanup
     session.query(ResultORM).delete()
@@ -319,10 +319,10 @@ def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures
     assert session.query(ResultORM).count() == 0
 
     result_template = {
-        "molecule_id": molecules_H4O2[0],
+        "molecule": molecules_H4O2[0],
         "method": "m1",
         "basis": "b1",
-        "keywords_id": kw_fixtures[0],
+        "keywords": kw_fixtures[0],
         "program": "p1",
         "driver": "energy",
     }
