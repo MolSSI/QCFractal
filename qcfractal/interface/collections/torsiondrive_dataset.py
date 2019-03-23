@@ -80,6 +80,7 @@ class TorsionDriveDataset(Collection):
         spec = TorsionDriveSpecification(
             name=lname, optimization_spec=optimization_spec, qc_spec=qc_spec, description=description)
         self.data.td_specs[lname] = spec
+        self.save()
 
     def get_specification(self, name: str) -> TorsionDriveSpecification:
         """
@@ -141,14 +142,18 @@ class TorsionDriveDataset(Collection):
             raise KeyError(f"Record {name} already in the dataset.")
 
         self.data.records[lname] = record
+        self.save()
 
-    def compute(self, specification: str, tag: Optional[str]=None, priority: Optional[str]=None) -> int:
+    def compute(self, specification: str, subset: Set[str]=None, tag: Optional[str]=None,
+                priority: Optional[str]=None) -> int:
         """Computes a specification for all records in the dataset.
 
         Parameters
         ----------
         specification : str
-            The specification name
+            The specification name.
+        subset : Set[str], optional
+            Computes only a subset of the dataset.
         tag : Optional[str], optional
             The queue tag to use when submitting compute requests.
         priority : Optional[str], optional
@@ -161,10 +166,15 @@ class TorsionDriveDataset(Collection):
         """
         specification = specification.lower()
         spec = self.get_specification(specification)
+        if subset:
+            subset = set(subset)
 
         submitted = 0
         for rec in self.data.records.values():
             if specification in rec.torsiondrives:
+                continue
+
+            if (subset is not None) and (rec.name not in subset):
                 continue
 
             service = TorsionDriveInput(
@@ -174,8 +184,10 @@ class TorsionDriveDataset(Collection):
                 qc_spec=spec.qc_spec)
 
             rec.torsiondrives[specification] = self.client.add_service([service], tag=tag, priority=priority).ids[0]
+            submitted += 1
 
         self.data.history.add(specification)
+        self.save()
         return submitted
 
     def query(self, specification: str) -> None:

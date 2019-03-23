@@ -404,7 +404,8 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     ds.add_specification("spec1", optimization_spec, qc_spec, description="This is a really cool spec")
 
-    ds.compute("spec1")
+    ncompute = ds.compute("spec1")
+    assert ncompute == 2
 
     ds.save()
 
@@ -415,7 +416,13 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     # Add another fake set, should instantly return
     ds.add_specification("spec2", optimization_spec, qc_spec, description="This is a really cool spec")
-    ds.compute("spec2")
+
+    # Test subsets
+    ncompute = ds.compute("spec2", subset=set())
+    assert ncompute == 0
+
+    ncompute = ds.compute("spec2")
+    assert ncompute == 2
     ds.query("spec2")
 
     # We effectively computed the same thing twice with two duplicate specs
