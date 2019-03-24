@@ -206,6 +206,52 @@ class ReactionDataset(Dataset):
 
         return self._get_history(**history)
 
+    def visualize(self,
+                  method: Optional[str]=None,
+                  basis: Optional[str]=None,
+                  keywords: Optional[str]=None,
+                  program: Optional[str]=None,
+                  stoich: Optional[str]=None,
+                  groupby: Optional[str]=None,
+                  metric: str="UE",
+                  bench: Optional[str]=None,
+                  kind: str="bar",
+                  return_figure: Optional[bool]=None) -> 'plotly.Figure':
+        """
+        Parameters
+        ----------
+        method : Optional[str], optional
+            Methods to query
+        basis : Optional[str], optional
+            Bases to query
+        keywords : Optional[str], optional
+            Keyword aliases to query
+        program : Optional[str], optional
+            Programs aliases to query
+        stoich : Optional[str], optional
+            Stoichiometry to query
+        groupby : Optional[str], optional
+            Groups the plot by this index.
+        metric : str, optional
+            The metric to use either UE (unsigned error) or URE (unsigned relative error)
+        bench : Optional[str], optional
+            The benchmark level of theory to use
+        kind : str, optional
+            The kind of chart to produce, either 'bar' or 'violin'
+        return_figure : Optional[bool], optional
+            If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+        
+        Returns
+        -------
+        plotly.Figure
+            The requested figure.
+        """
+
+        query = {"method": method, "basis": basis, "keywords": keywords, "program": program, "stoich": stoich}
+        query = {k: v for k, v in query.items() if v is not None}
+
+        return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind)
+
     def query(self,
               method,
               basis: Optional[str]=None,

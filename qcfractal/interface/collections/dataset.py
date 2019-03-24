@@ -13,7 +13,7 @@ from .collection import Collection
 from .collection_utils import register_collection
 from ..statistics import wrap_statistics
 from ..models import ObjectId, Molecule
-from ..visualization import bar_plot
+from ..visualization import bar_plot, violin_plot
 
 
 class MoleculeRecord(BaseModel):
@@ -250,21 +250,31 @@ class Dataset(Collection):
                    bench,
                    query: Dict[str, Optional[str]],
                    groupby: Optional[str]=None,
-                   return_figure=False) -> 'plotly.Figure':
+                   return_figure=None,
+                   kind="bar") -> 'plotly.Figure':
 
         # Validate query dimensions
         list_queries = [k for k, v in query.items() if isinstance(v, (list, tuple))]
         if len(list_queries) > 2:
             raise TypeError("A maximum of two lists are allowed.")
 
+        # Check kind
+        kind = kind.lower()
+        if kind not in ["bar", "violin"]:
+            raise KeyError(f"Visualiztion kind must either be 'bar' or 'violin', found {kind}")
+
         # Check metric
         metric = metric.upper()
-        if metric == "MUE":
-            ylabel = f"MUE [{self.units}]"
-        elif metric == "MURE":
-            ylabel = "MURE [%]"
+        if metric == "UE":
+            ylabel = f"UE [{self.units}]"
+        elif metric == "URE":
+            ylabel = "URE [%]"
         else:
-            raise KeyError('Metric {} not understood, available metrics {"MUE", "MURE"}'.format(metric))
+            raise KeyError('Metric {} not understood, available metrics {"UE", "URE"}'.format(metric))
+
+        if kind == "bar":
+            ylabel = "M" + ylabel
+            metric = "M" + metric
 
         # Are we a groupby?
         _valid_groupby = {"method", "basis", "keywords", "program", "stoich"}
@@ -279,6 +289,9 @@ class Dataset(Collection):
             if not isinstance(query[groupby], (tuple, list)):
                 raise KeyError(f"Groupby option {groupby} must be a list.")
 
+            if groupby and (kind == "violin") and (len(query[groupby]) != 2):
+                raise KeyError(f"Groupby option for violin plots must have two entries.")
+
             query_names = []
             queries = []
             for gb in query[groupby]:
@@ -292,7 +305,7 @@ class Dataset(Collection):
             queries = [self.get_history(**query)]
             query_names = ["Stats"]
 
-        title = f"Dataset {self.data.name} Statistics"
+        title = f"{self.data.name} Dataset Statistics"
 
         series = []
         for q, name in zip(queries, query_names):
@@ -304,18 +317,33 @@ class Dataset(Collection):
             stat.name = name
 
             col_names = {}
-            for record in  q.to_dict(orient="records"):
+            for record in q.to_dict(orient="records"):
                 if groupby:
                     record[groupby] = None
-                index_name = self._canonical_name(record["program"], record["method"], record["basis"], record["keywords"], stoich=record.get("stoichiometry"))
+                index_name = self._canonical_name(
+                    record["program"],
+                    record["method"],
+                    record["basis"],
+                    record["keywords"],
+                    stoich=record.get("stoich"))
 
                 col_names[record["name"]] = index_name
 
-            stat.index = [col_names[x] for x in stat.index]
+            if kind == "bar":
+                stat.index = [col_names[x] for x in stat.index]
+            else:
+                stat.columns = [col_names[x] for x in stat.columns]
 
             series.append(stat)
 
-        return bar_plot(series, title=title, ylabel=ylabel, return_figure=return_figure)
+        if kind == "bar":
+            return bar_plot(series, title=title, ylabel=ylabel, return_figure=return_figure)
+        else:
+            negative = None
+            if groupby:
+                negative = series[1]
+
+            return violin_plot(series[0], negative=negative, title=title, ylabel=ylabel, return_figure=return_figure)
 
     def visualize(self,
                   method: Optional[str]=None,
@@ -323,13 +351,42 @@ class Dataset(Collection):
                   keywords: Optional[str]=None,
                   program: Optional[str]=None,
                   groupby: Optional[str]=None,
-                  metric="MUE",
-                  bench=None):
+                  metric: str="UE",
+                  bench: Optional[str]=None,
+                  kind: str="bar",
+                  return_figure: Optional[bool]=None) -> 'plotly.Figure':
+        """
+        Parameters
+        ----------
+        method : Optional[str], optional
+            Methods to query
+        basis : Optional[str], optional
+            Bases to query
+        keywords : Optional[str], optional
+            Keyword aliases to query
+        program : Optional[str], optional
+            Programs aliases to query
+        groupby : Optional[str], optional
+            Groups the plot by this index.
+        metric : str, optional
+            The metric to use either UE (unsigned error) or URE (unsigned relative error)
+        bench : Optional[str], optional
+            The benchmark level of theory to use
+        kind : str, optional
+            The kind of chart to produce, either 'bar' or 'violin'
+        return_figure : Optional[bool], optional
+            If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+
+        Returns
+        -------
+        plotly.Figure
+            The requested figure.
+        """
 
         query = {"method": method, "basis": basis, "keywords": keywords, "program": program}
         query = {k: v for k, v in query.items() if v is not None}
 
-        return self._visualize(metric, bench, query=query, groupby=groupby)
+        return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind)
 
     def _canonical_name(self,
                         program: Optional[str]=None,
@@ -356,8 +413,11 @@ class Dataset(Collection):
         if program and (program.lower() != self.data.default_program):
             name = f"{name}-{program.title()}"
 
-        if stoich and (stoich.lower() != "default"):
-            name = f"{stoich.lower()}-name"
+        if stoich:
+            if name == "":
+                name = stoich.lower()
+            elif (stoich.lower() != "default"):
+                name = f"{stoich.lower()}-{name}"
 
         return name
 
