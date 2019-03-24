@@ -147,6 +147,21 @@ class TorsionDriveDataset(Collection):
         self.data.records[lname] = record
         self.save()
 
+    def get_entry(self, name:str) -> TDRecord:
+        """Obtains a record from the Dataset
+
+        Parameters
+        ----------
+        name : str
+            The record name to pull from.
+
+        Returns
+        -------
+        TDRecord
+            The requested record
+        """
+        return self.data.records[name.lower()]
+
     def compute(self, specification: str, subset: Set[str]=None, tag: Optional[str]=None,
                 priority: Optional[str]=None) -> int:
         """Computes a specification for all records in the dataset.
@@ -206,7 +221,7 @@ class TorsionDriveDataset(Collection):
         # Try to get the specification, will throw if not found.
         spec = self.get_specification(specification)
 
-        if force and (spec.name in self.df):
+        if not force and (spec.name in self.df):
             return spec.name
 
         spec_name = specification.lower()
@@ -264,6 +279,7 @@ class TorsionDriveDataset(Collection):
                   relative: bool=True,
                   units: str="kcal / mol",
                   digits: int=3,
+                  use_measured_angle: bool=False,
                   return_figure: Optional[bool]=None) -> 'plotly.Figure':
         """
         Parameters
@@ -278,6 +294,10 @@ class TorsionDriveDataset(Collection):
             The units of the plot.
         digits : int, optional
             Rounds the energies to n decimal places for display.
+        use_measured_angle : bool, optional
+            If True, the measured final angle instead of the constrained optimization angle.
+            Can provide more accurate results if the optimization was ill-behaved,
+            but pulls additional data from the server and may take longer.
         return_figure : Optional[bool], optional
             If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
 
@@ -312,6 +332,9 @@ class TorsionDriveDataset(Collection):
         for spec in specs:
             # Loop over indices (groups colors by entry)
             for index in entries:
+
+                record = self.get_entry(index)
+
                 td = self.df.loc[index, spec]
                 min_energy = 1e12
 
@@ -322,7 +345,15 @@ class TorsionDriveDataset(Collection):
                     if len(k) >= 2:
                         raise TypeError("Dataset.visualize is currently only available for 1-D scans.")
 
-                    x.append(k[0])
+                    if use_measured_angle:
+                        # Recalculate the dihedral angle
+                        dihedral_indices = record.td_keywords.dihedrals[0]
+                        mol = td.final_molecules(k)
+                        x.append(mol.measure(dihedral_indices))
+
+                    else:
+                        x.append(k[0])
+
                     y.append(v)
 
                     # Update minmum energy

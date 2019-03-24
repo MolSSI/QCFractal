@@ -59,12 +59,36 @@ def test_dataset_groupby_plot(S22Fixture, kind, groupby):
     assert "S22" in fig["layout"]["title"]["text"]
 
 
+### Test TorsionDriveDataset scans
+
+
+@pytest.fixture
+def TDDSFixture():
+
+    # Connect to the primary database
+    client = portal.FractalClient()
+    TDDs = client.get_collection("TorsionDriveDataset", "OpenFF Fragmenter Phenyl Benchmark")
+
+    return (client, TDDs)
+
+
 @using_plotly
-def test_torsiondrive_dataset_visualize():
+@pytest.mark.parametrize("measured", [True, False])
+def test_torsiondrive_dataset_visualize(TDDSFixture, measured):
+
+    client, ds = TDDSFixture
 
     client = portal.FractalClient()
     ds = client.get_collection("TorsionDriveDataset", "OpenFF Fragmenter Phenyl Benchmark")
 
-    ds.visualize("c1ccc(cc1)N-[3, 5, 6, 12]", ["b3lyp", "uff"], units="kJ / mol", return_figure=True)
     ds.visualize(
-        ["c1ccc(cc1)N-[3, 5, 6, 12]", "CCCNc1ccc(cc1)Cl-[1, 4, 9, 8]"], "uff", relative=False, return_figure=True)
+        "c1ccc(cc1)N-[3, 5, 6, 12]", ["b3lyp", "uff"],
+        units="kJ / mol",
+        use_measured_angle=measured,
+        return_figure=True)
+    ds.visualize(
+        ["c1ccc(cc1)N-[3, 5, 6, 12]", "CCCNc1ccc(cc1)Cl-[1, 4, 9, 8]"],
+        "uff",
+        use_measured_angle=measured,
+        relative=False,
+        return_figure=True)
