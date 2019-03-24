@@ -108,7 +108,7 @@ class TorsionDriveDataset(Collection):
         List[str]
             A list of known specification names.
         """
-        return list(self.data.td_specs)
+        return [x.name for x in self.data.td_specs]
 
     def add_entry(self,
                   name: str,
@@ -190,16 +190,21 @@ class TorsionDriveDataset(Collection):
         self.save()
         return submitted
 
-    def query(self, specification: str) -> None:
+    def query(self, specification: str, force: bool=False) -> None:
         """Queries a given specification from the server
 
         Parameters
         ----------
         specification : str
             The specification name to query
+        force : bool, optional
+            Force a fresh query if the specification already exists.
         """
         # Try to get the specification, will throw if not found.
         spec = self.get_specification(specification)
+
+        if force and (spec.name in self.df):
+            return spec.name
 
         spec_name = specification.lower()
         query_ids = []
@@ -223,27 +228,38 @@ class TorsionDriveDataset(Collection):
 
         self.df[spec.name] = df[spec.name]
 
-    def status(self, collapse: bool=True) -> 'DataFrame':
+    def status(self, collapse: bool=True, status:Optional[str]=None) -> 'DataFrame':
         """Returns the current status of all current specifications.
 
         Parameters
         ----------
         collapse : bool, optional
             Collapse the status into summaries per specification or not.
-            Description
+        status : Optional[str], optional
+            If not None, only returns results that match the provided status.
 
         Returns
         -------
         DataFrame
             A DataFrame of all known statuses
+
         """
 
-        df = self.df.apply(lambda x: x.apply(lambda y: y.status.value))
+        # apply status by column then by row
+        df = self.df.apply(lambda col: col.apply(lambda entry: entry.status.value))
+        if status:
+            df = df[(df == status.upper()).all(axis=1)]
 
         if collapse:
             return df.apply(lambda x: x.value_counts())
         else:
             return df
+
+    def visualize(self, entries: Union[str, List[str]], specs: Union[str, List[str]]) -> 'plotly.Figure':
+
+        # Query all of the specs and make sure they are valid
+        for x in specs:
+            self.query(x)
 
 
 register_collection(TorsionDriveDataset)
