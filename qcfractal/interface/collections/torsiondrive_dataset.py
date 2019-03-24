@@ -147,7 +147,7 @@ class TorsionDriveDataset(Collection):
         self.data.records[lname] = record
         self.save()
 
-    def get_entry(self, name:str) -> TDRecord:
+    def get_entry(self, name: str) -> TDRecord:
         """Obtains a record from the Dataset
 
         Parameters
@@ -273,6 +273,76 @@ class TorsionDriveDataset(Collection):
         else:
             return df
 
+    def counts(self,
+               entries: Union[str, List[str]],
+               specs: Optional[Union[str, List[str]]]=None,
+               count_gradients=False) -> 'DataFrame':
+        """Counts the number of optimization or gradient evaluations associated with the
+        TorsionDrives.
+
+        Parameters
+        ----------
+        entries : Union[str, List[str]]
+            The entries to query for
+        specs : Optional[Union[str, List[str]]], optional
+            The specifications to query for
+        count_gradients : bool, optional
+            If True, counts the total number of gradient calls. Warning! This can be slow for large datasets.
+
+        Returns
+        -------
+        DataFrame
+            The queried counts.
+        """
+
+        # Specifications
+        if isinstance(specs, str):
+            specs = [specs]
+
+        if isinstance(entries, str):
+            entries = [entries]
+
+        # Query all of the specs and make sure they are valid
+        if specs is None:
+            specs = list(self.df.columns)
+        else:
+            for spec in specs:
+                self.query(spec)
+
+        # Count functions
+        def count_gradient_evals(td):
+            if td.status != "COMPLETE":
+                return None
+
+            total_grads = 0
+            for key, optimizations in td.get_history().items():
+                for opt in optimizations:
+                    total_grads += len(opt.trajectory)
+            return total_grads
+
+        def count_optimizations(td):
+            if td.status != "COMPLETE":
+                return None
+            return sum(len(v) for v in td.optimization_history.values())
+
+        # Loop over the data and apply the count function
+        ret = []
+        for col in specs:
+            data = self.df[col]
+            if entries:
+                data = data[entries]
+
+            if count_gradients:
+                cnts = data.apply(lambda td: count_gradient_evals(td))
+            else:
+                cnts = data.apply(lambda td: count_optimizations(td))
+            ret.append(cnts)
+
+        ret = pd.DataFrame(ret).transpose()
+        ret.dropna(inplace=True, how="all")
+        ret = pd.DataFrame([ret[x].astype(int) for x in ret.columns]).transpose()
+        return ret
+
     def visualize(self,
                   entries: Union[str, List[str]],
                   specs: Union[str, List[str]],
@@ -392,18 +462,25 @@ class TorsionDriveDataset(Collection):
         if show_spec is False:
             title += f" [spec={specs[0]}]"
 
-        ylable = ""
         if relative:
             ylabel = f"Relative Energy [{units}]"
         else:
             ylabel = f"Absolute Energy [{units}]"
 
-        custom_layout = {"title": title, "yaxis": {"title": ylabel, "zeroline": True}, "xaxis": {"title": "Dihedral Angle [degrees]", "zeroline": False, "range": [xmin, xmax]}}
+        custom_layout = {
+            "title": title,
+            "yaxis": {
+                "title": ylabel,
+                "zeroline": True
+            },
+            "xaxis": {
+                "title": "Dihedral Angle [degrees]",
+                "zeroline": False,
+                "range": [xmin, xmax]
+            }
+        }
 
-        return scatter_plot(
-            traces,
-            custom_layout=custom_layout,
-            return_figure=return_figure)
+        return scatter_plot(traces, custom_layout=custom_layout, return_figure=return_figure)
 
 
 register_collection(TorsionDriveDataset)

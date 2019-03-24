@@ -67,7 +67,7 @@ def test_task_error(fractal_compute_server):
     assert "connectivity" in results[0].get_error().error_message
 
     # Check manager
-    m = fractal_compute_server.storage.get_managers(status="ACTIVE")["data"]
+    m = fractal_compute_server.storage.get_managers()["data"]
     assert len(m) == 1
     assert m[0]["failures"] > 0
     assert m[0]["completed"] > 0

@@ -29,7 +29,7 @@ def S22Fixture():
 
 @using_plotly
 @pytest.mark.parametrize("kind", ["violin", "bar"])
-def test_dataset_plot(S22Fixture, kind):
+def test_plot_dataset(S22Fixture, kind):
 
     client, S22 = S22Fixture
 
@@ -45,7 +45,7 @@ def test_dataset_plot(S22Fixture, kind):
 @using_plotly
 @pytest.mark.parametrize("kind", ["violin", "bar"])
 @pytest.mark.parametrize("groupby", ["method", "basis"])
-def test_dataset_groupby_plot(S22Fixture, kind, groupby):
+def test_plot_dataset_groupby(S22Fixture, kind, groupby):
 
     client, S22 = S22Fixture
 
@@ -73,22 +73,16 @@ def TDDSFixture():
 
 
 @using_plotly
-@pytest.mark.parametrize("measured", [True, False])
-def test_torsiondrive_dataset_visualize(TDDSFixture, measured):
-
+def test_plot_torsiondrive_dataset(TDDSFixture):
     client, ds = TDDSFixture
 
-    client = portal.FractalClient()
-    ds = client.get_collection("TorsionDriveDataset", "OpenFF Fragmenter Phenyl Benchmark")
+    ds.visualize("c1ccc(cc1)N-[3, 5, 6, 12]", ["b3lyp", "uff"], units="kJ / mol", return_figure=True)
+    ds.visualize(
+        ["c1ccc(cc1)N-[3, 5, 6, 12]", "CCCNc1ccc(cc1)Cl-[1, 4, 9, 8]"], "uff", relative=False, return_figure=True)
 
-    ds.visualize(
-        "c1ccc(cc1)N-[3, 5, 6, 12]", ["b3lyp", "uff"],
-        units="kJ / mol",
-        use_measured_angle=measured,
-        return_figure=True)
-    ds.visualize(
-        ["c1ccc(cc1)N-[3, 5, 6, 12]", "CCCNc1ccc(cc1)Cl-[1, 4, 9, 8]"],
-        "uff",
-        use_measured_angle=measured,
-        relative=False,
-        return_figure=True)
+
+@using_plotly
+def test_plot_torsiondrive_dataset_measured(TDDSFixture):
+    client, ds = TDDSFixture
+
+    ds.visualize("c1ccc(cc1)N-[3, 5, 6, 12]", "b3lyp", units="kJ / mol", use_measured_angle=True, return_figure=True)

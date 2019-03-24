@@ -432,3 +432,6 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     assert ds.status().loc["COMPLETE", "spec1"] == 2
     assert ds.status(collapse=False).loc["hooh1", "spec1"] == "COMPLETE"
+
+    assert ds.counts("hooh1").loc["hooh1", "spec1"] > 5
+    assert ds.counts("hooh1", specs="spec1", count_gradients=True).loc["hooh1", "spec1"] > 30
