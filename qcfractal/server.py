@@ -363,7 +363,7 @@ class FractalServer:
 
         # Shut down queue manager
         if "queue_manager" in self.objects:
-            fut = self._run_in_thread(self.objects["queue_manager"].stop)
+            self._run_in_thread(self.objects["queue_manager"].stop)
 
         # Close down periodics
         for cb in self.periodic.values():
