@@ -199,14 +199,14 @@ class TorsionDriveDataset(Collection):
             The specification name to query
         """
         # Try to get the specification, will throw if not found.
-        self.get_specification(specification)
+        spec = self.get_specification(specification)
 
-        specification = specification.lower()
+        spec_name = specification.lower()
         query_ids = []
         mapper = {}
         for rec in self.data.records.values():
             try:
-                td_id = rec.torsiondrives[specification]
+                td_id = rec.torsiondrives[spec_name]
                 query_ids.append(td_id)
                 mapper[td_id] = rec.name
             except KeyError:
@@ -218,10 +218,32 @@ class TorsionDriveDataset(Collection):
         for td in torsiondrives:
             data.append([mapper[td.id], td])
 
-        df = pd.DataFrame(data, columns=["index", specification])
+        df = pd.DataFrame(data, columns=["index", spec.name])
         df.set_index("index", inplace=True)
 
-        self.df[specification] = df[specification]
+        self.df[spec.name] = df[spec.name]
+
+    def status(self, collapse: bool=True) -> 'DataFrame':
+        """Returns the current status of all current specifications.
+
+        Parameters
+        ----------
+        collapse : bool, optional
+            Collapse the status into summaries per specification or not.
+            Description
+
+        Returns
+        -------
+        DataFrame
+            A DataFrame of all known statuses
+        """
+
+        df = self.df.apply(lambda x: x.apply(lambda y: y.status.value))
+
+        if collapse:
+            return df.apply(lambda x: x.value_counts())
+        else:
+            return df
 
 
 register_collection(TorsionDriveDataset)

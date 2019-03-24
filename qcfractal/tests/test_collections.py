@@ -32,7 +32,8 @@ def test_dataset_compute_gradient(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
 
     # Build a dataset
-    ds = ptl.collections.Dataset("ds_gradient", client, default_program="psi4", default_driver="gradient", default_units="hartree")
+    ds = ptl.collections.Dataset(
+        "ds_gradient", client, default_program="psi4", default_driver="gradient", default_units="hartree")
 
     ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
     ds.add_entry("He2", ptl.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"))
@@ -179,7 +180,6 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
 
     ds.units = "eV"
     assert pytest.approx(0.00010614635, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g", floor=10)
-
 
 
 @testing.using_psi4
@@ -429,3 +429,6 @@ def test_torsiondrive_dataset(fractal_compute_server):
     for row in ["hooh1", "hooh2"]:
         for spec in ["spec1", "spec2"]:
             assert pytest.approx(ds.df.loc["hooh1", "spec2"].final_energies(90), 1.e-5) == 0.00015655375994799847
+
+    assert ds.status().loc["COMPLETE", "spec1"] == 2
+    assert ds.status(collapse=False).loc["hooh1", "spec1"] == "COMPLETE"
