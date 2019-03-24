@@ -45,7 +45,6 @@ def check_plotly():
     if _ipycheck:
         import plotly
         plotly.offline.init_notebook_mode(connected=True)
-        _ipycheck = True
 
 
 def _configure_return(figure, filename, return_figure):

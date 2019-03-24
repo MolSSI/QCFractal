@@ -57,3 +57,14 @@ def test_dataset_groupby_plot(S22Fixture, kind, groupby):
         kind=kind,
         groupby=groupby).to_dict()
     assert "S22" in fig["layout"]["title"]["text"]
+
+
+@using_plotly
+def test_torsiondrive_dataset_visualize():
+
+    client = portal.FractalClient()
+    ds = client.get_collection("TorsionDriveDataset", "OpenFF Fragmenter Phenyl Benchmark")
+
+    ds.visualize("c1ccc(cc1)N-[3, 5, 6, 12]", ["b3lyp", "uff"], units="kJ / mol", return_figure=True)
+    ds.visualize(
+        ["c1ccc(cc1)N-[3, 5, 6, 12]", "CCCNc1ccc(cc1)Cl-[1, 4, 9, 8]"], "uff", relative=False, return_figure=True)

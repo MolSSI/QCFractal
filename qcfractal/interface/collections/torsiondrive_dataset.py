@@ -4,13 +4,16 @@ QCPortal Database ODM
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
+import numpy as np
 
 from pydantic import BaseModel
+from qcelemental import constants
 
 from .collection_utils import register_collection
 from .collection import Collection
 from ..models import ObjectId, Molecule, OptimizationSpecification, QCSpecification, TorsionDriveInput
 from ..models.torsiondrive import TDKeywords
+from ..visualization import scatter_plot
 
 
 class TDRecord(BaseModel):
@@ -228,7 +231,7 @@ class TorsionDriveDataset(Collection):
 
         self.df[spec.name] = df[spec.name]
 
-    def status(self, collapse: bool=True, status:Optional[str]=None) -> 'DataFrame':
+    def status(self, collapse: bool=True, status: Optional[str]=None) -> 'DataFrame':
         """Returns the current status of all current specifications.
 
         Parameters
@@ -255,11 +258,121 @@ class TorsionDriveDataset(Collection):
         else:
             return df
 
-    def visualize(self, entries: Union[str, List[str]], specs: Union[str, List[str]]) -> 'plotly.Figure':
+    def visualize(self,
+                  entries: Union[str, List[str]],
+                  specs: Union[str, List[str]],
+                  relative: bool=True,
+                  units: str="kcal / mol",
+                  digits: int=3,
+                  return_figure: Optional[bool]=None) -> 'plotly.Figure':
+        """
+        Parameters
+        ----------
+        entries : Union[str, List[str]]
+            A single or list of indices to plot.
+        specs : Union[str, List[str]]
+            A single or list of specifications to plot.
+        relative : bool, optional
+            Shows relative energy, lowest energy per scan is zero.
+        units : str, optional
+            The units of the plot.
+        digits : int, optional
+            Rounds the energies to n decimal places for display.
+        return_figure : Optional[bool], optional
+            If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+
+        Returns
+        -------
+        plotly.Figure
+            Description
+
+        Raises
+        ------
+        TypeError
+            Description
+        """
+
+        show_spec = True
+        if isinstance(specs, str):
+            specs = [specs]
+            show_spec = False
+
+        if isinstance(entries, str):
+            entries = [entries]
 
         # Query all of the specs and make sure they are valid
-        for x in specs:
-            self.query(x)
+        for spec in specs:
+            self.query(spec)
+
+        traces = []
+
+        xmin = 1e12
+        xmax = -1e12
+        # Loop over specifications
+        for spec in specs:
+            # Loop over indices (groups colors by entry)
+            for index in entries:
+                td = self.df.loc[index, spec]
+                min_energy = 1e12
+
+                # Pull the dict apart
+                x = []
+                y = []
+                for k, v in td.final_energies().items():
+                    if len(k) >= 2:
+                        raise TypeError("Dataset.visualize is currently only available for 1-D scans.")
+
+                    x.append(k[0])
+                    y.append(v)
+
+                    # Update minmum energy
+                    if v < min_energy:
+                        min_energy = v
+
+                trace = {"mode": "lines+markers"}
+                if show_spec:
+                    trace["name"] = f"{index}-{spec}"
+                else:
+                    trace["name"] = f"{index}"
+
+                x = np.array(x)
+                y = np.array(y)
+
+                # Sort by angle
+                sorter = np.argsort(x)
+                x = x[sorter]
+                y = y[sorter]
+                if relative:
+                    y -= min_energy
+
+                # Find the x dimension
+                if x.max() > xmax:
+                    xmax = x.max()
+                if x.min() < xmin:
+                    xmin = x.min()
+
+                cf = constants.conversion_factor("hartree", units)
+                trace["x"] = x
+                trace["y"] = np.around(y * cf, digits)
+
+                traces.append(trace)
+
+        title = "TorsionDriveDataset 1-D Plot"
+        if show_spec is False:
+            title += f" [spec={specs[0]}]"
+
+        ylable = ""
+        if relative:
+            ylabel = f"Relative Energy [{units}]"
+        else:
+            ylabel = f"Absolute Energy [{units}]"
+
+        custom_layout = {"title": title, "yaxis": {"title": ylabel, "zeroline": True}, "xaxis": {"title": "Dihedral Angle [degrees]", "zeroline": False, "range": [xmin, xmax]}}
+
+        return scatter_plot(
+            traces,
+            custom_layout=custom_layout,
+            return_figure=return_figure)
 
 
 register_collection(TorsionDriveDataset)
