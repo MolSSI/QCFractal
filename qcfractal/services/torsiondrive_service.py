@@ -10,19 +10,16 @@ import numpy as np
 
 from .service_util import BaseService, TaskManager
 from ..interface.models import TorsionDriveRecord, json_encoders
+from ..extras import find_module
 
-try:
-    import torsiondrive
-    from torsiondrive import td_api
-except ImportError:
-    td_api = None
 
 __all__ = ["TorsionDriveService"]
 
+__td_api = find_module("torsiondrive")
 
 def _check_td():
-    if td_api is None:
-        raise ImportError("Unable to find TorsionDriveRecord which must be installed to use the TorsionDriveService")
+    if __td_api is None:
+        raise ModuleNotFoundError("Unable to find TorsionDriveRecord which must be installed to use the TorsionDriveService")
 
 
 class TorsionDriveService(BaseService):
@@ -54,6 +51,8 @@ class TorsionDriveService(BaseService):
     @classmethod
     def initialize_from_api(cls, storage_socket, logger, service_input, tag=None, priority=None):
         _check_td()
+        import torsiondrive
+        from torsiondrive import td_api
 
         # Build the record
         output = TorsionDriveRecord(
@@ -112,6 +111,9 @@ class TorsionDriveService(BaseService):
         return cls(**meta, storage_socket=storage_socket, logger=logger)
 
     def iterate(self):
+        _check_td()
+        from torsiondrive import td_api
+
 
         self.status = "RUNNING"
 
@@ -157,6 +159,8 @@ class TorsionDriveService(BaseService):
         return False
 
     def submit_optimization_tasks(self, task_dict):
+        _check_td()
+        from torsiondrive import td_api
 
         new_tasks = {}
         task_map = {}
@@ -192,6 +196,8 @@ class TorsionDriveService(BaseService):
         """
         Finishes adding data to the TorsionDriveRecord object
         """
+        _check_td()
+        from torsiondrive import td_api
 
         # # Get lowest energies and positions
         min_positions = {}

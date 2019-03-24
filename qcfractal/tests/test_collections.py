@@ -32,13 +32,13 @@ def test_dataset_compute_gradient(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
 
     # Build a dataset
-    ds = ptl.collections.Dataset("ds_energy", client, default_program="psi4", default_driver="gradient")
+    ds = ptl.collections.Dataset("ds_gradient", client, default_program="psi4", default_driver="gradient", default_units="hartree")
 
     ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
     ds.add_entry("He2", ptl.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"))
 
     contrib = {
-        "name": "gradient",
+        "name": "Gradient",
         "theory_level": "pseudo-random values",
         "values": {
             "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
@@ -47,17 +47,23 @@ def test_dataset_compute_gradient(fractal_compute_server):
         "units": "hartree"
     }
     ds.add_contributed_values(contrib)
+    ds.save()
+
+    ds = client.get_collection("dataset", "ds_gradient")
 
     # Compute
-    ds.save()
     ds.compute("HF", "sto-3g")
     fractal_compute_server.await_results()
 
     ds.query("HF", "sto-3g", as_array=True)
-    ds.query("gradient", None, contrib=True, as_array=True)
 
-    stats = ds.statistics("MUE", "HF/sto-3g", "gradient")
-    assert pytest.approx(stats.mean()) == 0.00984176986312362
+    # Test out some statistics
+    stats = ds.statistics("MUE", "HF/sto-3g", "Gradient")
+    assert pytest.approx(stats.mean(), 1.e-5) == 0.00984176986312362
+
+    stats = ds.statistics("UE", "HF/sto-3g", "Gradient")
+    assert pytest.approx(stats.loc["He1"].mean(), 1.e-5) == 0.01635020639
+    assert pytest.approx(stats.loc["He2"].mean(), 1.e-5) == 0.00333333333
 
     assert ds.list_history().shape[0] == 1
 
@@ -158,15 +164,22 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
 
     # Query computed results
     assert ds.query("SCF", "STO-3G")
-    assert pytest.approx(0.6024530476071095, 1.e-5) == ds.df.loc["He1", "SCF/STO-3G"]
-    assert pytest.approx(-0.006895035942673289, 1.e-5) == ds.df.loc["He2", "SCF/STO-3G"]
+    assert pytest.approx(0.6024530476, 1.e-5) == ds.df.loc["He1", "SCF/sto-3g"]
+    assert pytest.approx(-0.0068950359, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g"]
 
     # Check results
-    assert ds.query("Benchmark", contrib=True)
-    assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/STO-3G")
+    assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/sto-3g")
+
+    assert pytest.approx([0.081193, 7.9533e-05], 1.e-1) == list(ds.statistics("URE", "SCF/sto-3g"))
+    assert pytest.approx(0.0406367, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g")
+    assert pytest.approx(0.002447793, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g", floor=10)
 
     assert isinstance(ds.to_json(), dict)
     assert ds.list_history(keywords=None).shape[0] == 1
+
+    ds.units = "eV"
+    assert pytest.approx(0.00010614635, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g", floor=10)
+
 
 
 @testing.using_psi4
@@ -191,12 +204,12 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     r = ds.compute("SCF", "STO-3G")
     fractal_compute_server.await_results()
     assert ds.query("SCF", "STO-3G")
-    assert pytest.approx(0.39323818102293856, 1.e-5) == ds.df.loc["He2", "SCF/STO-3G"]
+    assert pytest.approx(0.39323818102293856, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g"]
 
-    r = ds.compute("SCF", "STO-3G", keywords="df")
+    r = ds.compute("SCF", "sto-3g", keywords="df")
     fractal_compute_server.await_results()
-    assert ds.query("SCF", "STO-3G", keywords="df", prefix="df-")
-    assert pytest.approx(0.38748602675524185, 1.e-5) == ds.df.loc["He2", "df-SCF/STO-3G"]
+    assert ds.query("SCF", "sto-3g", keywords="df") == "SCF/sto-3g-df"
+    assert pytest.approx(0.38748602675524185, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g-df"]
 
     assert ds.list_history().shape[0] == 2
     assert ds.list_history(keywords="DF").shape[0] == 1
@@ -272,7 +285,7 @@ def test_compute_openffworkflow(fractal_compute_server):
             "dihedrals": [[0, 1, 2, 3]],
         },
     }
-    wf.add_fragment("HOOH", fragment_input, provenance={})
+    wf.add_fragment("HOOH", fragment_input)
     assert set(wf.list_fragments()) == {"HOOH"}
     fractal_compute_server.await_services(max_iter=5)
 
@@ -298,7 +311,7 @@ def test_compute_openffworkflow(fractal_compute_server):
         }
     }
 
-    wf.add_fragment("HOOH", optimization_input, provenance={})
+    wf.add_fragment("HOOH", optimization_input)
     fractal_compute_server.await_services(max_iter=5)
 
     final_energies = wf.list_final_energies()
@@ -321,7 +334,7 @@ def test_compute_openffworkflow(fractal_compute_server):
             "dihedrals": [[0, 2, 3, 1]],
         },
     }
-    wf.add_fragment(butane_id, fragment_input, provenance={})
+    wf.add_fragment(butane_id, fragment_input)
     assert set(wf.list_fragments()) == {butane_id, "HOOH"}
 
     final_energies = wf.list_final_energies()
@@ -363,7 +376,7 @@ def test_missing_collection(fractal_compute_server):
 @testing.using_torsiondrive
 @testing.using_geometric
 @testing.using_rdkit
-def test_torsiondrive_service(fractal_compute_server):
+def test_torsiondrive_dataset(fractal_compute_server):
 
     client = ptl.FractalClient(fractal_compute_server)
 
@@ -391,7 +404,8 @@ def test_torsiondrive_service(fractal_compute_server):
 
     ds.add_specification("spec1", optimization_spec, qc_spec, description="This is a really cool spec")
 
-    ds.compute("spec1")
+    ncompute = ds.compute("spec1")
+    assert ncompute == 2
 
     ds.save()
 
@@ -402,11 +416,16 @@ def test_torsiondrive_service(fractal_compute_server):
 
     # Add another fake set, should instantly return
     ds.add_specification("spec2", optimization_spec, qc_spec, description="This is a really cool spec")
-    ds.compute("spec2")
+
+    # Test subsets
+    ncompute = ds.compute("spec2", subset=set())
+    assert ncompute == 0
+
+    ncompute = ds.compute("spec2")
+    assert ncompute == 2
     ds.query("spec2")
 
     # We effectively computed the same thing twice with two duplicate specs
     for row in ["hooh1", "hooh2"]:
         for spec in ["spec1", "spec2"]:
             assert pytest.approx(ds.df.loc["hooh1", "spec2"].final_energies(90), 1.e-5) == 0.00015655375994799847
-

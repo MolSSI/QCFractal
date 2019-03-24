@@ -12,7 +12,8 @@ from qcelemental import constants
 from .collection import Collection
 from .collection_utils import register_collection
 from ..statistics import wrap_statistics
-from ..models import ObjectId
+from ..models import ObjectId, Molecule
+from ..visualization import bar_plot, violin_plot
 
 
 class MoleculeRecord(BaseModel):
@@ -63,8 +64,7 @@ class Dataset(Collection):
         """
         super().__init__(name, client=client, **kwargs)
 
-        # Initialize internal data frames
-        self.df = pd.DataFrame(index=self.get_index())
+        self._units = self.data.default_units
 
         # If we making a new database we may need new hashes and json objects
         self._new_molecules = {}
@@ -72,12 +72,23 @@ class Dataset(Collection):
         self._new_records = []
         self._updated_state = False
 
+        # Initialize internal data frames and load in contrib
+        self.df = pd.DataFrame(index=self.get_index())
+
+        # Inherited classes need to call this themselves
+        for cv in self.data.contributed_values.values():
+            tmp_idx = self.get_contributed_values_column(cv.name)
+            self.df[tmp_idx.columns[0]] = tmp_idx
+
     class DataModel(Collection.DataModel):
 
         # Defaults
         default_program: Optional[str] = None
         default_keywords: Dict[str, str] = {}
         default_driver: str = "energy"
+        default_units: str = "kcal / mol"
+        default_benchmark: Optional[str] = None
+
         alias_keywords: Dict[str, Dict[str, str]] = {}
 
         # Data
@@ -154,21 +165,273 @@ class Dataset(Collection):
         df = pd.DataFrame(list(self.data.history), columns=self.data.history_keys)
 
         for key, value in search.items():
-            if value is not None:
+            if value is None:
+                df = df[df[key].isnull()]
+            elif isinstance(value, str):
                 value = value.lower()
                 df = df[df[key] == value]
+            elif isinstance(value, (list, tuple)):
+                query = [x.lower() for x in value]
+                df = df[df[key].isin(query)]
             else:
-                df = df[df[key].isnull()]
+                raise TypeError(f"Search type {type(value)} not understood.")
 
         df.set_index(list(self.data.history_keys[:-1]), inplace=True)
         df.sort_index(inplace=True)
         return df
 
-    def _default_parameters(self, driver: str, keywords: Optional[str], program: str) -> Tuple[str, str, str, str]:
+    def _get_history(self, **search: Dict[str, Optional[str]]) -> 'DataFrame':
+        """Queries for all history that matches the search
+
+        Parameters
+        ----------
+        **search : Dict[str, Optional[str]]
+            History query paramters
+
+        Returns
+        -------
+        DataFrame
+            A DataFrame of the queried parameters
+        """
+
+        queries = self.list_history(**search).reset_index()
+        if queries.shape[0] > 10:
+            raise TypeError("More than 10 queries formed, please narrow the search.")
+
+        # queries["name"] = None
+        for name, query in queries.iterrows():
+            query = query.to_dict()
+            query.pop("driver")
+            if "stoichiometry" in query:
+                query["stoich"] = query.pop("stoichiometry")
+            queries.loc[name, "name"] = self.query(query.pop("method"), **query)
+
+        return queries
+
+    def get_history(self,
+                    method: Optional[str]=None,
+                    basis: Optional[str]=None,
+                    keywords: Optional[str]=None,
+                    program: Optional[str]=None) -> 'DataFrame':
+        """ Queries known history from the search paramaters provided. Defaults to the standard
+        programs and keywords if not provided.
+
+        Parameters
+        ----------
+        method : Optional[str]
+            The computational method to compute (B3LYP)
+        basis : Optional[str], optional
+            The computational basis to compute (6-31G)
+        keywords : Optional[str], optional
+            The keyword alias for the requested compute
+        program : Optional[str], optional
+            The underlying QC program
+
+        Returns
+        -------
+        DataFrame
+            A DataFrame of the queried parameters
+        """
+
+        # Get default program/keywords
+        name, dbkeys, history = self._default_parameters(program, "nan", "nan", keywords)
+
+        for k, v in [("method", method), ("basis", basis)]:
+
+            if v is not None:
+                history[k] = v
+            else:
+                history.pop(k, None)
+
+        return self._get_history(**history)
+
+    def _visualize(self,
+                   metric,
+                   bench,
+                   query: Dict[str, Optional[str]],
+                   groupby: Optional[str]=None,
+                   return_figure=None,
+                   kind="bar") -> 'plotly.Figure':
+
+        # Validate query dimensions
+        list_queries = [k for k, v in query.items() if isinstance(v, (list, tuple))]
+        if len(list_queries) > 2:
+            raise TypeError("A maximum of two lists are allowed.")
+
+        # Check kind
+        kind = kind.lower()
+        if kind not in ["bar", "violin"]:
+            raise KeyError(f"Visualiztion kind must either be 'bar' or 'violin', found {kind}")
+
+        # Check metric
+        metric = metric.upper()
+        if metric == "UE":
+            ylabel = f"UE [{self.units}]"
+        elif metric == "URE":
+            ylabel = "URE [%]"
+        else:
+            raise KeyError('Metric {} not understood, available metrics: "UE", "URE"'.format(metric))
+
+        if kind == "bar":
+            ylabel = "M" + ylabel
+            metric = "M" + metric
+
+        # Are we a groupby?
+        _valid_groupby = {"method", "basis", "keywords", "program", "stoich"}
+        if groupby is not None:
+            groupby = groupby.lower()
+            if groupby not in _valid_groupby:
+                raise KeyError(f"Groupby option {groupby} not understood.")
+            if groupby not in query:
+                raise KeyError(
+                    f"Groupby option {groupby} not found in query, must provide a search on this parameter.")
+
+            if not isinstance(query[groupby], (tuple, list)):
+                raise KeyError(f"Groupby option {groupby} must be a list.")
+
+            if groupby and (kind == "violin") and (len(query[groupby]) != 2):
+                raise KeyError(f"Groupby option for violin plots must have two entries.")
+
+            query_names = []
+            queries = []
+            for gb in query[groupby]:
+                gb_query = query.copy()
+                gb_query[groupby] = gb
+
+                queries.append(self.get_history(**gb_query))
+                query_names.append(self._canonical_name(**{groupby: gb}))
+
+        else:
+            queries = [self.get_history(**query)]
+            query_names = ["Stats"]
+
+        title = f"{self.data.name} Dataset Statistics"
+
+        series = []
+        for q, name in zip(queries, query_names):
+
+            if len(q) == 0:
+                raise KeyError("No query matches, nothing to visualize!")
+            stat = self.statistics(metric, list(q["name"]), bench=bench)
+            stat.sort_index(inplace=True)
+            stat.name = name
+
+            col_names = {}
+            for record in q.to_dict(orient="records"):
+                if groupby:
+                    record[groupby] = None
+                index_name = self._canonical_name(
+                    record["program"],
+                    record["method"],
+                    record["basis"],
+                    record["keywords"],
+                    stoich=record.get("stoich"))
+
+                col_names[record["name"]] = index_name
+
+            if kind == "bar":
+                stat.index = [col_names[x] for x in stat.index]
+            else:
+                stat.columns = [col_names[x] for x in stat.columns]
+
+            series.append(stat)
+
+        if kind == "bar":
+            return bar_plot(series, title=title, ylabel=ylabel, return_figure=return_figure)
+        else:
+            negative = None
+            if groupby:
+                negative = series[1]
+
+            return violin_plot(series[0], negative=negative, title=title, ylabel=ylabel, return_figure=return_figure)
+
+    def visualize(self,
+                  method: Optional[str]=None,
+                  basis: Optional[str]=None,
+                  keywords: Optional[str]=None,
+                  program: Optional[str]=None,
+                  groupby: Optional[str]=None,
+                  metric: str="UE",
+                  bench: Optional[str]=None,
+                  kind: str="bar",
+                  return_figure: Optional[bool]=None) -> 'plotly.Figure':
+        """
+        Parameters
+        ----------
+        method : Optional[str], optional
+            Methods to query
+        basis : Optional[str], optional
+            Bases to query
+        keywords : Optional[str], optional
+            Keyword aliases to query
+        program : Optional[str], optional
+            Programs aliases to query
+        groupby : Optional[str], optional
+            Groups the plot by this index.
+        metric : str, optional
+            The metric to use either UE (unsigned error) or URE (unsigned relative error)
+        bench : Optional[str], optional
+            The benchmark level of theory to use
+        kind : str, optional
+            The kind of chart to produce, either 'bar' or 'violin'
+        return_figure : Optional[bool], optional
+            If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+
+        Returns
+        -------
+        plotly.Figure
+            The requested figure.
+        """
+
+        query = {"method": method, "basis": basis, "keywords": keywords, "program": program}
+        query = {k: v for k, v in query.items() if v is not None}
+
+        return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind)
+
+    def _canonical_name(self,
+                        program: Optional[str]=None,
+                        method: Optional[str]=None,
+                        basis: Optional[str]=None,
+                        keywords: Optional[str]=None,
+                        stoich: Optional[str]=None) -> str:
+        """
+        Attempts to build a canonical name for a DataFrame column
+        """
+
+        name = ""
+        if method:
+            name = method.upper()
+
+        if basis and name:
+            name = f"{name}/{basis.lower()}"
+        elif basis:
+            name = f"{basis.lower()}"
+
+        if keywords and (keywords != self.data.default_keywords.get(program, None)):
+            name = f"{name}-{keywords}"
+
+        if program and (program.lower() != self.data.default_program):
+            name = f"{name}-{program.title()}"
+
+        if stoich:
+            if name == "":
+                name = stoich.lower()
+            elif (stoich.lower() != "default"):
+                name = f"{stoich.lower()}-{name}"
+
+        return name
+
+    def _default_parameters(self,
+                            program: str,
+                            method: str,
+                            basis: Optional[str],
+                            keywords: Optional[str],
+                            stoich: Optional[str]=None) -> Tuple[str, str, str, str]:
         """
         Takes raw input parsed parameters and applies defaults to them.
         """
 
+        # Handle default program
         if program is None:
             if self.data.default_program is None:
                 raise KeyError("No default program was set and none was provided.")
@@ -176,9 +439,9 @@ class Dataset(Collection):
         else:
             program = program.lower()
 
-        if driver is None:
-            driver = self.data.default_driver
+        driver = self.data.default_driver
 
+        # Handle keywords
         keywords_alias = keywords
         if keywords is None:
             if program in self.data.default_keywords:
@@ -191,9 +454,17 @@ class Dataset(Collection):
             keywords_alias = keywords
             keywords = self.data.alias_keywords[program][keywords]
 
-        return driver, keywords, keywords_alias, program
+        # Form database and history keys
+        dbkeys = {"driver": driver, "program": program, "method": method, "basis": basis, "keywords": keywords}
+        history = {**dbkeys, **{"keywords": keywords_alias}}
+        if stoich is not None:
+            history["stoichiometry"] = stoich
 
-    def _query(self, indexer: str, query: Dict[str, Any], field: str="return_result", scale: str=None) -> 'Series':
+        name = self._canonical_name(program, method, basis, keywords_alias, stoich)
+
+        return name, dbkeys, history
+
+    def _query(self, indexer: str, query: Dict[str, Any], field: str="return_result") -> 'Series':
         """
         Runs a query based on an indexer which is index : molecule_id
 
@@ -229,10 +500,19 @@ class Dataset(Collection):
         ret.set_index("index", inplace=True)
         ret.drop("molecule", axis=1, inplace=True)
 
-        if scale:
-            ret[ret.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', scale)
+        ret[ret.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', self.units)
 
         return ret
+
+    @property
+    def units(self):
+        return self._units
+
+    @units.setter
+    def units(self, value):
+
+        self.df *= constants.conversion_factor(self._units, value)
+        self._units = value
 
     def set_default_program(self, program: str) -> bool:
         """
@@ -358,7 +638,7 @@ class Dataset(Collection):
         """
         return self.data.contributed_values[key.lower()].copy()
 
-    def get_contributed_values_column(self, key: str, scale='hartree') -> 'Series':
+    def get_contributed_values_column(self, key: str) -> 'Series':
         """Returns a Pandas column with the requested contributed values
 
         Parameters
@@ -381,30 +661,39 @@ class Dataset(Collection):
         else:
             values = {k: [v] for k, v in data.values.items()}
 
-        tmp_idx = pd.DataFrame.from_dict(values, orient="index", columns=[key])
+        tmp_idx = pd.DataFrame.from_dict(values, orient="index", columns=[data.name])
 
         # Convert to numeric
-        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor(data.units, scale)
+        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor(
+            data.units, self.units)
 
         return tmp_idx
 
-    def add_entry(self, name, molecule, **kwargs):
+    def add_entry(self, name: str, molecule: Molecule, **kwargs: Dict[str, Any]):
+        """Adds a new entry to the Datset
 
+        Parameters
+        ----------
+        name : str
+            The name of the record
+        molecule : Molecule
+            The Molecule associated with this record
+        **kwargs : Dict[str, Any]
+            Additional arguements to pass to the record
+        """
         mhash = molecule.get_hash()
         self._new_molecules[mhash] = molecule
         self._new_records.append({"name": name, "molecule_hash": mhash, **kwargs})
 
     def query(self,
-              method,
-              basis=None,
+              method: str,
+              basis: Optional[str]=None,
               *,
-              driver=None,
-              keywords=None,
-              program=None,
-              contrib=False,
-              scale="kcal / mol",
-              field="return_result",
-              as_array=False):
+              keywords: Optional[str]=None,
+              program: Optional[str]=None,
+              field: str=None,
+              as_array: bool=False,
+              force: bool=False) -> str:
         """
         Queries the local Portal for the requested keys.
 
@@ -412,53 +701,49 @@ class Dataset(Collection):
         ----------
         method : str
             The computational method to query on (B3LYP)
-        basis : str
+        basis : Optional[str], optional
             The computational basis query on (6-31G)
-        driver : str, optional
-            Search within energy, gradient, etc computations
-        keywords : str, optional
+        keywords : Optional[str], optional
             The option token desired
-        program : str, optional
+        program : Optional[str], optional
             The program to query on
-        contrib : bool
-            Toggles a search between the Mongo Pages and the Databases's ContributedValues field.
-        scale : str, double
-            All units are based in Hartree, the default scaling is to kcal/mol.
         field : str, optional
             The result field to query on
+        as_array : bool, optional
+            Converts the returned values to NumPy arrays
+        force : bool, optional
+            Forces a requery if data is already present
 
         Returns
         -------
         success : bool
-            Returns True if the requested query was successful or not.
+            The name of the queried column
 
         Examples
         --------
 
         >>> ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
+
         """
 
-        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
+        name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
 
-        if not contrib and (self.client is None):
+        if field is None:
+            field = "return_result"
+        else:
+            name = "{}-{}".format(name, field)
+
+        if (name in self.df) and (force is False):
+            return name
+
+        if self.client is None:
             raise AttributeError("DataBase: FractalClient was not set.")
 
-        query_keys = {
-            "method": method,
-            "basis": basis,
-            "driver": driver,
-            "keywords": keywords,
-            "program": program,
-        }
         # # If reaction results
-        if contrib:
-            tmp_idx = self.get_contributed_values_column(method, scale=scale)
+        indexer = {e.name: e.molecule_id for e in self.data.records}
 
-        else:
-            indexer = {e.name: e.molecule_id for e in self.data.records}
-
-            tmp_idx = self._query(indexer, query_keys, field=field, scale=scale)
-            tmp_idx.rename(columns={"result": method + '/' + basis}, inplace=True)
+        tmp_idx = self._query(indexer, dbkeys, field=field)
+        tmp_idx.rename(columns={"result": name}, inplace=True)
 
         if as_array:
             tmp_idx[tmp_idx.columns[0]] = tmp_idx[tmp_idx.columns[0]].apply(lambda x: np.array(x))
@@ -466,13 +751,12 @@ class Dataset(Collection):
         # Apply to df
         self.df[tmp_idx.columns] = tmp_idx
 
-        return True
+        return tmp_idx.columns[0]
 
     def compute(self,
                 method: str,
                 basis: Optional[str]=None,
                 *,
-                driver: Optional[str]=None,
                 keywords: Optional[str]=None,
                 program: Optional[str]=None,
                 tag: Optional[str]=None,
@@ -486,8 +770,6 @@ class Dataset(Collection):
             The computational method to compute (B3LYP)
         basis : Optional[str], optional
             The computational basis to compute (6-31G)
-        driver : Optional[str], optional
-            The type of computation to run (energy, gradient, etc)
         keywords : Optional[str], optional
             The keyword alias for the requested compute
         program : Optional[str], optional
@@ -508,16 +790,23 @@ class Dataset(Collection):
         if self.client is None:
             raise AttributeError("Dataset: Compute: Client was not set.")
 
-        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
+        name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
 
         molecule_idx = [e.molecule_id for e in self.data.records]
         umols, uidx = np.unique(molecule_idx, return_index=True)
 
         ret = self.client.add_compute(
-            program, method, basis, driver, keywords, list(umols), tag=tag, priority=priority)
+            dbkeys["program"],
+            dbkeys["method"],
+            dbkeys["basis"],
+            dbkeys["driver"],
+            dbkeys["keywords"],
+            list(umols),
+            tag=tag,
+            priority=priority)
 
         # Update the record that this was computed
-        self._add_history(driver=driver, program=program, method=method, basis=basis, keywords=keywords_alias)
+        self._add_history(**history)
         self.save()
 
         return ret
@@ -534,7 +823,7 @@ class Dataset(Collection):
         return [x.name for x in self.data.records]
 
     # Statistical quantities
-    def statistics(self, stype: str, value: str, bench: str="Benchmark"):
+    def statistics(self, stype: str, value: str, bench: str="Benchmark", **kwargs: Dict[str, Any]):
         """Summary
 
         Parameters
@@ -545,13 +834,16 @@ class Dataset(Collection):
             The method string to compare
         bench : str, optional
             The benchmark method for the comparison
+        kwargs: Dict[str, Any]
+            Additional kwargs to pass to the statistics functions
+
 
         Returns
         -------
         ret : pd.DataFrame, pd.Series, float
             Returns a DataFrame, Series, or float with the requested statistics depending on input.
         """
-        return wrap_statistics(stype, self.df, value, bench)
+        return wrap_statistics(stype.upper(), self.df, value, bench, **kwargs)
 
     # Getters
     def __getitem__(self, args: str) -> 'Series':

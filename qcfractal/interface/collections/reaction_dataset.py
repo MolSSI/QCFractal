@@ -68,10 +68,6 @@ class ReactionDataset(Dataset):
 
         # Internal data
         self.rxn_index = pd.DataFrame()
-        self.df = pd.DataFrame()
-
-        # Initialize internal data frames
-        self.df = pd.DataFrame(index=self.get_index())
 
         self.rxn_index = None
         self.valid_stoich = None
@@ -166,20 +162,103 @@ class ReactionDataset(Dataset):
 
         return tmp_idx
 
+    def get_history(self,
+                    method: Optional[str]=None,
+                    basis: Optional[str]=None,
+                    keywords: Optional[str]=None,
+                    program: Optional[str]=None,
+                    stoich: str="default") -> 'DataFrame':
+        """ Queries known history from the search paramaters provided. Defaults to the standard
+        programs and keywords if not provided.
+
+        Parameters
+        ----------
+        method : Optional[str]
+            The computational method to compute (B3LYP)
+        basis : Optional[str], optional
+            The computational basis to compute (6-31G)
+        keywords : Optional[str], optional
+            The keyword alias for the requested compute
+        program : Optional[str], optional
+            The underlying QC program
+        stoich : str, optional
+            The given stoichiometry to compute.
+
+        Returns
+        -------
+        DataFrame
+            A DataFrame of the queried parameters
+        """
+
+        self._validate_stoich(stoich)
+
+        name, dbkeys, history = self._default_parameters(program, "nan", "nan", keywords, stoich=stoich)
+
+        for k, v in [("method", method), ("basis", basis)]:
+
+            if v is not None:
+                history[k] = v
+            else:
+                history.pop(k, None)
+
+        return self._get_history(**history)
+
+    def visualize(self,
+                  method: Optional[str]=None,
+                  basis: Optional[str]=None,
+                  keywords: Optional[str]=None,
+                  program: Optional[str]=None,
+                  stoich: Optional[str]=None,
+                  groupby: Optional[str]=None,
+                  metric: str="UE",
+                  bench: Optional[str]=None,
+                  kind: str="bar",
+                  return_figure: Optional[bool]=None) -> 'plotly.Figure':
+        """
+        Parameters
+        ----------
+        method : Optional[str], optional
+            Methods to query
+        basis : Optional[str], optional
+            Bases to query
+        keywords : Optional[str], optional
+            Keyword aliases to query
+        program : Optional[str], optional
+            Programs aliases to query
+        stoich : Optional[str], optional
+            Stoichiometry to query
+        groupby : Optional[str], optional
+            Groups the plot by this index.
+        metric : str, optional
+            The metric to use either UE (unsigned error) or URE (unsigned relative error)
+        bench : Optional[str], optional
+            The benchmark level of theory to use
+        kind : str, optional
+            The kind of chart to produce, either 'bar' or 'violin'
+        return_figure : Optional[bool], optional
+            If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+        
+        Returns
+        -------
+        plotly.Figure
+            The requested figure.
+        """
+
+        query = {"method": method, "basis": basis, "keywords": keywords, "program": program, "stoich": stoich}
+        query = {k: v for k, v in query.items() if v is not None}
+
+        return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind)
+
     def query(self,
               method,
               basis: Optional[str]=None,
               *,
-              driver: Optional[str]=None,
               keywords: Optional[str]=None,
               program: Optional[str]=None,
               stoich: str="default",
-              prefix: str="",
-              postfix: str="",
-              contrib: bool=False,
-              scale: str="kcal/mol",
-              field: str="return_result",
-              ignore_ds_type: bool=False):
+              field: Optional[str]=None,
+              ignore_ds_type: bool=False,
+              force: bool=False) -> str:
         """
         Queries the local Portal for the requested keys and stoichiometry.
 
@@ -189,35 +268,23 @@ class ReactionDataset(Dataset):
             The computational method to query on (B3LYP)
         basis : Optional[str], optional
             The computational basis query on (6-31G)
-        driver : Optional[str], optional
-            Search within energy, gradient, etc computations
         keywords : Optional[str], optional
             The option token desired
         program : Optional[str], optional
             The program to query on
         stoich : str, optional
             The given stoichiometry to compute.
-        prefix : str, optional
-            A prefix given to the resulting column names.
-        postfix : str, optional
-            A postfix given to the resulting column names.
-        contrib : bool, optional
-            Toggles a search between the Mongo Pages and the Databases's ContributedValues field.
-        scale : str, optional
-            All units are based in Hartree, the default scaling is to kcal/mol.
-        field : str, optional
+        field : Optional[str], optional
             The result field to query on
         ignore_ds_type : bool, optional
             Override of "ie" for "rxn" db types.
-
+        force : bool, optional
+            Forces a requery if data is already present
 
         Returns
         -------
-        success : bool
-            Returns True if the requested query was successful or not.
-
-        Notes
-        -----
+        str
+            The name of the queried column
 
 
         Examples
@@ -225,56 +292,51 @@ class ReactionDataset(Dataset):
 
         ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
 
+
         """
         self._check_state()
 
-        if not contrib and (self.client is None):
+        if self.client is None:
             raise AttributeError("DataBase: FractalClient was not set.")
 
-        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
         self._validate_stoich(stoich)
+        name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=stoich)
+
+        if field is None:
+            field = "return_result"
+        else:
+            name = "{}-{}".format(name, field)
+
+        if (name in self.df) and (force is False):
+            return name
 
         # # If reaction results
-        if contrib:
-            tmp_idx = self.get_contributed_values_column(method, scale=scale)
-
-            self.df[prefix + method + postfix] = tmp_idx
-            return True
-
-        query_keys = {
-            "method": method,
-            "basis": basis,
-            "driver": driver,
-            "keywords": keywords,
-            "program": program,
-        }
-
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
-            tmp_idx_complex = self._unroll_query(query_keys, stoich, field=field)
-            tmp_idx_monomers = self._unroll_query(query_keys, monomer_stoich, field=field)
+            tmp_idx_complex = self._unroll_query(dbkeys, stoich, field=field)
+            tmp_idx_monomers = self._unroll_query(dbkeys, monomer_stoich, field=field)
 
             # Combine
             tmp_idx = tmp_idx_complex - tmp_idx_monomers
 
         else:
-            tmp_idx = self._unroll_query(query_keys, stoich, field=field)
-        tmp_idx.columns = [prefix + method + '/' + basis + postfix for _ in tmp_idx.columns]
+            tmp_idx = self._unroll_query(dbkeys, stoich, field=field)
+        tmp_idx.columns = [name]
 
         # scale
         tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
-        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', scale)
+        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor(
+            'hartree', self.units)
 
         # Apply to df
-        self.df[tmp_idx.columns] = tmp_idx
+        self.df[name] = tmp_idx
 
-        return True
+        return name
 
     def compute(self,
                 method: Optional[str],
                 basis: Optional[str]=None,
                 *,
-                driver: Optional[str]=None,
                 keywords: Optional[str]=None,
                 program: Optional[str]=None,
                 stoich: str="default",
@@ -290,8 +352,6 @@ class ReactionDataset(Dataset):
             The computational method to compute (B3LYP)
         basis : Optional[str], optional
             The computational basis to compute (6-31G)
-        driver : Optional[str], optional
-            The type of computation to run (energy, gradient, etc)
         keywords : Optional[str], optional
             The keyword alias for the requested compute
         program : Optional[str], optional
@@ -320,8 +380,8 @@ class ReactionDataset(Dataset):
         if self.client is None:
             raise AttributeError("Dataset: Compute: Client was not set.")
 
-        driver, keywords, keywords_alias, program = self._default_parameters(driver, keywords, program)
         self._validate_stoich(stoich)
+        name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=stoich)
 
         # Figure out molecules that we need
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
@@ -337,25 +397,24 @@ class ReactionDataset(Dataset):
         # There could be duplicates so take the unique and save the map
         umols, uidx = np.unique(tmp_idx["molecule"], return_index=True)
 
-        complete_values = self.client.query_results(
-            molecule=list(umols),
-            driver=driver,
-            keywords=keywords,
-            program=program,
-            method=method,
-            basis=basis,
-            projection={"molecule": True})
+        complete_values = self.client.query_results(**dbkeys, molecule=list(umols), projection={"molecule": True})
 
         complete_mols = np.array([x["molecule"] for x in complete_values])
         umols = np.setdiff1d(umols, complete_mols)
         compute_list = list(umols)
 
         ret = self.client.add_compute(
-            program, method, basis, driver, keywords, compute_list, tag=tag, priority=priority)
+            dbkeys["program"],
+            dbkeys["method"],
+            dbkeys["basis"],
+            dbkeys["driver"],
+            dbkeys["keywords"],
+            compute_list,
+            tag=tag,
+            priority=priority)
 
         # Update the record that this was computed
-        self._add_history(
-            driver=driver, program=program, method=method, basis=basis, keywords=keywords_alias, stoichiometry=stoich)
+        self._add_history(**history)
         self.save()
 
         return ret

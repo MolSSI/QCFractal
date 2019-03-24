@@ -79,6 +79,7 @@ class TorsionDriveRecord(RecordBase):
 
     # Output data
     final_energy_dict: Dict[str, float]
+
     optimization_history: Dict[str, List[ObjectId]]
     minimum_positions: Dict[str, int]
 

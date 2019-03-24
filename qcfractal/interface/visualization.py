@@ -1,0 +1,150 @@
+"""
+Visualization using the plotly library.
+"""
+
+
+def _isnotebook():
+    """
+    Checks if we are inside a jupyter notebook or not.
+    """
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell in ['ZMQInteractiveShell', 'google.colab._shell']:
+            return True
+        elif shell == 'TerminalInteractiveShell':
+            return False
+        else:
+            return False
+    except NameError:
+        return False
+
+
+# Plotly is an optional library
+from importlib.util import find_spec
+spec = find_spec('plotly')
+if spec is None:
+    _plotly_found = False
+else:
+    _plotly_found = True
+del spec, find_spec
+
+_ipycheck = _isnotebook()
+
+
+def check_plotly():
+    """
+    Checks if plotly is found and auto inits the offline notebook
+    """
+    if _plotly_found is False:
+        raise ModuleNotFoundError("Plotly is required for this function. Please 'conda install plotly' or 'pip isntall plotly'.")
+
+    global _ipycheck
+    if _ipycheck:
+        import plotly
+        plotly.offline.init_notebook_mode(connected=True)
+        _ipycheck = True
+
+
+def bar_plot(traces: 'List[Series]', title=None, ylabel=None, return_figure=True) -> 'plotly.Figure':
+    """Renders a plotly bar plot
+
+    Parameters
+    ----------
+    traces : List[Series]
+        A list of bar plots to show, if more than one series the resulting graph will be grouped.
+    title : None, optional
+        The title of the graph
+    ylabel : None, optional
+        The y axis label
+    dtype : str, optional
+        Description
+    return_figure : bool, optional
+        Returns the raw plotly figure or not
+
+    Returns
+    -------
+    plotly.Figure
+        The requested bar plot.
+    """
+
+    check_plotly()
+    import plotly.graph_objs as go
+    import plotly
+
+    data = [go.Bar(x=trace.index, y=trace, name=trace.name) for trace in traces]
+
+    layout = {}
+    if title:
+        layout["title"] = title
+    if ylabel:
+        layout["yaxis"] = {"title": ylabel}
+    layout = go.Layout(layout)
+    figure = go.Figure(data=data, layout=layout)
+
+    if return_figure is None:
+        return_figure = not _ipycheck
+
+    if return_figure:
+        return figure
+    else:
+        return plotly.offline.iplot(figure, filename='qcportal-bar')
+
+
+def violin_plot(traces: 'DataFrame',
+                negative: 'DataFrame'=None,
+                title=None,
+                points=False,
+                ylabel=None,
+                return_figure=True) -> 'plotly.Figure':
+    """Renders a plotly violin plot
+
+    Parameters
+    ----------
+    traces : DataFrame
+        Pandas DataFrame of points to plot, will create a violin plot of each column.
+    negative : DataFrame, optional
+        A comparison violin plot, these columns will present the right hand side.
+    title : None, optional
+        The title of the graph
+    points : None, optional
+        Show points or not, this option is not available for comparison violin plots.
+    ylabel : None, optional
+        The y axis label
+        Returns the raw plotly figure or not
+
+    Returns
+    -------
+    plotly.Figure
+        The requested violin plot.
+    """
+    check_plotly()
+    import plotly.graph_objs as go
+    import plotly
+
+    data = []
+    if negative is not None:
+
+        for trace, side in zip([traces, negative], ["positive", "negative"]):
+            p = {"name": trace.name, "type": "violin", "box": {"visible": True}}
+            p["y"] = trace.stack()
+            p["x"] = trace.stack().reset_index().level_1
+            p["side"] = side
+
+            data.append(p)
+    else:
+        for name, series in traces.items():
+            p = {"name": name, "type": "violin", "box": {"visible": True}}
+            p["y"] = series
+
+            data.append(p)
+
+    layout = go.Layout({"title": title, "yaxis": {"title": ylabel}})
+    figure = go.Figure(data=data, layout=layout)
+
+    if return_figure is None:
+        return_figure = not _ipycheck
+
+    if return_figure:
+        return figure
+    else:
+        return plotly.offline.iplot(figure, filename='qcportal-violin')

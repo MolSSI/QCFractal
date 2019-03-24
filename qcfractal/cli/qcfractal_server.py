@@ -44,6 +44,7 @@ def parse_args():
     general.add_argument("--port", type=int, default=7777, help="The server port")
     general.add_argument("--compress-response", type=bool, default=True, help="Compress the response or not")
     general.add_argument("--config-file", type=str, default=None, help="A configuration file to use")
+    general.add_argument("--start-periodics", type=bool, default=True, help="Start the periodic calls or not, always recommended unless running fractal-server behind a proxy")
 
     parser._action_groups.reverse()
 
@@ -120,7 +121,7 @@ def main(args=None):
     cli_utils.install_signal_handlers(server.loop, server.stop)
 
     # Blocks until keyboard interupt
-    server.start()
+    server.start(start_periodics=args["start_periodics"])
 
 
 if __name__ == '__main__':

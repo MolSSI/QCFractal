@@ -149,7 +149,7 @@ class OpenFFWorkflow(Collection):
         """
         return list(self.data.fragments)
 
-    def add_fragment(self, fragment_id, data, provenance=None, tag=None, priority=None):
+    def add_fragment(self, fragment_id, data, tag=None, priority=None):
         """
         Adds a new fragment to the workflow along with the associated input required.
 
@@ -161,9 +161,6 @@ class OpenFFWorkflow(Collection):
         data : dict
             A dictionary of label : {type, intial_molecule, grid_spacing, dihedrals} for torsiondrive type and
             label : {type, initial_molecule, contraints} for an optimization type
-
-        provenance : dict, optional
-            The provenance of the fragments creation
 
         Example
         -------
@@ -178,8 +175,6 @@ class OpenFFWorkflow(Collection):
         }
         wf.add_fragment("CCCC", data=)
         """
-        if provenance is None:
-            provenance = {}
 
         if fragment_id not in self.data.fragments:
             self.data.fragments[fragment_id] = {}
