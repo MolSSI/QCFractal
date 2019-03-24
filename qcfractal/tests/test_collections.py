@@ -32,7 +32,7 @@ def test_dataset_compute_gradient(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
 
     # Build a dataset
-    ds = ptl.collections.Dataset("ds_energy", client, default_program="psi4", default_driver="gradient", default_units="hartree")
+    ds = ptl.collections.Dataset("ds_gradient", client, default_program="psi4", default_driver="gradient", default_units="hartree")
 
     ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
     ds.add_entry("He2", ptl.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"))
@@ -47,14 +47,15 @@ def test_dataset_compute_gradient(fractal_compute_server):
         "units": "hartree"
     }
     ds.add_contributed_values(contrib)
+    ds.save()
+
+    ds = client.get_collection("dataset", "ds_gradient")
 
     # Compute
-    ds.save()
     ds.compute("HF", "sto-3g")
     fractal_compute_server.await_results()
 
     ds.query("HF", "sto-3g", as_array=True)
-    ds.query("gradient", None, contrib=True, as_array=True)
 
     # Test out some statistics
     stats = ds.statistics("MUE", "HF/sto-3g", "Gradient")
@@ -167,10 +168,9 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     assert pytest.approx(-0.0068950359, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g"]
 
     # Check results
-    assert ds.query("Benchmark", contrib=True)
     assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/sto-3g")
 
-    assert pytest.approx([0.081193, 7.9533e-05], 1.e-4) == list(ds.statistics("URE", "SCF/sto-3g"))
+    assert pytest.approx([0.081193, 7.9533e-05], 1.e-1) == list(ds.statistics("URE", "SCF/sto-3g"))
     assert pytest.approx(0.0406367, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g")
     assert pytest.approx(0.002447793, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g", floor=10)
 
@@ -285,7 +285,7 @@ def test_compute_openffworkflow(fractal_compute_server):
             "dihedrals": [[0, 1, 2, 3]],
         },
     }
-    wf.add_fragment("HOOH", fragment_input, provenance={})
+    wf.add_fragment("HOOH", fragment_input)
     assert set(wf.list_fragments()) == {"HOOH"}
     fractal_compute_server.await_services(max_iter=5)
 
@@ -311,7 +311,7 @@ def test_compute_openffworkflow(fractal_compute_server):
         }
     }
 
-    wf.add_fragment("HOOH", optimization_input, provenance={})
+    wf.add_fragment("HOOH", optimization_input)
     fractal_compute_server.await_services(max_iter=5)
 
     final_energies = wf.list_final_energies()
@@ -334,7 +334,7 @@ def test_compute_openffworkflow(fractal_compute_server):
             "dihedrals": [[0, 2, 3, 1]],
         },
     }
-    wf.add_fragment(butane_id, fragment_input, provenance={})
+    wf.add_fragment(butane_id, fragment_input)
     assert set(wf.list_fragments()) == {butane_id, "HOOH"}
 
     final_energies = wf.list_final_energies()

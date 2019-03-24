@@ -28,7 +28,7 @@ else:
     _plotly_found = True
 del spec, find_spec
 
-_ipycheck = False
+_ipycheck = _isnotebook()
 
 
 def check_plotly():
@@ -36,10 +36,10 @@ def check_plotly():
     Checks if plotly is found and auto inits the offline notebook
     """
     if _plotly_found is False:
-        raise ModuleNotFoundError("Plotly is required for this function. Please ")
+        raise ModuleNotFoundError("Plotly is required for this function. Please 'conda install plotly' or 'pip isntall plotly'.")
 
     global _ipycheck
-    if _ipycheck is False:
+    if _ipycheck:
         import plotly
         plotly.offline.init_notebook_mode(connected=True)
         _ipycheck = True

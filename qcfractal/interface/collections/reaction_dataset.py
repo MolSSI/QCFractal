@@ -73,9 +73,6 @@ class ReactionDataset(Dataset):
         self.valid_stoich = None
         self._form_index()
 
-        for cv in self.data.contributed_values.keys():
-            self.query(cv, contrib=True)
-
     class DataModel(Dataset.DataModel):
 
         ds_type: _ReactionTypeEnum = _ReactionTypeEnum.rxn
@@ -259,7 +256,6 @@ class ReactionDataset(Dataset):
               keywords: Optional[str]=None,
               program: Optional[str]=None,
               stoich: str="default",
-              contrib: bool=False,
               field: Optional[str]=None,
               ignore_ds_type: bool=False,
               force: bool=False) -> str:
@@ -278,8 +274,6 @@ class ReactionDataset(Dataset):
             The program to query on
         stoich : str, optional
             The given stoichiometry to compute.
-        contrib : bool, optional
-            Toggles a search between the Mongo Pages and the Databases's ContributedValues field.
         field : Optional[str], optional
             The result field to query on
         ignore_ds_type : bool, optional
@@ -302,7 +296,7 @@ class ReactionDataset(Dataset):
         """
         self._check_state()
 
-        if not contrib and (self.client is None):
+        if self.client is None:
             raise AttributeError("DataBase: FractalClient was not set.")
 
         self._validate_stoich(stoich)
@@ -317,12 +311,6 @@ class ReactionDataset(Dataset):
             return name
 
         # # If reaction results
-        if contrib:
-            tmp_idx = self.get_contributed_values_column(method)
-
-            self.df[tmp_idx.columns[0]] = tmp_idx
-            return tmp_idx.columns[0]
-
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
             tmp_idx_complex = self._unroll_query(dbkeys, stoich, field=field)

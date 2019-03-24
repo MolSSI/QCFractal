@@ -76,9 +76,9 @@ class Dataset(Collection):
         self.df = pd.DataFrame(index=self.get_index())
 
         # Inherited classes need to call this themselves
-        if self.__class__.__name__ == "Dataset":
-            for cv in self.data.contributed_values.keys():
-                self.query(cv, contrib=True)
+        for cv in self.data.contributed_values.values():
+            tmp_idx = self.get_contributed_values_column(cv.name)
+            self.df[tmp_idx.columns[0]] = tmp_idx
 
     class DataModel(Collection.DataModel):
 
@@ -270,7 +270,7 @@ class Dataset(Collection):
         elif metric == "URE":
             ylabel = "URE [%]"
         else:
-            raise KeyError('Metric {} not understood, available metrics {"UE", "URE"}'.format(metric))
+            raise KeyError('Metric {} not understood, available metrics: "UE", "URE"'.format(metric))
 
         if kind == "bar":
             ylabel = "M" + ylabel
@@ -691,7 +691,6 @@ class Dataset(Collection):
               *,
               keywords: Optional[str]=None,
               program: Optional[str]=None,
-              contrib: bool=False,
               field: str=None,
               as_array: bool=False,
               force: bool=False) -> str:
@@ -708,8 +707,6 @@ class Dataset(Collection):
             The option token desired
         program : Optional[str], optional
             The program to query on
-        contrib : bool, optional
-            Toggles a search between the Mongo Pages and the Databases's ContributedValues field.
         field : str, optional
             The result field to query on
         as_array : bool, optional
@@ -739,18 +736,14 @@ class Dataset(Collection):
         if (name in self.df) and (force is False):
             return name
 
-        if not contrib and (self.client is None):
+        if self.client is None:
             raise AttributeError("DataBase: FractalClient was not set.")
 
         # # If reaction results
-        if contrib:
-            tmp_idx = self.get_contributed_values_column(method)
+        indexer = {e.name: e.molecule_id for e in self.data.records}
 
-        else:
-            indexer = {e.name: e.molecule_id for e in self.data.records}
-
-            tmp_idx = self._query(indexer, dbkeys, field=field)
-            tmp_idx.rename(columns={"result": name}, inplace=True)
+        tmp_idx = self._query(indexer, dbkeys, field=field)
+        tmp_idx.rename(columns={"result": name}, inplace=True)
 
         if as_array:
             tmp_idx[tmp_idx.columns[0]] = tmp_idx[tmp_idx.columns[0]].apply(lambda x: np.array(x))
