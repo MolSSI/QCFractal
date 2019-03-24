@@ -45,7 +45,7 @@ def check_plotly():
         _ipycheck = True
 
 
-def bar_plot(traces: 'List[Series]', title=None, ylabel=None, dtype="bar", return_figure=True) -> 'plotly.Figure':
+def bar_plot(traces: 'List[Series]', title=None, ylabel=None, return_figure=True) -> 'plotly.Figure':
     """Renders a plotly bar plot
 
     Parameters
@@ -56,6 +56,10 @@ def bar_plot(traces: 'List[Series]', title=None, ylabel=None, dtype="bar", retur
         The title of the graph
     ylabel : None, optional
         The y axis label
+    dtype : str, optional
+        Description
+    return_figure : bool, optional
+        Returns the raw plotly figure or not
 
     Returns
     -------
@@ -77,14 +81,21 @@ def bar_plot(traces: 'List[Series]', title=None, ylabel=None, dtype="bar", retur
     layout = go.Layout(layout)
     figure = go.Figure(data=data, layout=layout)
 
+    if return_figure is None:
+        return_figure = not _ipycheck
+
     if return_figure:
         return figure
     else:
         return plotly.offline.iplot(figure, filename='qcportal-bar')
 
 
-def violin_plot(traces: 'DataFrame', negative: 'DataFrame'=None, title=None, points=False,
-                ylabel=None) -> 'plotly.Figure':
+def violin_plot(traces: 'DataFrame',
+                negative: 'DataFrame'=None,
+                title=None,
+                points=False,
+                ylabel=None,
+                return_figure=True) -> 'plotly.Figure':
     """Renders a plotly violin plot
 
     Parameters
@@ -99,6 +110,7 @@ def violin_plot(traces: 'DataFrame', negative: 'DataFrame'=None, title=None, poi
         Show points or not, this option is not available for comparison violin plots.
     ylabel : None, optional
         The y axis label
+        Returns the raw plotly figure or not
 
     Returns
     -------
@@ -107,6 +119,7 @@ def violin_plot(traces: 'DataFrame', negative: 'DataFrame'=None, title=None, poi
     """
     check_plotly()
     import plotly.graph_objs as go
+    import plotly
 
     data = []
     if negative is not None:
@@ -128,4 +141,10 @@ def violin_plot(traces: 'DataFrame', negative: 'DataFrame'=None, title=None, poi
     layout = go.Layout({"title": title, "yaxis": {"title": ylabel}})
     figure = go.Figure(data=data, layout=layout)
 
-    return figure
+    if return_figure is None:
+        return_figure = not _ipycheck
+
+    if return_figure:
+        return figure
+    else:
+        return plotly.offline.iplot(figure, filename='qcportal-violin')
