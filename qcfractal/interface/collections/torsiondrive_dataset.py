@@ -4,13 +4,16 @@ QCPortal Database ODM
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
+import numpy as np
 
 from pydantic import BaseModel
+from qcelemental import constants
 
 from .collection_utils import register_collection
 from .collection import Collection
 from ..models import ObjectId, Molecule, OptimizationSpecification, QCSpecification, TorsionDriveInput
 from ..models.torsiondrive import TDKeywords
+from ..visualization import scatter_plot
 
 
 class TDRecord(BaseModel):
@@ -108,7 +111,7 @@ class TorsionDriveDataset(Collection):
         List[str]
             A list of known specification names.
         """
-        return list(self.data.td_specs)
+        return [x.name for x in self.data.td_specs]
 
     def add_entry(self,
                   name: str,
@@ -143,6 +146,21 @@ class TorsionDriveDataset(Collection):
 
         self.data.records[lname] = record
         self.save()
+
+    def get_entry(self, name: str) -> TDRecord:
+        """Obtains a record from the Dataset
+
+        Parameters
+        ----------
+        name : str
+            The record name to pull from.
+
+        Returns
+        -------
+        TDRecord
+            The requested record
+        """
+        return self.data.records[name.lower()]
 
     def compute(self, specification: str, subset: Set[str]=None, tag: Optional[str]=None,
                 priority: Optional[str]=None) -> int:
@@ -190,23 +208,28 @@ class TorsionDriveDataset(Collection):
         self.save()
         return submitted
 
-    def query(self, specification: str) -> None:
+    def query(self, specification: str, force: bool=False) -> None:
         """Queries a given specification from the server
 
         Parameters
         ----------
         specification : str
             The specification name to query
+        force : bool, optional
+            Force a fresh query if the specification already exists.
         """
         # Try to get the specification, will throw if not found.
-        self.get_specification(specification)
+        spec = self.get_specification(specification)
 
-        specification = specification.lower()
+        if not force and (spec.name in self.df):
+            return spec.name
+
+        spec_name = specification.lower()
         query_ids = []
         mapper = {}
         for rec in self.data.records.values():
             try:
-                td_id = rec.torsiondrives[specification]
+                td_id = rec.torsiondrives[spec_name]
                 query_ids.append(td_id)
                 mapper[td_id] = rec.name
             except KeyError:
@@ -218,10 +241,246 @@ class TorsionDriveDataset(Collection):
         for td in torsiondrives:
             data.append([mapper[td.id], td])
 
-        df = pd.DataFrame(data, columns=["index", specification])
+        df = pd.DataFrame(data, columns=["index", spec.name])
         df.set_index("index", inplace=True)
 
-        self.df[specification] = df[specification]
+        self.df[spec.name] = df[spec.name]
+
+    def status(self, collapse: bool=True, status: Optional[str]=None) -> 'DataFrame':
+        """Returns the current status of all current specifications.
+
+        Parameters
+        ----------
+        collapse : bool, optional
+            Collapse the status into summaries per specification or not.
+        status : Optional[str], optional
+            If not None, only returns results that match the provided status.
+
+        Returns
+        -------
+        DataFrame
+            A DataFrame of all known statuses
+
+        """
+
+        # apply status by column then by row
+        df = self.df.apply(lambda col: col.apply(lambda entry: entry.status.value))
+        if status:
+            df = df[(df == status.upper()).all(axis=1)]
+
+        if collapse:
+            return df.apply(lambda x: x.value_counts())
+        else:
+            return df
+
+    def counts(self,
+               entries: Union[str, List[str]],
+               specs: Optional[Union[str, List[str]]]=None,
+               count_gradients=False) -> 'DataFrame':
+        """Counts the number of optimization or gradient evaluations associated with the
+        TorsionDrives.
+
+        Parameters
+        ----------
+        entries : Union[str, List[str]]
+            The entries to query for
+        specs : Optional[Union[str, List[str]]], optional
+            The specifications to query for
+        count_gradients : bool, optional
+            If True, counts the total number of gradient calls. Warning! This can be slow for large datasets.
+
+        Returns
+        -------
+        DataFrame
+            The queried counts.
+        """
+
+        # Specifications
+        if isinstance(specs, str):
+            specs = [specs]
+
+        if isinstance(entries, str):
+            entries = [entries]
+
+        # Query all of the specs and make sure they are valid
+        if specs is None:
+            specs = list(self.df.columns)
+        else:
+            for spec in specs:
+                self.query(spec)
+
+        # Count functions
+        def count_gradient_evals(td):
+            if td.status != "COMPLETE":
+                return None
+
+            total_grads = 0
+            for key, optimizations in td.get_history().items():
+                for opt in optimizations:
+                    total_grads += len(opt.trajectory)
+            return total_grads
+
+        def count_optimizations(td):
+            if td.status != "COMPLETE":
+                return None
+            return sum(len(v) for v in td.optimization_history.values())
+
+        # Loop over the data and apply the count function
+        ret = []
+        for col in specs:
+            data = self.df[col]
+            if entries:
+                data = data[entries]
+
+            if count_gradients:
+                cnts = data.apply(lambda td: count_gradient_evals(td))
+            else:
+                cnts = data.apply(lambda td: count_optimizations(td))
+            ret.append(cnts)
+
+        ret = pd.DataFrame(ret).transpose()
+        ret.dropna(inplace=True, how="all")
+        ret = pd.DataFrame([ret[x].astype(int) for x in ret.columns]).transpose()
+        return ret
+
+    def visualize(self,
+                  entries: Union[str, List[str]],
+                  specs: Union[str, List[str]],
+                  relative: bool=True,
+                  units: str="kcal / mol",
+                  digits: int=3,
+                  use_measured_angle: bool=False,
+                  return_figure: Optional[bool]=None) -> 'plotly.Figure':
+        """
+        Parameters
+        ----------
+        entries : Union[str, List[str]]
+            A single or list of indices to plot.
+        specs : Union[str, List[str]]
+            A single or list of specifications to plot.
+        relative : bool, optional
+            Shows relative energy, lowest energy per scan is zero.
+        units : str, optional
+            The units of the plot.
+        digits : int, optional
+            Rounds the energies to n decimal places for display.
+        use_measured_angle : bool, optional
+            If True, the measured final angle instead of the constrained optimization angle.
+            Can provide more accurate results if the optimization was ill-behaved,
+            but pulls additional data from the server and may take longer.
+        return_figure : Optional[bool], optional
+            If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+
+        Returns
+        -------
+        plotly.Figure
+            Description
+
+        Raises
+        ------
+        TypeError
+            Description
+        """
+
+        show_spec = True
+        if isinstance(specs, str):
+            specs = [specs]
+            show_spec = False
+
+        if isinstance(entries, str):
+            entries = [entries]
+
+        # Query all of the specs and make sure they are valid
+        for spec in specs:
+            self.query(spec)
+
+        traces = []
+
+        xmin = 1e12
+        xmax = -1e12
+        # Loop over specifications
+        for spec in specs:
+            # Loop over indices (groups colors by entry)
+            for index in entries:
+
+                record = self.get_entry(index)
+
+                td = self.df.loc[index, spec]
+                min_energy = 1e12
+
+                # Pull the dict apart
+                x = []
+                y = []
+                for k, v in td.final_energies().items():
+                    if len(k) >= 2:
+                        raise TypeError("Dataset.visualize is currently only available for 1-D scans.")
+
+                    if use_measured_angle:
+                        # Recalculate the dihedral angle
+                        dihedral_indices = record.td_keywords.dihedrals[0]
+                        mol = td.final_molecules(k)
+                        x.append(mol.measure(dihedral_indices))
+
+                    else:
+                        x.append(k[0])
+
+                    y.append(v)
+
+                    # Update minmum energy
+                    if v < min_energy:
+                        min_energy = v
+
+                trace = {"mode": "lines+markers"}
+                if show_spec:
+                    trace["name"] = f"{index}-{spec}"
+                else:
+                    trace["name"] = f"{index}"
+
+                x = np.array(x)
+                y = np.array(y)
+
+                # Sort by angle
+                sorter = np.argsort(x)
+                x = x[sorter]
+                y = y[sorter]
+                if relative:
+                    y -= min_energy
+
+                # Find the x dimension
+                if x.max() > xmax:
+                    xmax = x.max()
+                if x.min() < xmin:
+                    xmin = x.min()
+
+                cf = constants.conversion_factor("hartree", units)
+                trace["x"] = x
+                trace["y"] = np.around(y * cf, digits)
+
+                traces.append(trace)
+
+        title = "TorsionDriveDataset 1-D Plot"
+        if show_spec is False:
+            title += f" [spec={specs[0]}]"
+
+        if relative:
+            ylabel = f"Relative Energy [{units}]"
+        else:
+            ylabel = f"Absolute Energy [{units}]"
+
+        custom_layout = {
+            "title": title,
+            "yaxis": {
+                "title": ylabel,
+                "zeroline": True
+            },
+            "xaxis": {
+                "title": "Dihedral Angle [degrees]",
+                "zeroline": False,
+                "range": [xmin, xmax]
+            }
+        }
+
+        return scatter_plot(traces, custom_layout=custom_layout, return_figure=return_figure)
 
 
 register_collection(TorsionDriveDataset)

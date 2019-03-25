@@ -716,7 +716,7 @@ class Dataset(Collection):
 
         Returns
         -------
-        success : bool
+        success : str
             The name of the queried column
 
         Examples

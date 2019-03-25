@@ -231,16 +231,18 @@ class QueueManagerHandler(APIHandler):
 
         name = self._get_name_from_metadata(body.meta)
         self.logger.info("QueueManager: Recieved completed task packet from {}.".format(name))
-        ret = self.insert_complete_tasks(self.storage, body.data, self.logger)
+        success, error = self.insert_complete_tasks(self.storage, body.data, self.logger)
+
+        completed = success + error
 
         response = response_model(**{
             "meta": {
-                "n_inserted": ret[0],
+                "n_inserted": completed,
                 "duplicates": [],
                 "validation_errors": [],
                 "success": True,
                 "errors": [],
-                "error_description": "" if not ret[1] else "{} errors".format(ret[1])
+                "error_description": ""
             },
             "data": True
         })
@@ -249,7 +251,7 @@ class QueueManagerHandler(APIHandler):
 
         # Update manager logs
         name = self._get_name_from_metadata(body.meta)
-        self.storage.manager_update(name, completed=len(body.data), **body.meta.dict())
+        self.storage.manager_update(name, completed=completed, failures=error)
 
     def put(self):
         """

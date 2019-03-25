@@ -2,6 +2,8 @@
 Visualization using the plotly library.
 """
 
+from typing import Any, Dict, List
+
 
 def _isnotebook():
     """
@@ -36,13 +38,25 @@ def check_plotly():
     Checks if plotly is found and auto inits the offline notebook
     """
     if _plotly_found is False:
-        raise ModuleNotFoundError("Plotly is required for this function. Please 'conda install plotly' or 'pip isntall plotly'.")
+        raise ModuleNotFoundError(
+            "Plotly is required for this function. Please 'conda install plotly' or 'pip isntall plotly'.")
 
     global _ipycheck
     if _ipycheck:
         import plotly
         plotly.offline.init_notebook_mode(connected=True)
-        _ipycheck = True
+
+
+def _configure_return(figure, filename, return_figure):
+    import plotly
+
+    if return_figure is None:
+        return_figure = not _ipycheck
+
+    if return_figure:
+        return figure
+    else:
+        return plotly.offline.iplot(figure, filename=filename)
 
 
 def bar_plot(traces: 'List[Series]', title=None, ylabel=None, return_figure=True) -> 'plotly.Figure':
@@ -69,7 +83,6 @@ def bar_plot(traces: 'List[Series]', title=None, ylabel=None, return_figure=True
 
     check_plotly()
     import plotly.graph_objs as go
-    import plotly
 
     data = [go.Bar(x=trace.index, y=trace, name=trace.name) for trace in traces]
 
@@ -81,13 +94,7 @@ def bar_plot(traces: 'List[Series]', title=None, ylabel=None, return_figure=True
     layout = go.Layout(layout)
     figure = go.Figure(data=data, layout=layout)
 
-    if return_figure is None:
-        return_figure = not _ipycheck
-
-    if return_figure:
-        return figure
-    else:
-        return plotly.offline.iplot(figure, filename='qcportal-bar')
+    return _configure_return(figure, "qcportal-bar", return_figure)
 
 
 def violin_plot(traces: 'DataFrame',
@@ -110,6 +117,7 @@ def violin_plot(traces: 'DataFrame',
         Show points or not, this option is not available for comparison violin plots.
     ylabel : None, optional
         The y axis label
+    return_figure : bool, optional
         Returns the raw plotly figure or not
 
     Returns
@@ -119,7 +127,6 @@ def violin_plot(traces: 'DataFrame',
     """
     check_plotly()
     import plotly.graph_objs as go
-    import plotly
 
     data = []
     if negative is not None:
@@ -141,10 +148,58 @@ def violin_plot(traces: 'DataFrame',
     layout = go.Layout({"title": title, "yaxis": {"title": ylabel}})
     figure = go.Figure(data=data, layout=layout)
 
-    if return_figure is None:
-        return_figure = not _ipycheck
+    return _configure_return(figure, "qcportal-violin", return_figure)
 
-    if return_figure:
-        return figure
+
+def scatter_plot(traces: List[Dict[str, Any]],
+                 mode='lines+markers',
+                 title=None,
+                 ylabel=None,
+                 xlabel=None,
+                 xline=True,
+                 yline=True,
+                 custom_layout=None,
+                 return_figure=True) -> 'plotly.Figure':
+    """Renders a plotly violin plot
+
+    Parameters
+    ----------
+    traces : List[Dict[str, Any]]
+        A List of traces to plot, require x and y values
+    mode : str, optional
+        The mode of lines, will not override mode in the traces dictionary
+    title : None, optional
+        The title of the graph
+    ylabel : None, optional
+        The y axis label
+    xlabel : None, optional
+        The x axis label
+    xline : bool, optional
+        Show the x-zeroline
+    yline : bool, optional
+        Show the y-zeroline
+    custom_layout : None, optional
+        Overrides all other layout options
+    return_figure : bool, optional
+        Returns the raw plotly figure or not
+
+    Returns
+    -------
+    plotly.Figure
+        The requested scatter plot.
+
+    """
+    check_plotly()
+    import plotly.graph_objs as go
+
+    data = []
+    for trace in traces:
+        data.append(go.Scatter(**trace))
+
+    if custom_layout is None:
+        layout = go.Layout({"title": title, "yaxis": {"title": ylabel, "zeroline": yline}, "xaxis": {"title": xlabel, "zeroline": xline}})
     else:
-        return plotly.offline.iplot(figure, filename='qcportal-violin')
+        layout = go.Layout(**custom_layout)
+    figure = go.Figure(data=data, layout=layout)
+
+    return _configure_return(figure, "qcportal-violin", return_figure)
