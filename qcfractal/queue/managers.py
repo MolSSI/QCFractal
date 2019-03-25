@@ -2,7 +2,6 @@
 Queue backend abstraction manager.
 """
 
-import asyncio
 import json
 import logging
 import sched
@@ -330,7 +329,7 @@ class QueueManager:
             # Upload new results
             payload["data"] = results
             try:
-                _ = self.client._automodel_request("queue_manager", "post", payload)
+                self.client._automodel_request("queue_manager", "post", payload)
             except IOError:
                 # TODO something as we didnt successfully add the data
                 self.logger.warning("Post complete tasks was not successful. Data may be lost.")

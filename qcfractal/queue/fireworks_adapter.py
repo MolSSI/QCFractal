@@ -3,9 +3,20 @@ Queue adapter for Fireworks
 """
 
 import logging
-from typing import Any, Dict, Hashable, List, Optional, Tuple
+from typing import Any, Dict, Hashable, Optional, Tuple
 
 from .base_adapter import BaseAdapter
+
+from qcelemental.models import Result, Optimization, FailedOperation
+from qcelemental.models.common_models import qcschema_optimization_output_default, qcschema_output_default
+
+__all__ = ["FireworksAdapter"]
+
+# This, the __all__, and the imports from qcelemental.models are all to make it so Fireworks returns either the
+# Result, the Optimization, or the FailedOperation objects like all other adapters instead of a dict.
+# In the future, this may be cleaned up but for now, it works
+schema_mapper = {qcschema_output_default: Result,
+                 qcschema_optimization_output_default: Optimization}
 
 
 class FireworksAdapter(BaseAdapter):
@@ -36,7 +47,7 @@ class FireworksAdapter(BaseAdapter):
         """Overload existing method"""
         return False
 
-    def acquire_complete(self) -> List[Dict[str, Any]]:
+    def acquire_complete(self) -> Dict[str, Any]:
         ret = {}
 
         # Pull out completed results that match our queue ids
@@ -59,13 +70,19 @@ class FireworksAdapter(BaseAdapter):
         for tmp_data in cursor:
             key = self.queue.pop(tmp_data["fw_id"])
             if tmp_data["state"] == "COMPLETED":
-                ret[key] = tmp_data["action"]["stored_data"]["fw_results"]
+                key_data = tmp_data["action"]["stored_data"]["fw_results"]
+                if key_data['success']:
+                    # Cast dict to the Result or Optimization based on the schema
+                    ret[key] = schema_mapper[key_data['schema_name']](**key_data)
+                else:
+                    ret[key] = FailedOperation(**key_data)
             else:
                 blob = tmp_data["action"]["stored_data"]["_task"]["args"][0]
                 msg = tmp_data["action"]["stored_data"]["_exception"]["_stacktrace"]
                 blob["error_message"] = msg
                 blob["success"] = False
-                ret[key] = blob
+                key_data = blob
+                ret[key] = FailedOperation(**key_data)
 
         return ret
 
@@ -73,6 +90,7 @@ class FireworksAdapter(BaseAdapter):
         # Launch all results consecutively
         import fireworks.core.rocket_launcher
         fireworks.core.rocket_launcher.rapidfire(self.client, strm_lvl="CRITICAL")
+        return True
 
     def close(self) -> bool:
         self.client.reset(None, require_password=False, max_reset_wo_password=int(1e8))

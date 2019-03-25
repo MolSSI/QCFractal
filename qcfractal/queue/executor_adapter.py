@@ -3,7 +3,7 @@ Queue adapter for Dask
 """
 
 import traceback
-from typing import Any, Dict, Hashable, List, Tuple
+from typing import Any, Dict, Hashable, Tuple
 
 from .base_adapter import BaseAdapter
 
@@ -31,7 +31,7 @@ class ExecutorAdapter(BaseAdapter):
         task = self.client.submit(func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
         return task_spec["id"], task
 
-    def acquire_complete(self) -> List[Dict[str, Any]]:
+    def acquire_complete(self) -> Dict[str, Any]:
         ret = {}
         del_keys = []
         for key, future in self.queue.items():

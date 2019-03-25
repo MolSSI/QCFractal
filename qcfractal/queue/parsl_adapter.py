@@ -5,7 +5,7 @@ Queue adapter for Parsl
 import logging
 import time
 import traceback
-from typing import Any, Callable, Dict, Hashable, List, Optional, Tuple
+from typing import Any, Callable, Dict, Hashable, Optional, Tuple
 
 from .base_adapter import BaseAdapter
 
@@ -73,7 +73,7 @@ class ParslAdapter(BaseAdapter):
         task = func(*task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
         return task_spec["id"], task
 
-    def acquire_complete(self) -> List[Dict[str, Any]]:
+    def acquire_complete(self) -> Dict[str, Any]:
         ret = {}
         del_keys = []
         for key, future in self.queue.items():
