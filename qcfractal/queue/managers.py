@@ -335,7 +335,7 @@ class QueueManager:
                 self.logger.warning("Post complete tasks was not successful. Data may be lost.")
 
             self.active -= n_result
-            n_success = [r.success for r in results.values()].count(True)
+            n_success = sum([r.success for r in results.values()])
             n_fail = n_result - n_success
 
         self.logger.info("Pushed {} complete tasks to the server "
