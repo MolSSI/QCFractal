@@ -81,12 +81,12 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
     assert result.status == "COMPLETE"
     assert isinstance(str(result), str)  # Check that repr runs
 
-    assert pytest.approx(0.002597541340221565, 1e-5) == result.final_energies(0)
-    assert pytest.approx(0.000156553761859276, 1e-5) == result.final_energies(90)
-    assert pytest.approx(0.000156553761859271, 1e-5) == result.final_energies(-90)
-    assert pytest.approx(0.000753492556057886, 1e-5) == result.final_energies(180)
+    assert pytest.approx(0.002597541340221565, 1e-5) == result.get_final_energies(0)
+    assert pytest.approx(0.000156553761859276, 1e-5) == result.get_final_energies(90)
+    assert pytest.approx(0.000156553761859271, 1e-5) == result.get_final_energies(-90)
+    assert pytest.approx(0.000753492556057886, 1e-5) == result.get_final_energies(180)
 
-    assert hasattr(result.final_molecules()[(-90, )], "symbols")
+    assert hasattr(result.get_final_molecules()[(-90, )], "symbols")
 
 
 def test_service_torsiondrive_multi_single(torsiondrive_fixture):
@@ -204,8 +204,8 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
 
     assert result.status == "COMPLETE"
     assert result.starting_grid == (1, 0)
-    assert pytest.approx(result.final_energies((0, 0)), abs=1.e-4) == 0.0010044105443485617
-    assert pytest.approx(result.final_energies((1, 1)), abs=1.e-4) == 0.0026440964897817623
+    assert pytest.approx(result.get_final_energies((0, 0)), abs=1.e-4) == 0.0010044105443485617
+    assert pytest.approx(result.get_final_energies((1, 1)), abs=1.e-4) == 0.0026440964897817623
 
     assert result.starting_molecule != result.initial_molecule
 
@@ -271,7 +271,7 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
 
     assert result.status == "COMPLETE"
     assert result.starting_grid == (1, )
-    assert pytest.approx(result.final_energies((0, )), abs=1.e-4) == 0.00032145876568280524
+    assert pytest.approx(result.get_final_energies((0, )), abs=1.e-4) == 0.00032145876568280524
 
     assert result.starting_molecule == result.initial_molecule
 

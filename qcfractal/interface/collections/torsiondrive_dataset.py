@@ -103,15 +103,26 @@ class TorsionDriveDataset(Collection):
         except KeyError:
             raise KeyError(f"TorsionDriveSpecification '{name}' not found.")
 
-    def list_specifications(self) -> List[str]:
+    def list_specifications(self, description=True) -> Union[List[str], 'DataFrame']:
         """Lists all available specifications known
+
+        Parameters
+        ----------
+        description : bool, optional
+            If True returns a DataFrame with
+            Description
 
         Returns
         -------
-        List[str]
+        Union[List[str], 'DataFrame']
             A list of known specification names.
+
         """
-        return [x.name for x in self.data.td_specs]
+        if description:
+            data = [(x.name, x.description) for x in self.data.td_specs.values()]
+            return pd.DataFrame(data, columns=["Name", "Description"]).set_index("Name")
+        else:
+            return [x.name for x in self.data.td_specs.values()]
 
     def add_entry(self,
                   name: str,
@@ -224,12 +235,11 @@ class TorsionDriveDataset(Collection):
         if not force and (spec.name in self.df):
             return spec.name
 
-        spec_name = specification.lower()
         query_ids = []
         mapper = {}
         for rec in self.data.records.values():
             try:
-                td_id = rec.torsiondrives[spec_name]
+                td_id = rec.torsiondrives[spec.name]
                 query_ids.append(td_id)
                 mapper[td_id] = rec.name
             except KeyError:
@@ -246,7 +256,9 @@ class TorsionDriveDataset(Collection):
 
         self.df[spec.name] = df[spec.name]
 
-    def status(self, collapse: bool=True, status: Optional[str]=None) -> 'DataFrame':
+        return spec.name
+
+    def status(self, specs: Union[str, List[str]]=None, collapse: bool=True, status: Optional[str]=None) -> 'DataFrame':
         """Returns the current status of all current specifications.
 
         Parameters
@@ -263,8 +275,20 @@ class TorsionDriveDataset(Collection):
 
         """
 
+        # Specifications
+        if isinstance(specs, str):
+            specs = [specs]
+
+        # Query all of the specs and make sure they are valid
+        if specs is None:
+            list_specs = list(self.df.columns)
+        else:
+            list_specs = []
+            for spec in specs:
+                list_specs.append(self.query(spec))
+
         # apply status by column then by row
-        df = self.df.apply(lambda col: col.apply(lambda entry: entry.status.value))
+        df = self.df[list_specs].apply(lambda col: col.apply(lambda entry: entry.status.value))
         if status:
             df = df[(df == status.upper()).all(axis=1)]
 
@@ -340,7 +364,7 @@ class TorsionDriveDataset(Collection):
 
         ret = pd.DataFrame(ret).transpose()
         ret.dropna(inplace=True, how="all")
-        ret = pd.DataFrame([ret[x].astype(int) for x in ret.columns]).transpose()
+        # ret = pd.DataFrame([ret[x].astype(int) for x in ret.columns]).transpose()
         return ret
 
     def visualize(self,
@@ -411,14 +435,14 @@ class TorsionDriveDataset(Collection):
                 # Pull the dict apart
                 x = []
                 y = []
-                for k, v in td.final_energies().items():
+                for k, v in td.get_final_energies().items():
                     if len(k) >= 2:
                         raise TypeError("Dataset.visualize is currently only available for 1-D scans.")
 
                     if use_measured_angle:
                         # Recalculate the dihedral angle
                         dihedral_indices = record.td_keywords.dihedrals[0]
-                        mol = td.final_molecules(k)
+                        mol = td.get_final_molecules(k)
                         x.append(mol.measure(dihedral_indices))
 
                     else:
@@ -476,7 +500,7 @@ class TorsionDriveDataset(Collection):
             "xaxis": {
                 "title": "Dihedral Angle [degrees]",
                 "zeroline": False,
-                "range": [xmin, xmax]
+                "range": [xmin - 10, xmax + 10]
             }
         }
 

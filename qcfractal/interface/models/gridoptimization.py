@@ -1,9 +1,9 @@
 """
 A model for GridOptimization
 """
-
+import copy
 import json
-from typing import Dict, List, Tuple, Union
+from typing import Any, Dict, List, Tuple, Union
 
 from pydantic import BaseModel, constr, validator
 
@@ -126,6 +126,15 @@ class GridOptimizationRecord(RecordBase):
 
 ## Utility
 
+    def _organize_return(self, data: Dict[str, Any], key: Union[int, str, None]) -> Dict[str, Any]:
+
+        if key is None:
+            return {self.deserialize_key(k): copy.deepcopy(v) for k, v in data.items()}
+        else:
+            key = self.serialize_key(key)
+
+        return copy.deepcopy(data[key])
+
     def serialize_key(self, key):
         if isinstance(key, (int, float)):
             key = (int(key), )
@@ -161,9 +170,27 @@ class GridOptimizationRecord(RecordBase):
 
 ## Query
 
-    def final_energies(self, key=None):
+    def get_final_energies(self, key: Union[int, str, None]=None) -> Dict[str, Any]:
+        """
+        Provides the final optimized energies at each grid point.
 
-        if key is None:
-            return {self.deserialize_key(k): v for k, v in self.final_energy_dict.items()}
-        else:
-            return self.final_energy_dict[self.serialize_key(key)]
+        Parameters
+        ----------
+        key : Union[int, str, None], optional
+            Specifies a single entry to pull from.
+
+
+        Returns
+        -------
+        energy : Dict[str, Any]
+            Returns energies at each grid point in a dictionary or at a
+            single point if a key is specified.
+
+        Examples
+        --------
+
+        >>> torsiondrive_obj.final_energies()
+        {(-90,): -148.7641654446243, (180,): -148.76501336993732, (0,): -148.75056290106735, (90,): -148.7641654446148}
+        """
+
+        return self._organize_return(self.final_energy_dict, key)

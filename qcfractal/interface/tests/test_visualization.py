@@ -87,7 +87,7 @@ def test_plot_torsiondrive_dataset(TDDSFixture):
 
     ds.visualize("c1ccc(cc1)N-[3, 5, 6, 12]", ["B3LYP-D3", "UFF"], units="kJ / mol", return_figure=True)
     ds.visualize(
-        ["c1ccc(cc1)N-[3, 5, 6, 12]", "CCCNc1ccc(cc1)Cl-[1, 4, 9, 8]"], "uff", relative=False, return_figure=True)
+        ["c1ccc(cc1)N-[3, 5, 6, 12]", "CCCNc1ccc(cc1)Cl-[1, 4, 9, 8]"], "UFF", relative=False, return_figure=True)
 
 
 @using_plotly

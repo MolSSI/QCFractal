@@ -428,7 +428,7 @@ def test_torsiondrive_dataset(fractal_compute_server):
     # We effectively computed the same thing twice with two duplicate specs
     for row in ["hooh1", "hooh2"]:
         for spec in ["spec1", "spec2"]:
-            assert pytest.approx(ds.df.loc["hooh1", "spec2"].final_energies(90), 1.e-5) == 0.00015655375994799847
+            assert pytest.approx(ds.df.loc["hooh1", "spec2"].get_final_energies(90), 1.e-5) == 0.00015655375994799847
 
     assert ds.status().loc["COMPLETE", "spec1"] == 2
     assert ds.status(collapse=False).loc["hooh1", "spec1"] == "COMPLETE"

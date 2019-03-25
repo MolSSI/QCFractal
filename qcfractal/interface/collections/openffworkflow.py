@@ -281,7 +281,7 @@ class OpenFFWorkflow(Collection):
                     # TODO figure out a better solution here
                     obj = self._torsiondrive_cache[v]
                     if isinstance(obj, TorsionDriveRecord):
-                        tmp[k] = obj.final_energies()
+                        tmp[k] = obj.get_final_energies()
                     elif isinstance(obj, OptimizationRecord):
                         tmp[k] = obj.get_final_energy()
                     else:
@@ -324,7 +324,7 @@ class OpenFFWorkflow(Collection):
                 if v in self._torsiondrive_cache:
                     obj = self._torsiondrive_cache[v]
                     if isinstance(obj, TorsionDriveRecord):
-                        tmp[k] = obj.final_molecules()
+                        tmp[k] = obj.get_final_molecules()
                     elif isinstance(obj, OptimizationRecord):
                         tmp[k] = obj.get_final_molecule()
                     else:
