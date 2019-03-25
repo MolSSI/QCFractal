@@ -5,6 +5,7 @@ A command line interface to the qcfractal server.
 import argparse
 import inspect
 import signal
+import logging
 from enum import Enum
 from typing import List, Optional
 
@@ -39,6 +40,7 @@ class CommonManagerSettings(BaseSettings):
     ncores: int = qcng.config.get_global("ncores")
     memory: confloat(gt=0) = qcng.config.get_global("memory")
     scratch_directory: str = None
+    verbose: bool = False
 
     class Config(SettingsCommonConfig):
         pass
@@ -73,6 +75,11 @@ class SchedulerEnum(str, Enum):
     lsf = "lsf"
 
 
+class AdaptiveCluster(str, Enum):
+    static = "static"
+    adaptive = "adaptive"
+
+
 class ClusterSettings(BaseSettings):
     max_nodes: conint(gt=0) = 1
     node_exclusivity: bool = True
@@ -80,12 +87,13 @@ class ClusterSettings(BaseSettings):
     scheduler_options: List[str] = []
     task_startup_commands: List[str] = []
     walltime: str = "06:00:00"
+    adaptive: AdaptiveCluster = AdaptiveCluster.adaptive
 
     class Config(SettingsCommonConfig):
         pass
 
-    @validator('scheduler', pre=True)
-    def scheduler_lcase(cls, v):
+    @validator('scheduler', 'adaptive', pre=True)
+    def things_to_lcase(cls, v):
         return v.lower()
 
 
@@ -141,6 +149,7 @@ def parse_args():
     common.add_argument("--ncores", type=int, help="The number of process for the executor")
     common.add_argument("--memory", type=int, help="The total amount of memory on the system in GB")
     common.add_argument("--scratch-directory", type=str, help="Scratch directory location")
+    common.add_argument("-v", "--verbose", action="store_true", help="Increase verbosity of the logger.")
 
     # FractalClient options
     server = parser.add_argument_group('FractalServer connection settings')
@@ -182,7 +191,7 @@ def parse_args():
 
     # Stupid we cannot inspect groups
     data = {
-        "common": _build_subset(args, {"adapter", "ntasks", "ncores", "memory", "scratch_directory"}),
+        "common": _build_subset(args, {"adapter", "ntasks", "ncores", "memory", "scratch_directory", "verbose"}),
         "server": _build_subset(args, {"fractal_uri", "password", "username", "verify"}),
         "manager": _build_subset(args, {"max_tasks", "manager_name", "queue_tag", "log_file_prefix", "update_frequency",
                                         "test", "ntests"}),
@@ -212,6 +221,12 @@ def main(args=None):
 
     # Construct object
     settings = ManagerSettings(**args)
+
+    logger_map = {AdapterEnum.pool: "",
+                  AdapterEnum.dask: "dask_jobqueue.core"}
+    if settings.common.verbose:
+        logger = logging.getLogger(logger_map[settings.common.adapter])
+        logger.setLevel("DEBUG")
 
     if settings.manager.log_file_prefix is not None:
         tornado.options.options['log_file_prefix'] = settings.common.log_file_prefix
@@ -289,7 +304,11 @@ def main(args=None):
         # Setup up adaption
         # Workers are distributed down to the cores through the sub-divided processes
         # Optimization may be needed
-        cluster.adapt(minimum=0, maximum=settings.common.ntasks * settings.cluster.max_nodes, interval="10s")
+        workers = settings.common.ntasks * settings.cluster.max_nodes
+        if settings.cluster.adaptive == AdaptiveCluster.adaptive:
+            cluster.adapt(minimum=0, maximum=workers, interval="10s")
+        else:
+            cluster.scale(workers)
 
         queue_client = Client(cluster)
 
@@ -313,7 +332,8 @@ def main(args=None):
         update_frequency=settings.manager.update_frequency,
         cores_per_task=cores_per_task,
         memory_per_task=memory_per_task,
-        scratch_directory=settings.common.scratch_directory
+        scratch_directory=settings.common.scratch_directory,
+        verbose=settings.common.verbose
     )
 
     # Add exit callbacks

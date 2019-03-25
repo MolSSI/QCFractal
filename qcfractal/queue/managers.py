@@ -2,7 +2,6 @@
 Queue backend abstraction manager.
 """
 
-import asyncio
 import json
 import logging
 import sched
@@ -321,20 +320,26 @@ class QueueManager:
         self.assert_connected()
 
         results = self.queue_adapter.acquire_complete()
-        if len(results):
+        n_success = 0
+        n_fail = 0
+        n_result = len(results)
+        if n_result:
             payload = self._payload_template()
 
             # Upload new results
             payload["data"] = results
             try:
-                response = self.client._automodel_request("queue_manager", "post", payload)
+                self.client._automodel_request("queue_manager", "post", payload)
             except IOError:
                 # TODO something as we didnt successfully add the data
                 self.logger.warning("Post complete tasks was not successful. Data may be lost.")
 
-            self.active -= len(results)
+            self.active -= n_result
+            n_success = sum([r.success for r in results.values()])
+            n_fail = n_result - n_success
 
-        self.logger.info("Pushed {} complete tasks to the server.".format(len(results)))
+        self.logger.info("Pushed {} complete tasks to the server "
+                         "({} success / {} fail).".format(n_result, n_success, n_fail))
 
         open_slots = max(0, self.max_tasks - self.active)
 
@@ -459,15 +464,25 @@ class QueueManager:
             self.logger.info("All tasks retrieved successfully.")
 
         failures = 0
+        fail_report = {}
         for k, result in results.items():
             if result.success:
                 self.logger.info("  {} - PASSED".format(k))
             else:
                 self.logger.error("  {} - FAILED!".format(k))
+                failed_program = "Return Mangled!"  # This should almost never be seen, but is in place as a fallback
+                for program in programs.keys():
+                    if program in k:
+                        failed_program = program
+                        break
+                if failed_program not in fail_report:
+                    fail_report[failed_program] = f"On test {k}: {result.error}"
                 failures += 1
 
         if failures:
             self.logger.error("{}/{} tasks failed!".format(failures, len(results)))
+            self.logger.error(f"A sample error from each program to help:\n" +
+                              "\n".join([e for e in fail_report.values()]))
             return False
         else:
             self.logger.info("All tasks completed successfully!")

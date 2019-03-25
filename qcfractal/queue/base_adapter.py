@@ -138,7 +138,7 @@ class BaseAdapter(abc.ABC):
         return ret
 
     @abc.abstractmethod
-    def acquire_complete(self) -> List[Dict[str, Any]]:
+    def acquire_complete(self) -> Dict[str, Any]:
         """Pulls complete tasks out of the Parsl queue.
 
         Returns
