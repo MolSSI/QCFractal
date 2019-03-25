@@ -321,20 +321,26 @@ class QueueManager:
         self.assert_connected()
 
         results = self.queue_adapter.acquire_complete()
-        if len(results):
+        n_success = 0
+        n_fail = 0
+        n_result = len(results)
+        if n_result:
             payload = self._payload_template()
 
             # Upload new results
             payload["data"] = results
             try:
-                response = self.client._automodel_request("queue_manager", "post", payload)
+                _ = self.client._automodel_request("queue_manager", "post", payload)
             except IOError:
                 # TODO something as we didnt successfully add the data
                 self.logger.warning("Post complete tasks was not successful. Data may be lost.")
 
-            self.active -= len(results)
+            self.active -= n_result
+            n_success = [r.success for r in results.values()].count(True)
+            n_fail = n_result - n_success
 
-        self.logger.info("Pushed {} complete tasks to the server.".format(len(results)))
+        self.logger.info("Pushed {} complete tasks to the server "
+                         "({} success / {} fail).".format(n_result, n_success, n_fail))
 
         open_slots = max(0, self.max_tasks - self.active)
 
@@ -468,6 +474,7 @@ class QueueManager:
 
         if failures:
             self.logger.error("{}/{} tasks failed!".format(failures, len(results)))
+            self.logger.error(f"Last known error to help you debug it:\n{result.error.error_message}")
             return False
         else:
             self.logger.info("All tasks completed successfully!")
