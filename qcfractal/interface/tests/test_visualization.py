@@ -94,4 +94,4 @@ def test_plot_torsiondrive_dataset(TDDSFixture):
 def test_plot_torsiondrive_dataset_measured(TDDSFixture):
     client, ds = TDDSFixture
 
-    ds.visualize("c1ccc(cc1)N-[3, 5, 6, 12]", "b3lyp-d3", units="kJ / mol", use_measured_angle=True, return_figure=True)
+    ds.visualize("c1ccc(cc1)N-[3, 5, 6, 12]", "B3LYP-D3", units="kJ / mol", use_measured_angle=True, return_figure=True)

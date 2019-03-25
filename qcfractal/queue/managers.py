@@ -464,16 +464,25 @@ class QueueManager:
             self.logger.info("All tasks retrieved successfully.")
 
         failures = 0
+        fail_report = {}
         for k, result in results.items():
             if result.success:
                 self.logger.info("  {} - PASSED".format(k))
             else:
                 self.logger.error("  {} - FAILED!".format(k))
+                failed_program = "Return Mangled!"  # This should almost never be seen, but is in place as a fallback
+                for program in programs.keys():
+                    if program in k:
+                        failed_program = program
+                        break
+                if failed_program not in fail_report:
+                    fail_report[failed_program] = f"On test {k}: {result.error}"
                 failures += 1
 
         if failures:
             self.logger.error("{}/{} tasks failed!".format(failures, len(results)))
-            self.logger.error(f"Last known error to help you debug it:\n{result.error.error_message}")
+            self.logger.error(f"A sample error from each program to help:\n" +
+                              "\n".join([e for e in fail_report.values()]))
             return False
         else:
             self.logger.info("All tasks completed successfully!")
