@@ -112,7 +112,7 @@ python ~/anaconda3/envs/pgadmin/lib/python3.6/site-packages/pgadmin4/pgAdmin4.py
 
 Then add an alias to the bashrc `vi ~/.bashrc` the following
 
-`alias pgadmin4=~/pgamin4.sh`
+`alias pgadmin4=~/pgadmin4.sh`
 
 Reload bashrc `source ~./bashrc`
 

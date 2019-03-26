@@ -17,19 +17,19 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import IntegrityError
 from contextlib import contextmanager
 
-
-
+import bcrypt
 import logging
 import secrets
 from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Union
 from sqlalchemy.sql import select, column
 from sqlalchemy.sql.expression import func
-from .sql_models import (CollectionORM, KeywordsORM, LogsORM, MoleculeORM,
-                         OptimizationProcedureORM, QueueManagerORM, ResultORM,
+from .sql_models import (CollectionORM, KeywordsORM, LogsORM, MoleculeORM, BaseResultORM,
+                         OptimizationProcedureORM, QueueManagerORM, ResultORM, ErrorORM,
                          ServiceQueueORM, TaskQueueORM, UserORM, TorsionDriveProcedureORM)
 from .storage_utils import add_metadata_template, get_metadata_template
 from ..interface.models import KeywordSet, Molecule, ResultRecord, TaskRecord, prepare_basis
+from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum
 
 
 _null_keys = {"basis", "keywords"}
@@ -862,7 +862,7 @@ class SQLAlchemySocket:
                     molecule: str=None,
                     driver: str=None,
                     keywords: str=None,
-                    # task_id: Union[str, List]=None,
+                    task_id: Union[str, List]=None,
                     status: str='COMPLETE',
                     projection=None,
                     limit: int=None,
@@ -904,9 +904,12 @@ class SQLAlchemySocket:
             Data is the objects found
         """
 
+        if task_id:
+            return self._get_results_by_task_id(task_id)
+
         meta = get_metadata_template()
 
-        # # Ignore status if Id or task_id is present
+        # Ignore status if Id is present
         if id is not None:
             status = None
 
@@ -921,7 +924,6 @@ class SQLAlchemySocket:
             keywords=keywords,
             status=status)
 
-
         data = []
 
         # try:
@@ -929,6 +931,40 @@ class SQLAlchemySocket:
         meta["success"] = True
         # except Exception as err:
         #     meta['error_description'] = str(err)
+
+        return {"data": data, "meta": meta}
+
+    def _get_results_by_task_id(self,
+                    task_id: Union[str, List]=None,
+                    return_json=True):
+        """
+
+        Parameters
+        ----------
+        task_id : str or list
+
+        return_json : bool, default is True
+            Return the results as a list of json inseated of objects
+
+        Returns
+        -------
+        Dict with keys: data, meta
+            Data is the objects found
+        """
+
+        meta = get_metadata_template()
+
+        data = []
+        task_id_list = [task_id] if isinstance(task_id, (int, str)) else task_id
+        # try:
+        with self.session_scope() as session:
+            data = session.query(BaseResultORM).filter(BaseResultORM.id == TaskQueueORM.base_result)\
+                            .filter(TaskQueueORM.id.in_(task_id_list))
+            meta['n_found'] = get_count_fast(data)
+            data = [d.to_dict() for d in data.all()]
+            meta["success"] = True
+            # except Exception as err:
+            #     meta['error_description'] = str(err)
 
         return {"data": data, "meta": meta}
 
@@ -1274,14 +1310,13 @@ class SQLAlchemySocket:
 
                     task = TaskQueueORM(**record.json_dict(exclude={"id"}))
                     session.add(task)
+                    session.commit()
                     results.append(str(task.id))
                     meta['n_inserted'] += 1
                 except IntegrityError as err:  # rare case
-                    print(str(err))
-                    # If results is stored as DBRef, get it with:
-                    # task = TaskQueueORM.objects(__raw__={'base_result': base_result}).first()  # avoid
-
-                    # If base_result is stored as a ResultORM or ProcedureORM class, get it with:
+                    # print(str(err))
+                    session.rollback()
+                    # TODO: merge hooks
                     task = session.query(TaskQueueORM).filter_by(base_result=record.base_result).first()
                     self.logger.warning('queue_submit got a duplicate task: {}'.format(task.to_dict()))
                     results.append(str(task.id))
@@ -1304,7 +1339,7 @@ class SQLAlchemySocket:
         # Figure out query, tagless has no requirements
         query = format_query(
             TaskQueueORM,
-            status="WAITING",
+            status=TaskStatusEnum.waiting,
             program=available_programs,
             procedure=available_procedures,  # Procedure can be none, explicitly include
             tag=tag)
@@ -1316,20 +1351,22 @@ class SQLAlchemySocket:
                    .limit(limit).all()
 
             ids =  [x.id for x in found]
-
-            # update_many using pymongo in one DB access
-            upd = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(ids)).update(
-                    {
-                        "status": "RUNNING",
-                        "modified_on": dt.utcnow(),
-                        "manager": manager,
-                    })
+            update_fields = {
+                    'status': TaskStatusEnum.running,
+                    'modified_on': dt.utcnow(),
+                    'manager': manager
+            }
+            # Bulk update operation in SQL
+            update_count = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(ids)).update(
+                            update_fields, synchronize_session=False)
 
             if as_json:
-                found = [TaskRecord(**task.to_dict()) for task in found]
+                # avoid another trip to the DB to get the updated values, set them here
+                found = [TaskRecord(**task.to_dict(exclude=update_fields.keys()),
+                                    **update_fields) for task in found]
 
-            if upd.modified_count != len(found):
-                self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
+        if update_count != len(found):
+            self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
 
         return found
 
@@ -1403,10 +1440,11 @@ class SQLAlchemySocket:
         list of the found tasks
         """
 
-        found = TaskQueueORM.objects(id__in=id).limit(self.get_limit(limit)).skip(skip)
+        with self.session_scope() as session:
+            found = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(id)).limit(self.get_limit(limit)).offset(skip)
 
-        if as_json:
-            found = [TaskRecord(**task.to_json_obj()) for task in found]
+            if as_json:
+                found = [TaskRecord(**task.to_dict()) for task in found]
 
         return found
 
@@ -1426,73 +1464,54 @@ class SQLAlchemySocket:
             Updated count
         """
 
-        # If using replica sets, we can use as a transcation:
-        # with self.client.start_session() as session:
-        #     with session.start_transaction():
-        #         # automatically calls ClientSession.commit_transaction().
-        #         # If the block exits with an exception, the transaction
-        #         # automatically calls ClientSession.abort_transaction().
-        #           found = TaskQueueORM._get_collection().update_many(
-        #                               {'id': {'$in': task_ids}},
-        #                               {'$set': {'status': 'COMPLETE'}},
-        #                               session=session)
-        #         # next, Update results
-
-        tasks = TaskQueueORM.objects(id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
-        results = ResultORM.objects(task_id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
-        procedures = ProcedureORM.objects(task_id__in=task_ids).update(status='COMPLETE', modified_on=dt.utcnow())
+        update_fields = dict(status=TaskStatusEnum.complete, modified_on=dt.utcnow())
+        with self.session_scope() as session:
+            tasks_c = session.query(TaskQueueORM)\
+                             .filter(TaskQueueORM.id.in_(task_ids))\
+                             .update(update_fields, synchronize_session=False)
+            base_results_c = session.query(BaseResultORM)\
+                                    .filter(BaseResultORM.id == TaskQueueORM.base_result) \
+                                    .filter(TaskQueueORM.id.in_(task_ids))\
+                                    .update(update_fields, synchronize_session=False)
 
         # This should not happen unless there is data inconsistency in the DB
-        if results + procedures < tasks:
+        if base_results_c != tasks_c:
             self.logger.error("Some tasks don't reference results or procedures correctly!"
                               "Tasks: {}, ResultORMs: {}, procedures: {}. ".format(tasks, results, procedures))
-        return tasks
+        return tasks_c
 
     def queue_mark_error(self, data):
         """update the given tasks as errored
-        Mark the corresponding result/procedure as complete
+        Mark the corresponding result/procedure as Errored
 
         """
 
-        bulk_commands = []
-        bulk_commands_records = []
         task_ids = []
-        for task_id, msg in data:
-            task_ids.append(task_id)
-            update = {
-                "$set": {
-                    "status": "ERROR",
-                    "error": msg,
-                    "modified_on": dt.utcnow(),
-                }
-            }
-            bulk_commands.append(pymongo.UpdateOne({"_id": ObjectId(task_id)}, update))
+        with self.session_scope() as session:
+            task_objects = session.query(TaskQueueORM).filer(TaskQueueORM.id.in_(data.keys())).all()
+            for (task_id, msg), task_obj in zip(data, task_objects):
 
-            # Update the objects as well, different from mark complete as these are not processed the same way
-            # This design should be overhauled...
-            error_id = self.add_kvstore([msg])["data"][0]
-            update = {
-                "$set": {
-                    "status": "ERROR",
-                    "error": error_id,
-                    "modified_on": dt.utcnow(),
-                }
-            }
-            # Task id is held as a string here... don't move to ObjectId
-            bulk_commands_records.append(pymongo.UpdateOne({"task_id": task_id}, update))
+                task_ids.append(task_id)
+                task_obj.status = TaskStatusEnum.error
+                task_obj.modified_on = dt.utcnow()
+                task_obj.error_obj = ErrorORM(value=msg)
 
-        if len(bulk_commands) == 0:
-            return
+                session.add(task_obj)
 
-        task_mod = TaskQueueORM._get_collection().bulk_write(bulk_commands, ordered=False).modified_count
-        rec_mod = ResultORM._get_collection().bulk_write(bulk_commands_records, ordered=False).modified_count
-        rec_mod += ProcedureORM._get_collection().bulk_write(bulk_commands_records, ordered=False).modified_count
-        if task_mod != rec_mod:
+            session.commit()
+
+            update_fields = dict(status=TaskStatusEnum.error, modified_on=dt.utcnow())
+            base_results_c = session.query(BaseResultORM)\
+                                    .filter(BaseResultORM.id == TaskQueueORM.base_result) \
+                                    .filter(TaskQueueORM.id.in_(task_ids))\
+                                    .update(update_fields, synchronize_session=False)
+
+        if len(task_ids) != base_results_c:
             self.logger.error(
                 "Queue Mark Error: Number of tasks updates {}, does not match the number of records updates {}.".
-                format(task_mod, rec_mod))
+                format(len(task_ids), base_results_c))
 
-        return task_mod
+        return len(task_ids)
 
     def queue_reset_status(self, manager: str, reset_running: bool=True, reset_error: bool=False) -> int:
         """
@@ -1519,21 +1538,24 @@ class SQLAlchemySocket:
             # nothing to do
             return 0
 
-        # Update results and procedures if reset_error
-        if reset_error:
-            task_ids = TaskQueueORM.objects(manager=manager, status="ERROR").only('id')
-            ResultORM.objects(task_id__in=task_ids).update(status='INCOMPLETE', modified_on=dt.utcnow())
-            ProcedureORM.objects(task_id__in=task_ids).update(status='INCOMPLETE', modified_on=dt.utcnow())
+        with self.session_scope() as session:
+            # Update results and procedures if reset_error
+            if reset_error:
+                task_ids = session.query(TaskQueueORM.id)\
+                                  .filter(manager=manager, status=TaskStatusEnum.error)
+                result_count = session.query(BaseResultORM)\
+                                      .filter(TaskQueueORM.base_result==BaseResultORM.id)\
+                                      .filter(TaskQueueORM.id.in_(task_ids))\
+                                      .update(dict(status='INCOMPLETE', modified_on=dt.utcnow()))
 
-        status = []
-        if reset_running:
-            status.append("RUNNING")
-        if reset_error:
-            status.append("ERROR")
+            status = []
+            if reset_running:
+                status.append("RUNNING")
+            if reset_error:
+                status.append("ERROR")
 
-        updated = TaskQueueORM.objects(
-            manager=manager, status__in=status).update(
-                status="WAITING", modified_on=dt.utcnow())
+            updated = session.query(TaskQueueORM).filter(TaskQueueORM.status.in_(status), manager=manager)\
+                             .update(dict(status=TaskStatusEnum.waiting, modified_on=dt.utcnow()))
 
         return updated
 
@@ -1550,8 +1572,9 @@ class SQLAlchemySocket:
             Number of tasks deleted
         """
 
+        task_ids = [id] if isinstance(id, (int, str)) else id
         with self.session_scope() as session:
-            count = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(id))\
+            count = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(task_ids))\
                                               .delete(synchronize_session=False)
 
         return count
@@ -1570,30 +1593,34 @@ class SQLAlchemySocket:
 
         upd = {key: kwargs[key] for key in QueueManagerORM._fields_ordered if key in kwargs}
 
-        QueueManagerORM.objects()  # init
-        manager = QueueManagerORM.objects(name=name)
-        if manager:  # existing
-            upd.update(inc_count)
-            num_updated = manager.update(**upd, modified_on=dt.utcnow())
-        else:  # create new, ensures defaults and validations
-            QueueManagerORM(name=name, **upd).save()
-            num_updated = 1
+        with self.session_scope() as session:
+            # QueueManagerORM.objects()  # init
+            manager = session.query(QueueManagerORM).filter_by(name=name)
+            if manager:  # existing
+                upd.update(inc_count)
+                num_updated = manager.update(**upd, modified_on=dt.utcnow())
+            else:  # create new, ensures defaults and validations
+                QueueManagerORM(name=name, **upd).save()
+                num_updated = 1
 
         return num_updated == 1
 
-    def get_managers(self, name: str=None, status: str=None, modified_before=None):
-
-        query, error = format_query(name=name, status=status)
-        if modified_before:
-            query["modified_on__lt"] = modified_before
-
-        data = QueueManagerORM.objects(**query)
+    def get_managers(self, name: str=None, status: str=None, modified_before=None, limit=None, skip=0):
 
         meta = get_metadata_template()
-        meta["success"] = True
-        meta["n_found"] = data.count()
+        query, error = format_query(QueueManagerORM, name=name, status=status)
 
-        data = [x.to_json_obj(with_id=False) for x in data]
+        if modified_before:
+            query.append(QueueManagerORM.modified_on<=modified_before)
+
+        with self.session_scope() as session:
+            data = session.query(QueueManagerORM).filter(*query).limit(self.get_limit(limit)).offset(skip)
+
+            meta["n_found"] = get_count_fast(data)
+
+            data = [x.to_dict(with_id=False) for x in data.all()]
+            meta["success"] = True
+
 
         return {"data": data, "meta": meta}
 
@@ -1603,7 +1630,6 @@ class SQLAlchemySocket:
                  username: str,
                  password: Optional[str]=None,
                  permissions: List[str]=["read"],
-                 *,
                  overwrite: bool=False) -> Union[bool, str]:
         """
         Adds a new user and associated permissions.
@@ -1639,17 +1665,22 @@ class SQLAlchemySocket:
         blob = {"username": username, "password": hashed, "permissions": permissions}
 
         success = False
-        if overwrite:
-            doc = UserORM.objects(username=username)
-            doc.upsert_one(**blob)
-            success = True
-
-        else:
-            try:
-                UserORM(**blob).save()
+        with self.session_scope() as session:
+            if overwrite:
+                count = session.query(UserORM).filter_by(username=username).update(**blob)
+                # doc.upsert_one(**blob)
                 success = True
-            except mongoengine.errors.NotUniqueError:
-                success = False
+
+            else:
+                try:
+                    user = UserORM(**blob)
+                    session.add(user)
+                    session.commit()
+                    success = True
+                except IntegrityError as err:
+                    self.logger.warning(str(err))
+                    success = False
+                    session.rollback()
 
         if return_password and success:
             return password
@@ -1692,9 +1723,11 @@ class SQLAlchemySocket:
         if self._bypass_security or (self._allow_read and (permission == "read")):
             return (True, "Success")
 
-        data = UserORM.objects(username=username).first()
-        if data is None:
-            return (False, "User not found.")
+        with self.session_scope() as session:
+            data = session.query(UserORM).filter_by(username=username).first()
+
+            if data is None:
+                    return (False, "User not found.")
 
         pwcheck = bcrypt.checkpw(password.encode("UTF-8"), data.password)
         if pwcheck is False:
@@ -1719,4 +1752,9 @@ class SQLAlchemySocket:
         bool
             If the operation was successful or not.
         """
-        return UserORM.objects(username=username).delete() == 1
+
+        with self.session_scope() as session:
+            count = session.query(UserORM).filter_by(username=username)\
+                                          .delete(synchronize_session=False)
+
+        return count == 1

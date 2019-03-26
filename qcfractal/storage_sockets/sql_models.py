@@ -3,14 +3,13 @@ import datetime
 from sqlalchemy import (Column, Integer, String, Text, DateTime, Boolean,
                         ForeignKey, JSON, Enum, Float)
 from sqlalchemy.orm import relationship
-# from sqlalchemy_utils.types.choice import ChoiceType
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.declarative import as_declarative
 
 
-# pip install sqlalchemy psycopg2 sqlalchemy_utils
+# pip install sqlalchemy psycopg2
 
 # Base = declarative_base()
 
@@ -415,7 +414,7 @@ class TaskQueueORM(Base):
 
     # can reference ResultORMs or any ProcedureORM
     base_result = Column(Integer, ForeignKey("base_result.id"), unique=True)
-    base_result_obj = relationship(BaseResultORM, lazy='joined')  # or 'select'?
+    base_result_obj = relationship(BaseResultORM, lazy='select')  # or lazy='joined'
 
     # meta = {
     #     'indexes': [
@@ -479,7 +478,7 @@ class UserORM(Base):
     id = Column(Integer, primary_key=True)
 
     username = Column(String, nullable=False, unique=True)
-    password = Column(JSON, nullable=False)
+    password = Column(String, nullable=False)
     permissions = Column(JSON)  # Column(ARRAY(String))
 
     # meta = {'collection': 'user', 'indexes': ['username']}
