@@ -15,6 +15,38 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.5.5 / 2019-03-26
+------------------
+
+New Features
+++++++++++++
+
+- (:pr:`228`) ReactionDatasets visualization statistics plots can now be generated through Plotly! This feature includes
+  bar plots and violin plots and is designed for interactive use through websites, Jupyter notebooks, and more.
+- (:pr:`233`) TorsionDrive Datasets have custom visualization statistics through Plotly! This allows plotting 1-D
+  torsion scans against other ones.
+
+Enhancements
+++++++++++++
+
+- (:pr:`226`) LSF can now be specified for the Queue Managers for Dask managers.
+- (:pr:`228`) Plotly is an optional dependency overall, it is not required to run QCFractal or QCPortal but will be
+  downloaded in some situations. If you don't have Plotly installed, more graceful errors beyond just raw
+  ``ImportErrors`` are given.
+- (:pr:`234`) Queue Managers now report the number of passed and failed jobs they return to the server and can also
+  have verbose (debug level) outputs to the log.
+- (:pr:`234`) Dask-driven queue managers can now be set to simply scale up to a fixed number of workers instead of
+  trying to adapt the number of workers on the fly.
+
+Bug Fixes
++++++++++
+
+- (:pr:`227`) SGE Clusters specified in Queue Manager under Dask correctly process ``job_extra`` for additional
+  scheduler headers. This is implemented in a stable way such that if the upstream Dask Jobqueue implements a fix, the
+  manager will keep working without needing to get a new release.
+- (:pr:`234`) Fireworks managers now return the same pydantic models as every other manager instead of raw dictionaries.
+
+
 0.5.4 / 2019-03-21
 ------------------
 
