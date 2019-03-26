@@ -439,7 +439,7 @@ def test_get_results_by_ids(storage_results):
     assert ret["meta"]["n_found"] == 6
     assert len(ret["data"]) == 6
 
-    ret = storage_results.get_results(id=ids, projection=['status'])
+    ret = storage_results.get_results(id=ids, projection=['status', 'id'])
     assert ret['data'][0].keys() == {'id', 'status'}
 
 
@@ -470,7 +470,7 @@ def test_results_get_dual(storage_results):
 def test_results_get_project(storage_results):
     """See new changes in design here"""
 
-    ret = storage_results.get_results(method="M2", program="P2", projection={"return_result"})["data"][0]
+    ret = storage_results.get_results(method="M2", program="P2", projection={"return_result", "id"})["data"][0]
     assert set(ret.keys()) == {"id", "return_result"}
     assert ret["return_result"] == 15
 
@@ -505,7 +505,7 @@ def test_queue_submit(storage_results):
         "tag": None,
         "program": "p1",
         "parser": "",
-        "base_result": {"ref": 'result', "id": result1['id']}
+        "base_result": result1['id']
     })
 
     # Submit a new task
@@ -590,9 +590,9 @@ def test_queue_submit_many_order(storage_results):
     }
 
 
-    task1 = ptl.models.TaskRecord(**task_template, base_result={"ref": 'result', "id": results[3]['id']})
-    task2 = ptl.models.TaskRecord(**task_template, base_result={"ref": 'result', "id": results[4]['id']})
-    task3 = ptl.models.TaskRecord(**task_template, base_result={"ref": 'result', "id": results[5]['id']})
+    task1 = ptl.models.TaskRecord(**task_template, base_result=results[3]['id'])
+    task2 = ptl.models.TaskRecord(**task_template, base_result=results[4]['id'])
+    task3 = ptl.models.TaskRecord(**task_template, base_result=results[5]['id'])
 
     # Submit tasks
     ret = storage_results.queue_submit([task1, task2, task3])
@@ -603,7 +603,7 @@ def test_queue_submit_many_order(storage_results):
     r = storage_results.queue_get_next("test_manager", ["p1"], ["p1"], limit=1)
     assert len(r) == 1
     # will get the first submitted result first
-    assert r[0].base_result.id == results[3]["id"]
+    assert r[0].base_result == results[3]["id"]
 
     # Todo: test more scenarios
 

@@ -5,7 +5,7 @@ from sqlalchemy import (Column, Integer, String, Text, DateTime, Boolean,
 from sqlalchemy.orm import relationship
 # from sqlalchemy_utils.types.choice import ChoiceType
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
-from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum
+from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.declarative import as_declarative
 
@@ -73,6 +73,10 @@ class CollectionORM(Base):
 
     collection = Column(String(100), nullable=False)
     name = Column(String(100), nullable=False)  # Example 'water'
+
+    tags = Column(JSON)
+    tagline = Column(String)
+    data = Column(JSON)  # extra data related to specific collection type
 
     # meta = {
     #     'indexes': [{
@@ -391,6 +395,7 @@ class TaskQueueORM(Base):
 
     __tablename__ = "task_queue"
 
+
     id = Column(Integer, primary_key=True)
 
     spec = Column(JSON)
@@ -398,14 +403,18 @@ class TaskQueueORM(Base):
     # others
     tag = Column(String, default=None)
     parser = Column(String, default='')
+    program = Column(String)
+    procedure = Column(String)
     status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.waiting)
+    priority = Column(Enum(PriorityEnum), default=PriorityEnum.NORMAL)
     manager = Column(String, default=None)
+    error = Column(String)  # TODO: is this an error object? should be in results?
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
     # can reference ResultORMs or any ProcedureORM
-    base_result = Column(Integer, ForeignKey("base_result.id"))
+    base_result = Column(Integer, ForeignKey("base_result.id"), unique=True)
     base_result_obj = relationship(BaseResultORM, lazy='joined')  # or 'select'?
 
     # meta = {
@@ -496,11 +505,10 @@ class QueueManagerORM(Base):
     failures = Column(Integer, default=0)
     returned = Column(Integer, default=0)
 
-    status = Column(Enum(ManagerStatusEnum),
-                    default=ManagerStatusEnum.inactive)
+    status = Column(Enum(ManagerStatusEnum), default=ManagerStatusEnum.inactive)
 
-    created_on = Column(DateTime, nullable=False)
-    modified_on = Column(DateTime, nullable=False)
+    created_on = Column(DateTime, default=datetime.datetime.utcnow)
+    modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
     # meta = {'collection': 'queue_manager', 'indexes': ['status', 'name', 'modified_on']}
 

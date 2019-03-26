@@ -248,14 +248,14 @@ class OptimizationRecord(RecordBase):
     schema_version: int = 1  # TODO: why not in Base
 
     # Input data
-    initial_molecule: int
+    initial_molecule: Union[ObjectId, int]
     qc_spec: QCSpecification
     keywords: Dict[str, Any] = {}  # TODO: defined in Base
 
     # Results
     energies: List[float] = None
-    final_molecule: int = None
-    trajectory: List[int] = None
+    final_molecule: Union[ObjectId, int] = None
+    trajectory: List[Union[ObjectId, int]] = None
 
     class Config(RecordBase.Config):
         pass

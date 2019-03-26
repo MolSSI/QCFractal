@@ -44,7 +44,7 @@ class QCSpecification(BaseModel):
     driver: DriverEnum
     method: str
     basis: Optional[str] = None
-    keywords: Optional[int] = None
+    keywords: Optional[Union[ObjectId, int]] = None
     program: str
 
     @validator('basis')
