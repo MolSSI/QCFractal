@@ -136,17 +136,9 @@ class ReactionDataset(Dataset):
         tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
         tmp_idx = tmp_idx.reset_index(drop=True)
 
-        # There could be duplicates so take the unique and save the map
-        umols, uidx = np.unique(tmp_idx["molecule"], return_index=True)
-
-        # Evaluate the overall dataframe
-        query_keys = {k: v for k, v in keys.items()}
-        query_keys["molecule"] = list(umols)
-        query_keys["projection"] = {field: True, "molecule": True}
-        values = pd.DataFrame(self.client.query_results(**query_keys), columns=["molecule", field])
-
-        # Join on molecule hash
-        tmp_idx = tmp_idx.merge(values, how="left", on="molecule")
+        indexer = {x: x for x in tmp_idx["molecule"]}
+        results = self._query(indexer, keys, field=field)
+        tmp_idx = tmp_idx.join(results, on="molecule", how="left")
 
         # Apply stoich values
         tmp_idx[field] *= tmp_idx["coefficient"]
@@ -237,7 +229,7 @@ class ReactionDataset(Dataset):
             The kind of chart to produce, either 'bar' or 'violin'
         return_figure : Optional[bool], optional
             If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
-        
+
         Returns
         -------
         plotly.Figure
@@ -325,8 +317,6 @@ class ReactionDataset(Dataset):
 
         # scale
         tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
-        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor(
-            'hartree', self.units)
 
         # Apply to df
         self.df[name] = tmp_idx

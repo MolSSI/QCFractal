@@ -496,7 +496,6 @@ class Dataset(Collection):
         ret = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule"])
         ret.reset_index(inplace=True)
         ret = ret.merge(records, how="left", on="molecule")
-        ret.rename(columns={field: "result"}, inplace=True)
         ret.set_index("index", inplace=True)
         ret.drop("molecule", axis=1, inplace=True)
 
@@ -743,7 +742,7 @@ class Dataset(Collection):
         indexer = {e.name: e.molecule_id for e in self.data.records}
 
         tmp_idx = self._query(indexer, dbkeys, field=field)
-        tmp_idx.rename(columns={"result": name}, inplace=True)
+        tmp_idx.rename(columns={field: name}, inplace=True)
 
         if as_array:
             tmp_idx[tmp_idx.columns[0]] = tmp_idx[tmp_idx.columns[0]].apply(lambda x: np.array(x))
@@ -824,7 +823,7 @@ class Dataset(Collection):
 
     # Statistical quantities
     def statistics(self, stype: str, value: str, bench: str="Benchmark", **kwargs: Dict[str, Any]):
-        """Summary
+        """Provides statistics for various columns in the underlying dataframe.
 
         Parameters
         ----------
