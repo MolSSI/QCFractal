@@ -50,7 +50,7 @@ class RecordBase(BaseModel, abc.ABC):
     error: Optional[Union[ObjectId, int]] = None
 
     # Compute status
-    # task_id: ObjectId = None
+    task_id: Optional[Union[ObjectId, int]] = None  # TODO: not used in SQL
     status: RecordStatusEnum = "INCOMPLETE"
     modified_on: datetime.datetime = datetime.datetime.utcnow()
     created_on: datetime.datetime = datetime.datetime.utcnow()

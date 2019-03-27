@@ -1727,15 +1727,15 @@ class SQLAlchemySocket:
             data = session.query(UserORM).filter_by(username=username).first()
 
             if data is None:
-                    return (False, "User not found.")
+                return (False, "User not found.")
 
-        pwcheck = bcrypt.checkpw(password.encode("UTF-8"), data.password)
-        if pwcheck is False:
-            return (False, "Incorrect password.")
+            pwcheck = bcrypt.checkpw(password.encode("UTF-8"), data.password)
+            if pwcheck is False:
+                return (False, "Incorrect password.")
 
-        # Admin has access to everything
-        if (permission.lower() not in data.permissions) and ("admin" not in data.permissions):
-            return (False, "User has insufficient permissions.")
+            # Admin has access to everything
+            if (permission.lower() not in data.permissions) and ("admin" not in data.permissions):
+                return (False, "User has insufficient permissions.")
 
         return (True, "Success")
 

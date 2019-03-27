@@ -1,7 +1,7 @@
 import datetime
 # from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (Column, Integer, String, Text, DateTime, Boolean,
-                        ForeignKey, JSON, Enum, Float)
+                        ForeignKey, JSON, Enum, Float, Binary)
 from sqlalchemy.orm import relationship
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
@@ -186,6 +186,7 @@ class BaseResultORM(Base):
     # for SQL
     result_type = Column(String)  # for inheritance
     parent_id = Column(Integer, ForeignKey('base_result.id'))
+    task_id = Column(String)  # TODO: not used, for back compatibility
 
     # Base identification
     id = Column(Integer, primary_key=True)
@@ -478,7 +479,7 @@ class UserORM(Base):
     id = Column(Integer, primary_key=True)
 
     username = Column(String, nullable=False, unique=True)
-    password = Column(String, nullable=False)
+    password = Column(Binary, nullable=False)
     permissions = Column(JSON)  # Column(ARRAY(String))
 
     # meta = {'collection': 'user', 'indexes': ['username']}
