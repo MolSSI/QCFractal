@@ -17,8 +17,7 @@ def test_collection_query(fractal_compute_server):
     ds.save()
 
     cols = client.list_collections()
-    assert 'Dataset' in cols
-    assert 'CAPITAL' in cols["Dataset"]
+    assert cols.index.contains(("Dataset", "CAPITAL"))
 
     ds = client.get_collection("dataset", "capital")
     assert ds.name == "CAPITAL"
@@ -163,10 +162,10 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     assert "ReactionDataset(" in str(ds)
 
     # Test collection lists
-    ret = client.list_collections()
+    ret = client.list_collections(aslist=True)
     assert ds_name in ret["ReactionDataset"]
 
-    ret = client.list_collections("reactiondataset")
+    ret = client.list_collections("reactiondataset", aslist=True)
     assert ds_name in ret
 
     He2 = ptl.Molecule.from_data([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
