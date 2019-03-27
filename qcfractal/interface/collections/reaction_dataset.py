@@ -38,7 +38,7 @@ class ReactionDataset(Dataset):
     Attributes
     ----------
     client : client.FractalClient
-        A optional server portal to connect the database
+        A FractalClient connected to a server
     data : DataModel
         A Model representation of the database backbone
     df : pd.DataFrame
@@ -58,7 +58,7 @@ class ReactionDataset(Dataset):
         name : str
             The name of the Dataset
         client : client.FractalClient, optional
-            A Portal client to connected to a server
+            A FractalClient connected to a server
         ds_type : str, optional
             The type of Dataset involved
 
@@ -267,7 +267,7 @@ class ReactionDataset(Dataset):
         method : str
             The computational method to query on (B3LYP)
         basis : Optional[str], optional
-            The computational basis query on (6-31G)
+            The computational basis to query on (6-31G)
         keywords : Optional[str], optional
             The option token desired
         program : Optional[str], optional
@@ -373,7 +373,7 @@ class ReactionDataset(Dataset):
         Raises
         ------
         AttributeError
-            Description
+            If Client is not set
         """
         self._check_state()
 
@@ -480,7 +480,7 @@ class ReactionDataset(Dataset):
 
         Notes
         -----
-        This function attempts to convert the molecule into its correspond hash. The following will happen depending on the form of the Molecule.
+        This function attempts to convert the molecule into its corresponding hash. The following will happen depending on the form of the Molecule.
             - Molecule hash - Used directly in the stoichiometry.
             - Molecule class - Hash is obtained and the molecule will be added to the database upon saving.
             - Molecule string - Molecule will be converted to a Molecule class and the same process as the above will occur.
@@ -499,13 +499,13 @@ class ReactionDataset(Dataset):
 
         for line in stoichiometry:
             if len(line) != 2:
-                raise KeyError("Dataset: Parse stoichiometry: passed in as a list must of key : value type")
+                raise KeyError("Dataset: Parse stoichiometry: passed in as a list, must be of key : value type")
 
             # Get the values
             try:
                 mol_values.append(float(line[1]))
             except:
-                raise TypeError("Dataset: Parse stoichiometry: must be able to cast second value must be as float.")
+                raise TypeError("Dataset: Parse stoichiometry: must be able to cast second value to a float.")
 
             # What kind of molecule is it?
             mol = line[0]
@@ -671,7 +671,7 @@ class ReactionDataset(Dataset):
         do_vmfc : bool
             Create the Valiron-Mayer Function Counterpoise (VMFC) corrected stoichiometry.
         max_nbody : int
-            What is the maximum fragment level built, if zero defaults to the maximum number of fragments.
+            The maximum fragment level built, if zero defaults to the maximum number of fragments.
 
         Notes
         -----
