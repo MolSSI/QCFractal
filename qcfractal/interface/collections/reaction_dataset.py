@@ -14,7 +14,7 @@ from qcelemental import constants
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
 from ..dict_utils import replace_dict_keys
-from ..models import Molecule
+from ..models import ComputeResponse, Molecule
 
 
 class _ReactionTypeEnum(str, Enum):
@@ -372,31 +372,16 @@ class ReactionDataset(Dataset):
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
             tmp_monomer = self.rxn_index[self.rxn_index["stoichiometry"] == monomer_stoich].copy()
+
+            ret1 = self._compute(dbkeys, tmp_monomer["molecule"], tag, priority)
+
             tmp_complex = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
-            tmp_idx = pd.concat((tmp_monomer, tmp_complex), axis=0)
+            ret2 = self._compute(dbkeys, tmp_complex["molecule"], tag, priority)
+
+            ret = ret1.merge(ret2)
         else:
             tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
-
-        tmp_idx = tmp_idx.reset_index(drop=True)
-
-        # There could be duplicates so take the unique and save the map
-        umols, uidx = np.unique(tmp_idx["molecule"], return_index=True)
-
-        complete_values = self.client.query_results(**dbkeys, molecule=list(umols), projection={"molecule": True})
-
-        complete_mols = np.array([x["molecule"] for x in complete_values])
-        umols = np.setdiff1d(umols, complete_mols)
-        compute_list = list(umols)
-
-        ret = self.client.add_compute(
-            dbkeys["program"],
-            dbkeys["method"],
-            dbkeys["basis"],
-            dbkeys["driver"],
-            dbkeys["keywords"],
-            compute_list,
-            tag=tag,
-            priority=priority)
+            ret = self._compute(dbkeys, tmp_complex["molecule"], tag, priority)
 
         # Update the record that this was computed
         self._add_history(**history)

@@ -10,9 +10,9 @@ from pydantic import BaseModel
 from qcelemental import constants
 
 from .collection import Collection
-from .collection_utils import register_collection
+from .collection_utils import composition_planner, register_collection
 from ..statistics import wrap_statistics
-from ..models import ObjectId, Molecule
+from ..models import ComputeResponse, ObjectId, Molecule
 from ..visualization import bar_plot, violin_plot
 
 
@@ -503,6 +503,39 @@ class Dataset(Collection):
 
         return ret
 
+    def _compute(self, dbkeys, molecules, tag, priority):
+        """
+        Internal compute function
+        """
+
+        self._check_state()
+
+        if self.client is None:
+            raise AttributeError("Dataset: Compute: Client was not set.")
+
+        umols = list(set(molecules))
+
+        ids = []
+        submitted = []
+        existing = []
+        for compute_set in composition_planner(**dbkeys):
+
+            ret = self.client.add_compute(
+                compute_set["program"],
+                compute_set["method"],
+                compute_set["basis"],
+                compute_set["driver"],
+                compute_set["keywords"],
+                umols,
+                tag=tag,
+                priority=priority)
+
+            ids.extend(ret.ids)
+            submitted.extend(ret.submitted)
+            existing.extend(ret.existing)
+
+        return ComputeResponse(ids=ids, submitted=submitted, existing=existing)
+
     @property
     def units(self):
         return self._units
@@ -759,7 +792,7 @@ class Dataset(Collection):
                 keywords: Optional[str]=None,
                 program: Optional[str]=None,
                 tag: Optional[str]=None,
-                priority: Optional[str]=None):
+                priority: Optional[str]=None) -> ComputeResponse:
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -784,25 +817,12 @@ class Dataset(Collection):
             A dictionary of the keys for all requested computations
 
         """
-        self._check_state()
-
-        if self.client is None:
-            raise AttributeError("Dataset: Compute: FractalClient was not set.")
 
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
 
         molecule_idx = [e.molecule_id for e in self.data.records]
-        umols, uidx = np.unique(molecule_idx, return_index=True)
 
-        ret = self.client.add_compute(
-            dbkeys["program"],
-            dbkeys["method"],
-            dbkeys["basis"],
-            dbkeys["driver"],
-            dbkeys["keywords"],
-            list(umols),
-            tag=tag,
-            priority=priority)
+        ret = self._compute(dbkeys, molecule_idx, tag, priority)
 
         # Update the record that this was computed
         self._add_history(**history)

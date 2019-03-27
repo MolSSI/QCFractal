@@ -110,6 +110,39 @@ def test_reactiondataset_check_state(fractal_compute_server):
 
 
 @testing.using_psi4
+@testing.using_dftd3
+def test_compute_reactiondataset_dftd3(fractal_compute_server):
+
+    client = ptl.FractalClient(fractal_compute_server)
+    ds_name = "He_DFTD3"
+    ds = ptl.collections.ReactionDataset(ds_name, client, ds_type="ie")
+
+    # Add two helium dimers to the DB at 4 and 8 bohr
+    He1 = ptl.Molecule.from_data([[2, 0, 0, -4.123], [2, 0, 0, 4.123]], dtype="numpy", units="bohr", frags=[1])
+    ds.add_ie_rxn("He1", He1, attributes={"r": 4})
+    He2 = ptl.Molecule.from_data([[2, 0, 0, -8.123], [2, 0, 0, 8.123]], dtype="numpy", units="bohr", frags=[1])
+    ds.add_ie_rxn("He2", He2, attributes={"r": 4})
+    ds.set_default_program("psi4")
+
+    ds.save()
+
+    ncomp1 = ds.compute("B3LYP-D3", "6-31G")
+    assert len(ncomp1.ids) == 6
+    assert len(ncomp1.submitted) == 6
+
+    ncomp2 = ds.compute("B3LYP-D3(BJ)", "6-31G")
+    assert len(ncomp2.ids) == 6
+    assert len(ncomp2.submitted) == 3
+
+    # print(ncomp2)
+    raise Exception()
+
+    fractal_compute_server.await_results()
+    assert ds.query("B3LYP-D3", "6-31G")
+    assert ds.query("B3LYP-D3(BJ)", "6-31G")
+
+
+@testing.using_psi4
 def test_compute_reactiondataset_regression(fractal_compute_server):
     """
     Tests an entire server and interaction energy dataset run
