@@ -47,6 +47,8 @@ def test_task_molecule_no_orientation(data, fractal_compute_server):
     assert len(ret) == 1
     assert ret[0].id == mol_id
 
+    assert "nsubmitted" in str(ret)
+
 
 @testing.using_rdkit
 def test_task_error(fractal_compute_server):

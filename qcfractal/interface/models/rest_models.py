@@ -134,6 +134,30 @@ class ComputeResponse(BaseModel):
     class Config(RESTConfig):
         pass
 
+    def __str__(self) -> str:
+        return f"ComputeResponse(nsubmitted={len(self.submitted)} nexisting={len(self.existing)})"
+
+    def __repr__(self) -> str:
+        return f"<{self}>"
+
+    def merge(self, other: 'ComputeResponse') -> 'ComputeResponse':
+        """Merges two ComputeResponse objects together. The first takes precedence and order is maintained.
+
+        Parameters
+        ----------
+        other : ComputeResponse
+            The compute response to merge
+
+        Returns
+        -------
+        ComputeResponse
+            The merged compute response
+        """
+        return ComputeResponse(
+            ids=(self.ids + other.ids),
+            submitted=(self.submitted + other.submitted),
+            existing=(self.existing + other.existing))
+
 
 ### KVStore
 
