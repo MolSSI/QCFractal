@@ -366,25 +366,24 @@ class ReactionDataset(Dataset):
             raise AttributeError("Dataset: Compute: Client was not set.")
 
         self._validate_stoich(stoich)
-        name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=stoich)
+        compute_keys = {"program": program, "method": method, "basis": basis, "keywords": keywords, "stoich": stoich}
 
         # Figure out molecules that we need
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
             tmp_monomer = self.rxn_index[self.rxn_index["stoichiometry"] == monomer_stoich].copy()
 
-            ret1 = self._compute(dbkeys, tmp_monomer["molecule"], tag, priority)
+            ret1 = self._compute(compute_keys, tmp_monomer["molecule"], tag, priority)
 
             tmp_complex = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
-            ret2 = self._compute(dbkeys, tmp_complex["molecule"], tag, priority)
+            ret2 = self._compute(compute_keys, tmp_complex["molecule"], tag, priority)
 
             ret = ret1.merge(ret2)
         else:
             tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
-            ret = self._compute(dbkeys, tmp_complex["molecule"], tag, priority)
+            ret = self._compute(compute_keys, tmp_complex["molecule"], tag, priority)
 
         # Update the record that this was computed
-        self._add_history(**history)
         self.save()
 
         return ret

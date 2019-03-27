@@ -136,14 +136,16 @@ class Dataset(Collection):
 
         new_history = []
         for key in self.data.history_keys:
+
             value = history[key]
             if value is not None:
                 value = value.lower()
+
             new_history.append(value)
 
         self.data.history.add(tuple(new_history))
 
-    def list_history(self, **search: Dict[str, Optional[str]]) -> 'DataFrame':
+    def list_history(self, dftd3: bool=False, **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """
         Lists the history of computations completed.
 
@@ -175,6 +177,9 @@ class Dataset(Collection):
                 df = df[df[key].isin(query)]
             else:
                 raise TypeError(f"Search type {type(value)} not understood.")
+
+        if dftd3:
+            df = df[df["program"] != "dftd3"]
 
         df.set_index(list(self.data.history_keys[:-1]), inplace=True)
         df.sort_index(inplace=True)
@@ -514,10 +519,17 @@ class Dataset(Collection):
 
         return retdf
 
-    def _compute(self, dbkeys, molecules, tag, priority):
+    def _compute(self, compute_keys, molecules, tag, priority):
         """
         Internal compute function
         """
+
+        name, dbkeys, history = self._default_parameters(
+            compute_keys["program"],
+            compute_keys["method"],
+            compute_keys["basis"],
+            compute_keys["keywords"],
+            stoich=compute_keys.get("stoich", None))
 
         self._check_state()
 
@@ -544,6 +556,12 @@ class Dataset(Collection):
             ids.extend(ret.ids)
             submitted.extend(ret.submitted)
             existing.extend(ret.existing)
+
+            qhistory = history.copy()
+            qhistory["program"] = compute_set["program"]
+            qhistory["method"] = compute_set["method"]
+            qhistory["basis"] = compute_set["basis"]
+            self._add_history(**qhistory)
 
         return ComputeResponse(ids=ids, submitted=submitted, existing=existing)
 
@@ -829,14 +847,11 @@ class Dataset(Collection):
 
         """
 
-        name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
+        compute_keys = {"program": program, "method": method, "basis": basis, "keywords": keywords}
 
         molecule_idx = [e.molecule_id for e in self.data.records]
 
-        ret = self._compute(dbkeys, molecule_idx, tag, priority)
-
-        # Update the record that this was computed
-        self._add_history(**history)
+        ret = self._compute(compute_keys, molecule_idx, tag, priority)
         self.save()
 
         return ret
