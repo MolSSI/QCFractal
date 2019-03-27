@@ -15,7 +15,7 @@ from pydantic import BaseModel
 class Collection(abc.ABC):
     def __init__(self, name: str, client: 'FractalClient'=None, **kwargs: Dict[str, Any]):
         """
-        Initializer for the Collections objects. If no Portal is supplied or the Collection name
+        Initializer for the Collection objects. If no Portal is supplied or the Collection name
         is not present on the server that the Portal is connected to a blank Collection will be
         created.
 
@@ -24,7 +24,7 @@ class Collection(abc.ABC):
         name : str
             The name of the Collection object as ID'ed on the storage backend.
         client : FractalClient, optional
-            A Portal client to connect to a server
+            A FractalClient connected to a server
         **kwargs : Dict[str, Any]
             Additional keywords which are passed to the Collection and the initial data constructor
             It is up to the individual implementations of the Collection to do things with that data
@@ -106,7 +106,7 @@ class Collection(abc.ABC):
         Parameters
         ----------
         client : FractalClient
-            A Portal client to connected to a server
+            A FractalClient connected to a server
         name : str
             The name of the collection to pull from.
 
@@ -136,7 +136,7 @@ class Collection(abc.ABC):
         data : Dict[str, Any]
             The JSON blob to create a new class from.
         client : FractalClient, optional
-            A Portal client to connected to a server
+            A FractalClient connected to a server
 
         Returns
         -------
@@ -190,7 +190,7 @@ class Collection(abc.ABC):
         Parameters
         ----------
         client : FractalClient
-            Client to use for storage access
+            A FractalClient connected to a server used for storage access
         """
         pass
 
@@ -202,7 +202,7 @@ class Collection(abc.ABC):
         Parameters
         ----------
         client : FractalClient, optional
-            A Portal object to the server to upload to
+            A FractalClient connected to a server to upload to
 
         Returns
         -------
