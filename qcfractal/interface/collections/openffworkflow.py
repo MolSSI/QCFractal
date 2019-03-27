@@ -40,7 +40,7 @@ class OpenFFWorkflow(Collection):
     Attributes
     ----------
     client : client.FractalClient
-        A optional server portal to connect the database
+        A optional server portal to connect to the database
     """
 
     def __init__(self, name, client=None, **kwargs):
@@ -145,7 +145,7 @@ class OpenFFWorkflow(Collection):
         Returns
         -------
         list of str
-            A list of fragment id's.
+            A list of fragment ID's.
         """
         return list(self.data.fragments)
 
@@ -173,7 +173,7 @@ class OpenFFWorkflow(Collection):
             },
             ...
         }
-        wf.add_fragment("CCCC", data=)
+        wf.add_fragment("CCCC", data)
         """
 
         if fragment_id not in self.data.fragments:
