@@ -319,7 +319,7 @@ class ReactionDataset(Dataset):
         tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
 
         # Apply to df
-        self.df[name] = tmp_idx
+        self.df[name] = tmp_idx[name]
 
         return name
 

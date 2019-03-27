@@ -118,28 +118,28 @@ def test_compute_reactiondataset_dftd3(fractal_compute_server):
     ds = ptl.collections.ReactionDataset(ds_name, client, ds_type="ie")
 
     # Add two helium dimers to the DB at 4 and 8 bohr
-    He1 = ptl.Molecule.from_data([[2, 0, 0, -4.123], [2, 0, 0, 4.123]], dtype="numpy", units="bohr", frags=[1])
-    ds.add_ie_rxn("He1", He1, attributes={"r": 4})
-    He2 = ptl.Molecule.from_data([[2, 0, 0, -8.123], [2, 0, 0, 8.123]], dtype="numpy", units="bohr", frags=[1])
-    ds.add_ie_rxn("He2", He2, attributes={"r": 4})
+    HeDimer = ptl.Molecule.from_data([[2, 0, 0, -4.123], [2, 0, 0, 4.123]], dtype="numpy", units="bohr", frags=[1])
+    ds.add_ie_rxn("HeDimer", HeDimer, attributes={"r": 4})
     ds.set_default_program("psi4")
 
     ds.save()
 
     ncomp1 = ds.compute("B3LYP-D3", "6-31G")
-    assert len(ncomp1.ids) == 6
-    assert len(ncomp1.submitted) == 6
+    assert len(ncomp1.ids) == 4
+    assert len(ncomp1.submitted) == 4
 
     ncomp2 = ds.compute("B3LYP-D3(BJ)", "6-31G")
-    assert len(ncomp2.ids) == 6
-    assert len(ncomp2.submitted) == 3
-
-    # print(ncomp2)
-    raise Exception()
+    assert len(ncomp2.ids) == 4
+    assert len(ncomp2.submitted) == 2
 
     fractal_compute_server.await_results()
+    assert ds.query("B3LYP", "6-31G")
     assert ds.query("B3LYP-D3", "6-31G")
     assert ds.query("B3LYP-D3(BJ)", "6-31G")
+
+    for key, value in {"B3LYP/6-31g": -0.002135, "B3LYP-D3/6-31g": -0.005818, "B3LYP-D3(BJ)/6-31g": -0.005636}.items():
+
+        assert pytest.approx(value, 1.e-3) == ds.df.loc["HeDimer", key]
 
 
 @testing.using_psi4

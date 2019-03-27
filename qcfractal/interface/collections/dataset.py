@@ -488,20 +488,31 @@ class Dataset(Collection):
 
         field = field.lower()
 
-        query["molecule"] = set(indexer.values())
+        ret = []
+        for query_set in composition_planner(**query):
 
-        query["projection"] = {"molecule": True, field: True}
-        records = pd.DataFrame(self.client.query_results(**query), columns=["molecule", field])
+            query_set["molecule"] = set(indexer.values())
 
-        ret = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule"])
-        ret.reset_index(inplace=True)
-        ret = ret.merge(records, how="left", on="molecule")
-        ret.set_index("index", inplace=True)
-        ret.drop("molecule", axis=1, inplace=True)
+            query_set["projection"] = {"molecule": True, field: True}
+            records = pd.DataFrame(self.client.query_results(**query_set), columns=["molecule", field])
 
-        ret[ret.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', self.units)
+            df = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule"])
+            df.reset_index(inplace=True)
+            df = df.merge(records, how="left", on="molecule")
+            df.set_index("index", inplace=True)
+            df.drop("molecule", axis=1, inplace=True)
+            ret.append(df)
 
-        return ret
+        if len(ret) == 1:
+            retdf = ret[0]
+        else:
+            retdf = ret[0]
+            for df in ret[1:]:
+                retdf += df
+
+        retdf[retdf.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', self.units)
+
+        return retdf
 
     def _compute(self, dbkeys, molecules, tag, priority):
         """
