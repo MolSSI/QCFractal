@@ -40,7 +40,7 @@ class OpenFFWorkflow(Collection):
     Attributes
     ----------
     client : client.FractalClient
-        A optional server portal to connect to the database
+        A FractalClient connected to a server
     """
 
     def __init__(self, name, client=None, **kwargs):
@@ -54,7 +54,7 @@ class OpenFFWorkflow(Collection):
         name : str
             The name of the OpenFFWorkflow
         client : client.FractalClient, optional
-            A Portal client to connect to a server
+            A FractalClient connected to a server
 
         """
 

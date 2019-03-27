@@ -40,7 +40,7 @@ class Dataset(Collection):
     Attributes
     ----------
     client : client.FractalClient
-        A optional server portal to connect the database
+        A FractalClient connected to a server
     data : dict
         JSON representation of the database backbone
     df : pd.DataFrame
@@ -58,7 +58,7 @@ class Dataset(Collection):
         name : str
             The name of the Dataset
         client : Optional['FractalClient'], optional
-            A Portal client to connect to a server
+            A FractalClient connected to a server
         **kwargs : Dict[str, Any]
             Additional kwargs to pass to the collection
         """

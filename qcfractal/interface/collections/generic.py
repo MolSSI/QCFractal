@@ -15,7 +15,7 @@ class Generic(Collection):
     Attributes
     ----------
     client : client.FractalClient
-        A optional server portal to connect the database
+        A FractalClient connected to a server
     """
 
     class DataModel(Collection.DataModel):
