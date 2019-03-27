@@ -95,7 +95,7 @@ class TorsionDriveDataset(Collection):
         Returns
         -------
         TorsionDriveSpecification
-            The requestion specification.
+            The requested specification.
 
         """
         try:
@@ -104,7 +104,7 @@ class TorsionDriveDataset(Collection):
             raise KeyError(f"TorsionDriveSpecification '{name}' not found.")
 
     def list_specifications(self, description=True) -> Union[List[str], 'DataFrame']:
-        """Lists all available specifications known
+        """Lists all available specifications
 
         Parameters
         ----------
@@ -259,7 +259,7 @@ class TorsionDriveDataset(Collection):
         return spec.name
 
     def status(self, specs: Union[str, List[str]]=None, collapse: bool=True, status: Optional[str]=None) -> 'DataFrame':
-        """Returns the current status of all current specifications.
+        """Returns the status of all current specifications.
 
         Parameters
         ----------
@@ -398,7 +398,7 @@ class TorsionDriveDataset(Collection):
         Returns
         -------
         plotly.Figure
-            Description
+            The requested figure.
 
         Raises
         ------
