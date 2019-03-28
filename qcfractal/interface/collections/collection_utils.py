@@ -29,7 +29,7 @@ def nCr(n: int, r: int) -> int:
 
 
 def register_collection(collection: 'Collection') -> None:
-    """Registers a collection for the factory
+    """Registers a collection for use by the factory.
 
     Parameters
     ----------
@@ -52,7 +52,7 @@ def collection_factory(data: Dict[str, Any], client: 'FractalClient'=None) -> 'C
     data : Dict[str, Any]
         The JSON blob to create a new class from.
     client : FractalClient, optional
-        A Portal client to connected to a server
+        A FractalClient connected to a server
 
     Returns
     -------

@@ -15,15 +15,15 @@ class Generic(Collection):
     Attributes
     ----------
     client : client.FractalClient
-        A optional server portal to connect the database
+        A FractalClient connected to a server
     """
 
     class DataModel(Collection.DataModel):
         """
-        Internal Data structure base model typed by PyDantic
+        Internal Data structure base model typed by PyDantic.
 
         This structure validates input, allows server-side validation and data security,
-        and will create the information to pass back and forth between server and client
+        and will create the information to pass back and forth between server and client.
         """
         data: Dict[str, Any] = {}
 
@@ -45,12 +45,12 @@ class Generic(Collection):
         Parameters
         ----------
         copy : bool, optional
-            Wether to copy the object or not.
+            Whether to copy the object or not
 
         Returns
         -------
         DataModel
-            The underly DataModel
+            The underlying DataModel
         """
         if copy:
             return self.data.copy(deep=True)

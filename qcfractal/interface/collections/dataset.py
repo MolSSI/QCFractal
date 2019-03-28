@@ -40,7 +40,7 @@ class Dataset(Collection):
     Attributes
     ----------
     client : client.FractalClient
-        A optional server portal to connect the database
+        A FractalClient connected to a server
     data : dict
         JSON representation of the database backbone
     df : pd.DataFrame
@@ -57,8 +57,8 @@ class Dataset(Collection):
         ----------
         name : str
             The name of the Dataset
-        client : Opational['FractalClient'], optional
-            A Portal client to connected to a server
+        client : Optional['FractalClient'], optional
+            A FractalClient connected to a server
         **kwargs : Dict[str, Any]
             Additional kwargs to pass to the collection
         """
@@ -196,7 +196,7 @@ class Dataset(Collection):
 
         queries = self.list_history(**search).reset_index()
         if queries.shape[0] > 10:
-            raise TypeError("More than 10 queries formed, please narrow the search.")
+            raise TypeError("More than 10 queries formed, please narrow the search by adding additional constraints such as method or basis.")
 
         # queries["name"] = None
         for name, query in queries.iterrows():
@@ -528,7 +528,7 @@ class Dataset(Collection):
 
     def add_keywords(self, alias: str, program: str, keyword: 'KeywordSet', default: bool=False) -> bool:
         """
-        Adds an option alias to the dataset. Not that keywords are not present
+        Adds an option alias to the dataset. Note that keywords are not present
         until a save call has been completed.
 
         Parameters
@@ -702,7 +702,7 @@ class Dataset(Collection):
         method : str
             The computational method to query on (B3LYP)
         basis : Optional[str], optional
-            The computational basis query on (6-31G)
+            The computational basis to query on (6-31G)
         keywords : Optional[str], optional
             The option token desired
         program : Optional[str], optional
@@ -788,7 +788,7 @@ class Dataset(Collection):
         self._check_state()
 
         if self.client is None:
-            raise AttributeError("Dataset: Compute: Client was not set.")
+            raise AttributeError("Dataset: Compute: FractalClient was not set.")
 
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
 
@@ -813,12 +813,12 @@ class Dataset(Collection):
 
     def get_index(self) -> List[str]:
         """
-        Returns the current index of the database.
+        Returns the current index of the dataset.
 
         Returns
         -------
         ret : List[str]
-            The names of all reactions in the database
+            The names of all reactions in the dataset
         """
         return [x.name for x in self.data.records]
 
@@ -847,7 +847,7 @@ class Dataset(Collection):
 
     # Getters
     def __getitem__(self, args: str) -> 'Series':
-        """A wrapped to the underlying pd.DataFrame to access columnar data
+        """A wrapper to the underlying pd.DataFrame to access columnar data
 
         Parameters
         ----------
