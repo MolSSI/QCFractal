@@ -10,7 +10,7 @@ __all__ = ["initialize_service", "construct_service"]
 
 def _service_chooser(name):
     """
-    Choose the correct service
+    Choose the correct service.
     """
     name = name.lower()
     if name == "torsiondrive":
@@ -22,19 +22,21 @@ def _service_chooser(name):
 
 
 def initialize_service(storage_socket, logger, service_input, tag=None, priority=None):
-    """Initializes a service from a API call
+    """Initializes a service from a API call.
 
     Parameters
     ----------
-    name : str
-        Description
     storage_socket : StorageSocket
         A StorageSocket to the currently active database
-    meta : dict
-        A JSON blob with the required keys for the service.
-    molecule : dict
-        A JSON Molecule object
-
+    logger
+		A logger for use by the service
+	service_input
+		The service to be initialized.
+	tag : Optional
+		Optional tag to user with the service. Defaults to None
+	priority :
+		The priority of the service.
+		
     Returns
     -------
     Service
@@ -47,12 +49,14 @@ def initialize_service(storage_socket, logger, service_input, tag=None, priority
 
 
 def construct_service(storage_socket, logger, data):
-    """Initializes a service from a JSON blob
+    """Initializes a service from a JSON blob.
 
     Parameters
     ----------
     storage_socket : StorageSocket
         A StorageSocket to the currently active database
+    logger
+		A logger for use by the service
     data : dict
         The associated JSON blob with the service
 
