@@ -369,11 +369,6 @@ class ReactionDataset(Dataset):
         -------
         ret : dict
             A dictionary of the keys for all requested computations
-
-        Raises
-        ------
-        AttributeError
-            If Client is not set
         """
         self._check_state()
 

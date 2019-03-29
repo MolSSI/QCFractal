@@ -28,11 +28,6 @@ class Collection(abc.ABC):
         **kwargs : Dict[str, Any]
             Additional keywords which are passed to the Collection and the initial data constructor
             It is up to the individual implementations of the Collection to do things with that data
-
-        Raises
-        ------
-        TypeError
-            Description
         """
 
         self.client = client
