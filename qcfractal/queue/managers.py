@@ -27,7 +27,7 @@ class QueueManager:
     Attributes
     ----------
     client : FractalClient
-        A Portal client to connect to a server
+        A FractalClient connected to a server.
     queue_adapter : QueueAdapter
         The DBAdapter class for queue abstraction
     errors : dict
@@ -52,7 +52,7 @@ class QueueManager:
         Parameters
         ----------
         client : FractalClient
-            A Portal client to connect to a server
+            A FractalClient connected to a server
         queue_client : QueueAdapter
             The DBAdapter class for queue abstraction
         storage_socket : DBSocket
@@ -205,7 +205,7 @@ class QueueManager:
 
     def start(self) -> None:
         """
-        Starts up all IOLoops and processes
+        Starts up all IOLoops and processes.
         """
 
         self.assert_connected()
@@ -230,7 +230,7 @@ class QueueManager:
 
     def stop(self, signame="Not provided", signum=None, stack=None) -> None:
         """
-        Shuts down all IOLoops and periodic updates
+        Shuts down all IOLoops and periodic updates.
         """
         self.logger.info("QueueManager recieved shutdown signal: {}.\n".format(signame))
 
@@ -253,7 +253,7 @@ class QueueManager:
 
     def close_adapter(self) -> bool:
         """
-        Closes down the underlying adapter
+        Closes down the underlying adapter.
         """
 
         return self.queue_adapter.close()
@@ -262,7 +262,7 @@ class QueueManager:
 
     def heartbeat(self) -> None:
         """
-        Provides a heartbeat to the connected Server
+        Provides a heartbeat to the connected Server.
         """
 
         self.assert_connected()
@@ -297,14 +297,14 @@ class QueueManager:
         return response
 
     def add_exit_callback(self, callback: Callable, *args: List[Any], **kwargs: Dict[Any, Any]) -> None:
-        """Adds additional callbacks to perform when closing down the server
+        """Adds additional callbacks to perform when closing down the server.
 
         Parameters
         ----------
         callback : callable
             The function to call at exit
         *args
-            Arguements to call with the function.
+            Arguments to call with the function.
         **kwargs
             Kwargs to call with the function.
 
@@ -313,7 +313,7 @@ class QueueManager:
 
     def update(self, new_tasks: bool=True) -> bool:
         """Examines the queue for completed tasks and adds successful completions to the database
-        while unsuccessful are logged for future inspection
+        while unsuccessful are logged for future inspection.
 
         """
 
@@ -364,7 +364,7 @@ class QueueManager:
         return True
 
     def await_results(self) -> bool:
-        """A synchronous method for testing or small launches
+        """A synchronous method for testing on small launches
         that awaits task completion.
 
         Returns
@@ -382,7 +382,7 @@ class QueueManager:
 
     def list_current_tasks(self) -> List[Any]:
         """Provides a list of tasks currently in the queue along
-        with the associated keys
+        with the associated keys.
 
         Returns
         -------

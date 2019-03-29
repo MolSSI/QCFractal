@@ -60,7 +60,7 @@ class BaseTasks:
 
 
 class SingleResultTasks(BaseTasks):
-    """Single is a simple Result
+    """A task generator for a single Result.
      Unique by: driver, method, basis, option (the name in the options table),
      and program.
     """
@@ -195,7 +195,7 @@ class OptimizationTasks(BaseTasks):
         return True
 
     def parse_input(self, data, duplicate_id="hash_index"):
-        """
+        """Parse input json into internally appropriate format
 
         json_data = {
             "meta": {
@@ -373,7 +373,7 @@ def check_procedure_available(procedure: str) -> List[str]:
 
 
 def get_procedure_parser(procedure_type: str, storage, logger) -> supported_procedures:
-    """A factory methods that returns the approperiate parser class
+    """A factory method that returns the appropriate parser class
     for the supported procedure types (like single and optimization)
 
     Parameters
