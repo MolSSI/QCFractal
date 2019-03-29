@@ -7,7 +7,7 @@ def storage_socket_factory(uri, project_name, logger=None, db_type='mongoengine'
     """
     Factory for generating storage sockets. Spins up a given storage layer on request given common inputs.
 
-    Right now only supports MongoDB
+    Right now only supports MongoDB.
 
     Parameters
     ----------

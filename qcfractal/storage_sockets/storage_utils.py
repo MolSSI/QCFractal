@@ -1,5 +1,5 @@
 """
-Contains a number of utility functions for storage sockets
+Contains a number of utility functions for storage sockets.
 """
 
 import json
@@ -19,13 +19,13 @@ _add_metadata = json.dumps({
 
 def get_metadata_template():
     """
-    Returns a copy of the metadata for database getters
+    Returns a copy of the metadata for database getters.
     """
     return json.loads(_get_metadata)
 
 
 def add_metadata_template():
     """
-    Returns a copy of the metadata for database save/updates
+    Returns a copy of the metadata for database save/updates.
     """
     return json.loads(_add_metadata)

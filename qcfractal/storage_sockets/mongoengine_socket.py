@@ -1,5 +1,5 @@
 """
-Mongoengine Database class to handle access to mongoDB through ODM
+Mongoengine Database class to handle access to mongoDB through ODM.
 """
 
 try:
@@ -113,7 +113,7 @@ class MongoengineSocket:
                  logger: 'Logger'=None,
                  max_limit: int=1000):
         """
-        Constructs a new socket where url and port points towards a Mongod instance.
+        Constructs a new socket where url and port point towards a Mongod instance.
 
         """
 
@@ -168,7 +168,7 @@ class MongoengineSocket:
         return "<MongoSocket: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._project_name))
 
     def _clear_db(self, db_name: str):
-        """Dangerous, make sure you are deleting the right DB"""
+        """Dangerous, make sure you are deleting the right DB."""
 
         self.logger.warning("Clearing database '{}' and dropping all tables.".format(db_name))
 
@@ -213,9 +213,9 @@ class MongoengineSocket:
 
         Returns
         -------
-        TYPE
-
-            Description
+        A dict with keys: 'data' and 'meta'
+            (see get_metadata_template())
+            The 'data' part is an object of the result or None if not found
         """
 
         meta = add_metadata_template()
@@ -245,8 +245,9 @@ class MongoengineSocket:
 
         Returns
         -------
-        TYPE
-            Description
+        A dict with keys: 'data' and 'meta'
+            (see get_metadata_template())
+            The 'data' part is an object of the result or None if not found
         """
 
         meta = get_metadata_template()
@@ -269,7 +270,7 @@ class MongoengineSocket:
         """
         Get or add the given molecules (if they don't exit).
         MoleculeORMs are given in a mixed format, either as a dict of mol data
-        or as existing mol id
+        or as existing mol id.
 
         TODO: to be split into get by_id and get_by_data
         """
@@ -410,7 +411,7 @@ class MongoengineSocket:
 
         Returns
         -------
-        bool
+        int
             Number of deleted molecules.
         """
 
@@ -522,7 +523,7 @@ class MongoengineSocket:
         """
         Get or add the given options (if they don't exit).
         KeywordsORM are given in a mixed format, either as a dict of mol data
-        or as existing mol id
+        or as existing mol id.
 
         TODO: to be split into get by_id and get_by_data
         """
@@ -692,7 +693,7 @@ class MongoengineSocket:
 
     def del_collection(self, collection: str, name: str) -> bool:
         """
-        Remove a collection from the database from its keys.
+        Remove a collection from the database based on its keys.
 
         Parameters
         ----------
@@ -720,13 +721,13 @@ class MongoengineSocket:
         data : list of dict
             Each dict must have:
             program, driver, method, basis, options, molecule
-            Where molecule is the molecule id in the DB
+            Where molecule is the molecule ID in the DB
             In addition, it should have the other attributes that it needs
             to store
 
         Returns
         -------
-            Dict with keys: data, meta
+        Dict with keys: data, meta
             Data is the ids of the inserted/updated/existing docs
         """
 
@@ -760,12 +761,12 @@ class MongoengineSocket:
 
     def update_results(self, record_list: List[ResultRecord]):
         """
-        Update results from a given dict (replace existing)
+        Update results from a given dict (replace existing).
 
         Parameters
         ----------
         id : list of str
-            Ids of the results to update, must exist in the DB
+            IDs of the results to update, must exist in the DB
         data : list of dict
             Data that needs to be updated
             Shouldn't update:
@@ -791,7 +792,7 @@ class MongoengineSocket:
 
     def get_results_count(self):
         """
-        TODO: just return the count, used for big queries
+        TODO: just return the count, used for big queries.
 
         Returns
         -------
@@ -841,7 +842,7 @@ class MongoengineSocket:
         skip : int, default is 0
             skip the first 'skip' results. Used to paginate
         return_json : bool, default is True
-            Return the results as a list of json inseated of objects
+            Return the results as a list of json instead of objects
         with_ids : bool, default is True
             Include the ids in the returned objects/dicts
 
@@ -889,7 +890,7 @@ class MongoengineSocket:
     def del_results(self, ids: List[str]):
         """
         Removes results from the database using their ids
-        (Should be cautious! other tables maybe referencing results)
+        (Should be cautious! other tables maybe referencing results).
 
         Parameters
         ----------
@@ -925,7 +926,7 @@ class MongoengineSocket:
 
         Returns
         -------
-            Dict with keys: data, meta
+        Dict with keys: data, meta
             Data is the ids of the inserted/updated/existing docs
         """
 
@@ -979,9 +980,9 @@ class MongoengineSocket:
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
         skip : int, default is 0
-            skip the first 'skip' resaults. Used to paginate
-        return_json : bool, deafult is True
-            Return the results as a list of json inseated of objects
+            skip the first 'skip' results. Used to paginate
+        return_json : bool, default is True
+            Return the results as a list of json instead of objects
         with_ids : bool, default is True
             Include the ids in the returned objects/dicts
 
@@ -1047,7 +1048,7 @@ class MongoengineSocket:
 
         Returns
         -------
-            Dict with keys: data, meta
+        Dict with keys: data, meta
             Data is the hash_index of the inserted/existing docs
         """
 
@@ -1107,7 +1108,7 @@ class MongoengineSocket:
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
         skip : int, default is 0
-            skip the first 'skip' resaults. Used to paginate
+            skip the first 'skip' results. Used to paginate
         return_json : bool, deafult is True
             Return the results as a list of json instead of objects
 
@@ -1141,9 +1142,9 @@ class MongoengineSocket:
 
     def update_services(self, records_list: List["BaseService"]) -> int:
         """
-        Replace existing service
+        Replace existing service.
 
-        Raises exception if the id is invalid
+        Raises exception if the id is invalid.
 
         Parameters
         ----------
@@ -1192,11 +1193,11 @@ class MongoengineSocket:
         """Submit a list of tasks to the queue.
         Tasks are unique by their base_result, which should be inserted into
         the DB first before submitting it's corresponding task to the queue
-        (with result.status='INCOMPLETE' as the default)
-        The default task.status is 'WAITING'
+        (with result.status='INCOMPLETE' as the default).
+        The default task.status is 'WAITING'.
 
         Duplicate tasks sould be a rare case.
-        Hooks are merged if the task already exists
+        Hooks are merged if the task already exists.
 
         Parameters
         ----------
@@ -1261,7 +1262,7 @@ class MongoengineSocket:
 
     def queue_get_next(self, manager, available_programs, available_procedures, limit=100, tag=None,
                        as_json=True) -> List[TaskRecord]:
-        """TODO: needs to be done in a transcation"""
+        """TODO: needs to be done in a transaction."""
 
         # Figure out query, tagless has no requirements
         query, error = format_query(
@@ -1302,7 +1303,7 @@ class MongoengineSocket:
                   return_json=True,
                   with_ids=True):
         """
-        TODO: check what query keys are needs
+        TODO: check what query keys are needed.
         Parameters
         ----------
         id : list
@@ -1318,9 +1319,9 @@ class MongoengineSocket:
             the self._max_limit will be returned instead
             (This is to avoid overloading the server)
         skip : int, default is None 0
-            skip the first 'skip' resaults. Used to paginate
-        return_json : bool, deafult is True
-            Return the results as a list of json inseated of objects
+            skip the first 'skip' results. Used to paginate
+        return_json : bool, default is True
+            Return the results as a list of json instead of objects
         with_ids : bool, default is True
             Include the ids in the returned objects/dicts
 
@@ -1353,12 +1354,12 @@ class MongoengineSocket:
         return {"data": data, "meta": meta}
 
     def queue_get_by_id(self, id: List[str], limit: int=None, skip: int=0, as_json: bool=True):
-        """Get tasks by their IDs
+        """Get tasks by their IDs.
 
         Parameters
         ----------
         id : list of str
-            List of the task Ids in the DB
+            List of the task IDs in the DB
         limit : int (optional)
             max number of returned tasks. If limit > max_limit, max_limit
             will be returned instead (safe query)
@@ -1378,9 +1379,9 @@ class MongoengineSocket:
         return found
 
     def queue_mark_complete(self, task_ids: List[str]) -> int:
-        """Update the given tasks as complete
-        Note that each task is already pointing to its result location
-        Mark the corresponding result/procedure as complete
+        """Update the given tasks as complete.
+        Note that each task is already pointing to its result location.
+        Mark the corresponding result/procedure as complete.
 
         Parameters
         ----------
@@ -1416,8 +1417,8 @@ class MongoengineSocket:
         return tasks
 
     def queue_mark_error(self, data):
-        """update the given tasks as errored
-        Mark the corresponding result/procedure as complete
+        """update the given tasks as errored.
+        Mark the corresponding result/procedure as complete.
 
         """
 
@@ -1463,8 +1464,8 @@ class MongoengineSocket:
 
     def queue_reset_status(self, manager: str, reset_running: bool=True, reset_error: bool=False) -> int:
         """
-        Reset the status of the tasks that a manager owns from Running to Waiting
-        If reset_error is True, then also reset errored tasks AND its results/proc
+        Reset the status of the tasks that a manager owns from Running to Waiting.
+        If reset_error is True, then also reset errored tasks AND its results/proc.
 
         Parameters
         ----------
@@ -1506,7 +1507,7 @@ class MongoengineSocket:
         return updated
 
     def del_tasks(self, id: Union[str, list]):
-        """Delete a task from the queue. Use with cautious
+        """Delete a task from the queue. Use with caution.
 
         Parameters
         ----------
@@ -1671,7 +1672,7 @@ class MongoengineSocket:
         return (True, "Success")
 
     def remove_user(self, username):
-        """Removes a user from the MongoDB Tables
+        """Removes a user from the MongoDB Tables.
 
         Parameters
         ----------
