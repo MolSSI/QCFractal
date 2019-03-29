@@ -29,13 +29,13 @@ def initialize_service(storage_socket, logger, service_input, tag=None, priority
     storage_socket : StorageSocket
         A StorageSocket to the currently active database
     logger
-		A logger for use by the service
-	service_input
-		The service to be initialized.
+        A logger for use by the service
+    service_input
+        The service to be initialized.
 	tag : Optional
-		Optional tag to user with the service. Defaults to None
-	priority :
-		The priority of the service.
+        Optional tag to user with the service. Defaults to None
+    priority :
+        The priority of the service.
 		
     Returns
     -------
@@ -56,7 +56,7 @@ def construct_service(storage_socket, logger, data):
     storage_socket : StorageSocket
         A StorageSocket to the currently active database
     logger
-		A logger for use by the service
+        A logger for use by the service
     data : dict
         The associated JSON blob with the service
 

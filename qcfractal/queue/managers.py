@@ -364,7 +364,7 @@ class QueueManager:
         return True
 
     def await_results(self) -> bool:
-        """A synchronous method for testing on small launches
+        """A synchronous method for testing or small launches
         that awaits task completion.
 
         Returns

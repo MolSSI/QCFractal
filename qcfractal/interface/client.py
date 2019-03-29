@@ -678,8 +678,8 @@ class FractalClient(object):
         priority : str, optional
             The priority of the job {"HIGH", "MEDIUM", "LOW"}. Default is "MEDIUM".
         tag : str, optional
-            The computational tag to add to your procedure, managers can optionally only pulled
-            based off the strings tags. These tags are arbitrary, but several examples are to
+            The computational tag to add to your procedure, managers can optionally only pull
+            based off the string tags. These tags are arbitrary, but several examples are to
             use "large", "medium", "small" to denote the size of the job or "project1", "project2"
             to denote different projects.
         full_return : bool, optional
@@ -828,8 +828,8 @@ class FractalClient(object):
             A dictionary of each match that contains the current status
             and, if an error has occurred, the error message.
 
-		Examples
-		--------
+        Examples
+        --------
         >>> client.check_services(id="5bd35af47b878715165f8225", projection={"status": True})
         [{"status": "RUNNING"}]
 
