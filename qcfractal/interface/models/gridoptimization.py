@@ -129,19 +129,19 @@ class GridOptimizationRecord(RecordBase):
     def _organize_return(self, data: Dict[str, Any], key: Union[int, str, None]) -> Dict[str, Any]:
 
         if key is None:
-            return {self.deserialize_key(k): copy.deepcopy(v) for k, v in data.items()}
+            return {self._deserialize_key(k): copy.deepcopy(v) for k, v in data.items()}
         else:
-            key = self.serialize_key(key)
+            key = self._serialize_key(key)
 
         return copy.deepcopy(data[key])
 
-    def serialize_key(self, key):
+    def _serialize_key(self, key):
         if isinstance(key, (int, float)):
             key = (int(key), )
 
         return json.dumps(key)
 
-    def deserialize_key(self, key):
+    def _deserialize_key(self, key):
 
         return tuple(json.loads(key))
 
@@ -150,7 +150,7 @@ class GridOptimizationRecord(RecordBase):
         Obtains the scan parameters at a given grid point.
         """
         if isinstance(key, str):
-            key = self.deserialize_key(key)
+            key = self._deserialize_key(key)
 
         ret = []
         for n, idx in enumerate(key):
@@ -179,7 +179,6 @@ class GridOptimizationRecord(RecordBase):
         key : Union[int, str, None], optional
             Specifies a single entry to pull from.
 
-
         Returns
         -------
         energy : Dict[str, Any]
@@ -188,9 +187,53 @@ class GridOptimizationRecord(RecordBase):
 
         Examples
         --------
-
-        >>> torsiondrive_obj.final_energies()
+        >>> grid_optimization_record.get_final_energies()
         {(-90,): -148.7641654446243, (180,): -148.76501336993732, (0,): -148.75056290106735, (90,): -148.7641654446148}
+
+        >>> grid_optimization_record.get_final_energies((-90,))
+        -148.7641654446243
+
         """
 
         return self._organize_return(self.final_energy_dict, key)
+
+
+    def get_final_molecules(self, key: Union[int, str, None]=None) -> Dict[str, Any]:
+        """
+        Provides the final optimized molecules at each grid point.
+
+        Parameters
+        ----------
+        key : Union[int, str, None], optional
+            Specifies a single entry to pull from.
+
+
+        Returns
+        -------
+        final_molecules : Dict[str, Any]
+            Returns energies at each grid point in a dictionary or at a
+            single point if a key is specified.
+
+        Examples
+        --------
+
+        >>> grid_optimization_record.get_final_molecules()
+        {(-90,): molecule1, (-60,): molecule2, ... }
+
+        >>> grid_optimization_record.get_final_molecules((-90,))
+        molecule1
+
+        >>> type(molecule1)
+        qcelemental.models.molecule.Molecule
+
+        """
+
+        if "final_molecules" not in self.cache:
+            ret = {}
+            for k, task_id in self.grid_optimizations.items():
+                task = self.client.query_procedures(id=task_id)[0]
+                ret[k] = task.get_final_molecule()
+            self.cache["final_molecules"] = ret
+
+        data = self.cache["final_molecules"]
+        return self._organize_return(data, key)
