@@ -145,7 +145,7 @@ class Dataset(Collection):
 
         self.data.history.add(tuple(new_history))
 
-    def list_history(self, dftd3: bool=False, **search: Dict[str, Optional[str]]) -> 'DataFrame':
+    def list_history(self, dftd3: bool=False, get_base=False, **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """
         Lists the history of computations completed.
 
@@ -164,26 +164,27 @@ class Dataset(Collection):
         if not (search.keys() <= set(self.data.history_keys)):
             raise KeyError("Not all query keys were understood.")
 
-        df = pd.DataFrame(list(self.data.history), columns=self.data.history_keys)
+        history = pd.DataFrame(list(self.data.history), columns=self.data.history_keys)
+        ret = history.copy()
 
         for key, value in search.items():
             if value is None:
-                df = df[df[key].isnull()]
+                ret = ret[ret[key].isnull()]
             elif isinstance(value, str):
                 value = value.lower()
-                df = df[df[key] == value]
+                ret = ret[ret[key] == value]
             elif isinstance(value, (list, tuple)):
                 query = [x.lower() for x in value]
-                df = df[df[key].isin(query)]
+                ret = ret[ret[key].isin(query)]
             else:
                 raise TypeError(f"Search type {type(value)} not understood.")
 
-        if dftd3:
-            df = df[df["program"] != "dftd3"]
+        if dftd3 is False:
+            ret = ret[ret["program"] != "dftd3"]
 
-        df.set_index(list(self.data.history_keys[:-1]), inplace=True)
-        df.sort_index(inplace=True)
-        return df
+        ret.set_index(list(self.data.history_keys[:-1]), inplace=True)
+        ret.sort_index(inplace=True)
+        return ret
 
     def _get_history(self, **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """Queries for all history that matches the search
@@ -199,13 +200,14 @@ class Dataset(Collection):
             A DataFrame of the queried parameters
         """
 
-        queries = self.list_history(**search).reset_index()
+        queries = self.list_history(**search, dftd3=True).reset_index()
         if queries.shape[0] > 10:
             raise TypeError("More than 10 queries formed, please narrow the search by adding additional constraints such as method or basis.")
 
         # queries["name"] = None
         for name, query in queries.iterrows():
-            query = query.to_dict()
+
+            query = query.replace({np.nan: None}).to_dict()
             query.pop("driver")
             if "stoichiometry" in query:
                 query["stoich"] = query.pop("stoichiometry")
@@ -256,6 +258,7 @@ class Dataset(Collection):
                    query: Dict[str, Optional[str]],
                    groupby: Optional[str]=None,
                    return_figure=None,
+                   digits=3,
                    kind="bar") -> 'plotly.Figure':
 
         # Validate query dimensions
@@ -282,7 +285,7 @@ class Dataset(Collection):
             metric = "M" + metric
 
         # Are we a groupby?
-        _valid_groupby = {"method", "basis", "keywords", "program", "stoich"}
+        _valid_groupby = {"method", "basis", "keywords", "program", "stoic", "d3"}
         if groupby is not None:
             groupby = groupby.lower()
             if groupby not in _valid_groupby:
@@ -291,11 +294,13 @@ class Dataset(Collection):
                 raise KeyError(
                     f"Groupby option {groupby} not found in query, must provide a search on this parameter.")
 
-            if not isinstance(query[groupby], (tuple, list)):
+            if (not groupby == "d3") and (not isinstance(query[groupby], (tuple, list))):
                 raise KeyError(f"Groupby option {groupby} must be a list.")
 
-            if groupby and (kind == "violin") and (len(query[groupby]) != 2):
+            if (kind == "violin") and (len(query[groupby]) != 2):
                 raise KeyError(f"Groupby option for violin plots must have two entries.")
+
+
 
             query_names = []
             queries = []
@@ -307,6 +312,7 @@ class Dataset(Collection):
                 query_names.append(self._canonical_name(**{groupby: gb}))
 
         else:
+            print(query)
             queries = [self.get_history(**query)]
             query_names = ["Stats"]
 
@@ -339,7 +345,7 @@ class Dataset(Collection):
             else:
                 stat.columns = [col_names[x] for x in stat.columns]
 
-            series.append(stat)
+            series.append(stat.round(digits))
 
         if kind == "bar":
             return bar_plot(series, title=title, ylabel=ylabel, return_figure=return_figure)

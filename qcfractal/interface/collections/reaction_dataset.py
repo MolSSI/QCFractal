@@ -370,6 +370,10 @@ class ReactionDataset(Dataset):
 
         # Figure out molecules that we need
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
+            if ("-D3" in method.upper()) and stoich.lower() != "default":
+                raise KeyError("Please only run -D3 as default at the moment, running with CP could lead to extra computations.")
+
+
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
             tmp_monomer = self.rxn_index[self.rxn_index["stoichiometry"] == monomer_stoich].copy()
 
