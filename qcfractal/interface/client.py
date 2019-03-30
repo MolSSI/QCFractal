@@ -5,9 +5,10 @@ import os
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import ValidationError
-
+import pandas as pd
 import requests
+
+from pydantic import ValidationError
 
 from .collections import collection_factory, collections_name_map
 from .models import GridOptimizationInput, Molecule, ObjectId, TorsionDriveInput, build_procedure
@@ -360,7 +361,7 @@ class FractalClient(object):
 
 ### Collections section
 
-    def list_collections(self, collection_type: Optional[str]=None) -> Dict[str, Any]:
+    def list_collections(self, collection_type: Optional[str]=None, aslist: bool=False) -> 'DataFrame':
         """Lists the available collections currently on the server.
 
         Parameters
@@ -368,31 +369,42 @@ class FractalClient(object):
         collection_type : Optional[str], optional
             If `None` all collection types will be returned, otherwise only the
             specified collection type will be returned
+        aslist : bool, optional
+            Returns a canonical list rather than a dataframe.
 
         Returns
         -------
-        Dict[str, Any]
-            A dictionary containing the available collection types.
+        DataFrame
+            A dataframe containing the collection, name, and tagline.
         """
 
         query = {}
         if collection_type is not None:
             query = {"collection": collection_type.lower()}
 
-        payload = {"meta": {"projection": {"name": True, "collection": True}}, "data": query}
+        payload = {"meta": {"projection": {"name": True, "collection": True, "tagline": True}}, "data": query}
         response = self._automodel_request("collection", "get", payload, full_return=False)
 
-        if collection_type is None:
-            repl_name_map = collections_name_map()
-            ret = defaultdict(list)
-            for entry in response:
-                colname = entry["collection"]
-                if colname in repl_name_map:
-                    colname = repl_name_map[colname]
-                ret[colname].append(entry["name"])
-            return dict(ret)
+        # Rename collection names
+        repl_name_map = collections_name_map()
+        for item in response:
+            if item["collection"] in repl_name_map:
+                item["collection"] = repl_name_map[item["collection"]]
+
+        if aslist:
+            if collection_type is None:
+                ret = defaultdict(list)
+                for entry in response:
+                    ret[entry["collection"]].append(entry["name"])
+                return dict(ret)
+            else:
+                return [x["name"] for x in response]
         else:
-            return [x["name"] for x in response]
+            df = pd.DataFrame.from_dict(response)
+            df.drop("id", axis=1, inplace=True)
+            df.set_index(["collection", "name"], inplace=True)
+            df.sort_index(inplace=True)
+            return df
 
     def get_collection(self, collection_type: str, name: str, full_return: bool=False) -> 'Collection':
         """Acquires a given collection from the server.

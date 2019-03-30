@@ -15,6 +15,7 @@ from contextlib import contextmanager
 
 import pymongo
 import pytest
+import qcengine as qcng
 from tornado.ioloop import IOLoop
 
 from .queue import build_queue_adapter
@@ -53,6 +54,8 @@ if _programs["dask"]:
 else:
     _programs["dask.distributed"] = False
 
+_programs["dftd3"] = "dftd3" in qcng.list_available_programs()
+
 
 def has_module(name):
     return _programs[name]
@@ -65,6 +68,7 @@ def _build_pytest_skip(program):
 
 # Add a number of module testing options
 using_dask = _build_pytest_skip('dask.distributed')
+using_dftd3 = _build_pytest_skip('dftd3')
 using_fireworks = _build_pytest_skip('fireworks')
 using_geometric = _build_pytest_skip('geometric')
 using_parsl = _build_pytest_skip('parsl')

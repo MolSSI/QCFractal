@@ -9,12 +9,11 @@ import numpy as np
 import pandas as pd
 
 from pydantic import BaseModel
-from qcelemental import constants
 
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
 from ..dict_utils import replace_dict_keys
-from ..models import Molecule
+from ..models import ComputeResponse, Molecule
 
 
 class _ReactionTypeEnum(str, Enum):
@@ -136,17 +135,9 @@ class ReactionDataset(Dataset):
         tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
         tmp_idx = tmp_idx.reset_index(drop=True)
 
-        # There could be duplicates so take the unique and save the map
-        umols, uidx = np.unique(tmp_idx["molecule"], return_index=True)
-
-        # Evaluate the overall dataframe
-        query_keys = {k: v for k, v in keys.items()}
-        query_keys["molecule"] = list(umols)
-        query_keys["projection"] = {field: True, "molecule": True}
-        values = pd.DataFrame(self.client.query_results(**query_keys), columns=["molecule", field])
-
-        # Join on molecule hash
-        tmp_idx = tmp_idx.merge(values, how="left", on="molecule")
+        indexer = {x: x for x in tmp_idx["molecule"]}
+        results = self._query(indexer, keys, field=field)
+        tmp_idx = tmp_idx.join(results, on="molecule", how="left")
 
         # Apply stoich values
         tmp_idx[field] *= tmp_idx["coefficient"]
@@ -237,7 +228,7 @@ class ReactionDataset(Dataset):
             The kind of chart to produce, either 'bar' or 'violin'
         return_figure : Optional[bool], optional
             If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
-        
+
         Returns
         -------
         plotly.Figure
@@ -295,6 +286,7 @@ class ReactionDataset(Dataset):
 
         """
         self._check_state()
+        method = method.upper()
 
         if self.client is None:
             raise AttributeError("DataBase: FractalClient was not set.")
@@ -325,11 +317,9 @@ class ReactionDataset(Dataset):
 
         # scale
         tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
-        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor(
-            'hartree', self.units)
 
         # Apply to df
-        self.df[name] = tmp_idx
+        self.df[name] = tmp_idx[name]
 
         return name
 
@@ -342,7 +332,7 @@ class ReactionDataset(Dataset):
                 stoich: str="default",
                 ignore_ds_type: bool=False,
                 tag: Optional[str]=None,
-                priority: Optional[str]=None):
+                priority: Optional[str]=None) -> ComputeResponse:
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -367,8 +357,12 @@ class ReactionDataset(Dataset):
 
         Returns
         -------
-        ret : dict
-            A dictionary of the keys for all requested computations
+        ComputeResponse
+            An object that contains the submitted ObjectIds of the new compute. This object has the following fields:
+              - ids: The ObjectId's of the task in the order of input molecules
+              - submitted: A list of ObjectId's that were submitted to the compute queue
+              - existing: A list of ObjectId's of tasks already in the database
+
         """
         self._check_state()
 
@@ -376,40 +370,28 @@ class ReactionDataset(Dataset):
             raise AttributeError("Dataset: Compute: Client was not set.")
 
         self._validate_stoich(stoich)
-        name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=stoich)
+        compute_keys = {"program": program, "method": method, "basis": basis, "keywords": keywords, "stoich": stoich}
 
         # Figure out molecules that we need
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
+            if ("-D3" in method.upper()) and stoich.lower() != "default":
+                raise KeyError("Please only run -D3 as default at the moment, running with CP could lead to extra computations.")
+
+
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
             tmp_monomer = self.rxn_index[self.rxn_index["stoichiometry"] == monomer_stoich].copy()
+
+            ret1 = self._compute(compute_keys, tmp_monomer["molecule"], tag, priority)
+
             tmp_complex = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
-            tmp_idx = pd.concat((tmp_monomer, tmp_complex), axis=0)
+            ret2 = self._compute(compute_keys, tmp_complex["molecule"], tag, priority)
+
+            ret = ret1.merge(ret2)
         else:
-            tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
-
-        tmp_idx = tmp_idx.reset_index(drop=True)
-
-        # There could be duplicates so take the unique and save the map
-        umols, uidx = np.unique(tmp_idx["molecule"], return_index=True)
-
-        complete_values = self.client.query_results(**dbkeys, molecule=list(umols), projection={"molecule": True})
-
-        complete_mols = np.array([x["molecule"] for x in complete_values])
-        umols = np.setdiff1d(umols, complete_mols)
-        compute_list = list(umols)
-
-        ret = self.client.add_compute(
-            dbkeys["program"],
-            dbkeys["method"],
-            dbkeys["basis"],
-            dbkeys["driver"],
-            dbkeys["keywords"],
-            compute_list,
-            tag=tag,
-            priority=priority)
+            tmp_complex = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
+            ret = self._compute(compute_keys, tmp_complex["molecule"], tag, priority)
 
         # Update the record that this was computed
-        self._add_history(**history)
         self.save()
 
         return ret
