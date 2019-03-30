@@ -8,7 +8,7 @@ import mongoengine as db
 
 class CustomDynamicDocument(db.DynamicDocument):
     """
-    This class is serializable into standard json
+    This class is serializable into standard json.
     """
 
     def to_json_obj(self, with_id=True):
@@ -54,10 +54,10 @@ class KVStoreORM(CustomDynamicDocument):
 
 class CollectionORM(CustomDynamicDocument):
     """
-        A collection of precomuted workflows such as datasets, ..
+        A collection of precomputed workflows such as datasets, ...
 
         This is a dynamic document, so it will accept any number of
-        extra fields (expandable and uncontrolled schema)
+        extra fields (expandable and uncontrolled schema).
     """
 
     collection = db.StringField(required=True)  # , choices=['dataset', '?'])
@@ -77,7 +77,7 @@ class CollectionORM(CustomDynamicDocument):
 
 class MoleculeORM(CustomDynamicDocument):
     """
-        The molecule DB collection is managed by pymongo, so far
+        The molecule DB collection is managed by pymongo, so far.
     """
 
     name = db.StringField()
@@ -120,7 +120,7 @@ class MoleculeORM(CustomDynamicDocument):
 
 class KeywordsORM(CustomDynamicDocument):
     """
-        KeywordsORM are unique for a specific program and name
+        KeywordsORM are unique for a specific program and name.
     """
 
     # TODO: pull choices from const config
@@ -135,7 +135,7 @@ class KeywordsORM(CustomDynamicDocument):
 
 class BaseResultORM(CustomDynamicDocument):
     """
-        Abstract Base class for ResultORMs and ProcedureORMs
+        Abstract Base class for ResultORMs and ProcedureORMs.
     """
 
     # queue related
@@ -166,7 +166,7 @@ class BaseResultORM(CustomDynamicDocument):
 
 class ResultORM(BaseResultORM):
     """
-        Hold the result of an atomic single calculation
+        Hold the result of an atomic single calculation.
     """
 
     # uniquely identifying a result
@@ -204,7 +204,7 @@ class ResultORM(BaseResultORM):
 
 class ProcedureORM(BaseResultORM):
     """
-        A procedure is a group of related results applied to a list of molecules
+        A procedure is a group of related results applied to a list of molecules.
     """
 
     procedure = db.StringField(required=True)
@@ -239,7 +239,7 @@ class ProcedureORM(BaseResultORM):
 
 class OptimizationProcedureORM(ProcedureORM):
     """
-        An Optimization  procedure
+        An Optimization procedure.
     """
 
     procedure = db.StringField(default='optimization', required=True)
@@ -250,7 +250,7 @@ class OptimizationProcedureORM(ProcedureORM):
 
 class TorsiondriveProcedureORM(ProcedureORM):
     """
-        An torsion drive  procedure
+        An torsion drive procedure.
     """
 
     procedure = db.StringField(default='torsiondrive', required=True)
@@ -264,10 +264,10 @@ class TorsiondriveProcedureORM(ProcedureORM):
 
 
 class TaskQueueORM(CustomDynamicDocument):
-    """A queue of tasks corresponding to a procedure
+    """A queue of tasks corresponding to a procedure.
 
-       Notes: don't sort query results without having the index sorted
-              will impact the performce
+       Notes: Don't sort query results without having the index sorted
+              or it will impact the performance.
     """
 
     spec = db.DynamicField()
@@ -313,7 +313,7 @@ class TaskQueueORM(CustomDynamicDocument):
     }
 
     def save(self, *args, **kwargs):
-        """Override save to update modified_on"""
+        """Override save to update modified_on."""
         self.modified_on = datetime.datetime.utcnow()
         if not self.created_on:
             self.created_on = datetime.datetime.utcnow()
@@ -391,7 +391,7 @@ class QueueManagerORM(CustomDynamicDocument):
     meta = {'collection': 'queue_manager', 'indexes': ['status', 'name', 'modified_on']}
 
     def save(self, *args, **kwargs):
-        """Override save to update modified_on"""
+        """Override save to update modified_on."""
         self.modified_on = datetime.datetime.utcnow()
         if not self.created_on:
             self.created_on = datetime.datetime.utcnow()

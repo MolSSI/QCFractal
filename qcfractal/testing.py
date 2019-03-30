@@ -1,5 +1,5 @@
 """
-Contains testing infrastructure for QCFractal
+Contains testing infrastructure for QCFractal.
 """
 
 import os
@@ -101,7 +101,7 @@ def mark_example(func):
 
 
 def recursive_dict_merge(base_dict, dict_to_merge_in):
-    """Recursive merge for more complex than a simple top-level merge {**x, **y} which does not handle nested dict"""
+    """Recursive merge for more complex than a simple top-level merge {**x, **y} which does not handle nested dict."""
     for k, v in dict_to_merge_in.items():
         if (k in base_dict and isinstance(base_dict[k], dict) and isinstance(dict_to_merge_in[k], Mapping)):
             recursive_dict_merge(base_dict[k], dict_to_merge_in[k])
@@ -211,7 +211,7 @@ def terminate_process(proc):
 @contextmanager
 def popen(args, **kwargs):
     """
-    Opens a background task
+    Opens a background task.
 
     Code and idea from dask.distributed's testing suite
     https://github.com/dask/distributed
@@ -277,7 +277,7 @@ def run_process(args, **kwargs):
     """
     Runs a process in the background until complete.
 
-    Returns True if exit code zero
+    Returns True if exit code zero.
     """
 
     timeout = kwargs.pop("timeout", 30)
@@ -403,7 +403,7 @@ def adapter_client_fixture(request):
 @pytest.fixture(scope="module", params=_adapter_testing)
 def managed_compute_server(request):
     """
-    A FractalServer with compute associated parametrize for all managers
+    A FractalServer with compute associated parametrize for all managers.
     """
 
     yield from build_managed_compute_server(request.param)
@@ -412,7 +412,7 @@ def managed_compute_server(request):
 @pytest.fixture(scope="module")
 def fractal_compute_server(request):
     """
-    A FractalServer with a local Pool manager
+    A FractalServer with a local Pool manager.
     """
 
     # Check mongo

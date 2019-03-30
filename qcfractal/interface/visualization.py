@@ -70,8 +70,6 @@ def bar_plot(traces: 'List[Series]', title=None, ylabel=None, return_figure=True
         The title of the graph
     ylabel : None, optional
         The y axis label
-    dtype : str, optional
-        Description
     return_figure : bool, optional
         Returns the raw plotly figure or not
 
@@ -160,7 +158,7 @@ def scatter_plot(traces: List[Dict[str, Any]],
                  yline=True,
                  custom_layout=None,
                  return_figure=True) -> 'plotly.Figure':
-    """Renders a plotly violin plot
+    """Renders a plotly scatter plot
 
     Parameters
     ----------

@@ -22,7 +22,7 @@ def live_fractal_or_skip():
     try:
         return portal.FractalClient()
     except requests.exceptions.ConnectionError:
-        return pytest.skip("Could no make connection to central Fractal server")
+        return pytest.skip("Could not make a connection to central Fractal server")
 
 
 @pytest.fixture

@@ -1,5 +1,5 @@
 """
-Web handlers for the FractalServer
+Web handlers for the FractalServer.
 """
 import json
 
@@ -12,7 +12,7 @@ from .interface.models.rest_models import rest_model
 
 class APIHandler(tornado.web.RequestHandler):
     """
-    A requests handler for API calls, build
+    A requests handler for API calls.
     """
 
     # Admin authentication required by default
@@ -36,7 +36,7 @@ class APIHandler(tornado.web.RequestHandler):
         self.json = json.loads(self.request.body.decode("UTF-8"))
 
     def authenticate(self, permission):
-        """Authenticates request with a given permission setting
+        """Authenticates request with a given permission setting.
 
         Parameters
         ----------
@@ -69,7 +69,7 @@ class APIHandler(tornado.web.RequestHandler):
 
 class InformationHandler(APIHandler):
     """
-    A handler that returns public server information
+    A handler that returns public server information.
     """
 
     _required_auth = "read"

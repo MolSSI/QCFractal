@@ -21,7 +21,7 @@ def _get_future(future):
 
 
 class ParslAdapter(BaseAdapter):
-    """A Adapter for Parsl
+    """An Adapter for Parsl.
     """
 
     def __init__(self, client: Any, logger: Optional[logging.Logger] = None, **kwargs):
@@ -35,7 +35,7 @@ class ParslAdapter(BaseAdapter):
         return "<ParslAdapter client=<DataFlow label='{}'>>".format(self.client.config.executors[0].label)
 
     def get_app(self, function: str) -> Callable:
-        """Obtains a Parsl python_application
+        """Obtains a Parsl python_application.
 
         Parameters
         ----------
