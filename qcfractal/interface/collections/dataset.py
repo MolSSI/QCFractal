@@ -305,24 +305,47 @@ class Dataset(Collection):
             groupby = groupby.lower()
             if groupby not in _valid_groupby:
                 raise KeyError(f"Groupby option {groupby} not understood.")
-            if groupby not in query:
+            if (groupby != "d3") and (groupby not in query):
                 raise KeyError(
                     f"Groupby option {groupby} not found in query, must provide a search on this parameter.")
 
-            if (not groupby == "d3") and (not isinstance(query[groupby], (tuple, list))):
+            if (groupby != "d3") and (not isinstance(query[groupby], (tuple, list))):
                 raise KeyError(f"Groupby option {groupby} must be a list.")
 
-            if (kind == "violin") and (len(query[groupby]) != 2):
+
+            if (groupby == "d3"):
+                full_history = self.get_history(**query)
+                full_history["base"] = [x.split("-d3")[0] for x in full_history["method"]]
+                full_history["d3"] = [
+                    method.replace(base, "").replace("-d", "d")
+                    for method, base in zip(full_history["method"], full_history["base"])
+                ]
+
+
+                query_names = []
+                queries = []
+                for name, gb in full_history.groupby("d3"):
+                    gb = gb.copy()
+
+                    queries.append(gb)
+                    if name == "":
+                        query_names.append("No -D3")
+                    else:
+                        query_names.append(name.upper())
+
+            else:
+
+                query_names = []
+                queries = []
+                for gb in query[groupby]:
+                    gb_query = query.copy()
+                    gb_query[groupby] = gb
+
+                    queries.append(self.get_history(**gb_query))
+                    query_names.append(self._canonical_name(**{groupby: gb}))
+
+            if (kind == "violin") and (len(queries) != 2):
                 raise KeyError(f"Groupby option for violin plots must have two entries.")
-
-            query_names = []
-            queries = []
-            for gb in query[groupby]:
-                gb_query = query.copy()
-                gb_query[groupby] = gb
-
-                queries.append(self.get_history(**gb_query))
-                query_names.append(self._canonical_name(**{groupby: gb}))
 
         else:
             queries = [self.get_history(**query)]
@@ -336,13 +359,18 @@ class Dataset(Collection):
             if len(q) == 0:
                 raise KeyError("No query matches, nothing to visualize!")
             stat = self.statistics(metric, list(q["name"]), bench=bench)
+            stat = stat.round(digits)
             stat.sort_index(inplace=True)
             stat.name = name
 
             col_names = {}
             for record in q.to_dict(orient="records"):
-                if groupby:
+                if (groupby == "d3"):
+                    record["method"] = record["base"]
+
+                elif groupby:
                     record[groupby] = None
+
                 index_name = self._canonical_name(
                     record["program"],
                     record["method"],
@@ -357,7 +385,7 @@ class Dataset(Collection):
             else:
                 stat.columns = [col_names[x] for x in stat.columns]
 
-            series.append(stat.round(digits))
+            series.append(stat)
 
         if kind == "bar":
             return bar_plot(series, title=title, ylabel=ylabel, return_figure=return_figure)
