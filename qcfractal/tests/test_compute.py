@@ -32,6 +32,7 @@ def test_task_molecule_no_orientation(data, fractal_compute_server):
 
     program, method, basis = data
     ret = client.add_compute(program, method, basis, "energy", None, [mol_id])
+    assert "nsubmitted" in str(ret)
 
     # Manually handle the compute
     fractal_compute_server.await_results()
@@ -46,8 +47,6 @@ def test_task_molecule_no_orientation(data, fractal_compute_server):
     ret = client.query_molecules(molecular_formula=["H2"])
     assert len(ret) == 1
     assert ret[0].id == mol_id
-
-    assert "nsubmitted" in str(ret)
 
 
 @testing.using_rdkit

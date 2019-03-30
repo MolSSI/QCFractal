@@ -182,6 +182,7 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
         "units": "hartree"
     }
     ds.add_contributed_values(contrib)
+    ds.data.default_benchmark = "Benchmark"
 
     # Save the DB and overwrite the result, reacquire via client
     r = ds.save()

@@ -393,7 +393,6 @@ class FractalClient(object):
 
         if aslist:
             if collection_type is None:
-                repl_name_map = collections_name_map()
                 ret = defaultdict(list)
                 for entry in response:
                     ret[entry["collection"]].append(entry["name"])

@@ -57,8 +57,8 @@ class Dataset(Collection):
         ----------
         name : str
             The name of the Dataset
-        client : Optional['FractalClient'], optional
-            A FractalClient connected to a server
+        client : Opational['FractalClient'], optional
+            A Portal client to connected to a server
         **kwargs : Dict[str, Any]
             Additional kwargs to pass to the collection
         """
@@ -217,7 +217,7 @@ class Dataset(Collection):
 
         queries = self.list_history(**search, dftd3=True).reset_index()
         if queries.shape[0] > 10:
-            raise TypeError("More than 10 queries formed, please narrow the search by adding additional constraints such as method or basis.")
+            raise TypeError("More than 10 queries formed, please narrow the search.")
 
         # queries["name"] = None
         for name, query in queries.iterrows():
@@ -226,7 +226,7 @@ class Dataset(Collection):
             query.pop("driver")
             if "stoichiometry" in query:
                 query["stoich"] = query.pop("stoichiometry")
-            queries.loc[name, "name"] = self.query(query.pop("method"), **query)
+            queries.loc[name, "name"] = self.query(query.pop("method").upper(), **query)
 
         return queries
 
@@ -234,7 +234,8 @@ class Dataset(Collection):
                     method: Optional[str]=None,
                     basis: Optional[str]=None,
                     keywords: Optional[str]=None,
-                    program: Optional[str]=None) -> 'DataFrame':
+                    program: Optional[str]=None,
+                    force: bool=False) -> 'DataFrame':
         """ Queries known history from the search paramaters provided. Defaults to the standard
         programs and keywords if not provided.
 
@@ -265,7 +266,7 @@ class Dataset(Collection):
             else:
                 history.pop(k, None)
 
-        return self._get_history(**history)
+        return self._get_history(**history, force=force)
 
     def _visualize(self,
                    metric,
@@ -635,7 +636,7 @@ class Dataset(Collection):
 
     def add_keywords(self, alias: str, program: str, keyword: 'KeywordSet', default: bool=False) -> bool:
         """
-        Adds an option alias to the dataset. Note that keywords are not present
+        Adds an option alias to the dataset. Not that keywords are not present
         until a save call has been completed.
 
         Parameters
@@ -809,7 +810,7 @@ class Dataset(Collection):
         method : str
             The computational method to query on (B3LYP)
         basis : Optional[str], optional
-            The computational basis to query on (6-31G)
+            The computational basis query on (6-31G)
         keywords : Optional[str], optional
             The option token desired
         program : Optional[str], optional
@@ -888,9 +889,11 @@ class Dataset(Collection):
 
         Returns
         -------
-        ret : dict
-            A dictionary of the keys for all requested computations
-
+        ComputeResponse
+            An object that contains the submitted ObjectIds of the new compute. This object has the following fields:
+              - ids: The ObjectId's of the task in the order of input molecules
+              - submitted: A list of ObjectId's that were submitted to the compute queue
+              - existing: A list of ObjectId's of tasks already in the database
         """
 
         compute_keys = {"program": program, "method": method, "basis": basis, "keywords": keywords}
@@ -904,17 +907,17 @@ class Dataset(Collection):
 
     def get_index(self) -> List[str]:
         """
-        Returns the current index of the dataset.
+        Returns the current index of the database.
 
         Returns
         -------
         ret : List[str]
-            The names of all reactions in the dataset
+            The names of all reactions in the database
         """
         return [x.name for x in self.data.records]
 
     # Statistical quantities
-    def statistics(self, stype: str, value: str, bench: str="Benchmark", **kwargs: Dict[str, Any]):
+    def statistics(self, stype: str, value: str, bench: Optional[str]=None, **kwargs: Dict[str, Any]):
         """Provides statistics for various columns in the underlying dataframe.
 
         Parameters
@@ -924,7 +927,7 @@ class Dataset(Collection):
         value : str
             The method string to compare
         bench : str, optional
-            The benchmark method for the comparison
+            The benchmark method for the comparison, defaults to `default_benchmark'
         kwargs: Dict[str, Any]
             Additional kwargs to pass to the statistics functions
 
@@ -934,11 +937,18 @@ class Dataset(Collection):
         ret : pd.DataFrame, pd.Series, float
             Returns a DataFrame, Series, or float with the requested statistics depending on input.
         """
+
+        if (bench is None):
+            bench = self.data.default_benchmark
+
+        if (bench is None):
+            raise KeyError("No benchmark provided and default_benchmark is None!")
+
         return wrap_statistics(stype.upper(), self.df, value, bench, **kwargs)
 
     # Getters
     def __getitem__(self, args: str) -> 'Series':
-        """A wrapper to the underlying pd.DataFrame to access columnar data
+        """A wrapped to the underlying pd.DataFrame to access columnar data
 
         Parameters
         ----------

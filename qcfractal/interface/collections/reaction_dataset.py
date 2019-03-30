@@ -9,7 +9,6 @@ import numpy as np
 import pandas as pd
 
 from pydantic import BaseModel
-from qcelemental import constants
 
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
@@ -287,6 +286,7 @@ class ReactionDataset(Dataset):
 
         """
         self._check_state()
+        method = method.upper()
 
         if self.client is None:
             raise AttributeError("DataBase: FractalClient was not set.")
@@ -332,7 +332,7 @@ class ReactionDataset(Dataset):
                 stoich: str="default",
                 ignore_ds_type: bool=False,
                 tag: Optional[str]=None,
-                priority: Optional[str]=None):
+                priority: Optional[str]=None) -> ComputeResponse:
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -357,8 +357,12 @@ class ReactionDataset(Dataset):
 
         Returns
         -------
-        ret : dict
-            A dictionary of the keys for all requested computations
+        ComputeResponse
+            An object that contains the submitted ObjectIds of the new compute. This object has the following fields:
+              - ids: The ObjectId's of the task in the order of input molecules
+              - submitted: A list of ObjectId's that were submitted to the compute queue
+              - existing: A list of ObjectId's of tasks already in the database
+
         """
         self._check_state()
 
@@ -384,7 +388,7 @@ class ReactionDataset(Dataset):
 
             ret = ret1.merge(ret2)
         else:
-            tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
+            tmp_complex = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
             ret = self._compute(compute_keys, tmp_complex["molecule"], tag, priority)
 
         # Update the record that this was computed
