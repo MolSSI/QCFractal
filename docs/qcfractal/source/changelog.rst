@@ -15,6 +15,18 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.6.0 / 2019-03-30
+------------------
+
+Enhancements
+++++++++++++
+
+- (:pr:`236` and :pr:`237`) A large number of docstrings have been improved to be both more uniform,
+  complete, and correct.
+- (:pr:`239`) DFT-D3 can now be queried through the ``Dataset`` and ``ReactionDataset``.
+- (:pr:`239`) ``list_collections`` now returns Pandas Dataframes.
+
+
 0.5.5 / 2019-03-26
 ------------------
 
