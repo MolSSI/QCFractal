@@ -165,8 +165,23 @@ class Dataset(Collection):
             raise KeyError("Not all query keys were understood.")
 
         history = pd.DataFrame(list(self.data.history), columns=self.data.history_keys)
-        ret = history.copy()
 
+        # Build out -D3 combos
+
+        dftd3 = history[history["program"] == "dftd3"].copy()
+        dftd3["base"] = [x.split("-d3")[0] for x in dftd3["method"]]
+
+        nondftd3 = history[history["program"] != "dftd3"]
+        dftd3combo = nondftd3.merge(dftd3[["method", "base"]], left_on="method", right_on="base")
+        dftd3combo["method"] = dftd3combo["method_y"]
+        dftd3combo.drop(["method_x", "method_y", "base"], axis=1, inplace=True)
+
+        history = pd.concat([history, dftd3combo], sort=False)
+        history = history.reset_index()
+        history.drop("index", axis=1, inplace=True)
+
+        # Find the returned subset
+        ret = history.copy()
         for key, value in search.items():
             if value is None:
                 ret = ret[ret[key].isnull()]
@@ -300,8 +315,6 @@ class Dataset(Collection):
             if (kind == "violin") and (len(query[groupby]) != 2):
                 raise KeyError(f"Groupby option for violin plots must have two entries.")
 
-
-
             query_names = []
             queries = []
             for gb in query[groupby]:
@@ -312,7 +325,6 @@ class Dataset(Collection):
                 query_names.append(self._canonical_name(**{groupby: gb}))
 
         else:
-            print(query)
             queries = [self.get_history(**query)]
             query_names = ["Stats"]
 
