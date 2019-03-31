@@ -8,6 +8,7 @@ import pytest
 
 import qcfractal.interface as ptl
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
+from datetime import datetime
 
 
 bad_id1 = "000000000000000000000000"
@@ -404,7 +405,10 @@ def storage_results(storage_socket):
 
     yield storage_socket
 
-    # Cleanup
+    # # Cleanup
+    all_tasks = storage_socket.get_queue()['data']
+    storage_socket.del_tasks(id=[task['id'] for task in all_tasks])
+
     result_ids = [x for x in results_insert["data"]]
     ret = storage_socket.del_results(result_ids)
     assert ret == results_insert["meta"]["n_inserted"]
@@ -412,8 +416,7 @@ def storage_results(storage_socket):
     ret = storage_socket.del_molecules(id=mol_insert["data"])
     assert ret == mol_insert["meta"]["n_inserted"]
 
-    all_tasks = storage_socket.get_queue()['data']
-    storage_socket.del_tasks(id=[task.id for task in all_tasks])
+
 
 
 def test_empty_get(storage_results):
@@ -653,6 +656,94 @@ def test_user_permissions_admin(storage_socket):
     assert storage_socket.verify_user("george", "shortpw", "admin")[0] is True
 
     assert storage_socket.remove_user("george") is True
+
+def test_manager(storage_socket):
+
+    assert storage_socket.manager_update(name='first_manager')
+    assert storage_socket.manager_update(name='first_manager', submitted=100)
+    assert storage_socket.manager_update(name='first_manager', submitted=50)
+
+    ret = storage_socket.get_managers(name='first_manager')
+    assert ret['data'][0]['submitted'] == 150
+
+    ret = storage_socket.get_managers(name='first_manager', modified_before=datetime.utcnow())
+    assert len(ret['data']) == 1
+
+
+def test_procedure_sql(storage_socket, storage_results):
+
+    results = storage_results.get_results()['data']
+
+    assert len(storage_socket.get_procedures(procedure='optimization', status=None)['data']) == 0
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+
+    # Add once
+    mol_id = storage_socket.add_molecules([water])['data'][0]
+
+    proc_template = {
+        "procedure": "optimization",
+        "initial_molecule": mol_id,
+        "program": "something",
+        "hash_index": 123,
+        # "trajectory": [results[0]['id'], results[1]['id']],
+        "qc_spec": {
+            "driver": "gradient",
+            "method": "HF",
+            "basis": "sto-3g",
+            # "keywords": None,
+            "program": "psi4"
+        },
+    }
+
+    torsion_proc = {
+        "procedure": "torsiondrive",
+        "keywords": {
+            "dihedrals": [[0, 1, 2, 3]],
+            "grid_spacing": [10]
+        },
+        "hash_index": 456,
+        "optimization_spec": {
+            "program": "geometric",
+            "keywords": {
+            "coordsys": "tric",
+        }},
+        "qc_spec": {
+            "driver": "gradient",
+            "method": "HF",
+            "basis": "sto-3g",
+            # "keywords": None,
+            "program": "psi4"
+        },
+        "initial_molecule": [mol_id],
+        "final_energy_dict": {},
+        "optimization_history": {},
+        "minimum_positions": {},
+        "provenance": {
+            "creator": ""
+        }
+    }
+
+
+    # Optimization
+    inserted = storage_socket.add_procedures([ptl.models.OptimizationRecord(**proc_template)])
+    assert inserted['meta']['n_inserted'] == 1
+
+    ret = storage_socket.get_procedures(procedure='optimization', status=None)
+    assert len(ret['data']) == 1
+    # print(ret['data'][0]['trajectory'])
+
+    # # Torsiondrive
+    # inserted = storage_socket.add_procedures([ptl.models.TorsionDriveRecord(**torsion_proc)])
+    # assert inserted['meta']['n_inserted'] == 1
+    #
+    # ret = storage_socket.get_procedures(procedure='torsiondrive', status=None)
+    # assert len(ret['data']) == 1
+    #
+    # ret = storage_socket.get_procedures(status=None)
+    # assert len(ret['data']) == 2
+
+    # clean up
+    storage_socket.del_procedures(inserted['data'])
 
 
 def test_project_name(storage_socket):

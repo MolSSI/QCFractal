@@ -7,13 +7,14 @@ try:
     import sqlalchemy
 except ImportError:
     raise ImportError(
-        "SQLAlchemy_socket requires sqlalchemy, please install this python module or try a different db_socket.")
+        "SQLAlchemy_socket requires sqlalchemy, please install this python "
+        "module or try a different db_socket.")
 
 
 
 from sqlalchemy import create_engine
 from .sql_models import Base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, with_polymorphic
 from sqlalchemy.exc import IntegrityError
 from contextlib import contextmanager
 
@@ -22,14 +23,23 @@ import logging
 import secrets
 from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Union
-from sqlalchemy.sql import select, column
+
 from sqlalchemy.sql.expression import func
-from .sql_models import (CollectionORM, KeywordsORM, LogsORM, MoleculeORM, BaseResultORM,
-                         OptimizationProcedureORM, QueueManagerORM, ResultORM, ErrorORM,
-                         ServiceQueueORM, TaskQueueORM, UserORM, TorsionDriveProcedureORM)
-from .storage_utils import add_metadata_template, get_metadata_template
-from ..interface.models import KeywordSet, Molecule, ResultRecord, TaskRecord, prepare_basis
-from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum
+from sqlalchemy import select
+from qcfractal.storage_sockets.storage_utils import (add_metadata_template,
+                                                     get_metadata_template)
+
+# SQL ORMs
+from qcfractal.storage_sockets.sql_models import (CollectionORM, KeywordsORM,
+                         MoleculeORM, BaseResultORM, OptimizationProcedureORM,
+                         QueueManagerORM, ResultORM, ErrorORM, ServiceQueueORM,
+                         TaskQueueORM, UserORM, TorsionDriveProcedureORM, LogsORM,
+                                                  opt_result_association)
+
+# pydantic classes
+from qcfractal.interface.models import (KeywordSet, Molecule, ResultRecord, TaskRecord,
+                                OptimizationRecord, prepare_basis, TaskStatusEnum,
+                                ManagerStatusEnum, TorsionDriveRecord)
 
 
 _null_keys = {"basis", "keywords"}
@@ -86,6 +96,17 @@ def get_count_fast(query):
 
     return count
 
+def get_procedure_class(record):
+
+    if isinstance(record, OptimizationRecord):
+        procedure_class = OptimizationProcedureORM
+    elif isinstance(record, TorsionDriveRecord):
+        procedure_class = TorsionDriveProcedureORM
+    else:
+        raise TypeError('Procedure of type {} is not valid or supported yet.'
+                        .format(type(record)))
+
+    return procedure_class
 
 class SQLAlchemySocket:
     """
@@ -177,7 +198,7 @@ class SQLAlchemySocket:
         finally:
             session.close()
 
-    def _clear_db(self, db_name: str):
+    def _clear_db(self, db_name: str=None):
         """Dangerous, make sure you are deleting the right DB"""
 
         self.logger.warning("Clearing database '{}' and dropping all tables.".format(db_name))
@@ -795,7 +816,7 @@ class SQLAlchemySocket:
                     keywords=result.keywords,
                     molecule=result.molecule)
 
-                if doc.count() == 0:
+                if get_count_fast(doc) == 0:
                     doc = ResultORM(**result.json_dict(exclude={"id"}))
                     session.add(doc)
                     session.commit()  # TODO: faster if done in bulk
@@ -985,8 +1006,12 @@ class SQLAlchemySocket:
         """
 
         with self.session_scope() as session:
-            count = session.query(ResultORM).filter(ResultORM.id.in_(ids))\
-                                            .delete(synchronize_session=False)
+            results = session.query(ResultORM).filter(ResultORM.id.in_(ids)).all()
+            # delete through session to delete correctly from base_result
+            for result in results:
+                session.delete(result)
+            session.commit()
+            count = len(results)
 
         return count
 
@@ -1015,18 +1040,28 @@ class SQLAlchemySocket:
 
         meta = add_metadata_template()
 
-        procedure_ids = []
-        for procedure in record_list:
-            doc = ProcedureORM.objects(hash_index=procedure.hash_index)
+        if not record_list:
+            return {"data": [], "meta": meta}
 
-            if doc.count() == 0:
-                doc = doc.upsert_one(**procedure.json_dict(exclude={"id"}))
-                procedure_ids.append(str(doc.id))
-                meta['n_inserted'] += 1
-            else:
-                id = str(doc.first().id)
-                meta['duplicates'].append(id)  # TODO
-                procedure_ids.append(id)
+        procedure_class = get_procedure_class(record_list[0])
+
+        procedure_ids = []
+        with self.session_scope() as session:
+            for procedure in record_list:
+                doc = session.query(procedure_class).filter_by(hash_index=procedure.hash_index)
+
+                if get_count_fast(doc) == 0:
+                    data = procedure.json_dict(exclude={"id"})
+                    proc = procedure_class(**data)
+                    session.add(proc)
+                    session.commit()
+                    proc.add_relations(procedure.trajectory)
+                    procedure_ids.append(str(proc.id))
+                    meta['n_inserted'] += 1
+                else:
+                    id = str(doc.first().id)
+                    meta['duplicates'].append(id)  # TODO
+                    procedure_ids.append(id)
         meta["success"] = True
 
         ret = {"data": procedure_ids, "meta": meta}
@@ -1080,17 +1115,21 @@ class SQLAlchemySocket:
         if id is not None or task_id is not None:
             status = None
 
-        query, error = format_query(
-            id=id, procedure=procedure, program=program, hash_index=hash_index, task_id=task_id, status=status)
+        if procedure == 'optimization':
+            className = OptimizationProcedureORM
+        elif procedure == 'torsiondrive':
+            className = TorsionDriveProcedureORM
+        else:
+            raise TypeError('Unsupported procedure type {}'.format(procedure))
 
+        query = format_query(className,
+            id=id, procedure=procedure, program=program, hash_index=hash_index,
+            task_id=task_id, status=status)
 
         data = []
         try:
             # TODO: decide a way to find the right type
-            if procedure == 'optimization':
-                className = OptimizationProcedureORM
-            elif procedure == 'torsiondrive':
-                className = TorsionDriveProcedureORM
+
             data, meta['n_found'] = self.get_query_projection(className, query, projection, limit, skip)
             meta["success"] = True
         except Exception as err:
@@ -1120,6 +1159,34 @@ class SQLAlchemySocket:
             updated_count += 1
 
         return updated_count
+
+    def del_procedures(self, ids: List[str]):
+        """
+        Removes results from the database using their ids
+        (Should be cautious! other tables maybe referencing results)
+
+        Parameters
+        ----------
+        ids : list of str
+            The Ids of the results to be deleted
+
+        Returns
+        -------
+        int
+            number of results deleted
+        """
+
+        with self.session_scope() as session:
+            procedures = session.query(with_polymorphic(BaseResultORM,
+                            [OptimizationProcedureORM, TorsionDriveProcedureORM]))\
+                           .filter(BaseResultORM.id.in_(ids)).all()
+            # delete through session to delete correctly from base_result
+            for proc in procedures:
+                session.delete(proc)
+            session.commit()
+            count = len(procedures)
+
+        return count
 
     def add_services(self, service_list: List['BaseService']):
         """
@@ -1414,7 +1481,7 @@ class SQLAlchemySocket:
 
         data = []
         try:
-            data, meta['n_found'] = self.get_query_projection(ResultORM, query, projection, limit, skip)
+            data, meta['n_found'] = self.get_query_projection(TaskQueueORM, query, projection, limit, skip)
             meta["success"] = True
         except Exception as err:
             meta['error_description'] = str(err)
@@ -1542,7 +1609,7 @@ class SQLAlchemySocket:
             # Update results and procedures if reset_error
             if reset_error:
                 task_ids = session.query(TaskQueueORM.id)\
-                                  .filter(manager=manager, status=TaskStatusEnum.error)
+                                  .filter_by(manager=manager, status=TaskStatusEnum.error)
                 result_count = session.query(BaseResultORM)\
                                       .filter(TaskQueueORM.base_result==BaseResultORM.id)\
                                       .filter(TaskQueueORM.id.in_(task_ids))\
@@ -1585,22 +1652,24 @@ class SQLAlchemySocket:
 
         inc_count = {
             # Increment relevant data
-            "inc__submitted": kwargs.pop("submitted", 0),
-            "inc__completed": kwargs.pop("completed", 0),
-            "inc__returned": kwargs.pop("returned", 0),
-            "inc__failures": kwargs.pop("failures", 0)
+            "submitted": QueueManagerORM.submitted + kwargs.pop("submitted", 0),
+            "completed": QueueManagerORM.completed + kwargs.pop("completed", 0),
+            "returned": QueueManagerORM.returned + kwargs.pop("returned", 0),
+            "failures": QueueManagerORM.failures + kwargs.pop("failures", 0)
         }
 
-        upd = {key: kwargs[key] for key in QueueManagerORM._fields_ordered if key in kwargs}
+        upd = {key: kwargs[key] for key in QueueManagerORM.col() if key in kwargs}
 
         with self.session_scope() as session:
             # QueueManagerORM.objects()  # init
             manager = session.query(QueueManagerORM).filter_by(name=name)
-            if manager:  # existing
-                upd.update(inc_count)
-                num_updated = manager.update(**upd, modified_on=dt.utcnow())
+            if manager.count() > 0:  # existing
+                upd.update(inc_count, modified_on=dt.utcnow())
+                num_updated = manager.update(upd)
             else:  # create new, ensures defaults and validations
-                QueueManagerORM(name=name, **upd).save()
+                manager = QueueManagerORM(name=name, **upd)
+                session.add(manager)
+                session.commit()
                 num_updated = 1
 
         return num_updated == 1
@@ -1608,7 +1677,7 @@ class SQLAlchemySocket:
     def get_managers(self, name: str=None, status: str=None, modified_before=None, limit=None, skip=0):
 
         meta = get_metadata_template()
-        query, error = format_query(QueueManagerORM, name=name, status=status)
+        query = format_query(QueueManagerORM, name=name, status=status)
 
         if modified_before:
             query.append(QueueManagerORM.modified_on<=modified_before)

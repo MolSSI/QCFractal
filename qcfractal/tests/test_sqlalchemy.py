@@ -16,6 +16,14 @@ from qcfractal.storage_sockets.sql_models import (MoleculeORM, OptimizationProce
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
 
 
+def session_delete_all(session, className):
+    rows = session.query(className).all()
+    for row in rows:
+        session.delete(row)
+
+    session.commit()
+    return len(rows)
+
 @pytest.fixture(scope='function')
 def session(storage_socket):
 
@@ -63,6 +71,8 @@ def test_logs(storage_socket, session):
     session.commit()
 
     assert session.query(LogsORM).count() == 1
+
+    session_delete_all(session, LogsORM)
 
 
 # @pytest.mark.skip
@@ -154,9 +164,8 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
     # IMPORTANT: To be able to access lazy loading children use joinedload
     ret = session.query(ResultORM).options(joinedload('molecule_obj')).filter_by(method='m1').first()
     assert ret.molecule_obj.molecular_formula == 'H4O2'
-    # shouldn't access lazy loading
-    with pytest.raises(InvalidRequestError):
-        assert ret.keywords_obj == None
+    # Accessing the keywords_obj will issue a DB access
+    assert ret.keywords_obj == None
 
     result2 = ResultORM(**page2)
     session.add(result2)
@@ -166,8 +175,7 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
     assert ret.method == "m2"
 
     # clean up
-    session.query(ResultORM).delete(synchronize_session=False)
-    session.commit()  # must have it
+    session_delete_all(session, ResultORM)
 
 
 def test_optimization_procedure(storage_socket, session, molecules_H4O2):
@@ -210,21 +218,21 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
     assert proc.procedure == 'optimization'
 
     # add a trajectory result
-    result = ResultORM(**result1, parent_id=proc.id)
+    result = ResultORM(**result1)
     session.add(result)
     session.commit()
     assert result.id
 
-    # Now proc.trajectory should link with its results
-    # session.refresh(proc)
+    # link result to the trajectory
+    proc.trajectory_obj = [result]
+    session.commit()
     proc = session.query(OptimizationProcedureORM).options(
-                         joinedload('trajectory')).first()
-    assert proc.trajectory
+                         joinedload('trajectory_obj')).first()
+    assert proc.trajectory_obj
 
     # clean up
-    session.query(ResultORM).delete()
-    session.query(OptimizationProcedureORM).delete()
-    session.commit()
+    session_delete_all(session, ResultORM)
+    session_delete_all(session, OptimizationProcedureORM)
 
 
 def test_torsiondrive_procedure(storage_socket, session):
@@ -257,18 +265,19 @@ def test_torsiondrive_procedure(storage_socket, session):
 
     # Add optimization_history
 
-    opt_proc = OptimizationProcedureORM(**data1, parent_id=torj_proc.id)
+    opt_proc = OptimizationProcedureORM(**data1)
     session.add(opt_proc)
     session.commit()
     assert opt_proc.id
 
+    torj_proc.optimization_history = [opt_proc]
+    session.commit()
     torj_proc = session.query(TorsionDriveProcedureORM).options(joinedload('optimization_history')).first()
     assert torj_proc.optimization_history
 
     # clean up
-    session.query(OptimizationProcedureORM).delete()
-    session.query(TorsionDriveProcedureORM).delete()
-    session.commit()
+    session_delete_all(session, OptimizationProcedureORM)
+    session_delete_all(session, TorsionDriveProcedureORM)
 
 
 def test_add_task_queue(storage_socket, session, molecules_H4O2):
@@ -305,9 +314,8 @@ def test_add_task_queue(storage_socket, session, molecules_H4O2):
     assert task.base_result_obj.status == 'INCOMPLETE'
 
     # cleanup
-    session.query(ResultORM).delete()
-    session.query(TaskQueueORM).delete()
-    session.commit()
+    session_delete_all(session, TaskQueueORM)
+    session_delete_all(session, ResultORM)
 
 
 
@@ -381,6 +389,5 @@ def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures
     print('Query {} results in {:.3f} msec /doc'.format(total_results, total_time))
 
     # cleanup
-    session.query(ResultORM).delete()
-    session.commit()
+    session_delete_all(session, ResultORM)
 
