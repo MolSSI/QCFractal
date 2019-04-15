@@ -181,6 +181,7 @@ class MongoengineSocket:
             KVStoreORM.drop_collection()
             CollectionORM.drop_collection()
             TaskQueueORM.drop_collection()
+            ServiceQueueORM.drop_collection()
             QueueManagerORM.drop_collection()
             ProcedureORM.drop_collection()
             UserORM.drop_collection()

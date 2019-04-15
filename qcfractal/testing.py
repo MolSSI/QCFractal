@@ -424,14 +424,14 @@ def fractal_compute_server(request):
 
     # Storage name
     storage_name = "qcf_compute_server_test"
-
+    storage_uri = "mongodb://localhost:27017"
+    # storage_uri = "postgresql+psycopg2://qcarchive@localhost:5432/qcarchivedb"
+    # storage_uri = "sqlite:///:memory:"
     with FractalSnowflake(
-            max_workers=2, storage_project_name=storage_name, storage_uri="mongodb://localhost:27017",
+            max_workers=2, storage_project_name=storage_name, storage_uri=storage_uri,
             start_server=False) as server:
-
         reset_server_database(server)
         yield server
-
 
 def build_socket_fixture(stype):
     print("")
@@ -446,6 +446,15 @@ def build_socket_fixture(stype):
 
         # Clean and re-init the database
         storage._clear_db(storage_name)
+
+    elif stype == 'sqlalchemy':
+        storage = storage_socket_factory('postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb',
+                                         storage_name, db_type=stype, sql_echo=False)
+        # storage = storage_socket_factory('sqlite:///:memory:', storage_name, db_type=stype)
+        # storage = storage_socket_factory('sqlite:///path_to_db', storage_name, db_type=stype)
+
+        # Clean and re-init the database
+        storage._clear_db(storage_name)
     else:
         raise KeyError("Storage type {} not understood".format(stype))
 
@@ -453,6 +462,10 @@ def build_socket_fixture(stype):
 
     if stype in ["pymongo", "mongoengine"]:
         storage.client.drop_database(storage_name)
+    elif stype == "sqlalchemy":
+        # todo: drop db
+        # storage._clear_db(storage_name)
+        pass
     else:
         raise KeyError("Storage type {} not understood".format(stype))
 
@@ -461,3 +474,8 @@ def build_socket_fixture(stype):
 def mongoengine_socket_fixture(request):
 
     yield from build_socket_fixture("mongoengine")
+
+@pytest.fixture(scope="module")
+def sqlalchemy_socket_fixture(request):
+
+    yield from build_socket_fixture("sqlalchemy")

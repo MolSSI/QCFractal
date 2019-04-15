@@ -3,7 +3,7 @@ Common models for QCPortal/Fractal
 """
 import json
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 from pydantic import BaseModel, validator
 from qcelemental.models import Molecule, Provenance
@@ -44,7 +44,7 @@ class QCSpecification(BaseModel):
     driver: DriverEnum
     method: str
     basis: Optional[str] = None
-    keywords: Optional[ObjectId] = None
+    keywords: Optional[Union[ObjectId, int]] = None
     program: str
 
     @validator('basis')
@@ -111,7 +111,7 @@ class KeywordSet(BaseModel):
     """
     An options object for the QCArchive ecosystem
     """
-    id: Optional[ObjectId] = None
+    id: Optional[Union[ObjectId, int]] = None
     hash_index: str
     values: Dict[str, Any]
     lowercase: bool = True

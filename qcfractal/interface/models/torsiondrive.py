@@ -41,7 +41,7 @@ class TorsionDriveInput(BaseModel):
 
     program: _td_constr = "torsiondrive"
     procedure: _td_constr = "torsiondrive"
-    initial_molecule: List[Union[ObjectId, Molecule]]
+    initial_molecule: List[Union[ObjectId, Molecule, int]]
     keywords: TDKeywords
     optimization_spec: OptimizationSpecification
     qc_spec: QCSpecification
@@ -72,7 +72,7 @@ class TorsionDriveRecord(RecordBase):
     program: _td_constr = "torsiondrive"
 
     # Input data
-    initial_molecule: List[ObjectId]
+    initial_molecule: List[Union[ObjectId, int]]
     keywords: TDKeywords
     optimization_spec: OptimizationSpecification
     qc_spec: QCSpecification
@@ -80,7 +80,7 @@ class TorsionDriveRecord(RecordBase):
     # Output data
     final_energy_dict: Dict[str, float]
 
-    optimization_history: Dict[str, List[ObjectId]]
+    optimization_history: Dict[str, List[Union[ObjectId, int]]]
     minimum_positions: Dict[str, int]
 
     class Config(RecordBase.Config):

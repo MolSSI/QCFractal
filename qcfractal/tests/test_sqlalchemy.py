@@ -1,0 +1,392 @@
+"""
+    Unit tests of the SQLAlchemt to PostgreSQL interface to MongoDB
+
+    Does not use portal or fractal server interfaces.
+
+"""
+
+from time import time
+
+import pytest
+import qcfractal.interface as ptl
+from sqlalchemy.orm import joinedload
+from qcfractal.storage_sockets.sql_models import (MoleculeORM, OptimizationProcedureORM, ResultORM,
+                                                 TaskQueueORM, TorsionDriveProcedureORM, LogsORM)
+from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
+
+
+def session_delete_all(session, className):
+    rows = session.query(className).all()
+    for row in rows:
+        session.delete(row)
+
+    session.commit()
+    return len(rows)
+
+@pytest.fixture(scope='function')
+def session(storage_socket):
+
+    session = storage_socket.Session()
+    try:
+        yield session
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+@pytest.fixture
+def molecules_H4O2(storage_socket):
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
+
+    ret = storage_socket.add_molecules([water, water2])
+
+    yield list(ret['data'])
+
+    r = storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
+    assert r == 2
+
+
+@pytest.fixture
+def kw_fixtures(storage_socket):
+    kw1 = ptl.models.KeywordSet(**{"values": {"something": "kwfixture"}})
+    ret = storage_socket.add_keywords([kw1])
+
+    yield list(ret['data'])
+
+    r = storage_socket.del_keywords(ret['data'][0])
+    assert r == 1
+
+
+def test_logs(storage_socket, session):
+
+    assert session.query(LogsORM).count() == 0
+
+    log = LogsORM(value="New log")
+    session.add(log)
+    session.commit()
+
+    assert session.query(LogsORM).count() == 1
+
+    session_delete_all(session, LogsORM)
+
+
+# @pytest.mark.skip
+def test_molecule_sql(storage_socket, session):
+    """
+        Test the use of the ME class MoleculeORM
+
+        Note:
+            creation of a MoleculeORM using ME is not implemented yet
+            Should create a MoleculeORM using: mongoengine_socket.add_molecules
+    """
+
+    num_mol_in_db = session.query(MoleculeORM).count()
+    # MoleculeORM.objects().delete()
+    assert num_mol_in_db == 0
+
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
+
+    # Add MoleculeORM
+    ret = storage_socket.add_molecules([water, water2])
+    assert ret["meta"]["success"] is True
+    assert ret["meta"]["n_inserted"] == 2
+
+    ret = storage_socket.get_molecules()
+
+    assert ret['meta']['n_found'] == 2
+
+    # Use the ORM class
+    water_mol = session.query(MoleculeORM).first()
+    assert water_mol.molecular_formula == "H4O2"
+    assert water_mol.molecular_charge == 0
+
+    # print(water_mol.json_dict())
+    #
+    # Query with fields in the model
+    result_list = session.query(MoleculeORM).filter_by(molecular_formula="H4O2").all()
+    assert len(result_list) == 2
+    assert result_list[0].molecular_multiplicity == 1
+
+    # Query with fields NOT in the model. works too!
+    result_list = session.query(MoleculeORM).filter_by(molecular_charge=0).all()
+    assert len(result_list) == 2
+
+    # get unique by hash and formula
+    one_mol = session.query(MoleculeORM).filter_by(molecule_hash=water_mol.molecule_hash,
+                                                   molecular_formula=water_mol.molecular_formula)
+    assert len(one_mol.all()) == 1
+
+    # Clean up
+    storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
+
+
+def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
+    """
+        Handling results throught the ME classes
+    """
+
+
+    assert session.query(ResultORM).count() == 0
+
+    assert len(molecules_H4O2) == 2
+    assert len(kw_fixtures) == 1
+
+    page1 = {
+        "molecule": molecules_H4O2[0],
+        "method": "m1",
+        "basis": "b1",
+        "keywords": None,
+        "program": "p1",
+        "driver": "energy",
+        "status": "COMPLETE",
+    }
+
+    page2 = {
+        "molecule": molecules_H4O2[1],
+        "method": "m2",
+        "basis": "b1",
+        "keywords": kw_fixtures[0],
+        "program": "p1",
+        "driver": "energy",
+        "status": "COMPLETE",
+    }
+
+    result = ResultORM(**page1)
+    session.add(result)
+    session.commit()
+
+    # IMPORTANT: To be able to access lazy loading children use joinedload
+    ret = session.query(ResultORM).options(joinedload('molecule_obj')).filter_by(method='m1').first()
+    assert ret.molecule_obj.molecular_formula == 'H4O2'
+    # Accessing the keywords_obj will issue a DB access
+    assert ret.keywords_obj == None
+
+    result2 = ResultORM(**page2)
+    session.add(result2)
+    session.commit()
+    ret = session.query(ResultORM).options(joinedload('molecule_obj')).filter_by(method='m2').first()
+    assert ret.molecule_obj.molecular_formula == 'H4O2'
+    assert ret.method == "m2"
+
+    # clean up
+    session_delete_all(session, ResultORM)
+
+
+def test_optimization_procedure(storage_socket, session, molecules_H4O2):
+    """
+        Optimization procedure
+    """
+
+    assert session.query(OptimizationProcedureORM).count() == 0
+    # assert Keywords.objects().count() == 0
+
+    data1 = {
+        "initial_molecule": molecules_H4O2[0],
+        "keywords": None,
+        "program": "p7",
+        "qc_spec": {
+            "basis": "b1",
+            "program": "p1",
+            "method": "m1",
+            "driver": "energy"
+        },
+        "status": "COMPLETE",
+    }
+
+    result1 = {
+        "molecule": molecules_H4O2[0],
+        "method": "m1",
+        "basis": "b1",
+        "keywords": None,
+        "program": "p1",
+        "driver": "energy",
+        "status": "COMPLETE",
+    }
+
+    procedure = OptimizationProcedureORM(**data1)
+    session.add(procedure)
+    session.commit()
+    proc = session.query(OptimizationProcedureORM).options(
+                         joinedload('initial_molecule_obj')).first()
+    assert proc.initial_molecule_obj.molecular_formula == 'H4O2'
+    assert proc.procedure == 'optimization'
+
+    # add a trajectory result
+    result = ResultORM(**result1)
+    session.add(result)
+    session.commit()
+    assert result.id
+
+    # link result to the trajectory
+    proc.trajectory_obj = [result]
+    session.commit()
+    proc = session.query(OptimizationProcedureORM).options(
+                         joinedload('trajectory_obj')).first()
+    assert proc.trajectory_obj
+
+    # clean up
+    session_delete_all(session, ResultORM)
+    session_delete_all(session, OptimizationProcedureORM)
+
+
+def test_torsiondrive_procedure(storage_socket, session):
+    """
+        Torsiondrive procedure
+    """
+
+    assert session.query(TorsionDriveProcedureORM).count() == 0
+    # assert Keywords.objects().count() == 0
+
+    # molecules = MoleculeORM.objects(molecular_formula='H4O2')
+    # assert molecules.count() == 2
+
+    data1 = {
+        # "molecule": molecules[0],
+        "keywords": None,
+        "program": "p9",
+        "qc_spec": {
+            "basis": "b1",
+            "program": "p1",
+            "method": "m1",
+            "driver": "energy"
+        },
+        "status": "COMPLETE",
+    }
+
+    torj_proc = TorsionDriveProcedureORM(**data1)
+    session.add(torj_proc)
+    session.commit()
+
+    # Add optimization_history
+
+    opt_proc = OptimizationProcedureORM(**data1)
+    session.add(opt_proc)
+    session.commit()
+    assert opt_proc.id
+
+    torj_proc.optimization_history = [opt_proc]
+    session.commit()
+    torj_proc = session.query(TorsionDriveProcedureORM).options(joinedload('optimization_history')).first()
+    assert torj_proc.optimization_history
+
+    # clean up
+    session_delete_all(session, OptimizationProcedureORM)
+    session_delete_all(session, TorsionDriveProcedureORM)
+
+
+def test_add_task_queue(storage_socket, session, molecules_H4O2):
+    """
+        Simple test of adding a task using the SQL classes
+        in QCFractal, tasks should be added using storage_socket
+    """
+
+    assert session.query(TaskQueueORM).count() == 0
+    # TaskQueueORM.objects().delete()
+
+    page1 = {
+        "molecule": molecules_H4O2[0],
+        "method": "m1",
+        "basis": "b1",
+        "keywords": None,
+        "program": "p1",
+        "driver": "energy",
+    }
+    # add a task that reference results
+    result = ResultORM(**page1)
+    session.add(result)
+    session.commit()
+
+    task = TaskQueueORM(base_result_obj=result)
+    session.add(task)
+    session.commit()
+
+    ret = session.query(TaskQueueORM)
+    assert  ret.count() == 1
+
+    task = ret.first()
+    assert task.status == 'WAITING'
+    assert task.base_result_obj.status == 'INCOMPLETE'
+
+    # cleanup
+    session_delete_all(session, TaskQueueORM)
+    session_delete_all(session, ResultORM)
+
+
+
+def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures):
+    """
+        Test results pagination
+    """
+
+    assert session.query(ResultORM).count() == 0
+
+    result_template = {
+        "molecule": molecules_H4O2[0],
+        "method": "m1",
+        "basis": "b1",
+        "keywords": kw_fixtures[0],
+        "program": "p1",
+        "driver": "energy",
+    }
+
+
+    # Save ~ 1 msec/doc in ME, 0.5 msec/doc in SQL
+    # ------------------------------------------
+    t1 = time()
+
+    total_results = 1000
+    first_half = int(total_results / 2)
+    limit = 100
+    skip = 50
+
+    for i in range(first_half):
+        result_template['basis'] = str(i)
+        r = ResultORM(**result_template)
+        session.add(r)
+
+    result_template['method'] = 'm2'
+    for i in range(first_half, total_results):
+        result_template['basis'] = str(i)
+        r = ResultORM(**result_template)
+        session.add(r)
+
+    session.commit()  # must commit outside the loop, 10 times faster
+
+    total_time = (time() - t1) * 1000 / total_results
+    print('Inserted {} results in {:.2f} msec / doc'.format(total_results, total_time))
+
+    # query (~ 0.13 msec/doc) in ME, and ~0.02 msec/doc in SQL
+    # ----------------------------------------
+    t1 = time()
+
+    ret1 = session.query(ResultORM).filter_by(method='m1')
+    ret2 = session.query(ResultORM).filter_by(method='m2') .limit(limit) #.offset(skip)
+
+    data1 = [d.to_dict() for d in ret1]
+    data2 = [d.to_dict() for d in ret2]
+
+    # count is total, but actual data size is the limit
+    assert ret1.count() == first_half
+    assert len(data1) == first_half
+
+    # assert ret2.count() == total_results - first_half
+    # assert len(ret2) == limit
+    # assert len(data2) == limit
+    #
+    # assert int(data2[0]['basis']) == first_half + skip
+    #
+    # # get the last page when with fewer than limit are remaining
+    # ret = session.query(ResultORM).filter_by(method='m1').limit(limit).offset(int(first_half - limit / 2))
+    # assert len(ret) == limit / 2
+
+    total_time = (time() - t1) * 1000 / total_results
+    print('Query {} results in {:.3f} msec /doc'.format(total_results, total_time))
+
+    # cleanup
+    session_delete_all(session, ResultORM)
+

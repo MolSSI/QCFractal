@@ -37,7 +37,7 @@ class RecordBase(BaseModel, abc.ABC):
     cache: Dict[str, Any] = {}
 
     # Base identification
-    id: ObjectId = None
+    id: Union[ObjectId, int] = None
     hash_index: Optional[str] = None
     procedure: str
     program: str
@@ -45,16 +45,15 @@ class RecordBase(BaseModel, abc.ABC):
 
     # Extra fields
     extras: Dict[str, Any] = {}
-    stdout: Optional[ObjectId] = None
-    stderr: Optional[ObjectId] = None
-    error: Optional[ObjectId] = None
+    stdout: Optional[Union[ObjectId, int]] = None
+    stderr: Optional[Union[ObjectId, int]] = None
+    error: Optional[Union[ObjectId, int]] = None
 
     # Compute status
-    task_id: ObjectId = None
+    task_id: Optional[Union[ObjectId, int]] = None  # TODO: not used in SQL
     status: RecordStatusEnum = "INCOMPLETE"
     modified_on: datetime.datetime = datetime.datetime.utcnow()
     created_on: datetime.datetime = datetime.datetime.utcnow()
-    error: Optional[Any] = None
 
     # Carry-ons
     provenance: Optional[qcel.models.Provenance] = None
@@ -173,9 +172,9 @@ class ResultRecord(RecordBase):
     # Input data
     driver: DriverEnum
     method: str
-    molecule: ObjectId
+    molecule: Union[ObjectId, int]
     basis: Optional[str] = None
-    keywords: Optional[ObjectId] = None
+    keywords: Optional[Union[ObjectId, int]] = None
 
     # Output data
     return_result: Union[float, List[float], Dict[str, Any]] = None
@@ -246,17 +245,17 @@ class OptimizationRecord(RecordBase):
     # Version data
     version: int = 1
     procedure: constr(strip_whitespace=True, regex="optimization") = "optimization"
-    schema_version: int = 1
+    schema_version: int = 1  # TODO: why not in Base
 
     # Input data
-    initial_molecule: ObjectId
+    initial_molecule: Union[ObjectId, int]
     qc_spec: QCSpecification
-    keywords: Dict[str, Any] = {}
+    keywords: Dict[str, Any] = {}  # TODO: defined in Base
 
     # Results
     energies: List[float] = None
-    final_molecule: ObjectId = None
-    trajectory: List[ObjectId] = None
+    final_molecule: Union[ObjectId, int] = None
+    trajectory: List[Union[ObjectId, int]] = None
 
     class Config(RecordBase.Config):
         pass

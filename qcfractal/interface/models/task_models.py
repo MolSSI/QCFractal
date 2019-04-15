@@ -1,7 +1,7 @@
 import datetime
 import json
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from pydantic import BaseModel, validator
 from qcelemental.models import ComputeError
@@ -20,6 +20,10 @@ class TaskStatusEnum(str, Enum):
     error = "ERROR"
     complete = "COMPLETE"
 
+
+class ManagerStatusEnum(str, Enum):
+    active = 'ACTIVE'
+    inactive = 'INACTIVE'
 
 class PriorityEnum(int, Enum):
     HIGH = 2
@@ -40,7 +44,7 @@ class PythonComputeSpec(BaseModel):
 
 class TaskRecord(BaseModel):
 
-    id: ObjectId = None
+    id: Union[ObjectId, int] = None
 
     spec: PythonComputeSpec
     parser: str
@@ -56,7 +60,7 @@ class TaskRecord(BaseModel):
     tag: Optional[str] = None
 
     # Link back to the base Result
-    base_result: DBRef
+    base_result: Union[DBRef, int]
     error: Optional[ComputeError] = None
 
     # Modified data
