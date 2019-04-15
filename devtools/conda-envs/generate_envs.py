@@ -26,6 +26,8 @@ dependencies:
   - pydantic
   - mongoengine
   - plotly
+  - sqlalchemy
+  - psycopg2
 
 # Test depends
   - pytest

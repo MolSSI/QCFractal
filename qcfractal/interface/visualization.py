@@ -30,8 +30,6 @@ else:
     _plotly_found = True
 del spec, find_spec
 
-_ipycheck = _isnotebook()
-
 
 def check_plotly():
     """
@@ -41,8 +39,7 @@ def check_plotly():
         raise ModuleNotFoundError(
             "Plotly is required for this function. Please 'conda install plotly' or 'pip isntall plotly'.")
 
-    global _ipycheck
-    if _ipycheck:
+    if _isnotebook():
         import plotly
         plotly.offline.init_notebook_mode(connected=True)
 
@@ -51,7 +48,7 @@ def _configure_return(figure, filename, return_figure):
     import plotly
 
     if return_figure is None:
-        return_figure = not _ipycheck
+        return_figure = not _isnotebook()
 
     if return_figure:
         return figure
@@ -70,8 +67,6 @@ def bar_plot(traces: 'List[Series]', title=None, ylabel=None, return_figure=True
         The title of the graph
     ylabel : None, optional
         The y axis label
-    dtype : str, optional
-        Description
     return_figure : bool, optional
         Returns the raw plotly figure or not
 
@@ -160,7 +155,7 @@ def scatter_plot(traces: List[Dict[str, Any]],
                  yline=True,
                  custom_layout=None,
                  return_figure=True) -> 'plotly.Figure':
-    """Renders a plotly violin plot
+    """Renders a plotly scatter plot
 
     Parameters
     ----------
@@ -197,7 +192,17 @@ def scatter_plot(traces: List[Dict[str, Any]],
         data.append(go.Scatter(**trace))
 
     if custom_layout is None:
-        layout = go.Layout({"title": title, "yaxis": {"title": ylabel, "zeroline": yline}, "xaxis": {"title": xlabel, "zeroline": xline}})
+        layout = go.Layout({
+            "title": title,
+            "yaxis": {
+                "title": ylabel,
+                "zeroline": yline
+            },
+            "xaxis": {
+                "title": xlabel,
+                "zeroline": xline
+            }
+        })
     else:
         layout = go.Layout(**custom_layout)
     figure = go.Figure(data=data, layout=layout)

@@ -65,7 +65,7 @@ def recursive_normalizer(value: Any, **kwargs: Dict[str, Any]) -> Any:
                 value = 0
 
     else:
-        raise TypeError("Invalid type in KeywordSet ({type(value)}), only simply Python types are allowed.")
+        raise TypeError("Invalid type in KeywordSet ({type(value)}), only simple Python types are allowed.")
 
     return value
 

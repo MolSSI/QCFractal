@@ -5,9 +5,10 @@ import os
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import ValidationError
-
+import pandas as pd
 import requests
+
+from pydantic import ValidationError
 
 from .collections import collection_factory, collections_name_map
 from .models import GridOptimizationInput, Molecule, ObjectId, TorsionDriveInput, build_procedure
@@ -79,7 +80,7 @@ class FractalClient(object):
         self.server_name = self.server_info["name"]
 
     def __str__(self) -> str:
-        """A short short representation of the current FractalClient.
+        """A short representation of the current FractalClient.
 
         Returns
         -------
@@ -118,7 +119,7 @@ class FractalClient(object):
                 raise KeyError("Method not understood: '{}'".format(method))
         except requests.exceptions.SSLError as exc:
             error_msg = (
-                "\n\nSSL handshake failed. This is likely caused by a failure to retrive 3rd party SSL certificates.\n"
+                "\n\nSSL handshake failed. This is likely caused by a failure to retrieve 3rd party SSL certificates.\n"
                 "If you trust the server you are connecting to, try 'FractalClient(... verify=False)'")
             raise requests.exceptions.SSLError(error_msg)
         except requests.exceptions.ConnectionError as exc:
@@ -144,7 +145,7 @@ class FractalClient(object):
         name : str
             The name of the REST endpoint
         rest : str
-            The type of REST endpoint
+            The type of the REST endpoint
         payload : Dict[str, Any]
             The input dictionary
         full_return : bool, optional
@@ -156,17 +157,6 @@ class FractalClient(object):
         -------
         Any
             The REST response object
-
-        Raises
-        ------
-        TypeError
-            Description
-
-        Deleted Parameters
-        ------------------
-        noraise : bool, optional
-            Optionally do not raise error if
-            Description
         """
         body_model, response_model = rest_model(name, rest)
 
@@ -186,8 +176,8 @@ class FractalClient(object):
 
     @classmethod
     def from_file(cls, load_path: Optional[str]=None) -> 'FractalClient':
-        """Creates a new FractalClient from file. If no path is passed in searches
-        current working directory and ~.qca/ for "qcportal_config.yaml"
+        """Creates a new FractalClient from file. If no path is passed in, the
+        current working directory and ~.qca/ are searched for "qcportal_config.yaml"
 
         Parameters
         ----------
@@ -233,7 +223,7 @@ class FractalClient(object):
             raise TypeError("Could not infer data from load_path of type {}".format(type(load_path)))
 
         if "address" not in data:
-            raise KeyError("Config file must at least contain a address field.")
+            raise KeyError("Config file must at least contain an address field.")
 
         address = data["address"]
         username = data.get("username", None)
@@ -371,7 +361,7 @@ class FractalClient(object):
 
 ### Collections section
 
-    def list_collections(self, collection_type: Optional[str]=None) -> Dict[str, Any]:
+    def list_collections(self, collection_type: Optional[str]=None, aslist: bool=False) -> 'DataFrame':
         """Lists the available collections currently on the server.
 
         Parameters
@@ -379,34 +369,45 @@ class FractalClient(object):
         collection_type : Optional[str], optional
             If `None` all collection types will be returned, otherwise only the
             specified collection type will be returned
+        aslist : bool, optional
+            Returns a canonical list rather than a dataframe.
 
         Returns
         -------
-        Dict[str, Any]
-            A dictionary containing the available collection types.
+        DataFrame
+            A dataframe containing the collection, name, and tagline.
         """
 
         query = {}
         if collection_type is not None:
             query = {"collection": collection_type.lower()}
 
-        payload = {"meta": {"projection": {"name": True, "collection": True}}, "data": query}
+        payload = {"meta": {"projection": {"name": True, "collection": True, "tagline": True}}, "data": query}
         response = self._automodel_request("collection", "get", payload, full_return=False)
 
-        if collection_type is None:
-            repl_name_map = collections_name_map()
-            ret = defaultdict(list)
-            for entry in response:
-                colname = entry["collection"]
-                if colname in repl_name_map:
-                    colname = repl_name_map[colname]
-                ret[colname].append(entry["name"])
-            return dict(ret)
+        # Rename collection names
+        repl_name_map = collections_name_map()
+        for item in response:
+            if item["collection"] in repl_name_map:
+                item["collection"] = repl_name_map[item["collection"]]
+
+        if aslist:
+            if collection_type is None:
+                ret = defaultdict(list)
+                for entry in response:
+                    ret[entry["collection"]].append(entry["name"])
+                return dict(ret)
+            else:
+                return [x["name"] for x in response]
         else:
-            return [x["name"] for x in response]
+            df = pd.DataFrame.from_dict(response)
+            df.drop("id", axis=1, inplace=True)
+            df.set_index(["collection", "name"], inplace=True)
+            df.sort_index(inplace=True)
+            return df
 
     def get_collection(self, collection_type: str, name: str, full_return: bool=False) -> 'Collection':
-        """Acquires a given collection from the server
+        """Acquires a given collection from the server.
 
         Parameters
         ----------
@@ -438,7 +439,7 @@ class FractalClient(object):
 
     def add_collection(self, collection: Dict[str, Any], overwrite: bool=False,
                        full_return: bool=False) -> List[ObjectId]:
-        """Summary
+        """Adds a new Collection to the server.
 
         Parameters
         ----------
@@ -477,7 +478,7 @@ class FractalClient(object):
                       status: 'QueryStr'="COMPLETE",
                       projection: 'QueryProjection'=None,
                       full_return: bool=False) -> Union[List['RecordResult'], Dict[str, Any]]:
-        """Queries ResultRecords from the database.
+        """Queries ResultRecords from the server.
 
         Parameters
         ----------
@@ -547,7 +548,8 @@ class FractalClient(object):
                          status: 'QueryStr'="COMPLETE",
                          projection: 'QueryProjection'=None,
                          full_return: bool=False) -> Union[List['RecordBase'], Dict[str, Any]]:
-        """
+        """Queries Procedures from the server.
+		
         Parameters
         ----------
         id : QueryObjectId, optional
@@ -572,11 +574,6 @@ class FractalClient(object):
         Union[List['RecordBase'], Dict[str, Any]]
             Returns a List of found RecordResult's without projection, or a
             dictionary of results with projection.
-
-        Deleted Parameters
-        ------------------
-        return_full : bool, optional
-            If False, returns a Collection object otherwise returns raw JSON
         """
 
         payload = {
@@ -616,7 +613,7 @@ class FractalClient(object):
                     tag: str=None,
                     full_return: bool=False) -> ComputeResponse:
         """
-        Adds "single" compute to the server. That is
+        Adds a "single" compute to the server.
 
         Parameters
         ----------
@@ -635,8 +632,8 @@ class FractalClient(object):
         priority : str, optional
             The priority of the job {"HIGH", "MEDIUM", "LOW"}. Default is "MEDIUM".
         tag : str, optional
-            The computational tag to add to your compute, managers can optionally only pulled
-            based off the strings tags. These tags are arbitrary, but several examples are to
+            The computational tag to add to your compute, managers can optionally only pull
+            based off the string tags. These tags are arbitrary, but several examples are to
             use "large", "medium", "small" to denote the size of the job or "project1", "project2"
             to denote different projects.
         full_return : bool, optional
@@ -679,7 +676,7 @@ class FractalClient(object):
                       priority: str=None,
                       tag: str=None,
                       full_return: bool=False) -> ComputeResponse:
-        """
+        """Adds a "single" Procedure to the server.
         Parameters
         ----------
         procedure : str
@@ -689,12 +686,12 @@ class FractalClient(object):
         program_options : Dict[str, Any]
             Additional options and specifications for the given procedure.
         molecule : Union[ObjectId, Molecule, List[Union[str, Molecule]]]
-            The Molecules or Molecule ObjectId's to compute with the above methods
+            The Molecules or Molecule ObjectId's to use with the above procedure
         priority : str, optional
             The priority of the job {"HIGH", "MEDIUM", "LOW"}. Default is "MEDIUM".
         tag : str, optional
-            The computational tag to add to your compute, managers can optionally only pulled
-            based off the strings tags. These tags are arbitrary, but several examples are to
+            The computational tag to add to your procedure, managers can optionally only pull
+            based off the string tags. These tags are arbitrary, but several examples are to
             use "large", "medium", "small" to denote the size of the job or "project1", "project2"
             to denote different projects.
         full_return : bool, optional
@@ -703,7 +700,7 @@ class FractalClient(object):
         Returns
         -------
         ComputeResponse
-            An object that contains the submitted ObjectIds of the new compute. This object has the following fields:
+            An object that contains the submitted ObjectIds of the new procedure. This object has the following fields:
               - ids: The ObjectId's of the task in the order of input molecules
               - submitted: A list of ObjectId's that were submitted to the compute queue
               - existing: A list of ObjectId's of tasks already in the database
@@ -756,6 +753,8 @@ class FractalClient(object):
             A dictionary of each match that contains the current status
             and, if an error has occured, the error message.
 
+		Examples
+		--------
         >>> client.check_tasks(id="5bd35af47b878715165f8225", projection={"status": True})
         [{"status": "WAITING"}]
 
@@ -779,8 +778,8 @@ class FractalClient(object):
                     service: Union[GridOptimizationInput, TorsionDriveInput],
                     tag: Optional[str]=None,
                     priority: Optional[str]=None,
-                    full_return: bool=False):
-        """Summary
+                    full_return: bool=False) -> ComputeResponse:
+        """Adds a new service to the service queue.
 
         Parameters
         ----------
@@ -795,8 +794,11 @@ class FractalClient(object):
 
         Returns
         -------
-        TYPE
-            Description
+        ComputeResponse
+            An object that contains the submitted ObjectIds of the new service. This object has the following fields:
+              - ids: The ObjectId's of the task in the order of input molecules
+              - submitted: A list of ObjectId's that were submitted to the compute queue
+              - existing: A list of ObjectId's of tasks already in the database
         """
         payload = {
             "meta": {
@@ -838,6 +840,8 @@ class FractalClient(object):
             A dictionary of each match that contains the current status
             and, if an error has occurred, the error message.
 
+        Examples
+        --------
         >>> client.check_services(id="5bd35af47b878715165f8225", projection={"status": True})
         [{"status": "RUNNING"}]
 

@@ -1,5 +1,5 @@
 """
-Contains testing infrastructure for QCFractal
+Contains testing infrastructure for QCFractal.
 """
 
 import os
@@ -15,6 +15,7 @@ from contextlib import contextmanager
 
 import pymongo
 import pytest
+import qcengine as qcng
 from tornado.ioloop import IOLoop
 
 from .queue import build_queue_adapter
@@ -53,6 +54,8 @@ if _programs["dask"]:
 else:
     _programs["dask.distributed"] = False
 
+_programs["dftd3"] = "dftd3" in qcng.list_available_programs()
+
 
 def has_module(name):
     return _programs[name]
@@ -65,6 +68,7 @@ def _build_pytest_skip(program):
 
 # Add a number of module testing options
 using_dask = _build_pytest_skip('dask.distributed')
+using_dftd3 = _build_pytest_skip('dftd3')
 using_fireworks = _build_pytest_skip('fireworks')
 using_geometric = _build_pytest_skip('geometric')
 using_parsl = _build_pytest_skip('parsl')
@@ -101,7 +105,7 @@ def mark_example(func):
 
 
 def recursive_dict_merge(base_dict, dict_to_merge_in):
-    """Recursive merge for more complex than a simple top-level merge {**x, **y} which does not handle nested dict"""
+    """Recursive merge for more complex than a simple top-level merge {**x, **y} which does not handle nested dict."""
     for k, v in dict_to_merge_in.items():
         if (k in base_dict and isinstance(base_dict[k], dict) and isinstance(dict_to_merge_in[k], Mapping)):
             recursive_dict_merge(base_dict[k], dict_to_merge_in[k])
@@ -211,7 +215,7 @@ def terminate_process(proc):
 @contextmanager
 def popen(args, **kwargs):
     """
-    Opens a background task
+    Opens a background task.
 
     Code and idea from dask.distributed's testing suite
     https://github.com/dask/distributed
@@ -277,7 +281,7 @@ def run_process(args, **kwargs):
     """
     Runs a process in the background until complete.
 
-    Returns True if exit code zero
+    Returns True if exit code zero.
     """
 
     timeout = kwargs.pop("timeout", 30)
@@ -403,7 +407,7 @@ def adapter_client_fixture(request):
 @pytest.fixture(scope="module", params=_adapter_testing)
 def managed_compute_server(request):
     """
-    A FractalServer with compute associated parametrize for all managers
+    A FractalServer with compute associated parametrize for all managers.
     """
 
     yield from build_managed_compute_server(request.param)
@@ -412,7 +416,7 @@ def managed_compute_server(request):
 @pytest.fixture(scope="module")
 def fractal_compute_server(request):
     """
-    A FractalServer with a local Pool manager
+    A FractalServer with a local Pool manager.
     """
 
     # Check mongo
@@ -420,14 +424,14 @@ def fractal_compute_server(request):
 
     # Storage name
     storage_name = "qcf_compute_server_test"
-
+    storage_uri = "mongodb://localhost:27017"
+    # storage_uri = "postgresql+psycopg2://qcarchive@localhost:5432/qcarchivedb"
+    # storage_uri = "sqlite:///:memory:"
     with FractalSnowflake(
-            max_workers=2, storage_project_name=storage_name, storage_uri="mongodb://localhost:27017",
+            max_workers=2, storage_project_name=storage_name, storage_uri=storage_uri,
             start_server=False) as server:
-
         reset_server_database(server)
         yield server
-
 
 def build_socket_fixture(stype):
     print("")
@@ -442,6 +446,15 @@ def build_socket_fixture(stype):
 
         # Clean and re-init the database
         storage._clear_db(storage_name)
+
+    elif stype == 'sqlalchemy':
+        storage = storage_socket_factory('postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb',
+                                         storage_name, db_type=stype, sql_echo=False)
+        # storage = storage_socket_factory('sqlite:///:memory:', storage_name, db_type=stype)
+        # storage = storage_socket_factory('sqlite:///path_to_db', storage_name, db_type=stype)
+
+        # Clean and re-init the database
+        storage._clear_db(storage_name)
     else:
         raise KeyError("Storage type {} not understood".format(stype))
 
@@ -449,6 +462,10 @@ def build_socket_fixture(stype):
 
     if stype in ["pymongo", "mongoengine"]:
         storage.client.drop_database(storage_name)
+    elif stype == "sqlalchemy":
+        # todo: drop db
+        # storage._clear_db(storage_name)
+        pass
     else:
         raise KeyError("Storage type {} not understood".format(stype))
 
@@ -457,3 +474,8 @@ def build_socket_fixture(stype):
 def mongoengine_socket_fixture(request):
 
     yield from build_socket_fixture("mongoengine")
+
+@pytest.fixture(scope="module")
+def sqlalchemy_socket_fixture(request):
+
+    yield from build_socket_fixture("sqlalchemy")

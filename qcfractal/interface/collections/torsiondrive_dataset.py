@@ -399,11 +399,6 @@ class TorsionDriveDataset(Collection):
         -------
         plotly.Figure
             The requested figure.
-
-        Raises
-        ------
-        TypeError
-            Description
         """
 
         show_spec = True

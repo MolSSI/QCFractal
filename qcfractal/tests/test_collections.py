@@ -17,8 +17,7 @@ def test_collection_query(fractal_compute_server):
     ds.save()
 
     cols = client.list_collections()
-    assert 'Dataset' in cols
-    assert 'CAPITAL' in cols["Dataset"]
+    assert cols.index.contains(("Dataset", "CAPITAL"))
 
     ds = client.get_collection("dataset", "capital")
     assert ds.name == "CAPITAL"
@@ -110,6 +109,39 @@ def test_reactiondataset_check_state(fractal_compute_server):
 
 
 @testing.using_psi4
+@testing.using_dftd3
+def test_compute_reactiondataset_dftd3(fractal_compute_server):
+
+    client = ptl.FractalClient(fractal_compute_server)
+    ds_name = "He_DFTD3"
+    ds = ptl.collections.ReactionDataset(ds_name, client, ds_type="ie")
+
+    # Add two helium dimers to the DB at 4 and 8 bohr
+    HeDimer = ptl.Molecule.from_data([[2, 0, 0, -4.123], [2, 0, 0, 4.123]], dtype="numpy", units="bohr", frags=[1])
+    ds.add_ie_rxn("HeDimer", HeDimer, attributes={"r": 4})
+    ds.set_default_program("psi4")
+
+    ds.save()
+
+    ncomp1 = ds.compute("B3LYP-D3", "6-31G")
+    assert len(ncomp1.ids) == 4
+    assert len(ncomp1.submitted) == 4
+
+    ncomp2 = ds.compute("B3LYP-D3(BJ)", "6-31G")
+    assert len(ncomp2.ids) == 4
+    assert len(ncomp2.submitted) == 2
+
+    fractal_compute_server.await_results()
+    assert ds.query("B3LYP", "6-31G")
+    assert ds.query("B3LYP-D3", "6-31G")
+    assert ds.query("B3LYP-D3(BJ)", "6-31G")
+
+    for key, value in {"B3LYP/6-31g": -0.002135, "B3LYP-D3/6-31g": -0.005818, "B3LYP-D3(BJ)/6-31g": -0.005636}.items():
+
+        assert pytest.approx(value, 1.e-3) == ds.df.loc["HeDimer", key]
+
+
+@testing.using_psi4
 def test_compute_reactiondataset_regression(fractal_compute_server):
     """
     Tests an entire server and interaction energy dataset run
@@ -130,10 +162,10 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     assert "ReactionDataset(" in str(ds)
 
     # Test collection lists
-    ret = client.list_collections()
+    ret = client.list_collections(aslist=True)
     assert ds_name in ret["ReactionDataset"]
 
-    ret = client.list_collections("reactiondataset")
+    ret = client.list_collections("reactiondataset", aslist=True)
     assert ds_name in ret
 
     He2 = ptl.Molecule.from_data([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
@@ -150,6 +182,7 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
         "units": "hartree"
     }
     ds.add_contributed_values(contrib)
+    ds.data.default_benchmark = "Benchmark"
 
     # Save the DB and overwrite the result, reacquire via client
     r = ds.save()

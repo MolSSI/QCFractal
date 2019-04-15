@@ -13,7 +13,7 @@ def build_procedure(data, procedure=None, client=None):
     procedure : None, optional
         The name of the procedure. If blank the procedure name is pulled from the `data["procedure"]` field.
     client : FractalClient, optional
-        A activate server connection.
+        A FractalClient connected to a server.
 
     Returns
     -------

@@ -32,6 +32,7 @@ def test_task_molecule_no_orientation(data, fractal_compute_server):
 
     program, method, basis = data
     ret = client.add_compute(program, method, basis, "energy", None, [mol_id])
+    assert "nsubmitted" in str(ret)
 
     # Manually handle the compute
     fractal_compute_server.await_results()

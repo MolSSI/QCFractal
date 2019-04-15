@@ -91,3 +91,20 @@ def list_known_collections() -> List[str]:
         A list of registered collections
     """
     return list(collection_name_map.values())
+
+
+def composition_planner(program=None, method=None, basis=None, driver=None, keywords=None):
+    """
+    Plans out a given query into multiple pieces
+    """
+
+    base = {"program": program, "method": method, "basis": basis, "driver": driver, "keywords": keywords}
+
+    if ("-d3" in method.lower()) and ("dftd3" != program.lower()):
+        dftd3keys = {"program": "dftd3", "method": method, "basis": None, "driver": driver, "keywords": None}
+        base["method"] = method.split("-D3")[0]
+
+        return [dftd3keys, base]
+
+    else:
+        return [base]

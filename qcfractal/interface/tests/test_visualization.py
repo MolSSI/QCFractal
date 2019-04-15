@@ -22,7 +22,7 @@ def live_fractal_or_skip():
     try:
         return portal.FractalClient()
     except requests.exceptions.ConnectionError:
-        return pytest.skip("Could no make connection to central Fractal server")
+        return pytest.skip("Could not make a connection to central Fractal server")
 
 
 @pytest.fixture
@@ -85,13 +85,14 @@ def TDDSFixture():
 def test_plot_torsiondrive_dataset(TDDSFixture):
     client, ds = TDDSFixture
 
-    ds.visualize("c1ccc(cc1)N-[3, 5, 6, 12]", ["B3LYP-D3", "UFF"], units="kJ / mol", return_figure=True)
+    ds.visualize("[CH3:4][O:3][c:2]1[cH:1]cccc1", ["B3LYP-D3", "UFF"], units="kJ / mol", return_figure=True)
     ds.visualize(
-        ["c1ccc(cc1)N-[3, 5, 6, 12]", "CCCNc1ccc(cc1)Cl-[1, 4, 9, 8]"], "UFF", relative=False, return_figure=True)
+        ["[CH3:4][O:3][c:2]1[cH:1]cccc1", "[CH3:4][O:3][c:2]1[cH:1]ccnc1"], "UFF", relative=False, return_figure=True)
 
 
 @using_plotly
 def test_plot_torsiondrive_dataset_measured(TDDSFixture):
     client, ds = TDDSFixture
 
-    ds.visualize("c1ccc(cc1)N-[3, 5, 6, 12]", "B3LYP-D3", units="kJ / mol", use_measured_angle=True, return_figure=True)
+    ds.visualize(
+        "[CH3:4][O:3][c:2]1[cH:1]cccc1", "B3LYP-D3", units="kJ / mol", use_measured_angle=True, return_figure=True)

@@ -108,7 +108,7 @@ class FractalServer:
         Parameters
         ----------
         name : str, optional
-            The name of the server itself, provided when users query /information
+            The name of the server itself, provided when users query information
         port : int, optional
             The port the server will listen on.
         loop : IOLoop, optional
@@ -314,7 +314,7 @@ class FractalServer:
 
     def start(self, start_loop: bool=True, start_periodics: bool=True) -> None:
         """
-        Starts up the IOLoop and periodic calls
+        Starts up the IOLoop and periodic calls.
 
         Parameters
         ----------
@@ -391,7 +391,7 @@ class FractalServer:
         self.logger.info("FractalServer stopping gracefully. Stopped IOLoop.\n")
 
     def add_exit_callback(self, callback, *args, **kwargs):
-        """Adds additional callbacks to perform when closing down the server
+        """Adds additional callbacks to perform when closing down the server.
 
         Parameters
         ----------
@@ -408,7 +408,7 @@ class FractalServer:
 ## Helpers
 
     def get_address(self, endpoint: Optional[str]=None) -> str:
-        """Obtains the full URI for a given function on the FractalServer
+        """Obtains the full URI for a given function on the FractalServer.
 
         Parameters
         ----------
@@ -492,7 +492,7 @@ class FractalServer:
 
     def list_managers(self, status: Optional[str]=None, name: Optional[str]=None) -> List[Dict[str, Any]]:
         """
-        Provides a list of managers associated with the server both active and inactive
+        Provides a list of managers associated with the server both active and inactive.
 
         Parameters
         ----------
@@ -591,7 +591,7 @@ class FractalServer:
 
     def list_current_tasks(self) -> List[Any]:
         """Provides a list of tasks currently in the queue along
-        with the associated keys
+        with the associated keys.
 
         Returns
         -------

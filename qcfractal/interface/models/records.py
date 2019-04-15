@@ -37,7 +37,7 @@ class RecordBase(BaseModel, abc.ABC):
     cache: Dict[str, Any] = {}
 
     # Base identification
-    id: ObjectId = None
+    id: Union[ObjectId, int] = None
     hash_index: Optional[str] = None
     procedure: str
     program: str
@@ -45,16 +45,15 @@ class RecordBase(BaseModel, abc.ABC):
 
     # Extra fields
     extras: Dict[str, Any] = {}
-    stdout: Optional[ObjectId] = None
-    stderr: Optional[ObjectId] = None
-    error: Optional[ObjectId] = None
+    stdout: Optional[Union[ObjectId, int]] = None
+    stderr: Optional[Union[ObjectId, int]] = None
+    error: Optional[Union[ObjectId, int]] = None
 
     # Compute status
-    task_id: ObjectId = None
+    task_id: Optional[Union[ObjectId, int]] = None  # TODO: not used in SQL
     status: RecordStatusEnum = "INCOMPLETE"
     modified_on: datetime.datetime = datetime.datetime.utcnow()
     created_on: datetime.datetime = datetime.datetime.utcnow()
-    error: Optional[Any] = None
 
     # Carry-ons
     provenance: Optional[qcel.models.Provenance] = None
@@ -132,7 +131,7 @@ class RecordBase(BaseModel, abc.ABC):
         Returns
         -------
         Optional[str]
-            The requested stdout, none if no stderr present.
+            The requested stdout, none if no stdout present.
         """
         return self._kvstore_getter("stdout")
 
@@ -161,49 +160,6 @@ class RecordBase(BaseModel, abc.ABC):
         else:
             return value
 
-
-class ResultProperties(BaseModel):
-    """
-    Copy of QCElemental.ResultProperties wil updates trickle through. Remove ASAP.
-    """
-
-    # Calcinfo
-    calcinfo_nbasis: int = None
-    calcinfo_nmo: int = None
-    calcinfo_nalpha: int = None
-    calcinfo_nbeta: int = None
-    calcinfo_natom: int = None
-
-    # Canonical
-    nuclear_repulsion_energy: float = None
-    return_energy: float = None
-
-    # SCF Keywords
-    scf_one_electron_energy: float = None
-    scf_two_electron_energy: float = None
-    scf_vv10_energy: float = None
-    scf_xc_energy: float = None
-    scf_dispersion_correction_energy: float = None
-    scf_dipole_moment: List[float] = None
-    scf_total_energy: float = None
-    scf_iterations: int = None
-
-    # MP2 Keywords
-    mp2_same_spin_correlation_energy: float = None
-    mp2_opposite_spin_correlation_energy: float = None
-    mp2_singles_energy: float = None
-    mp2_doubles_energy: float = None
-    mp2_total_correlation_energy: float = None
-    mp2_total_energy: float = None
-
-    class Config:
-        allow_mutation = False
-        extra = "forbid"
-
-    def dict(self, *args, **kwargs):
-        return super().dict(*args, **{**kwargs, **{"skip_defaults": True}})
-
-
 class ResultRecord(RecordBase):
 
     # Classdata
@@ -216,13 +172,13 @@ class ResultRecord(RecordBase):
     # Input data
     driver: DriverEnum
     method: str
-    molecule: ObjectId
+    molecule: Union[ObjectId, int]
     basis: Optional[str] = None
-    keywords: Optional[ObjectId] = None
+    keywords: Optional[Union[ObjectId, int]] = None
 
     # Output data
     return_result: Union[float, List[float], Dict[str, Any]] = None
-    properties: ResultProperties = None  # deprecate for qcel.models.ResultProperties
+    properties: qcel.models.ResultProperties = None
 
     class Config(RecordBase.Config):
         build_hash_index = False
@@ -289,17 +245,17 @@ class OptimizationRecord(RecordBase):
     # Version data
     version: int = 1
     procedure: constr(strip_whitespace=True, regex="optimization") = "optimization"
-    schema_version: int = 1
+    schema_version: int = 1  # TODO: why not in Base
 
     # Input data
-    initial_molecule: ObjectId
+    initial_molecule: Union[ObjectId, int]
     qc_spec: QCSpecification
-    keywords: Dict[str, Any] = {}
+    keywords: Dict[str, Any] = {}  # TODO: defined in Base
 
     # Results
     energies: List[float] = None
-    final_molecule: ObjectId = None
-    trajectory: List[ObjectId] = None
+    final_molecule: Union[ObjectId, int] = None
+    trajectory: List[Union[ObjectId, int]] = None
 
     class Config(RecordBase.Config):
         pass

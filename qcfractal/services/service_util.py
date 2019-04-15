@@ -31,7 +31,7 @@ class TaskManager(BaseModel):
 
     def done(self) -> bool:
         """
-        Check if requested tasks are complete
+        Check if requested tasks are complete.
         """
 
         if len(self.required_tasks) == 0:
@@ -62,7 +62,7 @@ class TaskManager(BaseModel):
 
     def get_tasks(self) -> Dict[str, Any]:
         """
-        Pulls currently held tasks
+        Pulls currently held tasks.
         """
 
         ret = {}
@@ -142,7 +142,7 @@ class BaseService(BaseModel, abc.ABC):
     @abc.abstractmethod
     def initialize_from_api(cls, storage_socket, meta, molecule, tag=None, priority=None):
         """
-        Initalizes a Service from the API
+        Initalizes a Service from the API.
         """
 
     def dict(self, *args, **kwargs) -> Dict[str, Any]:
@@ -155,16 +155,17 @@ class BaseService(BaseModel, abc.ABC):
     @abc.abstractmethod
     def iterate(self):
         """
-        Takes a "step" of the service. Should return False if not finished
+        Takes a "step" of the service. Should return False if not finished.
         """
 
 
 def expand_ndimensional_grid(dimensions: Tuple[int, ...], seeds: Set[Tuple[int, ...]],
                              complete: Set[Tuple[int, ...]]) -> List[Tuple[Tuple[int, ...], Tuple[int, ...]]]:
     """
-    Expands an n-dimensional key/value grid
+    Expands an n-dimensional key/value grid.
 
-    Example:
+    Example
+	-------
     >>> expand_ndimensional_grid((3, 3), {(1, 1)}, set())
     [((1, 1), (0, 1)), ((1, 1), (2, 1)), ((1, 1), (1, 0)), ((1, 1), (1, 2))]
     """

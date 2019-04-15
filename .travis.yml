@@ -12,6 +12,7 @@ os: linux
 
 services:
   - mongodb
+  - postgresql
 
 matrix:
   include:
@@ -81,6 +82,9 @@ before_script:
   - python -V
   - mongod --version
   - conda list
+  - psql -c "create database qcarchivedb;" -U postgres
+  - psql -c "create user qcarchive with password 'mypass';" -U postgres
+  - psql -c "grant all privileges on database qcarchivedb to qcarchive;" -U postgres
 
 script:
   - pytest -v -rsx --runslow --cov=qcfractal qcfractal/

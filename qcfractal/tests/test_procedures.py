@@ -119,8 +119,8 @@ def test_procedure_optimization(fractal_compute_server):
         assert traj[0].provenance.creator.lower() == "psi4"
 
         # Check keywords went through
-        assert "SCF QUADRUPOLE XY" in traj[0].extras["local_qcvars"]
-        assert "WIBERG_LOWDIN_INDICES" in traj[0].extras["local_qcvars"]
+        assert "SCF QUADRUPOLE XY" in traj[0].extras["qcvars"]
+        assert "WIBERG_LOWDIN_INDICES" in traj[0].extras["qcvars"]
 
         # Make sure extra was popped
         assert "_qcfractal_tags" not in traj[0].extras

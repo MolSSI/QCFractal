@@ -21,7 +21,7 @@ class TaskQueueHandler(APIHandler):
     _required_auth = "compute"
 
     def post(self):
-        """Summary
+        """Posts new tasks to the task queue.
         """
 
         body_model, response_model = rest_model("task_queue", "post")
@@ -45,7 +45,7 @@ class TaskQueueHandler(APIHandler):
         self.write(response.json())
 
     def get(self):
-        """Posts new services to the service queue
+        """Posts new services to the service queue.
         """
 
         body_model, response_model = rest_model("task_queue", "get")
@@ -66,7 +66,7 @@ class ServiceQueueHandler(APIHandler):
     _required_auth = "compute"
 
     def post(self):
-        """Posts new services to the service queue
+        """Posts new services to the service queue.
         """
 
         body_model, response_model = rest_model("service_queue", "post")
@@ -97,7 +97,7 @@ class ServiceQueueHandler(APIHandler):
         self.write(response.json())
 
     def get(self):
-        """Gets services from the service queue
+        """Gets services from the service queue.
         """
 
         body_model, response_model = rest_model("service_queue", "get")
@@ -113,7 +113,7 @@ class ServiceQueueHandler(APIHandler):
 class QueueManagerHandler(APIHandler):
     """
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
-    Manages the external
+    Manages the external queue.
     """
     _required_auth = "queue"
 
@@ -230,7 +230,7 @@ class QueueManagerHandler(APIHandler):
         body = self.parse_bodymodel(body_model)
 
         name = self._get_name_from_metadata(body.meta)
-        self.logger.info("QueueManager: Recieved completed task packet from {}.".format(name))
+        self.logger.info("QueueManager: Received completed task packet from {}.".format(name))
         success, error = self.insert_complete_tasks(self.storage, body.data, self.logger)
 
         completed = success + error

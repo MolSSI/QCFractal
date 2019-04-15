@@ -1,5 +1,5 @@
 """
-Queue adapter for Parsl
+A BaseAdapter for wrapping compute engines.
 """
 
 import abc
@@ -23,8 +23,13 @@ class BaseAdapter(abc.ABC):
         """
         Parameters
         ----------
-        client : parsl.config.Config
-            A activate Parsl DataFlow
+        client : object
+            A object wrapper for different distributed workflow types. The following input types are valid
+             - Python Processes: "concurrent.futures.process.ProcessPoolExecutor"
+             - Dask Distributed: "distributed.Client"
+             - Fireworks: "fireworks.LaunchPad"
+             - Parsl: "parsl.config.Config"
+			 
         logger : None, optional
             A optional logging object to write output to
         cores_per_task : int, optional, Default: None
@@ -52,7 +57,7 @@ class BaseAdapter(abc.ABC):
         return "<BaseAdapter>"
 
     def get_function(self, function: str) -> Callable:
-        """Obtains a Python function from a given string
+        """Obtains a Python function from a given string.
 
         Parameters
         ----------
@@ -82,9 +87,10 @@ class BaseAdapter(abc.ABC):
     @property
     def qcengine_local_options(self) -> Dict[str, Any]:
         """
-        Helper property to return the local QCEngine Options based on number of cores and memory per task
+        Helper property to return the local QCEngine Options based on number of cores and memory per task.
 
-        Individual adapters can overload this behavior
+        Individual adapters can overload this behavior.
+		
         Returns
         -------
         local_options : dict
@@ -100,7 +106,7 @@ class BaseAdapter(abc.ABC):
         return local_options
 
     def submit_tasks(self, tasks: List[Dict[str, Any]]) -> List[str]:
-        """Adds tasks to the queue
+        """Adds tasks to the queue.
 
         Parameters
         ----------
@@ -139,7 +145,7 @@ class BaseAdapter(abc.ABC):
 
     @abc.abstractmethod
     def acquire_complete(self) -> Dict[str, Any]:
-        """Pulls complete tasks out of the Parsl queue.
+        """Pulls complete tasks out of the task queue.
 
         Returns
         -------
@@ -158,7 +164,7 @@ class BaseAdapter(abc.ABC):
         """
 
     def list_tasks(self) -> List[str]:
-        """Returns the tags for all active tasks
+        """Returns the tags for all active tasks.
 
         Returns
         -------
@@ -168,7 +174,7 @@ class BaseAdapter(abc.ABC):
         return list(self.queue.keys())
 
     def task_count(self) -> int:
-        """Counts all active tasks
+        """Counts all active tasks.
 
         Returns
         -------
@@ -179,7 +185,7 @@ class BaseAdapter(abc.ABC):
 
     @abc.abstractmethod
     def close(self) -> bool:
-        """Closes down the Client and Adapter objects
+        """Closes down the Client and Adapter objects.
 
         Returns
         -------
@@ -190,7 +196,7 @@ class BaseAdapter(abc.ABC):
     @abc.abstractmethod
     def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
         """
-        Add a specific task to the queue
+        Add a specific task to the queue.
 
         Parameters
         ----------
@@ -202,12 +208,12 @@ class BaseAdapter(abc.ABC):
         queue_key : Valid Dictionary Key
             Identifier for the queue to use for lookup of the task
         task
-            Submitted task object for the adapter to look up later after its formatted it
+            Submitted task object for the adapter to look up later after it has formatted it
         """
 
     def _task_exists(self, lookup) -> bool:
         """
-        Check if the tasks exists helper function, adapters may use something different
+        Check if the task exists helper function, adapters may use something different
 
         Parameters
         ----------

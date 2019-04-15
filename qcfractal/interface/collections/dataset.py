@@ -10,9 +10,9 @@ from pydantic import BaseModel
 from qcelemental import constants
 
 from .collection import Collection
-from .collection_utils import register_collection
+from .collection_utils import composition_planner, register_collection
 from ..statistics import wrap_statistics
-from ..models import ObjectId, Molecule
+from ..models import ComputeResponse, ObjectId, Molecule
 from ..visualization import bar_plot, violin_plot
 
 
@@ -57,8 +57,8 @@ class Dataset(Collection):
         ----------
         name : str
             The name of the Dataset
-        client : Optional['FractalClient'], optional
-            A FractalClient connected to a server
+        client : Opational['FractalClient'], optional
+            A Portal client to connected to a server
         **kwargs : Dict[str, Any]
             Additional kwargs to pass to the collection
         """
@@ -136,14 +136,16 @@ class Dataset(Collection):
 
         new_history = []
         for key in self.data.history_keys:
+
             value = history[key]
             if value is not None:
                 value = value.lower()
+
             new_history.append(value)
 
         self.data.history.add(tuple(new_history))
 
-    def list_history(self, **search: Dict[str, Optional[str]]) -> 'DataFrame':
+    def list_history(self, dftd3: bool=False, get_base=False, **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """
         Lists the history of computations completed.
 
@@ -162,23 +164,42 @@ class Dataset(Collection):
         if not (search.keys() <= set(self.data.history_keys)):
             raise KeyError("Not all query keys were understood.")
 
-        df = pd.DataFrame(list(self.data.history), columns=self.data.history_keys)
+        history = pd.DataFrame(list(self.data.history), columns=self.data.history_keys)
 
+        # Build out -D3 combos
+
+        dftd3 = history[history["program"] == "dftd3"].copy()
+        dftd3["base"] = [x.split("-d3")[0] for x in dftd3["method"]]
+
+        nondftd3 = history[history["program"] != "dftd3"]
+        dftd3combo = nondftd3.merge(dftd3[["method", "base"]], left_on="method", right_on="base")
+        dftd3combo["method"] = dftd3combo["method_y"]
+        dftd3combo.drop(["method_x", "method_y", "base"], axis=1, inplace=True)
+
+        history = pd.concat([history, dftd3combo], sort=False)
+        history = history.reset_index()
+        history.drop("index", axis=1, inplace=True)
+
+        # Find the returned subset
+        ret = history.copy()
         for key, value in search.items():
             if value is None:
-                df = df[df[key].isnull()]
+                ret = ret[ret[key].isnull()]
             elif isinstance(value, str):
                 value = value.lower()
-                df = df[df[key] == value]
+                ret = ret[ret[key] == value]
             elif isinstance(value, (list, tuple)):
                 query = [x.lower() for x in value]
-                df = df[df[key].isin(query)]
+                ret = ret[ret[key].isin(query)]
             else:
                 raise TypeError(f"Search type {type(value)} not understood.")
 
-        df.set_index(list(self.data.history_keys[:-1]), inplace=True)
-        df.sort_index(inplace=True)
-        return df
+        if dftd3 is False:
+            ret = ret[ret["program"] != "dftd3"]
+
+        ret.set_index(list(self.data.history_keys[:-1]), inplace=True)
+        ret.sort_index(inplace=True)
+        return ret
 
     def _get_history(self, **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """Queries for all history that matches the search
@@ -194,17 +215,18 @@ class Dataset(Collection):
             A DataFrame of the queried parameters
         """
 
-        queries = self.list_history(**search).reset_index()
+        queries = self.list_history(**search, dftd3=True).reset_index()
         if queries.shape[0] > 10:
-            raise TypeError("More than 10 queries formed, please narrow the search by adding additional constraints such as method or basis.")
+            raise TypeError("More than 10 queries formed, please narrow the search.")
 
         # queries["name"] = None
         for name, query in queries.iterrows():
-            query = query.to_dict()
+
+            query = query.replace({np.nan: None}).to_dict()
             query.pop("driver")
             if "stoichiometry" in query:
                 query["stoich"] = query.pop("stoichiometry")
-            queries.loc[name, "name"] = self.query(query.pop("method"), **query)
+            queries.loc[name, "name"] = self.query(query.pop("method").upper(), **query)
 
         return queries
 
@@ -212,7 +234,8 @@ class Dataset(Collection):
                     method: Optional[str]=None,
                     basis: Optional[str]=None,
                     keywords: Optional[str]=None,
-                    program: Optional[str]=None) -> 'DataFrame':
+                    program: Optional[str]=None,
+                    force: bool=False) -> 'DataFrame':
         """ Queries known history from the search paramaters provided. Defaults to the standard
         programs and keywords if not provided.
 
@@ -243,7 +266,7 @@ class Dataset(Collection):
             else:
                 history.pop(k, None)
 
-        return self._get_history(**history)
+        return self._get_history(**history, force=force)
 
     def _visualize(self,
                    metric,
@@ -251,6 +274,7 @@ class Dataset(Collection):
                    query: Dict[str, Optional[str]],
                    groupby: Optional[str]=None,
                    return_figure=None,
+                   digits=3,
                    kind="bar") -> 'plotly.Figure':
 
         # Validate query dimensions
@@ -277,29 +301,52 @@ class Dataset(Collection):
             metric = "M" + metric
 
         # Are we a groupby?
-        _valid_groupby = {"method", "basis", "keywords", "program", "stoich"}
+        _valid_groupby = {"method", "basis", "keywords", "program", "stoic", "d3"}
         if groupby is not None:
             groupby = groupby.lower()
             if groupby not in _valid_groupby:
                 raise KeyError(f"Groupby option {groupby} not understood.")
-            if groupby not in query:
+            if (groupby != "d3") and (groupby not in query):
                 raise KeyError(
                     f"Groupby option {groupby} not found in query, must provide a search on this parameter.")
 
-            if not isinstance(query[groupby], (tuple, list)):
+            if (groupby != "d3") and (not isinstance(query[groupby], (tuple, list))):
                 raise KeyError(f"Groupby option {groupby} must be a list.")
 
-            if groupby and (kind == "violin") and (len(query[groupby]) != 2):
+
+            if (groupby == "d3"):
+                full_history = self.get_history(**query)
+                full_history["base"] = [x.split("-d3")[0] for x in full_history["method"]]
+                full_history["d3"] = [
+                    method.replace(base, "").replace("-d", "d")
+                    for method, base in zip(full_history["method"], full_history["base"])
+                ]
+
+
+                query_names = []
+                queries = []
+                for name, gb in full_history.groupby("d3"):
+                    gb = gb.copy()
+
+                    queries.append(gb)
+                    if name == "":
+                        query_names.append("No -D3")
+                    else:
+                        query_names.append(name.upper())
+
+            else:
+
+                query_names = []
+                queries = []
+                for gb in query[groupby]:
+                    gb_query = query.copy()
+                    gb_query[groupby] = gb
+
+                    queries.append(self.get_history(**gb_query))
+                    query_names.append(self._canonical_name(**{groupby: gb}))
+
+            if (kind == "violin") and (len(queries) != 2):
                 raise KeyError(f"Groupby option for violin plots must have two entries.")
-
-            query_names = []
-            queries = []
-            for gb in query[groupby]:
-                gb_query = query.copy()
-                gb_query[groupby] = gb
-
-                queries.append(self.get_history(**gb_query))
-                query_names.append(self._canonical_name(**{groupby: gb}))
 
         else:
             queries = [self.get_history(**query)]
@@ -313,13 +360,18 @@ class Dataset(Collection):
             if len(q) == 0:
                 raise KeyError("No query matches, nothing to visualize!")
             stat = self.statistics(metric, list(q["name"]), bench=bench)
+            stat = stat.round(digits)
             stat.sort_index(inplace=True)
             stat.name = name
 
             col_names = {}
             for record in q.to_dict(orient="records"):
-                if groupby:
+                if (groupby == "d3"):
+                    record["method"] = record["base"]
+
+                elif groupby:
                     record[groupby] = None
+
                 index_name = self._canonical_name(
                     record["program"],
                     record["method"],
@@ -488,21 +540,77 @@ class Dataset(Collection):
 
         field = field.lower()
 
-        query["molecule"] = set(indexer.values())
+        ret = []
+        for query_set in composition_planner(**query):
 
-        query["projection"] = {"molecule": True, field: True}
-        records = pd.DataFrame(self.client.query_results(**query), columns=["molecule", field])
+            query_set["molecule"] = set(indexer.values())
 
-        ret = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule"])
-        ret.reset_index(inplace=True)
-        ret = ret.merge(records, how="left", on="molecule")
-        ret.rename(columns={field: "result"}, inplace=True)
-        ret.set_index("index", inplace=True)
-        ret.drop("molecule", axis=1, inplace=True)
+            query_set["projection"] = {"molecule": True, field: True}
+            records = pd.DataFrame(self.client.query_results(**query_set), columns=["molecule", field])
 
-        ret[ret.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', self.units)
+            df = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule"])
+            df.reset_index(inplace=True)
+            df = df.merge(records, how="left", on="molecule")
+            df.set_index("index", inplace=True)
+            df.drop("molecule", axis=1, inplace=True)
+            ret.append(df)
 
-        return ret
+        if len(ret) == 1:
+            retdf = ret[0]
+        else:
+            retdf = ret[0]
+            for df in ret[1:]:
+                retdf += df
+
+        retdf[retdf.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', self.units)
+
+        return retdf
+
+    def _compute(self, compute_keys, molecules, tag, priority):
+        """
+        Internal compute function
+        """
+
+        name, dbkeys, history = self._default_parameters(
+            compute_keys["program"],
+            compute_keys["method"],
+            compute_keys["basis"],
+            compute_keys["keywords"],
+            stoich=compute_keys.get("stoich", None))
+
+        self._check_state()
+
+        if self.client is None:
+            raise AttributeError("Dataset: Compute: Client was not set.")
+
+        umols = list(set(molecules))
+
+        ids = []
+        submitted = []
+        existing = []
+        for compute_set in composition_planner(**dbkeys):
+
+            ret = self.client.add_compute(
+                compute_set["program"],
+                compute_set["method"],
+                compute_set["basis"],
+                compute_set["driver"],
+                compute_set["keywords"],
+                umols,
+                tag=tag,
+                priority=priority)
+
+            ids.extend(ret.ids)
+            submitted.extend(ret.submitted)
+            existing.extend(ret.existing)
+
+            qhistory = history.copy()
+            qhistory["program"] = compute_set["program"]
+            qhistory["method"] = compute_set["method"]
+            qhistory["basis"] = compute_set["basis"]
+            self._add_history(**qhistory)
+
+        return ComputeResponse(ids=ids, submitted=submitted, existing=existing)
 
     @property
     def units(self):
@@ -528,7 +636,7 @@ class Dataset(Collection):
 
     def add_keywords(self, alias: str, program: str, keyword: 'KeywordSet', default: bool=False) -> bool:
         """
-        Adds an option alias to the dataset. Note that keywords are not present
+        Adds an option alias to the dataset. Not that keywords are not present
         until a save call has been completed.
 
         Parameters
@@ -702,7 +810,7 @@ class Dataset(Collection):
         method : str
             The computational method to query on (B3LYP)
         basis : Optional[str], optional
-            The computational basis to query on (6-31G)
+            The computational basis query on (6-31G)
         keywords : Optional[str], optional
             The option token desired
         program : Optional[str], optional
@@ -743,7 +851,7 @@ class Dataset(Collection):
         indexer = {e.name: e.molecule_id for e in self.data.records}
 
         tmp_idx = self._query(indexer, dbkeys, field=field)
-        tmp_idx.rename(columns={"result": name}, inplace=True)
+        tmp_idx.rename(columns={field: name}, inplace=True)
 
         if as_array:
             tmp_idx[tmp_idx.columns[0]] = tmp_idx[tmp_idx.columns[0]].apply(lambda x: np.array(x))
@@ -760,7 +868,7 @@ class Dataset(Collection):
                 keywords: Optional[str]=None,
                 program: Optional[str]=None,
                 tag: Optional[str]=None,
-                priority: Optional[str]=None):
+                priority: Optional[str]=None) -> ComputeResponse:
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -781,50 +889,36 @@ class Dataset(Collection):
 
         Returns
         -------
-        ret : dict
-            A dictionary of the keys for all requested computations
-
+        ComputeResponse
+            An object that contains the submitted ObjectIds of the new compute. This object has the following fields:
+              - ids: The ObjectId's of the task in the order of input molecules
+              - submitted: A list of ObjectId's that were submitted to the compute queue
+              - existing: A list of ObjectId's of tasks already in the database
         """
-        self._check_state()
 
-        if self.client is None:
-            raise AttributeError("Dataset: Compute: FractalClient was not set.")
-
-        name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
+        compute_keys = {"program": program, "method": method, "basis": basis, "keywords": keywords}
 
         molecule_idx = [e.molecule_id for e in self.data.records]
-        umols, uidx = np.unique(molecule_idx, return_index=True)
 
-        ret = self.client.add_compute(
-            dbkeys["program"],
-            dbkeys["method"],
-            dbkeys["basis"],
-            dbkeys["driver"],
-            dbkeys["keywords"],
-            list(umols),
-            tag=tag,
-            priority=priority)
-
-        # Update the record that this was computed
-        self._add_history(**history)
+        ret = self._compute(compute_keys, molecule_idx, tag, priority)
         self.save()
 
         return ret
 
     def get_index(self) -> List[str]:
         """
-        Returns the current index of the dataset.
+        Returns the current index of the database.
 
         Returns
         -------
         ret : List[str]
-            The names of all reactions in the dataset
+            The names of all reactions in the database
         """
         return [x.name for x in self.data.records]
 
     # Statistical quantities
-    def statistics(self, stype: str, value: str, bench: str="Benchmark", **kwargs: Dict[str, Any]):
-        """Summary
+    def statistics(self, stype: str, value: str, bench: Optional[str]=None, **kwargs: Dict[str, Any]):
+        """Provides statistics for various columns in the underlying dataframe.
 
         Parameters
         ----------
@@ -833,7 +927,7 @@ class Dataset(Collection):
         value : str
             The method string to compare
         bench : str, optional
-            The benchmark method for the comparison
+            The benchmark method for the comparison, defaults to `default_benchmark'
         kwargs: Dict[str, Any]
             Additional kwargs to pass to the statistics functions
 
@@ -843,11 +937,18 @@ class Dataset(Collection):
         ret : pd.DataFrame, pd.Series, float
             Returns a DataFrame, Series, or float with the requested statistics depending on input.
         """
+
+        if (bench is None):
+            bench = self.data.default_benchmark
+
+        if (bench is None):
+            raise KeyError("No benchmark provided and default_benchmark is None!")
+
         return wrap_statistics(stype.upper(), self.df, value, bench, **kwargs)
 
     # Getters
     def __getitem__(self, args: str) -> 'Series':
-        """A wrapper to the underlying pd.DataFrame to access columnar data
+        """A wrapped to the underlying pd.DataFrame to access columnar data
 
         Parameters
         ----------
