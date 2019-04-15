@@ -5,10 +5,8 @@ from sqlalchemy import (Column, Integer, String, Text, DateTime, Boolean,
 from sqlalchemy.orm import relationship, object_session, column_property
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
-from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.ext.declarative import as_declarative
-from sqlalchemy import event, select
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import select
 
 
 # pip install sqlalchemy psycopg2

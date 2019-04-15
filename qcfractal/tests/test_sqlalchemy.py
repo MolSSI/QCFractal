@@ -10,7 +10,6 @@ from time import time
 import pytest
 import qcfractal.interface as ptl
 from sqlalchemy.orm import joinedload
-from sqlalchemy.exc import InvalidRequestError
 from qcfractal.storage_sockets.sql_models import (MoleculeORM, OptimizationProcedureORM, ResultORM,
                                                  TaskQueueORM, TorsionDriveProcedureORM, LogsORM)
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket

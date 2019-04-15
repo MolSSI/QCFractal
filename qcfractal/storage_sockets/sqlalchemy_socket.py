@@ -25,7 +25,6 @@ from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Union
 
 from sqlalchemy.sql.expression import func
-from sqlalchemy import select
 from qcfractal.storage_sockets.storage_utils import (add_metadata_template,
                                                      get_metadata_template)
 
@@ -33,13 +32,12 @@ from qcfractal.storage_sockets.storage_utils import (add_metadata_template,
 from qcfractal.storage_sockets.sql_models import (CollectionORM, KeywordsORM,
                          MoleculeORM, BaseResultORM, OptimizationProcedureORM,
                          QueueManagerORM, ResultORM, ErrorORM, ServiceQueueORM,
-                         TaskQueueORM, UserORM, TorsionDriveProcedureORM, LogsORM,
-                                                  opt_result_association)
+                         TaskQueueORM, UserORM, TorsionDriveProcedureORM, LogsORM)
 
 # pydantic classes
 from qcfractal.interface.models import (KeywordSet, Molecule, ResultRecord, TaskRecord,
                                 OptimizationRecord, prepare_basis, TaskStatusEnum,
-                                ManagerStatusEnum, TorsionDriveRecord)
+                                TorsionDriveRecord)
 
 
 _null_keys = {"basis", "keywords"}
