@@ -193,13 +193,11 @@ class TorsionDriveRecord(RecordBase):
 
         Examples
         --------
-        >>> torsiondrive_obj.get_final_molecules()
-        {(-90,): molecule1, (-60,): molecule2, ...}
+        >>> mols = torsiondrive_obj.get_final_molecules()
+        >>> type(mols[(-90, )])
+        qcelemental.models.molecule.Molecule
 
-        >>> torsiondrive_obj.get_final_molecules((-90,))
-        molecule1
-
-        >>> type(molecule1)
+        >>> type(torsiondrive_obj.get_final_molecules((-90,)))
         qcelemental.models.molecule.Molecule
 
         """

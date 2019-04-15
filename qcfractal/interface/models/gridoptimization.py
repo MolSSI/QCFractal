@@ -217,13 +217,11 @@ class GridOptimizationRecord(RecordBase):
         Examples
         --------
 
-        >>> grid_optimization_record.get_final_molecules()
-        {(-90,): molecule1, (-60,): molecule2, ... }
+        >>> mols = grid_optimization_record.get_final_molecules()
+        >>> type(mols[(-90, )])
+        qcelemental.models.molecule.Molecule
 
-        >>> grid_optimization_record.get_final_molecules((-90,))
-        molecule1
-
-        >>> type(molecule1)
+        >>> type(grid_optimization_record.get_final_molecules((-90,)))
         qcelemental.models.molecule.Molecule
 
         """
