@@ -129,19 +129,19 @@ class GridOptimizationRecord(RecordBase):
     def _organize_return(self, data: Dict[str, Any], key: Union[int, str, None]) -> Dict[str, Any]:
 
         if key is None:
-            return {self._deserialize_key(k): copy.deepcopy(v) for k, v in data.items()}
+            return {self.deserialize_key(k): copy.deepcopy(v) for k, v in data.items()}
         else:
-            key = self._serialize_key(key)
+            key = self.serialize_key(key)
 
         return copy.deepcopy(data[key])
 
-    def _serialize_key(self, key):
+    def serialize_key(self, key):
         if isinstance(key, (int, float)):
             key = (int(key), )
 
         return json.dumps(key)
 
-    def _deserialize_key(self, key):
+    def deserialize_key(self, key):
 
         return tuple(json.loads(key))
 
@@ -150,7 +150,7 @@ class GridOptimizationRecord(RecordBase):
         Obtains the scan parameters at a given grid point.
         """
         if isinstance(key, str):
-            key = self._deserialize_key(key)
+            key = self.deserialize_key(key)
 
         ret = []
         for n, idx in enumerate(key):
