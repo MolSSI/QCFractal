@@ -162,7 +162,6 @@ class TorsionDriveRecord(RecordBase):
         key : Union[int, str, None], optional
             Specifies a single entry to pull from.
 
-
         Returns
         -------
         energy : Dict[str, Any]
@@ -171,9 +170,9 @@ class TorsionDriveRecord(RecordBase):
 
         Examples
         --------
-
         >>> torsiondrive_obj.get_final_energies()
         {(-90,): -148.7641654446243, (180,): -148.76501336993732, (0,): -148.75056290106735, (90,): -148.7641654446148}
+
         """
 
         return self._organize_return(self.final_energy_dict, key)
@@ -186,18 +185,21 @@ class TorsionDriveRecord(RecordBase):
         key : Union[int, str, None], optional
             Specifies a single entry to pull from.
 
-
         Returns
         -------
-        energy : Dict[str, Any]
+        final_molecules : Dict[str, Any]
             Returns molecule at each grid point in a dictionary or at a
             single point if a key is specified.
 
         Examples
         --------
+        >>> mols = torsiondrive_obj.get_final_molecules()
+        >>> type(mols[(-90, )])
+        qcelemental.models.molecule.Molecule
 
-        >>> torsiondrive_obj.get_final_energies()
-        {(-90,):{'symbols': ['H', 'O', 'O', 'H'], 'geometry': [1.72669422, 1.28135788, ... }
+        >>> type(torsiondrive_obj.get_final_molecules((-90,)))
+        qcelemental.models.molecule.Molecule
+
         """
 
         if "final_molecules" not in self.cache:
