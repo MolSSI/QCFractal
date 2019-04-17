@@ -6,11 +6,14 @@ import copy
 import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 
+import numpy as np
 from pydantic import BaseModel, constr, validator
+from qcelemental import constants
 
 from .common_models import Molecule, ObjectId, OptimizationSpecification, QCSpecification
 from .model_utils import json_encoders, recursive_normalizer
 from .records import RecordBase
+from ..visualization import scatter_plot
 
 __all__ = ["TorsionDriveInput", "TorsionDriveRecord"]
 
@@ -216,3 +219,90 @@ class TorsionDriveRecord(RecordBase):
         data = self.cache["final_molecules"]
 
         return self._organize_return(data, key)
+
+    def visualize(self,
+                  relative: bool=True,
+                  units: str="kcal / mol",
+                  digits: int=3,
+                  use_measured_angle: bool=False,
+                  return_figure: Optional[bool]=None) -> 'plotly.Figure':
+        """
+        Parameters
+        ----------
+        relative : bool, optional
+            Shows relative energy, lowest energy per scan is zero.
+        units : str, optional
+            The units of the plot.
+        digits : int, optional
+            Rounds the energies to n decimal places for display.
+        use_measured_angle : bool, optional
+            If True, the measured final angle instead of the constrained optimization angle.
+            Can provide more accurate results if the optimization was ill-behaved,
+            but pulls additional data from the server and may take longer.
+        return_figure : Optional[bool], optional
+            If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+
+        Returns
+        -------
+        plotly.Figure
+            The requested figure.
+        """
+
+        # Pull energy dictionary apart
+        min_energy = 1e12
+        x = []
+        y = []
+        for k, v in self.get_final_energies().items():
+            if len(k) >= 2:
+                raise TypeError("TorsionDrive.visualize is currently only available for 1-D scans.")
+
+            if use_measured_angle:
+                # Recalculate the dihedral angle
+                dihedral_indices = record.td_keywords.dihedrals[0]
+                mol = td.get_final_molecules(k)
+                x.append(mol.measure(dihedral_indices))
+
+            else:
+                x.append(k[0])
+
+            y.append(v)
+
+            # Update minmum energy
+            if v < min_energy:
+                min_energy = v
+
+        x = np.array(x)
+        y = np.array(y)
+
+        # Sort by angle
+        sorter = np.argsort(x)
+        x = x[sorter]
+        y = y[sorter]
+        if relative:
+            y -= min_energy
+
+        cf = constants.conversion_factor("hartree", units)
+        trace = {"mode": "lines+markers", "x": x, "y": np.around(y * cf, digits)}
+        # "name": "something"
+
+        title = "TorsionDrive 1-D Plot"
+
+        if relative:
+            ylabel = f"Relative Energy [{units}]"
+        else:
+            ylabel = f"Absolute Energy [{units}]"
+
+        custom_layout = {
+            "title": title,
+            "yaxis": {
+                "title": ylabel,
+                "zeroline": True
+            },
+            "xaxis": {
+                "title": "Dihedral Angle [degrees]",
+                "zeroline": False,
+                "range": [x.min() - 10, x.max() + 10]
+            }
+        }
+
+        return scatter_plot([trace], custom_layout=custom_layout, return_figure=return_figure)

@@ -65,7 +65,6 @@ def torsiondrive_fixture(fractal_compute_server):
         assert len(fractal_compute_server.list_current_tasks()) == 0
         return ret.data
 
-
     yield spin_up_test, client
 
 
@@ -138,7 +137,7 @@ def test_service_iterate_error(torsiondrive_fixture):
 
 
 def test_service_torsiondrive_compute_error(torsiondrive_fixture):
-    """Ensure errors are caught and logged when iterating serivces"""
+    """Ensure errors are caught and logged when computing serivces"""
 
     spin_up_test, client = torsiondrive_fixture
 
@@ -150,6 +149,19 @@ def test_service_torsiondrive_compute_error(torsiondrive_fixture):
 
     assert status[0]["status"] == "ERROR"
     assert "All tasks" in status[0]["error"]["error_message"]
+
+
+def test_service_torsiondrive_visualization(torsiondrive_fixture):
+    """Test the visualization function for the 1-D case"""
+
+    spin_up_test, client = torsiondrive_fixture
+    ret = spin_up_test()
+
+    # Get a TorsionDriveORM result and check data
+    result = client.query_procedures(id=ret.ids)[0]
+    assert result.status == "COMPLETE"
+
+    result.visualize()
 
 
 @using_geometric
@@ -215,7 +227,6 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     assert pytest.approx(starting_mol.measure([1, 2])) != initial_distance
     assert pytest.approx(starting_mol.measure([1, 2])) == 2.488686479260597
 
-
     # Check tags on individual procedures
     proc_id = list(result.grid_optimizations.values())[0]
     opt = client.query_procedures(id=proc_id)[0]
@@ -223,7 +234,6 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     task = client.query_tasks(id=opt.task_id)[0]
     assert task.priority == 0
     assert task.tag == "gridopt"
-
 
 
 @using_geometric
