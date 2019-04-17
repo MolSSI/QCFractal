@@ -258,8 +258,8 @@ class TorsionDriveRecord(RecordBase):
 
             if use_measured_angle:
                 # Recalculate the dihedral angle
-                dihedral_indices = record.td_keywords.dihedrals[0]
-                mol = td.get_final_molecules(k)
+                dihedral_indices = self.keywords.dihedrals[0]
+                mol = self.get_final_molecules(k)
                 x.append(mol.measure(dihedral_indices))
 
             else:

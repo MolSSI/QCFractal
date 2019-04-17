@@ -56,6 +56,27 @@ def _configure_return(figure, filename, return_figure):
         return plotly.offline.iplot(figure, filename=filename)
 
 
+def custom_plot(data: Any, layout: Any, return_figure=True) -> 'plotly.Figure':
+    """A custom plotly plot where the data and layout are pre-specified
+
+    Parameters
+    ----------
+    data : Any
+        Plotly data block
+    layout : Any
+        Plotly layout block
+    return_figure : bool, optional
+        Returns the raw plotly figure or not
+    """
+
+    check_plotly()
+    import plotly.graph_objs as go
+
+    figure = go.Figure(data=data, layout=layout)
+
+    return _configure_return(figure, "qcportal-bar", return_figure)
+
+
 def bar_plot(traces: 'List[Series]', title=None, ylabel=None, return_figure=True) -> 'plotly.Figure':
     """Renders a plotly bar plot
 
