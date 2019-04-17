@@ -549,7 +549,7 @@ class FractalClient(object):
                          projection: 'QueryProjection'=None,
                          full_return: bool=False) -> Union[List['RecordBase'], Dict[str, Any]]:
         """Queries Procedures from the server.
-		
+
         Parameters
         ----------
         id : QueryObjectId, optional
@@ -677,6 +677,7 @@ class FractalClient(object):
                       tag: str=None,
                       full_return: bool=False) -> ComputeResponse:
         """Adds a "single" Procedure to the server.
+
         Parameters
         ----------
         procedure : str
@@ -729,7 +730,7 @@ class FractalClient(object):
                     program: 'QueryStr'=None,
                     status: 'QueryStr'=None,
                     projection: 'QueryProjection'=None,
-                    full_return: bool=False):
+                    full_return: bool=False) -> List[Dict[str, Any]]:
         """Checks the status of tasks in the Fractal queue.
 
         Parameters
@@ -749,14 +750,16 @@ class FractalClient(object):
 
         Returns
         -------
-        list of dict
+        List[Dict[str, Any]]
             A dictionary of each match that contains the current status
             and, if an error has occured, the error message.
 
-		Examples
-		--------
-        >>> client.check_tasks(id="5bd35af47b878715165f8225", projection={"status": True})
+        Examples
+        --------
+
+        >>> client.query_tasks(id="5bd35af47b878715165f8225", projection={"status": True})
         [{"status": "WAITING"}]
+
 
         """
 
@@ -816,7 +819,7 @@ class FractalClient(object):
                        hash_index: 'QueryStr'=None,
                        status: 'QueryStr'=None,
                        projection: 'QueryProjection'=None,
-                       full_return: bool=False):
+                       full_return: bool=False) -> List[Dict[str, Any]]:
         """Checks the status of services in the Fractal queue.
 
         Parameters
@@ -836,13 +839,13 @@ class FractalClient(object):
 
         Returns
         -------
-        list of dict
+        List[Dict[str, Any]]
             A dictionary of each match that contains the current status
             and, if an error has occurred, the error message.
 
         Examples
         --------
-        >>> client.check_services(id="5bd35af47b878715165f8225", projection={"status": True})
+        >>> client.query_services(id="5bd35af47b878715165f8225", projection={"status": True})
         [{"status": "RUNNING"}]
 
         """

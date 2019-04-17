@@ -37,9 +37,8 @@ New Compute Tasks
     add_compute
     add_procedure
     add_service
-    check_tasks
-    check_results
-    check_services
+    query_tasks
+    query_services
 
 Function Definitions
 --------------------
@@ -68,16 +67,14 @@ Function Definitions
 
 .. autofunction:: query_results
 
-.. autofunction:: check_results
-
 .. autofunction:: query_procedures
 
 .. autofunction:: add_compute
 
 .. autofunction:: add_procedure
 
-.. autofunction:: check_tasks
+.. autofunction:: query_tasks
 
 .. autofunction:: add_service
 
-.. autofunction:: check_services
+.. autofunction:: query_services

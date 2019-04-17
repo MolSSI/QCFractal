@@ -432,7 +432,7 @@ class TorsionDriveDataset(Collection):
                 y = []
                 for k, v in td.get_final_energies().items():
                     if len(k) >= 2:
-                        raise TypeError("Dataset.visualize is currently only available for 1-D scans.")
+                        raise TypeError("TorsionDriveDataset.visualize is currently only available for 1-D scans.")
 
                     if use_measured_angle:
                         # Recalculate the dihedral angle

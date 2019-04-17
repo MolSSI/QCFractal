@@ -22,7 +22,7 @@ A collection can then be pulled from the server as follows:
 .. code-block:: python
 
     >>> client.get_collection("dataset", "S22")
-    Dataset(id=`5b7f1fd57b87872d2c5d0a6d`, name=`S22`, client="localhost:8888")
+    Dataset(id=`5b7f1fd57b87872d2c5d0a6d`, name=`S22`, client="localhost:7777")
 
 Available Collections
 ---------------------
@@ -30,4 +30,5 @@ Available Collections
 Below is a complete list of collections available from QCPortal:
 
 * :doc:`collection-dataset` - A collection for running a single set of reactions under many methods.
+* :doc:`collection-torsiondrive` - A collection for running a single set of TorsionDrives under different methods.
 
