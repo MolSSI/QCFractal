@@ -28,7 +28,7 @@ dependencies:
   - psi4
   - rdkit
   - geometric>=0.9.3
-  - torsiondrive
+  - torsiondrive>=0.9.6
 
 # QCArchive includes
   - qcengine>=0.6.2
