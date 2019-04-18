@@ -329,27 +329,27 @@ _base_torsion = {
 @pytest.mark.parametrize("data, hash_index", [
 
     # Check same
-    ({}, "539022b987b84a8888a88789224c42096f11f5fc"),
+    ({}, "dd305011ee2b741b1dcd03350994920a3718b289"),
 
     ({"keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10], "tol": 1.e-12}},
-     "972c731248b800a4e8984820333ed2b0fd3ac372"),
+     "cb3f9c9bd4eda742b0429ebea0c3d12719ab2582"),
 
     ({"keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10], "tol": 0}},
-     "972c731248b800a4e8984820333ed2b0fd3ac372"),
+     "cb3f9c9bd4eda742b0429ebea0c3d12719ab2582"),
 
     ({"keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10], "tol": 1.e-9}},
-     "f0d09cb058501e18001c7e454dafe42944d5f45e"),
+     "903cc0deb4f0e7b8bc41a69cf5fbd0c9420176a4"),
 
     # Check opt keywords stability
     ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 0.0}}}},
-      "c4cf09b80f6cb77bb3d5f41a3888d7b877205ef4"),
+      "a12fd524b0e215b5252b464ca4041091916df8bb"),
 
     ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 1.e-12}}}},
-      "c4cf09b80f6cb77bb3d5f41a3888d7b877205ef4"),
+      "a12fd524b0e215b5252b464ca4041091916df8bb"),
 
     # Check fields
     ({"initial_molecule": ["5c78987e95d592ad07a2fe3c"]},
-     "e37272983b3c2f6dcca74bb45f823f33d0cb3b11"),
+     "f209751a4a6559a8d2d539c070f3b701d1ddf9f2"),
 
 ]) # yapf disable
 def test_torsiondrive_canary_hash(data, hash_index):
