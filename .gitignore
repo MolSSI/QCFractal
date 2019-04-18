@@ -94,3 +94,6 @@ ipengine.*
 parsl_scripts/*
 runinfo/
 .idea/
+
+#vscode
+**/.vscode/
