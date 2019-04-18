@@ -99,7 +99,8 @@ class ClusterSettings(BaseSettings):
 
 class DaskQueueSettings(BaseSettings):
     """Pass through options beyond interface are permitted"""
-    address: str = None
+    interface: str = None
+    extra: List[str] = None
 
     def __init__(self, **kwargs):
         """Enforce that the keys we are going to set remain untouched"""
