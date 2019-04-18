@@ -99,8 +99,7 @@ class ClusterSettings(BaseSettings):
 
 class DaskQueueSettings(BaseSettings):
     """Pass through options beyond interface are permitted"""
-    interface: str = None
-    extra: List[str] = None
+    address: str = None
 
     def __init__(self, **kwargs):
         """Enforce that the keys we are going to set remain untouched"""
@@ -119,12 +118,61 @@ class DaskQueueSettings(BaseSettings):
         extra = "allow"
 
 
+class ParslExecutorSettings(BaseSettings):
+    address: str = None
+
+    def __init__(self, **kwargs):
+        """Enforce that the keys we are going to set remain untouched"""
+        # This set blocks the Parsl Executor and Provider keywords which we set, so the names of the keywords align
+        # to those classes' kwargs, not whatever Fractal chooses to use as keywords.
+        forbidden_set = {"label", "provider", "cores_per_worker", "max_workers"}
+        bad_set = set(kwargs.keys()) & forbidden_set
+        if bad_set:
+            raise KeyError("The following items were set as part of parsl executor, however, "
+                           "there are other config items which control these in more generic "
+                           "settings locations: {}".format(bad_set))
+        super().__init__(**kwargs)
+
+    class Config(SettingsCommonConfig):
+        # This overwrites the base config to allow other keywords to be fed in
+        extra = "allow"
+
+
+class ParslProviderSettings(BaseSettings):
+    partition: str = None
+
+    def __init__(self, **kwargs):
+        """Enforce that the keys we are going to set remain untouched"""
+        # This set blocks the Parsl Executor and Provider keywords which we set, so the names of the keywords align
+        # to those classes' kwargs, not whatever Fractal chooses to use as keywords.
+        forbidden_set = {"nodes_per_block", "max_blocks", "worker_init", "scheduler_options", "wall_time"}
+        bad_set = set(kwargs.keys()) & forbidden_set
+        if bad_set:
+            raise KeyError("The following items were set as part of parsl's provider, however, "
+                           "there are other config items which control these in more generic "
+                           "settings locations: {}".format(bad_set))
+        super().__init__(**kwargs)
+
+    class Config(SettingsCommonConfig):
+        # This overwrites the base config to allow other keywords to be fed in
+        extra = "allow"
+
+
+class ParslQueueSettings(BaseSettings):
+    executor: ParslExecutorSettings = ParslExecutorSettings()
+    provider: ParslProviderSettings = ParslProviderSettings()
+
+    class Config(SettingsCommonConfig):
+        pass
+
+
 class ManagerSettings(BaseModel):
     common: CommonManagerSettings = CommonManagerSettings()
     server: FractalServerSettings = FractalServerSettings()
     manager: QueueManagerSettings = QueueManagerSettings()
     cluster: Optional[ClusterSettings] = None
     dask: Optional[DaskQueueSettings] = None
+    parsl: Optional[ParslQueueSettings] = None
 
     class Config:
         extra = "forbid"
@@ -317,6 +365,66 @@ def main(args=None):
         # Make sure tempdir gets assigned correctly
 
         # Dragonstooth has the low priority queue
+
+    elif settings.common.adapter == "parsl":
+
+        scheduler_opts = settings.cluster.scheduler_options
+
+        # Import helpers
+        _provider_loaders = {"slurm": "SlurmProvider",
+                             "pbs": "TorqueProvider",
+                             "moab": None,
+                             "sge": "GridEngineProvider",
+                             "lsf": None}
+
+        if _provider_loaders[settings.cluster.scheduler] is None:
+            raise ValueError(f"Parsl does not know how to handle cluster of type {settings.cluster.scheduler}.")
+
+        # Headers
+        _provider_headers = {"slurm": "#SBATCH",
+                             "pbs": "#PBS",
+                             "moab": None,
+                             "sge": "#$$",
+                             "lsf": None
+                             }
+
+        # Import the parsl things we need
+        from parsl.config import Config
+        from parsl.executors import HighThroughputExecutor
+        provider_module = cli_utils.import_module("parsl.providers",
+                                                  package=_provider_loaders[settings.cluster.scheduler])
+        provider_class = getattr(provider_module, _provider_loaders[settings.cluster.scheduler])
+        provider_header = _provider_headers[settings.cluster.scheduler]
+
+        # Setup the providers
+
+        # Create one construct to quickly merge dicts with a final check
+        common_parsl_provider_construct = {
+            "init_blocks": 1,
+            "max_blocks": settings.cluster.max_nodes,
+            "walltime": settings.cluster.walltime,
+            "scheduler_options": f'{provider_header} ' + f'\n{provider_header} '.join(scheduler_opts) + '\n',
+            "nodes_per_block": 1,
+            "worker_init": settings.cluster.task_startup_commands,
+            **settings.parsl.provider.dict(skip_defaults=True, exclude={"partition"})
+        }
+        if settings.cluster.scheduler == "slurm":
+            # The Parsl SLURM constructor has a strange set of arguments
+            provider = provider_class(settings.parsl.provider.partition,
+                                      exclusive=settings.cluster.node_exclusivity,
+                                      **common_parsl_provider_construct)
+        else:
+            provider = provider_class(**common_parsl_provider_construct)
+
+        parsl_executor_construct = {
+            "label": "QCFractal_Parsl_{}_Executor".format(settings.cluster.scheduler.title()),
+            "cores_per_worker": cores_per_task,
+            "max_workers": settings.common.ntasks * settings.cluster.max_nodes,
+            "provider": provider,
+            **settings.parsl.executor.dict(skip_defaults=True)}
+
+        queue_client = Config(
+            executors=[HighThroughputExecutor(**parsl_executor_construct)])
 
     else:
         raise KeyError("Unknown adapter type '{}', available options: {}.\n"
