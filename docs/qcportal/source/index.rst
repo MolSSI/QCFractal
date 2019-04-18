@@ -52,6 +52,7 @@ Collections are the primary way of viewing and generating new data.
 
    collections.rst
    collection-dataset
+   collection-torsiondrive
 
 **Model Documentation**
 

@@ -4,16 +4,14 @@ QCPortal Database ODM
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
-import numpy as np
 
 from pydantic import BaseModel
-from qcelemental import constants
 
 from .collection_utils import register_collection
 from .collection import Collection
 from ..models import ObjectId, Molecule, OptimizationSpecification, QCSpecification, TorsionDriveInput
 from ..models.torsiondrive import TDKeywords
-from ..visualization import scatter_plot
+from ..visualization import custom_plot
 
 
 class TDRecord(BaseModel):
@@ -258,7 +256,8 @@ class TorsionDriveDataset(Collection):
 
         return spec.name
 
-    def status(self, specs: Union[str, List[str]]=None, collapse: bool=True, status: Optional[str]=None) -> 'DataFrame':
+    def status(self, specs: Union[str, List[str]]=None, collapse: bool=True,
+               status: Optional[str]=None) -> 'DataFrame':
         """Returns the status of all current specifications.
 
         Parameters
@@ -414,66 +413,27 @@ class TorsionDriveDataset(Collection):
             self.query(spec)
 
         traces = []
-
-        xmin = 1e12
-        xmax = -1e12
+        ranges = []
         # Loop over specifications
         for spec in specs:
             # Loop over indices (groups colors by entry)
             for index in entries:
 
-                record = self.get_entry(index)
+                # Plot the figure using the torsiondrives plotting function
+                fig = self.df.loc[index, spec].visualize(
+                    relative=relative,
+                    units=units,
+                    digits=digits,
+                    use_measured_angle=use_measured_angle,
+                    return_figure=True)
 
-                td = self.df.loc[index, spec]
-                min_energy = 1e12
+                ranges.append(fig.layout.xaxis.range)
+                trace = fig.data[0] # Pull out the underlying scatterplot
 
-                # Pull the dict apart
-                x = []
-                y = []
-                for k, v in td.get_final_energies().items():
-                    if len(k) >= 2:
-                        raise TypeError("Dataset.visualize is currently only available for 1-D scans.")
-
-                    if use_measured_angle:
-                        # Recalculate the dihedral angle
-                        dihedral_indices = record.td_keywords.dihedrals[0]
-                        mol = td.get_final_molecules(k)
-                        x.append(mol.measure(dihedral_indices))
-
-                    else:
-                        x.append(k[0])
-
-                    y.append(v)
-
-                    # Update minmum energy
-                    if v < min_energy:
-                        min_energy = v
-
-                trace = {"mode": "lines+markers"}
                 if show_spec:
-                    trace["name"] = f"{index}-{spec}"
+                    trace.name = f"{index}-{spec}"
                 else:
-                    trace["name"] = f"{index}"
-
-                x = np.array(x)
-                y = np.array(y)
-
-                # Sort by angle
-                sorter = np.argsort(x)
-                x = x[sorter]
-                y = y[sorter]
-                if relative:
-                    y -= min_energy
-
-                # Find the x dimension
-                if x.max() > xmax:
-                    xmax = x.max()
-                if x.min() < xmin:
-                    xmin = x.min()
-
-                cf = constants.conversion_factor("hartree", units)
-                trace["x"] = x
-                trace["y"] = np.around(y * cf, digits)
+                    trace.name = f"{index}"
 
                 traces.append(trace)
 
@@ -495,11 +455,11 @@ class TorsionDriveDataset(Collection):
             "xaxis": {
                 "title": "Dihedral Angle [degrees]",
                 "zeroline": False,
-                "range": [xmin - 10, xmax + 10]
+                "range": [min(x[0] for x in ranges), max(x[1] for x in ranges)]
             }
         }
 
-        return scatter_plot(traces, custom_layout=custom_layout, return_figure=return_figure)
+        return custom_plot(traces, custom_layout, return_figure=return_figure)
 
 
 register_collection(TorsionDriveDataset)
