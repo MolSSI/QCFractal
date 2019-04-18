@@ -69,7 +69,7 @@ def torsiondrive_fixture(fractal_compute_server):
 
 
 def test_service_torsiondrive_single(torsiondrive_fixture):
-    """"Tests torsiondrive pathway and checks the result result"""
+    """"Tests torsiondrive pathway and checks the result """
 
     spin_up_test, client = torsiondrive_fixture
 
@@ -119,6 +119,32 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
 
     base_run, duplicate_run = procedures
     assert base_run.optimization_history == duplicate_run.optimization_history
+
+def test_service_torsiondrive_optional(torsiondrive_fixture):
+    """"Tests torsiondrive with optional keywords"""
+
+    spin_up_test, client = torsiondrive_fixture
+
+    # test optional dihedral_ranges feature
+    ret = spin_up_test(keywords={"grid_spacing": [30], "dihedral_ranges": [[-150, -60]]})
+
+    # Get a TorsionDriveORM result and check data
+    result = client.query_procedures(id=ret.ids)[0]
+    assert result.status == "COMPLETE"
+    # check final energies
+    final_energies = result.get_final_energies()
+    # the dihedral range should be limited to -150, -90, -60
+    assert set(final_energies.keys()) == {(-150,), (-90,), (-60,)}
+    assert pytest.approx(0.002597541340221565, 1e-5) == final_energies[(-150,)]
+    assert pytest.approx(0.002597541340221565, 1e-5) == final_energies[(-90,)]
+    assert pytest.approx(0.002597541340221565, 1e-5) == final_energies[(-60,)]
+    # check final molecules
+    final_molecules = result.get_final_molecules()
+    assert set(final_molecules.keys()) == {(-150,), (-90,), (-60,)}
+    assert all(hasattr(m, "symbols") for m in final_molecules.values())
+
+    # test optional energy_decrease_thresh feature
+
 
 
 def test_service_iterate_error(torsiondrive_fixture):
