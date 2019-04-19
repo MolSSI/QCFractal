@@ -31,6 +31,7 @@ class SettingsCommonConfig:
 class AdapterEnum(str, Enum):
     dask = "dask"
     pool = "pool"
+    parsl = "parsl"
 
 
 class CommonManagerSettings(BaseSettings):
@@ -254,7 +255,7 @@ def parse_args():
 
             data[name] = cli_utils.argparse_config_merge(subparser, data[name], config_data[name], check=False)
 
-        for name in ["cluster", "dask"]:
+        for name in ["cluster", "dask", "parsl"]:
             if name in config_data:
                 data[name] = config_data[name]
 
@@ -392,6 +393,7 @@ def main(args=None):
         # Import the parsl things we need
         from parsl.config import Config
         from parsl.executors import HighThroughputExecutor
+        from parsl.addresses import address_by_hostname
         provider_module = cli_utils.import_module("parsl.providers",
                                                   package=_provider_loaders[settings.cluster.scheduler])
         provider_class = getattr(provider_module, _provider_loaders[settings.cluster.scheduler])
@@ -406,7 +408,7 @@ def main(args=None):
             "walltime": settings.cluster.walltime,
             "scheduler_options": f'{provider_header} ' + f'\n{provider_header} '.join(scheduler_opts) + '\n',
             "nodes_per_block": 1,
-            "worker_init": settings.cluster.task_startup_commands,
+            "worker_init": '\n'.join(settings.cluster.task_startup_commands),
             **settings.parsl.provider.dict(skip_defaults=True, exclude={"partition"})
         }
         if settings.cluster.scheduler == "slurm":
@@ -422,6 +424,7 @@ def main(args=None):
             "cores_per_worker": cores_per_task,
             "max_workers": settings.common.ntasks * settings.cluster.max_nodes,
             "provider": provider,
+            "address": address_by_hostname(),
             **settings.parsl.executor.dict(skip_defaults=True)}
 
         queue_client = Config(
