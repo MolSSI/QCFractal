@@ -120,8 +120,9 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     base_run, duplicate_run = procedures
     assert base_run.optimization_history == duplicate_run.optimization_history
 
-def test_service_torsiondrive_optional(torsiondrive_fixture):
-    """"Tests torsiondrive with optional keywords"""
+
+def test_service_torsiondrive_option_dihedral_ranges(torsiondrive_fixture):
+    """"Tests torsiondrive with dihedral_ranges optional keyword """
 
     spin_up_test, client = torsiondrive_fixture
 
@@ -143,6 +144,11 @@ def test_service_torsiondrive_optional(torsiondrive_fixture):
     assert set(final_molecules.keys()) == {(-150,), (-120,), (-90,), (-60,)}
     assert all(hasattr(m, "symbols") for m in final_molecules.values())
 
+
+def test_service_torsiondrive_option_energy_decrease_thresh(torsiondrive_fixture):
+    """"Tests torsiondrive with energy_decrease_thresh optional keyword"""
+
+    spin_up_test, client = torsiondrive_fixture
     ## test optional energy_decrease_thresh feature
     ret = spin_up_test(keywords={"grid_spacing": [90], "energy_decrease_thresh": 3e-5})
     # Get a TorsionDriveORM result and check data
@@ -160,6 +166,11 @@ def test_service_torsiondrive_optional(torsiondrive_fixture):
     final_molecules = result.get_final_molecules()
     assert all(hasattr(m, "symbols") for m in final_molecules.values())
 
+
+def test_service_torsiondrive_option_energy_upper_limit(torsiondrive_fixture):
+    """"Tests torsiondrive with energy_upper_limit optional keyword"""
+
+    spin_up_test, client = torsiondrive_fixture
     ## test optional energy_upper_limit feature
     ret = spin_up_test(keywords={"grid_spacing": [30], "energy_upper_limit": 1e-4})
     # Get a TorsionDriveORM result and check data
@@ -177,6 +188,11 @@ def test_service_torsiondrive_optional(torsiondrive_fixture):
     final_molecules = result.get_final_molecules()
     assert all(hasattr(m, "symbols") for m in final_molecules.values())
 
+
+def test_service_torsiondrive_option_extra_constraints(torsiondrive_fixture):
+    """"Tests torsiondrive with extra_constraints in optimization_spec """
+
+    spin_up_test, client = torsiondrive_fixture
     ## test optional "extra_constraints" feature
     ret = spin_up_test(optimization_spec={
         "program": "geometric",
@@ -208,6 +224,7 @@ def test_service_torsiondrive_optional(torsiondrive_fixture):
     for m in final_molecules.values():
         # the coordinate of the first atom should be "frozen"
         assert pytest.approx(m.geometry[0], abs=1e-3) == hooh.geometry[0]
+
 
 def test_service_iterate_error(torsiondrive_fixture):
     """Ensure errors are caught and logged when iterating serivces"""
