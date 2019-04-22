@@ -323,6 +323,7 @@ class QueueManager:
         n_success = 0
         n_fail = 0
         n_result = len(results)
+        error_payload = []
         if n_result:
             payload = self._payload_template()
 
@@ -335,11 +336,20 @@ class QueueManager:
                 self.logger.warning("Post complete tasks was not successful. Data may be lost.")
 
             self.active -= n_result
-            n_success = sum([r.success for r in results.values()])
+            for key, result in results.items():
+                if result.success:
+                    n_success += 1
+                else:
+                    error_payload.append(f"Job {key} failed: {result.error.error_type} - "
+                                         f"Msg: {result.error.error_message}")
             n_fail = n_result - n_success
 
         self.logger.info("Pushed {} complete tasks to the server "
                          "({} success / {} fail).".format(n_result, n_success, n_fail))
+        if n_fail:
+            self.logger.info("The following tasks failed with the errors:")
+            for error in error_payload:
+                self.logger.info(error)
 
         open_slots = max(0, self.max_tasks - self.active)
 

@@ -253,6 +253,14 @@ class QueueManagerHandler(APIHandler):
         name = self._get_name_from_metadata(body.meta)
         self.storage.manager_update(name, completed=completed, failures=error)
 
+        # Report failures after updating database for speed and data stability
+        if error:
+            self.logger.info("The following received tasks failed with the errors:")
+            for key, result in body.data.items():
+                if not result['success']:
+                    self.logger.info(f"Job {key} failed: {result['error']['error_type']} - "
+                                     f"Msg: {result['error']['error_message']}")
+
     def put(self):
         """
         Various manager manipulation operations
