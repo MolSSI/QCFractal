@@ -347,9 +347,9 @@ class QueueManager:
         self.logger.info("Pushed {} complete tasks to the server "
                          "({} success / {} fail).".format(n_result, n_success, n_fail))
         if n_fail:
-            self.logger.info("The following tasks failed with the errors:")
+            self.logger.warning("The following tasks failed with the errors:")
             for error in error_payload:
-                self.logger.info(error)
+                self.logger.warning(error)
 
         open_slots = max(0, self.max_tasks - self.active)
 
