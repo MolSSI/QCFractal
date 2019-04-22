@@ -69,7 +69,7 @@ def torsiondrive_fixture(fractal_compute_server):
 
 
 def test_service_torsiondrive_single(torsiondrive_fixture):
-    """"Tests torsiondrive pathway and checks the result result"""
+    """"Tests torsiondrive pathway and checks the result """
 
     spin_up_test, client = torsiondrive_fixture
 
@@ -80,10 +80,10 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
     assert result.status == "COMPLETE"
     assert isinstance(str(result), str)  # Check that repr runs
 
-    assert pytest.approx(0.002597541340221565, 1e-5) == result.get_final_energies(0)
-    assert pytest.approx(0.000156553761859276, 1e-5) == result.get_final_energies(90)
-    assert pytest.approx(0.000156553761859271, 1e-5) == result.get_final_energies(-90)
-    assert pytest.approx(0.000753492556057886, 1e-5) == result.get_final_energies(180)
+    assert pytest.approx(0.002597541340221565, abs=1e-6) == result.get_final_energies(0)
+    assert pytest.approx(0.000156553761859276, abs=1e-6) == result.get_final_energies(90)
+    assert pytest.approx(0.000156553761859271, abs=1e-6) == result.get_final_energies(-90)
+    assert pytest.approx(0.000753492556057886, abs=1e-6) == result.get_final_energies(180)
 
     assert hasattr(result.get_final_molecules()[(-90, )], "symbols")
 
@@ -119,6 +119,111 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
 
     base_run, duplicate_run = procedures
     assert base_run.optimization_history == duplicate_run.optimization_history
+
+
+def test_service_torsiondrive_option_dihedral_ranges(torsiondrive_fixture):
+    """"Tests torsiondrive with dihedral_ranges optional keyword """
+
+    spin_up_test, client = torsiondrive_fixture
+
+    ## test optional dihedral_ranges feature
+    ret = spin_up_test(keywords={"grid_spacing": [30], "dihedral_ranges": [[-150, -60]]})
+    # Get a TorsionDriveORM result and check data
+    result = client.query_procedures(id=ret.ids)[0]
+    assert result.status == "COMPLETE"
+    # check final energies
+    final_energies = result.get_final_energies()
+    # the dihedral range should be limited to -150, -90, -60
+    assert set(final_energies.keys()) == {(-150,), (-120,), (-90,), (-60,)}
+    assert pytest.approx(0.0005683235570009067, abs=1e-6) == final_energies[(-150,)]
+    assert pytest.approx(0.0002170694130912583, abs=1e-6) == final_energies[(-120,)]
+    assert pytest.approx(0.0001565537585121726, abs=1e-6) == final_energies[(-90,)]
+    assert pytest.approx(0.0007991274441437338, abs=1e-6) == final_energies[(-60,)]
+    # check final molecules
+    final_molecules = result.get_final_molecules()
+    assert set(final_molecules.keys()) == {(-150,), (-120,), (-90,), (-60,)}
+    assert all(hasattr(m, "symbols") for m in final_molecules.values())
+
+
+def test_service_torsiondrive_option_energy_decrease_thresh(torsiondrive_fixture):
+    """"Tests torsiondrive with energy_decrease_thresh optional keyword"""
+
+    spin_up_test, client = torsiondrive_fixture
+    ## test optional energy_decrease_thresh feature
+    ret = spin_up_test(keywords={"grid_spacing": [90], "energy_decrease_thresh": 3e-5})
+    # Get a TorsionDriveORM result and check data
+    result = client.query_procedures(id=ret.ids)[0]
+    assert result.status == "COMPLETE"
+    # check final energies
+    final_energies = result.get_final_energies()
+    # the final energies are the same as the default setting, because this molecule is too simple
+    assert set(final_energies.keys()) == {(-90,), (-0,), (90,), (180,)}
+    assert pytest.approx(0.002597541340221565, abs=1e-6) == final_energies[(0,)]
+    assert pytest.approx(0.000156553761859276, abs=1e-6) == final_energies[(90,)]
+    assert pytest.approx(0.000156553761859271, abs=1e-6) == final_energies[(-90,)]
+    assert pytest.approx(0.000753492556057886, abs=1e-6) == final_energies[(180,)]
+    # check final molecules
+    final_molecules = result.get_final_molecules()
+    assert all(hasattr(m, "symbols") for m in final_molecules.values())
+
+
+def test_service_torsiondrive_option_energy_upper_limit(torsiondrive_fixture):
+    """"Tests torsiondrive with energy_upper_limit optional keyword"""
+
+    spin_up_test, client = torsiondrive_fixture
+    ## test optional energy_upper_limit feature
+    ret = spin_up_test(keywords={"grid_spacing": [30], "energy_upper_limit": 1e-4})
+    # Get a TorsionDriveORM result and check data
+    result = client.query_procedures(id=ret.ids)[0]
+    assert result.status == "COMPLETE"
+    # check final energies
+    final_energies = result.get_final_energies()
+    # the energy_upper_limit should limit the range of the scan
+    assert set(final_energies.keys()) == {(-150,), (-120,), (-90,), (-60,)}
+    assert pytest.approx(0.0005683235570009067, abs=1e-6) == final_energies[(-150,)]
+    assert pytest.approx(0.0002170694130912583, abs=1e-6) == final_energies[(-120,)]
+    assert pytest.approx(0.0001565537585121726, abs=1e-6) == final_energies[(-90,)]
+    assert pytest.approx(0.0007991274441437338, abs=1e-6) == final_energies[(-60,)]
+    # check final molecules
+    final_molecules = result.get_final_molecules()
+    assert all(hasattr(m, "symbols") for m in final_molecules.values())
+
+
+def test_service_torsiondrive_option_extra_constraints(torsiondrive_fixture):
+    """"Tests torsiondrive with extra_constraints in optimization_spec """
+
+    spin_up_test, client = torsiondrive_fixture
+    ## test optional "extra_constraints" feature
+    ret = spin_up_test(optimization_spec={
+        "program": "geometric",
+        "keywords": {
+            "coordsys": "tric",
+            "constraints": {
+                "freeze": [{
+                    'type': 'xyz',
+                    'indices': [0],
+                }]
+            }
+        }
+    })
+    # Get a TorsionDriveORM result and check data
+    result = client.query_procedures(id=ret.ids)[0]
+    assert result.status == "COMPLETE"
+    # check final energies
+    final_energies = result.get_final_energies()
+    # the final energies are the same as the default setting, because this molecule is too simple
+    assert set(final_energies.keys()) == {(-90,), (-0,), (90,), (180,)}
+    assert pytest.approx(0.002597541340221565, abs=1e-6) == final_energies[(0,)]
+    assert pytest.approx(0.000156553761859276, abs=1e-6) == final_energies[(90,)]
+    assert pytest.approx(0.000156553761859271, abs=1e-6) == final_energies[(-90,)]
+    assert pytest.approx(0.000753492556057886, abs=1e-6) == final_energies[(180,)]
+    # input molecule
+    hooh = ptl.data.get_molecule("hooh.json")
+    # check final molecules
+    final_molecules = result.get_final_molecules()
+    for m in final_molecules.values():
+        # the coordinate of the first atom should be "frozen"
+        assert pytest.approx(m.geometry[0], abs=1e-3) == hooh.geometry[0]
 
 
 def test_service_iterate_error(torsiondrive_fixture):

@@ -80,7 +80,11 @@ class TorsionDriveService(BaseService):
             dihedrals=output.keywords.dihedrals,
             grid_spacing=output.keywords.grid_spacing,
             elements=molecule_template["symbols"],
-            init_coords=[x.geometry for x in service_input.initial_molecule])
+            init_coords=[x.geometry for x in service_input.initial_molecule],
+            dihedral_ranges=output.keywords.dihedral_ranges,
+            energy_decrease_thresh=output.keywords.energy_decrease_thresh,
+            energy_upper_limit=output.keywords.energy_upper_limit
+        )
 
         # Build dihedral template
         dihedral_template = []
@@ -177,7 +181,10 @@ class TorsionDriveService(BaseService):
                 grid_id = td_api.grid_id_from_string(key)
                 for con_num, k in enumerate(grid_id):
                     constraints[con_num]["value"] = k
-                packet["meta"]["keywords"]["constraints"] = {"set": constraints}
+                # update existing constraints to support the "extra constraints" feature
+                packet["meta"]["keywords"].setdefault("constraints", {})
+                packet["meta"]["keywords"]["constraints"].setdefault("set", [])
+                packet["meta"]["keywords"]["constraints"]["set"].extend(constraints)
 
                 # Build new molecule
                 mol = json.loads(self.molecule_template)

@@ -127,6 +127,9 @@ class TorsionDriveDataset(Collection):
                   initial_molecules: List[Molecule],
                   dihedrals: List[Tuple[int, int, int, int]],
                   grid_spacing: List[int],
+                  dihedral_ranges: Optional[List[Tuple[int, int]]]=None,
+                  energy_decrease_thresh: Optional[float]=None,
+                  energy_upper_limit: Optional[float]=None,
                   attributes: Dict[str, Any]=None):
         """
         Parameters
@@ -139,13 +142,20 @@ class TorsionDriveDataset(Collection):
             A list of dihedrals to scan over
         grid_spacing : List[int]
             The grid spacing for each dihedrals
+        dihedral_ranges: Optional[List[Tuple[int, int]]]
+            The range limit of each dihedrals to scan, within [-180, 360]
+        energy_decrease_thresh: Optional[float]
+            The threshold of energy decrease to trigger activating grid points
+        energy_upper_limit: Optional[float]
+            The upper limit of energy relative to current global minimum to trigger activating grid points
         attributes : Dict[str, Any], optional
             Additional attributes and descriptions for the record
         """
 
         # Build new objects
         molecule_ids = self.client.add_molecules(initial_molecules)
-        td_keywords = TDKeywords(dihedrals=dihedrals, grid_spacing=grid_spacing)
+        td_keywords = TDKeywords(dihedrals=dihedrals, grid_spacing=grid_spacing, dihedral_ranges=dihedral_ranges,
+            energy_decrease_thresh=energy_decrease_thresh, energy_upper_limit=energy_upper_limit)
 
         record = TDRecord(name=name, initial_molecules=molecule_ids, td_keywords=td_keywords, attributes=attributes)
 

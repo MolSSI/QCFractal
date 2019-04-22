@@ -24,6 +24,9 @@ class TDKeywords(BaseModel):
     """
     dihedrals: List[Tuple[int, int, int, int]]
     grid_spacing: List[int]
+    dihedral_ranges: Optional[List[Tuple[int, int]]] = None
+    energy_decrease_thresh: Optional[float] = None
+    energy_upper_limit: Optional[float] = None
 
     def __init__(self, **kwargs):
         super().__init__(**recursive_normalizer(kwargs))
