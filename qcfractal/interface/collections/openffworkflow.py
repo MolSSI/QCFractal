@@ -6,9 +6,10 @@ from typing import Any, Dict
 
 from pydantic import BaseModel
 
-from ..models import OptimizationRecord, OptimizationSpecification, TorsionDriveRecord, TorsionDriveInput, QCSpecification
 from .collection import Collection
 from .collection_utils import register_collection
+from ..models import (OptimizationRecord, OptimizationSpecification, QCSpecification, TorsionDriveInput,
+                      TorsionDriveRecord)
 
 
 class TorsionDriveStaticOptions(BaseModel):

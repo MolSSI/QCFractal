@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
-
 from pydantic import BaseModel
 
 from .collection_utils import nCr, register_collection

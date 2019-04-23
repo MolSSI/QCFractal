@@ -468,3 +468,14 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     assert ds.counts("hooh1").loc["hooh1", "spec1"] > 5
     assert ds.counts("hooh1", specs="spec1", count_gradients=True).loc["hooh1", "spec1"] > 30
+
+@testing.using_geometric
+@testing.using_rdkit
+def test_optimization_dataset(fractal_compute_server):
+
+    client = ptl.FractalClient(fractal_compute_server)
+
+    ds = ptl.collections.OptimizationDataset("testing", client=client)
+
+    hooh1 = ptl.data.get_molecule("hooh.json")
+    hooh2 = hooh1.copy(update={"geometry": hooh1.geometry + np.array([0, 0, 0.2])})
