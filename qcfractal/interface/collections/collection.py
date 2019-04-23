@@ -310,7 +310,7 @@ class BaseProcedureDataset(Collection):
         try:
             return self.data.specs[name.lower()].copy()
         except KeyError:
-            raise KeyError(f"{self.__class__.__name__} '{name}' not found.")
+            raise KeyError(f"Specification '{name}' not found.")
 
     def list_specifications(self, description=True) -> Union[List[str], 'DataFrame']:
         """Lists all available specifications

@@ -435,7 +435,7 @@ def test_torsiondrive_dataset(fractal_compute_server):
         "program": "rdkit",
     }
 
-    ds.add_specification("spec1", optimization_spec, qc_spec, description="This is a really cool spec")
+    ds.add_specification("Spec1", optimization_spec, qc_spec, description="This is a really cool spec")
 
     ncompute = ds.compute("spec1")
     assert ncompute == 2
@@ -460,14 +460,14 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     # We effectively computed the same thing twice with two duplicate specs
     for row in ["hooh1", "hooh2"]:
-        for spec in ["spec1", "spec2"]:
-            assert pytest.approx(ds.df.loc["hooh1", "spec2"].get_final_energies(90), 1.e-5) == 0.00015655375994799847
+        for spec in ["Spec1", "spec2"]:
+            assert pytest.approx(ds.df.loc[row, spec].get_final_energies(90), 1.e-5) == 0.00015655375994799847
 
-    assert ds.status().loc["COMPLETE", "spec1"] == 2
-    assert ds.status(collapse=False).loc["hooh1", "spec1"] == "COMPLETE"
+    assert ds.status().loc["COMPLETE", "Spec1"] == 2
+    assert ds.status(collapse=False).loc["hooh1", "Spec1"] == "COMPLETE"
 
-    assert ds.counts("hooh1").loc["hooh1", "spec1"] > 5
-    assert ds.counts("hooh1", specs="spec1", count_gradients=True).loc["hooh1", "spec1"] > 30
+    assert ds.counts("hooh1").loc["hooh1", "Spec1"] > 5
+    assert ds.counts("hooh1", specs="spec1", count_gradients=True).loc["hooh1", "Spec1"] > 30
 
 @testing.using_geometric
 @testing.using_rdkit

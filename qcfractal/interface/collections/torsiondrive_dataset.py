@@ -149,7 +149,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
                 optimization_spec=spec.optimization_spec,
                 qc_spec=spec.qc_spec)
 
-            rec.object_map[specification] = self.client.add_service([service], tag=tag, priority=priority).ids[0]
+            rec.object_map[spec.name] = self.client.add_service([service], tag=tag, priority=priority).ids[0]
             submitted += 1
 
         self.data.history.add(specification)
@@ -178,7 +178,6 @@ class TorsionDriveDataset(BaseProcedureDataset):
             The queried counts.
         """
 
-        # Specifications
         if isinstance(specs, str):
             specs = [specs]
 
@@ -189,8 +188,12 @@ class TorsionDriveDataset(BaseProcedureDataset):
         if specs is None:
             specs = list(self.df.columns)
         else:
+            new_specs = []
             for spec in specs:
-                self.query(spec)
+                new_specs.append(self.query(spec))
+
+            # Remap names
+            specs = new_specs
 
         # Count functions
         def count_gradient_evals(td):
