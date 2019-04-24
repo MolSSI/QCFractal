@@ -1,15 +1,18 @@
 import datetime
+import dateutil
 # from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (Column, Integer, String, Text, DateTime, Boolean,
-                        ForeignKey, JSON, Enum, Float, Binary, Table)
-from sqlalchemy.orm import relationship, object_session, column_property
+                        ForeignKey, JSON, Enum, Float, Binary, Table, ARRAY,
+                        PrimaryKeyConstraint)
+from sqlalchemy.orm import relationship, object_session, column_property, validates
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
 from sqlalchemy.ext.declarative import as_declarative
-from sqlalchemy import select
+from sqlalchemy import event, select, func, and_
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.schema import Index
 
-
-# pip install sqlalchemy psycopg2
 
 # Base = declarative_base()
 
@@ -18,22 +21,73 @@ from sqlalchemy import select
 class Base:
     """Base declarative class of all ORM models"""
 
-    def to_dict(self, with_id=True, exclude=None):
+    db_related_fields = ['result_type']
+
+    def to_dict(self, with_id=True, exclude=None, no_child_obj=True):
         dict_obj = self.__dict__.copy()
-        del dict_obj['_sa_instance_state']
+
+        tobe_deleted_keys = ['_sa_instance_state']
+        tobe_deleted_keys.extend(self.db_related_fields)
+
         if not with_id:
-            del dict_obj['id']
+            tobe_deleted_keys.append('id')
+
         if exclude:
-            for key in exclude:
-                del dict_obj[key]
+            tobe_deleted_keys.extend(exclude)
+
+        if no_child_obj:  # remove attr ending with _obj
+            arr = [key  for key in self.__dict__ if key.endswith('_obj')]
+            tobe_deleted_keys.extend(arr)
+
+        for key in tobe_deleted_keys:
+            dict_obj.pop(key, None)
+
         return dict_obj
 
     @classmethod
     def col(cls):
         return cls.__table__.c
 
+    def update_many_to_many(self, table, parent_id_name, child_id_name,
+                            parent_id_val, new_list, old_list=None):
+        """Perfomr upsert on a many to many association table
+        Does NOT commit changes, parent should optimize when it needs to commit
+        raises exception if ids don't exist in the DB
+        """
+
+        session = object_session(self)
+
+        old_set = {x for x in old_list} if old_list else set()
+        new_set = {x for x in new_list} if new_list else set()
+
+
+        # Update many-to-many relations
+        # Remove old relations and apply the new ones
+        if old_set != new_set:
+            to_add = new_set - old_set
+            to_del = old_set - new_set
+
+            if to_del:
+                session.execute(
+                    table.delete()
+                        .where(and_(table.c[parent_id_name]==parent_id_val,
+                                    table.c[child_id_name].in_(to_del)))
+                )
+            if to_add:
+                session.execute(
+                    table.insert()\
+                        .values([(parent_id_val, my_id) for my_id in to_add])
+                )
+
     def __str__(self):
         return str(self.id)
+
+    # @validates('created_on', 'modified_on')
+    # def validate_date(self, key, date):
+    #     """For SQLite, translate str to dates manulally"""
+    #     if date is not None and isinstance(date, str):
+    #         date = dateutil.parser.parse(date)
+    #     return date
 
 
 class AccessLogORM(Base):
@@ -303,7 +357,8 @@ class ProcedureMixin:
 # association table for many to many relation
 opt_result_association = Table('opt_result_association', Base.metadata,
     Column('opt_id', Integer, ForeignKey('optimization_procedure.id', ondelete="CASCADE")),
-    Column('result_id', Integer, ForeignKey('result.id', ondelete="CASCADE"))
+    Column('result_id', Integer, ForeignKey('result.id', ondelete="CASCADE")),
+    # PrimaryKeyConstraint('opt_id', 'result_id')
 )
 
 class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
@@ -333,11 +388,13 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
                                       foreign_keys=final_molecule)
 
     # ids, calculated not stored in this table
+    # NOTE: this won't work in SQLite since it returns ARRAYS
     trajectory = column_property(
-        select([opt_result_association.c.result_id])\
-            .where(opt_result_association.c.opt_id==id)
-    )
-    # array of objects (results)
+                    select([func.array_agg(opt_result_association.c.result_id)])\
+                    .where(opt_result_association.c.opt_id==id)
+            )
+
+    # array of objects (results) - Lazy - raise error of accessed
     trajectory_obj = relationship(ResultORM, secondary=opt_result_association,
                                   uselist=True)
 
@@ -345,16 +402,20 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
         'polymorphic_identity': 'optimization_procedure',
     }
 
-    def add_relations(self, trajectory):
-        session = object_session(self)
-        # add many to many relation with results if ids are given not objects
-        # if trajectory:
-        #     session.execute(
-        #         opt_result_association
-        #             .insert()  # or update
-        #             .values([(self.id, i) for i in trajectory])
-        #     )
-        # session.commit()
+    __table_args__ = (
+        # Index('my_index', "a", "b", unique=True),
+    )
+
+    # def add_relations(self, trajectory):
+    #     session = object_session(self)
+    #     # add many to many relation with results if ids are given not objects
+    #     if trajectory:
+    #         session.execute(
+    #             opt_result_association
+    #                 .insert()  # or update
+    #                 .values([(self.id, i) for i in trajectory])
+    #         )
+    #     session.commit()
 
 
 # event.listen(OptimizationProcedureORM, 'before_insert', add_relations)

@@ -685,7 +685,8 @@ def test_procedure_sql(storage_socket, storage_results):
         "initial_molecule": mol_id,
         "program": "something",
         "hash_index": 123,
-        # "trajectory": [results[0]['id'], results[1]['id']],
+        # "trajectory": None,
+        "trajectory": [results[0]['id'], results[1]['id']],
         "qc_spec": {
             "driver": "gradient",
             "method": "HF",
@@ -730,7 +731,26 @@ def test_procedure_sql(storage_socket, storage_results):
 
     ret = storage_socket.get_procedures(procedure='optimization', status=None)
     assert len(ret['data']) == 1
-    # print(ret['data'][0]['trajectory'])
+    assert ret['data'][0]['trajectory'] == proc_template['trajectory']
+
+    new_proc = ret['data'][0]
+
+    test_traj = [
+        [results[0]['id'], results[1]['id'], results[2]['id']],  # add
+        [results[0]['id']],  # remove
+        [results[0]['id']],  # no change
+        None  # empty
+    ]
+     # update relations
+    for trajectory in test_traj:
+        new_proc['trajectory'] = trajectory
+        ret_count = storage_socket.update_procedures([ptl.models.OptimizationRecord(**new_proc)])
+        assert ret_count == 1
+
+        ret = storage_socket.get_procedures(procedure='optimization', status=None)
+        assert len(ret['data']) == 1
+        assert ret['data'][0]['trajectory'] == trajectory
+
 
     # # Torsiondrive
     # inserted = storage_socket.add_procedures([ptl.models.TorsionDriveRecord(**torsion_proc)])
