@@ -396,7 +396,8 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
 
     # array of objects (results) - Lazy - raise error of accessed
     trajectory_obj = relationship(ResultORM, secondary=opt_result_association,
-                                  uselist=True)
+                                  uselist=True, lazy='noload')
+
 
     __mapper_args__ = {
         'polymorphic_identity': 'optimization_procedure',
@@ -449,17 +450,34 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
         super().__init__(**kwargs)
 
     # input data (along with the mixin)
-    # many to many relation
-    initial_molecule = relationship(MoleculeORM,
-                                    secondary=torj_init_mol_association)
+
+    # ids of the many to many relation
+    initial_molecule = column_property(
+                    select([func.array_agg(torj_init_mol_association.c.molecule_id)])\
+                    .where(torj_init_mol_association.c.torj_id==id)
+            )
+    # actual objects relation M2M, never loaded here
+    initial_molecule_obj = relationship(MoleculeORM,
+                                        secondary=torj_init_mol_association,
+                                        uselist=True, lazy='noload')
+
+
     keywords = Column(JSON)  # TODO: same as BaseRecord!!!
     optimization_spec = Column(JSON)
 
     # Output data
     final_energy_dict = Column(JSON)
     minimum_positions = Column(JSON)
-    optimization_history = relationship(OptimizationProcedureORM,
-                                        secondary=torj_opt_association)
+
+    # ids of the many to many relation
+    optimization_history = column_property(
+                    select([func.array_agg(torj_opt_association.c.opt_id)])\
+                    .where(torj_opt_association.c.torj_id==id)
+            )
+    # actual objects relation M2M, never loaded here
+    optimization_history_obj = relationship(OptimizationProcedureORM,
+                                        secondary=torj_opt_association,
+                                        uselist=True, lazy='noload')
 
     __mapper_args__ = {
         'polymorphic_identity': 'torsiondrive_procedure',

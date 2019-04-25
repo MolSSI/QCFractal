@@ -269,10 +269,10 @@ def test_torsiondrive_procedure(storage_socket, session):
     session.commit()
     assert opt_proc.id
 
-    torj_proc.optimization_history = [opt_proc]
+    torj_proc.optimization_history_obj = [opt_proc]
     session.commit()
-    torj_proc = session.query(TorsionDriveProcedureORM).options(joinedload('optimization_history')).first()
-    assert torj_proc.optimization_history
+    torj_proc = session.query(TorsionDriveProcedureORM).options(joinedload('optimization_history_obj')).first()
+    assert torj_proc.optimization_history_obj
 
     # clean up
     session_delete_all(session, OptimizationProcedureORM)
