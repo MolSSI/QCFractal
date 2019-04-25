@@ -12,7 +12,7 @@ except ImportError:
 
 
 
-from sqlalchemy import create_engine, and_
+from sqlalchemy import create_engine
 from .sql_models import Base
 from sqlalchemy.orm import sessionmaker, with_polymorphic
 from sqlalchemy.exc import IntegrityError
@@ -33,8 +33,7 @@ from qcfractal.storage_sockets.storage_utils import (add_metadata_template,
 from qcfractal.storage_sockets.sql_models import (CollectionORM, KeywordsORM,
                          MoleculeORM, BaseResultORM, OptimizationProcedureORM,
                          QueueManagerORM, ResultORM, ErrorORM, ServiceQueueORM,
-                         TaskQueueORM, UserORM, TorsionDriveProcedureORM, LogsORM,
-                         opt_result_association)
+                         TaskQueueORM, UserORM, TorsionDriveProcedureORM, LogsORM)
 
 # pydantic classes
 from qcfractal.interface.models import (KeywordSet, Molecule, ResultRecord, TaskRecord,
@@ -107,31 +106,6 @@ def get_procedure_class(record):
                         .format(type(record)))
 
     return procedure_class
-
-def update_many_to_many(session, table, parent_id_name, child_id_name,
-                        parent_id_val, new_list, old_list):
-    """Perfomr upsert on a many to many association table"""
-
-    old_set = {x for x in old_list} if old_list else set()
-    new_set = {x for x in new_list} if new_list else set()
-
-    # Update many-to-many relations
-    # Remove old relations and apply the new ones
-    if old_set != new_set:
-        to_add = new_set - old_set
-        to_del = old_set - new_set
-
-        if to_del:
-            session.execute(
-                table.delete()
-                    .where(and_(table.c[parent_id_name]==parent_id_val,
-                                table.c[child_id_name].in_(to_del)))
-            )
-        if to_add:
-            session.execute(
-                table.insert()\
-                    .values([(parent_id_val, my_id) for my_id in to_add])
-            )
 
 class SQLAlchemySocket:
     """
@@ -1076,12 +1050,11 @@ class SQLAlchemySocket:
                 doc = session.query(procedure_class).filter_by(hash_index=procedure.hash_index)
 
                 if get_count_fast(doc) == 0:
-                    data = procedure.json_dict(exclude={"id", "trajectory"})
+                    data = procedure.json_dict(exclude={"id"})
                     proc_db = procedure_class(**data)
                     session.add(proc_db)
                     session.commit()
-                    proc_db.update_many_to_many(opt_result_association, 'opt_id', 'result_id',
-                        proc_db.id, procedure.trajectory)
+                    proc_db.update_relations(**data)
                     session.commit()
                     procedure_ids.append(str(proc_db.id))
                     meta['n_inserted'] += 1
@@ -1183,42 +1156,25 @@ class SQLAlchemySocket:
                     continue
 
                 proc_db = session.query(className).filter_by(id=procedure.id).first()
-                for attr, val in procedure.json_dict(exclude={"trajectory"}).items():
+
+                data = procedure.json_dict()
+                proc_db.update_relations(**data)
+
+                for attr, val in data.items():
                     setattr(proc_db, attr, val)
 
-                # update_many_to_many(session, opt_result_association, 'opt_id', 'result_id',
-                #         procedure.id, procedure.trajectory, proc_db.trajectory)
-                proc_db.update_many_to_many(opt_result_association, 'opt_id', 'result_id',
-                        procedure.id, procedure.trajectory, proc_db.trajectory)
-                # traj_old = {x for x in proc_db.trajectory} if proc_db.trajectory else set()
-                # traj_new = {x for x in procedure.trajectory} if procedure.trajectory else set()
-                # # Update many-to-many relations
-                # # Remove old relations and apply the new ones
-                # if traj_old != traj_new:
-                #     to_add = traj_new - traj_old
-                #     to_del = traj_old - traj_new
-                #
-                #     if to_del:
-                #         session.execute(
-                #             opt_result_association.delete()
-                #                 .where(and_(opt_result_association.c.opt_id==procedure.id,
-                #                             opt_result_association.c.result_id.in_(to_del)))
-                #         )
-                #     if to_add:
-                #         session.execute(
-                #             opt_result_association.insert()\
-                #                 .values([(procedure.id, res_id) for res_id in to_add])
-                #         )
+                session.add(proc_db)
 
-                    # Upsert relations (insert or update)
-                    # needs primarykeyconstraint on the table keys
-                    # for result_id in procedure.trajectory:
-                    #     statement = postgres_insert(opt_result_association)\
-                    #         .values(opt_id=procedure.id, result_id=result_id)\
-                    #         .on_conflict_do_update(
-                    #             index_elements=[opt_result_association.c.opt_id, opt_result_association.c.result_id],
-                    #             set_=dict(result_id=result_id))
-                    #     session.execute(statement)
+
+                # Upsert relations (insert or update)
+                # needs primarykeyconstraint on the table keys
+                # for result_id in procedure.trajectory:
+                #     statement = postgres_insert(opt_result_association)\
+                #         .values(opt_id=procedure.id, result_id=result_id)\
+                #         .on_conflict_do_update(
+                #             index_elements=[opt_result_association.c.opt_id, opt_result_association.c.result_id],
+                #             set_=dict(result_id=result_id))
+                #     session.execute(statement)
 
                 session.commit()
                 updated_count += 1
@@ -1250,7 +1206,7 @@ class SQLAlchemySocket:
             # delete through session to delete correctly from base_result
             for proc in procedures:
                 session.delete(proc)
-            session.commit()
+            # session.commit()
             count = len(procedures)
 
         return count

@@ -407,6 +407,12 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
         # Index('my_index', "a", "b", unique=True),
     )
 
+    def update_relations(self, trajectory=None, **kwarg):
+
+        # update optimization_results relations
+        self.update_many_to_many(opt_result_association, 'opt_id', 'result_id',
+                        self.id, trajectory, self.trajectory)
+
     # def add_relations(self, trajectory):
     #     session = object_session(self)
     #     # add many to many relation with results if ids are given not objects
@@ -422,14 +428,14 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
 # event.listen(OptimizationProcedureORM, 'before_insert', add_relations)
 
 # association table for many to many relation
-torj_opt_association = Table('torj_opt_association', Base.metadata,
-    Column('torj_id', Integer, ForeignKey('torsiondrive_procedure.id', ondelete="CASCADE")),
+torsion_opt_association = Table('torsion_opt_association', Base.metadata,
+    Column('torsion_id', Integer, ForeignKey('torsiondrive_procedure.id', ondelete="CASCADE")),
     Column('opt_id', Integer, ForeignKey('optimization_procedure.id', ondelete="CASCADE"))
 )
 
 # association table for many to many relation
-torj_init_mol_association = Table('torj_init_mol_association', Base.metadata,
-    Column('torj_id', Integer, ForeignKey('torsiondrive_procedure.id', ondelete="CASCADE")),
+torsion_init_mol_association = Table('torsion_init_mol_association', Base.metadata,
+    Column('torsion_id', Integer, ForeignKey('torsiondrive_procedure.id', ondelete="CASCADE")),
     Column('molecule_id', Integer, ForeignKey('molecule.id', ondelete="CASCADE"))
 )
 
@@ -453,12 +459,12 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 
     # ids of the many to many relation
     initial_molecule = column_property(
-                    select([func.array_agg(torj_init_mol_association.c.molecule_id)])\
-                    .where(torj_init_mol_association.c.torj_id==id)
+                    select([func.array_agg(torsion_init_mol_association.c.molecule_id)])\
+                    .where(torsion_init_mol_association.c.torsion_id==id)
             )
     # actual objects relation M2M, never loaded here
     initial_molecule_obj = relationship(MoleculeORM,
-                                        secondary=torj_init_mol_association,
+                                        secondary=torsion_init_mol_association,
                                         uselist=True, lazy='noload')
 
 
@@ -471,17 +477,27 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 
     # ids of the many to many relation
     optimization_history = column_property(
-                    select([func.array_agg(torj_opt_association.c.opt_id)])\
-                    .where(torj_opt_association.c.torj_id==id)
+                    select([func.array_agg(torsion_opt_association.c.opt_id)])\
+                    .where(torsion_opt_association.c.torsion_id==id)
             )
     # actual objects relation M2M, never loaded here
     optimization_history_obj = relationship(OptimizationProcedureORM,
-                                        secondary=torj_opt_association,
+                                        secondary=torsion_opt_association,
                                         uselist=True, lazy='noload')
 
     __mapper_args__ = {
         'polymorphic_identity': 'torsiondrive_procedure',
     }
+
+    def update_relations(self, initial_molecule=None, optimization_history=None, **kwarg):
+
+        # update torsion molecule relation
+        self.update_many_to_many(torsion_init_mol_association, 'torsion_id', 'molecule_id',
+                        self.id, initial_molecule, self.initial_molecule)
+
+        # update torsion optimization procedure relation
+        self.update_many_to_many(torsion_opt_association, 'torsion_id', 'opt_id',
+                        self.id, optimization_history, self.optimization_history)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
