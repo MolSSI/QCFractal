@@ -55,8 +55,6 @@ class QueueManager:
             A FractalClient connected to a server
         queue_client : QueueAdapter
             The DBAdapter class for queue abstraction
-        storage_socket : DBSocket
-            A socket for the backend database
         logger : logging.Logger, Optional. Default: None
             A logger for the QueueManager
         max_tasks : int
@@ -93,7 +91,7 @@ class QueueManager:
         self.scratch_directory = scratch_directory
         self.queue_adapter = build_queue_adapter(
             queue_client, logger=self.logger, cores_per_task=self.cores_per_task, memory_per_task=self.memory_per_task,
-            scratch_directory=self.scratch_directory
+            scratch_directory=self.scratch_directory, verbose=verbose
         )
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag
@@ -148,7 +146,7 @@ class QueueManager:
             payload = self._payload_template()
             payload["data"]["operation"] = "startup"
 
-            response = self.client._automodel_request("queue_manager", "put", payload)
+            self.client._automodel_request("queue_manager", "put", payload)
 
             if self.verbose:
                 self.logger.info("    Connected:")
@@ -270,7 +268,7 @@ class QueueManager:
         payload = self._payload_template()
         payload["data"]["operation"] = "heartbeat"
         try:
-            response = self.client._automodel_request("queue_manager", "put", payload)
+            self.client._automodel_request("queue_manager", "put", payload)
             self.logger.info("Heartbeat was successful.")
         except IOError:
             self.logger.warning("Heartbeat was not successful.")
