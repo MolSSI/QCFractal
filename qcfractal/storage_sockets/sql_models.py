@@ -3,7 +3,7 @@ import dateutil
 # from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (Column, Integer, String, Text, DateTime, Boolean,
                         ForeignKey, JSON, Enum, Float, Binary, Table, ARRAY,
-                        PrimaryKeyConstraint)
+                        PrimaryKeyConstraint, inspect)
 from sqlalchemy.orm import relationship, object_session, column_property, validates
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
@@ -21,13 +21,11 @@ from sqlalchemy.schema import Index
 class Base:
     """Base declarative class of all ORM models"""
 
-    db_related_fields = ['result_type']
+    db_related_fields = ['result_type', 'metadata']
 
-    def to_dict(self, with_id=True, exclude=None, no_child_obj=True):
-        dict_obj = self.__dict__.copy()
+    def to_dict(self, with_id=True, exclude=None):
 
-        tobe_deleted_keys = ['_sa_instance_state']
-        tobe_deleted_keys.extend(self.db_related_fields)
+        tobe_deleted_keys = []
 
         if not with_id:
             tobe_deleted_keys.append('id')
@@ -35,20 +33,24 @@ class Base:
         if exclude:
             tobe_deleted_keys.extend(exclude)
 
-        if no_child_obj:  # remove attr ending with _obj
-            arr = [key  for key in self.__dict__ if key.endswith('_obj')]
-            tobe_deleted_keys.extend(arr)
+        dict_obj = [x for x in self.__dict__
+                    if not x.startswith('_')
+                    and x not in self.db_related_fields
+                    and not x.endswith('_obj')
+                    and x not in tobe_deleted_keys]
 
-        for key in tobe_deleted_keys:
-            dict_obj.pop(key, None)
+        # add hybrid properties
+        for key, prop in inspect(self.__class__).all_orm_descriptors.items():
+            if isinstance(prop, hybrid_property):
+                dict_obj.append(key)
 
-        return dict_obj
+        return {k:getattr(self, k) for k in dict_obj}
 
     @classmethod
     def col(cls):
         return cls.__table__.c
 
-    def update_many_to_many(self, table, parent_id_name, child_id_name,
+    def _update_many_to_many(self, table, parent_id_name, child_id_name,
                             parent_id_val, new_list, old_list=None):
         """Perfomr upsert on a many to many association table
         Does NOT commit changes, parent should optimize when it needs to commit
@@ -410,7 +412,7 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     def update_relations(self, trajectory=None, **kwarg):
 
         # update optimization_results relations
-        self.update_many_to_many(opt_result_association, 'opt_id', 'result_id',
+        self._update_many_to_many(opt_result_association, 'opt_id', 'result_id',
                         self.id, trajectory, self.trajectory)
 
     # def add_relations(self, trajectory):
@@ -428,10 +430,25 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
 # event.listen(OptimizationProcedureORM, 'before_insert', add_relations)
 
 # association table for many to many relation
-torsion_opt_association = Table('torsion_opt_association', Base.metadata,
-    Column('torsion_id', Integer, ForeignKey('torsiondrive_procedure.id', ondelete="CASCADE")),
-    Column('opt_id', Integer, ForeignKey('optimization_procedure.id', ondelete="CASCADE"))
-)
+# torsion_opt_association = Table('torsion_opt_association', Base.metadata,
+#     Column('torsion_id', Integer, ForeignKey('torsiondrive_procedure.id', ondelete="CASCADE")),
+#     Column('opt_id', Integer, ForeignKey('optimization_procedure.id', ondelete="CASCADE")),
+#     Column('key', String),
+#     Index('torsion_id', 'key', unique=True)
+# )
+
+class OptimizationHistory(Base):
+    """Association table for many to many"""
+
+    __tablename__ = 'optimization_history'
+
+    torsion_id = Column(Integer, ForeignKey('torsiondrive_procedure.id', ondelete='cascade'), primary_key=True)
+    opt_id = Column(Integer, ForeignKey('optimization_procedure.id', ondelete='cascade'), primary_key=True)
+    key = Column(String, nullable=False, primary_key=True)
+    # Index('torsion_id', 'key', unique=True)
+
+    optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
+
 
 # association table for many to many relation
 torsion_init_mol_association = Table('torsion_init_mol_association', Base.metadata,
@@ -475,15 +492,46 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
     final_energy_dict = Column(JSON)
     minimum_positions = Column(JSON)
 
-    # ids of the many to many relation
-    optimization_history = column_property(
-                    select([func.array_agg(torsion_opt_association.c.opt_id)])\
-                    .where(torsion_opt_association.c.torsion_id==id)
-            )
-    # actual objects relation M2M, never loaded here
-    optimization_history_obj = relationship(OptimizationProcedureORM,
-                                        secondary=torsion_opt_association,
-                                        uselist=True, lazy='noload')
+    # # ids of the many to many relation
+    # optimization_history = column_property(
+    #                 select([func.array_agg(torsion_opt_association.c.opt_id)])\
+    #                 .where(torsion_opt_association.c.torsion_id==id)
+    #         )
+    # # actual objects relation M2M, never loaded here
+    # optimization_history_obj = relationship(OptimizationProcedureORM,
+    #                                     secondary=torsion_opt_association,
+    #                                     uselist=True, lazy='noload')
+
+
+    optimization_history_obj = relationship(OptimizationHistory,
+        cascade="all, delete-orphan", backref="torsiondrive_procedure"
+    )
+
+    @hybrid_property
+    def optimization_history(self):
+        """calculated property when accessed, not saved in the DB
+        A view of the many to many relation in the form of a dict"""
+
+        ret = {}
+        try:
+            for opt_history in self.optimization_history_obj:
+                if opt_history.key in ret:
+                    ret[opt_history.key].append(opt_history.opt_id)
+                else:
+                    ret[opt_history.key] = [opt_history.opt_id]
+
+        except Exception as err:
+            # raises exception of first access!!
+            print(err)
+
+        return ret
+
+    @optimization_history.setter
+    def optimization_history(self, dict_values):
+        """A private copy of the opt history as a dict
+        Key: list of optimization procedures"""
+
+        return dict_values
 
     __mapper_args__ = {
         'polymorphic_identity': 'torsiondrive_procedure',
@@ -492,13 +540,24 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
     def update_relations(self, initial_molecule=None, optimization_history=None, **kwarg):
 
         # update torsion molecule relation
-        self.update_many_to_many(torsion_init_mol_association, 'torsion_id', 'molecule_id',
+        self._update_many_to_many(torsion_init_mol_association, 'torsion_id', 'molecule_id',
                         self.id, initial_molecule, self.initial_molecule)
 
-        # update torsion optimization procedure relation
-        self.update_many_to_many(torsion_opt_association, 'torsion_id', 'opt_id',
-                        self.id, optimization_history, self.optimization_history)
+        # # update torsion optimization procedure relation
+        # self._update_many_to_many(torsion_opt_association, 'torsion_id', 'opt_id',
+        #                 self.id, optimization_history, self.optimization_history)
 
+        session = object_session(self)
+        self.optimization_history_obj = []
+        for key in optimization_history:
+            for opt_id in optimization_history[key]:
+                opt_history = OptimizationHistory(torsion_id=id, opt_id=opt_id, key=key)
+                self.optimization_history_obj.append(opt_history)
+
+        # No need for the following because the session is committed with parent save
+        # session.add_all(self.optimization_history_obj)
+        # session.add(self)
+        # session.commit()
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

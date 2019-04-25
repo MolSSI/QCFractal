@@ -764,14 +764,13 @@ def test_procedure_sql(storage_socket, storage_results):
         }
     }
 
-    # Torsiondrive
+    # Torsiondrive init molecule many to many
     inserted2 = storage_socket.add_procedures([ptl.models.TorsionDriveRecord(**torsion_proc)])
     assert inserted['meta']['n_inserted'] == 1
 
     ret = storage_socket.get_procedures(procedure='torsiondrive', status=None)
     assert len(ret['data']) == 1
     torsion = ret['data'][0]
-    torsion['optimization_history'] = {}
 
     init_mol_tests = [
         [mol_ids[0]],  # del one
@@ -784,6 +783,21 @@ def test_procedure_sql(storage_socket, storage_results):
         assert ret == 1
         ret = storage_socket.get_procedures(procedure='torsiondrive', status=None)
         assert ret['data'][0]['initial_molecule'] == init_mol
+
+
+    # optimization history
+    opt_hist_tests = [
+        {'90': [opt_proc['id']]},  # add one
+        {'90': [opt_proc['id']], '44': [opt_proc['id']]},
+        {'5': [opt_proc['id']]}
+    ]
+
+    for opt_hist in opt_hist_tests:
+        torsion['optimization_history'] = opt_hist
+        ret = storage_socket.update_procedures([ptl.models.TorsionDriveRecord(**torsion)])
+        assert ret == 1
+        ret = storage_socket.get_procedures(procedure='torsiondrive', status=None)
+        assert ret['data'][0]['optimization_history'] == opt_hist
 
     # clean up
     storage_socket.del_procedures(inserted['data'])

@@ -1163,7 +1163,7 @@ class SQLAlchemySocket:
                 for attr, val in data.items():
                     setattr(proc_db, attr, val)
 
-                session.add(proc_db)
+                # session.add(proc_db)
 
 
                 # Upsert relations (insert or update)
