@@ -19,6 +19,7 @@ class BaseAdapter(abc.ABC):
                  cores_per_task: Optional[int] = None,
                  memory_per_task: Optional[float] = None,
                  scratch_directory: Optional[str] = None,
+                 verbose: bool = False,
                  **kwargs):
         """
         Parameters
@@ -29,7 +30,6 @@ class BaseAdapter(abc.ABC):
              - Dask Distributed: "distributed.Client"
              - Fireworks: "fireworks.LaunchPad"
              - Parsl: "parsl.config.Config"
-			 
         logger : None, optional
             A optional logging object to write output to
         cores_per_task : int, optional, Default: None
@@ -43,6 +43,8 @@ class BaseAdapter(abc.ABC):
         scratch_directory: str, optional, Default: None
             Location of the scratch directory to compute QCEngine tasks in
             It is up to the specific Adapter implementation to handle this option
+        verbose: bool, Default: True
+            Increase verbosity of the logger
         """
         self.client = client
         self.logger = logger or logging.getLogger(self.__class__.__name__)
@@ -52,6 +54,9 @@ class BaseAdapter(abc.ABC):
         self.cores_per_task = cores_per_task
         self.memory_per_task = memory_per_task
         self.scratch_directory = scratch_directory
+        self.verbose = verbose
+        if self.verbose:
+            self.logger.setLevel("DEBUG")
 
     def __repr__(self) -> str:
         return "<BaseAdapter>"
@@ -90,7 +95,7 @@ class BaseAdapter(abc.ABC):
         Helper property to return the local QCEngine Options based on number of cores and memory per task.
 
         Individual adapters can overload this behavior.
-		
+
         Returns
         -------
         local_options : dict
@@ -137,6 +142,7 @@ class BaseAdapter(abc.ABC):
                 }
 
             queue_key, task = self._submit_task(task_spec)
+            self.logger.debug(f"Submitted Task:\n{task_spec}\n")
 
             self.queue[queue_key] = task
             # self.logger.info("Adapter: Task submitted {}".format(tag))

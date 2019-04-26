@@ -229,7 +229,9 @@ def main(args=None):
         logger.setLevel("DEBUG")
 
     if settings.manager.log_file_prefix is not None:
-        tornado.options.options['log_file_prefix'] = settings.common.log_file_prefix
+        tornado.options.options['log_file_prefix'] = settings.manager.log_file_prefix
+        # Clones the log to the output
+        tornado.options.options['log_to_stderr'] = True
     tornado.log.enable_pretty_logging()
 
     if settings.manager.test:
