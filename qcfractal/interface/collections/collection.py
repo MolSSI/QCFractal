@@ -388,15 +388,16 @@ class BaseProcedureDataset(Collection):
             try:
                 td_id = rec.object_map[spec.name]
                 query_ids.append(td_id)
-                mapper[td_id] = rec.name
+                mapper[rec.name] = td_id
             except KeyError:
                 pass
 
         procedures = self.client.query_procedures(id=query_ids)
+        proc_lookup = {x.id: x for x in procedures}
 
         data = []
-        for proc in procedures:
-            data.append([mapper[proc.id], proc])
+        for name, oid in mapper.items():
+            data.append([name, proc_lookup[oid]])
 
         df = pd.DataFrame(data, columns=["index", spec.name])
         df.set_index("index", inplace=True)
