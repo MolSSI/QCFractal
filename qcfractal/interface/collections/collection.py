@@ -194,7 +194,6 @@ class Collection(abc.ABC):
         client : FractalClient
             A FractalClient connected to a server used for storage access
         """
-        pass
 
     # Setters
     def save(self, client: 'FractalClient'=None) -> 'ObjectId':

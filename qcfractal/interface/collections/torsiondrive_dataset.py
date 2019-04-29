@@ -4,12 +4,11 @@ QCPortal Database ODM
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
-
 from pydantic import BaseModel
 
-from .collection_utils import register_collection
 from .collection import BaseProcedureDataset
-from ..models import ObjectId, Molecule, OptimizationSpecification, QCSpecification, TorsionDriveInput
+from .collection_utils import register_collection
+from ..models import Molecule, ObjectId, OptimizationSpecification, QCSpecification, TorsionDriveInput
 from ..models.torsiondrive import TDKeywords
 from ..visualization import custom_plot
 
