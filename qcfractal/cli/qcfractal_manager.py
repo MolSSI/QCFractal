@@ -277,7 +277,7 @@ def main(args=None):
             "processes": settings.common.ntasks, # Number of workers to generate == tasks
             "walltime": settings.cluster.walltime,
             "job_extra": scheduler_opts,
-            "env_exta": settings.cluster.task_startup_commands,
+            "env_extra": settings.cluster.task_startup_commands,
             **dask_settings}
 
         # Import the dask things we need
