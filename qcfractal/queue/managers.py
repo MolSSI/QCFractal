@@ -344,8 +344,10 @@ class QueueManager:
         try:
             self.client._automodel_request("queue_manager", "post", payload)
         except IOError:
+
             # Trapped behavior elsewhere
             raise
+
         except Exception as fatal:
             # Non IOError, something has gone very wrong
             self.logger.error("An error was detected which was not an expected requests-type error. The manager "
@@ -370,12 +372,14 @@ class QueueManager:
                 self.logger.info(f"Successfully pushed jobs from {attempts+1} updates ago")
                 clear_indices.append(index)
             except IOError:
+
                 # Tried and failed
                 attempts += 1
                 # Case: Still within the retry limit
                 if self.server_error_retries is None or self.server_error_retries > attempts:
                     self._stale_payload_tracking[index][-1] = attempts
-                    self.logger.warning(f"Re-attempt to post jobs from {attempts} ago failed again, will retry")
+                    self.logger.warning(f"Could not post jobs from {attempts} ago, will retry on next update.")
+
                 # Case: Over limit
                 else:
                     self.logger.warning(f"Could not post jobs from {attempts} ago and over attempt limit, marking "
@@ -383,13 +387,16 @@ class QueueManager:
                     self.n_stale_jobs += len(results)
                     clear_indices.append(index)
                     self._stale_updates_tracked += 1
+
         # Cleanup clear indices
         for index in clear_indices[::-1]:
             self._stale_payload_tracking.pop(index)
+
         # Check stale limiters
         if self.stale_update_limit is not None and (
                 len(self._stale_payload_tracking) + self._stale_updates_tracked) > self.stale_update_limit:
             self.logger.error("Exceeded number of stale updates allowed! Attempting to shutdown gracefully...")
+
             # Log all not-quite stale jobs to stale
             for (results, _) in self._stale_payload_tracking:
                 self.n_stale_jobs += len(results)
@@ -424,7 +431,6 @@ class QueueManager:
         jobs_pushed = f"Pushed {n_result} complete tasks to the server "
         if n_result:
             try:
-                print("posting")
                 self._post_update(results, allow_shutdown=allow_shutdown)
             except IOError:
                 if self.server_error_retries is None or self.server_error_retries > 0:

@@ -92,14 +92,14 @@ def test_queue_manager_server_delay(compute_adapter_fixture):
     manager = queue.QueueManager(client, adapter, server_error_retries=1)
 
     hooh = ptl.data.get_molecule("hooh.json")
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
+    client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
 
     # Pull job to manager and shutdown
     manager.update()
     assert len(manager.list_current_tasks()) == 1
 
     # Mock a network error
-    client.mock_network_error = True
+    client._mock_network_error = True
     # Let the calculation finish
     manager.queue_adapter.await_results()
     # Try to push the changes through the network error
@@ -117,7 +117,7 @@ def test_queue_manager_server_delay(compute_adapter_fixture):
     manager.update()
 
     # Return the jobs to the server
-    client.mock_network_error = False
+    client._mock_network_error = False
     assert manager.shutdown()["nshutdown"] == 1
 
     # Once more, but this time restart the server in between
@@ -126,13 +126,13 @@ def test_queue_manager_server_delay(compute_adapter_fixture):
     assert len(manager.list_current_tasks()) == 1
     manager.queue_adapter.await_results()
     # Trigger our failure
-    client.mock_network_error = True
+    client._mock_network_error = True
     manager.update()
     assert len(manager.list_current_tasks()) == 0
     assert len(manager._stale_payload_tracking) == 1
     assert manager.n_stale_jobs == 0
     # Stop mocking a network error
-    client.mock_network_error = False
+    client._mock_network_error = False
     manager.update()
     assert len(manager.list_current_tasks()) == 0
     assert len(manager._stale_payload_tracking) == 0
