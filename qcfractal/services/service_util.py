@@ -4,7 +4,7 @@ Utilities and base functions for Services.
 
 import abc
 import json
-from typing import Any, Dict, List, Set, Tuple, Optional, Union
+from typing import Any, Dict, List, Set, Tuple, Optional
 
 from pydantic import BaseModel, validator
 
@@ -104,7 +104,7 @@ class BaseService(BaseModel, abc.ABC):
     logger: Any
 
     # Base identification
-    id: Optional[Union[int, ObjectId]] = None
+    id: Optional[ObjectId] = None
     hash_index: str
     service: str
     program: str
@@ -112,8 +112,8 @@ class BaseService(BaseModel, abc.ABC):
     output: Any
 
     # Links
-    task_id: Optional[Union[int, ObjectId]] = None
-    procedure_id: Optional[Union[int, ObjectId]] = None
+    task_id: Optional[ObjectId] = None
+    procedure_id: Optional[ObjectId] = None
 
     # Task manager
     task_tag: Optional[str] = None
