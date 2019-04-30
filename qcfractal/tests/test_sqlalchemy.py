@@ -11,7 +11,10 @@ import pytest
 import qcfractal.interface as ptl
 from sqlalchemy.orm import joinedload
 from qcfractal.storage_sockets.sql_models import (MoleculeORM, OptimizationProcedureORM, ResultORM,
-                                                 TaskQueueORM, TorsionDriveProcedureORM, LogsORM)
+                                                 TaskQueueORM, TorsionDriveProcedureORM, LogsORM,
+                                                  OptimizationHistory, ServiceQueueORM)
+from qcfractal.services.services import TorsionDriveService
+
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
 
 
@@ -74,7 +77,6 @@ def test_logs(storage_socket, session):
     session_delete_all(session, LogsORM)
 
 
-# @pytest.mark.skip
 def test_molecule_sql(storage_socket, session):
     """
         Test the use of the ME class MoleculeORM
@@ -123,6 +125,59 @@ def test_molecule_sql(storage_socket, session):
 
     # Clean up
     storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
+
+def test_services(storage_socket, session):
+
+    assert session.query(OptimizationProcedureORM).count() == 0
+
+    proc_data = {
+        "initial_molecule":None,
+        "keywords": None,
+        "program": "p7",
+        "qc_spec": {
+            "basis": "b1",
+            "program": "p1",
+            "method": "m1",
+            "driver": "energy"
+        },
+        "status": "COMPLETE",
+    }
+
+    service_data = {
+        "tag": "tag1 tag2",
+        "hash_index" : "123",
+        "status": "COMPLETE",
+
+        # extra fields
+        "torsiondrive_state": {},
+
+        "dihedral_template": "1",
+        "optimization_template": "2",
+        "molecule_template": "",
+        "logger": None,
+        "storage_socket": storage_socket,
+        "task_priority": 0
+    }
+
+
+    procedure = OptimizationProcedureORM(**proc_data)
+    session.add(procedure)
+    session.commit()
+    assert procedure.id
+
+    service_pydantic = TorsionDriveService(**service_data)
+
+    doc = ServiceQueueORM(**service_pydantic.json_dict(include=ServiceQueueORM.__dict__.keys()))
+    doc.extra = service_pydantic.json_dict(exclude=ServiceQueueORM.__dict__.keys())
+    doc.procedure_id = procedure.id
+    session.add(doc)
+    session.commit()
+
+    session.delete(doc)
+    session.delete(procedure)
+    session.commit()
+
+    assert session.query(ServiceQueueORM).count() == 0
 
 
 def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
@@ -265,14 +320,17 @@ def test_torsiondrive_procedure(storage_socket, session):
     # Add optimization_history
 
     opt_proc = OptimizationProcedureORM(**data1)
-    session.add(opt_proc)
+    opt_proc2 = OptimizationProcedureORM(**data1)
+    session.add_all([opt_proc, opt_proc2])
     session.commit()
     assert opt_proc.id
 
-    # torj_proc.optimization_history_obj = [opt_proc]
+    opt_hist = OptimizationHistory(torsion_id=torj_proc.id, opt_id=opt_proc.id, key='20')
+    opt_hist2 = OptimizationHistory(torsion_id=torj_proc.id, opt_id=opt_proc2.id, key='20')
+    torj_proc.optimization_history_obj = [opt_hist, opt_hist2]
     session.commit()
     torj_proc = session.query(TorsionDriveProcedureORM).options(joinedload('optimization_history_obj')).first()
-    # assert torj_proc.optimization_history_obj
+    assert torj_proc.optimization_history == {'20': [opt_proc.id, opt_proc2.id]}
 
     # clean up
     session_delete_all(session, OptimizationProcedureORM)
