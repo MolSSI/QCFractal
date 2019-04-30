@@ -1664,7 +1664,9 @@ class SQLAlchemySocket:
             if reset_error:
                 status.append("ERROR")
 
-            updated = session.query(TaskQueueORM).filter(TaskQueueORM.status.in_(status), manager=manager)\
+            updated = session.query(TaskQueueORM)\
+                             .filter(TaskQueueORM.status.in_(status))\
+                             .filter_by(manager=manager)\
                              .update(dict(status=TaskStatusEnum.waiting, modified_on=dt.utcnow()))
 
         return updated
