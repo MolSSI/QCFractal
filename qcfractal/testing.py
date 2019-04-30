@@ -124,6 +124,18 @@ def check_active_mongo_server():
         pytest.skip("Could not find an activate mongo test instance at 'localhost:27017'.")
 
 
+def check_active_postgres_server():
+    """Checks for a active mongo server, skips the test if not found.
+    """
+
+    try:
+        from sqlalchemy import create_engine
+        engine = create_engine("postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb")
+        engine.table_names()
+    except:
+        pytest.skip("Could not find an activate mongo test instance at 'localhost:27017'.")
+
+
 def find_open_port():
     """
     Use socket's built in ability to find an open port.
@@ -428,28 +440,32 @@ def fractal_compute_server(request):
     # storage_uri = "postgresql+psycopg2://qcarchive@localhost:5432/qcarchivedb"
     # storage_uri = "sqlite:///:memory:"
     with FractalSnowflake(
-            max_workers=2, storage_project_name=storage_name, storage_uri=storage_uri,
-            start_server=False) as server:
+            max_workers=2, storage_project_name=storage_name, storage_uri=storage_uri, start_server=False) as server:
         reset_server_database(server)
         yield server
+
 
 def build_socket_fixture(stype):
     print("")
 
     # Check mongo
-    check_active_mongo_server()
     storage_name = "qcf_local_values_test_" + stype
 
     # IP/port/drop table is specific to build
     if stype in ["pymongo", "mongoengine"]:
+        check_active_mongo_server()
         storage = storage_socket_factory("mongodb://localhost", storage_name, db_type=stype)
 
         # Clean and re-init the database
         storage._clear_db(storage_name)
 
     elif stype == 'sqlalchemy':
-        storage = storage_socket_factory('postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb',
-                                         storage_name, db_type=stype, sql_echo=False)
+        check_active_postgres_server()
+        storage = storage_socket_factory(
+            'postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb',
+            storage_name,
+            db_type=stype,
+            sql_echo=False)
         # storage = storage_socket_factory('sqlite:///:memory:', storage_name, db_type=stype)
         # storage = storage_socket_factory('sqlite:///path_to_db', storage_name, db_type=stype)
 
@@ -474,6 +490,7 @@ def build_socket_fixture(stype):
 def mongoengine_socket_fixture(request):
 
     yield from build_socket_fixture("mongoengine")
+
 
 @pytest.fixture(scope="module")
 def sqlalchemy_socket_fixture(request):

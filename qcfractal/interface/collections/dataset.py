@@ -5,14 +5,13 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
-
 from pydantic import BaseModel
 from qcelemental import constants
 
 from .collection import Collection
 from .collection_utils import composition_planner, register_collection
+from ..models import ComputeResponse, Molecule, ObjectId
 from ..statistics import wrap_statistics
-from ..models import ComputeResponse, ObjectId, Molecule
 from ..visualization import bar_plot, violin_plot
 
 

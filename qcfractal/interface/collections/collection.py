@@ -7,9 +7,12 @@ Helper
 import abc
 import copy
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set, Union
 
+import pandas as pd
 from pydantic import BaseModel
+
+from ..models import json_encoders
 
 
 class Collection(abc.ABC):
@@ -58,6 +61,10 @@ class Collection(abc.ABC):
         tagline: str = None
         tags: List[str] = []
         id: str = 'local'
+
+        class Config:
+            json_encoders = json_encoders
+            extra = "forbid"
 
     def __str__(self) -> str:
         """
@@ -187,7 +194,6 @@ class Collection(abc.ABC):
         client : FractalClient
             A FractalClient connected to a server used for storage access
         """
-        pass
 
     # Setters
     def save(self, client: 'FractalClient'=None) -> 'ObjectId':
@@ -225,7 +231,6 @@ class Collection(abc.ABC):
 
         return self.data.id
 
-
 ### General helpers
 
     @staticmethod
@@ -240,3 +245,202 @@ class Collection(abc.ABC):
         mol_ret = client.add_molecules(flat_map_mols)
 
         return {k: v for k, v in zip(flat_map_keys, mol_ret)}
+
+
+class BaseProcedureDataset(Collection):
+    def __init__(self, name: str, client: 'FractalClient'=None, **kwargs):
+        if client is None:
+            raise KeyError("{self.__class__.name__} must initialize with a client.")
+
+        super().__init__(name, client=client, **kwargs)
+
+        self.df = pd.DataFrame(index=self._get_index())
+
+    class DataModel(Collection.DataModel):
+
+        records: Dict[str, Any] = {}
+        history: Set[str] = set()
+        specs: Dict[str, Any] = {}
+
+        class Config(Collection.DataModel.Config):
+            pass
+
+    def _pre_save_prep(self, client: 'FractalClient') -> None:
+        pass
+
+    def _get_index(self):
+
+        return [x.name for x in self.data.records.values()]
+
+    def _add_specification(self, name: str, spec: Any, overwrite=False) -> None:
+        """
+        Parameters
+        ----------
+        name : str
+            The name of the specification
+        spec : Any
+            The specification object
+        overwrite : bool, optional
+            Overwrite existing specification names
+
+        """
+
+
+        lname = name.lower()
+        if (lname in self.data.specs) and (not overwrite):
+            raise KeyError(f"{self.__class__.__name__} '{name}' already present, use `overwrite=True` to replace.")
+
+        self.data.specs[lname] = spec
+        self.save()
+
+    def get_specification(self, name: str) -> Any:
+        """
+        Parameters
+        ----------
+        name : str
+            The name of the specification
+
+        Returns
+        -------
+        Specification
+            The requested specification.
+
+        """
+        try:
+            return self.data.specs[name.lower()].copy()
+        except KeyError:
+            raise KeyError(f"Specification '{name}' not found.")
+
+    def list_specifications(self, description=True) -> Union[List[str], 'DataFrame']:
+        """Lists all available specifications
+
+        Parameters
+        ----------
+        description : bool, optional
+            If True returns a DataFrame with
+            Description
+
+        Returns
+        -------
+        Union[List[str], 'DataFrame']
+            A list of known specification names.
+
+        """
+        if description:
+            data = [(x.name, x.description) for x in self.data.specs.values()]
+            return pd.DataFrame(data, columns=["Name", "Description"]).set_index("Name")
+        else:
+            return [x.name for x in self.data.specs.values()]
+
+    def _add_entry(self, name: str, record: 'Record') -> None:
+        """Adds a record to the dataset using the lowered input name. Saves the dataset after adding a new entry.
+
+        Parameters
+        ----------
+        name : str
+            The name of the record
+        record : Record
+            The record itself
+
+        """
+        lname = name.lower()
+        if lname in self.data.records:
+            raise KeyError(f"Record {name} already in the dataset.")
+
+        self.data.records[lname] = record
+        self.save()
+
+    def get_entry(self, name: str) -> 'Record':
+        """Obtains a record from the Dataset
+
+        Parameters
+        ----------
+        name : str
+            The record name to pull from.
+
+        Returns
+        -------
+        Record
+            The requested record
+        """
+        return self.data.records[name.lower()]
+
+    def query(self, specification: str, force: bool=False) -> None:
+        """Queries a given specification from the server
+
+        Parameters
+        ----------
+        specification : str
+            The specification name to query
+        force : bool, optional
+            Force a fresh query if the specification already exists.
+        """
+        # Try to get the specification, will throw if not found.
+        spec = self.get_specification(specification)
+
+        if not force and (spec.name in self.df):
+            return spec.name
+
+        query_ids = []
+        mapper = {}
+        for rec in self.data.records.values():
+            try:
+                td_id = rec.object_map[spec.name]
+                query_ids.append(td_id)
+                mapper[rec.name] = td_id
+            except KeyError:
+                pass
+
+        procedures = self.client.query_procedures(id=query_ids)
+        proc_lookup = {x.id: x for x in procedures}
+
+        data = []
+        for name, oid in mapper.items():
+            data.append([name, proc_lookup[oid]])
+
+        df = pd.DataFrame(data, columns=["index", spec.name])
+        df.set_index("index", inplace=True)
+
+        self.df[spec.name] = df[spec.name]
+
+        return spec.name
+
+    def status(self, specs: Union[str, List[str]]=None, collapse: bool=True,
+               status: Optional[str]=None) -> 'DataFrame':
+        """Returns the status of all current specifications.
+
+        Parameters
+        ----------
+        collapse : bool, optional
+            Collapse the status into summaries per specification or not.
+        status : Optional[str], optional
+            If not None, only returns results that match the provided status.
+
+        Returns
+        -------
+        DataFrame
+            A DataFrame of all known statuses
+
+        """
+
+        # Specifications
+        if isinstance(specs, str):
+            specs = [specs]
+
+        # Query all of the specs and make sure they are valid
+        if specs is None:
+            list_specs = list(self.df.columns)
+        else:
+            list_specs = []
+            for spec in specs:
+                list_specs.append(self.query(spec))
+
+        # apply status by column then by row
+        df = self.df[list_specs].apply(lambda col: col.apply(lambda entry: entry.status.value))
+        if status:
+            df = df[(df == status.upper()).all(axis=1)]
+
+        if collapse:
+            return df.apply(lambda x: x.value_counts())
+        else:
+            return df

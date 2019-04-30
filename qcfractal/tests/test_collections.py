@@ -435,7 +435,7 @@ def test_torsiondrive_dataset(fractal_compute_server):
         "program": "rdkit",
     }
 
-    ds.add_specification("spec1", optimization_spec, qc_spec, description="This is a really cool spec")
+    ds.add_specification("Spec1", optimization_spec, qc_spec, description="This is a really cool spec")
 
     ncompute = ds.compute("spec1")
     assert ncompute == 2
@@ -460,11 +460,42 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     # We effectively computed the same thing twice with two duplicate specs
     for row in ["hooh1", "hooh2"]:
-        for spec in ["spec1", "spec2"]:
-            assert pytest.approx(ds.df.loc["hooh1", "spec2"].get_final_energies(90), 1.e-5) == 0.00015655375994799847
+        for spec in ["Spec1", "spec2"]:
+            assert pytest.approx(ds.df.loc[row, spec].get_final_energies(90), 1.e-5) == 0.00015655375994799847
 
-    assert ds.status().loc["COMPLETE", "spec1"] == 2
-    assert ds.status(collapse=False).loc["hooh1", "spec1"] == "COMPLETE"
+    assert ds.status().loc["COMPLETE", "Spec1"] == 2
+    assert ds.status(collapse=False).loc["hooh1", "Spec1"] == "COMPLETE"
 
-    assert ds.counts("hooh1").loc["hooh1", "spec1"] > 5
-    assert ds.counts("hooh1", specs="spec1", count_gradients=True).loc["hooh1", "spec1"] > 30
+    assert ds.counts("hooh1").loc["hooh1", "Spec1"] > 5
+    assert ds.counts("hooh1", specs="spec1", count_gradients=True).loc["hooh1", "Spec1"] > 30
+
+
+@testing.using_geometric
+@testing.using_rdkit
+def test_optimization_dataset(fractal_compute_server):
+
+    client = ptl.FractalClient(fractal_compute_server)
+
+    ds = ptl.collections.OptimizationDataset("testing", client=client)
+
+    opt_spec = {"program": "geometric"}
+    qc_spec = {"driver": "gradient", "method": "UFF", "program": "rdkit"}
+    ds.add_specification("test", opt_spec, qc_spec)
+
+    hooh1 = ptl.data.get_molecule("hooh.json")
+    hooh2 = hooh1.copy(update={"geometry": hooh1.geometry + np.array([0, 0, 0.2])})
+
+    ds.add_entry("hooh1", hooh1)
+    ds.add_entry("hooh1-2", hooh1)
+    ds.add_entry("hooh2", hooh2)
+
+    ds.compute("test")
+    fractal_compute_server.await_results()
+
+    ds.query("test")
+    assert ds.status().loc["COMPLETE", "test"] == 3
+
+    assert ds.counts().loc["hooh1", "test"] >= 4
+
+    for idx, row in ds.df["test"].items():
+        assert pytest.approx(row.get_final_energy(), abs=1.e-5) == 0.00011456853977485626

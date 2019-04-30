@@ -4,12 +4,11 @@ QCPortal Database ODM
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
-
 from pydantic import BaseModel
 
+from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
-from .collection import Collection
-from ..models import ObjectId, Molecule, OptimizationSpecification, QCSpecification, TorsionDriveInput
+from ..models import Molecule, ObjectId, OptimizationSpecification, QCSpecification, TorsionDriveInput
 from ..models.torsiondrive import TDKeywords
 from ..visualization import custom_plot
 
@@ -20,7 +19,7 @@ class TDRecord(BaseModel):
     initial_molecules: List[ObjectId]
     td_keywords: TDKeywords
     attributes: Dict[str, Union[int, float, str]]  # Might be overloaded key types
-    torsiondrives: Dict[str, ObjectId] = {}
+    object_map: Dict[str, ObjectId] = {}
 
 
 class TorsionDriveSpecification(BaseModel):
@@ -30,27 +29,15 @@ class TorsionDriveSpecification(BaseModel):
     qc_spec: QCSpecification
 
 
-class TorsionDriveDataset(Collection):
-    def __init__(self, name: str, client: 'FractalClient'=None, **kwargs):
-        if client is None:
-            raise KeyError("TorsionDriveDataset must have a client.")
-
-        super().__init__(name, client=client, **kwargs)
-
-        self.df = pd.DataFrame(index=self._get_index())
-
-    class DataModel(Collection.DataModel):
+class TorsionDriveDataset(BaseProcedureDataset):
+    class DataModel(BaseProcedureDataset.DataModel):
 
         records: Dict[str, TDRecord] = {}
         history: Set[str] = set()
-        td_specs: Dict[str, TorsionDriveSpecification] = {}
+        specs: Dict[str, TorsionDriveSpecification] = {}
 
-    def _pre_save_prep(self, client: 'FractalClient') -> None:
-        pass
-
-    def _get_index(self):
-
-        return [x.name for x in self.data.records.values()]
+        class Config(BaseProcedureDataset.DataModel.Config):
+            pass
 
     def add_specification(self,
                           name: str,
@@ -74,53 +61,10 @@ class TorsionDriveDataset(Collection):
 
         """
 
-        lname = name.lower()
-        if (lname in self.data.td_specs) and (not overwrite):
-            raise KeyError(f"TorsionDriveSpecification '{name}' already present, use `overwrite=True` to replace.")
-
         spec = TorsionDriveSpecification(
-            name=lname, optimization_spec=optimization_spec, qc_spec=qc_spec, description=description)
-        self.data.td_specs[lname] = spec
-        self.save()
+            name=name, optimization_spec=optimization_spec, qc_spec=qc_spec, description=description)
 
-    def get_specification(self, name: str) -> TorsionDriveSpecification:
-        """
-        Parameters
-        ----------
-        name : str
-            The name of the specification
-
-        Returns
-        -------
-        TorsionDriveSpecification
-            The requested specification.
-
-        """
-        try:
-            return self.data.td_specs[name.lower()].copy()
-        except KeyError:
-            raise KeyError(f"TorsionDriveSpecification '{name}' not found.")
-
-    def list_specifications(self, description=True) -> Union[List[str], 'DataFrame']:
-        """Lists all available specifications
-
-        Parameters
-        ----------
-        description : bool, optional
-            If True returns a DataFrame with
-            Description
-
-        Returns
-        -------
-        Union[List[str], 'DataFrame']
-            A list of known specification names.
-
-        """
-        if description:
-            data = [(x.name, x.description) for x in self.data.td_specs.values()]
-            return pd.DataFrame(data, columns=["Name", "Description"]).set_index("Name")
-        else:
-            return [x.name for x in self.data.td_specs.values()]
+        return self._add_specification(name, spec, overwrite=overwrite)
 
     def add_entry(self,
                   name: str,
@@ -130,7 +74,7 @@ class TorsionDriveDataset(Collection):
                   dihedral_ranges: Optional[List[Tuple[int, int]]]=None,
                   energy_decrease_thresh: Optional[float]=None,
                   energy_upper_limit: Optional[float]=None,
-                  attributes: Dict[str, Any]=None):
+                  attributes: Dict[str, Any]=None) -> None:
         """
         Parameters
         ----------
@@ -154,32 +98,16 @@ class TorsionDriveDataset(Collection):
 
         # Build new objects
         molecule_ids = self.client.add_molecules(initial_molecules)
-        td_keywords = TDKeywords(dihedrals=dihedrals, grid_spacing=grid_spacing, dihedral_ranges=dihedral_ranges,
-            energy_decrease_thresh=energy_decrease_thresh, energy_upper_limit=energy_upper_limit)
+        td_keywords = TDKeywords(
+            dihedrals=dihedrals,
+            grid_spacing=grid_spacing,
+            dihedral_ranges=dihedral_ranges,
+            energy_decrease_thresh=energy_decrease_thresh,
+            energy_upper_limit=energy_upper_limit)
 
         record = TDRecord(name=name, initial_molecules=molecule_ids, td_keywords=td_keywords, attributes=attributes)
 
-        lname = name.lower()
-        if lname in self.data.records:
-            raise KeyError(f"Record {name} already in the dataset.")
-
-        self.data.records[lname] = record
-        self.save()
-
-    def get_entry(self, name: str) -> TDRecord:
-        """Obtains a record from the Dataset
-
-        Parameters
-        ----------
-        name : str
-            The record name to pull from.
-
-        Returns
-        -------
-        TDRecord
-            The requested record
-        """
-        return self.data.records[name.lower()]
+        self._add_entry(name, record)
 
     def compute(self, specification: str, subset: Set[str]=None, tag: Optional[str]=None,
                 priority: Optional[str]=None) -> int:
@@ -208,7 +136,7 @@ class TorsionDriveDataset(Collection):
 
         submitted = 0
         for rec in self.data.records.values():
-            if specification in rec.torsiondrives:
+            if specification in rec.object_map:
                 continue
 
             if (subset is not None) and (rec.name not in subset):
@@ -220,91 +148,12 @@ class TorsionDriveDataset(Collection):
                 optimization_spec=spec.optimization_spec,
                 qc_spec=spec.qc_spec)
 
-            rec.torsiondrives[specification] = self.client.add_service([service], tag=tag, priority=priority).ids[0]
+            rec.object_map[spec.name] = self.client.add_service([service], tag=tag, priority=priority).ids[0]
             submitted += 1
 
         self.data.history.add(specification)
         self.save()
         return submitted
-
-    def query(self, specification: str, force: bool=False) -> None:
-        """Queries a given specification from the server
-
-        Parameters
-        ----------
-        specification : str
-            The specification name to query
-        force : bool, optional
-            Force a fresh query if the specification already exists.
-        """
-        # Try to get the specification, will throw if not found.
-        spec = self.get_specification(specification)
-
-        if not force and (spec.name in self.df):
-            return spec.name
-
-        query_ids = []
-        mapper = {}
-        for rec in self.data.records.values():
-            try:
-                td_id = rec.torsiondrives[spec.name]
-                query_ids.append(td_id)
-                mapper[td_id] = rec.name
-            except KeyError:
-                pass
-
-        torsiondrives = self.client.query_procedures(id=query_ids)
-
-        data = []
-        for td in torsiondrives:
-            data.append([mapper[td.id], td])
-
-        df = pd.DataFrame(data, columns=["index", spec.name])
-        df.set_index("index", inplace=True)
-
-        self.df[spec.name] = df[spec.name]
-
-        return spec.name
-
-    def status(self, specs: Union[str, List[str]]=None, collapse: bool=True,
-               status: Optional[str]=None) -> 'DataFrame':
-        """Returns the status of all current specifications.
-
-        Parameters
-        ----------
-        collapse : bool, optional
-            Collapse the status into summaries per specification or not.
-        status : Optional[str], optional
-            If not None, only returns results that match the provided status.
-
-        Returns
-        -------
-        DataFrame
-            A DataFrame of all known statuses
-
-        """
-
-        # Specifications
-        if isinstance(specs, str):
-            specs = [specs]
-
-        # Query all of the specs and make sure they are valid
-        if specs is None:
-            list_specs = list(self.df.columns)
-        else:
-            list_specs = []
-            for spec in specs:
-                list_specs.append(self.query(spec))
-
-        # apply status by column then by row
-        df = self.df[list_specs].apply(lambda col: col.apply(lambda entry: entry.status.value))
-        if status:
-            df = df[(df == status.upper()).all(axis=1)]
-
-        if collapse:
-            return df.apply(lambda x: x.value_counts())
-        else:
-            return df
 
     def counts(self,
                entries: Union[str, List[str]],
@@ -328,7 +177,6 @@ class TorsionDriveDataset(Collection):
             The queried counts.
         """
 
-        # Specifications
         if isinstance(specs, str):
             specs = [specs]
 
@@ -339,8 +187,12 @@ class TorsionDriveDataset(Collection):
         if specs is None:
             specs = list(self.df.columns)
         else:
+            new_specs = []
             for spec in specs:
-                self.query(spec)
+                new_specs.append(self.query(spec))
+
+            # Remap names
+            specs = new_specs
 
         # Count functions
         def count_gradient_evals(td):
@@ -419,13 +271,14 @@ class TorsionDriveDataset(Collection):
             entries = [entries]
 
         # Query all of the specs and make sure they are valid
+        formatted_spec_names = []
         for spec in specs:
-            self.query(spec)
+            formatted_spec_names.append(self.query(spec))
 
         traces = []
         ranges = []
         # Loop over specifications
-        for spec in specs:
+        for spec in formatted_spec_names:
             # Loop over indices (groups colors by entry)
             for index in entries:
 
@@ -438,7 +291,7 @@ class TorsionDriveDataset(Collection):
                     return_figure=True)
 
                 ranges.append(fig.layout.xaxis.range)
-                trace = fig.data[0] # Pull out the underlying scatterplot
+                trace = fig.data[0]  # Pull out the underlying scatterplot
 
                 if show_spec:
                     trace.name = f"{index}-{spec}"
@@ -449,7 +302,7 @@ class TorsionDriveDataset(Collection):
 
         title = "TorsionDriveDataset 1-D Plot"
         if show_spec is False:
-            title += f" [spec={specs[0]}]"
+            title += f" [spec={formatted_spec_names[0]}]"
 
         if relative:
             ylabel = f"Relative Energy [{units}]"

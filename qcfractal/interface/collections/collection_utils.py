@@ -3,7 +3,6 @@ A set of utility functions to help the Collections
 """
 
 import math
-
 from typing import Any, Dict, List
 
 __registered_collections = {}
