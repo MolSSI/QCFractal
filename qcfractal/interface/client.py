@@ -63,6 +63,8 @@ class FractalClient(object):
         self.username = username
         self._verify = verify
         self._headers = {}
+        # Mode toggle for network error testing
+        self._mock_network_error = False
 
         # If no 3rd party verification, quiet urllib
         if self._verify is False:
@@ -108,6 +110,10 @@ class FractalClient(object):
             "headers": self._headers,
             "verify": self._verify,
         }
+
+        if self.mock_network_error:
+            raise requests.exceptions.RequestException("mock_network_error is on, failing by design!")
+
         try:
             if method == "get":
                 r = requests.get(addr, **kwargs)
@@ -131,6 +137,18 @@ class FractalClient(object):
             raise IOError("Server communication failure. Reason: {}".format(r.reason))
 
         return r
+
+    @property
+    def mock_network_error(self):
+        """
+        Boolean for debugging purposes. When set to True, requests to the server always raise a network error without
+        actually making an attempt to connect
+        """
+        return self._mock_network_error
+
+    @mock_network_error.setter
+    def mock_network_error(self, value):
+        self._mock_network_error = bool(value)
 
     def _automodel_request(self,
                            name: str,

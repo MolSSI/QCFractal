@@ -300,7 +300,7 @@ class QueueManager:
         """
         self.assert_connected()
 
-        self.update(new_tasks=False)
+        self.update(new_tasks=False, allow_shutdown=False)
 
         payload = self._payload_template()
         payload["data"]["operation"] = "shutdown"
@@ -315,7 +315,7 @@ class QueueManager:
         shutdown_string = "Shutdown was successful, {} tasks returned to master queue."
         if self.n_stale_jobs:
             shutdown_string = shutdown_string.format(
-                f"{min(0, nshutdown-self.stale_jobs)} active and {nshutdown} stale")
+                f"{min(0, nshutdown-self.n_stale_jobs)} active and {nshutdown} stale")
         else:
             shutdown_string = shutdown_string.format(nshutdown)
         self.logger.info(shutdown_string)
@@ -336,7 +336,7 @@ class QueueManager:
         """
         self.exit_callbacks.append((callback, args, kwargs))
 
-    def _post_update(self, payload_data):
+    def _post_update(self, payload_data, allow_shutdown=True):
         """Internal function to post payload update"""
         payload = self._payload_template()
         # Update with data
@@ -352,12 +352,14 @@ class QueueManager:
                               "will attempt shutdown as best it can. Please report this error to the QCFractal "
                               "developers as this block should not be "
                               "seen outside of debugging modes. Error is as follows\n{}".format(fatal))
+
             try:
-                self.shutdown()
+                if allow_shutdown:
+                    self.shutdown()
             finally:
                 raise fatal
 
-    def _update_stale_jobs(self):
+    def _update_stale_jobs(self, allow_shutdown=True):
         """
         Attempt to post the previous payload failures
         """
@@ -392,18 +394,27 @@ class QueueManager:
             for (results, _) in self._stale_payload_tracking:
                 self.n_stale_jobs += len(results)
             try:
-                self.shutdown()
+                if allow_shutdown:
+                    self.shutdown()
             finally:
                 raise RuntimeError("Exceeded number of stale updates allowed!")
 
-    def update(self, new_tasks: bool=True) -> bool:
+    def update(self, new_tasks: bool=True, allow_shutdown=True) -> bool:
         """Examines the queue for completed tasks and adds successful completions to the database
         while unsuccessful are logged for future inspection.
 
+        Parameters
+        ----------
+        new_tasks: bool, optional, Default: True
+            Try to get new tasks from the server
+        allow_shutdown: bool, optional, Default: True
+            Allow function to attempt graceful shutdowns in the case of stale job or fatal error limits.
+            Does not prevent errors from being raise, but mostly used to prevent infinite loops when update is
+            called from `shutdown` itself
         """
 
         self.assert_connected()
-        self._update_stale_jobs()
+        self._update_stale_jobs(allow_shutdown=allow_shutdown)
 
         results = self.queue_adapter.acquire_complete()
         n_success = 0
@@ -413,7 +424,8 @@ class QueueManager:
         jobs_pushed = f"Pushed {n_result} complete tasks to the server "
         if n_result:
             try:
-                self._post_update(results)
+                print("posting")
+                self._post_update(results, allow_shutdown=allow_shutdown)
             except IOError:
                 if self.server_error_retries is None or self.server_error_retries > 0:
                     self.logger.warning("Post complete tasks was not successful. Attempting again on next update.")
