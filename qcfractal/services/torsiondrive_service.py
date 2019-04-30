@@ -30,7 +30,7 @@ class TorsionDriveService(BaseService):
     procedure: str = "torsiondrive"
 
     # Output
-    output: TorsionDriveRecord
+    output: TorsionDriveRecord = None  # added default
 
     # Temporaries
     torsiondrive_state: Dict[str, Any]

@@ -436,8 +436,8 @@ def fractal_compute_server(request):
 
     # Storage name
     storage_name = "qcf_compute_server_test"
-    storage_uri = "mongodb://localhost:27017"
-    # storage_uri = "postgresql+psycopg2://qcarchive@localhost:5432/qcarchivedb"
+    # storage_uri = "mongodb://localhost:27017"
+    storage_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb"
     # storage_uri = "sqlite:///:memory:"
     with FractalSnowflake(
             max_workers=2, storage_project_name=storage_name, storage_uri=storage_uri, start_server=False) as server:

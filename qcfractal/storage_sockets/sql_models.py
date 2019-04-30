@@ -44,7 +44,13 @@ class Base:
             if isinstance(prop, hybrid_property):
                 dict_obj.append(key)
 
-        return {k:getattr(self, k) for k in dict_obj}
+        ret = {k:getattr(self, k) for k in dict_obj}
+
+        if 'extra' in ret:
+            ret.update(ret['extra'])
+            del ret['extra']
+
+        return ret
 
     @classmethod
     def col(cls):
@@ -82,7 +88,9 @@ class Base:
                 )
 
     def __str__(self):
-        return str(self.id)
+        if hasattr(self, 'id'):
+            return str(self.id)
+        return super.__str__(self)
 
     # @validates('created_on', 'modified_on')
     # def validate_date(self, key, date):
@@ -639,8 +647,10 @@ class ServiceQueueORM(Base):
     tag = Column(String, default=None)
     hash_index = Column(String, nullable=False)
 
-    procedure_id = Column(Integer, ForeignKey("base_result.id"))
-    procedure = relationship(BaseResultORM, lazy='joined')
+    procedure_id = Column(Integer, ForeignKey("base_result.id"), unique=True)
+    procedure_obj = relationship(BaseResultORM, lazy='joined')
+
+    extra = Column(JSON)
 
     # created_on = Column(DateTime, nullable=False)
     # modified_on = Column(DateTime, nullable=False)

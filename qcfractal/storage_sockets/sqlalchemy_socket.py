@@ -39,6 +39,7 @@ from qcfractal.storage_sockets.sql_models import (CollectionORM, KeywordsORM,
 from qcfractal.interface.models import (KeywordSet, Molecule, ResultRecord, TaskRecord,
                                 OptimizationRecord, prepare_basis, TaskStatusEnum,
                                 TorsionDriveRecord)
+from qcfractal.services.service_util import BaseService
 
 
 _null_keys = {"basis", "keywords"}
@@ -227,10 +228,12 @@ class SQLAlchemySocket:
             if projection:
                 proj = [getattr(className, i) for i in projection]
                 data = session.query(*proj).filter(*query).limit(self.get_limit(limit)).offset(skip)
-                n_found = get_count_fast(data)
+                n_found = get_count_fast(data)  # before iterating on the data
                 rdata = [dict(zip(projection, row)) for row in data]
             else:
                 data = session.query(className).filter(*query).limit(self.get_limit(limit)).offset(skip)
+                # from sqlalchemy.dialects import postgresql
+                # print(data.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
                 n_found = get_count_fast(data)
                 rdata = [d.to_dict() for d in data.all()]
 
@@ -1236,6 +1239,7 @@ class SQLAlchemySocket:
 
                 # ProcedureORM already exists
                 proc_id = new_procedure["data"][0]
+
                 if new_procedure["meta"]["duplicates"]:
                     procedure_ids.append(proc_id)
                     meta["duplicates"].append(proc_id)
@@ -1246,14 +1250,15 @@ class SQLAlchemySocket:
                 service.procedure_id = proc_id
 
                 if doc.count() == 0:
-                    doc = ServiceQueueORM(**service.json_dict(exclude={"id"}))
+                    doc = ServiceQueueORM(**service.json_dict(include=ServiceQueueORM.__dict__.keys()))
+                    doc.extra = service.json_dict(exclude=ServiceQueueORM.__dict__.keys())
                     session.add(doc)
                     session.commit()  # TODO
                     procedure_ids.append(proc_id)
                     meta['n_inserted'] += 1
                 else:
                     procedure_ids.append(None)
-                    meta["errors"].append((idx, "Duplicate service, but not caught by procedure."))
+                    meta["errors"].append((doc.id, "Duplicate service, but not caught by procedure."))
 
         meta["success"] = True
 
@@ -1294,14 +1299,16 @@ class SQLAlchemySocket:
         """
 
         meta = get_metadata_template()
-        query, error = format_query(id=id, hash_index=hash_index, procedure_id=procedure_id, status=status)
+        query = format_query(ServiceQueueORM,
+                             id=id, hash_index=hash_index,
+                             procedure_id=procedure_id,
+                             status=status)
 
         data = []
         # try:
         data, meta['n_found'] = self.get_query_projection(ServiceQueueORM, query, projection, limit, skip)
         meta["success"] = True
 
-        meta["success"] = True
         # except Exception as err:
         #     meta['error_description'] = str(err)
 
@@ -1332,8 +1339,16 @@ class SQLAlchemySocket:
                 continue
 
             with self.session_scope() as session:
-                service = ServiceQueueORM(**service.json_dict())
-                session.merge(service)
+
+                doc_db = session.query(ServiceQueueORM).filter_by(id=service.id).first()
+
+                data = service.json_dict(include=ServiceQueueORM.__dict__.keys())
+                data['extra'] = service.json_dict(exclude=ServiceQueueORM.__dict__.keys())
+
+                for attr, val in data.items():
+                    setattr(doc_db, attr, val)
+
+                session.add(doc_db)
                 session.commit()
 
             updated_count += 1
@@ -1349,11 +1364,16 @@ class SQLAlchemySocket:
                     "No service id found on completion (hash_index={}), skipping.".format(service.hash_index))
                 continue
 
-            procedure = service.output
-            procedure.id = service.procedure_id
-            self.update_procedures([procedure])
+            # in one transaction
+            with self.session_scope() as session:
 
-            ServiceQueueORM.objects(id=ObjectId(service.id)).delete()
+                procedure = service.output
+                procedure.id = service.procedure_id
+                self.update_procedures([procedure])
+
+                session.query(ServiceQueueORM)\
+                        .filter_by(id=service.id)\
+                        .delete() #synchronize_session=False)
 
             done += 1
 
