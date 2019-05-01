@@ -136,11 +136,11 @@ class CollectionORM(Base):
     id = Column(Integer, primary_key=True)
 
     collection = Column(String(100), nullable=False)
-    name = Column(String(100), nullable=False)  # Example 'water'
+    name = Column(String(100), nullable=False)
 
     tags = Column(JSON)
     tagline = Column(String)
-    data = Column(JSON)  # extra data related to specific collection type
+    extra = Column(JSON)  # extra data related to specific collection type
 
     # meta = {
     #     'indexes': [{

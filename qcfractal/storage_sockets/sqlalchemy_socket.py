@@ -650,9 +650,8 @@ class SQLAlchemySocket:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 
-### Mongo database functions
+### database functions
 
-    # def add_collection(self, data, overwrite=False):
     def add_collection(self, data: Dict[str, Any], overwrite: bool=False):
         """Add (or update) a collection to the database.
 
@@ -689,7 +688,7 @@ class SQLAlchemySocket:
         update = dict(
             tags = data.pop("tags", None),
             tagline = data.pop("tagline", None),
-            data = data  # todo: check for sql injection
+            extra = data  # todo: check for sql injection
         )
 
         with self.session_scope() as session:
@@ -751,9 +750,9 @@ class SQLAlchemySocket:
         # try:
         rdata, meta['n_found'] = self.get_query_projection(CollectionORM, query, projection, limit, skip)
 
-        for data in rdata:
-            data.update({k: v for k, v in data['data'].items()})
-            del data['data']
+        # for data in rdata:
+        #     data.update({k: v for k, v in data['extra'].items()})
+        #     del data['data']
         meta["success"] = True
         # except Exception as err:
         #     meta['error_description'] = str(err)
