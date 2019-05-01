@@ -52,8 +52,8 @@ class RecordBase(BaseModel, abc.ABC):
     # Compute status
     task_id: Optional[Union[ObjectId, int]] = None  # TODO: not used in SQL
     status: RecordStatusEnum = "INCOMPLETE"
-    modified_on: datetime.datetime = datetime.datetime.utcnow()
-    created_on: datetime.datetime = datetime.datetime.utcnow()
+    modified_on: datetime.datetime = None
+    created_on: datetime.datetime = None
 
     # Carry-ons
     provenance: Optional[qcel.models.Provenance] = None
@@ -68,7 +68,10 @@ class RecordBase(BaseModel, abc.ABC):
         return v.lower()
 
     def __init__(self, **data):
-        # Make sure several fields are available and written to prevent sparse dic
+
+        # Set datetime defaults if not automatically available
+        data.setdefault("modified_on", datetime.datetime.utcnow())
+        data.setdefault("created_on", datetime.datetime.utcnow())
 
         super().__init__(**data)
 
