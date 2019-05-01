@@ -64,6 +64,9 @@ class FractalClient(object):
         self._verify = verify
         self._headers = {}
 
+        # Mode toggle for network error testing, not public facing
+        self._mock_network_error = False
+
         # If no 3rd party verification, quiet urllib
         if self._verify is False:
             from urllib3.exceptions import InsecureRequestWarning
@@ -108,6 +111,10 @@ class FractalClient(object):
             "headers": self._headers,
             "verify": self._verify,
         }
+
+        if self._mock_network_error:
+            raise requests.exceptions.RequestException("mock_network_error is on, failing by design!")
+
         try:
             if method == "get":
                 r = requests.get(addr, **kwargs)

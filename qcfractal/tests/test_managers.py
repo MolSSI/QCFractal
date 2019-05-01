@@ -66,7 +66,7 @@ def test_queue_manager_shutdown(compute_adapter_fixture):
     manager = queue.QueueManager(client, adapter)
 
     hooh = ptl.data.get_molecule("hooh.json")
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
+    client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
 
     # Pull job to manager and shutdown
     manager.update()
@@ -82,6 +82,61 @@ def test_queue_manager_shutdown(compute_adapter_fixture):
     manager.await_results()
     ret = client.query_results()
     assert len(ret) == 1
+
+@testing.using_rdkit
+def test_queue_manager_server_delay(compute_adapter_fixture):
+    """Test to ensure interrupts to the server shutdown correctly"""
+    client, server, adapter = compute_adapter_fixture
+    reset_server_database(server)
+
+    manager = queue.QueueManager(client, adapter, server_error_retries=1)
+
+    hooh = ptl.data.get_molecule("hooh.json")
+    client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
+
+    # Pull job to manager and shutdown
+    manager.update()
+    assert len(manager.list_current_tasks()) == 1
+
+    # Mock a network error
+    client._mock_network_error = True
+    # Let the calculation finish
+    manager.queue_adapter.await_results()
+    # Try to push the changes through the network error
+    manager.update()
+    assert len(manager.list_current_tasks()) == 0
+    assert len(manager._stale_payload_tracking) == 1
+    assert manager.n_stale_jobs == 0
+
+    # Try again to push the tracked attempts into stale
+    manager.update()
+    assert len(manager.list_current_tasks()) == 0
+    assert len(manager._stale_payload_tracking) == 0
+    assert manager.n_stale_jobs == 1
+    # Update again to push jobs to stale
+    manager.update()
+
+    # Return the jobs to the server
+    client._mock_network_error = False
+    assert manager.shutdown()["nshutdown"] == 1
+
+    # Once more, but this time restart the server in between
+    manager = queue.QueueManager(client, adapter, server_error_retries=1)
+    manager.update()
+    assert len(manager.list_current_tasks()) == 1
+    manager.queue_adapter.await_results()
+    # Trigger our failure
+    client._mock_network_error = True
+    manager.update()
+    assert len(manager.list_current_tasks()) == 0
+    assert len(manager._stale_payload_tracking) == 1
+    assert manager.n_stale_jobs == 0
+    # Stop mocking a network error
+    client._mock_network_error = False
+    manager.update()
+    assert len(manager.list_current_tasks()) == 0
+    assert len(manager._stale_payload_tracking) == 0
+    assert manager.n_stale_jobs == 0
 
 
 def test_queue_manager_heartbeat(compute_adapter_fixture):

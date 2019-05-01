@@ -45,6 +45,8 @@ class QueueManager:
                  manager_name: str="unlabled",
                  update_frequency: Union[int, float]=2,
                  verbose: bool=True,
+                 server_error_retries: Optional[int]=1,
+                 stale_update_limit: Optional[int]=10,
                  cores_per_task: Optional[int]=None,
                  memory_per_task: Optional[Union[int, float]]=None,
                  scratch_directory: Optional[str]=None):
@@ -65,6 +67,18 @@ class QueueManager:
             The cluster the manager belongs to
         update_frequency : int
             The frequency to check for new tasks in seconds
+        verbose: bool, optional, Default: True
+            Whether or not to have the manager be verbose (logger level debug and up)
+        server_error_retries: int, optional, Default: 1
+            How many times finished jobs are attempted to be pushed to the server in
+            in the event of a server communication error.
+            After number of attempts, the failed jobs are dropped from this manager and considered "stale"
+            Set to `None` to keep retrying
+        stale_update_limit: int, optional, Default: 10
+            Number of stale update attempts to keep around
+            If this limit is ever hit, the server initiates as shutdown as best it can
+            since communication with the server has gone wrong too many times.
+            Set to `None` for unlimited
         cores_per_task : int, optional, Default: None
             How many CPU cores per computation task to allocate for QCEngine
             None indicates "use however many you can detect"
@@ -73,7 +87,7 @@ class QueueManager:
             None indicates "use however much you can consume"
         scratch_directory: str, optional, Default: None
             Scratch directory location to do QCEngine compute
-            None indicates "wherever the system default is"
+            None indicates "wherever the system default is"'
         """
 
         # Setup logging
@@ -102,6 +116,13 @@ class QueueManager:
         self.periodic = {}
         self.active = 0
         self.exit_callbacks = []
+
+        # Server response/stale job handling
+        self.server_error_retries = server_error_retries
+        self.stale_update_limit = stale_update_limit
+        self._stale_updates_tracked = 0
+        self._stale_payload_tracking = []
+        self.n_stale_jobs = 0
 
         # QCEngine data
         self.available_programs = qcng.list_available_programs()
@@ -230,7 +251,7 @@ class QueueManager:
         """
         Shuts down all IOLoops and periodic updates.
         """
-        self.logger.info("QueueManager recieved shutdown signal: {}.\n".format(signame))
+        self.logger.info("QueueManager received shutdown signal: {}.\n".format(signame))
 
         # Cancel all events
         if self.scheduler is not None:
@@ -279,7 +300,7 @@ class QueueManager:
         """
         self.assert_connected()
 
-        self.update(new_tasks=False)
+        self.update(new_tasks=False, allow_shutdown=False)
 
         payload = self._payload_template()
         payload["data"]["operation"] = "shutdown"
@@ -291,7 +312,13 @@ class QueueManager:
             return {"nshutdown": 0}
 
         nshutdown = response["nshutdown"]
-        self.logger.info("Shutdown was successful, {} tasks returned to master queue.".format(nshutdown))
+        shutdown_string = "Shutdown was successful, {} tasks returned to master queue."
+        if self.n_stale_jobs:
+            shutdown_string = shutdown_string.format(
+                f"{min(0, nshutdown-self.n_stale_jobs)} active and {nshutdown} stale")
+        else:
+            shutdown_string = shutdown_string.format(nshutdown)
+        self.logger.info(shutdown_string)
         return response
 
     def add_exit_callback(self, callback: Callable, *args: List[Any], **kwargs: Dict[Any, Any]) -> None:
@@ -309,29 +336,111 @@ class QueueManager:
         """
         self.exit_callbacks.append((callback, args, kwargs))
 
-    def update(self, new_tasks: bool=True) -> bool:
+    def _post_update(self, payload_data, allow_shutdown=True):
+        """Internal function to post payload update"""
+        payload = self._payload_template()
+        # Update with data
+        payload["data"] = payload_data
+        try:
+            self.client._automodel_request("queue_manager", "post", payload)
+        except IOError:
+
+            # Trapped behavior elsewhere
+            raise
+
+        except Exception as fatal:
+            # Non IOError, something has gone very wrong
+            self.logger.error("An error was detected which was not an expected requests-type error. The manager "
+                              "will attempt shutdown as best it can. Please report this error to the QCFractal "
+                              "developers as this block should not be "
+                              "seen outside of debugging modes. Error is as follows\n{}".format(fatal))
+
+            try:
+                if allow_shutdown:
+                    self.shutdown()
+            finally:
+                raise fatal
+
+    def _update_stale_jobs(self, allow_shutdown=True):
+        """
+        Attempt to post the previous payload failures
+        """
+        clear_indices = []
+        for index, (results, attempts) in enumerate(self._stale_payload_tracking):
+            try:
+                self._post_update(results)
+                self.logger.info(f"Successfully pushed jobs from {attempts+1} updates ago")
+                clear_indices.append(index)
+            except IOError:
+
+                # Tried and failed
+                attempts += 1
+                # Case: Still within the retry limit
+                if self.server_error_retries is None or self.server_error_retries > attempts:
+                    self._stale_payload_tracking[index][-1] = attempts
+                    self.logger.warning(f"Could not post jobs from {attempts} ago, will retry on next update.")
+
+                # Case: Over limit
+                else:
+                    self.logger.warning(f"Could not post jobs from {attempts} ago and over attempt limit, marking "
+                                        f"jobs as stale.")
+                    self.n_stale_jobs += len(results)
+                    clear_indices.append(index)
+                    self._stale_updates_tracked += 1
+
+        # Cleanup clear indices
+        for index in clear_indices[::-1]:
+            self._stale_payload_tracking.pop(index)
+
+        # Check stale limiters
+        if self.stale_update_limit is not None and (
+                len(self._stale_payload_tracking) + self._stale_updates_tracked) > self.stale_update_limit:
+            self.logger.error("Exceeded number of stale updates allowed! Attempting to shutdown gracefully...")
+
+            # Log all not-quite stale jobs to stale
+            for (results, _) in self._stale_payload_tracking:
+                self.n_stale_jobs += len(results)
+            try:
+                if allow_shutdown:
+                    self.shutdown()
+            finally:
+                raise RuntimeError("Exceeded number of stale updates allowed!")
+
+    def update(self, new_tasks: bool=True, allow_shutdown=True) -> bool:
         """Examines the queue for completed tasks and adds successful completions to the database
         while unsuccessful are logged for future inspection.
 
+        Parameters
+        ----------
+        new_tasks: bool, optional, Default: True
+            Try to get new tasks from the server
+        allow_shutdown: bool, optional, Default: True
+            Allow function to attempt graceful shutdowns in the case of stale job or fatal error limits.
+            Does not prevent errors from being raise, but mostly used to prevent infinite loops when update is
+            called from `shutdown` itself
         """
 
         self.assert_connected()
+        self._update_stale_jobs(allow_shutdown=allow_shutdown)
 
         results = self.queue_adapter.acquire_complete()
         n_success = 0
         n_fail = 0
         n_result = len(results)
         error_payload = []
+        jobs_pushed = f"Pushed {n_result} complete tasks to the server "
         if n_result:
-            payload = self._payload_template()
-
-            # Upload new results
-            payload["data"] = results
             try:
-                self.client._automodel_request("queue_manager", "post", payload)
+                self._post_update(results, allow_shutdown=allow_shutdown)
             except IOError:
-                # TODO something as we didnt successfully add the data
-                self.logger.warning("Post complete tasks was not successful. Data may be lost.")
+                if self.server_error_retries is None or self.server_error_retries > 0:
+                    self.logger.warning("Post complete tasks was not successful. Attempting again on next update.")
+                    self._stale_payload_tracking.append([results, 0])
+                    jobs_pushed = f"Tried to push {n_result} complete tasks to the server "
+                else:
+                    self.logger.warning("Post complete tasks was not successful. Data may be lost.")
+                    self.n_stale_jobs += len(results)
+                    jobs_pushed = f"Failed to push {n_result} complete tasks to the server "
 
             self.active -= n_result
             for key, result in results.items():
@@ -342,8 +451,7 @@ class QueueManager:
                                          f"Msg: {result.error.error_message}")
             n_fail = n_result - n_success
 
-        self.logger.info("Pushed {} complete tasks to the server "
-                         "({} success / {} fail).".format(n_result, n_success, n_fail))
+        self.logger.info(jobs_pushed + f"({n_success} success / {n_fail} fail).")
         if n_fail:
             self.logger.warning("The following tasks failed with the errors:")
             for error in error_payload:
