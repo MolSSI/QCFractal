@@ -84,16 +84,16 @@ class FractalClient(object):
         self.server_name = self.server_info["name"]
 
         def version_list(version):
-            re.sub(r"\+.*$", "", version.strip("v"))
+            version = re.sub(r"\+.*$", "", version.strip("v"))
             return [int(x) for x in version.split(".")]
 
         from . import __version__  # Import here to avoid circular import from __init__
         server_version = version_list(self.server_info["version"])
         client_version = version_list(__version__)
-        assert client_version[:-1] >= server_version[:-1], (f"Sever's' Fractal version of {server_version} appears to "
-                                                            f"be ahead of this Client's Fractal version of "
-                                                            f"{client_version}! Please up your client! "
-                                                            f"Only MAJOR.MINOR version checked.")
+        assert client_version[:2] >= server_version[:2], (f"Server Fractal version of {server_version} appears to "
+                                                          f"be ahead of this Client's Fractal version of "
+                                                          f"{client_version}! Please up your client! "
+                                                          f"Only MAJOR.MINOR version checked.")
 
     def __str__(self) -> str:
         """A short representation of the current FractalClient.
