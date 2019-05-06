@@ -201,7 +201,7 @@ class SQLAlchemySocket:
     def _clear_db(self, db_name: str=None):
         """Dangerous, make sure you are deleting the right DB"""
 
-        self.logger.warning("Clearing database '{}' and dropping all tables.".format(db_name))
+        self.logger.warning("SQL: Clearing database '{}' and dropping all tables.".format(db_name))
 
         # drop all tables that it knows about
         Base.metadata.drop_all(self.engine)
@@ -1416,8 +1416,11 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
             for task_num, record in enumerate(data):
                 try:
-
-                    task = TaskQueueORM(**record.json_dict(exclude={"id"}))
+                    task_dict = record.json_dict(exclude={"id"})
+                    # for compatibility with mongoengine
+                    if isinstance(task_dict['base_result'], dict):
+                        task_dict['base_result'] = task_dict['base_result']['id']
+                    task = TaskQueueORM(**task_dict)
                     session.add(task)
                     session.commit()
                     results.append(str(task.id))
