@@ -102,7 +102,7 @@ class GridOptimizationRecord(RecordBase):
     """
 
     # Classdata
-    _hash_indices = {"initial_molecule", "keywords", "optimization_meta", "qc_meta"}
+    _hash_indices = {"initial_molecule", "keywords", "optimization_meta", "qc_spec"}
 
     # Version data
     version: int = 1
