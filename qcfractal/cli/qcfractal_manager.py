@@ -21,6 +21,8 @@ __all__ = ["main"]
 
 QCA_RESOURCE_STRING = '--resources process=1'
 
+logger = logging.getLogger("qcfractal.cli")
+
 
 class SettingsCommonConfig:
     env_prefix = "QCA_"
@@ -31,6 +33,7 @@ class SettingsCommonConfig:
 class AdapterEnum(str, Enum):
     dask = "dask"
     pool = "pool"
+    parsl = "parsl"
 
 
 class CommonManagerSettings(BaseSettings):
@@ -119,12 +122,61 @@ class DaskQueueSettings(BaseSettings):
         extra = "allow"
 
 
+class ParslExecutorSettings(BaseSettings):
+    address: str = None
+
+    def __init__(self, **kwargs):
+        """Enforce that the keys we are going to set remain untouched"""
+        # This set blocks the Parsl Executor and Provider keywords which we set, so the names of the keywords align
+        # to those classes' kwargs, not whatever Fractal chooses to use as keywords.
+        forbidden_set = {"label", "provider", "cores_per_worker", "max_workers"}
+        bad_set = set(kwargs.keys()) & forbidden_set
+        if bad_set:
+            raise KeyError("The following items were set as part of parsl executor, however, "
+                           "there are other config items which control these in more generic "
+                           "settings locations: {}".format(bad_set))
+        super().__init__(**kwargs)
+
+    class Config(SettingsCommonConfig):
+        # This overwrites the base config to allow other keywords to be fed in
+        extra = "allow"
+
+
+class ParslProviderSettings(BaseSettings):
+    partition: str = None
+
+    def __init__(self, **kwargs):
+        """Enforce that the keys we are going to set remain untouched"""
+        # This set blocks the Parsl Executor and Provider keywords which we set, so the names of the keywords align
+        # to those classes' kwargs, not whatever Fractal chooses to use as keywords.
+        forbidden_set = {"nodes_per_block", "max_blocks", "worker_init", "scheduler_options", "wall_time"}
+        bad_set = set(kwargs.keys()) & forbidden_set
+        if bad_set:
+            raise KeyError("The following items were set as part of parsl's provider, however, "
+                           "there are other config items which control these in more generic "
+                           "settings locations: {}".format(bad_set))
+        super().__init__(**kwargs)
+
+    class Config(SettingsCommonConfig):
+        # This overwrites the base config to allow other keywords to be fed in
+        extra = "allow"
+
+
+class ParslQueueSettings(BaseSettings):
+    executor: ParslExecutorSettings = ParslExecutorSettings()
+    provider: ParslProviderSettings = ParslProviderSettings()
+
+    class Config(SettingsCommonConfig):
+        pass
+
+
 class ManagerSettings(BaseModel):
     common: CommonManagerSettings = CommonManagerSettings()
     server: FractalServerSettings = FractalServerSettings()
     manager: QueueManagerSettings = QueueManagerSettings()
     cluster: Optional[ClusterSettings] = None
     dask: Optional[DaskQueueSettings] = None
+    parsl: Optional[ParslQueueSettings] = None
 
     class Config:
         extra = "forbid"
@@ -205,7 +257,7 @@ def parse_args():
 
             data[name] = cli_utils.argparse_config_merge(subparser, data[name], config_data[name], check=False)
 
-        for name in ["cluster", "dask"]:
+        for name in ["cluster", "dask", "parsl"]:
             if name in config_data:
                 data[name] = config_data[name]
 
@@ -223,10 +275,11 @@ def main(args=None):
     settings = ManagerSettings(**args)
 
     logger_map = {AdapterEnum.pool: "",
-                  AdapterEnum.dask: "dask_jobqueue.core"}
+                  AdapterEnum.dask: "dask_jobqueue.core",
+                  AdapterEnum.parsl: "parsl"}
     if settings.common.verbose:
-        logger = logging.getLogger(logger_map[settings.common.adapter])
-        logger.setLevel("DEBUG")
+        adapter_logger = logging.getLogger(logger_map[settings.common.adapter])
+        adapter_logger.setLevel("DEBUG")
 
     if settings.manager.log_file_prefix is not None:
         tornado.options.options['log_file_prefix'] = settings.manager.log_file_prefix
@@ -317,6 +370,77 @@ def main(args=None):
         # Make sure tempdir gets assigned correctly
 
         # Dragonstooth has the low priority queue
+
+    elif settings.common.adapter == "parsl":
+
+        scheduler_opts = settings.cluster.scheduler_options
+
+        if not settings.cluster.node_exclusivity:
+            raise ValueError("For now, QCFractal can only be run with Parsl in node exclusivity. This will be relaxed "
+                             "in a future release of Parsl and QCFractal")
+
+        # Import helpers
+        _provider_loaders = {"slurm": "SlurmProvider",
+                             "pbs": "TorqueProvider",
+                             "moab": "TorqueProvider",
+                             "sge": "GridEngineProvider",
+                             "lsf": None}
+
+        if _provider_loaders[settings.cluster.scheduler] is None:
+            raise ValueError(f"Parsl does not know how to handle cluster of type {settings.cluster.scheduler}.")
+
+        # Headers
+        _provider_headers = {"slurm": "#SBATCH",
+                             "pbs": "#PBS",
+                             "moab": "#PBS",
+                             "sge": "#$$",
+                             "lsf": None
+                             }
+
+        # Import the parsl things we need
+        from parsl.config import Config
+        from parsl.executors import HighThroughputExecutor
+        from parsl.addresses import address_by_hostname
+        provider_module = cli_utils.import_module("parsl.providers",
+                                                  package=_provider_loaders[settings.cluster.scheduler])
+        provider_class = getattr(provider_module, _provider_loaders[settings.cluster.scheduler])
+        provider_header = _provider_headers[settings.cluster.scheduler]
+
+        if _provider_loaders[settings.cluster.scheduler] == "moab":
+            logger.warning("Parsl uses its TorqueProvider for Moab clusters due to the scheduler similarities. "
+                           "However, if you find a bug with it, please report to the Parsl and QCFractal developers so "
+                           "it can be fixed on each respective end.")
+
+        # Setup the providers
+
+        # Create one construct to quickly merge dicts with a final check
+        common_parsl_provider_construct = {
+            "init_blocks": 0,  # Update this at a later time of Parsl
+            "max_blocks": settings.cluster.max_nodes,
+            "walltime": settings.cluster.walltime,
+            "scheduler_options": f'{provider_header} ' + f'\n{provider_header} '.join(scheduler_opts) + '\n',
+            "nodes_per_block": 1,
+            "worker_init": '\n'.join(settings.cluster.task_startup_commands),
+            **settings.parsl.provider.dict(skip_defaults=True, exclude={"partition"})
+        }
+        if settings.cluster.scheduler == "slurm":
+            # The Parsl SLURM constructor has a strange set of arguments
+            provider = provider_class(settings.parsl.provider.partition,
+                                      exclusive=settings.cluster.node_exclusivity,
+                                      **common_parsl_provider_construct)
+        else:
+            provider = provider_class(**common_parsl_provider_construct)
+
+        parsl_executor_construct = {
+            "label": "QCFractal_Parsl_{}_Executor".format(settings.cluster.scheduler.title()),
+            "cores_per_worker": cores_per_task,
+            "max_workers": settings.common.ntasks * settings.cluster.max_nodes,
+            "provider": provider,
+            "address": address_by_hostname(),
+            **settings.parsl.executor.dict(skip_defaults=True)}
+
+        queue_client = Config(
+            executors=[HighThroughputExecutor(**parsl_executor_construct)])
 
     else:
         raise KeyError("Unknown adapter type '{}', available options: {}.\n"
