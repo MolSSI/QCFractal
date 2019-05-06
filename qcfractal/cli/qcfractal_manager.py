@@ -21,6 +21,8 @@ __all__ = ["main"]
 
 QCA_RESOURCE_STRING = '--resources process=1'
 
+logger = logging.getLogger("qcfractal.cli")
+
 
 class SettingsCommonConfig:
     env_prefix = "QCA_"
@@ -273,10 +275,11 @@ def main(args=None):
     settings = ManagerSettings(**args)
 
     logger_map = {AdapterEnum.pool: "",
-                  AdapterEnum.dask: "dask_jobqueue.core"}
+                  AdapterEnum.dask: "dask_jobqueue.core",
+                  AdapterEnum.parsl: "parsl"}
     if settings.common.verbose:
-        logger = logging.getLogger(logger_map[settings.common.adapter])
-        logger.setLevel("DEBUG")
+        adapter_logger = logging.getLogger(logger_map[settings.common.adapter])
+        adapter_logger.setLevel("DEBUG")
 
     if settings.manager.log_file_prefix is not None:
         tornado.options.options['log_file_prefix'] = settings.manager.log_file_prefix
@@ -372,10 +375,14 @@ def main(args=None):
 
         scheduler_opts = settings.cluster.scheduler_options
 
+        if not settings.cluster.node_exclusivity:
+            raise ValueError("For now, QCFractal can only be run with Parsl in node exclusivity. This will be relaxed "
+                             "in a future release of Parsl and QCFractal")
+
         # Import helpers
         _provider_loaders = {"slurm": "SlurmProvider",
                              "pbs": "TorqueProvider",
-                             "moab": None,
+                             "moab": "TorqueProvider",
                              "sge": "GridEngineProvider",
                              "lsf": None}
 
@@ -385,7 +392,7 @@ def main(args=None):
         # Headers
         _provider_headers = {"slurm": "#SBATCH",
                              "pbs": "#PBS",
-                             "moab": None,
+                             "moab": "#PBS",
                              "sge": "#$$",
                              "lsf": None
                              }
@@ -399,11 +406,16 @@ def main(args=None):
         provider_class = getattr(provider_module, _provider_loaders[settings.cluster.scheduler])
         provider_header = _provider_headers[settings.cluster.scheduler]
 
+        if _provider_loaders[settings.cluster.scheduler] == "moab":
+            logger.warning("Parsl uses its TorqueProvider for Moab clusters due to the scheduler similarities. "
+                           "However, if you find a bug with it, please report to the Parsl and QCFractal developers so "
+                           "it can be fixed on each respective end.")
+
         # Setup the providers
 
         # Create one construct to quickly merge dicts with a final check
         common_parsl_provider_construct = {
-            "init_blocks": 1,
+            "init_blocks": 0,  # Update this at a later time of Parsl
             "max_blocks": settings.cluster.max_nodes,
             "walltime": settings.cluster.walltime,
             "scheduler_options": f'{provider_header} ' + f'\n{provider_header} '.join(scheduler_opts) + '\n',
