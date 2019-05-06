@@ -160,13 +160,14 @@ class Dataset(Collection):
 
         """
 
+        show_dftd3 = dftd3
+
         if not (search.keys() <= set(self.data.history_keys)):
             raise KeyError("Not all query keys were understood.")
 
         history = pd.DataFrame(list(self.data.history), columns=self.data.history_keys)
 
         # Build out -D3 combos
-
         dftd3 = history[history["program"] == "dftd3"].copy()
         dftd3["base"] = [x.split("-d3")[0] for x in dftd3["method"]]
 
@@ -193,9 +194,11 @@ class Dataset(Collection):
             else:
                 raise TypeError(f"Search type {type(value)} not understood.")
 
-        if dftd3 is False:
+
+        if show_dftd3 is False:
             ret = ret[ret["program"] != "dftd3"]
 
+        ret.fillna("None", inplace=True)
         ret.set_index(list(self.data.history_keys[:-1]), inplace=True)
         ret.sort_index(inplace=True)
         return ret

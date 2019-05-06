@@ -250,7 +250,7 @@ class Collection(abc.ABC):
 class BaseProcedureDataset(Collection):
     def __init__(self, name: str, client: 'FractalClient'=None, **kwargs):
         if client is None:
-            raise KeyError("{self.__class__.name__} must initialize with a client.")
+            raise KeyError("{self.__class__.__name__} must initialize with a client.")
 
         super().__init__(name, client=client, **kwargs)
 
