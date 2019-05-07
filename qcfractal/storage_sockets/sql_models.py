@@ -21,7 +21,7 @@ from sqlalchemy.schema import Index
 class Base:
     """Base declarative class of all ORM models"""
 
-    db_related_fields = ['result_type', 'metadata']
+    db_related_fields = ['result_type', 'base_result_id', 'metadata']
 
     def to_dict(self, with_id=True, exclude=None):
 
@@ -348,6 +348,8 @@ class ResultORM(BaseResultORM):
 
     __mapper_args__ = {
         'polymorphic_identity': 'result',
+        # to have separate select when querying BaseResultsORM
+        'polymorphic_load': 'selectin',
     }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -411,6 +413,8 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
 
     __mapper_args__ = {
         'polymorphic_identity': 'optimization_procedure',
+        # to have separate select when querying BaseResultsORM
+        'polymorphic_load': 'selectin',
     }
 
     __table_args__ = (
@@ -543,6 +547,8 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 
     __mapper_args__ = {
         'polymorphic_identity': 'torsiondrive_procedure',
+        # to have separate select when querying BaseResultsORM
+        'polymorphic_load': 'selectin',
     }
 
     def update_relations(self, initial_molecule=None, optimization_history=None, **kwarg):
@@ -609,8 +615,23 @@ class TaskQueueORM(Base):
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
+    # TODO: for back-compatibility with mongo, tobe removed
+    @hybrid_property
+    def base_result(self):
+        return dict(ref="result", id=self.base_result_id)
+
+    @base_result.setter
+    def base_result(self, val):
+        """Only two valid values, dict and int"""
+
+        if isinstance(val, dict):
+            self.base_result_id = val['id']
+        else:
+            self.base_result_id = val
+        return val
+
     # can reference ResultORMs or any ProcedureORM
-    base_result = Column(Integer, ForeignKey("base_result.id"), unique=True)
+    base_result_id = Column(Integer, ForeignKey("base_result.id"), unique=True)
     base_result_obj = relationship(BaseResultORM, lazy='select')  # or lazy='joined'
 
     # meta = {

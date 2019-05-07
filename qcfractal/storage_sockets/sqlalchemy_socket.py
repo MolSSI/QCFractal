@@ -22,7 +22,7 @@ import bcrypt
 import logging
 import secrets
 from datetime import datetime as dt
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Tuple
 
 from sqlalchemy.sql.expression import func
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
@@ -980,7 +980,7 @@ class SQLAlchemySocket:
         task_id_list = [task_id] if isinstance(task_id, (int, str)) else task_id
         # try:
         with self.session_scope() as session:
-            data = session.query(BaseResultORM).filter(BaseResultORM.id == TaskQueueORM.base_result)\
+            data = session.query(BaseResultORM).filter(BaseResultORM.id == TaskQueueORM.base_result_id)\
                             .filter(TaskQueueORM.id.in_(task_id_list))
             meta['n_found'] = get_count_fast(data)
             data = [d.to_dict() for d in data.all()]
@@ -1122,7 +1122,11 @@ class SQLAlchemySocket:
         elif procedure == 'torsiondrive':
             className = TorsionDriveProcedureORM
         else:
-            raise TypeError('Unsupported procedure type {}'.format(procedure))
+            # raise TypeError('Unsupported procedure type {}. Id: {}, task_id: {}'
+            #                 .format(procedure, id, task_id))
+            self.logger.warning('Procedure type not specified({}). Query include: Id= {}, task_id= {}'
+                            .format(procedure, id, task_id))
+            className = BaseResultORM   # all classes, including those with 'selectin'
 
         query = format_query(className,
             id=id, procedure=procedure, program=program, hash_index=hash_index,
@@ -1417,9 +1421,9 @@ class SQLAlchemySocket:
             for task_num, record in enumerate(data):
                 try:
                     task_dict = record.json_dict(exclude={"id"})
-                    # for compatibility with mongoengine
-                    if isinstance(task_dict['base_result'], dict):
-                        task_dict['base_result'] = task_dict['base_result']['id']
+                    # # for compatibility with mongoengine
+                    # if isinstance(task_dict['base_result'], dict):
+                    #     task_dict['base_result'] = task_dict['base_result']['id']
                     task = TaskQueueORM(**task_dict)
                     session.add(task)
                     session.commit()
@@ -1429,7 +1433,7 @@ class SQLAlchemySocket:
                     # print(str(err))
                     session.rollback()
                     # TODO: merge hooks
-                    task = session.query(TaskQueueORM).filter_by(base_result=record.base_result).first()
+                    task = session.query(TaskQueueORM).filter_by(base_result_id=record.base_result.id).first()
                     self.logger.warning('queue_submit got a duplicate task: {}'.format(task.to_dict()))
                     results.append(str(task.id))
                     meta['duplicates'].append(task_num)
@@ -1490,7 +1494,7 @@ class SQLAlchemySocket:
                   projection=None,
                   limit: int=None,
                   skip: int=0,
-                  return_json=True,
+                  return_json=False,
                   with_ids=True):
         """
         TODO: check what query keys are needs
@@ -1531,6 +1535,7 @@ class SQLAlchemySocket:
         except Exception as err:
             meta['error_description'] = str(err)
 
+        data = [TaskRecord(**task) for task in data]
 
         return {"data": data, "meta": meta}
 
@@ -1582,17 +1587,13 @@ class SQLAlchemySocket:
                              .filter(TaskQueueORM.id.in_(task_ids))\
                              .update(update_fields, synchronize_session=False)
             base_results_c = session.query(BaseResultORM)\
-                                    .filter(BaseResultORM.id == TaskQueueORM.base_result) \
+                                    .filter(BaseResultORM.id == TaskQueueORM.base_result_id) \
                                     .filter(TaskQueueORM.id.in_(task_ids))\
                                     .update(update_fields, synchronize_session=False)
 
-        # This should not happen unless there is data inconsistency in the DB
-        if base_results_c != tasks_c:
-            self.logger.error("Some tasks don't reference results or procedures correctly!"
-                              "Tasks: {}, ResultORMs: {}, procedures: {}. ".format(tasks, results, procedures))
         return tasks_c
 
-    def queue_mark_error(self, data):
+    def queue_mark_error(self, data: List[Tuple[int, str]]):
         """update the given tasks as errored
         Mark the corresponding result/procedure as Errored
 
@@ -1600,7 +1601,8 @@ class SQLAlchemySocket:
 
         task_ids = []
         with self.session_scope() as session:
-            task_objects = session.query(TaskQueueORM).filer(TaskQueueORM.id.in_(data.keys())).all()
+            ids = [err[0] for err in data]
+            task_objects = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(ids)).all()
             for (task_id, msg), task_obj in zip(data, task_objects):
 
                 task_ids.append(task_id)
@@ -1614,7 +1616,7 @@ class SQLAlchemySocket:
 
             update_fields = dict(status=TaskStatusEnum.error, modified_on=dt.utcnow())
             base_results_c = session.query(BaseResultORM)\
-                                    .filter(BaseResultORM.id == TaskQueueORM.base_result) \
+                                    .filter(BaseResultORM.id == TaskQueueORM.base_result_id) \
                                     .filter(TaskQueueORM.id.in_(task_ids))\
                                     .update(update_fields, synchronize_session=False)
 
@@ -1656,9 +1658,10 @@ class SQLAlchemySocket:
                 task_ids = session.query(TaskQueueORM.id)\
                                   .filter_by(manager=manager, status=TaskStatusEnum.error)
                 result_count = session.query(BaseResultORM)\
-                                      .filter(TaskQueueORM.base_result==BaseResultORM.id)\
+                                      .filter(TaskQueueORM.base_result_id==BaseResultORM.id)\
                                       .filter(TaskQueueORM.id.in_(task_ids))\
-                                      .update(dict(status='INCOMPLETE', modified_on=dt.utcnow()))
+                                      .update(dict(status='INCOMPLETE', modified_on=dt.utcnow()),
+                                              synchronize_session=False)
 
             status = []
             if reset_running:
@@ -1669,7 +1672,8 @@ class SQLAlchemySocket:
             updated = session.query(TaskQueueORM)\
                              .filter(TaskQueueORM.status.in_(status))\
                              .filter_by(manager=manager)\
-                             .update(dict(status=TaskStatusEnum.waiting, modified_on=dt.utcnow()))
+                             .update(dict(status=TaskStatusEnum.waiting, modified_on=dt.utcnow()),
+                                     synchronize_session=False)
 
         return updated
 

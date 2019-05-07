@@ -1301,7 +1301,7 @@ class MongoengineSocket:
                   projection=None,
                   limit: int=None,
                   skip: int=0,
-                  return_json=True,
+                  return_json=False,
                   with_ids=True):
         """
         TODO: check what query keys are needed.
@@ -1349,8 +1349,8 @@ class MongoengineSocket:
         except Exception as err:
             meta['error_description'] = str(err)
 
-        if return_json:
-            data = [TaskRecord(**task.to_json_obj()) for task in data]
+
+        data = [TaskRecord(**task.to_json_obj()) for task in data]
 
         return {"data": data, "meta": meta}
 

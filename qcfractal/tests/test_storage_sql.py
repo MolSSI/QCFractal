@@ -420,7 +420,7 @@ def storage_results(storage_socket):
 
     # # Cleanup
     all_tasks = storage_socket.get_queue()['data']
-    storage_socket.del_tasks(id=[task['id'] for task in all_tasks])
+    storage_socket.del_tasks(id=[task.id for task in all_tasks])
 
     result_ids = [x for x in results_insert["data"]]
     ret = storage_socket.del_results(result_ids)
@@ -523,7 +523,7 @@ def test_queue_submit_sql(storage_results):
         "tag": None,
         "program": "p1",
         "parser": "",
-        "base_result": result1['id']
+        "base_result": dict(ref='result', id=result1['id'])
     })
 
     # Submit a new task
@@ -559,7 +559,7 @@ def test_storage_queue_roundtrip(storage_results):
         "program": "P1",
         "procedure": "P1",
         "parser": "",
-        "base_result": result1['id']
+        "base_result": dict(ref='result', id=result1['id'])
     })
 
     # Submit a task
@@ -608,9 +608,9 @@ def test_queue_submit_many_order(storage_results):
     }
 
 
-    task1 = ptl.models.TaskRecord(**task_template, base_result=results[3]['id'])
-    task2 = ptl.models.TaskRecord(**task_template, base_result=results[4]['id'])
-    task3 = ptl.models.TaskRecord(**task_template, base_result=results[5]['id'])
+    task1 = ptl.models.TaskRecord(**task_template, base_result=dict(ref='result', id=results[3]['id']))
+    task2 = ptl.models.TaskRecord(**task_template, base_result=dict(ref='result', id=results[4]['id']))
+    task3 = ptl.models.TaskRecord(**task_template, base_result=dict(ref='result', id=results[5]['id']))
 
     # Submit tasks
     ret = storage_results.queue_submit([task1, task2, task3])
@@ -621,7 +621,7 @@ def test_queue_submit_many_order(storage_results):
     r = storage_results.queue_get_next("test_manager", ["p1"], ["p1"], limit=1)
     assert len(r) == 1
     # will get the first submitted result first
-    assert r[0].base_result == results[3]["id"]
+    assert r[0].base_result.id == results[3]["id"]
 
     # Todo: test more scenarios
 
