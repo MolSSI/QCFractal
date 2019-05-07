@@ -6,7 +6,8 @@ from enum import Enum
 from typing import Any, Dict, Optional, Union
 
 from pydantic import BaseModel, validator
-from qcelemental.models import Molecule, Provenance
+from qcelemental.models import Provenance
+import qcelemental as qcel
 
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
@@ -32,6 +33,17 @@ class ObjectId(str):
         return v
 
 
+class Molecule(qcel.models.Molecule):
+
+    id: Optional[ObjectId] = None
+
+    def __init__(self, **kwargs):
+        if "connectivity" in kwargs:
+            if len(kwargs["connectivity"]) == 0:
+                del kwargs["connectivity"]
+        super().__init__(**kwargs)
+
+
 class DriverEnum(str, Enum):
     energy = 'energy'
     gradient = 'gradient'
@@ -46,7 +58,7 @@ class QCSpecification(BaseModel):
     driver: DriverEnum
     method: str
     basis: Optional[str] = None
-    keywords: Optional[Union[ObjectId, int]] = None
+    keywords: Optional[ObjectId] = None
     program: str
 
     @validator('basis')
@@ -65,7 +77,7 @@ class QCSpecification(BaseModel):
         extra = "forbid"
         allow_mutation = False
 
-    def form_schema_object(self, keywords: Optional['KeywordSet'] = None, checks=True) -> Dict[str, Any]:
+    def form_schema_object(self, keywords: Optional['KeywordSet']=None, checks=True) -> Dict[str, Any]:
         if checks and self.keywords:
             assert keywords.id == self.keywords
 
@@ -113,7 +125,7 @@ class KeywordSet(BaseModel):
     """
     An options object for the QCArchive ecosystem
     """
-    id: Optional[Union[ObjectId, int]] = None
+    id: Optional[ObjectId] = None
     hash_index: str
     values: Dict[str, Any]
     lowercase: bool = True

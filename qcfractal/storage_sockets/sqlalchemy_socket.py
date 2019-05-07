@@ -338,6 +338,7 @@ class SQLAlchemySocket:
 
         # Get molecules by index and translate back to dict
         tmp = self.get_molecules(list(id_mols.values()))
+        print(tmp)
         id_mols_list = tmp["data"]
         meta["errors"].extend(tmp["meta"]["errors"])
 
