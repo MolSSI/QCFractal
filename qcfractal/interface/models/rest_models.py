@@ -616,7 +616,7 @@ register_model("queue_manager", "GET", QueueManagerGETBody, QueueManagerGETRespo
 
 class QueueManagerPOSTBody(BaseModel):
     meta: QueueManagerMeta
-    data: Dict[str, Any]
+    data: Dict[ObjectId, Any]
 
     class Config:
         json_encoders = json_encoders

@@ -4,7 +4,8 @@ Utility functions for on-node procedures.
 
 import json
 
-from qcelemental.models import Molecule, ResultInput
+from qcelemental.models import ResultInput
+from ..interface.models import Molecule
 
 
 def unpack_single_task_spec(storage, meta, molecules):

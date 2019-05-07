@@ -3,7 +3,7 @@ Common models for QCPortal/Fractal
 """
 import json
 from enum import Enum
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, List, Tuple
 
 from pydantic import BaseModel, validator
 from qcelemental.models import Provenance
@@ -37,11 +37,13 @@ class ObjectId(str):
 class Molecule(qcel.models.Molecule):
 
     id: Optional[ObjectId] = None
+    connectivity: List[Tuple[int, int, float]] = None
 
     def __init__(self, **kwargs):
-        if "connectivity" in kwargs:
-            if len(kwargs["connectivity"]) == 0:
-                del kwargs["connectivity"]
+        # print(kwargs.get("connectivity", None))
+        if ("connectivity" in kwargs) and (len(kwargs["connectivity"]) == 0):
+            del kwargs["connectivity"]
+        # print(kwargs.get("id", None), type(kwargs.get("id", None)))
         super().__init__(**kwargs)
 
 
