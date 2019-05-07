@@ -26,11 +26,12 @@ class ObjectId(str):
 
     @classmethod
     def validate(cls, v):
-        mongo_id_validation = (not isinstance(v, str)) or (len(v) != 24) or (not set(v) <= cls._valid_hex)
-        sql_id_validation = not (isinstance(v, int) or isinstance(v, str) and v.isdigit())
-        if mongo_id_validation and sql_id_validation:
-            raise TypeError("The string {} is not a valid 24-character hexadecimal ObjectId!".format(v))
-        return v
+        if (isinstance(v, str) and (len(v) == 24) and (set(v) <= cls._valid_hex)):
+            return v
+        elif isinstance(v, int) or (isinstance(v, str) and v.isdigit()):
+            return int(v)
+        else:
+            raise TypeError("The string {} is not a valid 24-character hexadecimal or integer ObjectId!".format(v))
 
 
 class Molecule(qcel.models.Molecule):

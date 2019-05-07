@@ -12,35 +12,30 @@ except ImportError:
 
 
 
-from sqlalchemy import create_engine
-from .sql_models import Base
-from sqlalchemy.orm import sessionmaker, with_polymorphic
-from sqlalchemy.exc import IntegrityError
-from contextlib import contextmanager
-
-import bcrypt
 import logging
 import secrets
+from contextlib import contextmanager
 from datetime import datetime as dt
-from typing import Any, Dict, List, Optional, Union, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+import bcrypt
+from sqlalchemy import create_engine
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import sessionmaker, with_polymorphic
 from sqlalchemy.sql.expression import func
-# from sqlalchemy.dialects.postgresql import insert as postgres_insert
-from qcfractal.storage_sockets.storage_utils import (add_metadata_template,
-                                                     get_metadata_template)
-
-# SQL ORMs
-from qcfractal.storage_sockets.sql_models import (CollectionORM, KeywordsORM,
-                         MoleculeORM, BaseResultORM, OptimizationProcedureORM,
-                         QueueManagerORM, ResultORM, ErrorORM, ServiceQueueORM,
-                         TaskQueueORM, UserORM, TorsionDriveProcedureORM, LogsORM)
 
 # pydantic classes
-from qcfractal.interface.models import (KeywordSet, Molecule, ResultRecord, TaskRecord,
-                                OptimizationRecord, prepare_basis, TaskStatusEnum,
-                                TorsionDriveRecord)
+from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
+                                        TaskStatusEnum, TorsionDriveRecord, prepare_basis)
 from qcfractal.services.service_util import BaseService
+# SQL ORMs
+from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, ErrorORM, KeywordsORM, LogsORM,
+                                                  MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
+                                                  ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM)
+# from sqlalchemy.dialects.postgresql import insert as postgres_insert
+from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
+from .sql_models import Base
 
 _null_keys = {"basis", "keywords"}
 _id_keys = {"id", "molecule", "keywords", "procedure_id"}
@@ -303,7 +298,7 @@ class SQLAlchemySocket:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Molecule ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def get_add_molecules_mixed(self, data: List[Union[str, Molecule]]) -> List[Molecule]:
+    def get_add_molecules_mixed(self, data: List[Union[ObjectId, Molecule]]) -> List[Molecule]:
         """
         Get or add the given molecules (if they don't exit).
         MoleculeORMs are given in a mixed format, either as a dict of mol data
@@ -318,7 +313,7 @@ class SQLAlchemySocket:
         new_molecules = {}
         id_mols = {}
         for idx, mol in ordered_mol_dict.items():
-            if isinstance(mol, str):
+            if isinstance(mol, (int, str)):
                 id_mols[idx] = mol
             elif isinstance(mol, Molecule):
                 new_molecules[idx] = mol
@@ -338,7 +333,6 @@ class SQLAlchemySocket:
 
         # Get molecules by index and translate back to dict
         tmp = self.get_molecules(list(id_mols.values()))
-        print(tmp)
         id_mols_list = tmp["data"]
         meta["errors"].extend(tmp["meta"]["errors"])
 

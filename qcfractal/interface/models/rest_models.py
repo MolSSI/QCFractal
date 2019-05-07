@@ -127,9 +127,9 @@ class QueryMeta(BaseModel):
 
 
 class ComputeResponse(BaseModel):
-    ids: List[Optional[str]]
-    submitted: List[str]
-    existing: List[str]
+    ids: List[Optional[ObjectId]]
+    submitted: List[ObjectId]
+    existing: List[ObjectId]
 
     class Config(RESTConfig):
         pass
