@@ -282,23 +282,26 @@ _base_gridopt = {
 @pytest.mark.parametrize("data, hash_index", [
 
     # Check same
-    ({}, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+    ({}, "fa2da83aae1651a9115f5eaea83043187c4c8c7b"),
     ({"keywords": {
             "preoptimization": False,
             "scans": [{**_scan_spec, **{"steps": [-0.1 + 1e-12, 0.0 - 1.e-12]}}]
         }
-    }, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+    }, "fa2da83aae1651a9115f5eaea83043187c4c8c7b"),
 
     # Check opt keywords stability
     ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 1.e-12}}}
-    }, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+    }, "fa2da83aae1651a9115f5eaea83043187c4c8c7b"),
 
     ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 0}}}
-    }, "6bf2bce9b49cf669fe01d064321ecdd42ff59d5f"),
+    }, "fa2da83aae1651a9115f5eaea83043187c4c8c7b"),
 
     # Check fields
     ({"initial_molecule": "5c78987e95d592ad07a2fe3c"},
-     "5b00f25ce8a81950754faf65b1643896837ea0ec"),
+     "9624ce2eca96eabcdb9ec3b2e073429f6dd4b8a4"),
+
+    ({"qc_spec": {**_qc_spec, **{"method": "custom1"}}
+    },"d6a187bf6de7a25d36402c5d16109ddc6f4f217d"),
 ]) # yapf: disable
 def test_gridoptimization_canary_hash(data, hash_index):
 
@@ -328,9 +331,9 @@ _base_torsion = {
 
 @pytest.mark.parametrize("data, hash_index", [
 
-    # Check same
     ({}, "dd305011ee2b741b1dcd03350994920a3718b289"),
 
+    # Check same
     ({"keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10], "tol": 1.e-12}},
      "cb3f9c9bd4eda742b0429ebea0c3d12719ab2582"),
 
