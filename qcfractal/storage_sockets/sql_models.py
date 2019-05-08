@@ -8,11 +8,12 @@ from sqlalchemy.orm import relationship, object_session, column_property, valida
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
 from sqlalchemy.ext.declarative import as_declarative
-from sqlalchemy import event, select, func, and_
+from sqlalchemy import select, func, and_
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.schema import Index
-
+from sqlalchemy.dialects.postgresql import aggregate_order_by
 
 # Base = declarative_base()
 
@@ -366,12 +367,26 @@ class ProcedureMixin:
 
 # ================== Types of ProcedureORMs ================== #
 
-# association table for many to many relation
-opt_result_association = Table('opt_result_association', Base.metadata,
-    Column('opt_id', Integer, ForeignKey('optimization_procedure.id', ondelete="CASCADE")),
-    Column('result_id', Integer, ForeignKey('result.id', ondelete="CASCADE")),
-    # PrimaryKeyConstraint('opt_id', 'result_id')
-)
+class Trajectory(Base):
+    """Association table for many to many"""
+
+    __tablename__ = 'opt_result_association'
+
+    opt_id = Column(Integer, ForeignKey('optimization_procedure.id', ondelete='cascade'), primary_key=True)
+    result_id = Column(Integer, ForeignKey('result.id', ondelete='cascade'), primary_key=True)
+    position = Column(Integer)
+    # Index('opt_id', 'result_id', unique=True)
+
+    trajectory_obj = relationship(ResultORM, lazy="noload")
+
+
+# # association table for many to many relation
+# opt_result_association = Table('opt_result_association', Base.metadata,
+#     Column('opt_id', Integer, ForeignKey('optimization_procedure.id', ondelete="CASCADE")),
+#     Column('result_id', Integer, ForeignKey('result.id', ondelete="CASCADE")),
+#     Column('position', Integer)
+#     # PrimaryKeyConstraint('opt_id', 'result_id')
+# )
 
 class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     """
@@ -400,15 +415,19 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
                                       foreign_keys=final_molecule)
 
     # ids, calculated not stored in this table
-    # NOTE: this won't work in SQLite since it returns ARRAYS
+    # NOTE: this won't work in SQLite since it returns ARRAYS, aggregate_order_by
     trajectory = column_property(
-                    select([func.array_agg(opt_result_association.c.result_id)])\
-                    .where(opt_result_association.c.opt_id==id)
-            )
+                    select([func.array_agg(
+                            aggregate_order_by(Trajectory.result_id,Trajectory.position))
+                    ]).where(Trajectory.opt_id==id)
+    )
+
 
     # array of objects (results) - Lazy - raise error of accessed
-    trajectory_obj = relationship(ResultORM, secondary=opt_result_association,
-                                  uselist=True, lazy='noload')
+    trajectory_obj = relationship(Trajectory, cascade="all, delete-orphan",
+                                  backref="optimization_procedure",
+                                  order_by=Trajectory.position,
+                                  collection_class=ordering_list('position'))
 
 
     __mapper_args__ = {
@@ -424,8 +443,17 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     def update_relations(self, trajectory=None, **kwarg):
 
         # update optimization_results relations
-        self._update_many_to_many(opt_result_association, 'opt_id', 'result_id',
-                        self.id, trajectory, self.trajectory)
+        # self._update_many_to_many(opt_result_association, 'opt_id', 'result_id',
+        #                 self.id, trajectory, self.trajectory)
+
+        self.trajectory_obj = []
+        trajectory = [] if not trajectory else trajectory
+        for result_id in trajectory:
+            traj = Trajectory(opt_id=int(self.id), result_id=int(result_id))
+            self.trajectory_obj.append(traj)
+
+        # for i in self.trajectory_obj:
+        #     print('--', i.opt_id, i.result_id, i.position)
 
     # def add_relations(self, trajectory):
     #     session = object_session(self)
@@ -561,13 +589,15 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
         # self._update_many_to_many(torsion_opt_association, 'torsion_id', 'opt_id',
         #                 self.id, optimization_history, self.optimization_history)
 
-        session = object_session(self)
+        # session = object_session(self)
         self.optimization_history_obj = []
         for key in optimization_history:
             for opt_id in optimization_history[key]:
-                opt_history = OptimizationHistory(torsion_id=id, opt_id=opt_id, key=key)
+                opt_history = OptimizationHistory(torsion_id=int(self.id), opt_id=int(opt_id), key=key)
                 self.optimization_history_obj.append(opt_history)
 
+        # print('Given: ', optimization_history)
+        # print('Created: ', [(i.torsion_id, i.opt_id, i.key) for i in self.optimization_history_obj])
         # No need for the following because the session is committed with parent save
         # session.add_all(self.optimization_history_obj)
         # session.add(self)

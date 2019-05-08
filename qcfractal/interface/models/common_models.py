@@ -28,7 +28,9 @@ class ObjectId(str):
     def validate(cls, v):
         if (isinstance(v, str) and (len(v) == 24) and (set(v) <= cls._valid_hex)):
             return v
-        elif isinstance(v, int) or (isinstance(v, str) and v.isdigit()):
+        elif isinstance(v, int):
+            return (v)
+        elif isinstance(v, str) and v.isdigit():
             return int(v)
         else:
             raise TypeError("The string {} is not a valid 24-character hexadecimal or integer ObjectId!".format(v))

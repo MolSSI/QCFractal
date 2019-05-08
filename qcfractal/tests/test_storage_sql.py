@@ -418,7 +418,7 @@ def storage_results(storage_socket):
 
     yield storage_socket
 
-    # # Cleanup
+    # Cleanup
     all_tasks = storage_socket.get_queue()['data']
     storage_socket.del_tasks(id=[task.id for task in all_tasks])
 
@@ -769,7 +769,7 @@ def test_procedure_sql(storage_results):
 
     # Torsiondrive init molecule many to many
     inserted2 = storage_results.add_procedures([ptl.models.TorsionDriveRecord(**torsion_proc)])
-    assert inserted['meta']['n_inserted'] == 1
+    assert inserted2['meta']['n_inserted'] == 1
 
     ret = storage_results.get_procedures(procedure='torsiondrive', status=None)
     assert len(ret['data']) == 1
@@ -785,7 +785,7 @@ def test_procedure_sql(storage_results):
         ret = storage_results.update_procedures([ptl.models.TorsionDriveRecord(**torsion)])
         assert ret == 1
         ret = storage_results.get_procedures(procedure='torsiondrive', status=None)
-        assert ret['data'][0]['initial_molecule'] == init_mol
+        assert set(ret['data'][0]['initial_molecule']) == set(init_mol)
 
 
     # optimization history

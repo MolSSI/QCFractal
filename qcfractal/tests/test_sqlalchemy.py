@@ -12,7 +12,7 @@ import qcfractal.interface as ptl
 from sqlalchemy.orm import joinedload
 from qcfractal.storage_sockets.sql_models import (MoleculeORM, OptimizationProcedureORM, ResultORM,
                                                  TaskQueueORM, TorsionDriveProcedureORM, LogsORM,
-                                                  OptimizationHistory, ServiceQueueORM)
+                                                  OptimizationHistory, ServiceQueueORM, Trajectory)
 from qcfractal.services.services import TorsionDriveService
 
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
@@ -278,7 +278,7 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
     assert result.id
 
     # link result to the trajectory
-    proc.trajectory_obj = [result]
+    proc.trajectory_obj = [Trajectory(opt_id=proc.id, result_id=result.id)]
     session.commit()
     proc = session.query(OptimizationProcedureORM).options(
                          joinedload('trajectory_obj')).first()
