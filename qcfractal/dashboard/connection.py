@@ -1,12 +1,11 @@
 from flask import current_app, g
-import qcportal as ptl
+from ..storage_sockets import storage_socket_factory
 
-def get_client():
-    if 'connection' not in g:
-        uri = current_app.config['QCPORTAL_URI']
-        if uri is None:
-            raise KeyError("QCPROTAL_URI must be set")
 
-        g.connection = ptl.FractalClient(uri, verify=current_app.config['QCPORTAL_VERIFY'])
+def get_socket():
+    if 'socket' not in g:
 
-    return g.connection
+        g.socket = storage_socket_factory(current_app.config['DATABASE_URI'],
+                                          project_name=current_app.config['DATABASE_NAME'])
+
+    return g.socket

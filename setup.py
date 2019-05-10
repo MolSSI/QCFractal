@@ -47,6 +47,7 @@ if __name__ == "__main__":
             "console_scripts": [
                 "qcfractal-server=qcfractal.cli.qcfractal_server:main",
                 "qcfractal-manager=qcfractal.cli.qcfractal_manager:main",
+                "qcfractal-dashboard=qcfractal.cli.qcfractal_dashboard:main",
                 "qcfractal-template=qcfractal.cli.qcfractal_template_generator:main"
             ]
         },
