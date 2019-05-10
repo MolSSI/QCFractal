@@ -11,7 +11,7 @@ import pytest
 import qcfractal.interface as ptl
 from sqlalchemy.orm import joinedload
 from qcfractal.storage_sockets.sql_models import (MoleculeORM, OptimizationProcedureORM, ResultORM,
-                                                 TaskQueueORM, TorsionDriveProcedureORM, LogsORM,
+                                                 TaskQueueORM, TorsionDriveProcedureORM, KVStoreORM,
                                                   OptimizationHistory, ServiceQueueORM, Trajectory)
 from qcfractal.services.services import TorsionDriveService
 
@@ -66,15 +66,15 @@ def kw_fixtures(storage_socket):
 
 def test_logs(storage_socket, session):
 
-    assert session.query(LogsORM).count() == 0
+    assert session.query(KVStoreORM).count() == 0
 
-    log = LogsORM(value="New log")
+    log = KVStoreORM(value="New log")
     session.add(log)
     session.commit()
 
-    assert session.query(LogsORM).count() == 1
+    assert session.query(KVStoreORM).count() == 1
 
-    session_delete_all(session, LogsORM)
+    session_delete_all(session, KVStoreORM)
 
 
 def test_molecule_sql(storage_socket, session):

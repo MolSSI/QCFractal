@@ -110,8 +110,9 @@ class AccessLogORM(Base):
     type = Column(String)
 
 
-class LogsORM(Base):
-    __tablename__ = "logs"
+class KVStoreORM(Base):
+    """TODO: rename to """
+    __tablename__ = "kv_store"
 
     id = Column(Integer, primary_key=True)
     value = Column(Text, nullable=False)
@@ -262,12 +263,12 @@ class BaseResultORM(Base):
 
     # Extra fields
     extras = Column(JSON)
-    stdout = Column(Integer, ForeignKey('logs.id'))
-    stdout_obj = relationship(LogsORM, lazy='noload', foreign_keys=stdout,
+    stdout = Column(Integer, ForeignKey('kv_store.id'))
+    stdout_obj = relationship(KVStoreORM, lazy='noload', foreign_keys=stdout,
                           cascade="all, delete-orphan", single_parent=True)
 
-    stderr = Column(Integer, ForeignKey('logs.id'))
-    stderr_obj = relationship(LogsORM, lazy='noload', foreign_keys=stderr,
+    stderr = Column(Integer, ForeignKey('kv_store.id'))
+    stderr_obj = relationship(KVStoreORM, lazy='noload', foreign_keys=stderr,
                           cascade="all, delete-orphan", single_parent=True)
 
     error = Column(Integer, ForeignKey('error.id'))
@@ -452,8 +453,6 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
             traj = Trajectory(opt_id=int(self.id), result_id=int(result_id))
             self.trajectory_obj.append(traj)
 
-        # for i in self.trajectory_obj:
-        #     print('--', i.opt_id, i.result_id, i.position)
 
     # def add_relations(self, trajectory):
     #     session = object_session(self)
@@ -596,9 +595,7 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
                 opt_history = OptimizationHistory(torsion_id=int(self.id), opt_id=int(opt_id), key=key)
                 self.optimization_history_obj.append(opt_history)
 
-        # print('Given: ', optimization_history)
-        # print('Created: ', [(i.torsion_id, i.opt_id, i.key) for i in self.optimization_history_obj])
-        # No need for the following because the session is committed with parent save
+         # No need for the following because the session is committed with parent save
         # session.add_all(self.optimization_history_obj)
         # session.add(self)
         # session.commit()

@@ -29,7 +29,7 @@ from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, Optimiza
                                         TaskStatusEnum, TorsionDriveRecord, prepare_basis)
 from qcfractal.services.service_util import BaseService
 # SQL ORMs
-from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, ErrorORM, KeywordsORM, LogsORM,
+from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, ErrorORM, KeywordsORM, KVStoreORM,
                                                   MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
                                                   ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
@@ -235,7 +235,7 @@ class SQLAlchemySocket:
         return rdata, n_found
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logs (KV store) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def add_logs(self, blobs_list: List[Any]):
+    def add_kvstore(self, blobs_list: List[Any]):
         """
         Adds to the key/value store table.
 
@@ -253,21 +253,23 @@ class SQLAlchemySocket:
 
         meta = add_metadata_template()
         blob_ids = []
-        for blob in blobs_list:
-            if blob is None:
-                blob_ids.append(None)
-                continue
+        with self.session_scope() as session:
+            for blob in blobs_list:
+                if blob is None:
+                    blob_ids.append(None)
+                    continue
 
-            doc = LogsORM(value=blob)
-            doc.save()
-            blob_ids.append(str(doc.id))
-            meta['n_inserted'] += 1
+                doc = KVStoreORM(value=blob)
+                session.add(doc)
+                session.commit()
+                blob_ids.append(str(doc.id))
+                meta['n_inserted'] += 1
 
         meta["success"] = True
 
         return {"data": blob_ids, "meta": meta}
 
-    def get_logs(self, id: List[str]):
+    def get_kvstore(self, id: List[str]):
         """
         Pulls from the key/value store table.
 
@@ -284,17 +286,20 @@ class SQLAlchemySocket:
 
         meta = get_metadata_template()
 
-        query, errors = format_query(id=id)
+        query = format_query(KVStoreORM, id=id)
 
-        data = LogsORM.objects(**query)
+        with self.session_scope() as session:
+            data = session.query(KVStoreORM).filter(*query)
 
-        meta["success"] = True
-        meta["n_found"] = data.count()  # all data count, can be > len(data)
-        meta["errors"].extend(errors)
+            meta["n_found"] = get_count_fast(data)
+            meta["success"] = True
 
-        data = [d.to_json_obj() for d in data]
-        data = {d["id"]: d["value"] for d in data}
-        return {"data": data, "meta": meta}
+            # meta['error_description'] = str(err)
+            data = data.all()
+            rdata = [d.to_dict() for d in data]
+            rdata = {d["id"]: d["value"] for d in rdata}
+
+        return {"data": rdata, "meta": meta}
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Molecule ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -858,7 +863,8 @@ class SQLAlchemySocket:
                 self.logger.error("Attempted update without ID, skipping")
                 continue
             with self.session_scope() as session:
-                rec = ResultORM(**result.json_dict())
+                rec = ResultORM(**result.json_dict(exclude={'id'}))
+                rec.id = int(result.id)
                 session.add(rec)
                 session.commit()
             updated_count += 1
@@ -1162,7 +1168,7 @@ class SQLAlchemySocket:
 
                 proc_db = session.query(className).filter_by(id=procedure.id).first()
 
-                data = procedure.json_dict()
+                data = procedure.json_dict(exclude={'id'})
                 proc_db.update_relations(**data)
 
                 for attr, val in data.items():
@@ -1347,6 +1353,7 @@ class SQLAlchemySocket:
                 data = service.json_dict(include=ServiceQueueORM.__dict__.keys())
                 data['extra'] = service.json_dict(exclude=ServiceQueueORM.__dict__.keys())
 
+                data['id'] = int(data['id'])
                 for attr, val in data.items():
                     setattr(doc_db, attr, val)
 
