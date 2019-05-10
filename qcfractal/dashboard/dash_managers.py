@@ -34,48 +34,47 @@ def managers_table(status):
     return table
 
 
-body = lambda: dbc.Container([
+groupby_items = dcc.Checklist(id="manager-overview-groupby",
+                              options=[
+                                  {
+                                      'label': 'ACTIVE',
+                                      'value': 'ACTIVE'
+                                  },
+                                  {
+                                      'label': 'INACTIVE',
+                                      'value': 'INACTIVE'
+                                  },
+                              ],
+                              values=["ACTIVE"],
+                              labelStyle={'display': 'inline-block'})
 
+body = lambda: dbc.Container([
     dbc.Row([
         dbc.Col([
             html.H2("Heading"),
-            html.P("Hello!")]
-        )]),
+            html.P("Hello!"),
+            dbc.Row([groupby_items]),
+        ]),
+        dbc.Col([html.H2("Current status"), dcc.Graph(id="manager-overview", figure=overview_graph(None))]),
+    ]),
     html.H2("Raw Manager Statistics"),
     managers_table("ACTIVE"),
-    ])
+])
 
 layout = lambda: html.Div([navbar, body()])
 
 
-@app.callback([
-    Output('rds-display-value', 'children'),
-    Output('rds-available-methods', 'options'),
-    Output('rds-available-basis', 'options')
-], [Input('available-rds', 'value')])
-def display_value(value):
-    display_value = 'You have selected "{}"'.format(value)
+def overview_graph(status):
+    socket = get_socket()
 
-    return display_value, get_history_values(value, "method"), get_history_values(value, "basis")
+    managers = socket.get_managers(status=status)
+    df = pd.DataFrame(managers["data"])
 
+    data = df.groupby("cluster")["completed"].sum().sort_values(ascending=False)
+    return {"data": [{"x": data.index, "y": data.values}]}
 
-@app.callback(Output('primary-graph', 'figure'), [
-    Input('available-rds', 'value'),
-    Input('rds-available-methods', 'value'),
-    Input('rds-available-basis', 'value'),
-    Input('rds-groupby', 'value'),
-    Input('rds-metric', 'value'),
-    Input('rds-kind', 'value'),
-])
-def build_graph(dataset, method, basis, groupby, metric, kind):
-
-    client = get_client()
-
-    ds = client.get_collection("reactiondataset", dataset)
-    history = ds.list_history(method=method, basis=basis)
-    if (method is None) or (basis is None):
-        print("")
-        return {}
-
-    fig = ds.visualize(method=method, basis=basis, groupby=groupby, metric=metric, kind=kind, return_figure=True)
-    return fig
+@app.callback(
+    Output('manager-overview', 'figure'),
+ [Input('manager-overview-groupby', 'value')])
+def update_overview_graph(status):
+    return overview_graph(status)
