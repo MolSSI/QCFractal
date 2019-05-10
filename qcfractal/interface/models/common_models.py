@@ -138,7 +138,7 @@ class KeywordSet(BaseModel):
     comments: Optional[str] = None
 
     class Config:
-        extra = "allow"
+        extra = "forbid"
         allow_mutation = False
 
     def __init__(self, **data):

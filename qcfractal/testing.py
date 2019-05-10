@@ -485,6 +485,10 @@ def build_socket_fixture(stype):
     else:
         raise KeyError("Storage type {} not understood".format(stype))
 
+@pytest.fixture(scope="module", params=["mongoengine", "sqlalchemy"])
+def socket_fixture(request):
+
+    yield from build_socket_fixture(request.param)
 
 @pytest.fixture(scope="module")
 def mongoengine_socket_fixture(request):

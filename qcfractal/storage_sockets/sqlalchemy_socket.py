@@ -335,8 +335,6 @@ class SQLAlchemySocket:
             flat_mol_keys.append(k)
             flat_mols.append(v)
         flat_mols = self.add_molecules(flat_mols)["data"]
-        print(flat_mols)
-        print(flat_mol_keys)
 
         id_mols.update({k: v for k, v in zip(flat_mol_keys, flat_mols)})
 
@@ -346,7 +344,6 @@ class SQLAlchemySocket:
         meta["errors"].extend(tmp["meta"]["errors"])
 
         inv_id_mols = {v: k for k, v in id_mols.items()}
-        print(inv_id_mols)
 
         for mol in id_mols_list:
             ret_mols[inv_id_mols[mol.id]] = mol

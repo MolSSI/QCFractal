@@ -54,7 +54,8 @@ def test_compute_queue_stack(fractal_compute_server):
         "method": compute["meta"]["method"],
         "basis": compute["meta"]["basis"]
     }
-    results = client.query_results(**results_query)
+    results = client.query_results(**results_query, status=None)
+    print(results)
 
     assert len(results) == 2
     for r in results:
