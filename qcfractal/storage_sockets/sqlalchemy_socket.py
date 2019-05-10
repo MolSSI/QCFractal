@@ -23,6 +23,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, with_polymorphic
 from sqlalchemy.sql.expression import func
+from sqlalchemy.dialects import postgresql
 
 # pydantic classes
 from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
@@ -1468,9 +1469,13 @@ class SQLAlchemySocket:
         # query["procedure__in"].append(None)  # TODO
 
         with self.session_scope() as session:
-            found = session.query(TaskQueueORM).filter(*query)\
+            query = session.query(TaskQueueORM).filter(*query)\
                    .order_by(TaskQueueORM.priority.desc(), TaskQueueORM.created_on)\
-                   .limit(limit).all()
+                   .limit(limit)
+
+            self.logger.info(query.statement.compile(dialect=postgresql.dialect(),
+                                                     compile_kwargs={"literal_binds": True}))
+            found = query.all()
 
             ids =  [x.id for x in found]
             update_fields = {
