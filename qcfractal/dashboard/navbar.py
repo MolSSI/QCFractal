@@ -7,11 +7,8 @@ navbar = dbc.NavbarSimple(
     children=[
         dbc.NavItem(dbc.NavLink("Managers", href="/manager")),
         dbc.NavItem(dbc.NavLink("Link", href="#")),
-        ]
-        ),
     ],
     brand="QCFractal Dashboard",
     brand_href="#",
     sticky="top",
 )
-

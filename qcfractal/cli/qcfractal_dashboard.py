@@ -30,8 +30,8 @@ def main(args=None):
     if args is None:
         args = parse_args()
 
-    dashboard_app.config["DATABASE_URI"] = args["database_uri"]
-    dashboard_app.config["DATABASE_NAME"] = args["database_name"]
+    dashboard_app.server.config["DATABASE_URI"] = args["database_uri"]
+    dashboard_app.server.config["DATABASE_NAME"] = args["database_name"]
 
     dashboard_app.run_server(debug=True)
 
