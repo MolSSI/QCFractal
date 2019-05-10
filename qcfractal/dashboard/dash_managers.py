@@ -12,7 +12,7 @@ from .navbar import navbar
 import pandas as pd
 
 
-def list_managers(status):
+def managers_table(status):
     socket = get_socket()
 
     managers = socket.get_managers(status=status)
@@ -42,7 +42,7 @@ body = lambda: dbc.Container([
             html.P("Hello!")]
         )]),
     html.H2("Raw Manager Statistics"),
-    list_managers("ACTIVE"),
+    managers_table("ACTIVE"),
     ])
 
 layout = lambda: html.Div([navbar, body()])
