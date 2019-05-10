@@ -19,7 +19,7 @@ from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import bcrypt
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, with_polymorphic
 from sqlalchemy.sql.expression import func
@@ -1461,17 +1461,17 @@ class SQLAlchemySocket:
             TaskQueueORM,
             status=TaskStatusEnum.waiting,
             program=available_programs,
-            procedure=available_procedures,  # Procedure can be none, explicitly include
             tag=tag)
-        # query["procedure__in"].append(None)  # TODO
+
+        proc_filt = TaskQueueORM.procedure.in_(available_procedures)
+        none_filt = TaskQueueORM.procedure == None
+        query.append(or_(proc_filt, none_filt))
 
         with self.session_scope() as session:
             query = session.query(TaskQueueORM).filter(*query)\
                    .order_by(TaskQueueORM.priority.desc(), TaskQueueORM.created_on)\
                    .limit(limit)
 
-            self.logger.info(query.statement.compile(dialect=postgresql.dialect(),
-                                                     compile_kwargs={"literal_binds": True}))
             found = query.all()
 
             ids =  [x.id for x in found]
@@ -1491,6 +1491,7 @@ class SQLAlchemySocket:
 
         if update_count != len(found):
             self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
+
 
         return found
 
