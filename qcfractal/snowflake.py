@@ -36,12 +36,13 @@ def _background_process(args, **kwargs):
 
 class FractalSnowflake(FractalServer):
     def __init__(self,
-                 max_workers: Optional[int]=2,
-                 storage_uri: Optional[str]=None,
-                 storage_project_name: str="temporary_snowflake",
-                 max_active_services: int=20,
-                 logging: Union[bool, str]=False,
-                 start_server: bool=True):
+                 max_workers: Optional[int] = 2,
+                 storage_uri: Optional[str] = None,
+                 storage_project_name: str = "temporary_snowflake",
+                 max_active_services: int = 20,
+                 logging: Union[bool, str] = False,
+                 start_server: bool = True,
+                 reset_database: bool = False):
         """A temporary FractalServer that can be used to run complex workflows or try new computations.
 
         ! Warning ! All data is lost when the server is shutdown.
@@ -62,6 +63,13 @@ class FractalSnowflake(FractalServer):
             written to this file.
         start_server : bool, optional
             Starts the background asyncio loop or not.
+        reset_database : bool, optional
+            Resets the database or not if a storage_uri is provided
+
+        Raises
+        ------
+        KeyError
+            Description
 
         """
 
@@ -75,6 +83,12 @@ class FractalSnowflake(FractalServer):
         else:
             self._mongod_tmpdir = None
             self._mongod_proc = None
+
+            if reset_database:
+                socket = storage_socket_factory(storage_uri, project_name=storage_project_name)
+
+                socket._clear_db(socket._project_name)
+                del socket
 
         # Boot workers if needed
         self.queue_socket = None

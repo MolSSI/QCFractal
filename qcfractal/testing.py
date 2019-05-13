@@ -333,10 +333,9 @@ def test_server(request):
     # with loop_in_thread() as loop:
     with FractalSnowflake(
             max_workers=0, storage_project_name=storage_name, storage_uri="mongodb://localhost:27017",
-            start_server=False) as server:
+            start_server=False, reset_database=True) as server:
 
         # Clean and re-init the database
-        reset_server_database(server)
         yield server
 
 
