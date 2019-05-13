@@ -150,6 +150,7 @@ class SQLAlchemySocket:
         # actually create the tables
         Base.metadata.create_all(self.engine)
 
+
         # if expanded_uri["password"] is not None:
         #     # connect to mongoengine
         #     self.client = db.connect(db=project, host=uri, authMechanism=authMechanism, authSource=authSource)
@@ -861,11 +862,16 @@ class SQLAlchemySocket:
                 self.logger.error("Attempted update without ID, skipping")
                 continue
             with self.session_scope() as session:
-                rec = ResultORM(**result.json_dict(exclude={'id'}))
-                rec.id = int(result.id)
-                session.add(rec)
+
+                result_db = session.query(ResultORM).filter_by(id=result.id).first()
+
+                data = result.json_dict(exclude={'id'})
+
+                for attr, val in data.items():
+                    setattr(result_db, attr, val)
+
                 session.commit()
-            updated_count += 1
+                updated_count += 1
 
         return updated_count
 
