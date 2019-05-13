@@ -12,6 +12,7 @@ from tornado.ioloop import IOLoop
 from typing import Optional, Union
 
 from .server import FractalServer
+from .storage_sockets import storage_socket_factory
 
 
 def _find_port() -> int:
@@ -86,7 +87,6 @@ class FractalSnowflake(FractalServer):
 
             if reset_database:
                 socket = storage_socket_factory(storage_uri, project_name=storage_project_name)
-
                 socket._clear_db(socket._project_name)
                 del socket
 
