@@ -23,6 +23,7 @@ Enhancements
 
 - (:pr:`??`) Tasks which fail are now more verbose in the log as to why they failed. This is additional information
   on top of the number of pass/fail.
+- (:pr:`??`) OpenFF conda environment now installs ``dask`` and ``dask-jobqueue`` by default
 
 
 0.6.0 / 2019-03-30
