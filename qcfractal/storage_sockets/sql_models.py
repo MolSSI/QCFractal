@@ -151,6 +151,7 @@ class CollectionORM(Base):
     id = Column(Integer, primary_key=True)
 
     collection = Column(String(100), nullable=False)
+    lname = Column(String(100), nullable=False)
     name = Column(String(100), nullable=False)
 
     tags = Column(JSON)

@@ -552,6 +552,12 @@ class Dataset(Collection):
 
             df = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule"])
             df.reset_index(inplace=True)
+            print()
+            print(records.dtypes)
+            print(records.head())
+            print()
+            print(df.dtypes)
+            print(df.head())
 
             df = df.merge(records, how="left", on="molecule")
             df.set_index("index", inplace=True)
