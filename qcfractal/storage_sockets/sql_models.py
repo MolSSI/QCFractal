@@ -478,16 +478,95 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     #         )
     #     session.commit()
 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# event.listen(OptimizationProcedureORM, 'before_insert', add_relations)
+class GridOptimizationAssociation(Base):
+    """Association table for many to many"""
 
-# association table for many to many relation
-# torsion_opt_association = Table('torsion_opt_association', Base.metadata,
-#     Column('torsion_id', Integer, ForeignKey('torsiondrive_procedure.id', ondelete="CASCADE")),
-#     Column('opt_id', Integer, ForeignKey('optimization_procedure.id', ondelete="CASCADE")),
-#     Column('key', String),
-#     Index('torsion_id', 'key', unique=True)
-# )
+    __tablename__ = 'grid_optimization_association'
+
+    grid_opt_id = Column(Integer, ForeignKey('grid_optimization_procedure.id', ondelete='cascade'), primary_key=True)
+    key = Column(String, nullable=False, primary_key=True)
+
+    # not primary key
+    opt_id = Column(Integer, ForeignKey('optimization_procedure.id', ondelete='cascade'))
+
+    # Index('grid_opt_id', 'key', unique=True)
+
+    optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
+
+
+class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
+
+    __tablename__ = "grid_optimization_procedure"
+
+    id = Column(Integer, ForeignKey('base_result.id', ondelete='cascade'),
+                      primary_key=True)
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("version", 1)
+        kwargs.setdefault("procedure", "gridoptimization")
+        kwargs.setdefault("program", "qcfractal")
+        super().__init__(**kwargs)
+
+    # Input data
+    initial_molecule = Column(Integer, ForeignKey('molecule.id'))
+    initial_molecule_obj = relationship(MoleculeORM, lazy='select',
+                                        foreign_keys=initial_molecule)
+
+    optimization_spec = Column(JSON)
+
+    # Output data
+    starting_molecule = Column(Integer, ForeignKey('molecule.id'))
+    starting_molecule_obj = relationship(MoleculeORM, lazy='select',
+                                        foreign_keys=initial_molecule)
+
+    final_energy_dict = Column(JSON)  # Dict[str, float]
+    starting_grid = Column(JSON)  # tuple
+
+    grid_optimizations_obj = relationship(GridOptimizationAssociation,
+        cascade="all, delete-orphan", backref="grid_optimization_procedure"
+    )
+
+    @hybrid_property
+    def grid_optimizations(self):
+        """calculated property when accessed, not saved in the DB
+        A view of the many to many relation in the form of a dict"""
+
+        ret = {}
+        try:
+            for opt_history in self.grid_optimizations_obj:
+                if opt_history.key in ret:
+                    ret[opt_history.key].append(str(opt_history.opt_id))
+                else:
+                    ret[opt_history.key] = [str(opt_history.opt_id)]
+
+        except Exception as err:
+            # raises exception of first access!!
+            print(err)
+
+        return ret
+
+    @grid_optimizations.setter
+    def grid_optimizations(self, dict_values):
+
+        return dict_values
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'grid_optimization_procedure',
+        # to have separate select when querying BaseResultsORM
+        'polymorphic_load': 'selectin',
+    }
+
+    def update_relations(self, grid_optimizations=None, **kwarg):
+
+        self.grid_optimizations_obj = []
+        for key in grid_optimizations:
+            for opt_id in grid_optimizations[key]:
+                obj = GridOptimizationAssociation(grid_opt_id=int(self.id), opt_id=int(opt_id), key=key)
+                self.grid_optimizations_obj.append(obj)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 class OptimizationHistory(Base):
     """Association table for many to many"""
@@ -497,6 +576,7 @@ class OptimizationHistory(Base):
     torsion_id = Column(Integer, ForeignKey('torsiondrive_procedure.id', ondelete='cascade'), primary_key=True)
     opt_id = Column(Integer, ForeignKey('optimization_procedure.id', ondelete='cascade'), primary_key=True)
     key = Column(String, nullable=False, primary_key=True)
+    #TODO position for ordering
     # Index('torsion_id', 'key', unique=True)
 
     optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
@@ -536,23 +616,11 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
                                         secondary=torsion_init_mol_association,
                                         uselist=True, lazy='noload')
 
-
-    keywords = Column(JSON)  # TODO: same as BaseRecord!!!
     optimization_spec = Column(JSON)
 
     # Output data
     final_energy_dict = Column(JSON)
     minimum_positions = Column(JSON)
-
-    # # ids of the many to many relation
-    # optimization_history = column_property(
-    #                 select([func.array_agg(torsion_opt_association.c.opt_id)])\
-    #                 .where(torsion_opt_association.c.torsion_id==id)
-    #         )
-    # # actual objects relation M2M, never loaded here
-    # optimization_history_obj = relationship(OptimizationProcedureORM,
-    #                                     secondary=torsion_opt_association,
-    #                                     uselist=True, lazy='noload')
 
 
     optimization_history_obj = relationship(OptimizationHistory,
@@ -597,36 +665,18 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
         self._update_many_to_many(torsion_init_mol_association, 'torsion_id', 'molecule_id',
                         self.id, initial_molecule, self.initial_molecule)
 
-        # # update torsion optimization procedure relation
-        # self._update_many_to_many(torsion_opt_association, 'torsion_id', 'opt_id',
-        #                 self.id, optimization_history, self.optimization_history)
-
-        # session = object_session(self)
         self.optimization_history_obj = []
         for key in optimization_history:
             for opt_id in optimization_history[key]:
                 opt_history = OptimizationHistory(torsion_id=int(self.id), opt_id=int(opt_id), key=key)
                 self.optimization_history_obj.append(opt_history)
 
-         # No need for the following because the session is committed with parent save
+        # No need for the following because the session is committed with parent save
         # session.add_all(self.optimization_history_obj)
         # session.add(self)
         # session.commit()
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-# class Spec(db.DynamicEmbeddedDocument):
-#     """ The spec of a task in the queue
-#         This is an embedded document, meaning that it will be embedded
-#         in the task_queue collection and won't be stored as a seperate
-#         collection/table --> for faster parsing
-#     """
-#
-#     function = Column(String)
-#     args = Column(JSON)  # fast, can take any structure
-#     kwargs = Column(JSON)
-
 
 class TaskQueueORM(Base):
     """A queue of tasks corresponding to a procedure

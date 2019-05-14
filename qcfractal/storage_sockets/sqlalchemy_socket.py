@@ -26,13 +26,17 @@ from sqlalchemy.sql.expression import func
 from sqlalchemy.dialects import postgresql
 
 # pydantic classes
-from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
+from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord,
+                                        ResultRecord, TaskRecord, GridOptimizationRecord,
                                         TaskStatusEnum, TorsionDriveRecord, prepare_basis)
 from qcfractal.services.service_util import BaseService
 # SQL ORMs
-from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, ErrorORM, KeywordsORM, KVStoreORM,
-                                                  MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
-                                                  ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM)
+from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, ErrorORM,
+                                                  KeywordsORM, KVStoreORM, MoleculeORM,
+                                                  OptimizationProcedureORM, QueueManagerORM,
+                                                  ResultORM, GridOptimizationProcedureORM,
+                                                  ServiceQueueORM, TaskQueueORM,
+                                                  TorsionDriveProcedureORM, UserORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
@@ -98,6 +102,8 @@ def get_procedure_class(record):
         procedure_class = OptimizationProcedureORM
     elif isinstance(record, TorsionDriveRecord):
         procedure_class = TorsionDriveProcedureORM
+    elif isinstance(record, GridOptimizationRecord):
+        procedure_class = GridOptimizationProcedureORM
     else:
         raise TypeError('Procedure of type {} is not valid or supported yet.'
                         .format(type(record)))
@@ -1130,6 +1136,8 @@ class SQLAlchemySocket:
             className = OptimizationProcedureORM
         elif procedure == 'torsiondrive':
             className = TorsionDriveProcedureORM
+        elif procedure == 'gridoptimization':
+            className = GridOptimizationProcedureORM
         else:
             # raise TypeError('Unsupported procedure type {}. Id: {}, task_id: {}'
             #                 .format(procedure, id, task_id))
@@ -1216,7 +1224,8 @@ class SQLAlchemySocket:
 
         with self.session_scope() as session:
             procedures = session.query(with_polymorphic(BaseResultORM,
-                            [OptimizationProcedureORM, TorsionDriveProcedureORM]))\
+                            [OptimizationProcedureORM, TorsionDriveProcedureORM,
+                             GridOptimizationProcedureORM]))\
                            .filter(BaseResultORM.id.in_(ids)).all()
             # delete through session to delete correctly from base_result
             for proc in procedures:
