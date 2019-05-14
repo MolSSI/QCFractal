@@ -12,8 +12,7 @@ from ..torsiondrive import TorsionDriveRecord
 
 def test_molecule_water_canary_hash():
 
-    water_dimer_minima = Molecule.from_data(
-        """
+    water_dimer_minima = Molecule.from_data("""
     0 1
     O  -1.551007  -0.114520   0.000000
     H  -1.934259   0.762503   0.000000
@@ -23,29 +22,29 @@ def test_molecule_water_canary_hash():
     H   1.680398  -0.373741  -0.758561
     H   1.680398  -0.373741   0.758561
     """,
-        dtype="psi4")
-    assert water_dimer_minima.get_hash() == "e816b396c7b00e49ef2d9c8b670c955df0a410c7"
+                                            dtype="psi4")
+    assert water_dimer_minima.get_hash() == "42f3ac52af52cf2105c252031334a2ad92aa911c"
 
     # Check orientation
     mol = water_dimer_minima.orient_molecule()
-    assert mol.get_hash() == "b9bbe6028825d2e61c1ccfcdd0f4be4c3fa6efda"
+    assert mol.get_hash() == "632490a0601500bfc677e9277275f82fbc45affe"
 
     frag_0 = mol.get_fragment(0, orient=True)
     frag_1 = mol.get_fragment(1, orient=True)
-    assert frag_0.get_hash() == "f701c1724e645f52c09dbf36d01fe17d9d882a8a"
-    assert frag_1.get_hash() == "4469ff05895a6375a91ce9a225f96e3f9938450b"
+    assert frag_0.get_hash() == "d0b499739f763e8d3a5556b4ddaeded6a148e4d5"
+    assert frag_1.get_hash() == "bdc1f75bd1b7b999ff24783d7c1673452b91beb9"
 
-@pytest.mark.parametrize("geom, hash_index", [
-    ([0, 0, 0, 0, 5, 0], "ba76b68bb11e042712b2444d6b42ebbf92b944fc"),
-    ([0, 0, 0, 0, 5, 0 + 1.e-12], "ba76b68bb11e042712b2444d6b42ebbf92b944fc"),
-    ([0, 0, 0, 0, 5, 0 - 1.e-12], "ba76b68bb11e042712b2444d6b42ebbf92b944fc"),
-    ([0, 0, 0, 0, 5, 0 + 1.e-7], "ba76b68bb11e042712b2444d6b42ebbf92b944fc"),
+@pytest.mark.parametrize("geom", [
+    [0, 0, 0, 0, 5, 0],
+    [0, 0, 0, 0, 5, 0 + 1.e-12],
+    [0, 0, 0, 0, 5, 0 - 1.e-12],
+    [0, 0, 0, 0, 5, 0 + 1.e-7],
 ]) # yapf: disable
-def test_molecule_geometry_canary_hash(geom, hash_index):
+def test_molecule_geometry_canary_hash(geom):
 
     mol = Molecule(geometry=geom, symbols=["H", "H"])
 
-    assert mol.get_hash() == hash_index
+    assert mol.get_hash() == "fb69e6744407b220a96d6ddab4ec2099619db791"
 
 
 ## Keyword Set hash
@@ -142,6 +141,7 @@ def test_keywords_comparison_hash(data1, data2):
     assert opt1s.hash_index == opt2.hash_index
     assert opt1s.hash_index == opt2s.hash_index
 
+
 @pytest.mark.parametrize("model", [ResultRecord, OptimizationRecord])
 def test_hash_fields(model):
     assert "procedure" in model.get_hash_fields()
@@ -195,16 +195,12 @@ def test_result_record_canary_hash(data, hash_index):
     opt = ResultRecord(**{**_base_result, **data})
 
     assert hash_index == opt.get_hash_index(), data
-    assert opt.hash_index is None # Not set
+    assert opt.hash_index is None  # Not set
+
 
 ## Optimization hashes
 _qc_spec = {"driver": "gradient", "method": "HF", "basis": "sto-3g", "keywords": None, "program": "prog"}
-_base_opt = {
-    "keywords": {},
-    "program": "prog2",
-    "initial_molecule": "5c7896fb95d592ad07a2fe3b",
-    "qc_spec": _qc_spec
-}
+_base_opt = {"keywords": {}, "program": "prog2", "initial_molecule": "5c7896fb95d592ad07a2fe3b", "qc_spec": _qc_spec}
 @pytest.mark.parametrize("data, hash_index", [
 
     # Check same
@@ -275,7 +271,9 @@ _base_gridopt = {
     "grid_optimizations": {},
     "final_energy_dict": {},
     "starting_grid": tuple(),
-    "provenance": {"creator": ""}
+    "provenance": {
+        "creator": ""
+    }
 }
 
 
@@ -329,32 +327,61 @@ _base_torsion = {
 }
 
 
-@pytest.mark.parametrize("data, hash_index", [
+@pytest.mark.parametrize(
+    "data, hash_index",
+    [
+        ({}, "dd305011ee2b741b1dcd03350994920a3718b289"),
 
-    ({}, "dd305011ee2b741b1dcd03350994920a3718b289"),
+        # Check same
+        ({
+            "keywords": {
+                "dihedrals": [[0, 1, 2, 3]],
+                "grid_spacing": [10],
+                "tol": 1.e-12
+            }
+        }, "cb3f9c9bd4eda742b0429ebea0c3d12719ab2582"),
+        ({
+            "keywords": {
+                "dihedrals": [[0, 1, 2, 3]],
+                "grid_spacing": [10],
+                "tol": 0
+            }
+        }, "cb3f9c9bd4eda742b0429ebea0c3d12719ab2582"),
+        ({
+            "keywords": {
+                "dihedrals": [[0, 1, 2, 3]],
+                "grid_spacing": [10],
+                "tol": 1.e-9
+            }
+        }, "903cc0deb4f0e7b8bc41a69cf5fbd0c9420176a4"),
 
-    # Check same
-    ({"keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10], "tol": 1.e-12}},
-     "cb3f9c9bd4eda742b0429ebea0c3d12719ab2582"),
+        # Check opt keywords stability
+        ({
+            "optimization_spec": {
+                **_opt_spec,
+                **{
+                    "keywords": {
+                        "tol": 0.0
+                    }
+                }
+            }
+        }, "a12fd524b0e215b5252b464ca4041091916df8bb"),
+        ({
+            "optimization_spec": {
+                **_opt_spec,
+                **{
+                    "keywords": {
+                        "tol": 1.e-12
+                    }
+                }
+            }
+        }, "a12fd524b0e215b5252b464ca4041091916df8bb"),
 
-    ({"keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10], "tol": 0}},
-     "cb3f9c9bd4eda742b0429ebea0c3d12719ab2582"),
-
-    ({"keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [10], "tol": 1.e-9}},
-     "903cc0deb4f0e7b8bc41a69cf5fbd0c9420176a4"),
-
-    # Check opt keywords stability
-    ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 0.0}}}},
-      "a12fd524b0e215b5252b464ca4041091916df8bb"),
-
-    ({"optimization_spec": {**_opt_spec, **{"keywords": {"tol": 1.e-12}}}},
-      "a12fd524b0e215b5252b464ca4041091916df8bb"),
-
-    # Check fields
-    ({"initial_molecule": ["5c78987e95d592ad07a2fe3c"]},
-     "f209751a4a6559a8d2d539c070f3b701d1ddf9f2"),
-
-]) # yapf disable
+        # Check fields
+        ({
+            "initial_molecule": ["5c78987e95d592ad07a2fe3c"]
+        }, "f209751a4a6559a8d2d539c070f3b701d1ddf9f2"),
+    ])  # yapf disable
 def test_torsiondrive_canary_hash(data, hash_index):
 
     td = TorsionDriveRecord(**{**_base_torsion, **data})

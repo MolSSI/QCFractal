@@ -37,7 +37,7 @@ def test_molecule_constructors():
     assert neon_from_psi.compare(neon_from_psi, neon_from_json)
     assert neon_from_json.get_molecular_formula() == "Ne4"
 
-    assert water_psi.compare(portal.Molecule.from_data(water_psi.to_string()))
+    assert water_psi.compare(portal.Molecule.from_data(water_psi.to_string("psi4")))
 
 
 def test_molecule_file_constructors():
@@ -70,7 +70,7 @@ def test_water_minima_data():
          [-2.6821528, -0.12325075, 0.],
          [-3.27523824, 0.81341093, 1.43347255],
          [-3.27523824, 0.81341093, -1.43347255]]) # yapf: disable
-    assert mol.get_hash() == "b41f1e38bc4be5482fcd1d4dd53ca7c65146ab91"
+    assert mol.get_hash() == "3c4b98f515d64d1adc1648fe1fe1d6789e978d34"
 
 
 def test_water_minima_fragment():
@@ -79,8 +79,8 @@ def test_water_minima_fragment():
 
     frag_0 = mol.get_fragment(0, orient=True)
     frag_1 = mol.get_fragment(1, orient=True)
-    assert frag_0.get_hash() == "0b13814f79b8f74f17499b31fe7b76cd97b89449"
-    assert frag_1.get_hash() == "4469ff05895a6375a91ce9a225f96e3f9938450b"
+    assert frag_0.get_hash() == "5f31757232a9a594c46073082534ca8a6806d367"
+    assert frag_1.get_hash() == "bdc1f75bd1b7b999ff24783d7c1673452b91beb9"
 
     frag_0_1 = mol.get_fragment(0, 1)
     frag_1_0 = mol.get_fragment(1, 0)
@@ -104,7 +104,7 @@ def test_pretty_print():
 def test_to_string():
 
     mol = portal.data.get_molecule("water_dimer_minima.psimol")
-    assert isinstance(mol.to_string(), str)
+    assert isinstance(mol.to_string("psi4"), str)
 
 
 def test_water_orient():
