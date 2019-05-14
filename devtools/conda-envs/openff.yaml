@@ -37,3 +37,6 @@ dependencies:
 # Distributed computing
   - dask
   - dask-jobqueue
+
+# geometric
+  - openmm
