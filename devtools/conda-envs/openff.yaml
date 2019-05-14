@@ -33,3 +33,7 @@ dependencies:
 # QCArchive includes
   - qcengine>=0.6.2
   - qcelemental>=0.3.1
+
+# Distributed computing
+  - dask
+  - dask-jobqueue
