@@ -14,9 +14,9 @@ dependencies:
   - cryptography
   - pydantic
   - mongoengine
+  - plotly
   - sqlalchemy
   - psycopg2
-  - plotly
 
 # Test depends
   - pytest

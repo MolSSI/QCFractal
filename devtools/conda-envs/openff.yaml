@@ -15,9 +15,9 @@ dependencies:
   - cryptography
   - pydantic
   - mongoengine
+  - plotly
   - sqlalchemy
   - psycopg2
-  - plotly
 
 # Test depends
   - pytest
@@ -28,8 +28,8 @@ dependencies:
   - psi4
   - rdkit
   - geometric>=0.9.3
-  - torsiondrive>=0.9.6
+  - torsiondrive
 
 # QCArchive includes
   - qcengine>=0.6.2
-  - qcelemental>=0.3.1
+  - qcelemental>=0.4.0

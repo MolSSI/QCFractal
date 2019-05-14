@@ -56,10 +56,10 @@ def water_ds():
             "DFT": -10.0
         })
 
-    dimer_string = dimer.to_string()
+    dimer_string = dimer.to_string("psi4")
     # Add single stoich from strings, not a valid set
     ds.add_rxn(
-        "Water Dimer, dimer - str (invalid)", [(dimer_string, 1.0), (dimer_string.splitlines()[-5], 0.0)],
+        "Water Dimer, dimer - str (invalid)", [(dimer_string, 1.0), (frag_0, 0.0)],
         attributes={"R": "Minima"},
         reaction_results={
             "Benchmark": -20.0,
@@ -84,7 +84,7 @@ def water_ds():
         },
         other_fields={"Something": "Other thing"})
 
-    ds.add_ie_rxn("Water dimer", dimer.to_string())
+    ds.add_ie_rxn("Water dimer", dimer.to_string("psi4"))
 
     # Add unverified records (requires a active server)
     ds.data.records = ds._new_records
@@ -111,7 +111,7 @@ def nbody_ds():
             "default": [(dimer, 1.0)],
         })
 
-    ds.add_ie_rxn("Water Dimer", dimer.to_string())
+    ds.add_ie_rxn("Water Dimer", dimer.to_string("psi4"))
     ds.add_ie_rxn("Ne Tetramer", portal.data.get_molecule("neon_tetramer.psimol"))
 
     # Ne Tetramer benchmark
