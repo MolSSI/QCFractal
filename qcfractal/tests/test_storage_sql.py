@@ -711,6 +711,7 @@ def test_procedure_sql(storage_results):
 
     ret = storage_results.get_procedures(procedure='optimization', status=None)
     assert len(ret['data']) == 1
+    # assert ret['data'][0]['trajectory'] == [str(i) for i in proc_template['trajectory']]
     assert ret['data'][0]['trajectory'] == proc_template['trajectory']
 
     new_proc = ret['data'][0]
@@ -723,8 +724,6 @@ def test_procedure_sql(storage_results):
     ]
      # update relations
     for trajectory in test_traj:
-        print('changing trajectory to: ', trajectory)
-        print('Result id type: ', type(results[0]['id']))
         new_proc['trajectory'] = trajectory
         ret_count = storage_results.update_procedures([ptl.models.OptimizationRecord(**new_proc)])
         assert ret_count == 1
@@ -786,7 +785,7 @@ def test_procedure_sql(storage_results):
         ret = storage_results.update_procedures([ptl.models.TorsionDriveRecord(**torsion)])
         assert ret == 1
         ret = storage_results.get_procedures(procedure='torsiondrive', status=None)
-        assert set(ret['data'][0]['initial_molecule']) == set(init_mol)
+        assert set(ret['data'][0]['initial_molecule']) == set([str(i) for i in init_mol])
 
 
     # optimization history
@@ -944,7 +943,7 @@ def test_results_pagination(storage_socket):
     ret = storage_socket.get_results(method='M2', status=None, limit=limit, skip=skip)
 
     # total_time = (time() - t1) * 1000 / first_half
-    # print('Query {} results in {:.2f} msec /doc'.format(first_half, total_time))
+    # `('Query {} results in {:.2f} msec /doc'.format(first_half, total_time))
 
     # count is total, but actual data size is the limit
     assert ret['meta']['n_found'] == total_results - first_half

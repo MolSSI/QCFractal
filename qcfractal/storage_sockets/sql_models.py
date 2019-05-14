@@ -4,16 +4,17 @@ import dateutil
 from sqlalchemy import (Column, Integer, String, Text, DateTime, Boolean,
                         ForeignKey, JSON, Enum, Float, Binary, Table, ARRAY,
                         PrimaryKeyConstraint, inspect)
-from sqlalchemy.orm import relationship, object_session, column_property, validates
+from sqlalchemy.orm import relationship, object_session, column_property
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.orderinglist import ordering_list
-from sqlalchemy.ext.associationproxy import association_proxy
-from sqlalchemy.schema import Index
+# from sqlalchemy.ext.associationproxy import association_proxy
+# from sqlalchemy.schema import Index
 from sqlalchemy.dialects.postgresql import aggregate_order_by
+from collections.abc import Iterable
 
 # Base = declarative_base()
 
@@ -22,7 +23,7 @@ from sqlalchemy.dialects.postgresql import aggregate_order_by
 class Base:
     """Base declarative class of all ORM models"""
 
-    db_related_fields = ['result_type', 'base_result_id', 'metadata']
+    db_related_fields = ['result_type', 'base_result_id', 'metadata', '_trajectory']
 
     def to_dict(self, with_id=True, exclude=None):
 
@@ -40,16 +41,28 @@ class Base:
                     and not x.endswith('_obj')
                     and x not in tobe_deleted_keys]
 
+        class_inspector = inspect(self.__class__)
         # add hybrid properties
-        for key, prop in inspect(self.__class__).all_orm_descriptors.items():
+        for key, prop in class_inspector.all_orm_descriptors.items():
             if isinstance(prop, hybrid_property):
                 dict_obj.append(key)
 
+        # Add the attributes to the final results
         ret = {k:getattr(self, k) for k in dict_obj}
 
         if 'extra' in ret:
             ret.update(ret['extra'])
             del ret['extra']
+
+        # transform ids from int into str
+        for key, col in class_inspector.columns.items():
+            if key in ret.keys() and ret[key] is not None:
+                # if PK, FK, or column property (TODO: work around for column property)
+                if col.primary_key or len(col.foreign_keys)>0 or key != col.key:
+                    if isinstance(ret[key], Iterable):
+                        ret[key] = [str(i) for i in ret[key]]
+                    else:
+                        ret[key] = str(ret[key])
 
         return ret
 
@@ -555,9 +568,9 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
         try:
             for opt_history in self.optimization_history_obj:
                 if opt_history.key in ret:
-                    ret[opt_history.key].append(opt_history.opt_id)
+                    ret[opt_history.key].append(str(opt_history.opt_id))
                 else:
-                    ret[opt_history.key] = [opt_history.opt_id]
+                    ret[opt_history.key] = [str(opt_history.opt_id)]
 
         except Exception as err:
             # raises exception of first access!!
@@ -645,16 +658,17 @@ class TaskQueueORM(Base):
     # TODO: for back-compatibility with mongo, tobe removed
     @hybrid_property
     def base_result(self):
-        return dict(ref="result", id=self.base_result_id)
+        return dict(ref="result", id=str(self.base_result_id))
 
     @base_result.setter
     def base_result(self, val):
         """Only two valid values, dict and int"""
 
         if isinstance(val, dict):
-            self.base_result_id = val['id']
+            self.base_result_id = int(val['id'])
         else:
-            self.base_result_id = val
+            self.base_result_id = int(val)
+
         return val
 
     # can reference ResultORMs or any ProcedureORM
