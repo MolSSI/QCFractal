@@ -535,11 +535,8 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
 
         ret = {}
         try:
-            for opt_history in self.grid_optimizations_obj:
-                if opt_history.key in ret:
-                    ret[opt_history.key].append(str(opt_history.opt_id))
-                else:
-                    ret[opt_history.key] = [str(opt_history.opt_id)]
+            for obj in self.grid_optimizations_obj:
+                ret[obj.key] = str(obj.opt_id)
 
         except Exception as err:
             # raises exception of first access!!
@@ -561,10 +558,9 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     def update_relations(self, grid_optimizations=None, **kwarg):
 
         self.grid_optimizations_obj = []
-        for key in grid_optimizations:
-            for opt_id in grid_optimizations[key]:
-                obj = GridOptimizationAssociation(grid_opt_id=int(self.id), opt_id=int(opt_id), key=key)
-                self.grid_optimizations_obj.append(obj)
+        for key, opt_id in grid_optimizations.items():
+            obj = GridOptimizationAssociation(grid_opt_id=int(self.id), opt_id=int(opt_id), key=key)
+            self.grid_optimizations_obj.append(obj)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
