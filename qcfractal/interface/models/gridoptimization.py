@@ -275,7 +275,7 @@ class GridOptimizationRecord(RecordBase):
             query_result_ids = list(map_id_key.keys())
             # put the ids into batch of 10k limit
             batch_size_limit = 10000
-            for i_batch in range(len(query_result_ids)-1 // batch_size_limit):
+            for i_batch in range((len(query_result_ids)+batch_size_limit-1) // batch_size_limit):
                 query_batch_ids = query_result_ids[i_batch * batch_size_limit: (i_batch+1) * batch_size_limit]
                 # run the query on this batch
                 for grad_result_record in self.client.query_results(id=query_batch_ids):
