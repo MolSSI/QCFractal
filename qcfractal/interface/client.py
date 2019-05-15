@@ -389,7 +389,7 @@ class FractalClient(object):
         if collection_type is not None:
             query = {"collection": collection_type.lower()}
 
-        payload = {"meta": {"projection": {"name": True, "collection": True, "tagline": True, "id": True}}, "data": query}
+        payload = {"meta": {"projection": {"name": True, "collection": True, "tagline": True}}, "data": query}
         response = self._automodel_request("collection", "get", payload, full_return=False)
 
         # Rename collection names
@@ -408,7 +408,6 @@ class FractalClient(object):
                 return [x["name"] for x in response]
         else:
             df = pd.DataFrame.from_dict(response)
-            df.drop("id", axis=1, inplace=True)
             df.set_index(["collection", "name"], inplace=True)
             df.sort_index(inplace=True)
             return df

@@ -27,12 +27,13 @@ from sqlalchemy.dialects import postgresql
 
 # pydantic classes
 from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
-                                        TaskStatusEnum, TorsionDriveRecord, prepare_basis)
+                                        TaskStatusEnum, TorsionDriveRecord, prepare_basis, GridOptimizationRecord)
 from qcfractal.services.service_util import BaseService
 # SQL ORMs
 from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, ErrorORM, KeywordsORM, KVStoreORM,
                                                   MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
-                                                  ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM)
+                                                  ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
+                                                  GridOptimizationProcedureORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
@@ -98,6 +99,8 @@ def get_procedure_class(record):
         procedure_class = OptimizationProcedureORM
     elif isinstance(record, TorsionDriveRecord):
         procedure_class = TorsionDriveProcedureORM
+    elif isinstance(record, GridOptimizationRecord):
+        procedure_class = GridOptimizationProcedureORM
     else:
         raise TypeError('Procedure of type {} is not valid or supported yet.'
                         .format(type(record)))
@@ -660,9 +663,10 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-        collection : str
-        name : str
-        data : dict
+        data : dict, which should inlcude at least:
+            collection : str (immutable)
+            name : str (immutable)
+
         overwrite : bool
             Update existing collection
 
@@ -684,27 +688,29 @@ class SQLAlchemySocket:
         col_id = None
         # try:
 
-        if ("id" in data) and (data["id"] == "local"):
+        # if ("id" in data) and (data["id"] == "local"):
+        #     data.pop("id", None)
+        if "id" in data: # remove the ID in any case
             data.pop("id", None)
         lname = data.get("name").lower()
         collection = data.pop("collection").lower()
-        update = {
-            "name": data.pop("name"),
-            "tags": data.pop("tags", None),
-            "tagline": data.pop("tagline", None),
-            "extra": data  # todo: check for sql injection
-        }
+
+        update_fields = {}
+        for field in CollectionORM.col().keys():
+            if field in data:
+                update_fields[field] = data.pop(field)
+
+        update_fields['extra'] = data  # todo: check for sql injection
+
 
         with self.session_scope() as session:
 
             if overwrite:
                 col = session.query(CollectionORM).filter_by(collection=collection, lname=lname).first()
-                for key, value in update.items():
+                for key, value in update_fields.items():
                     setattr(col, key, value)
-                # may use upsert=True to add or update
-                # col = CollectionORM.objects(collection=collection, lname=lname).update_one(**data)
             else:
-                col = CollectionORM(collection=collection, lname=lname, **update)
+                col = CollectionORM(collection=collection, lname=lname, **update_fields)
 
             session.add(col)
             session.commit()
