@@ -55,16 +55,27 @@ class Base:
             del ret['extra']
 
         # transform ids from int into str
-        for key, col in class_inspector.columns.items():
+        id_fields = self._get_fieldnames_with_DB_ids_(class_inspector)
+        for key in id_fields:
             if key in ret.keys() and ret[key] is not None:
-                # if PK, FK, or column property (TODO: work around for column property)
-                if col.primary_key or len(col.foreign_keys)>0 or key != col.key:
-                    if isinstance(ret[key], Iterable):
-                        ret[key] = [str(i) for i in ret[key]]
-                    else:
-                        ret[key] = str(ret[key])
+                if isinstance(ret[key], Iterable):
+                    ret[key] = [str(i) for i in ret[key]]
+                else:
+                    ret[key] = str(ret[key])
 
         return ret
+
+    @classmethod
+    def _get_fieldnames_with_DB_ids_(cls, class_inspector=None):
+        if not class_inspector:
+            class_inspector = inspect(cls)
+        id_fields = []
+        for key, col in class_inspector.columns.items():
+            # if PK, FK, or column property (TODO: work around for column property)
+            if col.primary_key or len(col.foreign_keys)>0 or key != col.key:
+                id_fields.append(key)
+
+        return id_fields
 
     @classmethod
     def col(cls):

@@ -24,6 +24,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, with_polymorphic
 from sqlalchemy.sql.expression import func
 from sqlalchemy.dialects import postgresql
+from collections.abc import Iterable
+
 
 # pydantic classes
 from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
@@ -230,6 +232,17 @@ class SQLAlchemySocket:
                 data = session.query(*proj).filter(*query).limit(self.get_limit(limit)).offset(skip)
                 n_found = get_count_fast(data)  # before iterating on the data
                 rdata = [dict(zip(projection, row)) for row in data]
+                print('----------rdata before: ', rdata)
+                # transform ids from int into str
+                id_fields = className._get_fieldnames_with_DB_ids_()
+                for d in rdata:
+                    for key in id_fields:
+                        if key in d.keys() and d[key] is not None:
+                            if isinstance(d[key], Iterable):
+                                d[key] = [str(i) for i in d[key]]
+                            else:
+                                d[key] = str(d[key])
+                print('--------rdata after: ', rdata)
             else:
                 data = session.query(className).filter(*query).limit(self.get_limit(limit)).offset(skip)
                 # from sqlalchemy.dialects import postgresql
