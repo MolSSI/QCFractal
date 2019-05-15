@@ -232,7 +232,7 @@ class SQLAlchemySocket:
                 data = session.query(*proj).filter(*query).limit(self.get_limit(limit)).offset(skip)
                 n_found = get_count_fast(data)  # before iterating on the data
                 rdata = [dict(zip(projection, row)) for row in data]
-                print('----------rdata before: ', rdata)
+                # print('----------rdata before: ', rdata)
                 # transform ids from int into str
                 id_fields = className._get_fieldnames_with_DB_ids_()
                 for d in rdata:
@@ -242,7 +242,7 @@ class SQLAlchemySocket:
                                 d[key] = [str(i) for i in d[key]]
                             else:
                                 d[key] = str(d[key])
-                print('--------rdata after: ', rdata)
+                # print('--------rdata after: ', rdata)
             else:
                 data = session.query(className).filter(*query).limit(self.get_limit(limit)).offset(skip)
                 # from sqlalchemy.dialects import postgresql
@@ -1155,8 +1155,8 @@ class SQLAlchemySocket:
         else:
             # raise TypeError('Unsupported procedure type {}. Id: {}, task_id: {}'
             #                 .format(procedure, id, task_id))
-            self.logger.warning('Procedure type not specified({}). Query include: Id= {}, task_id= {}'
-                            .format(procedure, id, task_id))
+            # self.logger.warning('Procedure type not specified({}). Query include: Id= {}, task_id= {}'
+            #                 .format(procedure, id, task_id))
             className = BaseResultORM   # all classes, including those with 'selectin'
 
         query = format_query(className,
@@ -1528,6 +1528,7 @@ class SQLAlchemySocket:
                   hash_index=None,
                   program=None,
                   status: str=None,
+                  base_result: str=None,
                   projection=None,
                   limit: int=None,
                   skip: int=0,
@@ -1542,6 +1543,8 @@ class SQLAlchemySocket:
         Hash_index
         status : bool, default is None (find all)
             The status of the task: 'COMPLETE', 'RUNNING', 'WAITING', or 'ERROR'
+        base_result: str (optional)
+            base_result id
         projection : list/set/tuple of keys, default is None
             The fields to return, default to return all
         limit : int, default is None
@@ -1563,7 +1566,8 @@ class SQLAlchemySocket:
         """
 
         meta = get_metadata_template()
-        query = format_query(TaskQueueORM, program=program, id=id, hash_index=hash_index, status=status)
+        query = format_query(TaskQueueORM, program=program, id=id, hash_index=hash_index,
+                             status=status, base_result_id=base_result)
 
         data = []
         try:

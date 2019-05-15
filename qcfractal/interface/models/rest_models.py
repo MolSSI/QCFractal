@@ -468,6 +468,7 @@ class TaskQueueGETBody(BaseModel):
         hash_index: QueryStr = None
         program: QueryStr = None
         status: QueryStr = None
+        base_result: QueryStr = None
 
         class Config(RESTConfig):
             pass

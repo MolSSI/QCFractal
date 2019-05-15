@@ -59,7 +59,6 @@ def torsiondrive_fixture(fractal_compute_server):
             compute_key = ret.data.ids[0]
             status = client.query_services(procedure_id=compute_key, projection={"status": True, "id": True}, full_return=True)
             assert 'WAITING' in status.data[0]['status']
-            assert status.data[0]['id'] != compute_key  # Hash should never be id
 
         fractal_compute_server.await_services()
         assert len(fractal_compute_server.list_current_tasks()) == 0
@@ -337,10 +336,9 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     assert pytest.approx(starting_mol.measure([1, 2])) == 2.488686479260597
 
     # Check tags on individual procedures
-    proc_id = list(result.grid_optimizations.values())[0]
-    opt = client.query_procedures(id=proc_id)[0]
+    proc_id = result.grid_optimizations['[0, 0]']
+    task = client.query_tasks(base_result=proc_id)[0]
 
-    task = client.query_tasks(id=opt.task_id)[0]
     assert task.priority == 0
     assert task.tag == "gridopt"
 
