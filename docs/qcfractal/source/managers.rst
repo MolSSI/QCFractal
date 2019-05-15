@@ -1,15 +1,27 @@
 Fractal Queue Managers
 ======================
 
-Queue Managers are the processes which interface with the Fractal Server and back end compute hardware to carry out the
-computations needed by Fractal. These pull the compute :term:`tasks<Task>` from the server, and then pass them to various
-distributed back ends for computation. The Managers are set up through a YAML file with a set of options that can
-be tuned to your specific hardware, mainly focusing on cluster-level hardware, but can also be set to consume
-local resources like a laptop. Each Manager can be run on a separate
-location than the Fractal Server you are connecting to and are designed to be started and left running.
+Queue Managers are the processes which interface with the Fractal Server and
+clusters, supercomputers, and cloud resources to execute the tasks in the
+Fractal Server. These managers pull compute :term:`tasks<Task>` from the
+server, and then pass them to various distributed back ends for computation
+for a variety of different needs. The architecture of the Fractal Server
+allows many managers to be created in multiple physical locations. Currently,
+QCFractal supports the following:
+
+- `Pool` - A python `ProcessPoolExecutor` for computing tasks on a single machine (or node).
+- `Dask <http://dask.pydata.org/en/latest/docs.html>`_ - A graph-based workflow engine for laptops and small clusters.
+- `Parsl <http://parsl-project.org>`_ - High-performance workflows.
+- `Fireworks <https://materialsproject.github.io/fireworks/>`_ - A asynchronous Mongo-based distributed queuing system.
+
+These backends allow QCFractal to be incredibly elastic in utilized
+computational resources, scaling from a single laptop to thousands of nodes on
+physically separate hardware. Our end goal is to be able to setup a manager at
+a physical site and allow it to scale up and down as its task queue requires
+and execute compute over long periods of time (months) without intervention.
 
 The Queue Manager's interactions with the Fractal Server, the Distributed Compute Engine, the physical Compute
-Hardware, and the user are show in the following diagram.
+Hardware, and the user are shown in the following diagram.
 
 .. image:: media/QCFractalQueueManager.png
    :width: 800px
@@ -189,7 +201,7 @@ of. However, if you feel something is missing, let us know!
     Task
         A single unit of compute as defined by the Fractal Server (i.e. the item which comes from the Task Queue). These
         tasks are preserved as they pass to the distributed compute engine and are what are presented to each distributed
-        compute engine's :term:`Worker`s to compute
+        compute engine's :term:`Worker`\s to compute
 
     Worker
         The process executed from the :term:`Adapter` on the allocated hardware inside a :term:`Job`. This process
@@ -200,5 +212,5 @@ of. However, if you feel something is missing, let us know!
 
     Server
         The Fractal Server that the :term:`Manager` connects to. This is the source of the
-        :term:`Task`s which are pulled from and pushed to.
+        :term:`Task`\s which are pulled from and pushed to.
 

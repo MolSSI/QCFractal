@@ -3,7 +3,7 @@ Setup Server
 
 A  ``qcfractal-server`` instance contains a record of all results, task queue,
 and collection information and provides an interface to all FractalClients
-and ``qcfractal-manager``s. All data is stored in a local MongoDB. A server
+and ``qcfractal-manager``\s. All data is stored in a local MongoDB. A server
 instance should be run on hardware that is for long periods stable (not
 shutdown often),  accessible from both compute resources and users via HTTP,
 and have access to permanent storage.  This location is often either research

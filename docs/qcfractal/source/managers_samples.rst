@@ -27,7 +27,7 @@ Server running on that cluster, and using the SLURM partition ``default``, save 
      memory: 8
 
     server:
-     fractal_uri: "api.qcarchive.molssi.org:443"
+     fractal_uri: "localhost:7777"
      username: Foo
      password: b4R
 
@@ -60,7 +60,7 @@ user has run 1 ``sbatch`` jobs which requested 4 cores and 20 GB of memory.
      memory: 20
 
     server:
-     fractal_uri: "api.qcarchive.molssi.org:443"
+     fractal_uri: "localhost:7777"
      username: Foo
      password: b4R
 
@@ -126,7 +126,7 @@ allow all of those :term:`jobs<Job>` to start, whether due to lack of resources 
      memory: 256
 
     server:
-     fractal_uri: api.qcarchive.molssi.org:443
+     fractal_uri: localhost:7777
      username: Foo
      password: b4R
 
@@ -165,7 +165,7 @@ This example also uses Parsl and sets a scratch directory.
      scratch_directory: "$TMPDIR"
 
     server:
-     fractal_uri: api.qcarchive.molssi.org:443
+     fractal_uri: localhost:7777
      username: Foo
      password: b4R
      verify: False
