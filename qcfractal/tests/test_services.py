@@ -259,6 +259,20 @@ def test_service_torsiondrive_visualization(torsiondrive_fixture):
     result.visualize()
 
 
+def test_service_torsiondrive_get_final_results(torsiondrive_fixture):
+    """Test the get_final_results function for the 1-D case"""
+
+    spin_up_test, client = torsiondrive_fixture
+    ret = spin_up_test()
+
+    # Get a TorsionDriveORM result and check data
+    result = client.query_procedures(id=ret.ids)[0]
+    assert result.status == "COMPLETE"
+
+    final_result_records = result.get_final_results()
+    assert set(final_result_records.keys()) == {(-90,), (-0,), (90,), (180,)}
+
+
 @using_geometric
 @using_rdkit
 def test_service_gridoptimization_single_opt(fractal_compute_server):
@@ -316,7 +330,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
 
     assert result.starting_molecule != result.initial_molecule
 
-    # Check initial vs startin molecule
+    # Check initial vs starting molecule
     assert result.initial_molecule == mol_ret[0]
     starting_mol = client.query_molecules(id=result.starting_molecule)[0]
     assert pytest.approx(starting_mol.measure([1, 2])) != initial_distance
@@ -329,6 +343,10 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     task = client.query_tasks(id=opt.task_id)[0]
     assert task.priority == 0
     assert task.tag == "gridopt"
+
+    # Check final ResultRecords
+    final_result_records = result.get_final_results()
+    assert len(final_result_records) == 4
 
 
 @using_geometric
