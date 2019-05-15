@@ -159,6 +159,7 @@ class TorsionDriveRecord(RecordBase):
 
         return self._organize_return(data, key, minimum=minimum)
 
+
     def get_final_energies(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, Any]:
         """
         Provides the final optimized energies at each grid point.
@@ -182,6 +183,7 @@ class TorsionDriveRecord(RecordBase):
         """
 
         return self._organize_return(self.final_energy_dict, key)
+
 
     def get_final_molecules(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, Any]:
         """Returns the optimized molecules at each grid point
@@ -223,6 +225,7 @@ class TorsionDriveRecord(RecordBase):
 
         return self._organize_return(data, key)
 
+
     def get_final_results(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, Any]:
         """Returns the final opt gradient result records at each grid point
 
@@ -261,13 +264,13 @@ class TorsionDriveRecord(RecordBase):
                     # store the id -> grid id mapping
                     map_id_key[final_grad_record_id] = k
             # combine the ids into one query
-            query_result_ids = list(ret_result_ids.keys())
+            query_result_ids = list(map_id_key.keys())
             # put the ids into batch of 10k limit
             batch_size_limit = 10000
-            for i_batch in range(len(query_result_ids) // batch_size_limit):
+            for i_batch in range(len(query_result_ids)-1 // batch_size_limit):
                 query_batch_ids = query_result_ids[i_batch * batch_size_limit: (i_batch+1) * batch_size_limit]
                 # run the query on this batch
-                for grad_result_record in self.client.get_final_results(id=query_batch_ids):
+                for grad_result_record in self.client.query_results(id=query_batch_ids):
                     k = map_id_key[grad_result_record.id]
                     ret[k] = grad_result_record
 
