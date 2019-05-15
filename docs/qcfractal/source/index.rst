@@ -81,6 +81,20 @@ The records created from adding additional compute.
    services.rst
    flow.rst
 
+**Manager Documentation**
+
+Setting up, and running QCFractal Managers on your system
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Manager Documentation
+
+   managers.rst
+   managers_config_api.rst
+   managers_samples.rst
+   managers_faq.rst
+
 **Developer Documentation**
 
 Contains in-depth developer documentation.
