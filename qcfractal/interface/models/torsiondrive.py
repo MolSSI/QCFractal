@@ -159,6 +159,7 @@ class TorsionDriveRecord(RecordBase):
 
         return self._organize_return(data, key, minimum=minimum)
 
+
     def get_final_energies(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, Any]:
         """
         Provides the final optimized energies at each grid point.
@@ -170,7 +171,7 @@ class TorsionDriveRecord(RecordBase):
 
         Returns
         -------
-        energy : Dict[str, Any]
+        energy : Dict[str, float]
             Returns energies at each grid point in a dictionary or at a
             single point if a key is specified.
 
@@ -183,6 +184,7 @@ class TorsionDriveRecord(RecordBase):
 
         return self._organize_return(self.final_energy_dict, key)
 
+
     def get_final_molecules(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, Any]:
         """Returns the optimized molecules at each grid point
 
@@ -193,7 +195,7 @@ class TorsionDriveRecord(RecordBase):
 
         Returns
         -------
-        final_molecules : Dict[str, Any]
+        final_molecules : Dict[str, qcelemental.models.molecule.Molecule]
             Returns molecule at each grid point in a dictionary or at a
             single point if a key is specified.
 
@@ -220,6 +222,57 @@ class TorsionDriveRecord(RecordBase):
             self.cache["final_molecules"] = ret
 
         data = self.cache["final_molecules"]
+
+        return self._organize_return(data, key)
+
+
+    def get_final_results(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, Any]:
+        """Returns the final opt gradient result records at each grid point
+
+        Parameters
+        ----------
+        key : Union[int, str, None], optional
+            Specifies a single entry to pull from.
+
+        Returns
+        -------
+        final_results : Dict[str, qcfractal.interface.models.records.ResultRecord]
+            Returns ResultRecord at each grid point in a dictionary or at a
+            single point if a key is specified.
+
+        Examples
+        --------
+        >>> mols = torsiondrive_obj.get_final_results()
+        >>> type(mols[(-90, )])
+        qcfractal.interface.models.records.ResultRecord
+
+        >>> type(torsiondrive_obj.get_final_results((-90,)))
+        qcfractal.interface.models.records.ResultRecord
+
+        """
+
+        if "final_results" not in self.cache:
+
+            map_id_key = {}
+            ret = {}
+            for k, tasks in self.get_history().items():
+                k = self._serialize_key(k)
+                minpos = self.minimum_positions[k]
+                final_opt_task = tasks[minpos]
+                if len(final_opt_task.trajectory) > 0:
+                    final_grad_record_id = final_opt_task.trajectory[-1]
+                    # store the id -> grid id mapping
+                    map_id_key[final_grad_record_id] = k
+            # combine the ids into one query
+            query_result_ids = list(map_id_key.keys())
+            # run the query on this batch
+            for grad_result_record in self.client.query_results(id=query_result_ids):
+                k = map_id_key[grad_result_record.id]
+                ret[k] = grad_result_record
+
+            self.cache["final_results"] = ret
+
+        data = self.cache["final_results"]
 
         return self._organize_return(data, key)
 

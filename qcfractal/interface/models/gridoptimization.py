@@ -235,3 +235,51 @@ class GridOptimizationRecord(RecordBase):
 
         data = self.cache["final_molecules"]
         return self._organize_return(data, key)
+
+
+    def get_final_results(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, Any]:
+        """Returns the final opt gradient result records at each grid point.
+
+        Parameters
+        ----------
+        key : Union[int, str, None], optional
+            Specifies a single entry to pull from.
+
+        Returns
+        -------
+        final_results : Dict[str, qcfractal.interface.models.records.ResultRecord]
+            Returns ResultRecord at each grid point in a dictionary or at a
+            single point if a key is specified.
+
+        Examples
+        --------
+        >>> mols = grid_optimization_record.get_final_results()
+        >>> type(mols[(-90, )])
+        qcfractal.interface.models.records.ResultRecord
+
+        >>> type(grid_optimization_record.get_final_results((-90,)))
+        qcfractal.interface.models.records.ResultRecord
+
+        """
+
+        if "final_results" not in self.cache:
+            map_id_key = {}
+            ret = {}
+            for k, task_id in self.grid_optimizations.items():
+                task = self.client.query_procedures(id=task_id)[0]
+                if len(task.trajectory) > 0:
+                    final_grad_record_id = task.trajectory[-1]
+                    # store the id -> grid id mapping
+                    map_id_key[final_grad_record_id] = k
+            # combine the ids into one query
+            query_result_ids = list(map_id_key.keys())
+            # run the query on this batch
+            for grad_result_record in self.client.query_results(id=query_result_ids):
+                k = map_id_key[grad_result_record.id]
+                ret[k] = grad_result_record
+
+            self.cache["final_results"] = ret
+
+        data = self.cache["final_results"]
+
+        return self._organize_return(data, key)
