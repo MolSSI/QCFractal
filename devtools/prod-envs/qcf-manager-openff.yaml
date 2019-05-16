@@ -1,0 +1,18 @@
+name: qcf-manager-openff
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python
+  - qcfractal
+  - qcportal
+
+    # Compute engines
+  - psi4::psi4
+  - rdkit
+    
+    # Procedures
+  - geometric
+
+    # Distributed managers
+  - dask-jobqueue

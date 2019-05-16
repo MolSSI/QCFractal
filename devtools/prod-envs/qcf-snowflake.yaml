@@ -1,0 +1,16 @@
+name: qcf-snowflake
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python
+  - qcfractal
+  - qcportal
+
+    # Compute engines
+  - psi4::psi4
+  - rdkit
+    
+    # Procedures
+  - geometric
+
