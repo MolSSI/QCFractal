@@ -139,14 +139,14 @@ class KVStoreORM(Base):
     __tablename__ = "kv_store"
 
     id = Column(Integer, primary_key=True)
-    value = Column(Text, nullable=False)
+    value = Column(JSON, nullable=False)
 
 
-class ErrorORM(Base):
-    __tablename__ = "error"
-
-    id = Column(Integer, primary_key=True)
-    value = Column(Text, nullable=False)
+# class ErrorORM(Base):
+#     __tablename__ = "error"
+#
+#     id = Column(Integer, primary_key=True)
+#     value = Column(JSON, nullable=False)
 
 
 class CollectionORM(Base):
@@ -290,15 +290,16 @@ class BaseResultORM(Base):
     extras = Column(JSON)
     stdout = Column(Integer, ForeignKey('kv_store.id'))
     stdout_obj = relationship(KVStoreORM, lazy='noload', foreign_keys=stdout,
-                          cascade="all, delete-orphan", single_parent=True)
+                              cascade="all, delete-orphan", single_parent=True)
 
     stderr = Column(Integer, ForeignKey('kv_store.id'))
     stderr_obj = relationship(KVStoreORM, lazy='noload', foreign_keys=stderr,
-                          cascade="all, delete-orphan", single_parent=True)
+                              cascade="all, delete-orphan", single_parent=True)
 
-    error = Column(Integer, ForeignKey('error.id'))
-    error_obj = relationship(ErrorORM, lazy='noload', cascade="all, delete-orphan",
-                         single_parent=True)
+    error = Column(Integer, ForeignKey('kv_store.id'))
+    error_obj = relationship(KVStoreORM, lazy='noload', foreign_keys=error,
+                             cascade="all, delete-orphan",
+                             single_parent=True)
 
     # Compute status
     # task_id: ObjectId = None  # Removed in SQL
@@ -706,7 +707,7 @@ class TaskQueueORM(Base):
     program = Column(String)
     procedure = Column(String)
     status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.waiting)
-    priority = Column(Enum(PriorityEnum), default=PriorityEnum.NORMAL)
+    priority = Column(Integer, default=int(PriorityEnum.NORMAL))
     manager = Column(String, default=None)
     error = Column(String)  # TODO: is this an error object? should be in results?
 

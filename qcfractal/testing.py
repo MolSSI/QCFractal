@@ -317,7 +317,7 @@ def reset_server_database(server):
     """Resets the server database for testing.
     """
     # server.storage._clear_db(server.storage._project_name)
-    server.storage._delete_DB_data()
+    server.storage._delete_DB_data(server.storage._project_name)
 
 
 @pytest.fixture(scope="module")
@@ -331,9 +331,12 @@ def test_server(request):
 
     storage_name = "qcf_local_server_test"
 
+    storage_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb"
+    # storage_uri="mongodb://localhost:27017"
+
     # with loop_in_thread() as loop:
     with FractalSnowflake(
-            max_workers=0, storage_project_name=storage_name, storage_uri="mongodb://localhost:27017",
+            max_workers=0, storage_project_name=storage_name, storage_uri=storage_uri,
             start_server=False, reset_database=True) as server:
 
         # Clean and re-init the database

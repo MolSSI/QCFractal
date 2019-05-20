@@ -190,6 +190,9 @@ class MongoengineSocket:
 
         QueueManagerORM.objects(name='').first()  # init
 
+    def _delete_DB_data(self, db_name):
+        self._clear_db(db_name)
+
     def get_project_name(self) -> str:
         return self._project_name
 
@@ -1269,7 +1272,7 @@ class MongoengineSocket:
         query, error = format_query(
             status="WAITING",
             program=available_programs,
-            procedure=available_procedures,  # Procedue can be none, explicitly include
+            procedure=available_procedures,  # Procedure can be none, explicitly include
             tag=tag)
         query["procedure__in"].append(None)
 

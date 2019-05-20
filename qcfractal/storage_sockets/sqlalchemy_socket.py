@@ -32,7 +32,7 @@ from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, Optimiza
                                         TaskStatusEnum, TorsionDriveRecord, prepare_basis, GridOptimizationRecord)
 from qcfractal.services.service_util import BaseService
 # SQL ORMs
-from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, ErrorORM, KeywordsORM, KVStoreORM,
+from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM,
                                                   MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
                                                   ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
                                                   GridOptimizationProcedureORM)
@@ -213,7 +213,7 @@ class SQLAlchemySocket:
 
         # self.client.drop_database(db_name)
 
-    def _delete_DB_data(self):
+    def _delete_DB_data(self, db_name):
         """TODO: needs more testing"""
         
         with self.session_scope() as session:
@@ -1505,7 +1505,7 @@ class SQLAlchemySocket:
             program=available_programs,
             tag=tag)
 
-        proc_filt = TaskQueueORM.procedure.in_(available_procedures)
+        proc_filt = TaskQueueORM.procedure.in_([p.lower() for p in available_procedures])
         none_filt = TaskQueueORM.procedure == None
         query.append(or_(proc_filt, none_filt))
 
@@ -1514,6 +1514,7 @@ class SQLAlchemySocket:
                    .order_by(TaskQueueORM.priority.desc(), TaskQueueORM.created_on)\
                    .limit(limit)
 
+            # print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
             found = query.all()
 
             ids =  [x.id for x in found]
@@ -1530,6 +1531,7 @@ class SQLAlchemySocket:
                 # avoid another trip to the DB to get the updated values, set them here
                 found = [TaskRecord(**task.to_dict(exclude=update_fields.keys()),
                                     **update_fields) for task in found]
+            session.commit()
 
         if update_count != len(found):
             self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
@@ -1658,27 +1660,25 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
             ids = [err[0] for err in data]
             task_objects = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(ids)).all()
-            for (task_id, msg), task_obj in zip(data, task_objects):
+            base_results = session.query(BaseResultORM)\
+                                    .filter(BaseResultORM.id == TaskQueueORM.base_result_id) \
+                                    .filter(TaskQueueORM.id.in_(ids)).all()
+            for (task_id, msg), task_obj, base_result in zip(data, task_objects, base_results):
 
                 task_ids.append(task_id)
+                # update task
                 task_obj.status = TaskStatusEnum.error
                 task_obj.modified_on = dt.utcnow()
-                task_obj.error_obj = ErrorORM(value=msg)
 
-                session.add(task_obj)
+                # update result
+                base_result.status = TaskStatusEnum.error
+                base_result.modified_on = dt.utcnow()
+                base_result.error_obj = KVStoreORM(value=msg)
+
+                # session.add(task_obj)
+
 
             session.commit()
-
-            update_fields = dict(status=TaskStatusEnum.error, modified_on=dt.utcnow())
-            base_results_c = session.query(BaseResultORM)\
-                                    .filter(BaseResultORM.id == TaskQueueORM.base_result_id) \
-                                    .filter(TaskQueueORM.id.in_(task_ids))\
-                                    .update(update_fields, synchronize_session=False)
-
-        if len(task_ids) != base_results_c:
-            self.logger.error(
-                "Queue Mark Error: Number of tasks updates {}, does not match the number of records updates {}.".
-                format(len(task_ids), base_results_c))
 
         return len(task_ids)
 
