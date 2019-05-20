@@ -3,7 +3,7 @@ import dateutil
 # from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (Column, Integer, String, Text, DateTime, Boolean,
                         ForeignKey, JSON, Enum, Float, Binary, Table, ARRAY,
-                        PrimaryKeyConstraint, inspect)
+                        PrimaryKeyConstraint, inspect, Index)
 from sqlalchemy.orm import relationship, object_session, column_property
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
@@ -168,6 +168,10 @@ class CollectionORM(Base):
     tags = Column(JSON)
     tagline = Column(String)
     extra = Column(JSON)  # extra data related to specific collection type
+
+    __table_args__ = (
+        Index('collection_name', "collection", "lname", unique=True),
+    )
 
     # meta = {
     #     'indexes': [{

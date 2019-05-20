@@ -128,4 +128,7 @@ def test_storage_socket(test_server):
 
     pdata = r.json()
     del pdata["data"][0]["id"]
+    # got a default values when created
+    pdata["data"][0].pop("tags", None)
+    pdata["data"][0].pop("tagline", None)
     assert pdata["data"][0] == storage

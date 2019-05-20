@@ -732,21 +732,24 @@ class SQLAlchemySocket:
 
         with self.session_scope() as session:
 
-            if overwrite:
-                col = session.query(CollectionORM).filter_by(collection=collection, lname=lname).first()
-                for key, value in update_fields.items():
-                    setattr(col, key, value)
-            else:
-                col = CollectionORM(collection=collection, lname=lname, **update_fields)
+            try:
+                if overwrite:
+                    col = session.query(CollectionORM).filter_by(collection=collection, lname=lname).first()
+                    for key, value in update_fields.items():
+                        setattr(col, key, value)
+                else:
+                    col = CollectionORM(collection=collection, lname=lname, **update_fields)
 
-            session.add(col)
-            session.commit()
+                session.add(col)
+                session.commit()
 
-            col_id = str(col.id)
-            meta['success'] = True
-            meta['n_inserted'] = 1
-        # except Exception as err:
-        # meta['error_description'] = str(err)
+                col_id = str(col.id)
+                meta['success'] = True
+                meta['n_inserted'] = 1
+
+            except Exception as err:
+                session.rollback()
+                meta['error_description'] = str(err)
 
         ret = {'data': col_id, 'meta': meta}
         return ret
@@ -1764,7 +1767,8 @@ class SQLAlchemySocket:
             "failures": QueueManagerORM.failures + kwargs.pop("failures", 0)
         }
 
-        upd = {key: kwargs[key] for key in QueueManagerORM.col() if key in kwargs}
+
+        upd = {key: kwargs[key] for key in QueueManagerORM.__dict__.keys() if key in kwargs}
 
         with self.session_scope() as session:
             # QueueManagerORM.objects()  # init

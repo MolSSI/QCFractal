@@ -81,6 +81,10 @@ def test_collection_portal(test_server):
     get_db = client.get_collection(db["collection"], db["name"], full_return=True)
     db_id = get_db.data[0].pop("id")
 
+    # got a default values when created
+    get_db.data[0].pop("tags", None)
+    get_db.data[0].pop("tagline", None)
+
     assert db == get_db.data[0]
 
     # Test add w/o overwrite

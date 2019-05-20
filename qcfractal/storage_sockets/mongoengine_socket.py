@@ -1301,6 +1301,7 @@ class MongoengineSocket:
                   hash_index=None,
                   program=None,
                   status: str=None,
+                  base_result: str=None,
                   projection=None,
                   limit: int=None,
                   skip: int=0,
@@ -1338,6 +1339,8 @@ class MongoengineSocket:
         meta = get_metadata_template()
         query, error = format_query(program=program, id=id, hash_index=hash_index, status=status)
 
+        if base_result:
+            query['__raw__'] = {'base_result._ref.$id': ObjectId(base_result)}
         q_limit = self.get_limit(limit)
 
         data = []
