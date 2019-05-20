@@ -64,9 +64,17 @@ class TaskRecord(BaseModel):
     error: Optional[ComputeError] = None
 
     # Modified data
-    modified_on: datetime.datetime = datetime.datetime.utcnow()
-    created_on: datetime.datetime = datetime.datetime.utcnow()
+    modified_on: datetime.datetime = None
+    created_on: datetime.datetime = None
 
+
+    def __init__(self, **data):
+
+        # Set datetime defaults if not automatically available
+        data.setdefault("modified_on", datetime.datetime.utcnow())
+        data.setdefault("created_on", datetime.datetime.utcnow())
+
+        super().__init__(**data)
 
     class Config:
         extra = "forbid"
