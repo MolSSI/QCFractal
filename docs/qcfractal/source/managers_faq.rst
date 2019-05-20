@@ -4,8 +4,7 @@ Queue Manager Frequent Questions and Issues
 This page documents some of the frequent questions and issues we see with the
 Queue Managers. If this page and none of the other documentation pages have
 answered your question, please ask `on GitHub <https://github.com/MolSSI/QCFractal/>`_ or
-`join our Slack group <https://join.slack.com/t/qcdb/shared_invite/enQtNDIzNTQ2OTExODk0LWM3OTgxN2ExYTlkMTlkZjA0OTExZDlmNGRlY2M4NWJlNDlkZGQyYWUxOTJmMzc3M2VlYzZjMjgxMDRkYzFmOTE>`_
-to get assistance.
+|slack|_ to get assistance.
 
 Common Questions
 ----------------
@@ -30,8 +29,8 @@ Can I connect to a Fractal Server besides MolSSI's?
 
 Yes! Just change the ``server.fractal_uri`` argument.
 
-Can I connect to a more tan one Fractal Server
-++++++++++++++++++++++++++++++++++++++++++++++
+Can I connect to a more than one Fractal Server
++++++++++++++++++++++++++++++++++++++++++++++++
 
 Yes and No. Each :term:`Manager` can only connect to a single :term:`Fractal Server<Server>`, but
 you can start multiple managers with different config files pointing to different
@@ -40,7 +39,7 @@ you can start multiple managers with different config files pointing to differen
 How do I help contribute compute time to the MolSSI database?
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-`Join our Slack group! <https://join.slack.com/t/qcdb/shared_invite/enQtNDIzNTQ2OTExODk0LWM3OTgxN2ExYTlkMTlkZjA0OTExZDlmNGRlY2M4NWJlNDlkZGQyYWUxOTJmMzc3M2VlYzZjMjgxMDRkYzFmOTE>`_
+|Slack|_!
 We would love to talk to you and help get you contributing as well!
 
 I have this issue, here is my config file...

@@ -10,13 +10,17 @@ The full documentation of every option and how it can be used can be found in
 :doc:`the Queue Manager's API <managers_config_api>`.
 
 For these examples, the ``username`` will always be "Foo" and the ``password`` will always be "b4R"
-(which are just placeholders and not valid).
+(which are just placeholders and not valid). The ``manager_name`` variable can be any string and these examples provide
+some descriptive samples. The more distinct the name, the better it is to see its status on the :term:`Server`.
 
-SLURM Cluster, Dask Adapter
-----------------------------
+SLURM Cluster, Dask Adapter with additional options
+---------------------------------------------------
 
-To start a manager with a dask :term:`Adapter`, on a SLURM cluster, consuming 1 CPU and 8 GB of ram, targeting a Fractal
-Server running on that cluster, and using the SLURM partition ``default``, save the following YAML config file:
+This example is similar to the :ref:`example on the start page for Managers<manager_starter_example>`, but with some
+additional options such as connecting back to a central Fractal instance and setting more cluster-specific options.
+Again, this starts manager with a dask :term:`Adapter`, on a SLURM cluster, consuming 1 CPU and 8 GB of ram, targeting
+a Fractal Server running on that cluster, and using the SLURM partition ``default``, save the following YAML config
+file:
 
 .. code-block:: yaml
 
@@ -32,7 +36,7 @@ Server running on that cluster, and using the SLURM partition ``default``, save 
      password: b4R
 
     manager:
-     manager_name: "My First Manager"
+     manager_name: "SlurmCluster_OneDaskTask"
 
     cluster:
      scheduler: slurm
@@ -65,7 +69,7 @@ user has run 1 ``sbatch`` jobs which requested 4 cores and 20 GB of memory.
      password: b4R
 
     manager:
-     manager_name: "A multi-task manager"
+     manager_name: "SlurmCluster_MultiDask"
 
     cluster:
      scheduler: slurm
@@ -91,7 +95,7 @@ connect to the :term:`Server`, and therefore does not need a ``server`` block.
      memory: 10
 
     manager:
-     manager_name: "A test manager"
+     manager_name: "TestBox_NeverSeen_OnServer"
      test: True
      ntests: 5
 
@@ -112,7 +116,7 @@ Sun Grid Engine (SGE) cluster, start a conda environment, and load a module.
 
 An important note about this one, we have now set ``max_cluster_jobs`` to something larger than 1.
 Each :term:`Job` will still request 4 cores and 256 GB of memory to be evenly distributed between the
-4 :term:`tasks<Task>`, however, the :term:`Adapter` will **attempt to start be 5 independent** :term:`jobs<Job>`, for a
+4 :term:`tasks<Task>`, however, the :term:`Adapter` will **attempt to start 5 independent** :term:`jobs<Job>`, for a
 total of 80 cores, 1.280 TB of memory, distributed over 20 :term:`workers<Worker>`. If the :term:`Scheduler` does not
 allow all of those :term:`jobs<Job>` to start, whether due to lack of resources or user limits, the
 :term:`Adapter` can still start fewer :term:`jobs<Job>`, each with 16 cores, 256 GB of memory.
@@ -131,7 +135,7 @@ allow all of those :term:`jobs<Job>` to start, whether due to lack of resources 
      password: b4R
 
     manager:
-     manager_name: "Module Run Manager"
+     manager_name: "GridEngine_OpenMPI_DaskWorker"
      test: False
 
     cluster:
@@ -172,7 +176,7 @@ This example also uses Parsl and sets a scratch directory.
 
     manager:
      max_tasks: 10
-     manager_name: "Options Manager"
+     manager_name: "PBS_Parsl_MyPIGroupAccount_Manger"
 
     cluster:
      max_cluster_jobs: 5

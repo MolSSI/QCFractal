@@ -83,7 +83,7 @@ The records created from adding additional compute.
 
 **Manager Documentation**
 
-Setting up, and running QCFractal Managers on your system
+Setting up and running QCFractal Managers on your system
 
 .. toctree::
    :maxdepth: 1
@@ -94,6 +94,7 @@ Setting up, and running QCFractal Managers on your system
    managers_config_api.rst
    managers_samples.rst
    managers_faq.rst
+   managers_detailed.rst
 
 **Developer Documentation**
 

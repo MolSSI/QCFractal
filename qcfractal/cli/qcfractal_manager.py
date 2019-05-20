@@ -10,6 +10,7 @@ import os
 from enum import Enum
 from functools import partial
 from math import ceil
+from textwrap import dedent, indent
 from typing import List, Optional
 
 import tornado.log
@@ -25,6 +26,77 @@ __all__ = ["main"]
 QCA_RESOURCE_STRING = '--resources process=1'
 
 logger = logging.getLogger("qcfractal.cli")
+
+
+def doc_formatter(target_object):
+    """
+    Set the docstring for a Pydantic object automatically based on the parameters, its a bit
+    """
+    doc = target_object.__doc__
+
+    # Handle non-pydantic objects
+    if doc is None:
+        new_doc = ''
+    elif 'Parameters\n' in doc or not (issubclass(target_object, BaseSettings) or issubclass(target_object, BaseModel)):
+        new_doc = doc
+    else:
+        type_formatter = {'boolan': 'bool',
+                          'string': 'str',
+                          'integer': 'int'
+                          }
+        # Add the white space
+        if not doc.endswith('\n\n'):
+            doc += "\n\n"
+        new_doc = dedent(doc) + "Parameters\n----------\n"
+        target_schema = target_object.schema()
+        # Go through each propert
+        for prop_name, prop in target_schema['properties'].items():
+            # Catch lookups for other Pydantic objects
+            if '$ref' in prop:
+                lookup = prop['$ref'].split('/')[-1]
+                prop = target_schema['definitions'][lookup]
+            # Get common properties
+            prop_type = prop["type"]
+            new_doc += prop_name + " : "
+            prop_desc = prop['description']
+
+            # Check for enumeration
+            if 'enum' in prop:
+                new_doc += '{' + ', '.join(prop['enum']) + '}'
+
+            # Set the name/type of object
+            else:
+                if prop_type == 'object':
+                    prop_field = prop['title']
+                else:
+                    prop_field = prop_type
+                new_doc += f'{type_formatter[prop_field] if prop_field in type_formatter else prop_field}'
+
+            # Handle Classes so as not to re-copy pydantic descriptions
+            if prop_type == 'object':
+                if not ('required' in target_schema and prop_name in target_schema['required']):
+                    new_doc += ", Optional"
+                prop_desc = f":class:`{prop['title']}`"
+
+            # Handle non-classes
+            else:
+                if 'default' in prop:
+                    default = prop['default']
+                    try:
+                        # Get the explicit default value for enum classes
+                        if issubclass(default, Enum):
+                            default = default.value
+                    except TypeError:
+                        pass
+                    new_doc += f", Default: {default}"
+                elif not ('required' in target_schema and prop_name in target_schema['required']):
+                    new_doc += ", Optional"
+
+            # Finally, write the detailed doc string
+            new_doc += "\n" + indent(prop_desc, "    ") + "\n"
+
+    # Assign the new doc string
+    target_object.__doc__ = new_doc
 
 
 class SettingsCommonConfig:
@@ -46,28 +118,6 @@ class CommonManagerSettings(BaseSettings):
     user, and manager and will be the most commonly updated options, even as config files are copied and reused, and
     even on the same platform/cluster.
 
-    Parameters
-    ----------
-    adapter : str, Default: "pool"
-        Which type of Distrusted adapter to run tasks through. Current options: "dask", "pool", and "parsl"
-    ntasks : int, Default: 1
-        Number of concurrent tasks to run *per cluster job* which is executed. Total number of concurrent
-        tasks is this value times cluster.max_cluster_jobs, assuming the hardware is available. With the
-        pool adapter, and/or if cluster.max_cluster_jobs is 1, this is the number of concurrent jobs.
-    ncores : int, Default: Current processors
-        Number of cores to be consumed and distributed over the ntasks. These tasks are divided evenly,
-        so it is recommended that ncores/ntasks be a whole number else the core distribution is left
-        up to the logic of the adapter.
-    memory : float, Default: Current Memory
-        Amount of memory (in GB) to be consumed and distributed over the ntasks. This memory is divided
-        evenly, but is ultimately at the control of the adapter. Engine will only allow each of its
-        calls to consume memory/ntasks of memory. Total memory consumed by this manager at any one
-        time is this value times cluster.max_cluster_jobs.
-    scratch_directory : str, Optional
-        Scratch directory for Engine execution jobs.
-    verbose : bool, Default: False
-        Turn on verbose mode or not. In verbose mode, all messages from DEBUG level and up are shown,
-        otherwise, defaults are all used for any logger.
     """
     adapter: AdapterEnum = Schema(
         AdapterEnum.pool,
@@ -107,6 +157,9 @@ class CommonManagerSettings(BaseSettings):
         pass
 
 
+doc_formatter(CommonManagerSettings)
+
+
 class FractalServerSettings(BaseSettings):
     """
     Settings pertaining to the Fractal Server you wish to pull tasks from and push completed tasks to. Each manager
@@ -115,18 +168,6 @@ class FractalServerSettings(BaseSettings):
 
     Caution: The password here is written in plain text, so it is up to the owner/writer of the configuration file
     to ensure its security.
-
-    Parameters
-    ----------
-    fractal_uri : str, Default: localhost:7777
-        Full URI to the Fractal Server you want to connect to
-    username : str, Optional
-        Username to connect to the Fractal Server with. When not provided, a connection is attempted
-        as a guest user, which in most default Servers will be unable to return results.
-    password : str, Optional
-        Password to authenticate to the Fractal Server with (alongside the `username`)
-    verify : bool, Optional
-        Use Server-side generated SSL certification or not.
     """
     fractal_uri: str = Schema(
         "localhost:7777",
@@ -150,41 +191,13 @@ class FractalServerSettings(BaseSettings):
         pass
 
 
+doc_formatter(FractalServerSettings)
+
+
 class QueueManagerSettings(BaseSettings):
     """
     Fractal Queue Manger settings. These are options which control the setup and execution of the Fractal Manager
     itself.
-
-    Parameters
-    ----------
-    max_tasks : int, Default: 50
-        Number of tasks to pull from the Fractal Server to keep locally at all times.
-        As tasks are completed, the local pool is filled back up to this value. These tasks will all
-        attempt to be run at once, but parallel tasks are limited bu number of cluster jobs and ntasks.
-    manager_name : str, Default: "unlabeled"
-        Name of this scheduler to present to the Fractal Server. Descriptive names help the server
-        identify you and debugging purposes.
-    queue_tag : str, Optional
-        Only pull jobs from the Fractal Server with this tag. If not set (None/null), then pull untagged
-        jobs, which should be the majority of jobs. This option should only be used when you want to
-        pull very specific jobs which you know have been tagged as such on the server.
-    log_file_prefix : str, Optional
-        Full path to save a log file to, including the filename. If not provided, information will still
-        be reported to terminal, but not saved.
-    update_frequency : float, Default: 30
-        Time between heartbeats/update checks between this Manager and the Fractal Server. The lower this
-        value, the shorter the intervals. If you have an unreliable network connection, consider
-        increasing this time as repeated, consecutive network failures will cause the Manager to shut
-        itself down to maintain integrity between it and the Fractal Server. Units of seconds
-    test : bool, Default: False
-        Turn on testing mode for this Manager. The Manager will not connect to any Fractal Server, and
-        instead submit netsts worth trial jobs per quantum chemistry program it finds. These jobs are
-        generated locally and do not need a running Fractal server to work. Helpful for ensuring the
-        Manager is configured correctly and the quantum chemistry codes are operating as expected.
-    ntests : int, Default: 5
-        Number of tests to run if the `test` flag is set to True. Total number of tests will be this
-        number times the number of found quantum chemistry programs.
-
     """
     max_tasks: int = Schema(
         50,
@@ -232,6 +245,9 @@ class QueueManagerSettings(BaseSettings):
     )
 
 
+doc_formatter(QueueManagerSettings)
+
+
 class SchedulerEnum(str, Enum):
     slurm = "slurm"
     pbs = "pbs"
@@ -251,42 +267,6 @@ class ClusterSettings(BaseSettings):
     jobs you are submitting, separate from the nature of the compute jobs you will be running within them. As such,
     the options here are things like wall time (per job), which Scheduler your cluster has (like PBS or SLURM),
     etc. No additional options are allowed here.
-
-    Parameters
-    ----------
-    max_cluster_jobs : int, Default: 1
-        The maximum number of cluster jobs which are allowed to be run at the same time. The total number
-        of workers which can be started (and thus simultaneous Fractal tasks which can be run) is equal
-        to this parameter times common.ntasks.
-        In exclusive mode this is equivalent to the maximum number of nodes which you will consume.
-        This must be a positive, non zero integer.
-    node_exclusivity : bool, Defualt: False
-        Run your cluster jobs in node-exclusivity mode. This option may not be available to all scheduler types and thus
-        may not do anything.
-    scheduler : str, Optional
-        Option of which Scheduler/Queuing system your cluster uses. Valid options are: slurm, pbs, sge, moab, and lsf.
-        Note: not all scheduler options are available with every adapter.
-    scheduler_options : list, Default: []
-        Additional options which are fed into the header files for your submitted jobs to your cluster's
-        Scheduler/Queuing system. The directives are automatically filled in, so if you want to set
-        something like '#PBS -n something', you would instead just do '-n something'. Each directive
-        should be a separate string entry in the list. No validation is done on this w.r.t. valid
-        directives so it is on the user to know what they need to set.
-    task_startup_commands : list, Default: []
-        Additional commands to be run before starting the workers and the task distribution. This can
-        include commands needed to start things like conda environments or setting environment variables
-        before executing the workers. These commands are executed first before any of the distributed
-        commands run and are added to the batch scripts as individual commands per entry, verbatim.
-    walltime : str, Default: "06:00:00"
-        Wall clock time of each cluster job started. Presented as a string in HH:MM:SS form, but your
-        cluster may have a different structural syntax. This number should be set high as there should
-        be a number of Fractal jobs which are run for each submitted cluster job.
-    adaptive : str, Default: "adaptive"
-        Whether or not to use adaptive scaling of workers or not. If set to 'static', a fixed number of
-        workers will be started (and likely *NOT* restarted when the wall clock is reached). When set to
-        'adaptive' (the default), the distributed engine will try to adaptively scale the number of
-        workers based on jobs in the queue. This is str instead of bool type variable in case more
-        complex adaptivity options are added in the future. Valid options: "adaptive" and "static"
     """
     max_cluster_jobs: int = Schema(
         1,
@@ -336,6 +316,10 @@ class ClusterSettings(BaseSettings):
                     "workers based on jobs in the queue. This is str instead of bool type variable in case more "
                     "complex adaptivity options are added in the future."
     )
+    throw: bool = Schema(
+        ...,
+        description="something"
+    )
 
     class Config(SettingsCommonConfig):
         pass
@@ -343,6 +327,9 @@ class ClusterSettings(BaseSettings):
     @validator('scheduler', 'adaptive', pre=True)
     def things_to_lcase(cls, v):
         return v.lower()
+
+
+doc_formatter(ClusterSettings)
 
 
 class SettingsBlocker(BaseSettings):
@@ -380,22 +367,6 @@ class DaskQueueSettings(SettingsBlocker):
     options which should be considered for some of the edge cases we have discovered
 
     Please see the docs for the provider for more information.
-
-    Parameters
-    ----------
-    interface : str, Optional
-        Name of the network adapter to use as communication between the head node and the compute node.
-        There are oddities of this when the head node and compute node use different ethernet adapter
-        names and we have not figured out exactly which combination is needed between this and the
-        poorly documented `ip` keyword which appears to be for workers, but not the Client.
-    extra : list[str], Optional
-        Additional flags which are fed into the Dask Worker CLI startup, can be used to overwrite
-        pre-configured options. Do not use unless you know exactly which flags to use.
-    lsf_units : str, Optional
-        Unit system for an LSF cluster limits (e.g. MB, GB, TB). If not set, the units are
-        are attempted to be set from the `lsf.conf` file in the default locations. This does nothing
-        if the cluster is not LSF.
-
     """
     interface: Optional[str] = Schema(
         None,
@@ -419,6 +390,9 @@ class DaskQueueSettings(SettingsBlocker):
     _forbidden_name = "dask_jobqueue"
 
 
+doc_formatter(DaskQueueSettings)
+
+
 class ParslExecutorSettings(SettingsBlocker):
     """
     Settings for the Parsl Executor class. This serves as the primary mechanism for distributing jobs.
@@ -430,22 +404,11 @@ class ParslExecutorSettings(SettingsBlocker):
     NOTE: The parameters listed here have are a special exception for additional features Fractal has engineered or
     options which should be considered for some of the edge cases we have discovered
 
-    Parameters
-    ----------
-    address : str, Optional
-        This only needs to be set in conditional cases when the head node and compute nodes use a
-        differently named ethernet adapter.
-
-        An address to connect to the main Parsl process which is reachable from the network in which
-        workers will be running. This can be either a hostname as returned by hostname or an IP address.
-        Most login nodes on clusters have several network interfaces available, only some of which can be
-        reached from the compute nodes. Some trial and error might be necessary to identify what
-        addresses are reachable from compute nodes.
     """
     address: Optional[str] = Schema(
         None,
         description="This only needs to be set in conditional cases when the head node and compute nodes use a "
-                    "differently named ethernet adapter.\n"
+                    "differently named ethernet adapter.\n\n"
                     "An address to connect to the main Parsl process which is reachable from the network in which "
                     "workers will be running. This can be either a hostname as returned by hostname or an IP address. "
                     "Most login nodes on clusters have several network interfaces available, only some of which can be "
@@ -454,6 +417,9 @@ class ParslExecutorSettings(SettingsBlocker):
     )
     _forbidden_set = {"label", "provider", "cores_per_worker", "max_workers"}
     _forbidden_name = "the parsl executor"
+
+
+doc_formatter(ParslExecutorSettings)
 
 
 class ParslProviderSettings(SettingsBlocker):
@@ -469,13 +435,6 @@ class ParslProviderSettings(SettingsBlocker):
     PBS/Torque/Moba: https://parsl.readthedocs.io/en/latest/stubs/parsl.providers.TorqueProvider.html
     SGE (Sun GridEngine): https://parsl.readthedocs.io/en/latest/stubs/parsl.providers.GridEngineProvider.html
 
-    Parameters
-    ----------
-    partition : str, Optional
-        The name of the cluster.scheduler partition being submitted to. Behavior, valid values, and even
-        its validity as a variable are a function of what type of queue scheduler your specific cluster
-        has (e.g. this variable should NOT be present for PBS clusters).
-        Check with your Sys. Admins and/or your cluster documentation.
     """
     partition: str = Schema(
         None,
@@ -488,6 +447,9 @@ class ParslProviderSettings(SettingsBlocker):
     _forbidden_name = "parsl's provider"
 
 
+doc_formatter(ParslProviderSettings)
+
+
 class ParslQueueSettings(BaseSettings):
     """
     The Parsl-specific configurations used with the `common.adapter = parsl` setting. The parsl config is broken up into
@@ -497,17 +459,16 @@ class ParslQueueSettings(BaseSettings):
 
     It requires both `executor` and `provider` settings, but will default fill them in and often does not need
     any further configuration which is handled by other settings in the config file.
-
-    Parameters
-    ----------
-    executor : :class:`ParslExecutorSettings`
-    provider : :class:`ParslProviderSettings`
     """
+
     executor: ParslExecutorSettings = ParslExecutorSettings()
     provider: ParslProviderSettings = ParslProviderSettings()
 
     class Config(SettingsCommonConfig):
         pass
+
+
+doc_formatter(ParslQueueSettings)
 
 
 class ManagerSettings(BaseModel):
@@ -536,6 +497,9 @@ class ManagerSettings(BaseModel):
 
     class Config:
         extra = "forbid"
+
+
+doc_formatter(ManagerSettings)
 
 
 def parse_args():
@@ -582,6 +546,10 @@ def parse_args():
     optional.add_argument("--test", action="store_true", help="Boot and run a short test suite to validate setup")
     optional.add_argument(
         "--ntests", type=int, help="How many tests per found program to run, does nothing without --test set")
+    optional.add_argument("--schema", action="store_true", help="Display the current Schema (Pydantic) for the YAML "
+                                                                "config file and exit. This will always show the "
+                                                                "most up-to-date schema. It will be presented in a "
+                                                                "JSON-like format.")
 
     # Move into nested namespace
     args = vars(parser.parse_args())
@@ -603,6 +571,9 @@ def parse_args():
         "server": _build_subset(args, {"fractal_uri", "password", "username", "verify"}),
         "manager": _build_subset(args, {"max_tasks", "manager_name", "queue_tag", "log_file_prefix", "update_frequency",
                                         "test", "ntests"}),
+        # This set is for this script only, items here should not be passed to the ManagerSettings nor any other
+        # classes
+        "debug": _build_subset(args, {"schema"})
     } # yapf: disable
 
     if args["config_file"] is not None:
@@ -626,6 +597,15 @@ def main(args=None):
     if args is None:
         args = parse_args()
     exit_callbacks = []
+
+    try:
+        if args["debug"]["schema"]:
+            print(ManagerSettings.schema_json(indent=2))
+            return  # We're done, exit normally
+    except KeyError:
+        pass  # Don't worry if schema isn't in the list
+    finally:
+        args.pop("debug", None)  # Ensure the debug key is not present
 
     # Construct object
     settings = ManagerSettings(**args)
@@ -689,10 +669,14 @@ def main(args=None):
             "env_extra": settings.cluster.task_startup_commands,
             **dask_settings}
 
-        # Import the dask things we need
-        from dask.distributed import Client
-        cluster_module = cli_utils.import_module("dask_jobqueue", package=_cluster_loaders[settings.cluster.scheduler])
-        cluster_class = getattr(cluster_module, _cluster_loaders[settings.cluster.scheduler])
+        try:
+            # Import the dask things we need
+            from dask.distributed import Client
+            cluster_module = cli_utils.import_module("dask_jobqueue",
+                                                     package=_cluster_loaders[settings.cluster.scheduler])
+            cluster_class = getattr(cluster_module, _cluster_loaders[settings.cluster.scheduler])
+        except ImportError:
+            raise ImportError("You need both `dask` and `dask-jobqueue` to use the `dask` adapter")
 
         from dask_jobqueue import SGECluster
 
@@ -814,13 +798,16 @@ def main(args=None):
                              }
 
         # Import the parsl things we need
-        from parsl.config import Config
-        from parsl.executors import HighThroughputExecutor
-        from parsl.addresses import address_by_hostname
-        provider_module = cli_utils.import_module("parsl.providers",
-                                                  package=_provider_loaders[settings.cluster.scheduler])
-        provider_class = getattr(provider_module, _provider_loaders[settings.cluster.scheduler])
-        provider_header = _provider_headers[settings.cluster.scheduler]
+        try:
+            from parsl.config import Config
+            from parsl.executors import HighThroughputExecutor
+            from parsl.addresses import address_by_hostname
+            provider_module = cli_utils.import_module("parsl.providers",
+                                                      package=_provider_loaders[settings.cluster.scheduler])
+            provider_class = getattr(provider_module, _provider_loaders[settings.cluster.scheduler])
+            provider_header = _provider_headers[settings.cluster.scheduler]
+        except ImportError:
+            raise ImportError("You need the `parsl` package to use the `parsl` adapter")
 
         if _provider_loaders[settings.cluster.scheduler] == "moab":
             logger.warning("Parsl uses its TorqueProvider for Moab clusters due to the scheduler similarities. "
