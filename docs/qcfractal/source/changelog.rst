@@ -111,7 +111,7 @@ New Features
 ++++++++++++
 
 - (:pr:`207`) All compute operations can now be augmented with a ``tag`` which can be later consumed by different
-  ``QueueManager``s to only carry out computations with specified tags.
+  ``QueueManager``\s to only carry out computations with specified tags.
 - (:pr:`210`) Passwords in the database can now be generated for new users and user information can be updated (server-side only)
 - (:pr:`210`) ``Collections`` can now be updated automatically from the defaults
 - (:pr:`211`) The ``qcfractal-manager`` CLI command now accepts a config file for more complex managers through Dask JobQueue.
@@ -257,7 +257,7 @@ General note: ``Options`` objects have been renamed to ``KeywordSet`` to better 
 - (:pr:`147`) Service submission has been overhauled such that all services submit to a single source. Right now, only one service can be submitted at a time (to be expanded in a future feature.)
   TorsionDrive can now have multiple molecule inputs.
 - (:pr:`149`) Package import logic has been reworked to reduce the boot-up time of QCFractal from 3000ms at the worst to about 600ms.
-- (:pr:`150`) ``KeywordSet``s are now modeled much more consistently through pydantic models and are consistently hashed to survive round trip serialization.
+- (:pr:`150`) ``KeywordSet`` objects are now modeled much more consistently through pydantic models and are consistently hashed to survive round trip serialization.
 - (:pr:`153`) Datasets now support option aliases which map to the consistent ``KeywordSet`` models from :pr:`150`.
 - (:pr:`155`) Adding multiple ``Molecule`` or ``Result`` objects to the database at the same time now always return their Database ID's if added, and order of returned list of ID's matches input order.
   This PR also renamed ``Options`` to ``KeywordSet`` to properly reflect the goal of the object.
@@ -270,7 +270,7 @@ Bug Fixes
 +++++++++
 
 - (:pr:`132`) Fixed MongoEngine Socket bug where calling some functions before others resulted in an error due to lack of initialized variables.
-- (:pr:`133`) ``Molecule`` objects cannot be oriented once they enter the QCFractal ecosystem (after optional initial orientation.) ``Molecule``s also cannot be oriented by programs invoked by the QCFractal ecosystem so orientation is preserved post-calculation.
+- (:pr:`133`) ``Molecule`` objects cannot be oriented once they enter the QCFractal ecosystem (after optional initial orientation.) ``Molecule`` objects also cannot be oriented by programs invoked by the QCFractal ecosystem so orientation is preserved post-calculation.
 - (:pr:`146`) CI environments have been simplified to make maintaining them easier, improve test coverage, and find more bugs.
 - (:pr:`158`) Database addition documents in general will strip IDs from the input dictionary which caused issues from MongoEngine having a special treatment for the dictionary key "id".
 

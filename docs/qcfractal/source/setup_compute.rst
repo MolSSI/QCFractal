@@ -18,11 +18,11 @@ workload, task specifications, and resources that the compute will be executed
 on. In general, we recommend the following:
 
 - For laptops and single nodes: ProcessPoolExecutor
-- For local clusters: Dask
+- For local clusters: Dask or Parsl
 
 The ProcessPoolExecutor uses built-in Python types and requires no additional
 libraries while Dask requires ``dask``, ``dask.distributed``, and
-``dask_jobqueue``.
+``dask_jobqueue`` (|DaskD|_, |DaskJQ|_); and Parsl requires ``parsl`` (|ParslDoc|_)
 
 Using the Command Line
 ----------------------
@@ -30,6 +30,8 @@ Using the Command Line
 At the moment only ProcessPoolExecutor ``qcfractal-manager`` can be spun up
 from the command line as other distributed workflow managers require
 additional setup.
+
+For the full docs for setting up a :term:`Manager`, please see :doc:`the Manager documentation pages.<managers>`
 
 Launching a ``qcfractal-manager`` using a ProcessPoolExecutor:
 

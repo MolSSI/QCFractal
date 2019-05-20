@@ -2,6 +2,7 @@ Glossary
 ========
 
 .. glossary::
+    :sorted:
 
     Procedures
       On-node computations, these can either be a single computation (energy,
@@ -15,7 +16,8 @@ Glossary
 
     Queue Adapter
       The interface between QCFractal's internal queue representation and other
-      queueing systems such as Dask or Fireworks.
+      queueing systems such as Dask or Fireworks. Also see the :term:`Adapter` in the
+      :term:`Manager` glossary.
 
     Molecule
       A unique 3D representation of a molecule. Any changes to the protonation
