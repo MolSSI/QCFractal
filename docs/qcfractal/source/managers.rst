@@ -32,7 +32,7 @@ In this, multiple :term:`managers <Manager>` talk to a central :term:`Fractal Se
 
 The main goals of the Queue Manager is to reduce the user's level of expertise needed to start compute with Fractal and,
 more importantly, to need as little manual intervention as possible to have persistent compute. Ideally, you start
-the manager in a background process, and then leave it be while it checks in with the Fractal Server from time to time
+the manager in a background process, leave it be while it checks in with the Fractal Server from time to time
 to get :term:`tasks<Task>`, and pushes/pulls :term:`tasks<Task>` from the distributed :term:`Adapter` as need be.
 
 The communication between each of the layers involved, and the mechanism by which they communicate is summarized in
@@ -43,8 +43,8 @@ this image:
    :alt: Line of communication between server to compute
    :align: center
 
-The different levels of communication are all established automatically once the user configures the manager, but
-this does show how information flow from point-to-point.
+The different levels of communication are all established automatically once the user configures the manager, and
+this image shows how information flow from point-to-point.
 
 The manager itself is a fairly lightweight process and consumes very little CPU power on its own. You should talk with
 your sysadmin before running this on a head node, but the Queue Manager itself will consume
@@ -97,7 +97,8 @@ and then run the following command:
     $ qcfractal-manager --config-file="path/to/config.yaml"
 
 replacing the ``config-file`` arg with the path to the file you saved. You will need ``dask`` and ``dask-jobqueue``
-to run this example, which are not packages required by Fractal unless you are running compute managers
+(|DaskD|_, |DaskJQ|_), to run this example, which are not packages required by Fractal unless you are running compute
+managers; if you use a different :term:`Adapter`, you would need a separate set of packages.
 
 
 Queue Manager CLI
@@ -181,8 +182,7 @@ Terminology
 -----------
 
 There are a number of terms which can overlap in due to the layers of abstraction and the type of software and hardware
-the Queue Manager interacts with. To help with that, the pages in this section will use the terminology defined in
-the :doc:`glossary`.
+the Queue Manager interacts with. To help with that, the pages in this section will use the terminology defined below.
 Several pieces of software we interface with may have their own terms or the same term with different meaning, but
 because one goal of the Manager is to abstract those concepts away as best it can, we choose the following set. If
 you find something inappropriately labeled, unclear, or overloaded in any way, please raise an issue
@@ -192,3 +192,56 @@ An important note: Not all the concepts/mechanics of the :term:`Manager` and :te
 glossary by design!
 There are several abstraction layers and mechanics which the user should never have to interact with or even be aware
 of. However, if you feel something is missing, let us know!
+
+.. glossary::
+    :sorted:
+
+    Manager
+        The :doc:`Fractal Queue Manager<managers>`. The term "Manager" presented by itself refers to this object.
+
+    Adapter
+        The specific piece of software which accepts :term:`tasks<Task>` from the :term:`Manager` and sends them to the
+        physical hardware. It is also the software which typically interacts with a cluster's :term:`Scheduler` to
+        allocate said hardware and start :term:`Job`.
+
+    Distributed Compute Engine
+        A more precise, although longer-winded, term for the :term:`Adapter`.
+
+    Scheduler
+        The software running on a cluster which users request hardware from to run computational :term:`tasks<Task>`,
+        e.g. PBS, SLURM,
+        LSF, SGE, etc. This, by itself, does not have any concept of the :term:`Manager` or even the :term:`Adapter`
+        as both interface with *it*, not the other way around. Individual users' clusters may, and almost always,
+        have a different configuration, even amongst the same governing software. Therefore, no two Schedulers
+        should be treated the same.
+
+    Job
+        The specific allocation of resources (CPU, Memory, wall clock, etc) provided by the :term:`Scheduler` to the
+        :term:`Adapter`. This is identical to if you requested batch-like job on a cluster (e.g. though ``qsub`` or
+        ``sbatch``), however, it is more apt to think of the resources allocated in this way as "resources to be
+        distributed to the :term:`Task` by the :term:`Adapter`". Although a user running a :term:`Manager` will likely
+        not directly interact with these, its important to track as these are what your :term:`Scheduler` is actually
+        running and your allocations will be charged by.
+
+    Task
+        A single unit of compute as defined by the Fractal :term:`Server` (i.e. the item which comes from the Task
+        Queue). These tasks are preserved as they pass to the distributed compute engine and are what are presented to
+        each distributed compute engine's :term:`Worker`\s to compute
+
+    Worker
+        The process executed from the :term:`Adapter` on the allocated hardware inside a :term:`Job`. This process
+        receives the :term:`tasks<Task>` tracked by the :term:`Adapter` and is responsible for their execution. There may
+        be multiple Workers within a single :term:`Job`, and the resources allocated for said :term:`Job` will be
+        distributed by the :term:`Adapter` using whatever the :term:`Adapter` is configured to do. This is often uniform,
+        but not always.
+
+    Server
+        The Fractal Server that the :term:`Manager` connects to. This is the source of the
+        :term:`Task`\s which are pulled from and pushed to. Only the :term:`Manager` has any notion
+        of the Server of all the other software involved with the :term:`Manager` does not.
+
+    Tag
+        Arbitrary categorization labels that different :term:`tasks<Task>` can be assigned when submitted to the
+        :term:`Server`. :term:`Managers<Manager>` can pull these tags if configured, and will *exclusively* pull their
+        defined tag if so. Similarly, :term:`tasks<Task>` set with a given tag can *only* be pulled if
+        their :term:`Manager` is configured to do so.

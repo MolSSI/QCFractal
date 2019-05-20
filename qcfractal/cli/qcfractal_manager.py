@@ -10,7 +10,7 @@ import os
 from enum import Enum
 from functools import partial
 from math import ceil
-from textwrap import dedent, indent
+
 from typing import List, Optional
 
 import tornado.log
@@ -28,77 +28,6 @@ QCA_RESOURCE_STRING = '--resources process=1'
 logger = logging.getLogger("qcfractal.cli")
 
 
-def doc_formatter(target_object):
-    """
-    Set the docstring for a Pydantic object automatically based on the parameters, its a bit
-    """
-    doc = target_object.__doc__
-
-    # Handle non-pydantic objects
-    if doc is None:
-        new_doc = ''
-    elif 'Parameters\n' in doc or not (issubclass(target_object, BaseSettings) or issubclass(target_object, BaseModel)):
-        new_doc = doc
-    else:
-        type_formatter = {'boolan': 'bool',
-                          'string': 'str',
-                          'integer': 'int'
-                          }
-        # Add the white space
-        if not doc.endswith('\n\n'):
-            doc += "\n\n"
-        new_doc = dedent(doc) + "Parameters\n----------\n"
-        target_schema = target_object.schema()
-        # Go through each propert
-        for prop_name, prop in target_schema['properties'].items():
-            # Catch lookups for other Pydantic objects
-            if '$ref' in prop:
-                lookup = prop['$ref'].split('/')[-1]
-                prop = target_schema['definitions'][lookup]
-            # Get common properties
-            prop_type = prop["type"]
-            new_doc += prop_name + " : "
-            prop_desc = prop['description']
-
-            # Check for enumeration
-            if 'enum' in prop:
-                new_doc += '{' + ', '.join(prop['enum']) + '}'
-
-            # Set the name/type of object
-            else:
-                if prop_type == 'object':
-                    prop_field = prop['title']
-                else:
-                    prop_field = prop_type
-                new_doc += f'{type_formatter[prop_field] if prop_field in type_formatter else prop_field}'
-
-            # Handle Classes so as not to re-copy pydantic descriptions
-            if prop_type == 'object':
-                if not ('required' in target_schema and prop_name in target_schema['required']):
-                    new_doc += ", Optional"
-                prop_desc = f":class:`{prop['title']}`"
-
-            # Handle non-classes
-            else:
-                if 'default' in prop:
-                    default = prop['default']
-                    try:
-                        # Get the explicit default value for enum classes
-                        if issubclass(default, Enum):
-                            default = default.value
-                    except TypeError:
-                        pass
-                    new_doc += f", Default: {default}"
-                elif not ('required' in target_schema and prop_name in target_schema['required']):
-                    new_doc += ", Optional"
-
-            # Finally, write the detailed doc string
-            new_doc += "\n" + indent(prop_desc, "    ") + "\n"
-
-    # Assign the new doc string
-    target_object.__doc__ = new_doc
-
-
 class SettingsCommonConfig:
     env_prefix = "QCA_"
     case_insensitive = True
@@ -113,7 +42,7 @@ class AdapterEnum(str, Enum):
 
 class CommonManagerSettings(BaseSettings):
     """
-    The Common settings are the most settings most users will need to adjust regularly and control the nature of
+    The Common settings are the settings most users will need to adjust regularly to control the nature of
     task execution and the hardware under which tasks are executed on. This block is often unique to each deployment,
     user, and manager and will be the most commonly updated options, even as config files are copied and reused, and
     even on the same platform/cluster.
@@ -121,7 +50,7 @@ class CommonManagerSettings(BaseSettings):
     """
     adapter: AdapterEnum = Schema(
         AdapterEnum.pool,
-        description="Which type of Distrusted adapter to run tasks through."
+        description="Which type of Distributed adapter to run tasks through."
     )
     ntasks: int = Schema(
         1,
@@ -132,15 +61,18 @@ class CommonManagerSettings(BaseSettings):
     ncores: int = Schema(
         qcng.config.get_global("ncores"),
         description="Number of cores to be consumed and distributed over the ntasks. These tasks are divided evenly, "
-                    "so it is recommended that ncores/ntasks be a whole number else the core distribution is left "
-                    "up to the logic of the adapter."
+                    "so it is recommended that quotient of ncores/ntasks be a whole number else the core distribution "
+                    "is left up to the logic of the adapter. The default value is read from the number of detected "
+                    "cores on the system you are executing on.",
+        gt=0
     )
     memory: float = Schema(
         qcng.config.get_global("memory"),
         description="Amount of memory (in GB) to be consumed and distributed over the ntasks. This memory is divided "
                     "evenly, but is ultimately at the control of the adapter. Engine will only allow each of its "
                     "calls to consume memory/ntasks of memory. Total memory consumed by this manager at any one "
-                    "time is this value times cluster.max_cluster_jobs.",
+                    "time is this value times cluster.max_cluster_jobs. The default value is read from the amount of "
+                    "memory detected on the system you are executing on.",
         gt=0
     )
     scratch_directory: Optional[str] = Schema(
@@ -157,14 +89,15 @@ class CommonManagerSettings(BaseSettings):
         pass
 
 
-doc_formatter(CommonManagerSettings)
+cli_utils.doc_formatter(CommonManagerSettings)
 
 
 class FractalServerSettings(BaseSettings):
     """
     Settings pertaining to the Fractal Server you wish to pull tasks from and push completed tasks to. Each manager
     supports exactly 1 Fractal Server to be in communication with, and exactly 1 user on that Fractal Server. These
-    can be changed, but only once the Manager is shutdown and the settings changed.
+    can be changed, but only once the Manager is shutdown and the settings changed. Multiple Managers however can be
+    started in parallel with each other, but must be done as separate calls to the CLI.
 
     Caution: The password here is written in plain text, so it is up to the owner/writer of the configuration file
     to ensure its security.
@@ -191,7 +124,7 @@ class FractalServerSettings(BaseSettings):
         pass
 
 
-doc_formatter(FractalServerSettings)
+cli_utils.doc_formatter(FractalServerSettings)
 
 
 class QueueManagerSettings(BaseSettings):
@@ -240,12 +173,12 @@ class QueueManagerSettings(BaseSettings):
     ntests: int = Schema(
         5,
         description="Number of tests to run if the `test` flag is set to True. Total number of tests will be this "
-                    "number times the number of found quantum chemistry programs.",
+                    "number times the number of found quantum chemistry programs. Does nothing if `test` is False",
         gt=0
     )
 
 
-doc_formatter(QueueManagerSettings)
+cli_utils.doc_formatter(QueueManagerSettings)
 
 
 class SchedulerEnum(str, Enum):
@@ -264,7 +197,7 @@ class AdaptiveCluster(str, Enum):
 class ClusterSettings(BaseSettings):
     """
     Settings tied to the cluster you are running on. These settings are mostly tied to the nature of the cluster
-    jobs you are submitting, separate from the nature of the compute jobs you will be running within them. As such,
+    jobs you are submitting, separate from the nature of the compute tasks you will be running within them. As such,
     the options here are things like wall time (per job), which Scheduler your cluster has (like PBS or SLURM),
     etc. No additional options are allowed here.
     """
@@ -272,7 +205,7 @@ class ClusterSettings(BaseSettings):
         1,
         description="The maximum number of cluster jobs which are allowed to be run at the same time. The total number "
                     "of workers which can be started (and thus simultaneous Fractal tasks which can be run) is equal "
-                    "to this parameter times common.ntasks."
+                    "to this parameter times common.ntasks. "
                     "In exclusive mode this is equivalent to the maximum number of nodes which you will consume. "
                     "This must be a positive, non zero integer.",
         gt=0
@@ -316,10 +249,6 @@ class ClusterSettings(BaseSettings):
                     "workers based on jobs in the queue. This is str instead of bool type variable in case more "
                     "complex adaptivity options are added in the future."
     )
-    throw: bool = Schema(
-        ...,
-        description="something"
-    )
 
     class Config(SettingsCommonConfig):
         pass
@@ -329,7 +258,7 @@ class ClusterSettings(BaseSettings):
         return v.lower()
 
 
-doc_formatter(ClusterSettings)
+cli_utils.doc_formatter(ClusterSettings)
 
 
 class SettingsBlocker(BaseSettings):
@@ -364,7 +293,9 @@ class DaskQueueSettings(SettingsBlocker):
     these to Dask.
 
     NOTE: The parameters listed here have are a special exception for additional features Fractal has engineered or
-    options which should be considered for some of the edge cases we have discovered
+    options which should be considered for some of the edge cases we have discovered. If you try to set a value
+    which is derived from other options in the YAML file, an error is raised and you are told exactly which one is
+    forbidden.
 
     Please see the docs for the provider for more information.
     """
@@ -390,7 +321,7 @@ class DaskQueueSettings(SettingsBlocker):
     _forbidden_name = "dask_jobqueue"
 
 
-doc_formatter(DaskQueueSettings)
+cli_utils.doc_formatter(DaskQueueSettings)
 
 
 class ParslExecutorSettings(SettingsBlocker):
@@ -402,7 +333,9 @@ class ParslExecutorSettings(SettingsBlocker):
     https://parsl.readthedocs.io/en/latest/stubs/parsl.executors.HighThroughputExecutor.html
 
     NOTE: The parameters listed here have are a special exception for additional features Fractal has engineered or
-    options which should be considered for some of the edge cases we have discovered
+    options which should be considered for some of the edge cases we have discovered. If you try to set a value
+    which is derived from other options in the YAML file, an error is raised and you are told exactly which one is
+    forbidden.
 
     """
     address: Optional[str] = Schema(
@@ -419,7 +352,7 @@ class ParslExecutorSettings(SettingsBlocker):
     _forbidden_name = "the parsl executor"
 
 
-doc_formatter(ParslExecutorSettings)
+cli_utils.doc_formatter(ParslExecutorSettings)
 
 
 class ParslProviderSettings(SettingsBlocker):
@@ -429,7 +362,9 @@ class ParslProviderSettings(SettingsBlocker):
     Please see the docs for the provider information
 
     NOTE: The parameters listed here have are a special exception for additional features Fractal has engineered or
-    options which should be considered for some of the edge cases we have discovered
+    options which should be considered for some of the edge cases we have discovered. If you try to set a value
+    which is derived from other options in the YAML file, an error is raised and you are told exactly which one is
+    forbidden.
 
     SLURM: https://parsl.readthedocs.io/en/latest/stubs/parsl.providers.SlurmProvider.html
     PBS/Torque/Moba: https://parsl.readthedocs.io/en/latest/stubs/parsl.providers.TorqueProvider.html
@@ -447,7 +382,7 @@ class ParslProviderSettings(SettingsBlocker):
     _forbidden_name = "parsl's provider"
 
 
-doc_formatter(ParslProviderSettings)
+cli_utils.doc_formatter(ParslProviderSettings)
 
 
 class ParslQueueSettings(BaseSettings):
@@ -465,10 +400,10 @@ class ParslQueueSettings(BaseSettings):
     provider: ParslProviderSettings = ParslProviderSettings()
 
     class Config(SettingsCommonConfig):
-        pass
+        extra = "allow"
 
 
-doc_formatter(ParslQueueSettings)
+cli_utils.doc_formatter(ParslQueueSettings)
 
 
 class ManagerSettings(BaseModel):
@@ -477,7 +412,7 @@ class ManagerSettings(BaseModel):
     YAML file. No additional top-level fields are permitted, but sub-fields may have their own additions.
 
     Not all fields are required and many will depend on the cluster you are running, and the adapter you choose
-    to run on
+    to run on.
 
     Parameters
     ----------
@@ -499,7 +434,7 @@ class ManagerSettings(BaseModel):
         extra = "forbid"
 
 
-doc_formatter(ManagerSettings)
+cli_utils.doc_formatter(ManagerSettings)
 
 
 def parse_args():

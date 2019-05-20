@@ -4,7 +4,7 @@ Queue Manager Frequent Questions and Issues
 This page documents some of the frequent questions and issues we see with the
 Queue Managers. If this page and none of the other documentation pages have
 answered your question, please ask `on GitHub <https://github.com/MolSSI/QCFractal/>`_ or
-|slack|_ to get assistance.
+|join_slack_lower|_ to get assistance.
 
 Common Questions
 ----------------
@@ -14,12 +14,15 @@ How do I get more information from the Manger?
 
 Turn on ``verbose`` mode, either add the ``-v`` flag to the CLI, or set the
 ``common.verbose`` to ``True`` in the YAML file. Setting this flag will produce
-much more detailed information.
+much more detailed information. This sets the loggers to ``DEBUG`` level.
+
+In the future, we may allow for different levels of verbosity, but for now there is
+only the one level.
 
 Can I start more than one Manager at a time?
 ++++++++++++++++++++++++++++++++++++++++++++
 
-Yes. This is often done if you would like to create multiple task tags that
+Yes. This is often done if you would like to create multiple :term:`task<Task>` :term:`tags<Tag>` that
 have different resource requirements or spin up managers that can access
 different resources. Check with your cluster administrators though to find out
 their policy on multiple processes running on the clusters head node.
@@ -39,14 +42,14 @@ you can start multiple managers with different config files pointing to differen
 How do I help contribute compute time to the MolSSI database?
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-|Slack|_!
+|join_slack_upper|_!
 We would love to talk to you and help get you contributing as well!
 
 I have this issue, here is my config file...
 ++++++++++++++++++++++++++++++++++++++++++++
 
-Great! I only ask that you please **remove the password from the config file
-before posting it.** If we see a password, we'll do our best to delete it, but
+Great! We only ask that you please **remove the password from the config file before posting it.**
+If we see a password, we'll do our best to delete it, but
 that does not ensure someone did not see it.
 
 
@@ -108,7 +111,9 @@ If there isn't a shared adapter name, try this instead:
 
 Replace the ``.XX.Y.Z`` with the code which has the intranet IP of the *head node*. This option
 acts as a pass through to the Dask :term:`Worker` call and tells the worker to try and connect to the
-head node at that IP address. If that still doesn't work, contact us.
+head node at that IP address.
+
+If that still doesn't work, contact us. We're working to make this less manual and difficult in the future.
 
 
 Other variants:
@@ -122,6 +127,17 @@ My Conda Environments are not Activating
 
 You likely have to ``source`` the Conda ``profile.d`` again first. See also
 `<https://github.com/conda/conda/issues/8072>`_
+
+This can also happen during testing where you will see command-line based binaries (like Psi4) pass, but Python-based
+codes (like RDKit) fail saying complaining about an import error. On cluster compute nodes, this often manifests as
+the ``$PATH`` variable being passed from your head node correctly to the compute node, but then the Python imports
+cannot be found because the Conda environment is not set up correctly.
+
+This problem is obfuscated by the fact that
+:term:`workers<Worker>` such as Dask Workers can still start initially despite being a Python code themselves. Many
+:term:`adapters<Adapter>` will start their programs using the absolute Python binary path which gets around the
+incomplete Conda configuration. **We strongly recommend you do not try setting the absolute Python path** in your
+scripts to get around this, and instead try to ``source`` the Conda ``profile.d`` first.
 
 
 My jobs appear to be running, but only one (or few) workers are starting

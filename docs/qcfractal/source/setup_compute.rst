@@ -22,7 +22,7 @@ on. In general, we recommend the following:
 
 The ProcessPoolExecutor uses built-in Python types and requires no additional
 libraries while Dask requires ``dask``, ``dask.distributed``, and
-``dask_jobqueue`` (|DaskD|_, |DaskJQ|_); and Parsl requires ``parsl`` (|Parsl|_)
+``dask_jobqueue`` (|DaskD|_, |DaskJQ|_); and Parsl requires ``parsl`` (|ParslDoc|_)
 
 Using the Command Line
 ----------------------
