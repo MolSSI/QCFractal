@@ -106,10 +106,13 @@ class FractalSnowflake(FractalServer):
 
         if logging is False:
             self.logfile = tempfile.NamedTemporaryFile()
+            log_prefix = self.logfile.name
         elif logging is True:
             self.logfile = None
+            log_prefix = None
         elif isinstance(logging, str):
             self.logfile = logging
+            log_prefix = self.logfile
         else:
             raise KeyError(f"Logfile type not recognized {type(logfile)}.")
 
@@ -122,7 +125,7 @@ class FractalSnowflake(FractalServer):
             ssl_options=False,
             max_active_services=max_active_services,
             queue_socket=self.queue_socket,
-            # logfile_prefix=self.logfile.name,
+            logfile_prefix=log_prefix,
             query_limit=int(1.e6))
 
         if self._mongod_proc:
