@@ -1,15 +1,19 @@
 import datetime
 # from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import (Column, Integer, String, Text, DateTime, Boolean,
-                        ForeignKey, JSON, Enum, Float, Binary, Table)
+from sqlalchemy import (Column, Integer, String, DateTime, Boolean,
+                        ForeignKey, JSON, Enum, Float, Binary, Table,
+                        inspect, Index)
 from sqlalchemy.orm import relationship, object_session, column_property
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
 from sqlalchemy.ext.declarative import as_declarative
-from sqlalchemy import select
-
-
-# pip install sqlalchemy psycopg2
+from sqlalchemy import select, func, and_
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.orderinglist import ordering_list
+# from sqlalchemy.ext.associationproxy import association_proxy
+# from sqlalchemy.schema import Index
+from sqlalchemy.dialects.postgresql import aggregate_order_by
+from collections.abc import Iterable
 
 # Base = declarative_base()
 
@@ -18,22 +22,106 @@ from sqlalchemy import select
 class Base:
     """Base declarative class of all ORM models"""
 
+    db_related_fields = ['result_type', 'base_result_id', 'metadata', '_trajectory']
+
     def to_dict(self, with_id=True, exclude=None):
-        dict_obj = self.__dict__.copy()
-        del dict_obj['_sa_instance_state']
+
+        tobe_deleted_keys = []
+
         if not with_id:
-            del dict_obj['id']
+            tobe_deleted_keys.append('id')
+
         if exclude:
-            for key in exclude:
-                del dict_obj[key]
-        return dict_obj
+            tobe_deleted_keys.extend(exclude)
+
+        dict_obj = [x for x in self.__dict__
+                    if not x.startswith('_')
+                    and x not in self.db_related_fields
+                    and not x.endswith('_obj')
+                    and x not in tobe_deleted_keys]
+
+        class_inspector = inspect(self.__class__)
+        # add hybrid properties
+        for key, prop in class_inspector.all_orm_descriptors.items():
+            if isinstance(prop, hybrid_property):
+                dict_obj.append(key)
+
+        # Add the attributes to the final results
+        ret = {k:getattr(self, k) for k in dict_obj}
+
+        if 'extra' in ret:
+            ret.update(ret['extra'])
+            del ret['extra']
+
+        # transform ids from int into str
+        id_fields = self._get_fieldnames_with_DB_ids_(class_inspector)
+        for key in id_fields:
+            if key in ret.keys() and ret[key] is not None:
+                if isinstance(ret[key], Iterable):
+                    ret[key] = [str(i) for i in ret[key]]
+                else:
+                    ret[key] = str(ret[key])
+
+        return ret
+
+    @classmethod
+    def _get_fieldnames_with_DB_ids_(cls, class_inspector=None):
+        if not class_inspector:
+            class_inspector = inspect(cls)
+        id_fields = []
+        for key, col in class_inspector.columns.items():
+            # if PK, FK, or column property (TODO: work around for column property)
+            if col.primary_key or len(col.foreign_keys)>0 or key != col.key:
+                id_fields.append(key)
+
+        return id_fields
 
     @classmethod
     def col(cls):
         return cls.__table__.c
 
+    def _update_many_to_many(self, table, parent_id_name, child_id_name,
+                            parent_id_val, new_list, old_list=None):
+        """Perfomr upsert on a many to many association table
+        Does NOT commit changes, parent should optimize when it needs to commit
+        raises exception if ids don't exist in the DB
+        """
+
+        session = object_session(self)
+
+        old_set = {x for x in old_list} if old_list else set()
+        new_set = {x for x in new_list} if new_list else set()
+
+
+        # Update many-to-many relations
+        # Remove old relations and apply the new ones
+        if old_set != new_set:
+            to_add = new_set - old_set
+            to_del = old_set - new_set
+
+            if to_del:
+                session.execute(
+                    table.delete()
+                        .where(and_(table.c[parent_id_name]==parent_id_val,
+                                    table.c[child_id_name].in_(to_del)))
+                )
+            if to_add:
+                session.execute(
+                    table.insert()\
+                        .values([(parent_id_val, my_id) for my_id in to_add])
+                )
+
     def __str__(self):
-        return str(self.id)
+        if hasattr(self, 'id'):
+            return str(self.id)
+        return super.__str__(self)
+
+    # @validates('created_on', 'modified_on')
+    # def validate_date(self, key, date):
+    #     """For SQLite, translate str to dates manulally"""
+    #     if date is not None and isinstance(date, str):
+    #         date = dateutil.parser.parse(date)
+    #     return date
 
 
 class AccessLogORM(Base):
@@ -45,18 +133,19 @@ class AccessLogORM(Base):
     type = Column(String)
 
 
-class LogsORM(Base):
-    __tablename__ = "logs"
+class KVStoreORM(Base):
+    """TODO: rename to """
+    __tablename__ = "kv_store"
 
     id = Column(Integer, primary_key=True)
-    value = Column(Text, nullable=False)
+    value = Column(JSON, nullable=False)
 
 
-class ErrorORM(Base):
-    __tablename__ = "error"
-
-    id = Column(Integer, primary_key=True)
-    value = Column(Text, nullable=False)
+# class ErrorORM(Base):
+#     __tablename__ = "error"
+#
+#     id = Column(Integer, primary_key=True)
+#     value = Column(JSON, nullable=False)
 
 
 class CollectionORM(Base):
@@ -72,11 +161,16 @@ class CollectionORM(Base):
     id = Column(Integer, primary_key=True)
 
     collection = Column(String(100), nullable=False)
-    name = Column(String(100), nullable=False)  # Example 'water'
+    lname = Column(String(100), nullable=False)
+    name = Column(String(100), nullable=False)
 
     tags = Column(JSON)
     tagline = Column(String)
-    data = Column(JSON)  # extra data related to specific collection type
+    extra = Column(JSON)  # extra data related to specific collection type
+
+    __table_args__ = (
+        Index('collection_name', "collection", "lname", unique=True),
+    )
 
     # meta = {
     #     'indexes': [{
@@ -197,17 +291,18 @@ class BaseResultORM(Base):
 
     # Extra fields
     extras = Column(JSON)
-    stdout = Column(Integer, ForeignKey('logs.id'))
-    stdout_obj = relationship(LogsORM, lazy='noload', foreign_keys=stdout,
-                          cascade="all, delete-orphan", single_parent=True)
+    stdout = Column(Integer, ForeignKey('kv_store.id'))
+    stdout_obj = relationship(KVStoreORM, lazy='noload', foreign_keys=stdout,
+                              cascade="all, delete-orphan", single_parent=True)
 
-    stderr = Column(Integer, ForeignKey('logs.id'))
-    stderr_obj = relationship(LogsORM, lazy='noload', foreign_keys=stderr,
-                          cascade="all, delete-orphan", single_parent=True)
+    stderr = Column(Integer, ForeignKey('kv_store.id'))
+    stderr_obj = relationship(KVStoreORM, lazy='noload', foreign_keys=stderr,
+                              cascade="all, delete-orphan", single_parent=True)
 
-    error = Column(Integer, ForeignKey('error.id'))
-    error_obj = relationship(ErrorORM, lazy='noload', cascade="all, delete-orphan",
-                         single_parent=True)
+    error = Column(Integer, ForeignKey('kv_store.id'))
+    error_obj = relationship(KVStoreORM, lazy='noload', foreign_keys=error,
+                             cascade="all, delete-orphan",
+                             single_parent=True)
 
     # Compute status
     # task_id: ObjectId = None  # Removed in SQL
@@ -284,6 +379,8 @@ class ResultORM(BaseResultORM):
 
     __mapper_args__ = {
         'polymorphic_identity': 'result',
+        # to have separate select when querying BaseResultsORM
+        'polymorphic_load': 'selectin',
     }
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -300,11 +397,26 @@ class ProcedureMixin:
 
 # ================== Types of ProcedureORMs ================== #
 
-# association table for many to many relation
-opt_result_association = Table('opt_result_association', Base.metadata,
-    Column('opt_id', Integer, ForeignKey('optimization_procedure.id', ondelete="CASCADE")),
-    Column('result_id', Integer, ForeignKey('result.id', ondelete="CASCADE"))
-)
+class Trajectory(Base):
+    """Association table for many to many"""
+
+    __tablename__ = 'opt_result_association'
+
+    opt_id = Column(Integer, ForeignKey('optimization_procedure.id', ondelete='cascade'), primary_key=True)
+    result_id = Column(Integer, ForeignKey('result.id', ondelete='cascade'), primary_key=True)
+    position = Column(Integer)
+    # Index('opt_id', 'result_id', unique=True)
+
+    trajectory_obj = relationship(ResultORM, lazy="noload")
+
+
+# # association table for many to many relation
+# opt_result_association = Table('opt_result_association', Base.metadata,
+#     Column('opt_id', Integer, ForeignKey('optimization_procedure.id', ondelete="CASCADE")),
+#     Column('result_id', Integer, ForeignKey('result.id', ondelete="CASCADE")),
+#     Column('position', Integer)
+#     # PrimaryKeyConstraint('opt_id', 'result_id')
+# )
 
 class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     """
@@ -333,41 +445,158 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
                                       foreign_keys=final_molecule)
 
     # ids, calculated not stored in this table
+    # NOTE: this won't work in SQLite since it returns ARRAYS, aggregate_order_by
     trajectory = column_property(
-        select([opt_result_association.c.result_id])\
-            .where(opt_result_association.c.opt_id==id)
+                    select([func.array_agg(
+                            aggregate_order_by(Trajectory.result_id,Trajectory.position))
+                    ]).where(Trajectory.opt_id==id)
     )
-    # array of objects (results)
-    trajectory_obj = relationship(ResultORM, secondary=opt_result_association,
-                                  uselist=True)
+
+
+    # array of objects (results) - Lazy - raise error of accessed
+    trajectory_obj = relationship(Trajectory, cascade="all, delete-orphan",
+                                  backref="optimization_procedure",
+                                  order_by=Trajectory.position,
+                                  collection_class=ordering_list('position'))
+
 
     __mapper_args__ = {
         'polymorphic_identity': 'optimization_procedure',
+        # to have separate select when querying BaseResultsORM
+        'polymorphic_load': 'selectin',
     }
 
-    def add_relations(self, trajectory):
-        session = object_session(self)
-        # add many to many relation with results if ids are given not objects
-        # if trajectory:
-        #     session.execute(
-        #         opt_result_association
-        #             .insert()  # or update
-        #             .values([(self.id, i) for i in trajectory])
-        #     )
-        # session.commit()
+    __table_args__ = (
+        # Index('my_index', "a", "b", unique=True),
+    )
+
+    def update_relations(self, trajectory=None, **kwarg):
+
+        # update optimization_results relations
+        # self._update_many_to_many(opt_result_association, 'opt_id', 'result_id',
+        #                 self.id, trajectory, self.trajectory)
+
+        self.trajectory_obj = []
+        trajectory = [] if not trajectory else trajectory
+        for result_id in trajectory:
+            traj = Trajectory(opt_id=int(self.id), result_id=int(result_id))
+            self.trajectory_obj.append(traj)
 
 
-# event.listen(OptimizationProcedureORM, 'before_insert', add_relations)
+    # def add_relations(self, trajectory):
+    #     session = object_session(self)
+    #     # add many to many relation with results if ids are given not objects
+    #     if trajectory:
+    #         session.execute(
+    #             opt_result_association
+    #                 .insert()  # or update
+    #                 .values([(self.id, i) for i in trajectory])
+    #         )
+    #     session.commit()
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+class GridOptimizationAssociation(Base):
+    """Association table for many to many"""
+
+    __tablename__ = 'grid_optimization_association'
+
+    grid_opt_id = Column(Integer, ForeignKey('grid_optimization_procedure.id', ondelete='cascade'), primary_key=True)
+    key = Column(String, nullable=False, primary_key=True)
+
+    # not primary key
+    opt_id = Column(Integer, ForeignKey('optimization_procedure.id', ondelete='cascade'))
+
+    # Index('grid_opt_id', 'key', unique=True)
+
+    optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
+
+
+class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
+
+    __tablename__ = "grid_optimization_procedure"
+
+    id = Column(Integer, ForeignKey('base_result.id', ondelete='cascade'),
+                      primary_key=True)
+
+    def __init__(self, **kwargs):
+        kwargs.setdefault("version", 1)
+        kwargs.setdefault("procedure", "gridoptimization")
+        kwargs.setdefault("program", "qcfractal")
+        super().__init__(**kwargs)
+
+    # Input data
+    initial_molecule = Column(Integer, ForeignKey('molecule.id'))
+    initial_molecule_obj = relationship(MoleculeORM, lazy='select',
+                                        foreign_keys=initial_molecule)
+
+    optimization_spec = Column(JSON)
+
+    # Output data
+    starting_molecule = Column(Integer, ForeignKey('molecule.id'))
+    starting_molecule_obj = relationship(MoleculeORM, lazy='select',
+                                        foreign_keys=initial_molecule)
+
+    final_energy_dict = Column(JSON)  # Dict[str, float]
+    starting_grid = Column(JSON)  # tuple
+
+    grid_optimizations_obj = relationship(GridOptimizationAssociation,
+        cascade="all, delete-orphan", backref="grid_optimization_procedure"
+    )
+
+    @hybrid_property
+    def grid_optimizations(self):
+        """calculated property when accessed, not saved in the DB
+        A view of the many to many relation in the form of a dict"""
+
+        ret = {}
+        try:
+            for obj in self.grid_optimizations_obj:
+                ret[obj.key] = str(obj.opt_id)
+
+        except Exception as err:
+            # raises exception of first access!!
+            print(err)
+
+        return ret
+
+    @grid_optimizations.setter
+    def grid_optimizations(self, dict_values):
+
+        return dict_values
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'grid_optimization_procedure',
+        # to have separate select when querying BaseResultsORM
+        'polymorphic_load': 'selectin',
+    }
+
+    def update_relations(self, grid_optimizations=None, **kwarg):
+
+        self.grid_optimizations_obj = []
+        for key, opt_id in grid_optimizations.items():
+            obj = GridOptimizationAssociation(grid_opt_id=int(self.id), opt_id=int(opt_id), key=key)
+            self.grid_optimizations_obj.append(obj)
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+class OptimizationHistory(Base):
+    """Association table for many to many"""
+
+    __tablename__ = 'optimization_history'
+
+    torsion_id = Column(Integer, ForeignKey('torsiondrive_procedure.id', ondelete='cascade'), primary_key=True)
+    opt_id = Column(Integer, ForeignKey('optimization_procedure.id', ondelete='cascade'), primary_key=True)
+    key = Column(String, nullable=False, primary_key=True)
+    #TODO position for ordering
+    # Index('torsion_id', 'key', unique=True)
+
+    optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
+
 
 # association table for many to many relation
-torj_opt_association = Table('torj_opt_association', Base.metadata,
-    Column('torj_id', Integer, ForeignKey('torsiondrive_procedure.id', ondelete="CASCADE")),
-    Column('opt_id', Integer, ForeignKey('optimization_procedure.id', ondelete="CASCADE"))
-)
-
-# association table for many to many relation
-torj_init_mol_association = Table('torj_init_mol_association', Base.metadata,
-    Column('torj_id', Integer, ForeignKey('torsiondrive_procedure.id', ondelete="CASCADE")),
+torsion_init_mol_association = Table('torsion_init_mol_association', Base.metadata,
+    Column('torsion_id', Integer, ForeignKey('torsiondrive_procedure.id', ondelete="CASCADE")),
     Column('molecule_id', Integer, ForeignKey('molecule.id', ondelete="CASCADE"))
 )
 
@@ -388,37 +617,78 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
         super().__init__(**kwargs)
 
     # input data (along with the mixin)
-    # many to many relation
-    initial_molecule = relationship(MoleculeORM,
-                                    secondary=torj_init_mol_association)
-    keywords = Column(JSON)  # TODO: same as BaseRecord!!!
+
+    # ids of the many to many relation
+    initial_molecule = column_property(
+                    select([func.array_agg(torsion_init_mol_association.c.molecule_id)])\
+                    .where(torsion_init_mol_association.c.torsion_id==id)
+            )
+    # actual objects relation M2M, never loaded here
+    initial_molecule_obj = relationship(MoleculeORM,
+                                        secondary=torsion_init_mol_association,
+                                        uselist=True, lazy='noload')
+
     optimization_spec = Column(JSON)
 
     # Output data
     final_energy_dict = Column(JSON)
     minimum_positions = Column(JSON)
-    optimization_history = relationship(OptimizationProcedureORM,
-                                        secondary=torj_opt_association)
+
+
+    optimization_history_obj = relationship(OptimizationHistory,
+        cascade="all, delete-orphan", backref="torsiondrive_procedure"
+    )
+
+    @hybrid_property
+    def optimization_history(self):
+        """calculated property when accessed, not saved in the DB
+        A view of the many to many relation in the form of a dict"""
+
+        ret = {}
+        try:
+            for opt_history in self.optimization_history_obj:
+                if opt_history.key in ret:
+                    ret[opt_history.key].append(str(opt_history.opt_id))
+                else:
+                    ret[opt_history.key] = [str(opt_history.opt_id)]
+
+        except Exception as err:
+            # raises exception of first access!!
+            print(err)
+
+        return ret
+
+    @optimization_history.setter
+    def optimization_history(self, dict_values):
+        """A private copy of the opt history as a dict
+        Key: list of optimization procedures"""
+
+        return dict_values
 
     __mapper_args__ = {
         'polymorphic_identity': 'torsiondrive_procedure',
+        # to have separate select when querying BaseResultsORM
+        'polymorphic_load': 'selectin',
     }
 
+    def update_relations(self, initial_molecule=None, optimization_history=None, **kwarg):
+
+        # update torsion molecule relation
+        self._update_many_to_many(torsion_init_mol_association, 'torsion_id', 'molecule_id',
+                        self.id, initial_molecule, self.initial_molecule)
+
+        self.optimization_history_obj = []
+        for key in optimization_history:
+            for opt_id in optimization_history[key]:
+                opt_history = OptimizationHistory(torsion_id=int(self.id), opt_id=int(opt_id), key=key)
+                self.optimization_history_obj.append(opt_history)
+
+        # No need for the following because the session is committed with parent save
+        # session.add_all(self.optimization_history_obj)
+        # session.add(self)
+        # session.commit()
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-# class Spec(db.DynamicEmbeddedDocument):
-#     """ The spec of a task in the queue
-#         This is an embedded document, meaning that it will be embedded
-#         in the task_queue collection and won't be stored as a seperate
-#         collection/table --> for faster parsing
-#     """
-#
-#     function = Column(String)
-#     args = Column(JSON)  # fast, can take any structure
-#     kwargs = Column(JSON)
-
 
 class TaskQueueORM(Base):
     """A queue of tasks corresponding to a procedure
@@ -440,15 +710,31 @@ class TaskQueueORM(Base):
     program = Column(String)
     procedure = Column(String)
     status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.waiting)
-    priority = Column(Enum(PriorityEnum), default=PriorityEnum.NORMAL)
+    priority = Column(Integer, default=int(PriorityEnum.NORMAL))
     manager = Column(String, default=None)
     error = Column(String)  # TODO: is this an error object? should be in results?
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
+    # TODO: for back-compatibility with mongo, tobe removed
+    @hybrid_property
+    def base_result(self):
+        return dict(ref="result", id=str(self.base_result_id))
+
+    @base_result.setter
+    def base_result(self, val):
+        """Only two valid values, dict and int"""
+
+        if isinstance(val, dict):
+            self.base_result_id = int(val['id'])
+        else:
+            self.base_result_id = int(val)
+
+        return val
+
     # can reference ResultORMs or any ProcedureORM
-    base_result = Column(Integer, ForeignKey("base_result.id"), unique=True)
+    base_result_id = Column(Integer, ForeignKey("base_result.id"), unique=True)
     base_result_obj = relationship(BaseResultORM, lazy='select')  # or lazy='joined'
 
     # meta = {
@@ -485,8 +771,10 @@ class ServiceQueueORM(Base):
     tag = Column(String, default=None)
     hash_index = Column(String, nullable=False)
 
-    procedure_id = Column(Integer, ForeignKey("base_result.id"))
-    procedure = relationship(BaseResultORM, lazy='joined')
+    procedure_id = Column(Integer, ForeignKey("base_result.id"), unique=True)
+    procedure_obj = relationship(BaseResultORM, lazy='joined')
+
+    extra = Column(JSON)
 
     # created_on = Column(DateTime, nullable=False)
     # modified_on = Column(DateTime, nullable=False)

@@ -3,10 +3,11 @@ Common models for QCPortal/Fractal
 """
 import json
 from enum import Enum
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional, Union, List, Tuple
 
 from pydantic import BaseModel, validator
-from qcelemental.models import Molecule, Provenance
+from qcelemental.models import Provenance
+import qcelemental as qcel
 
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
@@ -25,9 +26,27 @@ class ObjectId(str):
 
     @classmethod
     def validate(cls, v):
-        if (not isinstance(v, str)) or (len(v) != 24) or (not set(v) <= cls._valid_hex):
-            raise TypeError("The string {} is not a valid 24-character hexadecimal ObjectId!".format(v))
-        return v
+        if (isinstance(v, str) and (len(v) == 24) and (set(v) <= cls._valid_hex)):
+            return v
+        elif isinstance(v, int):
+            return str(v)
+        elif isinstance(v, str) and v.isdigit():
+            return (v)
+        else:
+            raise TypeError("The string {} is not a valid 24-character hexadecimal or integer ObjectId!".format(v))
+
+
+class Molecule(qcel.models.Molecule):
+
+    id: Optional[ObjectId] = None
+    connectivity: List[Tuple[int, int, float]] = None
+
+    def __init__(self, **kwargs):
+        # print(kwargs.get("connectivity", None))
+        if ("connectivity" in kwargs) and (len(kwargs["connectivity"]) == 0):
+            del kwargs["connectivity"]
+        # print(kwargs.get("id", None), type(kwargs.get("id", None)))
+        super().__init__(**kwargs)
 
 
 class DriverEnum(str, Enum):
@@ -44,7 +63,7 @@ class QCSpecification(BaseModel):
     driver: DriverEnum
     method: str
     basis: Optional[str] = None
-    keywords: Optional[Union[ObjectId, int]] = None
+    keywords: Optional[ObjectId] = None
     program: str
 
     @validator('basis')
@@ -63,7 +82,7 @@ class QCSpecification(BaseModel):
         extra = "forbid"
         allow_mutation = False
 
-    def form_schema_object(self, keywords: Optional['KeywordSet'] = None, checks=True) -> Dict[str, Any]:
+    def form_schema_object(self, keywords: Optional['KeywordSet']=None, checks=True) -> Dict[str, Any]:
         if checks and self.keywords:
             assert keywords.id == self.keywords
 
@@ -111,7 +130,7 @@ class KeywordSet(BaseModel):
     """
     An options object for the QCArchive ecosystem
     """
-    id: Optional[Union[ObjectId, int]] = None
+    id: Optional[ObjectId] = None
     hash_index: str
     values: Dict[str, Any]
     lowercase: bool = True
@@ -119,7 +138,7 @@ class KeywordSet(BaseModel):
     comments: Optional[str] = None
 
     class Config:
-        extra = "allow"
+        extra = "forbid"
         allow_mutation = False
 
     def __init__(self, **data):

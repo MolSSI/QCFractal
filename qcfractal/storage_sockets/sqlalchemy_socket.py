@@ -4,7 +4,7 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 
 
 try:
-    import sqlalchemy
+    import sqlalchemy # lgtm [py/import-and-import-from]
 except ImportError:
     raise ImportError(
         "SQLAlchemy_socket requires sqlalchemy, please install this python "
@@ -12,33 +12,34 @@ except ImportError:
 
 
 
-from sqlalchemy import create_engine
-from .sql_models import Base
-from sqlalchemy.orm import sessionmaker, with_polymorphic
-from sqlalchemy.exc import IntegrityError
-from contextlib import contextmanager
-
-import bcrypt
 import logging
 import secrets
+from contextlib import contextmanager
 from datetime import datetime as dt
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+import bcrypt
+from sqlalchemy import create_engine, or_
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import sessionmaker, with_polymorphic
 from sqlalchemy.sql.expression import func
-from qcfractal.storage_sockets.storage_utils import (add_metadata_template,
-                                                     get_metadata_template)
+# from sqlalchemy.dialects import postgresql
+from collections.abc import Iterable
 
-# SQL ORMs
-from qcfractal.storage_sockets.sql_models import (CollectionORM, KeywordsORM,
-                         MoleculeORM, BaseResultORM, OptimizationProcedureORM,
-                         QueueManagerORM, ResultORM, ErrorORM, ServiceQueueORM,
-                         TaskQueueORM, UserORM, TorsionDriveProcedureORM, LogsORM)
 
 # pydantic classes
-from qcfractal.interface.models import (KeywordSet, Molecule, ResultRecord, TaskRecord,
-                                OptimizationRecord, prepare_basis, TaskStatusEnum,
-                                TorsionDriveRecord)
+from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
+                                        TaskStatusEnum, TorsionDriveRecord, prepare_basis, GridOptimizationRecord)
+# from qcfractal.services.service_util import BaseService
+# SQL ORMs
+from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM,
+                                                  MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
+                                                  ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
+                                                  GridOptimizationProcedureORM)
+# from sqlalchemy.dialects.postgresql import insert as postgres_insert
+from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
+from .sql_models import Base
 
 _null_keys = {"basis", "keywords"}
 _id_keys = {"id", "molecule", "keywords", "procedure_id"}
@@ -100,6 +101,8 @@ def get_procedure_class(record):
         procedure_class = OptimizationProcedureORM
     elif isinstance(record, TorsionDriveRecord):
         procedure_class = TorsionDriveProcedureORM
+    elif isinstance(record, GridOptimizationRecord):
+        procedure_class = GridOptimizationProcedureORM
     else:
         raise TypeError('Procedure of type {} is not valid or supported yet.'
                         .format(type(record)))
@@ -152,6 +155,7 @@ class SQLAlchemySocket:
         # actually create the tables
         Base.metadata.create_all(self.engine)
 
+
         # if expanded_uri["password"] is not None:
         #     # connect to mongoengine
         #     self.client = db.connect(db=project, host=uri, authMechanism=authMechanism, authSource=authSource)
@@ -199,7 +203,7 @@ class SQLAlchemySocket:
     def _clear_db(self, db_name: str=None):
         """Dangerous, make sure you are deleting the right DB"""
 
-        self.logger.warning("Clearing database '{}' and dropping all tables.".format(db_name))
+        self.logger.warning("SQL: Clearing database '{}' and dropping all tables.".format(db_name))
 
         # drop all tables that it knows about
         Base.metadata.drop_all(self.engine)
@@ -208,6 +212,20 @@ class SQLAlchemySocket:
         Base.metadata.create_all(self.engine)
 
         # self.client.drop_database(db_name)
+
+    def _delete_DB_data(self, db_name):
+        """TODO: needs more testing"""
+
+        with self.session_scope() as session:
+            session.query(TaskQueueORM).delete(synchronize_session=False)
+            session.query(ServiceQueueORM).delete(synchronize_session=False)
+            session.query(GridOptimizationProcedureORM).delete(synchronize_session=False)
+            session.query(TorsionDriveProcedureORM).delete(synchronize_session=False)
+            session.query(OptimizationProcedureORM).delete(synchronize_session=False)
+            session.query(ResultORM).delete(synchronize_session=False)
+            session.query(MoleculeORM).delete(synchronize_session=False)
+            session.query(CollectionORM).delete(synchronize_session=False)
+
 
     def get_project_name(self) -> str:
         return self._project_name
@@ -226,17 +244,30 @@ class SQLAlchemySocket:
             if projection:
                 proj = [getattr(className, i) for i in projection]
                 data = session.query(*proj).filter(*query).limit(self.get_limit(limit)).offset(skip)
-                n_found = get_count_fast(data)
+                n_found = get_count_fast(data)  # before iterating on the data
                 rdata = [dict(zip(projection, row)) for row in data]
+                # print('----------rdata before: ', rdata)
+                # transform ids from int into str
+                id_fields = className._get_fieldnames_with_DB_ids_()
+                for d in rdata:
+                    for key in id_fields:
+                        if key in d.keys() and d[key] is not None:
+                            if isinstance(d[key], Iterable):
+                                d[key] = [str(i) for i in d[key]]
+                            else:
+                                d[key] = str(d[key])
+                # print('--------rdata after: ', rdata)
             else:
                 data = session.query(className).filter(*query).limit(self.get_limit(limit)).offset(skip)
+                # from sqlalchemy.dialects import postgresql
+                # print(data.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
                 n_found = get_count_fast(data)
                 rdata = [d.to_dict() for d in data.all()]
 
         return rdata, n_found
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logs (KV store) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def add_logs(self, blobs_list: List[Any]):
+    def add_kvstore(self, blobs_list: List[Any]):
         """
         Adds to the key/value store table.
 
@@ -254,21 +285,23 @@ class SQLAlchemySocket:
 
         meta = add_metadata_template()
         blob_ids = []
-        for blob in blobs_list:
-            if blob is None:
-                blob_ids.append(None)
-                continue
+        with self.session_scope() as session:
+            for blob in blobs_list:
+                if blob is None:
+                    blob_ids.append(None)
+                    continue
 
-            doc = LogsORM(value=blob)
-            doc.save()
-            blob_ids.append(str(doc.id))
-            meta['n_inserted'] += 1
+                doc = KVStoreORM(value=blob)
+                session.add(doc)
+                session.commit()
+                blob_ids.append(str(doc.id))
+                meta['n_inserted'] += 1
 
         meta["success"] = True
 
         return {"data": blob_ids, "meta": meta}
 
-    def get_logs(self, id: List[str]):
+    def get_kvstore(self, id: List[str]):
         """
         Pulls from the key/value store table.
 
@@ -285,21 +318,24 @@ class SQLAlchemySocket:
 
         meta = get_metadata_template()
 
-        query, errors = format_query(id=id)
+        query = format_query(KVStoreORM, id=id)
 
-        data = LogsORM.objects(**query)
+        with self.session_scope() as session:
+            data = session.query(KVStoreORM).filter(*query)
 
-        meta["success"] = True
-        meta["n_found"] = data.count()  # all data count, can be > len(data)
-        meta["errors"].extend(errors)
+            meta["n_found"] = get_count_fast(data)
+            meta["success"] = True
 
-        data = [d.to_json_obj() for d in data]
-        data = {d["id"]: d["value"] for d in data}
-        return {"data": data, "meta": meta}
+            # meta['error_description'] = str(err)
+            data = data.all()
+            rdata = [d.to_dict() for d in data]
+            rdata = {d["id"]: d["value"] for d in rdata}
+
+        return {"data": rdata, "meta": meta}
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Molecule ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def get_add_molecules_mixed(self, data: List[Union[str, Molecule]]) -> List[Molecule]:
+    def get_add_molecules_mixed(self, data: List[Union[ObjectId, Molecule]]) -> List[Molecule]:
         """
         Get or add the given molecules (if they don't exit).
         MoleculeORMs are given in a mixed format, either as a dict of mol data
@@ -314,7 +350,7 @@ class SQLAlchemySocket:
         new_molecules = {}
         id_mols = {}
         for idx, mol in ordered_mol_dict.items():
-            if isinstance(mol, str):
+            if isinstance(mol, (int, str)):
                 id_mols[idx] = mol
             elif isinstance(mol, Molecule):
                 new_molecules[idx] = mol
@@ -330,6 +366,7 @@ class SQLAlchemySocket:
             flat_mol_keys.append(k)
             flat_mols.append(v)
         flat_mols = self.add_molecules(flat_mols)["data"]
+
         id_mols.update({k: v for k, v in zip(flat_mol_keys, flat_mols)})
 
         # Get molecules by index and translate back to dict
@@ -592,7 +629,7 @@ class SQLAlchemySocket:
 
         ids = []
         for idx, kw in enumerate(data):
-            if isinstance(kw, str):
+            if isinstance(kw, (int, str)):
                 ids.append(kw)
 
             elif isinstance(kw, KeywordSet):
@@ -646,17 +683,17 @@ class SQLAlchemySocket:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~`
 
-### Mongo database functions
+### database functions
 
-    # def add_collection(self, data, overwrite=False):
     def add_collection(self, data: Dict[str, Any], overwrite: bool=False):
         """Add (or update) a collection to the database.
 
         Parameters
         ----------
-        collection : str
-        name : str
-        data : dict
+        data : dict, which should inlcude at least:
+            collection : str (immutable)
+            name : str (immutable)
+
         overwrite : bool
             Update existing collection
 
@@ -678,35 +715,41 @@ class SQLAlchemySocket:
         col_id = None
         # try:
 
-        if ("id" in data) and (data["id"] == "local"):
+        # if ("id" in data) and (data["id"] == "local"):
+        #     data.pop("id", None)
+        if "id" in data: # remove the ID in any case
             data.pop("id", None)
-        lname = data.pop("name").lower()
+        lname = data.get("name").lower()
         collection = data.pop("collection").lower()
-        update = dict(
-            tags = data.pop("tags", None),
-            tagline = data.pop("tagline", None),
-            data = data  # todo: check for sql injection
-        )
+
+        update_fields = {}
+        for field in CollectionORM.col().keys():
+            if field in data:
+                update_fields[field] = data.pop(field)
+
+        update_fields['extra'] = data  # todo: check for sql injection
+
 
         with self.session_scope() as session:
 
-            if overwrite:
-                col = session.query(CollectionORM).filter_by(collection=collection, name=lname).first()
-                for key, value in update.items():
-                    setattr(col, key, value)
-                # may use upsert=True to add or update
-                # col = CollectionORM.objects(collection=collection, lname=lname).update_one(**data)
-            else:
-                col = CollectionORM(collection=collection, name=lname, **update)
+            try:
+                if overwrite:
+                    col = session.query(CollectionORM).filter_by(collection=collection, lname=lname).first()
+                    for key, value in update_fields.items():
+                        setattr(col, key, value)
+                else:
+                    col = CollectionORM(collection=collection, lname=lname, **update_fields)
 
-            session.add(col)
-            session.commit()
+                session.add(col)
+                session.commit()
 
-            col_id = str(col.id)
-            meta['success'] = True
-            meta['n_inserted'] = 1
-        # except Exception as err:
-        # meta['error_description'] = str(err)
+                col_id = str(col.id)
+                meta['success'] = True
+                meta['n_inserted'] = 1
+
+            except Exception as err:
+                session.rollback()
+                meta['error_description'] = str(err)
 
         ret = {'data': col_id, 'meta': meta}
         return ret
@@ -742,14 +785,16 @@ class SQLAlchemySocket:
             name = name.lower()
         if collection:
             collection = collection.lower()
-        query = format_query(CollectionORM, name=name, collection=collection)
+        query = format_query(CollectionORM, lname=name, collection=collection)
 
         # try:
         rdata, meta['n_found'] = self.get_query_projection(CollectionORM, query, projection, limit, skip)
+        for col in rdata:
+            col.pop("lname", None) # Pop out lowername index
 
-        for data in rdata:
-            data.update({k: v for k, v in data['data'].items()})
-            del data['data']
+        # for data in rdata:
+        #     data.update({k: v for k, v in data['extra'].items()})
+        #     del data['data']
         meta["success"] = True
         # except Exception as err:
         #     meta['error_description'] = str(err)
@@ -774,7 +819,7 @@ class SQLAlchemySocket:
         """
 
         with self.session_scope() as session:
-            count = session.query(CollectionORM).filter_by(collection=collection.lower(), name=name.lower())\
+            count = session.query(CollectionORM).filter_by(collection=collection.lower(), lname=name.lower())\
                                                 .delete(synchronize_session=False)
         return count
 
@@ -856,10 +901,16 @@ class SQLAlchemySocket:
                 self.logger.error("Attempted update without ID, skipping")
                 continue
             with self.session_scope() as session:
-                rec = ResultORM(**result.json_dict())
-                session.add(rec)
+
+                result_db = session.query(ResultORM).filter_by(id=result.id).first()
+
+                data = result.json_dict(exclude={'id'})
+
+                for attr, val in data.items():
+                    setattr(result_db, attr, val)
+
                 session.commit()
-            updated_count += 1
+                updated_count += 1
 
         return updated_count
 
@@ -977,7 +1028,7 @@ class SQLAlchemySocket:
         task_id_list = [task_id] if isinstance(task_id, (int, str)) else task_id
         # try:
         with self.session_scope() as session:
-            data = session.query(BaseResultORM).filter(BaseResultORM.id == TaskQueueORM.base_result)\
+            data = session.query(BaseResultORM).filter(BaseResultORM.id == TaskQueueORM.base_result_id)\
                             .filter(TaskQueueORM.id.in_(task_id_list))
             meta['n_found'] = get_count_fast(data)
             data = [d.to_dict() for d in data.all()]
@@ -1050,11 +1101,12 @@ class SQLAlchemySocket:
 
                 if get_count_fast(doc) == 0:
                     data = procedure.json_dict(exclude={"id"})
-                    proc = procedure_class(**data)
-                    session.add(proc)
+                    proc_db = procedure_class(**data)
+                    session.add(proc_db)
                     session.commit()
-                    proc.add_relations(procedure.trajectory)
-                    procedure_ids.append(str(proc.id))
+                    proc_db.update_relations(**data)
+                    session.commit()
+                    procedure_ids.append(str(proc_db.id))
                     meta['n_inserted'] += 1
                 else:
                     id = str(doc.first().id)
@@ -1118,7 +1170,11 @@ class SQLAlchemySocket:
         elif procedure == 'torsiondrive':
             className = TorsionDriveProcedureORM
         else:
-            raise TypeError('Unsupported procedure type {}'.format(procedure))
+            # raise TypeError('Unsupported procedure type {}. Id: {}, task_id: {}'
+            #                 .format(procedure, id, task_id))
+            # self.logger.warning('Procedure type not specified({}). Query include: Id= {}, task_id= {}'
+            #                 .format(procedure, id, task_id))
+            className = BaseResultORM   # all classes, including those with 'selectin'
 
         query = format_query(className,
             id=id, procedure=procedure, program=program, hash_index=hash_index,
@@ -1142,19 +1198,42 @@ class SQLAlchemySocket:
         """
 
         updated_count = 0
-        for procedure in records_list:
+        with self.session_scope() as session:
+            for procedure in records_list:
 
-            # Must have ID
-            if procedure.id is None:
-                self.logger.error(
-                    "No procedure id found on update (hash_index={}), skipping.".format(procedure.hash_index))
-                continue
+                className = get_procedure_class(procedure)
+                # join_table = get_procedure_join(procedure)
+                # Must have ID
+                if procedure.id is None:
+                    self.logger.error(
+                        "No procedure id found on update (hash_index={}), skipping.".format(procedure.hash_index))
+                    continue
 
-            with self.session_scope() as session:
-                rec = OptimizationProcedureORM(**records_list.json_dict())
-                session.merge(rec)
+                proc_db = session.query(className).filter_by(id=procedure.id).first()
+
+                data = procedure.json_dict(exclude={'id'})
+                proc_db.update_relations(**data)
+
+                for attr, val in data.items():
+                    setattr(proc_db, attr, val)
+
+                # session.add(proc_db)
+
+
+                # Upsert relations (insert or update)
+                # needs primarykeyconstraint on the table keys
+                # for result_id in procedure.trajectory:
+                #     statement = postgres_insert(opt_result_association)\
+                #         .values(opt_id=procedure.id, result_id=result_id)\
+                #         .on_conflict_do_update(
+                #             index_elements=[opt_result_association.c.opt_id, opt_result_association.c.result_id],
+                #             set_=dict(result_id=result_id))
+                #     session.execute(statement)
+
                 session.commit()
-            updated_count += 1
+                updated_count += 1
+
+        # session.commit()  # save changes, takes care of inheritance
 
         return updated_count
 
@@ -1181,7 +1260,7 @@ class SQLAlchemySocket:
             # delete through session to delete correctly from base_result
             for proc in procedures:
                 session.delete(proc)
-            session.commit()
+            # session.commit()
             count = len(procedures)
 
         return count
@@ -1211,6 +1290,7 @@ class SQLAlchemySocket:
 
                 # ProcedureORM already exists
                 proc_id = new_procedure["data"][0]
+
                 if new_procedure["meta"]["duplicates"]:
                     procedure_ids.append(proc_id)
                     meta["duplicates"].append(proc_id)
@@ -1221,14 +1301,15 @@ class SQLAlchemySocket:
                 service.procedure_id = proc_id
 
                 if doc.count() == 0:
-                    doc = ServiceQueueORM(**service.json_dict(exclude={"id"}))
+                    doc = ServiceQueueORM(**service.json_dict(include=ServiceQueueORM.__dict__.keys()))
+                    doc.extra = service.json_dict(exclude=ServiceQueueORM.__dict__.keys())
                     session.add(doc)
                     session.commit()  # TODO
                     procedure_ids.append(proc_id)
                     meta['n_inserted'] += 1
                 else:
                     procedure_ids.append(None)
-                    meta["errors"].append((idx, "Duplicate service, but not caught by procedure."))
+                    meta["errors"].append((doc.id, "Duplicate service, but not caught by procedure."))
 
         meta["success"] = True
 
@@ -1269,14 +1350,16 @@ class SQLAlchemySocket:
         """
 
         meta = get_metadata_template()
-        query, error = format_query(id=id, hash_index=hash_index, procedure_id=procedure_id, status=status)
+        query = format_query(ServiceQueueORM,
+                             id=id, hash_index=hash_index,
+                             procedure_id=procedure_id,
+                             status=status)
 
         data = []
         # try:
         data, meta['n_found'] = self.get_query_projection(ServiceQueueORM, query, projection, limit, skip)
         meta["success"] = True
 
-        meta["success"] = True
         # except Exception as err:
         #     meta['error_description'] = str(err)
 
@@ -1307,8 +1390,17 @@ class SQLAlchemySocket:
                 continue
 
             with self.session_scope() as session:
-                service = ServiceQueueORM(**service.json_dict())
-                session.merge(service)
+
+                doc_db = session.query(ServiceQueueORM).filter_by(id=service.id).first()
+
+                data = service.json_dict(include=ServiceQueueORM.__dict__.keys())
+                data['extra'] = service.json_dict(exclude=ServiceQueueORM.__dict__.keys())
+
+                data['id'] = int(data['id'])
+                for attr, val in data.items():
+                    setattr(doc_db, attr, val)
+
+                session.add(doc_db)
                 session.commit()
 
             updated_count += 1
@@ -1324,11 +1416,16 @@ class SQLAlchemySocket:
                     "No service id found on completion (hash_index={}), skipping.".format(service.hash_index))
                 continue
 
-            procedure = service.output
-            procedure.id = service.procedure_id
-            self.update_procedures([procedure])
+            # in one transaction
+            with self.session_scope() as session:
 
-            ServiceQueueORM.objects(id=ObjectId(service.id)).delete()
+                procedure = service.output
+                procedure.id = service.procedure_id
+                self.update_procedures([procedure])
+
+                session.query(ServiceQueueORM)\
+                        .filter_by(id=service.id)\
+                        .delete() #synchronize_session=False)
 
             done += 1
 
@@ -1372,8 +1469,11 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
             for task_num, record in enumerate(data):
                 try:
-
-                    task = TaskQueueORM(**record.json_dict(exclude={"id"}))
+                    task_dict = record.json_dict(exclude={"id"})
+                    # # for compatibility with mongoengine
+                    # if isinstance(task_dict['base_result'], dict):
+                    #     task_dict['base_result'] = task_dict['base_result']['id']
+                    task = TaskQueueORM(**task_dict)
                     session.add(task)
                     session.commit()
                     results.append(str(task.id))
@@ -1382,7 +1482,7 @@ class SQLAlchemySocket:
                     # print(str(err))
                     session.rollback()
                     # TODO: merge hooks
-                    task = session.query(TaskQueueORM).filter_by(base_result=record.base_result).first()
+                    task = session.query(TaskQueueORM).filter_by(base_result_id=record.base_result.id).first()
                     self.logger.warning('queue_submit got a duplicate task: {}'.format(task.to_dict()))
                     results.append(str(task.id))
                     meta['duplicates'].append(task_num)
@@ -1406,14 +1506,19 @@ class SQLAlchemySocket:
             TaskQueueORM,
             status=TaskStatusEnum.waiting,
             program=available_programs,
-            procedure=available_procedures,  # Procedure can be none, explicitly include
             tag=tag)
-        # query["procedure__in"].append(None)  # TODO
+
+        proc_filt = TaskQueueORM.procedure.in_([p.lower() for p in available_procedures])
+        none_filt = TaskQueueORM.procedure == None # lgtm [py/test-equals-none]
+        query.append(or_(proc_filt, none_filt))
 
         with self.session_scope() as session:
-            found = session.query(TaskQueueORM).filter(*query)\
+            query = session.query(TaskQueueORM).filter(*query)\
                    .order_by(TaskQueueORM.priority.desc(), TaskQueueORM.created_on)\
-                   .limit(limit).all()
+                   .limit(limit)
+
+            # print(query.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
+            found = query.all()
 
             ids =  [x.id for x in found]
             update_fields = {
@@ -1429,9 +1534,11 @@ class SQLAlchemySocket:
                 # avoid another trip to the DB to get the updated values, set them here
                 found = [TaskRecord(**task.to_dict(exclude=update_fields.keys()),
                                     **update_fields) for task in found]
+            session.commit()
 
         if update_count != len(found):
             self.logger.warning("QUEUE: Number of found projects does not match the number of updated projects.")
+
 
         return found
 
@@ -1440,10 +1547,11 @@ class SQLAlchemySocket:
                   hash_index=None,
                   program=None,
                   status: str=None,
+                  base_result: str=None,
                   projection=None,
                   limit: int=None,
                   skip: int=0,
-                  return_json=True,
+                  return_json=False,
                   with_ids=True):
         """
         TODO: check what query keys are needs
@@ -1454,6 +1562,8 @@ class SQLAlchemySocket:
         Hash_index
         status : bool, default is None (find all)
             The status of the task: 'COMPLETE', 'RUNNING', 'WAITING', or 'ERROR'
+        base_result: str (optional)
+            base_result id
         projection : list/set/tuple of keys, default is None
             The fields to return, default to return all
         limit : int, default is None
@@ -1475,7 +1585,8 @@ class SQLAlchemySocket:
         """
 
         meta = get_metadata_template()
-        query = format_query(TaskQueueORM, program=program, id=id, hash_index=hash_index, status=status)
+        query = format_query(TaskQueueORM, program=program, id=id, hash_index=hash_index,
+                             status=status, base_result_id=base_result)
 
         data = []
         try:
@@ -1484,6 +1595,7 @@ class SQLAlchemySocket:
         except Exception as err:
             meta['error_description'] = str(err)
 
+        data = [TaskRecord(**task) for task in data]
 
         return {"data": data, "meta": meta}
 
@@ -1534,18 +1646,16 @@ class SQLAlchemySocket:
             tasks_c = session.query(TaskQueueORM)\
                              .filter(TaskQueueORM.id.in_(task_ids))\
                              .update(update_fields, synchronize_session=False)
-            base_results_c = session.query(BaseResultORM)\
-                                    .filter(BaseResultORM.id == TaskQueueORM.base_result) \
-                                    .filter(TaskQueueORM.id.in_(task_ids))\
-                                    .update(update_fields, synchronize_session=False)
 
-        # This should not happen unless there is data inconsistency in the DB
-        if base_results_c != tasks_c:
-            self.logger.error("Some tasks don't reference results or procedures correctly!"
-                              "Tasks: {}, ResultORMs: {}, procedures: {}. ".format(tasks, results, procedures))
+            # Update the base results
+            session.query(BaseResultORM)\
+                    .filter(BaseResultORM.id == TaskQueueORM.base_result_id)\
+                    .filter(TaskQueueORM.id.in_(task_ids))\
+                    .update(update_fields, synchronize_session=False)
+
         return tasks_c
 
-    def queue_mark_error(self, data):
+    def queue_mark_error(self, data: List[Tuple[int, str]]):
         """update the given tasks as errored
         Mark the corresponding result/procedure as Errored
 
@@ -1553,28 +1663,27 @@ class SQLAlchemySocket:
 
         task_ids = []
         with self.session_scope() as session:
-            task_objects = session.query(TaskQueueORM).filer(TaskQueueORM.id.in_(data.keys())).all()
-            for (task_id, msg), task_obj in zip(data, task_objects):
+            ids = [err[0] for err in data]
+            task_objects = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(ids)).all()
+            base_results = session.query(BaseResultORM)\
+                                    .filter(BaseResultORM.id == TaskQueueORM.base_result_id) \
+                                    .filter(TaskQueueORM.id.in_(ids)).all()
+            for (task_id, msg), task_obj, base_result in zip(data, task_objects, base_results):
 
                 task_ids.append(task_id)
+                # update task
                 task_obj.status = TaskStatusEnum.error
                 task_obj.modified_on = dt.utcnow()
-                task_obj.error_obj = ErrorORM(value=msg)
 
-                session.add(task_obj)
+                # update result
+                base_result.status = TaskStatusEnum.error
+                base_result.modified_on = dt.utcnow()
+                base_result.error_obj = KVStoreORM(value=msg)
+
+                # session.add(task_obj)
+
 
             session.commit()
-
-            update_fields = dict(status=TaskStatusEnum.error, modified_on=dt.utcnow())
-            base_results_c = session.query(BaseResultORM)\
-                                    .filter(BaseResultORM.id == TaskQueueORM.base_result) \
-                                    .filter(TaskQueueORM.id.in_(task_ids))\
-                                    .update(update_fields, synchronize_session=False)
-
-        if len(task_ids) != base_results_c:
-            self.logger.error(
-                "Queue Mark Error: Number of tasks updates {}, does not match the number of records updates {}.".
-                format(len(task_ids), base_results_c))
 
         return len(task_ids)
 
@@ -1608,10 +1717,11 @@ class SQLAlchemySocket:
             if reset_error:
                 task_ids = session.query(TaskQueueORM.id)\
                                   .filter_by(manager=manager, status=TaskStatusEnum.error)
-                result_count = session.query(BaseResultORM)\
-                                      .filter(TaskQueueORM.base_result==BaseResultORM.id)\
-                                      .filter(TaskQueueORM.id.in_(task_ids))\
-                                      .update(dict(status='INCOMPLETE', modified_on=dt.utcnow()))
+                session.query(BaseResultORM)\
+                          .filter(TaskQueueORM.base_result_id==BaseResultORM.id)\
+                          .filter(TaskQueueORM.id.in_(task_ids))\
+                          .update(dict(status='INCOMPLETE', modified_on=dt.utcnow()),
+                                  synchronize_session=False)
 
             status = []
             if reset_running:
@@ -1619,8 +1729,11 @@ class SQLAlchemySocket:
             if reset_error:
                 status.append("ERROR")
 
-            updated = session.query(TaskQueueORM).filter(TaskQueueORM.status.in_(status), manager=manager)\
-                             .update(dict(status=TaskStatusEnum.waiting, modified_on=dt.utcnow()))
+            updated = session.query(TaskQueueORM)\
+                             .filter(TaskQueueORM.status.in_(status))\
+                             .filter_by(manager=manager)\
+                             .update(dict(status=TaskStatusEnum.waiting, modified_on=dt.utcnow()),
+                                     synchronize_session=False)
 
         return updated
 
@@ -1656,7 +1769,8 @@ class SQLAlchemySocket:
             "failures": QueueManagerORM.failures + kwargs.pop("failures", 0)
         }
 
-        upd = {key: kwargs[key] for key in QueueManagerORM.col() if key in kwargs}
+
+        upd = {key: kwargs[key] for key in QueueManagerORM.__dict__.keys() if key in kwargs}
 
         with self.session_scope() as session:
             # QueueManagerORM.objects()  # init
@@ -1736,7 +1850,7 @@ class SQLAlchemySocket:
             if overwrite:
                 count = session.query(UserORM).filter_by(username=username).update(**blob)
                 # doc.upsert_one(**blob)
-                success = True
+                success = count == 1
 
             else:
                 try:

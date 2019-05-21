@@ -408,7 +408,6 @@ class FractalClient(object):
                 return [x["name"] for x in response]
         else:
             df = pd.DataFrame.from_dict(response)
-            df.drop("id", axis=1, inplace=True)
             df.set_index(["collection", "name"], inplace=True)
             df.sort_index(inplace=True)
             return df
@@ -736,6 +735,7 @@ class FractalClient(object):
                     hash_index: 'QueryStr'=None,
                     program: 'QueryStr'=None,
                     status: 'QueryStr'=None,
+                    base_result: 'QueryStr'=None,
                     projection: 'QueryProjection'=None,
                     full_return: bool=False) -> List[Dict[str, Any]]:
         """Checks the status of tasks in the Fractal queue.
@@ -750,6 +750,8 @@ class FractalClient(object):
             Queries the Services ``program`` field.
         status : QueryStr, optional
             Queries the Services ``status`` field.
+        base_result : QueryStr, optional
+            Queries the Services ``base_result`` field.
         projection : QueryProjection, optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
@@ -778,7 +780,8 @@ class FractalClient(object):
                 "id": id,
                 "hash_index": hash_index,
                 "program": program,
-                "status": status
+                "status": status,
+                "base_result": base_result
             }
         }
 

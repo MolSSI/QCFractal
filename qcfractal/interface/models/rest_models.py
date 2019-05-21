@@ -127,9 +127,9 @@ class QueryMeta(BaseModel):
 
 
 class ComputeResponse(BaseModel):
-    ids: List[Optional[str]]
-    submitted: List[str]
-    existing: List[str]
+    ids: List[Optional[ObjectId]]
+    submitted: List[ObjectId]
+    existing: List[ObjectId]
 
     class Config(RESTConfig):
         pass
@@ -468,6 +468,7 @@ class TaskQueueGETBody(BaseModel):
         hash_index: QueryStr = None
         program: QueryStr = None
         status: QueryStr = None
+        base_result: QueryStr = None
 
         class Config(RESTConfig):
             pass
@@ -616,7 +617,7 @@ register_model("queue_manager", "GET", QueueManagerGETBody, QueueManagerGETRespo
 
 class QueueManagerPOSTBody(BaseModel):
     meta: QueueManagerMeta
-    data: Dict[str, Any]
+    data: Dict[ObjectId, Any]
 
     class Config:
         json_encoders = json_encoders

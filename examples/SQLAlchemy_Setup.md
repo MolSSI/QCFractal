@@ -2,7 +2,7 @@
 
 Install `postgresql` package along with the `-contrib` to get the extra extensions.
 
-`apt-get install postgresql postgresql-contrib`
+`sudo apt-get install postgresql postgresql-contrib`
 
 ### Configuring PostgreSQL
 
@@ -48,8 +48,39 @@ Then type in the password.
 sudo service postgresql restart
 
 
+## Install PostgreSQL using conda:
 
-## Installing and setting up pgAdmin4
+Create conda environment, and install postgresql:
+
+```
+conda install -c anaconda postgresql 
+```
+
+Then in the shell run:
+
+```
+psql --version
+which psql
+# create a data folder anywhere you like
+initdb -D ~/anaconda3/envs/testsql/psql_data
+# change the port in the postgresql.conf file if you have nother running on 5432
+# start the server
+pg_ctl -D ~/anaconda3/envs/testsql/psql_data start
+createuser [-p 5433] --superuser postgres
+psql [-p 5433] -c "create database qcarchivedb;" -U postgres
+psql [-p 5433] -c "create user qcarchive with password 'mypass';" -U postgres
+psql [-p 5433] -c "grant all privileges on database qcarchivedb to qcarchive;" -U postgres
+```
+
+
+## Install DB view using DataGrip (best)
+
+Go to (https://www.jetbrains.com/datagrip/) and install using OS links.
+You can create an academic account to use all commercial products of JetBrains.
+
+
+
+## Installing and setting up pgAdmin4 (deprecated)
 
 You can also install the graphical interface, [PgAdmin4](https://ftp.postgresql.org/pub/pgadmin/pgadmin4/v4.2/pip/pgadmin4-4.2-py2.py3-none-any.whl)
 

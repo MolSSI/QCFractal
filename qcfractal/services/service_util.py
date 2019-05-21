@@ -82,6 +82,7 @@ class TaskManager(BaseModel):
         # Add in all new tasks
         for key, packet in tasks.items():
             packet["meta"].update({"tag": self.tag, "priority": self.priority})
+            # print("Check tag and priority:", packet)
             packet = TaskQueuePOSTBody(**packet)
 
             # Turn packet into a full task, if there are duplicates, get the ID
@@ -90,6 +91,7 @@ class TaskManager(BaseModel):
             if len(r["meta"]["errors"]):
                 raise KeyError("Problem submitting task: {}.".format(errors))
 
+            # print("Submission:", r["data"])
             required_tasks[key] = r["data"]["ids"][0]
 
         self.required_tasks = required_tasks

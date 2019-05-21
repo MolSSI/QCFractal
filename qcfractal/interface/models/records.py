@@ -37,7 +37,7 @@ class RecordBase(BaseModel, abc.ABC):
     cache: Dict[str, Any] = {}
 
     # Base identification
-    id: Union[ObjectId, int] = None
+    id: ObjectId = None
     hash_index: Optional[str] = None
     procedure: str
     program: str
@@ -45,12 +45,12 @@ class RecordBase(BaseModel, abc.ABC):
 
     # Extra fields
     extras: Dict[str, Any] = {}
-    stdout: Optional[Union[ObjectId, int]] = None
-    stderr: Optional[Union[ObjectId, int]] = None
-    error: Optional[Union[ObjectId, int]] = None
+    stdout: Optional[ObjectId] = None
+    stderr: Optional[ObjectId] = None
+    error: Optional[ObjectId] = None
 
     # Compute status
-    task_id: Optional[Union[ObjectId, int]] = None  # TODO: not used in SQL
+    task_id: Optional[ObjectId] = None  # TODO: not used in SQL
     status: RecordStatusEnum = "INCOMPLETE"
     modified_on: datetime.datetime = None
     created_on: datetime.datetime = None
@@ -175,9 +175,9 @@ class ResultRecord(RecordBase):
     # Input data
     driver: DriverEnum
     method: str
-    molecule: Union[ObjectId, int]
+    molecule: ObjectId
     basis: Optional[str] = None
-    keywords: Optional[Union[ObjectId, int]] = None
+    keywords: Optional[ObjectId] = None
 
     # Output data
     return_result: Union[float, List[float], Dict[str, Any]] = None
@@ -251,14 +251,14 @@ class OptimizationRecord(RecordBase):
     schema_version: int = 1  # TODO: why not in Base
 
     # Input data
-    initial_molecule: Union[ObjectId, int]
+    initial_molecule: ObjectId
     qc_spec: QCSpecification
     keywords: Dict[str, Any] = {}  # TODO: defined in Base
 
     # Results
     energies: List[float] = None
-    final_molecule: Union[ObjectId, int] = None
-    trajectory: List[Union[ObjectId, int]] = None
+    final_molecule: ObjectId = None
+    trajectory: List[ObjectId] = None
 
     class Config(RecordBase.Config):
         pass

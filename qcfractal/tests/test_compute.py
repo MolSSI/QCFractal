@@ -98,7 +98,8 @@ def test_queue_error(fractal_compute_server):
     result = db.get_results(id=compute_ret.ids)['data'][0]
 
     assert len(queue_ret) == 1
-    assert "connectivity graph" in queue_ret[0].error.error_message
+    # TODO: task.error is not used anymore
+    # assert "connectivity graph" in queue_ret[0].error.error_message
     assert result['status'] == 'ERROR'
 
     # Force a complete mark and test

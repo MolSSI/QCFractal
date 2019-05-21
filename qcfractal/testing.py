@@ -316,7 +316,8 @@ def run_process(args, **kwargs):
 def reset_server_database(server):
     """Resets the server database for testing.
     """
-    server.storage._clear_db(server.storage._project_name)
+    # server.storage._clear_db(server.storage._project_name)
+    server.storage._delete_DB_data(server.storage._project_name)
 
 
 @pytest.fixture(scope="module")
@@ -330,13 +331,15 @@ def test_server(request):
 
     storage_name = "qcf_local_server_test"
 
+    storage_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb"
+    # storage_uri="mongodb://localhost:27017"
+
     # with loop_in_thread() as loop:
     with FractalSnowflake(
-            max_workers=0, storage_project_name=storage_name, storage_uri="mongodb://localhost:27017",
-            start_server=False) as server:
+            max_workers=0, storage_project_name=storage_name, storage_uri=storage_uri,
+            start_server=False, reset_database=True) as server:
 
         # Clean and re-init the database
-        reset_server_database(server)
         yield server
 
 
@@ -436,12 +439,12 @@ def fractal_compute_server(request):
 
     # Storage name
     storage_name = "qcf_compute_server_test"
-    storage_uri = "mongodb://localhost:27017"
-    # storage_uri = "postgresql+psycopg2://qcarchive@localhost:5432/qcarchivedb"
+    # storage_uri = "mongodb://localhost:27017"
+    storage_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb"
     # storage_uri = "sqlite:///:memory:"
     with FractalSnowflake(
-            max_workers=2, storage_project_name=storage_name, storage_uri=storage_uri, start_server=False) as server:
-        reset_server_database(server)
+            max_workers=2, storage_project_name=storage_name, storage_uri=storage_uri, reset_database=True, start_server=False) as server:
+        # reset_server_database(server)
         yield server
 
 
@@ -485,6 +488,10 @@ def build_socket_fixture(stype):
     else:
         raise KeyError("Storage type {} not understood".format(stype))
 
+@pytest.fixture(scope="module", params=["mongoengine", "sqlalchemy"])
+def socket_fixture(request):
+
+    yield from build_socket_fixture(request.param)
 
 @pytest.fixture(scope="module")
 def mongoengine_socket_fixture(request):

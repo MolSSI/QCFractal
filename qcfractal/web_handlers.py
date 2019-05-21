@@ -197,12 +197,10 @@ class KeywordHandler(APIHandler):
 
     def get(self):
 
-        storage = self.objects["storage_socket"]
-
         body_model, response_model = rest_model("keyword", "get")
         body = self.parse_bodymodel(body_model)
 
-        ret = storage.get_keywords(**body.data.dict(), with_ids=False)
+        ret = self.storage.get_keywords(**body.data.dict(), with_ids=False)
         response = response_model(**ret)
 
         self.logger.info("GET: Keywords - {} pulls.".format(len(response.data)))

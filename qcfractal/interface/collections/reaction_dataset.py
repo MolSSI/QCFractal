@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel
+import qcelemental as qcel
 
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
@@ -487,6 +488,9 @@ class ReactionDataset(Dataset):
             mol = line[0]
 
             # This is a molecule hash, should be in the database
+            if isinstance(mol, qcel.models.Molecule):
+                mol = Molecule(**mol.dict())
+
             if isinstance(mol, str) and (len(mol) == 40):
                 molecule_hash = mol
 

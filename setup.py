@@ -35,6 +35,8 @@ if __name__ == "__main__":
 
             # Database
             'mongoengine',
+            'sqlalchemy>=1.3',
+            'psycopg2',
 
             # QCArchive depends
             'qcengine>=0.6.2',

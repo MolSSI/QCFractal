@@ -4,10 +4,8 @@ All procedures tasks involved in on-node computation.
 
 from typing import List, Union
 
-from qcelemental.models import Molecule
-
 from .procedures_util import parse_single_tasks
-from ..interface.models import OptimizationRecord, QCSpecification, ResultRecord, TaskRecord
+from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord
 
 import qcengine as qcng
 
@@ -252,6 +250,8 @@ class OptimizationTasks(BaseTasks):
         qc_spec = QCSpecification(**data.meta["qc_spec"])
         if qc_spec.keywords:
             qc_keywords = self.storage.get_add_keywords_mixed([qc_spec.keywords])["data"][0]
+            if qc_keywords is None:
+                raise KeyError("Could not find requested KeywordsSet from id key.")
         else:
             qc_keywords = None
 

@@ -106,11 +106,11 @@ def test_molecules_get(storage_socket):
 def test_molecules_mixed_add_get(storage_socket):
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
 
-    ret = storage_socket.get_add_molecules_mixed([bad_id1, water, bad_id2, "bad_id"])
+    ret = storage_socket.get_add_molecules_mixed([bad_id1, water, bad_id2])
     assert ret["data"][0] is None
     assert ret["data"][1].identifiers.molecule_hash == water.get_hash()
     assert ret["data"][2] is None
-    assert set(ret["meta"]["missing"]) == {0, 2, 3}
+    assert set(ret["meta"]["missing"]) == {0, 2}
 
     # Cleanup adds
     ret = storage_socket.del_molecules(id=ret["data"][1].id)
@@ -126,10 +126,7 @@ def test_molecules_bad_get(storage_socket):
     water_id = ret["data"][0]
 
     # Pull molecule from the DB for tests
-    ret = storage_socket.get_molecules(id=[water_id, "something", 5, (3, 2)])
-    assert len(ret["meta"]["errors"]) == 1
-    assert ret["meta"]["errors"][0][0] == "id"
-    assert len(ret["meta"]["errors"][0][1]) == 3
+    ret = storage_socket.get_molecules(id=[water_id, bad_id1, bad_id2])
     assert ret["meta"]["n_found"] == 1
 
     # Cleanup adds
@@ -245,7 +242,7 @@ def test_results_add(storage_socket):
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
     mol_insert = storage_socket.add_molecules([water, water2])
 
-    kw1 = ptl.models.KeywordSet(**{"program": "a", "values": {}})
+    kw1 = ptl.models.KeywordSet(**{"comments": "a", "values": {}})
     kwid1 = storage_socket.add_keywords([kw1])["data"][0]
 
     page1 = ptl.models.ResultRecord(**{
@@ -318,7 +315,7 @@ def storage_results(storage_socket):
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
     mol_insert = storage_socket.add_molecules([water, water2])
 
-    kw1 = ptl.models.KeywordSet(**{"program": "a", "values": {}})
+    kw1 = ptl.models.KeywordSet(**{"comments": "a", "values": {}})
     kwid1 = storage_socket.add_keywords([kw1])["data"][0]
 
     page1 = ptl.models.ResultRecord(**{
@@ -435,7 +432,7 @@ def test_get_results_by_ids(storage_results):
     assert ret["meta"]["n_found"] == 6
     assert len(ret["data"]) == 6
 
-    ret = storage_results.get_results(id=ids, projection=['status'])
+    ret = storage_results.get_results(id=ids, projection=['status', 'id'])
     assert ret['data'][0].keys() == {'id', 'status'}
 
 

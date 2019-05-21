@@ -190,6 +190,9 @@ class MongoengineSocket:
 
         QueueManagerORM.objects(name='').first()  # init
 
+    def _delete_DB_data(self, db_name):
+        self._clear_db(db_name)
+
     def get_project_name(self) -> str:
         return self._project_name
 
@@ -1269,7 +1272,7 @@ class MongoengineSocket:
         query, error = format_query(
             status="WAITING",
             program=available_programs,
-            procedure=available_procedures,  # Procedue can be none, explicitly include
+            procedure=available_procedures,  # Procedure can be none, explicitly include
             tag=tag)
         query["procedure__in"].append(None)
 
@@ -1298,10 +1301,11 @@ class MongoengineSocket:
                   hash_index=None,
                   program=None,
                   status: str=None,
+                  base_result: str=None,
                   projection=None,
                   limit: int=None,
                   skip: int=0,
-                  return_json=True,
+                  return_json=False,
                   with_ids=True):
         """
         TODO: check what query keys are needed.
@@ -1335,6 +1339,8 @@ class MongoengineSocket:
         meta = get_metadata_template()
         query, error = format_query(program=program, id=id, hash_index=hash_index, status=status)
 
+        if base_result:
+            query['__raw__'] = {'base_result._ref.$id': ObjectId(base_result)}
         q_limit = self.get_limit(limit)
 
         data = []
@@ -1349,8 +1355,8 @@ class MongoengineSocket:
         except Exception as err:
             meta['error_description'] = str(err)
 
-        if return_json:
-            data = [TaskRecord(**task.to_json_obj()) for task in data]
+
+        data = [TaskRecord(**task.to_json_obj()) for task in data]
 
         return {"data": data, "meta": meta}
 
