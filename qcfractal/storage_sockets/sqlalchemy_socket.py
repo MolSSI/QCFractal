@@ -1169,12 +1169,19 @@ class SQLAlchemySocket:
             className = OptimizationProcedureORM
         elif procedure == 'torsiondrive':
             className = TorsionDriveProcedureORM
+        elif procedure == 'gridoptimization':
+            className = GridOptimizationProcedureORM
         else:
             # raise TypeError('Unsupported procedure type {}. Id: {}, task_id: {}'
             #                 .format(procedure, id, task_id))
-            # self.logger.warning('Procedure type not specified({}). Query include: Id= {}, task_id= {}'
-            #                 .format(procedure, id, task_id))
+            self.logger.warning('Procedure type not specified({}), so only ID is allowed. '
+                                'Query include: Id={}, program={} (will NOT be used).'
+                            .format(procedure, id, task_id, program))
             className = BaseResultORM   # all classes, including those with 'selectin'
+            program = None  # make sure it's not used
+            if id is None:
+                raise KeyError('ID is required if procedure type is not specified.')
+
 
         query = format_query(className,
             id=id, procedure=procedure, program=program, hash_index=hash_index,
