@@ -3,6 +3,7 @@
 import json
 import os
 import re
+import ssl
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Union
 
@@ -18,6 +19,10 @@ from .models.rest_models import ComputeResponse, rest_model
 ### Common docs
 
 _common_docs = {"full_return": "Returns the full server response if True that contains additional metadata."}
+_ssl_error_msg = (
+    "\n\nSSL handshake failed. This is likely caused by a failure to retrieve 3rd party SSL certificates.\n"
+    "If you trust the server you are connecting to, try 'FractalClient(... verify=False)'")
+_connection_error_msg = "\n\nCould not connect to server {}, please check the address and try again."
 
 
 ### Helper functions
@@ -38,7 +43,8 @@ class FractalClient(object):
                  address: Union[str, 'FractalServer']='api.qcarchive.molssi.org:443',
                  username: Optional[str]=None,
                  password: Optional[str]=None,
-                 verify: bool=True):
+                 verify: bool=True,
+                 asynchronous: bool=False):
         """Initializes a FractalClient instance from an address and verification information.
 
         Parameters
@@ -54,6 +60,9 @@ class FractalClient(object):
             Verifies the SSL connection with a third party server. This may be False if a
             FractalServer was not provided a SSL certificate and defaults back to self-signed
             SSL keys.
+        asynchronous : bool, optional
+            If True, uses the tornado library for asynchronous requests. This is an expert option
+            and should only be used if a user is familiar with asynchronous python programming.
         """
 
         if hasattr(address, "get_address"):
@@ -73,6 +82,7 @@ class FractalClient(object):
 
         self.address = address
         self.username = username
+        self._asynchronous = asynchronous
         self._verify = verify
         self._headers = {}
 
@@ -90,7 +100,7 @@ class FractalClient(object):
         self._headers["content_type"] = 'application/json'
 
         # Try to connect and pull general data
-        self.server_info = self._request("get", "information", {}).json()
+        self.server_info = self._request("get", "information")
 
         self.server_name = self.server_info["name"]
 
@@ -135,15 +145,13 @@ class FractalClient(object):
     def _request(self,
                  method: str,
                  service: str,
-                 payload: Dict[str, Any]=None,
                  *,
                  data: str=None,
                  noraise: bool=False,
-                 timeout=None):
+                 timeout:int=None):
 
         addr = self.address + service
         kwargs = {
-            "json": payload,
             "data": data,
             "timeout": timeout,
             "headers": self._headers,
@@ -163,14 +171,48 @@ class FractalClient(object):
             else:
                 raise KeyError("Method not understood: '{}'".format(method))
         except requests.exceptions.SSLError as exc:
-            error_msg = (
-                "\n\nSSL handshake failed. This is likely caused by a failure to retrieve 3rd party SSL certificates.\n"
-                "If you trust the server you are connecting to, try 'FractalClient(... verify=False)'")
-            raise requests.exceptions.SSLError(error_msg)
+            raise ConnectionRefusedError(_ssl_error_msg)
         except requests.exceptions.ConnectionError as exc:
-            error_msg = (
-                "\n\nCould not connect to server {}, please check the address and try again.".format(self.address))
-            raise requests.exceptions.ConnectionError(error_msg)
+            raise ConnectionRefusedError(_connection_error_msg)
+
+        if (r.status_code != 200) and (not noraise):
+            raise IOError("Server communication failure. Reason: {}".format(r.reason))
+
+        return r
+
+    async def _async_request(self,
+                             method: str,
+                             service: str,
+                             *,
+                             data: str = None,
+                             noraise: bool = False,
+                             timeout: int = None):
+
+        try:
+            from tornado.httpclient import AsyncHTTPClient
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError(
+                "Tornado is required for this function. Please 'conda install tornado' or 'pip isntall tornado'.")
+
+        addr = self.address + service
+        kwargs = {
+            "body": data,
+            "headers": self._headers,
+            "connect_timeout": timeout or 20,
+            "validate_cert": self._verify,
+            "method": method.upper()
+        }
+
+        if self._mock_network_error:
+            raise requests.exceptions.RequestException("mock_network_error is on, failing by design!")
+
+        client = AsyncHTTPClient()
+        try:
+            data = await client.fetch(addr, **kwargs)
+        except ssl.SSLCertVerificationError as exc:
+            raise ConnectionRefusedError(_ssl_error_msg)
+        except ConnectionRefusedError as exc:
+            raise ConnectionRefusedError(_connection_error_msg.format(addr))
 
         if (r.status_code != 200) and (not noraise):
             raise IOError("Server communication failure. Reason: {}".format(r.reason))
@@ -211,8 +253,12 @@ class FractalClient(object):
         except ValidationError as exc:
             raise TypeError(str(exc))
 
-        r = self._request(rest, name, data=payload.json(), timeout=timeout)
-        response = response_model.parse_raw(r.text)
+        if self._asynchronous:
+            r = self._async_request(rest, name, data=payload.json(), timeout=timeout)
+            response = response_model.parse_raw(r.body)
+        else:
+            r = self._request(rest, name, data=payload.json(), timeout=timeout)
+            response = response_model.parse_raw(r.text)
 
         if full_return:
             return response
@@ -270,12 +316,7 @@ class FractalClient(object):
         if "address" not in data:
             raise KeyError("Config file must at least contain an address field.")
 
-        address = data["address"]
-        username = data.get("username", None)
-        password = data.get("password", None)
-        verify = data.get("verify", True)
-
-        return cls(address, username=username, password=password, verify=verify)
+        return cls(data.pop("address"), **data)
 
     def server_information(self) -> Dict[str, str]:
         """Pull down various data on the connected server.
