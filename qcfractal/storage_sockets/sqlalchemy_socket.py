@@ -4,7 +4,7 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 
 
 try:
-    import sqlalchemy
+    import sqlalchemy # lgtm [py/import-and-import-from]
 except ImportError:
     raise ImportError(
         "SQLAlchemy_socket requires sqlalchemy, please install this python "
@@ -23,14 +23,14 @@ from sqlalchemy import create_engine, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import sessionmaker, with_polymorphic
 from sqlalchemy.sql.expression import func
-from sqlalchemy.dialects import postgresql
+# from sqlalchemy.dialects import postgresql
 from collections.abc import Iterable
 
 
 # pydantic classes
 from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
                                         TaskStatusEnum, TorsionDriveRecord, prepare_basis, GridOptimizationRecord)
-from qcfractal.services.service_util import BaseService
+# from qcfractal.services.service_util import BaseService
 # SQL ORMs
 from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM,
                                                   MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
@@ -215,7 +215,7 @@ class SQLAlchemySocket:
 
     def _delete_DB_data(self, db_name):
         """TODO: needs more testing"""
-        
+
         with self.session_scope() as session:
             session.query(TaskQueueORM).delete(synchronize_session=False)
             session.query(ServiceQueueORM).delete(synchronize_session=False)
@@ -1509,7 +1509,7 @@ class SQLAlchemySocket:
             tag=tag)
 
         proc_filt = TaskQueueORM.procedure.in_([p.lower() for p in available_procedures])
-        none_filt = TaskQueueORM.procedure == None
+        none_filt = TaskQueueORM.procedure == None # lgtm [py/test-equals-none]
         query.append(or_(proc_filt, none_filt))
 
         with self.session_scope() as session:
@@ -1646,10 +1646,12 @@ class SQLAlchemySocket:
             tasks_c = session.query(TaskQueueORM)\
                              .filter(TaskQueueORM.id.in_(task_ids))\
                              .update(update_fields, synchronize_session=False)
-            base_results_c = session.query(BaseResultORM)\
-                                    .filter(BaseResultORM.id == TaskQueueORM.base_result_id) \
-                                    .filter(TaskQueueORM.id.in_(task_ids))\
-                                    .update(update_fields, synchronize_session=False)
+
+            # Update the base results
+            session.query(BaseResultORM)\
+                    .filter(BaseResultORM.id == TaskQueueORM.base_result_id)\
+                    .filter(TaskQueueORM.id.in_(task_ids))\
+                    .update(update_fields, synchronize_session=False)
 
         return tasks_c
 
@@ -1715,11 +1717,11 @@ class SQLAlchemySocket:
             if reset_error:
                 task_ids = session.query(TaskQueueORM.id)\
                                   .filter_by(manager=manager, status=TaskStatusEnum.error)
-                result_count = session.query(BaseResultORM)\
-                                      .filter(TaskQueueORM.base_result_id==BaseResultORM.id)\
-                                      .filter(TaskQueueORM.id.in_(task_ids))\
-                                      .update(dict(status='INCOMPLETE', modified_on=dt.utcnow()),
-                                              synchronize_session=False)
+                session.query(BaseResultORM)\
+                          .filter(TaskQueueORM.base_result_id==BaseResultORM.id)\
+                          .filter(TaskQueueORM.id.in_(task_ids))\
+                          .update(dict(status='INCOMPLETE', modified_on=dt.utcnow()),
+                                  synchronize_session=False)
 
             status = []
             if reset_running:
@@ -1848,7 +1850,7 @@ class SQLAlchemySocket:
             if overwrite:
                 count = session.query(UserORM).filter_by(username=username).update(**blob)
                 # doc.upsert_one(**blob)
-                success = True
+                success = count == 1
 
             else:
                 try:

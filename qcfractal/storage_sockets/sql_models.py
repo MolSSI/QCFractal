@@ -1,9 +1,8 @@
 import datetime
-import dateutil
 # from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import (Column, Integer, String, Text, DateTime, Boolean,
-                        ForeignKey, JSON, Enum, Float, Binary, Table, ARRAY,
-                        PrimaryKeyConstraint, inspect, Index)
+from sqlalchemy import (Column, Integer, String, DateTime, Boolean,
+                        ForeignKey, JSON, Enum, Float, Binary, Table,
+                        inspect, Index)
 from sqlalchemy.orm import relationship, object_session, column_property
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
