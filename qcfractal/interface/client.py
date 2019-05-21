@@ -84,16 +84,25 @@ class FractalClient(object):
         self.server_name = self.server_info["name"]
 
         def version_list(version):
-            version = re.sub(r"\+.*$", "", version.strip("v"))
+            version_match = re.search(r"\d+\.\d+\.\d+", version)
+            if version_match is None:
+                raise ValueError(f"Could not read version of form XX.YY.ZZ in {version}")
+            version = version_match.group(0)
             return [int(x) for x in version.split(".")]
 
         from . import __version__  # Import here to avoid circular import from __init__
-        server_version = version_list(self.server_info["version"])
+        try:
+            server_version_min_client = version_list(self.server_info["client_lower_version_limit"])
+            server_version_max_client = version_list(self.server_info["client_upper_version_limit"])
+        except KeyError:
+            raise IOError(f"The Server at {self.address}, version {self.server_info['version']} does not report what "
+                          f"Client versions it accepts! It can be almost asserted your Client is too new for the Server "
+                          f"you are connecting to.")
         client_version = version_list(__version__)
-        assert client_version[:2] >= server_version[:2], (f"Server Fractal version of {server_version} appears to "
-                                                          f"be ahead of this Client's Fractal version of "
-                                                          f"{client_version}! Please up your client! "
-                                                          f"Only MAJOR.MINOR version checked.")
+        assert server_version_min_client <= client_version <= server_version_max_client, (
+                f"This Client of version {client_version} does not fall within the Server's allowed Client versions "
+                f"of [{server_version_min_client}, {server_version_max_client}]. Server address: {self.address}"
+                )
 
     def __str__(self) -> str:
         """A short representation of the current FractalClient.
