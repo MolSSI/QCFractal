@@ -80,7 +80,7 @@ def test_molecule_socket(test_server):
 def test_keywords_socket(test_server):
 
     opt_api_addr = test_server.get_address("keyword")
-    opts = {"program": "qc", "values": {"opt": "a"}}
+    opts = {"values": {"opt": "a"}}
     # Add a molecule
     r = requests.post(opt_api_addr, json={"meta": {}, "data": [opts]})
     assert r.status_code == 200
