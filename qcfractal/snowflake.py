@@ -3,8 +3,10 @@ import atexit
 import shutil
 import socket
 import sys
+import os
 import subprocess
 import tempfile
+import uuid
 
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from tornado.ioloop import IOLoop
@@ -116,17 +118,16 @@ class FractalSnowflake(FractalServer):
         else:
             raise KeyError(f"Logfile type not recognized {type(logfile)}.")
 
-        super().__init__(
-            name="QCFractal Snowflake Instance",
-            port=_find_port(),
-            loop=self.loop,
-            storage_uri=storage_uri,
-            storage_project_name=storage_project_name,
-            ssl_options=False,
-            max_active_services=max_active_services,
-            queue_socket=self.queue_socket,
-            logfile_prefix=log_prefix,
-            query_limit=int(1.e6))
+        super().__init__(name="QCFractal Snowflake Instance",
+                         port=_find_port(),
+                         loop=self.loop,
+                         storage_uri=storage_uri,
+                         storage_project_name=storage_project_name,
+                         ssl_options=False,
+                         max_active_services=max_active_services,
+                         queue_socket=self.queue_socket,
+                         logfile_prefix=log_prefix,
+                         query_limit=int(1.e6))
 
         if self._mongod_proc:
             self.logger.warning("Warning! This is a temporary instance, data will be lost upon shutdown.")
@@ -180,3 +181,124 @@ class FractalSnowflake(FractalServer):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop()
         return False
+
+
+class FractalSnowflakeHandler:
+    def __init__(self, ncores: int = 2):
+
+        # Set variables
+        self._running = False
+        self._qcfractal_proc = None
+        self._dbdir = tempfile.TemporaryDirectory()
+        self._logdir = tempfile.TemporaryDirectory()
+        self._dbname = str(uuid.uuid4())
+        self._server_port = _find_port()
+        self._address = f"https://localhost:{self._server_port}"
+        self._ncores = ncores
+
+        # Start up a mongo instance, controlled by the temp file so that it properly dies on shutdown
+        mongod_port = _find_port()
+        self._mongod_proc = _background_process(
+            [shutil.which("mongod"), f"--port={mongod_port}", f"--dbpath={self._dbdir.name}"])
+        self._storage_uri = f"mongodb://localhost:{mongod_port}"
+
+        # Set items for the Client
+        self.client_verify = False
+
+        self.start()
+
+        # We need to call before threadings cleanup
+        atexit.register(self.stop)
+        atexit.register(self._kill_mongod)
+
+### Dunder functions
+
+    def __del__(self):
+        """
+        Cleans up the Snowflake instance on delete.
+        """
+
+        self.stop()
+        atexit.unregister(self.stop)
+        self._kill_mongod()
+        atexit.unregister(self._kill_mongod)
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
+        return False
+
+    def _kill_mongod(self):
+        if self._mongod_proc:
+            self._mongod_proc.kill()
+            self._mongod_proc = None
+
+
+### Utility funcitons
+
+    @property
+    def logfilename(self):
+        return os.path.join(self._logdir.name, self._dbname)
+
+    def get_address(self, endpoint: Optional[str] = None) -> str:
+        """Obtains the full URI for a given function on the FractalServer.
+
+        Parameters
+        ----------
+        endpoint : Optional[str], optional
+            Specifies a endpoint to provide the URI for. If None returns the server address.
+
+        Returns
+        -------
+        str
+            The endpoint URI
+
+        """
+
+        if endpoint:
+            return self._address + endpoint
+        else:
+            return self._address
+
+    def start(self):
+        """
+        Stop the current FractalSnowflake instance and destroys all data.
+        """
+        if self._running:
+            return
+
+        # Generate a new database name
+        self._dbname = str(uuid.uuid4())
+
+        self._qcfractal_proc = _background_process([
+            shutil.which("qcfractal-server"),
+            self._dbname,
+            f"--database-uri={self._storage_uri}",
+            f"--log-prefix={self.logfilename}",
+            f"--port={self._server_port}",
+            f"--local-manager={self._ncores}"
+        ]) # yapf: disable
+
+        self._running = True
+
+    def stop(self):
+        """
+        Stop the current FractalSnowflake instance and destroys all data.
+        """
+        if self._running is False:
+            return
+
+        self._running = False
+
+    def restart(self):
+        """
+        Restarts the current FractalSnowflake instances and destroys all data in the process.
+        """
+        self.stop()
+        self.start()
+
+    def show_log(self, nlines: int = 20, stream: bool = False, clean: bool = True):
+        pass
