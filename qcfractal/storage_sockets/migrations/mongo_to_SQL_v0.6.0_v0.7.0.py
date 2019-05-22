@@ -1,7 +1,7 @@
 from qcfractal.storage_sockets import storage_socket_factory
 from qcfractal.storage_sockets.me_models import MoleculeORM, KeywordsORM, KVStoreORM, ResultORM
 from qcfractal.storage_sockets.sql_models import MoleculeMap, KeywordsMap, KVStoreMap, ResultMap
-from qcfractal.interface.models import KeywordSet
+from qcfractal.interface.models import KeywordSet, ResultRecord
 
 
 sql_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb"
@@ -145,9 +145,85 @@ def copy_kv_store(with_check=False):
 
     print('---- Done copying KV_store\n\n')
 
+
+def copy_results(with_check=False):
+    """Copy from mongo to sql"""
+
+    total_count = mongo_storage.get_total_count(ResultORM)
+    print('Total # of Results in the DB is: ', total_count)
+
+    for skip in range(0, total_count, m_limit):
+
+        print('\nCurrent skip={}\n-----------'.format(skip))
+        ret = mongo_storage.get_results(limit=m_limit, skip=skip)
+        mongo_res= ret['data']
+        print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
+
+        # check if this patch has been already stored
+        with sql_storage.session_scope() as session:
+            if session.query(ResultMap).filter_by(mongo_id=mongo_res[-1]['id']).count() > 0:
+                print('Skipping first ', skip+m_limit)
+                continue
+
+        # load mapped ids in memory
+        mol_map, keywords_map, kv_store_map = [], [], []
+        for res in mongo_res:
+            if 'molecule' in res and res['molecule']:
+                mol_map.append(res['molecule'])
+            if 'keywords' in res and res['keywords']:
+                keywords_map.append(res['keywords'])
+            if 'stdout' in res and res['stdout']:
+                kv_store_map.append(res['stdout'])
+            if 'stderr' in res and res['stderr']:
+                kv_store_map.append(res['stderr'])
+            if 'error' in res and res['error']:
+                kv_store_map.append(res['error'])
+
+        with sql_storage.session_scope() as session:
+            mols = session.query(MoleculeMap).filter(MoleculeMap.mongo_id.in_(mol_map)).all()
+            mol_map = {i.mongo_id:i.sql_id for i in mols}
+
+            keys = session.query(KeywordsMap).filter(KeywordsMap.mongo_id.in_(keywords_map)).all()
+            keywords_map = {i.mongo_id: i.sql_id for i in keys}
+
+            kv = session.query(KVStoreMap).filter(KVStoreMap.mongo_id.in_(kv_store_map)).all()
+            kv_store_map = {i.mongo_id: i.sql_id for i in kv}
+
+        # replace mongo ids Results with sql
+        for res in mongo_res:
+            res['molecule'] = mol_map[res['molecule']]
+            if 'keywords' in res and res['keywords']:
+                res['keywords'] = keywords_map[res['keywords']]
+            if 'stdout' in res and res['stdout']:
+                res['stdout'] = kv_store_map[res['stdout']]
+            if 'stderr' in res and res['stderr']:
+                res['stderr'] = kv_store_map[res['stderr']]
+            if 'error' in res and res['error']:
+                res['error'] = kv_store_map[res['error']]
+
+        results_py = [ResultRecord(**res) for res in mongo_res]
+        sql_insered = sql_storage.add_results(results_py)['data']
+        print('Inserted in SQL:', len(sql_insered))
+
+        if with_check:
+            ret = sql_storage.get_results(limit=m_limit, skip=skip)
+            print('Get from SQL: n_found={}, returned={}'.format(ret['meta']['n_found'], len(ret['data'])))
+
+            assert mongo_res[0].compare(ret['data'][0])
+
+        # store the ids mapping in the sql DB
+        with sql_storage.session_scope() as session:
+            obj_map = []
+            for mongo_obj, sql_id in zip(mongo_res, sql_insered):
+                obj_map.append(ResultMap(sql_id=sql_id, mongo_id=mongo_obj['id']))
+
+            session.add_all(obj_map)
+            session.commit()
+
 if __name__ == "__main__":
 
-    sql_storage._clear_db('qcarchivedb')
-    copy_molecules(with_check=True)
-    copy_keywords(with_check=True)
-    copy_kv_store(with_check=True)
+    # sql_storage._clear_db('qcarchivedb')
+    # copy_molecules(with_check=True)
+    # copy_keywords(with_check=True)
+    # copy_kv_store(with_check=True)
+    copy_results(with_check=False)
