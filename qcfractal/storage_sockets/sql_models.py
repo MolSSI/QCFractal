@@ -2,7 +2,7 @@ import datetime
 # from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (Column, Integer, String, DateTime, Boolean,
                         ForeignKey, JSON, Enum, Float, Binary, Table,
-                        inspect, Index)
+                        inspect, Index, UniqueConstraint)
 from sqlalchemy.orm import relationship, object_session, column_property
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
@@ -11,9 +11,9 @@ from sqlalchemy import select, func, and_
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.orderinglist import ordering_list
 # from sqlalchemy.ext.associationproxy import association_proxy
-# from sqlalchemy.schema import Index
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 from collections.abc import Iterable
+from sqlalchemy.ext.declarative import declared_attr
 
 # Base = declarative_base()
 
@@ -118,7 +118,7 @@ class Base:
 
     # @validates('created_on', 'modified_on')
     # def validate_date(self, key, date):
-    #     """For SQLite, translate str to dates manulally"""
+    #     """For SQLite, translate str to dates manually"""
     #     if date is not None and isinstance(date, str):
     #         date = dateutil.parser.parse(date)
     #     return date
@@ -129,9 +129,12 @@ class AccessLogORM(Base):
 
     id = Column(Integer, primary_key=True)
     ip_address = Column(String)
-    date = Column(DateTime, default=datetime.datetime.utcnow)
+    access_date = Column(DateTime, default=datetime.datetime.utcnow)
     type = Column(String)
 
+    __table_args__ = (
+        Index('access_log_date', "access_date"),
+    )
 
 class KVStoreORM(Base):
     """TODO: rename to """
@@ -168,8 +171,9 @@ class CollectionORM(Base):
     tagline = Column(String)
     extra = Column(JSON)  # extra data related to specific collection type
 
+
     __table_args__ = (
-        Index('collection_name', "collection", "lname", unique=True),
+        Index('ix_collection_lname', "collection", "lname", unique=True),
     )
 
     # meta = {
@@ -232,6 +236,11 @@ class MoleculeORM(Base):
     # def __str__(self):
     #     return str(self.id)
 
+    __table_args__ = (
+        Index('ix_molecule_hash', "molecule_hash", unique=False), # dafault index is B-tree
+        # TODO: no index on molecule_formula
+    )
+
     # meta = {
     #
     #     'indexes': [
@@ -265,6 +274,9 @@ class KeywordsORM(Base):
     exact_floats = Column(Boolean, default=False)
     comments = Column(String)
 
+    __table_args__ = (
+        Index('ix_keywords_hash_index', "hash_index", unique=True),
+    )
     # meta = {'indexes': [{'fields': ('hash_index', ), 'unique': True}]}
 
 
@@ -286,7 +298,7 @@ class BaseResultORM(Base):
     id = Column(Integer, primary_key=True)
     hash_index = Column(String) # TODO
     procedure = Column(String(100))  # TODO: may remove
-    program = Column(String(100))
+    # program = Column(String(100))  # moved to subclasses
     version = Column(Integer)
 
     # Extra fields
@@ -314,6 +326,11 @@ class BaseResultORM(Base):
 
     # Carry-ons
     provenance = Column(JSON)
+
+    __table_args__ = (
+        Index('ix_base_result_status', 'status'),
+        Index('ix_base_result_type', 'result_type'), # todo: needed?
+    )
 
     # meta = {
     #     # 'allow_inheritance': True,
@@ -346,8 +363,8 @@ class ResultORM(BaseResultORM):
     id = Column(Integer, ForeignKey('base_result.id', ondelete="CASCADE"), primary_key=True)
 
     # uniquely identifying a result
-    # program = Column(String(100), nullable=False)  # example "rdkit", is it the same as program in keywords?
-    driver = Column(String, Enum(DriverEnum), nullable=False)
+    program = Column(String(100), nullable=False)  # example "rdkit", is it the same as program in keywords?
+    driver = Column(String(100), Enum(DriverEnum), nullable=False)
     method = Column(String(100), nullable=False)  # example "uff"
     basis = Column(String(100))
     molecule = Column(Integer, ForeignKey('molecule.id'))
@@ -366,6 +383,19 @@ class ResultORM(BaseResultORM):
     # TODO: Do they still exist?
     # schema_name = Column(String)  # default="qc_ret_data_output"??
     # schema_version = Column(Integer)
+
+    __table_args__ = (
+        # TODO: optimize indexes
+        # A multicolumn GIN index can be used with query conditions that involve any subset of
+        # the index's columns. Unlike B-tree or GiST, index search effectiveness is the same
+        # regardless of which index column(s) the query conditions use.
+        # Index('ix_result_combined', "program", "driver", "method", "basis",
+        #       "keywords", postgresql_using='gin'),  # gin index
+        # Index('ix_results_molecule', 'molecule'),  # b-tree index
+
+        UniqueConstraint("program", "driver", "method", "basis",
+              "keywords", "molecule", name='uix_results_keys'),
+    )
 
     # meta = {
     #     # 'collection': 'result',
@@ -391,6 +421,7 @@ class ProcedureMixin:
         A procedure mixin to be used by specific procedure types
     """
 
+    program = Column(String(100), nullable=False)
     keywords = Column(JSON)
     qc_spec = Column(JSON)
 
@@ -467,7 +498,7 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     }
 
     __table_args__ = (
-        # Index('my_index', "a", "b", unique=True),
+        Index('ix_optimization_program', 'program'),  # todo: needed for procedures?
     )
 
     def update_relations(self, trajectory=None, **kwarg):
@@ -564,6 +595,10 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     def grid_optimizations(self, dict_values):
 
         return dict_values
+
+    __table_args__ = (
+        Index('ix_grid_optmization_program', 'program'),  # todo: needed for procedures?
+    )
 
     __mapper_args__ = {
         'polymorphic_identity': 'grid_optimization_procedure',
@@ -665,6 +700,10 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 
         return dict_values
 
+    __table_args__ = (
+        Index('ix_torsion_drive_program', 'program'),  # todo: needed for procedures?
+    )
+
     __mapper_args__ = {
         'polymorphic_identity': 'torsiondrive_procedure',
         # to have separate select when querying BaseResultsORM
@@ -737,6 +776,19 @@ class TaskQueueORM(Base):
     base_result_id = Column(Integer, ForeignKey("base_result.id"), unique=True)
     base_result_obj = relationship(BaseResultORM, lazy='select')  # or lazy='joined'
 
+
+    # An important special case is ORDER BY in combination with LIMIT n: an
+    # explicit sort will have to process all the data to identify the first n
+    # rows, but if there is an index matching the ORDER BY, the first n rows
+    # can be retrieved directly, without scanning the remainder at all.
+
+    __table_args__ = (
+        Index('ix_task_queue_created_on', "created_on"),
+        Index('ix_task_queue_keys', "status", "program", "procedure", "tag"),
+        Index('ix_task_queue_manager', "manager"),
+        Index('ix_task_queue_base_result_id', "base_result_id")
+    )
+
     # meta = {
     #     'indexes': [
     #         'created_on',
@@ -748,14 +800,6 @@ class TaskQueueORM(Base):
     #         },  # new
     #     ]
     # }
-
-    # def save(self, *args, **kwargs):
-    #     """Override save to update modified_on"""
-    #     self.modified_on = datetime.datetime.utcnow()
-    #     if not self.created_on:
-    #         self.created_on = datetime.datetime.utcnow()
-    #
-    #     return super(TaskQueueORM, self).save(*args, **kwargs)
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -779,6 +823,12 @@ class ServiceQueueORM(Base):
     # created_on = Column(DateTime, nullable=False)
     # modified_on = Column(DateTime, nullable=False)
 
+    __table_args__ = (
+        Index('ix_service_queue_status', "status"),
+        Index('ix_service_queue_status_tag_hash', "status", "tag"),
+        Index('ix_service_queue_hash_index', "hash_index")
+    )
+
     # meta = {
     #     'indexes': [
     #         'status',
@@ -800,9 +850,10 @@ class UserORM(Base):
 
     id = Column(Integer, primary_key=True)
 
-    username = Column(String, nullable=False, unique=True)
+    username = Column(String, nullable=False, unique=True) # indexed and unique
     password = Column(Binary, nullable=False)
     permissions = Column(JSON)  # Column(ARRAY(String))
+
 
     # meta = {'collection': 'user', 'indexes': ['username']}
 
@@ -831,6 +882,12 @@ class QueueManagerORM(Base):
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)
+
+
+    __table_args__ = (
+        Index('ix_queue_manager_status', "status"),
+        Index('ix_queue_manager_modified_on', "modified_on")
+    )
 
     # meta = {'collection': 'queue_manager', 'indexes': ['status', 'name', 'modified_on']}
 
