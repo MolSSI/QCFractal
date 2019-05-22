@@ -30,12 +30,11 @@ from collections.abc import Iterable
 # pydantic classes
 from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
                                         TaskStatusEnum, TorsionDriveRecord, prepare_basis, GridOptimizationRecord)
-# from qcfractal.services.service_util import BaseService
 # SQL ORMs
 from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM,
                                                   MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
                                                   ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
-                                                  GridOptimizationProcedureORM)
+                                                  GridOptimizationProcedureORM, VersionsORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
@@ -181,6 +180,9 @@ class SQLAlchemySocket:
 
         self._project_name = project
         self._max_limit = max_limit
+
+
+        self.check_lib_versions()
 
 
     def __str__(self) -> str:
@@ -1946,3 +1948,27 @@ class SQLAlchemySocket:
                                           .delete(synchronize_session=False)
 
         return count == 1
+
+    def check_lib_versions(self):
+        """Check the stored versions of elemental and fractal"""
+
+        with self.session_scope() as session:
+            db_ver = session.query(VersionsORM).order_by(VersionsORM.created_on.desc())
+            if db_ver.count() == 0:
+                # FIXME: get versions from the right place
+                import qcelemental
+                import qcfractal
+                import qcengine
+                elemental_version = qcelemental.__version__
+                fractal_version = qcfractal.__version__
+                engine_version = qcengine.__version__
+                current = VersionsORM(elemental_version=elemental_version,
+                                      fractal_version=fractal_version,
+                                      engine_version=engine_version)
+                session.add(current)
+                session.commit()
+            else:
+                current = db_ver.first()
+
+
+        return current.to_dict(exclude=['id'])

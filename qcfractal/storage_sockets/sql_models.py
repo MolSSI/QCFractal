@@ -136,6 +136,16 @@ class AccessLogORM(Base):
         Index('access_log_date', "access_date"),
     )
 
+class VersionsORM(Base):
+    __tablename__ = 'versions'
+
+    id = Column(Integer, primary_key=True)
+    created_on = Column(DateTime, default=datetime.datetime.utcnow)
+    elemental_version = Column(String, nullable=False)
+    fractal_version = Column(String, nullable=False)
+    engine_version = Column(String)
+
+
 class KVStoreORM(Base):
     """TODO: rename to """
     __tablename__ = "kv_store"
