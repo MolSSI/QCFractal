@@ -1692,3 +1692,7 @@ class MongoengineSocket:
             If the operation was successful or not.
         """
         return UserORM.objects(username=username).delete() == 1
+
+    def get_total_count(self, className):
+
+        return className.objects().count()

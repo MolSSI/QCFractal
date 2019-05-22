@@ -120,6 +120,20 @@ class Base:
     #         date = dateutil.parser.parse(date)
     #     return date
 
+# Temporary classes for migration from mongo to sql
+class MoleculeMap(Base):
+    __tablename__ = 'molecule_map'
+
+    sql_id = Column(Integer, ForeignKey('molecule.id', ondelete='cascade'), primary_key=True)
+    mongo_id = Column(String, unique=True)  # will have an index
+
+
+class ResultMap(Base):
+    __tablename__ = 'result_map'
+
+    sql_id = Column(Integer, ForeignKey('result.id', ondelete='cascade'), primary_key=True)
+    mono_id = Column(Integer, unique=True)  # will have an index
+
 
 class AccessLogORM(Base):
     __tablename__ = 'access_log'
