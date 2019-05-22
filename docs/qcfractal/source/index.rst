@@ -83,7 +83,7 @@ The records created from adding additional compute.
 
 **Manager Documentation**
 
-Setting up and running QCFractal Managers on your system
+Setting up and running Fractal's Queue Managers on your system
 
 .. toctree::
    :maxdepth: 1

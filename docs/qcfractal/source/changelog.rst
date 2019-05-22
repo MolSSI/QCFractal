@@ -18,6 +18,13 @@ Changelog
 0.7.0 / 2019-05-??
 ------------------
 
+.. warning:: Final MongoDB Supported Release
+
+    **This is the last major release which support MongoDB.** Fractal is moving towards a PostgreSQL for database to
+    make upgrades more stable and because it is more suited to the nature of QCArchive Data. The upgrade path for
+    MongoDB -> PostgreSQL will be provided by the Fractal developers in the next release. This first one will likely
+    be a bit manual in th form of scripts, but afterwords will be engineered to be more automatic and documented.
+
 New Features
 ++++++++++++
 
@@ -58,7 +65,7 @@ Enhancements
 - (:pr:`248`) Jobs which fail, or cannot be returned correctly, from Queue Managers are now better handled in the
   Manager and don't sit in the Manager's internal buffer. They will attempt to be returned to the Server on later
   updates. If too many jobs become stale, the Manager will shut itself down for safety.
-- (:pr:`258`) Fractal Managers are now fully documented, both from the CLI and through the doc pages themselves.
+- (:pr:`258`) Fractal Queue Managers are now fully documented, both from the CLI and through the doc pages themselves.
 - (:pr:`251`) The Fractal Server now reports valid minimum/maximum allowed client versions. The Portal Client will try
   check these numbers against itself and fail to connect if it is not within the Server's allowed ranges. Clients
   started from Fractal's ``interface`` do not make this check.
@@ -97,13 +104,13 @@ New Features
 Enhancements
 ++++++++++++
 
-- (:pr:`226`) LSF can now be specified for the Queue Managers for Dask managers.
+- (:pr:`226`) LSF can now be specified for the Queue Managers for Dask Managers.
 - (:pr:`228`) Plotly is an optional dependency overall, it is not required to run QCFractal or QCPortal but will be
   downloaded in some situations. If you don't have Plotly installed, more graceful errors beyond just raw
   ``ImportErrors`` are given.
 - (:pr:`234`) Queue Managers now report the number of passed and failed jobs they return to the server and can also
   have verbose (debug level) outputs to the log.
-- (:pr:`234`) Dask-driven queue managers can now be set to simply scale up to a fixed number of workers instead of
+- (:pr:`234`) Dask-driven Queue Managers can now be set to simply scale up to a fixed number of workers instead of
   trying to adapt the number of workers on the fly.
 
 Bug Fixes
@@ -111,7 +118,7 @@ Bug Fixes
 
 - (:pr:`227`) SGE Clusters specified in Queue Manager under Dask correctly process ``job_extra`` for additional
   scheduler headers. This is implemented in a stable way such that if the upstream Dask Jobqueue implements a fix, the
-  manager will keep working without needing to get a new release.
+  Manager will keep working without needing to get a new release.
 - (:pr:`234`) Fireworks managers now return the same pydantic models as every other manager instead of raw dictionaries.
 
 
@@ -121,18 +128,18 @@ Bug Fixes
 New Features
 ++++++++++++
 
-- (:pr:`216`) Jobs submitted to the queue can now be assigned a priority to be served out to the managers.
+- (:pr:`216`) Jobs submitted to the queue can now be assigned a priority to be served out to the Managers.
 - (:pr:`219`) Temporary, pop-up, local instances of ``FractalServer`` can now be created through the
   ``FractalSnowflake``. This creates an instance of ``FractalServer``, with its database structure, which is entirely
   held in temporary storage and memory, all of which is deleted upon exit/stop. This feature is designed for those
   who want to tinker with Fractal without needed to create their own database or connect to a production
   ``FractalServer``.
-- (:pr:`220`) Queue managers can now set the ``scratch_directory`` variable that is passed to QCEngine and its workers.
+- (:pr:`220`) Queue Managers can now set the ``scratch_directory`` variable that is passed to QCEngine and its workers.
 
 Enhancements
 ++++++++++++
 
-- (:pr:`216`) Queue managers now report what programs and procedures they have access to and will only pull jobs they
+- (:pr:`216`) Queue Managers now report what programs and procedures they have access to and will only pull jobs they
   think they can execute.
 - (:pr:`222`) All of ``FractalClient``'s methods now have full docstrings and type annotations for clairy
 - (:pr:`222`) Massive overhaul to the REST interface to simplify internal calls from the client and server side.
@@ -181,7 +188,7 @@ Enhancements
 - (:pr:`211`) The ``qcfractal-template`` command now has fields for Fractal username and password.
 - (:pr:`212`) The docs for QCFractal and QCPortal have been split into separate structures. They will be hosted on
   separate (although linked) pages, but their content will all be kept in the QCFractal source code. QCPortal's docs
-  are for most users whereas QCFractal docs will be for those creating their own managers, Fractal instances, and
+  are for most users whereas QCFractal docs will be for those creating their own Managers, Fractal instances, and
   developers.
 
 Bug Fixes
@@ -352,7 +359,7 @@ server.
 New Features
 ++++++++++++
 - (:pr:`72`) Queues are no longer required of FractalServer instances, now separate QueueManager instances can be created that push and pull tasks to the server.
-- (:pr:`80`) A `Parsl <http://parsl-project.org>`_ queue manager was written.
+- (:pr:`80`) A `Parsl <http://parsl-project.org>`_ Queue Manager was written.
 - (:pr:`75`) CLI's have been added for the `qcfractal-server` and `qcfractal-manager` instances.
 - (:pr:`83`) The status of server tasks and services can now be queried from a FractalClient.
 - (:pr:`82`) OpenFF Workflows can now add single optimizations for fragments.

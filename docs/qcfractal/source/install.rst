@@ -10,7 +10,7 @@ You can update qcfractal using `conda <https://www.anaconda.com/download/>`_::
 
     conda install qcfractal -c conda-forge
 
-This installs qcfractal and the NumPy dependency, but *not* any of the quantum
+The above command install qcfractal and its required dependencies, but *not* any of the quantum
 chemistry codes nor the software to run run :term:`Queue Managers <Manager>`.
 
 The qcfractal package is maintained on the
@@ -26,7 +26,7 @@ Fractal can also be installed through pre-configured environments you can pull t
     conda activate {environment name}
 
 The environments are created from the YAML files hosted on the Anaconda Cloud, which then need to be activated
-to use. You can find all of the environments `here <https://anaconda.org/qcarchive>`_.
+to use. You can find all of the environments `here <https://anaconda.org/QCArchive/environments>`_.
 
 If you want to use a different name than the environment file, you can add a ``-n {custom name}`` flag to the
 ``conda env`` command.
