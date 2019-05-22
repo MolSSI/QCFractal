@@ -25,7 +25,7 @@ _common_docs = {"full_return": "Returns the full server response if True that co
 def _version_list(version):
     version_match = re.search(r"\d+\.\d+\.\d+", version)
     if version_match is None:
-        raise ValueError(f"Could not read version of form XX.YY.ZZ in {version}. There is something very "
+        raise ValueError(f"Could not read version of form XX.YY.ZZ from {version}. There is something very "
                          f"malformed about the version string. Please report this to the Fractal developers.")
     version = version_match.group(0)
     return [int(x) for x in version.split(".")]
@@ -107,15 +107,17 @@ class FractalClient(object):
                               f"the one of following commands (pip or conda):"
                               f"\n\t- pip install qcportal=={self.server_info['version']}"
                               f"\n\t- conda install -c conda-forge qcportal=={self.server_info['version']}"
+                              f"\n(Only MAJOR.MINOR versions are checked)"
                               )
             client_version = _version_list(__version__)
-            if not server_version_min_client <= client_version <= server_version_max_client:
+            if not server_version_min_client[:2] <= client_version[:2] <= server_version_max_client[:2]:
                 raise IOError(f"This Client of version {client_version} does not fall within the Server's allowed "
                               f"Client versions of [{server_version_min_client}, {server_version_max_client}] at "
                               f"Server address: {self.address}. Please change your Client version with one of the "
                               f"following commands:"
                               f"\n\t- pip install qcportal=={server_version_max_client}"
                               f"\n\t- conda install -c conda-forge qcportal=={server_version_max_client}"
+                              f"\n(Only MAJOR.MINOR versions are checked)"
                               )
 
     def __str__(self) -> str:
