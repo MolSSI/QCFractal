@@ -17,10 +17,12 @@ try:
     versions = _version.get_versions()
     __version__ = versions["version"]
     __git_revision__ = versions["full-revisionid"]
+    _isportal = True
 
 # We are running inside QCFractal
 except ImportError:
     from ..extras import get_information
     __version__ = "inplace-{}".format(get_information('version'))
     __git_revision__ = get_information('git_revision')
+    _isportal = False
     del get_information

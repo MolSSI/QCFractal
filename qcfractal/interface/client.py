@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Union
 
@@ -17,6 +18,17 @@ from .models.rest_models import ComputeResponse, rest_model
 ### Common docs
 
 _common_docs = {"full_return": "Returns the full server response if True that contains additional metadata."}
+
+
+### Helper functions
+
+def _version_list(version):
+    version_match = re.search(r"\d+\.\d+\.\d+", version)
+    if version_match is None:
+        raise ValueError(f"Could not read version of form XX.YY.ZZ in {version}. There is something very "
+                         f"malformed about the version string. Please report this to the Fractal developers.")
+    version = version_match.group(0)
+    return [int(x) for x in version.split(".")]
 
 ### Fractal Client
 
@@ -81,6 +93,30 @@ class FractalClient(object):
         self.server_info = self._request("get", "information", {}).json()
 
         self.server_name = self.server_info["name"]
+
+        from . import __version__  # Import here to avoid circular import from __init__
+        from . import _isportal
+        if _isportal:
+            try:
+                server_version_min_client = _version_list(self.server_info["client_lower_version_limit"])
+                server_version_max_client = _version_list(self.server_info["client_upper_version_limit"])
+            except KeyError:
+                raise IOError(f"The Server at {self.address}, version {self.server_info['version']} does not report "
+                              f"what Client versions it accepts! It can be almost asserted your Client is too new for "
+                              f"the Server you are connecting to. Please downgrade your Client with "
+                              f"the one of following commands (pip or conda):"
+                              f"\n\t- pip install qcportal=={self.server_info['version']}"
+                              f"\n\t- conda install -c conda-forge qcportal=={self.server_info['version']}"
+                              )
+            client_version = _version_list(__version__)
+            if not server_version_min_client <= client_version <= server_version_max_client:
+                raise IOError(f"This Client of version {client_version} does not fall within the Server's allowed "
+                              f"Client versions of [{server_version_min_client}, {server_version_max_client}] at "
+                              f"Server address: {self.address}. Please change your Client version with one of the "
+                              f"following commands:"
+                              f"\n\t- pip install qcportal=={server_version_max_client}"
+                              f"\n\t- conda install -c conda-forge qcportal=={server_version_max_client}"
+                              )
 
     def __str__(self) -> str:
         """A short representation of the current FractalClient.
