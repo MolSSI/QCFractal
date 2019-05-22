@@ -7,6 +7,7 @@ import os
 import subprocess
 import tempfile
 import uuid
+import time
 
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from tornado.ioloop import IOLoop
@@ -15,6 +16,7 @@ from typing import Optional, Union
 
 from .server import FractalServer
 from .storage_sockets import storage_socket_factory
+from .interface import FractalClient
 
 
 def _find_port() -> int:
@@ -22,6 +24,19 @@ def _find_port() -> int:
     sock.bind(('', 0))
     host, port = sock.getsockname()
     return port
+
+
+def _port_open(ip: str, port: int) -> bool:
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(1)
+    try:
+        s.connect((ip, int(port)))
+        s.shutdown(socket.SHUT_RDWR)
+        return True
+    except:
+        return False
+    finally:
+        s.close()
 
 
 def _background_process(args, **kwargs):
@@ -213,7 +228,11 @@ class FractalSnowflakeHandler:
 
 ### Dunder functions
 
-    def __del__(self):
+    def __repr__(self) -> str:
+
+        return f"FractalSnowflakeHandler(name='{self._dbname}' uri='{self._address}')"
+
+    def __del__(self) -> None:
         """
         Cleans up the Snowflake instance on delete.
         """
@@ -223,15 +242,15 @@ class FractalSnowflakeHandler:
         self._kill_mongod()
         atexit.unregister(self._kill_mongod)
 
-    def __enter__(self):
+    def __enter__(self) -> 'FractalSnowflakeHandler':
         self.start()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
         self.stop()
         return False
 
-    def _kill_mongod(self):
+    def _kill_mongod(self) -> None:
         if self._mongod_proc:
             self._mongod_proc.kill()
             self._mongod_proc = None
@@ -240,7 +259,7 @@ class FractalSnowflakeHandler:
 ### Utility funcitons
 
     @property
-    def logfilename(self):
+    def logfilename(self) -> str:
         return os.path.join(self._logdir.name, self._dbname)
 
     def get_address(self, endpoint: Optional[str] = None) -> str:
@@ -263,7 +282,7 @@ class FractalSnowflakeHandler:
         else:
             return self._address
 
-    def start(self):
+    def start(self, timeout: int = 5) -> None:
         """
         Stop the current FractalSnowflake instance and destroys all data.
         """
@@ -273,32 +292,70 @@ class FractalSnowflakeHandler:
         # Generate a new database name
         self._dbname = str(uuid.uuid4())
 
+
         self._qcfractal_proc = _background_process([
             shutil.which("qcfractal-server"),
             self._dbname,
+            f"--server-name={self._dbname}",
             f"--database-uri={self._storage_uri}",
             f"--log-prefix={self.logfilename}",
             f"--port={self._server_port}",
             f"--local-manager={self._ncores}"
         ]) # yapf: disable
 
+        client = None
+        for x in range(timeout * 10):
+
+            try:
+                client = FractalClient(self)
+                break
+            except ConnectionRefusedError:
+                pass
+
+            time.sleep(0.1)
+        else:
+            self._running = True
+            self.stop()
+            raise ConnectionRefusedError("Snowflake instance did not boot properly, try increasing the timeout.")
+
         self._running = True
 
-    def stop(self):
+    def stop(self) -> None:
         """
         Stop the current FractalSnowflake instance and destroys all data.
         """
         if self._running is False:
             return
 
+        self._qcfractal_proc.terminate()
+        self._qcfractal_proc = None
+
         self._running = False
 
-    def restart(self):
+    def restart(self, timeout: int = 5) -> None:
         """
         Restarts the current FractalSnowflake instances and destroys all data in the process.
         """
         self.stop()
+
+        # Make sure we really shut down
+        for x in range(timeout * 10):
+            if _port_open("localhost", self._server_port):
+                time.sleep(0.1)
+            else:
+                break
+        else:
+            raise ConnectionRefusedError(
+                f"Could not start. The current port {self._server_port} is being used by another process. Please construct a new FractalSnowflakeHandler, this error is likely encountered due a bad shutdown of a previous instance."
+            )
         self.start()
 
     def show_log(self, nlines: int = 20, stream: bool = False, clean: bool = True):
         pass
+
+    def client(self):
+        """
+        Builds a client off
+        """
+
+        return FractalClient(self)

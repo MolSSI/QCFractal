@@ -165,10 +165,10 @@ class FractalClient(object):
                 r = requests.put(addr, **kwargs)
             else:
                 raise KeyError("Method not understood: '{}'".format(method))
-        except requests.exceptions.SSLError as exc:
-            raise ConnectionRefusedError(_ssl_error_msg)
-        except requests.exceptions.ConnectionError as exc:
-            raise ConnectionRefusedError(_connection_error_msg)
+        except requests.exceptions.SSLError:
+            raise ConnectionRefusedError(_ssl_error_msg) from None
+        except requests.exceptions.ConnectionError:
+            raise ConnectionRefusedError(_connection_error_msg.format(self.address)) from None
 
         if (r.status_code != 200) and (not noraise):
             raise IOError("Server communication failure. Reason: {}".format(r.reason))
