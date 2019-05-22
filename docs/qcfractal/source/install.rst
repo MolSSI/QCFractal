@@ -10,11 +10,28 @@ You can update qcfractal using `conda <https://www.anaconda.com/download/>`_::
 
     conda install qcfractal -c conda-forge
 
-This installs qcfractal and the NumPy dependancy.
+This installs qcfractal and the NumPy dependency, but *not* any of the quantum
+chemistry codes nor the software to run run :term:`Queue Managers <Manager>`.
 
 The qcfractal package is maintained on the
 `conda-forge channel <https://conda-forge.github.io/>`_.
 
+
+Conda Pre-Created Environments
+++++++++++++++++++++++++++++++
+
+Fractal can also be installed through pre-configured environments you can pull through our Conda Channel::
+
+    conda env create qcarchive/{environment name}
+    conda activate {environment name}
+
+The environments are created from the YAML files hosted on the Anaconda Cloud, which then need to be activated
+to use. You can find all of the environments `here <https://anaconda.org/qcarchive>`_.
+
+If you want to use a different name than the environment file, you can add a ``-n {custom name}`` flag to the
+``conda env`` command.
+
+The environments must be installed as new environments and cannot be installed into existing ones.
 
 Pip
 ---
@@ -42,12 +59,17 @@ It is recommended to setup a testing environment using ``conda``. This can be ac
 
     cd qcfractal
     python devtools/scripts/conda_env.py -n=qcf_test -p=3.7 devtools/conda-envs/openff.yaml
+    conda activate qcarchive
+    pip install -e .
 
+This installs all the dependencies to setup a production background in a new conda environment,
+activate the environment, and then install Fractal into development mode.
 
 Test
 ----
 
-Test qcfractal with ``py.test``::
+Test qcfractal with ``pytest``::
 
     cd qcfractal
-    py.test
+    pytest
+

@@ -27,9 +27,14 @@ libraries while Dask requires ``dask``, ``dask.distributed``, and
 Using the Command Line
 ----------------------
 
+.. note::
+
+    The CLI + YAML config file is the current recommended way to start and run
+    Fractal Queue Managers
+
 At the moment only ProcessPoolExecutor ``qcfractal-manager`` can be spun up
 from the command line as other distributed workflow managers require
-additional setup.
+additional setup through a YAML config file.
 
 For the full docs for setting up a :term:`Manager`, please see :doc:`the Manager documentation pages.<managers>`
 
@@ -67,62 +72,30 @@ The connected ``qcfractal-server`` instance can be controlled by:
 
     $ qcfractal-manager --fractal-uri=api.qcfractal.molssi.org:80
 
-.. note::
-
-    The ``--name`` argument is useful for change the name of the manager
-    reported back to the ``qcfractal-server`` instance. In addition, the
-    ``--queue-tag`` will limit the acquisition of tasks to only the desired
-    ``qcfractal-server`` task tags.
-
-Using the Template Generator
-----------------------------
-
-Due to the complexity of setting up various distributed workflow managers a
-``qcfractal-template`` CLI is available to generate ``qcfractal-manager``
-scripts that will both setup a distributed workflow system and a ``qcfractal-
-manager``.
-
-To setup a Dask with the SLURM queue manager the following command can be run:
+Only basic settings can be started through the CLI and most of the options require a YAML config file to get up and
+going. You can check all valid YAML options in :doc:`the Manager documentation pages<managers>` or you can always
+check the current schema from the CLI with:
 
 .. code-block:: console
 
-    $ qcfractal-template parsl slurm
-    $ cat manager_template.py
-
-    """
-    Dask Distributed Manager Helper
-
-    Conditions:
-    - Dask Distributed and Dask Job Queue (dask_jobqueue in Conda/pip)
-    - Manager running on the head node
-    - SLURM manager
-
-    For additional information about the Dask Job Queue, please visit this site:
-    https://jobqueue.dask.org/en/latest/
-    """
-
-    # Fractal Settings
-    # Location of the Fractal Server you are connecting to
-    FRACTAL_URI = "localhost:7777"
-    ...
-
-The generated script has a small tutorial on how to correct fill in the
-relevant data.
+    $ qcfractal-manager --schema
 
 
 .. note::
 
-    This is a temporary solution to this complex problem, we will be moving to
-    configuration files in the future.
+    The ``--manager-name`` argument is useful for change the name of the manager
+    reported back to the :term:`Server` instance. In addition, the
+    ``--queue-tag`` will limit the acquisition of tasks to only the desired
+    :term:`Server` task tags. These settings can also all be set in the YAML
+    config file.
 
 
 Using the Python API
 --------------------
 
-
 ``qcfractal-managers`` can also be created using the Python API.
 
-.. note::
+.. warning::
 
     This is for advanced users and special care needs to be taken to ensure
     that both the manager and the workflow tool need to understand the number
@@ -161,7 +134,7 @@ computational engines are found.
 
 .. code-block:: console
 
-    $ qcfractal-manager --test executor
+    $ qcfractal-manager --test
     [I 190301 10:55:57 managers:118] QueueManager:
     [I 190301 10:55:57 managers:119]     Version:         v0.5.0+52.g6eab46f
 
@@ -193,6 +166,3 @@ computational engines are found.
     [I 190301 10:56:04 managers:456]   torchani - PASSED
     [I 190301 10:56:04 managers:456]   psi4 - PASSED
     [I 190301 10:56:04 managers:465] All tasks completed successfully!
-
-
-
