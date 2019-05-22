@@ -80,9 +80,9 @@ Server running on that cluster, and using the SLURM partition ``default``, save 
 
     common:
      adapter: dask
-     ntasks: 1
-     ncores: 1
-     memory: 8
+     tasks_per_job: 1
+     cores_per_job: 1
+     memory_per_job: 8
 
     cluster:
      scheduler: slurm
@@ -116,18 +116,20 @@ help block.
     $ qcfractal-manager --help
 
     usage: qcfractal-manager [-h] [--config-file CONFIG_FILE] [--adapter ADAPTER]
-                         [--ntasks NTASKS] [--ncores NCORES] [--memory MEMORY]
-                         [--scratch-directory SCRATCH_DIRECTORY] [-v]
-                         [--fractal-uri FRACTAL_URI] [-u USERNAME]
-                         [-p PASSWORD] [--verify VERIFY]
-                         [--max-tasks MAX_TASKS] [--manager-name MANAGER_NAME]
-                         [--queue-tag QUEUE_TAG]
-                         [--log-file-prefix LOG_FILE_PREFIX]
-                         [--update-frequency UPDATE_FREQUENCY] [--test]
-                         [--ntests NTESTS]
+                             [--tasks_per_job TASKS_PER_JOB]
+                             [--cores_per_job CORES_PER_JOB]
+                             [--memory_per_job MEMORY_PER_JOB]
+                             [--scratch-directory SCRATCH_DIRECTORY] [-v]
+                             [--fractal-uri FRACTAL_URI] [-u USERNAME]
+                             [-p PASSWORD] [--verify VERIFY]
+                             [--max-tasks MAX_TASKS] [--manager-name MANAGER_NAME]
+                             [--queue-tag QUEUE_TAG]
+                             [--log-file-prefix LOG_FILE_PREFIX]
+                             [--update-frequency UPDATE_FREQUENCY] [--test]
+                             [--ntests NTESTS] [--schema]
 
     A CLI for a QCFractal QueueManager with a ProcessPoolExecutor, Dask, or Parsl
-    backend. The Dask and Parsl backends *require* a config file due to the
+    backend. The Dask and Parsl backends *requires* a config file due to the
     complexity of its setup. If a config file is specified, the remaining options
     serve as CLI overwrites of the config.
 
@@ -138,10 +140,13 @@ help block.
     Common Adapter Settings:
       --adapter ADAPTER     The backend adapter to use, currently only {'dask',
                             'parsl', 'pool'} are valid.
-      --ntasks NTASKS       The number of simultaneous tasks for the executor to
+      --tasks_per_job TASKS_PER_JOB
+                            The number of simultaneous tasks for the executor to
                             run, resources will be divided evenly.
-      --ncores NCORES       The number of process for the executor
-      --memory MEMORY       The total amount of memory on the system in GB
+      --cores_per_job CORES_PER_JOB
+                            The number of process for the executor
+      --memory_per_job MEMORY_PER_JOB
+                            The total amount of memory on the system in GB
       --scratch-directory SCRATCH_DIRECTORY
                             Scratch directory location
       -v, --verbose         Increase verbosity of the logger.
@@ -159,6 +164,7 @@ help block.
     QueueManager settings:
       --max-tasks MAX_TASKS
                             Maximum number of tasks to hold at any given time.
+                            Generally should not be set.
       --manager-name MANAGER_NAME
                             The name of the manager to start
       --queue-tag QUEUE_TAG
@@ -176,6 +182,7 @@ help block.
                             config file and exit. This will always show the most
                             up-to-date schema. It will be presented in a JSON-like
                             format.
+
 
 
 Terminology

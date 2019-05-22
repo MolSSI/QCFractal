@@ -139,7 +139,7 @@ Using the Python API
     workflow_client = distributed.Client("tcp://10.0.1.40:8786")
 
     ncores = 4
-    memory_per_task = 2
+    mem = 2
 
     # Build a manager
     manager = QueueManager(fractal_client, workflow_client, cores_per_task=ncores, memory_per_task=mem)

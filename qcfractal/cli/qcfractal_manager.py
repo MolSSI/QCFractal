@@ -52,27 +52,27 @@ class CommonManagerSettings(BaseSettings):
         AdapterEnum.pool,
         description="Which type of Distributed adapter to run tasks through."
     )
-    ntasks: int = Schema(
+    tasks_per_job: int = Schema(
         1,
         description="Number of concurrent tasks to run *per cluster job* which is executed. Total number of concurrent "
                     "tasks is this value times cluster.max_cluster_jobs, assuming the hardware is available. With the "
                     "pool adapter, and/or if cluster.max_cluster_jobs is 1, this is the number of concurrent jobs."
     )
-    ncores: int = Schema(
+    cores_per_job: int = Schema(
         qcng.config.get_global("ncores"),
-        description="Number of cores to be consumed and distributed over the ntasks. These tasks are divided evenly, "
-                    "so it is recommended that quotient of ncores/ntasks be a whole number else the core distribution "
-                    "is left up to the logic of the adapter. The default value is read from the number of detected "
-                    "cores on the system you are executing on.",
+        description="Number of cores to be consumed and distributed over the tasks_per_job. These tasks are divided "
+                    "evenly, so it is recommended that quotient of cores_per_job/tasks_per_job be a whole number else "
+                    "the core distribution is left up to the logic of the adapter. The default value is read from the "
+                    "number of detected cores on the system you are executing on.",
         gt=0
     )
-    memory: float = Schema(
+    memory_per_job: float = Schema(
         qcng.config.get_global("memory"),
-        description="Amount of memory (in GB) to be consumed and distributed over the ntasks. This memory is divided "
-                    "evenly, but is ultimately at the control of the adapter. Engine will only allow each of its "
-                    "calls to consume memory/ntasks of memory. Total memory consumed by this manager at any one "
-                    "time is this value times cluster.max_cluster_jobs. The default value is read from the amount of "
-                    "memory detected on the system you are executing on.",
+        description="Amount of memory (in GB) to be consumed and distributed over the tasks_per_job. This memory is "
+                    "divided evenly, but is ultimately at the control of the adapter. Engine will only allow each of "
+                    "its calls to consume memory_per_job/tasks_per_job of memory. Total memory consumed by this "
+                    "manager at any one time is this value times cluster.max_cluster_jobs. The default value is read "
+                    "from the amount of memory detected on the system you are executing on.",
         gt=0
     )
     scratch_directory: Optional[str] = Schema(
@@ -132,11 +132,16 @@ class QueueManagerSettings(BaseSettings):
     Fractal Queue Manger settings. These are options which control the setup and execution of the Fractal Manager
     itself.
     """
-    max_tasks: int = Schema(
-        50,
-        description="Number of tasks to pull from the Fractal Server to keep locally at all times. "
-                    "As tasks are completed, the local pool is filled back up to this value. These tasks will all "
-                    "attempt to be run at once, but parallel tasks are limited bu number of cluster jobs and ntasks.",
+    max_tasks: Optional[int] = Schema(
+        None,
+        description="Generally should not be set. Number of tasks to pull from the Fractal Server to keep locally at "
+                    "all times. If `None`, this is automatically computed as "
+                    "`ciel(common.tasks_per_job*cluster.max_cluster_jobs*1.2) + 1`. As tasks are completed, the local "
+                    "pool is filled back up to this value. These tasks will all attempt to be run at once, but "
+                    "parallel tasks are limited bu number of cluster jobs and tasks per job. Pulling too many of these "
+                    "can result in under-utilized managers from other sites and result in less FIFO returns. As such "
+                    "it is recommended not to touch this setting in general as you will be given enough tasks to fill "
+                    "your maximum throughput with a buffer (assuming the queue has them).",
         gt=0
     )
     manager_name: str = Schema(
@@ -205,7 +210,7 @@ class ClusterSettings(BaseSettings):
         1,
         description="The maximum number of cluster jobs which are allowed to be run at the same time. The total number "
                     "of workers which can be started (and thus simultaneous Fractal tasks which can be run) is equal "
-                    "to this parameter times common.ntasks. "
+                    "to this parameter times common.tasks_per_job. "
                     "In exclusive mode this is equivalent to the maximum number of nodes which you will consume. "
                     "This must be a positive, non zero integer.",
         gt=0
@@ -450,11 +455,11 @@ def parse_args():
     common.add_argument(
         "--adapter", type=str, help="The backend adapter to use, currently only {'dask', 'parsl', 'pool'} are valid.")
     common.add_argument(
-        "--ntasks",
+        "--tasks_per_job",
         type=int,
         help="The number of simultaneous tasks for the executor to run, resources will be divided evenly.")
-    common.add_argument("--ncores", type=int, help="The number of process for the executor")
-    common.add_argument("--memory", type=int, help="The total amount of memory on the system in GB")
+    common.add_argument("--cores_per_job", type=int, help="The number of process for the executor")
+    common.add_argument("--memory_per_job", type=int, help="The total amount of memory on the system in GB")
     common.add_argument("--scratch-directory", type=str, help="Scratch directory location")
     common.add_argument("-v", "--verbose", action="store_true", help="Increase verbosity of the logger.")
 
@@ -470,7 +475,8 @@ def parse_args():
 
     # QueueManager options
     manager = parser.add_argument_group("QueueManager settings")
-    manager.add_argument("--max-tasks", type=int, help="Maximum number of tasks to hold at any given time.")
+    manager.add_argument("--max-tasks", type=int, help="Maximum number of tasks to hold at any given time. Generally "
+                                                       "should not be set.")
     manager.add_argument("--manager-name", type=str, help="The name of the manager to start")
     manager.add_argument("--queue-tag", type=str, help="The queue tag to pull from")
     manager.add_argument("--log-file-prefix", type=str, help="The path prefix of the logfile to write to.")
@@ -502,7 +508,8 @@ def parse_args():
 
     # Stupid we cannot inspect groups
     data = {
-        "common": _build_subset(args, {"adapter", "ntasks", "ncores", "memory", "scratch_directory", "verbose"}),
+        "common": _build_subset(args, {"adapter", "tasks_per_job", "cores_per_job", "memory_per_job",
+                                       "scratch_directory", "verbose"}),
         "server": _build_subset(args, {"fractal_uri", "password", "username", "verify"}),
         "manager": _build_subset(args, {"max_tasks", "manager_name", "queue_tag", "log_file_prefix", "update_frequency",
                                         "test", "ntests"}),
@@ -567,15 +574,15 @@ def main(args=None):
             address=settings.server.fractal_uri, **settings.server.dict(skip_defaults=True, exclude={"fractal_uri"}))
 
     # Figure out per-task data
-    cores_per_task = settings.common.ncores // settings.common.ntasks
-    memory_per_task = settings.common.memory / settings.common.ntasks
+    cores_per_task = settings.common.cores_per_job // settings.common.tasks_per_job
+    memory_per_task = settings.common.memory_per_job / settings.common.tasks_per_job
     if cores_per_task < 1:
         raise ValueError("Cores per task must be larger than one!")
 
     if settings.common.adapter == "pool":
         from concurrent.futures import ProcessPoolExecutor
 
-        queue_client = ProcessPoolExecutor(max_workers=settings.common.ntasks)
+        queue_client = ProcessPoolExecutor(max_workers=settings.common.tasks_per_job)
 
     elif settings.common.adapter == "dask":
 
@@ -596,9 +603,9 @@ def main(args=None):
         # Create one construct to quickly merge dicts with a final check
         dask_construct = {
             "name": "QCFractal_Dask_Compute_Executor",
-            "cores": settings.common.ncores,
-            "memory": str(settings.common.memory) + "GB",
-            "processes": settings.common.ntasks, # Number of workers to generate == tasks
+            "cores": settings.common.cores_per_job,
+            "memory": str(settings.common.memory_per_job) + "GB",
+            "processes": settings.common.tasks_per_job,  # Number of workers to generate == tasks
             "walltime": settings.cluster.walltime,
             "job_extra": scheduler_opts,
             "env_extra": settings.cluster.task_startup_commands,
@@ -626,13 +633,13 @@ def main(args=None):
         from dask_jobqueue import LSFCluster
         from dask_jobqueue import lsf
 
-        def lsf_format_bytes_ceil_with_unit(n: int, unit: str = "mb") -> str:
+        def lsf_format_bytes_ceil_with_unit(n: int, unit_str: str = "mb") -> str:
             """
             Special function we will use to monkey-patch as a partial into the dask_jobqueue.lsf file if need be
             Because the function exists as part of the lsf.py and not a staticmethod of the LSFCluster class, we have
             to do it this way.
             """
-            unit = unit.lower()
+            unit_str = unit_str.lower()
             converter = {
                 "b": 0,
                 "kb": 1,
@@ -642,7 +649,7 @@ def main(args=None):
                 "pb": 5,
                 "eb": 6
             }
-            return "%d" % ceil(n / (1000 ** converter[unit]))
+            return "%d" % ceil(n / (1000 ** converter[unit_str]))
 
         # Temporary fix until Dask Jobqueue fixes #256
         if cluster_class is SGECluster and 'job_extra' not in inspect.getfullargspec(SGECluster.__init__).args:
@@ -694,17 +701,13 @@ def main(args=None):
         # Setup up adaption
         # Workers are distributed down to the cores through the sub-divided processes
         # Optimization may be needed
-        workers = settings.common.ntasks * settings.cluster.max_cluster_jobs
+        workers = settings.common.tasks_per_job * settings.cluster.max_cluster_jobs
         if settings.cluster.adaptive == AdaptiveCluster.adaptive:
             cluster.adapt(minimum=0, maximum=workers, interval="10s")
         else:
             cluster.scale(workers)
 
         queue_client = Client(cluster)
-
-        # Make sure tempdir gets assigned correctly
-
-        # Dragonstooth has the low priority queue
 
     elif settings.common.adapter == "parsl":
 
@@ -772,7 +775,7 @@ def main(args=None):
         parsl_executor_construct = {
             "label": "QCFractal_Parsl_{}_Executor".format(settings.cluster.scheduler.title()),
             "cores_per_worker": cores_per_task,
-            "max_workers": settings.common.ntasks * settings.cluster.max_cluster_jobs,
+            "max_workers": settings.common.tasks_per_job * settings.cluster.max_cluster_jobs,
             "provider": provider,
             "address": address_by_hostname(),
             **settings.parsl.executor.dict(skip_defaults=True)}
@@ -787,10 +790,20 @@ def main(args=None):
                            settings.common.adapter, [getattr(AdapterEnum, v).value for v in AdapterEnum]))
 
     # Build out the manager itself
+    # Compute max tasks
+    if settings.manager.max_tasks is None:
+        cluster_jobs = 1
+        if settings.cluster is not None:
+            cluster_jobs = settings.cluster.max_cluster_jobs
+        # Tasks * jobs * buffer + 1
+        max_tasks = ceil(settings.common.tasks_per_job * cluster_jobs * 1.20) + 1
+    else:
+        max_tasks = settings.manager.max_tasks
+
     manager = qcfractal.queue.QueueManager(
         client,
         queue_client,
-        max_tasks=settings.manager.max_tasks,
+        max_tasks=max_tasks,
         queue_tag=settings.manager.queue_tag,
         manager_name=settings.manager.manager_name,
         update_frequency=settings.manager.update_frequency,

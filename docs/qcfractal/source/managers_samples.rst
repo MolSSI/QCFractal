@@ -26,9 +26,9 @@ file:
 
     common:
      adapter: dask
-     ntasks: 1
-     ncores: 1
-     memory: 8
+     tasks_per_job: 1
+     cores_per_job: 1
+     memory_per_job: 8
 
     server:
      fractal_uri: "localhost:7777"
@@ -59,9 +59,9 @@ user has run 1 ``sbatch`` jobs which requested 4 cores and 20 GB of memory.
 
     common:
      adapter: dask
-     ntasks: 4
-     ncores: 8
-     memory: 20
+     tasks_per_job: 4
+     cores_per_job: 8
+     memory_per_job: 20
 
     server:
      fractal_uri: "localhost:7777"
@@ -90,9 +90,9 @@ connect to the :term:`Server`, and therefore does not need a ``server`` block.
 
     common:
      adapter: dask
-     ntasks: 2
-     ncores: 4
-     memory: 10
+     tasks_per_job: 2
+     cores_per_job: 4
+     memory_per_job: 10
 
     manager:
      manager_name: "TestBox_NeverSeen_OnServer"
@@ -125,9 +125,9 @@ allow all of those :term:`jobs<Job>` to start, whether due to lack of resources 
 
     common:
      adapter: dask
-     ntasks: 4
-     ncores: 16
-     memory: 256
+     tasks_per_job: 4
+     cores_per_job: 16
+     memory_per_job: 256
 
     server:
      fractal_uri: localhost:7777
@@ -163,9 +163,9 @@ This example also uses Parsl and sets a scratch directory.
 
     common:
      adapter: parsl
-     ntasks: 1
-     ncores: 6
-     memory: 64
+     tasks_per_job: 1
+     cores_per_job: 6
+     memory_per_job: 64
      scratch_directory: "$TMPDIR"
 
     server:
