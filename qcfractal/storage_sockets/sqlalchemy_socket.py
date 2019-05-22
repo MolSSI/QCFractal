@@ -1174,12 +1174,12 @@ class SQLAlchemySocket:
         else:
             # raise TypeError('Unsupported procedure type {}. Id: {}, task_id: {}'
             #                 .format(procedure, id, task_id))
-            self.logger.warning('Procedure type not specified({}), so only ID is allowed. '
-                                'Query include: Id={}, program={} (will NOT be used).'
-                            .format(procedure, id, task_id, program))
             className = BaseResultORM   # all classes, including those with 'selectin'
             program = None  # make sure it's not used
             if id is None:
+                self.logger.error('Procedure type not specified({}), and ID is not given. '
+                                  'Query include: Id={}, program={}.'
+                                  .format(procedure, id, task_id, program))
                 raise KeyError('ID is required if procedure type is not specified.')
 
 

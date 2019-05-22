@@ -784,7 +784,7 @@ class TaskQueueORM(Base):
 
     __table_args__ = (
         Index('ix_task_queue_created_on', "created_on"),
-        Index('ix_task_queue_status', "status"),
+        Index('ix_task_queue_keys', "status", "program", "procedure", "tag"),
         Index('ix_task_queue_manager', "manager"),
     )
 
@@ -824,7 +824,7 @@ class ServiceQueueORM(Base):
 
     __table_args__ = (
         Index('ix_service_queue_status', "status"),
-        Index('ix_task_queue_status_tag_hash', "status", "tag"),
+        Index('ix_service_queue_status_tag_hash', "status", "tag"),
         Index('ix_service_queue_hash_index', "hash_index")
     )
 
