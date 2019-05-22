@@ -36,13 +36,16 @@ This directory contains the files to build and deploy on [Conda](https://conda.i
 - We'll review the changes and get your code into the repo after lively discussion!
 
 
-## Checklist for updates
-- [ ] Make sure there is an/are issue(s) opened for your specific update
-- [ ] Create the PR, referencing the issue
+## Checklist for updates and releases
+- [ ] Update the changelog for both Fractal and Portal
+- [ ] Ensure the minimum and maximum allowed Client versions the Server reports are up to date, including 
+  what version you are about to bump up to.
+- [ ] Create the PR with the changelog updates
 - [ ] Debug the PR as needed until tests pass
-- [ ] Tag the final, debugged version 
-   *  `git tag -a X.Y.Z [latest pushed commit] && git push --follow-tags`
 - [ ] Get the PR merged in
+- [ ] Create a GitHub Release and use the version formatted as `vXX.YY.ZZ` for the tag name.
+- [ ] When ready, create a PyPi release from the checkout of the tag you made above
+- [ ] Create a new release on conda forge, updating to the version you just uploaded on PyPi
 
 ## Versioneer Auto-version
 [Versioneer](https://github.com/warner/python-versioneer) will automatically infer what version 
