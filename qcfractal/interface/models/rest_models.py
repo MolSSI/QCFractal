@@ -158,6 +158,23 @@ class ComputeResponse(BaseModel):
             submitted=(self.submitted + other.submitted),
             existing=(self.existing + other.existing))
 
+### KVStore
+
+
+class InformationGETBody(BaseModel):
+
+    class Config(RESTConfig):
+        pass
+
+
+class InformationGETResponse(BaseModel):
+
+    class Config(RESTConfig):
+        extra = "allow"
+        pass
+
+
+register_model("information", "GET", InformationGETBody, InformationGETResponse)
 
 ### KVStore
 
