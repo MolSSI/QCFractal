@@ -23,9 +23,9 @@ and execute compute over long periods of time (months) without intervention.
 The basic setup of the Queue Managers and how they interact with the :term:`Server` is as follows:
 
 .. image:: media/QCQuManagerBasic.png
-   :width: 800px
+   :width: 400px
    :alt: Multiple Managers communicating with one server
-   :align: center
+   :align: right
 
 In this, multiple :term:`managers <Manager>` talk to a central :term:`Fractal Server<Server>` and deploy
 :term:`tasks<Task>` to different compute resources based on availability, physical location, and :term:`tags<Tag>`.

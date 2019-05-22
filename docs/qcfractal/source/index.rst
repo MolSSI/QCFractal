@@ -12,9 +12,10 @@ QCFractal
 Workflows
 ---------
 QCFractal supports several high-throughput contexts:
- - Ensembles of single point quantum chemistry computations.
- - Procedures such as geometry optimization, finite different gradients and Hessians, and complete basis set extrapolations.
- - Complex scenarios such as the `OpenFF <http://openforcefield.org>`_ torsion scan workflow:
+
+- Ensembles of single point quantum chemistry computations.
+- Procedures such as geometry optimization, finite different gradients and Hessians, and complete basis set extrapolations.
+- Complex scenarios such as the `OpenFF <http://openforcefield.org>`_ torsion scan workflow:
 
 .. image:: media/openff_torsion_workflow.jpg
    :width: 800px
@@ -83,7 +84,12 @@ The records created from adding additional compute.
 
 **Manager Documentation**
 
-Setting up and running Fractal's Queue Managers on your system
+Setting up and running Fractal's Queue Managers on your system.
+
+* :doc:`managers`
+* :doc:`managers_config_api`
+* :doc:`managers_samples`
+* :doc:`managers_faq`
 
 .. toctree::
    :maxdepth: 1
@@ -99,6 +105,11 @@ Setting up and running Fractal's Queue Managers on your system
 **Developer Documentation**
 
 Contains in-depth developer documentation.
+
+* :doc:`qcarchive_overview`
+* :doc:`glossary`
+* :doc:`changelog`
+* :doc:`glossary`
 
 .. toctree::
    :maxdepth: 1
