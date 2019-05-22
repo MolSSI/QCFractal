@@ -1,7 +1,9 @@
 from qcfractal.storage_sockets import storage_socket_factory
-from qcfractal.storage_sockets.me_models import MoleculeORM, KeywordsORM, KVStoreORM, ResultORM
-from qcfractal.storage_sockets.sql_models import MoleculeMap, KeywordsMap, KVStoreMap, ResultMap
-from qcfractal.interface.models import KeywordSet, ResultRecord
+from qcfractal.storage_sockets.me_models import (MoleculeORM, KeywordsORM, KVStoreORM, ResultORM,
+                                                 OptimizationProcedureORM, ProcedureORM)
+from qcfractal.storage_sockets.sql_models import (MoleculeMap, KeywordsMap, KVStoreMap, ResultMap,
+                                                  OptimizationMap)
+from qcfractal.interface.models import KeywordSet, ResultRecord, OptimizationRecord
 
 
 sql_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb"
@@ -156,13 +158,13 @@ def map_ids(field_names, className, mongo_res):
 
     with sql_storage.session_scope() as session:
         objs = session.query(className).filter(className.mongo_id.in_(ids_map)).all()
-        mol_map = {i.mongo_id:i.sql_id for i in objs}
+        ids_map = {i.mongo_id:i.sql_id for i in objs}
 
     # replace mongo ids Results with sql
     for res in mongo_res:
         for field in field_names:
             if field in res and res[field]:
-                res[field] = mol_map[res[field]]
+                res[field] = ids_map[res[field]]
 
     return mongo_res
 
@@ -195,12 +197,6 @@ def copy_results(with_check=False):
         sql_insered = sql_storage.add_results(results_py)['data']
         print('Inserted in SQL:', len(sql_insered))
 
-        if with_check:
-            ret = sql_storage.get_results(limit=m_limit, skip=skip)
-            print('Get from SQL: n_found={}, returned={}'.format(ret['meta']['n_found'], len(ret['data'])))
-
-            assert mongo_res[0]['created_on'] == ret['data'][0]['created_on']
-
         # store the ids mapping in the sql DB
         with sql_storage.session_scope() as session:
             obj_map = []
@@ -210,10 +206,86 @@ def copy_results(with_check=False):
             session.add_all(obj_map)
             session.commit()
 
+        if with_check:
+            with sql_storage.session_scope() as session:
+                res = session.query(ResultMap).filter_by(mongo_id=mongo_res[0]['id']).first().sql_id
+
+            ret = sql_storage.get_results(id=[res])
+            print('Get from SQL:', ret['data'])
+
+            ret2 = mongo_storage.get_results(id=[mongo_res[0]['id']])
+            print('Get from Mongo:', ret2['data'])
+            assert ret2['data'][0]['return_result'] == ret['data'][0]['return_result']
+
+def copy_optimization_procedure(with_check=False):
+    """Copy from mongo to sql"""
+
+    total_count = mongo_storage.get_total_count(ProcedureORM, procedure='optimization')
+    print('Total # of Optimization in the DB is: ', total_count)
+
+    for skip in range(0, total_count, m_limit):
+
+        print('\nCurrent skip={}\n-----------'.format(skip))
+        ret = mongo_storage.get_procedures(procedure='optimization', limit=m_limit, skip=skip)
+        mongo_res= ret['data']
+        print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
+
+        # check if this patch has been already stored
+        with sql_storage.session_scope() as session:
+            if session.query(OptimizationMap).filter_by(mongo_id=mongo_res[-1]['id']).count() > 0:
+                print('Skipping first ', skip+m_limit)
+                continue
+
+        # load mapped ids in memory
+        mongo_res = map_ids(['initial_molecule', 'final_molecule'], MoleculeMap, mongo_res)
+        mongo_res = map_ids(['stdout', 'stderr', 'error'], KVStoreMap, mongo_res)
+
+        # trajectory
+        ids_map = []
+        for res in mongo_res:
+            if 'trajectory' in res and res['trajectory']:
+                ids_map.extend(res['trajectory'])
+
+        with sql_storage.session_scope() as session:
+            objs = session.query(ResultMap).filter(ResultMap.mongo_id.in_(ids_map)).all()
+            ids_map = {i.mongo_id:i.sql_id for i in objs}
+
+        # replace mongo ids Results with sql
+        for res in mongo_res:
+            if 'trajectory' in res and res['trajectory']:
+                res['trajectory'] = [ids_map[i] for i in res['trajectory']]
+
+        results_py = [OptimizationRecord(**res) for res in mongo_res]
+        sql_insered = sql_storage.add_procedures(results_py)['data']
+        print('Inserted in SQL:', len(sql_insered))
+
+        # store the ids mapping in the sql DB
+        with sql_storage.session_scope() as session:
+            obj_map = []
+            for mongo_obj, sql_id in zip(mongo_res, sql_insered):
+                obj_map.append(OptimizationMap(sql_id=sql_id, mongo_id=mongo_obj['id']))
+
+            session.add_all(obj_map)
+            session.commit()
+
+        if with_check:
+            with sql_storage.session_scope() as session:
+                proc = session.query(OptimizationMap).filter_by(mongo_id=mongo_res[0]['id']).first().sql_id
+
+            ret = sql_storage.get_procedures(id=[proc])
+            print('Get from SQL:', ret['data'])
+
+            ret2 = mongo_storage.get_procedures(id=[mongo_res[0]['id']])
+            print('Get from Mongo:', ret2['data'])
+            assert ret2['data'][0]['hash_index'] == ret['data'][0]['hash_index']
+
+
+
 if __name__ == "__main__":
 
     sql_storage._clear_db('qcarchivedb')
     copy_molecules(with_check=True)
     copy_keywords(with_check=True)
     copy_kv_store(with_check=True)
-    copy_results(with_check=False)
+    copy_results(with_check=True)
+    copy_optimization_procedure(with_check=True)

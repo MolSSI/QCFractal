@@ -1953,10 +1953,10 @@ class SQLAlchemySocket:
 
         return current.to_dict(exclude=['id'])
 
-    def get_total_count(self, className):
+    def get_total_count(self, className, **kwargs):
 
         with self.session_scope() as session:
-            query = session.query(className)
+            query = session.query(className).filter(**kwargs)
             count = get_count_fast(query)
 
         return count

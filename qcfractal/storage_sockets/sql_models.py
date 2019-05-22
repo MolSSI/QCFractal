@@ -148,6 +148,11 @@ class ResultMap(Base):
     sql_id = Column(Integer, ForeignKey('result.id', ondelete='cascade'), primary_key=True)
     mongo_id = Column(String, unique=True)  # will have an index
 
+class OptimizationMap(Base):
+    __tablename__ = 'optimization_map'
+
+    sql_id = Column(Integer, ForeignKey('optimization_procedure.id', ondelete='cascade'), primary_key=True)
+    mongo_id = Column(String, unique=True)  # will have an index
 
 
 class AccessLogORM(Base):
@@ -659,7 +664,7 @@ class OptimizationHistory(Base):
     torsion_id = Column(Integer, ForeignKey('torsiondrive_procedure.id', ondelete='cascade'), primary_key=True)
     opt_id = Column(Integer, ForeignKey('optimization_procedure.id', ondelete='cascade'), primary_key=True)
     key = Column(String, nullable=False, primary_key=True)
-    #TODO position for ordering
+    position = Column(Integer)
     # Index('torsion_id', 'key', unique=True)
 
     optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
@@ -707,8 +712,11 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 
 
     optimization_history_obj = relationship(OptimizationHistory,
-        cascade="all, delete-orphan", backref="torsiondrive_procedure"
+        cascade="all, delete-orphan", backref="torsiondrive_procedure",
+        order_by=OptimizationHistory.position,
+        collection_class=ordering_list('position')
     )
+
 
     @hybrid_property
     def optimization_history(self):

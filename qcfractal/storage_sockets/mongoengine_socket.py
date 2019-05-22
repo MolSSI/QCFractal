@@ -1694,6 +1694,6 @@ class MongoengineSocket:
         """
         return UserORM.objects(username=username).delete() == 1
 
-    def get_total_count(self, className):
+    def get_total_count(self, className, **kwargs):
 
-        return className.objects().count()
+        return className.objects(**kwargs).count()
