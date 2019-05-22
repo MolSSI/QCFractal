@@ -301,7 +301,7 @@ class FractalSnowflakeHandler:
             f"--log-prefix={self.logfilename}",
             f"--port={self._server_port}",
             f"--local-manager={self._ncores}"
-        ]) # yapf: disable
+        ], cwd=self._logdir.name) # yapf: disable
 
         client = None
         for x in range(timeout * 10):
