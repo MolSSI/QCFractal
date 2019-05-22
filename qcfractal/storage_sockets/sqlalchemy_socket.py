@@ -82,7 +82,7 @@ def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[st
 
 def get_count_fast(query):
     """
-    returns rttal count of the query using:
+    returns total count of the query using:
         Fast: SELECT COUNT(*) FROM TestModel WHERE ...
 
     Not like q.count():
@@ -240,13 +240,14 @@ class SQLAlchemySocket:
 
         return limit if limit and limit < self._max_limit else self._max_limit
 
-    def get_query_projection(self, className, query, projection, limit, skip):
+    def get_query_projection(self, className, query, projection, limit, skip, exclude=None):
 
         with self.session_scope() as session:
             if projection:
                 proj = [getattr(className, i) for i in projection]
-                data = session.query(*proj).filter(*query).limit(self.get_limit(limit)).offset(skip)
+                data = session.query(*proj).filter(*query)
                 n_found = get_count_fast(data)  # before iterating on the data
+                data = data.limit(self.get_limit(limit)).offset(skip)
                 rdata = [dict(zip(projection, row)) for row in data]
                 # print('----------rdata before: ', rdata)
                 # transform ids from int into str
@@ -260,11 +261,12 @@ class SQLAlchemySocket:
                                 d[key] = str(d[key])
                 # print('--------rdata after: ', rdata)
             else:
-                data = session.query(className).filter(*query).limit(self.get_limit(limit)).offset(skip)
+                data = session.query(className).filter(*query)
                 # from sqlalchemy.dialects import postgresql
                 # print(data.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
                 n_found = get_count_fast(data)
-                rdata = [d.to_dict() for d in data.all()]
+                data = data.limit(self.get_limit(limit)).offset(skip).all()
+                rdata = [d.to_dict(exclude=exclude) for d in data]
 
         return rdata, n_found
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logs (KV store) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -459,7 +461,7 @@ class SQLAlchemySocket:
 
     def get_molecules(self, id=None, molecule_hash=None, molecular_formula=None, limit: int=None, skip: int=0):
 
-        ret = {"meta": get_metadata_template(), "data": []}
+        meta = get_metadata_template()
 
         query = format_query(MoleculeORM, id=id, molecule_hash=molecule_hash, molecular_formula=molecular_formula)
         # query = [getattr(MoleculeORM, 'id') == id,
@@ -467,27 +469,21 @@ class SQLAlchemySocket:
         #          MoleculeORM.molecular_formula == molecular_formula
         # ]
 
-        # Make the query
-        with self.session_scope() as session:
-            data = session.query(MoleculeORM).filter(*query)\
-                                        .limit(self.get_limit(limit))\
-                                        .offset(skip)  # TODO: don't use offset, slow for large data
+        # Don't include the hash or the molecular_formula in the returned result
+        rdata, meta['n_found'] = self.get_query_projection(MoleculeORM, query, None,
+                                      limit, skip, exclude=['molecule_hash', 'molecular_formula'])
 
-            ret["meta"]["success"] = True
-            ret["meta"]["n_found"] = get_count_fast(data)
-            # ret["meta"]["errors"].extend(errors)
-            data = data.all()
+        meta["success"] = True
 
-            # Don't include the hash or the molecular_formula in the returned result
-            # Todo: tobe removed after bug is fixed in elemental
-            for d in data:
-                if d.connectivity is None:
-                    d.connectivity = []
-            data = [Molecule(**d.to_dict(exclude=['molecule_hash', 'molecular_formula']), validate=False)
-                    for d in data]
-            ret["data"] = data
+        # ret["meta"]["errors"].extend(errors)
 
-        return ret
+        # Todo: tobe removed after bug is fixed in elemental
+        for d in rdata:
+            if d['connectivity'] is None:
+                d['connectivity'] = []
+        data = [Molecule(**d, validate=False) for d in rdata]
+
+        return {'meta': meta, 'data': data}
 
     def del_molecules(self, id: List[str]=None, molecule_hash: List[str]=None):
         """
@@ -566,7 +562,7 @@ class SQLAlchemySocket:
                      hash_index: Union[str, list]=None,
                      limit: int=None,
                      skip: int=0,
-                     return_json: bool=True,
+                     return_json: bool=False,
                      with_ids: bool=True) -> List[KeywordSet]:
         """Search for one (unique) option based on the 'program'
         and the 'name'. No overwrite allowed.
@@ -601,22 +597,20 @@ class SQLAlchemySocket:
         meta = get_metadata_template()
         query = format_query(KeywordsORM, id=id, hash_index=hash_index)
 
-        with self.session_scope() as session:
-            data = session.query(KeywordsORM).filter(*query)\
-                                             .limit(self.get_limit(limit))\
-                                             .offset(skip)
 
-            meta["n_found"] = get_count_fast(data)
-            meta["success"] = True
+        rdata, meta['n_found'] = self.get_query_projection(KeywordsORM, query, None,
+                                      limit, skip, exclude=[None if with_ids else 'id'])
 
-            # meta['error_description'] = str(err)
-            data = data.all()
-            if return_json:
-                rdata = [KeywordSet(**d.to_dict(with_id=with_ids)) for d in data]
-            else:
-                rdata = data
+        meta["success"] = True
 
-        return {"data": rdata, "meta": meta}
+        # meta['error_description'] = str(err)
+
+        if not return_json:
+            data = [KeywordSet(**d) for d in rdata]
+        else:
+            data = rdata
+
+        return {"data": data, "meta": meta}
 
     def get_add_keywords_mixed(self, data):
         """
@@ -790,13 +784,9 @@ class SQLAlchemySocket:
         query = format_query(CollectionORM, lname=name, collection=collection)
 
         # try:
-        rdata, meta['n_found'] = self.get_query_projection(CollectionORM, query, projection, limit, skip)
-        for col in rdata:
-            col.pop("lname", None) # Pop out lowername index
+        rdata, meta['n_found'] = self.get_query_projection(CollectionORM, query, projection,
+                                                           limit, skip, exclude=['lname'])
 
-        # for data in rdata:
-        #     data.update({k: v for k, v in data['extra'].items()})
-        #     del data['data']
         meta["success"] = True
         # except Exception as err:
         #     meta['error_description'] = str(err)
@@ -1803,14 +1793,10 @@ class SQLAlchemySocket:
         if modified_before:
             query.append(QueueManagerORM.modified_on<=modified_before)
 
-        with self.session_scope() as session:
-            data = session.query(QueueManagerORM).filter(*query).limit(self.get_limit(limit)).offset(skip)
 
-            meta["n_found"] = get_count_fast(data)
-
-            data = [x.to_dict(with_id=False) for x in data.all()]
-            meta["success"] = True
-
+        data, meta['n_found'] = self.get_query_projection(QueueManagerORM, query,
+                                                          None, limit, skip, exclude=['id'])
+        meta["success"] = True
 
         return {"data": data, "meta": meta}
 

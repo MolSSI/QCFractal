@@ -12,6 +12,7 @@ from qcfractal.services.services import TorsionDriveService
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
 from qcfractal.interface.models.task_models import TaskStatusEnum
 from datetime import datetime
+from time import time
 
 
 bad_id1 = "000000000000000000000000"
@@ -888,7 +889,6 @@ def test_project_name(storage_socket):
     assert 'test' in storage_socket.get_project_name()
 
 
-@pytest.mark.skip
 def test_results_pagination(storage_socket):
     """
         Test results pagination
@@ -911,8 +911,8 @@ def test_results_pagination(storage_socket):
         "driver": "energy",
     }
 
-    # Save (~ 1 msec/doc)
-    # t1 = time()
+    # Save (~ 1-7 msec/doc)
+    t1 = time()
 
     total_results = 1000
     first_half = int(total_results / 2)
@@ -934,16 +934,16 @@ def test_results_pagination(storage_socket):
     inserted = storage_socket.add_results(results)
     assert inserted['meta']['n_inserted'] == total_results
 
-    # total_time = (time() - t1) * 1000 / total_results
-    # print('Inserted {} results in {:.2f} msec / doc'.format(total_results, total_time))
-
-    # query (~ 0.05 msec/doc)
-    # t1 = time()
+    total_time = (time() - t1) * 1000 / total_results
+    print('Inserted {} results in {:.2f} msec / doc'.format(total_results, total_time))
+    #
+    # query (~ 0.03 msec/doc)
+    t1 = time()
 
     ret = storage_socket.get_results(method='M2', status=None, limit=limit, skip=skip)
 
-    # total_time = (time() - t1) * 1000 / first_half
-    # `('Query {} results in {:.2f} msec /doc'.format(first_half, total_time))
+    total_time = (time() - t1) * 1000 / first_half
+    print('Query {} results in {:.2f} msec /doc'.format(first_half, total_time))
 
     # count is total, but actual data size is the limit
     assert ret['meta']['n_found'] == total_results - first_half
@@ -960,16 +960,18 @@ def test_results_pagination(storage_socket):
     storage_socket.del_molecules(mol)
 
 
-@pytest.mark.skip
 def test_procedure_pagination(storage_socket):
     """
         Test procedure pagination
     """
 
-    assert len(storage_socket.get_procedures()['data']) == 0
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    mol = storage_socket.add_molecules([water])['data'][0]
+
+    assert len(storage_socket.get_procedures(procedure='optimization')['data']) == 0
 
     proc_template = {
-        "initial_molecule": bad_id1,
+        "initial_molecule": mol,
         "program": "something",
         "qc_spec": {
             "driver": "gradient",
@@ -980,7 +982,9 @@ def test_procedure_pagination(storage_socket):
         },
     }
 
-    total = 1000
+    total = 100
+    limit = 50
+    skip = 40
 
     procedures = []
     for i in range(total):
@@ -991,14 +995,15 @@ def test_procedure_pagination(storage_socket):
     inserted = storage_socket.add_procedures(procedures)
     assert inserted['meta']['n_inserted'] == total
 
-    ret = storage_socket.get_procedures(procedure='optimization', status=None, skip=400)
+    ret = storage_socket.get_procedures(procedure='optimization', status=None, limit=limit, skip=skip)
 
     # count is total, but actual data size is the limit
     assert ret['meta']['n_found'] == total
-    assert len(ret['data']) == storage_socket._max_limit - 400
+    assert len(ret['data']) == limit
 
+    storage_socket.del_procedures(inserted['data'])
+    storage_socket.del_molecules(mol)
 
-@pytest.mark.skip
 def test_mol_pagination(storage_socket):
     """
         Test Molecule pagination
