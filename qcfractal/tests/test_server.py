@@ -147,3 +147,14 @@ def test_snowflakehandler_restart():
 
     assert proc1.poll() is not None
     assert proc2.poll() is not None
+
+
+def test_snowflakehandler_log():
+
+    with FractalSnowflakeHandler() as server:
+        proc1 = server._qcfractal_proc
+
+        assert "New active manager" in server.show_log(show=False, nlines=100)
+        assert "0 task" not in server.show_log(show=False, nlines=100)
+
+    assert proc1.poll() is not None

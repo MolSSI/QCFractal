@@ -324,7 +324,8 @@ class FractalSnowflakeHandler:
             f"--database-uri={self._storage_uri}",
             f"--log-prefix={self.logfilename}",
             f"--port={self._server_port}",
-            f"--local-manager={self._ncores}"
+            f"--local-manager={self._ncores}",
+            "--query-limit=100000",
         ], cwd=self._logdir.name) # yapf: disable
 
         client = None
@@ -372,12 +373,70 @@ class FractalSnowflakeHandler:
             )
         self.start()
 
-    def show_log(self, nlines: int = 20, stream: bool = False, clean: bool = True):
-        pass
+    def show_log(self, nlines: int = 20, clean: bool = True, show: bool = True):
+        """Displays the FractalSnowflakes log data.
 
-    def client(self):
+        Parameters
+        ----------
+        nlines : int, optional
+            The the last n lines of the log.
+        clean : bool, optional
+            If True, cleans the log of manager operations where nothing happens.
+        show : bool, optional
+            If True prints to the log, otherwise returns the result text.
+
+        Returns
+        -------
+        TYPE
+            Description
+        """
+
+        with open(self.logfilename, "r") as handle:
+            log = handle.read().splitlines()
+
+        _skiplines = [
+            "Pushed 0 complete tasks to the server",
+            "QueueManager: Served 0 tasks", "GET /queue_manager",
+            "Acquired 0 new tasks.",
+            "Heartbeat was successful.",
+            "QueueManager: Heartbeat of manager",
+            "PUT /queue_manager",
+            "200 GET",
+            "200 POST",
+            "200 UPDATE",
+        ] # yapf: disable
+
+        ret = []
+        if clean:
+            for line in log:
+                skip = False
+                for skips in _skiplines:
+                    if skips in line:
+                        skip = True
+                        break
+
+                if skip:
+                    continue
+                else:
+                    ret.append(line)
+        else:
+            ret = log
+
+        ret = "\n".join(ret[-nlines:])
+
+        if show:
+            print(ret)
+        else:
+            return ret
+
+    def client(self) -> 'FractalClient':
         """
         Builds a client from this server.
+
+        Returns
+        -------
+        FractalClient
+            An active client connected to the server.
         """
 
         return FractalClient(self)
