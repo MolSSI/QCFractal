@@ -238,7 +238,7 @@ class MongoengineSocket:
 
         return {"data": blob_ids, "meta": meta}
 
-    def get_kvstore(self, id: List[str]):
+    def get_kvstore(self, id: List[str]=None,  limit: int=None, skip: int=0):
         """
         Pulls from the key/value store table.
 
@@ -258,7 +258,8 @@ class MongoengineSocket:
 
         query, errors = format_query(id=id)
 
-        data = KVStoreORM.objects(**query)
+        data = KVStoreORM.objects(**query).limit(self.get_limit(limit))\
+                                          .skip(skip)
 
         meta["success"] = True
         meta["n_found"] = data.count()  # all data count, can be > len(data)

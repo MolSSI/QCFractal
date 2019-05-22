@@ -128,11 +128,26 @@ class MoleculeMap(Base):
     mongo_id = Column(String, unique=True)  # will have an index
 
 
+class KeywordsMap(Base):
+    __tablename__ = 'keywords_map'
+
+    sql_id = Column(Integer, ForeignKey('keywords.id', ondelete='cascade'), primary_key=True)
+    mongo_id = Column(String, unique=True)  # will have an index
+
+
+class KVStoreMap(Base):
+    __tablename__ = 'kv_store_map'
+
+    sql_id = Column(Integer, ForeignKey('kv_store.id', ondelete='cascade'), primary_key=True)
+    mongo_id = Column(String, unique=True)  # will have an index
+
+
 class ResultMap(Base):
     __tablename__ = 'result_map'
 
     sql_id = Column(Integer, ForeignKey('result.id', ondelete='cascade'), primary_key=True)
-    mono_id = Column(Integer, unique=True)  # will have an index
+    mongo_id = Column(String, unique=True)  # will have an index
+
 
 
 class AccessLogORM(Base):

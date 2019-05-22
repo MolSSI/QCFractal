@@ -305,7 +305,7 @@ class SQLAlchemySocket:
 
         return {"data": blob_ids, "meta": meta}
 
-    def get_kvstore(self, id: List[str]):
+    def get_kvstore(self, id: List[str]=None,limit: int=None, skip: int=0):
         """
         Pulls from the key/value store table.
 
@@ -313,7 +313,10 @@ class SQLAlchemySocket:
         ----------
         id : List[str]
             A list of ids to query
-
+        limit : int, optional
+            Maximum number of results to return.
+        skip : int, optional
+            skip the `skip` results
         Returns
         -------
         TYPE
@@ -324,18 +327,15 @@ class SQLAlchemySocket:
 
         query = format_query(KVStoreORM, id=id)
 
-        with self.session_scope() as session:
-            data = session.query(KVStoreORM).filter(*query)
+        rdata, meta['n_found'] = self.get_query_projection(KVStoreORM, query, None, limit, skip)
 
-            meta["n_found"] = get_count_fast(data)
-            meta["success"] = True
+        meta["success"] = True
 
-            # meta['error_description'] = str(err)
-            data = data.all()
-            rdata = [d.to_dict() for d in data]
-            rdata = {d["id"]: d["value"] for d in rdata}
+        # meta['error_description'] = str(err)
 
-        return {"data": rdata, "meta": meta}
+        data = {d["id"]: d["value"] for d in rdata}
+
+        return {"data": data, "meta": meta}
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Molecule ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
