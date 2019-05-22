@@ -2,13 +2,14 @@
 Tests the DQM Server class
 """
 
+import os
 import threading
 
 import pytest
 import requests
 
 import qcfractal.interface as ptl
-from qcfractal import FractalServer
+from qcfractal import FractalServer, FractalSnowflake, FractalSnowflakeHandler
 from qcfractal.testing import check_active_mongo_server, find_open_port, pristine_loop, test_server
 
 meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
@@ -116,14 +117,14 @@ def test_storage_socket(test_server):
     assert pdata["meta"].keys() == meta_set
     assert pdata["meta"]["n_inserted"] == 1
 
-    r = requests.get(
-        storage_api_addr, json={
-            "meta": {},
-            "data": {
-                "collection": storage["collection"],
-                "name": storage["name"]
-            }
-        })
+    r = requests.get(storage_api_addr,
+                     json={
+                         "meta": {},
+                         "data": {
+                             "collection": storage["collection"],
+                             "name": storage["name"]
+                         }
+                     })
     assert r.status_code == 200
 
     pdata = r.json()
@@ -132,3 +133,17 @@ def test_storage_socket(test_server):
     pdata["data"][0].pop("tags", None)
     pdata["data"][0].pop("tagline", None)
     assert pdata["data"][0] == storage
+
+
+def test_snowflakehandler_restart():
+
+    with FractalSnowflakeHandler() as server:
+        server.client()
+        proc1 = server._qcfractal_proc
+
+        server.restart()
+        proc2 = server._qcfractal_proc
+        server.client()
+
+    assert proc1.poll() is not None
+    assert proc2.poll() is not None

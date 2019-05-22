@@ -1,22 +1,22 @@
 import asyncio
 import atexit
-import shutil
-import socket
-import sys
 import os
+import shutil
+import signal
+import socket
 import subprocess
+import sys
 import tempfile
-import uuid
 import time
-
+import uuid
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
-from tornado.ioloop import IOLoop
-
 from typing import Optional, Union
 
+from tornado.ioloop import IOLoop
+
+from .interface import FractalClient
 from .server import FractalServer
 from .storage_sockets import storage_socket_factory
-from .interface import FractalClient
 
 
 def _find_port() -> int:
@@ -50,6 +50,20 @@ def _background_process(args, **kwargs):
     proc = subprocess.Popen(args, **kwargs)
 
     return proc
+
+
+def _terminate_process(proc, timeout: int = 5):
+    """
+    SIGKILL the process, no shutdown
+    """
+    if proc.poll() is None:
+        proc.send_signal(signal.SIGKILL)
+        start = time.time()
+        while (proc.poll() is None) and (time.time() < (start + timeout)):
+            time.sleep(0.02)
+
+        if proc.poll() is None:
+            raise AssertionError(f"Could not kill process {proc.pid}!")
 
 
 class FractalSnowflake(FractalServer):
@@ -157,6 +171,20 @@ class FractalSnowflake(FractalServer):
         # We need to call before threadings cleanup
         atexit.register(self.stop)
 
+    def __del__(self):
+        """
+        Cleans up the Snowflake instance on delete.
+        """
+
+        self.stop()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
+        return False
+
     def stop(self) -> None:
         """
         Shuts down the Snowflake instance. This instance is not recoverable after a stop call.
@@ -183,19 +211,12 @@ class FractalSnowflake(FractalServer):
         self._active = False
         atexit.unregister(self.stop)
 
-    def __del__(self):
+    def client(self):
         """
-        Cleans up the Snowflake instance on delete.
+        Builds a client from this server.
         """
 
-        self.stop()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.stop()
-        return False
+        return FractalClient(self)
 
 
 class FractalSnowflakeHandler:
@@ -248,11 +269,14 @@ class FractalSnowflakeHandler:
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
         self.stop()
+        atexit.unregister(self.stop)
+        self._kill_mongod()
+        atexit.unregister(self._kill_mongod)
         return False
 
     def _kill_mongod(self) -> None:
         if self._mongod_proc:
-            self._mongod_proc.kill()
+            _terminate_process(self._mongod_proc, timeout=1)
             self._mongod_proc = None
 
 
@@ -327,9 +351,7 @@ class FractalSnowflakeHandler:
         if self._running is False:
             return
 
-        self._qcfractal_proc.terminate()
-        self._qcfractal_proc = None
-
+        _terminate_process(self._qcfractal_proc, timeout=1)
         self._running = False
 
     def restart(self, timeout: int = 5) -> None:
@@ -355,7 +377,7 @@ class FractalSnowflakeHandler:
 
     def client(self):
         """
-        Builds a client off
+        Builds a client from this server.
         """
 
         return FractalClient(self)
