@@ -155,6 +155,13 @@ class OptimizationMap(Base):
     mongo_id = Column(String, unique=True)  # will have an index
 
 
+class TorsiondriveMap(Base):
+    __tablename__ = 'torsiondrive_map'
+
+    sql_id = Column(Integer, ForeignKey('torsiondrive_procedure.id', ondelete='cascade'), primary_key=True)
+    mongo_id = Column(String, unique=True)  # will have an index
+
+
 class AccessLogORM(Base):
     __tablename__ = 'access_log'
 
@@ -358,7 +365,6 @@ class BaseResultORM(Base):
                              single_parent=True)
 
     # Compute status
-    # task_id: ObjectId = None  # Removed in SQL
     status = Column(Enum(RecordStatusEnum), nullable=False,
                     default=RecordStatusEnum.incomplete)
 

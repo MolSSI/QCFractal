@@ -7,10 +7,11 @@ SQL DB in version 0.7.0
 import argparse
 from qcfractal.storage_sockets import storage_socket_factory
 from qcfractal.storage_sockets.me_models import (MoleculeORM, KeywordsORM, KVStoreORM, ResultORM,
-                                                 OptimizationProcedureORM, ProcedureORM)
+                                                 ProcedureORM)
 from qcfractal.storage_sockets.sql_models import (MoleculeMap, KeywordsMap, KVStoreMap, ResultMap,
-                                                  OptimizationMap)
-from qcfractal.interface.models import KeywordSet, ResultRecord, OptimizationRecord
+                                                  OptimizationMap, TorsiondriveMap)
+from qcfractal.interface.models import (KeywordSet, ResultRecord, OptimizationRecord,
+                                        TorsionDriveRecord)
 
 
 sql_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb"
@@ -31,12 +32,53 @@ def connect_to_DBs(mongo_uri, sql_uri, mongo_db_name, max_limit):
 
     return mongo_storage, sql_storage
 
+def get_ids_map(sql_storage, field_names, mappingClass, mongo_res):
+    # load mapped ids in memory
+    ids_map = []
+    for res in mongo_res:
+        for field in field_names:
+            if field in res and res[field]:
+                if isinstance(res[field], (list, tuple)):
+                    ids_map.extend(res[field])
+                elif isinstance(res[field], dict):
+                    ids_map.extend(set().union(*res[field].values()))
+                else:
+                    ids_map.append(res[field])
+
+    with sql_storage.session_scope() as session:
+        objs = session.query(mappingClass).filter(mappingClass.mongo_id.in_(set(ids_map))).all()
+        ids_map = {i.mongo_id:i.sql_id for i in objs}
+
+    # replace mongo ids Results with sql
+    for res in mongo_res:
+        for field in field_names:
+            if field in res and res[field]:
+                if isinstance(res[field], (list, tuple)):
+                    res[field] = [ids_map[i] for i in res[field]]
+                elif isinstance(res[field], dict):
+                    for key, values in res[field].items():
+                        res[field][key] = [ids_map[val] for val in values]
+                else:
+                    res[field] = ids_map[res[field]]
+
+    return mongo_res
+
+
+def store_ids_map(sql_storage, mongo_ids, sql_ids, mappingClass):
+
+    with sql_storage.session_scope() as session:
+        obj_map = []
+        for mongo_id, sql_id in zip(mongo_ids, sql_ids):
+            obj_map.append(mappingClass(sql_id=sql_id, mongo_id=mongo_id))
+
+        session.add_all(obj_map)
+        session.commit()
 
 def copy_molecules(mongo_storage, sql_storage, max_limit, with_check=False):
     """Copy from mongo to sql"""
 
     total_count = mongo_storage.get_total_count(MoleculeORM)
-    print('Total # of Molecules in the DB is: ', total_count)
+    print('----Total # of Molecules in the DB is: ', total_count)
 
     for skip in range(0, total_count, max_limit):
 
@@ -61,13 +103,8 @@ def copy_molecules(mongo_storage, sql_storage, max_limit, with_check=False):
             assert mongo_res[0].compare(ret['data'][0])
 
         # store the ids mapping in the sql DB
-        with sql_storage.session_scope() as session:
-            obj_map = []
-            for mongo_obj, sql_id in zip(mongo_res, sql_insered):
-                obj_map.append(MoleculeMap(sql_id=sql_id, mongo_id=mongo_obj.id))
-
-            session.add_all(obj_map)
-            session.commit()
+        mongo_ids = [obj.id for obj in mongo_res]
+        store_ids_map(sql_storage, mongo_ids, sql_insered, MoleculeMap)
 
     print('---- Done copying molecules\n\n')
 
@@ -78,7 +115,7 @@ def copy_keywords(mongo_storage, sql_storage, max_limit, with_check=False):
     mongo_storage.add_keywords([KeywordSet(values={'key': 'test data'})])
 
     total_count = mongo_storage.get_total_count(KeywordsORM)
-    print('Total # of Keywords in the DB is: ', total_count)
+    print('-----Total # of Keywords in the DB is: ', total_count)
 
     for skip in range(0, total_count, max_limit):
 
@@ -103,13 +140,8 @@ def copy_keywords(mongo_storage, sql_storage, max_limit, with_check=False):
             assert mongo_res[0].hash_index == ret['data'][0].hash_index
 
         # store the ids mapping in the sql DB
-        with sql_storage.session_scope() as session:
-            obj_map = []
-            for mongo_obj, sql_id in zip(mongo_res, sql_insered):
-                obj_map.append(KeywordsMap(sql_id=sql_id, mongo_id=mongo_obj.id))
-
-            session.add_all(obj_map)
-            session.commit()
+        mongo_ids = [obj.id for obj in mongo_res]
+        store_ids_map(sql_storage, mongo_ids, sql_insered, KeywordsMap)
 
     print('---- Done copying keywords\n\n')
 
@@ -118,7 +150,7 @@ def copy_kv_store(mongo_storage, sql_storage, max_limit, with_check=False):
     """Copy from mongo to sql"""
 
     total_count = mongo_storage.get_total_count(KVStoreORM)
-    print('Total # of KV_store in the DB is: ', total_count)
+    print('------Total # of KV_store in the DB is: ', total_count)
 
     for skip in range(0, total_count, max_limit):
 
@@ -145,43 +177,17 @@ def copy_kv_store(mongo_storage, sql_storage, max_limit, with_check=False):
             assert list(values)[0] == list(ret['data'].values())[0]
 
         # store the ids mapping in the sql DB
-        with sql_storage.session_scope() as session:
-            obj_map = []
-            for mongo_id, sql_id in zip(ids, sql_insered):
-                obj_map.append(KVStoreMap(sql_id=sql_id, mongo_id=mongo_id))
-
-            session.add_all(obj_map)
-            session.commit()
+        store_ids_map(sql_storage, ids, sql_insered, KVStoreMap)
 
     print('---- Done copying KV_store\n\n')
 
-
-def map_ids(sql_storage, field_names, className, mongo_res):
-    # load mapped ids in memory
-    ids_map = []
-    for res in mongo_res:
-        for field in field_names:
-            if field in res and res[field]:
-                ids_map.append(res[field])
-
-    with sql_storage.session_scope() as session:
-        objs = session.query(className).filter(className.mongo_id.in_(ids_map)).all()
-        ids_map = {i.mongo_id:i.sql_id for i in objs}
-
-    # replace mongo ids Results with sql
-    for res in mongo_res:
-        for field in field_names:
-            if field in res and res[field]:
-                res[field] = ids_map[res[field]]
-
-    return mongo_res
 
 
 def copy_results(mongo_storage, sql_storage, max_limit, with_check=False):
     """Copy from mongo to sql"""
 
     total_count = mongo_storage.get_total_count(ResultORM)
-    print('Total # of Results in the DB is: ', total_count)
+    print('------Total # of Results in the DB is: ', total_count)
 
     for skip in range(0, total_count, max_limit):
 
@@ -197,22 +203,17 @@ def copy_results(mongo_storage, sql_storage, max_limit, with_check=False):
                 continue
 
         # load mapped ids in memory
-        mongo_res = map_ids(sql_storage, ['molecule'], MoleculeMap, mongo_res)
-        mongo_res = map_ids(sql_storage, ['keywords'], KeywordsMap, mongo_res)
-        mongo_res = map_ids(sql_storage, ['stdout', 'stderr', 'error'], KVStoreMap, mongo_res)
+        mongo_res = get_ids_map(sql_storage, ['molecule'], MoleculeMap, mongo_res)
+        mongo_res = get_ids_map(sql_storage, ['keywords'], KeywordsMap, mongo_res)
+        mongo_res = get_ids_map(sql_storage, ['stdout', 'stderr', 'error'], KVStoreMap, mongo_res)
 
         results_py = [ResultRecord(**res) for res in mongo_res]
         sql_insered = sql_storage.add_results(results_py)['data']
         print('Inserted in SQL:', len(sql_insered))
 
         # store the ids mapping in the sql DB
-        with sql_storage.session_scope() as session:
-            obj_map = []
-            for mongo_obj, sql_id in zip(mongo_res, sql_insered):
-                obj_map.append(ResultMap(sql_id=sql_id, mongo_id=mongo_obj['id']))
-
-            session.add_all(obj_map)
-            session.commit()
+        mongo_ids = [obj['id'] for obj in mongo_res]
+        store_ids_map(sql_storage, mongo_ids, sql_insered, ResultMap)
 
         if with_check:
             with sql_storage.session_scope() as session:
@@ -225,11 +226,14 @@ def copy_results(mongo_storage, sql_storage, max_limit, with_check=False):
             print('Get from Mongo:', ret2['data'])
             assert ret2['data'][0]['return_result'] == ret['data'][0]['return_result']
 
+    print('---- Done copying Results\n\n')
+
+
 def copy_optimization_procedure(mongo_storage, sql_storage, max_limit, with_check=False):
     """Copy from mongo to sql"""
 
     total_count = mongo_storage.get_total_count(ProcedureORM, procedure='optimization')
-    print('Total # of Optimization in the DB is: ', total_count)
+    print('------Total # of Optimization in the DB is: ', total_count)
 
     for skip in range(0, total_count, max_limit):
 
@@ -245,36 +249,17 @@ def copy_optimization_procedure(mongo_storage, sql_storage, max_limit, with_chec
                 continue
 
         # load mapped ids in memory
-        mongo_res = map_ids(sql_storage, ['initial_molecule', 'final_molecule'], MoleculeMap, mongo_res)
-        mongo_res = map_ids(sql_storage, ['stdout', 'stderr', 'error'], KVStoreMap, mongo_res)
-
-        # trajectory
-        ids_map = []
-        for res in mongo_res:
-            if 'trajectory' in res and res['trajectory']:
-                ids_map.extend(res['trajectory'])
-
-        with sql_storage.session_scope() as session:
-            objs = session.query(ResultMap).filter(ResultMap.mongo_id.in_(ids_map)).all()
-            ids_map = {i.mongo_id:i.sql_id for i in objs}
-
-        # replace mongo ids Results with sql
-        for res in mongo_res:
-            if 'trajectory' in res and res['trajectory']:
-                res['trajectory'] = [ids_map[i] for i in res['trajectory']]
+        mongo_res = get_ids_map(sql_storage, ['initial_molecule', 'final_molecule'], MoleculeMap, mongo_res)
+        mongo_res = get_ids_map(sql_storage, ['stdout', 'stderr', 'error'], KVStoreMap, mongo_res)
+        mongo_res = get_ids_map(sql_storage, ['trajectory'], ResultMap, mongo_res)
 
         results_py = [OptimizationRecord(**res) for res in mongo_res]
         sql_insered = sql_storage.add_procedures(results_py)['data']
         print('Inserted in SQL:', len(sql_insered))
 
         # store the ids mapping in the sql DB
-        with sql_storage.session_scope() as session:
-            obj_map = []
-            for mongo_obj, sql_id in zip(mongo_res, sql_insered):
-                obj_map.append(OptimizationMap(sql_id=sql_id, mongo_id=mongo_obj['id']))
-
-            session.add_all(obj_map)
-            session.commit()
+        mongo_ids = [obj['id'] for obj in mongo_res]
+        store_ids_map(sql_storage, mongo_ids, sql_insered, OptimizationMap)
 
         if with_check:
             with sql_storage.session_scope() as session:
@@ -286,6 +271,61 @@ def copy_optimization_procedure(mongo_storage, sql_storage, max_limit, with_chec
             ret2 = mongo_storage.get_procedures(id=[mongo_res[0]['id']])
             print('Get from Mongo:', ret2['data'])
             assert ret2['data'][0]['hash_index'] == ret['data'][0]['hash_index']
+
+    print('---- Done copying Optimization procedures\n\n')
+
+
+def copy_torsiondrive_procedure(mongo_storage, sql_storage, max_limit, with_check=False):
+    """Copy from mongo to sql"""
+
+    total_count = mongo_storage.get_total_count(ProcedureORM, procedure='torsiondrive')
+    print('-----Total # of Torsiondrive in the DB is: ', total_count)
+
+    for skip in range(0, total_count, max_limit):
+
+        print('\nCurrent skip={}\n-----------'.format(skip))
+        ret = mongo_storage.get_procedures(procedure='torsiondrive', limit=max_limit, skip=skip)
+        mongo_res= ret['data']
+        print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
+
+        # check if this patch has been already stored
+        with sql_storage.session_scope() as session:
+            if session.query(TorsiondriveMap).filter_by(mongo_id=mongo_res[-1]['id']).count() > 0:
+                print('Skipping first ', skip+max_limit)
+                continue
+
+        # load mapped ids in memory
+        mongo_res = get_ids_map(sql_storage, ['stdout', 'stderr', 'error'], KVStoreMap, mongo_res)
+        mongo_res = get_ids_map(sql_storage, ['initial_molecule'], MoleculeMap, mongo_res)
+        mongo_res = get_ids_map(sql_storage, ['optimization_history'], OptimizationMap, mongo_res)
+
+        results_py = [TorsionDriveRecord(**res) for res in mongo_res]
+        sql_insered = sql_storage.add_procedures(results_py)['data']
+        print('Inserted in SQL:', len(sql_insered))
+
+        # store the ids mapping in the sql DB
+        mongo_ids = [obj['id'] for obj in mongo_res]
+        store_ids_map(sql_storage, mongo_ids, sql_insered, TorsiondriveMap)
+
+        if with_check:
+            with sql_storage.session_scope() as session:
+                proc = session.query(TorsiondriveMap).filter_by(mongo_id=mongo_res[0]['id']).first().sql_id
+
+            ret = sql_storage.get_procedures(id=[proc])
+            print('Get from SQL:', ret['data'])
+
+            ret2 = mongo_storage.get_procedures(id=[mongo_res[0]['id']])
+            print('Get from Mongo:', ret2['data'])
+            assert ret2['data'][0]['hash_index'] == ret['data'][0]['hash_index']
+            assert ret2['data'][0]['optimization_history'].keys() == \
+                                   ret['data'][0]['optimization_history'].keys()
+            print(ret2['data'][0]['optimization_history'])
+            print(ret['data'][0]['optimization_history'])
+
+
+
+    print('---- Done copying Torsiondrive procedures\n\n')
+
 
 def main():
 
@@ -317,6 +357,8 @@ def main():
     copy_kv_store(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
     copy_results(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
     copy_optimization_procedure(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
+    copy_torsiondrive_procedure(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
+
 
 if __name__ == "__main__":
     main()
