@@ -16,7 +16,7 @@ Turn on ``verbose`` mode, either add the ``-v`` flag to the CLI, or set the
 ``common.verbose`` to ``True`` in the YAML file. Setting this flag will produce
 much more detailed information. This sets the loggers to ``DEBUG`` level.
 
-In the future, we may allow for different levels of verbosity, but for now there is
+In the future, we may allow for different levels of increased verbosity, but for now there is
 only the one level.
 
 Can I start more than one Manager at a time?
@@ -26,6 +26,8 @@ Yes. This is often done if you would like to create multiple :term:`task<Task>` 
 have different resource requirements or spin up managers that can access
 different resources. Check with your cluster administrators though to find out
 their policy on multiple processes running on the clusters head node.
+
+You can reuse the same config file, just invoke the CLI again.
 
 Can I connect to a Fractal Server besides MolSSI's?
 +++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -139,6 +141,12 @@ This problem is obfuscated by the fact that
 incomplete Conda configuration. **We strongly recommend you do not try setting the absolute Python path** in your
 scripts to get around this, and instead try to ``source`` the Conda ``profile.d`` first.
 
+Other variants:
+
+- "Tests from one program pass, but others don't"
+- "I get errors about unable to find program, but its installed"
+- "I get path and/or import errors when testing"
+
 
 My jobs appear to be running, but only one (or few) workers are starting
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -148,5 +156,7 @@ a few things may be happening.
 
 - If jobs are completing very fast, the :term:`Adapter` may not feel like it needs to start more
   :term:`workers<Worker>`, which is fine.
-- Check your ``manger.max_tasks`` arg to pull more :term:`tasks<Task>` from the :term:`Server` to fill
-  the jobs you have started.
+- (Not recommended, use for debug only) Check your ``manger.max_tasks`` arg to pull more :term:`tasks<Task>`
+  from the :term:`Server` to fill the jobs you have started. This option is usually automatically calculated based on
+  your ``common.tasks_per_worker`` and ``cluster.max_cluster_jobs`` to keep all :term:`workers<Worker>` busy and
+  still have a buffer.
