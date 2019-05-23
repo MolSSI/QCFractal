@@ -33,7 +33,7 @@ def _port_open(ip: str, port: int) -> bool:
         s.connect((ip, int(port)))
         s.shutdown(socket.SHUT_RDWR)
         return True
-    except:
+    except ConnectionRefusedError:
         return False
     finally:
         s.close()
@@ -332,7 +332,8 @@ class FractalSnowflakeHandler:
         for x in range(timeout * 10):
 
             try:
-                client = FractalClient(self)
+                # Client will attempt to connect to the server
+                FractalClient(self)
                 break
             except ConnectionRefusedError:
                 pass

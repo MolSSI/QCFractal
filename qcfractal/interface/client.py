@@ -3,7 +3,6 @@
 import json
 import os
 import re
-import ssl
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Union
 

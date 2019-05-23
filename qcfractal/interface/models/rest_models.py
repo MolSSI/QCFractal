@@ -171,7 +171,6 @@ class InformationGETResponse(BaseModel):
 
     class Config(RESTConfig):
         extra = "allow"
-        pass
 
 
 register_model("information", "GET", InformationGETBody, InformationGETResponse)
