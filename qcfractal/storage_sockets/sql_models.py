@@ -24,12 +24,10 @@ class Base:
 
     db_related_fields = ['result_type', 'base_result_id', 'metadata', '_trajectory']
 
-    def to_dict(self, with_id=True, exclude=None):
+    def to_dict(self, exclude=None):
 
         tobe_deleted_keys = []
 
-        if not with_id:
-            tobe_deleted_keys.append('id')
 
         if exclude:
             tobe_deleted_keys.extend(exclude)
