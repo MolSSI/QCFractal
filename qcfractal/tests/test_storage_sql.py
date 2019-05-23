@@ -934,16 +934,16 @@ def test_results_pagination(storage_socket):
     inserted = storage_socket.add_results(results)
     assert inserted['meta']['n_inserted'] == total_results
 
-    total_time = (time() - t1) * 1000 / total_results
-    print('Inserted {} results in {:.2f} msec / doc'.format(total_results, total_time))
+    # total_time = (time() - t1) * 1000 / total_results
+    # print('Inserted {} results in {:.2f} msec / doc'.format(total_results, total_time))
     #
     # query (~ 0.03 msec/doc)
-    t1 = time()
+    # t1 = time()
 
     ret = storage_socket.get_results(method='M2', status=None, limit=limit, skip=skip)
 
-    total_time = (time() - t1) * 1000 / first_half
-    print('Query {} results in {:.2f} msec /doc'.format(first_half, total_time))
+    # total_time = (time() - t1) * 1000 / first_half
+    # print('Query {} results in {:.2f} msec /doc'.format(first_half, total_time))
 
     # count is total, but actual data size is the limit
     assert ret['meta']['n_found'] == total_results - first_half
