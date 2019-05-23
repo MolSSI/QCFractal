@@ -161,6 +161,12 @@ class TorsiondriveMap(Base):
     sql_id = Column(Integer, ForeignKey('torsiondrive_procedure.id', ondelete='cascade'), primary_key=True)
     mongo_id = Column(String, unique=True)  # will have an index
 
+class GridOptizationMap(Base):
+    __tablename__ = 'grid_optimization_map'
+
+    sql_id = Column(Integer, ForeignKey('grid_optimization_procedure.id', ondelete='cascade'), primary_key=True)
+    mongo_id = Column(String, unique=True)  # will have an index
+
 
 class AccessLogORM(Base):
     __tablename__ = 'access_log'
@@ -801,7 +807,7 @@ class TaskQueueORM(Base):
     status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.waiting)
     priority = Column(Integer, default=int(PriorityEnum.NORMAL))
     manager = Column(String, default=None)
-    error = Column(String)  # TODO: is this an error object? should be in results?
+    error = Column(String)  # TODO: tobe removed - should be in results
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)

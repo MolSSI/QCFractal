@@ -9,9 +9,9 @@ from qcfractal.storage_sockets import storage_socket_factory
 from qcfractal.storage_sockets.me_models import (MoleculeORM, KeywordsORM, KVStoreORM, ResultORM,
                                                  ProcedureORM)
 from qcfractal.storage_sockets.sql_models import (MoleculeMap, KeywordsMap, KVStoreMap, ResultMap,
-                                                  OptimizationMap, TorsiondriveMap)
+                                                  OptimizationMap, TorsiondriveMap, GridOptizationMap)
 from qcfractal.interface.models import (KeywordSet, ResultRecord, OptimizationRecord,
-                                        TorsionDriveRecord)
+                                        TorsionDriveRecord, GridOptimizationRecord)
 
 
 sql_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb"
@@ -32,6 +32,7 @@ def connect_to_DBs(mongo_uri, sql_uri, mongo_db_name, max_limit):
 
     return mongo_storage, sql_storage
 
+
 def get_ids_map(sql_storage, field_names, mappingClass, mongo_res):
     # load mapped ids in memory
     ids_map = []
@@ -41,7 +42,10 @@ def get_ids_map(sql_storage, field_names, mappingClass, mongo_res):
                 if isinstance(res[field], (list, tuple)):
                     ids_map.extend(res[field])
                 elif isinstance(res[field], dict):
-                    ids_map.extend(set().union(*res[field].values()))
+                    if isinstance(list(res[field].values())[0], list):
+                        ids_map.extend(set().union(*res[field].values()))
+                    else:
+                        ids_map.extend([val for val in res[field].values()])
                 else:
                     ids_map.append(res[field])
 
@@ -57,7 +61,10 @@ def get_ids_map(sql_storage, field_names, mappingClass, mongo_res):
                     res[field] = [ids_map[i] for i in res[field]]
                 elif isinstance(res[field], dict):
                     for key, values in res[field].items():
-                        res[field][key] = [ids_map[val] for val in values]
+                        if isinstance(values, list):
+                            res[field][key] = [ids_map[val] for val in values]
+                        else:
+                            res[field][key] = ids_map[values]
                 else:
                     res[field] = ids_map[res[field]]
 
@@ -74,6 +81,14 @@ def store_ids_map(sql_storage, mongo_ids, sql_ids, mappingClass):
         session.add_all(obj_map)
         session.commit()
 
+def is_mapped(sql_storage, mappingClass, monog_id):
+    # check if this id has been already stored
+        with sql_storage.session_scope() as session:
+            if session.query(mappingClass).filter_by(mongo_id=monog_id).count() > 0:
+                return True
+        return False
+
+
 def copy_molecules(mongo_storage, sql_storage, max_limit, with_check=False):
     """Copy from mongo to sql"""
 
@@ -88,10 +103,9 @@ def copy_molecules(mongo_storage, sql_storage, max_limit, with_check=False):
         print('mongo mol returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
 
         # check if this patch has been already stored
-        with sql_storage.session_scope() as session:
-            if session.query(MoleculeMap).filter_by(mongo_id=mongo_res[-1].id).count() > 0:
-                print('Skipping first ', skip+max_limit)
-                continue
+        if is_mapped(sql_storage, MoleculeMap, mongo_res[-1].id):
+            print('Skipping first ', skip+max_limit)
+            continue
 
         sql_insered = sql_storage.add_molecules(mongo_res)['data']
         print('Inserted in SQL:', len(sql_insered))
@@ -124,11 +138,9 @@ def copy_keywords(mongo_storage, sql_storage, max_limit, with_check=False):
         mongo_res= ret['data']
         print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
 
-        # check if this patch has been already stored
-        with sql_storage.session_scope() as session:
-            if session.query(KeywordsMap).filter_by(mongo_id=mongo_res[-1].id).count() > 0:
-                print('Skipping first ', skip+max_limit)
-                continue
+        if is_mapped(sql_storage, KeywordsMap, mongo_res[-1].id):
+            print('Skipping first ', skip+max_limit)
+            continue
 
         sql_insered = sql_storage.add_keywords(mongo_res)['data']
         print('Inserted in SQL:', len(sql_insered))
@@ -162,10 +174,9 @@ def copy_kv_store(mongo_storage, sql_storage, max_limit, with_check=False):
         ids = list(mongo_res.keys())
         values = mongo_res.values()
         # check if this patch has been already stored
-        with sql_storage.session_scope() as session:
-            if session.query(KVStoreMap).filter_by(mongo_id=ids[-1]).count() > 0:
-                print('Skipping first ', skip+max_limit)
-                continue
+        if is_mapped(sql_storage, KVStoreMap, ids[-1]):
+            print('Skipping first ', skip+max_limit)
+            continue
 
         sql_insered = sql_storage.add_kvstore(values)['data']
         print('Inserted in SQL:', len(sql_insered))
@@ -182,7 +193,6 @@ def copy_kv_store(mongo_storage, sql_storage, max_limit, with_check=False):
     print('---- Done copying KV_store\n\n')
 
 
-
 def copy_results(mongo_storage, sql_storage, max_limit, with_check=False):
     """Copy from mongo to sql"""
 
@@ -197,10 +207,9 @@ def copy_results(mongo_storage, sql_storage, max_limit, with_check=False):
         print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
 
         # check if this patch has been already stored
-        with sql_storage.session_scope() as session:
-            if session.query(ResultMap).filter_by(mongo_id=mongo_res[-1]['id']).count() > 0:
-                print('Skipping first ', skip+max_limit)
-                continue
+        if is_mapped(sql_storage, ResultMap, mongo_res[-1]['id']):
+            print('Skipping first ', skip+max_limit)
+            continue
 
         # load mapped ids in memory
         mongo_res = get_ids_map(sql_storage, ['molecule'], MoleculeMap, mongo_res)
@@ -243,10 +252,9 @@ def copy_optimization_procedure(mongo_storage, sql_storage, max_limit, with_chec
         print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
 
         # check if this patch has been already stored
-        with sql_storage.session_scope() as session:
-            if session.query(OptimizationMap).filter_by(mongo_id=mongo_res[-1]['id']).count() > 0:
-                print('Skipping first ', skip+max_limit)
-                continue
+        if is_mapped(sql_storage, OptimizationMap, mongo_res[-1]['id']):
+            print('Skipping first ', skip+max_limit)
+            continue
 
         # load mapped ids in memory
         mongo_res = get_ids_map(sql_storage, ['initial_molecule', 'final_molecule'], MoleculeMap, mongo_res)
@@ -289,10 +297,9 @@ def copy_torsiondrive_procedure(mongo_storage, sql_storage, max_limit, with_chec
         print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
 
         # check if this patch has been already stored
-        with sql_storage.session_scope() as session:
-            if session.query(TorsiondriveMap).filter_by(mongo_id=mongo_res[-1]['id']).count() > 0:
-                print('Skipping first ', skip+max_limit)
-                continue
+        if is_mapped(sql_storage, TorsiondriveMap, mongo_res[-1]['id']):
+            print('Skipping first ', skip+max_limit)
+            continue
 
         # load mapped ids in memory
         mongo_res = get_ids_map(sql_storage, ['stdout', 'stderr', 'error'], KVStoreMap, mongo_res)
@@ -322,9 +329,57 @@ def copy_torsiondrive_procedure(mongo_storage, sql_storage, max_limit, with_chec
             print(ret2['data'][0]['optimization_history'])
             print(ret['data'][0]['optimization_history'])
 
-
-
     print('---- Done copying Torsiondrive procedures\n\n')
+
+
+def copy_grid_optimization_procedure(mongo_storage, sql_storage, max_limit, with_check=False):
+    """Copy from mongo to sql"""
+
+    total_count = mongo_storage.get_total_count(ProcedureORM, procedure='gridoptimization')
+    print('-----Total # of Grid Optmizations in the DB is: ', total_count)
+
+    for skip in range(0, total_count, max_limit):
+
+        print('\nCurrent skip={}\n-----------'.format(skip))
+        ret = mongo_storage.get_procedures(procedure='gridoptimization', limit=max_limit, skip=skip)
+        mongo_res= ret['data']
+        print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
+
+        # check if this patch has been already stored
+        if is_mapped(sql_storage, GridOptizationMap, mongo_res[-1]['id']):
+            print('Skipping first ', skip+max_limit)
+            continue
+
+        # load mapped ids in memory
+        mongo_res = get_ids_map(sql_storage, ['stdout', 'stderr', 'error'], KVStoreMap, mongo_res)
+        mongo_res = get_ids_map(sql_storage, ['initial_molecule', 'starting_molecule'], MoleculeMap, mongo_res)
+        mongo_res = get_ids_map(sql_storage, ['grid_optimizations'], OptimizationMap, mongo_res)
+
+        results_py = [GridOptimizationRecord(**res) for res in mongo_res]
+        sql_insered = sql_storage.add_procedures(results_py)['data']
+        print('Inserted in SQL:', len(sql_insered))
+
+        # store the ids mapping in the sql DB
+        mongo_ids = [obj['id'] for obj in mongo_res]
+        store_ids_map(sql_storage, mongo_ids, sql_insered, GridOptizationMap)
+
+        if with_check:
+            with sql_storage.session_scope() as session:
+                proc = session.query(GridOptizationMap).filter_by(mongo_id=mongo_res[0]['id']).first().sql_id
+
+            ret = sql_storage.get_procedures(id=[proc])
+            print('Get from SQL:', ret['data'])
+
+            ret2 = mongo_storage.get_procedures(id=[mongo_res[0]['id']])
+            print('Get from Mongo:', ret2['data'])
+            assert ret2['data'][0]['hash_index'] == ret['data'][0]['hash_index']
+            assert ret2['data'][0]['grid_optimizations'].keys() == \
+                                   ret['data'][0]['grid_optimizations'].keys()
+            print(ret2['data'][0]['grid_optimizations'])
+            print(ret['data'][0]['grid_optimizations'])
+
+
+    print('---- Done copying Grid Optmization procedures\n\n')
 
 
 def main():
@@ -358,7 +413,7 @@ def main():
     copy_results(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
     copy_optimization_procedure(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
     copy_torsiondrive_procedure(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
-
+    copy_grid_optimization_procedure(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
 
 if __name__ == "__main__":
     main()
