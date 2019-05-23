@@ -253,6 +253,16 @@ class FractalSnowflakeHandler:
 
         return f"FractalSnowflakeHandler(name='{self._dbname}' uri='{self._address}')"
 
+    def _repr_html_(self) -> str:
+
+        return f"""
+<h3>FractalSnowflakeHandler</h3>
+<ul>
+  <li><b>Server:   &nbsp; </b>{self._dbname}</li>
+  <li><b>Address:  &nbsp; </b>{self._address}</li>
+</ul>
+"""
+
     def __del__(self) -> None:
         """
         Cleans up the Snowflake instance on delete.
@@ -397,12 +407,14 @@ class FractalSnowflakeHandler:
 
         _skiplines = [
             "Pushed 0 complete tasks to the server",
-            "QueueManager: Served 0 tasks", "GET /queue_manager",
+            "QueueManager: Served 0 tasks",
             "Acquired 0 new tasks.",
             "Heartbeat was successful.",
             "QueueManager: Heartbeat of manager",
+            "GET /queue_manager",
             "PUT /queue_manager",
             "200 GET",
+            "200 PUT",
             "200 POST",
             "200 UPDATE",
         ] # yapf: disable

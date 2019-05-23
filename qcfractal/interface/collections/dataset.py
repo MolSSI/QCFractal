@@ -144,7 +144,7 @@ class Dataset(Collection):
 
         self.data.history.add(tuple(new_history))
 
-    def list_history(self, dftd3: bool=False, get_base=False, **search: Dict[str, Optional[str]]) -> 'DataFrame':
+    def list_history(self, dftd3: bool=False, get_base: bool=False, pretty: bool=True, **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """
         Lists the history of computations completed.
 
@@ -198,7 +198,9 @@ class Dataset(Collection):
         if show_dftd3 is False:
             ret = ret[ret["program"] != "dftd3"]
 
-        ret.fillna("None", inplace=True)
+        if pretty:
+            ret.fillna("None", inplace=True)
+
         ret.set_index(list(self.data.history_keys[:-1]), inplace=True)
         ret.sort_index(inplace=True)
         return ret
@@ -217,7 +219,7 @@ class Dataset(Collection):
             A DataFrame of the queried parameters
         """
 
-        queries = self.list_history(**search, dftd3=True).reset_index()
+        queries = self.list_history(**search, dftd3=True, pretty=False).reset_index()
         if queries.shape[0] > 10:
             raise TypeError("More than 10 queries formed, please narrow the search.")
 
