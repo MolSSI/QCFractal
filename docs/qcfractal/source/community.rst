@@ -10,11 +10,7 @@ Discussion
 ----------
 
 - QCArchive Slack is a great place to get feedback and advice from the community. |join_slack_upper|_ to get started.
-- The QCArchive GitHub repositories contain future roadmaps, current code updates, and a list of issues that are being worked and provide an excellent overview of the development status of the project. See the following links:
-
-   - `QCSchema <https://github.com/MolSSI/QC_JSON_Schema>`_
-   - `QCEngine <https://github.com/MolSSI/QCEngine>`_
-   - `QCFractal <https://github.com/MolSSI/QCFractal>`_
+- The QCArchive GitHub repositories contain future roadmaps, current code updates, and a list of issues that are being worked and provide an excellent overview of the development status of the project.
 
 
 Work with us!

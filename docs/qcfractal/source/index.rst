@@ -65,6 +65,7 @@ Index
 **Getting Started**
 
 * :doc:`install`
+* :doc:`quickstart`
 * :doc:`setup_compute`
 * :doc:`setup_server`
 * :doc:`community`
@@ -76,6 +77,7 @@ Index
    :caption: Getting Started
 
    install.rst
+   quickstart.ipynb
    community.rst
    setup_compute.rst
    setup_server.rst

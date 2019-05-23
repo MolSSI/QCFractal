@@ -7,6 +7,7 @@ dependencies:
     - sphinx_rtd_theme
     - sphinx-automodapi
     - graphviz
+    - nbsphinx
 
     - pip:
       - git+git://github.com/MolSSI/qcarchive-sphinx-theme#egg=qcarchive_sphinx_theme
