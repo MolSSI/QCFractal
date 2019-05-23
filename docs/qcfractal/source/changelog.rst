@@ -77,6 +77,8 @@ Bug Fixes
   parsed correctly.
 - (:pr:`250`) Record objects now correctly set their provenance time on object creation, not module import.
 - (:pr:`253`) A spelling bug was fixed in GridOptimization which caused hashing to not be processed correctly.
+- (:pr:`270`) LSF clusters not in ``MB`` for the units on memory by config are now auto-detected (or manually set)
+  without large workarounds in the YAML file and the CLI file itself. Supports documented settings of LSF 9.1.3.
 
 0.6.0 / 2019-03-30
 ------------------
