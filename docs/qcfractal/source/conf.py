@@ -58,6 +58,7 @@ extensions = [
     'sphinx.ext.extlinks',
     'sphinx_automodapi.automodapi',
     'sphinx_automodapi.automodsumm',
+    'nbsphinx'
 ]
 
 napoleon_google_docstring = False
