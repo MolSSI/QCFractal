@@ -551,6 +551,7 @@ def main(args=None):
     if settings.common.verbose:
         adapter_logger = logging.getLogger(logger_map[settings.common.adapter])
         adapter_logger.setLevel("DEBUG")
+        logger.setLevel("DEBUG")
 
     if settings.manager.log_file_prefix is not None:
         tornado.options.options['log_file_prefix'] = settings.manager.log_file_prefix
@@ -663,7 +664,7 @@ def main(args=None):
                     # Start looking for the LSF conf file
                     conf_dir = "/etc"  # Fall back directory
                     # Search the two environment variables the docs say it could be at (likely a typo in docs)
-                    for conf_env in ["$LSF_ENVDIR", "$LSF_CONFDIR"]:
+                    for conf_env in ["LSF_ENVDIR", "LSF_CONFDIR"]:
                         conf_search = os.environ.get(conf_env, None)
                         if conf_search is not None:
                             conf_dir = conf_search
@@ -676,8 +677,8 @@ def main(args=None):
                         line = line.strip()
                         if not line.strip().startswith("LSF_UNIT_FOR_LIMITS"):
                             continue
-                        # Found the line, infer the unit
-                        unit = line.split("=")[1].lower()
+                        # Found the line, infer the unit, only first 2 chars after "="
+                        unit = line.split("=")[1].lower()[:2]
                         break
                     logger.debug(f"Setting units to {unit} from the LSF config file at {conf_path}")
                 # Trap the lsf.conf does not exist, and the conf file not setup right (i.e. "$VAR=xxx^" regex-form)
