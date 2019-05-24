@@ -65,7 +65,6 @@ which contains no data and then destroy this database upon shudown.
 .. code-block:: python
 
     >>> from qcfractal import FractalSnowflake
-    >>> from qcfractal.int
     >>> server = FractalSnowflake()
 
     # Obtain a FractalClient to the server
@@ -91,7 +90,6 @@ than the canonical Python script. To manipulate a server in a Jupyter Notebook a
 .. code-block:: python
 
     >>> from qcfractal import FractalSnowflakeHandler
-    >>> from qcfractal.int
     >>> server = FractalSnowflakeHandler()
 
     # Obtain a FractalClient to the server
