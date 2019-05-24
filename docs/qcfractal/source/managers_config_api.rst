@@ -13,7 +13,7 @@ each of the headers (top level objects) and a description for each one. The fina
         option_for_server: "some string"
 
 
-This is the complete set of options and auto-generated from the parser itself, so should be accurate for the given
+This is the complete set of options, auto-generated from the parser itself, so it should be accurate for the given
 release. If you are using a developmental build or want to see the schema yourself, you can run the
 ``qcfractal-manager --schema`` command and it will display the whole schema for the YAML input.
 
