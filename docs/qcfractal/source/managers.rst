@@ -118,16 +118,16 @@ help block.
 
     usage: qcfractal-manager [-h] [--config-file CONFIG_FILE] [--adapter ADAPTER]
                              [--tasks_per_worker TASKS_PER_WORKER]
-                             [--cores_per_worker CORES_PER_WORKER]
-                             [--memory_per_worker MEMORY_PER_WORKER]
+                             [--cores-per-worker CORES_PER_WORKER]
+                             [--memory-per-worker MEMORY_PER_WORKER]
                              [--scratch-directory SCRATCH_DIRECTORY] [-v]
                              [--fractal-uri FRACTAL_URI] [-u USERNAME]
                              [-p PASSWORD] [--verify VERIFY]
                              [--manager-name MANAGER_NAME] [--queue-tag QUEUE_TAG]
                              [--log-file-prefix LOG_FILE_PREFIX]
                              [--update-frequency UPDATE_FREQUENCY]
-                             [--max-tasks MAX_TASKS] [--test] [--ntests NTESTS]
-                             [--schema]
+                             [--max-queued-tasks MAX_QUEUED_TASKS] [--test]
+                             [--ntests NTESTS] [--schema]
 
     A CLI for a QCFractal QueueManager with a ProcessPoolExecutor, Dask, or Parsl
     backend. The Dask and Parsl backends *requires* a config file due to the
@@ -144,9 +144,9 @@ help block.
       --tasks_per_worker TASKS_PER_WORKER
                             The number of simultaneous tasks for the executor to
                             run, resources will be divided evenly.
-      --cores_per_worker CORES_PER_WORKER
-                            The number of process for each executor's workers
-      --memory_per_worker MEMORY_PER_WORKER
+      --cores-per-worker CORES_PER_WORKER
+                            The number of process for each executor's Workers
+      --memory-per-worker MEMORY_PER_WORKER
                             The total amount of memory on the system in GB
       --scratch-directory SCRATCH_DIRECTORY
                             Scratch directory location
@@ -171,7 +171,7 @@ help block.
                             The path prefix of the logfile to write to.
       --update-frequency UPDATE_FREQUENCY
                             The frequency in seconds to check for complete tasks.
-      --max-tasks MAX_TASKS
+      --max-queued-tasks MAX_QUEUED_TASKS
                             Maximum number of tasks to hold at any given time.
                             Generally should not be set.
 

@@ -139,7 +139,16 @@ This problem is obfuscated by the fact that
 :term:`workers<Worker>` such as Dask Workers can still start initially despite being a Python code themselves. Many
 :term:`adapters<Adapter>` will start their programs using the absolute Python binary path which gets around the
 incomplete Conda configuration. **We strongly recommend you do not try setting the absolute Python path** in your
-scripts to get around this, and instead try to ``source`` the Conda ``profile.d`` first.
+scripts to get around this, and instead try to ``source`` the Conda ``profile.d`` first. For example, you might
+need to add something like this to your YAML file (change paths/environment names as needed):
+
+.. code-block:: yaml
+
+    cluster:
+        task_startup_commands:
+            - source ~/miniconda3/etc/profile.d/conda.sh
+            - conda activate qcfractal
+
 
 Other variants:
 
@@ -156,7 +165,7 @@ a few things may be happening.
 
 - If jobs are completing very fast, the :term:`Adapter` may not feel like it needs to start more
   :term:`workers<Worker>`, which is fine.
-- (Not recommended, use for debug only) Check your ``manger.max_tasks`` arg to pull more :term:`tasks<Task>`
+- (Not recommended, use for debug only) Check your ``manger.max_queued_tasks`` arg to pull more :term:`tasks<Task>`
   from the :term:`Server` to fill the jobs you have started. This option is usually automatically calculated based on
-  your ``common.tasks_per_worker`` and ``cluster.max_cluster_jobs`` to keep all :term:`workers<Worker>` busy and
+  your ``common.tasks_per_worker`` and ``common.max_workers`` to keep all :term:`workers<Worker>` busy and
   still have a buffer.

@@ -54,9 +54,9 @@ class CommonManagerSettings(BaseSettings):
     )
     tasks_per_worker: int = Schema(
         1,
-        description="Number of concurrent tasks to run *per worker* which is executed. Total number of concurrent "
-                    "tasks is this value times cluster.max_cluster_jobs, assuming the hardware is available. With the "
-                    "pool adapter, and/or if cluster.max_cluster_jobs=1, this is the number of concurrent jobs."
+        description="Number of concurrent tasks to run *per Worker* which is executed. Total number of concurrent "
+                    "tasks is this value times max_workers, assuming the hardware is available. With the "
+                    "pool adapter, and/or if max_workers=1, tasks_per_worker *is* the number of concurrent tasks."
     )
     cores_per_worker: int = Schema(
         qcng.config.get_global("ncores"),
@@ -71,8 +71,19 @@ class CommonManagerSettings(BaseSettings):
         description="Amount of memory (in GB) to be consumed and distributed over the tasks_per_worker. This memory is "
                     "divided evenly, but is ultimately at the control of the adapter. Engine will only allow each of "
                     "its calls to consume memory_per_worker/tasks_per_worker of memory. Total memory consumed by this "
-                    "manager at any one time is this value times cluster.max_cluster_jobs. The default value is read "
+                    "manager at any one time is this value times max_workers. The default value is read "
                     "from the amount of memory detected on the system you are executing on.",
+        gt=0
+    )
+    max_workers: int = Schema(
+        1,
+        description="The maximum number of Workers which are allowed to be run at the same time. The total number of "
+                    "concurrent tasks will maximize at this quantity times tasks_per_worker."
+                    "The total number "
+                    "of Jobs on a cluster which will be started is equal to this parameter in most cases, and should "
+                    "be assumed 1 Worker per Job. Any exceptions to this will be documented. "
+                    "In node exclusive mode this is equivalent to the maximum number of nodes which you will consume. "
+                    "This must be a positive, non zero integer.",
         gt=0
     )
     scratch_directory: Optional[str] = Schema(
@@ -135,7 +146,7 @@ class QueueManagerSettings(BaseSettings):
     manager_name: str = Schema(
         "unlabeled",
         description="Name of this scheduler to present to the Fractal Server. Descriptive names help the server "
-                    "identify you and help with debugging."
+                    "identify the manager resource and assists with debugging."
     )
     queue_tag: Optional[str] = Schema(
         None,
@@ -172,11 +183,11 @@ class QueueManagerSettings(BaseSettings):
                     "number times the number of found quantum chemistry programs. Does nothing if `test` is False",
         gt=0
     )
-    max_tasks: Optional[int] = Schema(
+    max_queued_tasks: Optional[int] = Schema(
         None,
         description="Generally should not be set. Number of tasks to pull from the Fractal Server to keep locally at "
                     "all times. If `None`, this is automatically computed as "
-                    "`ciel(common.tasks_per_worker*cluster.max_cluster_jobs*1.2) + 1`. As tasks are completed, the "
+                    "`ceil(common.tasks_per_worker*common.max_workers*1.2) + 1`. As tasks are completed, the "
                     "local pool is filled back up to this value. These tasks will all attempt to be run concurrently, "
                     "but concurrent tasks are limited by number of cluster jobs and tasks per job. Pulling too many of "
                     "these can result in under-utilized managers from other sites and result in less FIFO returns. As "
@@ -209,15 +220,6 @@ class ClusterSettings(BaseSettings):
     the options here are things like wall time (per job), which Scheduler your cluster has (like PBS or SLURM),
     etc. No additional options are allowed here.
     """
-    max_cluster_jobs: int = Schema(
-        1,
-        description="The maximum number of cluster jobs which are allowed to be run at the same time. The total number "
-                    "of workers which can be started (and thus simultaneous Fractal tasks which can be run) is equal "
-                    "to this parameter in most cases, and should be assumed 1 Worker per Job. "
-                    "In exclusive mode this is equivalent to the maximum number of nodes which you will consume. "
-                    "This must be a positive, non zero integer.",
-        gt=0
-    )
     node_exclusivity: bool = Schema(
         False,
         description="Run your cluster jobs in node-exclusivity mode. This option may not be available to all scheduler "
@@ -238,9 +240,9 @@ class ClusterSettings(BaseSettings):
     )
     task_startup_commands: List[str] = Schema(
         [],
-        description="Additional commands to be run before starting the workers and the task distribution. This can "
+        description="Additional commands to be run before starting the Workers and the task distribution. This can "
                     "include commands needed to start things like conda environments or setting environment variables "
-                    "before executing the workers. These commands are executed first before any of the distributed "
+                    "before executing the Workers. These commands are executed first before any of the distributed "
                     "commands run and are added to the batch scripts as individual commands per entry, verbatim."
     )
     walltime: str = Schema(
@@ -248,16 +250,16 @@ class ClusterSettings(BaseSettings):
         description="Wall clock time of each cluster job started. Presented as a string in HH:MM:SS form, but your "
                     "cluster may have a different structural syntax. This number should be set high as there should "
                     "be a number of Fractal tasks which are run for each submitted cluster job. Ideally, the job "
-                    "will start, the worker will land, and the worker will crunch through as many tasks as it can; "
-                    "meaning the job which has a worker in it must continue existing to minimize time spend "
+                    "will start, the Worker will land, and the Worker will crunch through as many tasks as it can; "
+                    "meaning the job which has a Worker in it must continue existing to minimize time spend "
                     "redeploying Workers."
     )
     adaptive: AdaptiveCluster = Schema(
         AdaptiveCluster.adaptive,
-        description="Whether or not to use adaptive scaling of workers or not. If set to 'static', a fixed number of "
-                    "workers will be started (and likely *NOT* restarted when the wall clock is reached). When set to "
+        description="Whether or not to use adaptive scaling of Workers or not. If set to 'static', a fixed number of "
+                    "Workers will be started (and likely *NOT* restarted when the wall clock is reached). When set to "
                     "'adaptive' (the default), the distributed engine will try to adaptively scale the number of "
-                    "workers based on tasks in the queue. This is str instead of bool type variable in case more "
+                    "Workers based on tasks in the queue. This is str instead of bool type variable in case more "
                     "complex adaptivity options are added in the future."
     )
 
@@ -315,7 +317,7 @@ class DaskQueueSettings(SettingsBlocker):
         description="Name of the network adapter to use as communication between the head node and the compute node."
                     "There are oddities of this when the head node and compute node use different ethernet adapter "
                     "names and we have not figured out exactly which combination is needed between this and the "
-                    "poorly documented `ip` keyword which appears to be for workers, but not the Client."
+                    "poorly documented `ip` keyword which appears to be for Workers, but not the Client."
     )
     extra: Optional[List[str]] = Schema(
         None,
@@ -337,7 +339,7 @@ cli_utils.doc_formatter(DaskQueueSettings)
 
 class ParslExecutorSettings(SettingsBlocker):
     """
-    Settings for the Parsl Executor class. This serves as the primary mechanism for distributing workers to jobs.
+    Settings for the Parsl Executor class. This serves as the primary mechanism for distributing Workers to jobs.
     In most cases, you will not need to set any of these options, as several options are automatically inferred
     from other settings. Any option set here is passed through to the HighThroughputExecutor class of Parsl.
 
@@ -354,7 +356,7 @@ class ParslExecutorSettings(SettingsBlocker):
         description="This only needs to be set in conditional cases when the head node and compute nodes use a "
                     "differently named ethernet adapter.\n\n"
                     "An address to connect to the main Parsl process which is reachable from the network in which "
-                    "workers will be running. This can be either a hostname as returned by hostname or an IP address. "
+                    "Workers will be running. This can be either a hostname as returned by hostname or an IP address. "
                     "Most login nodes on clusters have several network interfaces available, only some of which can be "
                     "reached from the compute nodes. Some trial and error might be necessary to identify what "
                     "addresses are reachable from compute nodes."
@@ -464,8 +466,8 @@ def parse_args():
         "--tasks_per_worker",
         type=int,
         help="The number of simultaneous tasks for the executor to run, resources will be divided evenly.")
-    common.add_argument("--cores_per_worker", type=int, help="The number of process for each executor's workers")
-    common.add_argument("--memory_per_worker", type=int, help="The total amount of memory on the system in GB")
+    common.add_argument("--cores-per-worker", type=int, help="The number of process for each executor's Workers")
+    common.add_argument("--memory-per-worker", type=int, help="The total amount of memory on the system in GB")
     common.add_argument("--scratch-directory", type=str, help="Scratch directory location")
     common.add_argument("-v", "--verbose", action="store_true", help="Increase verbosity of the logger.")
 
@@ -485,8 +487,8 @@ def parse_args():
     manager.add_argument("--queue-tag", type=str, help="The queue tag to pull from")
     manager.add_argument("--log-file-prefix", type=str, help="The path prefix of the logfile to write to.")
     manager.add_argument("--update-frequency", type=int, help="The frequency in seconds to check for complete tasks.")
-    manager.add_argument("--max-tasks", type=int, help="Maximum number of tasks to hold at any given time. Generally "
-                                                       "should not be set.")
+    manager.add_argument("--max-queued-tasks", type=int, help="Maximum number of tasks to hold at any given time. "
+                                                              "Generally should not be set.")
 
     # Additional args
     optional = parser.add_argument_group('Optional Settings')
@@ -517,8 +519,8 @@ def parse_args():
         "common": _build_subset(args, {"adapter", "tasks_per_worker", "cores_per_worker", "memory_per_worker",
                                        "scratch_directory", "verbose"}),
         "server": _build_subset(args, {"fractal_uri", "password", "username", "verify"}),
-        "manager": _build_subset(args, {"max_tasks", "manager_name", "queue_tag", "log_file_prefix", "update_frequency",
-                                        "test", "ntests"}),
+        "manager": _build_subset(args, {"max_queued_tasks", "manager_name", "queue_tag", "log_file_prefix",
+                                        "update_frequency", "test", "ntests"}),
         # This set is for this script only, items here should not be passed to the ManagerSettings nor any other
         # classes
         "debug": _build_subset(args, {"schema"})
@@ -707,7 +709,7 @@ def main(args=None):
         # Setup up adaption
         # Workers are distributed down to the cores through the sub-divided processes
         # Optimization may be needed
-        workers = settings.common.tasks_per_worker * settings.cluster.max_cluster_jobs
+        workers = settings.common.tasks_per_worker * settings.common.max_workers
         if settings.cluster.adaptive == AdaptiveCluster.adaptive:
             cluster.adapt(minimum=0, maximum=workers, interval="10s")
         else:
@@ -763,7 +765,7 @@ def main(args=None):
         # Create one construct to quickly merge dicts with a final check
         common_parsl_provider_construct = {
             "init_blocks": 0,  # Update this at a later time of Parsl
-            "max_blocks": settings.cluster.max_cluster_jobs,
+            "max_blocks": settings.common.max_workers,
             "walltime": settings.cluster.walltime,
             "scheduler_options": f'{provider_header} ' + f'\n{provider_header} '.join(scheduler_opts) + '\n',
             "nodes_per_block": 1,
@@ -781,7 +783,7 @@ def main(args=None):
         parsl_executor_construct = {
             "label": "QCFractal_Parsl_{}_Executor".format(settings.cluster.scheduler.title()),
             "cores_per_worker": cores_per_task,
-            "max_workers": settings.common.tasks_per_worker * settings.cluster.max_cluster_jobs,
+            "max_workers": settings.common.tasks_per_worker * settings.common.max_workers,
             "provider": provider,
             "address": address_by_hostname(),
             **settings.parsl.executor.dict(skip_defaults=True)}
@@ -797,19 +799,16 @@ def main(args=None):
 
     # Build out the manager itself
     # Compute max tasks
-    if settings.manager.max_tasks is None:
-        cluster_jobs = 1
-        if settings.cluster is not None:
-            cluster_jobs = settings.cluster.max_cluster_jobs
+    if settings.manager.max_queued_tasks is None:
         # Tasks * jobs * buffer + 1
-        max_tasks = ceil(settings.common.tasks_per_worker * cluster_jobs * 1.20) + 1
+        max_queued_tasks = ceil(settings.common.tasks_per_worker * settings.common.max_workers * 1.20) + 1
     else:
-        max_tasks = settings.manager.max_tasks
+        max_queued_tasks = settings.manager.max_queued_tasks
 
     manager = qcfractal.queue.QueueManager(
         client,
         queue_client,
-        max_tasks=max_tasks,
+        max_tasks=max_queued_tasks,
         queue_tag=settings.manager.queue_tag,
         manager_name=settings.manager.manager_name,
         update_frequency=settings.manager.update_frequency,
