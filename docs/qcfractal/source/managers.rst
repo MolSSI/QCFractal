@@ -1,26 +1,26 @@
 Fractal Queue Managers
 ======================
 
-Queue Managers are the processes which interface with the Fractal Server and
+Queue Managers are the processes which interface with the Fractal :term:`Server` and
 clusters, supercomputers, and cloud resources to execute the tasks in the
-Fractal Server. These managers pull compute :term:`tasks<Task>` from the
-server, and then pass them to various distributed back ends for computation
-for a variety of different needs. The architecture of the Fractal Server
+Fractal :term:`Server`. These managers pull compute :term:`tasks<Task>` from the
+:term:`Server`, and then pass them to various distributed back ends for computation
+for a variety of different needs. The architecture of the Fractal :term:`Server`
 allows many managers to be created in multiple physical locations. Currently,
-QCFractal supports the following:
+Fractal supports the following:
 
 - `Pool` - A python `ProcessPoolExecutor` for computing tasks on a single machine (or node).
 - `Dask <http://dask.pydata.org/en/latest/docs.html>`_ - A graph-based workflow engine for laptops and small clusters.
 - `Parsl <http://parsl-project.org>`_ - High-performance workflows.
 - `Fireworks <https://materialsproject.github.io/fireworks/>`_ - A asynchronous Mongo-based distributed queuing system.
 
-These backends allow QCFractal to be incredibly elastic in utilized
+These backends allow Fractal to be incredibly elastic in utilized
 computational resources, scaling from a single laptop to thousands of nodes on
 physically separate hardware. Our end goal is to be able to setup a manager at
 a physical site and allow it to scale up and down as its task queue requires
 and execute compute over long periods of time (months) without intervention.
 
-The basic setup of the Queue Managers and how they interact with the :term:`Server` is as follows:
+The basic setup of the Queue :term:`Managers <Manager>` and how they interact with the :term:`Server` is as follows:
 
 .. image:: media/QCQuManagerBasic.png
    :width: 800px
@@ -30,9 +30,10 @@ The basic setup of the Queue Managers and how they interact with the :term:`Serv
 In this, multiple :term:`managers <Manager>` talk to a central :term:`Fractal Server<Server>` and deploy
 :term:`tasks<Task>` to different compute resources based on availability, physical location, and :term:`tags<Tag>`.
 
-The main goals of the Queue Manager is to reduce the user's level of expertise needed to start compute with Fractal and,
-more importantly, to need as little manual intervention as possible to have persistent compute. Ideally, you start
-the manager in a background process, leave it be while it checks in with the Fractal Server from time to time
+The main goals of the Queue :term:`Manager` is to reduce the user's level of expertise needed to start compute with
+Fractal and, more importantly, to need as little manual intervention as possible to have persistent compute. Ideally,
+you start the :term:`Manager` in a background process, leave it be while it checks in with the
+:term:`Fractal Server<Server>` from time to time
 to get :term:`tasks<Task>`, and pushes/pulls :term:`tasks<Task>` from the distributed :term:`Adapter` as need be.
 
 The communication between each of the layers involved, and the mechanism by which they communicate is summarized in
@@ -47,7 +48,7 @@ The different levels of communication are all established automatically once the
 this image shows how information flow from point-to-point.
 
 The manager itself is a fairly lightweight process and consumes very little CPU power on its own. You should talk with
-your sysadmin before running this on a head node, but the Queue Manager itself will consume
+your sysadmin before running this on a head node, but the Queue :term:`Manager` itself will consume
 less than 1% CPU we have found and virtually no RAM.
 
 If you are interested in the more detailed workings of the :term:`Manager`, please see the :doc:`managers_detailed`
@@ -80,9 +81,9 @@ Server running on that cluster, and using the SLURM partition ``default``, save 
 
     common:
      adapter: dask
-     ntasks: 1
-     ncores: 1
-     memory: 8
+     tasks_per_worker: 1
+     cores_per_worker: 1
+     memory_per_worker: 8
 
     cluster:
      scheduler: slurm
@@ -116,18 +117,20 @@ help block.
     $ qcfractal-manager --help
 
     usage: qcfractal-manager [-h] [--config-file CONFIG_FILE] [--adapter ADAPTER]
-                         [--ntasks NTASKS] [--ncores NCORES] [--memory MEMORY]
-                         [--scratch-directory SCRATCH_DIRECTORY] [-v]
-                         [--fractal-uri FRACTAL_URI] [-u USERNAME]
-                         [-p PASSWORD] [--verify VERIFY]
-                         [--max-tasks MAX_TASKS] [--manager-name MANAGER_NAME]
-                         [--queue-tag QUEUE_TAG]
-                         [--log-file-prefix LOG_FILE_PREFIX]
-                         [--update-frequency UPDATE_FREQUENCY] [--test]
-                         [--ntests NTESTS]
+                             [--tasks_per_worker TASKS_PER_WORKER]
+                             [--cores-per-worker CORES_PER_WORKER]
+                             [--memory-per-worker MEMORY_PER_WORKER]
+                             [--scratch-directory SCRATCH_DIRECTORY] [-v]
+                             [--fractal-uri FRACTAL_URI] [-u USERNAME]
+                             [-p PASSWORD] [--verify VERIFY]
+                             [--manager-name MANAGER_NAME] [--queue-tag QUEUE_TAG]
+                             [--log-file-prefix LOG_FILE_PREFIX]
+                             [--update-frequency UPDATE_FREQUENCY]
+                             [--max-queued-tasks MAX_QUEUED_TASKS] [--test]
+                             [--ntests NTESTS] [--schema]
 
     A CLI for a QCFractal QueueManager with a ProcessPoolExecutor, Dask, or Parsl
-    backend. The Dask and Parsl backends *require* a config file due to the
+    backend. The Dask and Parsl backends *requires* a config file due to the
     complexity of its setup. If a config file is specified, the remaining options
     serve as CLI overwrites of the config.
 
@@ -138,10 +141,13 @@ help block.
     Common Adapter Settings:
       --adapter ADAPTER     The backend adapter to use, currently only {'dask',
                             'parsl', 'pool'} are valid.
-      --ntasks NTASKS       The number of simultaneous tasks for the executor to
+      --tasks_per_worker TASKS_PER_WORKER
+                            The number of simultaneous tasks for the executor to
                             run, resources will be divided evenly.
-      --ncores NCORES       The number of process for the executor
-      --memory MEMORY       The total amount of memory on the system in GB
+      --cores-per-worker CORES_PER_WORKER
+                            The number of process for each executor's Workers
+      --memory-per-worker MEMORY_PER_WORKER
+                            The total amount of memory on the system in GB
       --scratch-directory SCRATCH_DIRECTORY
                             Scratch directory location
       -v, --verbose         Increase verbosity of the logger.
@@ -153,12 +159,10 @@ help block.
                             FractalServer username
       -p PASSWORD, --password PASSWORD
                             FractalServer password
-      --verify VERIFY       Do verify the SSL certificate, turn off for servers
-                            with custom SSL certificiates.
+      --verify VERIFY       Do verify the SSL certificate, leave off (unset) for
+                            servers with custom SSL certificates.
 
     QueueManager settings:
-      --max-tasks MAX_TASKS
-                            Maximum number of tasks to hold at any given time.
       --manager-name MANAGER_NAME
                             The name of the manager to start
       --queue-tag QUEUE_TAG
@@ -167,6 +171,9 @@ help block.
                             The path prefix of the logfile to write to.
       --update-frequency UPDATE_FREQUENCY
                             The frequency in seconds to check for complete tasks.
+      --max-queued-tasks MAX_QUEUED_TASKS
+                            Maximum number of tasks to hold at any given time.
+                            Generally should not be set.
 
     Optional Settings:
       --test                Boot and run a short test suite to validate setup
@@ -176,6 +183,7 @@ help block.
                             config file and exit. This will always show the most
                             up-to-date schema. It will be presented in a JSON-like
                             format.
+
 
 
 Terminology
@@ -213,7 +221,8 @@ of. However, if you feel something is missing, let us know!
         LSF, SGE, etc. This, by itself, does not have any concept of the :term:`Manager` or even the :term:`Adapter`
         as both interface with *it*, not the other way around. Individual users' clusters may, and almost always,
         have a different configuration, even amongst the same governing software. Therefore, no two Schedulers
-        should be treated the same.
+        should be treated the same. In many cases, the :term:`Adapter` submits a :term:`Job` to the Scheduler with
+        instructions of how the :term:`Job` should start a :term:`Worker` once it is allocated and booted.
 
     Job
         The specific allocation of resources (CPU, Memory, wall clock, etc) provided by the :term:`Scheduler` to the
@@ -221,7 +230,10 @@ of. However, if you feel something is missing, let us know!
         ``sbatch``), however, it is more apt to think of the resources allocated in this way as "resources to be
         distributed to the :term:`Task` by the :term:`Adapter`". Although a user running a :term:`Manager` will likely
         not directly interact with these, its important to track as these are what your :term:`Scheduler` is actually
-        running and your allocations will be charged by.
+        running and your allocations will be charged by. At least (and usually only) one :term:`Worker` will be
+        deployed to a :term:`Job` from the :term:`Adapter` to handle incoming :term:`Task`\s. Once the :term:`Worker`
+        lands, it will report back to the :term:`Adapter` and all communications happen between those two objects; the
+        Job simply runs until either the :term:`Adapter` stops it, or the :term:`Scheduler` ends it.
 
     Task
         A single unit of compute as defined by the Fractal :term:`Server` (i.e. the item which comes from the Task
@@ -230,10 +242,12 @@ of. However, if you feel something is missing, let us know!
 
     Worker
         The process executed from the :term:`Adapter` on the allocated hardware inside a :term:`Job`. This process
-        receives the :term:`tasks<Task>` tracked by the :term:`Adapter` and is responsible for their execution. There may
-        be multiple Workers within a single :term:`Job`, and the resources allocated for said :term:`Job` will be
-        distributed by the :term:`Adapter` using whatever the :term:`Adapter` is configured to do. This is often uniform,
-        but not always.
+        receives the :term:`tasks<Task>` tracked by the :term:`Adapter` and is responsible for their execution. The
+        Worker itself is responsible for consuming the resources of the :term:`Job` and distributing them to handle
+        concurrent :term:`tasks<Task>`. In most cases, there will be 1 Worker per :term:`Job`, but there are some
+        uncommon instances where this isn't true. You can safely assume the 1 Worker/:term:`Job` case for Fractal
+        usage. Resources allocated for the Worker will be distributed by the :term:`Adapter`\s configuration,
+        but is usually uniform.
 
     Server
         The Fractal Server that the :term:`Manager` connects to. This is the source of the

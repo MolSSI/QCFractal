@@ -26,9 +26,9 @@ file:
 
     common:
      adapter: dask
-     ntasks: 1
-     ncores: 1
-     memory: 8
+     tasks_per_worker: 1
+     cores_per_worker: 1
+     memory_per_worker: 8
 
     server:
      fractal_uri: "localhost:7777"
@@ -50,18 +50,19 @@ Mutiple Tasks, 1 Cluster Job
 ----------------------------
 
 This example starts a max of 1 cluster :term:`Job`, but multiple :term:`tasks<Task>`. The hardware will be
-consumed uniformly by each :term:`Worker`. With 8 cores, 20 GB of memory, and 4 tasks; each :term:`Worker` will get
-2 core and 5 GB of memory to work with. We set ``cluster.max_cluster_jobs`` to 1 to limit the number
-of jobs which can be started. Since this is SLURM, the ``squeue`` information will show this
-user has run 1 ``sbatch`` jobs which requested 4 cores and 20 GB of memory.
+consumed uniformly by the :term:`Worker`. With 8 cores, 20 GB of memory, and 4 tasks; the :term:`Worker` will provide
+2 cores and 5 GB of memory to compute each :term:`Task`. We set ``common.max_workers`` to 1 to limit the number
+of :term:`Workers<Worker>` and :term:`Jobs <Job>` which can be started. Since this is SLURM, the ``squeue`` information
+will show this user has run 1 ``sbatch`` jobs which requested 4 cores and 20 GB of memory.
 
 .. code-block:: yaml
 
     common:
      adapter: dask
-     ntasks: 4
-     ncores: 8
-     memory: 20
+     tasks_per_worker: 4
+     cores_per_worker: 8
+     memory_per_worker: 20
+     max_workers: 1
 
     server:
      fractal_uri: "localhost:7777"
@@ -74,7 +75,6 @@ user has run 1 ``sbatch`` jobs which requested 4 cores and 20 GB of memory.
     cluster:
      scheduler: slurm
      walltime: "72:00:00"
-     max_cluster_jobs: 1
 
     dask:
      queue: default
@@ -84,15 +84,16 @@ Testing the Manager Setup
 -------------------------
 
 This will test the :term:`Manager` to make sure its setup correctly, and does not need to
-connect to the :term:`Server`, and therefore does not need a ``server`` block.
+connect to the :term:`Server`, and therefore does not need a ``server`` block. It will still however submit
+:term:`jobs <Job>`.
 
 .. code-block:: yaml
 
     common:
      adapter: dask
-     ntasks: 2
-     ncores: 4
-     memory: 10
+     tasks_per_worker: 2
+     cores_per_worker: 4
+     memory_per_worker: 10
 
     manager:
      manager_name: "TestBox_NeverSeen_OnServer"
@@ -114,20 +115,24 @@ Suppose there are some commands you want to run *before* starting the :term:`Wor
 environment, or setting some environment variables. This lets you specify that. For this, we will run on a
 Sun Grid Engine (SGE) cluster, start a conda environment, and load a module.
 
-An important note about this one, we have now set ``max_cluster_jobs`` to something larger than 1.
+An important note about this one, we have now set ``max_workers`` to something larger than 1.
 Each :term:`Job` will still request 4 cores and 256 GB of memory to be evenly distributed between the
 4 :term:`tasks<Task>`, however, the :term:`Adapter` will **attempt to start 5 independent** :term:`jobs<Job>`, for a
-total of 80 cores, 1.280 TB of memory, distributed over 20 :term:`workers<Worker>`. If the :term:`Scheduler` does not
+total of 80 cores, 1.280 TB of memory, distributed over 5 :term:`Workers<Worker>` collectively running 20 concurrent
+:term:`tasks<Task>`. If the :term:`Scheduler` does not
 allow all of those :term:`jobs<Job>` to start, whether due to lack of resources or user limits, the
-:term:`Adapter` can still start fewer :term:`jobs<Job>`, each with 16 cores, 256 GB of memory.
+:term:`Adapter` can still start fewer :term:`jobs<Job>`, each with 16 cores and 256 GB of memory, but :term:`Task`
+concurrency will change by blocks of 4 since the :term:`Worker` in each :term:`Job` is configured to handle 4
+:term:`Tasks` each.
 
 .. code-block:: yaml
 
     common:
      adapter: dask
-     ntasks: 4
-     ncores: 16
-     memory: 256
+     tasks_per_worker: 4
+     cores_per_worker: 16
+     memory_per_worker: 256
+     max_workers: 5
 
     server:
      fractal_uri: localhost:7777
@@ -144,7 +149,6 @@ allow all of those :term:`jobs<Job>` to start, whether due to lack of resources 
          - module load mpi/gcc/openmpi-1.6.4
          - conda activate qcfmanager
      walltime: "71:00:00"
-     max_cluster_jobs: 5
 
     dask:
      queue: free64
@@ -156,16 +160,19 @@ Additional Scheduler Flags
 A :term:`Scheduler` may ask you to set additional flags (or you might want to) when submitting a :term:`Job`.
 Maybe its a Sys. Admin enforced rule, maybe you want to pull from a specific account, or set something not
 interpreted for you in the :term:`Manager` or :term:`Adapter` (do tell us though if this is the case). This
-example sets additional flags on a PBS cluster such that the final :term:`Job` file will have ``#PBS {my headers}``.
+example sets additional flags on a PBS cluster such that the final :term:`Job` launch file will have
+``#PBS {my headers}``.
+
 This example also uses Parsl and sets a scratch directory.
 
 .. code-block:: yaml
 
     common:
      adapter: parsl
-     ntasks: 1
-     ncores: 6
-     memory: 64
+     tasks_per_worker: 1
+     cores_per_worker: 6
+     memory_per_worker: 64
+     max_workers: 5
      scratch_directory: "$TMPDIR"
 
     server:
@@ -175,11 +182,9 @@ This example also uses Parsl and sets a scratch directory.
      verify: False
 
     manager:
-     max_tasks: 10
      manager_name: "PBS_Parsl_MyPIGroupAccount_Manger"
 
     cluster:
-     max_cluster_jobs: 5
      node_exclusivity: False
      scheduler: pbs
      scheduler_options:
