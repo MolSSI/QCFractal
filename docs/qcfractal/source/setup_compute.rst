@@ -83,7 +83,7 @@ check the current schema from the CLI with:
 
 .. note::
 
-    The ``--manager-name`` argument is useful for change the name of the manager
+    The ``--manager-name`` argument is useful to change the name of the manager
     reported back to the :term:`Server` instance. In addition, the
     ``--queue-tag`` will limit the acquisition of tasks to only the desired
     :term:`Server` task tags. These settings can also all be set in the YAML
@@ -127,7 +127,7 @@ Using the Python API
 Testing
 -------
 
-A ``qcfractal-manager` can be tested using the ``--test`` argument and does
+A ``qcfractal-manager`` can be tested using the ``--test`` argument and does
 not require an active ``qcfractal-manager``, this is very useful to check if
 both the distributed workflow manager is setup correctly and correct
 computational engines are found.
