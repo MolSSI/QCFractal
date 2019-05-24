@@ -12,7 +12,6 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.orderinglist import ordering_list
 # from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.dialects.postgresql import aggregate_order_by
-from collections.abc import Iterable
 
 # Base = declarative_base()
 
@@ -54,7 +53,7 @@ class Base:
         id_fields = self._get_fieldnames_with_DB_ids_(class_inspector)
         for key in id_fields:
             if key in ret.keys() and ret[key] is not None:
-                if isinstance(ret[key], Iterable):
+                if isinstance(ret[key], (list, tuple)):
                     ret[key] = [str(i) for i in ret[key]]
                 else:
                     ret[key] = str(ret[key])
@@ -120,6 +119,7 @@ class Base:
     #         date = dateutil.parser.parse(date)
     #     return date
 
+
 # Temporary classes for migration from mongo to sql
 class MoleculeMap(Base):
     __tablename__ = 'molecule_map'
@@ -148,23 +148,18 @@ class ResultMap(Base):
     sql_id = Column(Integer, ForeignKey('result.id', ondelete='cascade'), primary_key=True)
     mongo_id = Column(String, unique=True)  # will have an index
 
-class OptimizationMap(Base):
-    __tablename__ = 'optimization_map'
 
-    sql_id = Column(Integer, ForeignKey('optimization_procedure.id', ondelete='cascade'), primary_key=True)
+class ProcedureMap(Base):
+    __tablename__ = 'procedure_map'
+
+    sql_id = Column(Integer, ForeignKey('base_result.id', ondelete='cascade'), primary_key=True)
     mongo_id = Column(String, unique=True)  # will have an index
 
 
-class TorsiondriveMap(Base):
-    __tablename__ = 'torsiondrive_map'
+class TaskQueueMap(Base):
+    __tablename__ = 'task_queue_map'
 
-    sql_id = Column(Integer, ForeignKey('torsiondrive_procedure.id', ondelete='cascade'), primary_key=True)
-    mongo_id = Column(String, unique=True)  # will have an index
-
-class GridOptizationMap(Base):
-    __tablename__ = 'grid_optimization_map'
-
-    sql_id = Column(Integer, ForeignKey('grid_optimization_procedure.id', ondelete='cascade'), primary_key=True)
+    sql_id = Column(Integer, ForeignKey('task_queue.id', ondelete='cascade'), primary_key=True)
     mongo_id = Column(String, unique=True)  # will have an index
 
 
@@ -806,7 +801,7 @@ class TaskQueueORM(Base):
     procedure = Column(String)
     status = Column(Enum(TaskStatusEnum), default=TaskStatusEnum.waiting)
     priority = Column(Integer, default=int(PriorityEnum.NORMAL))
-    manager = Column(String, default=None)
+    manager = Column(String, ForeignKey('queue_manager.name'), default=None)
     error = Column(String)  # TODO: tobe removed - should be in results
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
@@ -939,6 +934,10 @@ class QueueManagerORM(Base):
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
+    qcengine_version = Column(String)
+    manager_version = Column(String)
+    programs = Column(JSON)
+    procedures = Column(JSON)
 
     __table_args__ = (
         Index('ix_queue_manager_status', "status"),

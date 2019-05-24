@@ -7,9 +7,9 @@ SQL DB in version 0.7.0
 import argparse
 from qcfractal.storage_sockets import storage_socket_factory
 from qcfractal.storage_sockets.me_models import (MoleculeORM, KeywordsORM, KVStoreORM, ResultORM,
-                                                 ProcedureORM)
+                                                 ProcedureORM, TaskQueueORM, QueueManagerORM)
 from qcfractal.storage_sockets.sql_models import (MoleculeMap, KeywordsMap, KVStoreMap, ResultMap,
-                                                  OptimizationMap, TorsiondriveMap, GridOptizationMap)
+                                                  ProcedureMap, TaskQueueMap)
 from qcfractal.interface.models import (KeywordSet, ResultRecord, OptimizationRecord,
                                         TorsionDriveRecord, GridOptimizationRecord)
 
@@ -192,6 +192,38 @@ def copy_kv_store(mongo_storage, sql_storage, max_limit, with_check=False):
 
     print('---- Done copying KV_store\n\n')
 
+def copy_managers(mongo_storage, sql_storage, max_limit, with_check=False):
+    """Copy from mongo to sql"""
+
+    total_count = mongo_storage.get_total_count(QueueManagerORM)
+    print('-----Total # of Managers in the DB is: ', total_count)
+
+
+    ret = mongo_storage.get_managers()
+    mongo_res= ret['data']
+    print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
+
+    # # check if this patch has been already stored
+    # if is_mapped(sql_storage, QueueManagerMap, mongo_res[-1]['name']):
+    #     print('Skipping')
+    #     return
+
+    sql_insered = sql_storage._copy_managers(mongo_res)['data']
+    print('Inserted in SQL:', len(sql_insered))
+
+    # store the ids mapping in the sql DB
+    # mongo_names = [obj['name'] for obj in mongo_res]  # Name not id
+    # store_ids_map(sql_storage, mongo_names, sql_insered, QueueManagerMap)
+
+    if with_check:
+
+        ret = sql_storage.get_managers(name=[mongo_res[0]['name']])
+        print('Get from SQL:', ret['data'])
+
+        assert mongo_res[0]['uuid'] == ret['data'][0]['uuid']
+
+    print('---- Done copying Queue Manager\n\n')
+
 
 def copy_results(mongo_storage, sql_storage, max_limit, with_check=False):
     """Copy from mongo to sql"""
@@ -202,7 +234,7 @@ def copy_results(mongo_storage, sql_storage, max_limit, with_check=False):
     for skip in range(0, total_count, max_limit):
 
         print('\nCurrent skip={}\n-----------'.format(skip))
-        ret = mongo_storage.get_results(limit=max_limit, skip=skip)
+        ret = mongo_storage.get_results(status=None, limit=max_limit, skip=skip)
         mongo_res= ret['data']
         print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
 
@@ -247,12 +279,12 @@ def copy_optimization_procedure(mongo_storage, sql_storage, max_limit, with_chec
     for skip in range(0, total_count, max_limit):
 
         print('\nCurrent skip={}\n-----------'.format(skip))
-        ret = mongo_storage.get_procedures(procedure='optimization', limit=max_limit, skip=skip)
+        ret = mongo_storage.get_procedures(procedure='optimization', status=None, limit=max_limit, skip=skip)
         mongo_res= ret['data']
         print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
 
         # check if this patch has been already stored
-        if is_mapped(sql_storage, OptimizationMap, mongo_res[-1]['id']):
+        if is_mapped(sql_storage, ProcedureMap, mongo_res[-1]['id']):
             print('Skipping first ', skip+max_limit)
             continue
 
@@ -267,11 +299,11 @@ def copy_optimization_procedure(mongo_storage, sql_storage, max_limit, with_chec
 
         # store the ids mapping in the sql DB
         mongo_ids = [obj['id'] for obj in mongo_res]
-        store_ids_map(sql_storage, mongo_ids, sql_insered, OptimizationMap)
+        store_ids_map(sql_storage, mongo_ids, sql_insered, ProcedureMap)
 
         if with_check:
             with sql_storage.session_scope() as session:
-                proc = session.query(OptimizationMap).filter_by(mongo_id=mongo_res[0]['id']).first().sql_id
+                proc = session.query(ProcedureMap).filter_by(mongo_id=mongo_res[0]['id']).first().sql_id
 
             ret = sql_storage.get_procedures(id=[proc])
             print('Get from SQL:', ret['data'])
@@ -292,19 +324,19 @@ def copy_torsiondrive_procedure(mongo_storage, sql_storage, max_limit, with_chec
     for skip in range(0, total_count, max_limit):
 
         print('\nCurrent skip={}\n-----------'.format(skip))
-        ret = mongo_storage.get_procedures(procedure='torsiondrive', limit=max_limit, skip=skip)
+        ret = mongo_storage.get_procedures(procedure='torsiondrive', status=None, limit=max_limit, skip=skip)
         mongo_res= ret['data']
         print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
 
         # check if this patch has been already stored
-        if is_mapped(sql_storage, TorsiondriveMap, mongo_res[-1]['id']):
+        if is_mapped(sql_storage, ProcedureMap, mongo_res[-1]['id']):
             print('Skipping first ', skip+max_limit)
             continue
 
         # load mapped ids in memory
         mongo_res = get_ids_map(sql_storage, ['stdout', 'stderr', 'error'], KVStoreMap, mongo_res)
         mongo_res = get_ids_map(sql_storage, ['initial_molecule'], MoleculeMap, mongo_res)
-        mongo_res = get_ids_map(sql_storage, ['optimization_history'], OptimizationMap, mongo_res)
+        mongo_res = get_ids_map(sql_storage, ['optimization_history'], ProcedureMap, mongo_res)
 
         results_py = [TorsionDriveRecord(**res) for res in mongo_res]
         sql_insered = sql_storage.add_procedures(results_py)['data']
@@ -312,11 +344,11 @@ def copy_torsiondrive_procedure(mongo_storage, sql_storage, max_limit, with_chec
 
         # store the ids mapping in the sql DB
         mongo_ids = [obj['id'] for obj in mongo_res]
-        store_ids_map(sql_storage, mongo_ids, sql_insered, TorsiondriveMap)
+        store_ids_map(sql_storage, mongo_ids, sql_insered, ProcedureMap)
 
         if with_check:
             with sql_storage.session_scope() as session:
-                proc = session.query(TorsiondriveMap).filter_by(mongo_id=mongo_res[0]['id']).first().sql_id
+                proc = session.query(ProcedureMap).filter_by(mongo_id=mongo_res[0]['id']).first().sql_id
 
             ret = sql_storage.get_procedures(id=[proc])
             print('Get from SQL:', ret['data'])
@@ -341,19 +373,19 @@ def copy_grid_optimization_procedure(mongo_storage, sql_storage, max_limit, with
     for skip in range(0, total_count, max_limit):
 
         print('\nCurrent skip={}\n-----------'.format(skip))
-        ret = mongo_storage.get_procedures(procedure='gridoptimization', limit=max_limit, skip=skip)
+        ret = mongo_storage.get_procedures(procedure='gridoptimization', status=None, limit=max_limit, skip=skip)
         mongo_res= ret['data']
         print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
 
         # check if this patch has been already stored
-        if is_mapped(sql_storage, GridOptizationMap, mongo_res[-1]['id']):
+        if is_mapped(sql_storage, ProcedureMap, mongo_res[-1]['id']):
             print('Skipping first ', skip+max_limit)
             continue
 
         # load mapped ids in memory
         mongo_res = get_ids_map(sql_storage, ['stdout', 'stderr', 'error'], KVStoreMap, mongo_res)
         mongo_res = get_ids_map(sql_storage, ['initial_molecule', 'starting_molecule'], MoleculeMap, mongo_res)
-        mongo_res = get_ids_map(sql_storage, ['grid_optimizations'], OptimizationMap, mongo_res)
+        mongo_res = get_ids_map(sql_storage, ['grid_optimizations'], ProcedureMap, mongo_res)
 
         results_py = [GridOptimizationRecord(**res) for res in mongo_res]
         sql_insered = sql_storage.add_procedures(results_py)['data']
@@ -361,11 +393,11 @@ def copy_grid_optimization_procedure(mongo_storage, sql_storage, max_limit, with
 
         # store the ids mapping in the sql DB
         mongo_ids = [obj['id'] for obj in mongo_res]
-        store_ids_map(sql_storage, mongo_ids, sql_insered, GridOptizationMap)
+        store_ids_map(sql_storage, mongo_ids, sql_insered, ProcedureMap)
 
         if with_check:
             with sql_storage.session_scope() as session:
-                proc = session.query(GridOptizationMap).filter_by(mongo_id=mongo_res[0]['id']).first().sql_id
+                proc = session.query(ProcedureMap).filter_by(mongo_id=mongo_res[0]['id']).first().sql_id
 
             ret = sql_storage.get_procedures(id=[proc])
             print('Get from SQL:', ret['data'])
@@ -378,8 +410,72 @@ def copy_grid_optimization_procedure(mongo_storage, sql_storage, max_limit, with
             print(ret2['data'][0]['grid_optimizations'])
             print(ret['data'][0]['grid_optimizations'])
 
-
     print('---- Done copying Grid Optmization procedures\n\n')
+
+
+def copy_task_queue(mongo_storage, sql_storage, max_limit, with_check=False):
+    """Copy from mongo to sql"""
+
+    total_count = mongo_storage.get_total_count(TaskQueueORM)
+    print('-----Total # of Tasks in the DB is: ', total_count)
+
+    for skip in range(0, total_count, max_limit):
+
+        print('\nCurrent skip={}\n-----------'.format(skip))
+        ret = mongo_storage.get_queue(limit=max_limit, skip=skip)
+        mongo_res= ret['data']
+        print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
+
+        # check if this patch has been already stored
+        if is_mapped(sql_storage, TaskQueueMap, mongo_res[-1].id):
+            print('Skipping first ', skip+max_limit)
+            continue
+
+        results_ids_map, procedures_ids_map = [], []
+        for res in mongo_res:
+            if res.base_result.ref == 'result':
+                results_ids_map.append(res.base_result.id)
+            else:
+                procedures_ids_map.append(res.base_result.id)
+
+        with sql_storage.session_scope() as session:
+            objs = session.query(ResultMap).filter(ResultMap.mongo_id.in_(set(results_ids_map))).all()
+            assert len(objs) == len(set(results_ids_map))
+            results_ids_map = {i.mongo_id:i.sql_id for i in objs}
+
+            objs = session.query(ProcedureMap).filter(ProcedureMap.mongo_id.in_(set(procedures_ids_map))).all()
+            assert len(objs) == len(set(procedures_ids_map))
+            procedures_ids_map = {i.mongo_id:i.sql_id for i in objs}
+
+        # replace mongo ids Results with sql
+        for res in mongo_res:
+            if res.base_result.ref == 'result':
+                res.base_result.id = results_ids_map[res.base_result.id]
+            else:
+                res.base_result.id = procedures_ids_map[res.base_result.id]
+
+        sql_insered = sql_storage._copy_task_to_queue(mongo_res)['data']
+        print('Inserted in SQL:', len(sql_insered))
+
+        # store the ids mapping in the sql DB
+        mongo_ids = [obj.id for obj in mongo_res]
+        store_ids_map(sql_storage, mongo_ids, sql_insered, TaskQueueMap)
+
+        if with_check:
+            with sql_storage.session_scope() as session:
+                mongo_task = mongo_storage.get_queue(id=[mongo_res[0].id])['data'][0]
+
+                task_sql_id = session.query(TaskQueueMap).filter_by(mongo_id=mongo_res[0].id).first().sql_id
+                sql_task = sql_storage.get_queue(id=[task_sql_id])['data'][0]
+                print('Get from SQL:', sql_task)
+
+                mongo_base_result_id = mongo_task.base_result.id
+                className = ResultMap if mongo_task.base_result.ref == 'result' else ProcedureMap
+                sql_base_result_id_mapped = session.query(className.sql_id).filter_by(mongo_id=mongo_base_result_id).first()[0]
+
+                assert str(sql_base_result_id_mapped) == sql_task.base_result.id
+
+    print('---- Done copying Task Queue\n\n')
 
 
 def main():
@@ -410,10 +506,13 @@ def main():
     copy_molecules(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
     copy_keywords(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
     copy_kv_store(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
+    copy_managers(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
     copy_results(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
     copy_optimization_procedure(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
     copy_torsiondrive_procedure(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
     copy_grid_optimization_procedure(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
+    copy_task_queue(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
+
 
 if __name__ == "__main__":
     main()

@@ -276,6 +276,8 @@ def test_queue_ordering_time(fractal_compute_server):
     ret1 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol1).ids[0]
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
 
+    fractal_compute_server.storage.manager_update('manager')
+
     assert len(fractal_compute_server.storage.queue_get_next("manager", [], [], limit=1)) == 0
 
     queue_id1 = fractal_compute_server.storage.queue_get_next("manager", ["rdkit"], [], limit=1)[0].base_result.id
@@ -297,6 +299,8 @@ def test_queue_ordering_priority(fractal_compute_server):
     ret1 = client.add_compute("rdkit", "uff", "", "energy", None, mol1).ids[0]
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2, priority="high").ids[0]
     ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3, priority="HIGH").ids[0]
+
+    fractal_compute_server.storage.manager_update('manager')
 
     queue_id1 = fractal_compute_server.storage.queue_get_next("manager", ["rdkit"], [], limit=1)[0].base_result.id
     queue_id2 = fractal_compute_server.storage.queue_get_next("manager", ["RDkit"], [], limit=1)[0].base_result.id
