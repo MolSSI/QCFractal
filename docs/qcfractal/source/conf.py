@@ -48,9 +48,9 @@ release = qcfractal.__version__
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'sphinx.ext.doctest',
-    'sphinx.ext.todo',
-    'sphinx.ext.coverage',
+#    'sphinx.ext.doctest',
+#    'sphinx.ext.todo',
+#    'sphinx.ext.coverage',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
@@ -58,6 +58,7 @@ extensions = [
     'sphinx.ext.extlinks',
     'sphinx_automodapi.automodapi',
     'sphinx_automodapi.automodsumm',
+    'nbsphinx'
 ]
 
 napoleon_google_docstring = False
@@ -218,10 +219,11 @@ extlinks = {
 # -- Keywords for intersphinx extension ---------------------------------------
 
 # Example configuration for intersphinx: refer to the Python standard library.
-intersphinx_mapping = {'python': ('https://docs.python.org/3.7', None),
-                       'numpy': ('https://docs.scipy.org/doc/numpy/', None),
-                       'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
-                       'matplotlib': ('https://matplotlib.org/', None),
+intersphinx_mapping = {
+                       # 'python': ('https://docs.python.org/3.7', None),
+                       # 'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+                       # 'scipy': ('https://docs.scipy.org/doc/scipy/reference/', None),
+                       # 'matplotlib': ('https://matplotlib.org/', None),
                        'qcelemental': ('https://qcelemental.readthedocs.io/en/latest/', None),
                        'qcengine': ('https://qcengine.readthedocs.io/en/latest/', None),
                       }
@@ -230,3 +232,5 @@ intersphinx_mapping = {'python': ('https://docs.python.org/3.7', None),
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+html_context = {'extra_js_files': ["https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"]}

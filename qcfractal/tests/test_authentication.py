@@ -76,7 +76,7 @@ def test_security_auth_decline_none(sec_server):
 
 
 def test_security_auth_bad_ssl(sec_server):
-    with pytest.raises(requests.exceptions.SSLError) as excinfo:
+    with pytest.raises(ConnectionError) as excinfo:
         client = ptl.FractalClient.from_file({
             "address": sec_server.get_address(),
             "username": "read",

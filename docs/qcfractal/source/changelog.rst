@@ -54,7 +54,7 @@ Enhancements
   ``get_final_results``, which is like ``get_final_molecules``, but for x
 - (:pr:`241`) The visualization suite with Plotly has been made more general so it can be invoked in different classes.
   This particular PR updates the TorsionDriveDataSet objects.
-- (:pr:`243) TorsionDrives in Fractal now support the updated Torsion Drive API from the underlying package. This
+- (:pr:`243`) TorsionDrives in Fractal now support the updated Torsion Drive API from the underlying package. This
   includes both the new arguments and the "extra constraints" features.
 - (:pr:`244`) Tasks which fail are now more verbose in the log as to why they failed. This is additional information
   on top of the number of pass/fail.

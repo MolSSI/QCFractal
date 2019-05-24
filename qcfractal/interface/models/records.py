@@ -5,6 +5,7 @@ A model for TorsionDrive
 import abc
 import datetime
 import json
+import numpy as np
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Union
 
@@ -13,6 +14,7 @@ from pydantic import BaseModel, constr, validator
 
 from .common_models import DriverEnum, ObjectId, QCSpecification
 from .model_utils import hash_dictionary, json_encoders, prepare_basis, recursive_normalizer
+from ..visualization import scatter_plot
 
 __all__ = ["OptimizationRecord", "ResultRecord", "OptimizationRecord"]
 
@@ -111,6 +113,7 @@ class RecordBase(BaseModel, abc.ABC):
         if self.client is None:
             raise ValueError("Requested method requires a client, but client was '{}'.".format(self.client))
 
+
 ### KVStore Getters
 
     def _kvstore_getter(self, field_name):
@@ -163,6 +166,7 @@ class RecordBase(BaseModel, abc.ABC):
         else:
             return value
 
+
 class ResultRecord(RecordBase):
 
     # Classdata
@@ -194,10 +198,11 @@ class ResultRecord(RecordBase):
     def check_basis(cls, v):
         return prepare_basis(v)
 
+
 ## QCSchema constructors
 
-    def build_schema_input(self, molecule: 'Molecule', keywords: Optional['KeywordsSet']=None,
-                           checks: bool=True) -> 'ResultInput':
+    def build_schema_input(self, molecule: 'Molecule', keywords: Optional['KeywordsSet'] = None,
+                           checks: bool = True) -> 'ResultInput':
         """
         Creates a OptimizationInput schema.
         """
@@ -216,11 +221,15 @@ class ResultRecord(RecordBase):
         else:
             keywords = keywords.values
 
-        model = qcel.models.ResultInput(
-            id=self.id, driver=self.driver.name, model=model, molecule=molecule, keywords=keywords, extras=self.extras)
+        model = qcel.models.ResultInput(id=self.id,
+                                        driver=self.driver.name,
+                                        model=model,
+                                        molecule=molecule,
+                                        keywords=keywords,
+                                        extras=self.extras)
         return model
 
-    def consume_output(self, data: Dict[str, Any], checks: bool=True):
+    def consume_output(self, data: Dict[str, Any], checks: bool = True):
         assert self.method == data["model"]["method"]
 
         # Result specific
@@ -273,8 +282,8 @@ class OptimizationRecord(RecordBase):
 
     def build_schema_input(self,
                            initial_molecule: 'Molecule',
-                           qc_keywords: Optional['KeywordsSet']=None,
-                           checks: bool=True) -> 'OptimizationInput':
+                           qc_keywords: Optional['KeywordsSet'] = None,
+                           checks: bool = True) -> 'OptimizationInput':
         """
         Creates a OptimizationInput schema.
         """
@@ -287,14 +296,14 @@ class OptimizationRecord(RecordBase):
         qcinput_spec = self.qc_spec.form_schema_object(keywords=qc_keywords, checks=checks)
         qcinput_spec.pop("program", None)
 
-        model = qcel.models.OptimizationInput(
-            id=self.id,
-            initial_molecule=initial_molecule,
-            keywords=self.keywords,
-            extras=self.extras,
-            hash_index=self.hash_index,
-            input_specification=qcinput_spec)
+        model = qcel.models.OptimizationInput(id=self.id,
+                                              initial_molecule=initial_molecule,
+                                              keywords=self.keywords,
+                                              extras=self.extras,
+                                              hash_index=self.hash_index,
+                                              input_specification=qcinput_spec)
         return model
+
 
 ## Standard function
 
@@ -337,3 +346,42 @@ class OptimizationRecord(RecordBase):
 
         ret = self.client.query_molecules(id=[self.final_molecule])
         return ret[0]
+
+    def show_history(self,
+                     units: str = "kcal/mol",
+                     digits: int = 3,
+                     relative: bool = True,
+                     return_figure: Optional[bool] = None) -> 'plotly.Figure':
+
+        cf = qcel.constants.conversion_factor("hartree", units)
+
+        energies = np.array(self.energies)
+        if relative:
+            energies = energies - np.min(energies)
+
+        trace = {
+            "mode": "lines+markers",
+            "x": list(range(1,
+                            len(energies) + 1)),
+            "y": np.around(energies * cf, digits)
+        }
+
+        if relative:
+            ylabel = f"Relative Energy [{units}]"
+        else:
+            ylabel = f"Absolute Energy [{units}]"
+
+        custom_layout = {
+            "title": "Geometry Optimization",
+            "yaxis": {
+                "title": ylabel,
+                "zeroline": True
+            },
+            "xaxis": {
+                "title": "Optimization Step",
+                # "zeroline": False,
+                "range": [min(trace["x"]), max(trace["x"])]
+            }
+        }
+
+        return scatter_plot([trace], custom_layout=custom_layout, return_figure=return_figure)

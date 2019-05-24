@@ -8,20 +8,19 @@ import logging
 import ssl
 import time
 import traceback
+from typing import Any, Dict, List, Optional, Union
 
 import tornado.ioloop
 import tornado.log
 import tornado.options
 import tornado.web
 
-from typing import Any, Dict, List, Optional, Union
-
 from .extras import get_information
 from .interface import FractalClient
 from .queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, TaskQueueHandler
 from .services import construct_service
 from .storage_sockets import storage_socket_factory
-from .web_handlers import (CollectionHandler, InformationHandler, KVStoreHandler, MoleculeHandler, KeywordHandler,
+from .web_handlers import (CollectionHandler, InformationHandler, KeywordHandler, KVStoreHandler, MoleculeHandler,
                            ProcedureHandler, ResultHandler)
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -510,6 +509,13 @@ class FractalServer:
         """
 
         return self.storage.get_managers(status=status, name=name)["data"]
+
+    def client(self):
+        """
+        Builds a client from this server.
+        """
+
+        return FractalClient(self)
 
 ### Functions only available if using a local queue_adapter
 

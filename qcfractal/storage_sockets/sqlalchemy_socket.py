@@ -4,7 +4,7 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 
 
 try:
-    import sqlalchemy # lgtm [py/import-and-import-from]
+    import sqlalchemy # lgtm [py/unused-import]
 except ImportError:
     raise ImportError(
         "SQLAlchemy_socket requires sqlalchemy, please install this python "
@@ -1169,9 +1169,7 @@ class SQLAlchemySocket:
             className = BaseResultORM   # all classes, including those with 'selectin'
             program = None  # make sure it's not used
             if id is None:
-                self.logger.error('Procedure type not specified({}), and ID is not given. '
-                                  'Query include: Id={}, program={}.'
-                                  .format(procedure, id, task_id, program))
+                self.logger.error(f'Procedure type not specified({procedure}), and ID is not given.')
                 raise KeyError('ID is required if procedure type is not specified.')
 
 

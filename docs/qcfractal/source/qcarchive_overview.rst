@@ -25,13 +25,14 @@ concert can be seen below:
 1) QCPortal
 ++++++++++++
 
-- GitHub: |QCPortalBadge|_
+.. image:: https://img.shields.io/github/stars/MolSSI/QCPortal.svg?style=social&label=Stars
+   :width: 100px
+   :align: center
+   :target: https://github.com/MolSSI/QCPortal
+
 - Hardware: Laptop
 - Actor: User
 - Primary Developer: MolSSI
-
-.. |QCPortalBadge| image:: https://img.shields.io/github/stars/MolSSI/QCPortal.svg?style=social&label=Stars
-.. _QCPortalBadge: https://github.com/MolSSI/QCPortal
 
 QCPortal provides a Python-based user front-end experience for users who are
 interested in exploring data and executing new tasks. Exploration of computed
@@ -42,32 +43,32 @@ simultaneously. Querying of data and submission of new tasks occurs over the
 QCFractal REST API.
 
 
-
 2) QCFractal
 ++++++++++++
 
-- GitHub: |QCFractalBadge|_
+.. image:: https://img.shields.io/github/stars/MolSSI/QCFractal.svg?style=social&label=Stars
+   :width: 100px
+   :align: center
+   :target: https://github.com/MolSSI/QCFractal
+
 - Hardware: Persistent Server
 - Actor: Power User
 - Primary Developer: MolSSI
 
-.. |QCFractalBadge| image:: https://img.shields.io/github/stars/MolSSI/QCFractal.svg?style=social&label=Stars
-.. _QCFractalBadge: https://github.com/MolSSI/QCFractal
-
 QCFractal is the primary persistent server that QCPortal communicates with and has several main duties:
 
- - Maintain a database of all completed quantum chemistry results along with metadata that forms higher-level collections of results.
- - Maintain a compute queue of all requested and completed tasks. Where each task is a single quantum chemistry result.
- - Submit new tasks to distributed workflow engines and insert complete results into the database.
- - Maintain high level compute workflows via the "Services" feature.
+- Maintain a database of all completed quantum chemistry results along with metadata that forms higher-level collections of results.
+- Maintain a compute queue of all requested and completed tasks. Where each task is a single quantum chemistry result.
+- Submit new tasks to distributed workflow engines and insert complete results into the database.
+- Maintain high level compute workflows via the "Services" feature.
 
 
 3) Distributed Compute
 ++++++++++++++++++++++
 
- - Hardware: Persistent Server/Supercomputer
- - Actor: Power User
- - Primary Developer: Scientific and HPC Communities
+- Hardware: Persistent Server/Supercomputer
+- Actor: Power User
+- Primary Developer: Scientific and HPC Communities
 
 The QCArchive project relies on a number of distributed compute workflow
 engines to enable a large variety of compute workloads. QCFractal will
@@ -78,14 +79,14 @@ implementation details of the individual tools.
 
 Current distributed compute backends are:
 
- - `Dask Distributed <http://dask.pydata.org>`_ - Multi-node task graph schedular built in Python.
- - `Fireworks <https://materialsproject.github.io/fireworks/>`_ - Multi-site task schedular built in Python with a central MongoDB server.
+- `Dask Distributed <http://dask.pydata.org>`_ - Multi-node task graph schedular built in Python.
+- `Fireworks <https://materialsproject.github.io/fireworks/>`_ - Multi-site task schedular built in Python with a central MongoDB server.
 
 Pending backend implementations include:
 
- - `RADICAL Cybertools <https://radical-cybertools.github.io>`_ - Distributed task scheduler built for DOE and NSF compute resources.
- - `BOINC <http://boinc.berkeley.edu>`_ - High throughput volunteer computing task manager.
- - `Balsam <https://balsam.alcf.anl.gov>`_ - Task manager for a single compute resource (supercomputer) with tasks pulled from a central server.
+- `RADICAL Cybertools <https://radical-cybertools.github.io>`_ - Distributed task scheduler built for DOE and NSF compute resources.
+- `BOINC <http://boinc.berkeley.edu>`_ - High throughput volunteer computing task manager.
+- `Balsam <https://balsam.alcf.anl.gov>`_ - Task manager for a single compute resource (supercomputer) with tasks pulled from a central server.
 
 The compute workers of each of these tools is executed in different ways.
 However, in each case the compute workers will distribute QCSchema_ inputs,
@@ -94,35 +95,36 @@ call QCEngine, and receive a QCSchema_ output.
 4) QCEngine
 ++++++++++++
 
-- GitHub: |QCEngineBadge|_
+.. image:: https://img.shields.io/github/stars/MolSSI/QCEngine.svg?style=social&label=Stars
+   :width: 100px
+   :align: center
+   :target: https://github.com/MolSSI/QCEngine
+
 - Hardware: Local Cluster, Supercomputer, or Cloud Compute
 - Actor: Power User
-
-.. |QCEngineBadge| image:: https://img.shields.io/github/stars/MolSSI/QCEngine.svg?style=social&label=Stars
-.. _QCEngineBadge: https://github.com/MolSSI/QCEngine
 
 QCEngine is a stateless, lightweight wrapper around Quantum Chemistry programs
 so that these programs consistently accept and emit QCSchema_. Depending on
 the underlying program QCEngine provides this uniform interface by either:
 
- 1) Calling the QCSchema_ IO functions that individual program have implemented.
- 2) Calling the Python-API of the program and modifying the input/output according to the QCSchema_.
- 3) Writing a ASCII input file based on the input QCSchema_, running the program, and parsing an ASCII output file into the QCSchema_.
+1) Calling the QCSchema_ IO functions that individual program have implemented.
+2) Calling the Python-API of the program and modifying the input/output according to the QCSchema_.
+3) Writing a ASCII input file based on the input QCSchema_, running the program, and parsing an ASCII output file into the QCSchema_.
 
 
 QCEngine also keeps track of the provenance of each task. This includes:
 
- - A description of the hardware used (CPU, GPU, memory, etc).
- - The total compute time and resources allocated to the run.
- - The function and version of the program called.
+- A description of the hardware used (CPU, GPU, memory, etc).
+- The total compute time and resources allocated to the run.
+- The function and version of the program called.
 
 
 5) 3rd Party Services
 +++++++++++++++++++++
 
- - Hardware: Laptop
- - Actor: User/Power User
- - Primary Developer: Computational Molecular Sciences Community
+- Hardware: Laptop
+- Actor: User/Power User
+- Primary Developer: Computational Molecular Sciences Community
 
 The QCFractal API is expected to have additional services attached by 3rd
 parties. These services can range from cross-reference data services to user

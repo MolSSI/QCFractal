@@ -9,7 +9,7 @@ from .storage_sockets import storage_socket_factory
 
 # Handle top level object imports
 from .server import FractalServer
-from .snowflake import FractalSnowflake
+from .snowflake import FractalSnowflake, FractalSnowflakeHandler
 from .queue import QueueManager
 
 # Handle versioneer
