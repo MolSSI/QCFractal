@@ -1866,7 +1866,7 @@ class SQLAlchemySocket:
                     manager_names.append(doc.name)
                     meta['n_inserted'] += 1
                 else:
-                    id = doc.first().name
+                    name = doc.first().name
                     meta['duplicates'].append(name)  # TODO
                     # If new or duplicate, add the id to the return list
                     manager_names.append(id)
@@ -2009,6 +2009,43 @@ class SQLAlchemySocket:
                                           .delete(synchronize_session=False)
 
         return count == 1
+
+    def _copy_users(self, record_list: Dict):
+        """
+        copy the given users as-is to the DB. Used for data migration
+
+        Parameters
+        ----------
+        record_list : list of dict of managers data
+
+        Returns
+        -------
+            Dict with keys: data, meta
+            Data is the ids of the inserted/updated/existing docs
+        """
+
+        meta = add_metadata_template()
+
+        user_names = []
+        with self.session_scope() as session:
+            for user in record_list:
+                doc = session.query(UserORM).filter_by(username=user['username'])
+
+                if get_count_fast(doc) == 0:
+                    doc = UserORM(**user)
+                    doc.password = doc.password.encode('ascii')
+                    session.add(doc)
+                    session.commit()
+                    user_names.append(doc.username)
+                    meta['n_inserted'] += 1
+                else:
+                    name = doc.first().username
+                    meta['duplicates'].append(name)
+                    user_names.append(name)
+        meta["success"] = True
+
+        ret = {"data": user_names, "meta": meta}
+        return ret
 
     def check_lib_versions(self):
         """Check the stored versions of elemental and fractal"""

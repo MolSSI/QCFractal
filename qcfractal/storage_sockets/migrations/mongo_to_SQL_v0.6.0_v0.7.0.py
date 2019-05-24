@@ -7,7 +7,7 @@ SQL DB in version 0.7.0
 import argparse
 from qcfractal.storage_sockets import storage_socket_factory
 from qcfractal.storage_sockets.me_models import (MoleculeORM, KeywordsORM, KVStoreORM, ResultORM,
-                                                 ProcedureORM, TaskQueueORM, QueueManagerORM)
+                                                 ProcedureORM, TaskQueueORM, QueueManagerORM, UserORM)
 from qcfractal.storage_sockets.sql_models import (MoleculeMap, KeywordsMap, KVStoreMap, ResultMap,
                                                   ProcedureMap, TaskQueueMap)
 from qcfractal.interface.models import (KeywordSet, ResultRecord, OptimizationRecord,
@@ -192,6 +192,27 @@ def copy_kv_store(mongo_storage, sql_storage, max_limit, with_check=False):
 
     print('---- Done copying KV_store\n\n')
 
+
+def copy_users(mongo_storage, sql_storage, max_limit, with_check=False):
+    """Copy from mongo to sql"""
+
+    total_count = mongo_storage.get_total_count(UserORM)
+    print('-----Total # of Users in the DB is: ', total_count)
+
+
+    mongo_res = mongo_storage._get_users()
+    print('mongo results returned:  total: ', len(mongo_res))
+
+    for user in mongo_res:
+        user['password'] = user['password']['$binary']
+
+    sql_insered = sql_storage._copy_users(mongo_res)['data']
+    print('Inserted in SQL:', len(sql_insered))
+
+
+    print('---- Done copying Users\n\n')
+
+
 def copy_managers(mongo_storage, sql_storage, max_limit, with_check=False):
     """Copy from mongo to sql"""
 
@@ -203,19 +224,12 @@ def copy_managers(mongo_storage, sql_storage, max_limit, with_check=False):
     mongo_res= ret['data']
     print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
 
-    # # check if this patch has been already stored
-    # if is_mapped(sql_storage, QueueManagerMap, mongo_res[-1]['name']):
-    #     print('Skipping')
-    #     return
 
     sql_insered = sql_storage._copy_managers(mongo_res)['data']
     print('Inserted in SQL:', len(sql_insered))
 
-    # store the ids mapping in the sql DB
-    # mongo_names = [obj['name'] for obj in mongo_res]  # Name not id
-    # store_ids_map(sql_storage, mongo_names, sql_insered, QueueManagerMap)
 
-    if with_check:
+    if with_check and len(mongo_res):
 
         ret = sql_storage.get_managers(name=[mongo_res[0]['name']])
         print('Get from SQL:', ret['data'])
@@ -506,6 +520,7 @@ def main():
     copy_molecules(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
     copy_keywords(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
     copy_kv_store(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
+    copy_users(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
     copy_managers(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
     copy_results(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
     copy_optimization_procedure(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])

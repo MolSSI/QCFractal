@@ -1694,6 +1694,12 @@ class MongoengineSocket:
         """
         return UserORM.objects(username=username).delete() == 1
 
+    def _get_users(self):
+
+        data = UserORM.objects()
+
+        return [x.to_json_obj(with_id=False) for x in data]
+
     def get_total_count(self, className, **kwargs):
 
         return className.objects(**kwargs).count()
