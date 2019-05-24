@@ -12,6 +12,15 @@ bad_id1 = "000000000000000000000000"
 bad_id2 = "000000000000000000000001"
 
 
+def get_manager(fractal_compute_server):
+
+    manager = fractal_compute_server.storage.get_managers()['data']
+    if len(manager) == 0:
+        fractal_compute_server.storage.manager_update('test manager')
+        return 'test manager'
+    else:
+        return manager[0]['name']
+
 @pytest.mark.parametrize("data", [
     pytest.param(("psi4", "HF", "sto-3g"), id="psi4", marks=using_psi4),
     pytest.param(("rdkit", "UFF", None), id="rdkit", marks=using_rdkit)
@@ -276,12 +285,12 @@ def test_queue_ordering_time(fractal_compute_server):
     ret1 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol1).ids[0]
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
 
-    fractal_compute_server.storage.manager_update('manager')
+    manager = get_manager(fractal_compute_server)
 
-    assert len(fractal_compute_server.storage.queue_get_next("manager", [], [], limit=1)) == 0
+    assert len(fractal_compute_server.storage.queue_get_next(manager, [], [], limit=1)) == 0
 
-    queue_id1 = fractal_compute_server.storage.queue_get_next("manager", ["rdkit"], [], limit=1)[0].base_result.id
-    queue_id2 = fractal_compute_server.storage.queue_get_next("manager", ["rdkit"], [], limit=1)[0].base_result.id
+    queue_id1 = fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], [], limit=1)[0].base_result.id
+    queue_id2 = fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], [], limit=1)[0].base_result.id
 
     assert queue_id1 == ret1
     assert queue_id2 == ret2
@@ -300,11 +309,11 @@ def test_queue_ordering_priority(fractal_compute_server):
     ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2, priority="high").ids[0]
     ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3, priority="HIGH").ids[0]
 
-    fractal_compute_server.storage.manager_update('manager')
+    manager = get_manager(fractal_compute_server)
 
-    queue_id1 = fractal_compute_server.storage.queue_get_next("manager", ["rdkit"], [], limit=1)[0].base_result.id
-    queue_id2 = fractal_compute_server.storage.queue_get_next("manager", ["RDkit"], [], limit=1)[0].base_result.id
-    queue_id3 = fractal_compute_server.storage.queue_get_next("manager", ["RDKIT"], [], limit=1)[0].base_result.id
+    queue_id1 = fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], [], limit=1)[0].base_result.id
+    queue_id2 = fractal_compute_server.storage.queue_get_next(manager, ["RDkit"], [], limit=1)[0].base_result.id
+    queue_id3 = fractal_compute_server.storage.queue_get_next(manager, ["RDKIT"], [], limit=1)[0].base_result.id
 
     assert queue_id1 == ret2
     assert queue_id2 == ret3
@@ -335,16 +344,18 @@ def test_queue_order_procedure_priority(fractal_compute_server):
     ret2 = client.add_procedure("OPTIMIZATION", "geometric", geometric_options, [mol2], priority="high").ids[0]
     ret3 = client.add_procedure("OPTimization", "GEOmetric", geometric_options, [mol3], priority="HIGH").ids[0]
 
-    assert len(fractal_compute_server.storage.queue_get_next("manager", ["rdkit"], [], limit=1)) == 0
-    assert len(fractal_compute_server.storage.queue_get_next("manager", ["rdkit"], ["geom"], limit=1)) == 0
-    assert len(fractal_compute_server.storage.queue_get_next("manager", ["prog1"], ["geometric"], limit=1)) == 0
+    manager = get_manager(fractal_compute_server)
+
+    assert len(fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], [], limit=1)) == 0
+    assert len(fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], ["geom"], limit=1)) == 0
+    assert len(fractal_compute_server.storage.queue_get_next(manager, ["prog1"], ["geometric"], limit=1)) == 0
 
     queue_id1 = fractal_compute_server.storage.queue_get_next(
-        "manager", ["rdkit"], ["geometric"], limit=1)[0].base_result.id
+        manager, ["rdkit"], ["geometric"], limit=1)[0].base_result.id
     queue_id2 = fractal_compute_server.storage.queue_get_next(
-        "manager", ["RDKIT"], ["geometric"], limit=1)[0].base_result.id
+        manager, ["RDKIT"], ["geometric"], limit=1)[0].base_result.id
     queue_id3 = fractal_compute_server.storage.queue_get_next(
-        "manager", ["rdkit"], ["GEOMETRIC"], limit=1)[0].base_result.id
+        manager, ["rdkit"], ["GEOMETRIC"], limit=1)[0].base_result.id
 
     assert queue_id1 == ret2
     assert queue_id2 == ret3
