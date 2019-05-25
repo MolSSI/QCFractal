@@ -12,9 +12,9 @@ Fractal supports the following:
 - `Pool` - A python `ProcessPoolExecutor` for computing tasks on a single machine (or node).
 - `Dask <http://dask.pydata.org/en/latest/docs.html>`_ - A graph-based workflow engine for laptops and small clusters.
 - `Parsl <http://parsl-project.org>`_ - High-performance workflows.
-- `Fireworks <https://materialsproject.github.io/fireworks/>`_ - A asynchronous Mongo-based distributed queuing system.
+- `Fireworks <https://materialsproject.github.io/fireworks/>`_ - An asynchronous Mongo-based distributed queuing system.
 
-These backends allow Fractal to be incredibly elastic in utilized
+These backends allow Fractal to be incredibly elastic in utilizing
 computational resources, scaling from a single laptop to thousands of nodes on
 physically separate hardware. Our end goal is to be able to setup a manager at
 a physical site and allow it to scale up and down as its task queue requires
@@ -189,7 +189,7 @@ help block.
 Terminology
 -----------
 
-There are a number of terms which can overlap in due to the layers of abstraction and the type of software and hardware
+There are a number of terms which can overlap due to the layers of abstraction and the type of software and hardware
 the Queue Manager interacts with. To help with that, the pages in this section will use the terminology defined below.
 Several pieces of software we interface with may have their own terms or the same term with different meaning, but
 because one goal of the Manager is to abstract those concepts away as best it can, we choose the following set. If

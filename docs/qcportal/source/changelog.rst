@@ -15,21 +15,14 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
-0.7.0 / 2019-05-??
+0.7.0 / 2019-05-27
 ------------------
-
-.. warning:: Final MongoDB Supported Release
-
-    **This is the last major release which support MongoDB.** Fractal is moving towards a PostgreSQL for database to
-    make upgrades more stable and because it is more suited to the nature of QCArchive Data. The upgrade path for
-    MongoDB -> PostgreSQL will be provided by the Fractal developers in the next release. This first one will likely
-    be a bit manual in th form of scripts, but afterwords will be engineered to be more automatic and documented.
 
 New Features
 ++++++++++++
 
-- (:pr:`206`, :pr:`249`) SQL Database is now feature complete and implemented. As final testing in production is
-  continued, MongoDB will be phased out in the future.
+- (:pr:`206`, :pr:`249`, :pr:`264`, :pr:`267`) SQL Database is now feature complete and implemented. As final testing in
+  production is continued, MongoDB will be phased out in the future.
 - (:pr:`242`) Parsl can now be used as an ``Adapter`` in the Queue Managers.
 - (:pr:`247`) The new ``OptimizationDataset`` collection has been added! This collection returns a set of optimized
   molecular structures given an initial input.
@@ -38,6 +31,8 @@ New Features
 - (:pr:`260`) Its now even easier to install Fractal/Portal through conda with pre-built environments on the
   ``qcarchive`` conda channel. This channel only provides environment files, no packages (and there are not plans to
   do so.)
+- (:pr:`269`) The Fractal Snowflake project has been extended to work in Jupyter Notebooks. A Fractal Snowflake can
+  be created with the ``FractalSnowflakeHandler`` inside of a Jupyter Session.
 
 Database Compatibility Updates
 ++++++++++++++++++++++++++++++
@@ -63,9 +58,11 @@ Enhancements
 - (:pr:`247`) Procedure classes now all derive from a common base class to be more consistent with one another and
   for any new Procedures going forward.
 - (:pr:`248`) Jobs which fail, or cannot be returned correctly, from Queue Managers are now better handled in the
-  Manager and don't sit in the Queue Manager's internal buffer. They will attempt to be returned to the Server on later
-  updates. If too many jobs become stale, the Queue Manager will shut itself down for safety.
-- (:pr:`258`) Fractal's Queue Managers are now fully documented, both from the CLI and through the doc pages themselves.
+  Manager and don't sit in the Manager's internal buffer. They will attempt to be returned to the Server on later
+  updates. If too many jobs become stale, the Manager will shut itself down for safety.
+- (:pr:`258` and :pr:`268`) Fractal Queue Managers are now fully documented, both from the CLI and through the doc pages
+  themselves. There have also been a few variables renamed and moved to be more clear the nature of what they do.
+  See the PR for the renamed variables.
 - (:pr:`251`) The Fractal Server now reports valid minimum/maximum allowed client versions. The Portal Client will try
   check these numbers against itself and fail to connect if it is not within the Server's allowed ranges. Clients
   started from Fractal's ``interface`` do not make this check.
@@ -77,6 +74,8 @@ Bug Fixes
   parsed correctly.
 - (:pr:`250`) Record objects now correctly set their provenance time on object creation, not module import.
 - (:pr:`253`) A spelling bug was fixed in GridOptimization which caused hashing to not be processed correctly.
+- (:pr:`270`) LSF clusters not in ``MB`` for the units on memory by config are now auto-detected (or manually set)
+  without large workarounds in the YAML file and the CLI file itself. Supports documented settings of LSF 9.1.3.
 
 0.6.0 / 2019-03-30
 ------------------

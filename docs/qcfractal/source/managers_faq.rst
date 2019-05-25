@@ -34,12 +34,12 @@ Can I connect to a Fractal Server besides MolSSI's?
 
 Yes! Just change the ``server.fractal_uri`` argument.
 
-Can I connect to a more than one Fractal Server
-+++++++++++++++++++++++++++++++++++++++++++++++
+Can I connect to more than one Fractal Server
++++++++++++++++++++++++++++++++++++++++++++++
 
 Yes and No. Each :term:`Manager` can only connect to a single :term:`Fractal Server<Server>`, but
 you can start multiple managers with different config files pointing to different
-:term:`Fractal Servers<Server>`
+:term:`Fractal Servers<Server>`.
 
 How do I help contribute compute time to the MolSSI database?
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -50,7 +50,7 @@ We would love to talk to you and help get you contributing as well!
 I have this issue, here is my config file...
 ++++++++++++++++++++++++++++++++++++++++++++
 
-Great! We only ask that you please **remove the password from the config file before posting it.**
+Happy to look at it! We only ask that you please **remove the password from the config file before posting it.**
 If we see a password, we'll do our best to delete it, but
 that does not ensure someone did not see it.
 

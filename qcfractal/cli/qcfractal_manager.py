@@ -173,7 +173,7 @@ class QueueManagerSettings(BaseSettings):
     test: bool = Schema(
         False,
         description="Turn on testing mode for this Manager. The Manager will not connect to any Fractal Server, and "
-                    "instead submit netsts worth trial tasks per quantum chemistry program it finds. These tasks are "
+                    "instead submits netsts worth trial tasks per quantum chemistry program it finds. These tasks are "
                     "generated locally and do not need a running Fractal Server to work. Helpful for ensuring the "
                     "Manager is configured correctly and the quantum chemistry codes are operating as expected."
     )
@@ -235,8 +235,8 @@ class ClusterSettings(BaseSettings):
         description="Additional options which are fed into the header files for your submitted jobs to your cluster's "
                     "Scheduler/Queuing system. The directives are automatically filled in, so if you want to set "
                     "something like '#PBS -n something', you would instead just do '-n something'. Each directive "
-                    "should be a separate string entry in the list. No validation is done on this w.r.t. valid "
-                    "directives so it is on the user to know what they need to set."
+                    "should be a separate string entry in the list. No validation is done on this with respect to "
+                    "valid directives so it is on the user to know what they need to set."
     )
     task_startup_commands: List[str] = Schema(
         [],
@@ -302,10 +302,10 @@ class DaskQueueSettings(SettingsBlocker):
     `cluster.scheduler` settings. Although many values are set automatically from other settings, there are
     some additional values such as `interface` and `extra` which are passed through to the constructor.
 
-    Valid values for this field are function of your cluster.scheduler and no linting is done ahead of trying to pass
+    Valid values for this field are functions of your cluster.scheduler and no linting is done ahead of trying to pass
     these to Dask.
 
-    NOTE: The parameters listed here have are a special exception for additional features Fractal has engineered or
+    NOTE: The parameters listed here are a special exception for additional features Fractal has engineered or
     options which should be considered for some of the edge cases we have discovered. If you try to set a value
     which is derived from other options in the YAML file, an error is raised and you are told exactly which one is
     forbidden.
@@ -345,7 +345,7 @@ class ParslExecutorSettings(SettingsBlocker):
 
     https://parsl.readthedocs.io/en/latest/stubs/parsl.executors.HighThroughputExecutor.html
 
-    NOTE: The parameters listed here have are a special exception for additional features Fractal has engineered or
+    NOTE: The parameters listed here are a special exception for additional features Fractal has engineered or
     options which should be considered for some of the edge cases we have discovered. If you try to set a value
     which is derived from other options in the YAML file, an error is raised and you are told exactly which one is
     forbidden.
@@ -370,11 +370,11 @@ cli_utils.doc_formatter(ParslExecutorSettings)
 
 class ParslProviderSettings(SettingsBlocker):
     """
-    Settings for the Parsl Provider class. Valid values for this field are function of your cluster.scheduler and no
+    Settings for the Parsl Provider class. Valid values for this field are functions of your cluster.scheduler and no
     linting is done ahead of trying to pass these to Parsl.
     Please see the docs for the provider information
 
-    NOTE: The parameters listed here have are a special exception for additional features Fractal has engineered or
+    NOTE: The parameters listed here are a special exception for additional features Fractal has engineered or
     options which should be considered for some of the edge cases we have discovered. If you try to set a value
     which is derived from other options in the YAML file, an error is raised and you are told exactly which one is
     forbidden.

@@ -18,7 +18,7 @@ SLURM Cluster, Dask Adapter with additional options
 
 This example is similar to the :ref:`example on the start page for Managers<manager_starter_example>`, but with some
 additional options such as connecting back to a central Fractal instance and setting more cluster-specific options.
-Again, this starts manager with a dask :term:`Adapter`, on a SLURM cluster, consuming 1 CPU and 8 GB of ram, targeting
+Again, this starts a manager with a dask :term:`Adapter`, on a SLURM cluster, consuming 1 CPU and 8 GB of ram, targeting
 a Fractal Server running on that cluster, and using the SLURM partition ``default``, save the following YAML config
 file:
 
@@ -46,8 +46,8 @@ file:
      queue: default
 
 
-Mutiple Tasks, 1 Cluster Job
-----------------------------
+Multiple Tasks, 1 Cluster Job
+-----------------------------
 
 This example starts a max of 1 cluster :term:`Job`, but multiple :term:`tasks<Task>`. The hardware will be
 consumed uniformly by the :term:`Worker`. With 8 cores, 20 GB of memory, and 4 tasks; the :term:`Worker` will provide
@@ -83,7 +83,7 @@ will show this user has run 1 ``sbatch`` jobs which requested 4 cores and 20 GB 
 Testing the Manager Setup
 -------------------------
 
-This will test the :term:`Manager` to make sure its setup correctly, and does not need to
+This will test the :term:`Manager` to make sure it's setup correctly, and does not need to
 connect to the :term:`Server`, and therefore does not need a ``server`` block. It will still however submit
 :term:`jobs <Job>`.
 
@@ -116,7 +116,7 @@ environment, or setting some environment variables. This lets you specify that. 
 Sun Grid Engine (SGE) cluster, start a conda environment, and load a module.
 
 An important note about this one, we have now set ``max_workers`` to something larger than 1.
-Each :term:`Job` will still request 4 cores and 256 GB of memory to be evenly distributed between the
+Each :term:`Job` will still request 16 cores and 256 GB of memory to be evenly distributed between the
 4 :term:`tasks<Task>`, however, the :term:`Adapter` will **attempt to start 5 independent** :term:`jobs<Job>`, for a
 total of 80 cores, 1.280 TB of memory, distributed over 5 :term:`Workers<Worker>` collectively running 20 concurrent
 :term:`tasks<Task>`. If the :term:`Scheduler` does not
@@ -158,7 +158,7 @@ Additional Scheduler Flags
 --------------------------
 
 A :term:`Scheduler` may ask you to set additional flags (or you might want to) when submitting a :term:`Job`.
-Maybe its a Sys. Admin enforced rule, maybe you want to pull from a specific account, or set something not
+Maybe it's a Sys. Admin enforced rule, maybe you want to pull from a specific account, or set something not
 interpreted for you in the :term:`Manager` or :term:`Adapter` (do tell us though if this is the case). This
 example sets additional flags on a PBS cluster such that the final :term:`Job` launch file will have
 ``#PBS {my headers}``.
