@@ -184,7 +184,7 @@ help block.
                             up-to-date schema. It will be presented in a JSON-like
                             format.
 
-
+.. _manager_glossary:
 
 Terminology
 -----------

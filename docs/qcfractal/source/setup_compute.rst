@@ -32,7 +32,7 @@ Using the Command Line
     The CLI + YAML config file is the current recommended way to start and run
     Fractal Queue Managers
 
-At the moment only ProcessPoolExecutor ``qcfractal-manager`` can be spun up
+At the moment only ProcessPoolExecutor ``qcfractal-manager`` can be spun up purely
 from the command line as other distributed workflow managers require
 additional setup through a YAML config file.
 
@@ -70,7 +70,7 @@ The connected ``qcfractal-server`` instance can be controlled by:
 
 .. code-block:: console
 
-    $ qcfractal-manager --fractal-uri=api.qcfractal.molssi.org:80
+    $ qcfractal-manager --fractal-uri=api.qcfractal.molssi.org:443
 
 Only basic settings can be started through the CLI and most of the options require a YAML config file to get up and
 going. You can check all valid YAML options in :doc:`the Manager documentation pages<managers>` or you can always
@@ -79,6 +79,14 @@ check the current schema from the CLI with:
 .. code-block:: console
 
     $ qcfractal-manager --schema
+
+The CLI has several options which can examined with::
+
+    qcfractal-manager --help
+
+Every option specified in the CLI has an equal option in the YAML config file (except for ``--help`` and ``--schema``),
+but many YAML options are not present in the CLI due to their complex nature. Any option set in both places will
+defer to the CLI's setting, allowing you to overwrite some of the common YAML config options on invocation.
 
 
 .. note::
@@ -99,7 +107,7 @@ Using the Python API
 
     This is for advanced users and special care needs to be taken to ensure
     that both the manager and the workflow tool need to understand the number
-    of cores and memory available to prevent oversubscription of compute.
+    of cores and memory available to prevent over-subscription of compute.
 
 .. code-block:: python
 

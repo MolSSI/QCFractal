@@ -1,6 +1,11 @@
 Glossary
 ========
 
+This glossary contains the common terms which appear over the entire Fractal project. There are other, specialized
+glossaries for components of Fractal which are linked below to help group terms together with their contextual docs.
+Some terms may appear in multiple glossaries, but will always have the same meaning, e.g. :term:`Queue Adapter` and
+:term:`Adapter`.
+
 .. glossary::
     :sorted:
 
@@ -47,3 +52,9 @@ Glossary
     DB Table
       A set of data inside the Database which has a common :term:`ObjectId`. The ``table``
       name follows SQL conventions which is also known as a ``collection`` in MongoDB.
+
+
+Contextually Organized Glossaries
+---------------------------------
+
+- :ref:`Queue Manager Glossary<manager_glossary>`

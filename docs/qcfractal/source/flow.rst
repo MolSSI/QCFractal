@@ -5,8 +5,8 @@ The interface between the Portal client, the Fractal server, and the distributed
 compute resources is not something easily conveyed by text. We have created
 flowchart diagrams to help explain what happens from the time Portal invokes a
 call to Fractal, to the time that Fractal finishes handling the request.
-These diagrams are simplified to not show every procedure and middleware
-called, but instead to provide a visual aid to what is happening to help
+These diagrams are simplified to not show every routine and middleware
+call, but instead to provide a visual aid to what is happening to help
 understanding.
 
 .. _flowchart_add_compute:
