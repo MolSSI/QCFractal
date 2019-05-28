@@ -21,9 +21,10 @@ Changelog
 .. warning:: Final MongoDB Supported Release
 
     **This is the last major release which support MongoDB.** Fractal is moving towards a PostgreSQL for database to
-    make upgrades more stable and because it is more suited to the nature of QCArchive Data. The upgrade path for
-    MongoDB -> PostgreSQL will be provided by the Fractal developers in the next release. This first one will likely
-    be a bit manual in th form of scripts, but afterwords will be engineered to be more automatic and documented.
+    make upgrades more stable and because it is more suited to the nature of QCArchive Data. The upgrade path from
+    MongoDB to PostgreSQL will be provided by the Fractal developers in the next release. Due to the complex nature
+    of the upgrade, the PostgreSQL upgrade will through scripts which will be provided. After the PostgreSQL upgrade,
+    there will be built-in utilities to upgrade the Database.
 
 New Features
 ++++++++++++

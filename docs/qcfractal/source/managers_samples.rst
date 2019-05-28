@@ -123,7 +123,7 @@ total of 80 cores, 1.280 TB of memory, distributed over 5 :term:`Workers<Worker>
 allow all of those :term:`jobs<Job>` to start, whether due to lack of resources or user limits, the
 :term:`Adapter` can still start fewer :term:`jobs<Job>`, each with 16 cores and 256 GB of memory, but :term:`Task`
 concurrency will change by blocks of 4 since the :term:`Worker` in each :term:`Job` is configured to handle 4
-:term:`Tasks` each.
+:term:`tasks<Task>` each.
 
 .. code-block:: yaml
 

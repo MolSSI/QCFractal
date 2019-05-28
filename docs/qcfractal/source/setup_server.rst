@@ -10,6 +10,13 @@ and have access to permanent storage.  This location is often either research
 groups local computers, a supercomputer with  appropriately allocated
 resources for this task, or the cloud.
 
+.. note::
+
+    Fractal will use a PostgreSQL database backend instead of MongoDB in versions
+    after 0.7. Upgrade tools will be provided for converting existing Fractal server
+    instances from Mongo to SQL. These docs will be updated at that time to reflect
+    the changes as well.
+
 
 Using the Command Line
 ----------------------
@@ -55,7 +62,7 @@ Within a Python Script
 
 Canonical workflows can be run from a Python script using the ``FractalSnowflake``
 instance. With default options a ``FractalSnowflake`` will spin up a database backend
-which contains no data and then destroy this database upon shudown.
+which contains no data and then destroy this database upon shutdown.
 
 .. warning::
 
@@ -71,7 +78,7 @@ which contains no data and then destroy this database upon shudown.
     >>> client = server.client()
 
 A standard ``FractalServer`` cannot be started in a Python script and then interacted with
-as a ``FractalServer`` uses asynchronous programming by default. ``FractalServer.start`` will
+as a ``FractalServer`` uses asynchronous programming by default. ``FractalServer.stop`` will
 stop the script.
 
 

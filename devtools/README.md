@@ -12,27 +12,35 @@ You should test your code, but do not feel compelled to use these specific progr
 Windows testing if you only plan to deploy on specific platforms. These are just to help you get started
 
 * `travis-ci`: Linux and OSX based testing through [Travis-CI](https://about.travis-ci.com/) 
-  * `install.sh`: Pip/Miniconda installation script for Travis
-* `appveyor`: Windows based testing through [AppVeyor](https://www.appveyor.com/)
-  * `install_conda.ps1` Powershell installation script of Conda components
+  * `before_install.sh`: Pip/Miniconda installation script for Travis
 
-### Conda Recipe:
+### Conda Environment:
 
-This directory contains the files to build and deploy on [Conda](https://conda.io/).
+These directories contain the files to build [Conda](https://conda.io/) environments for rapid setup and testing
 
-* `conda-recipie`: directory containing all the build objects required for Conda. All files in this folder must have their given names
-  * `meta.yaml`: The yaml file needed by Conda to construct the build
-  * `build.sh`: Unix-based instructions for how to install the software interpreted by Conda
-  * `bld.bat`: Windows-based instructions for how to install the software interpreted by Conda
+* `scripts`: Helper and utility scripts kept here to keep other folders and their content within the same context
+  * `conda_env.py`: Helper script with some specific CLI flags for the `conda env` command to install Conda Environment files quickly
+* `conda-envs`: Developer environments for quickly setting up different testing and software stacks to be installed 
+  alongside Fractal. These do *not* install Fractal on their own and are expected to be used with either `setup.py develop` 
+  or `pip install -e` installs of Fractal from source.
+* `prod-envs`: End-user production install files for Fractal. These install Fractal from the Anaconda Cloud for use 
+  at production level sites. No further installations needed from these files. 
 
 
 ## How to contribute changes
-- Clone the repository if you have write access to the main repo, fork the repository if you are a collaborator.
+- Fork the repository
+  * We do not generally permit anyone make direct changes to the main QCFractal repository, even core developers. 
+    Exceptions to this rule are rare and considered on a case-by-case basis, and thus far have only been to fix
+    previous mistaken merges. 
+- Clone your fork
 - Make a new branch with `git checkout -b {your branch name}`
-- Make changes and test your code
+- Make changes and test your code (contribute new tests or modify old ones as needed)
 - Push the branch to the repo (either the main or your fork) with `git push -u origin {your branch name}`
   * Note that `origin` is the default name assigned to the remote, yours may be different
 - Make a PR on GitHub with your changes
+  * We recommend setting the `Allow edits from maintainers` tick box as it makes it easier for other maintainers to 
+    directly make changes to the PR as needed. Although not often used, it is helpful for large PR's where many commits 
+    or contributors are expected.
 - We'll review the changes and get your code into the repo after lively discussion!
 
 

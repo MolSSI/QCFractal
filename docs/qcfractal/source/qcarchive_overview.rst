@@ -67,7 +67,7 @@ QCFractal is the primary persistent server that QCPortal communicates with and h
 ++++++++++++++++++++++
 
 - Hardware: Persistent Server/Supercomputer
-- Actor: Power User
+- Actor: Power User (can be separate from the Fractal Power Users)
 - Primary Developer: Scientific and HPC Communities
 
 The QCArchive project relies on a number of distributed compute workflow
@@ -79,8 +79,9 @@ implementation details of the individual tools.
 
 Current distributed compute backends are:
 
-- `Dask Distributed <http://dask.pydata.org>`_ - Multi-node task graph schedular built in Python.
-- `Fireworks <https://materialsproject.github.io/fireworks/>`_ - Multi-site task schedular built in Python with a central MongoDB server.
+- `Dask Distributed <http://dask.pydata.org>`_ - Multi-node task graph scheduler built in Python.
+- `Parsl <http://parsl-project.org>`_ - High-performance workflows.
+- `Fireworks <https://materialsproject.github.io/fireworks/>`_ - Multi-site task scheduler built in Python with a central MongoDB server.
 
 Pending backend implementations include:
 
