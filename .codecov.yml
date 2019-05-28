@@ -1,6 +1,8 @@
 coverage:
   ignore:
     - */tests/*
+    - qcfractal/dashboard/* # early state
+    - qcfractal/migrations/* # difficult to test
     - qcfractal/_version.py
     - setup.py
   status:

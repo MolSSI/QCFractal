@@ -44,7 +44,7 @@ class PythonComputeSpec(BaseModel):
 
 class TaskRecord(BaseModel):
 
-    id: Union[ObjectId, int] = None
+    id: ObjectId = None
 
     spec: PythonComputeSpec
     parser: str

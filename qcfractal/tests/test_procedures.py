@@ -109,7 +109,7 @@ def test_procedure_optimization(fractal_compute_server):
 
     for results in [results1, results2]:
         assert len(results) == 1
-        assert isinstance(results[0].provenance.creator, str) # TODO: Bug in QCEngine, see molssi/qcengine#42
+        assert isinstance(results[0].provenance.creator, str)
         assert isinstance(str(results[0]), str)  # Check that repr runs
         assert pytest.approx(-1.117530188962681, 1e-5) == results[0].get_final_energy()
 

@@ -477,10 +477,6 @@ class SQLAlchemySocket:
 
         # ret["meta"]["errors"].extend(errors)
 
-        # Todo: tobe removed after bug is fixed in elemental
-        for d in rdata:
-            if d['connectivity'] is None:
-                d['connectivity'] = []
         data = [Molecule(**d, validate=False) for d in rdata]
 
         return {'meta': meta, 'data': data}
