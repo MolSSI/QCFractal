@@ -109,8 +109,13 @@ class FractalSnowflake(FractalServer):
         if storage_uri is None:
             mongod_port = _find_port()
             self._mongod_tmpdir = tempfile.TemporaryDirectory()
+
+            mongod_path = shutil.which("mongod")
+            if mongod_path is None:
+                raise OSError("Could not find `mongod` in PATH, please `conda install mongodb`.")
+
             self._mongod_proc = _background_process(
-                [shutil.which("mongod"), f"--port={mongod_port}", f"--dbpath={self._mongod_tmpdir.name}"])
+                [mongod_path, f"--port={mongod_port}", f"--dbpath={self._mongod_tmpdir.name}"])
             storage_uri = f"mongodb://localhost:{mongod_port}"
         else:
             self._mongod_tmpdir = None
