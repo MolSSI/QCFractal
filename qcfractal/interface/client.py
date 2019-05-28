@@ -429,6 +429,7 @@ class FractalClient(object):
         # Rename collection names
         repl_name_map = collections_name_map()
         for item in response:
+            item.pop("id", None)
             if item["collection"] in repl_name_map:
                 item["collection"] = repl_name_map[item["collection"]]
 
