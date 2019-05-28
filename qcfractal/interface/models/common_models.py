@@ -6,8 +6,7 @@ from enum import Enum
 from typing import Any, Dict, Optional, Union, List, Tuple
 
 from pydantic import BaseModel, validator
-from qcelemental.models import Provenance
-import qcelemental as qcel
+from qcelemental.models import Molecule, Provenance
 
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
@@ -34,19 +33,6 @@ class ObjectId(str):
             return (v)
         else:
             raise TypeError("The string {} is not a valid 24-character hexadecimal or integer ObjectId!".format(v))
-
-
-class Molecule(qcel.models.Molecule):
-
-    id: Optional[ObjectId] = None
-    connectivity: List[Tuple[int, int, float]] = None
-
-    def __init__(self, **kwargs):
-        # print(kwargs.get("connectivity", None))
-        if ("connectivity" in kwargs) and (len(kwargs["connectivity"]) == 0):
-            del kwargs["connectivity"]
-        # print(kwargs.get("id", None), type(kwargs.get("id", None)))
-        super().__init__(**kwargs)
 
 
 class DriverEnum(str, Enum):
@@ -82,7 +68,7 @@ class QCSpecification(BaseModel):
         extra = "forbid"
         allow_mutation = False
 
-    def form_schema_object(self, keywords: Optional['KeywordSet']=None, checks=True) -> Dict[str, Any]:
+    def form_schema_object(self, keywords: Optional['KeywordSet'] = None, checks=True) -> Dict[str, Any]:
         if checks and self.keywords:
             assert keywords.id == self.keywords
 
