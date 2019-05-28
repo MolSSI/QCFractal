@@ -230,8 +230,8 @@ class FractalServer:
             "heartbeat_frequency": self.heartbeat_frequency,
             "version": get_information("version"),
             "query_limit": self.storage.get_limit(1.e9),
-            "client_lower_version_limit": "0.7",
-            "client_upper_version_limit": "0.7"
+            "client_lower_version_limit": "0.7.0",  # Must be XX.YY.ZZ
+            "client_upper_version_limit": "0.7.1"   # Must be XX.YY.ZZ
         }
 
         endpoints = [
