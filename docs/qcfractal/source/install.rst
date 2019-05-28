@@ -11,9 +11,8 @@ You can install or update qcfractal using `conda <https://www.anaconda.com/downl
     conda install qcfractal -c conda-forge
 
 The above command installs qcfractal and its required dependencies, but *not* any of the quantum
-chemistry codes nor the software to run :term:`Queue Managers <Manager>`. This is done to avoid
-requiring *every* software which *can* interface with Fractal, and instead leaving it up to the
-user to get the software they *want*.
+chemistry codes nor the software to run :term:`Queue Managers <Manager>`. This is done to avoid requiring *all* software
+which *can* interface with Fractal, and instead requires the user to obtain the software they individually *require*.
 
 The qcfractal package is maintained on the
 `conda-forge channel <https://conda-forge.github.io/>`_.
