@@ -566,6 +566,8 @@ def test_storage_queue_roundtrip(storage_results):
     r = storage_results.queue_submit([task1])
     assert len(r["data"]) == 1
 
+    # Add manager 'test_manager'
+    storage_results.manager_update('test_manager')
     # Query for next tasks
     r = storage_results.queue_get_next("test_manager", ["p1"], ["p1"])
     assert r[0].spec.function == task1.spec.function

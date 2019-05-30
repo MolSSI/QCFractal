@@ -25,7 +25,8 @@ from sqlalchemy.orm import sessionmaker, with_polymorphic
 from sqlalchemy.sql.expression import func
 # from sqlalchemy.dialects import postgresql
 from collections.abc import Iterable
-
+import datetime
+import json
 
 # pydantic classes
 from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
@@ -39,6 +40,7 @@ from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, 
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
 from .sql_models import Base
+
 
 _null_keys = {"basis", "keywords"}
 _id_keys = {"id", "molecule", "keywords", "procedure_id"}
@@ -305,7 +307,7 @@ class SQLAlchemySocket:
 
         return {"data": blob_ids, "meta": meta}
 
-    def get_kvstore(self, id: List[str]):
+    def get_kvstore(self, id: List[str]=None,limit: int=None, skip: int=0):
         """
         Pulls from the key/value store table.
 
@@ -313,7 +315,10 @@ class SQLAlchemySocket:
         ----------
         id : List[str]
             A list of ids to query
-
+        limit : int, optional
+            Maximum number of results to return.
+        skip : int, optional
+            skip the `skip` results
         Returns
         -------
         TYPE
@@ -324,18 +329,15 @@ class SQLAlchemySocket:
 
         query = format_query(KVStoreORM, id=id)
 
-        with self.session_scope() as session:
-            data = session.query(KVStoreORM).filter(*query)
+        rdata, meta['n_found'] = self.get_query_projection(KVStoreORM, query, None, limit, skip)
 
-            meta["n_found"] = get_count_fast(data)
-            meta["success"] = True
+        meta["success"] = True
 
-            # meta['error_description'] = str(err)
-            data = data.all()
-            rdata = [d.to_dict() for d in data]
-            rdata = {d["id"]: d["value"] for d in rdata}
+        # meta['error_description'] = str(err)
 
-        return {"data": rdata, "meta": meta}
+        data = {d["id"]: d["value"] for d in rdata}
+
+        return {"data": data, "meta": meta}
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Molecule ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1248,7 +1250,8 @@ class SQLAlchemySocket:
 
         with self.session_scope() as session:
             procedures = session.query(with_polymorphic(BaseResultORM,
-                            [OptimizationProcedureORM, TorsionDriveProcedureORM]))\
+                            [OptimizationProcedureORM, TorsionDriveProcedureORM,
+                             GridOptimizationProcedureORM]))\
                            .filter(BaseResultORM.id.in_(ids)).all()
             # delete through session to delete correctly from base_result
             for proc in procedures:
@@ -1730,6 +1733,46 @@ class SQLAlchemySocket:
 
         return updated
 
+    def _copy_task_to_queue(self, record_list: List[TaskRecord]):
+        """
+        copy the given tasks as-is to the DB. Used for data migration
+
+        Parameters
+        ----------
+        record_list : list of TaskRecords
+
+        Returns
+        -------
+            Dict with keys: data, meta
+            Data is the ids of the inserted/updated/existing docs
+        """
+
+        meta = add_metadata_template()
+
+        task_ids = []
+        with self.session_scope() as session:
+            for task in record_list:
+                doc = session.query(TaskQueueORM).filter_by(base_result_id=task.base_result.id)
+
+                if get_count_fast(doc) == 0:
+                    doc = TaskQueueORM(**task.json_dict(exclude={"id"}))
+                    if isinstance(doc.error, dict):
+                        doc.error = json.dumps(doc.error)
+
+                    session.add(doc)
+                    session.commit()  # TODO: faster if done in bulk
+                    task_ids.append(str(doc.id))
+                    meta['n_inserted'] += 1
+                else:
+                    id = str(doc.first().id)
+                    meta['duplicates'].append(id)  # TODO
+                    # If new or duplicate, add the id to the return list
+                    task_ids.append(id)
+        meta["success"] = True
+
+        ret = {"data": task_ids, "meta": meta}
+        return ret
+
     def del_tasks(self, id: Union[str, list]):
         """Delete a task from the queue. Use with cautious
 
@@ -1793,6 +1836,45 @@ class SQLAlchemySocket:
         meta["success"] = True
 
         return {"data": data, "meta": meta}
+
+    def _copy_managers(self, record_list: Dict):
+        """
+        copy the given managers as-is to the DB. Used for data migration
+
+        Parameters
+        ----------
+        record_list : list of dict of managers data
+
+        Returns
+        -------
+            Dict with keys: data, meta
+            Data is the ids of the inserted/updated/existing docs
+        """
+
+        meta = add_metadata_template()
+
+        manager_names = []
+        with self.session_scope() as session:
+            for manager in record_list:
+                doc = session.query(QueueManagerORM).filter_by(name=manager['name'])
+
+                if get_count_fast(doc) == 0:
+                    doc = QueueManagerORM(**manager)
+                    doc.created_on = datetime.datetime.fromtimestamp(doc.created_on / 1e3)
+                    doc.modified_on = datetime.datetime.fromtimestamp(doc.modified_on / 1e3)
+                    session.add(doc)
+                    session.commit()  # TODO: faster if done in bulk
+                    manager_names.append(doc.name)
+                    meta['n_inserted'] += 1
+                else:
+                    name = doc.first().name
+                    meta['duplicates'].append(name)  # TODO
+                    # If new or duplicate, add the id to the return list
+                    manager_names.append(id)
+        meta["success"] = True
+
+        ret = {"data": manager_names, "meta": meta}
+        return ret
 
 ### UserORMs
 
@@ -1929,6 +2011,43 @@ class SQLAlchemySocket:
 
         return count == 1
 
+    def _copy_users(self, record_list: Dict):
+        """
+        copy the given users as-is to the DB. Used for data migration
+
+        Parameters
+        ----------
+        record_list : list of dict of managers data
+
+        Returns
+        -------
+            Dict with keys: data, meta
+            Data is the ids of the inserted/updated/existing docs
+        """
+
+        meta = add_metadata_template()
+
+        user_names = []
+        with self.session_scope() as session:
+            for user in record_list:
+                doc = session.query(UserORM).filter_by(username=user['username'])
+
+                if get_count_fast(doc) == 0:
+                    doc = UserORM(**user)
+                    doc.password = doc.password.encode('ascii')
+                    session.add(doc)
+                    session.commit()
+                    user_names.append(doc.username)
+                    meta['n_inserted'] += 1
+                else:
+                    name = doc.first().username
+                    meta['duplicates'].append(name)
+                    user_names.append(name)
+        meta["success"] = True
+
+        ret = {"data": user_names, "meta": meta}
+        return ret
+
     def check_lib_versions(self):
         """Check the stored versions of elemental and fractal"""
 
@@ -1952,3 +2071,11 @@ class SQLAlchemySocket:
 
 
         return current.to_dict(exclude=['id'])
+
+    def get_total_count(self, className, **kwargs):
+
+        with self.session_scope() as session:
+            query = session.query(className).filter(**kwargs)
+            count = get_count_fast(query)
+
+        return count

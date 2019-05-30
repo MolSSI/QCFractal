@@ -238,7 +238,7 @@ class MongoengineSocket:
 
         return {"data": blob_ids, "meta": meta}
 
-    def get_kvstore(self, id: List[str]):
+    def get_kvstore(self, id: List[str]=None,  limit: int=None, skip: int=0):
         """
         Pulls from the key/value store table.
 
@@ -258,7 +258,8 @@ class MongoengineSocket:
 
         query, errors = format_query(id=id)
 
-        data = KVStoreORM.objects(**query)
+        data = KVStoreORM.objects(**query).limit(self.get_limit(limit))\
+                                          .skip(skip)
 
         meta["success"] = True
         meta["n_found"] = data.count()  # all data count, can be > len(data)
@@ -1692,3 +1693,13 @@ class MongoengineSocket:
             If the operation was successful or not.
         """
         return UserORM.objects(username=username).delete() == 1
+
+    def _get_users(self):
+
+        data = UserORM.objects()
+
+        return [x.to_json_obj(with_id=False) for x in data]
+
+    def get_total_count(self, className, **kwargs):
+
+        return className.objects(**kwargs).count()
