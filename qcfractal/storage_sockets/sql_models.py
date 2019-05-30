@@ -483,7 +483,7 @@ class Trajectory(Base):
 
     opt_id = Column(Integer, ForeignKey('optimization_procedure.id', ondelete='cascade'), primary_key=True)
     result_id = Column(Integer, ForeignKey('result.id', ondelete='cascade'), primary_key=True)
-    position = Column(Integer)
+    position = Column(Integer, primary_key=True)
     # Index('opt_id', 'result_id', unique=True)
 
     trajectory_obj = relationship(ResultORM, lazy="noload")
