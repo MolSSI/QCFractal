@@ -578,11 +578,12 @@ def test_storage_queue_roundtrip(storage_results):
     assert r == 1
 
     # Check results
+    # completed task should be deleted
     found = storage_results.queue_get_by_id([queue_id])
 
-    assert len(found) == 1
-    assert found[0].status == "COMPLETE"
-    res = storage_results.get_results(task_id=queue_id)['data'][0]
+    assert len(found) == 0
+    # assert found[0].status == "COMPLETE"
+    res = storage_results.get_results(id=result1['id'])['data'][0]
     assert res["status"] == 'COMPLETE'
 
     # Check queue is empty

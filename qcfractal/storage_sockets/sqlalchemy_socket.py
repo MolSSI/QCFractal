@@ -1639,15 +1639,16 @@ class SQLAlchemySocket:
 
         update_fields = dict(status=TaskStatusEnum.complete, modified_on=dt.utcnow())
         with self.session_scope() as session:
-            tasks_c = session.query(TaskQueueORM)\
-                             .filter(TaskQueueORM.id.in_(task_ids))\
-                             .update(update_fields, synchronize_session=False)
-
             # Update the base results
             session.query(BaseResultORM)\
-                    .filter(BaseResultORM.id == TaskQueueORM.base_result_id)\
-                    .filter(TaskQueueORM.id.in_(task_ids))\
-                    .update(update_fields, synchronize_session=False)
+                   .filter(BaseResultORM.id == TaskQueueORM.base_result_id)\
+                   .filter(TaskQueueORM.id.in_(task_ids))\
+                   .update(update_fields, synchronize_session=False)
+
+            # delete completed tasks
+            tasks_c = session.query(TaskQueueORM)\
+                             .filter(TaskQueueORM.id.in_(task_ids))\
+                             .delete(synchronize_session=False)
 
         return tasks_c
 
