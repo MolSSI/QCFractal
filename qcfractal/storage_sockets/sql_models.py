@@ -671,7 +671,7 @@ class OptimizationHistory(Base):
     torsion_id = Column(Integer, ForeignKey('torsiondrive_procedure.id', ondelete='cascade'), primary_key=True)
     opt_id = Column(Integer, ForeignKey('optimization_procedure.id', ondelete='cascade'), primary_key=True)
     key = Column(String, nullable=False, primary_key=True)
-    position = Column(Integer)
+    position = Column(Integer, primary_key=True)
     # Index('torsion_id', 'key', unique=True)
 
     optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
@@ -824,7 +824,7 @@ class TaskQueueORM(Base):
         return val
 
     # can reference ResultORMs or any ProcedureORM
-    base_result_id = Column(Integer, ForeignKey("base_result.id"), unique=True)
+    base_result_id = Column(Integer, ForeignKey("base_result.id", ondelete='cascade'), unique=True)
     base_result_obj = relationship(BaseResultORM, lazy='select')  # or lazy='joined'
 
 

@@ -1250,7 +1250,8 @@ class SQLAlchemySocket:
 
         with self.session_scope() as session:
             procedures = session.query(with_polymorphic(BaseResultORM,
-                            [OptimizationProcedureORM, TorsionDriveProcedureORM]))\
+                            [OptimizationProcedureORM, TorsionDriveProcedureORM,
+                             GridOptimizationProcedureORM]))\
                            .filter(BaseResultORM.id.in_(ids)).all()
             # delete through session to delete correctly from base_result
             for proc in procedures:
