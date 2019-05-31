@@ -39,17 +39,17 @@ class QueueManager:
     def __init__(self,
                  client: Any,
                  queue_client: Any,
-                 logger: Optional[logging.Logger]=None,
-                 max_tasks: int=200,
-                 queue_tag: str=None,
-                 manager_name: str="unlabled",
-                 update_frequency: Union[int, float]=2,
-                 verbose: bool=True,
-                 server_error_retries: Optional[int]=1,
-                 stale_update_limit: Optional[int]=10,
-                 cores_per_task: Optional[int]=None,
-                 memory_per_task: Optional[Union[int, float]]=None,
-                 scratch_directory: Optional[str]=None):
+                 logger: Optional[logging.Logger] = None,
+                 max_tasks: int = 200,
+                 queue_tag: str = None,
+                 manager_name: str = "unlabled",
+                 update_frequency: Union[int, float] = 2,
+                 verbose: bool = True,
+                 server_error_retries: Optional[int] = 1,
+                 stale_update_limit: Optional[int] = 10,
+                 cores_per_task: Optional[int] = None,
+                 memory_per_task: Optional[Union[int, float]] = None,
+                 scratch_directory: Optional[str] = None):
         """
         Parameters
         ----------
@@ -103,10 +103,12 @@ class QueueManager:
         self.cores_per_task = cores_per_task
         self.memory_per_task = memory_per_task
         self.scratch_directory = scratch_directory
-        self.queue_adapter = build_queue_adapter(
-            queue_client, logger=self.logger, cores_per_task=self.cores_per_task, memory_per_task=self.memory_per_task,
-            scratch_directory=self.scratch_directory, verbose=verbose
-        )
+        self.queue_adapter = build_queue_adapter(queue_client,
+                                                 logger=self.logger,
+                                                 cores_per_task=self.cores_per_task,
+                                                 memory_per_task=self.memory_per_task,
+                                                 scratch_directory=self.scratch_directory,
+                                                 verbose=verbose)
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag
         self.verbose = verbose
@@ -195,7 +197,8 @@ class QueueManager:
             # Pull info
             "programs": self.available_programs,
             "procedures": self.available_procedures,
-            "tag": self.queue_tag}
+            "tag": self.queue_tag
+        }
 
         return {"meta": meta, "data": {}}
 
@@ -276,6 +279,7 @@ class QueueManager:
         """
 
         return self.queue_adapter.close()
+
 
 ## Queue Manager functions
 
@@ -393,8 +397,8 @@ class QueueManager:
             self._stale_payload_tracking.pop(index)
 
         # Check stale limiters
-        if self.stale_update_limit is not None and (
-                len(self._stale_payload_tracking) + self._stale_updates_tracked) > self.stale_update_limit:
+        if self.stale_update_limit is not None and (len(self._stale_payload_tracking) +
+                                                    self._stale_updates_tracked) > self.stale_update_limit:
             self.logger.error("Exceeded number of stale updates allowed! Attempting to shutdown gracefully...")
 
             # Log all not-quite stale jobs to stale
@@ -406,7 +410,7 @@ class QueueManager:
             finally:
                 raise RuntimeError("Exceeded number of stale updates allowed!")
 
-    def update(self, new_tasks: bool=True, allow_shutdown=True) -> bool:
+    def update(self, new_tasks: bool = True, allow_shutdown=True) -> bool:
         """Examines the queue for completed tasks and adds successful completions to the database
         while unsuccessful are logged for future inspection.
 
@@ -592,7 +596,9 @@ class QueueManager:
                         failed_program = program
                         break
                 if failed_program not in fail_report:
-                    fail_report[failed_program] = f"On test {k}: {result.error}"
+                    fail_report[failed_program] = f"On test {k}:" \
+                                                  f"\nException Type: {result.error.error_type}" \
+                                                  f"\nException Message: {result.error.error_message}"
                 failures += 1
 
         if failures:
