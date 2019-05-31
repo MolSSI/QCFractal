@@ -1867,7 +1867,7 @@ class SQLAlchemySocket:
         success = False
         with self.session_scope() as session:
             if overwrite:
-                count = session.query(UserORM).filter_by(username=username).update(**blob)
+                count = session.query(UserORM).filter_by(username=username).update(blob)
                 # doc.upsert_one(**blob)
                 success = count == 1
 

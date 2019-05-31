@@ -23,6 +23,9 @@ from .server import FractalServer
 from .snowflake import FractalSnowflake
 from .storage_sockets import storage_socket_factory
 
+### Globals
+POSTGRES_TESTING_URI = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb"
+
 ### Addon testing capabilities
 
 
@@ -75,9 +78,9 @@ using_parsl = _build_pytest_skip('parsl')
 using_psi4 = _build_pytest_skip('psi4')
 using_rdkit = _build_pytest_skip('rdkit')
 using_torsiondrive = _build_pytest_skip('torsiondrive')
-using_unix = pytest.mark.skipif(
-    os.name.lower() != 'posix', reason='Not on Unix operating system, '
-    'assuming Bash is not present')
+using_unix = pytest.mark.skipif(os.name.lower() != 'posix',
+                                reason='Not on Unix operating system, '
+                                'assuming Bash is not present')
 
 ### Generic helpers
 
@@ -130,10 +133,12 @@ def check_active_postgres_server():
 
     try:
         from sqlalchemy import create_engine
-        engine = create_engine("postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb")
+        engine = create_engine(POSTGRES_TESTING_URI)
         engine.table_names()
     except:
-        pytest.skip("Could not find an activate mongo test instance at 'postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb'.")
+        pytest.skip(
+            f"Could not find an activate mongo test instance at '{POSTGRES_TESTING_URI}'."
+        )
 
 
 def find_open_port():
@@ -331,13 +336,15 @@ def test_server(request):
 
     storage_name = "qcf_local_server_test"
 
-    storage_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb"
+    storage_uri = POSTGRES_TESTING_URI
     # storage_uri="mongodb://localhost:27017"
 
     # with loop_in_thread() as loop:
-    with FractalSnowflake(
-            max_workers=0, storage_project_name=storage_name, storage_uri=storage_uri,
-            start_server=False, reset_database=True) as server:
+    with FractalSnowflake(max_workers=0,
+                          storage_project_name=storage_name,
+                          storage_uri=storage_uri,
+                          start_server=False,
+                          reset_database=True) as server:
 
         # Clean and re-init the database
         yield server
@@ -386,12 +393,11 @@ def build_managed_compute_server(mtype):
     # Build a server with the thread in a outer context loop
     # Not all adapters play well with internal loops
     with loop_in_thread() as loop:
-        server = FractalServer(
-            port=find_open_port(),
-            storage_project_name=storage_name,
-            loop=loop,
-            queue_socket=adapter_client,
-            ssl_options=False)
+        server = FractalServer(port=find_open_port(),
+                               storage_project_name=storage_name,
+                               loop=loop,
+                               queue_socket=adapter_client,
+                               ssl_options=False)
 
         # Clean and re-init the database
         reset_server_database(server)
@@ -440,10 +446,13 @@ def fractal_compute_server(request):
     # Storage name
     storage_name = "qcf_compute_server_test"
     # storage_uri = "mongodb://localhost:27017"
-    storage_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb"
+    storage_uri = POSTGRES_TESTING_URI
     # storage_uri = "sqlite:///:memory:"
-    with FractalSnowflake(
-            max_workers=2, storage_project_name=storage_name, storage_uri=storage_uri, reset_database=True, start_server=False) as server:
+    with FractalSnowflake(max_workers=2,
+                          storage_project_name=storage_name,
+                          storage_uri=storage_uri,
+                          reset_database=True,
+                          start_server=False) as server:
         # reset_server_database(server)
         yield server
 
@@ -464,11 +473,10 @@ def build_socket_fixture(stype):
 
     elif stype == 'sqlalchemy':
         check_active_postgres_server()
-        storage = storage_socket_factory(
-            'postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb',
-            storage_name,
-            db_type=stype,
-            sql_echo=False)
+        storage = storage_socket_factory(POSTGRES_TESTING_URI,
+                                         storage_name,
+                                         db_type=stype,
+                                         sql_echo=False)
         # storage = storage_socket_factory('sqlite:///:memory:', storage_name, db_type=stype)
         # storage = storage_socket_factory('sqlite:///path_to_db', storage_name, db_type=stype)
 
@@ -488,10 +496,12 @@ def build_socket_fixture(stype):
     else:
         raise KeyError("Storage type {} not understood".format(stype))
 
+
 @pytest.fixture(scope="module", params=["mongoengine", "sqlalchemy"])
 def socket_fixture(request):
 
     yield from build_socket_fixture(request.param)
+
 
 @pytest.fixture(scope="module")
 def mongoengine_socket_fixture(request):
