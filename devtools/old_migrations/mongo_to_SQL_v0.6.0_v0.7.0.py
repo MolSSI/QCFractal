@@ -103,7 +103,47 @@ def _copy_task_to_queue(self, record_list: List[TaskRecord]):
     return ret
 
 
+
+def _copy_users(self, record_list: Dict):
+    """
+    copy the given users as-is to the DB. Used for data migration
+
+    Parameters
+    ----------
+    record_list : list of dict of managers data
+
+    Returns
+    -------
+        Dict with keys: data, meta
+        Data is the ids of the inserted/updated/existing docs
+    """
+
+    meta = add_metadata_template()
+
+    user_names = []
+    with self.session_scope() as session:
+        for user in record_list:
+            doc = session.query(UserORM).filter_by(username=user['username'])
+
+            if get_count_fast(doc) == 0:
+                doc = UserORM(**user)
+                doc.password = doc.password.encode('ascii')
+                session.add(doc)
+                session.commit()
+                user_names.append(doc.username)
+                meta['n_inserted'] += 1
+            else:
+                name = doc.first().username
+                meta['duplicates'].append(name)
+                user_names.append(name)
+    meta["success"] = True
+
+    ret = {"data": user_names, "meta": meta}
+    return ret
+
+
 SQLAlchemySocket._copy_task_to_queue = _copy_task_to_queue
+SQLAlchemySocket._copy_users = _copy_users
 ## Connection
 
 
