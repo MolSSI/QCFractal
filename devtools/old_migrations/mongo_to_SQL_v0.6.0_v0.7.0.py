@@ -14,49 +14,49 @@ from qcfractal.interface.models import (KeywordSet, ResultRecord, OptimizationRe
                                         TorsionDriveRecord, GridOptimizationRecord)
 from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
 
-
+from qcfractal.storage_sockets.sql_models import Base
 
 # Temporary classes for migration from mongo to sql
-class MoleculeMap(Base):
-    __tablename__ = 'molecule_map'
+# class MoleculeMap(Base):
+#     __tablename__ = 'molecule_map'
 
-    sql_id = Column(Integer, ForeignKey('molecule.id', ondelete='cascade'), primary_key=True)
-    mongo_id = Column(String, unique=True)  # will have an index
-
-
-class KeywordsMap(Base):
-    __tablename__ = 'keywords_map'
-
-    sql_id = Column(Integer, ForeignKey('keywords.id', ondelete='cascade'), primary_key=True)
-    mongo_id = Column(String, unique=True)  # will have an index
+#     sql_id = Column(Integer, ForeignKey('molecule.id', ondelete='cascade'), primary_key=True)
+#     mongo_id = Column(String, unique=True)  # will have an index
 
 
-class KVStoreMap(Base):
-    __tablename__ = 'kv_store_map'
+# class KeywordsMap(Base):
+#     __tablename__ = 'keywords_map'
 
-    sql_id = Column(Integer, ForeignKey('kv_store.id', ondelete='cascade'), primary_key=True)
-    mongo_id = Column(String, unique=True)  # will have an index
-
-
-class ResultMap(Base):
-    __tablename__ = 'result_map'
-
-    sql_id = Column(Integer, ForeignKey('result.id', ondelete='cascade'), primary_key=True)
-    mongo_id = Column(String, unique=True)  # will have an index
+#     sql_id = Column(Integer, ForeignKey('keywords.id', ondelete='cascade'), primary_key=True)
+#     mongo_id = Column(String, unique=True)  # will have an index
 
 
-class ProcedureMap(Base):
-    __tablename__ = 'procedure_map'
+# class KVStoreMap(Base):
+#     __tablename__ = 'kv_store_map'
 
-    sql_id = Column(Integer, ForeignKey('base_result.id', ondelete='cascade'), primary_key=True)
-    mongo_id = Column(String, unique=True)  # will have an index
+#     sql_id = Column(Integer, ForeignKey('kv_store.id', ondelete='cascade'), primary_key=True)
+#     mongo_id = Column(String, unique=True)  # will have an index
 
 
-class TaskQueueMap(Base):
-    __tablename__ = 'task_queue_map'
+# class ResultMap(Base):
+#     __tablename__ = 'result_map'
 
-    sql_id = Column(Integer, ForeignKey('task_queue.id', ondelete='cascade'), primary_key=True)
-    mongo_id = Column(String, unique=True)  # will have an index
+#     sql_id = Column(Integer, ForeignKey('result.id', ondelete='cascade'), primary_key=True)
+#     mongo_id = Column(String, unique=True)  # will have an index
+
+
+# class ProcedureMap(Base):
+#     __tablename__ = 'procedure_map'
+
+#     sql_id = Column(Integer, ForeignKey('base_result.id', ondelete='cascade'), primary_key=True)
+#     mongo_id = Column(String, unique=True)  # will have an index
+
+
+# class TaskQueueMap(Base):
+#     __tablename__ = 'task_queue_map'
+
+#     sql_id = Column(Integer, ForeignKey('task_queue.id', ondelete='cascade'), primary_key=True)
+#     mongo_id = Column(String, unique=True)  # will have an index
 
 
 ## Extra SQL functions
