@@ -15,6 +15,15 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.7.2 / 2019-05-31
+------------------
+
+New Features
+++++++++++++
+
+- (:pr:`279`) Tasks will be deleted from the ``TaskQueue`` once they are completed successfully.
+
+
 0.7.1 / 2019-05-28
 ------------------
 
@@ -24,6 +33,7 @@ Bug Fixes
 - (:pr:`277`) A more informative error is thrown when Mongo is not found by ``FractalSnowflake``.
 - (:pr:`277`) ID's are no longer presented when listing Collections in Portal to minimize extra data.
 - (:pr:`278`) Fixed a bug in Portal where the Server was not reporting the correct unit.
+
 
 0.7.0 / 2019-05-27
 ------------------

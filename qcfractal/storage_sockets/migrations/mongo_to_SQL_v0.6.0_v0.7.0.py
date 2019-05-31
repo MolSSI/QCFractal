@@ -491,6 +491,14 @@ def copy_task_queue(mongo_storage, sql_storage, max_limit, with_check=False):
 
     print('---- Done copying Task Queue\n\n')
 
+def cleanup_mapping_tables(sql_storage):
+
+    MoleculeMap.__table__.drop(sql_storage.engine)
+    KeywordsMap.__table__.drop(sql_storage.engine)
+    KVStoreMap.__table__.drop(sql_storage.engine)
+    ResultMap.__table__.drop(sql_storage.engine)
+    ProcedureMap.__table__.drop(sql_storage.engine)
+    TaskQueueMap.__table__.drop(sql_storage.engine)
 
 def main():
 
