@@ -486,7 +486,7 @@ class Trajectory(Base):
     position = Column(Integer, primary_key=True)
     # Index('opt_id', 'result_id', unique=True)
 
-    trajectory_obj = relationship(ResultORM, lazy="noload")
+    # trajectory_obj = relationship(ResultORM, lazy="noload")
 
 
 # # association table for many to many relation
@@ -534,7 +534,7 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
 
     # array of objects (results) - Lazy - raise error of accessed
     trajectory_obj = relationship(Trajectory, cascade="all, delete-orphan",
-                                  backref="optimization_procedure",
+                                  # backref="optimization_procedure",
                                   order_by=Trajectory.position,
                                   collection_class=ordering_list('position'))
 
@@ -588,7 +588,7 @@ class GridOptimizationAssociation(Base):
 
     # Index('grid_opt_id', 'key', unique=True)
 
-    optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
+    # optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
 
 
 class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
@@ -619,7 +619,7 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     final_energy_dict = Column(JSON)  # Dict[str, float]
     starting_grid = Column(JSON)  # tuple
 
-    grid_optimizations_obj = relationship(GridOptimizationAssociation,
+    grid_optimizations_obj = relationship(GridOptimizationAssociation, lazy='selectin',
         cascade="all, delete-orphan", backref="grid_optimization_procedure"
     )
 
@@ -674,7 +674,7 @@ class OptimizationHistory(Base):
     position = Column(Integer, primary_key=True)
     # Index('torsion_id', 'key', unique=True)
 
-    optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
+    # optimization_obj = relationship(OptimizationProcedureORM, lazy="joined")
 
 
 # association table for many to many relation
@@ -719,9 +719,9 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 
 
     optimization_history_obj = relationship(OptimizationHistory,
-        cascade="all, delete-orphan", backref="torsiondrive_procedure",
+        cascade="all, delete-orphan", #backref="torsiondrive_procedure",
         order_by=OptimizationHistory.position,
-        collection_class=ordering_list('position')
+        collection_class=ordering_list('position'), lazy='selectin'
     )
 
 
