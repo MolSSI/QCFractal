@@ -130,10 +130,10 @@ def check_active_postgres_server():
 
     try:
         from sqlalchemy import create_engine
-        engine = create_engine("postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb")
+        engine = create_engine("postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb")
         engine.table_names()
     except:
-        pytest.skip("Could not find an activate mongo test instance at 'localhost:27017'.")
+        pytest.skip("Could not find an activate mongo test instance at 'postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb'.")
 
 
 def find_open_port():
@@ -331,7 +331,7 @@ def test_server(request):
 
     storage_name = "qcf_local_server_test"
 
-    storage_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb"
+    storage_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb"
     # storage_uri="mongodb://localhost:27017"
 
     # with loop_in_thread() as loop:
@@ -440,7 +440,7 @@ def fractal_compute_server(request):
     # Storage name
     storage_name = "qcf_compute_server_test"
     # storage_uri = "mongodb://localhost:27017"
-    storage_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb"
+    storage_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb"
     # storage_uri = "sqlite:///:memory:"
     with FractalSnowflake(
             max_workers=2, storage_project_name=storage_name, storage_uri=storage_uri, reset_database=True, start_server=False) as server:
@@ -465,7 +465,7 @@ def build_socket_fixture(stype):
     elif stype == 'sqlalchemy':
         check_active_postgres_server()
         storage = storage_socket_factory(
-            'postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb',
+            'postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb',
             storage_name,
             db_type=stype,
             sql_echo=False)

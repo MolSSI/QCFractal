@@ -24,9 +24,9 @@ Always use that user when accessing the DB, not the admin user.
 
 ```
 sudo -u postgres psql
-postgres=# create database qcarchivedb;
+postgres=# create database test_qcarchivedb;
 postgres=# create user qcarchive with password 'mypass';
-postgres=# grant all privileges on database qcarchivedb to qcarchive;
+postgres=# grant all privileges on database test_qcarchivedb to qcarchive;
 postgres=# \q
 ```
 
