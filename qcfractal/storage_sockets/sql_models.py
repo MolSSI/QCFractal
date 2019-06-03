@@ -858,6 +858,7 @@ class QueueManagerORM(Base):
     name = Column(String, unique=True)
     cluster = Column(String)
     hostname = Column(String)
+    username = Column(String)
     uuid = Column(String)
     tag = Column(String)
 
