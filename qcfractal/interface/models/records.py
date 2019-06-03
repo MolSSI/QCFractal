@@ -335,6 +335,18 @@ class OptimizationRecord(RecordBase):
 
         return self.client.query_results(id=self.trajectory)
 
+    def get_initial_molecule(self):
+        """Returns the initial molecule
+
+        Returns
+        -------
+        Molecule
+            The initial molecule
+        """
+
+        ret = self.client.query_molecules(id=[self.initial_molecule])
+        return ret[0]
+
     def get_final_molecule(self):
         """Returns the optimized molecule
 
@@ -346,6 +358,8 @@ class OptimizationRecord(RecordBase):
 
         ret = self.client.query_molecules(id=[self.final_molecule])
         return ret[0]
+
+## Show functions
 
     def show_history(self,
                      units: str = "kcal/mol",
