@@ -38,6 +38,7 @@ class AdapterEnum(str, Enum):
     dask = "dask"
     pool = "pool"
     parsl = "parsl"
+    balsam = "balsam"
 
 
 class CommonManagerSettings(BaseSettings):
@@ -421,6 +422,11 @@ class ParslQueueSettings(BaseSettings):
 cli_utils.doc_formatter(ParslQueueSettings)
 
 
+class BalsamQueueSettings(SettingsBlocker):
+    """
+    """
+
+
 class ManagerSettings(BaseModel):
     """
     The config file for setting up a QCFractal Manager, all sub fields of this model are at equal top-level of the
@@ -437,6 +443,7 @@ class ManagerSettings(BaseModel):
     cluster : :class:`ClusterSettings`, Optional
     dask : :class:`DaskQueueSettings`, Optional
     parsl : :class:`ParslQueueSettings`, Optional
+    balsam : :class:`BalsamQueueSettings`, Optional
     """
     common: CommonManagerSettings = CommonManagerSettings()
     server: FractalServerSettings = FractalServerSettings()
@@ -444,6 +451,7 @@ class ManagerSettings(BaseModel):
     cluster: Optional[ClusterSettings] = ClusterSettings()
     dask: Optional[DaskQueueSettings] = DaskQueueSettings()
     parsl: Optional[ParslQueueSettings] = ParslQueueSettings()
+    balsam: Optional[BalsamQueueSettings] = BalsamQueueSettings()
 
     class Config:
         extra = "forbid"
@@ -799,6 +807,9 @@ def main(args=None):
 
         queue_client = Config(
             executors=[HighThroughputExecutor(**parsl_executor_construct)])
+
+    elif settings.common.adapter == "balsam":
+        raise RuntimeError("This is still in development, tell Levi this is still here and incomplete!")
 
     else:
         raise KeyError("Unknown adapter type '{}', available options: {}.\n"
