@@ -1,23 +1,28 @@
+
+from typing import Any, Dict, Optional
+
 from .gridoptimization import GridOptimizationRecord
 from .records import OptimizationRecord
 from .torsiondrive import TorsionDriveRecord
 
-def build_procedure(data, procedure=None, client=None):
+
+def build_procedure(data: Dict[str, Any], procedure: Optional[str] = None,
+                    client: Optional['FractalClient'] = None) -> 'BaseRecord':
     """
     Constructs a Service ORM from incoming JSON data.
 
     Parameters
     ----------
-    data : dict
+    data : Dict[str, Any]
         A JSON representation of the procedure.
-    procedure : None, optional
+    procedure : Optional[str], optional
         The name of the procedure. If blank the procedure name is pulled from the `data["procedure"]` field.
-    client : FractalClient, optional
+    client : Optional['FractalClient'], optional
         A FractalClient connected to a server.
 
     Returns
     -------
-    ret : a ORM-like object
+    ret : BaseRecord
         Returns an interface object of the appropriate procedure.
 
     Examples

@@ -121,7 +121,7 @@ class TorsionDriveRecord(RecordBase):
 
 ## Query
 
-    def get_history(self, key: Union[int, Tuple[int, ...], str]=None, minimum: bool=False) -> Dict[str, Any]:
+    def get_history(self, key: Union[int, Tuple[int, ...], str]=None, minimum: bool=False) -> Dict[str, List['ResultRecord']]:
         """Queries the server for all optimization trajectories.
 
         Parameters
@@ -133,7 +133,7 @@ class TorsionDriveRecord(RecordBase):
 
         Returns
         -------
-        Dict[str, Any]
+        Dict[str, List['ResultRecord']]
             The optimization history
 
         """
@@ -160,13 +160,13 @@ class TorsionDriveRecord(RecordBase):
         return self._organize_return(data, key, minimum=minimum)
 
 
-    def get_final_energies(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, Any]:
+    def get_final_energies(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, float]:
         """
         Provides the final optimized energies at each grid point.
 
         Parameters
         ----------
-        key : Union[int, str, None], optional
+        key : Union[int, Tuple[int, ...], str], optional
             Specifies a single entry to pull from.
 
         Returns
@@ -185,17 +185,17 @@ class TorsionDriveRecord(RecordBase):
         return self._organize_return(self.final_energy_dict, key)
 
 
-    def get_final_molecules(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, Any]:
+    def get_final_molecules(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, 'Molecule']:
         """Returns the optimized molecules at each grid point
 
         Parameters
         ----------
-        key : Union[int, str, None], optional
+        key : Union[int, Tuple[int, ...], str], optional
             Specifies a single entry to pull from.
 
         Returns
         -------
-        final_molecules : Dict[str, qcelemental.models.molecule.Molecule]
+        final_molecules : Dict[str, 'Molecule']
             Returns molecule at each grid point in a dictionary or at a
             single point if a key is specified.
 
@@ -226,17 +226,17 @@ class TorsionDriveRecord(RecordBase):
         return self._organize_return(data, key)
 
 
-    def get_final_results(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, Any]:
+    def get_final_results(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, 'ResultRecord']:
         """Returns the final opt gradient result records at each grid point
 
         Parameters
         ----------
-        key : Union[int, str, None], optional
+        key : Union[int, Tuple[int, ...], str], optional
             Specifies a single entry to pull from.
 
         Returns
         -------
-        final_results : Dict[str, qcfractal.interface.models.records.ResultRecord]
+        final_results : Dict[str, 'ResultRecord']
             Returns ResultRecord at each grid point in a dictionary or at a
             single point if a key is specified.
 

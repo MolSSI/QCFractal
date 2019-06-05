@@ -135,19 +135,53 @@ class GridOptimizationRecord(RecordBase):
 
         return copy.deepcopy(data[key])
 
-    def serialize_key(self, key):
+    def serialize_key(self, key: Union[int, Tuple[int]]) -> str:
+        """Serializes the key ot map to the internal keys.
+
+        Parameters
+        ----------
+        key : Union[int, Tuple[int]]
+            A integer or list of integers denoting the position in the grid
+            to find.
+
+        Returns
+        -------
+        str
+            The internal key value.
+        """
         if isinstance(key, (int, float)):
             key = (int(key), )
 
         return json.dumps(key)
 
-    def deserialize_key(self, key):
+    def deserialize_key(self, key:str)->Tuple[int]:
+        """Unpacks a string key to a python object.
 
+        Parameters
+        ----------
+        key : str
+            The input key
+
+        Returns
+        -------
+        Tuple[int]
+            The unpacked key.
+        """
         return tuple(json.loads(key))
 
-    def get_scan_value(self, key: Union[str, Tuple]) -> Tuple:
+    def get_scan_value(self, scan_number: int) -> Tuple[List[float]]:
         """
         Obtains the scan parameters at a given grid point.
+
+        Parameters
+        ----------
+        key : Union[str, int, Tuple[int]]
+            The key of the scan.
+
+        Returns
+        -------
+        Tuple[List[float]]
+            Description
         """
         if isinstance(key, str):
             key = self.deserialize_key(key)
@@ -158,9 +192,14 @@ class GridOptimizationRecord(RecordBase):
 
         return tuple(ret)
 
-    def get_scan_dimensions(self) -> Tuple:
+    def get_scan_dimensions(self) -> Tuple[List[float]]:
         """
         Returns the overall dimensions of the scan.
+
+        Returns
+        -------
+        Tuple[List[float]]
+            The size of each dimension in the scan.
         """
         ret = []
         for scan in self.keywords.scans:
@@ -170,7 +209,7 @@ class GridOptimizationRecord(RecordBase):
 
 ## Query
 
-    def get_final_energies(self, key: Union[int, str, None]=None) -> Dict[str, Any]:
+    def get_final_energies(self, key: Union[int, str, None]=None) -> Dict[str, float]:
         """
         Provides the final optimized energies at each grid point.
 
@@ -181,7 +220,7 @@ class GridOptimizationRecord(RecordBase):
 
         Returns
         -------
-        energy : Dict[str, Any]
+        energy : Dict[str, float]
             Returns energies at each grid point in a dictionary or at a
             single point if a key is specified.
 
@@ -198,7 +237,7 @@ class GridOptimizationRecord(RecordBase):
         return self._organize_return(self.final_energy_dict, key)
 
 
-    def get_final_molecules(self, key: Union[int, str, None]=None) -> Dict[str, Any]:
+    def get_final_molecules(self, key: Union[int, str, None]=None) -> Dict[str, 'Molecule']:
         """
         Provides the final optimized molecules at each grid point.
 
@@ -210,7 +249,7 @@ class GridOptimizationRecord(RecordBase):
 
         Returns
         -------
-        final_molecules : Dict[str, Any]
+        final_molecules : Dict[str, 'Molecule']
             Returns energies at each grid point in a dictionary or at a
             single point if a key is specified.
 
@@ -237,17 +276,17 @@ class GridOptimizationRecord(RecordBase):
         return self._organize_return(data, key)
 
 
-    def get_final_results(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, Any]:
+    def get_final_results(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, 'ResultRecord']:
         """Returns the final opt gradient result records at each grid point.
 
         Parameters
         ----------
-        key : Union[int, str, None], optional
+        key : Union[int, Tuple[int, ...], str], optional
             Specifies a single entry to pull from.
 
         Returns
         -------
-        final_results : Dict[str, qcfractal.interface.models.records.ResultRecord]
+        final_results : Dict[str, 'ResultRecord']
             Returns ResultRecord at each grid point in a dictionary or at a
             single point if a key is specified.
 
