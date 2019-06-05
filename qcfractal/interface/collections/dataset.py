@@ -56,7 +56,7 @@ class Dataset(Collection):
         ----------
         name : str
             The name of the Dataset
-        client : Opational['FractalClient'], optional
+        client : Optional['FractalClient'], optional
             A Portal client to connected to a server
         **kwargs : Dict[str, Any]
             Additional kwargs to pass to the collection
@@ -932,7 +932,7 @@ class Dataset(Collection):
         value : str
             The method string to compare
         bench : str, optional
-            The benchmark method for the comparison, defaults to `default_benchmark'
+            The benchmark method for the comparison, defaults to `default_benchmark`.
         kwargs: Dict[str, Any]
             Additional kwargs to pass to the statistics functions
 
