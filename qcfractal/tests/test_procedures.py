@@ -114,7 +114,7 @@ def test_procedure_optimization(fractal_compute_server):
         assert pytest.approx(-1.117530188962681, 1e-5) == results[0].get_final_energy()
 
         # Check pulls
-        traj = results[0].get_trajectory(projection={"properties": True})
+        traj = results[0].get_trajectory()
         assert len(traj) == len(results[0].energies)
 
         assert results[0].get_final_molecule().symbols == ["H", "H"]

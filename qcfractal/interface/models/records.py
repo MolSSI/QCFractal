@@ -384,7 +384,7 @@ class OptimizationRecord(RecordBase):
 
         return self.client.query_results(id=self.trajectory, projection=projection)
 
-    def get_initial_molecule(self)) -> 'Molecule':
+    def get_initial_molecule(self) -> 'Molecule':
         """Returns the initial molecule
 
         Returns
