@@ -9,9 +9,142 @@ from qcfractal.storage_sockets import storage_socket_factory
 from qcfractal.storage_sockets.me_models import (MoleculeORM, KeywordsORM, KVStoreORM, ResultORM,
                                                  ProcedureORM, TaskQueueORM, QueueManagerORM, UserORM)
 from qcfractal.storage_sockets.sql_models import (MoleculeMap, KeywordsMap, KVStoreMap, ResultMap,
-                                                  ProcedureMap, TaskQueueMap)
+                                                  ProcedureMap, TaskQueueMap, Base)
 from qcfractal.interface.models import (KeywordSet, ResultRecord, OptimizationRecord,
                                         TorsionDriveRecord, GridOptimizationRecord)
+from qcfractal.storage_sockets.sqlalchemy_socket import SQLAlchemySocket
+
+from qcfractal.storage_sockets.sql_models import Base
+
+# Temporary classes for migration from mongo to sql
+# class MoleculeMap(Base):
+#     __tablename__ = 'molecule_map'
+
+#     sql_id = Column(Integer, ForeignKey('molecule.id', ondelete='cascade'), primary_key=True)
+#     mongo_id = Column(String, unique=True)  # will have an index
+
+
+# class KeywordsMap(Base):
+#     __tablename__ = 'keywords_map'
+
+#     sql_id = Column(Integer, ForeignKey('keywords.id', ondelete='cascade'), primary_key=True)
+#     mongo_id = Column(String, unique=True)  # will have an index
+
+
+# class KVStoreMap(Base):
+#     __tablename__ = 'kv_store_map'
+
+#     sql_id = Column(Integer, ForeignKey('kv_store.id', ondelete='cascade'), primary_key=True)
+#     mongo_id = Column(String, unique=True)  # will have an index
+
+
+# class ResultMap(Base):
+#     __tablename__ = 'result_map'
+
+#     sql_id = Column(Integer, ForeignKey('result.id', ondelete='cascade'), primary_key=True)
+#     mongo_id = Column(String, unique=True)  # will have an index
+
+
+# class ProcedureMap(Base):
+#     __tablename__ = 'procedure_map'
+
+#     sql_id = Column(Integer, ForeignKey('base_result.id', ondelete='cascade'), primary_key=True)
+#     mongo_id = Column(String, unique=True)  # will have an index
+
+
+# class TaskQueueMap(Base):
+#     __tablename__ = 'task_queue_map'
+
+#     sql_id = Column(Integer, ForeignKey('task_queue.id', ondelete='cascade'), primary_key=True)
+#     mongo_id = Column(String, unique=True)  # will have an index
+
+
+## Extra SQL functions
+
+
+def _copy_task_to_queue(self, record_list: List[TaskRecord]):
+    """
+    copy the given tasks as-is to the DB. Used for data migration
+
+    Parameters
+    ----------
+    record_list : list of TaskRecords
+
+    Returns
+    -------
+        Dict with keys: data, meta
+        Data is the ids of the inserted/updated/existing docs
+    """
+
+    meta = add_metadata_template()
+
+    task_ids = []
+    with self.session_scope() as session:
+        for task in record_list:
+            doc = session.query(TaskQueueORM).filter_by(base_result_id=task.base_result.id)
+
+            if get_count_fast(doc) == 0:
+                doc = TaskQueueORM(**task.json_dict(exclude={"id"}))
+                if isinstance(doc.error, dict):
+                    doc.error = json.dumps(doc.error)
+
+                session.add(doc)
+                session.commit()  # TODO: faster if done in bulk
+                task_ids.append(str(doc.id))
+                meta['n_inserted'] += 1
+            else:
+                id = str(doc.first().id)
+                meta['duplicates'].append(id)  # TODO
+                # If new or duplicate, add the id to the return list
+                task_ids.append(id)
+    meta["success"] = True
+
+    ret = {"data": task_ids, "meta": meta}
+    return ret
+
+
+
+def _copy_users(self, record_list: Dict):
+    """
+    copy the given users as-is to the DB. Used for data migration
+
+    Parameters
+    ----------
+    record_list : list of dict of managers data
+
+    Returns
+    -------
+        Dict with keys: data, meta
+        Data is the ids of the inserted/updated/existing docs
+    """
+
+    meta = add_metadata_template()
+
+    user_names = []
+    with self.session_scope() as session:
+        for user in record_list:
+            doc = session.query(UserORM).filter_by(username=user['username'])
+
+            if get_count_fast(doc) == 0:
+                doc = UserORM(**user)
+                doc.password = doc.password.encode('ascii')
+                session.add(doc)
+                session.commit()
+                user_names.append(doc.username)
+                meta['n_inserted'] += 1
+            else:
+                name = doc.first().username
+                meta['duplicates'].append(name)
+                user_names.append(name)
+    meta["success"] = True
+
+    ret = {"data": user_names, "meta": meta}
+    return ret
+
+
+SQLAlchemySocket._copy_task_to_queue = _copy_task_to_queue
+SQLAlchemySocket._copy_users = _copy_users
+## Connection
 
 
 sql_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/qcarchivedb"

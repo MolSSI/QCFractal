@@ -1,7 +1,6 @@
 import datetime
 # from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import (Column, Integer, String, DateTime, Boolean,
-                        ForeignKey, JSON, Enum, Float, Binary, Table,
+from sqlalchemy import (Column, Integer, String, DateTime, Boolean, ForeignKey, JSON, Enum, Float, Binary, Table,
                         inspect, Index, UniqueConstraint)
 from sqlalchemy.orm import relationship, object_session, column_property
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
@@ -26,15 +25,13 @@ class Base:
 
         tobe_deleted_keys = []
 
-
         if exclude:
             tobe_deleted_keys.extend(exclude)
 
-        dict_obj = [x for x in self.__dict__
-                    if not x.startswith('_')
-                    and x not in self.db_related_fields
-                    and not x.endswith('_obj')
-                    and x not in tobe_deleted_keys]
+        dict_obj = [
+            x for x in self.__dict__ if not x.startswith('_') and x not in self.db_related_fields
+            and not x.endswith('_obj') and x not in tobe_deleted_keys
+        ]
 
         class_inspector = inspect(self.__class__)
         # add hybrid properties
@@ -43,7 +40,7 @@ class Base:
                 dict_obj.append(key)
 
         # Add the attributes to the final results
-        ret = {k:getattr(self, k) for k in dict_obj}
+        ret = {k: getattr(self, k) for k in dict_obj}
 
         if 'extra' in ret:
             ret.update(ret['extra'])
@@ -67,7 +64,7 @@ class Base:
         id_fields = []
         for key, col in class_inspector.columns.items():
             # if PK, FK, or column property (TODO: work around for column property)
-            if col.primary_key or len(col.foreign_keys)>0 or key != col.key:
+            if col.primary_key or len(col.foreign_keys) > 0 or key != col.key:
                 id_fields.append(key)
 
         return id_fields
@@ -76,8 +73,7 @@ class Base:
     def col(cls):
         return cls.__table__.c
 
-    def _update_many_to_many(self, table, parent_id_name, child_id_name,
-                            parent_id_val, new_list, old_list=None):
+    def _update_many_to_many(self, table, parent_id_name, child_id_name, parent_id_val, new_list, old_list=None):
         """Perfomr upsert on a many to many association table
         Does NOT commit changes, parent should optimize when it needs to commit
         raises exception if ids don't exist in the DB
@@ -88,7 +84,6 @@ class Base:
         old_set = {x for x in old_list} if old_list else set()
         new_set = {x for x in new_list} if new_list else set()
 
-
         # Update many-to-many relations
         # Remove old relations and apply the new ones
         if old_set != new_set:
@@ -96,11 +91,8 @@ class Base:
             to_del = old_set - new_set
 
             if to_del:
-                session.execute(
-                    table.delete()
-                        .where(and_(table.c[parent_id_name]==parent_id_val,
-                                    table.c[child_id_name].in_(to_del)))
-                )
+                session.execute(table.delete().where(
+                    and_(table.c[parent_id_name] == parent_id_val, table.c[child_id_name].in_(to_del))))
             if to_add:
                 session.execute(
                     table.insert()\
@@ -120,49 +112,6 @@ class Base:
     #     return date
 
 
-# Temporary classes for migration from mongo to sql
-class MoleculeMap(Base):
-    __tablename__ = 'molecule_map'
-
-    sql_id = Column(Integer, ForeignKey('molecule.id', ondelete='cascade'), primary_key=True)
-    mongo_id = Column(String, unique=True)  # will have an index
-
-
-class KeywordsMap(Base):
-    __tablename__ = 'keywords_map'
-
-    sql_id = Column(Integer, ForeignKey('keywords.id', ondelete='cascade'), primary_key=True)
-    mongo_id = Column(String, unique=True)  # will have an index
-
-
-class KVStoreMap(Base):
-    __tablename__ = 'kv_store_map'
-
-    sql_id = Column(Integer, ForeignKey('kv_store.id', ondelete='cascade'), primary_key=True)
-    mongo_id = Column(String, unique=True)  # will have an index
-
-
-class ResultMap(Base):
-    __tablename__ = 'result_map'
-
-    sql_id = Column(Integer, ForeignKey('result.id', ondelete='cascade'), primary_key=True)
-    mongo_id = Column(String, unique=True)  # will have an index
-
-
-class ProcedureMap(Base):
-    __tablename__ = 'procedure_map'
-
-    sql_id = Column(Integer, ForeignKey('base_result.id', ondelete='cascade'), primary_key=True)
-    mongo_id = Column(String, unique=True)  # will have an index
-
-
-class TaskQueueMap(Base):
-    __tablename__ = 'task_queue_map'
-
-    sql_id = Column(Integer, ForeignKey('task_queue.id', ondelete='cascade'), primary_key=True)
-    mongo_id = Column(String, unique=True)  # will have an index
-
-
 class AccessLogORM(Base):
     __tablename__ = 'access_log'
 
@@ -171,9 +120,8 @@ class AccessLogORM(Base):
     access_date = Column(DateTime, default=datetime.datetime.utcnow)
     type = Column(String)
 
-    __table_args__ = (
-        Index('access_log_date', "access_date"),
-    )
+    __table_args__ = (Index('access_log_date', "access_date"), )
+
 
 class VersionsORM(Base):
     __tablename__ = 'versions'
@@ -220,10 +168,7 @@ class CollectionORM(Base):
     tagline = Column(String)
     extra = Column(JSON)  # extra data related to specific collection type
 
-
-    __table_args__ = (
-        Index('ix_collection_lname', "collection", "lname", unique=True),
-    )
+    __table_args__ = (Index('ix_collection_lname', "collection", "lname", unique=True), )
 
     # meta = {
     #     'indexes': [{
@@ -251,7 +196,7 @@ class MoleculeORM(Base):
     schema_name = Column(String)
     schema_version = Column(Integer, default=2)
     symbols = Column(JSON)  # Column(ARRAY(String))
-    geometry =  Column(JSON)  # Column(ARRAY(Float))
+    geometry = Column(JSON)  # Column(ARRAY(Float))
 
     # Molecule data
     name = Column(String, default="")
@@ -286,7 +231,7 @@ class MoleculeORM(Base):
     #     return str(self.id)
 
     __table_args__ = (
-        Index('ix_molecule_hash', "molecule_hash", unique=False), # dafault index is B-tree
+        Index('ix_molecule_hash', "molecule_hash", unique=False),  # dafault index is B-tree
         # TODO: no index on molecule_formula
     )
 
@@ -323,9 +268,7 @@ class KeywordsORM(Base):
     exact_floats = Column(Boolean, default=False)
     comments = Column(String)
 
-    __table_args__ = (
-        Index('ix_keywords_hash_index', "hash_index", unique=True),
-    )
+    __table_args__ = (Index('ix_keywords_hash_index', "hash_index", unique=True), )
     # meta = {'indexes': [{'fields': ('hash_index', ), 'unique': True}]}
 
 
@@ -345,7 +288,7 @@ class BaseResultORM(Base):
 
     # Base identification
     id = Column(Integer, primary_key=True)
-    hash_index = Column(String) # TODO
+    hash_index = Column(String)  # TODO
     procedure = Column(String(100))  # TODO: may remove
     # program = Column(String(100))  # moved to subclasses
     version = Column(Integer)
@@ -353,21 +296,28 @@ class BaseResultORM(Base):
     # Extra fields
     extras = Column(JSON)
     stdout = Column(Integer, ForeignKey('kv_store.id'))
-    stdout_obj = relationship(KVStoreORM, lazy='noload', foreign_keys=stdout,
-                              cascade="all, delete-orphan", single_parent=True)
+    stdout_obj = relationship(KVStoreORM,
+                              lazy='noload',
+                              foreign_keys=stdout,
+                              cascade="all, delete-orphan",
+                              single_parent=True)
 
     stderr = Column(Integer, ForeignKey('kv_store.id'))
-    stderr_obj = relationship(KVStoreORM, lazy='noload', foreign_keys=stderr,
-                              cascade="all, delete-orphan", single_parent=True)
+    stderr_obj = relationship(KVStoreORM,
+                              lazy='noload',
+                              foreign_keys=stderr,
+                              cascade="all, delete-orphan",
+                              single_parent=True)
 
     error = Column(Integer, ForeignKey('kv_store.id'))
-    error_obj = relationship(KVStoreORM, lazy='noload', foreign_keys=error,
+    error_obj = relationship(KVStoreORM,
+                             lazy='noload',
+                             foreign_keys=error,
                              cascade="all, delete-orphan",
                              single_parent=True)
 
     # Compute status
-    status = Column(Enum(RecordStatusEnum), nullable=False,
-                    default=RecordStatusEnum.incomplete)
+    status = Column(Enum(RecordStatusEnum), nullable=False, default=RecordStatusEnum.incomplete)
 
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)
@@ -377,7 +327,7 @@ class BaseResultORM(Base):
 
     __table_args__ = (
         Index('ix_base_result_status', 'status'),
-        Index('ix_base_result_type', 'result_type'), # todo: needed?
+        Index('ix_base_result_type', 'result_type'),  # todo: needed?
     )
 
     # meta = {
@@ -394,9 +344,8 @@ class BaseResultORM(Base):
     #
     #     return super(BaseResultORM, self).save(*args, **kwargs)
 
-    __mapper_args__ = {
-        'polymorphic_on': 'result_type'
-    }
+    __mapper_args__ = {'polymorphic_on': 'result_type'}
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -427,7 +376,6 @@ class ResultORM(BaseResultORM):
     return_result = Column(JSON)  # one of 3 types
     properties = Column(JSON)  # TODO: may use JSONB in the future
 
-
     # TODO: Do they still exist?
     # schema_name = Column(String)  # default="qc_ret_data_output"??
     # schema_version = Column(Integer)
@@ -440,10 +388,7 @@ class ResultORM(BaseResultORM):
         # Index('ix_result_combined', "program", "driver", "method", "basis",
         #       "keywords", postgresql_using='gin'),  # gin index
         # Index('ix_results_molecule', 'molecule'),  # b-tree index
-
-        UniqueConstraint("program", "driver", "method", "basis",
-              "keywords", "molecule", name='uix_results_keys'),
-    )
+        UniqueConstraint("program", "driver", "method", "basis", "keywords", "molecule", name='uix_results_keys'), )
 
     # meta = {
     #     # 'collection': 'result',
@@ -461,6 +406,7 @@ class ResultORM(BaseResultORM):
         'polymorphic_load': 'selectin',
     }
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -475,6 +421,7 @@ class ProcedureMixin:
 
 
 # ================== Types of ProcedureORMs ================== #
+
 
 class Trajectory(Base):
     """Association table for many to many"""
@@ -497,6 +444,7 @@ class Trajectory(Base):
 #     # PrimaryKeyConstraint('opt_id', 'result_id')
 # )
 
+
 class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     """
         An Optimization  procedure
@@ -504,8 +452,7 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
 
     __tablename__ = 'optimization_procedure'
 
-    id = Column(Integer, ForeignKey('base_result.id', ondelete='cascade'),
-                      primary_key=True)
+    id = Column(Integer, ForeignKey('base_result.id', ondelete='cascade'), primary_key=True)
 
     def __init__(self, **kwargs):
         kwargs.setdefault("version", 1)
@@ -514,30 +461,24 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
 
     schema_version = Column(Integer, default=1)
     initial_molecule = Column(Integer, ForeignKey('molecule.id'))
-    initial_molecule_obj = relationship(MoleculeORM, lazy='select',
-                                        foreign_keys=initial_molecule)
+    initial_molecule_obj = relationship(MoleculeORM, lazy='select', foreign_keys=initial_molecule)
 
     # # Results
-    energies =  Column(JSON)  #Column(ARRAY(Float))
+    energies = Column(JSON)  #Column(ARRAY(Float))
     final_molecule = Column(Integer, ForeignKey('molecule.id'))
-    final_molecule_obj = relationship(MoleculeORM, lazy='select',
-                                      foreign_keys=final_molecule)
+    final_molecule_obj = relationship(MoleculeORM, lazy='select', foreign_keys=final_molecule)
 
     # ids, calculated not stored in this table
     # NOTE: this won't work in SQLite since it returns ARRAYS, aggregate_order_by
     trajectory = column_property(
-                    select([func.array_agg(
-                            aggregate_order_by(Trajectory.result_id,Trajectory.position))
-                    ]).where(Trajectory.opt_id==id)
-    )
-
+        select([func.array_agg(aggregate_order_by(Trajectory.result_id,
+                                                  Trajectory.position))]).where(Trajectory.opt_id == id))
 
     # array of objects (results) - Lazy - raise error of accessed
     trajectory_obj = relationship(Trajectory, cascade="all, delete-orphan",
                                   # backref="optimization_procedure",
                                   order_by=Trajectory.position,
                                   collection_class=ordering_list('position'))
-
 
     __mapper_args__ = {
         'polymorphic_identity': 'optimization_procedure',
@@ -561,7 +502,6 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
             traj = Trajectory(opt_id=int(self.id), result_id=int(result_id))
             self.trajectory_obj.append(traj)
 
-
     # def add_relations(self, trajectory):
     #     session = object_session(self)
     #     # add many to many relation with results if ids are given not objects
@@ -573,7 +513,9 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
     #         )
     #     session.commit()
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 class GridOptimizationAssociation(Base):
     """Association table for many to many"""
@@ -595,8 +537,7 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
 
     __tablename__ = "grid_optimization_procedure"
 
-    id = Column(Integer, ForeignKey('base_result.id', ondelete='cascade'),
-                      primary_key=True)
+    id = Column(Integer, ForeignKey('base_result.id', ondelete='cascade'), primary_key=True)
 
     def __init__(self, **kwargs):
         kwargs.setdefault("version", 1)
@@ -606,22 +547,21 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
 
     # Input data
     initial_molecule = Column(Integer, ForeignKey('molecule.id'))
-    initial_molecule_obj = relationship(MoleculeORM, lazy='select',
-                                        foreign_keys=initial_molecule)
+    initial_molecule_obj = relationship(MoleculeORM, lazy='select', foreign_keys=initial_molecule)
 
     optimization_spec = Column(JSON)
 
     # Output data
     starting_molecule = Column(Integer, ForeignKey('molecule.id'))
-    starting_molecule_obj = relationship(MoleculeORM, lazy='select',
-                                        foreign_keys=initial_molecule)
+    starting_molecule_obj = relationship(MoleculeORM, lazy='select', foreign_keys=initial_molecule)
 
     final_energy_dict = Column(JSON)  # Dict[str, float]
     starting_grid = Column(JSON)  # tuple
 
-    grid_optimizations_obj = relationship(GridOptimizationAssociation, lazy='selectin',
-        cascade="all, delete-orphan", backref="grid_optimization_procedure"
-    )
+    grid_optimizations_obj = relationship(GridOptimizationAssociation,
+                                          lazy='selectin',
+                                          cascade="all, delete-orphan",
+                                          backref="grid_optimization_procedure")
 
     @hybrid_property
     def grid_optimizations(self):
@@ -661,7 +601,9 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
             obj = GridOptimizationAssociation(grid_opt_id=int(self.id), opt_id=int(opt_id), key=key)
             self.grid_optimizations_obj.append(obj)
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 class OptimizationHistory(Base):
     """Association table for many to many"""
@@ -678,10 +620,11 @@ class OptimizationHistory(Base):
 
 
 # association table for many to many relation
-torsion_init_mol_association = Table('torsion_init_mol_association', Base.metadata,
+torsion_init_mol_association = Table(
+    'torsion_init_mol_association', Base.metadata,
     Column('torsion_id', Integer, ForeignKey('torsiondrive_procedure.id', ondelete="CASCADE")),
-    Column('molecule_id', Integer, ForeignKey('molecule.id', ondelete="CASCADE"))
-)
+    Column('molecule_id', Integer, ForeignKey('molecule.id', ondelete="CASCADE")))
+
 
 class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
     """
@@ -690,8 +633,7 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 
     __tablename__ = 'torsiondrive_procedure'
 
-    id = Column(Integer, ForeignKey('base_result.id', ondelete='cascade'),
-                      primary_key=True)
+    id = Column(Integer, ForeignKey('base_result.id', ondelete='cascade'), primary_key=True)
 
     def __init__(self, **kwargs):
         kwargs.setdefault("version", 1)
@@ -709,7 +651,8 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
     # actual objects relation M2M, never loaded here
     initial_molecule_obj = relationship(MoleculeORM,
                                         secondary=torsion_init_mol_association,
-                                        uselist=True, lazy='noload')
+                                        uselist=True,
+                                        lazy='noload')
 
     optimization_spec = Column(JSON)
 
@@ -717,12 +660,12 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
     final_energy_dict = Column(JSON)
     minimum_positions = Column(JSON)
 
-
-    optimization_history_obj = relationship(OptimizationHistory,
-        cascade="all, delete-orphan", #backref="torsiondrive_procedure",
+    optimization_history_obj = relationship(
+        OptimizationHistory,
+        cascade="all, delete-orphan",  #backref="torsiondrive_procedure",
         order_by=OptimizationHistory.position,
-        collection_class=ordering_list('position'), lazy='selectin'
-    )
+        collection_class=ordering_list('position'),
+        lazy='selectin')
 
 
     @hybrid_property
@@ -764,8 +707,8 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
     def update_relations(self, initial_molecule=None, optimization_history=None, **kwarg):
 
         # update torsion molecule relation
-        self._update_many_to_many(torsion_init_mol_association, 'torsion_id', 'molecule_id',
-                        self.id, initial_molecule, self.initial_molecule)
+        self._update_many_to_many(torsion_init_mol_association, 'torsion_id', 'molecule_id', self.id, initial_molecule,
+                                  self.initial_molecule)
 
         self.optimization_history_obj = []
         for key in optimization_history:
@@ -778,7 +721,9 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
         # session.add(self)
         # session.commit()
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 class TaskQueueORM(Base):
     """A queue of tasks corresponding to a procedure
@@ -788,7 +733,6 @@ class TaskQueueORM(Base):
     """
 
     __tablename__ = "task_queue"
-
 
     id = Column(Integer, primary_key=True)
 
@@ -827,18 +771,15 @@ class TaskQueueORM(Base):
     base_result_id = Column(Integer, ForeignKey("base_result.id", ondelete='cascade'), unique=True)
     base_result_obj = relationship(BaseResultORM, lazy='select')  # or lazy='joined'
 
-
     # An important special case is ORDER BY in combination with LIMIT n: an
     # explicit sort will have to process all the data to identify the first n
     # rows, but if there is an index matching the ORDER BY, the first n rows
     # can be retrieved directly, without scanning the remainder at all.
 
-    __table_args__ = (
-        Index('ix_task_queue_created_on', "created_on"),
-        Index('ix_task_queue_keys', "status", "program", "procedure", "tag"),
-        Index('ix_task_queue_manager', "manager"),
-        Index('ix_task_queue_base_result_id', "base_result_id")
-    )
+    __table_args__ = (Index('ix_task_queue_created_on',
+                            "created_on"), Index('ix_task_queue_keys', "status", "program", "procedure", "tag"),
+                      Index('ix_task_queue_manager', "manager"), Index('ix_task_queue_base_result_id',
+                                                                       "base_result_id"))
 
     # meta = {
     #     'indexes': [
@@ -874,11 +815,9 @@ class ServiceQueueORM(Base):
     # created_on = Column(DateTime, nullable=False)
     # modified_on = Column(DateTime, nullable=False)
 
-    __table_args__ = (
-        Index('ix_service_queue_status', "status"),
-        Index('ix_service_queue_status_tag_hash', "status", "tag"),
-        Index('ix_service_queue_hash_index', "hash_index")
-    )
+    __table_args__ = (Index('ix_service_queue_status',
+                            "status"), Index('ix_service_queue_status_tag_hash', "status",
+                                             "tag"), Index('ix_service_queue_hash_index', "hash_index"))
 
     # meta = {
     #     'indexes': [
@@ -901,10 +840,9 @@ class UserORM(Base):
 
     id = Column(Integer, primary_key=True)
 
-    username = Column(String, nullable=False, unique=True) # indexed and unique
+    username = Column(String, nullable=False, unique=True)  # indexed and unique
     password = Column(Binary, nullable=False)
     permissions = Column(JSON)  # Column(ARRAY(String))
-
 
     # meta = {'collection': 'user', 'indexes': ['username']}
 
@@ -920,6 +858,7 @@ class QueueManagerORM(Base):
     name = Column(String, unique=True)
     cluster = Column(String)
     hostname = Column(String)
+    username = Column(String)
     uuid = Column(String)
     tag = Column(String)
 
@@ -939,10 +878,7 @@ class QueueManagerORM(Base):
     programs = Column(JSON)
     procedures = Column(JSON)
 
-    __table_args__ = (
-        Index('ix_queue_manager_status', "status"),
-        Index('ix_queue_manager_modified_on', "modified_on")
-    )
+    __table_args__ = (Index('ix_queue_manager_status', "status"), Index('ix_queue_manager_modified_on', "modified_on"))
 
     # meta = {'collection': 'queue_manager', 'indexes': ['status', 'name', 'modified_on']}
 

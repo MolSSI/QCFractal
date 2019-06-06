@@ -32,18 +32,24 @@ def sec_server(request):
     """
 
     # Check mongo
-    testing.check_active_mongo_server()
+    # testing.check_active_mongo_server()
+    # storage_name = "qcf_local_server_auth_test"
+    # storage_uri = "mongodb://localhost"
 
-    storage_name = "qcf_local_server_auth_test"
+    testing.check_active_mongo_server()
+    storage_name = "test_qcarchivedb"
 
     with testing.loop_in_thread() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
-        server = qcfractal.FractalServer(
-            port=testing.find_open_port(), storage_project_name=storage_name, loop=loop, security="local")
+        server = qcfractal.FractalServer(port=testing.find_open_port(),
+                                         storage_uri=testing.POSTGRES_TESTING_URI,
+                                         storage_project_name=storage_name,
+                                         loop=loop,
+                                         security="local")
 
         # Clean and re-init the databse
-        server.storage.client.drop_database(server.storage._project_name)
+        server.storage._clear_db(storage_name)
 
         # Add local users
         for k, v in _users.items():
@@ -57,14 +63,13 @@ def sec_server_allow_read(sec_server):
     """
     New sec server with read allowed
     """
-
-    yield qcfractal.FractalServer(
-        name="qcf_server_allow_read",
-        port=testing.find_open_port(),
-        storage_project_name=sec_server.storage.get_project_name(),
-        loop=sec_server.loop,
-        security="local",
-        allow_read=True)
+    yield qcfractal.FractalServer(name="qcf_server_allow_read",
+                                  port=testing.find_open_port(),
+                                  storage_project_name=sec_server.storage.get_project_name(),
+                                  storage_uri=testing.POSTGRES_TESTING_URI,
+                                  loop=sec_server.loop,
+                                  security="local",
+                                  allow_read=True)
 
 
 ### Tests the compute queue stack

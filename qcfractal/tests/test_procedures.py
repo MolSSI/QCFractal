@@ -116,20 +116,19 @@ def test_procedure_optimization(fractal_compute_server):
         # Check pulls
         traj = results[0].get_trajectory(projection={"properties": True})
         assert len(traj) == len(results[0].energies)
-        assert traj[0].provenance.creator.lower() == "psi4"
-
-        # Check keywords went through
-        assert "SCF QUADRUPOLE XY" in traj[0].extras["qcvars"]
-        assert "WIBERG_LOWDIN_INDICES" in traj[0].extras["qcvars"]
-
-        # Make sure extra was popped
-        assert "_qcfractal_tags" not in traj[0].extras
 
         assert results[0].get_final_molecule().symbols == ["H", "H"]
 
-
         # Check individual elements
         for ind in range(len(results[0].trajectory)):
+            # Check keywords went through
+            assert traj[ind].provenance.creator.lower() == "psi4"
+            assert "SCF QUADRUPOLE XY" in traj[ind].extras["qcvars"]
+            assert "WIBERG_LOWDIN_INDICES" in traj[ind].extras["qcvars"]
+
+            # Make sure extra was popped
+            assert "_qcfractal_tags" not in traj[ind].extras
+
             raw_energy = traj[ind].properties.return_energy
             assert pytest.approx(raw_energy, 1.e-5) == results[0].energies[ind]
 
