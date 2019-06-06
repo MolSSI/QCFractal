@@ -701,7 +701,7 @@ def main(args=None):
                     # No conf file found, assume defaults
                     logger.warning("Could not find lsf.conf file and LSF_UNIT_FOR_LIMITS variable within ")
             dask_construct.pop('lsf_units', None)  # Remove for integrity
-            lsf_format_bytes_ceil = partial(lsf_format_bytes_ceil_with_unit, unit=unit)
+            lsf_format_bytes_ceil = partial(lsf_format_bytes_ceil_with_unit, unit_str=unit)
             # Finally, monkey patch unit calculation routine with the partial function at fixed units
             lsf.lsf_format_bytes_ceil = lsf_format_bytes_ceil
 
