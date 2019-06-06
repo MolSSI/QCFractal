@@ -22,8 +22,8 @@ Collections are objects that can reference tens or millions of individual
 computations and provide handles to access and visualize this data. There are
 many types of collections such as:
 
-- `ReactionDataset` - A dataset that allows hold many chemical reactions which can be computed with a large vareity of computational methods.
-- `TorsionDriveDataset` - A dataset of molecules where torsion scans can be executed with a variety of computational methods.
+- ``ReactionDataset`` - A dataset that allows hold many chemical reactions which can be computed with a large vareity of computational methods.
+- ``TorsionDriveDataset`` - A dataset of molecules where torsion scans can be executed with a variety of computational methods.
 
 There are many types of collections and more are being added to index and
 organize computations for every use case.
