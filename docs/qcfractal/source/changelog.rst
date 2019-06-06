@@ -15,13 +15,34 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
-0.7.2 / 2019-05-31
+0.7.2 / 2019-06-06
 ------------------
 
 New Features
 ++++++++++++
 
 - (:pr:`279`) Tasks will be deleted from the ``TaskQueue`` once they are completed successfully.
+- (:pr:`271`) A new set of scripts have been created to facilitate migration between MongoDB and PostgreSQL.
+
+Enhancements
+++++++++++++
+
+- (:pr:`275`) Documentation has been further updated to be more contiguous between pages.
+- (:pr:`276`) Imports and type hints in Database objects have been improved to remove ambiguity and make imports easier
+  to follow.
+- (:pr:`280`) Optimizations queried in the database are done with a more efficient lazy ``selectin``. This should make
+  queries much faster.
+- (:pr:`281`) Database Migration tech has been moved to their own folder to keep them isolated from normal
+  production code. This PR also called the testing database ``test_qcarchivedb`` to avoid
+  clashes with production DBs. Finally, a new keyword for testing geometry optimizations
+  has been added.
+
+Bug Fixes
++++++++++
+
+- (:pr:`280`) Fixed a SQL query where ``join`` was set instead of ``noload`` in the lazy reference.
+- (:pr:`283`) The monkey-patch for Dask + LSF had a typo in the keyword for its invoke. This has
+  been fixed for the monkey-patch, as the upstream change was already fixed.
 
 
 0.7.1 / 2019-05-28
