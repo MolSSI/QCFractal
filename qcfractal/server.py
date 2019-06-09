@@ -290,7 +290,7 @@ class FractalServer:
             self.executor = ThreadPoolExecutor(max_workers=2)
 
             def _build_manager():
-                client = FractalClient(self)
+                client = FractalClient(self, username="qcfractal_server")
                 self.objects["queue_manager"] = QueueManager(
                     client, self.queue_socket, logger=self.logger, manager_name="FractalServer", verbose=False)
 
