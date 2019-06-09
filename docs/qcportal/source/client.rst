@@ -16,7 +16,7 @@ section.
 
 The ``FractalClient`` handles all communication to the ``FractalServer`` from
 the Python API layer. This includes adding new molecules, computations,
-collections, and querying for records. A ``FractalClient` constructed without
+collections, and querying for records. A ``FractalClient`` constructed without
 arguments will automatically connect to the MolSSI QCArchive server.
 
 The ``FractalClient`` can also be initialized from a file which is useful so

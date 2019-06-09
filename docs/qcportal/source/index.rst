@@ -2,23 +2,39 @@
 QCPortal
 ========
 
-*QCPortal is a distributed compute and archival platform for quantum chemistry.*
+*QCPortal is a front-end to a QCFractal server which allows the querying,
+visualization, manipulation of hosted data.*
 
 
-Scaling
--------
+QCPortal emphasizes the following virtues:
 
-QCPortal is aimed at a single user on a laptop up to large multi-PI groups on
-dozens of different supercomputers. QCPortal provides a central location to
-marshal and distribute data or computation. QCPortal can switch between a
-variety of computational queue backends such as:
+- **Organize:** Large sets of computations are organized into Collections for easy reference and manipulation.
+- **Reproducibility:** All steps of commonly used pipelines are elucidated in the input without additional human intervention.
+- **Exploration:** Explorate and query of all data contained within a FractalServer.
+- **Visualize:** Plot graphs within Jupyter notebooks or provide 3D graphics of molecules.
+- **Accessibility:** Easily share quantum chemistry data with colleagues or the community through accessibility settings.
 
-- `Dask <http://dask.pydata.org/en/latest/docs.html>`_ - A graph-based workflow engine for laptops and small clusters.
-- `Fireworks <https://materialsproject.github.io/fireworks/>`_ - A asynchronous Mongo-based distributed queuing system.
-- `Parsl <http://parsl-project.org>`_ - High-performance workflows.
 
-Additional backends such as BOINC, Radical Pilot, and Balsam are under active
-consideration.
+Collections
+-----------
+
+Collections are objects that can reference tens or millions of individual
+computations and provide handles to access and visualize this data. There are
+many types of collections such as:
+
+- ``ReactionDataset`` - A dataset that allows hold many chemical reactions which can be computed with a large vareity of computational methods.
+- ``TorsionDriveDataset`` - A dataset of molecules where torsion scans can be executed with a variety of computational methods.
+
+There are many types of collections and more are being added to index and
+organize computations for every use case.
+
+Visualization
+-------------
+
+Advanced visualization routines based off Plotly is provided out of the box to
+allow interactive statistics and rich visual information. In addition, popular
+molecular visualization tools like 3dMol.js provide interactive molecules
+within the Jupyter notebook ecosystem.
 
 ========
 

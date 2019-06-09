@@ -36,6 +36,9 @@ class ObjectId(str):
 
 
 class DriverEnum(str, Enum):
+    """The possible driver configurations of a single quantum chemistry
+    computation.
+    """
     energy = 'energy'
     gradient = 'gradient'
     hessian = 'hessian'

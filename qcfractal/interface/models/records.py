@@ -20,6 +20,8 @@ __all__ = ["OptimizationRecord", "ResultRecord", "OptimizationRecord"]
 
 
 class RecordStatusEnum(str, Enum):
+    """The allowed states of a record object.
+    """
     complete = "COMPLETE"
     incomplete = "INCOMPLETE"
     running = "RUNNING"
@@ -28,7 +30,8 @@ class RecordStatusEnum(str, Enum):
 
 class RecordBase(BaseModel, abc.ABC):
     """
-    Record objects for Results and Procedures tables
+    A BaseRecord object for Result and Procedure records. Contains all basic
+    fields common to the all records.
     """
 
     # Classdata
@@ -90,11 +93,27 @@ class RecordBase(BaseModel, abc.ABC):
 ### Serialization helpers
 
     @classmethod
-    def get_hash_fields(cls):
+    def get_hash_fields(cls) -> Set[str]:
+        """Provides a description of the fields to be used in the hash
+        that uniquely defines this object.
+
+        Returns
+        -------
+        Set[str]
+            A list of all fields that are used in the hash.
+
+        """
         return cls._hash_indices | {"procedure", "program"}
 
-    def get_hash_index(self):
+    def get_hash_index(self) -> str:
+        """Builds (or rebuilds) the hash of this
+        object using the internally known hash fields.
 
+        Returns
+        -------
+        str
+            The objects unique hash index.
+        """
         data = self.json_dict(include=self.get_hash_fields())
 
         return hash_dictionary(data)
@@ -109,9 +128,35 @@ class RecordBase(BaseModel, abc.ABC):
 
 ### Checkers
 
-    def check_client(self):
+    def check_client(self, noraise: bool = False) -> bool:
+        """Checks wether this object owns a FractalClient or not.
+        This is often done so that objects pulled from a server using
+        a FractalClient still posses a connection to the server so that
+        additional data related to this object can be queried.
+
+        Raises
+        ------
+        ValueError
+            If this object does not contain own a client.
+
+        Parameters
+        ----------
+        noraise : bool, optional
+            Does not raise an error if this is True and instead returns
+            a boolean depending if a client exists or not.
+
+        Returns
+        -------
+        bool
+            If True, the object owns a connection to a server. False otherwise.
+        """
         if self.client is None:
+            if noraise:
+                return False
+
             raise ValueError("Requested method requires a client, but client was '{}'.".format(self.client))
+
+        return True
 
 
 ### KVStore Getters
@@ -188,10 +233,15 @@ class ResultRecord(RecordBase):
     properties: qcel.models.ResultProperties = None
 
     class Config(RecordBase.Config):
+        """A hash index is not used for ResultRecords as they can be
+        uniquely determined with queryable keys.
+        """
         build_hash_index = False
 
     @validator('method')
     def check_method(cls, v):
+        """Methods should have a lower string to match the database.
+        """
         return v.lower()
 
     @validator('basis')
@@ -307,7 +357,7 @@ class OptimizationRecord(RecordBase):
 
 ## Standard function
 
-    def get_final_energy(self):
+    def get_final_energy(self) -> float:
         """The final energy of the geometry optimization.
 
         Returns
@@ -317,25 +367,24 @@ class OptimizationRecord(RecordBase):
         """
         return self.energies[-1]
 
-    def get_trajectory(self, projection=None):
+    def get_trajectory(self, projection: Optional[Dict[str, bool]] = None) -> List['ResultRecord']:
         """Returns the raw documents for each gradient evaluation in the trajectory.
 
         Parameters
         ----------
-        client : qcportal.FractalClient
-            A active client connected to a server.
-        projection : None, optional
-            A dictionary of the project to apply to the document
+        projection : Optional[Dict[str, bool]], optional
+            A projection to limit the queried data from the server.
 
         Returns
         -------
-        list of dict
-            A list of results documents
+        List['ResultRecord']
+            A ordered list of computed gradient computations.
+
         """
 
-        return self.client.query_results(id=self.trajectory)
+        return self.client.query_results(id=self.trajectory, projection=projection)
 
-    def get_initial_molecule(self):
+    def get_initial_molecule(self) -> 'Molecule':
         """Returns the initial molecule
 
         Returns
@@ -347,7 +396,7 @@ class OptimizationRecord(RecordBase):
         ret = self.client.query_molecules(id=[self.initial_molecule])
         return ret[0]
 
-    def get_final_molecule(self):
+    def get_final_molecule(self) -> 'Molecule':
         """Returns the optimized molecule
 
         Returns
@@ -366,7 +415,24 @@ class OptimizationRecord(RecordBase):
                      digits: int = 3,
                      relative: bool = True,
                      return_figure: Optional[bool] = None) -> 'plotly.Figure':
+        """Plots the energy of the trajectory the optimization took.
 
+        Parameters
+        ----------
+        units : str, optional
+            Units to display the trajectory in.
+        digits : int, optional
+            The number of valid digits to show.
+        relative : bool, optional
+            If True, all energies are shifted by the lowest energy in the trajectory. Otherwise provides raw energies.
+        return_figure : Optional[bool], optional
+            If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+
+        Returns
+        -------
+        plotly.Figure
+            The requested figure.
+        """
         cf = qcel.constants.conversion_factor("hartree", units)
 
         energies = np.array(self.energies)
