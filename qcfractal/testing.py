@@ -48,6 +48,7 @@ _programs = {
     "psi4": _plugin_import("psi4"),
     "parsl": _plugin_import("parsl"),
     "dask": _plugin_import("dask"),
+    "dask_jobqueue": _plugin_import("dask_jobqueue"),
     "geometric": _plugin_import("geometric"),
     "torsiondrive": _plugin_import("torsiondrive"),
     "torchani": _plugin_import("torchani"),
@@ -71,6 +72,7 @@ def _build_pytest_skip(program):
 
 # Add a number of module testing options
 using_dask = _build_pytest_skip('dask.distributed')
+using_dask_jobqueue = _build_pytest_skip('dask_jobqueue')
 using_dftd3 = _build_pytest_skip('dftd3')
 using_fireworks = _build_pytest_skip('fireworks')
 using_geometric = _build_pytest_skip('geometric')

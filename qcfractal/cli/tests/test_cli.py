@@ -8,6 +8,8 @@ import time
 import pytest
 
 from qcfractal import testing
+from qcfractal.cli.cli_utils import read_config_file
+import yaml
 
 # def _run_tests()
 _options = {"coverage": True, "dump_stdout": True}
@@ -70,28 +72,54 @@ def test_manager_executor_manager_boot_from_file(active_server, tmp_path):
     assert testing.run_process(args, interupt_after=7, **_options)
 
 
+def cli_manager_runs(config_data, tmp_path):
+    temp_config = tmp_path / "temp_config.yaml"
+    with open(temp_config, 'w') as config:
+        config.write(yaml.dump(config_data))
+    args = ["qcfractal-manager", f"--config-file={temp_config}", "--test"]
+    try:
+        assert testing.run_process(args)
+    except AssertionError:
+        # Dump stdout when slow to better debug
+        assert testing.run_process(args, **_options)
+
+
 @testing.mark_slow
-@pytest.mark.parametrize(
-    "adapter",
-    [
-        "dask",
-        "parsl",
-        # pytest.param("fireworks", marks=pytest.mark.xfail),
-        # pytest.param("executor", marks=pytest.mark.xfail)
-    ])
-@pytest.mark.parametrize("scheduler",
-                         ["slurm", "pbs", "torque", "lsf",
-                          pytest.param("garbage", marks=pytest.mark.xfail)])
-def test_cli_template_generator(adapter, scheduler, tmp_path):
-    if adapter == "parsl" and scheduler == "lsf":
-        pytest.xfail("Parsl has no LSF implementation")
+@testing.using_dask_jobqueue
+@testing.using_parsl
+@pytest.mark.parametrize("adapter,scheduler", [
+    ("pool", "slurm"),
+    ("dask", "slurm"),
+    ("dask", "PBS"),
+    ("dask", "MoAb"),
+    ("dask", "SGE"),
+    ("dask", "lSf"),
+    ("parsl", "slurm"),
+    ("parsl", "PBS"),
+    ("parsl", "MoAb"),
+    ("parsl", "SGE"),
+    pytest.param("parsl", "lSf", marks=pytest.mark.xfail),
+    pytest.param("NotAParser", "slurm", marks=pytest.mark.xfail),
+    pytest.param("dask", "NotAScheduler", marks=pytest.mark.xfail),
+])
+def test_cli_managers(adapter, scheduler, tmp_path):
+    """Test that multiple adapter/scheduler combinations at least can boot up in Managers"""
+    config = read_config_file(os.path.join(_pwd, "manager_boot_template.yaml"))
+    config["common"]["adapter"] = adapter
+    config["cluster"]["scheduler"] = scheduler
+    # Make sure this runs
+    cli_manager_runs(config, tmp_path)
+    # Try removing the scheduler block
+    config_present = config.pop(adapter, None)
+    cli_manager_runs(config, tmp_path)
+    # Finally, try setting scheduler block to None to check a corner case
+    if config_present is not None:
+        config[adapter] = None
 
-    tmpl_path = tmp_path / "tmp_template.py"
-    args = ["qcfractal-template", adapter, scheduler, "--test", "-o", str(tmpl_path)]
+
+def test_cli_managers_quick_exits():
+    """Test that --help and --schema correctly work"""
+    args = ["qcfractal-manager", "--help"]
     testing.run_process(args)
-
-    with open(tmpl_path, 'r') as handle:
-        data = handle.read()
-
-    # Will throw a syntax error if incorrect
-    c = ast.parse(data)
+    args = ["qcfractal-manager", "--schema"]
+    testing.run_process(args)

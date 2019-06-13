@@ -29,6 +29,7 @@ dependencies:
   - distributed
   - ipyparallel
   - ipykernel
+  - dask-jobqueue
 
 # QCArchive includes
   - qcengine>=0.6.2
