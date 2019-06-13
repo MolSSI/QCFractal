@@ -10,10 +10,11 @@ import signal
 from enum import Enum
 from functools import partial
 from textwrap import dedent, indent
+from typing import Tuple, Dict
 
 import yaml
 
-from pydantic import BaseModel, BaseSettings
+from pydantic import BaseModel, BaseSettings, validator, ValidationError
 
 
 def import_module(module, package=None):
@@ -107,6 +108,30 @@ def install_signal_handlers(loop, cleanup):
         old_handlers[sig] = signal.signal(sig, handle_signal)
 
 
+class _JsonRefModel(BaseModel):
+    """
+    Reference model for Json replacement fillers
+
+    Matches style of:
+
+    ``'allOf': [{'$ref': '#/definitions/something'}]}``
+
+    and will always be a length 1 list
+    """
+    allOf: Tuple[Dict[str, str]]
+
+    @validator("allOf", whole=True)
+    def all_of_entries(cls, v):
+        value = v[0]
+        if len(value) != 1:
+            raise ValueError("Dict must be of length 1")
+        elif '$ref' not in value:
+            raise ValueError("Dict needs to have key $ref")
+        elif not isinstance(value["$ref"], str) or not value["$ref"].startswith('#/'):
+            raise ValueError("$ref should be formatted as #/definitions/...")
+        return v
+
+
 def doc_formatter(target_object):
     """
     Set the docstring for a Pydantic object automatically based on the parameters
@@ -134,8 +159,19 @@ def doc_formatter(target_object):
         for prop_name, prop in target_schema['properties'].items():
             # Catch lookups for other Pydantic objects
             if '$ref' in prop:
+                # Pre 0.28 lookup
                 lookup = prop['$ref'].split('/')[-1]
                 prop = target_schema['definitions'][lookup]
+            elif 'allOf' in prop:
+                # Post 0.28 lookup
+                try:
+                    # Validation, we don't need output, just the object
+                    _JsonRefModel(**prop)
+                    lookup = prop['allOf'][0]['$ref'].split('/')[-1]
+                    prop = target_schema['definitions'][lookup]
+                except ValidationError:
+                    # Doesn't conform, pass on
+                    pass
             # Get common properties
             prop_type = prop["type"]
             new_doc += prop_name + " : "
