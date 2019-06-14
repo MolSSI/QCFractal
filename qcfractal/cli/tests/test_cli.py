@@ -86,22 +86,20 @@ def load_manager_config(adapter, scheduler):
 
 
 @testing.mark_slow
-@testing.using_dask_jobqueue
-@testing.using_parsl
 @pytest.mark.parametrize("adapter,scheduler", [
     ("pool", "slurm"),
-    ("dask", "slurm"),
-    ("dask", "PBS"),
-    ("dask", "MoAb"),
-    ("dask", "SGE"),
-    ("dask", "lSf"),
-    ("parsl", "slurm"),
-    ("parsl", "PBS"),
-    ("parsl", "MoAb"),
-    ("parsl", "SGE"),
-    pytest.param("parsl", "lSf", marks=pytest.mark.xfail),  # Invalid combination
+    pytest.param("dask", "slurm", marks=testing.using_dask_jobqueue),
+    pytest.param("dask", "PBS", marks=testing.using_dask_jobqueue),
+    pytest.param("dask", "MoAb", marks=testing.using_dask_jobqueue),
+    pytest.param("dask", "SGE", marks=testing.using_dask_jobqueue),
+    pytest.param("dask", "lSf", marks=testing.using_dask_jobqueue),
+    pytest.param("parsl", "slurm", marks=testing.using_parsl),
+    pytest.param("parsl", "PBS", marks=testing.using_parsl),
+    pytest.param("parsl", "MoAb", marks=testing.using_parsl),
+    pytest.param("parsl", "SGE", marks=testing.using_parsl),
+    pytest.param("parsl", "lSf", marks=[testing.using_parsl, pytest.mark.xfail]),  # Invalid combination
     pytest.param("NotAParser", "slurm", marks=pytest.mark.xfail),  # Invalid Parser
-    pytest.param("dask", "NotAScheduler", marks=pytest.mark.xfail),  # Invalid Scheduler
+    pytest.param("pool", "NotAScheduler", marks=pytest.mark.xfail),  # Invalid Scheduler
 ])
 def test_cli_managers(adapter, scheduler, tmp_path):
     """Test that multiple adapter/scheduler combinations at least can boot up in Managers"""
@@ -110,11 +108,9 @@ def test_cli_managers(adapter, scheduler, tmp_path):
 
 
 @testing.mark_slow
-@testing.using_dask_jobqueue
-@testing.using_parsl
 @pytest.mark.parametrize("adapter", [
-    "dask",
-    "parsl",
+    pytest.param("dask", marks=testing.using_dask_jobqueue),
+    pytest.param("parsl", marks=testing.using_parsl),
 ])
 def test_cli_managers_missing(adapter, tmp_path):
     """Test that the manager block missing correctly sets defaults"""
@@ -124,11 +120,9 @@ def test_cli_managers_missing(adapter, tmp_path):
 
 
 @testing.mark_slow
-@testing.using_dask_jobqueue
-@testing.using_parsl
 @pytest.mark.parametrize("adapter", [
-    "dask",
-    "parsl",
+    pytest.param("dask", marks=testing.using_dask_jobqueue),
+    pytest.param("parsl", marks=testing.using_parsl),
 ])
 def test_cli_managers_none(adapter, tmp_path):
     """Test that manager block set to None correctly assigns the defaults"""
