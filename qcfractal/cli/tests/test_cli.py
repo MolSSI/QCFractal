@@ -78,6 +78,13 @@ def cli_manager_runs(config_data, tmp_path):
     assert testing.run_process(args, **_options)
 
 
+def load_manager_config(adapter, scheduler):
+    config = read_config_file(os.path.join(_pwd, "manager_boot_template.yaml"))
+    config["common"]["adapter"] = adapter
+    config["cluster"]["scheduler"] = scheduler
+    return config
+
+
 @testing.mark_slow
 @testing.using_dask_jobqueue
 @testing.using_parsl
@@ -92,23 +99,42 @@ def cli_manager_runs(config_data, tmp_path):
     ("parsl", "PBS"),
     ("parsl", "MoAb"),
     ("parsl", "SGE"),
-    pytest.param("parsl", "lSf", marks=pytest.mark.xfail),
-    pytest.param("NotAParser", "slurm", marks=pytest.mark.xfail),
-    pytest.param("dask", "NotAScheduler", marks=pytest.mark.xfail),
+    pytest.param("parsl", "lSf", marks=pytest.mark.xfail),  # Invalid combination
+    pytest.param("NotAParser", "slurm", marks=pytest.mark.xfail),  # Invalid Parser
+    pytest.param("dask", "NotAScheduler", marks=pytest.mark.xfail),  # Invalid Scheduler
 ])
 def test_cli_managers(adapter, scheduler, tmp_path):
     """Test that multiple adapter/scheduler combinations at least can boot up in Managers"""
-    config = read_config_file(os.path.join(_pwd, "manager_boot_template.yaml"))
-    config["common"]["adapter"] = adapter
-    config["cluster"]["scheduler"] = scheduler
-    # Make sure this runs
+    config = load_manager_config(adapter, scheduler)
     cli_manager_runs(config, tmp_path)
-    # Try removing the scheduler block
-    config_present = config.pop(adapter, None)
+
+
+@testing.mark_slow
+@testing.using_dask_jobqueue
+@testing.using_parsl
+@pytest.mark.parametrize("adapter", [
+    "dask",
+    "parsl",
+])
+def test_cli_managers_missing(adapter, tmp_path):
+    """Test that the manager block missing correctly sets defaults"""
+    config = load_manager_config(adapter, "slurm")
+    config.pop(adapter, None)
     cli_manager_runs(config, tmp_path)
-    # Finally, try setting scheduler block to None to check a corner case
-    if config_present is not None:
-        config[adapter] = None
+
+
+@testing.mark_slow
+@testing.using_dask_jobqueue
+@testing.using_parsl
+@pytest.mark.parametrize("adapter", [
+    "dask",
+    "parsl",
+])
+def test_cli_managers_none(adapter, tmp_path):
+    """Test that manager block set to None correctly assigns the defaults"""
+    config = load_manager_config(adapter, "slurm")
+    config[adapter] = None
+    cli_manager_runs(config, tmp_path)
 
 
 def test_cli_managers_help():
