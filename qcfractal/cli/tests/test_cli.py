@@ -1,13 +1,14 @@
 """
 Tests for QCFractals CLI
 """
-import ast
 import os
 import time
 
 import pytest
 
 from qcfractal import testing
+from qcfractal.cli.cli_utils import read_config_file
+import yaml
 
 # def _run_tests()
 _options = {"coverage": True, "dump_stdout": True}
@@ -70,28 +71,73 @@ def test_manager_executor_manager_boot_from_file(active_server, tmp_path):
     assert testing.run_process(args, interupt_after=7, **_options)
 
 
+def cli_manager_runs(config_data, tmp_path):
+    temp_config = tmp_path / "temp_config.yaml"
+    temp_config.write_text(yaml.dump(config_data))
+    args = ["qcfractal-manager", f"--config-file={temp_config}", "--test"]
+    assert testing.run_process(args, **_options)
+
+
+def load_manager_config(adapter, scheduler):
+    config = read_config_file(os.path.join(_pwd, "manager_boot_template.yaml"))
+    config["common"]["adapter"] = adapter
+    config["cluster"]["scheduler"] = scheduler
+    return config
+
+
 @testing.mark_slow
-@pytest.mark.parametrize(
-    "adapter",
-    [
-        "dask",
-        "parsl",
-        # pytest.param("fireworks", marks=pytest.mark.xfail),
-        # pytest.param("executor", marks=pytest.mark.xfail)
-    ])
-@pytest.mark.parametrize("scheduler",
-                         ["slurm", "pbs", "torque", "lsf",
-                          pytest.param("garbage", marks=pytest.mark.xfail)])
-def test_cli_template_generator(adapter, scheduler, tmp_path):
-    if adapter == "parsl" and scheduler == "lsf":
-        pytest.xfail("Parsl has no LSF implementation")
+@pytest.mark.parametrize("adapter,scheduler", [
+    ("pool", "slurm"),
+    pytest.param("dask", "slurm", marks=testing.using_dask_jobqueue),
+    pytest.param("dask", "PBS", marks=testing.using_dask_jobqueue),
+    pytest.param("dask", "MoAb", marks=testing.using_dask_jobqueue),
+    pytest.param("dask", "SGE", marks=testing.using_dask_jobqueue),
+    pytest.param("dask", "lSf", marks=testing.using_dask_jobqueue),
+    pytest.param("parsl", "slurm", marks=testing.using_parsl),
+    pytest.param("parsl", "PBS", marks=testing.using_parsl),
+    pytest.param("parsl", "MoAb", marks=testing.using_parsl),
+    pytest.param("parsl", "SGE", marks=testing.using_parsl),
+    pytest.param("parsl", "lSf", marks=[testing.using_parsl, pytest.mark.xfail]),  # Invalid combination
+    pytest.param("NotAParser", "slurm", marks=pytest.mark.xfail),  # Invalid Parser
+    pytest.param("pool", "NotAScheduler", marks=pytest.mark.xfail),  # Invalid Scheduler
+])
+def test_cli_managers(adapter, scheduler, tmp_path):
+    """Test that multiple adapter/scheduler combinations at least can boot up in Managers"""
+    config = load_manager_config(adapter, scheduler)
+    cli_manager_runs(config, tmp_path)
 
-    tmpl_path = tmp_path / "tmp_template.py"
-    args = ["qcfractal-template", adapter, scheduler, "--test", "-o", str(tmpl_path)]
-    testing.run_process(args)
 
-    with open(tmpl_path, 'r') as handle:
-        data = handle.read()
+@testing.mark_slow
+@pytest.mark.parametrize("adapter", [
+    pytest.param("dask", marks=testing.using_dask_jobqueue),
+    pytest.param("parsl", marks=testing.using_parsl),
+])
+def test_cli_managers_missing(adapter, tmp_path):
+    """Test that the manager block missing correctly sets defaults"""
+    config = load_manager_config(adapter, "slurm")
+    config.pop(adapter, None)
+    cli_manager_runs(config, tmp_path)
 
-    # Will throw a syntax error if incorrect
-    c = ast.parse(data)
+
+@testing.mark_slow
+@pytest.mark.parametrize("adapter", [
+    pytest.param("dask", marks=testing.using_dask_jobqueue),
+    pytest.param("parsl", marks=testing.using_parsl),
+])
+def test_cli_managers_none(adapter, tmp_path):
+    """Test that manager block set to None correctly assigns the defaults"""
+    config = load_manager_config(adapter, "slurm")
+    config[adapter] = None
+    cli_manager_runs(config, tmp_path)
+
+
+def test_cli_managers_help():
+    """Test that qcfractal_manager --help works"""
+    args = ["qcfractal-manager", "--help"]
+    testing.run_process(args, **_options)
+
+
+def test_cli_managers_schema():
+    """Test that qcfractal_manager --schema works"""
+    args = ["qcfractal-manager", "--schema"]
+    testing.run_process(args, **_options)

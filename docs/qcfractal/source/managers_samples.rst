@@ -185,7 +185,7 @@ This example also uses Parsl and sets a scratch directory.
      manager_name: "PBS_Parsl_MyPIGroupAccount_Manger"
 
     cluster:
-     node_exclusivity: False
+     node_exclusivity: True
      scheduler: pbs
      scheduler_options:
          - "-A MyPIsGroupAccount"

@@ -15,7 +15,22 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
-0.7.2 / 2019-06-06
+0.7.3 / 2019-06-??
+------------------
+
+Enhancements
+++++++++++++
+
+- (:pr:`291`) Tests have been formally added for the Queue Manager to reduce bugs in the future. They cannot test on
+  actual Schedulers yet, but its a step in the right direction.
+
+Bug Fixes
++++++++++
+
+- (:pr:`291`) Queue Manager documentation generation works on Pydantic 0.28+. A number as-of-yet uncaught/unseen bugs
+  were revealed in tests and have been fixed as well.
+
+0.7.2 / 2019-05-31
 ------------------
 
 New Features

@@ -180,8 +180,10 @@ class QueueManagerSettings(BaseSettings):
     ntests: int = Schema(
         5,
         description="Number of tests to run if the `test` flag is set to True. Total number of tests will be this "
-                    "number times the number of found quantum chemistry programs. Does nothing if `test` is False",
-        gt=0
+                    "number times the number of found quantum chemistry programs. Does nothing if `test` is False."
+                    "If set to 0, then this submits no tests, but it will run through the setup and client "
+                    "initialization.",
+        gt=-1
     )
     max_queued_tasks: Optional[int] = Schema(
         None,
@@ -439,9 +441,9 @@ class ManagerSettings(BaseModel):
     common: CommonManagerSettings = CommonManagerSettings()
     server: FractalServerSettings = FractalServerSettings()
     manager: QueueManagerSettings = QueueManagerSettings()
-    cluster: Optional[ClusterSettings] = None
-    dask: Optional[DaskQueueSettings] = None
-    parsl: Optional[ParslQueueSettings] = None
+    cluster: Optional[ClusterSettings] = ClusterSettings()
+    dask: Optional[DaskQueueSettings] = DaskQueueSettings()
+    parsl: Optional[ParslQueueSettings] = ParslQueueSettings()
 
     class Config:
         extra = "forbid"
@@ -537,6 +539,12 @@ def parse_args():
         for name in ["cluster", "dask", "parsl"]:
             if name in config_data:
                 data[name] = config_data[name]
+                if data[name] is None:
+                    # Handle edge case where None provided here is explicitly treated as
+                    # "do not parse" by Pydantic (intended behavior) instead of the default empty dict
+                    # being used instead. This only happens when a user sets in the YAML file
+                    # the top level header and nothing below it.
+                    data[name] = {}
 
     return data
 
@@ -642,7 +650,7 @@ def main(args=None):
         from dask_jobqueue import LSFCluster
         from dask_jobqueue import lsf
 
-        def lsf_format_bytes_ceil_with_unit(n: int, unit_str: str = "mb") -> str:
+        def lsf_format_bytes_ceil_with_unit(n: int, unit_str: str = "m") -> str:
             """
             Special function we will use to monkey-patch as a partial into the dask_jobqueue.lsf file if need be
             Because the function exists as part of the lsf.py and not a staticmethod of the LSFCluster class, we have
@@ -651,12 +659,12 @@ def main(args=None):
             unit_str = unit_str.lower()
             converter = {
                 "b": 0,
-                "kb": 1,
-                "mb": 2,
-                "gb": 3,
-                "tb": 4,
-                "pb": 5,
-                "eb": 6
+                "k": 1,
+                "m": 2,
+                "g": 3,
+                "t": 4,
+                "p": 5,
+                "e": 6
             }
             return "%d" % ceil(n / (1000 ** converter[unit_str]))
 
@@ -674,7 +682,7 @@ def main(args=None):
                 unit = settings.dask.lsf_units
             else:
                 # Not manually set, search for automatically, Using docs from LSF 9.1.3 for search/defaults
-                unit = "kb"  # Default fallback unit
+                unit = "k"  # Default fallback unit
                 try:
                     # Start looking for the LSF conf file
                     conf_dir = "/etc"  # Fall back directory
@@ -693,7 +701,7 @@ def main(args=None):
                         if not line.strip().startswith("LSF_UNIT_FOR_LIMITS"):
                             continue
                         # Found the line, infer the unit, only first 2 chars after "="
-                        unit = line.split("=")[1].lower()[:2]
+                        unit = line.split("=")[1].lower()[0]
                         break
                     logger.debug(f"Setting units to {unit} from the LSF config file at {conf_path}")
                 # Trap the lsf.conf does not exist, and the conf file not setup right (i.e. "$VAR=xxx^" regex-form)
