@@ -1,7 +1,6 @@
 """
 Tests for QCFractals CLI
 """
-import ast
 import os
 import time
 
@@ -74,14 +73,9 @@ def test_manager_executor_manager_boot_from_file(active_server, tmp_path):
 
 def cli_manager_runs(config_data, tmp_path):
     temp_config = tmp_path / "temp_config.yaml"
-    with open(temp_config, 'w') as config:
-        config.write(yaml.dump(config_data))
+    temp_config.write_text(yaml.dump(config_data))
     args = ["qcfractal-manager", f"--config-file={temp_config}", "--test"]
-    try:
-        assert testing.run_process(args)
-    except AssertionError:
-        # Dump stdout when slow to better debug
-        assert testing.run_process(args, **_options)
+    assert testing.run_process(args, **_options)
 
 
 @testing.mark_slow
@@ -117,9 +111,13 @@ def test_cli_managers(adapter, scheduler, tmp_path):
         config[adapter] = None
 
 
-def test_cli_managers_quick_exits():
-    """Test that --help and --schema correctly work"""
+def test_cli_managers_help():
+    """Test that qcfractal_manager --help works"""
     args = ["qcfractal-manager", "--help"]
-    testing.run_process(args)
+    testing.run_process(args, **_options)
+
+
+def test_cli_managers_schema():
+    """Test that qcfractal_manager --schema works"""
     args = ["qcfractal-manager", "--schema"]
-    testing.run_process(args)
+    testing.run_process(args, **_options)
