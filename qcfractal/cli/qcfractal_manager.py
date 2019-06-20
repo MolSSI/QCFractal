@@ -674,7 +674,7 @@ def main(args=None):
             # using the custom class
             cluster_class = SGEClusterWithJobQueue
         # Temporary fix until unit system is checked in the LSFCluster of dask
-        elif cluster_class is LSFCluster and 'lsf_units' not in inspect.getfullargspec(SGECluster.__init__).args:
+        elif cluster_class is LSFCluster and 'lsf_units' not in inspect.getfullargspec(LSFCluster.__init__).args:
             # We have to do some serious monkey patching here
             # Try to infer the unit system
             if settings.dask.lsf_units is not None:

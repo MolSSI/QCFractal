@@ -11,11 +11,12 @@ import qcfractal.interface as ptl
 from qcfractal import FractalServer, queue, testing
 from qcfractal.testing import reset_server_database, test_server
 
+CLIENT_USERNAME = "test_compute_adapter"
 
 @pytest.fixture(scope="module")
 def compute_adapter_fixture(test_server):
 
-    client = ptl.FractalClient(test_server)
+    client = ptl.FractalClient(test_server, username=CLIENT_USERNAME)
 
     with ProcessPoolExecutor(max_workers=2) as adapter:
 
@@ -45,15 +46,23 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
     assert len(ret) == 1
 
     # Check the logs to make sure
-    manager_logs = server.storage.get_managers()["data"]
-    assert len(manager_logs) == 2
+    managers = server.storage.get_managers()["data"]
+    assert len(managers) == 2
 
-    stuff_log = next(x for x in manager_logs if x["tag"] == "stuff")
-    assert stuff_log["submitted"] == 0
+    test_results = {"stuff": 0, "other": 1}
+    for manager in managers:
+        value = test_results[manager["tag"]]
+        assert manager["submitted"] == value
+        assert manager["completed"] == value
+        assert manager["username"] == CLIENT_USERNAME
 
-    other_log = next(x for x in manager_logs if x["tag"] == "other")
-    assert other_log["submitted"] == 1
-    assert other_log["completed"] == 1
+
+    # stuff_log = next(x for x in manager_logs if x["tag"] == "stuff")
+    # assert stuff_log["submitted"] == 0
+
+    # other_log = next(x for x in manager_logs if x["tag"] == "other")
+    # assert other_log["submitted"] == 1
+    # assert other_log["completed"] == 1
 
 
 @testing.using_rdkit

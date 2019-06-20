@@ -24,7 +24,7 @@ def parse_args():
         help='Creates a local pool QueueManager')
 
     manager = parser.add_argument_group('Manager Settings')
-    manager.add_argument("--heartbeat-frequency", type=int, default=300, help="The manager heartbeat frequency.")
+    manager.add_argument("--heartbeat-frequency", type=int, default=1800, help="The manager heartbeat frequency.")
 
     security = parser.add_argument_group('Security Settings')
     security.add_argument(

@@ -280,7 +280,7 @@ class QueueManagerHandler(APIHandler):
 
         elif op == "heartbeat":
             self.storage.manager_update(name, status="ACTIVE", **body.meta.dict())
-            self.logger.info("QueueManager: Heartbeat of manager {} detected.".format(name))
+            self.logger.debug("QueueManager: Heartbeat of manager {} detected.".format(name))
 
         else:
             msg = "Operation '{}' not understood.".format(op)
