@@ -5,6 +5,7 @@ Queue backend abstraction manager.
 from .executor_adapter import DaskAdapter, ExecutorAdapter
 from .fireworks_adapter import FireworksAdapter
 from .parsl_adapter import ParslAdapter
+from .balsm_adapter import BalsamAdapter
 
 
 def build_queue_adapter(workflow_client, logger=None, **kwargs):
@@ -43,6 +44,9 @@ def build_queue_adapter(workflow_client, logger=None, **kwargs):
 
     elif adapter_type == "fireworks.core.launchpad.LaunchPad":
         adapter = FireworksAdapter(workflow_client, logger=logger, **kwargs)
+
+    elif adapter_type == "balsam.launcher.dag":
+        adapter = BalsamAdapter(workflow_client, logger=logger, **kwargs)
 
     else:
         raise KeyError("QueueAdapter type '{}' not understood".format(adapter_type))
