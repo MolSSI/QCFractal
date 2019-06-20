@@ -294,7 +294,7 @@ class QueueManager:
         payload["data"]["operation"] = "heartbeat"
         try:
             self.client._automodel_request("queue_manager", "put", payload)
-            self.logger.info("Heartbeat was successful.")
+            self.logger.debug("Heartbeat was successful.")
         except IOError:
             self.logger.warning("Heartbeat was not successful.")
 
