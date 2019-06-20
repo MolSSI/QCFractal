@@ -101,7 +101,7 @@ class FractalServer:
             # Queue options
             queue_socket: 'BaseAdapter'=None,
             max_active_services: int=20,
-            heartbeat_frequency: int=300):
+            heartbeat_frequency: int=1800):
         """QCFractal initialization
 
         Parameters
