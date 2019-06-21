@@ -129,6 +129,7 @@ class FractalSnowflake(FractalServer):
                          max_active_services=max_active_services,
                          queue_socket=self.queue_socket,
                          logfile_prefix=log_prefix,
+                         service_frequency=2,
                          query_limit=int(1.e6))
 
         if self._storage:
@@ -319,6 +320,7 @@ class FractalSnowflakeHandler:
             f"--server-name={self._dbname}",
             f"--port={self._server_port}",
             f"--local-manager={self._ncores}",
+            "--service_frequency=2",
         ], cwd=self._qcfdir.name) # yapf: disable
 
         for x in range(timeout * 10):

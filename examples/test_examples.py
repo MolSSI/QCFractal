@@ -58,7 +58,7 @@ def test_parsl_server_example():
 
     with testing.preserve_cwd():
         os.chdir(os.path.join(_pwd, "parsl_torsiondrive"))
-        server_args = ["qcfractal-server", "qca_parsl_testing"]
+        server_args = ["qcfractal-server", "qca_parsl_testing", "--service-frequency=0.5"]
         with testing.popen(server_args, **kwargs) as server:
             time.sleep(5)  # Boot up server
 
@@ -66,4 +66,4 @@ def test_parsl_server_example():
             with testing.popen(manager_args, **kwargs) as manager:
 
                 assert testing.run_process(["python", "compute_torsion.py"], **kwargs)
-                assert wait_true(40, testing.run_process, ["python", "query_torsion.py"], **kwargs)
+                assert wait_true(20, testing.run_process, ["python", "query_torsion.py"], **kwargs)

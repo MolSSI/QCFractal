@@ -38,7 +38,6 @@ def parse_args():
     start = subparsers.add_parser('start', help="Starts a QCFractal server instance.")
     start.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
-    fractal_args = start.add_argument_group('Server Settings')
     # Allow port and logfile to be altered on the fly
     for field in ["port", "logfile"]:
         cli_name = "--" + field.replace("_", "-")
@@ -260,6 +259,7 @@ def server_start(args, config):
             logfile_prefix=logfile,
 
             # Queue options
+            service_frequency=config.fractal.service_frequency,
             heartbeat_frequency=config.fractal.heartbeat_frequency,
             max_active_services=config.fractal.max_active_services,
             queue_socket=adapter)
