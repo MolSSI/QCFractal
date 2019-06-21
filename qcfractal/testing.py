@@ -151,6 +151,19 @@ def preserve_cwd():
         os.chdir(cwd)
 
 
+def await_true(wait_time, func, *args, **kwargs):
+
+    wait_period = kwargs.pop("period", 4)
+    periods = max(int(wait_time / wait_period), 1)
+    for period in range(periods):
+        ret = func(*args, **kwargs)
+        if ret:
+            return True
+        time.sleep(wait_period)
+
+    return False
+
+
 ### Background thread loops
 
 

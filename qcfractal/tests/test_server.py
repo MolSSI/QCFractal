@@ -10,7 +10,7 @@ import requests
 
 import qcfractal.interface as ptl
 from qcfractal import FractalServer, FractalSnowflake, FractalSnowflakeHandler
-from qcfractal.testing import check_active_mongo_server, find_open_port, pristine_loop, test_server
+from qcfractal.testing import await_true, check_active_mongo_server, find_open_port, pristine_loop, test_server, using_geometric, using_torsiondrive, using_rdkit, mark_slow
 
 meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
 
@@ -160,3 +160,45 @@ def test_snowflakehandler_log():
         assert "0 task" not in server.show_log(show=False, nlines=100)
 
     assert proc.poll() is not None
+
+@mark_slow
+@using_geometric
+@using_torsiondrive
+@using_rdkit
+def test_snowflake_service():
+    with FractalSnowflakeHandler() as server:
+
+        client = server.client()
+
+        hooh = ptl.data.get_molecule("hooh.json")
+
+        # Geometric options
+        tdinput = {
+            "initial_molecule": [hooh],
+            "keywords": {
+                "dihedrals": [[0, 1, 2, 3]],
+                "grid_spacing": [90]
+            },
+            "optimization_spec": {
+                "program": "geometric",
+                "keywords": {
+                    "coordsys": "tric",
+                }
+            },
+            "qc_spec": {
+                "driver": "gradient",
+                "method": "UFF",
+                "basis": None,
+                "keywords": None,
+                "program": "rdkit",
+            },
+        }
+
+        ret = client.add_service([tdinput])
+
+        def geometric_await():
+            td = client.query_procedures(id=ret.ids)[0]
+            return td.status == 'COMPLETE'
+
+        assert await_true(30, geometric_await, period=2)
+

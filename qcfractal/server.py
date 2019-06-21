@@ -454,8 +454,10 @@ class FractalServer:
         if open_slots > 0:
             new_services = self.storage.get_services(status="WAITING", limit=open_slots)["data"]
             current_services.extend(new_services)
+            if len(new_services):
+                self.logger.info(f"Starting {len(new_services)} new services.")
 
-        self.logger.info(f"Updating {len(current_services)} services.")
+        self.logger.debug(f"Updating {len(current_services)} services.")
 
         # Loop over the services and iterate
         running_services = 0
@@ -473,7 +475,7 @@ class FractalServer:
                 service.error = {"error_type": "iteration_error", "error_message": error_message}
                 finished = False
 
-            self.storage.update_services([service])
+            r = self.storage.update_services([service])
 
             if finished is not False:
 

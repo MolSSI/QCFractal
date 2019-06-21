@@ -320,7 +320,7 @@ class FractalSnowflakeHandler:
             f"--server-name={self._dbname}",
             f"--port={self._server_port}",
             f"--local-manager={self._ncores}",
-            "--service_frequency=2",
+            "--service-frequency=2",
         ], cwd=self._qcfdir.name) # yapf: disable
 
         for x in range(timeout * 10):
