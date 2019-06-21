@@ -3,6 +3,7 @@ Utilities and base functions for Services.
 """
 
 import abc
+import datetime
 import json
 from typing import Any, Dict, List, Set, Tuple, Optional
 
@@ -125,12 +126,22 @@ class BaseService(BaseModel, abc.ABC):
     status: str = "WAITING"
     error: Optional[ComputeError] = None
 
+    # Sorting and priority
+    priority: PriorityEnum = PriorityEnum.NORMAL
+    modified_on: datetime.datetime = None
+    created_on: datetime.datetime = None
+
     def __init__(self, **data):
+
+        data.setdefault("modified_on", datetime.datetime.utcnow())
+        data.setdefault("created_on", datetime.datetime.utcnow())
+
         super().__init__(**data)
         self.task_manager.logger = self.logger
         self.task_manager.storage_socket = self.storage_socket
         self.task_manager.tag = self.task_tag
         self.task_manager.priority = self.task_priority
+
 
     @validator('task_priority', pre=True)
     def munge_priority(cls, v):

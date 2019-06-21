@@ -124,7 +124,7 @@ class ServiceQueueHandler(APIHandler):
         body_model, response_model = rest_model("service_queue", "get")
         body = self.parse_bodymodel(body_model)
 
-        ret = self.storage.get_services(**body.data.dict(), projection=body.meta.projection)
+        ret = self.storage.get_services(**body.data.dict())
         response = response_model(**ret)
 
         self.logger.info("GET: ServiceQueue - {} pulls.\n".format(len(response.data)))
