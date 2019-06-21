@@ -4,16 +4,15 @@ Tests the database wrappers
 All tests should be atomic, that is create and cleanup their data
 """
 
-import pytest
-
-import qcfractal.interface as ptl
-from qcfractal.services.services import TorsionDriveService
-
-from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
-from qcfractal.interface.models.task_models import TaskStatusEnum
 from datetime import datetime
 from time import time
 
+import pytest
+
+import qcfractal.interface as ptl
+from qcfractal.interface.models.task_models import TaskStatusEnum
+from qcfractal.services.services import TorsionDriveService
+from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
 
 bad_id1 = "000000000000000000000000"
 bad_id2 = "000000000000000000000001"
@@ -917,10 +916,10 @@ def test_results_pagination(storage_socket):
     # Save (~ 1-7 msec/doc)
     t1 = time()
 
-    total_results = 1000
+    total_results = 50
     first_half = int(total_results / 2)
-    limit = 100
-    skip = 50
+    limit = 10
+    skip = 5
 
     results = []
     for i in range(first_half):
@@ -985,9 +984,9 @@ def test_procedure_pagination(storage_socket):
         },
     }
 
-    total = 100
-    limit = 50
-    skip = 40
+    total = 10
+    limit = 5
+    skip = 4
 
     procedures = []
     for i in range(total):

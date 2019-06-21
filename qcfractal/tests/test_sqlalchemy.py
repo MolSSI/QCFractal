@@ -8,13 +8,13 @@
 from time import time
 
 import pytest
-import qcfractal.interface as ptl
 from sqlalchemy.orm import joinedload
-from qcfractal.storage_sockets.sql_models import (MoleculeORM, OptimizationProcedureORM, ResultORM,
-                                                 TaskQueueORM, TorsionDriveProcedureORM, KVStoreORM,
-                                                  OptimizationHistory, ServiceQueueORM, Trajectory)
-from qcfractal.services.services import TorsionDriveService
 
+import qcfractal.interface as ptl
+from qcfractal.services.services import TorsionDriveService
+from qcfractal.storage_sockets.sql_models import (KVStoreORM, MoleculeORM, OptimizationHistory,
+                                                  OptimizationProcedureORM, ResultORM, ServiceQueueORM, TaskQueueORM,
+                                                  TorsionDriveProcedureORM, Trajectory)
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
 
 
@@ -447,4 +447,3 @@ def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures
 
     # cleanup
     session_delete_all(session, ResultORM)
-

@@ -8,7 +8,7 @@ import pytest
 
 import qcfractal.interface as ptl
 from qcfractal.interface.models import GridOptimizationInput, TorsionDriveInput
-from qcfractal.testing import fractal_compute_server, recursive_dict_merge, using_geometric, using_rdkit
+from qcfractal.testing import fractal_compute_server, recursive_dict_merge, mark_slow, using_geometric, using_rdkit
 
 
 @pytest.fixture(scope="module")
@@ -87,6 +87,7 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
     assert hasattr(result.get_final_molecules()[(-90, )], "symbols")
 
 
+@mark_slow
 def test_service_torsiondrive_multi_single(torsiondrive_fixture):
     spin_up_test, client = torsiondrive_fixture
 
@@ -120,6 +121,7 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
     assert base_run.optimization_history == duplicate_run.optimization_history
 
 
+@mark_slow
 def test_service_torsiondrive_option_dihedral_ranges(torsiondrive_fixture):
     """"Tests torsiondrive with dihedral_ranges optional keyword """
 
@@ -143,6 +145,7 @@ def test_service_torsiondrive_option_dihedral_ranges(torsiondrive_fixture):
     assert all(hasattr(m, "symbols") for m in final_molecules.values())
 
 
+@mark_slow
 def test_service_torsiondrive_option_energy_decrease_thresh(torsiondrive_fixture):
     """"Tests torsiondrive with energy_decrease_thresh optional keyword"""
 
@@ -161,6 +164,7 @@ def test_service_torsiondrive_option_energy_decrease_thresh(torsiondrive_fixture
     assert pytest.approx(0.000753492556057886, abs=1e-6) == final_energies[(180,)]
 
 
+@mark_slow
 def test_service_torsiondrive_option_energy_upper_limit(torsiondrive_fixture):
     """"Tests torsiondrive with energy_upper_limit optional keyword"""
 
@@ -179,6 +183,7 @@ def test_service_torsiondrive_option_energy_upper_limit(torsiondrive_fixture):
     assert pytest.approx(0.0007991274441437338, abs=1e-6) == final_energies[(-60,)]
 
 
+@mark_slow
 def test_service_torsiondrive_option_extra_constraints(torsiondrive_fixture):
     """"Tests torsiondrive with extra_constraints in optimization_spec """
 

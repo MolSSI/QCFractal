@@ -100,7 +100,7 @@ class FractalServer:
 
             # Queue options
             queue_socket: 'BaseAdapter'=None,
-            heartbeat_frequency: float=300,
+            heartbeat_frequency: float=1800,
 
             # Service options
             max_active_services: int=20,
