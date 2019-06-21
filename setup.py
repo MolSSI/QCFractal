@@ -50,6 +50,7 @@ if __name__ == "__main__":
                 "qcfractal-server=qcfractal.cli.qcfractal_server:main",
                 "qcfractal-manager=qcfractal.cli.qcfractal_manager:main",
                 "qcfractal-dashboard=qcfractal.cli.qcfractal_dashboard:main",
+                "qcabalsam-interface=qcfractal.cli.qcabalsam_interface:main"
             ]
         },
         extras_require={

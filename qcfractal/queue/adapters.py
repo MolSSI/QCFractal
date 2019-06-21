@@ -45,7 +45,7 @@ def build_queue_adapter(workflow_client, logger=None, **kwargs):
     elif adapter_type == "fireworks.core.launchpad.LaunchPad":
         adapter = FireworksAdapter(workflow_client, logger=logger, **kwargs)
 
-    elif adapter_type == "balsam.launcher.dag":
+    elif adapter_type == "qcfractal.queue.balsam_client.BalsamClient":
         adapter = BalsamAdapter(workflow_client, logger=logger, **kwargs)
 
     else:

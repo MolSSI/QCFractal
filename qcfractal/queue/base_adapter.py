@@ -2,10 +2,10 @@
 A BaseAdapter for wrapping compute engines.
 """
 
+from ..fractal_utils import get_function as get_function_top
+
 import abc
-import importlib
 import logging
-import operator
 from typing import Any, Callable, Dict, Hashable, List, Optional, Tuple
 
 
@@ -62,7 +62,7 @@ class BaseAdapter(abc.ABC):
         return "<BaseAdapter>"
 
     def get_function(self, function: str) -> Callable:
-        """Obtains a Python function from a given string.
+        """Obtains a Python function from a given string in a cached form.
 
         Parameters
         ----------
@@ -83,9 +83,7 @@ class BaseAdapter(abc.ABC):
         if function in self.function_map:
             return self.function_map[function]
 
-        module_name, func_name = function.split(".", 1)
-        module = importlib.import_module(module_name)
-        self.function_map[function] = operator.attrgetter(func_name)(module)
+        self.function_map[function] = get_function_top(function)
 
         return self.function_map[function]
 

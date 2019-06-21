@@ -425,6 +425,8 @@ cli_utils.doc_formatter(ParslQueueSettings)
 class BalsamQueueSettings(SettingsBlocker):
     """
     """
+    _forbidden_set = {"wall_time_minutes", "ranks_per_node", "threads_per_core", "job_id"}
+    _forbidden_name = "Balsam Pseudo-Client"
 
 
 class ManagerSettings(BaseModel):
@@ -544,7 +546,7 @@ def parse_args():
 
             data[name] = cli_utils.argparse_config_merge(subparser, data[name], config_data[name], check=False)
 
-        for name in ["cluster", "dask", "parsl"]:
+        for name in ["cluster", "dask", "parsl", "balsam"]:
             if name in config_data:
                 data[name] = config_data[name]
                 if data[name] is None:
@@ -578,7 +580,8 @@ def main(args=None):
 
     logger_map = {AdapterEnum.pool: "",
                   AdapterEnum.dask: "dask_jobqueue.core",
-                  AdapterEnum.parsl: "parsl"}
+                  AdapterEnum.parsl: "parsl",
+                  AdapterEnum.balsam: "balsam"}
     if settings.common.verbose:
         adapter_logger = logging.getLogger(logger_map[settings.common.adapter])
         adapter_logger.setLevel("DEBUG")
@@ -809,7 +812,20 @@ def main(args=None):
             executors=[HighThroughputExecutor(**parsl_executor_construct)])
 
     elif settings.common.adapter == "balsam":
-        raise RuntimeError("This is still in development, tell Levi this is still here and incomplete!")
+
+        try:
+            from ..queue.balsam_client import BalsamClient
+            import balsam # lgtm [py/unused-import]
+        except ImportError:
+            raise ImportError("You need the `balsam-flow` package to use the `balsam` adapter")
+
+        balsam_construct = {
+            "wall_time_minutes": settings.cluster.walltime,
+            "ranks_per_node": settings.common.tasks_per_worker,
+            **settings.balsam.dict(skip_defaults=True)
+        }
+
+        queue_client = BalsamClient(**balsam_construct)
 
     else:
         raise KeyError("Unknown adapter type '{}', available options: {}.\n"
