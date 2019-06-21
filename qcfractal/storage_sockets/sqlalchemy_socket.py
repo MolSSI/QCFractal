@@ -1363,10 +1363,6 @@ class SQLAlchemySocket:
         meta = get_metadata_template()
         query = format_query(ServiceQueueORM, id=id, hash_index=hash_index, procedure_id=procedure_id, status=status)
 
-        # data = []
-        # # try:
-        # data, meta['n_found'] = self.get_query_projection(ServiceQueueORM, query, projection, limit, skip)
-
         with self.session_scope() as session:
             data = session.query(ServiceQueueORM).filter(*query)\
                    .order_by(ServiceQueueORM.priority.desc(), ServiceQueueORM.created_on)\

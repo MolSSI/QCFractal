@@ -57,8 +57,8 @@ def torsiondrive_fixture(fractal_compute_server):
 
         if ret.meta.n_inserted:  # In case test already submitted
             compute_key = ret.data.ids[0]
-            status = client.query_services(procedure_id=compute_key, projection={"status": True, "id": True}, full_return=True)
-            assert 'WAITING' in status.data[0]['status']
+            service = client.query_services(procedure_id=compute_key)[0]
+            assert 'WAITING' in service['status']
 
         fractal_compute_server.await_services()
         assert len(fractal_compute_server.list_current_tasks()) == 0
@@ -337,13 +337,10 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
 
     # Check tags on individual procedures
     proc_id = result.grid_optimizations['[0, 0]']
+
     # completed tasks should be deleted
     task = client.query_tasks(base_result=proc_id)
-
     assert not task
-
-    # assert task.priority == 0
-    # assert task.tag == "gridopt"
 
     # Check final ResultRecords
     final_result_records = result.get_final_results()

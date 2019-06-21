@@ -133,8 +133,9 @@ class BaseService(BaseModel, abc.ABC):
 
     def __init__(self, **data):
 
-        data.setdefault("modified_on", datetime.datetime.utcnow())
-        data.setdefault("created_on", datetime.datetime.utcnow())
+        dt = datetime.datetime.utcnow()
+        data.setdefault("modified_on", dt)
+        data.setdefault("created_on", dt)
 
         super().__init__(**data)
         self.task_manager.logger = self.logger
