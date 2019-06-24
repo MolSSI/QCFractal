@@ -11,7 +11,7 @@ from enum import Enum
 from functools import partial
 from math import ceil
 
-from typing import List, Optional
+from typing import List, Optional, Any, Dict, Union
 
 import tornado.log
 
@@ -370,6 +370,67 @@ class ParslExecutorSettings(SettingsBlocker):
 cli_utils.doc_formatter(ParslExecutorSettings)
 
 
+class ParslLauncherSettings(BaseSettings):
+    """
+    Set the Launcher in a Parsl Provider, and its options, if not set, the defaults are used.
+
+    This is a rare use case where the ``launcher`` key of the Provider is needed to be set. Since it must be a class
+    first, you will need to specify the ``launcher_type`` options which is interpreted as the Class Name of the
+    Launcher to load and pass the rest of the options set here into it. Any unset key will just be left as defaults.
+    It is up to the user to consult the Parsl Docs for their desired Launcher's options and what they do.
+
+    The known launchers below are case-insensitive,
+    but if new launchers come out (or you are using a custom/developmental build of Parsl), then you can pass your
+    own Launcher in verbatim, with case sensitivity, and the Queue Manager will try to load it.
+
+    Known Launchers:
+        - ``SimpleLauncher``: https://parsl.readthedocs.io/en/latest/stubs/parsl.launchers.SimpleLauncher.html
+        - ``SingleNodeLauncher``: https://parsl.readthedocs.io/en/latest/stubs/parsl.launchers.SingleNodeLauncher.html
+        - ``SrunLauncher``: https://parsl.readthedocs.io/en/latest/stubs/parsl.launchers.SrunLauncher.html
+        - ``AprunLauncher``: https://parsl.readthedocs.io/en/latest/stubs/parsl.launchers.AprunLauncher.html
+        - ``SrunMPILauncher``: https://parsl.readthedocs.io/en/latest/stubs/parsl.launchers.SrunMPILauncher.html
+        - ``GnuParallelLauncher``: https://parsl.readthedocs.io/en/latest/stubs/parsl.launchers.GnuParallelLauncher.html
+        - ``MpiExecLauncher`` : https://parsl.readthedocs.io/en/latest/stubs/parsl.launchers.MpiExecLauncher.html
+    """
+    launcher_class: str = Schema(
+        ...,
+        description="Class of Launcher to use. This is a setting unique to QCArchive which is then used to pass onto "
+                    "the Provider's ``launcher`` setting and the remaining keys are passed to that Launcher's options."
+    )
+
+    def _get_launcher(self, launcher_base: str) -> 'Launcher':
+        launcher_lower = launcher_base.lower()
+        launcher_map = {
+            "simplelauncher": "SimpleLauncher",
+            "singlenodelauncher": "SingleNodeLauncher",
+            "srunlauncher": "SrunLauncher",
+            "aprunlauncher": "AprunLauncher",
+            "srunmpiLauncher": "SrunMPILauncher",
+            "gnuparallellauncher": "GnuParallelLauncher",
+            "mpiexeclauncher": "MpiExecLauncher"
+        }
+        launcher_string = launcher_map[launcher_lower] if launcher_lower in launcher_map else launcher_base
+
+        try:
+            launcher_load = cli_utils.import_module("parsl.launchers", package=launcher_string)
+            launcher = getattr(launcher_load, launcher_string)
+        except ImportError:
+            raise ImportError(f"Could not import Parsl Launcher: {launcher_base}. Please make sure you have Parsl "
+                              f"installed and are requesting one of the launchers within the package.")
+        return launcher
+
+    def build_launcher(self):
+        """Import and load the desired launcher"""
+        launcher = self._get_launcher(self.launcher_class)
+        return launcher(**self.dict(exclude={'launcher_class'}))
+
+    class Config(SettingsCommonConfig):
+        pass
+
+
+cli_utils.doc_formatter(ParslLauncherSettings)
+
+
 class ParslProviderSettings(SettingsBlocker):
     """
     Settings for the Parsl Provider class. Valid values for this field are functions of your cluster.scheduler and no
@@ -382,7 +443,7 @@ class ParslProviderSettings(SettingsBlocker):
     forbidden.
 
     SLURM: https://parsl.readthedocs.io/en/latest/stubs/parsl.providers.SlurmProvider.html
-    PBS/Torque/Moba: https://parsl.readthedocs.io/en/latest/stubs/parsl.providers.TorqueProvider.html
+    PBS/Torque/Moab: https://parsl.readthedocs.io/en/latest/stubs/parsl.providers.TorqueProvider.html
     SGE (Sun GridEngine): https://parsl.readthedocs.io/en/latest/stubs/parsl.providers.GridEngineProvider.html
 
     """
@@ -392,6 +453,13 @@ class ParslProviderSettings(SettingsBlocker):
                     "its validity as a set variable are a function of what type of queue scheduler your specific "
                     "cluster has (e.g. this variable should NOT be present for PBS clusters). "
                     "Check with your Sys. Admins and/or your cluster documentation."
+    )
+    launcher: ParslLauncherSettings = Schema(
+        None,
+        description="The Parsl Launcher do use with your Provider. If left to ``None``, defaults are assumed (check "
+                    "the Provider's defaults), otherwise this should be a dictionary requiring the option "
+                    "``launcher_class`` as a str to specify which Launcher class to load, and the remaining settings "
+                    "will be passed on to the Launcher's constructor."
     )
     _forbidden_set = {"nodes_per_block", "max_blocks", "worker_init", "scheduler_options", "wall_time"}
     _forbidden_name = "parsl's provider"
@@ -779,8 +847,10 @@ def main(args=None):
             "scheduler_options": f'{provider_header} ' + f'\n{provider_header} '.join(scheduler_opts) + '\n',
             "nodes_per_block": 1,
             "worker_init": '\n'.join(settings.cluster.task_startup_commands),
-            **settings.parsl.provider.dict(skip_defaults=True, exclude={"partition"})
+            **settings.parsl.provider.dict(skip_defaults=True, exclude={"partition", "launcher"})
         }
+        if settings.parsl.provider.launcher:
+            common_parsl_provider_construct["launcher"] = settings.parsl.provider.launcher.build_launcher()
         if settings.cluster.scheduler == "slurm":
             # The Parsl SLURM constructor has a strange set of arguments
             provider = provider_class(settings.parsl.provider.partition,
