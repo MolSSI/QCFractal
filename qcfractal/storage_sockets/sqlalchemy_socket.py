@@ -1928,7 +1928,14 @@ class SQLAlchemySocket:
             if data is None:
                 return (False, "User not found.")
 
-            pwcheck = bcrypt.checkpw(password.encode("UTF-8"), data.password)
+            # Completely general failure
+            try:
+                pwcheck = bcrypt.checkpw(password.encode("UTF-8"), data.password)
+            except Exception as e:
+                self.logger.warning(f"Password check failure, error: {str(e)}")
+                self.logger.warning(f"Error likely caused by encryption salt mismatch, potentially fixed by creating a new password for user {username}.")
+                return (False, "Password decryption failure, please contact your database administrator.")
+
             if pwcheck is False:
                 return (False, "Incorrect password.")
 
