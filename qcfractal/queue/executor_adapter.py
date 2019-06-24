@@ -6,14 +6,18 @@ import traceback
 from typing import Any, Dict, Hashable, Tuple
 
 from .base_adapter import BaseAdapter
+from qcelemental.models import FailedOperation
 
 
 def _get_future(future):
     try:
         return future.result()
     except Exception as e:
-        msg = traceback.format_exc()
-        ret = {"success": False, "error_message": msg}
+        msg = "Caught Executor Error:\n" + traceback.format_exc()
+        ret = FailedOperation(**{"success": False,
+                                 "error": {"error_type":  e.__class__.__name__,
+                                           "error_message": msg}
+                                 })
         return ret
 
 
