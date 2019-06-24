@@ -108,6 +108,14 @@ def test_cli_managers(adapter, scheduler, tmp_path):
 
 
 @testing.mark_slow
+@testing.using_parsl
+def test_cli_manager_parsl_launchers(tmp_path):
+    config = load_manager_config("parsl", "slurm")
+    config["parsl"]["provider"].update({"launcher": {"launcher_class": "singleNODELauncher"}})
+    cli_manager_runs(config, tmp_path)
+
+
+@testing.mark_slow
 @pytest.mark.parametrize("adapter", [
     pytest.param("dask", marks=testing.using_dask_jobqueue),
     pytest.param("parsl", marks=testing.using_parsl),
