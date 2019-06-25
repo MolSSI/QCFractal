@@ -311,7 +311,7 @@ class BaseProcedureDataset(Collection):
 
         """
 
-        spec = self.get_specification(specification)
+        spec = self.get_specification(spec)
 
         mapper = {}
         for rec in self.data.records.values():
@@ -414,7 +414,7 @@ class BaseProcedureDataset(Collection):
         if not force and (spec.name in self.df):
             return spec.name
 
-        mapper = self._get_procedure_ids(spec)
+        mapper = self._get_procedure_ids(spec.name)
         query_ids = list(mapper.values())
 
         procedures = self.client.query_procedures(id=query_ids)

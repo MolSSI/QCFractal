@@ -439,8 +439,16 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     ncompute = ds.compute("spec1")
     assert ncompute == 2
+    assert ds.status("spec1").loc["INCOMPLETE", "Spec1"] == 2
 
     ds.save()
+
+    fractal_compute_server.await_services(max_iter=1)
+
+    # Check status
+    status_detail = ds.status("Spec1", detail=True)
+    assert status_detail.loc["hooh1", "Complete"] == 1
+    assert status_detail.loc["hooh1", "Total Points"] == 4
 
     fractal_compute_server.await_services(max_iter=5)
 
