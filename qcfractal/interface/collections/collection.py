@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional, Set, Union
 import pandas as pd
 from pydantic import BaseModel
 
-from ..models import json_encoders
+from ..models import json_encoders, ObjectId
 
 
 class Collection(abc.ABC):
@@ -293,6 +293,39 @@ class BaseProcedureDataset(Collection):
         self.data.specs[lname] = spec
         self.save()
 
+    def _get_procedure_ids(self, spec: str, sieve: Optional[List[str]]= None) -> Dict[str, ObjectId]:
+        """Aquires the
+
+        Parameters
+        ----------
+        spec : str
+            The specification to get the map of
+        sieve : Optional[List[str]], optional
+            A
+            Description
+
+        Returns
+        -------
+        Dict[str, ObjectId]
+            A dictionary of identifier to id mappings.
+
+        """
+
+        spec = self.get_specification(specification)
+
+        mapper = {}
+        for rec in self.data.records.values():
+            if sieve and rec.name not in sieve:
+                continue
+
+            try:
+                td_id = rec.object_map[spec.name]
+                mapper[rec.name] = td_id
+            except KeyError:
+                pass
+
+        return mapper
+
     def get_specification(self, name: str) -> Any:
         """
         Parameters
@@ -381,15 +414,8 @@ class BaseProcedureDataset(Collection):
         if not force and (spec.name in self.df):
             return spec.name
 
-        query_ids = []
-        mapper = {}
-        for rec in self.data.records.values():
-            try:
-                td_id = rec.object_map[spec.name]
-                query_ids.append(td_id)
-                mapper[rec.name] = td_id
-            except KeyError:
-                pass
+        mapper = self._get_procedure_ids(spec)
+        query_ids = list(mapper.values())
 
         procedures = self.client.query_procedures(id=query_ids)
         proc_lookup = {x.id: x for x in procedures}
