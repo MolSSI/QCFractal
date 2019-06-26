@@ -92,7 +92,7 @@ class FractalServer:
 
             # Database options
             storage_uri: str="mongodb://localhost",
-            storage_project_name: str="molssistorage",
+            storage_project_name: str="qcfractal_default",
             query_limit: int=1000,
 
             # Log options
