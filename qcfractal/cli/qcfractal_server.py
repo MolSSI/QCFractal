@@ -18,7 +18,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description='A CLI for the QCFractalServer.')
     subparsers = parser.add_subparsers(dest="cmd")
 
-
     # Init subcommands
     init = subparsers.add_parser('init', help="Initializes a QCFractal server and database information.")
     db_init = init.add_argument_group('Database Settings')
@@ -36,42 +35,46 @@ def parse_args():
 
     # Start subcommands
     start = subparsers.add_parser('start', help="Starts a QCFractal server instance.")
-    start.add_argument('bar')
+    start.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+    for field in ["port", "logfile"]:
+        cli_name = "--" + field.replace("_", "-")
+        start.add_argument(cli_name, **FractalServerSettings.help_info(field))
+
+    # Config subcommands
+    config = subparsers.add_parser('config', help="Starts a QCFractal server instance.")
+    config.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
 
     # Move args around
     args = vars(parser.parse_args())
 
     ret = {}
-    print(args)
-    if args["cmd"] == "init":
-        ret["database"] = {}
-        ret["fractal"] = {}
-        for key, value, in args.items():
-            if value is None:
-                continue
+    ret["database"] = {}
+    ret["fractal"] = {}
+    for key, value, in args.items():
+        if value is None:
+            continue
 
-            if "db" in key:
-                ret["database"][key.replace("db_", "")] = value
-            elif key in FractalServerSettings.field_names():
-                ret["fractal"][key] = value
-            else:
-                ret[key] = value
+        if "db" in key:
+            ret["database"][key.replace("db_", "")] = value
+        elif key in FractalServerSettings.field_names():
+            ret["fractal"][key] = value
+        else:
+            ret[key] = value
 
-    elif args["cmd"] == "start":
-        pass
-    else:
+    if args["cmd"] is None:
         parser.print_help(sys.stderr)
         sys.exit(1)
 
     return ret
 
-def server_init(args):
+
+
+
+def server_init(config):
 
     print("Initializing QCFractal configuration.")
     # Configuration settings
-    config = FractalConfig(fractal=args["fractal"], database=args["database"])
-
 
     config.base_path.mkdir(exist_ok=True)
     overwrite = args.get("overwrite", False)
@@ -124,6 +127,11 @@ def server_init(args):
     print("\n>>> Finishing up...")
     print("\n>>> Success! Please run `qcfractal-server start` to boot a FractalServer!")
 
+def server_config(config):
+
+    print(f"Displaying QCFractal configuration:\n")
+    print(yaml.dump(config.dict(), default_flow_style=False))
+
 def main(args=None):
 
     # Grab CLI args if not present
@@ -131,9 +139,30 @@ def main(args=None):
         args = parse_args()
         print(args)
 
+    cmd = args.pop("cmd")
+    config = FractalConfig(**args)
 
-    if args["cmd"] == "init":
-        return server_init(args)
+    # Merge files
+    if cmd != "init":
+        if not config.base_path.exists():
+            print(f"Could not find configuration file path: {config.base_path}")
+            sys.exit(1)
+        if not config.config_file_path.exists():
+            print(f"Could not find configuration file: {config.config_file_path}")
+            sys.exit(1)
+
+        file_dict = FractalConfig(**yaml.load(config.config_file_path.read_text())).dict()
+        config_dict = config.dict(skip_defaults=True)
+
+        # Only fractal options can be changed by user input parameters
+        file_dict["fractal"] = {**config_dict.pop("fractal"), **file_dict.pop("fractal")}
+
+        config = FractalConfig(**file_dict)
+
+    if cmd == "init":
+        return server_init(config)
+    elif cmd == "config":
+        return server_config(config)
     raise Exception()
 
     # Handle SSL
