@@ -29,7 +29,7 @@ def storage_socket_factory(uri, project_name, logger=None, db_type=None, **kwarg
 
     if db_type is None:
         # try to find db_type from uri
-        if uri.startswith('postgresql') or uri.startswith('sqlite'):
+        if uri.startswith('postgresql'):
             db_type = 'sqlalchemy'
         elif uri.startswith('mongodb'):
             db_type = 'mongoengine'

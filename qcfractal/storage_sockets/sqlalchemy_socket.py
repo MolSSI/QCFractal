@@ -138,6 +138,14 @@ class SQLAlchemySocket:
 
         # disconnect from any active default connection
         # disconnect()
+        if "psycopg2" not in uri:
+            uri = uri.replace("postgresql", "postgresql+psycopg2")
+
+        if not uri.endswith("/"):
+            uri = uri + "/"
+
+        uri = uri + project
+        self.logger.info(f"SQLAlchemy attempt to connect to {uri}.")
 
         # Connect to DB and create session
         self.engine = create_engine(
@@ -151,7 +159,10 @@ class SQLAlchemySocket:
         self.Session = sessionmaker(bind=self.engine)
 
         # actually create the tables
-        Base.metadata.create_all(self.engine)
+        try:
+            Base.metadata.create_all(self.engine)
+        except Exception as e:
+            raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
 
         # if expanded_uri["password"] is not None:
         #     # connect to mongoengine
