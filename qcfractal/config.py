@@ -44,7 +44,7 @@ class DatabaseSettings(ConfigSettings):
     Postgres Database settings
     """
 
-    port: int = Schema(7778, description="The postgresql default port")
+    port: int = Schema(5432, description="The postgresql default port")
     address: str = Schema(
         "localhost",
         description=
@@ -89,14 +89,32 @@ class FractalConfig(ConfigSettings):
     class Config(SettingsCommonConfig):
         pass
 
+    @property
     def base_path(self):
         return Path(self.base_folder)
 
+    @property
     def config_file_path(self):
-        return self.base_path() / "qcfractal_config.yaml"
+        return self.base_path / "qcfractal_config.yaml"
 
+    @property
     def database_path(self):
         if self.database.directory is None:
-            return self.base_path() / "qcfractal_data"
+            return self.base_path / "postgres"
         else:
             return Path(os.path.expanduser(self.database.directory))
+
+    def database_uri(self, safe=True, database=None):
+
+        if safe:
+            pw = "*******"
+        else:
+            pw = self.database.password
+        uri = f"postgresql://{self.database.username}@{pw}:{self.database.address}/"
+
+        if database is None:
+            uri = uri + self.database.default_database
+        else:
+            uri = uri + database
+
+        return uri

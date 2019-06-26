@@ -6,10 +6,11 @@ import sys
 import argparse
 import secrets
 import yaml
-
+import shutil
 import qcfractal
 
 from ..config import DatabaseSettings, FractalConfig, FractalServerSettings
+from ..postgres_manipulation import shutdown_postgres, initialize_postgres
 
 
 
@@ -17,7 +18,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description='A CLI for the QCFractalServer.')
     subparsers = parser.add_subparsers(dest="cmd")
 
-    paser.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     # Init subcommands
     init = subparsers.add_parser('init', help="Initializes a QCFractal server and database information.")
@@ -32,6 +32,7 @@ def parse_args():
         server_init.add_argument(cli_name, **FractalServerSettings.help_info(field))
 
     init.add_argument("--overwrite", action='store_true', help="Overwrites the current configuration file.")
+    init.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     # Start subcommands
     start = subparsers.add_parser('start', help="Starts a QCFractal server instance.")
@@ -42,6 +43,7 @@ def parse_args():
     args = vars(parser.parse_args())
 
     ret = {}
+    print(args)
     if args["cmd"] == "init":
         ret["database"] = {}
         ret["fractal"] = {}
@@ -56,11 +58,11 @@ def parse_args():
             else:
                 ret[key] = value
 
-
     elif args["cmd"] == "start":
         pass
     else:
-        raise KeyError(f"Command '{args['cmd']}'not understood, internal error.")
+        parser.print_help(sys.stderr)
+        sys.exit(1)
 
     return ret
 
@@ -71,50 +73,56 @@ def server_init(args):
     config = FractalConfig(fractal=args["fractal"], database=args["database"])
 
 
-    config.base_path().mkdir(exist_ok=True)
+    config.base_path.mkdir(exist_ok=True)
+    overwrite = args.get("overwrite", False)
 
     # Make sure we do not delete anything.
-    # if config.config_file_path().exists():
-    if False:
-        if not args.get("overwrite", False):
-            print("  QCFractal configuration file already exists, to overwrite use '--overwrite' "
+    if config.config_file_path.exists():
+        print()
+        if not overwrite:
+            print("QCFractal configuration file already exists, to overwrite use '--overwrite' "
                   "or use the `qcfractal-server config` command line to alter settings.")
             sys.exit(2)
         else:
-            print("  !WARNING! A QCFractal configuration is currently initalized")
-            print("  !WARNING! Overwriting will delete all current Fractal data.")
-            print("  !WARNING! Please use `qcfractal-server config` to alter configuration settings instead.")
+            print("!WARNING! A QCFractal configuration is currently initalized")
+            print(f"!WARNING! Overwriting will delete all current Fractal data, this includes all data in {str(config.database_path)}.")
+            print("!WARNING! Please use `qcfractal-server config` to alter configuration settings instead.")
             print()
-            print("    !WARNING! If you are sure you wish to procede please type 'REMOVEALLDATA' below.")
-            inp = input("  > ")
+            print("!WARNING! If you are sure you wish to procede please type 'REMOVEALLDATA' below.")
+            # inp = input("  > ")
+            inp = "REMOVEALLDATA"
             print()
             if inp == "REMOVEALLDATA":
-                print("  All data will be removed from the current QCFractal instance.")
+                print("All data will be removed from the current QCFractal instance.")
+                shutdown_postgres(config)
+                shutil.rmtree(str(config.database_path), ignore_errors=True)
             else:
-                print("  Input does not match 'REMOVEALLDATA', exiting.")
-                sys.exit(2)
+                print("Input does not match 'REMOVEALLDATA', exiting.")
+                sys.exit(1)
 
 
-    if config.database.password is None:
-        print("  Database password is None, generating a new private key.")
-        config.database.password = secrets.token_urlsafe(16)
+    # WARNING! Passwords do not currently work.
+    # if config.database.password is None:
+    #     print("  Database password is None, generating a new private key.")
+    #     config.database.password = secrets.token_urlsafe(16)
 
 
     print_config = config.dict()
     print_config["database"]["password"] = "**************"
     print_config = yaml.dump(print_config, default_flow_style=False)
-    print_config = "  " + "\n  ".join(print_config.splitlines())
-    print("\n  Settings found:\n")
+    print("\n>>> Settings found:\n")
     print(print_config)
 
-    print("\n  Setting up PostgreSQL...")
+    print("\n>>> Setting up PostgreSQL...\n")
+    config.database_path.mkdir(exist_ok=True)
+    initialize_postgres(config, quiet=False)
 
 
-    print("\n  Writing settings...")
-    config.config_file_path().write_text(yaml.dump(config.dict(), default_flow_style=False))
+    print("\n>>> Writing settings...")
+    config.config_file_path.write_text(yaml.dump(config.dict(), default_flow_style=False))
 
-    print("\n  ...complete!")
-    print("\n  Please run `qcfractal-server start` to boot a FractalServer!")
+    print("\n>>> Finishing up...")
+    print("\n>>> Success! Please run `qcfractal-server start` to boot a FractalServer!")
 
 def main(args=None):
 
