@@ -171,7 +171,7 @@ def copy_results(staging_storage, production_storage, SAMPLE_SIZE=0, results_ids
 
 
 def copy_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE=None,
-                                procedure_ids=None):
+                                procedure_ids=[]):
     """Copy from prod to staging"""
 
 
@@ -194,7 +194,6 @@ def copy_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE
         if rec['final_molecule']:
             mols.append(rec['final_molecule'])
         if rec['trajectory']:
-            print('traj: ', rec['trajectory'])
             results.extend(rec['trajectory'])
         if rec['stdout']:
             kvstore.append(rec['stdout'])
@@ -206,9 +205,6 @@ def copy_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE
     mols_map = copy_molecules(staging_storage, production_storage, mols)
     results_map = copy_results(staging_storage, production_storage, results_ids=results)
     kvstore_map = copy_kv_store(staging_storage, production_storage, kvstore)
-
-    print(mols_map)
-    print(results_map)
 
     for rec in prod_proc:
         rec['initial_molecule'] = mols_map[rec['initial_molecule']]
@@ -224,173 +220,62 @@ def copy_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE
             rec['error'] = kvstore_map[rec['error']]
 
     procedures_py = [OptimizationRecord(**proc) for proc in prod_proc]
-    sql_insered = staging_storage.add_procedures(procedures_py)['data']
-    print('Inserted in SQL:', len(sql_insered))
+    staging_ids = staging_storage.add_procedures(procedures_py)['data']
+    print('Inserted in SQL:', len(staging_ids))
 
     print('---- Done copying Optimization procedures\n\n')
 
+    return {m1: m2 for m1, m2 in zip(procedure_ids, staging_ids)}
 
-def copy_torsiondrive_procedure(mongo_storage, sql_storage, max_limit, with_check=False):
-    """Copy from mongo to sql"""
+def copy_torsiondrive_procedure(staging_storage, production_storage, SAMPLE_SIZE=None):
+    """Copy from prod to staging"""
 
-    total_count = mongo_storage.get_total_count(ProcedureORM, procedure='torsiondrive')
-    print('-----Total # of Torsiondrive in the DB is: ', total_count)
+    total_count = production_storage.get_total_count(TorsionDriveProcedureORM)
+    print('------Total # of Torsiondrive Procedure in the DB is: ', total_count)
 
-    for skip in range(0, total_count, max_limit):
+    count_to_copy = int(total_count*SAMPLE_SIZE)
+    prod_proc = production_storage.get_procedures(procedure='torsiondrive', status=None, limit=count_to_copy)['data']
 
-        print('\nCurrent skip={}\n-----------'.format(skip))
-        ret = mongo_storage.get_procedures(procedure='torsiondrive', status=None, limit=max_limit, skip=skip)
-        mongo_res= ret['data']
-        print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
+    print('Copying {} Torsiondrives'.format(count_to_copy))
 
-        # check if this patch has been already stored
-        if is_mapped(sql_storage, ProcedureMap, mongo_res[-1]['id']):
-            print('Skipping first ', skip+max_limit)
-            continue
 
-        # load mapped ids in memory
-        mongo_res = get_ids_map(sql_storage, ['stdout', 'stderr', 'error'], KVStoreMap, mongo_res)
-        mongo_res = get_ids_map(sql_storage, ['initial_molecule'], MoleculeMap, mongo_res)
-        mongo_res = get_ids_map(sql_storage, ['optimization_history'], ProcedureMap, mongo_res)
+    mols, procs, kvstore = [], [], []
+    for rec in prod_proc:
+        if rec['initial_molecule']:
+            mols.extend(rec['initial_molecule'])
+        if rec['optimization_history']:
+            for i in rec['optimization_history'].values():
+                procs.extend(i)
+        if rec['stdout']:
+            kvstore.append(rec['stdout'])
+        if rec['stderr']:
+            kvstore.append(rec['stderr'])
+        if rec['error']:
+            kvstore.append(rec['error'])
 
-        results_py = [TorsionDriveRecord(**res) for res in mongo_res]
-        sql_insered = sql_storage.add_procedures(results_py)['data']
-        print('Inserted in SQL:', len(sql_insered))
+    mols_map = copy_molecules(staging_storage, production_storage, mols)
+    proc_map = copy_optimization_procedure(staging_storage, production_storage, procedure_ids=procs)
+    kvstore_map = copy_kv_store(staging_storage, production_storage, kvstore)
 
-        # store the ids mapping in the sql DB
-        mongo_ids = [obj['id'] for obj in mongo_res]
-        store_ids_map(sql_storage, mongo_ids, sql_insered, ProcedureMap)
+    for rec in prod_proc:
 
-        if with_check:
-            with sql_storage.session_scope() as session:
-                proc = session.query(ProcedureMap).filter_by(mongo_id=mongo_res[0]['id']).first().sql_id
+        if rec['initial_molecule']:
+            rec['initial_molecule'] = [mols_map[i] for i in rec['initial_molecule']]
+        if rec['optimization_history']:
+            for key, proc_list in rec['optimization_history'].items():
+                rec['optimization_history'][key] = [proc_map[i] for i in proc_list]
+        if rec['stdout']:
+            rec['stdout'] = kvstore_map[rec['stdout']]
+        if rec['stderr']:
+            rec['stderr'] = kvstore_map[rec['stderr']]
+        if rec['error']:
+            rec['error'] = kvstore_map[rec['error']]
 
-            ret = sql_storage.get_procedures(id=[proc])
-            print('Get from SQL:', ret['data'])
-
-            ret2 = mongo_storage.get_procedures(id=[mongo_res[0]['id']])
-            print('Get from Mongo:', ret2['data'])
-            assert ret2['data'][0]['hash_index'] == ret['data'][0]['hash_index']
-            assert ret2['data'][0]['optimization_history'].keys() == \
-                                   ret['data'][0]['optimization_history'].keys()
-            print(ret2['data'][0]['optimization_history'])
-            print(ret['data'][0]['optimization_history'])
+    procedures_py = [TorsionDriveRecord(**proc) for proc in prod_proc]
+    sql_insered = staging_storage.add_procedures(procedures_py)['data']
+    print('Inserted in SQL:', len(sql_insered))
 
     print('---- Done copying Torsiondrive procedures\n\n')
-
-
-def copy_grid_optimization_procedure(sta, sql_storage, max_limit, with_check=False):
-    """Copy from mongo to sql"""
-
-    total_count = mongo_storage.get_total_count(ProcedureORM, procedure='gridoptimization')
-    print('-----Total # of Grid Optmizations in the DB is: ', total_count)
-
-    for skip in range(0, total_count, max_limit):
-
-        print('\nCurrent skip={}\n-----------'.format(skip))
-        ret = mongo_storage.get_procedures(procedure='gridoptimization', status=None, limit=max_limit, skip=skip)
-        mongo_res= ret['data']
-        print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
-
-        # check if this patch has been already stored
-        if is_mapped(sql_storage, ProcedureMap, mongo_res[-1]['id']):
-            print('Skipping first ', skip+max_limit)
-            continue
-
-        # load mapped ids in memory
-        mongo_res = get_ids_map(sql_storage, ['stdout', 'stderr', 'error'], KVStoreMap, mongo_res)
-        mongo_res = get_ids_map(sql_storage, ['initial_molecule', 'starting_molecule'], MoleculeMap, mongo_res)
-        mongo_res = get_ids_map(sql_storage, ['grid_optimizations'], ProcedureMap, mongo_res)
-
-        results_py = [GridOptimizationRecord(**res) for res in mongo_res]
-        sql_insered = sql_storage.add_procedures(results_py)['data']
-        print('Inserted in SQL:', len(sql_insered))
-
-        # store the ids mapping in the sql DB
-        mongo_ids = [obj['id'] for obj in mongo_res]
-        store_ids_map(sql_storage, mongo_ids, sql_insered, ProcedureMap)
-
-        if with_check:
-            with sql_storage.session_scope() as session:
-                proc = session.query(ProcedureMap).filter_by(mongo_id=mongo_res[0]['id']).first().sql_id
-
-            ret = sql_storage.get_procedures(id=[proc])
-            print('Get from SQL:', ret['data'])
-
-            ret2 = mongo_storage.get_procedures(id=[mongo_res[0]['id']])
-            print('Get from Mongo:', ret2['data'])
-            assert ret2['data'][0]['hash_index'] == ret['data'][0]['hash_index']
-            assert ret2['data'][0]['grid_optimizations'].keys() == \
-                                   ret['data'][0]['grid_optimizations'].keys()
-            print(ret2['data'][0]['grid_optimizations'])
-            print(ret['data'][0]['grid_optimizations'])
-
-    print('---- Done copying Grid Optmization procedures\n\n')
-
-
-def copy_task_queue(mongo_storage, sql_storage, max_limit, with_check=False):
-    """Copy from mongo to sql"""
-
-    total_count = mongo_storage.get_total_count(TaskQueueORM)
-    print('-----Total # of Tasks in the DB is: ', total_count)
-
-    for skip in range(0, total_count, max_limit):
-
-        print('\nCurrent skip={}\n-----------'.format(skip))
-        ret = mongo_storage.get_queue(limit=max_limit, skip=skip)
-        mongo_res= ret['data']
-        print('mongo results returned: ', len(mongo_res), ', total: ', ret['meta']['n_found'])
-
-        # check if this patch has been already stored
-        if is_mapped(sql_storage, TaskQueueMap, mongo_res[-1].id):
-            print('Skipping first ', skip+max_limit)
-            continue
-
-        results_ids_map, procedures_ids_map = [], []
-        for res in mongo_res:
-            if res.base_result.ref == 'result':
-                results_ids_map.append(res.base_result.id)
-            else:
-                procedures_ids_map.append(res.base_result.id)
-
-        with sql_storage.session_scope() as session:
-            objs = session.query(ResultMap).filter(ResultMap.mongo_id.in_(set(results_ids_map))).all()
-            assert len(objs) == len(set(results_ids_map))
-            results_ids_map = {i.mongo_id:i.sql_id for i in objs}
-
-            objs = session.query(ProcedureMap).filter(ProcedureMap.mongo_id.in_(set(procedures_ids_map))).all()
-            assert len(objs) == len(set(procedures_ids_map))
-            procedures_ids_map = {i.mongo_id:i.sql_id for i in objs}
-
-        # replace mongo ids Results with sql
-        for res in mongo_res:
-            if res.base_result.ref == 'result':
-                res.base_result.id = results_ids_map[res.base_result.id]
-            else:
-                res.base_result.id = procedures_ids_map[res.base_result.id]
-
-        sql_insered = sql_storage._copy_task_to_queue(mongo_res)['data']
-        print('Inserted in SQL:', len(sql_insered))
-
-        # store the ids mapping in the sql DB
-        mongo_ids = [obj.id for obj in mongo_res]
-        store_ids_map(sql_storage, mongo_ids, sql_insered, TaskQueueMap)
-
-        if with_check:
-            with sql_storage.session_scope() as session:
-                mongo_task = mongo_storage.get_queue(id=[mongo_res[0].id])['data'][0]
-
-                task_sql_id = session.query(TaskQueueMap).filter_by(mongo_id=mongo_res[0].id).first().sql_id
-                sql_task = sql_storage.get_queue(id=[task_sql_id])['data'][0]
-                print('Get from SQL:', sql_task)
-
-                mongo_base_result_id = mongo_task.base_result.id
-                className = ResultMap if mongo_task.base_result.ref == 'result' else ProcedureMap
-                sql_base_result_id_mapped = session.query(className.sql_id).filter_by(mongo_id=mongo_base_result_id).first()[0]
-
-                assert str(sql_base_result_id_mapped) == sql_task.base_result.id
-
-    print('---- Done copying Task Queue\n\n')
 
 
 def main():
@@ -417,10 +302,9 @@ def main():
     print('\n---------------- Optimization Procedures -------------------')
     copy_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE=SAMPLE_SIZE*2)
 
-    # copy_torsiondrive_procedure(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
-    # copy_grid_optimization_procedure(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
-    # copy_task_queue(mongo_storage, sql_storage, args['max_limit'], with_check=args['check_db'])
-    #
+    print('\n---------------- Torsiondrive procedure -----------------------')
+    copy_torsiondrive_procedure(staging_storage, production_storage, SAMPLE_SIZE=SAMPLE_SIZE*2)
+
 
 if __name__ == "__main__":
     main()
