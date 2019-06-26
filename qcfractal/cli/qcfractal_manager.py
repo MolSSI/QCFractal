@@ -533,7 +533,7 @@ def parse_args():
     common.add_argument(
         "--adapter", type=str, help="The backend adapter to use, currently only {'dask', 'parsl', 'pool'} are valid.")
     common.add_argument(
-        "--tasks_per_worker",
+        "--tasks-per-worker",
         type=int,
         help="The number of simultaneous tasks for the executor to run, resources will be divided evenly.")
     common.add_argument("--cores-per-worker", type=int, help="The number of process for each executor's Workers")
