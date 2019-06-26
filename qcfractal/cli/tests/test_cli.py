@@ -42,12 +42,12 @@ def active_server(request):
 
 @testing.mark_slow
 def test_manager_local_testing_process():
-    assert testing.run_process(["qcfractal-manager", "--adapter=pool", "--test", "--tasks_per_worker=2"], **_options)
+    assert testing.run_process(["qcfractal-manager", "--adapter=pool", "--test", "--tasks-per-worker=2"], **_options)
 
 
 @testing.mark_slow
 def test_manager_executor_manager_boot(active_server):
-    args = ["qcfractal-manager", active_server.test_uri_cli, "--adapter=pool", "--tasks_per_worker=2", "--verify=False"]
+    args = ["qcfractal-manager", active_server.test_uri_cli, "--adapter=pool", "--tasks-per-worker=2", "--verify=False"]
     assert testing.run_process(args, interupt_after=7, **_options)
 
 
