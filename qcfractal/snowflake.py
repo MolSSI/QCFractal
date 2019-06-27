@@ -18,7 +18,7 @@ from .config import FractalConfig
 from .interface import FractalClient
 from .server import FractalServer
 from .storage_sockets import storage_socket_factory
-from .postgres_manipulation import initialize_postgres, shutdown_postgres, PsqlCommand
+from .postgres_harness import PsqlHarness
 
 
 def _find_port() -> int:
@@ -89,7 +89,8 @@ class TemporaryStorage:
         if database_name:
             config_data["default_database"] = database_name
         self.config = FractalConfig(database=config_data)
-        initialize_postgres(self.config, quiet=self.quiet, logger=self.logger)
+        self.psql = PsqlHarness(self.config)
+        self.psql.initialize()
 
         atexit.register(self.stop)
 
@@ -118,7 +119,7 @@ class TemporaryStorage:
         if not self._active:
             return
 
-        shutdown_postgres(self.config, quiet=self.quiet, logger=self.logger)
+        self.psql.shutdown()
 
         # Closed down
         self._active = False
@@ -162,13 +163,13 @@ class FractalSnowflake(FractalServer):
         # Startup a MongoDB in background thread and in custom folder.
         if storage_uri is None:
             self._storage = TemporaryStorage(database_name=storage_project_name)
-            self._storage_uri = self._storage.database_uri(safe=False)
+            self._storage_uri = self._storage.database_uri(safe=False, database="")
         else:
             self._storage = None
             self._storage_uri = storage_uri
 
             if reset_database:
-                socket = storage_socket_factory(self.storage_uri, project_name=storage_project_name)
+                socket = storage_socket_factory(self._storage_uri, project_name=storage_project_name)
                 socket._clear_db(socket._project_name)
                 del socket
 
@@ -201,7 +202,7 @@ class FractalSnowflake(FractalServer):
         super().__init__(name="QCFractal Snowflake Instance",
                          port=_find_port(),
                          loop=self.loop,
-                         storage_uri=storage_uri,
+                         storage_uri=self._storage_uri,
                          storage_project_name=storage_project_name,
                          ssl_options=False,
                          max_active_services=max_active_services,
@@ -209,7 +210,7 @@ class FractalSnowflake(FractalServer):
                          logfile_prefix=log_prefix,
                          query_limit=int(1.e6))
 
-        if self._mongod_proc:
+        if self._storage:
             self.logger.warning("Warning! This is a temporary instance, data will be lost upon shutdown.")
 
         if start_server:
@@ -277,7 +278,6 @@ class FractalSnowflakeHandler:
         self._running = False
         self._qcfractal_proc = None
         self._storage = TemporaryStorage()
-        self._psql = PsqlCommand(self._storage.config)
         self._storage_uri = self._storage.database_uri(safe=False)
         self._qcfdir = tempfile.TemporaryDirectory()
         self._dbname = str(uuid.uuid4())
@@ -378,7 +378,7 @@ class FractalSnowflakeHandler:
         self._dbname = "db_" + str(uuid.uuid4()).replace('-', '_')
 
         # Make a new database
-        success = self._psql.create_database(self._dbname)
+        success = self.storage.psql.create_database(self._dbname)
         if success is False:
             raise ValueError("Could not create a postgres database.")
 

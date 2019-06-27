@@ -10,7 +10,7 @@ import shutil
 import qcfractal
 
 from ..config import DatabaseSettings, FractalConfig, FractalServerSettings
-from ..postgres_manipulation import shutdown_postgres, initialize_postgres
+from ..postgres_handle import PsqlCommand
 from .cli_utils import install_signal_handlers
 
 
@@ -118,6 +118,8 @@ def server_init(args, config):
     config.base_path.mkdir(exist_ok=True)
     overwrite = args.get("overwrite", False)
 
+    psql = PsqlCommand(config, quiet=False, logger=print)
+
     # Make sure we do not delete anything.
     if config.config_file_path.exists():
         print()
@@ -138,7 +140,7 @@ def server_init(args, config):
             print()
             if inp == "REMOVEALLDATA":
                 print("All data will be removed from the current QCFractal instance.")
-                shutdown_postgres(config)
+                psql.shutdown()
                 shutil.rmtree(str(config.database_path), ignore_errors=True)
             else:
                 print("Input does not match 'REMOVEALLDATA', exiting.")
@@ -158,7 +160,7 @@ def server_init(args, config):
     print("\n>>> Setting up PostgreSQL...\n")
     config.database_path.mkdir(exist_ok=True)
     if config.database.own:
-        initialize_postgres(config, quiet=False)
+        psql.initialize()
     else:
         print(
             "Own was set to False, QCFractal will expect a live PostgreSQL server with the above connection information."
