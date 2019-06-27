@@ -11,25 +11,7 @@ from .config import FractalConfig
 from .util import find_port
 
 
-def _psql_return(data):
-    """
-
-    Finds the data line as show below:
-    >>> _psql_return('''
-     port
-    ------
-     5432
-     2345
-    (1 row)
-    ''')
-    ['5432', '2345']
-
-    """
-    return [x.strip() for x in data.splitlines()[2:-1]]
-
-
 def _run(commands, quiet=True, logger=print):
-    # proc = subprocess.run(commands, stdout=subprocess.PIPE)
     proc = subprocess.run(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     rcode = proc.returncode
     stdout = proc.stdout.decode()
@@ -41,6 +23,8 @@ def _run(commands, quiet=True, logger=print):
 
 class PostgresHarness:
     def __init__(self, config, quiet=True, logger=print):
+        if isinstance(config, dict):
+            config = FractalConfig(**config)
         self.config = config
         self.quiet = quiet
         self.logger = logger

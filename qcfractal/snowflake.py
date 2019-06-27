@@ -298,11 +298,14 @@ class FractalSnowflakeHandler:
         if self._running:
             return
 
+        if self._storage is None:
+            raise ValueError("This object has been stopped. Please build a new object to continue.")
+
         # Generate a new database name
         self._dbname = "db_" + str(uuid.uuid4()).replace('-', '_')
 
         # Make a new database
-        success = self.storage.psql.create_database(self._dbname)
+        success = self._storage.psql.create_database(self._dbname)
         if success is False:
             raise ValueError("Could not create a postgres database.")
 
@@ -337,14 +340,19 @@ class FractalSnowflakeHandler:
 
         self._running = True
 
-    def stop(self) -> None:
+    def stop(self, keep_storage: bool=False) -> None:
         """
         Stop the current FractalSnowflake instance and destroys all data.
+
+        Parameters
+        ----------
+        keep_storage : bool, optional
+            Does not delete the storage object if True.
         """
         if self._running is False:
             return
 
-        if self._storage is not None:
+        if (self._storage is not None) and (keep_storage is False):
             self._storage.stop()
             self._storage = None
 
@@ -355,7 +363,7 @@ class FractalSnowflakeHandler:
         """
         Restarts the current FractalSnowflake instances and destroys all data in the process.
         """
-        self.stop()
+        self.stop(keep_storage=True)
 
         # Make sure we really shut down
         for x in range(timeout * 10):

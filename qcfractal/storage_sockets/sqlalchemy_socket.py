@@ -232,7 +232,9 @@ class SQLAlchemySocket:
             session.query(TorsionDriveProcedureORM).delete(synchronize_session=False)
             session.query(OptimizationProcedureORM).delete(synchronize_session=False)
             session.query(ResultORM).delete(synchronize_session=False)
+            session.query(BaseResultORM).delete(synchronize_session=False)
             session.query(MoleculeORM).delete(synchronize_session=False)
+            session.query(KVStoreORM).delete(synchronize_session=False)
             session.query(CollectionORM).delete(synchronize_session=False)
 
     def get_project_name(self) -> str:
@@ -241,7 +243,7 @@ class SQLAlchemySocket:
     def get_limit(self, limit: Optional[int]) -> int:
         """Get the allowed limit on results to return in queries based on the
          given `limit`. If this number is greater than the
-         mongoengine_soket.max_limit then the max_limit will be returned instead.
+         mongoengine_socket.max_limit then the max_limit will be returned instead.
         """
 
         return limit if limit and limit < self._max_limit else self._max_limit

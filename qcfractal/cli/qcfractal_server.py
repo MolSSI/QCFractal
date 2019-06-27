@@ -10,7 +10,7 @@ import shutil
 import qcfractal
 
 from ..config import DatabaseSettings, FractalConfig, FractalServerSettings
-from ..postgres_handle import PsqlCommand
+from ..postgres_harness import PostgresHarness
 from .cli_utils import install_signal_handlers
 
 
@@ -118,7 +118,7 @@ def server_init(args, config):
     config.base_path.mkdir(exist_ok=True)
     overwrite = args.get("overwrite", False)
 
-    psql = PsqlCommand(config, quiet=False, logger=print)
+    psql = PostgresHarness(config, quiet=False, logger=print)
 
     # Make sure we do not delete anything.
     if config.config_file_path.exists():

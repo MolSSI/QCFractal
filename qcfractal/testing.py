@@ -19,7 +19,6 @@ import pytest
 import qcengine as qcng
 from tornado.ioloop import IOLoop
 
-from .config import FractalConfig
 from .postgres_harness import PostgresHarness, TemporaryPostgres
 from .queue import build_queue_adapter
 from .server import FractalServer
@@ -127,22 +126,6 @@ def check_active_mongo_server():
         client.server_info()
     except:
         pytest.skip("Could not find an activate mongo test instance at 'localhost:27017'.")
-
-
-def check_active_postgres_server():
-    """Checks for a active mongo server, skips the test if not found.
-    """
-
-    # Create singleton
-    if POSTGRES_TEST_URI is None:
-        pytest.skip(f"No postgres instance supplied, skipping.")
-
-    try:
-        from sqlalchemy import create_engine
-        engine = create_engine(POSTGRES_TEST_URI)
-        engine.table_names()
-    except:
-        pytest.skip(f"Could not find an activate mongo test instance at '{POSTGRES_TEST_URI}'.")
 
 
 def find_open_port():
@@ -321,6 +304,7 @@ def run_process(args, **kwargs):
 
 ### Server testing mechanics
 
+
 @pytest.fixture(scope="session")
 def postgres_server():
 
@@ -328,11 +312,11 @@ def postgres_server():
         pytest.skip("Postgres is not installed on this server and no active postgres could be found.")
 
     storage = None
-    psql = PostgresHarness(FractalConfig(database={"port": 5432}))
+    psql = PostgresHarness({"database": {"port": 5432}})
     if not psql.is_alive():
         print()
         print(
-            "Could not connect to a Postgres server at 'postgresql://localhost:5432', this will increase test latency session by ~4 seconds."
+            "Could not connect to a Postgres server at 'postgresql://localhost:5432', this will increase time per test session by ~3 seconds."
         )
         print()
         storage = TemporaryPostgres()
@@ -352,17 +336,18 @@ def reset_server_database(server):
 
 
 @pytest.fixture(scope="module")
-def test_server(request):
+def test_server(request, postgres_server):
     """
     Builds a server instance with the event loop running in a thread.
     """
 
-    # Check mongo
-    check_active_mongo_server()
+    # Storage name
+    storage_name = "test_qcfractal_server"
+    postgres_server.create_database(storage_name)
 
     with FractalSnowflake(max_workers=0,
                           storage_project_name="test_qcfractal_server",
-                          storage_uri=POSTGRES_TEST_URI,
+                          storage_uri=postgres_server.database_uri(),
                           start_server=False,
                           reset_database=True) as server:
 
@@ -371,8 +356,6 @@ def test_server(request):
 
 
 def build_adapter_clients(mtype, storage_name="test_qcfractal_compute_server"):
-    # Check mongo
-    check_active_mongo_server()
 
     # Basic boot and loop information
     if mtype == "pool":
@@ -405,16 +388,32 @@ def build_adapter_clients(mtype, storage_name="test_qcfractal_compute_server"):
     return adapter_client
 
 
-def build_managed_compute_server(mtype):
+@pytest.fixture(scope="module", params=_adapter_testing)
+def adapter_client_fixture(request):
+    adapter_client = build_adapter_clients(request.param)
+    yield adapter_client
+
+    # Do a final close with existing tech
+    build_queue_adapter(adapter_client).close()
+
+
+@pytest.fixture(scope="module", params=_adapter_testing)
+def managed_compute_server(request, postgres_server):
+    """
+    A FractalServer with compute associated parametrize for all managers.
+    """
 
     storage_name = "test_qcfractal_compute_server"
-    adapter_client = build_adapter_clients(mtype, storage_name=storage_name)
+    postgres_server.create_database(storage_name)
+
+    adapter_client = build_adapter_clients(request.param, storage_name=storage_name)
 
     # Build a server with the thread in a outer context loop
     # Not all adapters play well with internal loops
     with loop_in_thread() as loop:
         server = FractalServer(port=find_open_port(),
                                storage_project_name=storage_name,
+                               storage_uri=postgres_server.database_uri(),
                                loop=loop,
                                queue_socket=adapter_client,
                                ssl_options=False)
@@ -436,32 +435,11 @@ def build_managed_compute_server(mtype):
         manager.stop()
 
 
-@pytest.fixture(scope="module", params=_adapter_testing)
-def adapter_client_fixture(request):
-    adapter_client = build_adapter_clients(request.param)
-    yield adapter_client
-
-    # Do a final close with existing tech
-    build_queue_adapter(adapter_client).close()
-
-
-@pytest.fixture(scope="module", params=_adapter_testing)
-def managed_compute_server(request):
-    """
-    A FractalServer with compute associated parametrize for all managers.
-    """
-
-    yield from build_managed_compute_server(request.param)
-
-
 @pytest.fixture(scope="module")
 def fractal_compute_server(postgres_server):
     """
     A FractalServer with a local Pool manager.
     """
-
-    # Check mongo
-    check_active_mongo_server()
 
     # Storage name
     storage_name = "test_qcfractal_compute_snowflake"
@@ -476,7 +454,7 @@ def fractal_compute_server(postgres_server):
         yield server
 
 
-def build_socket_fixture(stype):
+def build_socket_fixture(stype, server=None):
     print("")
 
     # Check mongo
@@ -491,8 +469,9 @@ def build_socket_fixture(stype):
         storage._clear_db(storage_name)
 
     elif stype == 'sqlalchemy':
-        check_active_postgres_server()
-        storage = storage_socket_factory(POSTGRES_TEST_URI, storage_name, db_type=stype, sql_echo=False)
+
+        server.create_database(storage_name)
+        storage = storage_socket_factory(server.database_uri(), storage_name, db_type=stype, sql_echo=False)
 
         # Clean and re-init the database
         storage._clear_db(storage_name)
@@ -524,6 +503,6 @@ def mongoengine_socket_fixture(request):
 
 
 @pytest.fixture(scope="module")
-def sqlalchemy_socket_fixture(request):
+def sqlalchemy_socket_fixture(request, postgres_server):
 
-    yield from build_socket_fixture("sqlalchemy")
+    yield from build_socket_fixture("sqlalchemy", postgres_server)
