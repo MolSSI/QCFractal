@@ -47,6 +47,7 @@ def parse_args():
                               default=None,
                               type=str,
                               help="The database to connect to, defaults to the default database name.")
+    fractal_args.add_argument("--server-name", **FractalServerSettings.help_info("name"))
     fractal_args.add_argument(
         "--start-periodics",
         default=True,
@@ -81,19 +82,24 @@ def parse_args():
     ret["database"] = {}
     ret["fractal"] = {}
     for key, value, in args.items():
-        print(key, value)
 
+        # DB bucket
         if ("db_" in key) and (key.replace("db_", "") in DatabaseSettings.field_names()):
             if value is None:
                 continue
             ret["database"][key.replace("db_", "")] = value
+
+        # Fractal bucket
         elif key in FractalServerSettings.field_names():
             if value is None:
                 continue
             ret["fractal"][key] = value
+
+        # Additional base values that should be none
         elif key in ["base_folder"]:
             if value is None:
                 continue
+            ret[key] = value
         else:
             ret[key] = value
 
@@ -151,7 +157,12 @@ def server_init(args, config):
 
     print("\n>>> Setting up PostgreSQL...\n")
     config.database_path.mkdir(exist_ok=True)
-    initialize_postgres(config, quiet=False)
+    if config.database.own:
+        initialize_postgres(config, quiet=False)
+    else:
+        print(
+            "Own was set to False, QCFractal will expect a live PostgreSQL server with the above connection information."
+        )
 
     print("\n>>> Writing settings...")
     config.config_file_path.write_text(yaml.dump(config.dict(), default_flow_style=False))
@@ -208,7 +219,7 @@ def server_start(args, config):
 
     try:
         server = qcfractal.FractalServer(
-            name=config.fractal.name,
+            name=args.get("server_name", None) or config.fractal.name,
             port=config.fractal.port,
             compress_response=config.fractal.compress_response,
 

@@ -3,6 +3,7 @@ The global qcfractal config file specification.
 """
 
 import os
+import argparse
 from enum import Enum
 from functools import partial
 from math import ceil
@@ -12,6 +13,15 @@ from typing import List, Optional
 from pydantic import BaseModel, BaseSettings, validator, Schema
 
 
+def _str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 class SettingsCommonConfig:
     env_prefix = "QCF_"
@@ -21,7 +31,7 @@ class SettingsCommonConfig:
 
 class ConfigSettings(BaseSettings):
 
-    _type_map = {"string": str, "integer": int, "float": float, "boolean": bool}
+    _type_map = {"string": str, "integer": int, "float": float, "boolean": _str2bool}
 
     @classmethod
     def field_names(cls):
