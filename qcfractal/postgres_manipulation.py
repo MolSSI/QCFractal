@@ -2,8 +2,7 @@ import os
 import subprocess
 import shutil
 
-import psycogp2
-from psycopg2._psycopg import OperationalError
+import psycopg2
 
 
 def _psql_return(data):
@@ -25,12 +24,39 @@ def _psql_return(data):
 
 def _run(commands, quiet=True, logger=print):
     proc = subprocess.run(commands, stdout=subprocess.PIPE)
+    # proc = subprocess.run(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     rcode = proc.returncode
     stdout = proc.stdout.decode()
     if not quiet:
         logger(stdout)
 
     return (rcode, stdout)
+
+
+class PsqlCommand:
+    def __init__(self, config, quiet=True, logger=print):
+        self.config = config
+        self.quiet = quiet
+        self.logger = logger
+
+    def command(self, cmd):
+        if not self.quiet:
+            logger(f"pqsl command: {cmd}")
+        psql_cmd = [shutil.which("psql"), "-p", str(self.config.database.port), "-c"]
+        return _run(psql_cmd + [cmd], logger=self.logger, quiet=self.quiet)
+
+    def create_database(self, database_name, check=True):
+        self.command(f'create database {database_name};')
+
+        try:
+            with psycopg2.connect(database=database_name,
+                                  user=self.config.database.username,
+                                  host=self.config.database.host,
+                                  port=self.config.database.port) as conn:
+                pass
+            return True
+        except psycopg2._psycopg.OperationalError:
+            return False
 
 
 def shutdown_postgres(config, quiet=True, logger=print):
@@ -80,19 +106,12 @@ def initialize_postgres(config, quiet=True, logger=print):
         psql_cmd = [shutil.which("psql"), "-p", str(config.database.port), "-c"]
         return _run(psql_cmd + [cmd], logger=logger, quiet=quiet)
 
-    if not quiet:
-        logger(f"Creating database name '{config.database.default_database}'.")
-    ret = run_psql(f'create database {config.database.default_database};')
+    psql = PsqlCommand(config, quiet=quiet, logger=logger)
+    success = psql.create_database(config.database.default_database)
 
-    try:
-        with psycopg2.connect(database=config.database.default_database,
-                              user=storage.config.database.username,
-                              host=storage.config.database.host,
-                              port=storage.config.database.port) as conn:
-            pass
-    except sycopg2._psycopg.OperationalError:
-        shutdown_postgres(config, quiet=quiet, logger=logger)
-        raise ValueError("Database created successfull, but could not connect. Shutting down postgres.")
+    if success is False:
+        shutdown_postgres(self.config, quiet=quiet, logger=logger)
+        raise ValueError("Database created successfully, but could not connect. Shutting down postgres.")
 
 
 # createuser [-p 5433] --superuser postgres
