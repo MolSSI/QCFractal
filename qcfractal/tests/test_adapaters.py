@@ -105,10 +105,11 @@ def test_adapter_error_message(managed_compute_server):
     assert len(manager.list_current_tasks()) == 0
 
     db = server.objects["storage_socket"]
-    ret = db.get_queue(status="ERROR")["data"]
-
+    ret = client.query_results(id=ret.ids)
     assert len(ret) == 1
-    assert "connectivity graph" in ret[0].error.error_message
+
+    error = ret[0].get_error()
+    assert "connectivity graph" in error.error_message
     server.objects["storage_socket"].queue_mark_complete([queue_id])
 
 
@@ -126,8 +127,9 @@ def test_adapter_raised_error(managed_compute_server):
     manager.await_results()
 
     db = server.objects["storage_socket"]
-    ret = db.get_queue(status="ERROR")["data"]
-
+    ret = client.query_results(id=ret.ids)
     assert len(ret) == 1
-    assert "Error" in ret[0].error.error_message
+
+    error = ret[0].get_error()
+    assert "Error" in error.error_message
     server.objects["storage_socket"].queue_mark_complete([queue_id])
