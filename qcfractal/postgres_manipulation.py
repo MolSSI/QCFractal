@@ -2,6 +2,9 @@ import os
 import subprocess
 import shutil
 
+import psycogp2
+from psycopg2._psycopg import OperationalError
+
 
 def _psql_return(data):
     """
@@ -42,7 +45,7 @@ def shutdown_postgres(config, quiet=True, logger=print):
 def initialize_postgres(config, quiet=True, logger=print):
 
     if not quiet:
-        print("Initializing the database:")
+        logger("Initializing the database:")
 
     # Initialize the database
     init_code, init_stdout = _run([shutil.which("initdb"), "-D", config.database_path], logger=logger, quiet=quiet)
@@ -56,7 +59,7 @@ def initialize_postgres(config, quiet=True, logger=print):
         assert "#port = 5432" in psql_conf
         psql_conf = psql_conf.replace("#port = 5432", f"port = {config.database.port}")
 
-    psql_conf_file.write_text(psql_conf)
+        psql_conf_file.write_text(psql_conf)
 
     # Startup the server
     start_code, start_stdout = _run([
@@ -80,6 +83,17 @@ def initialize_postgres(config, quiet=True, logger=print):
     if not quiet:
         logger(f"Creating database name '{config.database.default_database}'.")
     ret = run_psql(f'create database {config.database.default_database};')
+
+    try:
+        with psycopg2.connect(database=config.database.default_database,
+                              user=storage.config.database.username,
+                              host=storage.config.database.host,
+                              port=storage.config.database.port) as conn:
+            pass
+    except sycopg2._psycopg.OperationalError:
+        shutdown_postgres(config, quiet=quiet, logger=logger)
+        raise ValueError("Database created successfull, but could not connect. Shutting down postgres.")
+
 
 # createuser [-p 5433] --superuser postgres
 # psql [-p 5433] -c "create database qcarchivedb;" -U postgres

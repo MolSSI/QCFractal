@@ -45,7 +45,7 @@ class DatabaseSettings(ConfigSettings):
     """
 
     port: int = Schema(5432, description="The postgresql default port")
-    address: str = Schema(
+    host: str = Schema(
         "localhost",
         description=
         "Default location for the postgres server. If not localhost, qcfractal command lines cannot manage the instance."
@@ -56,6 +56,7 @@ class DatabaseSettings(ConfigSettings):
         None, description="The physical location of the QCFractal instance data, defaults to the root folder.")
     default_database: str = Schema("qcfractal_default", description="The default database to connect to.")
     logfile: str = Schema("qcfractal_postgres.log", description="The logfile to write postgres logs.")
+    own: bool = Schema(True, description="If own is True, QCFractal will control the database instance. If False Postgres will expect a booted server at the database specification.")
 
     class Config(SettingsCommonConfig):
         pass
@@ -129,7 +130,7 @@ class FractalConfig(ConfigSettings):
 
             uri += "@"
 
-        uri += f"{self.database.address}:{self.database.port}/"
+        uri += f"{self.database.host}:{self.database.port}/"
 
         if database is None:
             uri += self.database.default_database

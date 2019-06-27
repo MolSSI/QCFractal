@@ -43,21 +43,32 @@ def parse_args():
         cli_name = "--" + field.replace("_", "-")
         fractal_args.add_argument(cli_name, **FractalServerSettings.help_info(field))
 
-    fractal_args.add_argument("--database-name", default=None, type=str, help="The database to connect to, defaults to the default database name.")
-    fractal_args.add_argument("--start-periodics", default=True, type=bool, help="Expert! Can disable periodic update (services, heartbeats) if False. Useful when running behind a proxy.")
+    fractal_args.add_argument("--database-name",
+                              default=None,
+                              type=str,
+                              help="The database to connect to, defaults to the default database name.")
+    fractal_args.add_argument(
+        "--start-periodics",
+        default=True,
+        type=bool,
+        help="Expert! Can disable periodic update (services, heartbeats) if False. Useful when running behind a proxy."
+    )
 
-    fractal_args.add_argument("--disable_ssl", default=False, type=bool, help="Disables SSL if present, if False a SSL cert will be created for you.")
+    fractal_args.add_argument("--disable_ssl",
+                              default=False,
+                              type=bool,
+                              help="Disables SSL if present, if False a SSL cert will be created for you.")
     fractal_args.add_argument("--tls-cert", type=str, default=None, help="Certificate file for TLS (in PEM format)")
     fractal_args.add_argument("--tls-key", type=str, default=None, help="Private key file for TLS (in PEM format)")
 
     compute_args = start.add_argument_group('Local Computation Settings')
-    compute_args.add_argument("--local-manager", const=-1,
-        default=None,
-        action='store',
-        nargs='?',
-        type=int,
-        help='Creates a local pool QueueManager attached to the server.')
-
+    compute_args.add_argument("--local-manager",
+                              const=-1,
+                              default=None,
+                              action='store',
+                              nargs='?',
+                              type=int,
+                              help='Creates a local pool QueueManager attached to the server.')
 
     ### Config subcommands
     config = subparsers.add_parser('config', help="Starts a QCFractal server instance.")
@@ -226,7 +237,7 @@ def server_start(args, config):
         sys.exit(1)
 
     print("\n>>> QCFractal server initialized...")
-    print(str(server))
+    print(f"Server: {str(server)}")
 
     # Register closing
     install_signal_handlers(server.loop, server.stop)
@@ -277,7 +288,6 @@ def main(args=None):
         return server_config(args, config)
     elif command == "start":
         return server_start(args, config)
-    raise Exception()
 
 
 if __name__ == '__main__':

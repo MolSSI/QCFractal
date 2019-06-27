@@ -14,9 +14,11 @@ from typing import Optional, Union
 
 from tornado.ioloop import IOLoop
 
+from .config import FractalConfig
 from .interface import FractalClient
 from .server import FractalServer
 from .storage_sockets import storage_socket_factory
+from .postgres_manipulation import initialize_postgres, shutdown_postgres
 
 
 def _find_port() -> int:
@@ -66,6 +68,58 @@ def _terminate_process(proc, timeout: int = 5):
             raise AssertionError(f"Could not kill process {proc.pid}!")
 
 
+class TemporaryStorage:
+    def __init__(self, tmpdir: Optional[str] = None, quiet=True, logger=print):
+        """A PostgreSQL instance run in a temporary folder.
+
+        ! Warning ! All data is lost when the server is shutdown.
+        """
+
+        if not tmpdir:
+            self._db_tmpdir = tempfile.TemporaryDirectory()
+        else:
+            self._db_tmpdir = tmpdir
+
+        self.quiet = quiet
+        self.logger = logger
+        self.config = FractalConfig(database={"port": _find_port(), "directory": self._db_tmpdir.name})
+        initialize_postgres(self.config, quiet=self.quiet, logger=self.logger)
+
+        self._active = True
+        atexit.register(self.stop)
+
+    def __del__(self):
+        """
+        Cleans up the TemporaryStorage instance on delete.
+        """
+
+        self.stop()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
+        return False
+
+    def database_uri(self, safe=True, database=None):
+        return self.config(database_uri, safe=safe, database=database)
+
+    def stop(self) -> None:
+        """
+        Shuts down the Snowflake instance. This instance is not recoverable after a stop call.
+        """
+
+        if not self._active:
+            return
+
+        shutdown_postgres(self.config, quiet=self.quiet, logger=self.logger)
+
+        # Closed down
+        self._active = False
+        atexit.unregister(self.stop)
+
+
 class FractalSnowflake(FractalServer):
     def __init__(self,
                  max_workers: Optional[int] = 2,
@@ -97,11 +151,6 @@ class FractalSnowflake(FractalServer):
             Starts the background asyncio loop or not.
         reset_database : bool, optional
             Resets the database or not if a storage_uri is provided
-
-        Raises
-        ------
-        KeyError
-            Description
 
         """
 

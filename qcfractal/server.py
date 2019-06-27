@@ -196,8 +196,10 @@ class FractalServer:
             atexit.register(os.remove, cert_name)
             atexit.register(os.remove, key_name)
             self.client_verify = False
+
         elif ssl_options is False:
             ssl_ctx = None
+
         elif isinstance(ssl_options, dict):
             if ("crt" not in ssl_options) or ("key" not in ssl_options):
                 raise KeyError("'crt' (SSL Certificate) and 'key' (SSL Key) fields are required for `ssl_options`.")
