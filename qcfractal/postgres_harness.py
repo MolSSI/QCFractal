@@ -3,7 +3,7 @@ import os
 import shutil
 import subprocess
 import tempfile
-from typing import Optional
+from typing import Any, Dict, Union, Optional
 
 import psycopg2
 
@@ -22,39 +22,100 @@ def _run(commands, quiet=True, logger=print):
 
 
 class PostgresHarness:
-    def __init__(self, config, quiet=True, logger=print):
+    def __init__(self, config: Union[Dict[str, Any], FractalConfig], quiet: bool = True, logger: 'print' = print):
+        """A flexible connection to a Postgres server
+
+        Parameters
+        ----------
+        config : Union[Dict[str, Any], FractalConfig]
+            The configuration options
+        quiet : bool, optional
+            If True, does not log any operations
+        logger : print, optional
+            The logger to show the operations to.
+        """
         if isinstance(config, dict):
             config = FractalConfig(**config)
         self.config = config
         self.quiet = quiet
         self.logger = logger
 
-    def database_uri(self):
+    def database_uri(self) -> str:
+        """Provides the full Postgres URI string.
+
+        Returns
+        -------
+        str
+            The database URI
+        """
         return self.config.database_uri(safe=False, database="")
 
-    def connect(self, database=None):
+    def connect(self, database: Optional[str] = None) -> 'Connection':
+        """Builds a psycopg2 connection object.
 
+        Parameters
+        ----------
+        database : Optional[str], optional
+            The database to connect to, otherwise defaults to None
+
+        Returns
+        -------
+        Connection
+            A live Connection object.
+        """
         return psycopg2.connect(database=database,
                                 user=self.config.database.username,
                                 host=self.config.database.host,
                                 port=self.config.database.port)
 
-    def is_alive(self, database=None):
+    def is_alive(self, database: Optional[str] = None) -> bool:
+        """Checks if the postgres is alive, and optionally if the database is present.
 
+        Parameters
+        ----------
+        database : Optional[str], optional
+            The datbase to connect to
+
+        Returns
+        -------
+        bool
+            If True, the postgres database is alive.
+        """
         try:
             self.connect(database=database)
             return True
         except psycopg2._psycopg.OperationalError:
             return False
 
-    def command(self, cmd):
+    def command(self, cmd: str) -> Any:
+        """Runs psql commands and returns their output while connected to the correct postgres instance.
+
+        Parameters
+        ----------
+        cmd : str
+            A psql command string.
+            Description
+
+        """
         if not self.quiet:
             logger(f"pqsl command: {cmd}")
         psql_cmd = [shutil.which("psql"), "-p", str(self.config.database.port), "-c"]
         return _run(psql_cmd + [cmd], logger=self.logger, quiet=self.quiet)
 
-    def create_database(self, database_name):
+    def create_database(self, database_name: str) -> bool:
+        """Creates a new database for the current postgres instance. If the database is existing, no
+        changes to the database are made.
 
+        Parameters
+        ----------
+        database_name : str
+            The name of the database to create.
+
+        Returns
+        -------
+        bool
+            If the operation was successful or not.
+        """
         conn = self.connect()
         conn.autocommit = True
 
@@ -67,7 +128,10 @@ class PostgresHarness:
 
         return self.is_alive(database=database_name)
 
-    def shutdown(self):
+    def shutdown(self) -> Any:
+        """Shutsdown the current postgres instance.
+
+        """
         ret = _run([
             shutil.which("pg_ctl"),
             "-D", str(self.config.database_path),
@@ -76,7 +140,8 @@ class PostgresHarness:
         return ret
 
     def initialize(self):
-
+        """Initializes and starts the current postgres instance.
+        """
         if not self.quiet:
             logger("Initializing the database:")
 
@@ -119,10 +184,25 @@ class PostgresHarness:
 
 
 class TemporaryPostgres:
-    def __init__(self, database_name: Optional[str] = None, tmpdir: Optional[str] = None, quiet=True, logger=print):
+    def __init__(self,
+                 database_name: Optional[str] = None,
+                 tmpdir: Optional[str] = None,
+                 quiet: bool = True,
+                 logger: 'print' = print):
         """A PostgreSQL instance run in a temporary folder.
 
         ! Warning ! All data is lost when the server is shutdown.
+
+        Parameters
+        ----------
+        database_name : Optional[str], optional
+            The database name to create.
+        tmpdir : Optional[str], optional
+            A directory to create the postgres instance in, if not None the data is not deleted upon shutdown.
+        quiet : bool, optional
+            If True, does not log any operations
+        logger : print, optional
+            The logger to show the operations to.
         """
 
         self._active = True
@@ -158,7 +238,21 @@ class TemporaryPostgres:
         self.stop()
         return False
 
-    def database_uri(self, safe=True, database=None):
+    def database_uri(self, safe: bool = True, database: Optional[str] = None) -> str:
+        """Provides the full Postgres URI string.
+
+        Parameters
+        ----------
+        safe : bool, optional
+            If True, hides the postgres password.
+        database : Optional[str], optional
+            An optional database to add to the string.
+
+        Returns
+        -------
+        str
+            The database URI
+        """
         return self.config.database_uri(safe=safe, database=database)
 
     def stop(self) -> None:
