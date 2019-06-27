@@ -16,29 +16,10 @@ from tornado.ioloop import IOLoop
 
 from .config import FractalConfig
 from .interface import FractalClient
+from .postgres_harness import TemporaryPostgres
 from .server import FractalServer
 from .storage_sockets import storage_socket_factory
-from .postgres_harness import PsqlHarness
-
-
-def _find_port() -> int:
-    sock = socket.socket()
-    sock.bind(('', 0))
-    host, port = sock.getsockname()
-    return port
-
-
-def _port_open(ip: str, port: int) -> bool:
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(1)
-    try:
-        s.connect((ip, int(port)))
-        s.shutdown(socket.SHUT_RDWR)
-        return True
-    except ConnectionRefusedError:
-        return False
-    finally:
-        s.close()
+from .util import find_port, port_open
 
 
 def _background_process(args, **kwargs):
@@ -66,64 +47,6 @@ def _terminate_process(proc, timeout: int = 5):
 
         if proc.poll() is None:
             raise AssertionError(f"Could not kill process {proc.pid}!")
-
-
-class TemporaryStorage:
-    def __init__(self, database_name: Optional[str] = None, tmpdir: Optional[str] = None, quiet=True, logger=print):
-        """A PostgreSQL instance run in a temporary folder.
-
-        ! Warning ! All data is lost when the server is shutdown.
-        """
-
-        self._active = True
-
-        if not tmpdir:
-            self._db_tmpdir = tempfile.TemporaryDirectory()
-        else:
-            self._db_tmpdir = tmpdir
-
-        self.quiet = quiet
-        self.logger = logger
-
-        config_data = {"port": _find_port(), "directory": self._db_tmpdir.name}
-        if database_name:
-            config_data["default_database"] = database_name
-        self.config = FractalConfig(database=config_data)
-        self.psql = PsqlHarness(self.config)
-        self.psql.initialize()
-
-        atexit.register(self.stop)
-
-    def __del__(self):
-        """
-        Cleans up the TemporaryStorage instance on delete.
-        """
-
-        self.stop()
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.stop()
-        return False
-
-    def database_uri(self, safe=True, database=None):
-        return self.config.database_uri(safe=safe, database=database)
-
-    def stop(self) -> None:
-        """
-        Shuts down the Snowflake instance. This instance is not recoverable after a stop call.
-        """
-
-        if not self._active:
-            return
-
-        self.psql.shutdown()
-
-        # Closed down
-        self._active = False
-        atexit.unregister(self.stop)
 
 
 class FractalSnowflake(FractalServer):
@@ -162,7 +85,7 @@ class FractalSnowflake(FractalServer):
 
         # Startup a MongoDB in background thread and in custom folder.
         if storage_uri is None:
-            self._storage = TemporaryStorage(database_name=storage_project_name)
+            self._storage = TemporaryPostgres(database_name=storage_project_name)
             self._storage_uri = self._storage.database_uri(safe=False, database="")
         else:
             self._storage = None
@@ -200,7 +123,7 @@ class FractalSnowflake(FractalServer):
             raise KeyError(f"Logfile type not recognized {type(logfile)}.")
 
         super().__init__(name="QCFractal Snowflake Instance",
-                         port=_find_port(),
+                         port=find_port(),
                          loop=self.loop,
                          storage_uri=self._storage_uri,
                          storage_project_name=storage_project_name,
@@ -277,11 +200,11 @@ class FractalSnowflakeHandler:
         # Set variables
         self._running = False
         self._qcfractal_proc = None
-        self._storage = TemporaryStorage()
+        self._storage = TemporaryPostgres()
         self._storage_uri = self._storage.database_uri(safe=False)
         self._qcfdir = tempfile.TemporaryDirectory()
         self._dbname = str(uuid.uuid4())
-        self._server_port = _find_port()
+        self._server_port = find_port()
         self._address = f"https://localhost:{self._server_port}"
         self._ncores = ncores
 
@@ -299,7 +222,8 @@ class FractalSnowflakeHandler:
             "--db-own=False",
             f"--db-port={self._storage.config.database.port}",
             "--query-limit=100000",
-        ], stdout=subprocess.PIPE)
+        ],
+                              stdout=subprocess.PIPE)
         stdout = proc.stdout.decode()
         if "Success!" not in stdout:
             raise ValueError(f"Could not initialize temporary server. Error:\n{stdout}")
@@ -395,7 +319,6 @@ class FractalSnowflakeHandler:
 
         for x in range(timeout * 10):
 
-
             try:
                 # Client will attempt to connect to the server
                 FractalClient(self)
@@ -408,9 +331,9 @@ class FractalSnowflakeHandler:
             self._running = True
             self.stop()
             out, err = self._qcfractal_proc.communicate()
-            raise ConnectionRefusedError("Snowflake instance did not boot properly, try increasing the timeout.\n\n"
-                                         f"stdout:\n{out.decode()}\n\n",
-                                         f"stderr:\n{err.decode()}")
+            raise ConnectionRefusedError(
+                "Snowflake instance did not boot properly, try increasing the timeout.\n\n"
+                f"stdout:\n{out.decode()}\n\n", f"stderr:\n{err.decode()}")
 
         self._running = True
 
@@ -436,7 +359,7 @@ class FractalSnowflakeHandler:
 
         # Make sure we really shut down
         for x in range(timeout * 10):
-            if _port_open("localhost", self._server_port):
+            if port_open("localhost", self._server_port):
                 time.sleep(0.1)
             else:
                 break

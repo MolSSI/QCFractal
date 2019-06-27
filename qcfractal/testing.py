@@ -4,6 +4,7 @@ Contains testing infrastructure for QCFractal.
 
 import os
 import pkgutil
+import shutil
 import signal
 import socket
 import subprocess
@@ -18,13 +19,12 @@ import pytest
 import qcengine as qcng
 from tornado.ioloop import IOLoop
 
+from .config import FractalConfig
+from .postgres_harness import PostgresHarness, TemporaryPostgres
 from .queue import build_queue_adapter
 from .server import FractalServer
 from .snowflake import FractalSnowflake
 from .storage_sockets import storage_socket_factory
-
-### Globals
-POSTGRES_TESTING_URI = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb"
 
 ### Addon testing capabilities
 
@@ -133,14 +133,16 @@ def check_active_postgres_server():
     """Checks for a active mongo server, skips the test if not found.
     """
 
+    # Create singleton
+    if POSTGRES_TEST_URI is None:
+        pytest.skip(f"No postgres instance supplied, skipping.")
+
     try:
         from sqlalchemy import create_engine
-        engine = create_engine(POSTGRES_TESTING_URI)
+        engine = create_engine(POSTGRES_TEST_URI)
         engine.table_names()
     except:
-        pytest.skip(
-            f"Could not find an activate mongo test instance at '{POSTGRES_TESTING_URI}'."
-        )
+        pytest.skip(f"Could not find an activate mongo test instance at '{POSTGRES_TEST_URI}'.")
 
 
 def find_open_port():
@@ -319,6 +321,28 @@ def run_process(args, **kwargs):
 
 ### Server testing mechanics
 
+@pytest.fixture(scope="session")
+def postgres_server():
+
+    if shutil.which("psql") is None:
+        pytest.skip("Postgres is not installed on this server and no active postgres could be found.")
+
+    storage = None
+    psql = PostgresHarness(FractalConfig(database={"port": 5432}))
+    if not psql.is_alive():
+        print()
+        print(
+            "Could not connect to a Postgres server at 'postgresql://localhost:5432', this will increase test latency session by ~4 seconds."
+        )
+        print()
+        storage = TemporaryPostgres()
+        psql = storage.psql
+
+    yield psql
+
+    if storage:
+        storage.stop()
+
 
 def reset_server_database(server):
     """Resets the server database for testing.
@@ -336,15 +360,9 @@ def test_server(request):
     # Check mongo
     check_active_mongo_server()
 
-    storage_name = "qcf_local_server_test"
-
-    storage_uri = POSTGRES_TESTING_URI
-    # storage_uri="mongodb://localhost:27017"
-
-    # with loop_in_thread() as loop:
     with FractalSnowflake(max_workers=0,
-                          storage_project_name=storage_name,
-                          storage_uri=storage_uri,
+                          storage_project_name="test_qcfractal_server",
+                          storage_uri=POSTGRES_TEST_URI,
                           start_server=False,
                           reset_database=True) as server:
 
@@ -352,7 +370,7 @@ def test_server(request):
         yield server
 
 
-def build_adapter_clients(mtype, storage_name="qcf_compute_server_test"):
+def build_adapter_clients(mtype, storage_name="test_qcfractal_compute_server"):
     # Check mongo
     check_active_mongo_server()
 
@@ -389,7 +407,7 @@ def build_adapter_clients(mtype, storage_name="qcf_compute_server_test"):
 
 def build_managed_compute_server(mtype):
 
-    storage_name = "qcf_compute_server_test"
+    storage_name = "test_qcfractal_compute_server"
     adapter_client = build_adapter_clients(mtype, storage_name=storage_name)
 
     # Build a server with the thread in a outer context loop
@@ -437,7 +455,7 @@ def managed_compute_server(request):
 
 
 @pytest.fixture(scope="module")
-def fractal_compute_server(request):
+def fractal_compute_server(postgres_server):
     """
     A FractalServer with a local Pool manager.
     """
@@ -446,13 +464,12 @@ def fractal_compute_server(request):
     check_active_mongo_server()
 
     # Storage name
-    storage_name = "qcf_compute_server_test"
-    # storage_uri = "mongodb://localhost:27017"
-    storage_uri = POSTGRES_TESTING_URI
-    # storage_uri = "sqlite:///:memory:"
+    storage_name = "test_qcfractal_compute_snowflake"
+    postgres_server.create_database(storage_name)
+
     with FractalSnowflake(max_workers=2,
                           storage_project_name=storage_name,
-                          storage_uri=storage_uri,
+                          storage_uri=postgres_server.database_uri(),
                           reset_database=True,
                           start_server=False) as server:
         # reset_server_database(server)
@@ -463,7 +480,7 @@ def build_socket_fixture(stype):
     print("")
 
     # Check mongo
-    storage_name = "qcf_local_values_test_" + stype
+    storage_name = "test_qcfractal_storage" + stype
 
     # IP/port/drop table is specific to build
     if stype in ["pymongo", "mongoengine"]:
@@ -475,12 +492,7 @@ def build_socket_fixture(stype):
 
     elif stype == 'sqlalchemy':
         check_active_postgres_server()
-        storage = storage_socket_factory(POSTGRES_TESTING_URI,
-                                         storage_name,
-                                         db_type=stype,
-                                         sql_echo=False)
-        # storage = storage_socket_factory('sqlite:///:memory:', storage_name, db_type=stype)
-        # storage = storage_socket_factory('sqlite:///path_to_db', storage_name, db_type=stype)
+        storage = storage_socket_factory(POSTGRES_TEST_URI, storage_name, db_type=stype, sql_echo=False)
 
         # Clean and re-init the database
         storage._clear_db(storage_name)
