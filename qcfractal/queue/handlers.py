@@ -271,7 +271,7 @@ class QueueManagerHandler(APIHandler):
 
         elif op == "shutdown":
             nshutdown = self.storage.queue_reset_status(name)
-            self.storage.manager_update(name, returned=nshutdown, status="INACTIVE", **body.meta.dict())
+            self.storage.manager_update(manager=name, returned=nshutdown, status="INACTIVE", **body.meta.dict())
 
             self.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(
                 name, nshutdown))

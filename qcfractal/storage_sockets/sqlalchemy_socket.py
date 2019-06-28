@@ -235,6 +235,7 @@ class SQLAlchemySocket:
             session.query(MoleculeORM).delete(synchronize_session=False)
             session.query(KVStoreORM).delete(synchronize_session=False)
             session.query(CollectionORM).delete(synchronize_session=False)
+            session.query(VersionsORM).delete(synchronize_session=False)
 
     def get_project_name(self) -> str:
         return self._project_name
@@ -1683,18 +1684,27 @@ class SQLAlchemySocket:
 
         return len(task_ids)
 
-    def queue_reset_status(self, manager: str, reset_running: bool = True, reset_error: bool = False) -> int:
+    def queue_reset_status(self,
+                           id: Union[str, List[str]] = None,
+                           base_result_id: Union[str, List[str]] = None,
+                           manager: Optional[str] = None,
+                           reset_running: bool = True,
+                           reset_error: bool = False) -> int:
         """
         Reset the status of the tasks that a manager owns from Running to Waiting
         If reset_error is True, then also reset errored tasks AND its results/proc
 
         Parameters
         ----------
-        manager : str
+        id : Union[str, List[str]], optional
+            The id of the task to modify
+        base_result_id : Union[str, List[str]], optional
+            The id of the base result to modify
+        manager : Optional[str], optional
             The manager name to reset the status of
-        reset_running : str (optional), default is True
+        reset_running : bool, optional
             If True, reset running tasks to be waiting
-        reset_error : str (optional), default is False
+        reset_error : bool, optional
             If True, also reset errored tasks to be waiting,
             also update results/proc to be INCOMPLETE
 
@@ -1703,31 +1713,40 @@ class SQLAlchemySocket:
         int
             Updated count
         """
-
         if not (reset_running or reset_error):
             # nothing to do
             return 0
 
+        if sum(x is not None for x in [id, base_result_id, manager]) == 0:
+            raise ValueError("All query fields are None, reset_status must specify queries.")
+
+        status = []
+        if reset_running:
+            status.append(TaskStatusEnum.running)
+        if reset_error:
+            status.append(TaskStatusEnum.error)
+
+        query = format_query(TaskQueueORM,
+                             id=id,
+                             base_result_id=base_result_id,
+                             manager=manager,
+                             status=status)
+
+        # Must have status + something, checking above as well(being paranoid)
+        if len(query) < 2:
+            raise ValueError("All query fields are None, reset_status must specify queries.")
+
         with self.session_scope() as session:
             # Update results and procedures if reset_error
-            if reset_error:
-                task_ids = session.query(TaskQueueORM.id)\
-                                  .filter_by(manager=manager, status=TaskStatusEnum.error)
-                session.query(BaseResultORM)\
-                          .filter(TaskQueueORM.base_result_id==BaseResultORM.id)\
-                          .filter(TaskQueueORM.id.in_(task_ids))\
-                          .update(dict(status='INCOMPLETE', modified_on=dt.utcnow()),
-                                  synchronize_session=False)
-
-            status = []
-            if reset_running:
-                status.append("RUNNING")
-            if reset_error:
-                status.append("ERROR")
+            task_ids = session.query(TaskQueueORM.id).filter(*query)
+            session.query(BaseResultORM)\
+                      .filter(TaskQueueORM.base_result_id==BaseResultORM.id)\
+                      .filter(TaskQueueORM.id.in_(task_ids))\
+                      .update(dict(status='INCOMPLETE', modified_on=dt.utcnow()),
+                              synchronize_session=False)
 
             updated = session.query(TaskQueueORM)\
-                             .filter(TaskQueueORM.status.in_(status))\
-                             .filter_by(manager=manager)\
+                             .filter(TaskQueueORM.id.in_(task_ids))\
                              .update(dict(status=TaskStatusEnum.waiting, modified_on=dt.utcnow()),
                                      synchronize_session=False)
 
