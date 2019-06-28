@@ -11,7 +11,6 @@ language: generic
 os: linux
 
 services:
-  - mongodb
   - postgresql
 
 matrix:
@@ -83,9 +82,6 @@ before_script:
   - mongod --version
   - conda list
   - psql --version
-  - psql -c "create database test_qcarchivedb;" -U postgres
-  - psql -c "create user qcarchive with password 'mypass';" -U postgres
-  - psql -c "grant all privileges on database test_qcarchivedb to qcarchive;" -U postgres
 
 script:
   - pytest -v -rsx --runslow --cov=qcfractal qcfractal/

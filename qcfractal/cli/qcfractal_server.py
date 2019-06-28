@@ -2,16 +2,17 @@
 A command line interface to the qcfractal server.
 """
 
-import sys
 import argparse
-import secrets
-import yaml
 import shutil
+import sys
+
+import yaml
+
 import qcfractal
 
+from .cli_utils import install_signal_handlers
 from ..config import DatabaseSettings, FractalConfig, FractalServerSettings
 from ..postgres_harness import PostgresHarness
-from .cli_utils import install_signal_handlers
 
 
 def parse_args():
@@ -173,7 +174,7 @@ def server_init(args, config):
     print("\n>>> Success! Please run `qcfractal-server start` to boot a FractalServer!")
 
 
-def server_config(config):
+def server_config(args, config):
 
     print(f"Displaying QCFractal configuration:\n")
     print(yaml.dump(config.dict(), default_flow_style=False))
@@ -296,11 +297,11 @@ def main(args=None):
         config = FractalConfig(**file_dict)
 
     if command == "init":
-        return server_init(args, config)
+        server_init(args, config)
     elif command == "config":
-        return server_config(args, config)
+        server_config(args, config)
     elif command == "start":
-        return server_start(args, config)
+        server_start(args, config)
 
 
 if __name__ == '__main__':

@@ -2,15 +2,12 @@
 The global qcfractal config file specification.
 """
 
-import os
 import argparse
-from enum import Enum
-from functools import partial
-from math import ceil
+import os
 from pathlib import Path
+from typing import Optional
 
-from typing import List, Optional
-from pydantic import BaseModel, BaseSettings, validator, Schema
+from pydantic import BaseModel, BaseSettings, Schema, validator
 
 
 def _str2bool(v):
