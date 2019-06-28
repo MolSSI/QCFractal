@@ -167,8 +167,8 @@ class PostgresHarness:
             "-l", str(self.config.base_path / self.config.database.logfile),
             "start"],
             logger=self.logger, quiet=self.quiet) # yapf: disable
-        if "server started" not in start_stdout:
-            raise ValueError(start_stdout)
+        if not (("server started" in start_stdout) or ("server starting" in start_stdout)):
+            raise ValueError(f"Could not start the Postgres server. Error below:\n{start_stdout}")
 
         # Create teh user and database
         if not self.quiet:
