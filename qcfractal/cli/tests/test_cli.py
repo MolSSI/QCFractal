@@ -3,6 +3,7 @@ Tests for QCFractals CLI
 """
 import os
 import time
+import tempfile
 
 import pytest
 
@@ -15,24 +16,39 @@ _options = {"coverage": True, "dump_stdout": True}
 _pwd = os.path.dirname(os.path.abspath(__file__))
 
 
-@testing.mark_slow
-def test_cli_server_boot():
-    port = "--port=" + str(testing.find_open_port())
-    assert testing.run_process(["qcfractal-server", "mydb", port], interupt_after=10, **_options)
+@pytest.fixture(scope="module")
+def qcfractal_base_init(postgres_server):
+
+    tmpdir = tempfile.TemporaryDirectory()
+
+    args = [
+        "qcfractal-server", "init", "--base-folder",
+        str(tmpdir.name), "--db-own=False", f"--db-port={postgres_server.config.database.port}"
+    ]
+    assert testing.run_process(args, **_options)
+
+    yield f"--base-folder={tmpdir.name}"
 
 
-@pytest.mark.skip(reason="Odd travis issue. TODO")
 @testing.mark_slow
-def test_cli_server_local_boot():
+def test_cli_server_boot(qcfractal_base_init):
     port = "--port=" + str(testing.find_open_port())
-    args = ["qcfractal-server", "mydb", "--local-manager=2", port]
+    args = ["qcfractal-server", "start", qcfractal_base_init, "--database-name=test_cli_db", port]
+    assert testing.run_process(args, interupt_after=10, **_options)
+
+
+@testing.mark_slow
+def test_cli_server_local_boot(qcfractal_base_init):
+    port = "--port=" + str(testing.find_open_port())
+    args = ["qcfractal-server", "start", "--local-manager=2", port, qcfractal_base_init]
     assert testing.run_process(args, interupt_after=10, **_options)
 
 
 @pytest.fixture(scope="module")
-def active_server(request):
+def active_server(request, qcfractal_base_init):
     port = str(testing.find_open_port())
-    args = ["qcfractal-server", "mydb", "--port=" + port]
+    args = ["qcfractal-server", "start", qcfractal_base_init, f"--port={port}"]
+    assert testing.run_process(args, interupt_after=10, **_options)
     with testing.popen(args, **_options) as server:
         time.sleep(2)
 
@@ -47,7 +63,9 @@ def test_manager_local_testing_process():
 
 @testing.mark_slow
 def test_manager_executor_manager_boot(active_server):
-    args = ["qcfractal-manager", active_server.test_uri_cli, "--adapter=pool", "--tasks-per-worker=2", "--verify=False"]
+    args = [
+        "qcfractal-manager", active_server.test_uri_cli, "--adapter=pool", "--tasks_per_worker=2", "--verify=False"
+    ]
     assert testing.run_process(args, interupt_after=7, **_options)
 
 
@@ -86,21 +104,23 @@ def load_manager_config(adapter, scheduler):
 
 
 @testing.mark_slow
-@pytest.mark.parametrize("adapter,scheduler", [
-    ("pool", "slurm"),
-    pytest.param("dask", "slurm", marks=testing.using_dask_jobqueue),
-    pytest.param("dask", "PBS", marks=testing.using_dask_jobqueue),
-    pytest.param("dask", "MoAb", marks=testing.using_dask_jobqueue),
-    pytest.param("dask", "SGE", marks=testing.using_dask_jobqueue),
-    pytest.param("dask", "lSf", marks=testing.using_dask_jobqueue),
-    pytest.param("parsl", "slurm", marks=testing.using_parsl),
-    pytest.param("parsl", "PBS", marks=testing.using_parsl),
-    pytest.param("parsl", "MoAb", marks=testing.using_parsl),
-    pytest.param("parsl", "SGE", marks=testing.using_parsl),
-    pytest.param("parsl", "lSf", marks=[testing.using_parsl, pytest.mark.xfail]),  # Invalid combination
-    pytest.param("NotAParser", "slurm", marks=pytest.mark.xfail),  # Invalid Parser
-    pytest.param("pool", "NotAScheduler", marks=pytest.mark.xfail),  # Invalid Scheduler
-])
+@pytest.mark.parametrize(
+    "adapter,scheduler",
+    [
+        ("pool", "slurm"),
+        pytest.param("dask", "slurm", marks=testing.using_dask_jobqueue),
+        pytest.param("dask", "PBS", marks=testing.using_dask_jobqueue),
+        pytest.param("dask", "MoAb", marks=testing.using_dask_jobqueue),
+        pytest.param("dask", "SGE", marks=testing.using_dask_jobqueue),
+        pytest.param("dask", "lSf", marks=testing.using_dask_jobqueue),
+        pytest.param("parsl", "slurm", marks=testing.using_parsl),
+        pytest.param("parsl", "PBS", marks=testing.using_parsl),
+        pytest.param("parsl", "MoAb", marks=testing.using_parsl),
+        pytest.param("parsl", "SGE", marks=testing.using_parsl),
+        pytest.param("parsl", "lSf", marks=[testing.using_parsl, pytest.mark.xfail]),  # Invalid combination
+        pytest.param("NotAParser", "slurm", marks=pytest.mark.xfail),  # Invalid Parser
+        pytest.param("pool", "NotAScheduler", marks=pytest.mark.xfail),  # Invalid Scheduler
+    ])
 def test_cli_managers(adapter, scheduler, tmp_path):
     """Test that multiple adapter/scheduler combinations at least can boot up in Managers"""
     config = load_manager_config(adapter, scheduler)

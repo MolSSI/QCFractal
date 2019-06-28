@@ -220,6 +220,10 @@ def server_start(args, config):
     else:
         logfile = str(config.base_path / config.fractal.logfile)
 
+    database_name = args.get("database_name", None) or config.database.default_database
+    psql = PostgresHarness(config, quiet=False, logger=print)
+    psql.create_database(database_name)
+
     try:
         server = qcfractal.FractalServer(
             name=args.get("server_name", None) or config.fractal.name,
@@ -233,7 +237,7 @@ def server_start(args, config):
 
             # Database
             storage_uri=config.database_uri(safe=False, database=""),
-            storage_project_name=args.get("database_name", None) or config.database.default_database,
+            storage_project_name=database_name,
             query_limit=config.fractal.query_limit,
 
             # Log options
@@ -266,7 +270,6 @@ def main(args=None):
     # Grab CLI args if not present
     if args is None:
         args = parse_args()
-        print(args)
 
     command = args.pop("command")
 

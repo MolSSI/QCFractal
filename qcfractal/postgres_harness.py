@@ -142,7 +142,7 @@ class PostgresHarness:
         """Initializes and starts the current postgres instance.
         """
         if not self.quiet:
-            logger("Initializing the database:")
+            self.logger("Initializing the database:")
 
         # Initialize the database
         init_code, init_stdout = _run([shutil.which("initdb"), "-D", self.config.database_path],
@@ -173,7 +173,7 @@ class PostgresHarness:
         # Create teh user and database
         if not self.quiet:
             self.logger(f"Building user information.")
-        _run([shutil.which("createdb"), "-p", str(self.config.database.port)])
+        ret = _run([shutil.which("createdb"), "-p", str(self.config.database.port)])
 
         success = self.create_database(self.config.database.default_database)
 
