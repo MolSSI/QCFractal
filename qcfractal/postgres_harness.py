@@ -167,7 +167,7 @@ class PostgresHarness:
         start_code, start_stdout = _run([
             shutil.which("pg_ctl"),
             "-D", str(self.config.database_path),
-            "-l", str(self.config.base_path / self.config.database.logfile),
+            "-l", str(self.config.database_path / self.config.database.logfile),
             "start"],
             logger=self.logger, quiet=self.quiet) # yapf: disable
         if not (("server started" in start_stdout) or ("server starting" in start_stdout)):

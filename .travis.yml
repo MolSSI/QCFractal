@@ -6,6 +6,9 @@
 sudo: false
 dist: xenial
 
+services:
+  - mongodb # For fireworks
+
 # Environment base builds
 language: generic
 os: linux

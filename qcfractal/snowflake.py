@@ -308,6 +308,9 @@ class FractalSnowflakeHandler:
         if success is False:
             raise ValueError("Could not create a postgres database.")
 
+        if shutil.which("qcfractal-server") is None:
+            raise ValueError("qcfractal-server is not installed. This is likely a development environment, please `pip install -e` from the development folder.")
+
         self._qcfractal_proc = _background_process([
             shutil.which("qcfractal-server"),
             "start",
