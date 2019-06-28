@@ -37,7 +37,6 @@ dependencies:
 """
 qca_ecosystem_template = ["qcengine>=0.6.2", "qcelemental>=0.4.0"]
 
-# Note we temporarily duplicate mongoengine as conda-forge appears to be broken
 pip_depends_template = []
 
 
