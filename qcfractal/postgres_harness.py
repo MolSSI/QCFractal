@@ -185,7 +185,7 @@ class PostgresHarness:
         # Create the user and database
         if not self.quiet:
             self.logger(f"Building user information.")
-        ret = _run([shutil.which("createdb"), "-p", str(self.config.database.port)])
+        _run([shutil.which("createdb"), "-p", str(self.config.database.port)])
 
         success = self.create_database(self.config.database.default_database)
 

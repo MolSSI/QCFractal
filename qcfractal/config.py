@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from pydantic import BaseModel, BaseSettings, Schema, validator
+from pydantic import BaseSettings, Schema, validator
 
 
 def _str2bool(v):

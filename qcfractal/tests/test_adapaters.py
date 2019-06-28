@@ -104,7 +104,6 @@ def test_adapter_error_message(managed_compute_server):
     manager.await_results()
     assert len(manager.list_current_tasks()) == 0
 
-    db = server.objects["storage_socket"]
     ret = client.query_results(id=ret.ids)
     assert len(ret) == 1
 
@@ -126,7 +125,6 @@ def test_adapter_raised_error(managed_compute_server):
 
     manager.await_results()
 
-    db = server.objects["storage_socket"]
     ret = client.query_results(id=ret.ids)
     assert len(ret) == 1
 

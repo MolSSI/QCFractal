@@ -21,7 +21,6 @@ from sqlalchemy.orm import sessionmaker, with_polymorphic
 from sqlalchemy.sql.expression import func
 # from sqlalchemy.dialects import postgresql
 from collections.abc import Iterable
-import datetime
 
 # pydantic classes
 from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
@@ -925,7 +924,6 @@ class SQLAlchemySocket:
         -------
 
         """
-        pass
 
     def get_results(self,
                     id: Union[str, List] = None,
@@ -1819,8 +1817,8 @@ class SQLAlchemySocket:
 
                 if get_count_fast(doc) == 0:
                     doc = QueueManagerORM(**manager)
-                    doc.created_on = datetime.datetime.fromtimestamp(doc.created_on / 1e3)
-                    doc.modified_on = datetime.datetime.fromtimestamp(doc.modified_on / 1e3)
+                    doc.created_on = dt.fromtimestamp(doc.created_on / 1e3)
+                    doc.modified_on = dt.fromtimestamp(doc.modified_on / 1e3)
                     session.add(doc)
                     session.commit()  # TODO: faster if done in bulk
                     manager_names.append(doc.name)

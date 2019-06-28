@@ -13,7 +13,6 @@ from typing import Optional, Union
 
 from tornado.ioloop import IOLoop
 
-from .config import FractalConfig
 from .interface import FractalClient
 from .postgres_harness import TemporaryPostgres
 from .server import FractalServer

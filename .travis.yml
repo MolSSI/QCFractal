@@ -85,7 +85,6 @@ before_script:
 
 script:
   - pytest -v -rsx --runslow --cov=qcfractal qcfractal/
-  - pytest -v --runexamples examples/
 
 notifications:
   email: false
