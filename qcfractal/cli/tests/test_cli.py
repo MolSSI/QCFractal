@@ -64,7 +64,7 @@ def test_manager_local_testing_process():
 @testing.mark_slow
 def test_manager_executor_manager_boot(active_server):
     args = [
-        "qcfractal-manager", active_server.test_uri_cli, "--adapter=pool", "--tasks_per_worker=2", "--verify=False"
+        "qcfractal-manager", active_server.test_uri_cli, "--adapter=pool", "--tasks-per-worker=2", "--verify=False"
     ]
     assert testing.run_process(args, interupt_after=7, **_options)
 

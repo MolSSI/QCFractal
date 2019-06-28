@@ -2,6 +2,7 @@ import atexit
 import shutil
 import subprocess
 import tempfile
+import time
 from typing import Any, Dict, Union, Optional
 
 import psycopg2
@@ -62,8 +63,10 @@ class PostgresHarness:
         Connection
             A live Connection object.
         """
+        if database is None:
+            database = "postgres"
         return psycopg2.connect(database=database,
-                                user=self.config.database.username,
+                                # user=self.config.database.username,
                                 host=self.config.database.host,
                                 port=self.config.database.port)
 
@@ -170,7 +173,16 @@ class PostgresHarness:
         if not (("server started" in start_stdout) or ("server starting" in start_stdout)):
             raise ValueError(f"Could not start the Postgres server. Error below:\n{start_stdout}")
 
-        # Create teh user and database
+        # Check that we are alive
+        for x in range(10):
+            if self.is_alive():
+                break
+            else:
+                time.sleep(0.1)
+        else:
+            raise ValueError(f"Could not connect to the server after booting. Boot log:\n{start_stdout}")
+
+        # Create the user and database
         if not self.quiet:
             self.logger(f"Building user information.")
         ret = _run([shutil.which("createdb"), "-p", str(self.config.database.port)])

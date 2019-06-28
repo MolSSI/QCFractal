@@ -91,7 +91,7 @@ class FractalServer:
             ssl_options: Union[bool, Dict[str, str]]=True,
 
             # Database options
-            storage_uri: str="mongodb://localhost",
+            storage_uri: str="postgresql://localhost:5432",
             storage_project_name: str="qcfractal_default",
             query_limit: int=1000,
 
@@ -210,6 +210,8 @@ class FractalServer:
             raise KeyError("ssl_options not understood")
 
         # Setup the database connection
+        self.storage_database = storage_project_name
+        self.storage_uri = storage_uri
         self.storage = storage_socket_factory(
             storage_uri,
             project_name=storage_project_name,

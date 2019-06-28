@@ -152,14 +152,15 @@ def test_queue_manager_heartbeat(compute_adapter_fixture):
     """Tests to ensure tasks are returned to queue when the manager shuts down
     """
 
-    client, _, adapter = compute_adapter_fixture
+    client, server, adapter = compute_adapter_fixture
 
     with testing.loop_in_thread() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
         server = FractalServer(
             port=testing.find_open_port(),
-            storage_project_name="qcf_heartbeat_checker_test",
+            storage_project_name=server.storage_database,
+            storage_uri=server.storage_uri,
             loop=loop,
             ssl_options=False,
             heartbeat_frequency=0.1)
