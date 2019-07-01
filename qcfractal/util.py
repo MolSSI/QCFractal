@@ -11,7 +11,7 @@ def find_port() -> int:
     host, port = sock.getsockname()
     return port
 
-def port_open(ip: str, port: int) -> bool:
+def is_port_open(ip: str, port: int) -> bool:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(1)
     try:

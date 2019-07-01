@@ -17,7 +17,7 @@ from .interface import FractalClient
 from .postgres_harness import TemporaryPostgres
 from .server import FractalServer
 from .storage_sockets import storage_socket_factory
-from .util import find_port, port_open
+from .util import find_port, is_port_open
 
 
 def _background_process(args, **kwargs):
@@ -368,7 +368,7 @@ class FractalSnowflakeHandler:
 
         # Make sure we really shut down
         for x in range(timeout * 10):
-            if port_open("localhost", self._server_port):
+            if is_port_open("localhost", self._server_port):
                 time.sleep(0.1)
             else:
                 break

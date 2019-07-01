@@ -164,6 +164,9 @@ class PostgresHarness:
             psql_conf_file.write_text(psql_conf)
 
         # Startup the server
+        if not self.quiet:
+            self.logger("Starting the database:")
+
         start_code, start_stdout = _run([
             shutil.which("pg_ctl"),
             "-D", str(self.config.database_path),
@@ -193,6 +196,9 @@ class PostgresHarness:
             self.shutdown()
             raise ValueError("Database created successfully, but could not connect. Shutting down postgres.")
 
+        if not self.quiet:
+            self.logger("\nDatabase successfully started!")
+
 
 class TemporaryPostgres:
     def __init__(self,
@@ -202,7 +208,7 @@ class TemporaryPostgres:
                  logger: 'print' = print):
         """A PostgreSQL instance run in a temporary folder.
 
-        ! Warning ! All data is lost when the server is shutdown.
+        ! Warning ! All data is lost when this object is deleted.
 
         Parameters
         ----------

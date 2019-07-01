@@ -129,17 +129,18 @@ def server_init(args, config):
                   "or use the `qcfractal-server config` command line to alter settings.")
             sys.exit(2)
         else:
+            user_required_input = f"REMOVEALLDATA {str(config.database_path)}"
             print("!WARNING! A QCFractal configuration is currently initalized")
             print(
                 f"!WARNING! Overwriting will delete all current Fractal data, this includes all data in {str(config.database_path)}."
             )
             print("!WARNING! Please use `qcfractal-server config` to alter configuration settings instead.")
             print()
-            print("!WARNING! If you are sure you wish to procede please type 'REMOVEALLDATA' below.")
-            # inp = input("  > ")
-            inp = "REMOVEALLDATA"
+            print(f"!WARNING! If you are sure you wish to procede please type '{user_required_input}' below.")
+
+            inp = input("  > ")
             print()
-            if inp == "REMOVEALLDATA":
+            if inp == user_required_input:
                 print("All data will be removed from the current QCFractal instance.")
                 psql.shutdown()
                 shutil.rmtree(str(config.database_path), ignore_errors=True)

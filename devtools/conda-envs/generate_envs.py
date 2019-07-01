@@ -89,7 +89,7 @@ environs = [{
     
     # Tools to test out all available adapters, ipy is for Parsl
     "filename": "adapters.yaml",
-    "dependencies": ["rdkit", "dask", "distributed", "ipyparallel", "ipykernel"],
+    "dependencies": ["rdkit", "dask", "distributed", "dask-jobqueue", "ipyparallel", "ipykernel"],
     "pip_dependencies": ["parsl", "fireworks"]
 }, {
 

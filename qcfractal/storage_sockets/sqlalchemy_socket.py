@@ -242,7 +242,7 @@ class SQLAlchemySocket:
     def get_limit(self, limit: Optional[int]) -> int:
         """Get the allowed limit on results to return in queries based on the
          given `limit`. If this number is greater than the
-         mongoengine_socket.max_limit then the max_limit will be returned instead.
+         SQLAlchemySocket.max_limit then the max_limit will be returned instead.
         """
 
         return limit if limit and limit < self._max_limit else self._max_limit
@@ -580,7 +580,7 @@ class SQLAlchemySocket:
             hash index of keywords
         limit : int, optional
             Maximum number of results to return.
-            If this number is greater than the mongoengine_soket.max_limit then
+            If this number is greater than the SQLAlchemySocket.max_limit then
             the max_limit will be returned instead.
             Default is to return the socket's max_limit (when limit=None or 0)
         skip : int, optional
