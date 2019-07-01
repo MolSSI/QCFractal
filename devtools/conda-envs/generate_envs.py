@@ -28,6 +28,7 @@ dependencies:
   - plotly
   - sqlalchemy>=1.3
   - psycopg2
+  - postgresql
 
 # Test depends
   - pytest
@@ -36,7 +37,6 @@ dependencies:
 """
 qca_ecosystem_template = ["qcengine>=0.6.2", "qcelemental>=0.4.0"]
 
-# Note we temporarily duplicate mongoengine as conda-forge appears to be broken
 pip_depends_template = []
 
 
@@ -89,7 +89,7 @@ environs = [{
     
     # Tools to test out all available adapters, ipy is for Parsl
     "filename": "adapters.yaml",
-    "dependencies": ["rdkit", "dask", "distributed", "ipyparallel", "ipykernel"],
+    "dependencies": ["rdkit", "dask", "distributed", "dask-jobqueue", "ipyparallel", "ipykernel"],
     "pip_dependencies": ["parsl", "fireworks"]
 }, {
 

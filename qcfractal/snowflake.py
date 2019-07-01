@@ -3,7 +3,6 @@ import atexit
 import os
 import shutil
 import signal
-import socket
 import subprocess
 import sys
 import tempfile
@@ -15,28 +14,10 @@ from typing import Optional, Union
 from tornado.ioloop import IOLoop
 
 from .interface import FractalClient
+from .postgres_harness import TemporaryPostgres
 from .server import FractalServer
 from .storage_sockets import storage_socket_factory
-
-
-def _find_port() -> int:
-    sock = socket.socket()
-    sock.bind(('', 0))
-    host, port = sock.getsockname()
-    return port
-
-
-def _port_open(ip: str, port: int) -> bool:
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.settimeout(1)
-    try:
-        s.connect((ip, int(port)))
-        s.shutdown(socket.SHUT_RDWR)
-        return True
-    except ConnectionRefusedError:
-        return False
-    finally:
-        s.close()
+from .util import find_port, is_port_open
 
 
 def _background_process(args, **kwargs):
@@ -98,31 +79,18 @@ class FractalSnowflake(FractalServer):
         reset_database : bool, optional
             Resets the database or not if a storage_uri is provided
 
-        Raises
-        ------
-        KeyError
-            Description
-
         """
 
         # Startup a MongoDB in background thread and in custom folder.
         if storage_uri is None:
-            mongod_port = _find_port()
-            self._mongod_tmpdir = tempfile.TemporaryDirectory()
-
-            mongod_path = shutil.which("mongod")
-            if mongod_path is None:
-                raise OSError("Could not find `mongod` in PATH, please `conda install mongodb`.")
-
-            self._mongod_proc = _background_process(
-                [mongod_path, f"--port={mongod_port}", f"--dbpath={self._mongod_tmpdir.name}"])
-            storage_uri = f"mongodb://localhost:{mongod_port}"
+            self._storage = TemporaryPostgres(database_name=storage_project_name)
+            self._storage_uri = self._storage.database_uri(safe=False, database="")
         else:
-            self._mongod_tmpdir = None
-            self._mongod_proc = None
+            self._storage = None
+            self._storage_uri = storage_uri
 
             if reset_database:
-                socket = storage_socket_factory(storage_uri, project_name=storage_project_name)
+                socket = storage_socket_factory(self._storage_uri, project_name=storage_project_name)
                 socket._clear_db(socket._project_name)
                 del socket
 
@@ -153,9 +121,9 @@ class FractalSnowflake(FractalServer):
             raise KeyError(f"Logfile type not recognized {type(logfile)}.")
 
         super().__init__(name="QCFractal Snowflake Instance",
-                         port=_find_port(),
+                         port=find_port(),
                          loop=self.loop,
-                         storage_uri=storage_uri,
+                         storage_uri=self._storage_uri,
                          storage_project_name=storage_project_name,
                          ssl_options=False,
                          max_active_services=max_active_services,
@@ -163,7 +131,7 @@ class FractalSnowflake(FractalServer):
                          logfile_prefix=log_prefix,
                          query_limit=int(1.e6))
 
-        if self._mongod_proc:
+        if self._storage:
             self.logger.warning("Warning! This is a temporary instance, data will be lost upon shutdown.")
 
         if start_server:
@@ -204,9 +172,9 @@ class FractalSnowflake(FractalServer):
 
         self.loop_thread.shutdown()
 
-        if self._mongod_proc is not None:
-            self._mongod_proc.kill()
-            self._mongod_proc = None
+        if self._storage is not None:
+            self._storage.stop()
+            self._storage = None
 
         if self.queue_socket is not None:
             self.queue_socket.shutdown(wait=False)
@@ -230,27 +198,38 @@ class FractalSnowflakeHandler:
         # Set variables
         self._running = False
         self._qcfractal_proc = None
-        self._dbdir = tempfile.TemporaryDirectory()
-        self._logdir = tempfile.TemporaryDirectory()
+        self._storage = TemporaryPostgres()
+        self._storage_uri = self._storage.database_uri(safe=False)
+        self._qcfdir = tempfile.TemporaryDirectory()
         self._dbname = str(uuid.uuid4())
-        self._server_port = _find_port()
+        self._server_port = find_port()
         self._address = f"https://localhost:{self._server_port}"
         self._ncores = ncores
 
         # Start up a mongo instance, controlled by the temp file so that it properly dies on shutdown
-        mongod_port = _find_port()
-        self._mongod_proc = _background_process(
-            [shutil.which("mongod"), f"--port={mongod_port}", f"--dbpath={self._dbdir.name}"])
-        self._storage_uri = f"mongodb://localhost:{mongod_port}"
 
         # Set items for the Client
         self.client_verify = False
+
+        # Init
+        proc = subprocess.run([
+            shutil.which("qcfractal-server"),
+            "init",
+            f"--base-folder={self._qcfdir.name}",
+            f"--port={self._server_port}",
+            "--db-own=False",
+            f"--db-port={self._storage.config.database.port}",
+            "--query-limit=100000",
+        ],
+                              stdout=subprocess.PIPE)
+        stdout = proc.stdout.decode()
+        if "Success!" not in stdout:
+            raise ValueError(f"Could not initialize temporary server. Error:\n{stdout}")
 
         self.start()
 
         # We need to call before threadings cleanup
         atexit.register(self.stop)
-        atexit.register(self._kill_mongod)
 
 ### Dunder functions
 
@@ -275,8 +254,6 @@ class FractalSnowflakeHandler:
 
         self.stop()
         atexit.unregister(self.stop)
-        self._kill_mongod()
-        atexit.unregister(self._kill_mongod)
 
     def __enter__(self) -> 'FractalSnowflakeHandler':
         self.start()
@@ -284,22 +261,13 @@ class FractalSnowflakeHandler:
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
         self.stop()
-        atexit.unregister(self.stop)
-        self._kill_mongod()
-        atexit.unregister(self._kill_mongod)
-        return False
-
-    def _kill_mongod(self) -> None:
-        if self._mongod_proc:
-            _terminate_process(self._mongod_proc, timeout=1)
-            self._mongod_proc = None
 
 
 ### Utility funcitons
 
     @property
     def logfilename(self) -> str:
-        return os.path.join(self._logdir.name, self._dbname)
+        return os.path.join(self._qcfdir.name, self._dbname)
 
     def get_address(self, endpoint: Optional[str] = None) -> str:
         """Obtains the full URI for a given function on the FractalServer.
@@ -328,22 +296,31 @@ class FractalSnowflakeHandler:
         if self._running:
             return
 
-        # Generate a new database name
-        self._dbname = str(uuid.uuid4())
+        if self._storage is None:
+            raise ValueError("This object has been stopped. Please build a new object to continue.")
 
+        # Generate a new database name
+        self._dbname = "db_" + str(uuid.uuid4()).replace('-', '_')
+
+        # Make a new database
+        success = self._storage.psql.create_database(self._dbname)
+        if success is False:
+            raise ValueError("Could not create a postgres database.")
+
+        if shutil.which("qcfractal-server") is None:
+            raise ValueError("qcfractal-server is not installed. This is likely a development environment, please `pip install -e` from the development folder.")
 
         self._qcfractal_proc = _background_process([
             shutil.which("qcfractal-server"),
-            self._dbname,
+            "start",
+            f"--database-name={self._dbname}",
+            f"--logfile={self._dbname}",
+            f"--base-folder={self._qcfdir.name}",
             f"--server-name={self._dbname}",
-            f"--database-uri={self._storage_uri}",
-            f"--log-prefix={self.logfilename}",
             f"--port={self._server_port}",
             f"--local-manager={self._ncores}",
-            "--query-limit=100000",
-        ], cwd=self._logdir.name) # yapf: disable
+        ], cwd=self._qcfdir.name) # yapf: disable
 
-        client = None
         for x in range(timeout * 10):
 
             try:
@@ -357,16 +334,28 @@ class FractalSnowflakeHandler:
         else:
             self._running = True
             self.stop()
-            raise ConnectionRefusedError("Snowflake instance did not boot properly, try increasing the timeout.")
+            out, err = self._qcfractal_proc.communicate()
+            raise ConnectionRefusedError(
+                "Snowflake instance did not boot properly, try increasing the timeout.\n\n"
+                f"stdout:\n{out.decode()}\n\n", f"stderr:\n{err.decode()}")
 
         self._running = True
 
-    def stop(self) -> None:
+    def stop(self, keep_storage: bool=False) -> None:
         """
         Stop the current FractalSnowflake instance and destroys all data.
+
+        Parameters
+        ----------
+        keep_storage : bool, optional
+            Does not delete the storage object if True.
         """
         if self._running is False:
             return
+
+        if (self._storage is not None) and (keep_storage is False):
+            self._storage.stop()
+            self._storage = None
 
         _terminate_process(self._qcfractal_proc, timeout=1)
         self._running = False
@@ -375,11 +364,11 @@ class FractalSnowflakeHandler:
         """
         Restarts the current FractalSnowflake instances and destroys all data in the process.
         """
-        self.stop()
+        self.stop(keep_storage=True)
 
         # Make sure we really shut down
         for x in range(timeout * 10):
-            if _port_open("localhost", self._server_port):
+            if is_port_open("localhost", self._server_port):
                 time.sleep(0.1)
             else:
                 break

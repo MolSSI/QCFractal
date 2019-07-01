@@ -21,7 +21,6 @@ from sqlalchemy.orm import sessionmaker, with_polymorphic
 from sqlalchemy.sql.expression import func
 # from sqlalchemy.dialects import postgresql
 from collections.abc import Iterable
-import datetime
 
 # pydantic classes
 from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
@@ -138,6 +137,14 @@ class SQLAlchemySocket:
 
         # disconnect from any active default connection
         # disconnect()
+        if "psycopg2" not in uri:
+            uri = uri.replace("postgresql", "postgresql+psycopg2")
+
+        if not uri.endswith("/"):
+            uri = uri + "/"
+
+        uri = uri + project
+        self.logger.info(f"SQLAlchemy attempt to connect to {uri}.")
 
         # Connect to DB and create session
         self.engine = create_engine(
@@ -151,7 +158,10 @@ class SQLAlchemySocket:
         self.Session = sessionmaker(bind=self.engine)
 
         # actually create the tables
-        Base.metadata.create_all(self.engine)
+        try:
+            Base.metadata.create_all(self.engine)
+        except Exception as e:
+            raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
 
         # if expanded_uri["password"] is not None:
         #     # connect to mongoengine
@@ -221,7 +231,9 @@ class SQLAlchemySocket:
             session.query(TorsionDriveProcedureORM).delete(synchronize_session=False)
             session.query(OptimizationProcedureORM).delete(synchronize_session=False)
             session.query(ResultORM).delete(synchronize_session=False)
+            session.query(BaseResultORM).delete(synchronize_session=False)
             session.query(MoleculeORM).delete(synchronize_session=False)
+            session.query(KVStoreORM).delete(synchronize_session=False)
             session.query(CollectionORM).delete(synchronize_session=False)
 
     def get_project_name(self) -> str:
@@ -230,7 +242,7 @@ class SQLAlchemySocket:
     def get_limit(self, limit: Optional[int]) -> int:
         """Get the allowed limit on results to return in queries based on the
          given `limit`. If this number is greater than the
-         mongoengine_soket.max_limit then the max_limit will be returned instead.
+         SQLAlchemySocket.max_limit then the max_limit will be returned instead.
         """
 
         return limit if limit and limit < self._max_limit else self._max_limit
@@ -568,7 +580,7 @@ class SQLAlchemySocket:
             hash index of keywords
         limit : int, optional
             Maximum number of results to return.
-            If this number is greater than the mongoengine_soket.max_limit then
+            If this number is greater than the SQLAlchemySocket.max_limit then
             the max_limit will be returned instead.
             Default is to return the socket's max_limit (when limit=None or 0)
         skip : int, optional
@@ -912,7 +924,6 @@ class SQLAlchemySocket:
         -------
 
         """
-        pass
 
     def get_results(self,
                     id: Union[str, List] = None,
@@ -1806,8 +1817,8 @@ class SQLAlchemySocket:
 
                 if get_count_fast(doc) == 0:
                     doc = QueueManagerORM(**manager)
-                    doc.created_on = datetime.datetime.fromtimestamp(doc.created_on / 1e3)
-                    doc.modified_on = datetime.datetime.fromtimestamp(doc.modified_on / 1e3)
+                    doc.created_on = dt.fromtimestamp(doc.created_on / 1e3)
+                    doc.modified_on = dt.fromtimestamp(doc.modified_on / 1e3)
                     session.add(doc)
                     session.commit()  # TODO: faster if done in bulk
                     manager_names.append(doc.name)
