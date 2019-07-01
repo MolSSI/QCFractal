@@ -162,7 +162,11 @@ def server_init(args, config):
     print("\n>>> Setting up PostgreSQL...\n")
     config.database_path.mkdir(exist_ok=True)
     if config.database.own:
-        psql.initialize()
+        try:
+            psql.initialize()
+        except ValueError as e:
+            print(str(e))
+            sys.exit(1)
     else:
         print(
             "Own was set to False, QCFractal will expect a live PostgreSQL server with the above connection information."
@@ -221,10 +225,21 @@ def server_start(args, config):
     else:
         logfile = str(config.base_path / config.fractal.logfile)
 
+    print("\n>>> Checking the PostgreSQL connection...")
     database_name = args.get("database_name", None) or config.database.default_database
     psql = PostgresHarness(config, quiet=False, logger=print)
+
+    if not psql.is_alive():
+        try:
+            print("\nCould not detect a PostgreSQL from configuration options, starting a PostgreSQL server.\n")
+            psql.start()
+        except ValueError as e:
+            print(str(e))
+            sys.exit(1)
+
     psql.create_database(database_name)
 
+    print("\n>>> Initializing the QCFractal server...")
     try:
         server = qcfractal.FractalServer(
             name=args.get("server_name", None) or config.fractal.name,
@@ -255,14 +270,13 @@ def server_start(args, config):
         print("\nFailed to start the server, shutting down.")
         sys.exit(1)
 
-    print("\n>>> QCFractal server initialized...")
     print(f"Server: {str(server)}")
 
     # Register closing
     install_signal_handlers(server.loop, server.stop)
 
     # Blocks until keyboard interupt
-    print("\n>>> Starting QCFractal server...")
+    print("\n>>> Starting the QCFractal server...")
     server.start(start_periodics=args["start_periodics"])
 
 

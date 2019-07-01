@@ -18,12 +18,14 @@ def _run(commands, quiet=True, logger=print):
     if not quiet:
         logger(stdout)
 
-    return (rcode, stdout)
+    ret = {"code": rcode, "stdout": stdout, "stderr": proc.stderr.decode()}
+
+    return ret
 
 
 class PostgresHarness:
     def __init__(self, config: Union[Dict[str, Any], FractalConfig], quiet: bool = True, logger: 'print' = print):
-        """A flexible connection to a Postgres server
+        """A flexible connection to a PostgreSQL server
 
         Parameters
         ----------
@@ -41,7 +43,7 @@ class PostgresHarness:
         self.logger = logger
 
     def database_uri(self) -> str:
-        """Provides the full Postgres URI string.
+        """Provides the full PostgreSQL URI string.
 
         Returns
         -------
@@ -130,6 +132,41 @@ class PostgresHarness:
 
         return self.is_alive(database=database_name)
 
+    def start(self) -> Any:
+        # Startup the server
+        if not self.quiet:
+            self.logger("Starting the database:")
+
+        start_status = _run([
+            shutil.which("pg_ctl"),
+            "-D", str(self.config.database_path),
+            "-l", str(self.config.database_path / self.config.database.logfile),
+            "start"],
+            logger=self.logger, quiet=self.quiet) # yapf: disable
+
+        if not (("server started" in start_status["stdout"]) or ("server starting" in start_status["stdout"])):
+            raise ValueError(f"Could not start the PostgreSQL server. Error below:\n\n{start_status['stderr']}")
+
+        # Check that we are alive
+        for x in range(10):
+            if self.is_alive():
+                break
+            else:
+                time.sleep(0.1)
+        else:
+            raise ValueError(f"Could not connect to the server after booting. Boot log:\n\n{start_status['stderr']}")
+
+        if not self.quiet:
+            self.logger("PostgreSQL successfully started in a background process, current_status:\n")
+            start_status = _run([
+                shutil.which("pg_ctl"),
+                "-D", str(self.config.database_path),
+                "status"],
+                logger=self.logger, quiet=self.quiet) # yapf: disable
+
+        return True
+
+
     def shutdown(self) -> Any:
         """Shutsdown the current postgres instance.
 
@@ -148,11 +185,11 @@ class PostgresHarness:
             self.logger("Initializing the database:")
 
         # Initialize the database
-        init_code, init_stdout = _run([shutil.which("initdb"), "-D", self.config.database_path],
+        init_status = _run([shutil.which("initdb"), "-D", self.config.database_path],
                                       logger=self.logger,
                                       quiet=self.quiet)
-        if "Success." not in init_stdout:
-            raise ValueError(init_stdout)
+        if "Success." not in init_status["stdout"]:
+            raise ValueError(f"Could not initialize the PostgreSQL server. Error below:\n\n{init_status['stderr']}")
 
         # Change any configurations
         psql_conf_file = (self.config.database_path / "postgresql.conf")
@@ -163,27 +200,8 @@ class PostgresHarness:
 
             psql_conf_file.write_text(psql_conf)
 
-        # Startup the server
-        if not self.quiet:
-            self.logger("Starting the database:")
-
-        start_code, start_stdout = _run([
-            shutil.which("pg_ctl"),
-            "-D", str(self.config.database_path),
-            "-l", str(self.config.database_path / self.config.database.logfile),
-            "start"],
-            logger=self.logger, quiet=self.quiet) # yapf: disable
-        if not (("server started" in start_stdout) or ("server starting" in start_stdout)):
-            raise ValueError(f"Could not start the Postgres server. Error below:\n{start_stdout}")
-
-        # Check that we are alive
-        for x in range(10):
-            if self.is_alive():
-                break
-            else:
-                time.sleep(0.1)
-        else:
-            raise ValueError(f"Could not connect to the server after booting. Boot log:\n{start_stdout}")
+        # Start the database
+        self.start()
 
         # Create the user and database
         if not self.quiet:
