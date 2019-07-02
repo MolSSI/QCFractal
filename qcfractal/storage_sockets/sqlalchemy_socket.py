@@ -1686,7 +1686,7 @@ class SQLAlchemySocket:
 
     def queue_reset_status(self,
                            id: Union[str, List[str]] = None,
-                           base_result_id: Union[str, List[str]] = None,
+                           base_result: Union[str, List[str]] = None,
                            manager: Optional[str] = None,
                            reset_running: bool = True,
                            reset_error: bool = False) -> int:
@@ -1698,7 +1698,7 @@ class SQLAlchemySocket:
         ----------
         id : Union[str, List[str]], optional
             The id of the task to modify
-        base_result_id : Union[str, List[str]], optional
+        base_result : Union[str, List[str]], optional
             The id of the base result to modify
         manager : Optional[str], optional
             The manager name to reset the status of
@@ -1717,7 +1717,7 @@ class SQLAlchemySocket:
             # nothing to do
             return 0
 
-        if sum(x is not None for x in [id, base_result_id, manager]) == 0:
+        if sum(x is not None for x in [id, base_result, manager]) == 0:
             raise ValueError("All query fields are None, reset_status must specify queries.")
 
         status = []
@@ -1728,7 +1728,7 @@ class SQLAlchemySocket:
 
         query = format_query(TaskQueueORM,
                              id=id,
-                             base_result_id=base_result_id,
+                             base_result_id=base_result,
                              manager=manager,
                              status=status)
 

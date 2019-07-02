@@ -57,6 +57,25 @@ class TaskQueueHandler(APIHandler):
         self.logger.info("GET: TaskQueue - {} pulls.".format(len(response.data)))
         self.write(response.json())
 
+    def update(self):
+        """Posts new services to the service queue.
+        """
+
+        body_model, response_model = rest_model("task_queue", "update")
+        body = self.parse_bodymodel(body_model)
+
+        if (body.data.id is None) and (body.data.result_id is None):
+            raise tornado.web.HTTPError(status_code=400, reason="Id or ResultId must be specified.")
+
+        if body.meta.operation == "restart":
+            tasks = self.storage.queue_reset_status(**body.data.dict(), reset_error=True)
+        else:
+            raise tornado.web.HTTPError(status_code=400, reason=f"Operation '{operation}' is not valid.")
+        response = response_model(**tasks)
+
+        self.logger.info("GET: TaskQueue - {} pulls.".format(len(response.data)))
+        self.write(response.json())
+
 
 class ServiceQueueHandler(APIHandler):
     """

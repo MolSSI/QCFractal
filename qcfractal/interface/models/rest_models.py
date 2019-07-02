@@ -505,7 +505,7 @@ register_model("task_queue", "GET", TaskQueueGETBody, TaskQueueGETResponse)
 
 
 class TaskQueuePOSTBody(BaseModel):
-    class Data(BaseModel):
+    class Meta(BaseModel):
         procedure: str
         program: str
 
@@ -515,7 +515,7 @@ class TaskQueuePOSTBody(BaseModel):
         class Config(RESTConfig):
             allow_extra = "allow"
 
-    meta: Dict[str, Any]
+    meta: Meta
     data: List[Union[ObjectId, Molecule]]
 
     class Config(RESTConfig):
@@ -532,6 +532,42 @@ class TaskQueuePOSTResponse(BaseModel):
 
 
 register_model("task_queue", "POST", TaskQueuePOSTBody, TaskQueuePOSTResponse)
+
+class TaskQueueUPDATEBody(BaseModel):
+    class Data(BaseModel):
+        id: QueryObjectId = None
+        base_result: QueryObjectId = None
+
+        class Config(RESTConfig):
+            pass
+
+    class Meta(BaseModel):
+        operation: str
+
+        class Config(RESTConfig):
+            pass
+
+        @validator("operation")
+        def cast_to_lower(cls, v):
+            return v.lower()
+
+    meta: Meta
+    data: Data
+
+    class Config(RESTConfig):
+        pass
+
+
+class TaskQueueUPDATEResponse(BaseModel):
+
+    meta: ResponseMeta
+    data: ComputeResponse
+
+    class Config(RESTConfig):
+        pass
+
+
+register_model("task_queue", "UPDATE", TaskQueueUPDATEBody, TaskQueueUPDATEResponse)
 
 ### Service Queue
 
