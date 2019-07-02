@@ -5,7 +5,7 @@ development DB.
 """
 
 from qcfractal.storage_sockets import storage_socket_factory
-from qcfractal.storage_sockets.sql_models import (BaseResultORM, ResultORM,
+from qcfractal.storage_sockets.sql_models import (BaseResultORM, ResultORM, CollectionORM,
                                                  OptimizationProcedureORM, GridOptimizationProcedureORM,
                                                  TorsionDriveProcedureORM, TaskQueueORM)
 from qcfractal.interface.models import (ResultRecord, OptimizationRecord,
@@ -13,7 +13,7 @@ from qcfractal.interface.models import (ResultRecord, OptimizationRecord,
 
 
 # production_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb"
-production_uri = "postgresql+psycopg2://postgres:mypass@localhost:11711/qcarchivedb"
+production_uri = "postgresql+psycopg2://postgres:@localhost:11711/qcarchivedb"
 staging_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/staging_qcarchivedb"
 SAMPLE_SIZE = 0.0001  # 0.1 is 10%
 MAX_LIMIT = 10000
@@ -131,6 +131,25 @@ def copy_managers(staging_storage, prod_storage):
     print('Inserted in SQL:', len(sql_insered))
 
     print('---- Done copying Queue Manager\n\n')
+
+
+def copy_collections(staging_storage, production_storage, SAMPLE_SIZE=0):
+    """Copy collections from production to staging"""
+
+    total_count = production_storage.get_total_count(CollectionORM)
+    print('------Total # of Collections in the DB is: ', total_count)
+    count_to_copy = get_number_to_copy(total_count, SAMPLE_SIZE)
+    prod_results = production_storage.get_collections(limit=count_to_copy)['data']
+
+    print('Copying {} collections'.format(count_to_copy))
+
+    sql_insered = 0
+    for col in prod_results:
+        ret = staging_storage.add_collection(col)['data']
+        sql_insered += 1
+    print('Inserted in SQL:', sql_insered)
+
+    print('---- Done copying Collections\n\n')
 
 
 def copy_results(staging_storage, production_storage, SAMPLE_SIZE=0, results_ids=[]):
@@ -465,6 +484,10 @@ def main():
 
     print('\n---------------- Task Queue -----------------------')
     copy_task_queue(staging_storage, production_storage, SAMPLE_SIZE=SAMPLE_SIZE*2)
+
+    print('\n---------------- Collections -----------------------')
+    copy_collections(staging_storage, production_storage, SAMPLE_SIZE=SAMPLE_SIZE*2)
+
 
 
 if __name__ == "__main__":
