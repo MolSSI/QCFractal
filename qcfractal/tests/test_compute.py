@@ -94,14 +94,14 @@ def test_task_client_restart(fractal_compute_server):
     # Manually handle the compute
     fractal_compute_server.await_results()
 
-    tasks = client.query_tasks(base_result=ret.submitted)
-    assert tasks["status"] == "ERROR"
+    tasks = client.query_tasks(base_result=ret.submitted)[0]
+    assert tasks.status == "ERROR"
 
     upd = client.modify_tasks("restart", ret.submitted)
-    assert upd == 1
+    assert upd.n_updated == 1
 
-    tasks = client.query_tasks(base_result=ret.submitted)
-    assert tasks["status"] == "WAITING"
+    tasks = client.query_tasks(base_result=ret.submitted)[0]
+    assert tasks.status == "WAITING"
 
 
 @testing.using_rdkit

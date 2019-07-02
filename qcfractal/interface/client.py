@@ -864,7 +864,7 @@ class FractalClient(object):
             }
         }
 
-        return self._automodel_request("task_queue", "update", payload, full_return=full_return)
+        return self._automodel_request("task_queue", "put", payload, full_return=full_return)
 
     def add_service(self,
                     service: Union[GridOptimizationInput, TorsionDriveInput],

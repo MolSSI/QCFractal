@@ -28,10 +28,10 @@ class TaskQueueHandler(APIHandler):
         body = self.parse_bodymodel(body_model)
 
         # Format and submit tasks
-        if not check_procedure_available(body.meta["procedure"]):
-            raise tornado.web.HTTPError(status_code=400, reason="Unknown procedure {}.".format(body.meta["procedure"]))
+        if not check_procedure_available(body.meta.procedure):
+            raise tornado.web.HTTPError(status_code=400, reason="Unknown procedure {}.".format(body.meta.procedure))
 
-        procedure_parser = get_procedure_parser(body.meta["procedure"], self.storage, self.logger)
+        procedure_parser = get_procedure_parser(body.meta.procedure, self.storage, self.logger)
 
         # Verify the procedure
         verify = procedure_parser.verify_input(body)
@@ -57,23 +57,25 @@ class TaskQueueHandler(APIHandler):
         self.logger.info("GET: TaskQueue - {} pulls.".format(len(response.data)))
         self.write(response.json())
 
-    def update(self):
+    def put(self):
         """Posts new services to the service queue.
         """
 
-        body_model, response_model = rest_model("task_queue", "update")
+        body_model, response_model = rest_model("task_queue", "put")
         body = self.parse_bodymodel(body_model)
 
-        if (body.data.id is None) and (body.data.result_id is None):
+        if (body.data.id is None) and (body.data.base_result is None):
             raise tornado.web.HTTPError(status_code=400, reason="Id or ResultId must be specified.")
 
         if body.meta.operation == "restart":
-            tasks = self.storage.queue_reset_status(**body.data.dict(), reset_error=True)
+            tasks_updated = self.storage.queue_reset_status(**body.data.dict(), reset_error=True)
+            data = {"n_updated": tasks_updated}
         else:
             raise tornado.web.HTTPError(status_code=400, reason=f"Operation '{operation}' is not valid.")
-        response = response_model(**tasks)
 
-        self.logger.info("GET: TaskQueue - {} pulls.".format(len(response.data)))
+        response = response_model(data=data, meta={"errors": [], "success": True, "error_description": False})
+
+        self.logger.info(f"PUT: TaskQueue - Operation: {body.meta.operation} - {tasks_updated}.")
         self.write(response.json())
 
 
@@ -289,8 +291,8 @@ class QueueManagerHandler(APIHandler):
             self.logger.info("QueueManager: New active manager {} detected.".format(name))
 
         elif op == "shutdown":
-            nshutdown = self.storage.queue_reset_status(name)
-            self.storage.manager_update(manager=name, returned=nshutdown, status="INACTIVE", **body.meta.dict())
+            nshutdown = self.storage.queue_reset_status(manager=name, reset_running=True)
+            self.storage.manager_update(name, returned=nshutdown, status="INACTIVE", **body.meta.dict())
 
             self.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(
                 name, nshutdown))

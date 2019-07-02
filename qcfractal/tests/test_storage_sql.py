@@ -1038,3 +1038,14 @@ def test_mol_pagination(storage_socket):
 
     # cleanup
     storage_socket.del_molecules(inserted['data'])
+
+def test_reset_task_blocks(storage_socket):
+    """
+        Ensures queue_reset_status must have some search variables so that it does not reset everything.
+    """
+
+    with pytest.raises(ValueError):
+        storage_socket.queue_reset_status(reset_running=True)
+
+    with pytest.raises(ValueError):
+        storage_socket.queue_reset_status(reset_error=True)

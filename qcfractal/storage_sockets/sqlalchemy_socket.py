@@ -1688,7 +1688,7 @@ class SQLAlchemySocket:
                            id: Union[str, List[str]] = None,
                            base_result: Union[str, List[str]] = None,
                            manager: Optional[str] = None,
-                           reset_running: bool = True,
+                           reset_running: bool = False,
                            reset_error: bool = False) -> int:
         """
         Reset the status of the tasks that a manager owns from Running to Waiting
