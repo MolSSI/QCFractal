@@ -823,6 +823,49 @@ class FractalClient(object):
 
         return self._automodel_request("task_queue", "get", payload, full_return=full_return)
 
+    def modify_tasks(self,
+                     operation: str,
+                     base_result: 'QueryObjectId',
+                     id: 'QueryObjectId' = None,
+                     full_return: bool = False) -> int:
+        """Summary
+
+        Parameters
+        ----------
+        operation : str
+            The operation to perform on the selected tasks. Valid operations are:
+             - `restart` - Restarts a task by moving its status from 'ERROR' to 'WAITING'
+        base_result : QueryObjectId
+            The id of the result that the task is associated with.
+        id : QueryObjectId, optional
+            The id of the individual task to restart. As a note querying tasks via their id is rarely performed and
+            is often an internal quantity.
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        int
+            The number of modified tasks.
+        """
+        operation = operation.lower()
+        valid_ops = {"restart"}
+
+        if operation not in valid_ops:
+            raise ValueError(f"Operation '{operation}' is not available, valid operations are: {valid_ops}")
+
+        payload = {
+            "meta": {
+                "operation": operation
+            },
+            "data": {
+                "id": id,
+                "base_result": base_result,
+            }
+        }
+
+        return self._automodel_request("task_queue", "put", payload, full_return=full_return)
+
     def add_service(self,
                     service: Union[GridOptimizationInput, TorsionDriveInput],
                     tag: Optional[str] = None,

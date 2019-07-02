@@ -9,7 +9,7 @@ from .common_models import KeywordSet, Molecule, ObjectId
 from .gridoptimization import GridOptimizationInput
 from .model_utils import json_encoders
 from .records import ResultRecord
-from .task_models import TaskRecord
+from .task_models import PriorityEnum, TaskRecord
 from .torsiondrive import TorsionDriveInput
 
 __all__ = ["ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryProjection"]
@@ -505,17 +505,24 @@ register_model("task_queue", "GET", TaskQueueGETBody, TaskQueueGETResponse)
 
 
 class TaskQueuePOSTBody(BaseModel):
-    class Data(BaseModel):
+    class Meta(BaseModel):
         procedure: str
         program: str
 
         tag: Optional[str] = None
-        priority: Union[str, int, None] = None
+        priority: Union[PriorityEnum, None] = None
 
         class Config(RESTConfig):
             allow_extra = "allow"
 
-    meta: Dict[str, Any]
+        @validator('priority', pre=True)
+        def munge_priority(cls, v):
+            if isinstance(v, str):
+                v = PriorityEnum[v.upper()]
+            return v
+
+
+    meta: Meta
     data: List[Union[ObjectId, Molecule]]
 
     class Config(RESTConfig):
@@ -532,6 +539,47 @@ class TaskQueuePOSTResponse(BaseModel):
 
 
 register_model("task_queue", "POST", TaskQueuePOSTBody, TaskQueuePOSTResponse)
+
+class TaskQueuePUTBody(BaseModel):
+    class Data(BaseModel):
+        id: QueryObjectId = None
+        base_result: QueryObjectId = None
+
+        class Config(RESTConfig):
+            pass
+
+    class Meta(BaseModel):
+        operation: str
+
+        class Config(RESTConfig):
+            pass
+
+        @validator("operation")
+        def cast_to_lower(cls, v):
+            return v.lower()
+
+    meta: Meta
+    data: Data
+
+    class Config(RESTConfig):
+        pass
+
+
+class TaskQueuePUTResponse(BaseModel):
+    class Data(BaseModel):
+        n_updated: int
+
+        class Config(RESTConfig):
+            pass
+
+    meta: ResponseMeta
+    data: Data
+
+    class Config(RESTConfig):
+        pass
+
+
+register_model("task_queue", "PUT", TaskQueuePUTBody, TaskQueuePUTResponse)
 
 ### Service Queue
 

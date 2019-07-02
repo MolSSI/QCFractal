@@ -64,7 +64,7 @@ class SingleResultTasks(BaseTasks):
     """
 
     def verify_input(self, data):
-        program = data.meta["program"].lower()
+        program = data.meta.program.lower()
         if program not in qcng.list_all_programs():
             return "Program '{}' not available in QCEngine.".format(program)
 
@@ -93,15 +93,16 @@ class SingleResultTasks(BaseTasks):
         # Unpack all molecules
         molecule_list = self.storage.get_add_molecules_mixed(data.data)["data"]
 
-        if data.meta["keywords"]:
-            keywords = self.storage.get_add_keywords_mixed([data.meta["keywords"]])["data"][0]
+        if data.meta.keywords:
+            keywords = self.storage.get_add_keywords_mixed([data.meta.keywords])["data"][0]
 
         else:
             keywords = None
 
         # Grab the tag if available
-        tag = data.meta.pop("tag", None)
-        priority = data.meta.pop("priority", None)
+        meta = data.meta.dict()
+        tag = meta.pop("tag", None)
+        priority = meta.pop("priority", None)
 
         # Construct full tasks
         new_tasks = []
@@ -112,7 +113,7 @@ class SingleResultTasks(BaseTasks):
                 results_ids.append(None)
                 continue
 
-            record = ResultRecord(**data.meta, molecule=mol.id)
+            record = ResultRecord(**meta.copy(), molecule=mol.id)
             inp = record.build_schema_input(mol, keywords)
             inp.extras["_qcfractal_tags"] = {"program": record.program, "keywords": record.keywords}
 
@@ -130,11 +131,11 @@ class SingleResultTasks(BaseTasks):
             task = TaskRecord(**{
                 "spec": {
                     "function": "qcengine.compute",  # todo: add defaults in models
-                    "args": [inp.json_dict(), data.meta["program"]],  # todo: json_dict should come from results
+                    "args": [inp.json_dict(), data.meta.program],  # todo: json_dict should come from results
                     "kwargs": {}  # todo: add defaults in models
                 },
                 "parser": "single",
-                "program": data.meta["program"],
+                "program": data.meta.program,
                 "tag": tag,
                 "priority": priority,
                 "base_result": {
@@ -182,11 +183,11 @@ class OptimizationTasks(BaseTasks):
     """
 
     def verify_input(self, data):
-        program = data.meta["program"].lower()
+        program = data.meta.program.lower()
         if program not in qcng.list_all_procedures():
             return "Procedure '{}' not available in QCEngine.".format(program)
 
-        program = data.meta["qc_spec"]["program"].lower()
+        program = data.meta.qc_spec["program"].lower()
         if program not in qcng.list_all_programs():
             return "Program '{}' not available in QCEngine.".format(program)
 
@@ -241,13 +242,13 @@ class OptimizationTasks(BaseTasks):
         intitial_molecule_list = self.storage.get_add_molecules_mixed(data.data)["data"]
 
         # Unpack keywords
-        if data.meta["keywords"] is None:
+        if data.meta.keywords is None:
             opt_keywords = {}
         else:
-            opt_keywords = data.meta["keywords"]
-        opt_keywords["program"] = data.meta["qc_spec"]["program"]
+            opt_keywords = data.meta.keywords
+        opt_keywords["program"] = data.meta.qc_spec["program"]
 
-        qc_spec = QCSpecification(**data.meta["qc_spec"])
+        qc_spec = QCSpecification(**data.meta.qc_spec)
         if qc_spec.keywords:
             qc_keywords = self.storage.get_add_keywords_mixed([qc_spec.keywords])["data"][0]
             if qc_keywords is None:
@@ -255,8 +256,8 @@ class OptimizationTasks(BaseTasks):
         else:
             qc_keywords = None
 
-        tag = data.meta.pop("tag", None)
-        priority = data.meta.pop("priority", None)
+        tag = data.meta.tag
+        priority = data.meta.priority
 
         new_tasks = []
         results_ids = []
@@ -270,7 +271,7 @@ class OptimizationTasks(BaseTasks):
                 initial_molecule=initial_molecule.id,
                 qc_spec=qc_spec,
                 keywords=opt_keywords,
-                program=data.meta["program"])
+                program=data.meta.program)
 
             inp = doc.build_schema_input(initial_molecule=initial_molecule, qc_keywords=qc_keywords)
             inp.input_specification.extras["_qcfractal_tags"] = {
@@ -291,12 +292,12 @@ class OptimizationTasks(BaseTasks):
             task = TaskRecord(**{
                 "spec": {
                     "function": "qcengine.compute_procedure",
-                    "args": [inp.json_dict(), data.meta["program"]],
+                    "args": [inp.json_dict(), data.meta.program],
                     "kwargs": {}
                 },
                 "parser": "optimization",
                 "program": qc_spec.program,
-                "procedure": data.meta["program"],
+                "procedure": data.meta.program,
                 "tag": tag,
                 "priority": priority,
                 "base_result": {

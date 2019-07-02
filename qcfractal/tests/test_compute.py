@@ -83,6 +83,26 @@ def test_task_error(fractal_compute_server):
     assert m[0]["failures"] > 0
     assert m[0]["completed"] > 0
 
+@testing.using_rdkit
+def test_task_client_restart(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+
+    mol = ptl.models.Molecule(**{"geometry": [0, 0, 1], "symbols": ["He"]})
+    # Cookiemonster is an invalid method
+    ret = client.add_compute("rdkit", "cookiemonster", "", "energy", None, [mol])
+
+    # Manually handle the compute
+    fractal_compute_server.await_results()
+
+    tasks = client.query_tasks(base_result=ret.submitted)[0]
+    assert tasks.status == "ERROR"
+
+    upd = client.modify_tasks("restart", ret.submitted)
+    assert upd.n_updated == 1
+
+    tasks = client.query_tasks(base_result=ret.submitted)[0]
+    assert tasks.status == "WAITING"
+
 
 @testing.using_rdkit
 def test_queue_error(fractal_compute_server):

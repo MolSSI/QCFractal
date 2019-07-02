@@ -13,6 +13,7 @@ from qcfractal.testing import reset_server_database, test_server
 
 CLIENT_USERNAME = "test_compute_adapter"
 
+
 @pytest.fixture(scope="module")
 def compute_adapter_fixture(test_server):
 
@@ -57,14 +58,6 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
         assert manager["username"] == CLIENT_USERNAME
 
 
-    # stuff_log = next(x for x in manager_logs if x["tag"] == "stuff")
-    # assert stuff_log["submitted"] == 0
-
-    # other_log = next(x for x in manager_logs if x["tag"] == "other")
-    # assert other_log["submitted"] == 1
-    # assert other_log["completed"] == 1
-
-
 @testing.using_rdkit
 def test_queue_manager_shutdown(compute_adapter_fixture):
     """Tests to ensure tasks are returned to queue when the manager shuts down
@@ -91,6 +84,7 @@ def test_queue_manager_shutdown(compute_adapter_fixture):
     manager.await_results()
     ret = client.query_results()
     assert len(ret) == 1
+
 
 @testing.using_rdkit
 def test_queue_manager_server_delay(compute_adapter_fixture):
@@ -157,13 +151,12 @@ def test_queue_manager_heartbeat(compute_adapter_fixture):
     with testing.loop_in_thread() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(
-            port=testing.find_open_port(),
-            storage_project_name=server.storage_database,
-            storage_uri=server.storage_uri,
-            loop=loop,
-            ssl_options=False,
-            heartbeat_frequency=0.1)
+        server = FractalServer(port=testing.find_open_port(),
+                               storage_project_name=server.storage_database,
+                               storage_uri=server.storage_uri,
+                               loop=loop,
+                               ssl_options=False,
+                               heartbeat_frequency=0.1)
 
         # Clean and re-init the database
         testing.reset_server_database(server)
