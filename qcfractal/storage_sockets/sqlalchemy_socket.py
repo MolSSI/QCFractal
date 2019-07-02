@@ -145,7 +145,7 @@ class SQLAlchemySocket:
         if "psycopg2" not in uri:
             uri = uri.replace("postgresql", "postgresql+psycopg2")
 
-        if not uri.endswith("/"):
+        if project and not uri.endswith("/"):
             uri = uri + "/"
 
         uri = uri + project
@@ -1765,6 +1765,46 @@ class SQLAlchemySocket:
 
         return count
 
+    def _copy_task_to_queue(self, record_list: List[TaskRecord]):
+        """
+        copy the given tasks as-is to the DB. Used for data migration
+
+        Parameters
+        ----------
+        record_list : list of TaskRecords
+
+        Returns
+        -------
+            Dict with keys: data, meta
+            Data is the ids of the inserted/updated/existing docs
+        """
+
+        meta = add_metadata_template()
+
+        task_ids = []
+        with self.session_scope() as session:
+            for task in record_list:
+                doc = session.query(TaskQueueORM).filter_by(base_result_id=task.base_result.id)
+
+                if get_count_fast(doc) == 0:
+                    doc = TaskQueueORM(**task.json_dict(exclude={"id"}))
+                    if isinstance(doc.error, dict):
+                        doc.error = json.dumps(doc.error)
+
+                    session.add(doc)
+                    session.commit()  # TODO: faster if done in bulk
+                    task_ids.append(str(doc.id))
+                    meta['n_inserted'] += 1
+                else:
+                    id = str(doc.first().id)
+                    meta['duplicates'].append(id)  # TODO
+                    # If new or duplicate, add the id to the return list
+                    task_ids.append(id)
+        meta["success"] = True
+
+        ret = {"data": task_ids, "meta": meta}
+        return ret
+
 ### QueueManagerORMs
 
     def manager_update(self, name, **kwargs):
@@ -1989,8 +2029,9 @@ class SQLAlchemySocket:
 
         with self.session_scope() as session:
             data = session.query(UserORM).filter().all()
+            data = [x.to_dict(exclude=['id']) for x in data]
 
-        return [x.to_dict(exclude=['id']) for x in data]
+        return data
 
     def _copy_users(self, record_list: Dict):
         """
@@ -2015,7 +2056,8 @@ class SQLAlchemySocket:
 
                 if get_count_fast(doc) == 0:
                     doc = UserORM(**user)
-                    doc.password = doc.password.encode('ascii')
+                    if (isinstance(doc.password, str)): #TODO, for mongo
+                        doc.password = doc.password.encode('ascii')
                     session.add(doc)
                     session.commit()
                     user_names.append(doc.username)

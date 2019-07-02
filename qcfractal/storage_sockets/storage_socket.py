@@ -3,7 +3,7 @@ A factory for Database sockets
 """
 
 
-def storage_socket_factory(uri, project_name, logger=None, db_type=None, **kwargs):
+def storage_socket_factory(uri, project_name="", logger=None, db_type=None, **kwargs):
     """
     Factory for generating storage sockets. Spins up a given storage layer on request given common inputs.
 
