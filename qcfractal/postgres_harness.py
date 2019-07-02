@@ -3,24 +3,14 @@ import shutil
 import subprocess
 import tempfile
 import time
-from typing import Any, Dict, Union, Optional
+from typing import Any, Dict, List, Union, Optional
 
 import psycopg2
 
 from .config import FractalConfig
-from .util import find_port
+from .util import find_port, is_port_open
 
 
-def _run(commands, quiet=True, logger=print):
-    proc = subprocess.run(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    rcode = proc.returncode
-    stdout = proc.stdout.decode()
-    if not quiet:
-        logger(stdout)
-
-    ret = {"code": rcode, "stdout": stdout, "stderr": proc.stderr.decode()}
-
-    return ret
 
 
 class PostgresHarness:
@@ -42,6 +32,16 @@ class PostgresHarness:
         self.quiet = quiet
         self.logger = logger
         self._checked = False
+
+    def _run(self, commands):
+        proc = subprocess.run(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout = proc.stdout.decode()
+        if not self.quiet:
+            self.logger(stdout)
+
+        ret = {"code": proc.returncode, "stdout": stdout, "stderr": proc.stderr.decode()}
+
+        return ret
 
     def _check_psql(self) -> None:
         """
@@ -127,7 +127,22 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         if not self.quiet:
             logger(f"pqsl command: {cmd}")
         psql_cmd = [shutil.which("psql"), "-p", str(self.config.database.port), "-c"]
-        return _run(psql_cmd + [cmd], logger=self.logger, quiet=self.quiet)
+        return self._run(psql_cmd + [cmd])
+
+    def pg_ctl(self, cmds: List[str]) -> Any:
+        """Runs pg_ctl commands and returns their output while connected to the correct postgres instance.
+
+        Parameters
+        ----------
+        cmds : List[str]
+            A list of PostgreSQL pg_ctl commands to run.
+        """
+        self._check_psql()
+
+        if not self.quiet:
+            self.logger(f"pg_ctl command: {cmds}")
+        psql_cmd = [shutil.which("pg_ctl"), "-D", str(self.config.database_path)]
+        return self._run(psql_cmd + cmds)
 
     def create_database(self, database_name: str) -> bool:
         """Creates a new database for the current postgres instance. If the database is existing, no
@@ -167,12 +182,16 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         if not self.quiet:
             self.logger("Starting the database:")
 
-        start_status = _run([
-            shutil.which("pg_ctl"),
-            "-D", str(self.config.database_path),
-            "-l", str(self.config.database_path / self.config.database.logfile),
-            "start"],
-            logger=self.logger, quiet=self.quiet) # yapf: disable
+        if is_port_open(self.config.database.host, self.config.database.port):
+            status = self.pg_ctl(["status"])
+            print(status)
+            raise Exception()
+
+
+        else:
+            start_status = self.pg_ctl([
+                "-l", str(self.config.database_path / self.config.database.logfile),
+                "start"]) # yapf: disable
 
         if not (("server started" in start_status["stdout"]) or ("server starting" in start_status["stdout"])):
             raise ValueError(f"Could not start the PostgreSQL server. Error below:\n\n{start_status['stderr']}")
@@ -188,11 +207,10 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
 
         if not self.quiet:
             self.logger("PostgreSQL successfully started in a background process, current_status:\n")
-            start_status = _run([
+            start_status = self._run([
                 shutil.which("pg_ctl"),
                 "-D", str(self.config.database_path),
-                "status"],
-                logger=self.logger, quiet=self.quiet) # yapf: disable
+                "status"]) # yapf: disable
 
         return True
 
@@ -204,11 +222,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
 
         self._check_psql()
 
-        ret = _run([
-            shutil.which("pg_ctl"),
-            "-D", str(self.config.database_path),
-            "stop"],
-            logger=self.logger, quiet=self.quiet) # yapf: disable
+        ret = self.pg_ctl(["stop"])
         return ret
 
     def initialize(self):
@@ -221,9 +235,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             self.logger("Initializing the database:")
 
         # Initialize the database
-        init_status = _run([shutil.which("initdb"), "-D", self.config.database_path],
-                                      logger=self.logger,
-                                      quiet=self.quiet)
+        init_status = self._run([shutil.which("initdb"), "-D", self.config.database_path])
         if "Success." not in init_status["stdout"]:
             raise ValueError(f"Could not initialize the PostgreSQL server. Error below:\n\n{init_status['stderr']}")
 
@@ -242,7 +254,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         # Create the user and database
         if not self.quiet:
             self.logger(f"Building user information.")
-        _run([shutil.which("createdb"), "-p", str(self.config.database.port)])
+        self._run([shutil.which("createdb"), "-p", str(self.config.database.port)])
 
         success = self.create_database(self.config.database.default_database)
 
