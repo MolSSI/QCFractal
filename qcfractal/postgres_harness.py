@@ -41,6 +41,27 @@ class PostgresHarness:
         self.config = config
         self.quiet = quiet
         self.logger = logger
+        self._checked = False
+
+    def _check_psql(self) -> None:
+        """
+        Checks to see if the proper PostgreSQL commands are present. Raises a ValueError if they are not found.
+        """
+
+
+        if self._checked:
+            return
+
+        msg = """
+Could not find 'pg_ctl' in the current path. Please install PostgreSQL with 'conda install postgresql'.
+
+Alternatively, you can install a system PostgreSQL manually, please see the following link: https://www.postgresql.org/download/
+"""
+
+        if shutil.which("pg_ctl") is None:
+            raise ValueError(msg)
+        else:
+            self._checked = True
 
     def database_uri(self) -> str:
         """Provides the full PostgreSQL URI string.
@@ -101,6 +122,8 @@ class PostgresHarness:
             Description
 
         """
+        self._check_psql()
+
         if not self.quiet:
             logger(f"pqsl command: {cmd}")
         psql_cmd = [shutil.which("psql"), "-p", str(self.config.database.port), "-c"]
@@ -133,6 +156,13 @@ class PostgresHarness:
         return self.is_alive(database=database_name)
 
     def start(self) -> Any:
+        """
+        Starts a PostgreSQL server based off the current configuration parameters. The server must be initialized
+        and the configured port open.
+        """
+
+        self._check_psql()
+
         # Startup the server
         if not self.quiet:
             self.logger("Starting the database:")
@@ -171,6 +201,9 @@ class PostgresHarness:
         """Shutsdown the current postgres instance.
 
         """
+
+        self._check_psql()
+
         ret = _run([
             shutil.which("pg_ctl"),
             "-D", str(self.config.database_path),
@@ -181,6 +214,9 @@ class PostgresHarness:
     def initialize(self):
         """Initializes and starts the current postgres instance.
         """
+
+        self._check_psql()
+
         if not self.quiet:
             self.logger("Initializing the database:")
 
