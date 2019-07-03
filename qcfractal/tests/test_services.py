@@ -406,6 +406,7 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
     assert pytest.approx(mol.measure([1, 2])) == initial_distance
 
 
+@pytest.mark.skip
 def test_query_time(fractal_compute_server):
 
     client = ptl.FractalClient(fractal_compute_server)
