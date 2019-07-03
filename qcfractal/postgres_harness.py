@@ -11,8 +11,6 @@ from .config import FractalConfig
 from .util import find_port, is_port_open
 
 
-
-
 class PostgresHarness:
     def __init__(self, config: Union[Dict[str, Any], FractalConfig], quiet: bool = True, logger: 'print' = print):
         """A flexible connection to a PostgreSQL server
@@ -39,7 +37,7 @@ class PostgresHarness:
         if not self.quiet:
             self.logger(stdout)
 
-        ret = {"code": proc.returncode, "stdout": stdout, "stderr": proc.stderr.decode()}
+        ret = {"retcode": proc.returncode, "stdout": stdout, "stderr": proc.stderr.decode()}
 
         return ret
 
@@ -48,6 +46,8 @@ class PostgresHarness:
         Checks to see if the proper PostgreSQL commands are present. Raises a ValueError if they are not found.
         """
 
+        if self.config.database.host != "localhost":
+            raise ValueError(f"Cannot modify PostgreSQL as configuration points to non-localhost: {self.config.host}")
 
         if self._checked:
             return
@@ -88,10 +88,11 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         """
         if database is None:
             database = "postgres"
-        return psycopg2.connect(database=database,
-                                # user=self.config.database.username,
-                                host=self.config.database.host,
-                                port=self.config.database.port)
+        return psycopg2.connect(
+            database=database,
+            # user=self.config.database.username,
+            host=self.config.database.host,
+            port=self.config.database.port)
 
     def is_alive(self, database: Optional[str] = None) -> bool:
         """Checks if the postgres is alive, and optionally if the database is present.
@@ -183,37 +184,51 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             self.logger("Starting the database:")
 
         if is_port_open(self.config.database.host, self.config.database.port):
+            if not self.quiet:
+                self.logger("Service currently running the configured port, current_status:\n")
             status = self.pg_ctl(["status"])
-            print(status)
-            raise Exception()
 
+            # If status is ok, exit is 0
+            if status["retcode"] != 0:
+                raise ValueError(
+                    f"A process is already running on 'port:{self.config.database.port}` that is not associated with the PostgreSQL instance at `location:{self.config.database.directory}.`"
+                    "\nThis often happens when two PostgreSQL databases are attempted to run on the same port."
+                    "\nEither shut down the other PostgreSQL database or change the `qcfractal-server init --db-port`."
+                    "\nStopping."
+                )
+
+
+            if not self.is_alive():
+                raise ValueError(f"PostgreSQL is running, but cannot connect to the default port.")
+
+            if not self.quiet:
+                self.logger("Found running PostgreSQL instance with correct configuration.")
 
         else:
             start_status = self.pg_ctl([
                 "-l", str(self.config.database_path / self.config.database.logfile),
                 "start"]) # yapf: disable
 
-        if not (("server started" in start_status["stdout"]) or ("server starting" in start_status["stdout"])):
-            raise ValueError(f"Could not start the PostgreSQL server. Error below:\n\n{start_status['stderr']}")
+            if not (("server started" in start_status["stdout"]) or ("server starting" in start_status["stdout"])):
+                raise ValueError(f"Could not start the PostgreSQL server. Error below:\n\n{start_status['stderr']}")
 
-        # Check that we are alive
-        for x in range(10):
-            if self.is_alive():
-                break
+            # Check that we are alive
+            for x in range(10):
+                if self.is_alive():
+                    break
+                else:
+                    time.sleep(0.1)
             else:
-                time.sleep(0.1)
-        else:
-            raise ValueError(f"Could not connect to the server after booting. Boot log:\n\n{start_status['stderr']}")
+                raise ValueError(f"Could not connect to the server after booting. Boot log:\n\n{start_status['stderr']}")
 
-        if not self.quiet:
-            self.logger("PostgreSQL successfully started in a background process, current_status:\n")
-            start_status = self._run([
-                shutil.which("pg_ctl"),
-                "-D", str(self.config.database_path),
-                "status"]) # yapf: disable
+            if not self.quiet:
+                self.logger("PostgreSQL successfully started in a background process, current_status:\n")
+                start_status = self._run([
+                    shutil.which("pg_ctl"),
+                    "-D", str(self.config.database_path),
+                    "status"]) # yapf: disable
 
         return True
-
 
     def shutdown(self) -> Any:
         """Shutsdown the current postgres instance.
