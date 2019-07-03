@@ -10,6 +10,7 @@ import time
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Union
 
+from pydantic import BaseModel
 import qcengine as qcng
 from qcfractal.extras import get_information
 
@@ -17,6 +18,34 @@ from .adapters import build_queue_adapter
 from ..interface.data import get_molecule
 
 __all__ = ["QueueManager"]
+
+
+class QueueStatistics(BaseModel):
+    """
+    Queue Manager Job statistics
+    """
+    # Dynamic quantities
+    total_successful_tasks: int = 0
+    total_failed_tasks: int = 0
+    total_cpu_hours: float = 0
+    # Static Quantities
+    max_concurrent_tasks: int = 0
+    cores_per_task: int = 0
+    last_update_time: float = None
+
+    def __init__(self, **kwargs):
+        if kwargs.get('last_update_time', None) is None:
+            kwargs['last_update_time'] = time.time()
+        super().__init__(**kwargs)
+
+    @property
+    def total_completed_tasks(self):
+        return self.total_successful_tasks + self.total_failed_tasks
+
+    @property
+    def theoretical_max_consumption(self):
+        """In CPU Hours"""
+        return self.max_concurrent_tasks * self.cores_per_task * (time.time() - self.last_update_time) / 3600
 
 
 class QueueManager:
@@ -42,7 +71,7 @@ class QueueManager:
                  logger: Optional[logging.Logger] = None,
                  max_tasks: int = 200,
                  queue_tag: str = None,
-                 manager_name: str = "unlabled",
+                 manager_name: str = "unlabeled",
                  update_frequency: Union[int, float] = 2,
                  verbose: bool = True,
                  server_error_retries: Optional[int] = 1,
@@ -112,6 +141,10 @@ class QueueManager:
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag
         self.verbose = verbose
+        self.statistics = QueueStatistics(max_concurrent_tasks=self.max_tasks,
+                                          cores_per_task=cores_per_task,
+                                          update_frequency=update_frequency
+                                          )
 
         self.scheduler = None
         self.update_frequency = update_frequency
@@ -280,7 +313,6 @@ class QueueManager:
 
         return self.queue_adapter.close()
 
-
 ## Queue Manager functions
 
     def heartbeat(self) -> None:
@@ -428,9 +460,26 @@ class QueueManager:
         self._update_stale_jobs(allow_shutdown=allow_shutdown)
 
         results = self.queue_adapter.acquire_complete()
+
+        # Stats fetching for running tasks, as close to the time we got the jobs as we can
+        last_time = self.statistics.last_update_time
+        now = self.statistics.last_update_time = time.time()
+        time_delta_seconds = now - last_time
+        try:
+            running_tasks = self.queue_adapter.count_running()
+            log_efficiency = True
+        except NotImplementedError:
+            running_tasks = 0
+            log_efficiency = False
+        max_cpu_hours_running = time_delta_seconds * running_tasks * self.statistics.cores_per_task / 3600
+        max_cpu_hours_possible = (time_delta_seconds * self.statistics.max_concurrent_tasks
+                                  * self.statistics.cores_per_task / 3600)
+
+        # Process jobs
         n_success = 0
         n_fail = 0
         n_result = len(results)
+        task_cpu_hours = 0
         error_payload = []
         jobs_pushed = f"Pushed {n_result} complete tasks to the server "
         if n_result:
@@ -448,11 +497,24 @@ class QueueManager:
 
             self.active -= n_result
             for key, result in results.items():
+                wall_time_seconds = 0
                 if result.success:
                     n_success += 1
+                    try:
+                        wall_time_seconds = result.provenance.wall_time
+                    except:
+                        pass
                 else:
                     error_payload.append(f"Job {key} failed: {result.error.error_type} - "
                                          f"Msg: {result.error.error_message}")
+                    try:
+                        wall_time_seconds = result.input_data['provenance'].get('wall_time')
+                    except:
+                        pass
+                try:
+                    task_cpu_hours += wall_time_seconds * self.statistics.cores_per_task / 3600
+                except:
+                    pass
             n_fail = n_result - n_success
 
         self.logger.info(jobs_pushed + f"({n_success} success / {n_fail} fail).")
@@ -469,6 +531,23 @@ class QueueManager:
         # Get new tasks
         payload = self._payload_template()
         payload["data"]["limit"] = open_slots
+
+        # Crunch Statistics
+        self.statistics.total_failed_tasks += n_fail
+        self.statistics.total_successful_tasks += n_success
+        self.statistics.total_cpu_hours += task_cpu_hours
+        self.logger.info(f"Stats: Number of processed jobs: {self.statistics.total_completed_tasks}")
+        self.logger.info(f"Stats: {self.statistics.total_successful_tasks} successful / "
+                         f"{self.statistics.total_failed_tasks} failed "
+                         f"({self.statistics.total_successful_tasks/self.statistics.total_completed_tasks*100}% "
+                         f"success rate)")
+        self.logger.info(f"Stats: {self.statistics.total_cpu_hours} CPU Hours logged successfully (estimate)")
+        # Handle efficiency calculations
+        if log_efficiency:
+            efficiency = min((max_cpu_hours_running + task_cpu_hours)/max_cpu_hours_possible * 100, 100)
+            self.logger.info(f"Stats: Resource consumption efficiency upper limit: {efficiency} "
+                             f"(estimate, higher is better)")
+
         try:
             new_tasks = self.client._automodel_request("queue_manager", "get", payload)
         except IOError as exc:

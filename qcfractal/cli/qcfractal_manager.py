@@ -814,9 +814,10 @@ def main(args=None):
 
     # Build out the manager itself
     # Compute max tasks
+    max_concurrent_tasks = settings.common.tasks_per_worker * settings.common.max_workers
     if settings.manager.max_queued_tasks is None:
         # Tasks * jobs * buffer + 1
-        max_queued_tasks = ceil(settings.common.tasks_per_worker * settings.common.max_workers * 1.20) + 1
+        max_queued_tasks = ceil(max_concurrent_tasks * 1.20) + 1
     else:
         max_queued_tasks = settings.manager.max_queued_tasks
 
@@ -832,6 +833,9 @@ def main(args=None):
         scratch_directory=settings.common.scratch_directory,
         verbose=settings.common.verbose
     )
+
+    # Set stats correctly since we buffer the max tasks a bit
+    manager.statistics.max_concurrent_tasks = max_concurrent_tasks
 
     # Add exit callbacks
     for cb in exit_callbacks:

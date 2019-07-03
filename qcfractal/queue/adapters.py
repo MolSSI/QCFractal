@@ -7,7 +7,7 @@ from .fireworks_adapter import FireworksAdapter
 from .parsl_adapter import ParslAdapter
 
 
-def build_queue_adapter(workflow_client, logger=None, **kwargs):
+def build_queue_adapter(workflow_client, logger=None, **kwargs) -> 'BaseAdapter':
     """Constructs a queue manager based off the incoming queue socket type.
 
     Parameters

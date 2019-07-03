@@ -33,6 +33,7 @@ class ParslAdapter(BaseAdapter):
 
         import parsl
         self.client = parsl.dataflow.dflow.DataFlowKernel(self.client)
+        self._parsl_states = parsl.dataflow.states.States
         self.app_map = {}
 
     def __repr__(self):
@@ -76,6 +77,16 @@ class ParslAdapter(BaseAdapter):
         func = self.get_app(task_spec["spec"]["function"])
         task = func(*task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
         return task_spec["id"], task
+
+    def count_running(self) -> int:
+
+        running = 0
+        for task in self.queue.values():
+            status = self.client.tasks.get(task.tid, {}).get('status', None)
+            if status == self._parsl_states.running:
+                running += 1
+
+        return running
 
     def acquire_complete(self) -> Dict[str, Any]:
         ret = {}
