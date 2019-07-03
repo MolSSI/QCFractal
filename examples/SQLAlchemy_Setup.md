@@ -151,6 +151,45 @@ Reload bashrc `source ~./bashrc`
 ## Connecting SQLAlchemy to PostgreSQL
 
 First, you need to install sqlalchemy and one of python's postgres 
-drivers. The most commone one is `psycog2`
+drivers. The most common one is `psycog2`
 
 `pip install sqlalchemy psycopg2-binary sqlalchemy_utils`
+
+
+## Migration commands:
+
+Check current version:
+
+`alembic current`
+
+`alembic history --verbose'`
+
+Create migration script:
+
+`alembic revision -m "Add a column"`
+
+Create migration script with autogenerate code (must be revised and checked):
+
+`alembic revision --autogenerate -m "Add a column"`
+
+Upgrade to the latest version (head):
+
+`alembic upgrade head`
+
+Upgrade to a specific version:
+
+`alembic upgrade ae1027a6acf`
+
+Upgrade by 2 versions:
+
+`alembic upgrade +2`
+
+Downgrade by 1 version:
+
+`alembic downgrade -1`
+
+Downgrade back to the beginning (base):
+
+`alembic downgrade base`
+
+ 

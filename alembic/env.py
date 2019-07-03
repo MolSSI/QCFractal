@@ -6,6 +6,8 @@ from sqlalchemy import pool
 
 from alembic import context
 
+from qcfractal.storage_sockets import sql_models
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -18,7 +20,9 @@ fileConfig(config.config_file_name)
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+# target_metadata = None
+target_metadata = sql_models.Base.metadata
+compare_type = True
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -40,7 +44,8 @@ def run_migrations_offline():
     """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True
+        url=url, target_metadata=target_metadata, literal_binds=True,
+        compare_type = compare_type
     )
 
     with context.begin_transaction():
@@ -62,7 +67,8 @@ def run_migrations_online():
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection, target_metadata=target_metadata,
+            compare_type = compare_type
         )
 
         with context.begin_transaction():
