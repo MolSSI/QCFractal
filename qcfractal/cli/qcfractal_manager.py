@@ -225,7 +225,10 @@ class ClusterSettings(BaseSettings):
     node_exclusivity: bool = Schema(
         False,
         description="Run your cluster jobs in node-exclusivity mode. This option may not be available to all scheduler "
-                    "types and thus may not do anything."
+                    "types and thus may not do anything. Related to this, the flags we have found for this option "
+                    "may not be correct for your scheduler and thus might throw an error. You can always add the "
+                    "correct flag/parameters to the `scheduler_options` parameter and leave this as False if you "
+                    "find it gives you problems."
     )
     scheduler: SchedulerEnum = Schema(
         None,
@@ -679,11 +682,17 @@ def main(args=None):
             dask_settings["extra"].append(QCA_RESOURCE_STRING)
         # Scheduler opts
         scheduler_opts = settings.cluster.scheduler_options.copy()
-        if settings.cluster.node_exclusivity and "--exclusive" not in scheduler_opts:
-            scheduler_opts.append("--exclusive")
 
         _cluster_loaders = {"slurm": "SLURMCluster", "pbs": "PBSCluster", "moab": "MoabCluster", "sge": "SGECluster",
                             "lsf": "LSFCluster"}
+        dask_exclusivity_map = {"slurm": "--exclusive",
+                                "pbs": "-n",
+                                "moab": "-n",  # Less sure about this one
+                                "sge": "-l exclusive=true",
+                                "lsf": "-x",
+                                }
+        if settings.cluster.node_exclusivity and dask_exclusivity_map[settings.cluster.scheduler] not in scheduler_opts:
+            scheduler_opts.append(dask_exclusivity_map[settings.cluster.scheduler])
 
         # Create one construct to quickly merge dicts with a final check
         dask_construct = {
@@ -698,88 +707,15 @@ def main(args=None):
 
         try:
             # Import the dask things we need
+            import dask_jobqueue
             from dask.distributed import Client
             cluster_module = cli_utils.import_module("dask_jobqueue",
                                                      package=_cluster_loaders[settings.cluster.scheduler])
             cluster_class = getattr(cluster_module, _cluster_loaders[settings.cluster.scheduler])
+            if dask_jobqueue.__version__ < "0.5.0":
+                raise ImportError
         except ImportError:
-            raise ImportError("You need both `dask` and `dask-jobqueue` to use the `dask` adapter")
-
-        from dask_jobqueue import SGECluster
-
-        class SGEClusterWithJobQueue(SGECluster):
-            """Helper class until Dask Jobqueue fixes #256"""
-            def __init__(self, job_extra=None, **kwargs):
-                super().__init__(**kwargs)
-                if job_extra is not None:
-                    more_header = ["#$ %s" % arg for arg in job_extra]
-                    self.job_header += "\n" + "\n".join(more_header)
-
-        from dask_jobqueue import LSFCluster
-        from dask_jobqueue import lsf
-
-        def lsf_format_bytes_ceil_with_unit(n: int, unit_str: str = "m") -> str:
-            """
-            Special function we will use to monkey-patch as a partial into the dask_jobqueue.lsf file if need be
-            Because the function exists as part of the lsf.py and not a staticmethod of the LSFCluster class, we have
-            to do it this way.
-            """
-            unit_str = unit_str.lower()
-            converter = {
-                "b": 0,
-                "k": 1,
-                "m": 2,
-                "g": 3,
-                "t": 4,
-                "p": 5,
-                "e": 6
-            }
-            return "%d" % ceil(n / (1000 ** converter[unit_str]))
-
-        # Temporary fix until Dask Jobqueue fixes #256
-        if cluster_class is SGECluster and 'job_extra' not in inspect.getfullargspec(SGECluster.__init__).args:
-            # Should the SGECluster ever get fixed, this if statement should automatically ensure we stop
-            # using the custom class
-            cluster_class = SGEClusterWithJobQueue
-        # Temporary fix until unit system is checked in the LSFCluster of dask
-        elif cluster_class is LSFCluster and 'lsf_units' not in inspect.getfullargspec(LSFCluster.__init__).args:
-            # We have to do some serious monkey patching here
-            # Try to infer the unit system
-            if settings.dask.lsf_units is not None:
-                logger.debug(f"Setting the unit system for LSF to {settings.dask.lsf_units} based on Manager config")
-                unit = settings.dask.lsf_units
-            else:
-                # Not manually set, search for automatically, Using docs from LSF 9.1.3 for search/defaults
-                unit = "k"  # Default fallback unit
-                try:
-                    # Start looking for the LSF conf file
-                    conf_dir = "/etc"  # Fall back directory
-                    # Search the two environment variables the docs say it could be at (likely a typo in docs)
-                    for conf_env in ["LSF_ENVDIR", "LSF_CONFDIR"]:
-                        conf_search = os.environ.get(conf_env, None)
-                        if conf_search is not None:
-                            conf_dir = conf_search
-                            break
-                    conf_path = os.path.join(conf_dir, 'lsf.conf')
-                    conf_file = open(conf_path, 'r').readlines()
-                    # Reverse order search (in case defined twice)
-                    for line in conf_file[::-1]:
-                        # Look for very specific line
-                        line = line.strip()
-                        if not line.strip().startswith("LSF_UNIT_FOR_LIMITS"):
-                            continue
-                        # Found the line, infer the unit, only first 2 chars after "="
-                        unit = line.split("=")[1].lower()[0]
-                        break
-                    logger.debug(f"Setting units to {unit} from the LSF config file at {conf_path}")
-                # Trap the lsf.conf does not exist, and the conf file not setup right (i.e. "$VAR=xxx^" regex-form)
-                except (FileNotFoundError, IndexError):
-                    # No conf file found, assume defaults
-                    logger.warning("Could not find lsf.conf file and LSF_UNIT_FOR_LIMITS variable within ")
-            dask_construct.pop('lsf_units', None)  # Remove for integrity
-            lsf_format_bytes_ceil = partial(lsf_format_bytes_ceil_with_unit, unit_str=unit)
-            # Finally, monkey patch unit calculation routine with the partial function at fixed units
-            lsf.lsf_format_bytes_ceil = lsf_format_bytes_ceil
+            raise ImportError("You need`dask-jobqueue >= 0.5.0` to use the `dask` adapter")
 
         cluster = cluster_class(**dask_construct)
 
@@ -822,6 +758,7 @@ def main(args=None):
 
         # Import the parsl things we need
         try:
+            import parsl
             from parsl.config import Config
             from parsl.executors import HighThroughputExecutor
             from parsl.addresses import address_by_hostname
@@ -829,8 +766,10 @@ def main(args=None):
                                                       package=_provider_loaders[settings.cluster.scheduler])
             provider_class = getattr(provider_module, _provider_loaders[settings.cluster.scheduler])
             provider_header = _provider_headers[settings.cluster.scheduler]
+            if parsl.__version__ < '0.8.0':
+                raise ImportError
         except ImportError:
-            raise ImportError("You need the `parsl` package to use the `parsl` adapter")
+            raise ImportError("You need `parsl >=0.8.0` to use the `parsl` adapter")
 
         if _provider_loaders[settings.cluster.scheduler] == "moab":
             logger.warning("Parsl uses its TorqueProvider for Moab clusters due to the scheduler similarities. "
