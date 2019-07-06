@@ -368,6 +368,7 @@ class BaseProcedureDataset(Collection):
     def _add_entry(self, name: str, record: 'Record') -> None:
         """Adds a record to the dataset using the lowered input name. Saves the dataset after adding a new entry.
 
+
         Parameters
         ----------
         name : str
@@ -417,12 +418,20 @@ class BaseProcedureDataset(Collection):
         mapper = self._get_procedure_ids(spec.name)
         query_ids = list(mapper.values())
 
-        procedures = self.client.query_procedures(id=query_ids)
+        # Poor mans paginate
+        procedures = []
+        for i in range(0, len(query_ids), self.client.query_limit):
+            chunk_ids = query_ids[i:i + self.client.query_limit]
+            procedures.extend(self.client.query_procedures(id=chunk_ids))
+
         proc_lookup = {x.id: x for x in procedures}
 
         data = []
         for name, oid in mapper.items():
-            data.append([name, proc_lookup[oid]])
+            try:
+                data.append([name, proc_lookup[oid]])
+            except KeyError:
+                data.append([name, None])
 
         df = pd.DataFrame(data, columns=["index", spec.name])
         df.set_index("index", inplace=True)

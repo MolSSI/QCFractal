@@ -98,6 +98,7 @@ class FractalClient(object):
         self.server_info = self._automodel_request("information", "get", {}, full_return=True).dict()
 
         self.server_name = self.server_info["name"]
+        self.query_limit = self.server_info["query_limit"]
 
         from . import __version__  # Import here to avoid circular import from __init__
         from . import _isportal
