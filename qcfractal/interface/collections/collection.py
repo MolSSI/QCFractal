@@ -418,7 +418,7 @@ class BaseProcedureDataset(Collection):
         mapper = self._get_procedure_ids(spec.name)
         query_ids = list(mapper.values())
 
-        # Poor mans paginate
+        # Chunk up the queries
         procedures = []
         for i in range(0, len(query_ids), self.client.query_limit):
             chunk_ids = query_ids[i:i + self.client.query_limit]
