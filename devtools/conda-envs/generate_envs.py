@@ -2,7 +2,6 @@
 Automatically generates the QCArchive environments
 """
 from ruamel.yaml import YAML
-import glob
 import copy
 
 yaml = YAML()
@@ -23,7 +22,7 @@ dependencies:
   - requests
   - bcrypt
   - cryptography
-  - pydantic
+  - pydantic>=0.20,<0.30
   - mongoengine
   - plotly
   - sqlalchemy>=1.3
@@ -89,8 +88,9 @@ environs = [{
     
     # Tools to test out all available adapters, ipy is for Parsl
     "filename": "adapters.yaml",
-    "dependencies": ["rdkit", "dask", "distributed", "dask-jobqueue", "ipyparallel", "ipykernel"],
-    "pip_dependencies": ["parsl", "fireworks"]
+    "dependencies": ["rdkit", "dask", "distributed", "dask-jobqueue>=0.5.0", "ipyparallel", "ipykernel",
+                     "parsl>=0.8.0"],
+    "pip_dependencies": ["fireworks"]
 }, {
 
     # Tests for the OpenFF toolchain (geometric and torsiondrive) 

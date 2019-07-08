@@ -27,7 +27,7 @@ if __name__ == "__main__":
             'cryptography',
             'numpy>=1.7',
             'pandas',
-            'pydantic>=0.20',
+            'pydantic>=0.20,<0.30',
             'pymongo>=3.0',
             'requests',
             'tornado',
