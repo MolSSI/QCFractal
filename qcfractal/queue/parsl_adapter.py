@@ -78,13 +78,26 @@ class ParslAdapter(BaseAdapter):
         task = func(*task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
         return task_spec["id"], task
 
-    def count_running(self) -> int:
+    def count_running_workers(self) -> int:
 
         running = 0
+        executor_running_task_map = {key: False for key in self.client.executors.keys()}
         for task in self.queue.values():
             status = self.client.tasks.get(task.tid, {}).get('status', None)
             if status == self._parsl_states.running:
+                executor_running_task_map[task['executor']] = True
+            if all(executor_running_task_map.values()):
+                # Efficiency loop break
+                break
+
+        for executor in self.client.executors.values():
+            if hasattr(executor, 'connected_workers'):
+                # Should return an int
+                running += executor.connected_workers
+            elif hasattr(executor, 'max_threads') and executor_running_task_map[executor]:
                 running += 1
+            else:
+                raise NotImplementedError("Cannot accurately estimate consumption from executors")
 
         return running
 

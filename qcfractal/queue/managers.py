@@ -10,7 +10,7 @@ import time
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Union
 
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 import qcengine as qcng
 from qcfractal.extras import get_information
 
@@ -27,11 +27,14 @@ class QueueStatistics(BaseModel):
     # Dynamic quantities
     total_successful_tasks: int = 0
     total_failed_tasks: int = 0
-    total_cpu_hours: float = 0
+    total_core_hours: float = 0
+    total_core_hours_consumed: float = 0
+    total_core_hours_possible: float = 0
     # Static Quantities
     max_concurrent_tasks: int = 0
     cores_per_task: int = 0
     last_update_time: float = None
+    # sum_task(task_wall_time * nthread/task) / sum_time(number_running_worker * nthread/worker * interval)
 
     def __init__(self, **kwargs):
         if kwargs.get('last_update_time', None) is None:
@@ -44,8 +47,14 @@ class QueueStatistics(BaseModel):
 
     @property
     def theoretical_max_consumption(self):
-        """In CPU Hours"""
+        """In Core Hours"""
         return self.max_concurrent_tasks * self.cores_per_task * (time.time() - self.last_update_time) / 3600
+
+    @validator('cores_per_task', pre=True)
+    def cores_per_tasks_none(cls, v):
+        if v is None:
+            v = 1
+        return v
 
 
 class QueueManager:
@@ -466,14 +475,16 @@ class QueueManager:
         now = self.statistics.last_update_time = time.time()
         time_delta_seconds = now - last_time
         try:
-            running_tasks = self.queue_adapter.count_running()
+            running_workers = self.queue_adapter.count_running_workers()
             log_efficiency = True
         except NotImplementedError:
-            running_tasks = 0
+            running_workers = 0
             log_efficiency = False
-        max_cpu_hours_running = time_delta_seconds * running_tasks * self.statistics.cores_per_task / 3600
-        max_cpu_hours_possible = (time_delta_seconds * self.statistics.max_concurrent_tasks
-                                  * self.statistics.cores_per_task / 3600)
+        max_core_hours_running = time_delta_seconds * running_workers * self.statistics.cores_per_task / 3600
+        max_core_hours_possible = (time_delta_seconds * self.statistics.max_concurrent_tasks
+                                   * self.statistics.cores_per_task / 3600)
+        self.statistics.total_core_hours_consumed += max_core_hours_running
+        self.statistics.total_core_hours_possible += max_core_hours_possible
 
         # Process jobs
         n_success = 0
@@ -500,21 +511,19 @@ class QueueManager:
                 wall_time_seconds = 0
                 if result.success:
                     n_success += 1
-                    try:
-                        wall_time_seconds = result.provenance.wall_time
-                    except:
-                        pass
+                    if hasattr(result.provenance, 'wall_time'):
+                        wall_time_seconds = float(result.provenance.wall_time)
                 else:
                     error_payload.append(f"Job {key} failed: {result.error.error_type} - "
                                          f"Msg: {result.error.error_message}")
+                    # Try to get the wall time in the most fault-tolerant way
                     try:
-                        wall_time_seconds = result.input_data['provenance'].get('wall_time')
-                    except:
-                        pass
-                try:
-                    task_cpu_hours += wall_time_seconds * self.statistics.cores_per_task / 3600
-                except:
-                    pass
+                        wall_time_seconds = float(results.input_data.get('provenance', {}).get('wall_time', 0))
+                    except TypeError:
+                        # Trap wall time corruption, e.g. float(None)
+                        # Other Result corruptions will raise an error correctly
+                        wall_time_seconds = 0
+                task_cpu_hours += wall_time_seconds * self.statistics.cores_per_task / 3600
             n_fail = n_result - n_success
 
         self.logger.info(jobs_pushed + f"({n_success} success / {n_fail} fail).")
@@ -535,18 +544,28 @@ class QueueManager:
         # Crunch Statistics
         self.statistics.total_failed_tasks += n_fail
         self.statistics.total_successful_tasks += n_success
-        self.statistics.total_cpu_hours += task_cpu_hours
-        self.logger.info(f"Stats: Number of processed jobs: {self.statistics.total_completed_tasks}")
-        self.logger.info(f"Stats: {self.statistics.total_successful_tasks} successful / "
-                         f"{self.statistics.total_failed_tasks} failed "
-                         f"({self.statistics.total_successful_tasks/self.statistics.total_completed_tasks*100}% "
-                         f"success rate)")
-        self.logger.info(f"Stats: {self.statistics.total_cpu_hours} CPU Hours logged successfully (estimate)")
+        self.statistics.total_core_hours += task_cpu_hours
+        try:
+            success_rate = self.statistics.total_successful_tasks/self.statistics.total_completed_tasks*100
+        except ZeroDivisionError:
+            success_rate = "N/A"
+        stats_str = (f"Stats (Tasks): Processed={self.statistics.total_completed_tasks}, "
+                     f"Failed={self.statistics.total_failed_tasks}, "
+                     f"Success={success_rate}%, "
+                     f"Core Hours (estimate)={self.statistics.total_core_hours}")
         # Handle efficiency calculations
+
         if log_efficiency:
-            efficiency = min((max_cpu_hours_running + task_cpu_hours)/max_cpu_hours_possible * 100, 100)
-            self.logger.info(f"Stats: Resource consumption efficiency upper limit: {efficiency} "
-                             f"(estimate, higher is better)")
+            # sum_task(task_wall_time * nthread / task) / sum_time(number_running_worker * nthread / worker * interval)
+            try:
+                efficiency_of_running = self.statistics.total_core_hours / self.statistics.total_core_hours_consumed
+                efficiency_of_potential = self.statistics.total_core_hours / self.statistics.total_core_hours_possible
+            except ZeroDivisionError:
+                efficiency_of_running = "(N/A yet)"
+                efficiency_of_potential = "(N/A yet)"
+            stats_str += (f", Worker Core Efficiency (est.): {efficiency_of_running}, "
+                          f"Max Resource Core Efficiency (est.): {efficiency_of_potential}")
+        self.logger.info(stats_str)
 
         try:
             new_tasks = self.client._automodel_request("queue_manager", "get", payload)
