@@ -25,7 +25,6 @@ from sqlalchemy.orm import sessionmaker, with_polymorphic
 from sqlalchemy.sql.expression import func
 # from sqlalchemy.dialects import postgresql
 from collections.abc import Iterable
-import datetime
 import json
 
 # pydantic classes
@@ -1884,9 +1883,9 @@ class SQLAlchemySocket:
                 if get_count_fast(doc) == 0:
                     doc = QueueManagerORM(**manager)
                     if isinstance(doc.created_on, float):
-                        doc.created_on = datetime.datetime.fromtimestamp(doc.created_on / 1e3)
+                        doc.created_on = dt.fromtimestamp(doc.created_on / 1e3)
                     if isinstance(doc.modified_on, float):
-                        doc.modified_on = datetime.datetime.fromtimestamp(doc.modified_on / 1e3)
+                        doc.modified_on = dt.fromtimestamp(doc.modified_on / 1e3)
                     session.add(doc)
                     session.commit()  # TODO: faster if done in bulk
                     manager_names.append(doc.name)
