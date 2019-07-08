@@ -2,11 +2,15 @@
 SQLAlchemy Database class to handle access to Pstgres through ORM
 """
 
+
 try:
-    import sqlalchemy  # lgtm [py/unused-import]
+    import sqlalchemy # lgtm [py/unused-import]
 except ImportError:
-    raise ImportError("SQLAlchemy_socket requires sqlalchemy, please install this python "
-                      "module or try a different db_socket.")
+    raise ImportError(
+        "SQLAlchemy_socket requires sqlalchemy, please install this python "
+        "module or try a different db_socket.")
+
+
 
 import logging
 import secrets
@@ -21,19 +25,21 @@ from sqlalchemy.orm import sessionmaker, with_polymorphic
 from sqlalchemy.sql.expression import func
 # from sqlalchemy.dialects import postgresql
 from collections.abc import Iterable
+import json
 
 # pydantic classes
 from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
                                         TaskStatusEnum, TorsionDriveRecord, prepare_basis, GridOptimizationRecord)
 # SQL ORMs
-from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM, MoleculeORM,
-                                                  OptimizationProcedureORM, QueueManagerORM, ResultORM,
+from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM,
+                                                  MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
                                                   ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
                                                   GridOptimizationProcedureORM, VersionsORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
 from .sql_models import Base
+
 
 _null_keys = {"basis", "keywords"}
 _id_keys = {"id", "molecule", "keywords", "procedure_id"}
@@ -43,7 +49,6 @@ _prepare_keys = {"program": _lower_func, "basis": prepare_basis, "method": _lowe
 
 def dict_from_tuple(keys, values):
     return [dict(zip(keys, row)) for row in values]
-
 
 def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[str, Union[str, List[str]]]:
     """
@@ -60,6 +65,7 @@ def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[st
         if (k in _null_keys) and (v == 'null'):
             v = None
 
+
         if k in _prepare_keys:
             f = _prepare_keys[k]
             if isinstance(v, (list, tuple)):
@@ -74,7 +80,6 @@ def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[st
             ret.append(getattr(ORMClass, k) == v)
 
     return ret
-
 
 def get_count_fast(query):
     """
@@ -100,7 +105,8 @@ def get_procedure_class(record):
     elif isinstance(record, GridOptimizationRecord):
         procedure_class = GridOptimizationProcedureORM
     else:
-        raise TypeError('Procedure of type {} is not valid or supported yet.'.format(type(record)))
+        raise TypeError('Procedure of type {} is not valid or supported yet.'
+                        .format(type(record)))
 
     return procedure_class
 
@@ -140,7 +146,7 @@ class SQLAlchemySocket:
         if "psycopg2" not in uri:
             uri = uri.replace("postgresql", "postgresql+psycopg2")
 
-        if not uri.endswith("/"):
+        if project and not uri.endswith("/"):
             uri = uri + "/"
 
         uri = uri + project
@@ -1772,6 +1778,46 @@ class SQLAlchemySocket:
 
         return count
 
+    def _copy_task_to_queue(self, record_list: List[TaskRecord]):
+        """
+        copy the given tasks as-is to the DB. Used for data migration
+
+        Parameters
+        ----------
+        record_list : list of TaskRecords
+
+        Returns
+        -------
+            Dict with keys: data, meta
+            Data is the ids of the inserted/updated/existing docs
+        """
+
+        meta = add_metadata_template()
+
+        task_ids = []
+        with self.session_scope() as session:
+            for task in record_list:
+                doc = session.query(TaskQueueORM).filter_by(base_result_id=task.base_result.id)
+
+                if get_count_fast(doc) == 0:
+                    doc = TaskQueueORM(**task.json_dict(exclude={"id"}))
+                    if isinstance(doc.error, dict):
+                        doc.error = json.dumps(doc.error)
+
+                    session.add(doc)
+                    session.commit()  # TODO: faster if done in bulk
+                    task_ids.append(str(doc.id))
+                    meta['n_inserted'] += 1
+                else:
+                    id = str(doc.first().id)
+                    meta['duplicates'].append(id)  # TODO
+                    # If new or duplicate, add the id to the return list
+                    task_ids.append(id)
+        meta["success"] = True
+
+        ret = {"data": task_ids, "meta": meta}
+        return ret
+
 ### QueueManagerORMs
 
     def manager_update(self, name, **kwargs):
@@ -1836,8 +1882,10 @@ class SQLAlchemySocket:
 
                 if get_count_fast(doc) == 0:
                     doc = QueueManagerORM(**manager)
-                    doc.created_on = dt.fromtimestamp(doc.created_on / 1e3)
-                    doc.modified_on = dt.fromtimestamp(doc.modified_on / 1e3)
+                    if isinstance(doc.created_on, float):
+                        doc.created_on = dt.fromtimestamp(doc.created_on / 1e3)
+                    if isinstance(doc.modified_on, float):
+                        doc.modified_on = dt.fromtimestamp(doc.modified_on / 1e3)
                     session.add(doc)
                     session.commit()  # TODO: faster if done in bulk
                     manager_names.append(doc.name)
@@ -1994,6 +2042,52 @@ class SQLAlchemySocket:
                                           .delete(synchronize_session=False)
 
         return count == 1
+
+    def _get_users(self):
+
+        with self.session_scope() as session:
+            data = session.query(UserORM).filter().all()
+            data = [x.to_dict(exclude=['id']) for x in data]
+
+        return data
+
+    def _copy_users(self, record_list: Dict):
+        """
+        copy the given users as-is to the DB. Used for data migration
+
+        Parameters
+        ----------
+        record_list : list of dict of managers data
+
+        Returns
+        -------
+            Dict with keys: data, meta
+            Data is the ids of the inserted/updated/existing docs
+        """
+
+        meta = add_metadata_template()
+
+        user_names = []
+        with self.session_scope() as session:
+            for user in record_list:
+                doc = session.query(UserORM).filter_by(username=user['username'])
+
+                if get_count_fast(doc) == 0:
+                    doc = UserORM(**user)
+                    if (isinstance(doc.password, str)): #TODO, for mongo
+                        doc.password = doc.password.encode('ascii')
+                    session.add(doc)
+                    session.commit()
+                    user_names.append(doc.username)
+                    meta['n_inserted'] += 1
+                else:
+                    name = doc.first().username
+                    meta['duplicates'].append(name)
+                    user_names.append(name)
+        meta["success"] = True
+
+        ret = {"data": user_names, "meta": meta}
+        return ret
 
     def check_lib_versions(self):
         """Check the stored versions of elemental and fractal"""

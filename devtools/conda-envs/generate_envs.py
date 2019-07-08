@@ -28,6 +28,7 @@ dependencies:
   - sqlalchemy>=1.3
   - psycopg2
   - postgresql
+  - alembic
 
 # Test depends
   - pytest

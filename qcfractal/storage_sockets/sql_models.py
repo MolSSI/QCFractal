@@ -755,6 +755,7 @@ class TaskQueueORM(Base):
     @hybrid_property
     def base_result(self):
         return dict(ref="result", id=str(self.base_result_id))
+        # return self.base_result_id   # todo, change to this
 
     @base_result.setter
     def base_result(self, val):

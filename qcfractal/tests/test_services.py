@@ -404,3 +404,27 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
 
     mol = client.query_molecules(id=result.starting_molecule)[0]
     assert pytest.approx(mol.measure([1, 2])) == initial_distance
+
+
+@pytest.mark.skip
+def test_query_time(fractal_compute_server):
+
+    client = ptl.FractalClient(fractal_compute_server)
+
+    import time
+    t = time.time()
+    p = client.query_procedures(procedure="optimization")
+    total = time.time() - t
+    print(total)
+    print(len(p))
+    print('---- per optmization proc: ', total/len(p))
+
+    import time
+    t = time.time()
+    p = client.query_procedures(procedure="torsiondrive")
+    total = time.time() - t
+    print(total)
+    print(len(p))
+    print('---- per Torsion proc: ', total/len(p))
+
+
