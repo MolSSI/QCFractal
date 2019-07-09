@@ -35,6 +35,10 @@ class ExecutorAdapter(BaseAdapter):
         task = self.client.submit(func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
         return task_spec["id"], task
 
+    def count_running_workers(self) -> int:
+        # If there are tasks, they are running
+        return bool(self.queue)
+
     def acquire_complete(self) -> Dict[str, Any]:
         ret = {}
         del_keys = []
@@ -77,6 +81,10 @@ class DaskAdapter(ExecutorAdapter):
         task = self.client.submit(
             func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"], resources={"process": 1})
         return task_spec["id"], task
+
+    def count_running_workers(self) -> int:
+        # Have not worked through this yet for Dask
+        raise NotImplementedError
 
     def await_results(self) -> bool:
         from dask.distributed import wait

@@ -518,11 +518,18 @@ class QueueManager:
                                          f"Msg: {result.error.error_message}")
                     # Try to get the wall time in the most fault-tolerant way
                     try:
-                        wall_time_seconds = float(results.input_data.get('provenance', {}).get('wall_time', 0))
+                        wall_time_seconds = float(result.input_data.get('provenance', {}).get('wall_time', 0))
+                    except AttributeError:
+                        # Trap the result.input_data is None, but let other attribute errors go
+                        if result.input_data is None:
+                            wall_time_seconds = 0
+                        else:
+                            raise
                     except TypeError:
                         # Trap wall time corruption, e.g. float(None)
                         # Other Result corruptions will raise an error correctly
                         wall_time_seconds = 0
+
                 task_cpu_hours += wall_time_seconds * self.statistics.cores_per_task / 3600
             n_fail = n_result - n_success
 
@@ -548,7 +555,7 @@ class QueueManager:
         try:
             success_rate = self.statistics.total_successful_tasks/self.statistics.total_completed_tasks*100
         except ZeroDivisionError:
-            success_rate = "N/A"
+            success_rate = "(N/A yet)"
         stats_str = (f"Stats (Tasks): Processed={self.statistics.total_completed_tasks}, "
                      f"Failed={self.statistics.total_failed_tasks}, "
                      f"Success={success_rate}%, "
