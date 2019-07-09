@@ -552,26 +552,34 @@ class QueueManager:
         self.statistics.total_failed_tasks += n_fail
         self.statistics.total_successful_tasks += n_success
         self.statistics.total_core_hours += task_cpu_hours
-        try:
-            success_rate = self.statistics.total_successful_tasks/self.statistics.total_completed_tasks*100
-        except ZeroDivisionError:
+        na_format = ''
+        percent_format = '.2f'
+        if self.statistics.total_completed_tasks == 0:
             success_rate = "(N/A yet)"
+            success_format = na_format
+        else:
+            success_rate = self.statistics.total_successful_tasks / self.statistics.total_completed_tasks * 100
+            success_format = percent_format
         stats_str = (f"Stats (Tasks): Processed={self.statistics.total_completed_tasks}, "
                      f"Failed={self.statistics.total_failed_tasks}, "
-                     f"Success={success_rate}%, "
-                     f"Core Hours (estimate)={self.statistics.total_core_hours}")
-        # Handle efficiency calculations
+                     f"Success={success_rate:{success_format}}%, "
+                     f"Core Hours (est.)={self.statistics.total_core_hours}")
 
+        # Handle efficiency calculations
         if log_efficiency:
+            # Efficiency calculated as:
             # sum_task(task_wall_time * nthread / task) / sum_time(number_running_worker * nthread / worker * interval)
-            try:
-                efficiency_of_running = self.statistics.total_core_hours / self.statistics.total_core_hours_consumed
-                efficiency_of_potential = self.statistics.total_core_hours / self.statistics.total_core_hours_possible
-            except ZeroDivisionError:
+            if self.statistics.total_core_hours_consumed == 0 or self.statistics.total_core_hours_possible == 0:
                 efficiency_of_running = "(N/A yet)"
                 efficiency_of_potential = "(N/A yet)"
-            stats_str += (f", Worker Core Efficiency (est.): {efficiency_of_running}, "
-                          f"Max Resource Core Efficiency (est.): {efficiency_of_potential}")
+                efficiency_format = na_format
+            else:
+                efficiency_of_running = self.statistics.total_core_hours / self.statistics.total_core_hours_consumed
+                efficiency_of_potential = self.statistics.total_core_hours / self.statistics.total_core_hours_possible
+                efficiency_format = percent_format
+            stats_str += (f", Worker Core Efficiency (est.): {efficiency_of_running*100:{efficiency_format}}%, "
+                          f"Max Resource Core Efficiency (est.): {efficiency_of_potential*100:{efficiency_format}}%")
+
         self.logger.info(stats_str)
 
         try:

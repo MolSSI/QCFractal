@@ -186,7 +186,7 @@ class QueueManagerSettings(BaseSettings):
         None,
         description="Generally should not be set. Number of tasks to pull from the Fractal Server to keep locally at "
                     "all times. If `None`, this is automatically computed as "
-                    "`ceil(common.tasks_per_worker*common.max_workers*1.2) + 1`. As tasks are completed, the "
+                    "`ceil(common.tasks_per_worker*common.max_workers*2.0) + 1`. As tasks are completed, the "
                     "local pool is filled back up to this value. These tasks will all attempt to be run concurrently, "
                     "but concurrent tasks are limited by number of cluster jobs and tasks per job. Pulling too many of "
                     "these can result in under-utilized managers from other sites and result in less FIFO returns. As "
@@ -817,7 +817,7 @@ def main(args=None):
     max_concurrent_tasks = settings.common.tasks_per_worker * settings.common.max_workers
     if settings.manager.max_queued_tasks is None:
         # Tasks * jobs * buffer + 1
-        max_queued_tasks = ceil(max_concurrent_tasks * 1.20) + 1
+        max_queued_tasks = ceil(max_concurrent_tasks * 2.00) + 1
     else:
         max_queued_tasks = settings.manager.max_queued_tasks
 

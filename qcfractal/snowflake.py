@@ -66,7 +66,7 @@ class FractalSnowflake(FractalServer):
             The maximum number of ProcessPoolExecutor to spin up.
         storage_uri : Optional[str], optional
             A database URI to connect to, otherwise builds a default instance in a
-            tempory directory
+            temporary directory
         storage_project_name : str, optional
             The database name
         max_active_services : int, optional
@@ -118,7 +118,7 @@ class FractalSnowflake(FractalServer):
             self.logfile = logging
             log_prefix = self.logfile
         else:
-            raise KeyError(f"Logfile type not recognized {type(logfile)}.")
+            raise KeyError(f"Logfile type not recognized {type(logging)}.")
 
         super().__init__(name="QCFractal Snowflake Instance",
                          port=find_port(),

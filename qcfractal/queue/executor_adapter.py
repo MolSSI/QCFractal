@@ -36,8 +36,8 @@ class ExecutorAdapter(BaseAdapter):
         return task_spec["id"], task
 
     def count_running_workers(self) -> int:
-        # If there are tasks, they are running
-        return bool(self.queue)
+        # This is always "running", even if there are no tasks since its running locally
+        return 1
 
     def acquire_complete(self) -> Dict[str, Any]:
         ret = {}
@@ -83,8 +83,8 @@ class DaskAdapter(ExecutorAdapter):
         return task_spec["id"], task
 
     def count_running_workers(self) -> int:
-        # Have not worked through this yet for Dask
-        raise NotImplementedError
+        # Note: This number may not quite be right if its treating "worker" as a "job" or Dask-Distributed "worker"
+        return self.client._count_active_workers()
 
     def await_results(self) -> bool:
         from dask.distributed import wait
