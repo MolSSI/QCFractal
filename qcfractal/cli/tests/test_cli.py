@@ -40,7 +40,7 @@ def test_cli_server_boot(qcfractal_base_init):
 @testing.mark_slow
 def test_cli_server_local_boot(qcfractal_base_init):
     port = "--port=" + str(testing.find_open_port())
-    args = ["qcfractal-server", "start", "--local-manager=2", port, qcfractal_base_init]
+    args = ["qcfractal-server", "start", "--local-manager=1", port, qcfractal_base_init]
     assert testing.run_process(args, interupt_after=10, **_options)
 
 
