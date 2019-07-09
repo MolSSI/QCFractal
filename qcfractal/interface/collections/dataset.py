@@ -547,14 +547,22 @@ class Dataset(Collection):
         ret = []
         for query_set in composition_planner(**query):
 
-            query_set["molecule"] = set(indexer.values())
-
+            # Set the index to remove duplicates
+            molecules = list(set(indexer.values()))
             query_set["projection"] = {"molecule": True, field: True}
-            records = pd.DataFrame(self.client.query_results(**query_set), columns=["molecule", field])
+
+            # Chunk up the queries
+            records = []
+            for i in range(0, len(molecules), self.client.query_limit):
+                query_set["molecule"] = molecules[i:i + self.client.query_limit]
+                records.extend(self.client.query_results(**query_set))
+
+            records = pd.DataFrame(records, columns=["molecule", field])
 
             df = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule"])
             df.reset_index(inplace=True)
 
+            # Outer join on left to merge duplicate molecules
             df = df.merge(records, how="left", on="molecule")
             df.set_index("index", inplace=True)
             df.drop("molecule", axis=1, inplace=True)
@@ -595,15 +603,17 @@ class Dataset(Collection):
         existing = []
         for compute_set in composition_planner(**dbkeys):
 
-            ret = self.client.add_compute(
-                compute_set["program"],
-                compute_set["method"],
-                compute_set["basis"],
-                compute_set["driver"],
-                compute_set["keywords"],
-                umols,
-                tag=tag,
-                priority=priority)
+            for i in range(0, len(umols), self.client.query_limit):
+                chunk_mols = umols[i:i + self.client.query_limit]
+                ret = self.client.add_compute(
+                    compute_set["program"],
+                    compute_set["method"],
+                    compute_set["basis"],
+                    compute_set["driver"],
+                    compute_set["keywords"],
+                    chunk_mols,
+                    tag=tag,
+                    priority=priority)
 
             ids.extend(ret.ids)
             submitted.extend(ret.submitted)

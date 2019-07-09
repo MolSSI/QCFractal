@@ -99,7 +99,7 @@ def composition_planner(program=None, method=None, basis=None, driver=None, keyw
 
     base = {"program": program, "method": method, "basis": basis, "driver": driver, "keywords": keywords}
 
-    if ("-d3" in method.lower()) and ("dftd3" != program.lower()):
+    if ("-d3" in method.lower()) and ("dftd3" != program.lower()) and ("hessian" != driver.lower()):
         dftd3keys = {"program": "dftd3", "method": method, "basis": None, "driver": driver, "keywords": None}
         base["method"] = method.split("-D3")[0]
 
