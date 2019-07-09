@@ -83,8 +83,11 @@ class DaskAdapter(ExecutorAdapter):
         return task_spec["id"], task
 
     def count_running_workers(self) -> int:
-        # Note: This number may not quite be right if its treating "worker" as a "job" or Dask-Distributed "worker"
-        return self.client._count_active_workers()
+        if hasattr(self.client.cluster, '_count_active_workers'):
+            # Note: This number may not quite be right if its treating "worker" as a "job" or Dask-Distributed "worker"
+            return self.client.cluster._count_active_workers()
+        else:
+            return len(self.client.scheduler_info()['workers'])
 
     def await_results(self) -> bool:
         from dask.distributed import wait
