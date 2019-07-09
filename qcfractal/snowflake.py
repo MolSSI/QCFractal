@@ -221,6 +221,7 @@ class FractalSnowflakeHandler:
             "--db-own=False",
             f"--db-port={self._storage.config.database.port}",
             "--query-limit=100000",
+            "--service-frequency=2",
         ],
                               stdout=subprocess.PIPE)
         stdout = proc.stdout.decode()
@@ -320,7 +321,6 @@ class FractalSnowflakeHandler:
             f"--server-name={self._dbname}",
             f"--port={self._server_port}",
             f"--local-manager={self._ncores}",
-            "--service-frequency=2",
         ], cwd=self._qcfdir.name) # yapf: disable
 
         for x in range(timeout * 10):
