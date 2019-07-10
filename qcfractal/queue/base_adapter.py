@@ -199,6 +199,23 @@ class BaseAdapter(abc.ABC):
             True if the closing was successful.
         """
 
+    def count_running_workers(self) -> int:
+        """
+        Adapter-specific implementation to count the currently running workers, helpful for resource consumption.
+        May not be implemented or possible for each adapter, nor is it required for
+        operation. As such, this it is not required to be implemented as an abstract method.
+
+        Returns
+        -------
+        int
+            Number of running workers
+
+        Raises
+        ------
+        NotImplementedError
+        """
+        raise NotImplementedError("This adapter has not implemented this method yet")
+
     @abc.abstractmethod
     def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
         """

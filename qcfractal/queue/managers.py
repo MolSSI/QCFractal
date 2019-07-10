@@ -10,6 +10,7 @@ import time
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Union
 
+from pydantic import BaseModel, validator
 import qcengine as qcng
 from qcfractal.extras import get_information
 
@@ -17,6 +18,43 @@ from .adapters import build_queue_adapter
 from ..interface.data import get_molecule
 
 __all__ = ["QueueManager"]
+
+
+class QueueStatistics(BaseModel):
+    """
+    Queue Manager Job statistics
+    """
+    # Dynamic quantities
+    total_successful_tasks: int = 0
+    total_failed_tasks: int = 0
+    total_core_hours: float = 0
+    total_core_hours_consumed: float = 0
+    total_core_hours_possible: float = 0
+    # Static Quantities
+    max_concurrent_tasks: int = 0
+    cores_per_task: int = 0
+    last_update_time: float = None
+    # sum_task(task_wall_time * nthread/task) / sum_time(number_running_worker * nthread/worker * interval)
+
+    def __init__(self, **kwargs):
+        if kwargs.get('last_update_time', None) is None:
+            kwargs['last_update_time'] = time.time()
+        super().__init__(**kwargs)
+
+    @property
+    def total_completed_tasks(self):
+        return self.total_successful_tasks + self.total_failed_tasks
+
+    @property
+    def theoretical_max_consumption(self):
+        """In Core Hours"""
+        return self.max_concurrent_tasks * self.cores_per_task * (time.time() - self.last_update_time) / 3600
+
+    @validator('cores_per_task', pre=True)
+    def cores_per_tasks_none(cls, v):
+        if v is None:
+            v = 1
+        return v
 
 
 class QueueManager:
@@ -42,7 +80,7 @@ class QueueManager:
                  logger: Optional[logging.Logger] = None,
                  max_tasks: int = 200,
                  queue_tag: str = None,
-                 manager_name: str = "unlabled",
+                 manager_name: str = "unlabeled",
                  update_frequency: Union[int, float] = 2,
                  verbose: bool = True,
                  server_error_retries: Optional[int] = 1,
@@ -112,6 +150,10 @@ class QueueManager:
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag
         self.verbose = verbose
+        self.statistics = QueueStatistics(max_concurrent_tasks=self.max_tasks,
+                                          cores_per_task=cores_per_task,
+                                          update_frequency=update_frequency
+                                          )
 
         self.scheduler = None
         self.update_frequency = update_frequency
@@ -280,7 +322,6 @@ class QueueManager:
 
         return self.queue_adapter.close()
 
-
 ## Queue Manager functions
 
     def heartbeat(self) -> None:
@@ -428,9 +469,28 @@ class QueueManager:
         self._update_stale_jobs(allow_shutdown=allow_shutdown)
 
         results = self.queue_adapter.acquire_complete()
+
+        # Stats fetching for running tasks, as close to the time we got the jobs as we can
+        last_time = self.statistics.last_update_time
+        now = self.statistics.last_update_time = time.time()
+        time_delta_seconds = now - last_time
+        try:
+            running_workers = self.queue_adapter.count_running_workers()
+            log_efficiency = True
+        except NotImplementedError:
+            running_workers = 0
+            log_efficiency = False
+        max_core_hours_running = time_delta_seconds * running_workers * self.statistics.cores_per_task / 3600
+        max_core_hours_possible = (time_delta_seconds * self.statistics.max_concurrent_tasks
+                                   * self.statistics.cores_per_task / 3600)
+        self.statistics.total_core_hours_consumed += max_core_hours_running
+        self.statistics.total_core_hours_possible += max_core_hours_possible
+
+        # Process jobs
         n_success = 0
         n_fail = 0
         n_result = len(results)
+        task_cpu_hours = 0
         error_payload = []
         jobs_pushed = f"Pushed {n_result} complete tasks to the server "
         if n_result:
@@ -448,11 +508,29 @@ class QueueManager:
 
             self.active -= n_result
             for key, result in results.items():
+                wall_time_seconds = 0
                 if result.success:
                     n_success += 1
+                    if hasattr(result.provenance, 'wall_time'):
+                        wall_time_seconds = float(result.provenance.wall_time)
                 else:
                     error_payload.append(f"Job {key} failed: {result.error.error_type} - "
                                          f"Msg: {result.error.error_message}")
+                    # Try to get the wall time in the most fault-tolerant way
+                    try:
+                        wall_time_seconds = float(result.input_data.get('provenance', {}).get('wall_time', 0))
+                    except AttributeError:
+                        # Trap the result.input_data is None, but let other attribute errors go
+                        if result.input_data is None:
+                            wall_time_seconds = 0
+                        else:
+                            raise
+                    except TypeError:
+                        # Trap wall time corruption, e.g. float(None)
+                        # Other Result corruptions will raise an error correctly
+                        wall_time_seconds = 0
+
+                task_cpu_hours += wall_time_seconds * self.statistics.cores_per_task / 3600
             n_fail = n_result - n_success
 
         self.logger.info(jobs_pushed + f"({n_success} success / {n_fail} fail).")
@@ -469,6 +547,44 @@ class QueueManager:
         # Get new tasks
         payload = self._payload_template()
         payload["data"]["limit"] = open_slots
+
+        # Crunch Statistics
+        self.statistics.total_failed_tasks += n_fail
+        self.statistics.total_successful_tasks += n_success
+        self.statistics.total_core_hours += task_cpu_hours
+        na_format = ''
+        float_format = ',.2f'
+        if self.statistics.total_completed_tasks == 0:
+            success_rate = "(N/A yet)"
+            success_format = na_format
+        else:
+            success_rate = self.statistics.total_successful_tasks / self.statistics.total_completed_tasks * 100
+            success_format = float_format
+        task_stats_str = (f"Task Stats: Processed={self.statistics.total_completed_tasks}, "
+                          f"Failed={self.statistics.total_failed_tasks}, "
+                          f"Success={success_rate:{success_format}}%")
+        worker_stats_str = f"Worker Stats (est.): Core Hours Used={self.statistics.total_core_hours:{float_format}}, "
+
+        # Handle efficiency calculations
+        if log_efficiency:
+            # Efficiency calculated as:
+            # sum_task(task_wall_time * nthread / task) / sum_time(number_running_worker * nthread / worker * interval)
+            if self.statistics.total_core_hours_consumed == 0 or self.statistics.total_core_hours_possible == 0:
+                efficiency_of_running = "(N/A yet)"
+                efficiency_of_potential = "(N/A yet)"
+                efficiency_format = na_format
+            else:
+                efficiency_of_running = self.statistics.total_core_hours / self.statistics.total_core_hours_consumed
+                efficiency_of_potential = self.statistics.total_core_hours / self.statistics.total_core_hours_possible
+                efficiency_format = float_format
+            worker_stats_str += f"Core Usage Efficiency: {efficiency_of_running*100:{efficiency_format}}%"
+            if self.verbose:
+                worker_stats_str += (f", Core Usage vs. Max Resources Requested: "
+                                     f"{efficiency_of_potential*100:{efficiency_format}}%")
+
+        self.logger.info(task_stats_str)
+        self.logger.info(worker_stats_str)
+
         try:
             new_tasks = self.client._automodel_request("queue_manager", "get", payload)
         except IOError as exc:

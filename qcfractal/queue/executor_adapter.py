@@ -35,6 +35,10 @@ class ExecutorAdapter(BaseAdapter):
         task = self.client.submit(func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
         return task_spec["id"], task
 
+    def count_running_workers(self) -> int:
+        # This is always "running", even if there are no tasks since its running locally
+        return 1
+
     def acquire_complete(self) -> Dict[str, Any]:
         ret = {}
         del_keys = []
@@ -77,6 +81,14 @@ class DaskAdapter(ExecutorAdapter):
         task = self.client.submit(
             func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"], resources={"process": 1})
         return task_spec["id"], task
+
+    def count_running_workers(self) -> int:
+        if hasattr(self.client.cluster, '_count_active_workers'):
+            # Note: This should be right since its counting Dask Workers, and each Dask Worker = 1 task, which we then
+            # Multiply by cores_per_task in the manager.
+            return self.client.cluster._count_active_workers()
+        else:
+            return len(self.client.cluster.scheduler.workers)
 
     def await_results(self) -> bool:
         from dask.distributed import wait

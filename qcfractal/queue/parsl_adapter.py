@@ -33,6 +33,7 @@ class ParslAdapter(BaseAdapter):
 
         import parsl
         self.client = parsl.dataflow.dflow.DataFlowKernel(self.client)
+        self._parsl_states = parsl.dataflow.states.States
         self.app_map = {}
 
     def __repr__(self):
@@ -76,6 +77,29 @@ class ParslAdapter(BaseAdapter):
         func = self.get_app(task_spec["spec"]["function"])
         task = func(*task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
         return task_spec["id"], task
+
+    def count_running_workers(self) -> int:
+
+        running = 0
+        executor_running_task_map = {key: False for key in self.client.executors.keys()}
+        for task in self.queue.values():
+            status = self.client.tasks.get(task.tid, {}).get('status', None)
+            if status == self._parsl_states.running:
+                executor_running_task_map[task['executor']] = True
+            if all(executor_running_task_map.values()):
+                # Efficiency loop break
+                break
+
+        for executor_key, executor in self.client.executors.items():
+            if hasattr(executor, 'connected_workers'):
+                # Should return an int
+                running += executor.connected_workers
+            elif hasattr(executor, 'max_threads') and executor_running_task_map[executor_key]:
+                running += 1
+            else:
+                raise NotImplementedError("Cannot accurately estimate consumption from executors")
+
+        return running
 
     def acquire_complete(self) -> Dict[str, Any]:
         ret = {}

@@ -116,7 +116,7 @@ def server_init(args, config):
     print("Initializing QCFractal configuration.")
     # Configuration settings
 
-    config.base_path.mkdir(exist_ok=True)
+    config.base_path.mkdir(parents=True, exist_ok=True)
     overwrite = args.get("overwrite", False)
 
     psql = PostgresHarness(config, quiet=False, logger=print)
