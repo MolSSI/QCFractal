@@ -129,6 +129,7 @@ class FractalSnowflake(FractalServer):
                          max_active_services=max_active_services,
                          queue_socket=self.queue_socket,
                          logfile_prefix=log_prefix,
+                         service_frequency=2,
                          query_limit=int(1.e6))
 
         if self._storage:
@@ -220,6 +221,7 @@ class FractalSnowflakeHandler:
             "--db-own=False",
             f"--db-port={self._storage.config.database.port}",
             "--query-limit=100000",
+            "--service-frequency=2",
         ],
                               stdout=subprocess.PIPE)
         stdout = proc.stdout.decode()

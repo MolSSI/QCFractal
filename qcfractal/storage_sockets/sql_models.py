@@ -811,14 +811,22 @@ class ServiceQueueORM(Base):
     procedure_id = Column(Integer, ForeignKey("base_result.id"), unique=True)
     procedure_obj = relationship(BaseResultORM, lazy='joined')
 
+    priority = Column(Integer, default=int(PriorityEnum.NORMAL))
+    created_on = Column(DateTime, default=datetime.datetime.utcnow)
+    modified_on = Column(DateTime, default=datetime.datetime.utcnow)
+
     extra = Column(JSON)
 
     # created_on = Column(DateTime, nullable=False)
     # modified_on = Column(DateTime, nullable=False)
 
-    __table_args__ = (Index('ix_service_queue_status',
-                            "status"), Index('ix_service_queue_status_tag_hash', "status",
-                                             "tag"), Index('ix_service_queue_hash_index', "hash_index"))
+    __table_args__ = (
+        Index('ix_service_queue_status', "status"),
+        Index('ix_service_queue_priority', "priority"),
+        Index('ix_service_queue_modified_on', "modified_on"),
+        Index('ix_service_queue_status_tag_hash', "status", "tag"),
+        Index('ix_service_queue_hash_index', "hash_index"),
+    )
 
     # meta = {
     #     'indexes': [

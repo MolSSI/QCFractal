@@ -83,6 +83,7 @@ class FractalServerSettings(ConfigSettings):
 
     query_limit: int = Schema(1000, description="The maximum number of records to return per query.")
     logfile: Optional[str] = Schema("qcfractal_server.log", description="The logfile to write server logs.")
+    service_frequency: int = Schema(60, description="The frequency to update the QCFractal services.")
     max_active_services: int = Schema(20, description="The maximum number of concurrent active services.")
     heartbeat_frequency: int = Schema(1800,
                                       description="The frequency (in seconds) to check the heartbeat of workers.")

@@ -100,8 +100,11 @@ class FractalServer:
 
             # Queue options
             queue_socket: 'BaseAdapter'=None,
+            heartbeat_frequency: float=1800,
+
+            # Service options
             max_active_services: int=20,
-            heartbeat_frequency: int=1800):
+            service_frequency: float=60):
         """QCFractal initialization
 
         Parameters
@@ -133,10 +136,12 @@ class FractalServer:
         queue_socket : BaseAdapter, optional
             An optional Adapter to provide for server to have limited local compute.
             Should only be used for testing and interactive sessions.
+        heartbeat_frequency : float, optional
+            The time (in seconds) of the heartbeat manager frequency.
         max_active_services : int, optional
             The maximum number of active Services that can be running at any given time.
-        heartbeat_frequency : int, optional
-            The time (in seconds) of the heartbeat manager frequency.
+        service_frequency : float, optional
+            The time (in seconds) before checking and updating services.
         """
 
         # Save local options
@@ -148,6 +153,7 @@ class FractalServer:
             self._address = "https://localhost:" + str(self.port) + "/"
 
         self.max_active_services = max_active_services
+        self.service_frequency = service_frequency
         self.heartbeat_frequency = heartbeat_frequency
 
         # Setup logging.
@@ -340,13 +346,12 @@ class FractalServer:
 
         # Add services callback
         if start_periodics:
-            nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, 2000)
+            nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, self.service_frequency * 1000)
             nanny_services.start()
             self.periodic["update_services"] = nanny_services
 
             # Add Manager heartbeats
-            heartbeats = tornado.ioloop.PeriodicCallback(self.check_manager_heartbeats,
-                                                         self.heartbeat_frequency * 1000)
+            heartbeats = tornado.ioloop.PeriodicCallback(self.check_manager_heartbeats, self.heartbeat_frequency * 1000)
             heartbeats.start()
             self.periodic["heartbeats"] = heartbeats
 
@@ -449,6 +454,10 @@ class FractalServer:
         if open_slots > 0:
             new_services = self.storage.get_services(status="WAITING", limit=open_slots)["data"]
             current_services.extend(new_services)
+            if len(new_services):
+                self.logger.info(f"Starting {len(new_services)} new services.")
+
+        self.logger.debug(f"Updating {len(current_services)} services.")
 
         # Loop over the services and iterate
         running_services = 0
@@ -466,7 +475,7 @@ class FractalServer:
                 service.error = {"error_type": "iteration_error", "error_message": error_message}
                 finished = False
 
-            self.storage.update_services([service])
+            r = self.storage.update_services([service])
 
             if finished is not False:
 
@@ -474,6 +483,9 @@ class FractalServer:
                 completed_services.append(service)
             else:
                 running_services += 1
+
+        if len(completed_services):
+            self.logger.info(f"Completed {len(completed_services)} services.")
 
         # Add new procedures and services
         self.storage.services_completed(completed_services)

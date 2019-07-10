@@ -2,12 +2,12 @@
 Tests the server collection compute capabilities.
 """
 
-import pytest
 import numpy as np
+import pytest
 
 import qcfractal.interface as ptl
 from qcfractal import testing
-from qcfractal.testing import fractal_compute_server
+from qcfractal.testing import fractal_compute_server, mark_slow
 
 
 def test_collection_query(fractal_compute_server):
@@ -258,6 +258,7 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     assert kw.values["scf_type"] == "df"
 
 
+@mark_slow
 @testing.using_torsiondrive
 @testing.using_geometric
 @testing.using_rdkit
@@ -406,6 +407,7 @@ def test_missing_collection(fractal_compute_server):
         client.get_collection("reactiondataset", "_waffles_")
 
 
+@mark_slow
 @testing.using_torsiondrive
 @testing.using_geometric
 @testing.using_rdkit

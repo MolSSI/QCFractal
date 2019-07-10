@@ -1333,7 +1333,6 @@ class SQLAlchemySocket:
                      procedure_id: Union[List[str], str] = None,
                      hash_index: Union[List[str], str] = None,
                      status: str = None,
-                     projection=None,
                      limit: int = None,
                      skip: int = 0,
                      return_json=True):
@@ -1364,9 +1363,13 @@ class SQLAlchemySocket:
         meta = get_metadata_template()
         query = format_query(ServiceQueueORM, id=id, hash_index=hash_index, procedure_id=procedure_id, status=status)
 
-        data = []
-        # try:
-        data, meta['n_found'] = self.get_query_projection(ServiceQueueORM, query, projection, limit, skip)
+        with self.session_scope() as session:
+            data = session.query(ServiceQueueORM).filter(*query)\
+                   .order_by(ServiceQueueORM.priority.desc(), ServiceQueueORM.created_on)\
+                   .limit(limit).offset(skip).all()
+            data = [x.to_dict() for x in data]
+
+        meta["n_found"] = len(data)
         meta["success"] = True
 
         # except Exception as err:

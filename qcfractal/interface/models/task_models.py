@@ -70,9 +70,10 @@ class TaskRecord(BaseModel):
 
     def __init__(self, **data):
 
-        # Set datetime defaults if not automatically available
-        data.setdefault("modified_on", datetime.datetime.utcnow())
-        data.setdefault("created_on", datetime.datetime.utcnow())
+        # Set datetime defaults if not present
+        dt = datetime.datetime.utcnow()
+        data.setdefault("modified_on", dt)
+        data.setdefault("created_on", dt)
 
         super().__init__(**data)
 
