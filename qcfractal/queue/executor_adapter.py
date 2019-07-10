@@ -84,10 +84,11 @@ class DaskAdapter(ExecutorAdapter):
 
     def count_running_workers(self) -> int:
         if hasattr(self.client.cluster, '_count_active_workers'):
-            # Note: This number may not quite be right if its treating "worker" as a "job" or Dask-Distributed "worker"
+            # Note: This should be right since its counting Dask Workers, and each Dask Worker = 1 task, which we then
+            # Multiply by cores_per_task in the manager.
             return self.client.cluster._count_active_workers()
         else:
-            return len(self.client.scheduler_info()['workers'])
+            return len(self.client.cluster.scheduler.workers)
 
     def await_results(self) -> bool:
         from dask.distributed import wait

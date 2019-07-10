@@ -553,17 +553,17 @@ class QueueManager:
         self.statistics.total_successful_tasks += n_success
         self.statistics.total_core_hours += task_cpu_hours
         na_format = ''
-        percent_format = '.2f'
+        float_format = ',.2f'
         if self.statistics.total_completed_tasks == 0:
             success_rate = "(N/A yet)"
             success_format = na_format
         else:
             success_rate = self.statistics.total_successful_tasks / self.statistics.total_completed_tasks * 100
-            success_format = percent_format
-        stats_str = (f"Stats (Tasks): Processed={self.statistics.total_completed_tasks}, "
-                     f"Failed={self.statistics.total_failed_tasks}, "
-                     f"Success={success_rate:{success_format}}%, "
-                     f"Core Hours (est.)={self.statistics.total_core_hours}")
+            success_format = float_format
+        task_stats_str = (f"Task Stats: Processed={self.statistics.total_completed_tasks}, "
+                          f"Failed={self.statistics.total_failed_tasks}, "
+                          f"Success={success_rate:{success_format}}%")
+        worker_stats_str = f"Worker Stats (est.): Core Hours Used={self.statistics.total_core_hours:{float_format}}, "
 
         # Handle efficiency calculations
         if log_efficiency:
@@ -576,11 +576,14 @@ class QueueManager:
             else:
                 efficiency_of_running = self.statistics.total_core_hours / self.statistics.total_core_hours_consumed
                 efficiency_of_potential = self.statistics.total_core_hours / self.statistics.total_core_hours_possible
-                efficiency_format = percent_format
-            stats_str += (f", Worker Core Efficiency (est.): {efficiency_of_running*100:{efficiency_format}}%, "
-                          f"Max Resource Core Efficiency (est.): {efficiency_of_potential*100:{efficiency_format}}%")
+                efficiency_format = float_format
+            worker_stats_str += f"Core Usage Efficiency: {efficiency_of_running*100:{efficiency_format}}%"
+            if self.verbose:
+                worker_stats_str += (f", Core Usage vs. Max Resources Requested: "
+                                     f"{efficiency_of_potential*100:{efficiency_format}}%")
 
-        self.logger.info(stats_str)
+        self.logger.info(task_stats_str)
+        self.logger.info(worker_stats_str)
 
         try:
             new_tasks = self.client._automodel_request("queue_manager", "get", payload)
