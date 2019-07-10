@@ -507,5 +507,9 @@ def test_optimization_dataset(fractal_compute_server):
 
     assert ds.counts().loc["hooh1", "test"] >= 4
 
+    final_energy = 0.00011456853977485626
     for idx, row in ds.df["test"].items():
-        assert pytest.approx(row.get_final_energy(), abs=1.e-5) == 0.00011456853977485626
+        assert pytest.approx(row.get_final_energy(), abs=1.e-5) == final_energy
+
+    opt = ds.get_record("hooh1", "test")
+    assert pytest.approx(opt.get_final_energy(), abs=1.e-5) == final_energy
