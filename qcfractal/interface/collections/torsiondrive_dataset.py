@@ -16,7 +16,7 @@ from ..visualization import custom_plot
 class TDRecord(BaseModel):
     """Data model for the `reactions` list in Dataset"""
     name: str
-    initial_molecules: List[ObjectId]
+    initial_molecules: Set[ObjectId]
     td_keywords: TDKeywords
     attributes: Dict[str, Union[int, float, str]]  # Might be overloaded key types
     object_map: Dict[str, ObjectId] = {}
