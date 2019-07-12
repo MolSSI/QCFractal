@@ -38,6 +38,10 @@ def parse_args():
     start = subparsers.add_parser('start', help="Starts a QCFractal server instance.")
     start.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
+    ### Upgrade subcommands
+    upgrade = subparsers.add_parser('upgrade', help="Upgrade QCFractal database.")
+    upgrade.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+
     # Allow port and logfile to be altered on the fly
     fractal_args = start.add_argument_group('Server Settings')
     for field in ["port", "logfile"]:
@@ -112,6 +116,7 @@ def parse_args():
 
 
 def server_init(args, config):
+    # alembic stamp head
 
     print("Initializing QCFractal configuration.")
     # Configuration settings
@@ -186,6 +191,7 @@ def server_config(args, config):
 
 
 def server_start(args, config):
+    # check if db not current, ask for upgrade
 
     print("Starting a QCFractal server.\n")
 
@@ -280,6 +286,35 @@ def server_start(args, config):
     print("\n>>> Starting the QCFractal server...")
     server.start(start_periodics=args["start_periodics"])
 
+def server_upgrade(args, config):
+    # alembic upgrade head
+
+    print("Upgrading QCFractal server.\n")
+
+    print(f"QCFractal server base folder: {config.base_folder}")
+
+    print("\n>>> Checking the PostgreSQL connection...")
+    database_name = args.get("database_name", None) or config.database.default_database
+    psql = PostgresHarness(config, quiet=False, logger=print)
+
+    if not psql.is_alive():
+        try:
+            print("\nCould not detect a PostgreSQL from configuration options, starting a PostgreSQL server.\n")
+            psql.start()
+        except ValueError as e:
+            print(str(e))
+            sys.exit(1)
+
+    psql.create_database(database_name)
+
+    print("\n>>> Upgrading the Database...")
+
+    try:
+        psql.upgrade()
+    except ValueError as e:
+        print(str(e))
+        sys.exit(1)
+
 
 def main(args=None):
 
@@ -307,7 +342,8 @@ def main(args=None):
             print(f"Could not find configuration file: {config.config_file_path}")
             sys.exit(1)
 
-        file_dict = FractalConfig(**yaml.load(config.config_file_path.read_text())).dict()
+        file_dict = FractalConfig(**yaml.load(config.config_file_path.read_text(),
+                                  Loader=yaml.FullLoader)).dict()
         config_dict = config.dict(skip_defaults=True)
 
         # Only fractal options can be changed by user input parameters
@@ -321,6 +357,8 @@ def main(args=None):
         server_config(args, config)
     elif command == "start":
         server_start(args, config)
+    elif command == 'upgrade':
+        server_upgrade(args, config)
 
 
 if __name__ == '__main__':

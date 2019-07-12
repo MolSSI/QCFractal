@@ -9,6 +9,7 @@ import psycopg2
 
 from .config import FractalConfig
 from .util import find_port, is_port_open
+import os
 
 
 class PostgresHarness:
@@ -30,6 +31,7 @@ class PostgresHarness:
         self.quiet = quiet
         self.logger = logger
         self._checked = False
+        self._alembic_ini = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'alembic.ini')
 
     def _run(self, commands):
         proc = subprocess.run(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -171,6 +173,24 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
 
         return self.is_alive(database=database_name)
 
+    def upgrade(self):
+        """
+        Upgrade the database schema using the latest alembic revision.
+        The database data won't be deleted.
+        """
+
+        cmd = [shutil.which('alembic'),
+               '-c', self._alembic_ini,
+               'upgrade', 'head']
+
+        ret = self._run(cmd)
+
+        if ret['retcode'] != 0:
+            raise ValueError("\nFailed to Upgrade the database, make sure to init the server and run it "
+              "at least once to create the database before being able to upgrade it.\n")
+
+        return True
+
     def start(self) -> Any:
         """
         Starts a PostgreSQL server based off the current configuration parameters. The server must be initialized
@@ -276,6 +296,13 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         if success is False:
             self.shutdown()
             raise ValueError("Database created successfully, but could not connect. Shutting down postgres.")
+
+        # update alembic_version table with the current version
+        print('---------', self._alembic_ini)
+        ret = self._run([shutil.which('alembic'),
+                         '-c', self._alembic_ini,
+                         'stamp', 'head'])
+        print('---------------', ret)
 
         if not self.quiet:
             self.logger("\nDatabase successfully started!")
