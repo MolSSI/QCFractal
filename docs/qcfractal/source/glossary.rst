@@ -53,6 +53,11 @@ Some terms may appear in multiple glossaries, but will always have the same mean
       A set of data inside the Database which has a common :term:`ObjectId`. The ``table``
       name follows SQL conventions which is also known as a ``collection`` in MongoDB.
 
+    Fractal Config Directory
+      The directory where QCFractal Server and Database configuration files live. This is
+      also the home of the Database itself in the default configuration. Default path is
+      ``~/.qca/qcfractal``
+
 
 Contextually Organized Glossaries
 ---------------------------------

@@ -126,7 +126,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self._check_psql()
 
         if not self.quiet:
-            logger(f"pqsl command: {cmd}")
+            self.logger(f"pqsl command: {cmd}")
         psql_cmd = [shutil.which("psql"), "-p", str(self.config.database.port), "-c"]
         return self._run(psql_cmd + [cmd])
 
@@ -196,7 +196,6 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
                     "\nEither shut down the other PostgreSQL database or change the `qcfractal-server init --db-port`."
                     "\nStopping."
                 )
-
 
             if not self.is_alive():
                 raise ValueError(f"PostgreSQL is running, but cannot connect to the default port.")

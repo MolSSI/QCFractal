@@ -122,6 +122,25 @@ Setting up and running Fractal's Queue Managers on your system.
    managers_faq.rst
    managers_detailed.rst
 
+**Server Documentation**
+
+Configuring and running the Server from the CLI and Config Files
+
+* :doc:`server_config`
+* :doc:`server_init`
+* :doc:`server_start`
+* :doc:`server_upgrade`
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   :caption: Server Configuration and Running Documentation
+
+   server_config.rst
+   server_init.rst
+   server_start.rst
+   server_upgrade.rst
+
 **Developer Documentation**
 
 Contains in-depth developer documentation.
