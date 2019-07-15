@@ -324,9 +324,9 @@ class FractalClient(object):
         molecular_formula : QueryStr, optional
             Queries the Molecule ``molecular_formula`` field.
         limit : Optional[int], optional
-            The maximum number of molecules to query
+            The maximum number of Molecules to query
         skip : int, optional
-            The number of molecules to skip in the query, used during pagination
+            The number of Molecules to skip in the query, used during pagination
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
 
@@ -564,9 +564,9 @@ class FractalClient(object):
         status : QueryStr, optional
             Queries the Result ``status`` field.
         limit : Optional[int], optional
-            The maximum number of results to query
+            The maximum number of Results to query
         skip : int, optional
-            The number of results to skip in the query, used during pagination
+            The number of Results to skip in the query, used during pagination
         projection : QueryProjection, optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
@@ -636,9 +636,9 @@ class FractalClient(object):
         status : QueryStr, optional
             Queries the Procedure ``status`` field.
         limit : Optional[int], optional
-            The maximum number of molecules to query
+            The maximum number of Procedures to query
         skip : int, optional
-            The number of molecules to skip in the query, used during pagination
+            The number of Procedures to skip in the query, used during pagination
         projection : QueryProjection, optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
@@ -811,24 +811,24 @@ class FractalClient(object):
                     skip: int = 0,
                     projection: 'QueryProjection' = None,
                     full_return: bool = False) -> List[Dict[str, Any]]:
-        """Checks the status of tasks in the Fractal queue.
+        """Checks the status of Tasks in the Fractal queue.
 
         Parameters
         ----------
         id : QueryObjectId, optional
-            Queries the Services ``id`` field.
+            Queries the Tasks ``id`` field.
         hash_index : QueryStr, optional
-            Queries the Services ``procedure_id`` field.
+            Queries the Tasks ``hash_index`` field.
         program : QueryStr, optional
-            Queries the Services ``program`` field.
+            Queries the Tasks ``program`` field.
         status : QueryStr, optional
-            Queries the Services ``status`` field.
+            Queries the Tasks ``status`` field.
         base_result : QueryStr, optional
-            Queries the Services ``base_result`` field.
+            Queries the Tasks ``base_result`` field.
         limit : Optional[int], optional
-            The maximum number of tasks to query
+            The maximum number of Tasks to query
         skip : int, optional
-            The number of tasks to skip in the query, used during pagination
+            The number of Tasks to skip in the query, used during pagination
         projection : QueryProjection, optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
@@ -952,7 +952,6 @@ class FractalClient(object):
                        status: 'QueryStr' = None,
                        limit: Optional[int] = None,
                        skip: int = 0,
-                       projection: 'QueryProjection' = None,
                        full_return: bool = False) -> List[Dict[str, Any]]:
         """Checks the status of services in the Fractal queue.
 
@@ -967,11 +966,9 @@ class FractalClient(object):
         status : QueryStr, optional
             Queries the Services ``status`` field.
         limit : Optional[int], optional
-            The maximum number of tasks to query
+            The maximum number of Services to query
         skip : int, optional
-            The number of tasks to skip in the query, used during pagination
-        projection : QueryProjection, optional
-            Filters the returned fields, will return a dictionary rather than an object.
+            The number of Services to skip in the query, used during pagination
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
 
@@ -991,7 +988,6 @@ class FractalClient(object):
             "meta": {
                 "limit": limit,
                 "skip": skip,
-                "projection": projection
             },
             "data": {
                 "id": id,

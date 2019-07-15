@@ -118,7 +118,6 @@ class ResponsePOSTMeta(ResponseMeta):
 
 
 class QueryMeta(BaseModel):
-    projection: QueryProjection = None
     limit: Optional[int] = None
     skip: int = 0
 
@@ -585,7 +584,7 @@ class ServiceQueueGETBody(BaseModel):
         hash_index: QueryStr = None
         status: QueryStr = None
 
-    meta: QueryMetaProjection = QueryMetaProjection()
+    meta: QueryMeta = QueryMeta()
     data: Data
 
     class Config(RESTConfig):
