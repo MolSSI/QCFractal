@@ -900,7 +900,6 @@ class FractalClient(object):
             },
             "data": service,
         }
-
         return self._automodel_request("service_queue", "post", payload, full_return=full_return)
 
     def query_services(self,

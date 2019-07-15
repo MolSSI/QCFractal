@@ -31,8 +31,11 @@ def test_dataset_compute_gradient(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
 
     # Build a dataset
-    ds = ptl.collections.Dataset(
-        "ds_gradient", client, default_program="psi4", default_driver="gradient", default_units="hartree")
+    ds = ptl.collections.Dataset("ds_gradient",
+                                 client,
+                                 default_program="psi4",
+                                 default_driver="gradient",
+                                 default_units="hartree")
 
     ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
     ds.add_entry("He2", ptl.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"))
@@ -441,7 +444,7 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     ncompute = ds.compute("spec1")
     assert ncompute == 2
-    assert ds.status("spec1")["Spec1"].sum() == 2 # Might have completed from previous run.
+    assert ds.status("spec1")["Spec1"].sum() == 2  # Might have completed from previous run.
 
     ds.save()
 
@@ -513,3 +516,29 @@ def test_optimization_dataset(fractal_compute_server):
 
     opt = ds.get_record("hooh1", "test")
     assert pytest.approx(opt.get_final_energy(), abs=1.e-5) == final_energy
+
+
+@testing.using_geometric
+@testing.using_rdkit
+def test_grid_optimization_dataset(fractal_compute_server):
+
+    client = ptl.FractalClient(fractal_compute_server)
+
+    ds = ptl.collections.GridOptimizationDataset("testing", client=client)
+
+    opt_spec = {"program": "geometric", "keywords": {}}
+    qc_spec = {"driver": "gradient", "method": "UFF", "program": "rdkit"}
+    ds.add_specification("test", opt_spec, qc_spec)
+
+    hooh1 = ptl.data.get_molecule("hooh.json")
+
+    scans = [{"type": "dihedral", "indices": [0, 1, 2, 3], "steps": [-10, 10], "step_type": "relative"}]
+    ds.add_entry("hooh1", hooh1, scans=scans, preoptimization=False)
+
+    ds.compute("test")
+    fractal_compute_server.await_services()
+
+    ds.query("test")
+    assert ds.get_record("hooh1", "test").status == "COMPLETE"
+    print()
+    print(ds.df)
