@@ -248,7 +248,6 @@ class ResultRecord(RecordBase):
     def check_basis(cls, v):
         return prepare_basis(v)
 
-
 ## QCSchema constructors
 
     def build_schema_input(self, molecule: 'Molecule', keywords: Optional['KeywordsSet'] = None,
@@ -294,6 +293,28 @@ class ResultRecord(RecordBase):
         self.stdout = data["stdout"]
         self.stderr = data["stderr"]
         self.status = "COMPLETE"
+
+
+## QCSchema constructors
+
+    def get_molecule(self) -> 'Molecule':
+        """
+        Pulls the Result's Molecule from the connected database.
+
+        Returns
+        -------
+        Molecule
+            The requested Molecule
+        """
+        self.check_client()
+
+        if self.molecule is None:
+            return None
+
+        if "molecule" not in self.cache:
+            self.cache["molecule"] = self.client.query_molecules(id=self.molecule)[0]
+
+        return self.cache["molecule"]
 
 
 class OptimizationRecord(RecordBase):
@@ -354,7 +375,6 @@ class OptimizationRecord(RecordBase):
                                               input_specification=qcinput_spec)
         return model
 
-
 ## Standard function
 
     def get_final_energy(self) -> float:
@@ -407,6 +427,7 @@ class OptimizationRecord(RecordBase):
 
         ret = self.client.query_molecules(id=[self.final_molecule])
         return ret[0]
+
 
 ## Show functions
 
