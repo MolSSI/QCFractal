@@ -9,16 +9,19 @@ from typing import Optional
 
 from pydantic import BaseSettings, Schema, validator
 
+from .util import doc_formatter
+
 
 def _str2bool(v):
     if isinstance(v, bool):
-       return v
+        return v
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
     elif v.lower() in ('no', 'false', 'f', 'n', '0'):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
 
 class SettingsCommonConfig:
     env_prefix = "QCF_"
@@ -54,8 +57,8 @@ class DatabaseSettings(ConfigSettings):
     port: int = Schema(5432, description="The postgresql default port")
     host: str = Schema(
         "localhost",
-        description=
-        "Default location for the postgres server. If not localhost, qcfractal command lines cannot manage the instance."
+        description="Default location for the postgres server. If not localhost, qcfractal command lines cannot manage "
+                    "the instance."
     )
     username: str = Schema(None, description="The postgres username to default to.")
     password: str = Schema(None, description="The postgres password for the give user.")
@@ -63,21 +66,26 @@ class DatabaseSettings(ConfigSettings):
         None, description="The physical location of the QCFractal instance data, defaults to the root folder.")
     default_database: str = Schema("qcfractal_default", description="The default database to connect to.")
     logfile: str = Schema("qcfractal_postgres.log", description="The logfile to write postgres logs.")
-    own: bool = Schema(True, description="If own is True, QCFractal will control the database instance. If False Postgres will expect a booted server at the database specification.")
+    own: bool = Schema(True, description="If own is True, QCFractal will control the database instance. If False "
+                                         "Postgres will expect a booted server at the database specification.")
 
     class Config(SettingsCommonConfig):
         pass
 
 
+doc_formatter(DatabaseSettings)
+
+
 class FractalServerSettings(ConfigSettings):
     """
-    Postgres Database settings
+    Fractal Server settings
     """
 
     name: str = Schema("QCFractal Server", description="The QCFractal server default name.")
     port: int = Schema(7777, description="The QCFractal default port.")
 
-    compress_response: bool = Schema(True, description="Compress REST responses or not, should be True unless behind a proxy.")
+    compress_response: bool = Schema(True, description="Compress REST responses or not, should be True unless behind a "
+                                                       "proxy.")
     allow_read: bool = Schema(True, description="Always allows read access to record tables.")
     security: str = Schema(None, description="Optional security features.")
 
@@ -98,10 +106,17 @@ class FractalServerSettings(ConfigSettings):
         pass
 
 
+doc_formatter(FractalServerSettings)
+
+
 class FractalConfig(ConfigSettings):
+    """
+    Top level configuration headers and options for a QCFractal Configuration File
+    """
 
     base_folder: str = Schema(os.path.expanduser("~/.qca/qcfractal"),
-                              description="The QCFractal base instance to attach to.")
+                              description="The QCFractal base instance to attach to. "
+                                          "Default will be your home directory")
     database: DatabaseSettings = DatabaseSettings()
     fractal: FractalServerSettings = FractalServerSettings()
 
@@ -146,3 +161,6 @@ class FractalConfig(ConfigSettings):
             uri += database
 
         return uri
+
+
+doc_formatter(FractalConfig)

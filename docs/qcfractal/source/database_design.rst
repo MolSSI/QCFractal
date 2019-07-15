@@ -28,14 +28,7 @@ to request computations, and all their related data, along with registered users
 computational managers.
 
 
-QCArchive DB is organized into a set of tables (or documents) as shown in the
-following diagram, each of which is described bellow.
-
-
-.. image:: media/database_design.jpg
-   :width: 800px
-   :alt: QCArchive Database Design
-   :align: center
+QCArchive DB is organized into a set of tables (or documents), each of which are detailed below.
 
 
 1) Molecule

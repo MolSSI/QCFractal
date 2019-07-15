@@ -41,7 +41,6 @@ with the ``start`` command:
 
 The QCFractal server is now ready to accept new connections.
 
-
 Within a Python Script
 ----------------------
 
@@ -86,3 +85,14 @@ than the canonical Python script. To manipulate a server in a Jupyter Notebook a
 
     # Obtain a FractalClient to the server
     >>> client = server.client()
+
+
+Full Server Config Settings
+---------------------------
+
+The full CLI and configs for the Fractal Server can be found on the following pages:
+
+* Fractal Server Config file: :doc:`server_config`
+* ``qcfractal-server init``: :doc:`server_init`
+* ``qcfractal-server start``: :doc:`server_start`
+* ``qcfractal-server upgrade``: :doc:`server_upgrade`

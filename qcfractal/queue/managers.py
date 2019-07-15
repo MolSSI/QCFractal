@@ -563,7 +563,7 @@ class QueueManager:
         task_stats_str = (f"Task Stats: Processed={self.statistics.total_completed_tasks}, "
                           f"Failed={self.statistics.total_failed_tasks}, "
                           f"Success={success_rate:{success_format}}%")
-        worker_stats_str = f"Worker Stats (est.): Core Hours Used={self.statistics.total_core_hours:{float_format}}, "
+        worker_stats_str = f"Worker Stats (est.): Core Hours Used={self.statistics.total_core_hours:{float_format}}"
 
         # Handle efficiency calculations
         if log_efficiency:
@@ -577,7 +577,7 @@ class QueueManager:
                 efficiency_of_running = self.statistics.total_core_hours / self.statistics.total_core_hours_consumed
                 efficiency_of_potential = self.statistics.total_core_hours / self.statistics.total_core_hours_possible
                 efficiency_format = float_format
-            worker_stats_str += f"Core Usage Efficiency: {efficiency_of_running*100:{efficiency_format}}%"
+            worker_stats_str += f", Core Usage Efficiency: {efficiency_of_running*100:{efficiency_format}}%"
             if self.verbose:
                 worker_stats_str += (f", Core Usage vs. Max Resources Requested: "
                                      f"{efficiency_of_potential*100:{efficiency_format}}%")

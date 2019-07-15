@@ -90,14 +90,17 @@ class ParslAdapter(BaseAdapter):
                 # Efficiency loop break
                 break
 
+        found_readable = False
         for executor_key, executor in self.client.executors.items():
             if hasattr(executor, 'connected_workers'):
                 # Should return an int
                 running += executor.connected_workers
+                found_readable = True
             elif hasattr(executor, 'max_threads') and executor_running_task_map[executor_key]:
                 running += 1
-            else:
-                raise NotImplementedError("Cannot accurately estimate consumption from executors")
+                found_readable = True
+        if not found_readable:
+            raise NotImplementedError("Cannot accurately estimate consumption from executors")
 
         return running
 

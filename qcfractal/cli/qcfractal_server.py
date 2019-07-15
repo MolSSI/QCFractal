@@ -56,7 +56,7 @@ def parse_args():
         help="Expert! Can disable periodic update (services, heartbeats) if False. Useful when running behind a proxy."
     )
 
-    fractal_args.add_argument("--disable_ssl",
+    fractal_args.add_argument("--disable-ssl",
                               default=False,
                               type=bool,
                               help="Disables SSL if present, if False a SSL cert will be created for you.")
@@ -73,7 +73,7 @@ def parse_args():
                               help='Creates a local pool QueueManager attached to the server.')
 
     ### Config subcommands
-    config = subparsers.add_parser('config', help="Starts a QCFractal server instance.")
+    config = subparsers.add_parser('config', help="Configure a QCFractal server instance.")
     config.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     ### Move args around
@@ -130,13 +130,13 @@ def server_init(args, config):
             sys.exit(2)
         else:
             user_required_input = f"REMOVEALLDATA {str(config.database_path)}"
-            print("!WARNING! A QCFractal configuration is currently initalized")
+            print("!WARNING! A QCFractal configuration is currently initialized")
             print(
                 f"!WARNING! Overwriting will delete all current Fractal data, this includes all data in {str(config.database_path)}."
             )
             print("!WARNING! Please use `qcfractal-server config` to alter configuration settings instead.")
             print()
-            print(f"!WARNING! If you are sure you wish to procede please type '{user_required_input}' below.")
+            print(f"!WARNING! If you are sure you wish to proceed please type '{user_required_input}' below.")
 
             inp = input("  > ")
             print()
