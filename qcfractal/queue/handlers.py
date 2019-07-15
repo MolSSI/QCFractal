@@ -51,7 +51,7 @@ class TaskQueueHandler(APIHandler):
         body_model, response_model = rest_model("task_queue", "get")
         body = self.parse_bodymodel(body_model)
 
-        tasks = self.storage.get_queue(**body.data.dict(), projection=body.meta.projection)
+        tasks = self.storage.get_queue(**{**body.data.dict(), **body.meta.dict()})
         response = response_model(**tasks)
 
         self.logger.info("GET: TaskQueue - {} pulls.".format(len(response.data)))
@@ -124,7 +124,7 @@ class ServiceQueueHandler(APIHandler):
         body_model, response_model = rest_model("service_queue", "get")
         body = self.parse_bodymodel(body_model)
 
-        ret = self.storage.get_services(**body.data.dict())
+        ret = self.storage.get_services(**{**body.data.dict(), **body.meta.dict()})
         response = response_model(**ret)
 
         self.logger.info("GET: ServiceQueue - {} pulls.\n".format(len(response.data)))

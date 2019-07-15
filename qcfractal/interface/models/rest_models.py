@@ -118,9 +118,15 @@ class ResponsePOSTMeta(ResponseMeta):
 
 
 class QueryMeta(BaseModel):
-    projection: Optional[Dict[str, bool]] = None
+    projection: QueryProjection = None
     limit: Optional[int] = None
-    skip: Optional[int] = None
+    skip: int = 0
+
+    class Config(RESTConfig):
+        pass
+
+class QueryMetaProjection(QueryMeta):
+    projection: QueryProjection = None
 
     class Config(RESTConfig):
         pass
@@ -208,7 +214,7 @@ class MoleculeGETBody(BaseModel):
         class Config(RESTConfig):
             pass
 
-    meta: EmptyMeta = {}
+    meta: QueryMeta = QueryMeta()
     data: Data
 
     class Config(RESTConfig):
@@ -255,7 +261,7 @@ class KeywordGETBody(BaseModel):
         class Config(RESTConfig):
             pass
 
-    meta: EmptyMeta = {}
+    meta: QueryMeta = QueryMeta()
     data: Data
 
     class Config(RESTConfig):
@@ -405,13 +411,7 @@ class ResultGETBody(BaseModel):
                 v = 'null'
             return v
 
-    class Meta(BaseModel):
-        projection: Dict[str, Any] = None
-
-        class Config(RESTConfig):
-            pass
-
-    meta: Meta = Meta()
+    meta: QueryMetaProjection = QueryMetaProjection()
     data: Data
 
     class Config(RESTConfig):
@@ -452,13 +452,7 @@ class ProcedureGETBody(BaseModel):
         class Config(RESTConfig):
             pass
 
-    class Meta(BaseModel):
-        projection: Dict[str, Any] = None
-
-        class Config(RESTConfig):
-            pass
-
-    meta: Meta = Meta()
+    meta: QueryMetaProjection = QueryMetaProjection()
     data: Data
 
     class Config(RESTConfig):
@@ -489,7 +483,7 @@ class TaskQueueGETBody(BaseModel):
         class Config(RESTConfig):
             pass
 
-    meta: QueryMeta
+    meta: QueryMetaProjection = QueryMetaProjection()
     data: Data
 
 
@@ -591,7 +585,7 @@ class ServiceQueueGETBody(BaseModel):
         hash_index: QueryStr = None
         status: QueryStr = None
 
-    meta: QueryMeta
+    meta: QueryMetaProjection = QueryMetaProjection()
     data: Data
 
     class Config(RESTConfig):
