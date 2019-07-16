@@ -6,9 +6,9 @@ from typing import Any, Dict, List, Optional, Set, Union
 import pandas as pd
 from pydantic import BaseModel
 
+from ..models import Molecule, ObjectId, OptimizationSpecification, QCSpecification
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
-from ..models import Molecule, ObjectId, OptimizationSpecification, QCSpecification
 
 
 class OptRecord(BaseModel):
@@ -16,7 +16,7 @@ class OptRecord(BaseModel):
     name: str
     initial_molecule: ObjectId
     additional_keywords: Dict[str, Any] = {}
-    attributes: Dict[str, Union[int, float, str]] = {}  # Might be overloaded key types
+    attributes: Dict[str, Any] = {}
     object_map: Dict[str, ObjectId] = {}
 
 

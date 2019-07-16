@@ -1,15 +1,14 @@
 """
 QCPortal Database ODM
 """
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set
 
-import pandas as pd
 from pydantic import BaseModel
 
-from .collection import BaseProcedureDataset
-from .collection_utils import register_collection
 from ..models import GridOptimizationInput, Molecule, ObjectId, OptimizationSpecification, QCSpecification
 from ..models.gridoptimization import GOKeywords, ScanDimension
+from .collection import BaseProcedureDataset
+from .collection_utils import register_collection
 
 
 class GORecord(BaseModel):
@@ -17,7 +16,7 @@ class GORecord(BaseModel):
     name: str
     initial_molecule: ObjectId
     go_keywords: GOKeywords
-    attributes: Dict[str, Union[int, float, str]]  # Might be overloaded key types
+    attributes: Dict[str, Any]  # Might be overloaded key types
     object_map: Dict[str, ObjectId] = {}
 
 
