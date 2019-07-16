@@ -180,6 +180,13 @@ def server_init(args, config):
     print("\n>>> Writing settings...")
     config.config_file_path.write_text(yaml.dump(config.dict(), default_flow_style=False))
 
+    # create Database and tables
+    database_name = args.get("database_name", None) or config.database.default_database
+    print(f'\n>>Creating Database {database_name}...')
+    psql.create_database(database_name)
+    psql.create_tables(database_name)
+
+
     print("\n>>> Finishing up...")
     print("\n>>> Success! Please run `qcfractal-server start` to boot a FractalServer!")
 
@@ -243,6 +250,7 @@ def server_start(args, config):
             print(str(e))
             sys.exit(1)
 
+    # make sure DB is created
     psql.create_database(database_name)
 
     print("\n>>> Initializing the QCFractal server...")
@@ -305,12 +313,10 @@ def server_upgrade(args, config):
             print(str(e))
             sys.exit(1)
 
-    psql.create_database(database_name)
-
     print("\n>>> Upgrading the Database...")
 
     try:
-        psql.upgrade()
+        psql.upgrade(database_name)
     except ValueError as e:
         print(str(e))
         sys.exit(1)

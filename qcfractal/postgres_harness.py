@@ -10,6 +10,8 @@ import psycopg2
 from .config import FractalConfig
 from .util import find_port, is_port_open
 import os
+from qcfractal.storage_sockets.sql_models import Base
+from sqlalchemy import create_engine
 
 
 class PostgresHarness:
@@ -173,7 +175,22 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
 
         return self.is_alive(database=database_name)
 
-    def upgrade(self):
+    def create_tables(self, database_name=''):
+        """Create database tables using SQLAlchemy models"""
+
+        uri = self.database_uri() + database_name
+        print(f'Creating tables for database: {uri}')
+        engine = create_engine(uri, echo=False, pool_size=1)
+
+        # actually create the tables
+        try:
+            Base.metadata.create_all(engine)
+        except Exception as e:
+            raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}")
+
+        return True
+
+    def upgrade(self, database_name=""):
         """
         Upgrade the database schema using the latest alembic revision.
         The database data won't be deleted.
@@ -182,6 +199,8 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         cmd = [shutil.which('alembic'),
                '-c', self._alembic_ini,
                'upgrade', 'head']
+        if database_name != "":
+            cmd.extend(['-x', 'database_name='+database_name])
 
         ret = self._run(cmd)
 
