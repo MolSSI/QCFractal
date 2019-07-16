@@ -354,7 +354,6 @@ class OptimizationRecord(RecordBase):
                                               input_specification=qcinput_spec)
         return model
 
-
 ## Standard function
 
     def get_final_energy(self) -> float:
@@ -367,22 +366,40 @@ class OptimizationRecord(RecordBase):
         """
         return self.energies[-1]
 
-    def get_trajectory(self, projection: Optional[Dict[str, bool]] = None) -> List['ResultRecord']:
-        """Returns the raw documents for each gradient evaluation in the trajectory.
-
-        Parameters
-        ----------
-        projection : Optional[Dict[str, bool]], optional
-            A projection to limit the queried data from the server.
+    def get_trajectory(self) -> List['ResultRecord']:
+        """Returns the Result records for each gradient evaluation in the trajectory.
 
         Returns
         -------
         List['ResultRecord']
-            A ordered list of computed gradient computations.
+            A ordered list of Result record gradient computations.
 
         """
 
-        return self.client.query_results(id=self.trajectory, projection=projection)
+        if "trajectory" not in self.cache:
+            result = {x.id: x for x in self.client.query_results(id=self.trajectory)}
+
+            self.cache["trajectory"] = [result[x] for x in self.trajectory]
+
+        return self.cache["trajectory"]
+
+    def get_molecular_trajectory(self) -> List['molecule']:
+        """Returns the Molecule at each gradient evaluation in the trajectory.
+
+        Returns
+        -------
+        List['Molecule']
+            A ordered list of Molecules in the trajectory.
+
+        """
+
+        if "molecular_trajectory" not in self.cache:
+            mol_ids = [x.molecule for x in self.get_trajectory()]
+
+            mols = {x.id: x for x in self.client.query_molecules(id=mol_ids)}
+            self.cache["molecular_trajectory"] = [mols[x] for x in mol_ids]
+
+        return self.cache["molecular_trajectory"]
 
     def get_initial_molecule(self) -> 'Molecule':
         """Returns the initial molecule
@@ -407,6 +424,7 @@ class OptimizationRecord(RecordBase):
 
         ret = self.client.query_molecules(id=[self.final_molecule])
         return ret[0]
+
 
 ## Show functions
 

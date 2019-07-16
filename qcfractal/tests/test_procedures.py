@@ -104,23 +104,25 @@ def test_procedure_optimization(fractal_compute_server):
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
     # # Query result and check against out manual pul
-    results1 = client.query_procedures(procedure="optimization", program="geometric")
-    results2 = client.query_procedures(id=compute_key)
+    query1 = client.query_procedures(procedure="optimization", program="geometric")
+    query2 = client.query_procedures(id=compute_key)
 
-    for results in [results1, results2]:
-        assert len(results) == 1
-        assert isinstance(results[0].provenance.creator, str)
-        assert isinstance(str(results[0]), str)  # Check that repr runs
-        assert pytest.approx(-1.117530188962681, 1e-5) == results[0].get_final_energy()
+    for query in [query1, query2]:
+        assert len(query) == 1
+        opt_result = query[0]
+
+        assert isinstance(opt_result.provenance.creator, str)
+        assert isinstance(str(opt_result), str)  # Check that repr runs
+        assert pytest.approx(-1.117530188962681, 1e-5) == opt_result.get_final_energy()
 
         # Check pulls
-        traj = results[0].get_trajectory()
-        assert len(traj) == len(results[0].energies)
+        traj = opt_result.get_trajectory()
+        assert len(traj) == len(opt_result.energies)
 
-        assert results[0].get_final_molecule().symbols == ["H", "H"]
+        assert opt_result.get_final_molecule().symbols == ["H", "H"]
 
         # Check individual elements
-        for ind in range(len(results[0].trajectory)):
+        for ind in range(len(opt_result.trajectory)):
             # Check keywords went through
             assert traj[ind].provenance.creator.lower() == "psi4"
             assert "SCF QUADRUPOLE XY" in traj[ind].extras["qcvars"]
@@ -130,13 +132,16 @@ def test_procedure_optimization(fractal_compute_server):
             assert "_qcfractal_tags" not in traj[ind].extras
 
             raw_energy = traj[ind].properties.return_energy
-            assert pytest.approx(raw_energy, 1.e-5) == results[0].energies[ind]
+            assert pytest.approx(raw_energy, 1.e-5) == opt_result.energies[ind]
 
         # Check result stdout
         assert "RHF Reference" in traj[0].get_stdout()
 
-    # Check stdout
-    assert "internal coordinates" in results[0].get_stdout()
+        assert opt_result.get_molecular_trajectory()[0].id == opt_result.initial_molecule
+        assert opt_result.get_molecular_trajectory()[-1].id == opt_result.final_molecule
+
+        # Check stdout
+        assert "internal coordinates" in opt_result.get_stdout()
 
     # Check that duplicates are caught
     r = client.add_procedure("optimization", "geometric", options, [mol_ret[0]])
