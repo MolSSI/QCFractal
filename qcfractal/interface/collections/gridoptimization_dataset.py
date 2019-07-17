@@ -11,7 +11,7 @@ from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
 
-class GORecord(BaseModel):
+class GOEntry(BaseModel):
     """Data model for the `reactions` list in Dataset"""
     name: str
     initial_molecule: ObjectId
@@ -20,7 +20,7 @@ class GORecord(BaseModel):
     object_map: Dict[str, ObjectId] = {}
 
 
-class GOSpecification(BaseModel):
+class GOEntrySpecification(BaseModel):
     name: str
     description: Optional[str]
     optimization_spec: OptimizationSpecification
@@ -30,9 +30,9 @@ class GOSpecification(BaseModel):
 class GridOptimizationDataset(BaseProcedureDataset):
     class DataModel(BaseProcedureDataset.DataModel):
 
-        records: Dict[str, GORecord] = {}
+        records: Dict[str, GOEntry] = {}
         history: Set[str] = set()
-        specs: Dict[str, GOSpecification] = {}
+        specs: Dict[str, GOEntrySpecification] = {}
 
         class Config(BaseProcedureDataset.DataModel.Config):
             pass
@@ -59,16 +59,16 @@ class GridOptimizationDataset(BaseProcedureDataset):
 
         """
 
-        spec = GOSpecification(name=name,
-                               optimization_spec=optimization_spec,
-                               qc_spec=qc_spec,
-                               description=description)
+        spec = GOEntrySpecification(name=name,
+                                    optimization_spec=optimization_spec,
+                                    qc_spec=qc_spec,
+                                    description=description)
 
         return self._add_specification(name, spec, overwrite=overwrite)
 
     def add_entry(self,
                   name: str,
-                  initial_molecule: Union[ObjectId, Molecule],
+                  initial_molecule: Molecule,
                   scans: List[ScanDimension],
                   preoptimization: bool = True,
                   attributes: Dict[str, Any] = None,
@@ -78,20 +78,21 @@ class GridOptimizationDataset(BaseProcedureDataset):
         ----------
         name : str
             The name of the entry, will be used for the index
-        initial_molecule : Union[ObjectId, Molecule]
+        initial_molecule : Molecule
             The initial molecule to start the GridOptimization
         scans : List[ScanDimension]
             A list of ScanDimension objects detailing the dimensions to scan over.
         preoptimization : bool, optional
             If True, pre-optimizes the molecules before scanning, otherwise
         attributes : Dict[str, Any], optional
-            Additional attributes and descriptions for the record
+            Additional attributes and descriptions for the entry
         save : bool, optional
             If true, saves the collection after adding the entry. If this is False be careful
             to call save after all entries are added, otherwise data pointers may be lost.
 
         """
-        self._check_entry_exists(name) # Fast skip
+
+        self._check_entry_exists(name)  # Fast skip
 
         if attributes is None:
             attributes = {}
@@ -100,7 +101,7 @@ class GridOptimizationDataset(BaseProcedureDataset):
         molecule_id = self.client.add_molecules([initial_molecule])[0]
         go_keywords = GOKeywords(scans=scans, preoptimization=preoptimization)
 
-        record = GORecord(name=name, initial_molecule=molecule_id, go_keywords=go_keywords, attributes=attributes)
+        record = GOEntry(name=name, initial_molecule=molecule_id, go_keywords=go_keywords, attributes=attributes)
         self._add_entry(name, record, save)
 
     def compute(self,

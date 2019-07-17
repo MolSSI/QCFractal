@@ -13,7 +13,7 @@ from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
 
-class TDRecord(BaseModel):
+class TDEntry(BaseModel):
     """Data model for the `reactions` list in Dataset"""
     name: str
     initial_molecules: Set[ObjectId]
@@ -22,7 +22,7 @@ class TDRecord(BaseModel):
     object_map: Dict[str, ObjectId] = {}
 
 
-class TorsionDriveSpecification(BaseModel):
+class TDEntrySpecification(BaseModel):
     name: str
     description: Optional[str]
     optimization_spec: OptimizationSpecification
@@ -32,9 +32,9 @@ class TorsionDriveSpecification(BaseModel):
 class TorsionDriveDataset(BaseProcedureDataset):
     class DataModel(BaseProcedureDataset.DataModel):
 
-        records: Dict[str, TDRecord] = {}
+        records: Dict[str, TDEntry] = {}
         history: Set[str] = set()
-        specs: Dict[str, TorsionDriveSpecification] = {}
+        specs: Dict[str, TDEntrySpecification] = {}
 
         class Config(BaseProcedureDataset.DataModel.Config):
             pass
@@ -61,10 +61,10 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
         """
 
-        spec = TorsionDriveSpecification(name=name,
-                                         optimization_spec=optimization_spec,
-                                         qc_spec=qc_spec,
-                                         description=description)
+        spec = TDEntrySpecification(name=name,
+                                    optimization_spec=optimization_spec,
+                                    qc_spec=qc_spec,
+                                    description=description)
 
         return self._add_specification(name, spec, overwrite=overwrite)
 
@@ -96,13 +96,13 @@ class TorsionDriveDataset(BaseProcedureDataset):
         energy_upper_limit: Optional[float]
             The upper limit of energy relative to current global minimum to trigger activating grid points
         attributes : Dict[str, Any], optional
-            Additional attributes and descriptions for the record
+            Additional attributes and descriptions for the entry
         save : bool, optional
             If true, saves the collection after adding the entry. If this is False be careful
             to call save after all entries are added, otherwise data pointers may be lost.
         """
 
-        self._check_entry_exists(name)
+        self._check_entry_exists(name)  # Fast skip
 
         if attributes is None:
             attributes = {}
@@ -115,16 +115,16 @@ class TorsionDriveDataset(BaseProcedureDataset):
                                  energy_decrease_thresh=energy_decrease_thresh,
                                  energy_upper_limit=energy_upper_limit)
 
-        record = TDRecord(name=name, initial_molecules=molecule_ids, td_keywords=td_keywords, attributes=attributes)
+        entry = TDEntry(name=name, initial_molecules=molecule_ids, td_keywords=td_keywords, attributes=attributes)
 
-        self._add_entry(name, record, save)
+        self._add_entry(name, entry, save)
 
     def compute(self,
                 specification: str,
                 subset: Set[str] = None,
                 tag: Optional[str] = None,
                 priority: Optional[str] = None) -> int:
-        """Computes a specification for all records in the dataset.
+        """Computes a specification for all entries in the dataset.
 
         Parameters
         ----------

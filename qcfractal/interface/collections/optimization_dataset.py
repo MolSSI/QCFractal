@@ -11,7 +11,7 @@ from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
 
-class OptRecord(BaseModel):
+class OptEntry(BaseModel):
     """Data model for the optimizations in a Dataset"""
     name: str
     initial_molecule: ObjectId
@@ -20,7 +20,7 @@ class OptRecord(BaseModel):
     object_map: Dict[str, ObjectId] = {}
 
 
-class OptSpecification(BaseModel):
+class OptEntrySpecification(BaseModel):
     name: str
     description: Optional[str]
     optimization_spec: OptimizationSpecification
@@ -30,9 +30,9 @@ class OptSpecification(BaseModel):
 class OptimizationDataset(BaseProcedureDataset):
     class DataModel(BaseProcedureDataset.DataModel):
 
-        records: Dict[str, OptRecord] = {}
+        records: Dict[str, OptEntry] = {}
         history: Set[str] = set()
-        specs: Dict[str, OptSpecification] = {}
+        specs: Dict[str, OptEntrySpecification] = {}
 
         class Config(BaseProcedureDataset.DataModel.Config):
             pass
@@ -59,10 +59,10 @@ class OptimizationDataset(BaseProcedureDataset):
 
         """
 
-        spec = OptSpecification(name=name,
-                                optimization_spec=optimization_spec,
-                                qc_spec=qc_spec,
-                                description=description)
+        spec = OptEntrySpecification(name=name,
+                                     optimization_spec=optimization_spec,
+                                     qc_spec=qc_spec,
+                                     description=description)
 
         return self._add_specification(name, spec, overwrite=overwrite)
 
@@ -82,13 +82,13 @@ class OptimizationDataset(BaseProcedureDataset):
         additional_keywords : Dict[str, Any], optional
             Additional keywords to add to the optimization run
         attributes : Dict[str, Any], optional
-            Additional attributes and descriptions for the record
+            Additional attributes and descriptions for the entry
         save : bool, optional
             If true, saves the collection after adding the entry. If this is False be careful
             to call save after all entries are added, otherwise data pointers may be lost.
         """
 
-        self._check_entry_exists(name) # Fast skip
+        self._check_entry_exists(name)  # Fast skip
 
         if additional_keywords is None:
             additional_keywords = {}
@@ -98,19 +98,19 @@ class OptimizationDataset(BaseProcedureDataset):
 
         # Build new objects
         molecule_id = self.client.add_molecules([initial_molecule])[0]
-        record = OptRecord(name=name,
-                           initial_molecule=molecule_id,
-                           additional_keywords=additional_keywords,
-                           attributes=attributes)
+        entry = OptEntry(name=name,
+                         initial_molecule=molecule_id,
+                         additional_keywords=additional_keywords,
+                         attributes=attributes)
 
-        self._add_entry(name, record, save)
+        self._add_entry(name, entry, save)
 
     def compute(self,
                 specification: str,
                 subset: Set[str] = None,
                 tag: Optional[str] = None,
                 priority: Optional[str] = None) -> int:
-        """Computes a specification for all records in the dataset.
+        """Computes a specification for all entries in the dataset.
 
         Parameters
         ----------
@@ -128,6 +128,7 @@ class OptimizationDataset(BaseProcedureDataset):
         int
             The number of submitted torsiondrives
         """
+
         specification = specification.lower()
         spec = self.get_specification(specification)
         if subset:
@@ -179,8 +180,6 @@ class OptimizationDataset(BaseProcedureDataset):
         DataFrame
             The queried counts.
         """
-
-        self._check_entry_exists(name)
 
         if isinstance(specs, str):
             specs = [specs]
