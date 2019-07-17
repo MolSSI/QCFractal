@@ -315,7 +315,6 @@ class FractalSnowflakeHandler:
         self._qcfractal_proc = _background_process([
             shutil.which("qcfractal-server"),
             "start",
-            f"--database-name={self._dbname}",
             f"--logfile={self._dbname}",
             f"--base-folder={self._qcfdir.name}",
             f"--server-name={self._dbname}",

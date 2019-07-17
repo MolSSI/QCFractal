@@ -33,10 +33,7 @@ compare_type = True
 # ... etc.
 
 # Overwrite the ini-file sqlalchemy.url path
-fractal_conf = FractalConfig()
-fractal_conf = FractalConfig(**yaml.load(fractal_conf.config_file_path.read_text(),
-                                         Loader=yaml.FullLoader))
-uri = fractal_conf.database_uri(safe=False)
+uri = context.get_x_argument(as_dictionary=True).get('uri')
 config.set_main_option('sqlalchemy.url', uri)
 
 

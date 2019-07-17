@@ -31,16 +31,13 @@ def parse_args():
         cli_name = "--" + field.replace("_", "-")
         server_init.add_argument(cli_name, **FractalServerSettings.help_info(field))
 
-    init.add_argument("--overwrite", action='store_true', help="Overwrites the current configuration file.")
+    init.add_argument("--overwrite-config", action='store_true', help="Overwrites the current configuration file.")
+    init.add_argument("--clear-database", default='store_true', help="Clear the content of the given database and initialize it.")
     init.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     ### Start subcommands
     start = subparsers.add_parser('start', help="Starts a QCFractal server instance.")
     start.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
-
-    ### Upgrade subcommands
-    upgrade = subparsers.add_parser('upgrade', help="Upgrade QCFractal database.")
-    upgrade.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     # Allow port and logfile to be altered on the fly
     fractal_args = start.add_argument_group('Server Settings')
@@ -48,10 +45,6 @@ def parse_args():
         cli_name = "--" + field.replace("_", "-")
         fractal_args.add_argument(cli_name, **FractalServerSettings.help_info(field))
 
-    fractal_args.add_argument("--database-name",
-                              default=None,
-                              type=str,
-                              help="The database to connect to, defaults to the default database name.")
     fractal_args.add_argument("--server-name", **FractalServerSettings.help_info("name"))
     fractal_args.add_argument(
         "--start-periodics",
@@ -66,6 +59,10 @@ def parse_args():
                               help="Disables SSL if present, if False a SSL cert will be created for you.")
     fractal_args.add_argument("--tls-cert", type=str, default=None, help="Certificate file for TLS (in PEM format)")
     fractal_args.add_argument("--tls-key", type=str, default=None, help="Private key file for TLS (in PEM format)")
+
+    ### Upgrade subcommands
+    upgrade = subparsers.add_parser('upgrade', help="Upgrade QCFractal database.")
+    upgrade.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     compute_args = start.add_argument_group('Local Computation Settings')
     compute_args.add_argument("--local-manager",
@@ -122,15 +119,16 @@ def server_init(args, config):
     # Configuration settings
 
     config.base_path.mkdir(parents=True, exist_ok=True)
-    overwrite = args.get("overwrite", False)
+    overwrite_config = args.get("overwrite_config", False)
+    clear_database = args.get("clear_database", False)
 
     psql = PostgresHarness(config, quiet=False, logger=print)
 
     # Make sure we do not delete anything.
     if config.config_file_path.exists():
         print()
-        if not overwrite:
-            print("QCFractal configuration file already exists, to overwrite use '--overwrite' "
+        if not overwrite_config:
+            print("QCFractal configuration file already exists, to overwrite use '--overwrite-config' "
                   "or use the `qcfractal-server config` command line to alter settings.")
             sys.exit(2)
         else:
@@ -164,11 +162,14 @@ def server_init(args, config):
     print("\n>>> Settings found:\n")
     print(print_config)
 
+    print("\n>>> Writing settings...")
+    config.config_file_path.write_text(yaml.dump(config.dict(), default_flow_style=False))
+
     print("\n>>> Setting up PostgreSQL...\n")
     config.database_path.mkdir(exist_ok=True)
     if config.database.own:
         try:
-            psql.initialize()
+            psql.initialize_postgres()
         except ValueError as e:
             print(str(e))
             sys.exit(1)
@@ -177,16 +178,15 @@ def server_init(args, config):
             "Own was set to False, QCFractal will expect a live PostgreSQL server with the above connection information."
         )
 
-    print("\n>>> Writing settings...")
-    config.config_file_path.write_text(yaml.dump(config.dict(), default_flow_style=False))
+    if config.database.own or clear_database:
+        print("\n>>> Initializing database schema...\n")
+        try:
+            psql.init_database()
+        except ValueError as e:
+            print(str(e))
+            sys.exit(1)
 
-    # create Database and tables
-    database_name = args.get("database_name", None) or config.database.default_database
-    print(f'\n>>Creating Database {database_name}...')
-    psql.create_database(database_name)
-    psql.create_tables(database_name)
-
-
+    # create tables and stamp version (if not)
     print("\n>>> Finishing up...")
     print("\n>>> Success! Please run `qcfractal-server start` to boot a FractalServer!")
 
@@ -239,7 +239,7 @@ def server_start(args, config):
         logfile = str(config.base_path / config.fractal.logfile)
 
     print("\n>>> Checking the PostgreSQL connection...")
-    database_name = args.get("database_name", None) or config.database.default_database
+    database_name = config.database.database_name
     psql = PostgresHarness(config, quiet=False, logger=print)
 
     if not psql.is_alive():
@@ -302,7 +302,6 @@ def server_upgrade(args, config):
     print(f"QCFractal server base folder: {config.base_folder}")
 
     print("\n>>> Checking the PostgreSQL connection...")
-    database_name = args.get("database_name", None) or config.database.default_database
     psql = PostgresHarness(config, quiet=False, logger=print)
 
     if not psql.is_alive():
@@ -316,7 +315,7 @@ def server_upgrade(args, config):
     print("\n>>> Upgrading the Database...")
 
     try:
-        psql.upgrade(database_name)
+        psql.upgrade()
     except ValueError as e:
         print(str(e))
         sys.exit(1)
