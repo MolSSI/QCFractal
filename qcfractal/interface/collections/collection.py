@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional, Set, Union
 import pandas as pd
 from pydantic import BaseModel
 
-from ..models import json_encoders, ObjectId
+from ..models import ObjectId, json_encoders
 
 
 class Collection(abc.ABC):
@@ -397,7 +397,34 @@ class BaseProcedureDataset(Collection):
         Record
             The requested record
         """
-        return self.data.records[name.lower()]
+        try:
+            return self.data.records[name.lower()]
+        except KeyError:
+            raise KeyError(f"Could not find entry name '{name}' in the dataset.")
+
+    def get_record(self, name: str, specification: str) -> Any:
+        """Pulls an individual computational record of the requested name and column.
+
+        Parameters
+        ----------
+        name : str
+            The index name to pull the record of.
+        specification : str
+            The name of specification to pull the record of.
+
+        Returns
+        -------
+        Any
+            The requested Record
+
+        """
+        spec = self.get_specification(specification)
+        rec_id = self.get_entry(name).object_map.get(spec.name, None)
+
+        if rec_id is None:
+            raise KeyError(f"Could not find a record for ({name}: {specification}).")
+
+        return self.client.query_procedures(id=rec_id)[0]
 
     def query(self, specification: str, force: bool=False) -> None:
         """Queries a given specification from the server

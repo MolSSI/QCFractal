@@ -6,11 +6,11 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import pandas as pd
 from pydantic import BaseModel
 
-from .collection import BaseProcedureDataset
-from .collection_utils import register_collection
 from ..models import Molecule, ObjectId, OptimizationSpecification, QCSpecification, TorsionDriveInput
 from ..models.torsiondrive import TDKeywords
 from ..visualization import custom_plot
+from .collection import BaseProcedureDataset
+from .collection_utils import register_collection
 
 
 class TDRecord(BaseModel):
@@ -18,7 +18,7 @@ class TDRecord(BaseModel):
     name: str
     initial_molecules: Set[ObjectId]
     td_keywords: TDKeywords
-    attributes: Dict[str, Union[int, float, str]]  # Might be overloaded key types
+    attributes: Dict[str, Any]
     object_map: Dict[str, ObjectId] = {}
 
 
