@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Optional
 
 from pydantic import BaseSettings, Schema, validator
+from typing import ClassVar
+import yaml
 
 
 def _str2bool(v):
@@ -61,7 +63,7 @@ class DatabaseSettings(ConfigSettings):
     password: str = Schema(None, description="The postgres password for the give user.")
     directory: str = Schema(
         None, description="The physical location of the QCFractal instance data, defaults to the root folder.")
-    default_database: str = Schema("qcfractal_default", description="The default database to connect to.")
+    database_name: str = Schema("qcfractal_default", description="The database name to connect to.")
     logfile: str = Schema("qcfractal_postgres.log", description="The logfile to write postgres logs.")
     own: bool = Schema(True, description="If own is True, QCFractal will control the database instance. If False Postgres will expect a booted server at the database specification.")
 
@@ -100,6 +102,9 @@ class FractalServerSettings(ConfigSettings):
 
 class FractalConfig(ConfigSettings):
 
+    # class variable, not in the pydantic model
+    defaults_file_path: ClassVar[str] = os.path.expanduser("~/.qca/qcfractal_defaults.yaml")
+
     base_folder: str = Schema(os.path.expanduser("~/.qca/qcfractal"),
                               description="The QCFractal base instance to attach to.")
     database: DatabaseSettings = DatabaseSettings()
@@ -107,6 +112,24 @@ class FractalConfig(ConfigSettings):
 
     class Config(SettingsCommonConfig):
         pass
+
+    def __init__(self, **kwargs):
+
+        # If no base_folder provided, read it from ~/.qca/qcfractal_defaults.yaml (if it exists)
+        # else, use the default base_folder
+        if 'base_folder' not in kwargs:
+            if Path(FractalConfig.defaults_file_path).exists():
+                with open(FractalConfig.defaults_file_path, "r") as handle:
+                    kwargs['base_folder'] = yaml.load(handle.read(),
+                                                      Loader=yaml.FullLoader)['default_base_folder']
+
+        super().__init__(**kwargs)
+
+    @classmethod
+    def from_base_folder(cls, base_folder):
+        path = Path(base_folder) / "qcfractal_config.yaml"
+        with open(str(path), "r") as handle:
+            return cls(**yaml.load(handle.read(), Loader=yaml.FullLoader))
 
     @property
     def base_path(self):
@@ -141,7 +164,7 @@ class FractalConfig(ConfigSettings):
         uri += f"{self.database.host}:{self.database.port}/"
 
         if database is None:
-            uri += self.database.default_database
+            uri += self.database.database_name
         else:
             uri += database
 
