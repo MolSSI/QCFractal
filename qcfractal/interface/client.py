@@ -310,6 +310,8 @@ class FractalClient(object):
                         id: 'QueryObjectId' = None,
                         molecule_hash: 'QueryStr' = None,
                         molecular_formula: 'QueryStr' = None,
+                        limit: Optional[int] = None,
+                        skip: int = 0,
                         full_return: bool = False) -> List[Molecule]:
         """Queries molecules from the database.
 
@@ -321,6 +323,10 @@ class FractalClient(object):
             Queries the Molecule ``molecule_hash`` field.
         molecular_formula : QueryStr, optional
             Queries the Molecule ``molecular_formula`` field.
+        limit : Optional[int], optional
+            The maximum number of Molecules to query
+        skip : int, optional
+            The number of Molecules to skip in the query, used during pagination
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
 
@@ -331,7 +337,10 @@ class FractalClient(object):
         """
 
         payload = {
-            "meta": {},
+            "meta": {
+                "limit": limit,
+                "skip": skip,
+            },
             "data": {
                 "id": id,
                 "molecule_hash": molecule_hash,
@@ -362,7 +371,12 @@ class FractalClient(object):
 
 ### Keywords section
 
-    def query_keywords(self, id: 'QueryObjectId' = None, *, hash_index: 'QueryStr' = None,
+    def query_keywords(self,
+                       id: 'QueryObjectId' = None,
+                       *,
+                       hash_index: 'QueryStr' = None,
+                       limit: Optional[int] = None,
+                       skip: int = 0,
                        full_return: bool = False) -> 'List[KeywordSet]':
         """Obtains KeywordSets from the server using keyword ids.
 
@@ -372,6 +386,10 @@ class FractalClient(object):
             A list of ids to query.
         hash_index : QueryStr, optional
             The hash index to look up
+        limit : Optional[int], optional
+            The maximum number of keywords to query
+        skip : int, optional
+            The number of keywords to skip in the query, used during pagination
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
 
@@ -519,6 +537,8 @@ class FractalClient(object):
                       basis: 'QueryStr' = None,
                       keywords: 'QueryObjectId' = None,
                       status: 'QueryStr' = "COMPLETE",
+                      limit: Optional[int] = None,
+                      skip: int = 0,
                       projection: 'QueryProjection' = None,
                       full_return: bool = False) -> Union[List['RecordResult'], Dict[str, Any]]:
         """Queries ResultRecords from the server.
@@ -543,6 +563,10 @@ class FractalClient(object):
             Queries the Result ``keywords`` field.
         status : QueryStr, optional
             Queries the Result ``status`` field.
+        limit : Optional[int], optional
+            The maximum number of Results to query
+        skip : int, optional
+            The number of Results to skip in the query, used during pagination
         projection : QueryProjection, optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
@@ -556,6 +580,8 @@ class FractalClient(object):
         """
         payload = {
             "meta": {
+                "limit": limit,
+                "skip": skip,
                 "projection": projection
             },
             "data": {
@@ -589,6 +615,8 @@ class FractalClient(object):
                          program: 'QueryStr' = None,
                          hash_index: 'QueryStr' = None,
                          status: 'QueryStr' = "COMPLETE",
+                         limit: Optional[int] = None,
+                         skip: int = 0,
                          projection: 'QueryProjection' = None,
                          full_return: bool = False) -> Union[List['RecordBase'], Dict[str, Any]]:
         """Queries Procedures from the server.
@@ -607,6 +635,10 @@ class FractalClient(object):
             Queries the Procedure ``hash_index`` field.
         status : QueryStr, optional
             Queries the Procedure ``status`` field.
+        limit : Optional[int], optional
+            The maximum number of Procedures to query
+        skip : int, optional
+            The number of Procedures to skip in the query, used during pagination
         projection : QueryProjection, optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
@@ -621,6 +653,8 @@ class FractalClient(object):
 
         payload = {
             "meta": {
+                "limit": limit,
+                "skip": skip,
                 "projection": projection
             },
             "data": {
@@ -773,22 +807,28 @@ class FractalClient(object):
                     program: 'QueryStr' = None,
                     status: 'QueryStr' = None,
                     base_result: 'QueryStr' = None,
+                    limit: Optional[int] = None,
+                    skip: int = 0,
                     projection: 'QueryProjection' = None,
                     full_return: bool = False) -> List[Dict[str, Any]]:
-        """Checks the status of tasks in the Fractal queue.
+        """Checks the status of Tasks in the Fractal queue.
 
         Parameters
         ----------
         id : QueryObjectId, optional
-            Queries the Services ``id`` field.
+            Queries the Tasks ``id`` field.
         hash_index : QueryStr, optional
-            Queries the Services ``procedure_id`` field.
+            Queries the Tasks ``hash_index`` field.
         program : QueryStr, optional
-            Queries the Services ``program`` field.
+            Queries the Tasks ``program`` field.
         status : QueryStr, optional
-            Queries the Services ``status`` field.
+            Queries the Tasks ``status`` field.
         base_result : QueryStr, optional
-            Queries the Services ``base_result`` field.
+            Queries the Tasks ``base_result`` field.
+        limit : Optional[int], optional
+            The maximum number of Tasks to query
+        skip : int, optional
+            The number of Tasks to skip in the query, used during pagination
         projection : QueryProjection, optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
@@ -811,6 +851,8 @@ class FractalClient(object):
 
         payload = {
             "meta": {
+                "limit": limit,
+                "skip": skip,
                 "projection": projection
             },
             "data": {
@@ -907,7 +949,8 @@ class FractalClient(object):
                        procedure_id: 'QueryObjectId' = None,
                        hash_index: 'QueryStr' = None,
                        status: 'QueryStr' = None,
-                       projection: 'QueryProjection' = None,
+                       limit: Optional[int] = None,
+                       skip: int = 0,
                        full_return: bool = False) -> List[Dict[str, Any]]:
         """Checks the status of services in the Fractal queue.
 
@@ -921,8 +964,10 @@ class FractalClient(object):
             Queries the Services ``procedure_id`` field.
         status : QueryStr, optional
             Queries the Services ``status`` field.
-        projection : QueryProjection, optional
-            Filters the returned fields, will return a dictionary rather than an object.
+        limit : Optional[int], optional
+            The maximum number of Services to query
+        skip : int, optional
+            The number of Services to skip in the query, used during pagination
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
 
@@ -940,7 +985,8 @@ class FractalClient(object):
         """
         payload = {
             "meta": {
-                "projection": projection
+                "limit": limit,
+                "skip": skip,
             },
             "data": {
                 "id": id,

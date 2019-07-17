@@ -151,7 +151,7 @@ class MoleculeHandler(APIHandler):
         body_model, response_model = rest_model("molecule", "get")
         body = self.parse_bodymodel(body_model)
 
-        molecules = self.storage.get_molecules(**body.data.dict())
+        molecules = self.storage.get_molecules(**{**body.data.dict(), **body.meta.dict()})
         ret = response_model(**molecules)
 
         self.logger.info("GET: Molecule - {} pulls.".format(len(ret.data)))
@@ -200,7 +200,7 @@ class KeywordHandler(APIHandler):
         body_model, response_model = rest_model("keyword", "get")
         body = self.parse_bodymodel(body_model)
 
-        ret = self.storage.get_keywords(**body.data.dict(), with_ids=False)
+        ret = self.storage.get_keywords(**{**body.data.dict(), **body.meta.dict()}, with_ids=False)
         response = response_model(**ret)
 
         self.logger.info("GET: Keywords - {} pulls.".format(len(response.data)))
@@ -263,7 +263,7 @@ class ResultHandler(APIHandler):
         body_model, response_model = rest_model("result", "get")
         body = self.parse_bodymodel(body_model)
 
-        ret = self.storage.get_results(**body.data.dict(), projection=body.meta.projection)
+        ret = self.storage.get_results(**{**body.data.dict(), **body.meta.dict()})
         result = response_model(**ret)
 
         self.logger.info("GET: Results - {} pulls.".format(len(result.data)))
@@ -282,7 +282,7 @@ class ProcedureHandler(APIHandler):
         body_model, response_model = rest_model("procedure", "get")
         body = self.parse_bodymodel(body_model)
 
-        ret = self.storage.get_procedures(**body.data.dict())
+        ret = self.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
         response = response_model(**ret)
 
         self.logger.info("GET: Procedures - {} pulls.".format(len(response.data)))
