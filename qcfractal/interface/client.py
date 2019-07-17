@@ -262,7 +262,7 @@ class FractalClient(object):
 
             with open(load_path, "r") as handle:
                 import yaml
-                data = yaml.load(handle)
+                data = yaml.load(handle, Loader=yaml.FullLoader)
 
         elif isinstance(load_path, dict):
             data = load_path
