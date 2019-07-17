@@ -267,6 +267,10 @@ class BaseProcedureDataset(Collection):
         class Config(Collection.DataModel.Config):
             pass
 
+    @abc.abstractmethod
+    def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> ObjectId:
+        pass
+
     def _pre_save_prep(self, client: 'FractalClient') -> None:
         pass
 
@@ -425,6 +429,54 @@ class BaseProcedureDataset(Collection):
             raise KeyError(f"Could not find a record for ({name}: {specification}).")
 
         return self.client.query_procedures(id=rec_id)[0]
+
+    def compute(self,
+                specification: str,
+                subset: Set[str] = None,
+                tag: Optional[str] = None,
+                priority: Optional[str] = None) -> int:
+        """Computes a specification for all entries in the dataset.
+
+        Parameters
+        ----------
+        specification : str
+            The specification name.
+        subset : Set[str], optional
+            Computes only a subset of the dataset.
+        tag : Optional[str], optional
+            The queue tag to use when submitting compute requests.
+        priority : Optional[str], optional
+            The priority of the jobs low, medium, or high.
+
+        Returns
+        -------
+        int
+            The number of submitted computations
+        """
+
+        specification = specification.lower()
+        spec = self.get_specification(specification)
+        if subset:
+            subset = set(subset)
+
+        submitted = 0
+        for entry in self.data.records.values():
+            if (subset is not None) and (entry.name not in subset):
+                continue
+
+            if spec.name in entry.object_map:
+                continue
+
+            entry.object_map[spec.name] = self._internal_compute_add(spec, entry, tag, priority)
+            submitted += 1
+
+        self.data.history.add(specification)
+
+        # Nothing to save
+        if submitted:
+            self.save()
+
+        return submitted
 
     def query(self, specification: str, force: bool = False) -> None:
         """Queries a given specification from the server

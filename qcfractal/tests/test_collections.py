@@ -540,5 +540,3 @@ def test_grid_optimization_dataset(fractal_compute_server):
 
     ds.query("test")
     assert ds.get_record("hooh1", "test").status == "COMPLETE"
-    print()
-    print(ds.df)

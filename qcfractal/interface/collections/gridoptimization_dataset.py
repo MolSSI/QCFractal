@@ -37,6 +37,14 @@ class GridOptimizationDataset(BaseProcedureDataset):
         class Config(BaseProcedureDataset.DataModel.Config):
             pass
 
+    def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> ObjectId:
+        service = GridOptimizationInput(initial_molecule=entry.initial_molecule,
+                                        keywords=entry.go_keywords,
+                                        optimization_spec=spec.optimization_spec,
+                                        qc_spec=spec.qc_spec)
+
+        return self.client.add_service([service], tag=tag, priority=priority).ids[0]
+
     def add_specification(self,
                           name: str,
                           optimization_spec: OptimizationSpecification,
@@ -103,54 +111,6 @@ class GridOptimizationDataset(BaseProcedureDataset):
 
         record = GOEntry(name=name, initial_molecule=molecule_id, go_keywords=go_keywords, attributes=attributes)
         self._add_entry(name, record, save)
-
-    def compute(self,
-                specification: str,
-                subset: Set[str] = None,
-                tag: Optional[str] = None,
-                priority: Optional[str] = None) -> int:
-        """Computes a specification for all records in the dataset.
-
-        Parameters
-        ----------
-        specification : str
-            The specification name.
-        subset : Set[str], optional
-            Computes only a subset of the dataset.
-        tag : Optional[str], optional
-            The queue tag to use when submitting compute requests.
-        priority : Optional[str], optional
-            The priority of the jobs low, medium, or high.
-
-        Returns
-        -------
-        int
-            The number of submitted torsiondrives
-        """
-        specification = specification.lower()
-        spec = self.get_specification(specification)
-        if subset:
-            subset = set(subset)
-
-        submitted = 0
-        for rec in self.data.records.values():
-            if specification in rec.object_map:
-                continue
-
-            if (subset is not None) and (rec.name not in subset):
-                continue
-
-            service = GridOptimizationInput(initial_molecule=rec.initial_molecule,
-                                            keywords=rec.go_keywords,
-                                            optimization_spec=spec.optimization_spec,
-                                            qc_spec=spec.qc_spec)
-
-            rec.object_map[spec.name] = self.client.add_service([service], tag=tag, priority=priority).ids[0]
-            submitted += 1
-
-        self.data.history.add(specification)
-        self.save()
-        return submitted
 
 
 register_collection(GridOptimizationDataset)

@@ -39,6 +39,15 @@ class TorsionDriveDataset(BaseProcedureDataset):
         class Config(BaseProcedureDataset.DataModel.Config):
             pass
 
+    def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> ObjectId:
+
+        service = TorsionDriveInput(initial_molecule=entry.initial_molecules,
+                                    keywords=entry.td_keywords,
+                                    optimization_spec=spec.optimization_spec,
+                                    qc_spec=spec.qc_spec)
+
+        return self.client.add_service([service], tag=tag, priority=priority).ids[0]
+
     def add_specification(self,
                           name: str,
                           optimization_spec: OptimizationSpecification,
@@ -118,54 +127,6 @@ class TorsionDriveDataset(BaseProcedureDataset):
         entry = TDEntry(name=name, initial_molecules=molecule_ids, td_keywords=td_keywords, attributes=attributes)
 
         self._add_entry(name, entry, save)
-
-    def compute(self,
-                specification: str,
-                subset: Set[str] = None,
-                tag: Optional[str] = None,
-                priority: Optional[str] = None) -> int:
-        """Computes a specification for all entries in the dataset.
-
-        Parameters
-        ----------
-        specification : str
-            The specification name.
-        subset : Set[str], optional
-            Computes only a subset of the dataset.
-        tag : Optional[str], optional
-            The queue tag to use when submitting compute requests.
-        priority : Optional[str], optional
-            The priority of the jobs low, medium, or high.
-
-        Returns
-        -------
-        int
-            The number of submitted torsiondrives
-        """
-        specification = specification.lower()
-        spec = self.get_specification(specification)
-        if subset:
-            subset = set(subset)
-
-        submitted = 0
-        for rec in self.data.records.values():
-            if specification in rec.object_map:
-                continue
-
-            if (subset is not None) and (rec.name not in subset):
-                continue
-
-            service = TorsionDriveInput(initial_molecule=rec.initial_molecules,
-                                        keywords=rec.td_keywords,
-                                        optimization_spec=spec.optimization_spec,
-                                        qc_spec=spec.qc_spec)
-
-            rec.object_map[spec.name] = self.client.add_service([service], tag=tag, priority=priority).ids[0]
-            submitted += 1
-
-        self.data.history.add(specification)
-        self.save()
-        return submitted
 
     def counts(self,
                entries: Union[str, List[str]],
