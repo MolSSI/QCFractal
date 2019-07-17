@@ -68,25 +68,30 @@ class GridOptimizationDataset(BaseProcedureDataset):
 
     def add_entry(self,
                   name: str,
-                  initial_molecule: Molecule,
+                  initial_molecule: Union[ObjectId, Molecule],
                   scans: List[ScanDimension],
                   preoptimization: bool = True,
-                  attributes: Dict[str, Any] = None) -> None:
+                  attributes: Dict[str, Any] = None,
+                  save: bool = True) -> None:
         """
         Parameters
         ----------
         name : str
             The name of the entry, will be used for the index
-        initial_molecule : Molecule
-            Description
+        initial_molecule : Union[ObjectId, Molecule]
+            The initial molecule to start the GridOptimization
         scans : List[ScanDimension]
-            Description
+            A list of ScanDimension objects detailing the dimensions to scan over.
         preoptimization : bool, optional
-            Description
+            If True, pre-optimizes the molecules before scanning, otherwise
         attributes : Dict[str, Any], optional
             Additional attributes and descriptions for the record
+        save : bool, optional
+            If true, saves the collection after adding the entry. If this is False be careful
+            to call save after all entries are added, otherwise data pointers may be lost.
 
         """
+        self._check_entry_exists(name) # Fast skip
 
         if attributes is None:
             attributes = {}
@@ -96,7 +101,7 @@ class GridOptimizationDataset(BaseProcedureDataset):
         go_keywords = GOKeywords(scans=scans, preoptimization=preoptimization)
 
         record = GORecord(name=name, initial_molecule=molecule_id, go_keywords=go_keywords, attributes=attributes)
-        self._add_entry(name, record)
+        self._add_entry(name, record, save)
 
     def compute(self,
                 specification: str,

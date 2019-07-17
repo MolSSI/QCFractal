@@ -16,7 +16,7 @@ from ..models import ObjectId, json_encoders
 
 
 class Collection(abc.ABC):
-    def __init__(self, name: str, client: 'FractalClient'=None, **kwargs: Dict[str, Any]):
+    def __init__(self, name: str, client: 'FractalClient' = None, **kwargs: Dict[str, Any]):
         """
         Initializer for the Collection objects. If no Portal is supplied or the Collection name
         is not present on the server that the Portal is connected to a blank Collection will be
@@ -130,7 +130,7 @@ class Collection(abc.ABC):
         return cls.from_json(tmp_data.data[0], client=client)
 
     @classmethod
-    def from_json(cls, data: Dict[str, Any], client: 'FractalClient'=None) -> 'Collection':
+    def from_json(cls, data: Dict[str, Any], client: 'FractalClient' = None) -> 'Collection':
         """Creates a new class from a JSON blob
 
         Parameters
@@ -152,14 +152,15 @@ class Collection(abc.ABC):
             raise KeyError("Attempted to create Collection from JSON, but no `collection` field found.")
 
         if data["collection"] != class_name:
-            raise KeyError("Attempted to create Collection from JSON with class {}, but found collection type of {}.".
-                           format(class_name, data["collection"]))
+            raise KeyError(
+                "Attempted to create Collection from JSON with class {}, but found collection type of {}.".format(
+                    class_name, data["collection"]))
 
         name = data.pop('name')
         # Allow PyDantic to handle type validation
         return cls(name, client=client, **data)
 
-    def to_json(self, filename: Optional[str]=None):
+    def to_json(self, filename: Optional[str] = None):
         """
         If a filename is provided, dumps the file to disk. Otherwise returns a copy of the current data.
 
@@ -196,7 +197,7 @@ class Collection(abc.ABC):
         """
 
     # Setters
-    def save(self, client: 'FractalClient'=None) -> 'ObjectId':
+    def save(self, client: 'FractalClient' = None) -> 'ObjectId':
         """Uploads the overall structure of the Collection (indices, options, new molecules, etc)
         to the server.
 
@@ -231,6 +232,7 @@ class Collection(abc.ABC):
 
         return self.data.id
 
+
 ### General helpers
 
     @staticmethod
@@ -248,7 +250,7 @@ class Collection(abc.ABC):
 
 
 class BaseProcedureDataset(Collection):
-    def __init__(self, name: str, client: 'FractalClient'=None, **kwargs):
+    def __init__(self, name: str, client: 'FractalClient' = None, **kwargs):
         if client is None:
             raise KeyError("{self.__class__.__name__} must initialize with a client.")
 
@@ -285,7 +287,6 @@ class BaseProcedureDataset(Collection):
 
         """
 
-
         lname = name.lower()
         if (lname in self.data.specs) and (not overwrite):
             raise KeyError(f"{self.__class__.__name__} '{name}' already present, use `overwrite=True` to replace.")
@@ -293,7 +294,7 @@ class BaseProcedureDataset(Collection):
         self.data.specs[lname] = spec
         self.save()
 
-    def _get_procedure_ids(self, spec: str, sieve: Optional[List[str]]= None) -> Dict[str, ObjectId]:
+    def _get_procedure_ids(self, spec: str, sieve: Optional[List[str]] = None) -> Dict[str, ObjectId]:
         """Aquires the
 
         Parameters
@@ -365,24 +366,23 @@ class BaseProcedureDataset(Collection):
         else:
             return [x.name for x in self.data.specs.values()]
 
-    def _add_entry(self, name: str, record: 'Record') -> None:
-        """Adds a record to the dataset using the lowered input name. Saves the dataset after adding a new entry.
-
-
-        Parameters
-        ----------
-        name : str
-            The name of the record
-        record : Record
-            The record itself
-
+    def _check_entry_exists(self, name):
         """
-        lname = name.lower()
-        if lname in self.data.records:
+        Checks if an entry exists or not.
+        """
+
+        if name.lower() in self.data.records:
             raise KeyError(f"Record {name} already in the dataset.")
 
-        self.data.records[lname] = record
-        self.save()
+    def _add_entry(self, name, record, save):
+        """
+        Adds an entry to the records
+        """
+
+        self._check_entry_exists(name)
+        self.data.records[name.lower()] = record
+        if save:
+            self.save()
 
     def get_entry(self, name: str) -> 'Record':
         """Obtains a record from the Dataset
@@ -426,7 +426,7 @@ class BaseProcedureDataset(Collection):
 
         return self.client.query_procedures(id=rec_id)[0]
 
-    def query(self, specification: str, force: bool=False) -> None:
+    def query(self, specification: str, force: bool = False) -> None:
         """Queries a given specification from the server
 
         Parameters
@@ -467,8 +467,8 @@ class BaseProcedureDataset(Collection):
 
         return spec.name
 
-    def status(self, specs: Union[str, List[str]]=None, collapse: bool=True,
-               status: Optional[str]=None) -> 'DataFrame':
+    def status(self, specs: Union[str, List[str]] = None, collapse: bool = True,
+               status: Optional[str] = None) -> 'DataFrame':
         """Returns the status of all current specifications.
 
         Parameters

@@ -76,7 +76,8 @@ class TorsionDriveDataset(BaseProcedureDataset):
                   dihedral_ranges: Optional[List[Tuple[int, int]]] = None,
                   energy_decrease_thresh: Optional[float] = None,
                   energy_upper_limit: Optional[float] = None,
-                  attributes: Dict[str, Any] = None) -> None:
+                  attributes: Dict[str, Any] = None,
+                  save: bool = True) -> None:
         """
         Parameters
         ----------
@@ -96,7 +97,15 @@ class TorsionDriveDataset(BaseProcedureDataset):
             The upper limit of energy relative to current global minimum to trigger activating grid points
         attributes : Dict[str, Any], optional
             Additional attributes and descriptions for the record
+        save : bool, optional
+            If true, saves the collection after adding the entry. If this is False be careful
+            to call save after all entries are added, otherwise data pointers may be lost.
         """
+
+        self._check_entry_exists(name)
+
+        if attributes is None:
+            attributes = {}
 
         # Build new objects
         molecule_ids = self.client.add_molecules(initial_molecules)
@@ -108,7 +117,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
         record = TDRecord(name=name, initial_molecules=molecule_ids, td_keywords=td_keywords, attributes=attributes)
 
-        self._add_entry(name, record)
+        self._add_entry(name, record, save)
 
     def compute(self,
                 specification: str,
@@ -390,8 +399,8 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
         df = pd.DataFrame(data)
         df = df[[
-            "Name", "Status", "Computed Points", "Total Points", "Percent Complete", "# Current Tasks", "Complete", "Incomplete",
-            "Error"
+            "Name", "Status", "Computed Points", "Total Points", "Percent Complete", "# Current Tasks", "Complete",
+            "Incomplete", "Error"
         ]]
         df = df.set_index("Name")
 
