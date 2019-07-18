@@ -35,7 +35,7 @@ dependencies:
   - pytest-cov
   - codecov
 """
-qca_ecosystem_template = ["qcengine>=0.6.2", "qcelemental>=0.4.0"]
+qca_ecosystem_template = ["qcengine>=0.6.2", "qcelemental>=0.5.0"]
 
 pip_depends_template = []
 
