@@ -239,7 +239,6 @@ def server_start(args, config):
         logfile = str(config.base_path / config.fractal.logfile)
 
     print("\n>>> Checking the PostgreSQL connection...")
-    database_name = config.database.database_name
     psql = PostgresHarness(config, quiet=False, logger=print)
 
     if not psql.is_alive():
@@ -251,7 +250,7 @@ def server_start(args, config):
             sys.exit(1)
 
     # make sure DB is created
-    psql.create_database(database_name)
+    psql.create_database(config.database.database_name)
 
     print("\n>>> Initializing the QCFractal server...")
     try:
@@ -267,7 +266,7 @@ def server_start(args, config):
 
             # Database
             storage_uri=config.database_uri(safe=False, database=""),
-            storage_project_name=database_name,
+            storage_project_name=config.database.database_name,
             query_limit=config.fractal.query_limit,
 
             # Log options

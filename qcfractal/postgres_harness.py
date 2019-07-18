@@ -130,7 +130,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self._check_psql()
 
         if not self.quiet:
-            logger(f"pqsl command: {cmd}")
+            self.logger(f"pqsl command: {cmd}")
         psql_cmd = [shutil.which("psql"), "-p", str(self.config.database.port), "-c"]
         return self._run(psql_cmd + [cmd])
 
@@ -179,7 +179,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         """Create database tables using SQLAlchemy models"""
 
         uri = self.config.database_uri()
-        print(f'Creating tables for database: {uri}')
+        self.logger(f'tables for database: {uri}')
         engine = create_engine(uri, echo=False, pool_size=1)
 
         # actually create the tables
@@ -204,8 +204,8 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         ret = self._run(cmd)
 
         if ret['retcode'] != 0:
-            raise ValueError("\nFailed to Upgrade the database, make sure to init the database first before being able to upgrade it.\n")
-            print(ret)
+            self.logger(ret)
+            raise ValueError(f"\nFailed to Upgrade the database, make sure to init the database first before being able to upgrade it.\n")
 
         return True
 
@@ -326,7 +326,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self.create_tables()
 
         # update alembic_version table with the current version
-        print('\nStamping Database with current version..')
+        self.logger(f'\nStamping Database with current version..')
 
         ret = self._run([shutil.which('alembic'),
                          '-c', self._alembic_ini,
@@ -334,8 +334,9 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
                          'stamp', 'head'])
 
         if ret['retcode'] != 0:
+            self.logger(ret)
             raise ValueError("\nFailed to Stamp the database with current version.\n")
-            print(ret)
+
 
 
 class TemporaryPostgres:

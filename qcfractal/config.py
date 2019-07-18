@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import Optional
 
 from pydantic import BaseSettings, Schema, validator
-from typing import ClassVar
 import yaml
 
 
@@ -103,7 +102,7 @@ class FractalServerSettings(ConfigSettings):
 class FractalConfig(ConfigSettings):
 
     # class variable, not in the pydantic model
-    defaults_file_path: ClassVar[str] = os.path.expanduser("~/.qca/qcfractal_defaults.yaml")
+    _defaults_file_path: str = os.path.expanduser("~/.qca/qcfractal_defaults.yaml")
 
     base_folder: str = Schema(os.path.expanduser("~/.qca/qcfractal"),
                               description="The QCFractal base instance to attach to.")
@@ -118,8 +117,8 @@ class FractalConfig(ConfigSettings):
         # If no base_folder provided, read it from ~/.qca/qcfractal_defaults.yaml (if it exists)
         # else, use the default base_folder
         if 'base_folder' not in kwargs:
-            if Path(FractalConfig.defaults_file_path).exists():
-                with open(FractalConfig.defaults_file_path, "r") as handle:
+            if Path(FractalConfig._defaults_file_path).exists():
+                with open(FractalConfig._defaults_file_path, "r") as handle:
                     kwargs['base_folder'] = yaml.load(handle.read(),
                                                       Loader=yaml.FullLoader)['default_base_folder']
 
