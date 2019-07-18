@@ -23,7 +23,8 @@ def qcfractal_base_init(postgres_server):
 
     args = [
         "qcfractal-server", "init", "--base-folder",
-        str(tmpdir.name), "--db-own=False", f"--db-port={postgres_server.config.database.port}"
+        str(tmpdir.name), "--db-own=False", "--clear-database=True",
+        f"--db-port={postgres_server.config.database.port}"
     ]
     assert testing.run_process(args, **_options)
 
@@ -33,7 +34,12 @@ def qcfractal_base_init(postgres_server):
 @testing.mark_slow
 def test_cli_server_boot(qcfractal_base_init):
     port = "--port=" + str(testing.find_open_port())
-    args = ["qcfractal-server", "start", qcfractal_base_init, "--database-name=test_cli_db", port]
+    args = ["qcfractal-server", "start", qcfractal_base_init, port]
+    assert testing.run_process(args, interupt_after=10, **_options)
+
+@testing.mark_slow
+def test_cli_upgrade(qcfractal_base_init):
+    args = ["qcfractal-server", "upgrade", qcfractal_base_init]
     assert testing.run_process(args, interupt_after=10, **_options)
 
 

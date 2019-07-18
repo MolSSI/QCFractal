@@ -120,14 +120,17 @@ def copy_users(staging_storage, prod_storage):
     print('---- Done copying Users\n\n')
 
 
-def copy_managers(staging_storage, prod_storage):
+def copy_managers(staging_storage, prod_storage, mang_list):
     """Copy ALL managers from prod to staging"""
 
-    prod_mangers = prod_storage.get_managers()
-    print('-----Total # of Managers in the DB is: ', prod_mangers['meta']['n_found'])
+    prod_mangers = []
+    for mang in mang_list:
+        prod_mangers.extend(prod_storage.get_managers(name=mang)['data'])
+
+    print('-----Total # of Managers to copy is: ', len(prod_mangers))
 
 
-    sql_insered = staging_storage._copy_managers(prod_mangers['data'])['data']
+    sql_insered = staging_storage._copy_managers(prod_mangers)['data']
     print('Inserted in SQL:', len(sql_insered))
 
     print('---- Done copying Queue Manager\n\n')
@@ -408,7 +411,7 @@ def copy_task_queue(staging_storage, production_storage, SAMPLE_SIZE=None):
     print('Copying {} TaskQueues'.format(count_to_copy))
 
 
-    base_results = []
+    base_results, managers = [], []
     results = {
         'result': [],
         'optimization_procedure': [],
@@ -418,6 +421,7 @@ def copy_task_queue(staging_storage, production_storage, SAMPLE_SIZE=None):
 
     for rec in prod_tasks:
         base_results.append(rec.base_result.id)
+        managers.append(rec.manager)
 
     with production_storage.session_scope() as session:
         ret = session.query(BaseResultORM.id, BaseResultORM.result_type).filter(BaseResultORM.id.in_(base_results)).all()
@@ -431,7 +435,7 @@ def copy_task_queue(staging_storage, production_storage, SAMPLE_SIZE=None):
     proc_map1 = copy_optimization_procedure(staging_storage, production_storage, procedure_ids=results['optimization_procedure'])
     proc_map2 = copy_grid_optimization_procedure(staging_storage, production_storage, procedure_ids=results['grid_optimization_procedure'])
     proc_map3 = copy_torsiondrive_procedure(staging_storage, production_storage, procedure_ids=results['torsiondrive_procedure'])
-
+    copy_managers(staging_storage, production_storage, managers)
 
     for rec in prod_tasks:
         id = int(rec.base_result.id)
@@ -465,9 +469,8 @@ def main():
         print('Exit without creating the DB.')
         return
 
-    # copy all managers and users, small tables, no need for sampling
+    # copy all users, small tables, no need for sampling
     copy_users(staging_storage, production_storage)
-    copy_managers(staging_storage, production_storage)
 
     # copy sample of results and procedures
     print('\n-------------- Results -----------------')

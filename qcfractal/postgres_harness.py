@@ -9,6 +9,9 @@ import psycopg2
 
 from .config import FractalConfig
 from .util import find_port, is_port_open
+import os
+from qcfractal.storage_sockets.sql_models import Base
+from sqlalchemy import create_engine
 
 
 class PostgresHarness:
@@ -30,6 +33,7 @@ class PostgresHarness:
         self.quiet = quiet
         self.logger = logger
         self._checked = False
+        self._alembic_ini = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'alembic.ini')
 
     def _run(self, commands):
         proc = subprocess.run(commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -171,6 +175,40 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
 
         return self.is_alive(database=database_name)
 
+    def create_tables(self):
+        """Create database tables using SQLAlchemy models"""
+
+        uri = self.config.database_uri()
+        self.logger(f'tables for database: {uri}')
+        engine = create_engine(uri, echo=False, pool_size=1)
+
+        # actually create the tables
+        try:
+            Base.metadata.create_all(engine)
+        except Exception as e:
+            raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}")
+
+        return True
+
+    def upgrade(self):
+        """
+        Upgrade the database schema using the latest alembic revision.
+        The database data won't be deleted.
+        """
+
+        cmd = [shutil.which('alembic'),
+               '-c', self._alembic_ini,
+               '-x', 'uri='+self.config.database_uri(),
+               'upgrade', 'head']
+
+        ret = self._run(cmd)
+
+        if ret['retcode'] != 0:
+            self.logger(ret)
+            raise ValueError(f"\nFailed to Upgrade the database, make sure to init the database first before being able to upgrade it.\n")
+
+        return True
+
     def start(self) -> Any:
         """
         Starts a PostgreSQL server based off the current configuration parameters. The server must be initialized
@@ -239,14 +277,14 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         ret = self.pg_ctl(["stop"])
         return ret
 
-    def initialize(self):
+    def initialize_postgres(self):
         """Initializes and starts the current postgres instance.
         """
 
         self._check_psql()
 
         if not self.quiet:
-            self.logger("Initializing the database:")
+            self.logger("Initializing the Postgresql database:")
 
         # Initialize the database
         init_status = self._run([shutil.which("initdb"), "-D", self.config.database_path])
@@ -270,14 +308,34 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             self.logger(f"Building user information.")
         self._run([shutil.which("createdb"), "-p", str(self.config.database.port)])
 
-        success = self.create_database(self.config.database.default_database)
+        success = self.create_database(self.config.database.database_name)
 
         if success is False:
             self.shutdown()
             raise ValueError("Database created successfully, but could not connect. Shutting down postgres.")
 
         if not self.quiet:
-            self.logger("\nDatabase successfully started!")
+            self.logger("\nDatabase server successfully started!")
+
+    def init_database(self):
+
+        # TODO: drop tables
+
+        # create models
+        self.create_tables()
+
+        # update alembic_version table with the current version
+        self.logger(f'\nStamping Database with current version..')
+
+        ret = self._run([shutil.which('alembic'),
+                         '-c', self._alembic_ini,
+                         '-x', 'uri='+self.config.database_uri(),
+                         'stamp', 'head'])
+
+        if ret['retcode'] != 0:
+            self.logger(ret)
+            raise ValueError("\nFailed to Stamp the database with current version.\n")
+
 
 
 class TemporaryPostgres:
@@ -314,10 +372,11 @@ class TemporaryPostgres:
 
         config_data = {"port": find_port(), "directory": self._db_tmpdir.name}
         if database_name:
-            config_data["default_database"] = database_name
+            config_data["database_name"] = database_name
         self.config = FractalConfig(database=config_data)
         self.psql = PostgresHarness(self.config)
-        self.psql.initialize()
+        self.psql.initialize_postgres()
+        self.psql.init_database()
 
         atexit.register(self.stop)
 

@@ -8,6 +8,9 @@ from alembic import context
 
 from qcfractal.storage_sockets import sql_models
 
+import yaml
+from qcfractal.config import FractalConfig
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -28,6 +31,10 @@ compare_type = True
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
+
+# Overwrite the ini-file sqlalchemy.url path
+uri = context.get_x_argument(as_dictionary=True).get('uri')
+config.set_main_option('sqlalchemy.url', uri)
 
 
 def run_migrations_offline():
