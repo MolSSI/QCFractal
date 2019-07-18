@@ -11,7 +11,7 @@ from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
 
-class OptRecord(BaseModel):
+class OptEntry(BaseModel):
     """Data model for the optimizations in a Dataset"""
     name: str
     initial_molecule: ObjectId
@@ -20,7 +20,7 @@ class OptRecord(BaseModel):
     object_map: Dict[str, ObjectId] = {}
 
 
-class OptSpecification(BaseModel):
+class OptEntrySpecification(BaseModel):
     name: str
     description: Optional[str]
     optimization_spec: OptimizationSpecification
@@ -30,18 +30,34 @@ class OptSpecification(BaseModel):
 class OptimizationDataset(BaseProcedureDataset):
     class DataModel(BaseProcedureDataset.DataModel):
 
-        records: Dict[str, OptRecord] = {}
+        records: Dict[str, OptEntry] = {}
         history: Set[str] = set()
-        specs: Dict[str, OptSpecification] = {}
+        specs: Dict[str, OptEntrySpecification] = {}
 
         class Config(BaseProcedureDataset.DataModel.Config):
             pass
+
+    def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> ObjectId:
+
+        # Form per-procedure keywords dictionary
+        general_keywords = spec.optimization_spec.keywords
+        if general_keywords is None:
+            general_keywords = {}
+        keywords = {**general_keywords, **entry.additional_keywords}
+
+        procedure_parameters = {"keywords": keywords, "qc_spec": spec.qc_spec.dict()}
+
+        return self.client.add_procedure("optimization",
+                                         spec.optimization_spec.program,
+                                         procedure_parameters, [entry.initial_molecule],
+                                         tag=tag,
+                                         priority=priority).ids[0]
 
     def add_specification(self,
                           name: str,
                           optimization_spec: OptimizationSpecification,
                           qc_spec: QCSpecification,
-                          description: str=None,
+                          description: str = None,
                           overwrite=False) -> None:
         """
         Parameters
@@ -59,12 +75,19 @@ class OptimizationDataset(BaseProcedureDataset):
 
         """
 
-        spec = OptSpecification(
-            name=name, optimization_spec=optimization_spec, qc_spec=qc_spec, description=description)
+        spec = OptEntrySpecification(name=name,
+                                     optimization_spec=optimization_spec,
+                                     qc_spec=qc_spec,
+                                     description=description)
 
         return self._add_specification(name, spec, overwrite=overwrite)
 
-    def add_entry(self, name: str, initial_molecule: Molecule, additional_keywords: Dict[str, Any]=None, attributes: Dict[str, Any]=None) -> None:
+    def add_entry(self,
+                  name: str,
+                  initial_molecule: Molecule,
+                  additional_keywords: Dict[str, Any] = None,
+                  attributes: Dict[str, Any] = None,
+                  save: bool = True) -> None:
         """
         Parameters
         ----------
@@ -75,9 +98,13 @@ class OptimizationDataset(BaseProcedureDataset):
         additional_keywords : Dict[str, Any], optional
             Additional keywords to add to the optimization run
         attributes : Dict[str, Any], optional
-            Additional attributes and descriptions for the record
-
+            Additional attributes and descriptions for the entry
+        save : bool, optional
+            If true, saves the collection after adding the entry. If this is False be careful
+            to call save after all entries are added, otherwise data pointers may be lost.
         """
+
+        self._check_entry_exists(name)  # Fast skip
 
         if additional_keywords is None:
             additional_keywords = {}
@@ -87,69 +114,15 @@ class OptimizationDataset(BaseProcedureDataset):
 
         # Build new objects
         molecule_id = self.client.add_molecules([initial_molecule])[0]
-        record = OptRecord(
-            name=name, initial_molecule=molecule_id, additional_keywords=additional_keywords, attributes=attributes)
+        entry = OptEntry(name=name,
+                         initial_molecule=molecule_id,
+                         additional_keywords=additional_keywords,
+                         attributes=attributes)
 
-        self._add_entry(name, record)
+        self._add_entry(name, entry, save)
 
-    def compute(self, specification: str, subset: Set[str]=None, tag: Optional[str]=None,
-                priority: Optional[str]=None) -> int:
-        """Computes a specification for all records in the dataset.
-
-        Parameters
-        ----------
-        specification : str
-            The specification name.
-        subset : Set[str], optional
-            Computes only a subset of the dataset.
-        tag : Optional[str], optional
-            The queue tag to use when submitting compute requests.
-        priority : Optional[str], optional
-            The priority of the jobs low, medium, or high.
-
-        Returns
-        -------
-        int
-            The number of submitted torsiondrives
-        """
-        specification = specification.lower()
-        spec = self.get_specification(specification)
-        if subset:
-            subset = set(subset)
-
-        submitted = 0
-        for rec in self.data.records.values():
-            if specification in rec.object_map:
-                continue
-
-            if (subset is not None) and (rec.name not in subset):
-                continue
-
-            # Form per-procedure keywords dictionary
-            general_keywords = spec.optimization_spec.keywords
-            if general_keywords is None:
-                general_keywords = {}
-            keywords = {**general_keywords, **rec.additional_keywords}
-
-            procedure_parameters = {
-                "keywords": keywords,
-                "qc_spec": spec.qc_spec.dict()
-            }
-
-            rec.object_map[spec.name] = self.client.add_procedure(
-                "optimization",
-                spec.optimization_spec.program,
-                procedure_parameters, [rec.initial_molecule],
-                tag=tag,
-                priority=priority).ids[0]
-            submitted += 1
-
-        self.data.history.add(specification)
-        self.save()
-        return submitted
-
-    def counts(self, entries: Optional[Union[str, List[str]]]=None,
-               specs: Optional[Union[str, List[str]]]=None) -> 'DataFrame':
+    def counts(self, entries: Optional[Union[str, List[str]]] = None,
+               specs: Optional[Union[str, List[str]]] = None) -> 'DataFrame':
         """Counts the number of optimization or gradient evaluations associated with the
         Optimizations.
 
@@ -204,5 +177,6 @@ class OptimizationDataset(BaseProcedureDataset):
         ret.dropna(inplace=True, how="all")
         # ret = pd.DataFrame([ret[x].astype(int) for x in ret.columns]).transpose()
         return ret
+
 
 register_collection(OptimizationDataset)
