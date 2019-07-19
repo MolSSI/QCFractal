@@ -15,20 +15,73 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
-0.7.3 / 2019-06-??
+0.8.0 / 2019-07-??
 ------------------
+
+New Features
+++++++++++++
+
+- (:pr:`307`, :pr:`319` :pr:`321`) Fractal's Server CLI has been overhauled to more intuitively and intelligently
+  control Server creation, startup, configuration, and upgrade paths. This is mainly reflected in a Fractal Server
+  config file, a config folder
+  (default location ``~/.qca``, and sub-commands ``init``, ``start``, ``config``, and ``upgrade`` of the
+  ``qcfractal-server (command)`` CLI.
+  `See the full documentation for details <https://qcfractal.readthedocs.io/en/latest/server_config.html>`_
+- (:pr:`323`) First implementation of the ``GridOptimizationDataset`` for collecting Grid Optimization calculations.
+  Not yet fully featured, but operational for users to start working with.
+
 
 Enhancements
 ++++++++++++
 
 - (:pr:`291`) Tests have been formally added for the Queue Manager to reduce bugs in the future. They cannot test on
   actual Schedulers yet, but its a step in the right direction.
+- (:pr:`295`) Quality of life improvement for Mangers which by default will be less noisy about heartbeats and trigger
+  a heartbeat less frequently. Both options can still be controlled through verbosity and a config setting.
+- (:pr:`296`) Services are now prioritized by the date they are created to properly order the compute queue.
+- (:pr:`301`) ``TorsionDriveDataset`` status can now be checked through the ``.status()`` method which shows the
+  current progress of the computed data.
+- (:pr:`310`) The Client can now modify tasks and restart them if need be in the event of random failures.
+- (:pr:`313`) Queue Managers now have more detailed statistics about failure rates, and core-hours consumed (estimated)
+- (:pr:`314`) The ``PostgresHarness`` has been improved to include better error handling if Postgress is not found, and
+  will not try to stop/start if the target data directory is already configured and running.
+- (:pr:`318`) Large collections are now automatically paginated to improve Server/Client response time and reduce
+  query sizes. See also :pr:`322` for the Client-side requested pagination.
+- (:pr:`322`) Client's can request paginated queries for quicker responses. See also :pr:`318` for the Server-side
+  auto-pagination.
+- (:pr:`322`) ``Record`` models and their derivatives now have a ``get_molecule()`` method for fetching the molecule
+  directly.
+- (:pr:`325`) Collections' have been improved to be more efficient. Previous queries are cached locally and the
+  ``compute`` call is now a single function, removing the need to make a separate call to the submission formation.
+- (:pr:`326`) ``ReactionDataset`` now explicitly groups the fragments to future-proof this method from upstream
+  changes to ``Molecule`` fragmentation.
+
 
 Bug Fixes
 +++++++++
 
 - (:pr:`291`) Queue Manager documentation generation works on Pydantic 0.28+. A number as-of-yet uncaught/unseen bugs
   were revealed in tests and have been fixed as well.
+- (:pr:`300`) Errors thrown in the level between Managers and their Adapters now correctly return a ``FailedOperation``
+  instead of ``dict`` to be consistent with all other errors and not crash the Manager.
+- (:pr:`301`) Invalid passwords present a helpful error message now instead of raising an Internal Server Error to the
+  user.
+- (:pr:`306`) The Manager CLI option ``tasks-per-worker`` is correctly hyphens instead of underscores to be consistent
+  with all other flags.
+- (:pr:`316`) Queue Manager workarounds for older versions of Dask-Jobqueue and Parsl have been removed and implicit
+  dependency on the newer versions of those Adapters is enforced on CLI usage of ``qcfractal-manager``. These packages
+  are *not required* for Fractal, so their versions are only checked when specifically used in the Managers.
+- (:pr:`320`) Duplicated ``initial_molecules`` in the ``TorsionDriveDataset`` will no longer cause a failure in adding
+  them to the database while still preserving de-duplication.
+- (:pr:`327`) Jupyter Notebook syntax highlighting has been fixed on Fractal's documentation pages.
+
+
+Deprecated Features
++++++++++++++++++++
+
+- (:pr:`291`) Queue Manager Template Generator CLI has been removed as its functionality is superseded by the
+  `qcfractal-manager` CLI.
+
 
 0.7.2 / 2019-05-31
 ------------------
