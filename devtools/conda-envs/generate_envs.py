@@ -97,7 +97,7 @@ environs = [{
     # Tests for the OpenFF toolchain (geometric and torsiondrive) 
     "filename": "openff.yaml",
     "channels": ["psi4"],
-    "dependencies": ["psi4", "rdkit", "geometric>=0.9.3", "torsiondrive"],
+    "dependencies": ["psi4>=1.3", "rdkit", "geometric>=0.9.3", "torsiondrive"],
 }, {
 
     # Tests for the current development heads
