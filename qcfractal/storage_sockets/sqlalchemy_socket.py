@@ -26,6 +26,7 @@ from sqlalchemy.sql.expression import func
 # from sqlalchemy.dialects import postgresql
 from collections.abc import Iterable
 import json
+from qcfractal.storage_sockets.geo_location_util import get_geoip2_data
 
 # pydantic classes
 from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
@@ -34,7 +35,7 @@ from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, Optimiza
 from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM,
                                                   MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
                                                   ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
-                                                  GridOptimizationProcedureORM, VersionsORM)
+                                                  GridOptimizationProcedureORM, VersionsORM, AccessLogORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
@@ -283,6 +284,38 @@ class SQLAlchemySocket:
                 rdata = [d.to_dict(exclude=exclude) for d in data]
 
         return rdata, n_found
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def save_access(self, request, access_type=None):
+
+        if not access_type:
+            # e.g., GET molecule
+            access_type = request.method + ' ' + request.uri[1:]  # remove \
+
+        log = AccessLogORM(access_type=access_type)
+
+        log.ip_address = request.remote_ip
+
+        log.user_agent = request.headers['User-Agent']
+
+        # log.referrer = request.referrer  # check how to get
+
+        # TODO: extract needed info, maybe move to caller
+        log.extra_access_params = request.body.decode('utf-8')
+        # Or, but will saved as string anyway
+        # log.extra_access_params = request.json
+
+        # extra geo data
+        extra = get_geoip2_data(log.ip_address)
+        for attr, val in extra.items():
+            setattr(log, attr, val)
+
+        with self.session_scope() as session:
+            session.add(log)
+            session.commit()
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logs (KV store) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def add_kvstore(self, blobs_list: List[Any]):

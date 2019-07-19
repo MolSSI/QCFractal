@@ -116,12 +116,30 @@ class AccessLogORM(Base):
     __tablename__ = 'access_log'
 
     id = Column(Integer, primary_key=True)
-    ip_address = Column(String)
     access_date = Column(DateTime, default=datetime.datetime.utcnow)
-    type = Column(String)
+    access_type = Column(String, nullable=False)
 
-    __table_args__ = (Index('access_log_date', "access_date"), )
+    # Note: no performance difference between varchar and text in postgres
+    # will mostly have a serialized JSON, but not stored as JSON for speed
+    extra_access_params = Column(String)
 
+    # user info
+    ip_address = Column(String)
+    user_agent = Column(String)
+    referrer = Column(String)
+
+    # extra computed geo data
+    city = Column(String)
+    country = Column(String)
+    country_code = Column(String)
+    ip_lat = Column(String)
+    ip_long = Column(String)
+    postal_code = Column(String)
+    subdivision = Column(String)
+
+    __table_args__ = (
+        Index('access_type', "access_date"),
+    )
 
 class VersionsORM(Base):
     __tablename__ = 'versions'

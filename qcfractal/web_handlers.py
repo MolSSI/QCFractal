@@ -35,6 +35,10 @@ class APIHandler(tornado.web.RequestHandler):
 
         self.json = json.loads(self.request.body.decode("UTF-8"))
 
+        self.storage.save_access(request=self.request)
+
+        self.logger.info('Done saving API access in the database')
+
     def authenticate(self, permission):
         """Authenticates request with a given permission setting.
 
