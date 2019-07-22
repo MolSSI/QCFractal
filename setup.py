@@ -63,6 +63,9 @@ if __name__ == "__main__":
                 'pytest',
                 'pytest-cov',
             ],
+            'api_logging':[
+                'geoip2',
+            ],
         },
         tests_require=[
             'pytest',
