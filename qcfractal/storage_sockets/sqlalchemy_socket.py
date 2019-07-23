@@ -295,7 +295,9 @@ class SQLAlchemySocket:
 
         log = AccessLogORM(access_type=access_type)
 
-        log.ip_address = request.remote_ip
+        # get the real IP address behind a proxy or ngnix
+        x_real_ip = request.headers.get("X-Real-IP", None)
+        log.ip_address = x_real_ip or request.remote_ip
 
         log.user_agent = request.headers['User-Agent']
 
