@@ -61,6 +61,23 @@ def active_server(request, qcfractal_base_init):
         server.test_uri_cli = "--fractal-uri=localhost:" + port
         yield server
 
+@pytest.mark.slow
+@pytest.mark.parametrize("log_apis", [0, 1])
+def test_with_api_logging(postgres_server, log_apis):
+
+    tmpdir = tempfile.TemporaryDirectory()
+
+    args = [
+        "qcfractal-server", "init", "--base-folder",
+        str(tmpdir.name), "--db-own=False", "--clear-database=True",
+        f"--db-port={postgres_server.config.database.port}",
+        f"--log-apis={log_apis}"
+    ]
+    assert testing.run_process(args, **_options)
+
+    port = "--port=" + str(testing.find_open_port())
+    args = ["qcfractal-server", "start", f"--base-folder={tmpdir.name}", port]
+    assert testing.run_process(args, interupt_after=10, **_options)
 
 @testing.mark_slow
 def test_manager_local_testing_process():
