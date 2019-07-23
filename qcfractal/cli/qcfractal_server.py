@@ -32,7 +32,7 @@ def parse_args():
         server_init.add_argument(cli_name, **FractalServerSettings.help_info(field))
 
     init.add_argument("--overwrite-config", action='store_true', help="Overwrites the current configuration file.")
-    init.add_argument("--clear-database", default='store_true', help="Clear the content of the given database and initialize it.")
+    init.add_argument("--clear-database", action='store_true', help="Clear the content of the given database and initialize it.")
     init.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     ### Start subcommands
@@ -179,6 +179,7 @@ def server_init(args, config):
         )
 
     if config.database.own or clear_database:
+        
         print("\n>>> Initializing database schema...\n")
         try:
             psql.init_database()
