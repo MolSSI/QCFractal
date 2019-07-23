@@ -4,8 +4,8 @@ DQM Client base folder
 
 from . import collections
 from . import data
-from . import dict_utils
 from . import models
+from . import util
 
 # Add imports here
 from .client import FractalClient

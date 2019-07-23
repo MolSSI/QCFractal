@@ -10,7 +10,7 @@ from typing import Optional
 from pydantic import BaseSettings, Schema, validator
 import yaml
 
-from .util import doc_formatter
+from .interface.util import doc_formatter
 
 
 def _str2bool(v):

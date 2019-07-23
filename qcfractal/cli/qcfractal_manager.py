@@ -17,7 +17,7 @@ import qcfractal
 from pydantic import BaseModel, BaseSettings, validator, Schema
 
 from . import cli_utils
-from ..util import doc_formatter
+from ..interface.util import doc_formatter
 
 __all__ = ["main"]
 
@@ -504,15 +504,6 @@ class ManagerSettings(BaseModel):
 
     Not all fields are required and many will depend on the cluster you are running, and the adapter you choose
     to run on.
-
-    Parameters
-    ----------
-    common : :class:`CommonManagerSettings`
-    server : :class:`FractalServerSettings`
-    manager : :class:`QueueManagerSettings`
-    cluster : :class:`ClusterSettings`, Optional
-    dask : :class:`DaskQueueSettings`, Optional
-    parsl : :class:`ParslQueueSettings`, Optional
     """
     common: CommonManagerSettings = CommonManagerSettings()
     server: FractalServerSettings = FractalServerSettings()

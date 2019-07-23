@@ -77,6 +77,7 @@ Documentation for models and compute records.
 * :doc:`record-overview`
 * :doc:`results`
 * :doc:`procedures`
+* :doc:`models`
 
 .. toctree::
    :maxdepth: 1
@@ -86,6 +87,7 @@ Documentation for models and compute records.
    record-overview.rst
    results.rst
    procedures.rst
+   models.rst
 
 
 **Fractal Client**
