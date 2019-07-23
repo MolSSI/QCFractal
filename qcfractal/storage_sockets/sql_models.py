@@ -117,11 +117,12 @@ class AccessLogORM(Base):
 
     id = Column(Integer, primary_key=True)
     access_date = Column(DateTime, default=datetime.datetime.utcnow)
+    access_method = Column(String, nullable=False)
     access_type = Column(String, nullable=False)
 
     # Note: no performance difference between varchar and text in postgres
     # will mostly have a serialized JSON, but not stored as JSON for speed
-    extra_access_params = Column(String)
+    extra_params = Column(String)
 
     # user info
     ip_address = Column(String)

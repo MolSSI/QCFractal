@@ -26,7 +26,6 @@ from sqlalchemy.sql.expression import func
 # from sqlalchemy.dialects import postgresql
 from collections.abc import Iterable
 import json
-from qcfractal.storage_sockets.geo_location_util import get_geoip2_data
 
 # pydantic classes
 from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
@@ -287,33 +286,10 @@ class SQLAlchemySocket:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def save_access(self, request, access_type=None):
-
-        if not access_type:
-            # e.g., GET molecule
-            access_type = request.method + ' ' + request.uri[1:]  # remove \
-
-        log = AccessLogORM(access_type=access_type)
-
-        # get the real IP address behind a proxy or ngnix
-        x_real_ip = request.headers.get("X-Real-IP", None)
-        log.ip_address = x_real_ip or request.remote_ip
-
-        log.user_agent = request.headers['User-Agent']
-
-        # log.referrer = request.referrer  # check how to get
-
-        # TODO: extract needed info, maybe move to caller
-        log.extra_access_params = request.body.decode('utf-8')
-        # Or, but will saved as string anyway
-        # log.extra_access_params = request.json
-
-        # extra geo data
-        extra = get_geoip2_data(log.ip_address)
-        for attr, val in extra.items():
-            setattr(log, attr, val)
+    def save_access(self, log_data):
 
         with self.session_scope() as session:
+            log = AccessLogORM(**log_data)
             session.add(log)
             session.commit()
 

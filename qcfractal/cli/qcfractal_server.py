@@ -271,6 +271,8 @@ def server_start(args, config):
 
             # Log options
             logfile_prefix=logfile,
+            log_apis=config.fractal.log_apis,
+            geo_file_path=config.fractal.geo_file_path,
 
             # Queue options
             service_frequency=config.fractal.service_frequency,

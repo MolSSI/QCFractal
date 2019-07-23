@@ -27,6 +27,7 @@ class APIHandler(tornado.web.RequestHandler):
         self.objects = objects
         self.storage = self.objects["storage_socket"]
         self.logger = objects["logger"]
+        self.api_logger = objects["api_logger"]
         self.username = None
 
     def prepare(self):
@@ -35,9 +36,13 @@ class APIHandler(tornado.web.RequestHandler):
 
         self.json = json.loads(self.request.body.decode("UTF-8"))
 
-        self.storage.save_access(request=self.request)
+        exclude_uris = ['/task_queue', '/service_queue', '/queue_manager']
+        if self.api_logger and self.request.method == 'GET' \
+                and self.request.uri not in exclude_uris:
+            log = self.api_logger.get_api_access_log(request=self.request)
+            self.storage.save_access(log)
 
-        self.logger.info('Done saving API access in the database')
+        self.logger.info('Done saving API access to the database')
 
     def authenticate(self, permission):
         """Authenticates request with a given permission setting.
