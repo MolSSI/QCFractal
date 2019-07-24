@@ -87,7 +87,8 @@ class QueueManager:
                  stale_update_limit: Optional[int] = 10,
                  cores_per_task: Optional[int] = None,
                  memory_per_task: Optional[Union[int, float]] = None,
-                 scratch_directory: Optional[str] = None):
+                 scratch_directory: Optional[str] = None,
+                 retries: Optional[int] = 2):
         """
         Parameters
         ----------
@@ -123,9 +124,13 @@ class QueueManager:
         memory_per_task: int, optional, Default: None
             How much memory, in GiB, per computation task to allocate for QCEngine
             None indicates "use however much you can consume"
-        scratch_directory: str, optional, Default: None
+        scratch_directory : str, optional, Default: None
             Scratch directory location to do QCEngine compute
             None indicates "wherever the system default is"'
+        retries : int, optional, Default: 2
+            Number of retries that QCEngine will attempt for RandomErrors detected when running
+            its computations. After this many attempts (or on any other type of error), the
+            error will be raised.
         """
 
         # Setup logging
@@ -141,11 +146,13 @@ class QueueManager:
         self.cores_per_task = cores_per_task
         self.memory_per_task = memory_per_task
         self.scratch_directory = scratch_directory
+        self.retries = retries
         self.queue_adapter = build_queue_adapter(queue_client,
                                                  logger=self.logger,
                                                  cores_per_task=self.cores_per_task,
                                                  memory_per_task=self.memory_per_task,
                                                  scratch_directory=self.scratch_directory,
+                                                 retries=self.retries,
                                                  verbose=verbose)
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag

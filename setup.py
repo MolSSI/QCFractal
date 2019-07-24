@@ -39,7 +39,7 @@ if __name__ == "__main__":
             'psycopg2',
 
             # QCArchive depends
-            'qcengine>=0.6.2',
+            'qcengine>=0.8.1',
             'qcelemental>=0.5.0',
 
             # Testing

@@ -19,6 +19,7 @@ class BaseAdapter(abc.ABC):
                  cores_per_task: Optional[int] = None,
                  memory_per_task: Optional[float] = None,
                  scratch_directory: Optional[str] = None,
+                 retries: Optional[int] = 2,
                  verbose: bool = False,
                  **kwargs):
         """
@@ -43,6 +44,10 @@ class BaseAdapter(abc.ABC):
         scratch_directory: str, optional, Default: None
             Location of the scratch directory to compute QCEngine tasks in
             It is up to the specific Adapter implementation to handle this option
+        retries : int, optional, Default: 2
+            Number of retries that QCEngine will attempt for RandomErrors detected when running
+            its computations. After this many attempts (or on any other type of error), the
+            error will be raised.
         verbose: bool, Default: True
             Increase verbosity of the logger
         """
@@ -54,6 +59,7 @@ class BaseAdapter(abc.ABC):
         self.cores_per_task = cores_per_task
         self.memory_per_task = memory_per_task
         self.scratch_directory = scratch_directory
+        self.retries = retries
         self.verbose = verbose
         if self.verbose:
             self.logger.setLevel("DEBUG")
@@ -108,6 +114,8 @@ class BaseAdapter(abc.ABC):
             local_options["ncores"] = self.cores_per_task
         if self.scratch_directory is not None:
             local_options["scratch_directory"] = self.scratch_directory
+        if self.retries is not None:
+            local_options["retries"] = self.retries
         return local_options
 
     def submit_tasks(self, tasks: List[Dict[str, Any]]) -> List[str]:

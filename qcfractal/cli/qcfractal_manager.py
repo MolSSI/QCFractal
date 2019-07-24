@@ -84,6 +84,13 @@ class CommonManagerSettings(BaseSettings):
                     "This must be a positive, non zero integer.",
         gt=0
     )
+    retries: int = Schema(
+        2,
+        description="Number of retries that QCEngine will attempt for RandomErrors detected when running "
+                    "its computations. After this many attempts (or on any other type of error), the "
+                    "error will be raised.",
+        ge=0
+    )
     scratch_directory: Optional[str] = Schema(
         None,
         description="Scratch directory for Engine execution jobs."
@@ -540,6 +547,7 @@ def parse_args():
     common.add_argument("--cores-per-worker", type=int, help="The number of process for each executor's Workers")
     common.add_argument("--memory-per-worker", type=int, help="The total amount of memory on the system in GB")
     common.add_argument("--scratch-directory", type=str, help="Scratch directory location")
+    common.add_argument("--retries", type=int, help="Number of RandomError retries per task before failing the task")
     common.add_argument("-v", "--verbose", action="store_true", help="Increase verbosity of the logger.")
 
     # FractalClient options
@@ -588,7 +596,7 @@ def parse_args():
     # Stupid we cannot inspect groups
     data = {
         "common": _build_subset(args, {"adapter", "tasks_per_worker", "cores_per_worker", "memory_per_worker",
-                                       "scratch_directory", "verbose"}),
+                                       "scratch_directory", "retries", "verbose"}),
         "server": _build_subset(args, {"fractal_uri", "password", "username", "verify"}),
         "manager": _build_subset(args, {"max_queued_tasks", "manager_name", "queue_tag", "log_file_prefix",
                                         "update_frequency", "test", "ntests"}),
@@ -832,6 +840,7 @@ def main(args=None):
         cores_per_task=cores_per_task,
         memory_per_task=memory_per_task,
         scratch_directory=settings.common.scratch_directory,
+        retries=settings.common.retries,
         verbose=settings.common.verbose
     )
 
