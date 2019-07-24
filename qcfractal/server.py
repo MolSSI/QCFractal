@@ -20,6 +20,7 @@ from .interface import FractalClient
 from .queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, TaskQueueHandler
 from .services import construct_service
 from .storage_sockets import storage_socket_factory
+from .storage_sockets.api_logger import API_AccessLogger
 from .web_handlers import (CollectionHandler, InformationHandler, KeywordHandler, KVStoreHandler, MoleculeHandler,
                            ProcedureHandler, ResultHandler)
 
@@ -97,6 +98,8 @@ class FractalServer:
 
             # Log options
             logfile_prefix: str=None,
+            log_apis: bool=False,
+            geo_file_path: str=None,
 
             # Queue options
             queue_socket: 'BaseAdapter'=None,
@@ -162,6 +165,12 @@ class FractalServer:
 
         tornado.log.enable_pretty_logging()
         self.logger = logging.getLogger("tornado.application")
+
+        # Create API Access logger class if enables
+        if log_apis:
+            self.api_logger = API_AccessLogger(geo_file_path=geo_file_path)
+        else:
+            self.api_logger = None
 
         # Build security layers
         if security is None:
@@ -232,6 +241,7 @@ class FractalServer:
         self.objects = {
             "storage_socket": self.storage,
             "logger": self.logger,
+            "api_logger": self.api_logger,
         }
 
         # Public information

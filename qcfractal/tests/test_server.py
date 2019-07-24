@@ -203,4 +203,4 @@ def test_snowflake_service():
             td = client.query_procedures(id=ret.ids)[0]
             return td.status == 'COMPLETE'
 
-        assert await_true(30, geometric_await, period=2)
+        assert await_true(60, geometric_await, period=2), client.query_procedures(id=ret.ids)[0]

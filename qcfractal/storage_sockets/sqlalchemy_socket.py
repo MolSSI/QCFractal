@@ -34,7 +34,7 @@ from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, Optimiza
 from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM,
                                                   MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
                                                   ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
-                                                  GridOptimizationProcedureORM, VersionsORM)
+                                                  GridOptimizationProcedureORM, VersionsORM, AccessLogORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
@@ -283,6 +283,17 @@ class SQLAlchemySocket:
                 rdata = [d.to_dict(exclude=exclude) for d in data]
 
         return rdata, n_found
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def save_access(self, log_data):
+
+        with self.session_scope() as session:
+            log = AccessLogORM(**log_data)
+            session.add(log)
+            session.commit()
+
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logs (KV store) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def add_kvstore(self, blobs_list: List[Any]):

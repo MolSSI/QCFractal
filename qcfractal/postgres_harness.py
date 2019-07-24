@@ -31,7 +31,7 @@ class PostgresHarness:
             config = FractalConfig(**config)
         self.config = config
         self.quiet = quiet
-        self.logger = logger
+        self._logger = logger
         self._checked = False
         self._alembic_ini = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'alembic.ini')
 
@@ -66,6 +66,17 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             raise ValueError(msg)
         else:
             self._checked = True
+
+    def logger(self, msg: str) -> None:
+        """Prints a logging message depending on quiet settings.
+
+        Parameters
+        ----------
+        msg : str
+            The message to show.
+        """
+        if not self.quiet:
+            self._logger(msg)
 
     def database_uri(self) -> str:
         """Provides the full PostgreSQL URI string.
@@ -129,8 +140,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         """
         self._check_psql()
 
-        if not self.quiet:
-            self.logger(f"pqsl command: {cmd}")
+        self.logger(f"pqsl command: {cmd}")
         psql_cmd = [shutil.which("psql"), "-p", str(self.config.database.port), "-c"]
         return self._run(psql_cmd + [cmd])
 
@@ -144,8 +154,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         """
         self._check_psql()
 
-        if not self.quiet:
-            self.logger(f"pg_ctl command: {cmds}")
+        self.logger(f"pg_ctl command: {cmds}")
         psql_cmd = [shutil.which("pg_ctl"), "-D", str(self.config.database_path)]
         return self._run(psql_cmd + cmds)
 
@@ -179,7 +188,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         """Create database tables using SQLAlchemy models"""
 
         uri = self.config.database_uri()
-        self.logger(f'tables for database: {uri}')
+        self.logger(f'Creating tables for database: {uri}')
         engine = create_engine(uri, echo=False, pool_size=1)
 
         # actually create the tables
@@ -218,12 +227,10 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self._check_psql()
 
         # Startup the server
-        if not self.quiet:
-            self.logger("Starting the database:")
+        self.logger("Starting the database:")
 
         if is_port_open(self.config.database.host, self.config.database.port):
-            if not self.quiet:
-                self.logger("Service currently running the configured port, current_status:\n")
+            self.logger("Service currently running the configured port, current_status:\n")
             status = self.pg_ctl(["status"])
 
             # If status is ok, exit is 0
@@ -238,8 +245,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             if not self.is_alive():
                 raise ValueError(f"PostgreSQL is running, but cannot connect to the default port.")
 
-            if not self.quiet:
-                self.logger("Found running PostgreSQL instance with correct configuration.")
+            self.logger("Found running PostgreSQL instance with correct configuration.")
 
         else:
             start_status = self.pg_ctl([
@@ -258,8 +264,8 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             else:
                 raise ValueError(f"Could not connect to the server after booting. Boot log:\n\n{start_status['stderr']}")
 
+            self.logger("PostgreSQL successfully started in a background process, current_status:\n")
             if not self.quiet:
-                self.logger("PostgreSQL successfully started in a background process, current_status:\n")
                 start_status = self._run([
                     shutil.which("pg_ctl"),
                     "-D", str(self.config.database_path),
@@ -283,8 +289,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
 
         self._check_psql()
 
-        if not self.quiet:
-            self.logger("Initializing the Postgresql database:")
+        self.logger("Initializing the Postgresql database:")
 
         # Initialize the database
         init_status = self._run([shutil.which("initdb"), "-D", self.config.database_path])
@@ -304,8 +309,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self.start()
 
         # Create the user and database
-        if not self.quiet:
-            self.logger(f"Building user information.")
+        self.logger(f"Building user information.")
         self._run([shutil.which("createdb"), "-p", str(self.config.database.port)])
 
         success = self.create_database(self.config.database.database_name)
@@ -314,8 +318,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             self.shutdown()
             raise ValueError("Database created successfully, but could not connect. Shutting down postgres.")
 
-        if not self.quiet:
-            self.logger("\nDatabase server successfully started!")
+        self.logger("\nDatabase server successfully started!")
 
     def init_database(self):
 

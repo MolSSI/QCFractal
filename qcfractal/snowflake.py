@@ -201,8 +201,8 @@ class FractalSnowflakeHandler:
         self._qcfractal_proc = None
         self._storage = TemporaryPostgres()
         self._storage_uri = self._storage.database_uri(safe=False)
-        self._qcfdir = tempfile.TemporaryDirectory()
-        self._dbname = str(uuid.uuid4())
+        self._qcfdir = None
+        self._dbname = None
         self._server_port = find_port()
         self._address = f"https://localhost:{self._server_port}"
         self._ncores = ncores
@@ -211,22 +211,6 @@ class FractalSnowflakeHandler:
 
         # Set items for the Client
         self.client_verify = False
-
-        # Init
-        proc = subprocess.run([
-            shutil.which("qcfractal-server"),
-            "init",
-            f"--base-folder={self._qcfdir.name}",
-            f"--port={self._server_port}",
-            "--db-own=False",
-            f"--db-port={self._storage.config.database.port}",
-            "--query-limit=100000",
-            "--service-frequency=2",
-        ],
-                              stdout=subprocess.PIPE)
-        stdout = proc.stdout.decode()
-        if "Success!" not in stdout:
-            raise ValueError(f"Could not initialize temporary server. Error:\n{stdout}")
 
         self.start()
 
@@ -301,16 +285,34 @@ class FractalSnowflakeHandler:
         if self._storage is None:
             raise ValueError("This object has been stopped. Please build a new object to continue.")
 
-        # Generate a new database name
+        if shutil.which("qcfractal-server") is None:
+            raise ValueError(
+                "qcfractal-server is not installed. This is likely a development environment, please `pip install -e` from the development folder."
+            )
+
+        # Generate a new database name and temporary directory
+        self._qcfdir = tempfile.TemporaryDirectory()
         self._dbname = "db_" + str(uuid.uuid4()).replace('-', '_')
 
-        # Make a new database
-        success = self._storage.psql.create_database(self._dbname)
-        if success is False:
-            raise ValueError("Could not create a postgres database.")
+        # Init
+        proc = subprocess.run([
+            shutil.which("qcfractal-server"),
+            "init",
+            f"--base-folder={self._qcfdir.name}",
+            f"--port={self._server_port}",
+            "--db-own=False",
+            f"--db-database-name={self._dbname}",
+            f"--db-port={self._storage.config.database.port}",
+            "--query-limit=100000",
+            "--service-frequency=2",
+        ],
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE)
+        stdout = proc.stdout.decode()
+        if "Success!" not in stdout:
+            raise ValueError(
+                f"Could not initialize temporary server.\n\nStdout:\n{stdout}\n\nStderr:\n{proc.stderr.decode()}")
 
-        if shutil.which("qcfractal-server") is None:
-            raise ValueError("qcfractal-server is not installed. This is likely a development environment, please `pip install -e` from the development folder.")
 
         self._qcfractal_proc = _background_process([
             shutil.which("qcfractal-server"),
@@ -342,7 +344,7 @@ class FractalSnowflakeHandler:
 
         self._running = True
 
-    def stop(self, keep_storage: bool=False) -> None:
+    def stop(self, keep_storage: bool = False) -> None:
         """
         Stop the current FractalSnowflake instance and destroys all data.
 

@@ -96,6 +96,10 @@ class FractalServerSettings(ConfigSettings):
     max_active_services: int = Schema(20, description="The maximum number of concurrent active services.")
     heartbeat_frequency: int = Schema(1800,
                                       description="The frequency (in seconds) to check the heartbeat of workers.")
+    log_apis: bool = Schema(False, description="True or False. Store API access in the Database. This is an advanced "
+                                                "option for servers accessed by extranl users through QCPortal.")
+    geo_file_path = Schema(os.path.expanduser("~/.qca/qcfractal/GeoLite2-City.mmdb"),
+                           description="Geoip2 cites file path (.mmdb) for resolving IP addresses.")
 
     @validator('logfile')
     def check_basis(cls, v):
