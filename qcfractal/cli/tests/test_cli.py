@@ -23,7 +23,7 @@ def qcfractal_base_init(postgres_server):
 
     args = [
         "qcfractal-server", "init", "--base-folder",
-        str(tmpdir.name), "--db-own=False", "--clear-database=True",
+        str(tmpdir.name), "--db-own=False", "--clear-database",
         f"--db-port={postgres_server.config.database.port}"
     ]
     assert testing.run_process(args, **_options)
@@ -69,7 +69,7 @@ def test_with_api_logging(postgres_server, log_apis):
 
     args = [
         "qcfractal-server", "init", "--base-folder",
-        str(tmpdir.name), "--db-own=False", "--clear-database=True",
+        str(tmpdir.name), "--db-own=False", "--clear-database",
         f"--db-port={postgres_server.config.database.port}",
         f"--log-apis={log_apis}"
     ]
