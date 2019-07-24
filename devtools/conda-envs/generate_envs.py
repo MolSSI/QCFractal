@@ -22,7 +22,7 @@ dependencies:
   - requests
   - bcrypt
   - cryptography
-  - pydantic>=0.20,<0.30
+  - pydantic>=0.30.1
   - mongoengine
   - plotly
   - sqlalchemy>=1.3
@@ -35,7 +35,7 @@ dependencies:
   - pytest-cov
   - codecov
 """
-qca_ecosystem_template = ["qcengine>=0.6.2", "qcelemental>=0.4.0"]
+qca_ecosystem_template = ["qcengine>=0.6.2", "qcelemental>=0.5.0"]
 
 pip_depends_template = []
 
@@ -97,7 +97,7 @@ environs = [{
     # Tests for the OpenFF toolchain (geometric and torsiondrive) 
     "filename": "openff.yaml",
     "channels": ["psi4"],
-    "dependencies": ["psi4", "rdkit", "geometric>=0.9.3", "torsiondrive"],
+    "dependencies": ["psi4>=1.3", "rdkit", "geometric>=0.9.3", "torsiondrive"],
 }, {
 
     # Tests for the current development heads

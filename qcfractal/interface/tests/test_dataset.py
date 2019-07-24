@@ -42,10 +42,10 @@ def water_ds():
 
     # Build the water dimer.
     dimer = portal.data.get_molecule("water_dimer_minima.psimol")
-    frag_0 = dimer.get_fragment(0, orient=True)
-    frag_1 = dimer.get_fragment(1, orient=True)
-    frag_0_1 = dimer.get_fragment(0, 1, orient=True)
-    frag_1_0 = dimer.get_fragment(1, 0, orient=True)
+    frag_0 = dimer.get_fragment(0, orient=True, group_fragments=True)
+    frag_1 = dimer.get_fragment(1, orient=True, group_fragments=True)
+    frag_0_1 = dimer.get_fragment(0, 1, orient=True, group_fragments=True)
+    frag_1_0 = dimer.get_fragment(1, 0, orient=True, group_fragments=True)
 
     # Add single stoich rxn via list
     ds.add_rxn(
@@ -98,10 +98,10 @@ def nbody_ds():
     ds = portal.collections.ReactionDataset("N-Body Data")
 
     dimer = portal.data.get_molecule("water_dimer_minima.psimol")
-    frag_0 = dimer.get_fragment(0, orient=True)
-    frag_1 = dimer.get_fragment(1, orient=True)
-    frag_0_1 = dimer.get_fragment(0, 1, orient=True)
-    frag_1_0 = dimer.get_fragment(1, 0, orient=True)
+    frag_0 = dimer.get_fragment(0, orient=True, group_fragments=True)
+    frag_1 = dimer.get_fragment(1, orient=True, group_fragments=True)
+    frag_0_1 = dimer.get_fragment(0, 1, orient=True, group_fragments=True)
+    frag_1_0 = dimer.get_fragment(1, 0, orient=True, group_fragments=True)
 
     ds.add_rxn(
         "Water Dimer, bench", {

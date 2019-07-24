@@ -3,6 +3,7 @@ Explicit tests for queue manipulation.
 """
 
 import pytest
+import tempfile
 
 import qcfractal.interface as ptl
 from qcfractal import QueueManager, testing
@@ -26,11 +27,16 @@ def test_adapter_single(managed_compute_server):
 
 @pytest.mark.parametrize("cores_per_task,memory_per_task,scratch_dir", [
     (None, None, None),
-    (1, 1, "."),
-    (2, 1.9, ".")
+    (1, 1, "tmpdir"),
+    (2, 1.9, "tmpdir")
 ])  # yapf: disable
 @testing.using_psi4
 def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per_task, scratch_dir):
+
+    if scratch_dir == "tmpdir":
+        temp_directory = tempfile.TemporaryDirectory()
+        scratch_dir = temp_directory.name
+
     psi4_mem_buffer = 0.95  # Memory consumption buffer on psi4
     adapter_client = adapter_client_fixture
     task_id = "uuid-{}-{}".format(cores_per_task, memory_per_task)
@@ -56,7 +62,8 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
         }
     ]
     # Spin up a test queue manager
-    manager = QueueManager(None, adapter_client,
+    manager = QueueManager(None,
+                           adapter_client,
                            cores_per_task=cores_per_task,
                            memory_per_task=memory_per_task,
                            scratch_directory=scratch_dir)
@@ -71,6 +78,8 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
         ret = ret[task_id].dict()
     else:
         ret = ret[task_id]
+
+    assert ret["success"], ret["error"]["error_message"]
 
     provenance = ret["provenance"]
     if cores_per_task is not None:

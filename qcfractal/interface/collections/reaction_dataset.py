@@ -692,10 +692,10 @@ class ReactionDataset(Dataset):
                 coef = take_nk * sign
                 for frag in it.combinations(fragment_range, k):
                     if do_default:
-                        nocp_tmp.append((mol.get_fragment(frag, orient=True), coef))
+                        nocp_tmp.append((mol.get_fragment(frag, orient=True, group_fragments=True), coef))
                     if do_cp:
                         ghost = list(set(fragment_range) - set(frag))
-                        cp_tmp.append((mol.get_fragment(frag, ghost, orient=True), coef))
+                        cp_tmp.append((mol.get_fragment(frag, ghost, orient=True, group_fragments=True), coef))
 
             if do_default:
                 ret["default" + str(nbody)] = nocp_tmp
