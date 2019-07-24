@@ -547,6 +547,7 @@ def parse_args():
     common.add_argument("--cores-per-worker", type=int, help="The number of process for each executor's Workers")
     common.add_argument("--memory-per-worker", type=int, help="The total amount of memory on the system in GB")
     common.add_argument("--scratch-directory", type=str, help="Scratch directory location")
+    common.add_argument("--retries", type=int, help="Number of RandomError retries per task before failing the task")
     common.add_argument("-v", "--verbose", action="store_true", help="Increase verbosity of the logger.")
 
     # FractalClient options
