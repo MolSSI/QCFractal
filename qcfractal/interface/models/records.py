@@ -90,6 +90,10 @@ class RecordBase(BaseModel, abc.ABC):
     def __repr__(self) -> str:
         return f"<{self}>"
 
+    def __eq__(self, other) -> bool:
+        # Try to make LGTM happy
+        return super(BaseModel, self).__eq__(other)
+
 ### Serialization helpers
 
     @classmethod

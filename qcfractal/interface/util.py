@@ -134,11 +134,14 @@ def doc_formatter(target_object, allow_failure=True):
                 second_line = "\n" + indent(prop_desc, "    ") if prop_desc is not None else ""
                 # Finally, write the detailed doc string
                 new_doc += first_line + second_line + "\n"
-        except:
+        except Exception:
             if allow_failure:
                 new_doc = doc
             else:
                 raise
+        except (SystemExit, KeyboardInterrupt):
+            # Make lgtm happy. Since this is user/higher order failures than this function, always raise.
+            raise
 
     else:
         new_doc = doc

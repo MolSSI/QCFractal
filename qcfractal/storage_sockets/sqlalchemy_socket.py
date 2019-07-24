@@ -4,13 +4,15 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 
 
 try:
-    import sqlalchemy # lgtm [py/unused-import]
+    from sqlalchemy import create_engine, or_
+    from sqlalchemy.exc import IntegrityError
+    from sqlalchemy.orm import sessionmaker, with_polymorphic
+    from sqlalchemy.sql.expression import func
+    # from sqlalchemy.dialects import postgresql
 except ImportError:
     raise ImportError(
         "SQLAlchemy_socket requires sqlalchemy, please install this python "
         "module or try a different db_socket.")
-
-
 
 import logging
 import secrets
@@ -19,11 +21,6 @@ from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import bcrypt
-from sqlalchemy import create_engine, or_
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import sessionmaker, with_polymorphic
-from sqlalchemy.sql.expression import func
-# from sqlalchemy.dialects import postgresql
 from collections.abc import Iterable
 import json
 
