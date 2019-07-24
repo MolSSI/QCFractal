@@ -5,6 +5,7 @@ common:
   memory_per_worker: 1
   max_workers: 1
   scratch_directory: "$TMPDIR"
+  retries: 1
   verbose: true
 
 server:
