@@ -292,7 +292,11 @@ class ProcedureHandler(APIHandler):
         body_model, response_model = rest_model("procedure", "get")
         body = self.parse_bodymodel(body_model)
 
-        ret = self.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
+        try:
+            ret = self.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
+        except KeyError as e:
+            raise tornado.web.HTTPError(status_code=401, reason=str(e))
+
         response = response_model(**ret)
 
         self.logger.info("GET: Procedures - {} pulls.".format(len(response.data)))
