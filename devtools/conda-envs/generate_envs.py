@@ -20,10 +20,11 @@ dependencies:
   - requests
   - bcrypt
   - cryptography
+  - pyyaml>=5.1
   - pydantic>=0.30.1
   - plotly
   - sqlalchemy>=1.3
-  - psycopg2
+  - psycopg2>=2.7
   - postgresql
   - alembic
 
@@ -32,7 +33,7 @@ dependencies:
   - pytest-cov
   - codecov
 """
-qca_ecosystem_template = ["qcengine>=0.8.1", "qcelemental>=0.5.0"]
+qca_ecosystem_template = ["qcengine>=0.8.2", "qcelemental>=0.5.0"]
 
 pip_depends_template = []
 

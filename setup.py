@@ -30,14 +30,15 @@ if __name__ == "__main__":
             'pydantic>=0.30.1',
             'requests',
             'tornado',
-            'pyyaml',
+            'pyyaml>=5.1',
 
             # Database
             'sqlalchemy>=1.3',
-            'psycopg2',
+            'psycopg2>=2.7',
+            'alembic',
 
             # QCArchive depends
-            'qcengine>=0.8.1',
+            'qcengine>=0.8.2',
             'qcelemental>=0.5.0',
 
             # Testing

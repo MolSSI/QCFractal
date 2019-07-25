@@ -118,12 +118,15 @@ class FractalClient(object):
                               f"\n(Only MAJOR.MINOR versions are checked)")
             client_version = _version_list(__version__)[:2]
             if not server_version_min_client <= client_version <= server_version_max_client:
-                raise IOError(f"This Client of version {client_version} does not fall within the Server's allowed "
-                              f"Client versions of [{server_version_min_client}, {server_version_max_client}] at "
+                client_ver_str = ".".join([str(i) for i in server_version_min_client])
+                server_version_min_str = ".".join([str(i) for i in server_version_min_client])
+                server_version_max_str = ".".join([str(i) for i in server_version_max_client])
+                raise IOError(f"This Client of version {client_ver_str} does not fall within the Server's allowed "
+                              f"Client versions of [{server_version_min_str}, {server_version_max_str}] at "
                               f"Server address: {self.address}. Please change your Client version with one of the "
                               f"following commands:"
-                              f"\n\t- pip install qcportal=={server_version_max_client}.*"
-                              f"\n\t- conda install -c conda-forge qcportal=={server_version_max_client}.*"
+                              f"\n\t- pip install qcportal=={server_version_max_str}.*"
+                              f"\n\t- conda install -c conda-forge qcportal=={server_version_max_str}.*"
                               f"\n(Only MAJOR.MINOR versions are checked and shown)")
 
 
