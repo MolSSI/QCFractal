@@ -51,10 +51,15 @@ Enhancements
   auto-pagination.
 - (:pr:`322`) ``Record`` models and their derivatives now have a ``get_molecule()`` method for fetching the molecule
   directly.
+- (:pr:`324`) Optimization queries for its trajectory pull the entire trajectory in one go and keep the correct order.
+  ``get_trajectory`` also pulls the correct order.
 - (:pr:`325`) Collections' have been improved to be more efficient. Previous queries are cached locally and the
   ``compute`` call is now a single function, removing the need to make a separate call to the submission formation.
 - (:pr:`326`) ``ReactionDataset`` now explicitly groups the fragments to future-proof this method from upstream
   changes to ``Molecule`` fragmentation.
+- (:pr:`329`) All API requests are now logged server side anonymously.
+- (:pr:`331`) Queue Manager jobs can now auto-retry failed jobs a finite number of times through QCEngine's retry
+  capabilities. This will only catch RandomErrors and all other errors are raised normally.
 
 
 Bug Fixes
@@ -74,6 +79,8 @@ Bug Fixes
 - (:pr:`320`) Duplicated ``initial_molecules`` in the ``TorsionDriveDataset`` will no longer cause a failure in adding
   them to the database while still preserving de-duplication.
 - (:pr:`327`) Jupyter Notebook syntax highlighting has been fixed on Fractal's documentation pages.
+- (:pr:`331`) The BaseModel/Settings auto-documentation function can no longer throw an error which prevents
+  using the code.
 
 
 Deprecated Features
