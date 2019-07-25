@@ -3,8 +3,8 @@ Dataset
 
 Datasets are useful for computing many methods for a single set of reactions where a reaction in a combination of molecules such as. There are currently two types of datasets:
 
- - ``rxn`` for datasets based on canonical chemical reactions :math:`A + B \rightarrow C`
- - ``ie`` for interaction energy datasets :math:`M_{complex} \rightarrow M_{monomer_1} + M_{monomer_2}`
+- ``rxn`` for datasets based on canonical chemical reactions :math:`A + B \rightarrow C`
+- ``ie`` for interaction energy datasets :math:`M_{complex} \rightarrow M_{monomer_1} + M_{monomer_2}`
 
 
 Querying
