@@ -184,8 +184,11 @@ register_model("information", "GET", InformationGETBody, InformationGETResponse)
 
 
 class KVStoreGETBody(BaseModel):
+    class Data(BaseModel):
+        id: QueryObjectId = None
+
     meta: EmptyMeta = {}
-    data: List[ObjectId]
+    data: Data
 
     class Config(RESTConfig):
         pass
@@ -350,7 +353,7 @@ class CollectionPOSTBody(BaseModel):
             pass
 
     class Data(BaseModel):
-        id: str = "local"  # Auto blocks overwriting in mongoengine_socket
+        id: str = "local"  # Auto blocks overwriting in a socket
         collection: str
         name: str
 

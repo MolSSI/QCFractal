@@ -62,7 +62,7 @@ def active_server(request, qcfractal_base_init):
         server.test_uri_cli = "--fractal-uri=localhost:" + port
         yield server
 
-@pytest.mark.slow
+@testing.mark_slow
 @pytest.mark.parametrize("log_apis", [0, 1])
 def test_with_api_logging(postgres_server, log_apis):
 

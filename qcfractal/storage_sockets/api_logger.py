@@ -35,7 +35,7 @@ class API_AccessLogger:
                         f'(default base_folder is ~/.qca/qcfractal/qcfractal_config.yaml).')
 
 
-    def get_api_access_log(self, request, access_type=None):
+    def get_api_access_log(self, request, access_type=None, extra_params=None):
 
         log = {}
 
@@ -53,9 +53,8 @@ class API_AccessLogger:
 
         log['user_agent'] = request.headers['User-Agent']
 
-
         # TODO: extract needed info, maybe handle by caller
-        log['extra_params'] = request.body.decode('utf-8')
+        log['extra_params'] = extra_params
         # Or, will saved as string anyway
         # log.extra_access_params = request.json
 

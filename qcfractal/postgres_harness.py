@@ -105,7 +105,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             database = "postgres"
         return psycopg2.connect(
             database=database,
-            # user=self.config.database.username,
+            user=self.config.database.username,
             host=self.config.database.host,
             port=self.config.database.port)
 

@@ -14,7 +14,6 @@ import time
 from collections import Mapping
 from contextlib import contextmanager
 
-import pymongo
 import pytest
 import qcengine as qcng
 from tornado.ioloop import IOLoop
@@ -115,17 +114,6 @@ def recursive_dict_merge(base_dict, dict_to_merge_in):
             recursive_dict_merge(base_dict[k], dict_to_merge_in[k])
         else:
             base_dict[k] = dict_to_merge_in[k]
-
-
-def check_active_mongo_server():
-    """Checks for a active mongo server, skips the test if not found.
-    """
-
-    client = pymongo.MongoClient("mongodb://localhost", serverSelectionTimeoutMS=100)
-    try:
-        client.server_info()
-    except:
-        pytest.skip("Could not find an activate mongo test instance at 'localhost:27017'.")
 
 
 def find_open_port():
@@ -474,14 +462,7 @@ def build_socket_fixture(stype, server=None):
     storage_name = "test_qcfractal_storage" + stype
 
     # IP/port/drop table is specific to build
-    if stype in ["pymongo", "mongoengine"]:
-        check_active_mongo_server()
-        storage = storage_socket_factory("mongodb://localhost", storage_name, db_type=stype)
-
-        # Clean and re-init the database
-        storage._clear_db(storage_name)
-
-    elif stype == 'sqlalchemy':
+    if stype == 'sqlalchemy':
 
         server.create_database(storage_name)
         storage = storage_socket_factory(server.database_uri(), storage_name, db_type=stype, sql_echo=False)
@@ -493,9 +474,7 @@ def build_socket_fixture(stype, server=None):
 
     yield storage
 
-    if stype in ["pymongo", "mongoengine"]:
-        storage.client.drop_database(storage_name)
-    elif stype == "sqlalchemy":
+    if stype == "sqlalchemy":
         # todo: drop db
         # storage._clear_db(storage_name)
         pass
@@ -503,16 +482,10 @@ def build_socket_fixture(stype, server=None):
         raise KeyError("Storage type {} not understood".format(stype))
 
 
-@pytest.fixture(scope="module", params=["mongoengine", "sqlalchemy"])
+@pytest.fixture(scope="module", params=["sqlalchemy"])
 def socket_fixture(request):
 
     yield from build_socket_fixture(request.param)
-
-
-@pytest.fixture(scope="module")
-def mongoengine_socket_fixture(request):
-
-    yield from build_socket_fixture("mongoengine")
 
 
 @pytest.fixture(scope="module")

@@ -67,6 +67,15 @@ def test_client_duplicate_keywords(test_server):
     assert len(ret3) == 3
     assert ret3[1] == ret[0]
 
+def test_empty_query(test_server):
+
+    client = ptl.FractalClient(test_server)
+
+    with pytest.raises(IOError) as error:
+        client.query_procedures(limit=1)
+
+    assert "ID is required" in str(error.value)
+
 
 def test_collection_portal(test_server):
 

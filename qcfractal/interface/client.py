@@ -92,7 +92,11 @@ class FractalClient(object):
         if (username is not None) or (password is not None):
             self._headers["Authorization"] = json.dumps({"username": username, "password": password})
 
+
+        from . import __version__  # Import here to avoid circular import
+        from . import _isportal
         self._headers["content_type"] = 'application/json'
+        self._headers["User-Agent"] = f"qcportal/{__version__}"
 
         # Try to connect and pull general data
         self.server_info = self._automodel_request("information", "get", {}, full_return=True).dict()
@@ -100,8 +104,6 @@ class FractalClient(object):
         self.server_name = self.server_info["name"]
         self.query_limit = self.server_info["query_limit"]
 
-        from . import __version__  # Import here to avoid circular import from __init__
-        from . import _isportal
         if _isportal:
             try:
                 server_version_min_client = _version_list(self.server_info["client_lower_version_limit"])[:2]
@@ -123,6 +125,7 @@ class FractalClient(object):
                               f"\n\t- pip install qcportal=={server_version_max_client}.*"
                               f"\n\t- conda install -c conda-forge qcportal=={server_version_max_client}.*"
                               f"\n(Only MAJOR.MINOR versions are checked and shown)")
+
 
     def __repr__(self) -> str:
         """A short representation of the current FractalClient.
@@ -302,7 +305,7 @@ class FractalClient(object):
             A list of found KVStore objects in {"id": "value"} format
         """
 
-        return self._automodel_request("kvstore", "get", {"meta": {}, "data": id}, full_return=full_return)
+        return self._automodel_request("kvstore", "get", {"meta": {}, "data": {"id": id}}, full_return=full_return)
 
 ### Molecule section
 

@@ -127,7 +127,6 @@ class AccessLogORM(Base):
     # user info
     ip_address = Column(String)
     user_agent = Column(String)
-    referrer = Column(String)
 
     # extra computed geo data
     city = Column(String)
