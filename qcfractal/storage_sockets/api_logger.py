@@ -53,7 +53,6 @@ class API_AccessLogger:
 
         log['user_agent'] = request.headers['User-Agent']
 
-
         # TODO: extract needed info, maybe handle by caller
         log['extra_params'] = extra_params
         # Or, will saved as string anyway
