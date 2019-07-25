@@ -7,28 +7,28 @@ All tests should be atomic, that is create and cleanup their data
 import pytest
 
 import qcfractal.interface as ptl
-from qcfractal.testing import mongoengine_socket_fixture as storage_socket
+from qcfractal.testing import socket_fixture
 
 bad_id1 = "000000000000000000000000"
 bad_id2 = "000000000000000000000001"
 
 
-def test_storage_repr(storage_socket):
+def test_storage_repr(socket_fixture):
 
-    assert isinstance(repr(storage_socket), str)
+    assert isinstance(repr(socket_fixture), str)
 
 
-def test_molecules_add(storage_socket):
+def test_molecules_add(socket_fixture):
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
-    ret1 = storage_socket.add_molecules([water])
+    ret1 = socket_fixture.add_molecules([water])
     assert ret1["meta"]["success"] is True
     assert ret1["meta"]["n_inserted"] == 1
 
     # Try duplicate adds
-    ret2 = storage_socket.add_molecules([water])
+    ret2 = socket_fixture.add_molecules([water])
     assert ret2["meta"]["success"] is True
     assert ret2["meta"]["n_inserted"] == 0
     assert ret2["meta"]["duplicates"][0] == ret1["data"][0]
@@ -37,15 +37,15 @@ def test_molecules_add(storage_socket):
     assert ret1["data"][0] == ret2["data"][0]
 
     # Pull molecule from the DB for tests
-    db_json = storage_socket.get_molecules(molecule_hash=water.get_hash())["data"][0]
+    db_json = socket_fixture.get_molecules(molecule_hash=water.get_hash())["data"][0]
     water.compare(db_json)
 
     # Cleanup adds
-    ret = storage_socket.del_molecules(molecule_hash=water.get_hash())
+    ret = socket_fixture.del_molecules(molecule_hash=water.get_hash())
     assert ret == 1
 
 
-def test_identical_mol_insert(storage_socket):
+def test_identical_mol_insert(socket_fixture):
     """
     Tests as edge case where to identical molecules are added under different tags.
     """
@@ -53,159 +53,159 @@ def test_identical_mol_insert(storage_socket):
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
 
     # Add two identical molecules
-    ret1 = storage_socket.add_molecules([water, water])
+    ret1 = socket_fixture.add_molecules([water, water])
     assert ret1["meta"]["success"] is True
     assert ret1["meta"]["n_inserted"] == 1
     assert ret1["data"][0] == ret1["data"][1]
 
     # Should only find one molecule
-    ret2 = storage_socket.get_molecules(molecule_hash=[water.get_hash()])
+    ret2 = socket_fixture.get_molecules(molecule_hash=[water.get_hash()])
     assert ret2["meta"]["n_found"] == 1
 
-    ret = storage_socket.del_molecules(molecule_hash=water.get_hash())
+    ret = socket_fixture.del_molecules(molecule_hash=water.get_hash())
     assert ret == 1
 
 
-def test_molecules_add_many(storage_socket):
+def test_molecules_add_many(socket_fixture):
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
 
-    ret = storage_socket.add_molecules([water, water2])
+    ret = socket_fixture.add_molecules([water, water2])
     assert ret["meta"]["n_inserted"] == 2
 
     # Cleanup adds
-    ret = storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
+    ret = socket_fixture.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
     assert ret == 2
 
-    ret = storage_socket.add_molecules([water, water2])
+    ret = socket_fixture.add_molecules([water, water2])
     assert ret["meta"]["n_inserted"] == 2
 
     # Cleanup adds
-    ret = storage_socket.del_molecules(id=ret["data"])
+    ret = socket_fixture.del_molecules(id=ret["data"])
     assert ret == 2
 
 
-def test_molecules_get(storage_socket):
+def test_molecules_get(socket_fixture):
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
-    ret = storage_socket.add_molecules([water])
+    ret = socket_fixture.add_molecules([water])
     assert ret["meta"]["n_inserted"] == 1
     water_id = ret["data"][0]
 
     # Pull molecule from the DB for tests
-    water2 = storage_socket.get_molecules(id=water_id)["data"][0]
+    water2 = socket_fixture.get_molecules(id=water_id)["data"][0]
     water2.compare(water)
 
     # Cleanup adds
-    ret = storage_socket.del_molecules(id=water_id)
+    ret = socket_fixture.del_molecules(id=water_id)
     assert ret == 1
 
 
-def test_molecules_mixed_add_get(storage_socket):
+def test_molecules_mixed_add_get(socket_fixture):
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
 
-    ret = storage_socket.get_add_molecules_mixed([bad_id1, water, bad_id2])
+    ret = socket_fixture.get_add_molecules_mixed([bad_id1, water, bad_id2])
     assert ret["data"][0] is None
     assert ret["data"][1].identifiers.molecule_hash == water.get_hash()
     assert ret["data"][2] is None
     assert set(ret["meta"]["missing"]) == {0, 2}
 
     # Cleanup adds
-    ret = storage_socket.del_molecules(id=ret["data"][1].id)
+    ret = socket_fixture.del_molecules(id=ret["data"][1].id)
     assert ret == 1
 
 
-def test_molecules_bad_get(storage_socket):
+def test_molecules_bad_get(socket_fixture):
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
 
     # Add once
-    ret = storage_socket.add_molecules([water])
+    ret = socket_fixture.add_molecules([water])
     water_id = ret["data"][0]
 
     # Pull molecule from the DB for tests
-    ret = storage_socket.get_molecules(id=[water_id, bad_id1, bad_id2])
+    ret = socket_fixture.get_molecules(id=[water_id, bad_id1, bad_id2])
     assert ret["meta"]["n_found"] == 1
 
     # Cleanup adds
-    ret = storage_socket.del_molecules(id=water_id)
+    ret = socket_fixture.del_molecules(id=water_id)
     assert ret == 1
 
 
-def test_keywords_add(storage_socket):
+def test_keywords_add(socket_fixture):
 
     kw = ptl.models.KeywordSet(**{"values": {"o": 5}, "hash_index": "something_unique"})
 
-    ret = storage_socket.add_keywords([kw, kw.copy()])
+    ret = socket_fixture.add_keywords([kw, kw.copy()])
     assert len(ret["data"]) == 2
     assert ret["meta"]["n_inserted"] == 1
     assert ret["data"][0] == ret["data"][1]
 
-    ret = storage_socket.add_keywords([kw])
+    ret = socket_fixture.add_keywords([kw])
     assert ret["meta"]["n_inserted"] == 0
 
-    ret = storage_socket.get_keywords(hash_index="something_unique")
+    ret = socket_fixture.get_keywords(hash_index="something_unique")
     ret_kw = ret["data"][0]
     assert ret["meta"]["n_found"] == 1
     assert ret_kw.values == kw.values
 
-    assert 1 == storage_socket.del_keywords(id=ret_kw.id)
+    assert 1 == socket_fixture.del_keywords(id=ret_kw.id)
 
 
-def test_keywords_mixed_add_get(storage_socket):
+def test_keywords_mixed_add_get(socket_fixture):
 
     opts1 = ptl.models.KeywordSet(values={"o": 5})
-    id1 = storage_socket.add_keywords([opts1])["data"][0]
+    id1 = socket_fixture.add_keywords([opts1])["data"][0]
 
     opts2 = ptl.models.KeywordSet(values={"o": 6})
-    opts = storage_socket.get_add_keywords_mixed([opts1, opts2, id1, bad_id1, bad_id2])["data"]
+    opts = socket_fixture.get_add_keywords_mixed([opts1, opts2, id1, bad_id1, bad_id2])["data"]
     assert opts[0].id == id1
     assert opts[1].values["o"] == 6
     assert opts[2].id == id1
     assert opts[3] is None
     assert opts[4] is None
 
-    assert 1 == storage_socket.del_keywords(id=id1)
-    assert 1 == storage_socket.del_keywords(id=opts[1].id)
+    assert 1 == socket_fixture.del_keywords(id=id1)
+    assert 1 == socket_fixture.del_keywords(id=opts[1].id)
 
 
-def test_collections_add(storage_socket):
+def test_collections_add(socket_fixture):
 
     collection = 'TorsionDriveRecord'
     name = 'Torsion123'
     db = {"collection": collection, "name": name, "something": "else", "array": ["54321"]}
 
-    ret = storage_socket.add_collection(db)
+    ret = socket_fixture.add_collection(db)
 
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.get_collections(collection, name)
+    ret = socket_fixture.get_collections(collection, name)
 
     assert ret["meta"]["success"] == True
     assert ret["meta"]["n_found"] == 1
     assert db['something'] == ret["data"][0]['something']
 
-    ret = storage_socket.del_collection(collection, name)
+    ret = socket_fixture.del_collection(collection, name)
     assert ret == 1
 
-    ret = storage_socket.get_collections(collection, "bleh")
+    ret = socket_fixture.get_collections(collection, "bleh")
     # assert len(ret["meta"]["missing"]) == 1
     assert ret["meta"]["n_found"] == 0
 
 
-def test_collections_overwrite(storage_socket):
+def test_collections_overwrite(socket_fixture):
 
     collection = 'TorsionDriveRecord'
     name = 'Torsion123'
     db = {"collection": collection, "name": name, "something": "else", "array": ["54321"]}
 
-    ret = storage_socket.add_collection(db)
+    ret = socket_fixture.add_collection(db)
 
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.get_collections(collection, name)
+    ret = socket_fixture.get_collections(collection, name)
     assert ret["meta"]["n_found"] == 1
 
     db_update = {
@@ -216,10 +216,10 @@ def test_collections_overwrite(storage_socket):
         "something2": "else",
         "array2": ["54321"]
     }
-    ret = storage_socket.add_collection(db_update, overwrite=True)
+    ret = socket_fixture.add_collection(db_update, overwrite=True)
     assert ret["meta"]["success"] == True
 
-    ret = storage_socket.get_collections(collection, name)
+    ret = socket_fixture.get_collections(collection, name)
     assert ret["meta"]["n_found"] == 1
 
     # Check to make sure the field were replaced and not updated
@@ -231,19 +231,19 @@ def test_collections_overwrite(storage_socket):
     assert "something2" in db_result
     assert db_update['something'] == db_result['something']
 
-    ret = storage_socket.del_collection(collection, name)
+    ret = socket_fixture.del_collection(collection, name)
     assert ret == 1
 
 
-def test_results_add(storage_socket):
+def test_results_add(socket_fixture):
 
     # Add two waters
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
-    mol_insert = storage_socket.add_molecules([water, water2])
+    mol_insert = socket_fixture.add_molecules([water, water2])
 
     kw1 = ptl.models.KeywordSet(**{"comments": "a", "values": {}})
-    kwid1 = storage_socket.add_keywords([kw1])["data"][0]
+    kwid1 = socket_fixture.add_keywords([kw1])["data"][0]
 
     page1 = ptl.models.ResultRecord(**{
         "molecule": mol_insert["data"][0],
@@ -284,12 +284,12 @@ def test_results_add(storage_socket):
         "hash_index": 2,
     })
     ids = []
-    ret = storage_socket.add_results([page1, page2])
+    ret = socket_fixture.add_results([page1, page2])
     assert ret["meta"]["n_inserted"] == 2
     ids.extend(ret['data'])
 
     # add with duplicates:
-    ret = storage_socket.add_results([page1, page2, page3])
+    ret = socket_fixture.add_results([page1, page2, page3])
 
     assert ret["meta"]["n_inserted"] == 1
     assert len(ret['data']) == 3  # first 2 found are None
@@ -299,9 +299,9 @@ def test_results_add(storage_socket):
         if res_id is not None:
             ids.append(res_id)
 
-    ret = storage_socket.del_results(ids)
+    ret = socket_fixture.del_results(ids)
     assert ret == 3
-    ret = storage_socket.del_molecules(id=mol_insert["data"])
+    ret = socket_fixture.del_molecules(id=mol_insert["data"])
     assert ret == 2
 
 
@@ -309,14 +309,14 @@ def test_results_add(storage_socket):
 
 
 @pytest.fixture(scope="function")
-def storage_results(storage_socket):
+def storage_results(socket_fixture):
     # Add two waters
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
-    mol_insert = storage_socket.add_molecules([water, water2])
+    mol_insert = socket_fixture.add_molecules([water, water2])
 
     kw1 = ptl.models.KeywordSet(**{"comments": "a", "values": {}})
-    kwid1 = storage_socket.add_keywords([kw1])["data"][0]
+    kwid1 = socket_fixture.add_keywords([kw1])["data"][0]
 
     page1 = ptl.models.ResultRecord(**{
         "molecule": mol_insert["data"][0],
@@ -390,21 +390,21 @@ def storage_results(storage_socket):
         "status": 'COMPLETE'
     })
 
-    results_insert = storage_socket.add_results([page1, page2, page3, page4, page5, page6])
+    results_insert = socket_fixture.add_results([page1, page2, page3, page4, page5, page6])
     assert results_insert["meta"]["n_inserted"] == 6
 
-    yield storage_socket
+    yield socket_fixture
 
     # Cleanup
     result_ids = [x for x in results_insert["data"]]
-    ret = storage_socket.del_results(result_ids)
+    ret = socket_fixture.del_results(result_ids)
     assert ret == results_insert["meta"]["n_inserted"]
 
-    ret = storage_socket.del_molecules(id=mol_insert["data"])
+    ret = socket_fixture.del_molecules(id=mol_insert["data"])
     assert ret == mol_insert["meta"]["n_inserted"]
 
-    all_tasks = storage_socket.get_queue()['data']
-    storage_socket.del_tasks(id=[task.id for task in all_tasks])
+    all_tasks = socket_fixture.get_queue()['data']
+    socket_fixture.del_tasks(id=[task.id for task in all_tasks])
 
 
 def test_empty_get(storage_results):
@@ -604,64 +604,64 @@ def test_queue_submit_many_order(storage_results):
 # User testing
 
 
-def test_user_duplicates(storage_socket):
+def test_user_duplicates(socket_fixture):
 
-    r = storage_socket.add_user("george", "shortpw")
+    r = socket_fixture.add_user("george", "shortpw")
     assert r is True
 
     # Duplicate should bounce
-    r = storage_socket.add_user("george", "shortpw")
+    r = socket_fixture.add_user("george", "shortpw")
     assert r is False
 
-    assert storage_socket.remove_user("george") is True
+    assert socket_fixture.remove_user("george") is True
 
-    assert storage_socket.remove_user("george") is False
+    assert socket_fixture.remove_user("george") is False
 
 
-def test_user_permissions_default(storage_socket):
+def test_user_permissions_default(socket_fixture):
 
-    r = storage_socket.add_user("george", "shortpw")
+    r = socket_fixture.add_user("george", "shortpw")
     assert r is True
 
     # Verify correct permission
-    assert storage_socket.verify_user("george", "shortpw", "read")[0] is True
+    assert socket_fixture.verify_user("george", "shortpw", "read")[0] is True
 
     # Verify incorrect permission
-    assert storage_socket.verify_user("george", "shortpw", "admin")[0] is False
+    assert socket_fixture.verify_user("george", "shortpw", "admin")[0] is False
 
-    assert storage_socket.remove_user("george") is True
+    assert socket_fixture.remove_user("george") is True
 
 
-def test_user_permissions_admin(storage_socket):
+def test_user_permissions_admin(socket_fixture):
 
-    r = storage_socket.add_user("george", "shortpw", permissions=["read", "write", "compute", "admin"])
+    r = socket_fixture.add_user("george", "shortpw", permissions=["read", "write", "compute", "admin"])
     assert r is True
 
     # Verify correct permissions
-    assert storage_socket.verify_user("george", "shortpw", "read")[0] is True
-    assert storage_socket.verify_user("george", "shortpw", "write")[0] is True
-    assert storage_socket.verify_user("george", "shortpw", "compute")[0] is True
-    assert storage_socket.verify_user("george", "shortpw", "admin")[0] is True
+    assert socket_fixture.verify_user("george", "shortpw", "read")[0] is True
+    assert socket_fixture.verify_user("george", "shortpw", "write")[0] is True
+    assert socket_fixture.verify_user("george", "shortpw", "compute")[0] is True
+    assert socket_fixture.verify_user("george", "shortpw", "admin")[0] is True
 
-    assert storage_socket.remove_user("george") is True
-
-
-def test_project_name(storage_socket):
-    assert 'test' in storage_socket.get_project_name()
+    assert socket_fixture.remove_user("george") is True
 
 
-def test_results_pagination(storage_socket):
+def test_project_name(socket_fixture):
+    assert 'test' in socket_fixture.get_project_name()
+
+
+def test_results_pagination(socket_fixture):
     """
         Test results pagination
     """
 
-    # results = storage_socket.get_results()['data']
-    # storage_socket.del_results([result['id'] for result in results])
+    # results = socket_fixture.get_results()['data']
+    # socket_fixture.del_results([result['id'] for result in results])
 
-    assert len(storage_socket.get_results()['data']) == 0
+    assert len(socket_fixture.get_results()['data']) == 0
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
-    mol = storage_socket.add_molecules([water])['data'][0]
+    mol = socket_fixture.add_molecules([water])['data'][0]
 
     result_template = {
         "molecule": mol,
@@ -692,7 +692,7 @@ def test_results_pagination(storage_socket):
         tmp['basis'] = str(i)
         results.append(ptl.models.ResultRecord(**tmp))
 
-    inserted = storage_socket.add_results(results)
+    inserted = socket_fixture.add_results(results)
     assert inserted['meta']['n_inserted'] == total_results
 
     # total_time = (time() - t1) * 1000 / total_results
@@ -701,7 +701,7 @@ def test_results_pagination(storage_socket):
     # query (~ 0.05 msec/doc)
     # t1 = time()
 
-    ret = storage_socket.get_results(method='M2', status=None, limit=limit, skip=skip)
+    ret = socket_fixture.get_results(method='M2', status=None, limit=limit, skip=skip)
 
     # total_time = (time() - t1) * 1000 / first_half
     # print('Query {} results in {:.2f} msec /doc'.format(first_half, total_time))
@@ -713,20 +713,20 @@ def test_results_pagination(storage_socket):
     assert int(ret['data'][0]['basis']) == first_half + skip
 
     # get the last page when with fewer than limit are remaining
-    ret = storage_socket.get_results(method='M1', skip=(int(first_half - limit / 2)), status=None)
+    ret = socket_fixture.get_results(method='M1', skip=(int(first_half - limit / 2)), status=None)
     assert len(ret['data']) == limit / 2
 
     # cleanup
-    storage_socket.del_results(inserted['data'])
-    storage_socket.del_molecules(mol)
+    socket_fixture.del_results(inserted['data'])
+    socket_fixture.del_molecules(mol)
 
 
-def test_procedure_pagination(storage_socket):
+def test_procedure_pagination(socket_fixture):
     """
         Test procedure pagination
     """
 
-    assert len(storage_socket.get_procedures()['data']) == 0
+    assert len(socket_fixture.get_procedures()['data']) == 0
 
     proc_template = {
         "initial_molecule": bad_id1,
@@ -748,22 +748,22 @@ def test_procedure_pagination(storage_socket):
         tmp['hash_index'] = str(i)
         procedures.append(ptl.models.OptimizationRecord(**tmp))
 
-    inserted = storage_socket.add_procedures(procedures)
+    inserted = socket_fixture.add_procedures(procedures)
     assert inserted['meta']['n_inserted'] == total
 
-    ret = storage_socket.get_procedures(procedure='optimization', status=None, skip=400)
+    ret = socket_fixture.get_procedures(procedure='optimization', status=None, skip=400)
 
     # count is total, but actual data size is the limit
     assert ret['meta']['n_found'] == total
-    assert len(ret['data']) == storage_socket._max_limit - 400
+    assert len(ret['data']) == socket_fixture._max_limit - 400
 
 
-def test_mol_pagination(storage_socket):
+def test_mol_pagination(socket_fixture):
     """
         Test Molecule pagination
     """
 
-    assert len(storage_socket.get_molecules()['data']) == 0
+    assert len(socket_fixture.get_molecules()['data']) == 0
     mol_names = [
         'water_dimer_minima.psimol', 'water_dimer_stretch.psimol', 'water_dimer_stretch2.psimol',
         'neon_tetramer.psimol'
@@ -775,17 +775,17 @@ def test_mol_pagination(storage_socket):
         mol = ptl.data.get_molecule(mol_name)
         molecules.append(mol)
 
-    inserted = storage_socket.add_molecules(molecules)
+    inserted = socket_fixture.add_molecules(molecules)
 
     assert inserted['meta']['n_inserted'] == total
 
-    ret = storage_socket.get_molecules(skip=1)
+    ret = socket_fixture.get_molecules(skip=1)
     assert len(ret['data']) == total - 1
     assert ret['meta']['n_found'] == total
 
-    ret = storage_socket.get_molecules(skip=total + 1)
+    ret = socket_fixture.get_molecules(skip=total + 1)
     assert len(ret['data']) == 0
     assert ret['meta']['n_found'] == total
 
     # cleanup
-    storage_socket.del_molecules(inserted['data'])
+    socket_fixture.del_molecules(inserted['data'])

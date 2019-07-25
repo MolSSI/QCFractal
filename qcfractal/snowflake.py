@@ -207,8 +207,6 @@ class FractalSnowflakeHandler:
         self._address = f"https://localhost:{self._server_port}"
         self._ncores = ncores
 
-        # Start up a mongo instance, controlled by the temp file so that it properly dies on shutdown
-
         # Set items for the Client
         self.client_verify = False
 

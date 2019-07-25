@@ -350,7 +350,7 @@ class CollectionPOSTBody(BaseModel):
             pass
 
     class Data(BaseModel):
-        id: str = "local"  # Auto blocks overwriting in mongoengine_socket
+        id: str = "local"  # Auto blocks overwriting in a socket
         collection: str
         name: str
 

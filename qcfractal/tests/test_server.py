@@ -10,34 +10,10 @@ import requests
 
 import qcfractal.interface as ptl
 from qcfractal import FractalServer, FractalSnowflake, FractalSnowflakeHandler
-from qcfractal.testing import (await_true, check_active_mongo_server, find_open_port, mark_slow, pristine_loop,
+from qcfractal.testing import (await_true, find_open_port, mark_slow, pristine_loop,
                                test_server, using_geometric, using_rdkit, using_torsiondrive)
 
 meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
-
-
-@pytest.mark.skip(reason="Hangs on Travis for some reason")
-def test_start_stop():
-    check_active_mongo_server()
-
-    with pristine_loop() as loop:
-
-        # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(port=find_open_port(), storage_project_name="something", loop=loop, ssl_options=False)
-
-        thread = threading.Thread(target=server.start, name="test IOLoop")
-        thread.daemon = True
-        thread.start()
-
-        loop_started = threading.Event()
-        loop.add_callback(loop_started.set)
-        loop_started.wait()
-
-        try:
-            loop.add_callback(server.stop)
-            thread.join(timeout=5)
-        except:
-            pass
 
 
 def test_server_information(test_server):
