@@ -15,8 +15,17 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
-0.8.0 / 2019-07-??
+0.8.0 / 2019-07-25
 ------------------
+
+Breaking Changes
+++++++++++++++++
+
+.. warning:: PostgreSQL is now the only supported database backend.
+
+    Fractal has officially dropped support for MongoDB in favor of PostgreSQL as our
+    database backend. Although MongoDB served the start of Fractal well, our database design
+    as evolved since then and will be better served by PostgreSQL.
 
 New Features
 ++++++++++++
@@ -60,6 +69,7 @@ Enhancements
 - (:pr:`329`) All API requests are now logged server side anonymously.
 - (:pr:`331`) Queue Manager jobs can now auto-retry failed jobs a finite number of times through QCEngine's retry
   capabilities. This will only catch RandomErrors and all other errors are raised normally.
+- (:pr:`332`) SQLAlchemy layer on the PostgreSQL database has received significant polish
 
 
 Bug Fixes
