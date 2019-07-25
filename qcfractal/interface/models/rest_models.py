@@ -184,8 +184,11 @@ register_model("information", "GET", InformationGETBody, InformationGETResponse)
 
 
 class KVStoreGETBody(BaseModel):
+    class Data(BaseModel):
+        id: QueryObjectId = None
+
     meta: EmptyMeta = {}
-    data: List[ObjectId]
+    data: Data
 
     class Config(RESTConfig):
         pass

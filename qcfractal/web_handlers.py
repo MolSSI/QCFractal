@@ -17,6 +17,7 @@ class APIHandler(tornado.web.RequestHandler):
 
     # Admin authentication required by default
     _required_auth = "admin"
+    _logging_param_counts = {}
 
     def initialize(self, **objects):
         """
@@ -41,7 +42,19 @@ class APIHandler(tornado.web.RequestHandler):
         exclude_uris = ['/task_queue', '/service_queue', '/queue_manager']
         if self.api_logger and self.request.method == 'GET' \
                 and self.request.uri not in exclude_uris:
-            log = self.api_logger.get_api_access_log(request=self.request)
+
+            extra_params = self.json.copy()
+            if self._logging_param_counts:
+                for key in self._logging_param_counts:
+                    if extra_params["data"].get(key, None):
+                        extra_params["data"][key] = len(extra_params["data"][key])
+
+            if "data" in extra_params:
+                extra_params["data"] = {k: v for k, v in extra_params["data"].items() if v is not None}
+
+            extra_params = json.dumps(extra_params)
+
+            log = self.api_logger.get_api_access_log(request=self.request, extra_params=extra_params)
             self.storage.save_access(log)
 
         # self.logger.info('Done saving API access to the database')
@@ -101,6 +114,7 @@ class KVStoreHandler(APIHandler):
     """
 
     _required_auth = "read"
+    _logging_param_counts = {"id"}
 
     def get(self):
         """
@@ -124,7 +138,7 @@ class KVStoreHandler(APIHandler):
         body_model, response_model = rest_model("kvstore", "get")
         body = self.parse_bodymodel(body_model)
 
-        ret = self.storage.get_kvstore(body.data)
+        ret = self.storage.get_kvstore(body.data.id)
         ret = response_model(**ret)
 
         self.logger.info("GET: KVStore - {} pulls.".format(len(ret.data)))
@@ -137,6 +151,7 @@ class MoleculeHandler(APIHandler):
     """
 
     _required_auth = "read"
+    _logging_param_counts = {"id"}
 
     def get(self):
         """
@@ -205,6 +220,7 @@ class KeywordHandler(APIHandler):
     """
 
     _required_auth = "read"
+    _logging_param_counts = {"id"}
 
     def get(self):
 
@@ -267,6 +283,7 @@ class ResultHandler(APIHandler):
     """
 
     _required_auth = "read"
+    _logging_param_counts = {"id", "molecule"}
 
     def get(self):
 
@@ -286,6 +303,7 @@ class ProcedureHandler(APIHandler):
     """
 
     _required_auth = "read"
+    _logging_param_counts = {"id"}
 
     def get(self):
 

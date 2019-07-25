@@ -128,6 +128,7 @@ class FractalConfig(ConfigSettings):
     database: DatabaseSettings = DatabaseSettings()
     fractal: FractalServerSettings = FractalServerSettings()
 
+
     class Config(SettingsCommonConfig):
         pass
 
@@ -135,7 +136,9 @@ class FractalConfig(ConfigSettings):
 
         # If no base_folder provided, read it from ~/.qca/qcfractal_defaults.yaml (if it exists)
         # else, use the default base_folder
-        if 'base_folder' not in kwargs:
+        if 'base_folder' in kwargs:
+            kwargs["base_folder"] = os.path.expanduser(kwargs["base_folder"])
+        else:
             if Path(FractalConfig._defaults_file_path).exists():
                 with open(FractalConfig._defaults_file_path, "r") as handle:
                     kwargs['base_folder'] = yaml.load(handle.read(),

@@ -302,7 +302,7 @@ class FractalClient(object):
             A list of found KVStore objects in {"id": "value"} format
         """
 
-        return self._automodel_request("kvstore", "get", {"meta": {}, "data": id}, full_return=full_return)
+        return self._automodel_request("kvstore", "get", {"meta": {}, "data": {"id": id}}, full_return=full_return)
 
 ### Molecule section
 
