@@ -167,8 +167,8 @@ def test_services(storage_socket, session):
 
     service_pydantic = TorsionDriveService(**service_data)
 
-    doc = ServiceQueueORM(**service_pydantic.json_dict(include=ServiceQueueORM.__dict__.keys()))
-    doc.extra = service_pydantic.json_dict(exclude=ServiceQueueORM.__dict__.keys())
+    doc = ServiceQueueORM(**service_pydantic.json_dict(include=set(ServiceQueueORM.__dict__.keys())))
+    doc.extra = service_pydantic.json_dict(exclude=set(ServiceQueueORM.__dict__.keys()))
     doc.procedure_id = procedure.id
     session.add(doc)
     session.commit()

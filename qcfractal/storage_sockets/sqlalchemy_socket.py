@@ -1324,8 +1324,8 @@ class SQLAlchemySocket:
                 service.procedure_id = proc_id
 
                 if doc.count() == 0:
-                    doc = ServiceQueueORM(**service.json_dict(include=ServiceQueueORM.__dict__.keys()))
-                    doc.extra = service.json_dict(exclude=ServiceQueueORM.__dict__.keys())
+                    doc = ServiceQueueORM(**service.json_dict(include=set(ServiceQueueORM.__dict__.keys())))
+                    doc.extra = service.json_dict(exclude=set(ServiceQueueORM.__dict__.keys()))
                     session.add(doc)
                     session.commit()  # TODO
                     procedure_ids.append(proc_id)
@@ -1415,8 +1415,8 @@ class SQLAlchemySocket:
 
                 doc_db = session.query(ServiceQueueORM).filter_by(id=service.id).first()
 
-                data = service.json_dict(include=ServiceQueueORM.__dict__.keys())
-                data['extra'] = service.json_dict(exclude=ServiceQueueORM.__dict__.keys())
+                data = service.json_dict(include=set(ServiceQueueORM.__dict__.keys()))
+                data['extra'] = service.json_dict(exclude=set(ServiceQueueORM.__dict__.keys()))
 
                 data['id'] = int(data['id'])
                 for attr, val in data.items():
