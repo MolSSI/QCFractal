@@ -20,6 +20,7 @@ dependencies:
   - requests
   - bcrypt
   - cryptography
+  - pyyaml>=5.1
   - pydantic>=0.30.1
   - plotly
   - sqlalchemy>=1.3
