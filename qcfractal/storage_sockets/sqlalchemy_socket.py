@@ -1665,11 +1665,16 @@ class SQLAlchemySocket:
 
         update_fields = dict(status=TaskStatusEnum.complete, modified_on=dt.utcnow())
         with self.session_scope() as session:
-            # Update the base results
-            session.query(BaseResultORM)\
-                   .filter(BaseResultORM.id == TaskQueueORM.base_result_id)\
-                   .filter(TaskQueueORM.id.in_(task_ids))\
-                   .update(update_fields, synchronize_session=False)
+            for task_id in task_ids:
+                # Get manager name to update in the base_results
+                manager = session.query(TaskQueueORM.manager).filter_by(id=task_id).first()
+                manager = manager[0] if manager else manager
+                update_fields['manager_name'] = manager
+
+                session.query(BaseResultORM)\
+                       .filter(BaseResultORM.id == TaskQueueORM.base_result_id)\
+                       .filter(TaskQueueORM.id == task_id)\
+                       .update(update_fields, synchronize_session=False)
 
             # delete completed tasks
             tasks_c = session.query(TaskQueueORM)\
@@ -1700,6 +1705,7 @@ class SQLAlchemySocket:
 
                 # update result
                 base_result.status = TaskStatusEnum.error
+                base_results.manager_name = task_obj.manager
                 base_result.modified_on = dt.utcnow()
                 base_result.error_obj = KVStoreORM(value=msg)
 
