@@ -59,16 +59,16 @@ class DatabaseSettings(ConfigSettings):
     host: str = Schema(
         "localhost",
         description="Default location for the postgres server. If not localhost, qcfractal command lines cannot manage "
-                    "the instance."
-    )
+        "the instance.")
     username: str = Schema(None, description="The postgres username to default to.")
     password: str = Schema(None, description="The postgres password for the give user.")
     directory: str = Schema(
         None, description="The physical location of the QCFractal instance data, defaults to the root folder.")
     database_name: str = Schema("qcfractal_default", description="The database name to connect to.")
     logfile: str = Schema("qcfractal_postgres.log", description="The logfile to write postgres logs.")
-    own: bool = Schema(True, description="If own is True, QCFractal will control the database instance. If False "
-                                         "Postgres will expect a booted server at the database specification.")
+    own: bool = Schema(True,
+                       description="If own is True, QCFractal will control the database instance. If False "
+                       "Postgres will expect a booted server at the database specification.")
 
     class Config(SettingsCommonConfig):
         pass
@@ -85,8 +85,9 @@ class FractalServerSettings(ConfigSettings):
     name: str = Schema("QCFractal Server", description="The QCFractal server default name.")
     port: int = Schema(7777, description="The QCFractal default port.")
 
-    compress_response: bool = Schema(True, description="Compress REST responses or not, should be True unless behind a "
-                                                       "proxy.")
+    compress_response: bool = Schema(True,
+                                     description="Compress REST responses or not, should be True unless behind a "
+                                     "proxy.")
     allow_read: bool = Schema(True, description="Always allows read access to record tables.")
     security: str = Schema(None, description="Optional security features.")
 
@@ -96,10 +97,15 @@ class FractalServerSettings(ConfigSettings):
     max_active_services: int = Schema(20, description="The maximum number of concurrent active services.")
     heartbeat_frequency: int = Schema(1800,
                                       description="The frequency (in seconds) to check the heartbeat of workers.")
-    log_apis: bool = Schema(False, description="True or False. Store API access in the Database. This is an advanced "
-                                                "option for servers accessed by extranl users through QCPortal.")
-    geo_file_path = Schema(os.path.expanduser("~/.qca/qcfractal/GeoLite2-City.mmdb"),
-                           description="Geoip2 cites file path (.mmdb) for resolving IP addresses.")
+    log_apis: bool = Schema(False,
+                            description="True or False. Store API access in the Database. This is an advanced "
+                            "option for servers accessed by extranl users through QCPortal.")
+    geo_file_path: Optional[str] = Schema(
+        None,
+        description=
+        "Geoip2 cites file path (.mmdb) for resolving IP addresses. Defaults to [base_folder]/GeoLite2-City.mmdb")
+
+    _default_geo_filename: str = "GeoLite2-City.mmdb"
 
     @validator('logfile')
     def check_basis(cls, v):
@@ -124,10 +130,9 @@ class FractalConfig(ConfigSettings):
 
     base_folder: str = Schema(os.path.expanduser("~/.qca/qcfractal"),
                               description="The QCFractal base instance to attach to. "
-                                          "Default will be your home directory")
+                              "Default will be your home directory")
     database: DatabaseSettings = DatabaseSettings()
     fractal: FractalServerSettings = FractalServerSettings()
-
 
     class Config(SettingsCommonConfig):
         pass
@@ -141,8 +146,7 @@ class FractalConfig(ConfigSettings):
         else:
             if Path(FractalConfig._defaults_file_path).exists():
                 with open(FractalConfig._defaults_file_path, "r") as handle:
-                    kwargs['base_folder'] = yaml.load(handle.read(),
-                                                      Loader=yaml.FullLoader)['default_base_folder']
+                    kwargs['base_folder'] = yaml.load(handle.read(), Loader=yaml.FullLoader)['default_base_folder']
 
         super().__init__(**kwargs)
 
@@ -190,6 +194,13 @@ class FractalConfig(ConfigSettings):
             uri += database
 
         return uri
+
+    def geo_file_path(self):
+
+        if self.fractal.geo_file_path:
+            return self.fractal.geo_file_path
+        else:
+            return os.path.join(self.base_folder, self.fractal._default_geo_filename)
 
 
 doc_formatter(FractalConfig)
