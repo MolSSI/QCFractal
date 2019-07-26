@@ -1526,7 +1526,7 @@ class SQLAlchemySocket:
 
     def queue_get_next(self, manager, available_programs, available_procedures, limit=100, tag=None,
                        as_json=True) -> List[TaskRecord]:
-        """TODO: needs to be done in a transcation"""
+        """Done in a transaction"""
 
         # Figure out query, tagless has no requirements
         query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs, tag=tag)
