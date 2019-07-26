@@ -949,6 +949,7 @@ class SQLAlchemySocket:
                     driver: str = None,
                     keywords: str = None,
                     task_id: Union[str, List] = None,
+                    manager_id: Union[str, List] = None,
                     status: str = 'COMPLETE',
                     projection=None,
                     limit: int = None,
@@ -968,6 +969,10 @@ class SQLAlchemySocket:
         driver : str
         keywords : str
             The id of the option in the DB
+        task_id: str or list
+            id or a list of ids of tasks
+        manager_id: str or list
+            id or a list of ids of queue_mangers
         status : bool, default is 'COMPLETE'
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
         projection : list/set/tuple of keys, default is None
@@ -1007,6 +1012,7 @@ class SQLAlchemySocket:
                              molecule=molecule,
                              driver=driver,
                              keywords=keywords,
+                             manager_id=manager_id,
                              status=status)
 
         data = []
@@ -1136,6 +1142,7 @@ class SQLAlchemySocket:
                        program: str = None,
                        hash_index: str = None,
                        task_id: Union[str, List] = None,
+                       manager_id: Union[str, List] = None,
                        status: str = 'COMPLETE',
                        projection=None,
                        limit: int = None,
@@ -1199,6 +1206,7 @@ class SQLAlchemySocket:
                              program=program,
                              hash_index=hash_index,
                              task_id=task_id,
+                             manager_id=manager_id,
                              status=status)
 
         data = []

@@ -306,6 +306,10 @@ class BaseResultORM(Base):
 
     # Base identification
     id = Column(Integer, primary_key=True)
+     # ondelete="SET NULL": when manger is deleted, set this field to None
+    manager_id = Column(Integer, ForeignKey('queue_manager.id', ondelete="SET NULL"),
+                        nullable=True,)
+
     hash_index = Column(String)  # TODO
     procedure = Column(String(100))  # TODO: may remove
     # program = Column(String(100))  # moved to subclasses
