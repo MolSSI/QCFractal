@@ -1705,7 +1705,7 @@ class SQLAlchemySocket:
 
                 # update result
                 base_result.status = TaskStatusEnum.error
-                base_results.manager_name = task_obj.manager
+                base_result.manager_name = task_obj.manager
                 base_result.modified_on = dt.utcnow()
                 base_result.error_obj = KVStoreORM(value=msg)
 

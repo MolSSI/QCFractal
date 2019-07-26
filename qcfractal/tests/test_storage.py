@@ -541,8 +541,8 @@ def test_queue_submit_sql(storage_results):
 
 # Builds tests for the queue - Changed design
 
-
-def test_storage_queue_roundtrip(storage_results):
+@pytest.mark.parametrize('status', ['COMPLETE', 'ERROR'])
+def test_storage_queue_roundtrip(storage_results, status):
 
     result1 = storage_results.get_results()['data'][1]
     task1 = ptl.models.TaskRecord(**{
@@ -572,22 +572,24 @@ def test_storage_queue_roundtrip(storage_results):
     assert r[0].spec.function == task1.spec.function
     queue_id = r[0].id
 
-    # Mark task as done
-    r = storage_results.queue_mark_complete([queue_id])
+    if status == 'ERROR':
+        r = storage_results.queue_mark_error([(queue_id, 'Error msg')])
+    elif status == 'COMPLETE':
+        r = storage_results.queue_mark_complete([queue_id])
+        # Check queue is empty
+        tasks = storage_results.queue_get_next("test_manager", ["p1"], ["p1"])
+        assert len(tasks) == 0
+
+        # completed task should be deleted
+        found = storage_results.queue_get_by_id([queue_id])
+        assert len(found) == 0
+
     assert r == 1
 
     # Check results
-    # completed task should be deleted
-    found = storage_results.queue_get_by_id([queue_id])
-
-    assert len(found) == 0
-    # assert found[0].status == "COMPLETE"
     res = storage_results.get_results(id=result1['id'])['data'][0]
-    assert res["status"] == 'COMPLETE'
-
-    # Check queue is empty
-    r = storage_results.queue_get_next("test_manager", ["p1"], ["p1"])
-    assert len(r) == 0
+    assert res["status"] == status
+    assert res['manager_name'] == 'test_manager'
 
 
 def test_queue_submit_many_order(storage_results):
