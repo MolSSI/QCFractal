@@ -69,6 +69,7 @@ def test_dataset_compute_gradient(fractal_compute_server):
     assert pytest.approx(stats.loc["He2"].mean(), 1.e-5) == 0.00333333333
 
     assert ds.list_history().shape[0] == 1
+    assert ds.get_history().shape[0] == 1
 
 
 def test_reactiondataset_check_state(fractal_compute_server):

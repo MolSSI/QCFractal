@@ -205,11 +205,13 @@ class Dataset(Collection):
         ret.sort_index(inplace=True)
         return ret
 
-    def _get_history(self, **search: Dict[str, Optional[str]]) -> 'DataFrame':
+    def _get_history(self, force: bool = False, **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """Queries for all history that matches the search
 
         Parameters
         ----------
+        force : bool, optional
+            Force a query even if the data is already present
         **search : Dict[str, Optional[str]]
             History query paramters
 
@@ -230,7 +232,7 @@ class Dataset(Collection):
             query.pop("driver")
             if "stoichiometry" in query:
                 query["stoich"] = query.pop("stoichiometry")
-            queries.loc[name, "name"] = self.query(query.pop("method").upper(), **query)
+            queries.loc[name, "name"] = self.query(query.pop("method").upper(), force=force, **query)
 
         return queries
 
