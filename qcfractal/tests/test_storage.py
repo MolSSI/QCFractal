@@ -544,9 +544,9 @@ def test_queue_submit_sql(storage_results):
 @pytest.mark.parametrize('status', ['COMPLETE', 'ERROR'])
 def test_storage_queue_roundtrip(storage_results, status):
 
-    result1 = storage_results.get_results()['data'][1]
-    task1 = ptl.models.TaskRecord(**{
-        # "hash_index": idx,
+    results = storage_results.get_results()['data']
+
+    task_template = {
         "spec": {
             "function": "qcengine.compute_procedure",
             "args": [{
@@ -558,36 +558,44 @@ def test_storage_queue_roundtrip(storage_results, status):
         "program": "P1",
         "procedure": "P1",
         "parser": "",
-        "base_result": dict(ref='result', id=result1['id'])
-    })
+        "base_result": dict(ref='result', id=None)
+    }
+
+    task_template['base_result']['id'] = results[0]['id']
+    task1 = ptl.models.TaskRecord(**task_template)
+    task_template['base_result']['id'] = results[1]['id']
+    task2 = ptl.models.TaskRecord(**task_template)
 
     # Submit a task
-    r = storage_results.queue_submit([task1])
-    assert len(r["data"]) == 1
+    r = storage_results.queue_submit([task1, task2])
+    assert len(r["data"]) == 2
 
     # Add manager 'test_manager'
     storage_results.manager_update('test_manager')
+    storage_results.manager_update('test_manager2')
     # Query for next tasks
-    r = storage_results.queue_get_next("test_manager", ["p1"], ["p1"])
+    r = storage_results.queue_get_next("test_manager", ["p1"], ["p1"], limit=1)
     assert r[0].spec.function == task1.spec.function
     queue_id = r[0].id
 
+    queue_id2 = storage_results.queue_get_next("test_manager2", ["p1"], ["p1"], limit=1)[0].id
+
     if status == 'ERROR':
-        r = storage_results.queue_mark_error([(queue_id, 'Error msg')])
+        r = storage_results.queue_mark_error([(queue_id, 'Error msg'), (queue_id2, 'Error msg2')])
     elif status == 'COMPLETE':
-        r = storage_results.queue_mark_complete([queue_id])
+        r = storage_results.queue_mark_complete([queue_id2, queue_id])
         # Check queue is empty
         tasks = storage_results.queue_get_next("test_manager", ["p1"], ["p1"])
         assert len(tasks) == 0
 
         # completed task should be deleted
-        found = storage_results.queue_get_by_id([queue_id])
+        found = storage_results.queue_get_by_id([queue_id, queue_id2])
         assert len(found) == 0
 
-    assert r == 1
+    assert r == 2
 
     # Check results
-    res = storage_results.get_results(id=result1['id'])['data'][0]
+    res = storage_results.get_results(id=results[0]['id'])['data'][0]
     assert res["status"] == status
     assert res['manager_name'] == 'test_manager'
 

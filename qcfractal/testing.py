@@ -314,14 +314,16 @@ def postgres_server():
 
     storage = None
     psql = PostgresHarness({"database": {"port": 5432}})
+    # psql = PostgresHarness({"database": {"port": 5432, "username": 'qcarchive', "password": 'mypass'}})
     if not psql.is_alive():
         print()
         print(
-            "Could not connect to a Postgres server at 'postgresql://localhost:5432', this will increase time per test session by ~3 seconds."
+            f"Could not connect to a Postgres server at {psql.config.database_uri()}, this will increase time per test session by ~3 seconds."
         )
         print()
         storage = TemporaryPostgres()
         psql = storage.psql
+        print('Using Database: ', psql.config.database_uri())
 
     yield psql
 

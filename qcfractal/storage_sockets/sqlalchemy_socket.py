@@ -4,7 +4,7 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 
 
 try:
-    from sqlalchemy import create_engine, or_
+    from sqlalchemy import create_engine, or_, case
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
     from sqlalchemy.sql.expression import func
@@ -150,6 +150,7 @@ class SQLAlchemySocket:
         self.logger.info(f"SQLAlchemy attempt to connect to {uri}.")
 
         # Connect to DB and create session
+        self.uri = uri
         self.engine = create_engine(
             uri,
             echo=sql_echo,  # echo for logging into python logging
@@ -1665,16 +1666,18 @@ class SQLAlchemySocket:
 
         update_fields = dict(status=TaskStatusEnum.complete, modified_on=dt.utcnow())
         with self.session_scope() as session:
-            for task_id in task_ids:
-                # Get manager name to update in the base_results
-                manager = session.query(TaskQueueORM.manager).filter_by(id=task_id).first()
-                manager = manager[0] if manager else manager
-                update_fields['manager_name'] = manager
+            # assuming all task_ids are valid, then managers will be in order by id
+            managers = session.query(TaskQueueORM.manager)\
+                              .filter(TaskQueueORM.id.in_(task_ids))\
+                              .order_by(TaskQueueORM.id).all()
+            managers = [manager[0] if manager else manager for manager in managers]
+            task_manger_map = {task_id: manager for task_id, manager in zip(sorted(task_ids), managers)}
+            update_fields[BaseResultORM.manager_name] = case(task_manger_map, value=TaskQueueORM.id)
 
-                session.query(BaseResultORM)\
-                       .filter(BaseResultORM.id == TaskQueueORM.base_result_id)\
-                       .filter(TaskQueueORM.id == task_id)\
-                       .update(update_fields, synchronize_session=False)
+            session.query(BaseResultORM)\
+                   .filter(BaseResultORM.id == TaskQueueORM.base_result_id)\
+                   .filter(TaskQueueORM.id.in_(task_ids))\
+                   .update(update_fields, synchronize_session=False)
 
             # delete completed tasks
             tasks_c = session.query(TaskQueueORM)\
@@ -1691,12 +1694,20 @@ class SQLAlchemySocket:
 
         task_ids = []
         with self.session_scope() as session:
-            ids = [err[0] for err in data]
-            task_objects = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(ids)).all()
+            # Make sure retuened results are in the same order as the task ids
+            # SQL queries change the order when using "in"
+            data_dict = {item[0]: item[1] for item in data}
+            sorted_data = {key: data_dict[key] for key in sorted(data_dict.keys())}
+            task_objects = session.query(TaskQueueORM)\
+                                  .filter(TaskQueueORM.id.in_(sorted_data.keys()))\
+                                  .order_by(TaskQueueORM.id).all()
             base_results = session.query(BaseResultORM)\
-                                    .filter(BaseResultORM.id == TaskQueueORM.base_result_id) \
-                                    .filter(TaskQueueORM.id.in_(ids)).all()
-            for (task_id, msg), task_obj, base_result in zip(data, task_objects, base_results):
+                                  .filter(BaseResultORM.id == TaskQueueORM.base_result_id) \
+                                   .filter(TaskQueueORM.id.in_(sorted_data.keys()))\
+                                   .order_by(TaskQueueORM.id).all()
+
+
+            for (task_id, msg), task_obj, base_result in zip(sorted_data.items(), task_objects, base_results):
 
                 task_ids.append(task_id)
                 # update task
