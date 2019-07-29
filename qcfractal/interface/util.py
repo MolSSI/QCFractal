@@ -4,11 +4,11 @@ Utility functions for QCPortal/QCFractal Interface.
 import re
 from enum import Enum, EnumMeta
 from textwrap import dedent, indent
-from typing import Any
+from typing import Any, Union
 
 from pydantic import BaseModel, BaseSettings
 
-__all__ = ["doc_formatter", "replace_dict_keys"]
+__all__ = ["auto_gen_docs_on_demand", "replace_dict_keys"]
 
 
 def type_to_string(input_type):
@@ -92,21 +92,20 @@ def parse_type_str(prop) -> str:
     return prop_type_str
 
 
-def doc_formatter(target_object, allow_failure=True):
+def doc_formatter(base_docs: str, target_object: Union[BaseModel, type(BaseModel)], allow_failure: bool = True) -> str:
     """
-    Set the docstring for a Pydantic object automatically based on the parameters
+    Generate the docstring for a Pydantic object automatically based on the parameters
 
     This could use improvement.
 
     Might be ported to Elemental at some point
     """
-    doc = target_object.__doc__
 
     # Convert the None to regex-parsable string
-    if doc is None:
+    if base_docs is None:
         doc_edit = ''
     else:
-        doc_edit = doc
+        doc_edit = base_docs
 
     # Is pydantic and not already formatted
     if is_pydantic(target_object) and not re.search(r'^\s*Parameters\n', doc_edit, re.MULTILINE):
@@ -140,15 +139,54 @@ def doc_formatter(target_object, allow_failure=True):
                 new_doc += first_line + second_line + "\n"
         except:
             if allow_failure:
-                new_doc = doc
+                new_doc = base_docs
             else:
                 raise
 
     else:
-        new_doc = doc
+        new_doc = base_docs
 
     # Assign the new doc string
-    target_object.__doc__ = new_doc
+    return new_doc
+
+
+class AutoPydanticDocGenerator:
+    """
+    Dynamic Doc generator, should never be called directly and only though augo_gen_docs_on_demand
+    """
+    ALREADY_AUTODOCED_ATTR = "__model_autodoc_applied__"
+
+    def __init__(self, target: Union[BaseModel, type(BaseModel)], allow_failure: bool = True):
+        # Checks against already instanced and uninstanced classes while avoiding unhahsable type error
+        if isinstance(target, BaseModel) or (isinstance(target, type) and issubclass(target, BaseModel)):
+            if hasattr(target, self.ALREADY_AUTODOCED_ATTR) and getattr(target, self.ALREADY_AUTODOCED_ATTR) is True:
+                raise ValueError("Object already has autodoc rules applied to it, cannot re-apply auto documentation"
+                                 f"without first resetting the __doc__ attribute and setting "
+                                 f"{self.ALREADY_AUTODOCED_ATTR} to False (or deleting it)")
+        else:
+            raise TypeError("Cannot use auto-doc tech on non-BaseModel subclasses")
+        self.base_doc = target.__doc__
+        self.target = target
+        setattr(target, self.ALREADY_AUTODOCED_ATTR, True)
+        self.allow_failure = allow_failure
+
+    def __get__(self, *args):
+        return doc_formatter(self.base_doc, self.target, allow_failure=self.allow_failure)
+
+    def __del__(self):
+        try:
+            self.target.__doc__ = self.base_doc
+            if hasattr(self.target, self.ALREADY_AUTODOCED_ATTR):
+                setattr(self.target, self.ALREADY_AUTODOCED_ATTR, False)
+        except:
+            # Corner case where trying to reapply and failing cannot delete the new self mid __init__ since
+            # base_doc has not been set.
+            pass
+
+
+def auto_gen_docs_on_demand(target: Union[BaseModel, type(BaseModel)], allow_failure: bool = True):
+    """Tell a Pydantic base model to generate its docstrings on the fly with the tech here """
+    target.__doc__ = AutoPydanticDocGenerator(target, allow_failure=allow_failure)
 
 
 def replace_dict_keys(data, replacement):

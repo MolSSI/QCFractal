@@ -12,11 +12,11 @@ from .records import OptimizationRecord, ResultRecord
 from .task_models import PythonComputeSpec, TaskRecord, TaskStatusEnum, ManagerStatusEnum
 from .torsiondrive import TorsionDriveInput, TorsionDriveRecord
 
-from ..util import doc_formatter
+from ..util import auto_gen_docs_on_demand
+
 
 for model in (ComputeResponse, KeywordSet, Molecule, OptimizationRecord, QCSpecification,
-              GridOptimizationInput, GridOptimizationRecord,
-              OptimizationRecord, ResultRecord,
+              GridOptimizationInput, GridOptimizationRecord, ResultRecord,
               PythonComputeSpec, TaskRecord,
               TorsionDriveInput, TorsionDriveRecord):
-    doc_formatter(model)
+    auto_gen_docs_on_demand(model)

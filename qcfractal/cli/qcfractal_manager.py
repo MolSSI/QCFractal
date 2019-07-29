@@ -17,7 +17,7 @@ import qcfractal
 from pydantic import BaseModel, BaseSettings, validator, Schema
 
 from . import cli_utils
-from ..interface.util import doc_formatter
+from ..interface.util import auto_gen_docs_on_demand
 
 __all__ = ["main"]
 
@@ -105,7 +105,7 @@ class CommonManagerSettings(BaseSettings):
         pass
 
 
-doc_formatter(CommonManagerSettings)
+auto_gen_docs_on_demand(CommonManagerSettings)
 
 
 class FractalServerSettings(BaseSettings):
@@ -140,7 +140,7 @@ class FractalServerSettings(BaseSettings):
         pass
 
 
-doc_formatter(FractalServerSettings)
+auto_gen_docs_on_demand(FractalServerSettings)
 
 
 class QueueManagerSettings(BaseSettings):
@@ -204,7 +204,7 @@ class QueueManagerSettings(BaseSettings):
     )
 
 
-doc_formatter(QueueManagerSettings)
+auto_gen_docs_on_demand(QueueManagerSettings)
 
 
 class SchedulerEnum(str, Enum):
@@ -281,7 +281,7 @@ class ClusterSettings(BaseSettings):
         return v.lower()
 
 
-doc_formatter(ClusterSettings)
+auto_gen_docs_on_demand(ClusterSettings)
 
 
 class SettingsBlocker(BaseSettings):
@@ -344,7 +344,7 @@ class DaskQueueSettings(SettingsBlocker):
     _forbidden_name = "dask_jobqueue"
 
 
-doc_formatter(DaskQueueSettings)
+auto_gen_docs_on_demand(DaskQueueSettings)
 
 
 class ParslExecutorSettings(SettingsBlocker):
@@ -375,7 +375,7 @@ class ParslExecutorSettings(SettingsBlocker):
     _forbidden_name = "the parsl executor"
 
 
-doc_formatter(ParslExecutorSettings)
+auto_gen_docs_on_demand(ParslExecutorSettings)
 
 
 class ParslLauncherSettings(BaseSettings):
@@ -436,7 +436,7 @@ class ParslLauncherSettings(BaseSettings):
         pass
 
 
-doc_formatter(ParslLauncherSettings)
+auto_gen_docs_on_demand(ParslLauncherSettings)
 
 
 class ParslProviderSettings(SettingsBlocker):
@@ -473,7 +473,7 @@ class ParslProviderSettings(SettingsBlocker):
     _forbidden_name = "parsl's provider"
 
 
-doc_formatter(ParslProviderSettings)
+auto_gen_docs_on_demand(ParslProviderSettings)
 
 
 class ParslQueueSettings(BaseSettings):
@@ -494,7 +494,7 @@ class ParslQueueSettings(BaseSettings):
         extra = "allow"
 
 
-doc_formatter(ParslQueueSettings)
+auto_gen_docs_on_demand(ParslQueueSettings)
 
 
 class ManagerSettings(BaseModel):
@@ -516,7 +516,7 @@ class ManagerSettings(BaseModel):
         extra = "forbid"
 
 
-doc_formatter(ManagerSettings)
+auto_gen_docs_on_demand(ManagerSettings)
 
 
 def parse_args():
