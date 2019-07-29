@@ -3,7 +3,7 @@ Models for the REST interface
 """
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from pydantic import BaseConfig, BaseModel, constr, validator
+from pydantic import BaseConfig, BaseModel, constr, validator, Schema
 
 from .common_models import KeywordSet, Molecule, ObjectId
 from .gridoptimization import GridOptimizationInput
@@ -132,7 +132,8 @@ class QueryMetaProjection(QueryMeta):
 
 
 class ComputeResponse(BaseModel):
-    ids: List[Optional[ObjectId]]
+    ids: List[Optional[ObjectId]] = Schema(...,
+                                           description="The ID's of the records to be computed")
     submitted: List[ObjectId]
     existing: List[ObjectId]
 

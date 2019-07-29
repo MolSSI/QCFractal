@@ -3,7 +3,7 @@ Common models for QCPortal/Fractal
 """
 import json
 from enum import Enum
-from typing import Any, Dict, Optional, Union, List, Tuple
+from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, validator
 from qcelemental.models import Molecule, Provenance

@@ -70,13 +70,14 @@ Collections are the primary way of viewing and generating new data.
    collection-dataset
    collection-torsiondrive
 
-**Model Documentation**
+**Record Documentation**
 
-Documentation for models and compute records.
+Documentation for compute records.
 
 * :doc:`record-overview`
 * :doc:`results`
 * :doc:`procedures`
+* :doc:`record_api`
 
 .. toctree::
    :maxdepth: 1
@@ -86,6 +87,7 @@ Documentation for models and compute records.
    record-overview.rst
    results.rst
    procedures.rst
+   record_api.rst
 
 
 **Fractal Client**
