@@ -71,6 +71,10 @@ def parse_type_str(prop) -> str:
             prop_type_str = typing_map[prop.shape] + '[' + ', '.join([parse_type_str(sf) for sf in sub_fields]) + ']'
         elif prop.type_ is Any:
             prop_type_str = "Any"
+    elif "ConstrainedInt" in prop.type_.__name__:
+        prop_type_str = "ConstrainedInt"
+    elif "ConstrainedFloat" in prop.type_.__name__:
+        prop_type_str = "ConstrainedFloat"
     elif prop.shape in typing_map.keys():
         if prop.sub_fields is None:
             # Single item
@@ -134,20 +138,14 @@ def doc_formatter(target_object, allow_failure=True):
                 second_line = "\n" + indent(prop_desc, "    ") if prop_desc is not None else ""
                 # Finally, write the detailed doc string
                 new_doc += first_line + second_line + "\n"
-        except Exception:
+        except:
             if allow_failure:
                 new_doc = doc
             else:
                 raise
-        except (SystemExit, KeyboardInterrupt):
-            # Make lgtm happy. Since this is user/higher order failures than this function, always raise.
-            raise
 
     else:
         new_doc = doc
-    # except:
-    #     # Something in the formatting went wrong, just ignore it since this is just docstring formatting
-    #     new_doc = doc
 
     # Assign the new doc string
     target_object.__doc__ = new_doc

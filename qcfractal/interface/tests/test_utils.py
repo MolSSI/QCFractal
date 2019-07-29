@@ -42,10 +42,15 @@ def doc_fixture():
         dlu: Dict[Union[int, str], List[Union[int, str, float]]] = Schema(..., description="this is complicated")
         dlu2: Dict[Any, List[Union[int, str, float]]]
         dlu3: Dict[str, Any]
-        s: int = Schema(
+        si: int = Schema(
             ...,
             description="A level of constraint",
             gt=0
+        )
+        sf: float = Schema(
+            None,
+            description="Optional Constrained Number",
+            le=100.3
         )
     yield X
 
@@ -69,6 +74,7 @@ def test_doc_formatter(doc_fixture):
     portal.util.doc_formatter(doc_fixture, allow_failure=False)
     assert "this is complicated" in doc_fixture.__doc__
     assert "z3 : float, Optional" in doc_fixture.__doc__
+    print(doc_fixture.__doc__)
 
 
 def test_doc_formatter_exiting(doc_fixture):
