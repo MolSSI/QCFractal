@@ -5,7 +5,7 @@ Tests for the interface utility functions.
 from . import portal
 from pydantic import BaseModel, Schema
 from typing import Optional, List, Union, Tuple, Dict, Any
-from pytest import fixture
+from pytest import fixture, raises
 
 
 @fixture(scope="function")
@@ -70,14 +70,33 @@ def test_replace_dict_keys():
     assert ret == {10: {10: 10}}
 
 
-def test_doc_formatter(doc_fixture):
-    portal.util.doc_formatter(doc_fixture, allow_failure=False)
+def test_auto_gen_doc(doc_fixture):
+    assert "this is complicated" not in doc_fixture.__doc__
+    portal.util.auto_gen_docs_on_demand(doc_fixture, allow_failure=False)
     assert "this is complicated" in doc_fixture.__doc__
     assert "z3 : float, Optional" in doc_fixture.__doc__
-    print(doc_fixture.__doc__)
+    # Check that docstring does not get duplicated for some reason
+    assert doc_fixture.__doc__.count("z3 : float, Optional") == 1
 
 
-def test_doc_formatter_exiting(doc_fixture):
+def test_auto_gen_doc_exiting(doc_fixture):
     doc_fixture.__doc__ = "Parameters\n"
-    portal.util.doc_formatter(doc_fixture, allow_failure=False)
+    portal.util.auto_gen_docs_on_demand(doc_fixture, allow_failure=False)
     assert "this is complicated" not in doc_fixture.__doc__
+
+
+def test_auto_gen_doc_reapply_failure(doc_fixture):
+    portal.util.auto_gen_docs_on_demand(doc_fixture, allow_failure=False)
+    with raises(ValueError):
+        # Allow true here because we are testing application, not errors in the doc generation itself
+        portal.util.auto_gen_docs_on_demand(doc_fixture, allow_failure=True)
+
+
+def test_auto_gen_doc_delete(doc_fixture):
+    portal.util.auto_gen_docs_on_demand(doc_fixture, allow_failure=False)
+    assert "this is complicated" in doc_fixture.__doc__
+    assert "A Pydantic model" in doc_fixture.__doc__
+    del doc_fixture.__doc__
+    assert "this is complicated" not in doc_fixture.__doc__
+    assert "A Pydantic model" in doc_fixture.__doc__
+

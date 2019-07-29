@@ -10,7 +10,7 @@ from typing import Optional
 from pydantic import BaseSettings, Schema, validator
 import yaml
 
-from .interface.util import doc_formatter
+from .interface.util import auto_gen_docs_on_demand
 
 
 def _str2bool(v):
@@ -74,7 +74,7 @@ class DatabaseSettings(ConfigSettings):
         pass
 
 
-doc_formatter(DatabaseSettings)
+auto_gen_docs_on_demand(DatabaseSettings)
 
 
 class FractalServerSettings(ConfigSettings):
@@ -117,7 +117,7 @@ class FractalServerSettings(ConfigSettings):
         pass
 
 
-doc_formatter(FractalServerSettings)
+auto_gen_docs_on_demand(FractalServerSettings)
 
 
 class FractalConfig(ConfigSettings):
@@ -203,4 +203,4 @@ class FractalConfig(ConfigSettings):
             return os.path.join(self.base_folder, self.fractal._default_geo_filename)
 
 
-doc_formatter(FractalConfig)
+auto_gen_docs_on_demand(FractalConfig)
