@@ -299,8 +299,7 @@ class SettingsBlocker(BaseSettings):
             raise KeyError("The following items were set as part of {}, however, "
                            "there are other config items which control these in more generic "
                            "settings locations: {}".format(self._forbidden_name, bad_set))
-        # Explicit super(...).__init__ to try and make LGTM happy
-        super(BaseSettings, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     class Config(SettingsCommonConfig):
         # This overwrites the base config to allow other keywords to be fed in

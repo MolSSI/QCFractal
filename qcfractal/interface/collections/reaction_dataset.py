@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
-from qcfractal.interface.util import replace_dict_keys
+from ..util import replace_dict_keys
 from ..models import ComputeResponse, Molecule
 
 
