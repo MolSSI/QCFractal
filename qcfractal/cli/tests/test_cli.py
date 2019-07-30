@@ -193,3 +193,10 @@ def test_cli_managers_schema():
     """Test that qcfractal_manager --schema works"""
     args = ["qcfractal-manager", "--schema"]
     testing.run_process(args, **_options)
+
+
+def test_cli_managers_skel(tmp_path):
+    """Test that qcfractal_manager --skeleton works"""
+    config = tmp_path / "config.yaml"
+    args = ["qcfractal-manager", "--skel", config.as_posix()]
+    testing.run_process(args, **_options)

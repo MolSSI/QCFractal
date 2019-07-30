@@ -548,13 +548,6 @@ class QueueManager:
 
         open_slots = max(0, self.max_tasks - self.active)
 
-        if (new_tasks is False) or (open_slots == 0):
-            return True
-
-        # Get new tasks
-        payload = self._payload_template()
-        payload["data"]["limit"] = open_slots
-
         # Crunch Statistics
         self.statistics.total_failed_tasks += n_fail
         self.statistics.total_successful_tasks += n_success
@@ -562,35 +555,49 @@ class QueueManager:
         na_format = ''
         float_format = ',.2f'
         if self.statistics.total_completed_tasks == 0:
-            success_rate = "(N/A yet)"
-            success_format = na_format
+            task_stats_str = "Task statistics unavailable until first tasks return"
+            worker_stats_str = None
         else:
             success_rate = self.statistics.total_successful_tasks / self.statistics.total_completed_tasks * 100
             success_format = float_format
-        task_stats_str = (f"Task Stats: Processed={self.statistics.total_completed_tasks}, "
-                          f"Failed={self.statistics.total_failed_tasks}, "
-                          f"Success={success_rate:{success_format}}%")
-        worker_stats_str = f"Worker Stats (est.): Core Hours Used={self.statistics.total_core_hours:{float_format}}"
+            task_stats_str = (f"Task Stats: Processed={self.statistics.total_completed_tasks}, "
+                              f"Failed={self.statistics.total_failed_tasks}, "
+                              f"Success={success_rate:{success_format}}%")
+            worker_stats_str = f"Worker Stats (est.): Core Hours Used={self.statistics.total_core_hours:{float_format}}"
 
-        # Handle efficiency calculations
-        if log_efficiency:
-            # Efficiency calculated as:
-            # sum_task(task_wall_time * nthread / task) / sum_time(number_running_worker * nthread / worker * interval)
-            if self.statistics.total_core_hours_consumed == 0 or self.statistics.total_core_hours_possible == 0:
-                efficiency_of_running = "(N/A yet)"
-                efficiency_of_potential = "(N/A yet)"
-                efficiency_format = na_format
-            else:
-                efficiency_of_running = self.statistics.total_core_hours / self.statistics.total_core_hours_consumed
-                efficiency_of_potential = self.statistics.total_core_hours / self.statistics.total_core_hours_possible
-                efficiency_format = float_format
-            worker_stats_str += f", Core Usage Efficiency: {efficiency_of_running*100:{efficiency_format}}%"
-            if self.verbose:
-                worker_stats_str += (f", Core Usage vs. Max Resources Requested: "
-                                     f"{efficiency_of_potential*100:{efficiency_format}}%")
+            # Handle efficiency calculations
+            if log_efficiency:
+                # Efficiency calculated as:
+                # sum_task(task_wall_time * nthread / task)
+                # -------------------------------------------------------------
+                # sum_time(number_running_worker * nthread / worker * interval)
+                if self.statistics.total_core_hours_consumed == 0 or self.statistics.total_core_hours_possible == 0:
+                    efficiency_of_running = "(N/A yet)"
+                    efficiency_of_potential = "(N/A yet)"
+                    efficiency_format = na_format
+                else:
+                    efficiency_of_running = (self.statistics.total_core_hours /
+                                             self.statistics.total_core_hours_consumed
+                                             * 100)
+                    efficiency_of_potential = (self.statistics.total_core_hours /
+                                               self.statistics.total_core_hours_possible
+                                               * 100)
+                    efficiency_format = float_format
+                worker_stats_str += f", Core Usage Efficiency: {efficiency_of_running:{efficiency_format}}%"
+                if self.verbose:
+                    worker_stats_str += (f", Core Usage vs. Max Resources Requested: "
+                                         f"{efficiency_of_potential:{efficiency_format}}%")
 
         self.logger.info(task_stats_str)
-        self.logger.info(worker_stats_str)
+        if worker_stats_str is not None:
+            self.logger.info(worker_stats_str)
+
+        if (new_tasks is False) or (open_slots == 0):
+            return True
+
+        # Get new tasks
+        payload = self._payload_template()
+        payload["data"]["limit"] = open_slots
 
         try:
             new_tasks = self.client._automodel_request("queue_manager", "get", payload)
