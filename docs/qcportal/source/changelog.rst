@@ -15,6 +15,16 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.8.1 / 2019-07-30
+------------------
+
+Bug Fixes
++++++++++
+
+- (:pr:`335`) Dataset's ``get_history`` function is fixed by allowing the ability to force a new query even if one has
+  already been cached.
+
+
 0.8.0 / 2019-07-25
 ------------------
 
