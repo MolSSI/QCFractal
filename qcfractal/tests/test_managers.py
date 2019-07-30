@@ -2,6 +2,9 @@
 Explicit tests for queue manipulation.
 """
 
+import contextlib
+import logging
+import re
 import time
 from concurrent.futures import ProcessPoolExecutor
 
@@ -12,6 +15,21 @@ from qcfractal import FractalServer, queue, testing
 from qcfractal.testing import reset_server_database, test_server
 
 CLIENT_USERNAME = "test_compute_adapter"
+
+
+@contextlib.contextmanager
+def caplog_handler_at_level(caplog_fixture, level, logger=None):
+    """
+    Helper function to set the caplog fixture's handler to a certain level as well, otherwise it wont be captured
+
+    e.g. if caplog.set_level(logging.INFO) but caplog.handler is at logging.CRITICAL, anything below CRITICAL wont be
+    captured.
+    """
+    starting_handler_level = caplog_fixture.handler.level
+    caplog_fixture.handler.setLevel(level)
+    with caplog_fixture.at_level(level, logger=logger):
+        yield
+    caplog_fixture.handler.setLevel(starting_handler_level)
 
 
 @pytest.fixture(scope="module")
@@ -56,6 +74,37 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
         assert manager["submitted"] == value
         assert manager["completed"] == value
         assert manager["username"] == CLIENT_USERNAME
+
+
+@testing.using_rdkit
+def test_queue_manager_statistics(compute_adapter_fixture, caplog):
+    """Test statistics are correctly generated"""
+    # Setup manager and add some compute
+    client, server, adapter = compute_adapter_fixture
+    reset_server_database(server)
+
+    manager = queue.QueueManager(client, adapter, verbose=True)
+
+    hooh = ptl.data.get_molecule("hooh.json")
+    client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
+
+    # Set capture level
+    with caplog_handler_at_level(caplog, logging.INFO):
+        # Pull jobs to manager
+        manager.update()
+        # Tasks should not have been started yet
+        assert "Task statistics unavailable" in caplog.text
+        assert "Task Stats: Processed" not in caplog.text
+        manager.await_results()
+        # Ensure text is at least generated
+        assert "Task Stats: Processed" in caplog.text
+        assert "Core Usage vs. Max Resources" in caplog.text
+        # Ensure some kind of stats are being calculated seemingly correctly
+        stats_re = re.search(r'Core Usage Efficiency: (\d+\.\d+)%', caplog.text)
+        assert stats_re is not None and float(stats_re.group(1)) != 0.0
+    # Clean up capture so it does not flood the output
+    caplog.records.clear()
+    caplog.handler.records.clear()
 
 
 @testing.using_rdkit

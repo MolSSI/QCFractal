@@ -548,13 +548,6 @@ class QueueManager:
 
         open_slots = max(0, self.max_tasks - self.active)
 
-        if (new_tasks is False) or (open_slots == 0):
-            return True
-
-        # Get new tasks
-        payload = self._payload_template()
-        payload["data"]["limit"] = open_slots
-
         # Crunch Statistics
         self.statistics.total_failed_tasks += n_fail
         self.statistics.total_successful_tasks += n_success
@@ -598,6 +591,13 @@ class QueueManager:
         self.logger.info(task_stats_str)
         if worker_stats_str is not None:
             self.logger.info(worker_stats_str)
+
+        if (new_tasks is False) or (open_slots == 0):
+            return True
+
+        # Get new tasks
+        payload = self._payload_template()
+        payload["data"]["limit"] = open_slots
 
         try:
             new_tasks = self.client._automodel_request("queue_manager", "get", payload)
