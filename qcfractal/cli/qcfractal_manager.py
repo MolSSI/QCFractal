@@ -4,9 +4,12 @@ A command line interface to the qcfractal server.
 
 import argparse
 import signal
+import json
 import logging
 from enum import Enum
 from math import ceil
+import os
+import yaml
 
 from typing import List, Optional
 
@@ -569,6 +572,10 @@ def parse_args():
                                                                 "config file and exit. This will always show the "
                                                                 "most up-to-date schema. It will be presented in a "
                                                                 "JSON-like format.")
+    optional.add_argument("--skeleton", "--skel", type=str, help="Create a skeleton/example YAML config file at the "
+                                                                 "specified path. This does not start the manager "
+                                                                 "and instead creates a skeleton based on all the "
+                                                                 "options specified.")
 
     # Move into nested namespace
     args = vars(parser.parse_args())
@@ -593,7 +600,7 @@ def parse_args():
                                         "update_frequency", "test", "ntests"}),
         # This set is for this script only, items here should not be passed to the ManagerSettings nor any other
         # classes
-        "debug": _build_subset(args, {"schema"})
+        "debug": _build_subset(args, {"schema", "skeleton"})
     } # yapf: disable
 
     if args["config_file"] is not None:
@@ -631,10 +638,36 @@ def main(args=None):
     except KeyError:
         pass  # Don't worry if schema isn't in the list
     finally:
-        args.pop("debug", None)  # Ensure the debug key is not present
+        debug_args = args.pop("debug", {})  # Ensure the debug key is not present
 
     # Construct object
     settings = ManagerSettings(**args)
+
+    # Handle Skeleton Generation
+    if debug_args.get("skeleton", None):
+
+        class IndentListDumper(yaml.Dumper):
+            """
+            Internal yaml Dumper to make lists indent in the output YAML
+
+            Buried inside this since its only used in "skeleton," once, and then exits. Does not need to be imported
+            anywhere else or accessed somehow
+
+            Based on response:
+            https://stackoverflow.com/questions/25108581/python-yaml-dump-bad-indentation/39681672#39681672
+            """
+
+            def increase_indent(self, flow=False, indentless=False):
+                return super(IndentListDumper, self).increase_indent(flow, False)
+
+        skel_path = os.path.expanduser(debug_args["skeleton"])
+        with open(skel_path, "w") as skel:
+            # cast to
+            data = yaml.dump(json.loads(settings.json()), Dumper=IndentListDumper, default_flow_style=False)
+            skel.write(data)
+            print(f"Skeleton Queue Manager YAML file written to {skel_path}\n"
+                  f"Run: `qcfractal-manager --config-file={skel_path}` to start a manager with this configuration.")
+            return
 
     logger_map = {AdapterEnum.pool: "",
                   AdapterEnum.dask: "dask_jobqueue.core",
