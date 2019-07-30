@@ -581,13 +581,15 @@ class QueueManager:
                 efficiency_of_potential = "(N/A yet)"
                 efficiency_format = na_format
             else:
-                efficiency_of_running = self.statistics.total_core_hours / self.statistics.total_core_hours_consumed
-                efficiency_of_potential = self.statistics.total_core_hours / self.statistics.total_core_hours_possible
+                efficiency_of_running = (self.statistics.total_core_hours / self.statistics.total_core_hours_consumed
+                                         * 100)
+                efficiency_of_potential = (self.statistics.total_core_hours / self.statistics.total_core_hours_possible
+                                           * 100)
                 efficiency_format = float_format
-            worker_stats_str += f", Core Usage Efficiency: {efficiency_of_running*100:{efficiency_format}}%"
+            worker_stats_str += f", Core Usage Efficiency: {efficiency_of_running:{efficiency_format}}%"
             if self.verbose:
                 worker_stats_str += (f", Core Usage vs. Max Resources Requested: "
-                                     f"{efficiency_of_potential*100:{efficiency_format}}%")
+                                     f"{efficiency_of_potential:{efficiency_format}}%")
 
         self.logger.info(task_stats_str)
         self.logger.info(worker_stats_str)
