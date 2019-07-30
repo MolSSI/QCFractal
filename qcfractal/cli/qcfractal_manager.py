@@ -572,10 +572,14 @@ def parse_args():
                                                                 "config file and exit. This will always show the "
                                                                 "most up-to-date schema. It will be presented in a "
                                                                 "JSON-like format.")
-    optional.add_argument("--skeleton", "--skel", type=str, help="Create a skeleton/example YAML config file at the "
-                                                                 "specified path. This does not start the manager "
-                                                                 "and instead creates a skeleton based on all the "
-                                                                 "options specified.")
+    optional.add_argument("--skeleton", "--skel",
+                          type=str,
+                          const="manager_config.yaml",
+                          default=None,
+                          action='store',
+                          nargs='?',
+                          help="Create a skeleton/example YAML config file at the specified path. This does not start "
+                               "the manager and instead creates a skeleton based on all the options specified.")
 
     # Move into nested namespace
     args = vars(parser.parse_args())

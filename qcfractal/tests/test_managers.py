@@ -12,7 +12,7 @@ import pytest
 
 import qcfractal.interface as ptl
 from qcfractal import FractalServer, queue, testing
-from qcfractal.testing import reset_server_database, test_server
+from qcfractal.testing import reset_server_database, test_server, mark_slow
 
 CLIENT_USERNAME = "test_compute_adapter"
 
@@ -76,6 +76,7 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
         assert manager["username"] == CLIENT_USERNAME
 
 
+@mark_slow
 @testing.using_rdkit
 def test_queue_manager_statistics(compute_adapter_fixture, caplog):
     """Test statistics are correctly generated"""
