@@ -109,12 +109,13 @@ class FractalClient(object):
                 server_version_min_client = _version_list(self.server_info["client_lower_version_limit"])[:2]
                 server_version_max_client = _version_list(self.server_info["client_upper_version_limit"])[:2]
             except KeyError:
+                server_ver_str = ".".join([str(i) for i in self.server_info['version']])
                 raise IOError(f"The Server at {self.address}, version {self.server_info['version']} does not report "
                               f"what Client versions it accepts! It can be almost asserted your Client is too new for "
                               f"the Server you are connecting to. Please downgrade your Client with "
                               f"the one of following commands (pip or conda):"
-                              f"\n\t- pip install qcportal=={self.server_info['version']}"
-                              f"\n\t- conda install -c conda-forge qcportal=={self.server_info['version']}"
+                              f"\n\t- pip install qcportal=={server_ver_str}"
+                              f"\n\t- conda install -c conda-forge qcportal=={server_ver_str}"
                               f"\n(Only MAJOR.MINOR versions are checked)")
             client_version = _version_list(__version__)[:2]
             if not server_version_min_client <= client_version <= server_version_max_client:
@@ -128,7 +129,6 @@ class FractalClient(object):
                               f"\n\t- pip install qcportal=={server_version_max_str}.*"
                               f"\n\t- conda install -c conda-forge qcportal=={server_version_max_str}.*"
                               f"\n(Only MAJOR.MINOR versions are checked and shown)")
-
 
     def __repr__(self) -> str:
         """A short representation of the current FractalClient.
