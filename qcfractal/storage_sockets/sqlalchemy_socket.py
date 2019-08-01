@@ -1664,6 +1664,9 @@ class SQLAlchemySocket:
             Updated count
         """
 
+        if not task_ids:
+            return 0
+
         update_fields = dict(status=TaskStatusEnum.complete, modified_on=dt.utcnow())
         with self.session_scope() as session:
             # assuming all task_ids are valid, then managers will be in order by id
@@ -1691,6 +1694,9 @@ class SQLAlchemySocket:
         Mark the corresponding result/procedure as Errored
 
         """
+
+        if not data:
+            return 0
 
         task_ids = []
         with self.session_scope() as session:
