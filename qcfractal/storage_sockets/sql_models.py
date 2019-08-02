@@ -306,6 +306,10 @@ class BaseResultORM(Base):
 
     # Base identification
     id = Column(Integer, primary_key=True)
+     # ondelete="SET NULL": when manger is deleted, set this field to None
+    manager_name = Column(String, ForeignKey('queue_manager.name', ondelete="SET NULL"),
+                        nullable=True,)
+
     hash_index = Column(String)  # TODO
     procedure = Column(String(100))  # TODO: may remove
     # program = Column(String(100))  # moved to subclasses
@@ -347,20 +351,6 @@ class BaseResultORM(Base):
         Index('ix_base_result_status', 'status'),
         Index('ix_base_result_type', 'result_type'),  # todo: needed?
     )
-
-    # meta = {
-    #     # 'allow_inheritance': True,
-    #     'indexes': ['status']
-    # }
-
-    # def save(self, *args, **kwargs):
-    #     """Override save to set defaults"""
-    #
-    #     self.modified_on = datetime.datetime.utcnow()
-    #     if not self.created_on:
-    #         self.created_on = datetime.datetime.utcnow()
-    #
-    #     return super(BaseResultORM, self).save(*args, **kwargs)
 
     __mapper_args__ = {'polymorphic_on': 'result_type'}
 
@@ -408,15 +398,6 @@ class ResultORM(BaseResultORM):
         # Index('ix_results_molecule', 'molecule'),  # b-tree index
         UniqueConstraint("program", "driver", "method", "basis", "keywords", "molecule", name='uix_results_keys'), )
 
-    # meta = {
-    #     # 'collection': 'result',
-    #     'indexes': [
-    #         {
-    #             'fields': ('program', 'driver', 'method', 'basis', 'molecule', 'keywords'),
-    #             'unique': True
-    #         },
-    #     ]
-    # }
 
     __mapper_args__ = {
         'polymorphic_identity': 'result',
@@ -795,23 +776,11 @@ class TaskQueueORM(Base):
     # rows, but if there is an index matching the ORDER BY, the first n rows
     # can be retrieved directly, without scanning the remainder at all.
 
-    __table_args__ = (Index('ix_task_queue_created_on',
-                            "created_on"), Index('ix_task_queue_keys', "status", "program", "procedure", "tag"),
-                      Index('ix_task_queue_manager', "manager"), Index('ix_task_queue_base_result_id',
-                                                                       "base_result_id"))
-
-    # meta = {
-    #     'indexes': [
-    #         'created_on',
-    #         'status',
-    #         'manager',
-    #         {
-    #             'fields': ('base_result', ),
-    #             'unique': True
-    #         },  # new
-    #     ]
-    # }
-
+    __table_args__ = (Index('ix_task_queue_created_on', "created_on"),
+                      Index('ix_task_queue_keys', "status", "program", "procedure", "tag"),
+                      Index('ix_task_queue_manager', "manager"),
+                      Index('ix_task_queue_base_result_id', "base_result_id")
+                      )
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -835,9 +804,6 @@ class ServiceQueueORM(Base):
 
     extra = Column(JSON)
 
-    # created_on = Column(DateTime, nullable=False)
-    # modified_on = Column(DateTime, nullable=False)
-
     __table_args__ = (
         Index('ix_service_queue_status', "status"),
         Index('ix_service_queue_priority', "priority"),
@@ -845,18 +811,6 @@ class ServiceQueueORM(Base):
         Index('ix_service_queue_status_tag_hash', "status", "tag"),
         Index('ix_service_queue_hash_index', "hash_index"),
     )
-
-    # meta = {
-    #     'indexes': [
-    #         'status',
-    #         {
-    #             'fields': ("status", "tag", "hash_index"),
-    #             'unique': False
-    #         },
-    #         # {'fields': ('procedure',), 'unique': True}
-    #     ]
-    # }
-
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -870,8 +824,6 @@ class UserORM(Base):
     username = Column(String, nullable=False, unique=True)  # indexed and unique
     password = Column(Binary, nullable=False)
     permissions = Column(JSON)  # Column(ARRAY(String))
-
-    # meta = {'collection': 'user', 'indexes': ['username']}
 
 
 class QueueManagerORM(Base):
@@ -905,14 +857,6 @@ class QueueManagerORM(Base):
     programs = Column(JSON)
     procedures = Column(JSON)
 
-    __table_args__ = (Index('ix_queue_manager_status', "status"), Index('ix_queue_manager_modified_on', "modified_on"))
-
-    # meta = {'collection': 'queue_manager', 'indexes': ['status', 'name', 'modified_on']}
-
-    # def save(self, *args, **kwargs):
-    #     """Override save to update modified_on"""
-    #     self.modified_on = datetime.datetime.utcnow()
-    #     if not self.created_on:
-    #         self.created_on = datetime.datetime.utcnow()
-    #
-    #     return super(QueueManagerORM, self).save(*args, **kwargs)
+    __table_args__ = (Index('ix_queue_manager_status', "status"),
+                      Index('ix_queue_manager_modified_on', "modified_on")
+                      )

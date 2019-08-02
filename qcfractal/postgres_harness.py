@@ -107,7 +107,8 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
             database=database,
             user=self.config.database.username,
             host=self.config.database.host,
-            port=self.config.database.port)
+            port=self.config.database.port,
+            password=self.config.database.password)
 
     def is_alive(self, database: Optional[str] = None) -> bool:
         """Checks if the postgres is alive, and optionally if the database is present.

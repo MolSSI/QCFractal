@@ -56,6 +56,7 @@ class RecordBase(BaseModel, abc.ABC):
 
     # Compute status
     task_id: Optional[ObjectId] = None  # TODO: not used in SQL
+    manager_name: Optional[str] = None
     status: RecordStatusEnum = "INCOMPLETE"
     modified_on: datetime.datetime = None
     created_on: datetime.datetime = None

@@ -4,7 +4,7 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 
 
 try:
-    from sqlalchemy import create_engine, or_
+    from sqlalchemy import create_engine, or_, case
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
     from sqlalchemy.sql.expression import func
@@ -150,6 +150,7 @@ class SQLAlchemySocket:
         self.logger.info(f"SQLAlchemy attempt to connect to {uri}.")
 
         # Connect to DB and create session
+        self.uri = uri
         self.engine = create_engine(
             uri,
             echo=sql_echo,  # echo for logging into python logging
@@ -949,6 +950,7 @@ class SQLAlchemySocket:
                     driver: str = None,
                     keywords: str = None,
                     task_id: Union[str, List] = None,
+                    manager_id: Union[str, List] = None,
                     status: str = 'COMPLETE',
                     projection=None,
                     limit: int = None,
@@ -968,6 +970,10 @@ class SQLAlchemySocket:
         driver : str
         keywords : str
             The id of the option in the DB
+        task_id: str or list
+            id or a list of ids of tasks
+        manager_id: str or list
+            id or a list of ids of queue_mangers
         status : bool, default is 'COMPLETE'
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
         projection : list/set/tuple of keys, default is None
@@ -1007,6 +1013,7 @@ class SQLAlchemySocket:
                              molecule=molecule,
                              driver=driver,
                              keywords=keywords,
+                             manager_id=manager_id,
                              status=status)
 
         data = []
@@ -1136,6 +1143,7 @@ class SQLAlchemySocket:
                        program: str = None,
                        hash_index: str = None,
                        task_id: Union[str, List] = None,
+                       manager_id: Union[str, List] = None,
                        status: str = 'COMPLETE',
                        projection=None,
                        limit: int = None,
@@ -1199,6 +1207,7 @@ class SQLAlchemySocket:
                              program=program,
                              hash_index=hash_index,
                              task_id=task_id,
+                             manager_id=manager_id,
                              status=status)
 
         data = []
@@ -1518,7 +1527,7 @@ class SQLAlchemySocket:
 
     def queue_get_next(self, manager, available_programs, available_procedures, limit=100, tag=None,
                        as_json=True) -> List[TaskRecord]:
-        """TODO: needs to be done in a transcation"""
+        """Done in a transaction"""
 
         # Figure out query, tagless has no requirements
         query = format_query(TaskQueueORM, status=TaskStatusEnum.waiting, program=available_programs, tag=tag)
@@ -1655,9 +1664,19 @@ class SQLAlchemySocket:
             Updated count
         """
 
+        if not task_ids:
+            return 0
+
         update_fields = dict(status=TaskStatusEnum.complete, modified_on=dt.utcnow())
         with self.session_scope() as session:
-            # Update the base results
+            # assuming all task_ids are valid, then managers will be in order by id
+            managers = session.query(TaskQueueORM.manager)\
+                              .filter(TaskQueueORM.id.in_(task_ids))\
+                              .order_by(TaskQueueORM.id).all()
+            managers = [manager[0] if manager else manager for manager in managers]
+            task_manger_map = {task_id: manager for task_id, manager in zip(sorted(task_ids), managers)}
+            update_fields[BaseResultORM.manager_name] = case(task_manger_map, value=TaskQueueORM.id)
+
             session.query(BaseResultORM)\
                    .filter(BaseResultORM.id == TaskQueueORM.base_result_id)\
                    .filter(TaskQueueORM.id.in_(task_ids))\
@@ -1676,14 +1695,25 @@ class SQLAlchemySocket:
 
         """
 
+        if not data:
+            return 0
+
         task_ids = []
         with self.session_scope() as session:
-            ids = [err[0] for err in data]
-            task_objects = session.query(TaskQueueORM).filter(TaskQueueORM.id.in_(ids)).all()
+            # Make sure retuened results are in the same order as the task ids
+            # SQL queries change the order when using "in"
+            data_dict = {item[0]: item[1] for item in data}
+            sorted_data = {key: data_dict[key] for key in sorted(data_dict.keys())}
+            task_objects = session.query(TaskQueueORM)\
+                                  .filter(TaskQueueORM.id.in_(sorted_data.keys()))\
+                                  .order_by(TaskQueueORM.id).all()
             base_results = session.query(BaseResultORM)\
-                                    .filter(BaseResultORM.id == TaskQueueORM.base_result_id) \
-                                    .filter(TaskQueueORM.id.in_(ids)).all()
-            for (task_id, msg), task_obj, base_result in zip(data, task_objects, base_results):
+                                  .filter(BaseResultORM.id == TaskQueueORM.base_result_id) \
+                                   .filter(TaskQueueORM.id.in_(sorted_data.keys()))\
+                                   .order_by(TaskQueueORM.id).all()
+
+
+            for (task_id, msg), task_obj, base_result in zip(sorted_data.items(), task_objects, base_results):
 
                 task_ids.append(task_id)
                 # update task
@@ -1692,6 +1722,7 @@ class SQLAlchemySocket:
 
                 # update result
                 base_result.status = TaskStatusEnum.error
+                base_result.manager_name = task_obj.manager
                 base_result.modified_on = dt.utcnow()
                 base_result.error_obj = KVStoreORM(value=msg)
 
