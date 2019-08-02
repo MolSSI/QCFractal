@@ -3,9 +3,10 @@ A model for GridOptimization
 """
 import copy
 import json
+from enum import Enum
 from typing import Any, Dict, List, Tuple, Union
 
-from pydantic import BaseModel, constr, validator
+from pydantic import BaseModel, constr, validator, Schema
 
 from .common_models import Molecule, ObjectId, OptimizationSpecification, QCSpecification
 from .model_utils import json_encoders, recursive_normalizer
@@ -14,31 +15,57 @@ from .records import RecordBase
 __all__ = ["GridOptimizationInput", "GridOptimizationRecord"]
 
 
+class ScanTypeEnum(str, Enum):
+    """
+    The scan types allowed by the scan dimensions.
+    """
+    distance = 'distance'
+    angle = 'angle'
+    dihedral = 'dihedral'
+
+
+class StepTypeEnum(str, Enum):
+    """
+    The scan types allowed by the scan dimensions.
+    """
+    absolute = 'absolute'
+    relative = 'relative'
+
+
 class ScanDimension(BaseModel):
     """
     A dimension to scan over
     """
-    type: str
-    indices: List[int]
-    steps: List[float]
-    step_type: str
+    type: ScanTypeEnum = Schema(
+        ...,
+        description="What measurement to scan along"
+    )
+    indices: List[int] = Schema(
+        ...,
+        description="The indices of atoms to select for the scan. The size of this is a function of the type. e.g. "
+                    "distances take 2 atoms, angles take 3, and dihedrals take 4. "
+    )
+    steps: List[float] = Schema(
+        ...,
+        description="Step sizes to scan in relative to your current location in the scan. This must be a strictly "
+                    "monotonic series."
+    )
+    step_type: StepTypeEnum = Schema(
+        ...,
+        description="How to interpret the ``steps`` values in either an absolute or relative scale."
+    )
 
     class Config:
         extra = "forbid"
         allow_mutation = False
 
-    @validator('type')
-    def check_type(cls, v):
-        v = v.lower()
-        possibilities = {"distance", "angle", "dihedral"}
-        if v not in possibilities:
-            raise TypeError("Type '{}' found, can only be one of {}.".format(v, possibilities))
-
-        return v
+    @validator('type', 'step_type', pre=True)
+    def check_lower_type_step_type(cls, v):
+        return v.lower()
 
     @validator('indices', whole=True)
     def check_indices(cls, v, values, **kwargs):
-        sizes = {"distance": 2, "angle": 3, "dihedral": 4}
+        sizes = {ScanTypeEnum.distance: 2, ScanTypeEnum.angle: 3, ScanTypeEnum.dihedral: 4}
         if sizes[values["type"]] != len(v):
             raise ValueError("ScanDimension of type {} must have {} values, found {}.".format(
                 values["type"], sizes[values["type"]], len(v)))
@@ -54,21 +81,19 @@ class ScanDimension(BaseModel):
 
         return v
 
-    @validator('step_type')
-    def check_step_type(cls, v):
-        v = v.lower()
-        if v not in ["absolute", "relative"]:
-            raise KeyError("Keyword 'step_type' must either be absolute or relative.")
-
-        return v
-
 
 class GOKeywords(BaseModel):
     """
     GridOptimizationRecord options
     """
-    scans: List[ScanDimension]
-    preoptimization: bool = True
+    scans: List[ScanDimension] = Schema(
+        ...,
+        description="Which dimensions to scan along (along with their options) for the full G.O. operation"
+    )
+    preoptimization: bool = Schema(
+        True,
+        description="Whether or not to try to pre-optimize the scan with initial values."
+    )
 
     class Config:
         extra = "forbid"
@@ -84,12 +109,34 @@ class GridOptimizationInput(BaseModel):
     A GridOptimizationRecord Input base class
     """
 
-    program: _qcfractal_constr = "qcfractal"
-    procedure: _gridopt_constr = "gridoptimization"
-    initial_molecule: Union[ObjectId, Molecule]
-    keywords: GOKeywords
-    optimization_spec: OptimizationSpecification
-    qc_spec: QCSpecification
+    program: _qcfractal_constr = Schema(
+        "qcfractal",
+        description="The name of the source program which initializes the Grid Optimization. This is a constant "
+                    "and is used for provenance information."
+    )
+    procedure: _gridopt_constr = Schema(
+        "gridoptimization",
+        description="The name of the procedure being run, which is Grid Optimization. This is a constant "
+                    "and is used for provenance information."
+    )
+    initial_molecule: Union[ObjectId, Molecule] = Schema(
+        ...,
+        description="The Molecule to start the Grid Optimization with. This can either be an existing Molecule in "
+                    "the database (through its :class:`ObjectId`) or a fully specified :class:`Molecule` model."
+    )
+    keywords: GOKeywords = Schema(
+        ...,
+        description="The keyword options to run the Grid Optimization with."
+    )
+    optimization_spec: OptimizationSpecification = Schema(
+        ...,
+        description="The spec to run the underlying optimization through at each grid point"
+    )
+    qc_spec: QCSpecification = Schema(
+        ...,
+        description="The specification for each of the actual quantum chemistry calculations run in each optimization "
+                    "at each of the grid points."
+    )
 
     class Config:
         allow_mutation = False
@@ -105,21 +152,59 @@ class GridOptimizationRecord(RecordBase):
     _hash_indices = {"initial_molecule", "keywords", "optimization_meta", "qc_spec"}
 
     # Version data
-    version: int = 1
-    procedure: _gridopt_constr = "gridoptimization"
-    program: _qcfractal_constr = "qcfractal"
+    version: int = Schema(
+        1,
+        description="The version number of the Record itself."
+    )
+    procedure: _gridopt_constr = Schema(
+        "gridoptimization",
+        description="The name of the procedure being run, which is Grid Optimization. This is a constant "
+                    "and is used for provenance information."
+    )
+    program: _qcfractal_constr = Schema(
+        "qcfractal",
+        description="The name of the source program which initializes the Grid Optimization. This is a constant "
+                    "and is used for provenance information."
+    )
 
     # Input data
-    initial_molecule: ObjectId
-    keywords: GOKeywords
-    optimization_spec: OptimizationSpecification
-    qc_spec: QCSpecification
+    initial_molecule: ObjectId = Schema(
+        ...,
+        description="ID of the intial molecule in the database which this record references."
+    )
+    keywords: GOKeywords = Schema(
+        ...,
+        description="The keyword options to run the Grid Optimization with."
+    )
+    optimization_spec: OptimizationSpecification = Schema(
+        ...,
+        description="The spec to run the underlying optimization through at each grid point"
+    )
+    qc_spec: QCSpecification = Schema(
+        ...,
+        description="The specification for each of the actual quantum chemistry calculations run in each optimization "
+                    "at each of the grid points."
+    )
 
     # Output data
-    starting_molecule: ObjectId
-    final_energy_dict: Dict[str, float]
-    grid_optimizations: Dict[str, ObjectId]
-    starting_grid: tuple
+    starting_molecule: ObjectId = Schema(
+        ...,
+        description="ID of the molecule in the database which was selected for the starting optimization on the grid. "
+                    "This *CAN* be the same is the same ID as the initial_molecule, but in many cases is not."
+    )
+    final_energy_dict: Dict[str, float] = Schema(
+        ...,
+        description="Map of the final energy outputs from the grid optimization at each point"
+    )
+    grid_optimizations: Dict[str, ObjectId] = Schema(
+        ...,
+        description="Full record of the ID of each optimization at each of the grid points"
+    )
+    starting_grid: tuple = Schema(
+        ...,
+        description="Initial grid layout provided to the Grid Optimization procedure under which the scans were "
+                    "performed"
+    )
 
     class Config(RecordBase.Config):
         pass

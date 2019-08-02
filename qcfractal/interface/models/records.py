@@ -10,7 +10,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Union
 
 import qcelemental as qcel
-from pydantic import BaseModel, constr, validator
+from pydantic import BaseModel, constr, validator, Schema
 
 from .common_models import DriverEnum, ObjectId, QCSpecification
 from .model_utils import hash_dictionary, json_encoders, prepare_basis, recursive_normalizer
@@ -38,31 +38,88 @@ class RecordBase(BaseModel, abc.ABC):
     _hash_indices: Set[str]
 
     # Helper data
-    client: Any = None
-    cache: Dict[str, Any] = {}
+    client: Any = Schema(
+        None,
+        description="The client object which the records are fetched from"
+    )
+    cache: Dict[str, Any] = Schema(
+        {},
+        description="Object cache from expensive queries. It should be very rare that this needs to be set manually "
+                    "by the user."
+    )
 
     # Base identification
-    id: ObjectId = None
-    hash_index: Optional[str] = None
-    procedure: str
-    program: str
-    version: int
+    id: ObjectId = Schema(
+        None,
+        description="ID of the object on the database. This is assigned automatically when the object is fetched"
+    )
+    hash_index: Optional[str] = Schema(
+        None,
+        description="Hash of this object used to detect duplication and collisions in the atabase"
+    )
+    procedure: str = Schema(
+        ...,
+        description="Name of the procedure which this Record targets"
+    )
+    program: str = Schema(
+        ...,
+        description="The quantum chemistry program which carries out the individual quantum chemistry calculations"
+    )
+    version: int = Schema(
+        ...,
+        description="The version of this record object describes."
+    )
 
     # Extra fields
-    extras: Dict[str, Any] = {}
-    stdout: Optional[ObjectId] = None
-    stderr: Optional[ObjectId] = None
-    error: Optional[ObjectId] = None
+    extras: Dict[str, Any] = Schema(
+        {},
+        description="Extra information to associate with this record."
+    )
+    stdout: Optional[ObjectId] = Schema(
+        None,
+        description="The ID of the stdout data stored in the database which was used to generate this record from the "
+                    "various programs which were called in the process."
+    )
+    stderr: Optional[ObjectId] = Schema(
+        None,
+        description="The ID of the stderr data stored in the database which was used to generate this record from the "
+                    "various programs which were called in the process."
+    )
+    error: Optional[ObjectId] = Schema(
+        None,
+        description="The ID of the error data stored in the database in the event that an error was generated in the "
+                    "process of carrying out the process this record targets. If no errors were raised, this field "
+                    "will be empty"
+    )
 
     # Compute status
-    task_id: Optional[ObjectId] = None  # TODO: not used in SQL
-    manager_name: Optional[str] = None
-    status: RecordStatusEnum = "INCOMPLETE"
-    modified_on: datetime.datetime = None
-    created_on: datetime.datetime = None
+    task_id: Optional[ObjectId] = Schema(  # TODO: not used in SQL
+        None,
+        description="Id of the compute task tracked by Fractal in its TaskTable"
+    )
+    manager_name: Optional[str] = Schema(
+        None,
+        description="Name of the Queue Manager which generated this record"
+    )
+    status: RecordStatusEnum = Schema(
+        "INCOMPLETE",
+        description="What stage of computation is the compute record at"
+    )
+    modified_on: datetime.datetime = Schema(
+        None,
+        description="Last time the data this record points to was modified"
+    )
+    created_on: datetime.datetime = Schema(
+        None,
+        description="Time the data this record points to was first created"
+    )
 
     # Carry-ons
-    provenance: Optional[qcel.models.Provenance] = None
+    provenance: Optional[qcel.models.Provenance] = Schema(
+        None,
+        description="Provenance information tied to the creation of this record. This includes things such as every "
+                    "program which was involved in generating the data for this record."
+    )
 
     class Config:
         json_encoders = json_encoders
@@ -159,7 +216,6 @@ class RecordBase(BaseModel, abc.ABC):
 
         return True
 
-
 ### KVStore Getters
 
     def _kvstore_getter(self, field_name):
@@ -219,19 +275,47 @@ class ResultRecord(RecordBase):
     _hash_indices = {"driver", "method", "basis", "molecule", "keywords", "program"}
 
     # Version data
-    version: int = 1
-    procedure: constr(strip_whitespace=True, regex="single") = "single"
+    version: int = Schema(
+        1,
+        description="Version of the ResultRecord Model which this data was created with"
+    )
+    procedure: constr(strip_whitespace=True, regex="single") = Schema(
+        "single",
+        description='Fixed as "single" because this is single quantum chemistry result.'
+    )
 
     # Input data
-    driver: DriverEnum
-    method: str
-    molecule: ObjectId
-    basis: Optional[str] = None
-    keywords: Optional[ObjectId] = None
+    driver: DriverEnum = Schema(
+        ...,
+        description="What type of calculation this result is tied to."
+    )
+    method: str = Schema(
+        ...,
+        description="What quantum chemistry method the calculations was computed with."
+    )
+    molecule: ObjectId = Schema(
+        ...,
+        description="The ID of the molecule in the Database which the calculation was performed on."
+    )
+    basis: Optional[str] = Schema(
+        None,
+        description="The basis set which the calculation was performed with."
+    )
+    keywords: Optional[ObjectId] = Schema(
+        None,
+        description="The ID of the :class:`KeywordSet` which was passed into the quantum chemistry program that "
+                    "performed this calculation."
+    )
 
     # Output data
-    return_result: Union[float, List[float], Dict[str, Any]] = None
-    properties: qcel.models.ResultProperties = None
+    return_result: Union[float, List[float], Dict[str, Any]] = Schema(
+        None,
+        description="The primary result of the calculation, output is a function of ``driver`` specified."
+    )
+    properties: qcel.models.ResultProperties = Schema(
+        None,
+        description="Additional data and results computed as part of the ``return_result``."
+    )
 
     class Config(RecordBase.Config):
         """A hash index is not used for ResultRecords as they can be
@@ -295,7 +379,6 @@ class ResultRecord(RecordBase):
         self.stderr = data["stderr"]
         self.status = "COMPLETE"
 
-
 ## QCSchema constructors
 
     def get_molecule(self) -> 'Molecule':
@@ -327,19 +410,45 @@ class OptimizationRecord(RecordBase):
     _hash_indices = {"initial_molecule", "keywords", "qc_spec"}
 
     # Version data
-    version: int = 1
-    procedure: constr(strip_whitespace=True, regex="optimization") = "optimization"
-    schema_version: int = 1  # TODO: why not in Base
+    version: int = Schema(
+        1,
+        description="Version of the OptimizationRecord Model which this data was created with"
+    )
+    procedure: constr(strip_whitespace=True, regex="optimization") = Schema(
+        "optimization",
+        description='String indication this was a record for an "Optimization", fixed. '
+    )
+    schema_version: int = Schema(  # TODO: why not in Base
+        1,
+        description="The version number of QCSchema under which this record conforms to."
+    )
 
     # Input data
-    initial_molecule: ObjectId
+    initial_molecule: ObjectId = Schema(
+        ...,
+        description="The ID of the molecule which was passed in as the reference for this Optimization"
+    )
     qc_spec: QCSpecification
-    keywords: Dict[str, Any] = {}  # TODO: defined in Base
+    keywords: Dict[str, Any] = Schema(  # TODO: defined in Base
+        {},
+        description="The keyword options which were passed into the Optimization program. "
+                    "Note: These are a Dict, not a :class:`KeywordSet`"
+    )
 
     # Results
-    energies: List[float] = None
-    final_molecule: ObjectId = None
-    trajectory: List[ObjectId] = None
+    energies: List[float] = Schema(
+        None,
+        description="The list of energies at each step of the optimization, in order"
+    )
+    final_molecule: ObjectId = Schema(
+        None,
+        description="The ID of the final, optimized Molecule the Optimization procedure converged to."
+    )
+    trajectory: List[ObjectId] = Schema(
+        None,
+        description="The list of Molecule ID's the Optimization procedure generated at each step of the optimization."
+                    "``initial_molecule`` will be the first index, and ``final_molecule`` will be the last index."
+    )
 
     class Config(RecordBase.Config):
         pass
