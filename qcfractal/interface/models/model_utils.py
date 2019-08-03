@@ -37,8 +37,11 @@ def recursive_normalizer(value: Any, **kwargs: Dict[str, Any]) -> Any:
         if lowercase:
             value = value.lower()
 
-    elif isinstance(value, (list, tuple)):
+    elif isinstance(value, list):
         value = [recursive_normalizer(x, **kwargs) for x in value]
+
+    elif isinstance(value, tuple):
+        value = tuple(recursive_normalizer(x, **kwargs) for x in value)
 
     elif isinstance(value, dict):
         ret = {}
@@ -48,15 +51,14 @@ def recursive_normalizer(value: Any, **kwargs: Dict[str, Any]) -> Any:
             ret[k] = recursive_normalizer(v, **kwargs)
         value = ret
 
-    elif isinstance(value, (list, np.ndarray)):
+    elif isinstance(value, np.ndarray):
         if digits:
             # Round array
             value = np.around(value, digits)
             # Flip zeros
-            value[np.abs(value) < 5**(-(around + 1))] = 0  # TODO: Which `around` is this supposed to be?
-            value = value.tolist()
+            value[np.abs(value) < 5**(-(digits + 1))] = 0
 
-    elif isinstance(value, (float, int)):
+    elif isinstance(value, float):
         if digits:
             value = round(value, digits)
             if value == -0.0:
