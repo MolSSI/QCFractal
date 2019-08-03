@@ -17,6 +17,9 @@ __all__.extend(["Molecule", "Provenance"])
 
 
 class ObjectId(str):
+    """
+    The Id of the object in the data.
+    """
     _valid_hex = set("0123456789abcdef")
 
     @classmethod
@@ -47,28 +50,27 @@ class DriverEnum(str, Enum):
 
 class QCSpecification(BaseModel):
     """
-    The basic quantum chemistry meta specification
+    The quantum chemistry metadata specification for individual computations such as energy, gradient, and Hessians.
     """
     driver: DriverEnum = Schema(
         ...,
-        description="What type of calculation is being performed"
+        description="The type of calculation that is being performed."
     )
     method: str = Schema(
         ...,
-        description="What quantum chemistry method to do the calculation with"
+        description="The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...)."
     )
     basis: Optional[str] = Schema(
         None,
-        description="The quantum chemistry basis set to carry out the calculation with"
+        description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for methods without basis sets."
     )
     keywords: Optional[ObjectId] = Schema(
         None,
-        description="The ID of the :class:`KeywordSet` registered in the database to run this calculation with. You "
-                    "cannot define a new set of keyword arguments, they must already exist."
+        description="The Id of the :class:`KeywordSet` registered in the database to run this calculation with. This Id must exist in the database."
     )
     program: str = Schema(
         ...,
-        description="The quantum chemistry program to run the calculation with. Not all quantum chemistry programs "
+        description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs "
                     "support all combinations of driver/method/basis."
     )
 
@@ -112,7 +114,7 @@ class QCSpecification(BaseModel):
 
 class OptimizationSpecification(BaseModel):
     """
-    GridOptimizationRecord options
+    Metadata describing a geometry optimization.
     """
     program: str = Schema(
         ...,
@@ -121,8 +123,7 @@ class OptimizationSpecification(BaseModel):
     keywords: Optional[Dict[str, Any]] = Schema(
         None,
         description="Dictionary of keyword arguments to pass into the ``program`` when the program runs. "
-                    "This is NOT the ID for a :class:`KeywordSet` due to the fact that these are options which are "
-                    "passed into the optimization program, not each individual calculation within it."
+                    "Note that unlike :class:`QCSpecification` this is a dictionary of keywords, not the Id for a :class:`KeywordSet`. "
     )
 
     @validator('program')
@@ -142,34 +143,34 @@ class OptimizationSpecification(BaseModel):
 
 class KeywordSet(BaseModel):
     """
-    An options object for the QCArchive ecosystem
+    A key:value storage object for Keywords.
     """
     id: Optional[ObjectId] = Schema(
         None,
-        description="The ID of this object inside the database. Used for query only. If this is a new database entry, "
-                    "this field is ignored and one will be assigned."
+        description="The Id of this object, will be automatically asigned when added to the database."
     )
     hash_index: str = Schema(
         ...,
-        description="The hash of this keyword set to store and check for collisions. This should be a programmatically "
-                    "calculated string."
+        description="The hash of this keyword set to store and check for collisions. This string is automatically copmuted."
     )
     values: Dict[str, Any] = Schema(
         ...,
-        description="The key-value pairs which make up this KeywordSet. There is no direct relation between this dict "
+        description="The key-value pairs which make up this KeywordSet. There is no direct relation between this dictionary "
                     "and applicable program/spec it can be used on."
     )
     lowercase: bool = Schema(
         True,
-        description="Whether or not to normalize the string keys of the ``values`` field to all lowercase or not."
+        description="If ``True``, normalizes the string keys of the ``values`` to all lowercase. Assists in matching against other "
+                    ":class:`KeywordSet` objects in the database."
     )
     exact_floats: bool = Schema(
         False,
-        description="Whether or not to allow some tolerance in the floats of the dict values"
+        description="If ``False``, rounds all floating point numbers to 1.e-10. Assists in matchin against other "
+                    ":class:`KeywordSet` objects in the database."
     )
     comments: Optional[str] = Schema(
         None,
-        description="Additional commentary to make for this KeywordSet. Intended for pure human/user consumption "
+        description="Additional comments for this KeywordSet. Intended for pure human/user consumption "
                     "and clarity."
     )
 
