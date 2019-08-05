@@ -53,9 +53,10 @@ class ScanDimension(BaseModel):
     )
     step_type: StepTypeEnum = Schema(
         ...,
-        description="How to interpret the ``steps`` values in either an absolute or relative terms. ``relative`` indicates "
-                    "that the values are relative to the starting value (e.g., a bond starts as 2.1 Bohr, relative steps of [-0.1, 0, 1.0] "
-                    "indicate grid points of [2.0, 2.1, 3.1] Bohr. An ``absolute`` ``step_type`` will be exactly."
+        description="How to interpret the ``steps`` values in either an absolute or relative terms. ``relative`` "
+                    "indicates that the values are relative to the starting value (e.g., a bond starts as 2.1 Bohr, "
+                    "relative steps of [-0.1, 0, 1.0] indicate grid points of [2.0, 2.1, 3.1] Bohr. An ``absolute`` "
+                    "``step_type`` will be exactly."
     )
 
     class Config:
@@ -138,7 +139,8 @@ class GridOptimizationInput(BaseModel):
     )
     qc_spec: QCSpecification = Schema(
         ...,
-        description="The specification for each of the quantum chemistry calculations run in each geometry optimization."
+        description="The specification for each of the quantum chemistry calculations run in each geometry "
+                    "optimization."
     )
 
     class Config:
@@ -189,7 +191,8 @@ class GridOptimizationRecord(RecordBase):
     )
     qc_spec: QCSpecification = Schema(
         ...,
-        description="The specification for each of the quantum chemistry computations used by the geometry optimizations."
+        description="The specification for each of the quantum chemistry computations used by the geometry "
+                    "optimizations."
     )
 
     # Output data
@@ -326,7 +329,6 @@ class GridOptimizationRecord(RecordBase):
         """
 
         return self._organize_return(self.final_energy_dict, key)
-
 
     def get_final_molecules(self, key: Union[int, str, None]=None) -> Dict[str, 'Molecule']:
         """

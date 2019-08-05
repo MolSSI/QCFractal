@@ -62,16 +62,18 @@ class QCSpecification(BaseModel):
     )
     basis: Optional[str] = Schema(
         None,
-        description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for methods without basis sets."
+        description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for "
+                    "methods without basis sets."
     )
     keywords: Optional[ObjectId] = Schema(
         None,
-        description="The Id of the :class:`KeywordSet` registered in the database to run this calculation with. This Id must exist in the database."
+        description="The ID of the :class:`KeywordSet` registered in the database to run this calculation with. This "
+                    "ID must exist in the database."
     )
     program: str = Schema(
         ...,
-        description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs "
-                    "support all combinations of driver/method/basis."
+        description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs"
+                    " support all combinations of driver/method/basis."
     )
 
     @validator('basis')
@@ -123,7 +125,8 @@ class OptimizationSpecification(BaseModel):
     keywords: Optional[Dict[str, Any]] = Schema(
         None,
         description="Dictionary of keyword arguments to pass into the ``program`` when the program runs. "
-                    "Note that unlike :class:`QCSpecification` this is a dictionary of keywords, not the Id for a :class:`KeywordSet`. "
+                    "Note that unlike :class:`QCSpecification` this is a dictionary of keywords, not the ID for a "
+                    ":class:`KeywordSet`. "
     )
 
     @validator('program')
@@ -147,25 +150,26 @@ class KeywordSet(BaseModel):
     """
     id: Optional[ObjectId] = Schema(
         None,
-        description="The Id of this object, will be automatically asigned when added to the database."
+        description="The ID of this object, will be automatically asigned when added to the database."
     )
     hash_index: str = Schema(
         ...,
-        description="The hash of this keyword set to store and check for collisions. This string is automatically copmuted."
+        description="The hash of this keyword set to store and check for collisions. This string is automatically "
+                    "computed."
     )
     values: Dict[str, Any] = Schema(
         ...,
-        description="The key-value pairs which make up this KeywordSet. There is no direct relation between this dictionary "
-                    "and applicable program/spec it can be used on."
+        description="The key-value pairs which make up this KeywordSet. There is no direct relation between this "
+                    "dictionary and applicable program/spec it can be used on."
     )
     lowercase: bool = Schema(
         True,
-        description="If ``True``, normalizes the string keys of the ``values`` to all lowercase. Assists in matching against other "
-                    ":class:`KeywordSet` objects in the database."
+        description="If ``True``, normalizes the string keys of the ``values`` to all lowercase. Assists in matching "
+                    "against other :class:`KeywordSet` objects in the database."
     )
     exact_floats: bool = Schema(
         False,
-        description="If ``False``, rounds all floating point numbers to 1.e-10. Assists in matchin against other "
+        description="If ``False``, rounds all floating point numbers to 1.e-10. Assists in matching against other "
                     ":class:`KeywordSet` objects in the database."
     )
     comments: Optional[str] = Schema(
