@@ -92,40 +92,77 @@ class EmptyMeta(BaseModel):
 
 
 class ResponseMeta(BaseModel):
-    errors: List[Tuple[str, str]]
-    success: bool
-    error_description: Union[str, bool]
+    errors: List[Tuple[str, str]] = Schema(
+        ...,
+        description="A list of error pairs in the form of [(error type, error message), ...]"
+    )
+    success: bool = Schema(
+        ...,
+        description="Indicates if the passed information was successful in its duties. This is contextual to the "
+                    "data being passed in."
+    )
+    error_description: Union[str, bool] = Schema(
+        ...,
+        description="Details about the error if ``success`` is ``False``, otherwise this is ``False`` in the event "
+                    "of no errors."
+    )
 
     class Config(RESTConfig):
         pass
 
 
 class ResponseGETMeta(ResponseMeta):
-    missing: List[str]
-    n_found: int
+    missing: List[str] = Schema(
+        ...,
+        description="ID's of the objects which were not found in the database."
+    )
+    n_found: int = Schema(
+        ...,
+        description="The number of entries which were already found in the database from the set which was provided."
+    )
 
     class Config(RESTConfig):
         pass
 
 
 class ResponsePOSTMeta(ResponseMeta):
-    n_inserted: int
-    duplicates: Union[List[str], List[Tuple[str, str]]]
-    validation_errors: List[str]
+    n_inserted: int = Schema(
+        ...,
+        description="The number of new objects amongst the inputs which did not exist already, and are now in the "
+                    "database."
+    )
+    duplicates: Union[List[str], List[Tuple[str, str]]] = Schema(
+        ...,
+        description="The IDs of the objects which already exist in the database amongst the set which were passed in."
+    )
+    validation_errors: List[str] = Schema(
+        ...,
+        description="All errors with validating submitted objects will be documented here."
+    )
 
     class Config(RESTConfig):
         pass
 
 
 class QueryMeta(BaseModel):
-    limit: Optional[int] = None
-    skip: int = 0
+    limit: Optional[int] = Schema(
+        None,
+        description="Limit to the number of objects which can be returned with this query"
+    )
+    skip: int = Schema(
+        0,
+        description="The number of records to skip on the query."
+    )
 
     class Config(RESTConfig):
         pass
 
+
 class QueryMetaProjection(QueryMeta):
-    projection: QueryProjection = None
+    projection: QueryProjection = Schema(
+        None,
+        description="Additional projection information to pass to the query. Expert-level object."
+    )
 
     class Config(RESTConfig):
         pass
@@ -134,8 +171,14 @@ class QueryMetaProjection(QueryMeta):
 class ComputeResponse(BaseModel):
     ids: List[Optional[ObjectId]] = Schema(...,
                                            description="The ID's of the records to be computed")
-    submitted: List[ObjectId]
-    existing: List[ObjectId]
+    submitted: List[ObjectId] = Schema(
+        ...,
+        description="Which object IDs which were submitted as new entries to the database"
+    )
+    existing: List[ObjectId] = Schema(
+        ...,
+        description="When object IDs already existed within the database"
+    )
 
     class Config(RESTConfig):
         pass
@@ -186,18 +229,33 @@ register_model("information", "GET", InformationGETBody, InformationGETResponse)
 
 class KVStoreGETBody(BaseModel):
     class Data(BaseModel):
-        id: QueryObjectId = None
+        id: QueryObjectId = Schema(
+            None,
+            description="ID of the Key/Value Storage object to get"
+        )
 
-    meta: EmptyMeta = {}
-    data: Data
+    meta: EmptyMeta = Schema(
+        {},
+        description="There is no metadata with this, so an empty metadata is sent for completion."
+    )
+    data: Data = Schema(
+        ...,
+        description="Data of the KV Get field, consists of a dict for ID of the Key/Value object to fetch"
+    )
 
     class Config(RESTConfig):
         pass
 
 
 class KVStoreGETResponse(BaseModel):
-    meta: ResponseGETMeta
-    data: Dict[str, Any]
+    meta: ResponseGETMeta = Schema(
+        ...,
+        description="Metadata associated with the response for fetching a Key/Value object"
+    )
+    data: Dict[str, Any] = Schema(
+        ...,
+        description="The entries of Key/Value object requested."
+    )
 
     class Config(RESTConfig):
         pass
@@ -210,23 +268,46 @@ register_model("kvstore", "GET", KVStoreGETBody, KVStoreGETResponse)
 
 class MoleculeGETBody(BaseModel):
     class Data(BaseModel):
-        id: QueryObjectId = None
-        molecule_hash: QueryStr = None
-        molecular_formula: QueryStr = None
+        id: QueryObjectId = Schema(
+            None,
+            description="Exact ID of the Molecule to fetch from the database"
+        )
+        molecule_hash: QueryStr = Schema(
+            None,
+            description="Hash of the Molecule to search for in the database. Can be computed from the Molecule object "
+                        "directly without direct access to the Database itself"
+        )
+        molecular_formula: QueryStr = Schema(
+            None,
+            description="Make a query based on simple molecular formula. This is based on just the formula itself and "
+                        "contains no connectivity information."
+        )
 
         class Config(RESTConfig):
             pass
 
-    meta: QueryMeta = QueryMeta()
-    data: Data
+    meta: QueryMeta = Schema(
+        QueryMeta(),
+        description="Meta data for querying a Molecule"
+    )
+    data: Data = Schema(
+        ...,
+        description="Data fields for a Molecule query."  # Because Data is internal, this may not document sufficiently
+    )
 
     class Config(RESTConfig):
         pass
 
 
 class MoleculeGETResponse(BaseModel):
-    meta: ResponseGETMeta
-    data: List[Molecule]
+    meta: ResponseGETMeta = Schema(
+        ...,
+        description="The response from a Molecule Query"
+    )
+    data: List[Molecule] = Schema(
+        ...,
+        description="The List of Molecule objects found by the Query"
+    )
 
     class Config(RESTConfig):
         pass
@@ -236,16 +317,30 @@ register_model("molecule", "GET", MoleculeGETBody, MoleculeGETResponse)
 
 
 class MoleculePOSTBody(BaseModel):
-    meta: EmptyMeta = {}
-    data: List[Molecule]
+    meta: EmptyMeta = Schema(
+        {},
+        description="There is no metadata with this, so an empty metadata is sent for completion."
+    )
+    data: List[Molecule] = Schema(
+        ...,
+        description="A list of Molecule objects to add to the Database"
+    )
 
     class Config(RESTConfig):
         pass
 
 
 class MoleculePOSTResponse(BaseModel):
-    meta: ResponsePOSTMeta
-    data: List[ObjectId]
+    meta: ResponsePOSTMeta = Schema(
+        ...,
+        description="The response from adding Molecules to the database"
+    )
+    data: List[ObjectId] = Schema(
+        ...,
+        description="A list of ID's assigned to the Molecule objects passed in which serves as a unique identifier "
+                    "in the database. If the Molecule was already in the database, then the ID returned is its "
+                    "existing ID (entries are not duplicated)"
+    )
 
     class Config(RESTConfig):
         pass
@@ -264,16 +359,28 @@ class KeywordGETBody(BaseModel):
         class Config(RESTConfig):
             pass
 
-    meta: QueryMeta = QueryMeta()
-    data: Data
+    meta: QueryMeta = Schema(
+        QueryMeta(),
+        description="Standard query metadata"
+    )
+    data: Data = Schema(
+        ...,
+        description="The formal query for a Keyword fetch, contains ``id`` or ``hash_index`` for the object to fetch."
+    )
 
     class Config(RESTConfig):
         pass
 
 
 class KeywordGETResponse(BaseModel):
-    meta: ResponseGETMeta
-    data: List[KeywordSet]
+    meta: ResponseGETMeta = Schema(
+        ...,
+        description="Additional response information from the server for the :class:`KeywordSet` fetch request."
+    )
+    data: List[KeywordSet] = Schema(
+        ...,
+        description="The :class:`KeywordSet` found from in the database based on the query."
+    )
 
     class Config(RESTConfig):
         pass
@@ -283,16 +390,29 @@ register_model("keyword", "GET", KeywordGETBody, KeywordGETResponse)
 
 
 class KeywordPOSTBody(BaseModel):
-    meta: EmptyMeta = {}
-    data: List[KeywordSet]
+    meta: EmptyMeta = Schema(
+        {},
+        description="There is no metadata with this, so an empty metadata is sent for completion."
+    )
+    data: List[KeywordSet] = Schema(
+        ...,
+        description="The list of :class:`KeywordSet` objects to add to the database."
+    )
 
     class Config(RESTConfig):
         pass
 
 
 class KeywordPOSTResponse(BaseModel):
-    data: List[Optional[ObjectId]]
-    meta: ResponsePOSTMeta
+    data: List[Optional[ObjectId]] = Schema(
+        ...,
+        description="The IDs assigned to the added :class:`KeywordSet` objects. In the event of duplicates, the ID "
+                    "will be the one already found in the database."
+    )
+    meta: ResponsePOSTMeta = Schema(
+        ...,
+        description="Standard metadata from attempting to add an object to the Database."
+    )
 
     class Config(RESTConfig):
         pass
@@ -305,8 +425,14 @@ register_model("keyword", "POST", KeywordPOSTBody, KeywordPOSTResponse)
 
 class CollectionGETBody(BaseModel):
     class Data(BaseModel):
-        collection: str = None
-        name: str = None
+        collection: str = Schema(
+            None,
+            description="The specific collection to look up as its identified in the database."
+        )
+        name: str = Schema(
+            None,
+            description="The common name of the collection to look up"
+        )
 
         @validator("collection")
         def cast_to_lower(cls, v):
@@ -316,21 +442,37 @@ class CollectionGETBody(BaseModel):
             pass
 
     class Meta(BaseModel):
-        projection: Dict[str, Any] = None
+        projection: Dict[str, Any] = Schema(
+            None,
+            description="Additional projection information to pass to the query. Expert-level object."
+        )
 
         class Config(RESTConfig):
             pass
 
-    meta: Meta = None
-    data: Data
+    meta: Meta = Schema(
+        None,
+        description="Additional metadata to make with the query. Collections can only have a ``projection`` key in its "
+                    "meta."
+    )
+    data: Data = Schema(
+        ...,
+        description="Information about the Collection to search the database with."
+    )
 
     class Config(RESTConfig):
         pass
 
 
 class CollectionGETResponse(BaseModel):
-    meta: ResponseGETMeta
-    data: List[Dict[str, Any]]
+    meta: ResponseGETMeta = Schema(
+        ...,
+        description="Standard meta information for any fetch query"
+    )
+    data: List[Dict[str, Any]] = Schema(
+        ...,
+        description="The Collection objects returned by the server based on the query. "
+    )
 
     @validator("data", whole=True)
     def ensure_collection_name_in_data_get_res(cls, v):
@@ -348,15 +490,28 @@ register_model("collection", "GET", CollectionGETBody, CollectionGETResponse)
 
 class CollectionPOSTBody(BaseModel):
     class Meta(BaseModel):
-        overwrite: bool = False
+        overwrite: bool = Schema(
+            False,
+            description="Update the existing Collection object in the database or not."
+        )
 
         class Config(RESTConfig):
             pass
 
     class Data(BaseModel):
-        id: str = "local"  # Auto blocks overwriting in a socket
-        collection: str
-        name: str
+        id: str = Schema(
+            "local",  # Auto blocks overwriting in a socket
+            description="The ID of the object to assign in the database. If 'local', then it will not overwrite "
+                        "existing keys. There should be very little reason to ever touch this."
+        )
+        collection: str = Schema(
+            ...,
+            description="The specific identifier for this Collection as it will appear in database."
+        )
+        name: str = Schema(
+            ...,
+            description="The common name of this Collection"
+        )
 
         @validator("collection")
         def cast_to_lower(cls, v):
@@ -365,16 +520,30 @@ class CollectionPOSTBody(BaseModel):
         class Config(RESTConfig):
             extra = "allow"
 
-    meta: Meta = Meta()
-    data: Data
+    meta: Meta = Schema(
+        Meta(),
+        description="Collection addition metas can only accept ``overwrite`` as a key to choose to update existing "
+                    "collections or not."
+    )
+    data: Data = Schema(
+        ...,
+        description="The data associated with this Collection to add to the database"
+    )
 
     class Config(RESTConfig):
         pass
 
 
 class CollectionPOSTResponse(BaseModel):
-    data: Union[str, None]
-    meta: ResponsePOSTMeta
+    data: Union[str, None] = Schema(
+        ...,
+        description="The ID of the Collection uniquely pointing to it in the Database. If the Collection was not added "
+                    "(e.g. ``overwrite=False`` for existing Collection), then a None is returned."
+    )
+    meta: ResponsePOSTMeta = Schema(
+        ...,
+        description="Standard metadata for adding entries."
+    )
 
     class Config(RESTConfig):
         pass
@@ -387,17 +556,49 @@ register_model("collection", "POST", CollectionPOSTBody, CollectionPOSTResponse)
 
 class ResultGETBody(BaseModel):
     class Data(BaseModel):
-        id: QueryObjectId = None
-        task_id: QueryObjectId = None
+        id: QueryObjectId = Schema(
+            None,
+            description="The exact ID to fetch from the database. If this is set as a search condition, there is no "
+                        "reason to set anything else as this will be unique in the database, if it exists."
+        )
+        task_id: QueryObjectId = Schema(
+            None,
+            description="The exact ID of the task which carried out this Result's computation. If this is set as a "
+                        "search condition, there is no reason to set anything else as this will be unique in the "
+                        "database, if it exists. See also :class:`TaskRecord`"
+        )
 
-        program: QueryStr = None
-        molecule: QueryObjectId = None
-        driver: QueryStr = None
-        method: QueryStr = None
-        basis: QueryStr = None
-        keywords: QueryNullObjectId = None
+        program: QueryStr = Schema(
+            None,
+            description="Find Results based on the quantum chemistry software which carried out the calculation."
+        )
+        molecule: QueryObjectId = Schema(
+            None,
+            description="Find Results based on Molecule ID which was computed on."
+        )
+        driver: QueryStr = Schema(
+            None,
+            description="Find Results based on what class of computation was done. See :class:`DriverEnum` for more "
+                        "information"
+        )
+        method: QueryStr = Schema(
+            None,
+            description="Find Results based on the quantum chemistry method executed to compute the value."
+        )
+        basis: QueryStr = Schema(
+            None,
+            description="Find Results based on specific basis sets which were used to compute the values."
+        )
+        keywords: QueryNullObjectId = Schema(
+            None,
+            description="Find Results based on which :class:`KeywordSet` was used to run the computation"
+        )
 
-        status: QueryStr = "COMPLETE"
+        status: QueryStr = Schema(
+            "COMPLETE",
+            description="Find Results based on where they are in the compute pipeline. See the "
+                        ":class:`RecordStatusEnum` for valid statuses."
+        )
 
         class Config(RESTConfig):
             pass
@@ -414,17 +615,31 @@ class ResultGETBody(BaseModel):
                 v = 'null'
             return v
 
-    meta: QueryMetaProjection = QueryMetaProjection()
-    data: Data
+    meta: QueryMetaProjection = Schema(
+        QueryMetaProjection(),
+        description="Standard metadata from retrieval queries."
+    )
+    data: Data = Schema(
+        ...,
+        description="The keys with data to search the database on for individual quantum chemistry computations."
+    )
 
     class Config(RESTConfig):
         pass
 
 
 class ResultGETResponse(BaseModel):
-    meta: ResponseGETMeta
+    meta: ResponseGETMeta = Schema(
+        ...,
+        description="Standard metadata for a fetch query."
+    )
     # Either a record or dict depending if projection
-    data: Union[List[ResultRecord], List[Dict[str, Any]]]
+    data: Union[List[ResultRecord], List[Dict[str, Any]]] = Schema(
+        ...,
+        description="Results found from the query. This is a list of :class:`ResultRecord` in most cases, however, "
+                    "if a projection was specified in the GET request, then a dict is returned with mappings based "
+                    "on the projection."
+    )
 
     @validator("data", whole=True, pre=True)
     def ensure_list_of_dict(cls, v):
@@ -443,28 +658,64 @@ register_model("result", "GET", ResultGETBody, ResultGETResponse)
 
 class ProcedureGETBody(BaseModel):
     class Data(BaseModel):
-        id: QueryObjectId = None
-        task_id: QueryObjectId = None
+        id: QueryObjectId = Schema(
+            None,
+            description="The exact ID to fetch from the database. If this is set as a search condition, there is no "
+                        "reason to set anything else as this will be unique in the database, if it exists."
+        )
+        task_id: QueryObjectId = Schema(  # TODO: Validate this description is correct.
+            None,
+            description="The exact ID of a task which carried out by this Procedure. If this is set as a "
+                        "search condition, there is no reason to set anything else as this will be unique in the "
+                        "database, if it exists. See also :class:`TaskRecord`"
+        )
 
-        procedure: QueryStr = None
-        program: QueryStr = None
-        hash_index: QueryStr = None
-
-        status: QueryStr = "COMPLETE"
+        procedure: QueryStr = Schema(
+            None,
+            description="Find procedure based on the name of the procedure"
+        )
+        program: QueryStr = Schema(
+            None,
+            description="Find a procedure based on the program which is the main manager of the procedure"
+        )
+        hash_index: QueryStr = Schema(
+            None,
+            description="Search the database based on a hash of the defined procedure. This is something which can "
+                        "be generated by the Procedure spec itself and does not require server access to compute. "
+                        "This should be unique in the database so there should be no reason to set anything else "
+                        "if this is set as a query."
+        )
+        status: QueryStr = Schema(
+            "COMPLETE",
+            description="Find Procedures based on where they are in the compute pipeline. See the "
+                        ":class:`RecordStatusEnum` for valid statuses."
+        )
 
         class Config(RESTConfig):
             pass
 
-    meta: QueryMetaProjection = QueryMetaProjection()
-    data: Data
+    meta: QueryMetaProjection = Schema(
+        QueryMetaProjection(),
+        description="Standard metadata from retrieval queries."
+    )
+    data: Data = Schema(
+        ...,
+        description="The keys with data to search the database on for Procedures."
+    )
 
     class Config(RESTConfig):
         pass
 
 
 class ProcedureGETResponse(BaseModel):
-    meta: ResponseGETMeta
-    data: List[Dict[str, Any]]
+    meta: ResponseGETMeta = Schema(
+        ...,
+        description="Standard metadata returned for fetch queries."
+    )
+    data: List[Dict[str, Any]] = Schema(
+        ...,
+        description="The list of Procedure specs found based on the query."
+    )
 
     class Config(RESTConfig):
         pass
@@ -477,22 +728,58 @@ register_model("procedure", "GET", ProcedureGETBody, ProcedureGETResponse)
 
 class TaskQueueGETBody(BaseModel):
     class Data(BaseModel):
-        id: QueryObjectId = None
-        hash_index: QueryStr = None
-        program: QueryStr = None
-        status: QueryStr = None
-        base_result: QueryStr = None
+        id: QueryObjectId = Schema(
+            None,
+            description="The exact ID to fetch from the database. If this is set as a search condition, there is no "
+                        "reason to set anything else as this will be unique in the database, if it exists."
+        )
+        hash_index: QueryStr = Schema(
+            None,
+            description="Search the database based on a hash of the defined Task. This is something which can "
+                        "be generated by the Task spec itself and does not require server access to compute. "
+                        "This should be unique in the database so there should be no reason to set anything else "
+                        "if this is set as a query."
+        )
+        program: QueryStr = Schema(
+            None,
+            description="Find a Task based on the program which is responsible for executing this task"
+        )
+        status: QueryStr = Schema(
+            None,
+            description="Find Tasks based on where they are in the compute pipeline. See the "
+                        ":class:`RecordStatusEnum` for valid statuses."
+        )
+        base_result: QueryStr = Schema(  # TODO: Validate this description is correct
+            None,
+            description="The exact ID of a result which this Task will ultimately write to. If this is set as a "
+                        "search condition, there is no reason to set anything else as this will be unique in the "
+                        "database, if it exists. See also :class:`ResultRecord`"
+        )
 
         class Config(RESTConfig):
             pass
 
-    meta: QueryMetaProjection = QueryMetaProjection()
-    data: Data
+    meta: QueryMetaProjection = Schema(
+        QueryMetaProjection(),
+        description="Standard metadata from retrieval queries."
+    )
+    data: Data = Schema(
+        ...,
+        description="The keys with data to search the database on for Tasks."
+    )
 
 
 class TaskQueueGETResponse(BaseModel):
-    meta: ResponseGETMeta
-    data: Union[List[TaskRecord], List[Dict[str, Any]]]
+    meta: ResponseGETMeta = Schema(
+        ...,
+        description="Standard metadata returned for fetch queries."
+    )
+    data: Union[List[TaskRecord], List[Dict[str, Any]]] = Schema(
+        ...,
+        description="Tasks found from the query. This is a list of :class:`TaskRecord` in most cases, however, "
+                    "if a projection was specified in the GET request, then a dict is returned with mappings based "
+                    "on the projection."
+    )
 
     class Config(RESTConfig):
         pass
@@ -503,11 +790,24 @@ register_model("task_queue", "GET", TaskQueueGETBody, TaskQueueGETResponse)
 
 class TaskQueuePOSTBody(BaseModel):
     class Meta(BaseModel):
-        procedure: str
-        program: str
+        procedure: str = Schema(
+            ...,
+            description="Name of the procedure which the Task will execute"
+        )
+        program: str = Schema(
+            ...,
+            description="The program which this Task will execute"
+        )
 
-        tag: Optional[str] = None
-        priority: Union[PriorityEnum, None] = None
+        tag: Optional[str] = Schema(
+            None,
+            description="Tag to assign to this Task so that Queue Managers can pull only Tasks based on this entry."
+                        "If no Tag is specified, any Queue Manager can pull this Task"
+        )
+        priority: Union[PriorityEnum, None] = Schema(
+            None,
+            description="Priority given to this Task. Higher priority will be pulled first."
+        )
 
         class Config(RESTConfig):
             allow_extra = "allow"
@@ -518,9 +818,15 @@ class TaskQueuePOSTBody(BaseModel):
                 v = PriorityEnum[v.upper()]
             return v
 
-
-    meta: Meta
-    data: List[Union[ObjectId, Molecule]]
+    meta: Meta = Schema(
+        ...,
+        description="The additional specification information for the Task to add to the Database"
+    )
+    data: List[Union[ObjectId, Molecule]] = Schema(
+        ...,
+        description="The list of either Molecule objects or Molecule ID's (those already in the database) to submit as "
+                    "part of this Task."
+    )
 
     class Config(RESTConfig):
         pass
@@ -528,8 +834,14 @@ class TaskQueuePOSTBody(BaseModel):
 
 class TaskQueuePOSTResponse(BaseModel):
 
-    meta: ResponsePOSTMeta
-    data: ComputeResponse
+    meta: ResponsePOSTMeta = Schema(
+        ...,
+        description="Standard metadata response for an add action."
+    )
+    data: ComputeResponse = Schema(
+        ...,
+        description="Data returned from the server from adding a Task"
+    )
 
     class Config(RESTConfig):
         pass
@@ -537,16 +849,29 @@ class TaskQueuePOSTResponse(BaseModel):
 
 register_model("task_queue", "POST", TaskQueuePOSTBody, TaskQueuePOSTResponse)
 
+
 class TaskQueuePUTBody(BaseModel):
     class Data(BaseModel):
-        id: QueryObjectId = None
-        base_result: QueryObjectId = None
+        id: QueryObjectId = Schema(
+            None,
+            description="The exact ID to target in database. If this is set as a search condition, there is no "
+                        "reason to set anything else as this will be unique in the database, if it exists."
+        )
+        base_result: QueryObjectId = Schema(  # TODO: Validate this description is correct
+            None,
+            description="The exact ID of a result which this Task is slated to write to. If this is set as a "
+                        "search condition, there is no reason to set anything else as this will be unique in the "
+                        "database, if it exists. See also :class:`ResultRecord`"
+        )
 
         class Config(RESTConfig):
             pass
 
     class Meta(BaseModel):
-        operation: str
+        operation: str = Schema(
+            ...,
+            description="The specific action you are taking as part of this update"
+        )
 
         class Config(RESTConfig):
             pass
@@ -555,8 +880,14 @@ class TaskQueuePUTBody(BaseModel):
         def cast_to_lower(cls, v):
             return v.lower()
 
-    meta: Meta
-    data: Data
+    meta: Meta = Schema(
+        ...,
+        description="The instructions to pass to the target Task from ``data``."
+    )
+    data: Data = Schema(
+        ...,
+        description="The information which contains the Task target in the database"
+    )
 
     class Config(RESTConfig):
         pass
@@ -564,13 +895,22 @@ class TaskQueuePUTBody(BaseModel):
 
 class TaskQueuePUTResponse(BaseModel):
     class Data(BaseModel):
-        n_updated: int
+        n_updated: int = Schema(
+            ...,
+            description="The number of tasks which were changed"
+        )
 
         class Config(RESTConfig):
             pass
 
-    meta: ResponseMeta
-    data: Data
+    meta: ResponseMeta = Schema(
+        ...,
+        description="Standard metadata returned from the database"
+    )
+    data: Data = Schema(
+        ...,
+        description="Information returned from attempting updates of Tasks"
+    )
 
     class Config(RESTConfig):
         pass
@@ -583,21 +923,52 @@ register_model("task_queue", "PUT", TaskQueuePUTBody, TaskQueuePUTResponse)
 
 class ServiceQueueGETBody(BaseModel):
     class Data(BaseModel):
-        id: QueryObjectId = None
-        procedure_id: QueryObjectId = None
-        hash_index: QueryStr = None
-        status: QueryStr = None
+        id: QueryObjectId = Schema(
+            None,
+            description="The exact ID to fetch from the database. If this is set as a search condition, there is no "
+                        "reason to set anything else as this will be unique in the database, if it exists."
+        )
+        procedure_id: QueryObjectId = Schema(  # TODO: Validate this description is correct
+            None,
+            description="The exact ID of the Procedure this Service is responsible for executing. If this is set as a "
+                        "search condition, there is no reason to set anything else as this will be unique in the "
+                        "database, if it exists."
+        )
+        hash_index: QueryStr = Schema(
+            None,
+            description="Search the database based on a hash of the defined Service. This is something which can "
+                        "be generated by the Service spec itself and does not require server access to compute. "
+                        "This should be unique in the database so there should be no reason to set anything else "
+                        "if this is set as a query."
+        )
+        status: QueryStr = Schema(
+            None,
+            description="Find Tasks based on where they are in the compute pipeline. See the "
+                        ":class:`RecordStatusEnum` for valid statuses."
+        )
 
-    meta: QueryMeta = QueryMeta()
-    data: Data
+    meta: QueryMeta = Schema(
+        QueryMeta(),
+        description="Standard metadata from retrieval queries."
+    )
+    data: Data = Schema(
+        ...,
+        description="The keys with data to search the database on for Services."
+    )
 
     class Config(RESTConfig):
         pass
 
 
 class ServiceQueueGETResponse(BaseModel):
-    meta: ResponseGETMeta
-    data: List[Dict[str, Any]]
+    meta: ResponseGETMeta = Schema(
+        ...,
+        description="Standard metadata returned for fetch queries."
+    )
+    data: List[Dict[str, Any]] = Schema(
+        ...,
+        description="The return of Services found in the database mapping their IDs to the Service spec."
+    )
 
     class Config(RESTConfig):
         pass
@@ -608,14 +979,28 @@ register_model("service_queue", "GET", ServiceQueueGETBody, ServiceQueueGETRespo
 
 class ServiceQueuePOSTBody(BaseModel):
     class Meta(BaseModel):
-        tag: Optional[str] = None
-        priority: Union[str, int, None] = None
+        tag: Optional[str] = Schema(
+            None,
+            description="Tag to assign to the Tasks this Service will generate so that Queue Managers can pull only "
+                        "Tasks based on this entry. If no Tag is specified, any Queue Manager can pull this Tasks "
+                        "created by this Service."
+        )
+        priority: Union[str, int, None] = Schema(
+            None,
+            description="Priority given to this Tasks created by this Service. Higher priority will be pulled first."
+        )
 
         class Config(RESTConfig):
             pass
 
-    meta: Meta
-    data: List[Union[TorsionDriveInput, GridOptimizationInput]]
+    meta: Meta = Schema(
+        ...,
+        description="Metadata information for the Service for the Tag and Priority of Tasks this Service will create."
+    )
+    data: List[Union[TorsionDriveInput, GridOptimizationInput]] = Schema(
+        ...,
+        description="A list the specification for Procedures this Service will manage and generate Tasks for."
+    )
 
     class Config(RESTConfig):
         pass
@@ -623,8 +1008,14 @@ class ServiceQueuePOSTBody(BaseModel):
 
 class ServiceQueuePOSTResponse(BaseModel):
 
-    meta: ResponsePOSTMeta
-    data: ComputeResponse
+    meta: ResponsePOSTMeta = Schema(
+        ...,
+        description="Standard metadata response for an add action."
+    )
+    data: ComputeResponse = Schema(
+        ...,
+        description="Data returned from the server from adding a Service"
+    )
 
     class Config(RESTConfig):
         pass
@@ -637,21 +1028,50 @@ register_model("service_queue", "POST", ServiceQueuePOSTBody, ServiceQueuePOSTRe
 
 class QueueManagerMeta(BaseModel):
     # Name data
-    cluster: str
-    hostname: str
-    uuid: str
+    cluster: str = Schema(
+        ...,
+        description="The Name of the Cluster the Queue Manager is running on"
+    )
+    hostname: str = Schema(
+        ...,
+        description="Hostname of the machine the Queue Manager is running on"
+    )
+    uuid: str = Schema(
+        ...,
+        description="A UUID assigned to the QueueManager to uniquely identify it."
+    )
 
     # Username
-    username: Optional[str] = None
+    username: Optional[str] = Schema(
+        None,
+        description="Fractal Username the Manager is being executed under"
+    )
 
     # Version info
-    qcengine_version: str
-    manager_version: str
+    qcengine_version: str = Schema(
+        ...,
+        description="Version of QCEngine which the Manager has access to."
+    )
+    manager_version: str = Schema(
+        ...,
+        description="Version of the QueueManager (Fractal) which is getting and returning Jobs."
+    )
 
     # search info
-    programs: List[str]
-    procedures: List[str]
-    tag: Optional[str] = None
+    programs: List[str] = Schema(
+        ...,
+        description="A list of programs which the QueueManager, and thus QCEngine, has access to. Affects which Tasks "
+                    "the Manager can pull"
+    )
+    procedures: List[str] = Schema(
+        ...,
+        description="A list of procedures which the QueueManager has access to. Affects which Tasks "
+                    "the Manager can pull"
+    )
+    tag: Optional[str] = Schema(
+        None,
+        description="Optional queue tag to pull Tasks from"
+    )
 
     class Config(RESTConfig):
         pass
@@ -659,7 +1079,10 @@ class QueueManagerMeta(BaseModel):
 
 class QueueManagerGETBody(BaseModel):
     class Data(BaseModel):
-        limit: int
+        limit: int = Schema(
+            ...,
+            description="Max number of Queue Managers to get from the server"  # TODO: Verify this.
+        )
 
     meta: QueueManagerMeta
     data: Data

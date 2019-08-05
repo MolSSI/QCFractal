@@ -5,7 +5,7 @@ import json
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Schema
 from qcelemental.models import Molecule, Provenance
 
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
@@ -17,6 +17,9 @@ __all__.extend(["Molecule", "Provenance"])
 
 
 class ObjectId(str):
+    """
+    The Id of the object in the data.
+    """
     _valid_hex = set("0123456789abcdef")
 
     @classmethod
@@ -47,13 +50,31 @@ class DriverEnum(str, Enum):
 
 class QCSpecification(BaseModel):
     """
-    The basic quantum chemistry meta specification
+    The quantum chemistry metadata specification for individual computations such as energy, gradient, and Hessians.
     """
-    driver: DriverEnum
-    method: str
-    basis: Optional[str] = None
-    keywords: Optional[ObjectId] = None
-    program: str
+    driver: DriverEnum = Schema(
+        ...,
+        description="The type of calculation that is being performed."
+    )
+    method: str = Schema(
+        ...,
+        description="The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...)."
+    )
+    basis: Optional[str] = Schema(
+        None,
+        description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for "
+                    "methods without basis sets."
+    )
+    keywords: Optional[ObjectId] = Schema(
+        None,
+        description="The ID of the :class:`KeywordSet` registered in the database to run this calculation with. This "
+                    "ID must exist in the database."
+    )
+    program: str = Schema(
+        ...,
+        description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs"
+                    " support all combinations of driver/method/basis."
+    )
 
     @validator('basis')
     def check_basis(cls, v):
@@ -95,10 +116,18 @@ class QCSpecification(BaseModel):
 
 class OptimizationSpecification(BaseModel):
     """
-    GridOptimizationRecord options
+    Metadata describing a geometry optimization.
     """
-    program: str
-    keywords: Optional[Dict[str, Any]] = None
+    program: str = Schema(
+        ...,
+        description="Optimization program to run the optimization with"
+    )
+    keywords: Optional[Dict[str, Any]] = Schema(
+        None,
+        description="Dictionary of keyword arguments to pass into the ``program`` when the program runs. "
+                    "Note that unlike :class:`QCSpecification` this is a dictionary of keywords, not the ID for a "
+                    ":class:`KeywordSet`. "
+    )
 
     @validator('program')
     def check_program(cls, v):
@@ -117,14 +146,37 @@ class OptimizationSpecification(BaseModel):
 
 class KeywordSet(BaseModel):
     """
-    An options object for the QCArchive ecosystem
+    A key:value storage object for Keywords.
     """
-    id: Optional[ObjectId] = None
-    hash_index: str
-    values: Dict[str, Any]
-    lowercase: bool = True
-    exact_floats: bool = False
-    comments: Optional[str] = None
+    id: Optional[ObjectId] = Schema(
+        None,
+        description="The ID of this object, will be automatically asigned when added to the database."
+    )
+    hash_index: str = Schema(
+        ...,
+        description="The hash of this keyword set to store and check for collisions. This string is automatically "
+                    "computed."
+    )
+    values: Dict[str, Any] = Schema(
+        ...,
+        description="The key-value pairs which make up this KeywordSet. There is no direct relation between this "
+                    "dictionary and applicable program/spec it can be used on."
+    )
+    lowercase: bool = Schema(
+        True,
+        description="If ``True``, normalizes the string keys of the ``values`` to all lowercase. Assists in matching "
+                    "against other :class:`KeywordSet` objects in the database."
+    )
+    exact_floats: bool = Schema(
+        False,
+        description="If ``False``, rounds all floating point numbers to 1.e-10. Assists in matching against other "
+                    ":class:`KeywordSet` objects in the database."
+    )
+    comments: Optional[str] = Schema(
+        None,
+        description="Additional comments for this KeywordSet. Intended for pure human/user consumption "
+                    "and clarity."
+    )
 
     class Config:
         extra = "forbid"
