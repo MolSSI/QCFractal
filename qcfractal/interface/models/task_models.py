@@ -3,15 +3,24 @@ import json
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Schema
 from qcelemental.models import ComputeError
 
 from .common_models import ObjectId
 
 
 class DBRef(BaseModel):
-    ref: str
-    id: ObjectId
+    """
+    Database locator reference object. Identifies an exact record in a database.
+    """
+    ref: str = Schema(
+        ...,
+        description="The name of the table which the Database entry exists"
+    )
+    id: ObjectId = Schema(
+        ...,
+        description="The Database assigned ID of the entry in the ``ref`` table."
+    )
 
 
 class TaskStatusEnum(str, Enum):
@@ -25,6 +34,7 @@ class ManagerStatusEnum(str, Enum):
     active = 'ACTIVE'
     inactive = 'INACTIVE'
 
+
 class PriorityEnum(int, Enum):
     HIGH = 2
     NORMAL = 1
@@ -37,36 +47,83 @@ class BaseResultEnum(str, Enum):
 
 
 class PythonComputeSpec(BaseModel):
-    function: str
-    args: List[Any]
-    kwargs: Dict[str, Any]
+    function: str = Schema(
+        ...,
+        description="The module and function name of a Python-callable to call. Of the form 'module.function'"
+    )
+    args: List[Any] = Schema(
+        ...,
+        description="List of positional arguments to pass into ``function`` in order they appear."
+    )
+    kwargs: Dict[str, Any] = Schema(
+        ...,
+        description="Dictionary of keyword arguments to pass into ``function``."
+    )
 
 
 class TaskRecord(BaseModel):
 
-    id: ObjectId = None
+    id: ObjectId = Schema(
+        None,
+        description="The Database assigned ID of the Task, if it has been assigned yet."
+    )
 
-    spec: PythonComputeSpec
-    parser: str
-    status: TaskStatusEnum = "WAITING"
+    spec: PythonComputeSpec = Schema(
+        ...,
+        description="The Python function specification this task will execute or has executed."
+    )
+    parser: str = Schema(
+        ...,
+        description="The type of operation this is Task is. Can be 'single' or 'optimization'"
+    )
+    status: TaskStatusEnum = Schema(
+        TaskStatusEnum.waiting,
+        description="What stage of processing this task is at."
+    )
 
     # Compute blockers and prevention
-    program: str
-    procedure: Optional[str] = None
-    manager: Optional[str] = None
+    program: str = Schema(
+        ...,
+        description="Name of the quantum chemistry program which must be present to execute this task."
+    )
+    procedure: Optional[str] = Schema(
+        None,
+        description="Name of the procedure the compute platform must be able to perform to execute this task."
+    )
+    manager: Optional[str] = Schema(
+        None,
+        description="The name of the Queue Manager which has ownership of this Task"
+    )
 
     # Sortables
-    priority: PriorityEnum = PriorityEnum.NORMAL
-    tag: Optional[str] = None
-
+    priority: PriorityEnum = Schema(
+        PriorityEnum.NORMAL,
+        description="The priority of this task in the Fractal Server task queue."
+    )
+    tag: Optional[str] = Schema(
+        None,
+        description="The optional tag assigned to this Task. Tagged tasks can only be pulled by Queue Managers which "
+                    "explicitly reference this tag. If no Tag is specified, any Queue Manager can pull this Task"
+    )
     # Link back to the base Result
-    base_result: Union[DBRef, int]
-    error: Optional[ComputeError] = None
+    base_result: Union[DBRef, int] = Schema(
+        ...,
+        description="Reference to the output Result from this Task as it exists within the database."
+    )
+    error: Optional[ComputeError] = Schema(
+        None,
+        description="The error thrown when trying to execute this task, if one was thrown at all"
+    )
 
     # Modified data
-    modified_on: datetime.datetime = None
-    created_on: datetime.datetime = None
-
+    modified_on: datetime.datetime = Schema(
+        None,
+        description="The last time this task was updated in the Database"
+    )
+    created_on: datetime.datetime = Schema(
+        None,
+        description="When this task was created in the Database"
+    )
 
     def __init__(self, **data):
 

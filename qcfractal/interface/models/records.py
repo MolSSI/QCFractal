@@ -1,5 +1,5 @@
 """
-A model for TorsionDrive
+A model for Compute Records
 """
 
 import abc
@@ -418,7 +418,7 @@ class OptimizationRecord(RecordBase):
         "optimization",
         description='String indication this was a record for an "Optimization", fixed. '
     )
-    schema_version: int = Schema(  # TODO: why not in Base
+    schema_version: int = Schema(
         1,
         description="The version number of QCSchema under which this record conforms to."
     )
@@ -428,8 +428,11 @@ class OptimizationRecord(RecordBase):
         ...,
         description="The ID of the molecule which was passed in as the reference for this Optimization"
     )
-    qc_spec: QCSpecification
-    keywords: Dict[str, Any] = Schema(  # TODO: defined in Base
+    qc_spec: QCSpecification = Schema(
+        ...,
+        description="The specification of the quantum chemistry calculation to run at each point."
+    )
+    keywords: Dict[str, Any] = Schema(
         {},
         description="The keyword options which were passed into the Optimization program. "
                     "Note: These are a Dict, not a :class:`KeywordSet`"

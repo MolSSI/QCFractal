@@ -10,7 +10,7 @@ from qcelemental.models import Molecule, Provenance
 
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
-__all__ = ["QCSpecification", "OptimizationSpecification", "KeywordSet", "ObjectId"]
+__all__ = ["QCSpecification", "OptimizationSpecification", "KeywordSet", "ObjectId", "DriverEnum"]
 
 # Add in QCElemental models
 __all__.extend(["Molecule", "Provenance"])

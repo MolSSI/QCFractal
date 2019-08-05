@@ -179,7 +179,7 @@ class GridOptimizationRecord(RecordBase):
     # Input data
     initial_molecule: ObjectId = Schema(
         ...,
-        description="Id of the intial molecule in the database."
+        description="Id of the initial molecule in the database."
     )
     keywords: GOKeywords = Schema(
         ...,

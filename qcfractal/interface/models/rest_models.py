@@ -802,7 +802,7 @@ class TaskQueuePOSTBody(BaseModel):
         tag: Optional[str] = Schema(
             None,
             description="Tag to assign to this Task so that Queue Managers can pull only Tasks based on this entry."
-                        "If no Tag is specified, any Queue Manager can pull this Task"
+                        "If no Tag is specified, any Queue Manager can pull this Task."
         )
         priority: Union[PriorityEnum, None] = Schema(
             None,
@@ -1081,35 +1081,62 @@ class QueueManagerGETBody(BaseModel):
     class Data(BaseModel):
         limit: int = Schema(
             ...,
-            description="Max number of Queue Managers to get from the server"  # TODO: Verify this.
+            description="Max number of Queue Managers to get from the server"
         )
 
-    meta: QueueManagerMeta
-    data: Data
+    meta: QueueManagerMeta = Schema(
+        ...,
+        description="Validation and identification Meta information for the Queue Manager's communication with the "
+                    "Fractal Server"
+    )
+    data: Data = Schema(
+        ...,
+        description="A model of Task request data for the Queue Manager to fetch. Accepts ``limit`` as the maximum "
+                    "number of tasks to pull."
+    )
 
     class Config(RESTConfig):
         pass
 
 
 class QueueManagerGETResponse(BaseModel):
-    meta: ResponseGETMeta
-    data: List[Dict[str, Any]]
+    meta: ResponseGETMeta = Schema(
+        ...,
+        description="Standard metadata returned for fetch queries."
+    )
+    data: List[Dict[str, Any]] = Schema(
+        ...,
+        description="A list of tasks retrieved from the server to compute."
+    )
 
 
 register_model("queue_manager", "GET", QueueManagerGETBody, QueueManagerGETResponse)
 
 
 class QueueManagerPOSTBody(BaseModel):
-    meta: QueueManagerMeta
-    data: Dict[ObjectId, Any]
+    meta: QueueManagerMeta = Schema(
+        ...,
+        description="Validation and identification Meta information for the Queue Manager's communication with the "
+                    "Fractal Server"
+    )
+    data: Dict[ObjectId, Any] = Schema(
+        ...,
+        description="A Dictionary of tasks to return to the server."
+    )
 
     class Config:
         json_encoders = json_encoders
 
 
 class QueueManagerPOSTResponse(BaseModel):
-    meta: ResponsePOSTMeta
-    data: bool
+    meta: ResponsePOSTMeta = Schema(
+        ...,
+        description="Standard metadata response for an add action."
+    )
+    data: bool = Schema(
+        ...,
+        description="A True/False return on if the server accepted the returned tasks."
+    )
 
 
 register_model("queue_manager", "POST", QueueManagerPOSTBody, QueueManagerPOSTResponse)
@@ -1119,16 +1146,31 @@ class QueueManagerPUTBody(BaseModel):
     class Data(BaseModel):
         operation: str
 
-    meta: QueueManagerMeta
-    data: Data
+    meta: QueueManagerMeta = Schema(
+        ...,
+        description="Validation and identification Meta information for the Queue Manager's communication with the "
+                    "Fractal Server"
+    )
+    data: Data = Schema(
+        ...,
+        description="The update action which the Queue Manager requests the Server take with respect to how the "
+                    "Queue Manager is tracked."
+    )
 
 
 class QueueManagerPUTResponse(BaseModel):
-    meta: Dict[str, Any] = {}
+    meta: Dict[str, Any] = Schema(
+        {},
+        description="There is no metadata with this, so an empty metadata is returned."
+    )
     # Order on Union[] is important. Union[bool, Dict[str, int]] -> True if the input dict is not empty since
     # Python can resolve dict -> bool since it passes a `is` test. Will not cast bool -> dict[str, int], so make Dict[]
     # check first
-    data: Union[Dict[str, int], bool]
+    data: Union[Dict[str, int], bool] = Schema(
+        ...,
+        description="The response from the Server attempting to update the Queue Manager's server-side status. "
+                    "Response type is a function of the operation made from the PUT request."
+    )
 
 
 register_model("queue_manager", "PUT", QueueManagerPUTBody, QueueManagerPUTResponse)
