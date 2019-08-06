@@ -39,8 +39,8 @@ class ObjectId(str):
 
 
 class DriverEnum(str, Enum):
-    """The possible driver configurations of a single quantum chemistry
-    computation.
+    """
+    The driver configuration of a single quantum chemistry computation. This is a finite set of choices.
     """
     energy = 'energy'
     gradient = 'gradient'
@@ -54,7 +54,7 @@ class QCSpecification(BaseModel):
     """
     driver: DriverEnum = Schema(
         ...,
-        description="The type of calculation that is being performed."
+        description=str(DriverEnum.__doc__)
     )
     method: str = Schema(
         ...,
@@ -150,7 +150,7 @@ class KeywordSet(BaseModel):
     """
     id: Optional[ObjectId] = Schema(
         None,
-        description="The ID of this object, will be automatically asigned when added to the database."
+        description="The ID of this object, will be automatically assigned when added to the database."
     )
     hash_index: str = Schema(
         ...,
@@ -164,13 +164,13 @@ class KeywordSet(BaseModel):
     )
     lowercase: bool = Schema(
         True,
-        description="If ``True``, normalizes the string keys of the ``values`` to all lowercase. Assists in matching "
-                    "against other :class:`KeywordSet` objects in the database."
+        description="String keys are in the ``values`` dict are normalized to lowercase if this is True. Assists in "
+                    "matching against other :class:`KeywordSet` objects in the database."
     )
     exact_floats: bool = Schema(
         False,
-        description="If ``False``, rounds all floating point numbers to 1.e-10. Assists in matching against other "
-                    ":class:`KeywordSet` objects in the database."
+        description="All floating point numbers are rounded to 1.e-10 if this is False."
+                    "Assists in matching against other :class:`KeywordSet` objects in the database."
     )
     comments: Optional[str] = Schema(
         None,

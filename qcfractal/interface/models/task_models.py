@@ -24,6 +24,9 @@ class DBRef(BaseModel):
 
 
 class TaskStatusEnum(str, Enum):
+    """
+    The state of a Task object. The states which are available are a finite set.
+    """
     running = "RUNNING"
     waiting = "WAITING"
     error = "ERROR"
@@ -31,11 +34,17 @@ class TaskStatusEnum(str, Enum):
 
 
 class ManagerStatusEnum(str, Enum):
+    """
+    The state of a Queue Manager. The states which are available are a finite set.
+    """
     active = 'ACTIVE'
     inactive = 'INACTIVE'
 
 
 class PriorityEnum(int, Enum):
+    """
+    The priority of a Task. Higher priority will be pulled first. The priorities which are available are a finite set.
+    """
     HIGH = 2
     NORMAL = 1
     LOW = 0
@@ -49,11 +58,11 @@ class BaseResultEnum(str, Enum):
 class PythonComputeSpec(BaseModel):
     function: str = Schema(
         ...,
-        description="The module and function name of a Python-callable to call. Of the form 'module.function'"
+        description="The module and function name of a Python-callable to call. Of the form 'module.function'."
     )
     args: List[Any] = Schema(
         ...,
-        description="List of positional arguments to pass into ``function`` in order they appear."
+        description="A List of positional arguments to pass into ``function`` in order they appear."
     )
     kwargs: Dict[str, Any] = Schema(
         ...,
@@ -70,11 +79,11 @@ class TaskRecord(BaseModel):
 
     spec: PythonComputeSpec = Schema(
         ...,
-        description="The Python function specification this task will execute or has executed."
+        description="The Python function specification for this Task."
     )
     parser: str = Schema(
         ...,
-        description="The type of operation this is Task is. Can be 'single' or 'optimization'"
+        description="The type of operation this is Task is. Can be 'single' or 'optimization'."
     )
     status: TaskStatusEnum = Schema(
         TaskStatusEnum.waiting,
@@ -92,18 +101,18 @@ class TaskRecord(BaseModel):
     )
     manager: Optional[str] = Schema(
         None,
-        description="The name of the Queue Manager which has ownership of this Task"
+        description="The Queue Manager that evaluated this task."
     )
 
     # Sortables
     priority: PriorityEnum = Schema(
         PriorityEnum.NORMAL,
-        description="The priority of this task in the Fractal Server task queue."
+        description=str(PriorityEnum.__doc__)
     )
     tag: Optional[str] = Schema(
         None,
         description="The optional tag assigned to this Task. Tagged tasks can only be pulled by Queue Managers which "
-                    "explicitly reference this tag. If no Tag is specified, any Queue Manager can pull this Task"
+                    "explicitly reference this tag. If no Tag is specified, any Queue Manager can pull this Task."
     )
     # Link back to the base Result
     base_result: Union[DBRef, int] = Schema(
@@ -112,17 +121,17 @@ class TaskRecord(BaseModel):
     )
     error: Optional[ComputeError] = Schema(
         None,
-        description="The error thrown when trying to execute this task, if one was thrown at all"
+        description="The error thrown when trying to execute this task, if one was thrown at all."
     )
 
     # Modified data
     modified_on: datetime.datetime = Schema(
         None,
-        description="The last time this task was updated in the Database"
+        description="The last time this task was updated in the Database."
     )
     created_on: datetime.datetime = Schema(
         None,
-        description="When this task was created in the Database"
+        description="The time when this task was created in the Database."
     )
 
     def __init__(self, **data):

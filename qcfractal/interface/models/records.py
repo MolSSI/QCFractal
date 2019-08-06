@@ -16,11 +16,12 @@ from .common_models import DriverEnum, ObjectId, QCSpecification
 from .model_utils import hash_dictionary, json_encoders, prepare_basis, recursive_normalizer
 from ..visualization import scatter_plot
 
-__all__ = ["OptimizationRecord", "ResultRecord", "OptimizationRecord"]
+__all__ = ["OptimizationRecord", "ResultRecord", "OptimizationRecord", "RecordBase"]
 
 
 class RecordStatusEnum(str, Enum):
-    """The allowed states of a record object.
+    """
+    The state of a record object. The states which are available are a finite set.
     """
     complete = "COMPLETE"
     incomplete = "INCOMPLETE"
@@ -40,7 +41,7 @@ class RecordBase(BaseModel, abc.ABC):
     # Helper data
     client: Any = Schema(
         None,
-        description="The client object which the records are fetched from"
+        description="The client object which the records are fetched from."
     )
     cache: Dict[str, Any] = Schema(
         {},
@@ -51,19 +52,19 @@ class RecordBase(BaseModel, abc.ABC):
     # Base identification
     id: ObjectId = Schema(
         None,
-        description="ID of the object on the database. This is assigned automatically when the object is fetched"
+        description="ID of the object on the database. This is assigned automatically when the object is fetched."
     )
     hash_index: Optional[str] = Schema(
         None,
-        description="Hash of this object used to detect duplication and collisions in the atabase"
+        description="Hash of this object used to detect duplication and collisions in the database."
     )
     procedure: str = Schema(
         ...,
-        description="Name of the procedure which this Record targets"
+        description="Name of the procedure which this Record targets."
     )
     program: str = Schema(
         ...,
-        description="The quantum chemistry program which carries out the individual quantum chemistry calculations"
+        description="The quantum chemistry program which carries out the individual quantum chemistry calculations."
     )
     version: int = Schema(
         ...,
@@ -89,29 +90,29 @@ class RecordBase(BaseModel, abc.ABC):
         None,
         description="The ID of the error data stored in the database in the event that an error was generated in the "
                     "process of carrying out the process this record targets. If no errors were raised, this field "
-                    "will be empty"
+                    "will be empty."
     )
 
     # Compute status
     task_id: Optional[ObjectId] = Schema(  # TODO: not used in SQL
         None,
-        description="Id of the compute task tracked by Fractal in its TaskTable"
+        description="ID of the compute task tracked by Fractal in its TaskTable."
     )
     manager_name: Optional[str] = Schema(
         None,
-        description="Name of the Queue Manager which generated this record"
+        description="Name of the Queue Manager which generated this record."
     )
     status: RecordStatusEnum = Schema(
-        "INCOMPLETE",
-        description="What stage of computation is the compute record at"
+        RecordStatusEnum.incomplete,
+        description=str(RecordStatusEnum.__doc__)
     )
     modified_on: datetime.datetime = Schema(
         None,
-        description="Last time the data this record points to was modified"
+        description="Last time the data this record points to was modified."
     )
     created_on: datetime.datetime = Schema(
         None,
-        description="Time the data this record points to was first created"
+        description="Time the data this record points to was first created."
     )
 
     # Carry-ons
@@ -187,7 +188,7 @@ class RecordBase(BaseModel, abc.ABC):
 ### Checkers
 
     def check_client(self, noraise: bool = False) -> bool:
-        """Checks wether this object owns a FractalClient or not.
+        """Checks whether this object owns a FractalClient or not.
         This is often done so that objects pulled from a server using
         a FractalClient still posses a connection to the server so that
         additional data related to this object can be queried.
@@ -277,29 +278,29 @@ class ResultRecord(RecordBase):
     # Version data
     version: int = Schema(
         1,
-        description="Version of the ResultRecord Model which this data was created with"
+        description="Version of the ResultRecord Model which this data was created with."
     )
     procedure: constr(strip_whitespace=True, regex="single") = Schema(
         "single",
-        description='Fixed as "single" because this is single quantum chemistry result.'
+        description='Procedure is fixed as "single" because this is single quantum chemistry result.'
     )
 
     # Input data
     driver: DriverEnum = Schema(
         ...,
-        description="What type of calculation this result is tied to."
+        description="The type of calculation this result references."
     )
     method: str = Schema(
         ...,
-        description="What quantum chemistry method the calculations was computed with."
+        description="The quantum chemistry method the driver runs with."
     )
     molecule: ObjectId = Schema(
         ...,
-        description="The ID of the molecule in the Database which the calculation was performed on."
+        description="The ID of the molecule in the Database which the result is computed on."
     )
     basis: Optional[str] = Schema(
         None,
-        description="The basis set which the calculation was performed with."
+        description="The basis set which the calculation is performed with."
     )
     keywords: Optional[ObjectId] = Schema(
         None,
@@ -310,7 +311,7 @@ class ResultRecord(RecordBase):
     # Output data
     return_result: Union[float, List[float], Dict[str, Any]] = Schema(
         None,
-        description="The primary result of the calculation, output is a function of ``driver`` specified."
+        description="The primary result of the calculation, output is a function of the specified ``driver``."
     )
     properties: qcel.models.ResultProperties = Schema(
         None,
@@ -406,17 +407,17 @@ class OptimizationRecord(RecordBase):
     A OptimizationRecord for all optimization procedure data.
     """
 
-    # Classdata
+    # Class data
     _hash_indices = {"initial_molecule", "keywords", "qc_spec"}
 
     # Version data
     version: int = Schema(
         1,
-        description="Version of the OptimizationRecord Model which this data was created with"
+        description="Version of the OptimizationRecord Model which this data was created with."
     )
     procedure: constr(strip_whitespace=True, regex="optimization") = Schema(
         "optimization",
-        description='String indication this was a record for an "Optimization", fixed. '
+        description='A fixed string indication this is a record for an "Optimization".'
     )
     schema_version: int = Schema(
         1,
@@ -426,7 +427,7 @@ class OptimizationRecord(RecordBase):
     # Input data
     initial_molecule: ObjectId = Schema(
         ...,
-        description="The ID of the molecule which was passed in as the reference for this Optimization"
+        description="The ID of the molecule which was passed in as the reference for this Optimization."
     )
     qc_spec: QCSpecification = Schema(
         ...,
@@ -435,17 +436,17 @@ class OptimizationRecord(RecordBase):
     keywords: Dict[str, Any] = Schema(
         {},
         description="The keyword options which were passed into the Optimization program. "
-                    "Note: These are a Dict, not a :class:`KeywordSet`"
+                    "Note: These are a Dict, not a :class:`KeywordSet`."
     )
 
     # Results
     energies: List[float] = Schema(
         None,
-        description="The list of energies at each step of the optimization, in order"
+        description="The ordered list of energies at each step of the Optimization."
     )
     final_molecule: ObjectId = Schema(
         None,
-        description="The ID of the final, optimized Molecule the Optimization procedure converged to."
+        description="The Database ID of the final, optimized Molecule the Optimization procedure converged to."
     )
     trajectory: List[ObjectId] = Schema(
         None,
@@ -517,7 +518,7 @@ class OptimizationRecord(RecordBase):
 
         return self.cache["trajectory"]
 
-    def get_molecular_trajectory(self) -> List['molecule']:
+    def get_molecular_trajectory(self) -> List['Molecule']:
         """Returns the Molecule at each gradient evaluation in the trajectory.
 
         Returns
@@ -559,7 +560,6 @@ class OptimizationRecord(RecordBase):
         ret = self.client.query_molecules(id=[self.final_molecule])
         return ret[0]
 
-
 ## Show functions
 
     def show_history(self,
@@ -578,7 +578,8 @@ class OptimizationRecord(RecordBase):
         relative : bool, optional
             If True, all energies are shifted by the lowest energy in the trajectory. Otherwise provides raw energies.
         return_figure : Optional[bool], optional
-            If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+            If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in
+            Jupyter notebook and a raw plotly figure in all other circumstances.
 
         Returns
         -------

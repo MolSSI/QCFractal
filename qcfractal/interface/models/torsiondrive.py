@@ -126,7 +126,8 @@ class TorsionDriveRecord(RecordBase):
     )
     program: _td_constr = Schema(
         "torsiondrive",
-        description="The name of the program. Fixed to 'torsiondrive' since this is the Record explicit to TorsionDrive"
+        description="The name of the program. Fixed to 'torsiondrive' since this is the Record explicit to "
+                    "TorsionDrive."
     )
 
     # Input data
@@ -136,7 +137,7 @@ class TorsionDriveRecord(RecordBase):
     )
     keywords: TDKeywords = Schema(
         ...,
-        description="The TorsionDrive-specific input arguments used for this operation"
+        description="The TorsionDrive-specific input arguments used for this operation."
     )
     optimization_spec: OptimizationSpecification = Schema(
         ...,
@@ -152,14 +153,14 @@ class TorsionDriveRecord(RecordBase):
     # Output data
     final_energy_dict: Dict[str, float] = Schema(
         ...,
-        description="The final energy at each angle of the TorsionDrive scan"
+        description="The final energy at each angle of the TorsionDrive scan."
     )
 
     optimization_history: Dict[str, List[ObjectId]] = Schema(
         ...,
         description="The map of each angle of the TorsionDrive scan to each optimization computations. "
                     "Each value of the dict maps to a sequence of :class:`ObjectId` strings which each "
-                    "point to a single computation in the Database"
+                    "point to a single computation in the Database."
     )
     minimum_positions: Dict[str, int] = Schema(  # TODO: This could use review
         ...,
