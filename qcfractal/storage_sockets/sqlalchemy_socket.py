@@ -444,7 +444,7 @@ class SQLAlchemySocket:
                 if dmol.validated is False:
                     dmol = Molecule(**dmol.dicT(), validate=True)
 
-                mol_dict = dmol.json_dict(exclude={"id", "validated"})
+                mol_dict = dmol.dict(exclude={"id", "validated"})
 
                 # TODO: can set them as defaults in the sql_models, not here
                 mol_dict["fix_com"] = True
@@ -562,7 +562,7 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
             for kw in keyword_sets:
 
-                kw_dict = kw.json_dict(exclude={"id"})
+                kw_dict = kw.dict(exclude={"id"})
 
                 # search by index keywords not by all keys, much faster
                 found = session.query(KeywordsORM).filter_by(hash_index=kw_dict['hash_index']).first()
@@ -881,7 +881,7 @@ class SQLAlchemySocket:
                                                          molecule=result.molecule)
 
                 if get_count_fast(doc) == 0:
-                    doc = ResultORM(**result.json_dict(exclude={"id"}))
+                    doc = ResultORM(**result.dict(exclude={"id"}))
                     session.add(doc)
                     session.commit()  # TODO: faster if done in bulk
                     result_ids.append(str(doc.id))
@@ -925,7 +925,7 @@ class SQLAlchemySocket:
 
                 result_db = session.query(ResultORM).filter_by(id=result.id).first()
 
-                data = result.json_dict(exclude={'id'})
+                data = result.dict(exclude={'id'})
 
                 for attr, val in data.items():
                     setattr(result_db, attr, val)
@@ -1123,7 +1123,7 @@ class SQLAlchemySocket:
                 doc = session.query(procedure_class).filter_by(hash_index=procedure.hash_index)
 
                 if get_count_fast(doc) == 0:
-                    data = procedure.json_dict(exclude={"id"})
+                    data = procedure.dict(exclude={"id"})
                     proc_db = procedure_class(**data)
                     session.add(proc_db)
                     session.commit()
@@ -1243,7 +1243,7 @@ class SQLAlchemySocket:
 
                 proc_db = session.query(className).filter_by(id=procedure.id).first()
 
-                data = procedure.json_dict(exclude={'id'})
+                data = procedure.dict(exclude={'id'})
                 proc_db.update_relations(**data)
 
                 for attr, val in data.items():
@@ -1333,8 +1333,9 @@ class SQLAlchemySocket:
                 service.procedure_id = proc_id
 
                 if doc.count() == 0:
-                    doc = ServiceQueueORM(**service.json_dict(include=set(ServiceQueueORM.__dict__.keys())))
-                    doc.extra = service.json_dict(exclude=set(ServiceQueueORM.__dict__.keys()))
+                    doc = ServiceQueueORM(**service.dict(include=set(ServiceQueueORM.__dict__.keys())))
+                    doc.extra = service.dict(exclude=set(ServiceQueueORM.__dict__.keys()))
+                    doc.priority = doc.priority.value # Must be an integer for sorting
                     session.add(doc)
                     session.commit()  # TODO
                     procedure_ids.append(proc_id)
@@ -1424,8 +1425,8 @@ class SQLAlchemySocket:
 
                 doc_db = session.query(ServiceQueueORM).filter_by(id=service.id).first()
 
-                data = service.json_dict(include=set(ServiceQueueORM.__dict__.keys()))
-                data['extra'] = service.json_dict(exclude=set(ServiceQueueORM.__dict__.keys()))
+                data = service.dict(include=set(ServiceQueueORM.__dict__.keys()))
+                data['extra'] = service.dict(exclude=set(ServiceQueueORM.__dict__.keys()))
 
                 data['id'] = int(data['id'])
                 for attr, val in data.items():
@@ -1500,11 +1501,12 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
             for task_num, record in enumerate(data):
                 try:
-                    task_dict = record.json_dict(exclude={"id"})
+                    task_dict = record.dict(exclude={"id"})
                     # # for compatibility with mongoengine
                     # if isinstance(task_dict['base_result'], dict):
                     #     task_dict['base_result'] = task_dict['base_result']['id']
                     task = TaskQueueORM(**task_dict)
+                    task.priority = task.priority.value # Must be an integer for sorting
                     session.add(task)
                     session.commit()
                     results.append(str(task.id))
@@ -1845,7 +1847,8 @@ class SQLAlchemySocket:
                 doc = session.query(TaskQueueORM).filter_by(base_result_id=task.base_result.id)
 
                 if get_count_fast(doc) == 0:
-                    doc = TaskQueueORM(**task.json_dict(exclude={"id"}))
+                    doc = TaskQueueORM(**task.dict(exclude={"id"}))
+                    doc.priority = doc.priority.value
                     if isinstance(doc.error, dict):
                         doc.error = json.dumps(doc.error)
 

@@ -19,7 +19,7 @@ def test_adapter_single(managed_compute_server):
 
     # Add compute
     hooh = ptl.data.get_molecule("hooh.json")
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh], tag="other")
 
     # Force manager compute and get results
     manager.await_results()
@@ -49,7 +49,7 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
                 "function":
                 "qcengine.compute",
                 "args": [{
-                    "molecule": ptl.data.get_molecule("hooh.json").json_dict(),
+                    "molecule": ptl.data.get_molecule("hooh.json"),
                     "driver": "energy",
                     "model": {
                         "method": "HF",
