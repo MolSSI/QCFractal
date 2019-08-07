@@ -11,7 +11,7 @@ from pydantic import constr, validator, Schema
 from qcelemental import constants
 
 from ..visualization import scatter_plot
-from .common_models import Molecule, ObjectId, OptimizationSpecification, QCSpecification
+from .common_models import Molecule, ObjectId, OptimizationSpecification, QCSpecification, ProtoModel
 from .model_utils import json_encoders, recursive_normalizer
 from .records import RecordBase
 

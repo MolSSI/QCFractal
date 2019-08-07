@@ -3,9 +3,9 @@ Models for the REST interface
 """
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from pydantic import BaseConfig, BaseModel, Schema, constr, validator
+from pydantic import BaseConfig, Schema, constr, validator
 
-from .common_models import KeywordSet, Molecule, ObjectId
+from .common_models import KeywordSet, Molecule, ObjectId, ProtoModel
 from .gridoptimization import GridOptimizationInput
 from .model_utils import json_encoders
 from .records import ResultRecord
@@ -20,7 +20,7 @@ __all__ = ["ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryP
 __rest_models = {}
 
 
-def register_model(name: str, rest: str, body: 'BaseModel', response: 'BaseModel') -> None:
+def register_model(name: str, rest: str, body: 'ProtoModel', response: 'ProtoModel') -> None:
     """
     Register a REST model.
 
@@ -30,9 +30,9 @@ def register_model(name: str, rest: str, body: 'BaseModel', response: 'BaseModel
         The REST endpoint name.
     rest : str
         The REST endpoint type.
-    body : BaseModel
+    body : ProtoModel
         The REST query body model.
-    response : BaseModel
+    response : ProtoModel
         The REST query response model.
 
     """
@@ -49,7 +49,7 @@ def register_model(name: str, rest: str, body: 'BaseModel', response: 'BaseModel
     __rest_models[name][rest] = (body, response)
 
 
-def rest_model(name: str, rest: str) -> Tuple['BaseModel', 'BaseModel']:
+def rest_model(name: str, rest: str) -> Tuple['ProtoModel', 'ProtoModel']:
     """Aquires a REST Model
 
     Parameters
@@ -61,7 +61,7 @@ def rest_model(name: str, rest: str) -> Tuple['BaseModel', 'BaseModel']:
 
     Returns
     -------
-    Tuple['BaseModel', 'BaseModel']
+    Tuple['ProtoModel', 'ProtoModel']
         The (body, response) models of the REST request.
 
     """
@@ -82,12 +82,11 @@ QueryNullObjectId = Optional[Union[List[ObjectId], ObjectId, List[nullstr], null
 QueryProjection = Optional[Dict[str, bool]]
 
 
-class RESTConfig(BaseConfig):
-    json_encoders = json_encoders
-    extra = "forbid"
+class EmptyMeta(ProtoModel):
+    pass
 
 
-class EmptyMeta(BaseModel):
+class EmptyMeta(ProtoModel):
     """
     There is no metadata accepted, so an empty metadata is sent for completion.
     """
@@ -98,7 +97,7 @@ class EmptyMeta(BaseModel):
 auto_gen_docs_on_demand(EmptyMeta)
 
 
-class ResponseMeta(BaseModel):
+class ResponseMeta(ProtoModel):
     """
     Standard Fractal Server response metadata
     """
@@ -117,9 +116,6 @@ class ResponseMeta(BaseModel):
                     "of no errors."
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 auto_gen_docs_on_demand(ResponseMeta)
 
@@ -136,9 +132,6 @@ class ResponseGETMeta(ResponseMeta):
         ...,
         description="The number of entries which were already found in the database from the set which was provided."
     )
-
-    class Config(RESTConfig):
-        pass
 
 
 auto_gen_docs_on_demand(ResponseGETMeta, force_reapply=True)
@@ -162,14 +155,11 @@ class ResponsePOSTMeta(ResponseMeta):
         description="All errors with validating submitted objects will be documented here."
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 auto_gen_docs_on_demand(ResponsePOSTMeta, force_reapply=True)
 
 
-class QueryMeta(BaseModel):
+class QueryMeta(ProtoModel):
     """
     Standard Fractal Server metadata for Database queries containing pagination information
     """
@@ -181,9 +171,6 @@ class QueryMeta(BaseModel):
         0,
         description="The number of records to skip on the query."
     )
-
-    class Config(RESTConfig):
-        pass
 
 
 auto_gen_docs_on_demand(QueryMeta)
@@ -198,14 +185,11 @@ class QueryMetaProjection(QueryMeta):
         description="Additional projection information to pass to the query. Expert-level object."
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 auto_gen_docs_on_demand(QueryMetaProjection, force_reapply=True)
 
 
-class ComputeResponse(BaseModel):
+class ComputeResponse(ProtoModel):
     """
     The response model from the Fractal Server when new Compute or Services are added.
     """
@@ -221,9 +205,6 @@ class ComputeResponse(BaseModel):
         ...,
         description="The list of object Ids which already existed in the database."
     )
-
-    class Config(RESTConfig):
-        pass
 
     def __str__(self) -> str:
         return f"ComputeResponse(nsubmitted={len(self.submitted)} nexisting={len(self.existing)})"
@@ -266,15 +247,12 @@ common_docs = {
 ### Information
 
 
-class InformationGETBody(BaseModel):
-
-    class Config(RESTConfig):
-        pass
+class InformationGETBody(ProtoModel):
+    pass
 
 
-class InformationGETResponse(BaseModel):
-
-    class Config(RESTConfig):
+class InformationGETResponse(ProtoModel):
+    class Config(ProtoModel.Config):
         extra = "allow"
 
 
@@ -283,8 +261,8 @@ register_model("information", "GET", InformationGETBody, InformationGETResponse)
 
 ### KVStore
 
-class KVStoreGETBody(BaseModel):
-    class Data(BaseModel):
+class KVStoreGETBody(ProtoModel):
+    class Data(ProtoModel):
         id: QueryObjectId = Schema(
             None,
             description="Id of the Key/Value Storage object to get."
@@ -299,11 +277,8 @@ class KVStoreGETBody(BaseModel):
         description="Data of the KV Get field: consists of a dict for Id of the Key/Value object to fetch."
     )
 
-    class Config(RESTConfig):
-        pass
 
-
-class KVStoreGETResponse(BaseModel):
+class KVStoreGETResponse(ProtoModel):
     meta: ResponseGETMeta = Schema(
         ...,
         description=common_docs[ResponseGETMeta]
@@ -313,9 +288,6 @@ class KVStoreGETResponse(BaseModel):
         description="The entries of Key/Value object requested."
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 register_model("kvstore", "GET", KVStoreGETBody, KVStoreGETResponse)
 auto_gen_docs_on_demand(KVStoreGETBody)
@@ -324,8 +296,8 @@ auto_gen_docs_on_demand(KVStoreGETResponse)
 
 ### Molecule response
 
-class MoleculeGETBody(BaseModel):
-    class Data(BaseModel):
+class MoleculeGETBody(ProtoModel):
+    class Data(ProtoModel):
         id: QueryObjectId = Schema(
             None,
             description="Exact Id of the Molecule to fetch from the database."
@@ -341,9 +313,6 @@ class MoleculeGETBody(BaseModel):
                         "contains no connectivity information."
         )
 
-        class Config(RESTConfig):
-            pass
-
     meta: QueryMeta = Schema(
         QueryMeta(),
         description=common_docs[QueryMeta]
@@ -353,11 +322,8 @@ class MoleculeGETBody(BaseModel):
         description="Data fields for a Molecule query."  # Because Data is internal, this may not document sufficiently
     )
 
-    class Config(RESTConfig):
-        pass
 
-
-class MoleculeGETResponse(BaseModel):
+class MoleculeGETResponse(ProtoModel):
     meta: ResponseGETMeta = Schema(
         ...,
         description=common_docs[ResponseGETMeta]
@@ -367,16 +333,13 @@ class MoleculeGETResponse(BaseModel):
         description="The List of Molecule objects found by the query."
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 register_model("molecule", "GET", MoleculeGETBody, MoleculeGETResponse)
 auto_gen_docs_on_demand(MoleculeGETBody)
 auto_gen_docs_on_demand(MoleculeGETResponse)
 
 
-class MoleculePOSTBody(BaseModel):
+class MoleculePOSTBody(ProtoModel):
     meta: EmptyMeta = Schema(
         {},
         description=common_docs[EmptyMeta]
@@ -386,11 +349,8 @@ class MoleculePOSTBody(BaseModel):
         description="A list of :class:`Molecule` objects to add to the Database."
     )
 
-    class Config(RESTConfig):
-        pass
 
-
-class MoleculePOSTResponse(BaseModel):
+class MoleculePOSTResponse(ProtoModel):
     meta: ResponsePOSTMeta = Schema(
         ...,
         description=common_docs[ResponsePOSTMeta]
@@ -402,9 +362,6 @@ class MoleculePOSTResponse(BaseModel):
                     "existing Id (entries are not duplicated)."
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 register_model("molecule", "POST", MoleculePOSTBody, MoleculePOSTResponse)
 auto_gen_docs_on_demand(MoleculePOSTBody)
@@ -413,13 +370,10 @@ auto_gen_docs_on_demand(MoleculePOSTResponse)
 
 ### Keywords
 
-class KeywordGETBody(BaseModel):
-    class Data(BaseModel):
+class KeywordGETBody(ProtoModel):
+    class Data(ProtoModel):
         id: QueryObjectId = None
         hash_index: QueryStr = None
-
-        class Config(RESTConfig):
-            pass
 
     meta: QueryMeta = Schema(
         QueryMeta(),
@@ -430,11 +384,8 @@ class KeywordGETBody(BaseModel):
         description="The formal query for a Keyword fetch, contains ``id`` or ``hash_index`` for the object to fetch."
     )
 
-    class Config(RESTConfig):
-        pass
 
-
-class KeywordGETResponse(BaseModel):
+class KeywordGETResponse(ProtoModel):
     meta: ResponseGETMeta = Schema(
         ...,
         description=common_docs[ResponseGETMeta]
@@ -444,16 +395,13 @@ class KeywordGETResponse(BaseModel):
         description="The :class:`KeywordSet` found from in the database based on the query."
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 register_model("keyword", "GET", KeywordGETBody, KeywordGETResponse)
 auto_gen_docs_on_demand(KeywordGETBody)
 auto_gen_docs_on_demand(KeywordGETResponse)
 
 
-class KeywordPOSTBody(BaseModel):
+class KeywordPOSTBody(ProtoModel):
     meta: EmptyMeta = Schema(
         {},
         description="There is no metadata with this, so an empty metadata is sent for completion."
@@ -463,11 +411,8 @@ class KeywordPOSTBody(BaseModel):
         description="The list of :class:`KeywordSet` objects to add to the database."
     )
 
-    class Config(RESTConfig):
-        pass
 
-
-class KeywordPOSTResponse(BaseModel):
+class KeywordPOSTResponse(ProtoModel):
     data: List[Optional[ObjectId]] = Schema(
         ...,
         description="The Ids assigned to the added :class:`KeywordSet` objects. In the event of duplicates, the Id "
@@ -478,9 +423,6 @@ class KeywordPOSTResponse(BaseModel):
         description=common_docs[ResponsePOSTMeta]
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 register_model("keyword", "POST", KeywordPOSTBody, KeywordPOSTResponse)
 auto_gen_docs_on_demand(KeywordPOSTBody)
@@ -489,8 +431,8 @@ auto_gen_docs_on_demand(KeywordPOSTResponse)
 
 ### Collections
 
-class CollectionGETBody(BaseModel):
-    class Data(BaseModel):
+class CollectionGETBody(ProtoModel):
+    class Data(ProtoModel):
         collection: str = Schema(
             None,
             description="The specific collection to look up as its identified in the database."
@@ -504,17 +446,11 @@ class CollectionGETBody(BaseModel):
         def cast_to_lower(cls, v):
             return v.lower()
 
-        class Config(RESTConfig):
-            pass
-
-    class Meta(BaseModel):
+    class Meta(ProtoModel):
         projection: Dict[str, Any] = Schema(
             None,
             description="Additional projection information to pass to the query. Expert-level object."
         )
-
-        class Config(RESTConfig):
-            pass
 
     meta: Meta = Schema(
         None,
@@ -526,11 +462,8 @@ class CollectionGETBody(BaseModel):
         description="Information about the Collection to search the database with."
     )
 
-    class Config(RESTConfig):
-        pass
 
-
-class CollectionGETResponse(BaseModel):
+class CollectionGETResponse(ProtoModel):
     meta: ResponseGETMeta = Schema(
         ...,
         description=common_docs[ResponseGETMeta]
@@ -547,27 +480,21 @@ class CollectionGETResponse(BaseModel):
                 raise ValueError("Dicts in 'data' must have both 'collection' and 'name'")
         return v
 
-    class Config(RESTConfig):
-        pass
-
 
 register_model("collection", "GET", CollectionGETBody, CollectionGETResponse)
 auto_gen_docs_on_demand(CollectionGETBody)
 auto_gen_docs_on_demand(CollectionGETResponse)
 
 
-class CollectionPOSTBody(BaseModel):
-    class Meta(BaseModel):
+class CollectionPOSTBody(ProtoModel):
+    class Meta(ProtoModel):
         overwrite: bool = Schema(
             False,
             description="The existing Collection in the database will be updated if this is True, otherwise will "
                         "remain unmodified if it already exists."
         )
 
-        class Config(RESTConfig):
-            pass
-
-    class Data(BaseModel):
+    class Data(ProtoModel):
         id: str = Schema(
             "local",  # Auto blocks overwriting in a socket
             description="The Id of the object to assign in the database. If 'local', then it will not overwrite "
@@ -586,9 +513,6 @@ class CollectionPOSTBody(BaseModel):
         def cast_to_lower(cls, v):
             return v.lower()
 
-        class Config(RESTConfig):
-            extra = "allow"
-
     meta: Meta = Schema(
         Meta(),
         description="Metadata to specify how the Database should handle adding this Collection if it already exists. "
@@ -600,11 +524,8 @@ class CollectionPOSTBody(BaseModel):
         description="The data associated with this Collection to add to the database."
     )
 
-    class Config(RESTConfig):
-        pass
 
-
-class CollectionPOSTResponse(BaseModel):
+class CollectionPOSTResponse(ProtoModel):
     data: Union[str, None] = Schema(
         ...,
         description="The Id of the Collection uniquely pointing to it in the Database. If the Collection was not added "
@@ -615,9 +536,6 @@ class CollectionPOSTResponse(BaseModel):
         description=common_docs[ResponsePOSTMeta]
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 register_model("collection", "POST", CollectionPOSTBody, CollectionPOSTResponse)
 auto_gen_docs_on_demand(CollectionPOSTBody)
@@ -626,8 +544,8 @@ auto_gen_docs_on_demand(CollectionPOSTResponse)
 
 ### Result
 
-class ResultGETBody(BaseModel):
-    class Data(BaseModel):
+class ResultGETBody(ProtoModel):
+    class Data(ProtoModel):
         id: QueryObjectId = Schema(
             None,
             description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
@@ -673,9 +591,6 @@ class ResultGETBody(BaseModel):
                         ":class:`RecordStatusEnum` for valid statuses and more information."
         )
 
-        class Config(RESTConfig):
-            pass
-
         @validator('keywords', pre=True)
         def validate_keywords(cls, v):
             if v is None:
@@ -697,11 +612,8 @@ class ResultGETBody(BaseModel):
         description="The keys with data to search the database on for individual quantum chemistry computations."
     )
 
-    class Config(RESTConfig):
-        pass
 
-
-class ResultGETResponse(BaseModel):
+class ResultGETResponse(ProtoModel):
     meta: ResponseGETMeta = Schema(
         ...,
         description=common_docs[ResponseGETMeta]
@@ -720,9 +632,6 @@ class ResultGETResponse(BaseModel):
             return [v]
         return v
 
-    class Config(RESTConfig):
-        pass
-
 
 register_model("result", "GET", ResultGETBody, ResultGETResponse)
 auto_gen_docs_on_demand(ResultGETBody)
@@ -731,8 +640,8 @@ auto_gen_docs_on_demand(ResultGETResponse)
 
 ### Procedures
 
-class ProcedureGETBody(BaseModel):
-    class Data(BaseModel):
+class ProcedureGETBody(ProtoModel):
+    class Data(ProtoModel):
         id: QueryObjectId = Schema(
             None,
             description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
@@ -766,9 +675,6 @@ class ProcedureGETBody(BaseModel):
                         ":class:`RecordStatusEnum` for valid statuses."
         )
 
-        class Config(RESTConfig):
-            pass
-
     meta: QueryMetaProjection = Schema(
         QueryMetaProjection(),
         description=common_docs[QueryMetaProjection]
@@ -778,11 +684,8 @@ class ProcedureGETBody(BaseModel):
         description="The keys with data to search the database on for Procedures."
     )
 
-    class Config(RESTConfig):
-        pass
 
-
-class ProcedureGETResponse(BaseModel):
+class ProcedureGETResponse(ProtoModel):
     meta: ResponseGETMeta = Schema(
         ...,
         description=common_docs[ResponseGETMeta]
@@ -792,9 +695,6 @@ class ProcedureGETResponse(BaseModel):
         description="The list of Procedure specs found based on the query."
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 register_model("procedure", "GET", ProcedureGETBody, ProcedureGETResponse)
 auto_gen_docs_on_demand(ProcedureGETBody)
@@ -803,8 +703,8 @@ auto_gen_docs_on_demand(ProcedureGETResponse)
 
 ### Task Queue
 
-class TaskQueueGETBody(BaseModel):
-    class Data(BaseModel):
+class TaskQueueGETBody(ProtoModel):
+    class Data(ProtoModel):
         id: QueryObjectId = Schema(
             None,
             description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
@@ -833,9 +733,6 @@ class TaskQueueGETBody(BaseModel):
                         "database, if it exists. See also :class:`ResultRecord`."
         )
 
-        class Config(RESTConfig):
-            pass
-
     meta: QueryMetaProjection = Schema(
         QueryMetaProjection(),
         description=common_docs[QueryMetaProjection]
@@ -846,7 +743,7 @@ class TaskQueueGETBody(BaseModel):
     )
 
 
-class TaskQueueGETResponse(BaseModel):
+class TaskQueueGETResponse(ProtoModel):
     meta: ResponseGETMeta = Schema(
         ...,
         description=common_docs[ResponseGETMeta]
@@ -858,17 +755,14 @@ class TaskQueueGETResponse(BaseModel):
                     "on the projection."
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 register_model("task_queue", "GET", TaskQueueGETBody, TaskQueueGETResponse)
 auto_gen_docs_on_demand(TaskQueueGETBody)
 auto_gen_docs_on_demand(TaskQueueGETResponse)
 
 
-class TaskQueuePOSTBody(BaseModel):
-    class Meta(BaseModel):
+class TaskQueuePOSTBody(ProtoModel):
+    class Meta(ProtoModel):
         procedure: str = Schema(
             ...,
             description="Name of the procedure which the Task will execute."
@@ -888,7 +782,7 @@ class TaskQueuePOSTBody(BaseModel):
             description=str(PriorityEnum.__doc__)
         )
 
-        class Config(RESTConfig):
+        class Config(ProtoModel.Config):
             allow_extra = "allow"
 
         @validator('priority', pre=True)
@@ -907,11 +801,8 @@ class TaskQueuePOSTBody(BaseModel):
                     "part of this Task."
     )
 
-    class Config(RESTConfig):
-        pass
 
-
-class TaskQueuePOSTResponse(BaseModel):
+class TaskQueuePOSTResponse(ProtoModel):
 
     meta: ResponsePOSTMeta = Schema(
         ...,
@@ -922,17 +813,14 @@ class TaskQueuePOSTResponse(BaseModel):
         description="Data returned from the server from adding a Task."
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 register_model("task_queue", "POST", TaskQueuePOSTBody, TaskQueuePOSTResponse)
 auto_gen_docs_on_demand(TaskQueuePOSTBody)
 auto_gen_docs_on_demand(TaskQueuePOSTResponse)
 
 
-class TaskQueuePUTBody(BaseModel):
-    class Data(BaseModel):
+class TaskQueuePUTBody(ProtoModel):
+    class Data(ProtoModel):
         id: QueryObjectId = Schema(
             None,
             description="The exact Id to target in database. If this is set as a search condition, there is no "
@@ -945,17 +833,11 @@ class TaskQueuePUTBody(BaseModel):
                         "database, if it exists. See also :class:`ResultRecord`."
         )
 
-        class Config(RESTConfig):
-            pass
-
-    class Meta(BaseModel):
+    class Meta(ProtoModel):
         operation: str = Schema(
             ...,
             description="The specific action you are taking as part of this update."
         )
-
-        class Config(RESTConfig):
-            pass
 
         @validator("operation")
         def cast_to_lower(cls, v):
@@ -970,19 +852,13 @@ class TaskQueuePUTBody(BaseModel):
         description="The information which contains the Task target in the database."
     )
 
-    class Config(RESTConfig):
-        pass
 
-
-class TaskQueuePUTResponse(BaseModel):
-    class Data(BaseModel):
+class TaskQueuePUTResponse(ProtoModel):
+    class Data(ProtoModel):
         n_updated: int = Schema(
             ...,
             description="The number of tasks which were changed."
         )
-
-        class Config(RESTConfig):
-            pass
 
     meta: ResponseMeta = Schema(
         ...,
@@ -993,9 +869,6 @@ class TaskQueuePUTResponse(BaseModel):
         description="Information returned from attempting updates of Tasks."
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 register_model("task_queue", "PUT", TaskQueuePUTBody, TaskQueuePUTResponse)
 auto_gen_docs_on_demand(TaskQueuePUTBody)
@@ -1004,8 +877,8 @@ auto_gen_docs_on_demand(TaskQueuePUTResponse)
 
 ### Service Queue
 
-class ServiceQueueGETBody(BaseModel):
-    class Data(BaseModel):
+class ServiceQueueGETBody(ProtoModel):
+    class Data(ProtoModel):
         id: QueryObjectId = Schema(
             None,
             description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
@@ -1039,11 +912,8 @@ class ServiceQueueGETBody(BaseModel):
         description="The keys with data to search the database on for Services."
     )
 
-    class Config(RESTConfig):
-        pass
 
-
-class ServiceQueueGETResponse(BaseModel):
+class ServiceQueueGETResponse(ProtoModel):
     meta: ResponseGETMeta = Schema(
         ...,
         description=common_docs[ResponseGETMeta]
@@ -1053,17 +923,14 @@ class ServiceQueueGETResponse(BaseModel):
         description="The return of Services found in the database mapping their Ids to the Service spec."
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 register_model("service_queue", "GET", ServiceQueueGETBody, ServiceQueueGETResponse)
 auto_gen_docs_on_demand(ServiceQueueGETBody)
 auto_gen_docs_on_demand(ServiceQueueGETResponse)
 
 
-class ServiceQueuePOSTBody(BaseModel):
-    class Meta(BaseModel):
+class ServiceQueuePOSTBody(ProtoModel):
+    class Meta(ProtoModel):
         tag: Optional[str] = Schema(
             None,
             description="Tag to assign to the Tasks this Service will generate so that Queue Managers can pull only "
@@ -1075,9 +942,6 @@ class ServiceQueuePOSTBody(BaseModel):
             description="Priority given to this Tasks created by this Service. Higher priority will be pulled first."
         )
 
-        class Config(RESTConfig):
-            pass
-
     meta: Meta = Schema(
         ...,
         description="Metadata information for the Service for the Tag and Priority of Tasks this Service will create."
@@ -1087,11 +951,8 @@ class ServiceQueuePOSTBody(BaseModel):
         description="A list the specification for Procedures this Service will manage and generate Tasks for."
     )
 
-    class Config(RESTConfig):
-        pass
 
-
-class ServiceQueuePOSTResponse(BaseModel):
+class ServiceQueuePOSTResponse(ProtoModel):
 
     meta: ResponsePOSTMeta = Schema(
         ...,
@@ -1102,9 +963,6 @@ class ServiceQueuePOSTResponse(BaseModel):
         description="Data returned from the server from adding a Service."
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 register_model("service_queue", "POST", ServiceQueuePOSTBody, ServiceQueuePOSTResponse)
 auto_gen_docs_on_demand(ServiceQueuePOSTBody)
@@ -1113,7 +971,7 @@ auto_gen_docs_on_demand(ServiceQueuePOSTResponse)
 
 ### Queue Manager
 
-class QueueManagerMeta(BaseModel):
+class QueueManagerMeta(ProtoModel):
     """
     Validation and identification Meta information for the Queue Manager's communication with the Fractal Server.
     """
@@ -1163,17 +1021,14 @@ class QueueManagerMeta(BaseModel):
         description="Optional queue tag to pull Tasks from."
     )
 
-    class Config(RESTConfig):
-        pass
-
 
 # Add the new QueueManagerMeta to the docs
 auto_gen_docs_on_demand(QueueManagerMeta)
 common_docs[QueueManagerMeta] = str(get_base_docs(QueueManagerMeta))
 
 
-class QueueManagerGETBody(BaseModel):
-    class Data(BaseModel):
+class QueueManagerGETBody(ProtoModel):
+    class Data(ProtoModel):
         limit: int = Schema(
             ...,
             description="Max number of Queue Managers to get from the server."
@@ -1189,11 +1044,8 @@ class QueueManagerGETBody(BaseModel):
                     "number of tasks to pull."
     )
 
-    class Config(RESTConfig):
-        pass
 
-
-class QueueManagerGETResponse(BaseModel):
+class QueueManagerGETResponse(ProtoModel):
     meta: ResponseGETMeta = Schema(
         ...,
         description=common_docs[ResponseGETMeta]
@@ -1203,13 +1055,12 @@ class QueueManagerGETResponse(BaseModel):
         description="A list of tasks retrieved from the server to compute."
     )
 
-
 register_model("queue_manager", "GET", QueueManagerGETBody, QueueManagerGETResponse)
 auto_gen_docs_on_demand(QueueManagerGETBody)
 auto_gen_docs_on_demand(QueueManagerGETResponse)
 
 
-class QueueManagerPOSTBody(BaseModel):
+class QueueManagerPOSTBody(ProtoModel):
     meta: QueueManagerMeta = Schema(
         ...,
         description=common_docs[QueueManagerMeta]
@@ -1219,11 +1070,8 @@ class QueueManagerPOSTBody(BaseModel):
         description="A Dictionary of tasks to return to the server."
     )
 
-    class Config:
-        json_encoders = json_encoders
 
-
-class QueueManagerPOSTResponse(BaseModel):
+class QueueManagerPOSTResponse(ProtoModel):
     meta: ResponsePOSTMeta = Schema(
         ...,
         description=common_docs[ResponsePOSTMeta]
@@ -1239,8 +1087,8 @@ auto_gen_docs_on_demand(QueueManagerPOSTBody)
 auto_gen_docs_on_demand(QueueManagerPOSTResponse)
 
 
-class QueueManagerPUTBody(BaseModel):
-    class Data(BaseModel):
+class QueueManagerPUTBody(ProtoModel):
+    class Data(ProtoModel):
         operation: str
 
     meta: QueueManagerMeta = Schema(
@@ -1254,7 +1102,7 @@ class QueueManagerPUTBody(BaseModel):
     )
 
 
-class QueueManagerPUTResponse(BaseModel):
+class QueueManagerPUTResponse(ProtoModel):
     meta: Dict[str, Any] = Schema(
         {},
         description=common_docs[EmptyMeta]

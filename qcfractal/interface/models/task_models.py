@@ -10,6 +10,7 @@ from qcelemental.models import ComputeError
 from .common_models import ObjectId, ProtoModel
 
 
+<<<<<<< HEAD
 class DBRef(BaseModel):
     """
     Database locator reference object. Identifies an exact record in a database.
@@ -22,6 +23,11 @@ class DBRef(BaseModel):
         ...,
         description="The Database assigned Id of the entry in the ``ref`` table."
     )
+=======
+class DBRef(ProtoModel):
+    ref: str
+    id: ObjectId
+>>>>>>> Models: More protomodels in REST models
 
 
 class TaskStatusEnum(str, Enum):
