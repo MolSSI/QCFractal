@@ -28,14 +28,14 @@ import json
 from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
                                         TaskStatusEnum, TorsionDriveRecord, prepare_basis, GridOptimizationRecord)
 # SQL ORMs
-from qcfractal.storage_sockets.sql_models import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM,
-                                                  MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
-                                                  ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
-                                                  GridOptimizationProcedureORM, VersionsORM, AccessLogORM)
+from qcfractal.storage_sockets import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM,
+                                       MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
+                                       ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
+                                       GridOptimizationProcedureORM, VersionsORM, AccessLogORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
-from .sql_models import Base
+from . import Base
 
 
 _null_keys = {"basis", "keywords"}
