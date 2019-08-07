@@ -80,8 +80,8 @@ Index
 
 * :doc:`install`
 * :doc:`quickstart`
-* :doc:`setup_compute`
 * :doc:`setup_server`
+* :doc:`setup_compute`
 * :doc:`community`
 * :doc:`roadmap`
 
@@ -92,9 +92,9 @@ Index
 
    install.rst
    quickstart.ipynb
-   community.rst
-   setup_compute.rst
    setup_server.rst
+   setup_compute.rst
+   community.rst
    roadmap.rst
 
 **Records Documentation**
