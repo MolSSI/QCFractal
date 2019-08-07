@@ -3,7 +3,7 @@ Database Design
 
 .. warning:: Final MongoDB Supported Version: 0.7.0
 
-    **0.7.0 is the last major release which support MongoDB.** Fractal is moving towards a PostgreSQL for database to
+    **0.7.0 is the last major release which support MongoDB.** Fractal is moving towards a PostgreSQL database to
     make upgrades more stable and because it is more suited to the nature of QCArchive Data. The upgrade path from
     MongoDB to PostgreSQL will be provided by the Fractal developers in the next release. Due to the complex nature
     of the upgrade, the PostgreSQL upgrade will through scripts which will be provided. After the PostgreSQL upgrade,
@@ -110,7 +110,7 @@ number of completed tasks, submissions, and failures.
 
 The database only keeps track of what :term:`Tasks<Task>` have been handed out to
 each :term:`Manager` and maintains a heartbeat to ensure the :term:`Manager` is still connected. More information about
-the configuration and executation of managers can be found here: :doc:`managers`.
+the configuration and execution of managers can be found here: :doc:`managers`.
 
 
 .. _QCSchema: https://github.com/MolSSI/QC_JSON_Schema

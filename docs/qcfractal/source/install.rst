@@ -42,6 +42,8 @@ dependencies you would like to keep up to date:
 
 *   ``pip install qcfractal``
 
+.. XXX: only one option is listed here. 
+
 Install from Source
 -------------------
 
