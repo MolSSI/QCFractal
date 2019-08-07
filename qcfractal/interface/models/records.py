@@ -5,16 +5,17 @@ A model for Compute Records
 import abc
 import datetime
 import json
-import numpy as np
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Union
 
-import qcelemental as qcel
-from pydantic import BaseModel, constr, validator, Schema
+import numpy as np
+from pydantic import Schema, constr, validator
 
-from .common_models import DriverEnum, ObjectId, QCSpecification
-from .model_utils import hash_dictionary, json_encoders, prepare_basis, recursive_normalizer
+import qcelemental as qcel
+
 from ..visualization import scatter_plot
+from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification
+from .model_utils import hash_dictionary, json_encoders, prepare_basis, recursive_normalizer
 
 __all__ = ["OptimizationRecord", "ResultRecord", "OptimizationRecord", "RecordBase"]
 
@@ -29,7 +30,7 @@ class RecordStatusEnum(str, Enum):
     error = "ERROR"
 
 
-class RecordBase(BaseModel, abc.ABC):
+class RecordBase(ProtoModel, abc.ABC):
     """
     A BaseRecord object for Result and Procedure records. Contains all basic
     fields common to the all records.
@@ -122,9 +123,7 @@ class RecordBase(BaseModel, abc.ABC):
                     "program which was involved in generating the data for this record."
     )
 
-    class Config:
-        json_encoders = json_encoders
-        extra = "forbid"
+    class Config(ProtoModel.Config):
         build_hash_index = True
 
     @validator('program')

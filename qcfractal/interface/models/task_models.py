@@ -3,10 +3,11 @@ import json
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, validator, Schema
+from pydantic import  validator, Schema
+
 from qcelemental.models import ComputeError
 
-from .common_models import ObjectId
+from .common_models import ObjectId, ProtoModel
 
 
 class DBRef(BaseModel):
@@ -70,7 +71,7 @@ class PythonComputeSpec(BaseModel):
     )
 
 
-class TaskRecord(BaseModel):
+class TaskRecord(ProtoModel):
 
     id: ObjectId = Schema(
         None,
@@ -142,9 +143,6 @@ class TaskRecord(BaseModel):
         data.setdefault("created_on", dt)
 
         super().__init__(**data)
-
-    class Config:
-        extra = "forbid"
 
     @validator('priority', pre=True)
     def munge_priority(cls, v):

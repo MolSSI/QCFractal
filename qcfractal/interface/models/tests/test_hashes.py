@@ -4,7 +4,7 @@ import pytest
 
 from ..common_models import KeywordSet, Molecule
 from ..gridoptimization import GridOptimizationRecord
-from ..records import ResultRecord, OptimizationRecord
+from ..records import OptimizationRecord, ResultRecord
 from ..torsiondrive import TorsionDriveRecord
 
 ## Molecule hashes

@@ -3,7 +3,7 @@ Models for the REST interface
 """
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from pydantic import BaseConfig, BaseModel, constr, validator, Schema
+from pydantic import BaseConfig, BaseModel, Schema, constr, validator
 
 from .common_models import KeywordSet, Molecule, ObjectId
 from .gridoptimization import GridOptimizationInput
