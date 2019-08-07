@@ -337,23 +337,23 @@ _base_torsion = {
             "keywords": {
                 "dihedrals": [[0, 1, 2, 3]],
                 "grid_spacing": [10],
-                "tol": 1.e-12
+                "energy_upper_limit": 1.e-12
             }
-        }, "cb3f9c9bd4eda742b0429ebea0c3d12719ab2582"),
+        }, "37b65cba19ec4fbd0d54c10fd74d0a27f627cdea"),
         ({
             "keywords": {
                 "dihedrals": [[0, 1, 2, 3]],
                 "grid_spacing": [10],
-                "tol": 0
+                "energy_upper_limit": 0
             }
-        }, "cb3f9c9bd4eda742b0429ebea0c3d12719ab2582"),
+        }, "37b65cba19ec4fbd0d54c10fd74d0a27f627cdea"),
         ({
             "keywords": {
                 "dihedrals": [[0, 1, 2, 3]],
                 "grid_spacing": [10],
-                "tol": 1.e-9
+                "energy_upper_limit": 1.e-9
             }
-        }, "903cc0deb4f0e7b8bc41a69cf5fbd0c9420176a4"),
+        }, "64b400229d3e5bff476e47c093c1a159c69d9fdc"),
 
         # Check opt keywords stability
         ({

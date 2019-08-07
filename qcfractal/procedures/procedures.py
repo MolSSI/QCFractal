@@ -164,7 +164,7 @@ class SingleResultTasks(BaseTasks):
             rdata["stderr"] = stderr
             rdata["error"] = error
 
-            result.consume_output(rdata)
+            result._consume_output(rdata)
             updates.append(result)
             completed_tasks.append(data["task_id"])
 

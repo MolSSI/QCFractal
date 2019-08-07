@@ -1452,7 +1452,7 @@ class SQLAlchemySocket:
             with self.session_scope() as session:
 
                 procedure = service.output
-                procedure.id = service.procedure_id
+                procedure.__dict__["id"] = service.procedure_id
                 self.update_procedures([procedure])
 
                 session.query(ServiceQueueORM)\

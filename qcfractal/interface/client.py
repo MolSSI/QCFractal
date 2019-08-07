@@ -607,7 +607,7 @@ class FractalClient(object):
         # Add references back to the client
         if not projection:
             for result in response.data:
-                result.client = self
+                result.__dict__["client"] = self
 
         if full_return:
             return response

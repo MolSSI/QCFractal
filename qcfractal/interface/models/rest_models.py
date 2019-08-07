@@ -509,6 +509,9 @@ class CollectionPOSTBody(ProtoModel):
             description="The common name of this Collection."
         )
 
+        class Config(ProtoModel.Config):
+            extra = "allow"
+
         @validator("collection")
         def cast_to_lower(cls, v):
             return v.lower()

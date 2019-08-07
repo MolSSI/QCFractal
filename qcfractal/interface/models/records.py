@@ -364,21 +364,22 @@ class ResultRecord(RecordBase):
                                         extras=self.extras)
         return model
 
-    def consume_output(self, data: Dict[str, Any], checks: bool = True):
+    def _consume_output(self, data: Dict[str, Any], checks: bool = True):
         assert self.method == data["model"]["method"]
+        values = self.__dict__
 
         # Result specific
-        self.extras = data["extras"]
-        self.extras.pop("_qcfractal_tags", None)
-        self.return_result = data["return_result"]
-        self.properties = data["properties"]
+        values["extras"] = data["extras"]
+        values["extras"].pop("_qcfractal_tags", None)
+        values["return_result"] = data["return_result"]
+        values["properties"] = data["properties"]
 
         # Standard blocks
-        self.provenance = data["provenance"]
-        self.error = data["error"]
-        self.stdout = data["stdout"]
-        self.stderr = data["stderr"]
-        self.status = "COMPLETE"
+        values["provenance"] = data["provenance"]
+        values["error"] = data["error"]
+        values["stdout"] = data["stdout"]
+        values["stderr"] = data["stderr"]
+        values["status"] = "COMPLETE"
 
 ## QCSchema constructors
 

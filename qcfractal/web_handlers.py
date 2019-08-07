@@ -86,7 +86,7 @@ class APIHandler(tornado.web.RequestHandler):
     def parse_bodymodel(self, model):
 
         try:
-            return model.parse_raw(self.request.body)
+            return model.parse_raw(self.request.body, content_type="json")
         except ValidationError as exc:
             raise tornado.web.HTTPError(status_code=401, reason="Invalid REST")
 

@@ -111,7 +111,7 @@ def test_service_torsiondrive_duplicates(torsiondrive_fixture):
 
     # Augment the input for torsion drive to yield a new hash procedure hash,
     # but not a new task set
-    id2 = spin_up_test(keywords={"meaningless_entry_to_change_hash": "Waffles!"}).ids[0]
+    id2 = spin_up_test(keywords={"energy_upper_limit": 1000}).ids[0]
 
     assert id1 != id2
     procedures = client.query_procedures(id=[id1, id2])
