@@ -40,7 +40,7 @@ class ObjectId(str):
 
 class DriverEnum(str, Enum):
     """
-    The driver configuration of a single quantum chemistry computation. This is a finite set of choices.
+    The type of calculation that is being performed (e.g., energy, gradient, Hessian, ...).
     """
     energy = 'energy'
     gradient = 'gradient'
@@ -67,8 +67,8 @@ class QCSpecification(BaseModel):
     )
     keywords: Optional[ObjectId] = Schema(
         None,
-        description="The ID of the :class:`KeywordSet` registered in the database to run this calculation with. This "
-                    "ID must exist in the database."
+        description="The Id of the :class:`KeywordSet` registered in the database to run this calculation with. This "
+                    "Id must exist in the database."
     )
     program: str = Schema(
         ...,
@@ -125,7 +125,7 @@ class OptimizationSpecification(BaseModel):
     keywords: Optional[Dict[str, Any]] = Schema(
         None,
         description="Dictionary of keyword arguments to pass into the ``program`` when the program runs. "
-                    "Note that unlike :class:`QCSpecification` this is a dictionary of keywords, not the ID for a "
+                    "Note that unlike :class:`QCSpecification` this is a dictionary of keywords, not the Id for a "
                     ":class:`KeywordSet`. "
     )
 
@@ -150,7 +150,7 @@ class KeywordSet(BaseModel):
     """
     id: Optional[ObjectId] = Schema(
         None,
-        description="The ID of this object, will be automatically assigned when added to the database."
+        description="The Id of this object, will be automatically assigned when added to the database."
     )
     hash_index: str = Schema(
         ...,

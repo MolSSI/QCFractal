@@ -19,7 +19,7 @@ class DBRef(BaseModel):
     )
     id: ObjectId = Schema(
         ...,
-        description="The Database assigned ID of the entry in the ``ref`` table."
+        description="The Database assigned Id of the entry in the ``ref`` table."
     )
 
 
@@ -74,7 +74,7 @@ class TaskRecord(BaseModel):
 
     id: ObjectId = Schema(
         None,
-        description="The Database assigned ID of the Task, if it has been assigned yet."
+        description="The Database assigned Id of the Task, if it has been assigned yet."
     )
 
     spec: PythonComputeSpec = Schema(

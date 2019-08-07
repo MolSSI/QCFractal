@@ -123,7 +123,7 @@ class ResponseGETMeta(ResponseMeta):
     """
     missing: List[str] = Schema(
         ...,
-        description="The ID's of the objects which were not found in the database."
+        description="The Id's of the objects which were not found in the database."
     )
     n_found: int = Schema(
         ...,
@@ -145,7 +145,7 @@ class ResponsePOSTMeta(ResponseMeta):
     )
     duplicates: Union[List[str], List[Tuple[str, str]]] = Schema(
         ...,
-        description="The IDs of the objects which already exist in the database amongst the set which were passed in."
+        description="The Ids of the objects which already exist in the database amongst the set which were passed in."
     )
     validation_errors: List[str] = Schema(
         ...,
@@ -192,15 +192,15 @@ class ComputeResponse(BaseModel):
     """
     ids: List[Optional[ObjectId]] = Schema(
         ...,
-        description="The ID's of the records to be computed."
+        description="The Id's of the records to be computed."
     )
     submitted: List[ObjectId] = Schema(
         ...,
-        description="The object IDs which were submitted as new entries to the database."
+        description="The object Ids which were submitted as new entries to the database."
     )
     existing: List[ObjectId] = Schema(
         ...,
-        description="The list of object IDs which alaready existed in the database."
+        description="The list of object Ids which alaready existed in the database."
     )
 
     class Config(RESTConfig):
@@ -254,7 +254,7 @@ class KVStoreGETBody(BaseModel):
     class Data(BaseModel):
         id: QueryObjectId = Schema(
             None,
-            description="ID of the Key/Value Storage object to get."
+            description="Id of the Key/Value Storage object to get."
         )
 
     meta: EmptyMeta = Schema(
@@ -263,7 +263,7 @@ class KVStoreGETBody(BaseModel):
     )
     data: Data = Schema(
         ...,
-        description="Data of the KV Get field: consists of a dict for ID of the Key/Value object to fetch."
+        description="Data of the KV Get field: consists of a dict for Id of the Key/Value object to fetch."
     )
 
     class Config(RESTConfig):
@@ -293,7 +293,7 @@ class MoleculeGETBody(BaseModel):
     class Data(BaseModel):
         id: QueryObjectId = Schema(
             None,
-            description="Exact ID of the Molecule to fetch from the database."
+            description="Exact Id of the Molecule to fetch from the database."
         )
         molecule_hash: QueryStr = Schema(
             None,
@@ -360,9 +360,9 @@ class MoleculePOSTResponse(BaseModel):
     )
     data: List[ObjectId] = Schema(
         ...,
-        description="A list of ID's assigned to the Molecule objects passed in which serves as a unique identifier "
-                    "in the database. If the Molecule was already in the database, then the ID returned is its "
-                    "existing ID (entries are not duplicated)."
+        description="A list of Id's assigned to the Molecule objects passed in which serves as a unique identifier "
+                    "in the database. If the Molecule was already in the database, then the Id returned is its "
+                    "existing Id (entries are not duplicated)."
     )
 
     class Config(RESTConfig):
@@ -429,7 +429,7 @@ class KeywordPOSTBody(BaseModel):
 class KeywordPOSTResponse(BaseModel):
     data: List[Optional[ObjectId]] = Schema(
         ...,
-        description="The IDs assigned to the added :class:`KeywordSet` objects. In the event of duplicates, the ID "
+        description="The Ids assigned to the added :class:`KeywordSet` objects. In the event of duplicates, the Id "
                     "will be the one already found in the database."
     )
     meta: ResponsePOSTMeta = Schema(
@@ -525,7 +525,7 @@ class CollectionPOSTBody(BaseModel):
     class Data(BaseModel):
         id: str = Schema(
             "local",  # Auto blocks overwriting in a socket
-            description="The ID of the object to assign in the database. If 'local', then it will not overwrite "
+            description="The Id of the object to assign in the database. If 'local', then it will not overwrite "
                         "existing keys. There should be very little reason to ever touch this."
         )
         collection: str = Schema(
@@ -562,7 +562,7 @@ class CollectionPOSTBody(BaseModel):
 class CollectionPOSTResponse(BaseModel):
     data: Union[str, None] = Schema(
         ...,
-        description="The ID of the Collection uniquely pointing to it in the Database. If the Collection was not added "
+        description="The Id of the Collection uniquely pointing to it in the Database. If the Collection was not added "
                     "(e.g. ``overwrite=False`` for existing Collection), then a None is returned."
     )
     meta: ResponsePOSTMeta = Schema(
@@ -583,12 +583,12 @@ class ResultGETBody(BaseModel):
     class Data(BaseModel):
         id: QueryObjectId = Schema(
             None,
-            description="The exact ID to fetch from the database. If this is set as a search condition, there is no "
+            description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
                         "reason to set anything else as this will be unique in the database, if it exists."
         )
         task_id: QueryObjectId = Schema(
             None,
-            description="The exact ID of the task which carried out this Result's computation. If this is set as a "
+            description="The exact Id of the task which carried out this Result's computation. If this is set as a "
                         "search condition, there is no reason to set anything else as this will be unique in the "
                         "database, if it exists. See also :class:`TaskRecord`."
         )
@@ -600,12 +600,12 @@ class ResultGETBody(BaseModel):
         )
         molecule: QueryObjectId = Schema(
             None,
-            description="Results will be searched to match the Molecule ID which was computed on."
+            description="Results will be searched to match the Molecule Id which was computed on."
         )
         driver: QueryStr = Schema(
             None,
             description="Results will be searched to match what class of computation was done. "
-                        "See :class:`DriverEnum` for valid choices and more information"
+                        "See :class:`DriverEnum` for valid choices and more information."
         )
         method: QueryStr = Schema(
             None,
@@ -686,12 +686,12 @@ class ProcedureGETBody(BaseModel):
     class Data(BaseModel):
         id: QueryObjectId = Schema(
             None,
-            description="The exact ID to fetch from the database. If this is set as a search condition, there is no "
+            description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
                         "reason to set anything else as this will be unique in the database, if it exists."
         )
         task_id: QueryObjectId = Schema(
             None,
-            description="The exact ID of a task which is carried out by this Procedure. If this is set as a "
+            description="The exact Id of a task which is carried out by this Procedure. If this is set as a "
                         "search condition, there is no reason to set anything else as this will be unique in the "
                         "database, if it exists. See also :class:`TaskRecord`."
         )
@@ -756,7 +756,7 @@ class TaskQueueGETBody(BaseModel):
     class Data(BaseModel):
         id: QueryObjectId = Schema(
             None,
-            description="The exact ID to fetch from the database. If this is set as a search condition, there is no "
+            description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
                         "reason to set anything else as this will be unique in the database, if it exists."
         )
         hash_index: QueryStr = Schema(
@@ -777,7 +777,7 @@ class TaskQueueGETBody(BaseModel):
         )
         base_result: QueryStr = Schema(
             None,
-            description="The exact ID of the Result which this Task is linked to. If this is set as a "
+            description="The exact Id of the Result which this Task is linked to. If this is set as a "
                         "search condition, there is no reason to set anything else as this will be unique in the "
                         "database, if it exists. See also :class:`ResultRecord`."
         )
@@ -850,7 +850,7 @@ class TaskQueuePOSTBody(BaseModel):
     )
     data: List[Union[ObjectId, Molecule]] = Schema(
         ...,
-        description="The list of either Molecule objects or Molecule ID's (those already in the database) to submit as "
+        description="The list of either Molecule objects or Molecule Id's (those already in the database) to submit as "
                     "part of this Task."
     )
 
@@ -880,12 +880,12 @@ class TaskQueuePUTBody(BaseModel):
     class Data(BaseModel):
         id: QueryObjectId = Schema(
             None,
-            description="The exact ID to target in database. If this is set as a search condition, there is no "
+            description="The exact Id to target in database. If this is set as a search condition, there is no "
                         "reason to set anything else as this will be unique in the database, if it exists."
         )
         base_result: QueryObjectId = Schema(  # TODO: Validate this description is correct
             None,
-            description="The exact ID of a result which this Task is slated to write to. If this is set as a "
+            description="The exact Id of a result which this Task is slated to write to. If this is set as a "
                         "search condition, there is no reason to set anything else as this will be unique in the "
                         "database, if it exists. See also :class:`ResultRecord`."
         )
@@ -951,12 +951,12 @@ class ServiceQueueGETBody(BaseModel):
     class Data(BaseModel):
         id: QueryObjectId = Schema(
             None,
-            description="The exact ID to fetch from the database. If this is set as a search condition, there is no "
+            description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
                         "reason to set anything else as this will be unique in the database, if it exists."
         )
         procedure_id: QueryObjectId = Schema(  # TODO: Validate this description is correct
             None,
-            description="The exact ID of the Procedure this Service is responsible for executing. If this is set as a "
+            description="The exact Id of the Procedure this Service is responsible for executing. If this is set as a "
                         "search condition, there is no reason to set anything else as this will be unique in the "
                         "database, if it exists."
         )
@@ -993,7 +993,7 @@ class ServiceQueueGETResponse(BaseModel):
     )
     data: List[Dict[str, Any]] = Schema(
         ...,
-        description="The return of Services found in the database mapping their IDs to the Service spec."
+        description="The return of Services found in the database mapping their Ids to the Service spec."
     )
 
     class Config(RESTConfig):

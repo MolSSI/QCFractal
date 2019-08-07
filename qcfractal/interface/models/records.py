@@ -52,7 +52,7 @@ class RecordBase(BaseModel, abc.ABC):
     # Base identification
     id: ObjectId = Schema(
         None,
-        description="ID of the object on the database. This is assigned automatically when the object is fetched."
+        description="Id of the object on the database. This is assigned automatically by the database."
     )
     hash_index: Optional[str] = Schema(
         None,
@@ -78,17 +78,17 @@ class RecordBase(BaseModel, abc.ABC):
     )
     stdout: Optional[ObjectId] = Schema(
         None,
-        description="The ID of the stdout data stored in the database which was used to generate this record from the "
+        description="The Id of the stdout data stored in the database which was used to generate this record from the "
                     "various programs which were called in the process."
     )
     stderr: Optional[ObjectId] = Schema(
         None,
-        description="The ID of the stderr data stored in the database which was used to generate this record from the "
+        description="The Id of the stderr data stored in the database which was used to generate this record from the "
                     "various programs which were called in the process."
     )
     error: Optional[ObjectId] = Schema(
         None,
-        description="The ID of the error data stored in the database in the event that an error was generated in the "
+        description="The Id of the error data stored in the database in the event that an error was generated in the "
                     "process of carrying out the process this record targets. If no errors were raised, this field "
                     "will be empty."
     )
@@ -96,7 +96,7 @@ class RecordBase(BaseModel, abc.ABC):
     # Compute status
     task_id: Optional[ObjectId] = Schema(  # TODO: not used in SQL
         None,
-        description="ID of the compute task tracked by Fractal in its TaskTable."
+        description="Id of the compute task tracked by Fractal in its TaskTable."
     )
     manager_name: Optional[str] = Schema(
         None,
@@ -288,7 +288,7 @@ class ResultRecord(RecordBase):
     # Input data
     driver: DriverEnum = Schema(
         ...,
-        description="The type of calculation this result references."
+        description=str(DriverEnum.__doc__)
     )
     method: str = Schema(
         ...,
@@ -296,15 +296,16 @@ class ResultRecord(RecordBase):
     )
     molecule: ObjectId = Schema(
         ...,
-        description="The ID of the molecule in the Database which the result is computed on."
+        description="The Id of the molecule in the Database which the result is computed on."
     )
     basis: Optional[str] = Schema(
         None,
-        description="The basis set which the calculation is performed with."
+        description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for "
+                    "methods without basis sets."
     )
     keywords: Optional[ObjectId] = Schema(
         None,
-        description="The ID of the :class:`KeywordSet` which was passed into the quantum chemistry program that "
+        description="The Id of the :class:`KeywordSet` which was passed into the quantum chemistry program that "
                     "performed this calculation."
     )
 
@@ -427,7 +428,7 @@ class OptimizationRecord(RecordBase):
     # Input data
     initial_molecule: ObjectId = Schema(
         ...,
-        description="The ID of the molecule which was passed in as the reference for this Optimization."
+        description="The Id of the molecule which was passed in as the reference for this Optimization."
     )
     qc_spec: QCSpecification = Schema(
         ...,
@@ -446,11 +447,11 @@ class OptimizationRecord(RecordBase):
     )
     final_molecule: ObjectId = Schema(
         None,
-        description="The Database ID of the final, optimized Molecule the Optimization procedure converged to."
+        description="The ``ObjectId`` of the final, optimized Molecule the Optimization procedure converged to."
     )
     trajectory: List[ObjectId] = Schema(
         None,
-        description="The list of Molecule ID's the Optimization procedure generated at each step of the optimization."
+        description="The list of Molecule Id's the Optimization procedure generated at each step of the optimization."
                     "``initial_molecule`` will be the first index, and ``final_molecule`` will be the last index."
     )
 

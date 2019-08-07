@@ -178,7 +178,7 @@ class GridOptimizationRecord(RecordBase):
     # Input data
     initial_molecule: ObjectId = Schema(
         ...,
-        description="ID of the initial molecule in the database."
+        description="Id of the initial molecule in the database."
     )
     keywords: GOKeywords = Schema(
         ...,
@@ -197,7 +197,7 @@ class GridOptimizationRecord(RecordBase):
     # Output data
     starting_molecule: ObjectId = Schema(
         ...,
-        description="ID of the molecule in the database begins the grid optimization. "
+        description="Id of the molecule in the database begins the grid optimization. "
                     "This will differ from the ``initial_molecule`` if ``preoptimization`` is True."
     )
     final_energy_dict: Dict[str, float] = Schema(
@@ -206,7 +206,7 @@ class GridOptimizationRecord(RecordBase):
     )
     grid_optimizations: Dict[str, ObjectId] = Schema(
         ...,
-        description="The ID of each optimization at each grid point."
+        description="The Id of each optimization at each grid point."
     )
     starting_grid: tuple = Schema(
         ...,

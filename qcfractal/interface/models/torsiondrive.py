@@ -133,7 +133,7 @@ class TorsionDriveRecord(RecordBase):
     # Input data
     initial_molecule: List[ObjectId] = Schema(
         ...,
-        description="ID(s) of the initial molecule(s) in the database."
+        description="Id(s) of the initial molecule(s) in the database."
     )
     keywords: TDKeywords = Schema(
         ...,
