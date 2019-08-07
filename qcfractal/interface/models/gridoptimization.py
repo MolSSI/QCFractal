@@ -264,7 +264,7 @@ class GridOptimizationRecord(RecordBase):
         """
         return tuple(json.loads(key))
 
-    def get_scan_value(self, scan_number: Union[str, int, Tuple[int]]) -> Tuple[List[float]]:
+    def get_scan_value(self, scan_number: Union[str, int, Tuple[int]]) -> Tuple[float, ...]:
         """
         Obtains the scan parameters at a given grid point.
 
@@ -275,7 +275,7 @@ class GridOptimizationRecord(RecordBase):
 
         Returns
         -------
-        Tuple[List[float]]
+        Tuple[float, ...]
             Description
         """
         if isinstance(scan_number, str):
@@ -285,26 +285,22 @@ class GridOptimizationRecord(RecordBase):
         for n, idx in enumerate(scan_number):
             ret.append(self.keywords.scans[n].steps[idx])
 
-        # Cast to Tuple[List[float]] instead of tuple(ret) -> Tuple[float,...]
-        ret = (ret, )
+        return tuple(ret)
 
-        return ret
-
-    def get_scan_dimensions(self) -> Tuple[List[float]]:
+    def get_scan_dimensions(self) -> Tuple[float, ...]:
         """
         Returns the overall dimensions of the scan.
 
         Returns
         -------
-        Tuple[List[float]]
+        Tuple[float, ...]
             The size of each dimension in the scan.
         """
         ret = []
         for scan in self.keywords.scans:
             ret.append(len(scan.steps))
 
-        ret = (ret, )
-        return ret
+        return tuple(ret)
 
 ## Query
 
