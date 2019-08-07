@@ -11,6 +11,7 @@ from .model_utils import json_encoders
 from .records import ResultRecord
 from .task_models import PriorityEnum, TaskRecord
 from .torsiondrive import TorsionDriveInput
+from ..util import auto_gen_docs_on_demand, get_base_docs
 
 __all__ = ["ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryProjection"]
 
@@ -94,6 +95,9 @@ class EmptyMeta(BaseModel):
         pass
 
 
+auto_gen_docs_on_demand(EmptyMeta)
+
+
 class ResponseMeta(BaseModel):
     """
     Standard Fractal Server response metadata
@@ -117,6 +121,9 @@ class ResponseMeta(BaseModel):
         pass
 
 
+auto_gen_docs_on_demand(ResponseMeta)
+
+
 class ResponseGETMeta(ResponseMeta):
     """
     Standard Fractal Server response metadata for GET/fetch type requests.
@@ -132,6 +139,9 @@ class ResponseGETMeta(ResponseMeta):
 
     class Config(RESTConfig):
         pass
+
+
+auto_gen_docs_on_demand(ResponseGETMeta, force_reapply=True)
 
 
 class ResponsePOSTMeta(ResponseMeta):
@@ -156,6 +166,9 @@ class ResponsePOSTMeta(ResponseMeta):
         pass
 
 
+auto_gen_docs_on_demand(ResponsePOSTMeta, force_reapply=True)
+
+
 class QueryMeta(BaseModel):
     """
     Standard Fractal Server metadata for Database queries containing pagination information
@@ -173,6 +186,9 @@ class QueryMeta(BaseModel):
         pass
 
 
+auto_gen_docs_on_demand(QueryMeta)
+
+
 class QueryMetaProjection(QueryMeta):
     """
     Fractal Server metadata for Database queries containing pagination information and query projection parameters
@@ -184,6 +200,9 @@ class QueryMetaProjection(QueryMeta):
 
     class Config(RESTConfig):
         pass
+
+
+auto_gen_docs_on_demand(QueryMetaProjection, force_reapply=True)
 
 
 class ComputeResponse(BaseModel):
@@ -200,7 +219,7 @@ class ComputeResponse(BaseModel):
     )
     existing: List[ObjectId] = Schema(
         ...,
-        description="The list of object Ids which alaready existed in the database."
+        description="The list of object Ids which already existed in the database."
     )
 
     class Config(RESTConfig):
@@ -230,7 +249,21 @@ class ComputeResponse(BaseModel):
             submitted=(self.submitted + other.submitted),
             existing=(self.existing + other.existing))
 
-### KVStore
+
+auto_gen_docs_on_demand(ComputeResponse)
+
+common_docs = {
+    EmptyMeta: str(get_base_docs(EmptyMeta)),
+    ResponseMeta: str(get_base_docs(ResponseMeta)),
+    ResponseGETMeta: str(get_base_docs(ResponseGETMeta)),
+    ResponsePOSTMeta: str(get_base_docs(ResponsePOSTMeta)),
+    QueryMeta: str(get_base_docs(QueryMeta)),
+    QueryMetaProjection: str(get_base_docs(QueryMetaProjection)),
+    ComputeResponse: str(get_base_docs(ComputeResponse)),
+}
+
+
+### Information
 
 
 class InformationGETBody(BaseModel):
@@ -247,8 +280,8 @@ class InformationGETResponse(BaseModel):
 
 register_model("information", "GET", InformationGETBody, InformationGETResponse)
 
-### KVStore
 
+### KVStore
 
 class KVStoreGETBody(BaseModel):
     class Data(BaseModel):
@@ -259,7 +292,7 @@ class KVStoreGETBody(BaseModel):
 
     meta: EmptyMeta = Schema(
         {},
-        description=str(EmptyMeta.__doc__)
+        description=common_docs[EmptyMeta]
     )
     data: Data = Schema(
         ...,
@@ -273,7 +306,7 @@ class KVStoreGETBody(BaseModel):
 class KVStoreGETResponse(BaseModel):
     meta: ResponseGETMeta = Schema(
         ...,
-        description=str(ResponseGETMeta.__doc__)
+        description=common_docs[ResponseGETMeta]
     )
     data: Dict[str, Any] = Schema(
         ...,
@@ -285,6 +318,8 @@ class KVStoreGETResponse(BaseModel):
 
 
 register_model("kvstore", "GET", KVStoreGETBody, KVStoreGETResponse)
+auto_gen_docs_on_demand(KVStoreGETBody)
+auto_gen_docs_on_demand(KVStoreGETResponse)
 
 
 ### Molecule response
@@ -311,7 +346,7 @@ class MoleculeGETBody(BaseModel):
 
     meta: QueryMeta = Schema(
         QueryMeta(),
-        description=str(QueryMeta.__doc__)
+        description=common_docs[QueryMeta]
     )
     data: Data = Schema(
         ...,
@@ -325,7 +360,7 @@ class MoleculeGETBody(BaseModel):
 class MoleculeGETResponse(BaseModel):
     meta: ResponseGETMeta = Schema(
         ...,
-        description=str(ResponseGETMeta.__doc__)
+        description=common_docs[ResponseGETMeta]
     )
     data: List[Molecule] = Schema(
         ...,
@@ -337,12 +372,14 @@ class MoleculeGETResponse(BaseModel):
 
 
 register_model("molecule", "GET", MoleculeGETBody, MoleculeGETResponse)
+auto_gen_docs_on_demand(MoleculeGETBody)
+auto_gen_docs_on_demand(MoleculeGETResponse)
 
 
 class MoleculePOSTBody(BaseModel):
     meta: EmptyMeta = Schema(
         {},
-        description=str(EmptyMeta.__doc__)
+        description=common_docs[EmptyMeta]
     )
     data: List[Molecule] = Schema(
         ...,
@@ -356,7 +393,7 @@ class MoleculePOSTBody(BaseModel):
 class MoleculePOSTResponse(BaseModel):
     meta: ResponsePOSTMeta = Schema(
         ...,
-        description=str(ResponsePOSTMeta.__doc__)
+        description=common_docs[ResponsePOSTMeta]
     )
     data: List[ObjectId] = Schema(
         ...,
@@ -370,6 +407,8 @@ class MoleculePOSTResponse(BaseModel):
 
 
 register_model("molecule", "POST", MoleculePOSTBody, MoleculePOSTResponse)
+auto_gen_docs_on_demand(MoleculePOSTBody)
+auto_gen_docs_on_demand(MoleculePOSTResponse)
 
 
 ### Keywords
@@ -384,7 +423,7 @@ class KeywordGETBody(BaseModel):
 
     meta: QueryMeta = Schema(
         QueryMeta(),
-        description=str(QueryMeta.__doc__)
+        description=common_docs[QueryMeta]
     )
     data: Data = Schema(
         ...,
@@ -398,7 +437,7 @@ class KeywordGETBody(BaseModel):
 class KeywordGETResponse(BaseModel):
     meta: ResponseGETMeta = Schema(
         ...,
-        description=str(ResponseGETMeta.__doc__)
+        description=common_docs[ResponseGETMeta]
     )
     data: List[KeywordSet] = Schema(
         ...,
@@ -410,6 +449,8 @@ class KeywordGETResponse(BaseModel):
 
 
 register_model("keyword", "GET", KeywordGETBody, KeywordGETResponse)
+auto_gen_docs_on_demand(KeywordGETBody)
+auto_gen_docs_on_demand(KeywordGETResponse)
 
 
 class KeywordPOSTBody(BaseModel):
@@ -434,7 +475,7 @@ class KeywordPOSTResponse(BaseModel):
     )
     meta: ResponsePOSTMeta = Schema(
         ...,
-        description=str(ResponsePOSTMeta.__doc__)
+        description=common_docs[ResponsePOSTMeta]
     )
 
     class Config(RESTConfig):
@@ -442,6 +483,8 @@ class KeywordPOSTResponse(BaseModel):
 
 
 register_model("keyword", "POST", KeywordPOSTBody, KeywordPOSTResponse)
+auto_gen_docs_on_demand(KeywordPOSTBody)
+auto_gen_docs_on_demand(KeywordPOSTResponse)
 
 
 ### Collections
@@ -490,7 +533,7 @@ class CollectionGETBody(BaseModel):
 class CollectionGETResponse(BaseModel):
     meta: ResponseGETMeta = Schema(
         ...,
-        description=str(ResponseGETMeta.__doc__)
+        description=common_docs[ResponseGETMeta]
     )
     data: List[Dict[str, Any]] = Schema(
         ...,
@@ -509,6 +552,8 @@ class CollectionGETResponse(BaseModel):
 
 
 register_model("collection", "GET", CollectionGETBody, CollectionGETResponse)
+auto_gen_docs_on_demand(CollectionGETBody)
+auto_gen_docs_on_demand(CollectionGETResponse)
 
 
 class CollectionPOSTBody(BaseModel):
@@ -567,7 +612,7 @@ class CollectionPOSTResponse(BaseModel):
     )
     meta: ResponsePOSTMeta = Schema(
         ...,
-        description=str(ResponsePOSTMeta.__doc__)
+        description=common_docs[ResponsePOSTMeta]
     )
 
     class Config(RESTConfig):
@@ -575,6 +620,8 @@ class CollectionPOSTResponse(BaseModel):
 
 
 register_model("collection", "POST", CollectionPOSTBody, CollectionPOSTResponse)
+auto_gen_docs_on_demand(CollectionPOSTBody)
+auto_gen_docs_on_demand(CollectionPOSTResponse)
 
 
 ### Result
@@ -643,7 +690,7 @@ class ResultGETBody(BaseModel):
 
     meta: QueryMetaProjection = Schema(
         QueryMetaProjection(),
-        description=str(QueryMetaProjection.__doc__)
+        description=common_docs[QueryMetaProjection]
     )
     data: Data = Schema(
         ...,
@@ -657,7 +704,7 @@ class ResultGETBody(BaseModel):
 class ResultGETResponse(BaseModel):
     meta: ResponseGETMeta = Schema(
         ...,
-        description=str(ResponseGETMeta.__doc__)
+        description=common_docs[ResponseGETMeta]
     )
     # Either a record or dict depending if projection
     data: Union[List[ResultRecord], List[Dict[str, Any]]] = Schema(
@@ -678,6 +725,8 @@ class ResultGETResponse(BaseModel):
 
 
 register_model("result", "GET", ResultGETBody, ResultGETResponse)
+auto_gen_docs_on_demand(ResultGETBody)
+auto_gen_docs_on_demand(ResultGETResponse)
 
 
 ### Procedures
@@ -722,7 +771,7 @@ class ProcedureGETBody(BaseModel):
 
     meta: QueryMetaProjection = Schema(
         QueryMetaProjection(),
-        description=str(QueryMetaProjection.__doc__)
+        description=common_docs[QueryMetaProjection]
     )
     data: Data = Schema(
         ...,
@@ -736,7 +785,7 @@ class ProcedureGETBody(BaseModel):
 class ProcedureGETResponse(BaseModel):
     meta: ResponseGETMeta = Schema(
         ...,
-        description=str(ResponseGETMeta.__doc__)
+        description=common_docs[ResponseGETMeta]
     )
     data: List[Dict[str, Any]] = Schema(
         ...,
@@ -748,6 +797,8 @@ class ProcedureGETResponse(BaseModel):
 
 
 register_model("procedure", "GET", ProcedureGETBody, ProcedureGETResponse)
+auto_gen_docs_on_demand(ProcedureGETBody)
+auto_gen_docs_on_demand(ProcedureGETResponse)
 
 
 ### Task Queue
@@ -787,7 +838,7 @@ class TaskQueueGETBody(BaseModel):
 
     meta: QueryMetaProjection = Schema(
         QueryMetaProjection(),
-        description=str(QueryMetaProjection.__doc__)
+        description=common_docs[QueryMetaProjection]
     )
     data: Data = Schema(
         ...,
@@ -798,7 +849,7 @@ class TaskQueueGETBody(BaseModel):
 class TaskQueueGETResponse(BaseModel):
     meta: ResponseGETMeta = Schema(
         ...,
-        description=str(ResponseGETMeta.__doc__)
+        description=common_docs[ResponseGETMeta]
     )
     data: Union[List[TaskRecord], List[Dict[str, Any]]] = Schema(
         ...,
@@ -812,6 +863,8 @@ class TaskQueueGETResponse(BaseModel):
 
 
 register_model("task_queue", "GET", TaskQueueGETBody, TaskQueueGETResponse)
+auto_gen_docs_on_demand(TaskQueueGETBody)
+auto_gen_docs_on_demand(TaskQueueGETResponse)
 
 
 class TaskQueuePOSTBody(BaseModel):
@@ -862,7 +915,7 @@ class TaskQueuePOSTResponse(BaseModel):
 
     meta: ResponsePOSTMeta = Schema(
         ...,
-        description=str(ResponsePOSTMeta.__doc__)
+        description=common_docs[ResponsePOSTMeta]
     )
     data: ComputeResponse = Schema(
         ...,
@@ -874,6 +927,8 @@ class TaskQueuePOSTResponse(BaseModel):
 
 
 register_model("task_queue", "POST", TaskQueuePOSTBody, TaskQueuePOSTResponse)
+auto_gen_docs_on_demand(TaskQueuePOSTBody)
+auto_gen_docs_on_demand(TaskQueuePOSTResponse)
 
 
 class TaskQueuePUTBody(BaseModel):
@@ -931,7 +986,7 @@ class TaskQueuePUTResponse(BaseModel):
 
     meta: ResponseMeta = Schema(
         ...,
-        description=str(ResponseMeta.__doc__)
+        description=common_docs[ResponseMeta]
     )
     data: Data = Schema(
         ...,
@@ -943,6 +998,8 @@ class TaskQueuePUTResponse(BaseModel):
 
 
 register_model("task_queue", "PUT", TaskQueuePUTBody, TaskQueuePUTResponse)
+auto_gen_docs_on_demand(TaskQueuePUTBody)
+auto_gen_docs_on_demand(TaskQueuePUTResponse)
 
 
 ### Service Queue
@@ -975,7 +1032,7 @@ class ServiceQueueGETBody(BaseModel):
 
     meta: QueryMeta = Schema(
         QueryMeta(),
-        description=str(QueryMeta.__doc__)
+        description=common_docs[QueryMeta]
     )
     data: Data = Schema(
         ...,
@@ -989,7 +1046,7 @@ class ServiceQueueGETBody(BaseModel):
 class ServiceQueueGETResponse(BaseModel):
     meta: ResponseGETMeta = Schema(
         ...,
-        description=str(ResponseGETMeta.__doc__)
+        description=common_docs[ResponseGETMeta]
     )
     data: List[Dict[str, Any]] = Schema(
         ...,
@@ -1001,6 +1058,8 @@ class ServiceQueueGETResponse(BaseModel):
 
 
 register_model("service_queue", "GET", ServiceQueueGETBody, ServiceQueueGETResponse)
+auto_gen_docs_on_demand(ServiceQueueGETBody)
+auto_gen_docs_on_demand(ServiceQueueGETResponse)
 
 
 class ServiceQueuePOSTBody(BaseModel):
@@ -1036,7 +1095,7 @@ class ServiceQueuePOSTResponse(BaseModel):
 
     meta: ResponsePOSTMeta = Schema(
         ...,
-        description=str(ResponsePOSTMeta.__doc__)
+        description=common_docs[ResponsePOSTMeta]
     )
     data: ComputeResponse = Schema(
         ...,
@@ -1048,6 +1107,8 @@ class ServiceQueuePOSTResponse(BaseModel):
 
 
 register_model("service_queue", "POST", ServiceQueuePOSTBody, ServiceQueuePOSTResponse)
+auto_gen_docs_on_demand(ServiceQueuePOSTBody)
+auto_gen_docs_on_demand(ServiceQueuePOSTResponse)
 
 
 ### Queue Manager
@@ -1106,6 +1167,11 @@ class QueueManagerMeta(BaseModel):
         pass
 
 
+# Add the new QueueManagerMeta to the docs
+auto_gen_docs_on_demand(QueueManagerMeta)
+common_docs[QueueManagerMeta] = str(get_base_docs(QueueManagerMeta))
+
+
 class QueueManagerGETBody(BaseModel):
     class Data(BaseModel):
         limit: int = Schema(
@@ -1115,7 +1181,7 @@ class QueueManagerGETBody(BaseModel):
 
     meta: QueueManagerMeta = Schema(
         ...,
-        description=str(QueueManagerMeta.__doc__)
+        description=common_docs[QueueManagerMeta]
     )
     data: Data = Schema(
         ...,
@@ -1130,7 +1196,7 @@ class QueueManagerGETBody(BaseModel):
 class QueueManagerGETResponse(BaseModel):
     meta: ResponseGETMeta = Schema(
         ...,
-        description=str(ResponseGETMeta.__doc__)
+        description=common_docs[ResponseGETMeta]
     )
     data: List[Dict[str, Any]] = Schema(
         ...,
@@ -1139,12 +1205,14 @@ class QueueManagerGETResponse(BaseModel):
 
 
 register_model("queue_manager", "GET", QueueManagerGETBody, QueueManagerGETResponse)
+auto_gen_docs_on_demand(QueueManagerGETBody)
+auto_gen_docs_on_demand(QueueManagerGETResponse)
 
 
 class QueueManagerPOSTBody(BaseModel):
     meta: QueueManagerMeta = Schema(
         ...,
-        description=str(QueueManagerMeta.__doc__)
+        description=common_docs[QueueManagerMeta]
     )
     data: Dict[ObjectId, Any] = Schema(
         ...,
@@ -1158,7 +1226,7 @@ class QueueManagerPOSTBody(BaseModel):
 class QueueManagerPOSTResponse(BaseModel):
     meta: ResponsePOSTMeta = Schema(
         ...,
-        description=str(ResponsePOSTMeta.__doc__)
+        description=common_docs[ResponsePOSTMeta]
     )
     data: bool = Schema(
         ...,
@@ -1167,6 +1235,8 @@ class QueueManagerPOSTResponse(BaseModel):
 
 
 register_model("queue_manager", "POST", QueueManagerPOSTBody, QueueManagerPOSTResponse)
+auto_gen_docs_on_demand(QueueManagerPOSTBody)
+auto_gen_docs_on_demand(QueueManagerPOSTResponse)
 
 
 class QueueManagerPUTBody(BaseModel):
@@ -1175,7 +1245,7 @@ class QueueManagerPUTBody(BaseModel):
 
     meta: QueueManagerMeta = Schema(
         ...,
-        description=str(QueueManagerMeta.__doc__)
+        description=common_docs[QueueManagerMeta]
     )
     data: Data = Schema(
         ...,
@@ -1187,7 +1257,7 @@ class QueueManagerPUTBody(BaseModel):
 class QueueManagerPUTResponse(BaseModel):
     meta: Dict[str, Any] = Schema(
         {},
-        description=str(EmptyMeta.__doc__)
+        description=common_docs[EmptyMeta]
     )
     # Order on Union[] is important. Union[bool, Dict[str, int]] -> True if the input dict is not empty since
     # Python can resolve dict -> bool since it passes a `is` test. Will not cast bool -> dict[str, int], so make Dict[]
@@ -1200,3 +1270,6 @@ class QueueManagerPUTResponse(BaseModel):
 
 
 register_model("queue_manager", "PUT", QueueManagerPUTBody, QueueManagerPUTResponse)
+auto_gen_docs_on_demand(QueueManagerPUTBody)
+auto_gen_docs_on_demand(QueueManagerPUTResponse)
+

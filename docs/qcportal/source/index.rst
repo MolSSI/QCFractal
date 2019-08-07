@@ -77,7 +77,7 @@ Documentation for compute records.
 * :doc:`record-overview`
 * :doc:`results`
 * :doc:`procedures`
-* :doc:`record_api`
+* :doc:`record-api`
 
 .. toctree::
    :maxdepth: 1
@@ -87,7 +87,7 @@ Documentation for compute records.
    record-overview.rst
    results.rst
    procedures.rst
-   record_api.rst
+   record-api.rst
 
 
 **Fractal Client**
@@ -122,4 +122,5 @@ Contains in-depth developer documentation.
    :caption: Developer Documentation
 
    glossary.rst
+   rest-api.rst
    changelog.rst
