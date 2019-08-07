@@ -26,7 +26,7 @@ Within the QCArchive stack, QCFractal is responsible for:
 - Accepting requests for calculations, submitted from a client such as `QCPortal <http://docs.qcarchive.molssi.org/projects/qcportal/en/latest/>`_. 
 - Running these calculations on disparate compute resources through Quantum Chemistry programs and procedures supported by `QCEngine <http://docs.qcarchive.molssi.org/projects/qcengine/en/latest/>`_. 
 - Storing and organizing the results of these calculations in a database.
-- Providing access to stored results to clients such as QCPortal.
+- Providing access to stored results to clients such as `QCPortal <http://docs.qcarchive.molssi.org/projects/qcportal/en/latest/>`_. 
 
 The diagram below illustrates a representative data flow:
 
