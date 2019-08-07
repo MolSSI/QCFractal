@@ -85,14 +85,14 @@ def test_water_minima_fragment():
     frag_0_1 = mol.get_fragment(0, 1)
     frag_1_0 = mol.get_fragment(1, 0)
 
-    assert mol.symbols[:3] == frag_0.symbols
+    assert np.array_equal(mol.symbols[:3], frag_0.symbols)
     assert np.allclose(mol.masses[:3], frag_0.masses)
 
-    assert mol.symbols == frag_0_1.symbols
+    assert np.array_equal(mol.symbols, frag_0_1.symbols)
     assert np.allclose(mol.geometry, frag_0_1.geometry)
 
-    assert mol.symbols[3:] + mol.symbols[:3] == frag_1_0.symbols
-    assert np.allclose(mol.masses[3:] + mol.masses[:3], frag_1_0.masses)
+    assert np.array_equal(np.hstack((mol.symbols[3:], mol.symbols[:3])), frag_1_0.symbols)
+    assert np.allclose(np.hstack((mol.masses[3:], mol.masses[:3])), frag_1_0.masses)
 
 
 def test_pretty_print():
