@@ -80,6 +80,7 @@ Index
 
 * :doc:`install`
 * :doc:`quickstart`
+* :doc:`common_use_cases`
 * :doc:`setup_server`
 * :doc:`setup_compute`
 * :doc:`community`
@@ -92,6 +93,7 @@ Index
 
    install.rst
    quickstart.ipynb
+   common_use_cases.rst
    setup_server.rst
    setup_compute.rst
    community.rst
