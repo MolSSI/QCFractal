@@ -34,7 +34,8 @@ class MsgpackExt(TypeDecorator):
 class Base:
     """Base declarative class of all ORM models"""
 
-    db_related_fields = ['result_type', 'base_result_id', 'metadata', '_trajectory']
+    db_related_fields = ['result_type', 'base_result_id', 'metadata', '_trajectory',
+                         'collection_type']
 
     def to_dict(self, exclude=None):
 
