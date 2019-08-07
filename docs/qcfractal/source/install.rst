@@ -37,12 +37,9 @@ The environments must be installed as new environments and cannot be installed i
 Pip
 ---
 
-To install qcfractal with ``pip`` there are a few options, depending on which
-dependencies you would like to keep up to date:
+qcfractal may be installed with ``pip``::
 
-*   ``pip install qcfractal``
-
-.. XXX: only one option is listed here. 
+    pip install qcfractal
 
 Install from Source
 -------------------
