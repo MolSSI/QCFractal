@@ -13,7 +13,9 @@ from qcfractal.testing import adapter_client_fixture, managed_compute_server, re
 @testing.using_rdkit
 def test_adapter_single(managed_compute_server):
     client, server, manager = managed_compute_server
+
     reset_server_database(server)
+    manager.heartbeat() # Re-register with server after clear
 
     # Add compute
     hooh = ptl.data.get_molecule("hooh.json")
@@ -93,7 +95,9 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
 @testing.using_rdkit
 def test_adapter_error_message(managed_compute_server):
     client, server, manager = managed_compute_server
+
     reset_server_database(server)
+    manager.heartbeat() # Re-register with server after clear
 
     # HOOH without connectivity, RDKit should fail
     hooh = ptl.data.get_molecule("hooh.json").json_dict()
@@ -124,7 +128,9 @@ def test_adapter_error_message(managed_compute_server):
 @testing.using_rdkit
 def test_adapter_raised_error(managed_compute_server):
     client, server, manager = managed_compute_server
+
     reset_server_database(server)
+    manager.heartbeat() # Re-register with server after clear
 
     # HOOH without connectivity, RDKit should fail
     hooh = ptl.data.get_molecule("hooh.json").json_dict()

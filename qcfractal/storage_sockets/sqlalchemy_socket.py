@@ -441,7 +441,10 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
             for dmol in molecules:
 
-                mol_dict = dmol.json_dict(exclude={"id"})
+                if dmol.validated is False:
+                    dmol = Molecule(**dmol.dicT(), validate=True)
+
+                mol_dict = dmol.json_dict(exclude={"id", "validated"})
 
                 # TODO: can set them as defaults in the sql_models, not here
                 mol_dict["fix_com"] = True
@@ -503,7 +506,7 @@ class SQLAlchemySocket:
 
         # ret["meta"]["errors"].extend(errors)
 
-        data = [Molecule(**d, validate=False) for d in rdata]
+        data = [Molecule(**d, validate=False, validated=True) for d in rdata]
 
         return {'meta': meta, 'data': data}
 

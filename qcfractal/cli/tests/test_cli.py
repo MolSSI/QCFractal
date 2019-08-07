@@ -177,6 +177,7 @@ def test_manager_executor_manager_boot_from_file(active_server, tmp_path):
     assert testing.run_process(args, interupt_after=7, **_options)
 
 
+@testing.mark_slow
 def cli_manager_runs(config_data, tmp_path):
     temp_config = tmp_path / "temp_config.yaml"
     temp_config.write_text(yaml.dump(config_data))
@@ -184,6 +185,7 @@ def cli_manager_runs(config_data, tmp_path):
     assert testing.run_process(args, **_options)
 
 
+@testing.mark_slow
 def load_manager_config(adapter, scheduler):
     config = read_config_file(os.path.join(_pwd, "manager_boot_template.yaml"))
     config["common"]["adapter"] = adapter
@@ -247,18 +249,21 @@ def test_cli_managers_none(adapter, tmp_path):
     cli_manager_runs(config, tmp_path)
 
 
+@testing.mark_slow
 def test_cli_managers_help():
     """Test that qcfractal_manager --help works"""
     args = ["qcfractal-manager", "--help"]
     testing.run_process(args, **_options)
 
 
+@testing.mark_slow
 def test_cli_managers_schema():
     """Test that qcfractal_manager --schema works"""
     args = ["qcfractal-manager", "--schema"]
     testing.run_process(args, **_options)
 
 
+@testing.mark_slow
 def test_cli_managers_skel(tmp_path):
     """Test that qcfractal_manager --skeleton works"""
     config = tmp_path / "config.yaml"
