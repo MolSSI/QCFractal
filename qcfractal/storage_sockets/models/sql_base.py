@@ -87,7 +87,7 @@ class Base:
 
     @classmethod
     def col(cls):
-        return cls.__table__.c
+        return [col for col in cls.__dict__ if not col.startswith('_')]
 
     def _update_many_to_many(self, table, parent_id_name, child_id_name, parent_id_val, new_list, old_list=None):
         """Perfomr upsert on a many to many association table

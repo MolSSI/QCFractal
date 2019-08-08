@@ -62,11 +62,11 @@ class DatasetORM(CollectionORM):
 
 
     default_benchmark = Column(String, nullable=True)
-    default_keywords  = Column(String, nullable=True)
+    default_keywords  = Column(JSON, nullable=True)
 
     default_driver = Column(String, nullable=True)
     default_units = Column(String, nullable=True)
-    alias_keywords = Column(String, nullable=True)
+    alias_keywords = Column(JSON, nullable=True)
     default_program  = Column(String, nullable=True)
 
     # contributed_values: {"gradient": {"name": "Gradient", "theory_level": "pseudo-random values", "values": {"He1": [0.03, 0, 0.02, -0.02, 0, -0.03], "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]}, "units": "hartree", "doi": null, "theory_level_details": null, "comments": null}},

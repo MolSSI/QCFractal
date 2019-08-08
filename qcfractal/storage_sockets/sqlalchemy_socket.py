@@ -31,7 +31,7 @@ from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, Optimiza
 from qcfractal.storage_sockets.models import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM,
                                        MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
                                        ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
-                                       GridOptimizationProcedureORM, VersionsORM, AccessLogORM)
+                                       GridOptimizationProcedureORM, VersionsORM, AccessLogORM, DatasetORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
@@ -106,6 +106,19 @@ def get_procedure_class(record):
                         .format(type(record)))
 
     return procedure_class
+
+def get_collection_class(collection_type):
+
+    collection_map = {
+        'dataset' : DatasetORM
+    }
+
+    collection_class = CollectionORM
+
+    if collection_type in collection_map:
+        collection_class = collection_map[collection_type]
+
+    return collection_class
 
 
 class SQLAlchemySocket:
@@ -745,8 +758,11 @@ class SQLAlchemySocket:
         lname = data.get("name").lower()
         collection = data.pop("collection").lower()
 
+        # Get collection class if special type is implemented
+        collection_class = get_collection_class(collection)
+
         update_fields = {}
-        for field in CollectionORM.col().keys():
+        for field in collection_class.col():
             if field in data:
                 update_fields[field] = data.pop(field)
 
@@ -756,11 +772,11 @@ class SQLAlchemySocket:
 
             try:
                 if overwrite:
-                    col = session.query(CollectionORM).filter_by(collection=collection, lname=lname).first()
+                    col = session.query(collection_class).filter_by(collection=collection, lname=lname).first()
                     for key, value in update_fields.items():
                         setattr(col, key, value)
                 else:
-                    col = CollectionORM(collection=collection, lname=lname, **update_fields)
+                    col = collection_class(collection=collection, lname=lname, **update_fields)
 
                 session.add(col)
                 session.commit()
@@ -776,7 +792,6 @@ class SQLAlchemySocket:
         ret = {'data': col_id, 'meta': meta}
         return ret
 
-    # def get_collections(self, keys, projection=None):
     def get_collections(self,
                         collection: str = None,
                         name: str = None,
@@ -807,10 +822,12 @@ class SQLAlchemySocket:
             name = name.lower()
         if collection:
             collection = collection.lower()
-        query = format_query(CollectionORM, lname=name, collection=collection)
+
+        collection_class = get_collection_class(collection)
+        query = format_query(collection_class, lname=name, collection=collection)
 
         # try:
-        rdata, meta['n_found'] = self.get_query_projection(CollectionORM,
+        rdata, meta['n_found'] = self.get_query_projection(collection_class,
                                                            query,
                                                            projection,
                                                            limit,

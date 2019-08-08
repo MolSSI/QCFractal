@@ -11,4 +11,4 @@ from .results_models import (BaseResultORM, OptimizationProcedureORM, ResultORM,
                              OptimizationHistory, Trajectory)
 
 # Collections ORMs
-from .collections_models import CollectionORM
+from .collections_models import CollectionORM, DatasetORM
