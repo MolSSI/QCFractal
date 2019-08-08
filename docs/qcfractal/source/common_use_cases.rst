@@ -68,23 +68,22 @@ Single Workstation
 ++++++++++++++++++
 
 This quickstart guide addresses QCFractal setup on a single computer which will be used for the :term:`Server`, :term:`Manager`, user client, and compute. 
-On the workstation, setup and start the :term:`Server`::
+On the workstation, initialize the :term:`Server`::
 
    qcfractal-server init 
-   nohup qcfractal-server start &
 
-The second command starts ``qcfractal-server`` in the background. 
+Next, start the :term:`Server` and ProcessPoolExecutor :term:`Manager`::
 
-Next, start the local ProcessPoolExecutor :term:`Manager`::
+   nohup qcfractal-server start --local-manager 1 &
 
-   nohup qcfractal-manager --adapter pool --verify False &
+The second command starts ``qcfractal-server`` in the background.
+It also starts one :term:`Worker` which will pull :term:`tasks <Task>` from the :term:`Server` and run them. 
 
-This command starts one :term:`Worker` which will pull :term:`tasks <Task>` from the :term:`Server` and run them. Note that authentication is turned off (``--verify False``) since all components are run locally.
-
-Test if the everything is setup by running a Hartee-Fock calculation a single hydrogen molecule, as in the :doc:`quickstart` (note this requires `psi4`)::
+Test if the everything is setup by running a Hartee-Fock calculation a single hydrogen molecule, as in the :doc:`quickstart` (note this requires ``psi4``)::
 
    python
    >>> import qcfractal.interface as ptl
+   # Note that server SSL verification is turned off (verify=False) since all components are run locally.
    >>> client = ptl.FractalClient(address="localhost:7777", verify=False)
    >>> mol = ptl.Molecule(symbols=["H", "H"], geometry=[0, 0, 0, 0, 5, 0])
    >>> mol_id = client.add_molecules([mol])[0]
