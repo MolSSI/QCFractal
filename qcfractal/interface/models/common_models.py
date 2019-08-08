@@ -10,7 +10,7 @@ from qcelemental.models import Molecule, Provenance
 
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
-__all__ = ["QCSpecification", "OptimizationSpecification", "KeywordSet", "ObjectId"]
+__all__ = ["QCSpecification", "OptimizationSpecification", "KeywordSet", "ObjectId", "DriverEnum"]
 
 # Add in QCElemental models
 __all__.extend(["Molecule", "Provenance"])
@@ -39,8 +39,8 @@ class ObjectId(str):
 
 
 class DriverEnum(str, Enum):
-    """The possible driver configurations of a single quantum chemistry
-    computation.
+    """
+    The type of calculation that is being performed (e.g., energy, gradient, Hessian, ...).
     """
     energy = 'energy'
     gradient = 'gradient'
@@ -54,7 +54,7 @@ class QCSpecification(BaseModel):
     """
     driver: DriverEnum = Schema(
         ...,
-        description="The type of calculation that is being performed."
+        description=str(DriverEnum.__doc__)
     )
     method: str = Schema(
         ...,
@@ -67,8 +67,8 @@ class QCSpecification(BaseModel):
     )
     keywords: Optional[ObjectId] = Schema(
         None,
-        description="The ID of the :class:`KeywordSet` registered in the database to run this calculation with. This "
-                    "ID must exist in the database."
+        description="The Id of the :class:`KeywordSet` registered in the database to run this calculation with. This "
+                    "Id must exist in the database."
     )
     program: str = Schema(
         ...,
@@ -125,7 +125,7 @@ class OptimizationSpecification(BaseModel):
     keywords: Optional[Dict[str, Any]] = Schema(
         None,
         description="Dictionary of keyword arguments to pass into the ``program`` when the program runs. "
-                    "Note that unlike :class:`QCSpecification` this is a dictionary of keywords, not the ID for a "
+                    "Note that unlike :class:`QCSpecification` this is a dictionary of keywords, not the Id for a "
                     ":class:`KeywordSet`. "
     )
 
@@ -150,7 +150,7 @@ class KeywordSet(BaseModel):
     """
     id: Optional[ObjectId] = Schema(
         None,
-        description="The ID of this object, will be automatically asigned when added to the database."
+        description="The Id of this object, will be automatically assigned when added to the database."
     )
     hash_index: str = Schema(
         ...,
@@ -164,13 +164,13 @@ class KeywordSet(BaseModel):
     )
     lowercase: bool = Schema(
         True,
-        description="If ``True``, normalizes the string keys of the ``values`` to all lowercase. Assists in matching "
-                    "against other :class:`KeywordSet` objects in the database."
+        description="String keys are in the ``values`` dict are normalized to lowercase if this is True. Assists in "
+                    "matching against other :class:`KeywordSet` objects in the database."
     )
     exact_floats: bool = Schema(
         False,
-        description="If ``False``, rounds all floating point numbers to 1.e-10. Assists in matching against other "
-                    ":class:`KeywordSet` objects in the database."
+        description="All floating point numbers are rounded to 1.e-10 if this is False."
+                    "Assists in matching against other :class:`KeywordSet` objects in the database."
     )
     comments: Optional[str] = Schema(
         None,
