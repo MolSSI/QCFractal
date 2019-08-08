@@ -9,9 +9,8 @@ from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 
 
-from qcfractal.storage_sockets.sql_base import Base, MsgpackExt
-from qcfractal.storage_sockets.sql_models import MoleculeORM, KeywordsORM, KVStoreORM
-
+from qcfractal.storage_sockets.models import Base, MsgpackExt
+from qcfractal.storage_sockets.models import MoleculeORM, KeywordsORM, KVStoreORM
 
 
 class BaseResultORM(Base):

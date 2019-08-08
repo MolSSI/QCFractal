@@ -6,7 +6,7 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from qcfractal.storage_sockets import sql_models
+from qcfractal.storage_sockets.models import Base
 
 import yaml
 from qcfractal.config import FractalConfig
@@ -24,7 +24,7 @@ fileConfig(config.config_file_name)
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 # target_metadata = None
-target_metadata = sql_models.Base.metadata
+target_metadata = Base.metadata
 compare_type = True
 
 # other values from the config, defined by the needs of env.py,

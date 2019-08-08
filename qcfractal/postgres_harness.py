@@ -10,7 +10,7 @@ import psycopg2
 from .config import FractalConfig
 from .util import find_port, is_port_open
 import os
-from qcfractal.storage_sockets.sql_models import Base
+from qcfractal.storage_sockets.models import Base
 from sqlalchemy import create_engine
 
 

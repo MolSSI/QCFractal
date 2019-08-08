@@ -3,8 +3,8 @@ from sqlalchemy import (Column, Integer, String, DateTime, Boolean, ForeignKey, 
                         inspect, Index, UniqueConstraint)
 from sqlalchemy.orm import relationship, column_property
 
-from qcfractal.storage_sockets.sql_base import Base
-from qcfractal.storage_sockets.sql_models import MoleculeORM
+from qcfractal.storage_sockets.models import Base
+from qcfractal.storage_sockets.models import MoleculeORM
 
 
 class CollectionORM(Base):
@@ -85,8 +85,6 @@ class DatasetORM(CollectionORM):
                                lazy='selectin',
                                cascade="all, delete-orphan",
                                backref="dataset")
-
-    extra = Column(JSON)  # extra data related to specific collection type
 
     __table_args__ = (
         # Index('ix_results_molecule', 'molecule'),  # b-tree index

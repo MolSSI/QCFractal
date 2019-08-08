@@ -20,9 +20,7 @@ from sqlalchemy.ext.orderinglist import ordering_list
 # from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 
-from qcfractal.storage_sockets.sql_base import Base, MsgpackExt
-
-# Base = declarative_base()
+from qcfractal.storage_sockets.models import Base, MsgpackExt
 
 
 class AccessLogORM(Base):

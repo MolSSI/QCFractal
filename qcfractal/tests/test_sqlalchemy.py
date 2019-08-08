@@ -12,7 +12,7 @@ from sqlalchemy.orm import joinedload
 
 import qcfractal.interface as ptl
 from qcfractal.services.services import TorsionDriveService
-from qcfractal.storage_sockets import (KVStoreORM, MoleculeORM, OptimizationHistory,
+from qcfractal.storage_sockets.models import (KVStoreORM, MoleculeORM, OptimizationHistory,
                                        OptimizationProcedureORM, ResultORM, ServiceQueueORM,
                                        TaskQueueORM, TorsionDriveProcedureORM, Trajectory)
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
