@@ -150,7 +150,7 @@ Configuring and running the Server from the CLI and Config Files
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Server Configuration and Running Documentation
+   :caption: Server Configuration
 
    server_config.rst
    server_init.rst
