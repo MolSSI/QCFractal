@@ -4,15 +4,13 @@
 import copy
 from typing import Any, Dict
 
-from pydantic import BaseModel
-
 from .collection import Collection
 from .collection_utils import register_collection
-from ..models import (OptimizationRecord, OptimizationSpecification, QCSpecification, TorsionDriveInput,
+from ..models import (OptimizationRecord, OptimizationSpecification, ProtoModel, QCSpecification, TorsionDriveInput,
                       TorsionDriveRecord)
 
 
-class TorsionDriveStaticOptions(BaseModel):
+class TorsionDriveStaticOptions(ProtoModel):
 
     keywords: Dict[str, Any]
     optimization_spec: OptimizationSpecification
@@ -23,7 +21,7 @@ class TorsionDriveStaticOptions(BaseModel):
         allow_mutation = False
 
 
-class OptimizationStaticOptions(BaseModel):
+class OptimizationStaticOptions(ProtoModel):
 
     program: str
     keywords: Dict[str, Any] = {}

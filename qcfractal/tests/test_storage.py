@@ -895,6 +895,8 @@ def test_services_sql(storage_results):
         "hash_index" : "123",
         "status": TaskStatusEnum.waiting,
 
+        "optimization_program": "gaussian",
+
         # extra fields
         "torsiondrive_state": {},
 

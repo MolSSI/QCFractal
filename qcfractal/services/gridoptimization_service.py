@@ -21,6 +21,9 @@ class GridOptimizationService(BaseService):
     program: str = "qcfractal"
     procedure: str = "gridoptimization"
 
+    # Program info
+    optimization_program: str
+
     # Output
     output: GridOptimizationRecord
 
@@ -41,9 +44,6 @@ class GridOptimizationService(BaseService):
     optimization_template: str
     # keyword_template: KeywordSet
     starting_molecule: Molecule
-
-    class Config:
-        json_encoders = json_encoders
 
     @classmethod
     def initialize_from_api(cls, storage_socket, logger, service_input, tag=None, priority=None):

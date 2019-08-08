@@ -29,6 +29,9 @@ class TorsionDriveService(BaseService):
     program: str = "torsiondrive"
     procedure: str = "torsiondrive"
 
+    # Program info
+    optimization_program: str
+
     # Output
     output: TorsionDriveRecord = None  # added default
 

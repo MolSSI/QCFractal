@@ -3,15 +3,13 @@ QCPortal Database ODM
 """
 from typing import Any, Dict, List, Optional, Set
 
-from pydantic import BaseModel
-
-from ..models import GridOptimizationInput, Molecule, ObjectId, OptimizationSpecification, QCSpecification
+from ..models import GridOptimizationInput, Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
 from ..models.gridoptimization import GOKeywords, ScanDimension
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
 
-class GOEntry(BaseModel):
+class GOEntry(ProtoModel):
     """Data model for the `reactions` list in Dataset"""
     name: str
     initial_molecule: ObjectId
@@ -20,7 +18,7 @@ class GOEntry(BaseModel):
     object_map: Dict[str, ObjectId] = {}
 
 
-class GOEntrySpecification(BaseModel):
+class GOEntrySpecification(ProtoModel):
     name: str
     description: Optional[str]
     optimization_spec: OptimizationSpecification

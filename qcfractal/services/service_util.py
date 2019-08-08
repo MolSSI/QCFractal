@@ -7,9 +7,9 @@ import datetime
 import json
 from typing import Any, Dict, List, Set, Tuple, Optional
 
-from pydantic import BaseModel, validator
+from pydantic import validator
 
-from ..interface.models import ObjectId
+from ..interface.models import ObjectId, ProtoModel
 from ..interface.models.rest_models import TaskQueuePOSTBody
 from ..interface.models.task_models import PriorityEnum
 from ..procedures import get_procedure_parser
@@ -17,7 +17,7 @@ from ..procedures import get_procedure_parser
 from qcelemental.models import ComputeError
 
 
-class TaskManager(BaseModel):
+class TaskManager(ProtoModel):
 
     storage_socket: Any = None
     logger: Any = None
@@ -26,9 +26,9 @@ class TaskManager(BaseModel):
     tag: Optional[str] = None
     priority: PriorityEnum = PriorityEnum.HIGH
 
-    def dict(self, *args, **kwargs) -> Dict[str, Any]:
-        kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"storage_socket", "logger"}
-        return BaseModel.dict(self, *args, **kwargs)
+    class Config(ProtoModel.Config):
+        allow_mutation = True
+        serialize_default_excludes = {"storage_socket", "logger"}
 
     def done(self) -> bool:
         """
@@ -100,7 +100,7 @@ class TaskManager(BaseModel):
         return True
 
 
-class BaseService(BaseModel, abc.ABC):
+class BaseService(ProtoModel, abc.ABC):
 
     # Excluded fields
     storage_socket: Any
@@ -125,11 +125,16 @@ class BaseService(BaseModel, abc.ABC):
 
     status: str = "WAITING"
     error: Optional[ComputeError] = None
+    tag: Optional[str] = None
 
     # Sorting and priority
     priority: PriorityEnum = PriorityEnum.NORMAL
     modified_on: datetime.datetime = None
     created_on: datetime.datetime = None
+
+    class Config(ProtoModel.Config):
+        allow_mutation = True
+        serialize_default_excludes = {"storage_socket", "logger"}
 
     def __init__(self, **data):
 
@@ -158,10 +163,6 @@ class BaseService(BaseModel, abc.ABC):
         """
         Initalizes a Service from the API.
         """
-
-    def dict(self, *args, **kwargs) -> Dict[str, Any]:
-        kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"storage_socket", "logger"}
-        return BaseModel.dict(self, *args, **kwargs)
 
     def json_dict(self, *args, **kwargs) -> str:
         return json.loads(self.json(*args, **kwargs))

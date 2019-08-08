@@ -148,6 +148,8 @@ def test_services(storage_socket, session):
         "hash_index" : "123",
         "status": "COMPLETE",
 
+        "optimization_program": "gaussian",
+
         # extra fields
         "torsiondrive_state": {},
 

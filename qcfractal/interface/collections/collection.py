@@ -10,9 +10,8 @@ import json
 from typing import Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
-from pydantic import BaseModel
 
-from ..models import ObjectId, json_encoders
+from ..models import ObjectId, ProtoModel, json_encoders
 
 
 class Collection(abc.ABC):
@@ -45,7 +44,7 @@ class Collection(abc.ABC):
         # Create the data model
         self.data = self.DataModel(**kwargs)
 
-    class DataModel(BaseModel):
+    class DataModel(ProtoModel):
         """
         Internal Data structure base model typed by PyDantic
 
@@ -61,10 +60,6 @@ class Collection(abc.ABC):
         tagline: str = None
         tags: List[str] = []
         id: str = 'local'
-
-        class Config:
-            json_encoders = json_encoders
-            extra = "forbid"
 
     def __str__(self) -> str:
         """
@@ -226,7 +221,7 @@ class Collection(abc.ABC):
 
         # Add the database
         if (self.data.id == self.data.fields['id'].default):
-            self.data.id = client.add_collection(self.data.dict(), overwrite=False)
+            self.data.__dict__["id"] = client.add_collection(self.data.dict(), overwrite=False)
         else:
             client.add_collection(self.data.dict(), overwrite=True)
 
