@@ -2,6 +2,8 @@
 Tests the imports and exports of the Molecule object.
 """
 
+import json
+
 import numpy as np
 import pytest
 
@@ -20,7 +22,7 @@ def test_molecule_constructors():
     assert water_psi.get_molecular_formula() == "H4O2"
 
     # Check the JSON construct/deconstruct
-    water_from_json = portal.Molecule(**water_psi.json_dict())
+    water_from_json = portal.Molecule(**water_psi.dict())
     assert water_psi.compare(water_psi, water_from_json)
 
     ### Neon Tetramer
@@ -33,7 +35,7 @@ def test_molecule_constructors():
     assert neon_from_psi.compare(neon_from_psi, neon_from_np)
 
     # Check the JSON construct/deconstruct
-    neon_from_json = portal.Molecule(**neon_from_psi.json_dict())
+    neon_from_json = portal.Molecule(**neon_from_psi.dict())
     assert neon_from_psi.compare(neon_from_psi, neon_from_json)
     assert neon_from_json.get_molecular_formula() == "Ne4"
 
@@ -143,7 +145,7 @@ def test_water_orient():
 def test_molecule_errors():
     mol = portal.data.get_molecule("water_dimer_stretch.psimol")
 
-    data = mol.json_dict()
+    data = mol.dict()
     data["whatever"] = 5
     with pytest.raises(ValueError):
         portal.Molecule(**data)
@@ -165,8 +167,8 @@ def test_molecule_repeated_hashing():
     h1 = mol.get_hash()
     assert mol.get_molecular_formula() == "H2O2"
 
-    mol2 = portal.Molecule(**mol.json_dict(), orient=False)
+    mol2 = portal.Molecule(**json.loads(mol.json()), orient=False)
     assert h1 == mol2.get_hash()
 
-    mol3 = portal.Molecule(**mol2.json_dict(), orient=False)
+    mol3 = portal.Molecule(**json.loads(mol2.json()), orient=False)
     assert h1 == mol3.get_hash()

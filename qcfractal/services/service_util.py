@@ -164,9 +164,6 @@ class BaseService(ProtoModel, abc.ABC):
         Initalizes a Service from the API.
         """
 
-    def json_dict(self, *args, **kwargs) -> str:
-        return json.loads(self.json(*args, **kwargs))
-
     @abc.abstractmethod
     def iterate(self):
         """

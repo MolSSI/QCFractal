@@ -37,7 +37,7 @@ def test_compute_queue_stack(fractal_compute_server):
             "keywords": kw_id,
             "program": "psi4",
         },
-        "data": [hydrogen_mol_id, helium.json_dict()],
+        "data": [hydrogen_mol_id, helium],
     }
 
     # Ask the server to compute a new computation

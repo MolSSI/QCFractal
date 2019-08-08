@@ -165,6 +165,3 @@ class TaskRecord(ProtoModel):
     @validator('procedure')
     def check_procedure(cls, v):
         return v.lower()
-
-    def json_dict(self, *args, **kwargs):
-        return json.loads(self.json(*args, **kwargs))

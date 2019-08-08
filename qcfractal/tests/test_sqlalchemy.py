@@ -107,7 +107,7 @@ def test_molecule_sql(storage_socket, session):
     assert water_mol.molecular_formula == "H4O2"
     assert water_mol.molecular_charge == 0
 
-    # print(water_mol.json_dict())
+    # print(water_mol.dict())
     #
     # Query with fields in the model
     result_list = session.query(MoleculeORM).filter_by(molecular_formula="H4O2").all()
@@ -169,9 +169,10 @@ def test_services(storage_socket, session):
 
     service_pydantic = TorsionDriveService(**service_data)
 
-    doc = ServiceQueueORM(**service_pydantic.json_dict(include=set(ServiceQueueORM.__dict__.keys())))
-    doc.extra = service_pydantic.json_dict(exclude=set(ServiceQueueORM.__dict__.keys()))
+    doc = ServiceQueueORM(**service_pydantic.dict(include=set(ServiceQueueORM.__dict__.keys())))
+    doc.extra = service_pydantic.dict(exclude=set(ServiceQueueORM.__dict__.keys()))
     doc.procedure_id = procedure.id
+    doc.priority = doc.priority.value # Special case where we need the value not the enum
     session.add(doc)
     session.commit()
 

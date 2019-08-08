@@ -100,7 +100,7 @@ def test_adapter_error_message(managed_compute_server):
     manager.heartbeat() # Re-register with server after clear
 
     # HOOH without connectivity, RDKit should fail
-    hooh = ptl.data.get_molecule("hooh.json").json_dict()
+    hooh = ptl.data.get_molecule("hooh.json").dict()
     del hooh["connectivity"]
     mol_ret = client.add_molecules([hooh])
 
@@ -133,7 +133,7 @@ def test_adapter_raised_error(managed_compute_server):
     manager.heartbeat() # Re-register with server after clear
 
     # HOOH without connectivity, RDKit should fail
-    hooh = ptl.data.get_molecule("hooh.json").json_dict()
+    hooh = ptl.data.get_molecule("hooh.json")
 
     ret = client.add_compute("rdkit", "UFF", "", "hessian", None, hooh)
     queue_id = ret.submitted[0]

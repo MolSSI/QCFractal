@@ -52,7 +52,7 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
 
     # Add compute
     hooh = ptl.data.get_molecule("hooh.json")
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh], tag="other")
 
     # Computer with the incorrect tag
     manager_stuff.await_results()
@@ -87,7 +87,7 @@ def test_queue_manager_statistics(compute_adapter_fixture, caplog):
     manager = queue.QueueManager(client, adapter, verbose=True)
 
     hooh = ptl.data.get_molecule("hooh.json")
-    client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
+    client.add_compute("rdkit", "UFF", "", "energy", None, [hooh], tag="other")
 
     # Set capture level
     with caplog_handler_at_level(caplog, logging.INFO):
@@ -118,7 +118,7 @@ def test_queue_manager_shutdown(compute_adapter_fixture):
     manager = queue.QueueManager(client, adapter)
 
     hooh = ptl.data.get_molecule("hooh.json")
-    client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
+    client.add_compute("rdkit", "UFF", "", "energy", None, [hooh], tag="other")
 
     # Pull job to manager and shutdown
     manager.update()
@@ -145,7 +145,7 @@ def test_queue_manager_server_delay(compute_adapter_fixture):
     manager = queue.QueueManager(client, adapter, server_error_retries=1)
 
     hooh = ptl.data.get_molecule("hooh.json")
-    client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
+    client.add_compute("rdkit", "UFF", "", "energy", None, [hooh], tag="other")
 
     # Pull job to manager and shutdown
     manager.update()

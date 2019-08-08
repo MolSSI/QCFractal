@@ -114,9 +114,7 @@ def test_queue_error(fractal_compute_server):
 
     client = ptl.FractalClient(fractal_compute_server)
 
-    hooh = ptl.data.get_molecule("hooh.json").json_dict()
-    del hooh["connectivity"]
-
+    hooh = ptl.data.get_molecule("hooh.json").copy(update={"connectivity": None})
     compute_ret = client.add_compute("rdkit", "UFF", "", "energy", None, hooh)
 
     # Pull out a special iteration on the queue manager
@@ -148,7 +146,7 @@ def test_queue_duplicate_compute(fractal_compute_server):
 
     client = ptl.FractalClient(fractal_compute_server)
 
-    hooh = ptl.data.get_molecule("hooh.json").json_dict()
+    hooh = ptl.data.get_molecule("hooh.json")
     mol_ret = client.add_molecules([hooh])
 
     ret = client.add_compute("rdkit", "UFF", "", "energy", None, mol_ret)
@@ -216,7 +214,7 @@ def test_queue_duplicate_procedure(fractal_compute_server):
 
     client = ptl.FractalClient(fractal_compute_server)
 
-    hooh = ptl.data.get_molecule("hooh.json").json_dict()
+    hooh = ptl.data.get_molecule("hooh.json")
     mol_ret = client.add_molecules([hooh])
 
     geometric_options = {
