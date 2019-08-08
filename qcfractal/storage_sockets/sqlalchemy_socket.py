@@ -780,6 +780,8 @@ class SQLAlchemySocket:
 
                 session.add(col)
                 session.commit()
+                col.update_relations(**update_fields)
+                session.commit()
 
                 col_id = str(col.id)
                 meta['success'] = True

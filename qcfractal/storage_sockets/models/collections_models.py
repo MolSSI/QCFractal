@@ -2,9 +2,18 @@ import datetime
 from sqlalchemy import (Column, Integer, String, DateTime, Boolean, ForeignKey, JSON, Enum, Float, Binary, Table,
                         inspect, Index, UniqueConstraint)
 from sqlalchemy.orm import relationship, column_property
-
+from sqlalchemy import select, func, tuple_, text
 from qcfractal.storage_sockets.models import Base
 from qcfractal.storage_sockets.models import MoleculeORM
+from sqlalchemy.dialects.postgresql import array_agg
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.sql.functions import GenericFunction
+
+class json_agg(GenericFunction):
+    type = postgresql.JSON
+
+class json_build_object(GenericFunction):
+    type = postgresql.JSON
 
 
 class CollectionORM(Base):
@@ -28,6 +37,10 @@ class CollectionORM(Base):
     tagline = Column(String)
     extra = Column(JSON)  # extra data related to specific collection type
 
+    def update_relations(self):
+        pass
+
+
     __table_args__ = (
         Index('ix_collection_lname', "collection", "lname", unique=True),
         Index('ix_collection_type', 'collection_type'),
@@ -48,7 +61,7 @@ class DatasetRecordsAssociation(Base):
 
     name = Column(String, nullable=False)
     comment = Column(String)
-    local_results = Column(String)
+    local_results = Column(JSON)
 
 
 class DatasetORM(CollectionORM):
@@ -81,10 +94,36 @@ class DatasetORM(CollectionORM):
 
     # records: [{"name": "He1", "molecule_id": "1", "comment": null, "local_results": {}},
     #             {"name": "He2", "molecule_id": "2", "comment": null, "local_results": {}}],
+    # records = column_property(
+    #     select([func.json_agg(tuple_(
+    #           DatasetRecordsAssociation.molecule_id, DatasetRecordsAssociation.name
+    #
+    #     ))])
+    #         .where(DatasetRecordsAssociation.dataset_id == id))
+
+    records = column_property(
+        select([json_agg(json_build_object(
+            'molecule_id', DatasetRecordsAssociation.molecule_id,
+            'name', DatasetRecordsAssociation.name
+        ))])
+            # .select_from(DatasetRecordsAssociation.__tablename__) # doesn't work
+            .where(DatasetRecordsAssociation.dataset_id == id))
+
+
+
     records_obj = relationship(DatasetRecordsAssociation,
-                               lazy='selectin',
+                               lazy='noload',
                                cascade="all, delete-orphan",
                                backref="dataset")
+
+    def update_relations(self, records=None, **kwarg):
+
+        self.records_obj = []
+        records = [] if not records else records
+        for rec_dict in records:
+            rec = DatasetRecordsAssociation(dataset_id=int(self.id),**rec_dict)
+            self.records_obj.append(rec)
+
 
     __table_args__ = (
         # Index('ix_results_molecule', 'molecule'),  # b-tree index
