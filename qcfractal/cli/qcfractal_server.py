@@ -96,12 +96,12 @@ def parse_args():
 
     user_subparsers = user.add_subparsers(dest="user_command")
 
-    user_add = user_subparsers.add_parser("add", help="Adds another user to the QCFractal server.")
+    user_add = user_subparsers.add_parser("add", help="Add a user to the QCFractal server.")
     user_add.add_argument("username", default=None, type=str, help="The username to add.")
-    user_add.add_argument("--password", default=None, type=str, required=False, help="The password for the user, a default one will be created if None.")
-    user_add.add_argument("--permissions", nargs='+', default=None, type=str, required=True, help="The permission for the user.")
+    user_add.add_argument("--password", default=None, type=str, required=False, help="The password for the user. If None, a default one will be created and printed.")
+    user_add.add_argument("--permissions", nargs='+', default=None, type=str, required=True, help="Permissions for the user. Allowed values: read, write, compute, admin.")
 
-    user_show = user_subparsers.add_parser("show", help="Show the users current permission.")
+    user_show = user_subparsers.add_parser("show", help="Show the user's current permissions.")
     user_show.add_argument("username", default=None, type=str, help="The username to show.")
 
     ### Move args around
@@ -338,6 +338,7 @@ def server_upgrade(args, config):
         print(str(e))
         sys.exit(1)
 
+
 def server_user(args, config):
 
     print("QCFractal server user function.\n")
@@ -369,6 +370,7 @@ def server_user(args, config):
     except Exception as e:
         print(str(e))
         sys.exit(1)
+
 
 def main(args=None):
 
