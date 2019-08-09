@@ -2064,8 +2064,9 @@ class SQLAlchemySocket:
 
         return (True, "Success")
 
-    def remove_user(self, username):
-        """Removes a user from the MongoDB Tables
+    def remove_user(self,
+                    username: str) -> bool:
+        """Removes a user
 
         Parameters
         ----------
@@ -2084,18 +2085,19 @@ class SQLAlchemySocket:
 
         return count == 1
 
-    def get_user(self, username):
-        """Removes a user from the MongoDB Tables
+    def get_user_permissions(self,
+                             username: str) -> Optional[List[str]]:
+        """
 
         Parameters
         ----------
         username : str
-            The username to remove
+            The username
 
         Returns
         -------
-        bool
-            If the operation was successful or not.
+        Optional[List[str]]
+            List of user permissions, or None if user is not found.
         """
 
         with self.session_scope() as session:
