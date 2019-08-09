@@ -7,7 +7,7 @@
 QCFractal
 =========
 
-*A platform to compute, organize, and share large-scale quantum chemistry data.*
+*A platform to compute, store, organize, and share large-scale quantum chemistry data.*
 
 QCFractal emphasizes the following virtues:
 
@@ -18,18 +18,32 @@ QCFractal emphasizes the following virtues:
 - **Elasticity:** Scale from a single laptop to a dozen simultaneous supercomputers.
 - **Transferability:** Run many different quantum chemistry, semiempirical, or force field programs with a single unified interface.
 
+QCFratal within the QCArchive stack
+-----------------------------------
+
+Within the QCArchive stack, QCFractal is responsible for:
+
+- Accepting requests for calculations, submitted from a client such as `QCPortal <http://docs.qcarchive.molssi.org/projects/qcportal/en/latest/>`_. 
+- Running these calculations on disparate compute resources through Quantum Chemistry programs and procedures supported by `QCEngine <http://docs.qcarchive.molssi.org/projects/qcengine/en/latest/>`_. 
+- Storing and organizing the results of these calculations in a database.
+- Providing access to stored results to clients such as `QCPortal <http://docs.qcarchive.molssi.org/projects/qcportal/en/latest/>`_. 
+
+The diagram below illustrates a representative data flow:
+
+.. image:: media/QCEcosystem.png
+   :width: 800px
+   :alt: QCArchive ecosystem
+   :align: center
+
+
 Pipelines
 ---------
 QCFractal supports several high-throughput pipelines:
 
 - Ensembles of single point quantum chemistry computations.
 - Procedures such as geometry optimization, finite different gradients and Hessians, and complete basis set extrapolations.
-- Complex scenarios such as the `OpenFF <http://openforcefield.org>`_ torsion scan workflow:
-
-.. image:: media/openff_torsion_workflow.jpg
-   :width: 800px
-   :alt: OpenFF Torsion Workflow example
-   :align: center
+- Complex scenarios such as the `OpenFF <http://openforcefield.org>`_ torsion scan workflow.
+- User-defined procedures.
 
 Data Sharing
 ------------
@@ -49,12 +63,12 @@ provides a central location to marshal and distribute data or computation.
 QCFractal can switch between a variety of computational queue backends such
 as:
 
+- `Parsl <http://parsl-project.org>`_ - High-performance workflows with backend support for common schedulers, supercomputers, and cloud compute.
 - `Dask <http://dask.pydata.org/en/latest/docs.html>`_ - A graph-based workflow engine for laptops and small clusters.
 - `Fireworks <https://materialsproject.github.io/fireworks/>`_ - A asynchronous Mongo-based distributed queuing system.
-- `Parsl <http://parsl-project.org>`_ - High-performance workflows.
 
 Additional backends such as BOINC, RADICAL Pilot, Kubernetes, and Balsam are under active
-consideration.
+consideration. :ref:`Contact us <work-with-us>` if you are interested in one of these use-cases.
 
 ========
 

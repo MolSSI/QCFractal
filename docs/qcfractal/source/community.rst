@@ -13,6 +13,8 @@ Discussion
 - The QCArchive GitHub repositories contain future roadmaps, current code updates, and a list of issues that are being worked and provide an excellent overview of the development status of the project.
 
 
+.. _work-with-us:
+
 Work with us!
 -------------
 
