@@ -51,10 +51,10 @@ class CollectionORM(Base):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-class DatasetRecordsAssociation(Base):
+class DatasetRecords(Base):
     """Association table for many to many"""
 
-    __tablename__ = 'dataset_records_association'
+    __tablename__ = 'dataset_records'
 
     dataset_id = Column(Integer, ForeignKey('dataset.id', ondelete='cascade'), primary_key=True)
     #TODO: check the cascase_delete with molecule
@@ -104,17 +104,17 @@ class DatasetORM(CollectionORM):
 
     records = column_property(
         select([array_agg(json_build_object(
-            "molecule_id", DatasetRecordsAssociation.molecule_id,
-            "name", DatasetRecordsAssociation.name,
-            "comment", DatasetRecordsAssociation.comment,
-            "local_results", DatasetRecordsAssociation.local_results
+            "molecule_id", DatasetRecords.molecule_id,
+            "name", DatasetRecords.name,
+            "comment", DatasetRecords.comment,
+            "local_results", DatasetRecords.local_results
         ))])
             # .select_from(DatasetRecordsAssociation.__tablename__) # doesn't work
-            .where(DatasetRecordsAssociation.dataset_id == id))
+            .where(DatasetRecords.dataset_id == id))
 
 
 
-    records_obj = relationship(DatasetRecordsAssociation,
+    records_obj = relationship(DatasetRecords,
                                lazy='noload',
                                cascade="all, delete-orphan",
                                backref="dataset")
@@ -124,7 +124,7 @@ class DatasetORM(CollectionORM):
         self.records_obj = []
         records = [] if not records else records
         for rec_dict in records:
-            rec = DatasetRecordsAssociation(dataset_id=int(self.id),**rec_dict)
+            rec = DatasetRecords(dataset_id=int(self.id),**rec_dict)
             self.records_obj.append(rec)
 
 
