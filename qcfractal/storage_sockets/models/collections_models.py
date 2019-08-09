@@ -9,8 +9,9 @@ from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql.functions import GenericFunction
 
-class json_agg(GenericFunction):
-    type = postgresql.JSON
+
+# class json_agg(GenericFunction):
+#     type = postgresql.JSON
 
 class json_build_object(GenericFunction):
     type = postgresql.JSON
@@ -37,7 +38,7 @@ class CollectionORM(Base):
     tagline = Column(String)
     extra = Column(JSON)  # extra data related to specific collection type
 
-    def update_relations(self):
+    def update_relations(self, **kwarg):
         pass
 
 
@@ -102,9 +103,11 @@ class DatasetORM(CollectionORM):
     #         .where(DatasetRecordsAssociation.dataset_id == id))
 
     records = column_property(
-        select([json_agg(json_build_object(
-            'molecule_id', DatasetRecordsAssociation.molecule_id,
-            'name', DatasetRecordsAssociation.name
+        select([array_agg(json_build_object(
+            "molecule_id", DatasetRecordsAssociation.molecule_id,
+            "name", DatasetRecordsAssociation.name,
+            "comment", DatasetRecordsAssociation.comment,
+            "local_results", DatasetRecordsAssociation.local_results
         ))])
             # .select_from(DatasetRecordsAssociation.__tablename__) # doesn't work
             .where(DatasetRecordsAssociation.dataset_id == id))
