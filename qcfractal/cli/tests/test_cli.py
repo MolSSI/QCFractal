@@ -71,6 +71,19 @@ def test_cli_user_show(qcfractal_base_init):
     args = ["qcfractal-server", "user", qcfractal_base_init, "show", "badname_1234"]
     assert testing.run_process(args, **_options) is False
 
+
+@testing.mark_slow
+def test_cli_user_remove(qcfractal_base_init):
+    args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_remove", "--permissions", "admin"]
+    assert testing.run_process(args, **_options)
+
+    args = ["qcfractal-server", "user", qcfractal_base_init, "remove", "test_user_remove"]
+    assert testing.run_process(args, **_options)
+
+    args = ["qcfractal-server", "user", qcfractal_base_init, "remove", "badname_1234"]
+    assert testing.run_process(args, **_options) is False
+
+
 @pytest.mark.skip(reason="Failing on Travis for unknown reasons.")
 @testing.mark_slow
 def test_cli_server_local_boot(qcfractal_base_init):

@@ -104,6 +104,10 @@ def parse_args():
     user_show = user_subparsers.add_parser("show", help="Show the user's current permissions.")
     user_show.add_argument("username", default=None, type=str, help="The username to show.")
 
+    user_show = user_subparsers.add_parser("remove", help="Remove a user.")
+    user_show.add_argument("username", default=None, type=str, help="The username to remove.")
+
+
     ### Move args around
     args = vars(parser.parse_args())
 
@@ -360,12 +364,19 @@ def server_user(args, config):
             print(f"\n>>> New user succesfully added, password:\n{pw}")
         if args["user_command"] == "show":
             print(f"\n>>> Showing permissions for user '{args['username']}'...")
-            permissions = storage.get_user(args["username"])
+            permissions = storage.get_user_permissions(args["username"])
             if permissions is None:
                 print("Username not found!")
                 sys.exit(1)
             else:
                 print(permissions)
+        elif args["user_command"] == "remove":
+            print(f"\n>>> Removing user '{args['username']}'...")
+            if storage.remove_user(args["username"]):
+                print("Successfully removed user.")
+            else:
+                print("Failed to remove user.")
+                sys.exit(1)
 
     except Exception as e:
         print(str(e))
