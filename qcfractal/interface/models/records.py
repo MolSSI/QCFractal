@@ -172,7 +172,7 @@ class RecordBase(ProtoModel, abc.ABC):
         str
             The objects unique hash index.
         """
-        data = self.json_dict(include=self.get_hash_fields())
+        data = self.dict(include=self.get_hash_fields(), encoding="json")
 
         return hash_dictionary(data)
 
@@ -180,9 +180,6 @@ class RecordBase(ProtoModel, abc.ABC):
         kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"client", "cache"}
         # kwargs["skip_defaults"] = True
         return super().dict(*args, **kwargs)
-
-    def json_dict(self, *args, **kwargs):
-        return json.loads(self.json(*args, **kwargs))
 
 ### Checkers
 

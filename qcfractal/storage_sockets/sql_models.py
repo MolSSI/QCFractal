@@ -14,7 +14,7 @@ from sqlalchemy.ext.orderinglist import ordering_list
 # from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 
-from qcelemental.util import msgpack_dumps, msgpack_loads
+from qcelemental.util import msgpackext_dumps, msgpackext_loads
 
 # Base = declarative_base()
 
@@ -24,10 +24,10 @@ class MsgpackExt(TypeDecorator):
     impl = BYTEA
 
     def process_bind_param(self, value, dialect):
-        return msgpack_dumps(value)
+        return msgpackext_dumps(value)
 
     def process_result_value(self, value, dialect):
-        return msgpack_loads(value)
+        return msgpackext_loads(value)
 
 @as_declarative()
 class Base:

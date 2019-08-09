@@ -9,7 +9,7 @@ from typing import Any, Dict, List
 import numpy as np
 
 from .service_util import BaseService, TaskManager
-from ..interface.models import TorsionDriveRecord, json_encoders
+from ..interface.models import TorsionDriveRecord
 from ..extras import find_module
 
 
@@ -48,9 +48,6 @@ class TorsionDriveService(BaseService):
     optimization_template: str
     molecule_template: str
 
-    class Config:
-        json_encoders = json_encoders
-
     @classmethod
     def initialize_from_api(cls, storage_socket, logger, service_input, tag=None, priority=None):
         _check_td()
@@ -73,7 +70,7 @@ class TorsionDriveService(BaseService):
         meta = {"output": output}
 
         # Remove identity info from molecule template
-        molecule_template = copy.deepcopy(service_input.initial_molecule[0].json_dict())
+        molecule_template = copy.deepcopy(service_input.initial_molecule[0].dict(encoding="json"))
         molecule_template.pop("id", None)
         molecule_template.pop("identifiers", None)
         meta["molecule_template"] = json.dumps(molecule_template)

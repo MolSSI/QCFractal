@@ -185,6 +185,3 @@ class KeywordSet(ProtoModel):
 
     def get_hash_index(self):
         return hash_dictionary(self.values.copy())
-
-    def json_dict(self, *args, **kwargs):
-        return json.loads(self.json(*args, **kwargs))
