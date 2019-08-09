@@ -360,9 +360,13 @@ def server_user(args, config):
     try:
         if args["user_command"] == "add":
             print("\n>>> Adding new user...")
-            pw = storage.add_user(args["username"], password=args["password"], permissions=args["permissions"])
-            print(f"\n>>> New user succesfully added, password:\n{pw}")
-        if args["user_command"] == "show":
+            success, pw = storage.add_user(args["username"], password=args["password"], permissions=args["permissions"])
+            if success:
+                print(f"\n>>> New user successfully added, password:\n{pw}")
+            else:
+                print("\n>>> Failed to add user. Perhaps the username is already taken?")
+                sys.exit(1)
+        elif args["user_command"] == "show":
             print(f"\n>>> Showing permissions for user '{args['username']}'...")
             permissions = storage.get_user_permissions(args["username"])
             if permissions is None:
