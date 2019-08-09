@@ -42,6 +42,16 @@ def test_cli_upgrade(qcfractal_base_init):
     args = ["qcfractal-server", "upgrade", qcfractal_base_init]
     assert testing.run_process(args, interupt_after=10, **_options)
 
+@testing.mark_slow
+def test_cli_user_show(qcfractal_base_init):
+    args = ["qcfractal-server", "user", qcfractal_base_init, "add", "qcf", "--permissions", "admin"]
+    assert testing.run_process(args, **_options)
+
+    args = ["qcfractal-server", "user", qcfractal_base_init, "show", "qcf"]
+    assert testing.run_process(args, **_options)
+
+    args = ["qcfractal-server", "user", qcfractal_base_init, "show", "badname_1234"]
+    assert testing.run_process(args, **_options) is False
 
 @pytest.mark.skip(reason="Failing on Travis for unknown reasons.")
 @testing.mark_slow
@@ -200,3 +210,4 @@ def test_cli_managers_skel(tmp_path):
     config = tmp_path / "config.yaml"
     args = ["qcfractal-manager", "--skel", config.as_posix()]
     testing.run_process(args, **_options)
+

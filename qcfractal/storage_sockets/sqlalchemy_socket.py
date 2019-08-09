@@ -1975,10 +1975,8 @@ class SQLAlchemySocket:
         if not valid_permissions >= set(permissions):
             raise KeyError("Permissions settings not understood: {}".format(set(permissions) - valid_permissions))
 
-        return_password = False
         if password is None:
             password = secrets.token_urlsafe(32)
-            return_password = True
 
         hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
         blob = {"username": username, "password": hashed, "permissions": permissions}
@@ -2001,10 +1999,7 @@ class SQLAlchemySocket:
                     success = False
                     session.rollback()
 
-        if return_password and success:
-            return password
-        else:
-            return success
+        return password
 
     def verify_user(self, username, password, permission):
         """
@@ -2084,6 +2079,29 @@ class SQLAlchemySocket:
                                           .delete(synchronize_session=False)
 
         return count == 1
+
+    def get_user(self, username):
+        """Removes a user from the MongoDB Tables
+
+        Parameters
+        ----------
+        username : str
+            The username to remove
+
+        Returns
+        -------
+        bool
+            If the operation was successful or not.
+        """
+
+        with self.session_scope() as session:
+            data = session.query(UserORM).filter_by(username=username).first()
+            try:
+                ret = data.permissions
+            except AttributeError:
+                ret = None
+
+        return ret
 
     def _get_users(self):
 

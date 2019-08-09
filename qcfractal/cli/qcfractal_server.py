@@ -13,6 +13,17 @@ import qcfractal
 from .cli_utils import install_signal_handlers
 from ..config import DatabaseSettings, FractalConfig, FractalServerSettings
 from ..postgres_harness import PostgresHarness
+from ..storage_sockets import storage_socket_factory
+
+
+def ensure_postgres_alive(psql):
+    if not psql.is_alive():
+        try:
+            print("\nCould not detect a PostgreSQL from configuration options, starting a PostgreSQL server.\n")
+            psql.start()
+        except ValueError as e:
+            print(str(e))
+            sys.exit(1)
 
 
 def parse_args():
@@ -32,7 +43,9 @@ def parse_args():
         server_init.add_argument(cli_name, **FractalServerSettings.help_info(field))
 
     init.add_argument("--overwrite-config", action='store_true', help="Overwrites the current configuration file.")
-    init.add_argument("--clear-database", action='store_true', help="Clear the content of the given database and initialize it.")
+    init.add_argument("--clear-database",
+                      action='store_true',
+                      help="Clear the content of the given database and initialize it.")
     init.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     ### Start subcommands
@@ -76,6 +89,20 @@ def parse_args():
     ### Config subcommands
     config = subparsers.add_parser('config', help="Configure a QCFractal server instance.")
     config.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+
+    ### Config subcommands
+    user = subparsers.add_parser('user', help="Configure a QCFractal server instance.")
+    user.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+
+    user_subparsers = user.add_subparsers(dest="user_command")
+
+    user_add = user_subparsers.add_parser("add", help="Adds another user to the QCFractal server.")
+    user_add.add_argument("username", default=None, type=str, help="The username to add.")
+    user_add.add_argument("--password", default=None, type=str, required=False, help="The password for the user, a default one will be created if None.")
+    user_add.add_argument("--permissions", nargs='+', default=None, type=str, required=True, help="The permission for the user.")
+
+    user_show = user_subparsers.add_parser("show", help="Show the users current permission.")
+    user_show.add_argument("username", default=None, type=str, help="The username to show.")
 
     ### Move args around
     args = vars(parser.parse_args())
@@ -242,13 +269,7 @@ def server_start(args, config):
     print("\n>>> Checking the PostgreSQL connection...")
     psql = PostgresHarness(config, quiet=False, logger=print)
 
-    if not psql.is_alive():
-        try:
-            print("\nCould not detect a PostgreSQL from configuration options, starting a PostgreSQL server.\n")
-            psql.start()
-        except ValueError as e:
-            print(str(e))
-            sys.exit(1)
+    ensure_postgres_alive(psql)
 
     # make sure DB is created
     psql.create_database(config.database.database_name)
@@ -296,6 +317,7 @@ def server_start(args, config):
     print("\n>>> Starting the QCFractal server...")
     server.start(start_periodics=args["start_periodics"])
 
+
 def server_upgrade(args, config):
     # alembic upgrade head
 
@@ -306,13 +328,7 @@ def server_upgrade(args, config):
     print("\n>>> Checking the PostgreSQL connection...")
     psql = PostgresHarness(config, quiet=False, logger=print)
 
-    if not psql.is_alive():
-        try:
-            print("\nCould not detect a PostgreSQL from configuration options, starting a PostgreSQL server.\n")
-            psql.start()
-        except ValueError as e:
-            print(str(e))
-            sys.exit(1)
+    ensure_postgres_alive(psql)
 
     print("\n>>> Upgrading the Database...")
 
@@ -322,6 +338,37 @@ def server_upgrade(args, config):
         print(str(e))
         sys.exit(1)
 
+def server_user(args, config):
+
+    print("QCFractal server user function.\n")
+
+    print(f"QCFractal server base folder: {config.base_folder}")
+
+    print("\n>>> Checking the PostgreSQL connection...")
+
+    psql = PostgresHarness(config, quiet=False, logger=print)
+    ensure_postgres_alive(psql)
+
+    storage = storage_socket_factory(config.database_uri(safe=False))
+
+    print(args)
+    try:
+        if args["user_command"] == "add":
+            print("\n>>> Adding new user...")
+            pw = storage.add_user(args["username"], password=args["password"], permissions=args["permissions"])
+            print(f"\n>>> New user succesfully added, password:\n{pw}")
+        if args["user_command"] == "show":
+            print(f"\n>>> Showing permissions for user '{args['username']}'...")
+            permissions = storage.get_user(args["username"])
+            if permissions is None:
+                print("Username not found!")
+                sys.exit(1)
+            else:
+                print(permissions)
+
+    except Exception as e:
+        print(str(e))
+        sys.exit(1)
 
 def main(args=None):
 
@@ -349,8 +396,7 @@ def main(args=None):
             print(f"Could not find configuration file: {config.config_file_path}")
             sys.exit(1)
 
-        file_dict = FractalConfig(**yaml.load(config.config_file_path.read_text(),
-                                  Loader=yaml.FullLoader)).dict()
+        file_dict = FractalConfig(**yaml.load(config.config_file_path.read_text(), Loader=yaml.FullLoader)).dict()
         config_dict = config.dict(skip_defaults=True)
 
         # Only fractal options can be changed by user input parameters
@@ -366,6 +412,8 @@ def main(args=None):
         server_start(args, config)
     elif command == 'upgrade':
         server_upgrade(args, config)
+    elif command == 'user':
+        server_user(args, config)
 
 
 if __name__ == '__main__':
