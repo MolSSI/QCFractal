@@ -83,7 +83,7 @@ Test if the everything is setup by running a Hartee-Fock calculation a single hy
 
    python
    >>> import qcfractal.interface as ptl
-   # Note that server SSL verification is turned off (verify=False) since all components are run locally.
+   # Note that server TLS verification is turned off (verify=False) since all components are run locally.
    >>> client = ptl.FractalClient(address="localhost:7777", verify=False)
    >>> mol = ptl.Molecule(symbols=["H", "H"], geometry=[0, 0, 0, 0, 5, 0])
    >>> mol_id = client.add_molecules([mol])[0]
