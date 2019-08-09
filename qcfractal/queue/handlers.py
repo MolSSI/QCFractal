@@ -42,7 +42,7 @@ class TaskQueueHandler(APIHandler):
         response = response_model(**payload)
 
         self.logger.info("POST: TaskQueue -  Added {} tasks.".format(response.meta.n_inserted))
-        self.write(response.json())
+        self.write(response)
 
     def get(self):
         """Posts new services to the service queue.
@@ -55,7 +55,7 @@ class TaskQueueHandler(APIHandler):
         response = response_model(**tasks)
 
         self.logger.info("GET: TaskQueue - {} pulls.".format(len(response.data)))
-        self.write(response.json())
+        self.write(response)
 
     def put(self):
         """Posts new services to the service queue.
@@ -76,7 +76,7 @@ class TaskQueueHandler(APIHandler):
         response = response_model(data=data, meta={"errors": [], "success": True, "error_description": False})
 
         self.logger.info(f"PUT: TaskQueue - Operation: {body.meta.operation} - {tasks_updated}.")
-        self.write(response.json())
+        self.write(response)
 
 
 class ServiceQueueHandler(APIHandler):
@@ -115,7 +115,7 @@ class ServiceQueueHandler(APIHandler):
         response = response_model(**ret)
 
         self.logger.info("POST: ServiceQueue -  Added {} services.\n".format(response.meta.n_inserted))
-        self.write(response.json())
+        self.write(response)
 
     def get(self):
         """Gets services from the service queue.
@@ -128,7 +128,7 @@ class ServiceQueueHandler(APIHandler):
         response = response_model(**ret)
 
         self.logger.info("GET: ServiceQueue - {} pulls.\n".format(len(response.data)))
-        self.write(response.json())
+        self.write(response)
 
 
 class QueueManagerHandler(APIHandler):
@@ -236,7 +236,7 @@ class QueueManagerHandler(APIHandler):
             },
             "data": new_tasks
         })
-        self.write(response.json())
+        self.write(response)
 
         self.logger.info("QueueManager: Served {} tasks.".format(response.meta.n_found))
 
@@ -267,7 +267,7 @@ class QueueManagerHandler(APIHandler):
             },
             "data": True
         })
-        self.write(response.json())
+        self.write(response)
         self.logger.info("QueueManager: Inserted {} complete tasks.".format(len(body.data)))
 
         # Update manager logs
@@ -308,6 +308,6 @@ class QueueManagerHandler(APIHandler):
             raise tornado.web.HTTPError(status_code=400, reason=msg)
 
         response = response_model(**{"meta": {}, "data": ret})
-        self.write(response.json())
+        self.write(response)
 
         # Update manager logs

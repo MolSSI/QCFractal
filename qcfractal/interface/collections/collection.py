@@ -221,7 +221,10 @@ class Collection(abc.ABC):
 
         # Add the database
         if (self.data.id == self.data.fields['id'].default):
-            self.data.__dict__["id"] = client.add_collection(self.data.dict(), overwrite=False)
+            response = client.add_collection(self.data.dict(), overwrite=False, full_return=True)
+            if response.meta.success is False:
+                raise KeyError(f"Error adding collection: \n{response.meta.error_description}")
+            self.data.__dict__["id"] = response.data
         else:
             client.add_collection(self.data.dict(), overwrite=True)
 

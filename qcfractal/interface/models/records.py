@@ -306,7 +306,7 @@ class ResultRecord(RecordBase):
     )
 
     # Output data
-    return_result: Union[float, List[float], Dict[str, Any]] = Schema(
+    return_result: Union[float, qcel.models.types.Array[float], Dict[str, Any]] = Schema(
         None,
         description="The primary result of the calculation, output is a function of the specified ``driver``."
     )

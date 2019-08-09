@@ -15,6 +15,7 @@ channels:
 dependencies:
   - python
   - numpy
+  - msgpack>=0.6.1
   - pandas
   - tornado
   - requests

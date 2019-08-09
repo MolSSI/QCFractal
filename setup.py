@@ -26,6 +26,7 @@ if __name__ == "__main__":
             'bcrypt',
             'cryptography',
             'numpy>=1.7',
+            'msgpack>=0.6.1',
             'pandas',
             'pydantic>=0.30.1',
             'requests',

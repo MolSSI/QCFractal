@@ -3,6 +3,7 @@ Tests the interface portal adapter to the REST API
 """
 
 import pytest
+import numpy as np
 
 import qcfractal.interface as ptl
 from qcfractal.testing import test_server
@@ -10,12 +11,16 @@ from qcfractal.testing import test_server
 # All tests should import test_server, but not use it
 # Make PyTest aware that this module needs the server
 
+valid_encodings = ["json", "json-ext", "msgpack-ext"]
 
-def test_client_molecule(test_server):
+@pytest.mark.parametrize("encoding", valid_encodings)
+def test_client_molecule(test_server, encoding):
 
     client = ptl.FractalClient(test_server)
+    client._set_encoding(encoding)
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water.geometry[:] += np.random.random(water.geometry.shape)
 
     # Test add
     ret = client.add_molecules([water])
@@ -29,11 +34,13 @@ def test_client_molecule(test_server):
     assert water.compare(get_mol[0])
 
 
-def test_client_keywords(test_server):
+@pytest.mark.parametrize("encoding", valid_encodings)
+def test_client_keywords(test_server, encoding):
 
     client = ptl.FractalClient(test_server)
+    client._set_encoding(encoding)
 
-    opt = ptl.models.KeywordSet(values={"one": "fish", "two": "fish"})
+    opt = ptl.models.KeywordSet(values={"one": "fish", "two": encoding})
 
     # Test add
     ret = client.add_keywords([opt])
@@ -46,13 +53,16 @@ def test_client_keywords(test_server):
     assert opt == get_kw[0]
 
 
-def test_client_duplicate_keywords(test_server):
+@pytest.mark.parametrize("encoding", valid_encodings)
+def test_client_duplicate_keywords(test_server, encoding):
 
     client = ptl.FractalClient(test_server)
+    client._set_encoding(encoding)
 
-    opt1 = ptl.models.KeywordSet(values={"key": 1})
-    opt2 = ptl.models.KeywordSet(values={"key": 2})
-    opt3 = ptl.models.KeywordSet(values={"key": 3})
+    key_name = f"key-{encoding}"
+    opt1 = ptl.models.KeywordSet(values={key_name: 1})
+    opt2 = ptl.models.KeywordSet(values={key_name: 2})
+    opt3 = ptl.models.KeywordSet(values={key_name: 3})
 
     # Test add
     ret = client.add_keywords([opt1, opt1])
@@ -67,9 +77,11 @@ def test_client_duplicate_keywords(test_server):
     assert len(ret3) == 3
     assert ret3[1] == ret[0]
 
-def test_empty_query(test_server):
+@pytest.mark.parametrize("encoding", valid_encodings)
+def test_empty_query(test_server, encoding):
 
     client = ptl.FractalClient(test_server)
+    client._set_encoding(encoding)
 
     with pytest.raises(IOError) as error:
         client.query_procedures(limit=1)
@@ -77,11 +89,14 @@ def test_empty_query(test_server):
     assert "ID is required" in str(error.value)
 
 
-def test_collection_portal(test_server):
+@pytest.mark.parametrize("encoding", valid_encodings)
+def test_collection_portal(test_server, encoding):
 
-    db = {"collection": "torsiondrive", "name": "Torsion123", "something": "else", "array": ["54321"]}
+    db_name = f"Torsion123-{encoding}"
+    db = {"collection": "torsiondrive", "name": db_name, "something": "else", "array": ["12345"]}
 
     client = ptl.FractalClient(test_server)
+    client._set_encoding(encoding)
 
     # Test add
     _ = client.add_collection(db)
@@ -106,12 +121,12 @@ def test_collection_portal(test_server):
 
     # Test that we cannot use a local key
     db['id'] = 'local'
-    db['array'] = ["12345"]
+    db['array'] = ["6789"]
     with pytest.raises(KeyError):
         _ = client.add_collection(db, overwrite=True)
 
     # Finally test that we can overwrite
     db['id'] = db_id
-    _ = client.add_collection(db, overwrite=True)
+    r = client.add_collection(db, overwrite=True)
     get_db = client.get_collection(db["collection"], db["name"], full_return=True)
-    assert get_db.data[0]['array'] == ["12345"]
+    assert get_db.data[0]['array'] == ["6789"]

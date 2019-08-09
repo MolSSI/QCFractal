@@ -797,7 +797,11 @@ class Dataset(Collection):
         if isinstance(next(iter(data.values.values())), (int, float)):
             values = data.values
         else:
-            values = {k: [v] for k, v in data.values.items()}
+            # TODO temporary patch until msgpack collections
+            if self.data.default_driver == "gradient":
+                values = {k: [np.array(v).reshape(-1, 3)] for k, v in data.values.items()}
+            else:
+                values = {k: [np.array(v)] for k, v in data.values.items()}
 
         tmp_idx = pd.DataFrame.from_dict(values, orient="index", columns=[data.name])
 

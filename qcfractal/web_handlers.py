@@ -6,9 +6,15 @@ import json
 import tornado.web
 
 from pydantic import ValidationError
+from qcelemental.util import serialize, deserialize
 
 from .interface.models.rest_models import rest_model
 
+_valid_encodings = {
+    "application/json": "json",
+    "application/json-ext": "json-ext",
+    "application/msgpack-ext": "msgpack-ext",
+}
 
 class APIHandler(tornado.web.RequestHandler):
     """
@@ -24,7 +30,17 @@ class APIHandler(tornado.web.RequestHandler):
         Initializes the request to JSON, adds objects, and logging.
         """
 
-        self.set_header("Content-Type", "application/json")
+
+        self.content_type = "Not Provided"
+        try:
+            self.content_type = self.request.headers["Content-Type"]
+            self.encoding = _valid_encodings[self.content_type]
+        except KeyError:
+            raise tornado.web.HTTPError(status_code=401, reason=f"Did not understand 'Content-Type': {self.content_type}")
+
+        # Always reply in the format sent
+        self.set_header("Content-Type", self.content_type)
+
         self.objects = objects
         self.storage = self.objects["storage_socket"]
         self.logger = objects["logger"]
@@ -35,7 +51,10 @@ class APIHandler(tornado.web.RequestHandler):
         if self._required_auth:
             self.authenticate(self._required_auth)
 
-        self.json = json.loads(self.request.body.decode("UTF-8"))
+        try:
+            self.data = deserialize(self.request.body, self.encoding)
+        except:
+            raise tornado.web.HTTPError(status_code=401, reason="Could not deserialize body.")
 
     def on_finish(self):
 
@@ -43,7 +62,7 @@ class APIHandler(tornado.web.RequestHandler):
         if self.api_logger and self.request.method == 'GET' \
                 and self.request.uri not in exclude_uris:
 
-            extra_params = self.json.copy()
+            extra_params = self.data.copy()
             if self._logging_param_counts:
                 for key in self._logging_param_counts:
                     if extra_params["data"].get(key, None):
@@ -86,9 +105,15 @@ class APIHandler(tornado.web.RequestHandler):
     def parse_bodymodel(self, model):
 
         try:
-            return model.parse_raw(self.request.body, encoding="json")
+            return model(**self.data)
         except ValidationError as exc:
             raise tornado.web.HTTPError(status_code=401, reason="Invalid REST")
+
+    def write(self, data):
+        if not isinstance(data, (str, bytes)):
+            data = serialize(data, self.encoding)
+
+        return super().write(data)
 
 
 class InformationHandler(APIHandler):
@@ -142,7 +167,7 @@ class KVStoreHandler(APIHandler):
         ret = response_model(**ret)
 
         self.logger.info("GET: KVStore - {} pulls.".format(len(ret.data)))
-        self.write(ret.json())
+        self.write(ret)
 
 
 class MoleculeHandler(APIHandler):
@@ -181,7 +206,7 @@ class MoleculeHandler(APIHandler):
         ret = response_model(**molecules)
 
         self.logger.info("GET: Molecule - {} pulls.".format(len(ret.data)))
-        self.write(ret.json())
+        self.write(ret)
 
     def post(self):
         """
@@ -211,7 +236,7 @@ class MoleculeHandler(APIHandler):
         response = response_model(**ret)
 
         self.logger.info("POST: Molecule - {} inserted.".format(response.meta.n_inserted))
-        self.write(response.json())
+        self.write(response)
 
 
 class KeywordHandler(APIHandler):
@@ -231,7 +256,7 @@ class KeywordHandler(APIHandler):
         response = response_model(**ret)
 
         self.logger.info("GET: Keywords - {} pulls.".format(len(response.data)))
-        self.write(response.json())
+        self.write(response)
 
     def post(self):
         self.authenticate("write")
@@ -243,7 +268,7 @@ class KeywordHandler(APIHandler):
         response = response_model(**ret)
 
         self.logger.info("POST: Keywords - {} inserted.".format(response.meta.n_inserted))
-        self.write(response.json())
+        self.write(response)
 
 
 class CollectionHandler(APIHandler):
@@ -262,7 +287,7 @@ class CollectionHandler(APIHandler):
         response = response_model(**cols)
 
         self.logger.info("GET: Collections - {} pulls.".format(len(response.data)))
-        self.write(response.json())
+        self.write(response)
 
     def post(self):
         self.authenticate("write")
@@ -274,7 +299,7 @@ class CollectionHandler(APIHandler):
         response = response_model(**ret)
 
         self.logger.info("POST: Collections - {} inserted.".format(response.meta.n_inserted))
-        self.write(response.json())
+        self.write(response)
 
 
 class ResultHandler(APIHandler):
@@ -294,7 +319,7 @@ class ResultHandler(APIHandler):
         result = response_model(**ret)
 
         self.logger.info("GET: Results - {} pulls.".format(len(result.data)))
-        self.write(result.json())
+        self.write(result)
 
 
 class ProcedureHandler(APIHandler):
@@ -318,4 +343,4 @@ class ProcedureHandler(APIHandler):
         response = response_model(**ret)
 
         self.logger.info("GET: Procedures - {} pulls.".format(len(response.data)))
-        self.write(response.json())
+        self.write(response)
