@@ -1949,7 +1949,7 @@ class SQLAlchemySocket:
                  username: str,
                  password: Optional[str] = None,
                  permissions: List[str] = ["read"],
-                 overwrite: bool = False) -> Union[bool, str]:
+                 overwrite: bool = False) -> Tuple[bool, str]:
         """
         Adds a new user and associated permissions.
 
@@ -1963,11 +1963,12 @@ class SQLAlchemySocket:
             The user's password
         permissions : list of str, optional
             The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
-
+        overwrite: bool, optional
+            Overwrite the user if it already exists.
         Returns
         -------
         tuple
-            Successful insert or not
+            A tuple of (success flag, password)
         """
         valid_permissions = {'read', 'write', 'compute', 'queue', 'admin'}
 
@@ -1999,9 +2000,12 @@ class SQLAlchemySocket:
                     success = False
                     session.rollback()
 
-        return password
+        return success, password
 
-    def verify_user(self, username, password, permission):
+    def verify_user(self,
+                    username: str,
+                    password: str,
+                    permission: str) -> Tuple[bool, str]:
         """
         Verifies if a user has the requested permissions or not.
 
@@ -2102,6 +2106,7 @@ class SQLAlchemySocket:
                 ret = None
 
         return ret
+
 
     def _get_users(self):
 
