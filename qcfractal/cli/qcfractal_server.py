@@ -87,7 +87,7 @@ def parse_args():
                               help='Creates a local pool QueueManager attached to the server.')
 
     ### Config subcommands
-    config = subparsers.add_parser('config', help="Configure a QCFractal server instance.")
+    config = subparsers.add_parser('config', help="Manage users and permissions on a QCFractal server instance.")
     config.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     ### Config subcommands
