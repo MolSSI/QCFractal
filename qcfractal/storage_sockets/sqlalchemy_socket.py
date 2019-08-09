@@ -31,7 +31,8 @@ from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, Optimiza
 from qcfractal.storage_sockets.models import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM,
                                        MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
                                        ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
-                                       GridOptimizationProcedureORM, VersionsORM, AccessLogORM, DatasetORM)
+                                       GridOptimizationProcedureORM, VersionsORM, AccessLogORM, DatasetORM,
+                                       ReactionDatasetORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
@@ -110,7 +111,8 @@ def get_procedure_class(record):
 def get_collection_class(collection_type):
 
     collection_map = {
-        'dataset' : DatasetORM
+        'dataset' : DatasetORM,
+        'reactiondataset': ReactionDatasetORM,
     }
 
     collection_class = CollectionORM
