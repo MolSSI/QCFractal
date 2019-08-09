@@ -643,11 +643,11 @@ def test_queue_submit_many_order(storage_results):
 
 def test_user_duplicates(storage_socket):
 
-    r = storage_socket.add_user("george", "shortpw")
+    r, pw = storage_socket.add_user("george", "shortpw")
     assert r is True
 
     # Duplicate should bounce
-    r = storage_socket.add_user("george", "shortpw")
+    r, pw = storage_socket.add_user("george", "shortpw")
     assert r is False
 
     assert storage_socket.remove_user("george") is True
@@ -657,7 +657,7 @@ def test_user_duplicates(storage_socket):
 
 def test_user_permissions_default(storage_socket):
 
-    r = storage_socket.add_user("george", "shortpw")
+    r, pw = storage_socket.add_user("george", "shortpw")
     assert r is True
 
     # Verify correct permission
@@ -671,7 +671,7 @@ def test_user_permissions_default(storage_socket):
 
 def test_user_permissions_admin(storage_socket):
 
-    r = storage_socket.add_user("george", "shortpw", permissions=["read", "write", "compute", "admin"])
+    r, pw = storage_socket.add_user("george", "shortpw", permissions=["read", "write", "compute", "admin"])
     assert r is True
 
     # Verify correct permissions
@@ -681,6 +681,7 @@ def test_user_permissions_admin(storage_socket):
     assert storage_socket.verify_user("george", "shortpw", "admin")[0] is True
 
     assert storage_socket.remove_user("george") is True
+
 
 def test_manager(storage_socket):
 
