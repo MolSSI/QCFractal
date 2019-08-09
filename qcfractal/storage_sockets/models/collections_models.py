@@ -1,13 +1,15 @@
 import datetime
-from sqlalchemy import (Column, Integer, String, DateTime, Boolean, ForeignKey, JSON, Enum, Float, Binary, Table,
+from sqlalchemy import (Column, Integer, String, DateTime, Boolean, ForeignKey, JSON,
+                        Enum, Float, Binary, Table, ARRAY,
                         inspect, Index, UniqueConstraint)
 from sqlalchemy.orm import relationship, column_property
-from sqlalchemy import select, func, tuple_, text
+from sqlalchemy import select, func, tuple_, text, cast
 from qcfractal.storage_sockets.models import Base
 from qcfractal.storage_sockets.models import MoleculeORM
 from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql.functions import GenericFunction
+from sqlalchemy.ext.hybrid import hybrid_property
 
 
 # class json_agg(GenericFunction):
@@ -51,7 +53,7 @@ class CollectionORM(Base):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-class DatasetRecords(Base):
+class DatasetRecordsORM(Base):
     """Association table for many to many"""
 
     __tablename__ = 'dataset_records'
@@ -83,15 +85,14 @@ class DatasetORM(CollectionORM):
     alias_keywords = Column(JSON, nullable=True)
     default_program  = Column(String, nullable=True)
 
-    # contributed_values: {"gradient": {"name": "Gradient", "theory_level": "pseudo-random values", "values": {"He1": [0.03, 0, 0.02, -0.02, 0, -0.03], "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]}, "units": "hartree", "doi": null, "theory_level_details": null, "comments": null}},
     contributed_values = Column(JSON)
 
     provenance = Column(JSON)  # TODO: in extra?
 
     # history_keys: ["driver", "program", "method", "basis", "keywords"],
     # history: [["gradient", "psi4", "hf", "sto-3g", null]],
-    history_keys = Column(JSON)
-    history = Column(JSON)
+    history_keys = Column(ARRAY(String, as_tuple=True))
+    history = Column(ARRAY(String, as_tuple=True))
 
     # records: [{"name": "He1", "molecule_id": "1", "comment": null, "local_results": {}},
     #             {"name": "He2", "molecule_id": "2", "comment": null, "local_results": {}}],
@@ -102,29 +103,49 @@ class DatasetORM(CollectionORM):
     #     ))])
     #         .where(DatasetRecordsAssociation.dataset_id == id))
 
-    records = column_property(
-        select([array_agg(json_build_object(
-            "molecule_id", DatasetRecords.molecule_id,
-            "name", DatasetRecords.name,
-            "comment", DatasetRecords.comment,
-            "local_results", DatasetRecords.local_results
-        ))])
-            # .select_from(DatasetRecordsAssociation.__tablename__) # doesn't work
-            .where(DatasetRecords.dataset_id == id))
+    ## returns json strings
+    # records = column_property(
+    #     select([array_agg(cast(json_build_object(
+    #         "molecule_id", DatasetRecordsORM.molecule_id,
+    #         "name", DatasetRecordsORM.name,
+    #         "comment", DatasetRecordsORM.comment,
+    #         "local_results", DatasetRecordsORM.local_results
+    #     ), type_=JSON))])
+    #         # .select_from(DatasetRecordsAssociation.__tablename__) # doesn't work
+    #         .where(DatasetRecordsORM.dataset_id == id))  #, deferred=True)
 
 
-
-    records_obj = relationship(DatasetRecords,
-                               lazy='noload',
+    records_obj = relationship(DatasetRecordsORM,
+                               lazy='selectin',   #lazy='noload', # when using column_property
                                cascade="all, delete-orphan",
                                backref="dataset")
+
+    @hybrid_property
+    def records(self):
+        """calculated property when accessed, not saved in the DB
+        A view of the many to many relation"""
+
+        ret = []
+        try:
+            for rec in self.records_obj:
+                ret.append(rec.to_dict(exclude='dataset_id'))
+
+        except Exception as err:
+            # raises exception of first access!!
+            pass
+
+        return ret
+
+    @records.setter
+    def records(self, dict_values):
+        return dict_values
 
     def update_relations(self, records=None, **kwarg):
 
         self.records_obj = []
         records = [] if not records else records
         for rec_dict in records:
-            rec = DatasetRecords(dataset_id=int(self.id),**rec_dict)
+            rec = DatasetRecordsORM(dataset_id=int(self.id),**rec_dict)
             self.records_obj.append(rec)
 
 
