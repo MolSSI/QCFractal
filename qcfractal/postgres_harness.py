@@ -214,7 +214,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         ret = self._run(cmd)
 
         if ret['retcode'] != 0:
-            self.logger(ret)
+            self.logger(ret["stderr"])
             raise ValueError(f"\nFailed to Upgrade the database, make sure to init the database first before being able to upgrade it.\n")
 
         return True
