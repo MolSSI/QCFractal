@@ -1973,8 +1973,8 @@ class SQLAlchemySocket:
         ----------
         username : str
             New user's username
-        password : str
-            The user's password
+        password : str, optional
+            The user's password. If None, a new password will be generated.
         permissions : list of str, optional
             The associated permissions of a user ['read', 'write', 'compute', 'queue', 'admin']
         overwrite: bool, optional
@@ -2024,7 +2024,7 @@ class SQLAlchemySocket:
         """
         Verifies if a user has the requested permissions or not.
 
-        Passwords are store and verified using bcrypt.
+        Passwords are stored and verified using bcrypt.
 
         Parameters
         ----------
