@@ -17,7 +17,7 @@ def test_collection_query(fractal_compute_server):
     ds.save()
 
     cols = client.list_collections()
-    assert cols.index.contains(("Dataset", "CAPITAL"))
+    assert ("Dataset", "CAPITAL") in cols.index
 
     ds = client.get_collection("dataset", "capital")
     assert ds.name == "CAPITAL"

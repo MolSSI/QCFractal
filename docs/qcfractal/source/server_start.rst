@@ -53,10 +53,10 @@ Options
 ``--disable-ssl (False|True)``
     Disables SSL if present, if ``False`` a SSL cert will be created for you. Default ``False``
 
-``--tsl-cert [<tsl_cert_str>]``
+``--tls-cert [<tls_cert_str>]``
     Certificate file for TLS (in PEM format)
 
-``--tsl-key [<tsl_key_str>]``
+``--tls-key [<tls_key_str>]``
     Private key file for TLS (in PEM format)
 
 ``--local-manager [<int>]``
