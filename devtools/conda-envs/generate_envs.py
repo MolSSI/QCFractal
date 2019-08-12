@@ -28,6 +28,7 @@ dependencies:
   - psycopg2>=2.7
   - postgresql
   - alembic
+  - tqdm
 
 # Test depends
   - pytest

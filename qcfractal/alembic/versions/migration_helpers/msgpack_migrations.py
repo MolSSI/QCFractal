@@ -118,10 +118,10 @@ def json_to_msgpack_table_altercolumns(table_name, update_columns, nullable_true
 
         for name in old_names:
             comp_data = msgpackext_loads(row[name + "_"])
-            try:
-                assert compare_recursive(comp_data, row[name])
-            except AssertionError:
-                assert compare_recursive(comp_data.ravel(), row[name], quiet=True)
+            # try:
+            #     assert compare_recursive(comp_data, row[name])
+            # except AssertionError:
+            #     assert compare_recursive(comp_data.ravel(), row[name], quiet=True)
 
 
             # try:

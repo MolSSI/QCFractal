@@ -6,6 +6,7 @@ channels:
 dependencies:
   - python
   - numpy
+  - msgpack>=0.6.1
   - pandas
   - tornado
   - requests
@@ -18,6 +19,7 @@ dependencies:
   - psycopg2>=2.7
   - postgresql
   - alembic
+  - tqdm
 
 # Test depends
   - pytest

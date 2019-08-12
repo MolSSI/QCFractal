@@ -31,6 +31,7 @@ if __name__ == "__main__":
             'pydantic>=0.30.1',
             'requests',
             'tornado',
+            'tqdm',
             'pyyaml>=5.1',
 
             # Database
