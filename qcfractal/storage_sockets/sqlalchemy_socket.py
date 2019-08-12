@@ -2045,10 +2045,10 @@ class SQLAlchemySocket:
 
         >>> db.add_user("george", "shortpw")
 
-        >>> db.verify_user("george", "shortpw", "read")
+        >>> db.verify_user("george", "shortpw", "read")[0]
         True
 
-        >>> db.verify_user("george", "shortpw", "admin")
+        >>> db.verify_user("george", "shortpw", "admin")[0]
         False
 
         """
