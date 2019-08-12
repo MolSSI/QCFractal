@@ -150,9 +150,10 @@ Configuring and running the Server from the CLI and Config Files
    :hidden:
    :caption: Server Configuration and Running Documentation
 
-   server_config.rst
    server_init.rst
    server_start.rst
+   server_user.rst
+   server_config.rst
    server_upgrade.rst
 
 **Developer Documentation**
