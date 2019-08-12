@@ -118,8 +118,9 @@ Arguments
 
 ``--permissions [<permissions>]``
     Change the user's permissions to the given set. 
-    Allowed values: ``read``, ``write``, ``queue``, ``compute``, ``admin``. 
-    Multiple values are allowed. 
+    Allowed values: ``read``, ``write``, ``queue``, ``compute``, ``admin``.
+    Multiple values are allowed.
+    See :ref:`server_user_permissions` for more information.
 
 
 .. _server_user_remove:
@@ -144,3 +145,19 @@ Arguments
 
 ``<username>``
     The username to remove.
+
+.. _server_user_permissions:
+
+User Permissions
+----------------
+
+Five permission types are available:
+
+* ``read`` allows read access to existing records. 
+* ``write`` allows write access to existing records and the ability to add new records.
+* ``queue`` allows enqueuing new calculations.
+* ``compute`` allows for consumption of compute tasks.
+  This permission is intended for use by a :term:`Manager`.
+* ``admin`` allows all permissions.
+
+
