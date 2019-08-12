@@ -5,12 +5,11 @@ development DB.
 """
 
 from qcfractal.storage_sockets import storage_socket_factory
-from qcfractal.storage_sockets.sql_models import (BaseResultORM, ResultORM, CollectionORM,
-                                                 OptimizationProcedureORM, GridOptimizationProcedureORM,
-                                                 TorsionDriveProcedureORM, TaskQueueORM)
+from qcfractal.storage_sockets.models import (BaseResultORM, ResultORM, CollectionORM,
+                                              OptimizationProcedureORM, GridOptimizationProcedureORM,
+                                              TorsionDriveProcedureORM, TaskQueueORM)
 from qcfractal.interface.models import (ResultRecord, OptimizationRecord,
                                         TorsionDriveRecord, GridOptimizationRecord)
-
 
 # production_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb"
 production_uri = "postgresql+psycopg2://postgres:@localhost:11711/qcarchivedb"
@@ -456,6 +455,26 @@ def copy_task_queue(staging_storage, production_storage, SAMPLE_SIZE=None):
     print('---- Done copying Task Queue\n\n')
 
 
+def copy_alembic(staging_storage, production_storage):
+
+    alembic_version = None
+
+    with production_storage.engine.connect() as conn:
+        alembic_version = conn.execute('select version_num from alembic_version;').scalar()
+
+    print('Alembic version: ', alembic_version)
+
+    create_table = """create table if not exists alembic_version(
+    version_num varchar(32) not null
+        constraint alembic_version_pkc
+            primary key
+    );"""
+
+    with staging_storage.engine.connect() as conn:
+        conn.execute(create_table)
+        conn.execute(f"insert into alembic_version values ('{alembic_version}')")
+
+
 def main():
 
     global staging_uri, production_uri, SAMPLE_SIZE, MAX_LIMIT
@@ -491,6 +510,8 @@ def main():
     print('\n---------------- Collections -----------------------')
     copy_collections(staging_storage, production_storage, SAMPLE_SIZE=SAMPLE_SIZE*2)
 
+    print('\n---------------- Alembic -----------------------')
+    copy_alembic(staging_storage, production_storage)
 
 
 if __name__ == "__main__":
