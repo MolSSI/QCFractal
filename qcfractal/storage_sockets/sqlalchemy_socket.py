@@ -1945,6 +1945,20 @@ class SQLAlchemySocket:
 
 ### UserORMs
 
+    VALID_PERMISSIONS = {'read', 'write', 'compute', 'queue', 'admin'}
+
+    @staticmethod
+    def _generate_password() -> str:
+        """
+        Generates a random password e.g. for add_user and modify_user.
+
+        Returns
+        -------
+        str
+            An unhashed random password.
+        """
+        return secrets.token_urlsafe(32)
+
     def add_user(self,
                  username: str,
                  password: Optional[str] = None,
@@ -1970,16 +1984,17 @@ class SQLAlchemySocket:
         tuple
             A tuple of (success flag, password)
         """
-        valid_permissions = {'read', 'write', 'compute', 'queue', 'admin'}
 
         # Make sure permissions are valid
-        if not valid_permissions >= set(permissions):
-            raise KeyError("Permissions settings not understood: {}".format(set(permissions) - valid_permissions))
+        if not SQLAlchemySocket.VALID_PERMISSIONS >= set(permissions):
+            raise KeyError("Permissions settings not understood: {}".format(
+                set(permissions) - SQLAlchemySocket.VALID_PERMISSIONS))
 
         if password is None:
-            password = secrets.token_urlsafe(32)
+            password = SQLAlchemySocket._generate_password()
 
         hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
+
         blob = {"username": username, "password": hashed, "permissions": permissions}
 
         success = False
