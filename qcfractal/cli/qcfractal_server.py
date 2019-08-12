@@ -90,7 +90,7 @@ def parse_args():
     config = subparsers.add_parser('config', help="Manage users and permissions on a QCFractal server instance.")
     config.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
-    ### Config subcommands
+    ### User subcommands
     user = subparsers.add_parser('user', help="Configure a QCFractal server instance.")
     user.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
@@ -374,6 +374,20 @@ def server_user(args, config):
                 sys.exit(1)
             else:
                 print(permissions)
+        elif args["user_command"] == "modify":
+            print(f"\n>>> Modifying user '{args['username']}'...")
+            success, message = storage.modify_user(args["username"],
+                                                   args["password"],
+                                                   args["reset_password"],
+                                                   args["permissions"])
+            if success:
+                info = "Successfully modified user\n"
+                if message is not None:
+                    info += "with message: " + message
+                print(info)
+            else:
+                print("Failed to modify user\nwith message:", message)
+                sys.exit(1)
         elif args["user_command"] == "remove":
             print(f"\n>>> Removing user '{args['username']}'...")
             if storage.remove_user(args["username"]):
