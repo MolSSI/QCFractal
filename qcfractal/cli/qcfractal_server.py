@@ -375,6 +375,9 @@ def server_user(args, config):
             success, pw = storage.add_user(args["username"], password=args["password"], permissions=args["permissions"])
             if success:
                 print(f"\n>>> New user successfully added, password:\n{pw}")
+                if config.fractal.security is None:
+                    print("Warning: security is disabled. To enable security, change the configuration YAML field "
+                          "fractal:security to local.")
             else:
                 print("\n>>> Failed to add user. Perhaps the username is already taken?")
                 sys.exit(1)
