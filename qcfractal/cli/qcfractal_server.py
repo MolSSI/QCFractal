@@ -383,7 +383,7 @@ def server_user(args, config):
                 sys.exit(1)
 
     except Exception as e:
-        print(str(e))
+        print(type(e), str(e))
         sys.exit(1)
 
 
