@@ -101,7 +101,7 @@ def parse_args():
     user_add.add_argument("--password", default=None, type=str, required=False,
                           help="The password for the user. If None, a default one will be created and printed.")
     user_add.add_argument("--permissions", nargs='+', default=None, type=str, required=True,
-                          help="Permissions for the user. Allowed values: read, write, compute, admin.")
+                          help="Permissions for the user. Allowed values: read, write, queue, compute, admin.")
 
     user_show = user_subparsers.add_parser("show", help="Show the user's current permissions.")
     user_show.add_argument("username", default=None, type=str, help="The username to show.")
