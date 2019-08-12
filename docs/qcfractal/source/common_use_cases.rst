@@ -40,7 +40,7 @@ The table below lists some common use cases for QCFractal:
      - Personal server, head node (if permitted)
      - Head node
      - Parsl
-   * - :ref:`Multiple Clusters <quickstart-shared-clusters>`
+   * - :ref:`Multiple Clusters <quickstart-shared-cluster>`
      - Personal server
      - Head node of each cluster
      - Parsl
@@ -86,7 +86,7 @@ Finally, :ref:`test your setup. <quickstart-test>`
 Private Cluster
 +++++++++++++++
 
-This quickstart guide addresses QCFractal setup on a private cluster comprising a head node and compute nodes, with a scheduler such as SLURM, PBS, or Torque. 
+This quickstart guide addresses QCFractal setup on a private cluster comprising a head node and compute nodes, with a :term:`Scheduler` such as SLURM, PBS, or Torque. 
 This guide requires `Parsl <https://parsl.readthedocs.io/en/stable/quickstart.html>`_ which may be installed with ``pip``.
 
 Begin by initializing the :term:`Server` on the cluster head node::
@@ -118,7 +118,7 @@ The :term:`Manager` must be configured before use. Create a configuration file (
 
 You may need to modify these values to match the particulars on your cluster. In particular:
 
-* The `scheduler` and `partition` options should be set to match the details of your scheduler (e.g. SLURM, PBS, Torque).
+* The `scheduler` and `partition` options should be set to match the details of your :term:`Scheduler` (e.g. SLURM, PBS, Torque).
 * Options related to workers should be set appropriately for the compute node on your cluster. 
   Note that Parsl requires that full nodes be allocated to each worker (i.e. ``node_exclusivity: True``).
 
@@ -138,29 +138,49 @@ Shared Clusters, Supercomputers, and Multiple Clusters
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 This quickstart guide addresses QCFractal setup on one or more shared cluster. 
-The :term:`Server` should be set up on a persistant server from which you have permission to expose ports. 
+The :term:`Server` should be set up on a persistant server for which you have permission to expose ports. 
 For example, this may be a dedicated webserver, the head node of a private cluster, or a cloud instance.
 The :term:`Manager` should be set up on each shared cluster. 
-In most cases, the :term:`Manager` may be run on the head node; contact your system administrator.
+In most cases, the :term:`Manager` may be run on the head node; 
+contact your system administrator if you are unsure.
 This guide requires `Parsl <https://parsl.readthedocs.io/en/stable/quickstart.html>`_ to be installed for the :term:`Manager`. It may be installed with ``pip``.
 
 Begin by initializing the :term:`Server` on your persistant server::
 
     qcfractal-server init 
 
-The QCFractal server recieves connections from :term:`Managers <Manager>` and clients on port 7777. 
-You may optionally specify the `--port` option to choose a custom port. 
+The QCFractal server recieves connections from :term:`Managers <Manager>` and clients on TCP port 7777. 
+You may optionally specify the ``--port`` option to choose a custom port. 
 You may need to configure your firewall to allow access to this port.
+
+Because the :term:`Server` will be exposed to the internet, 
+security should be enabled to control access. 
+Enable security by changing the YAML file (default: ``~/.qca/qcfractal/qcfractal_config.yaml``)
+``fractal.security`` option to ``local``::
+
+   - security: null
+   + security: local
 
 Start the :term:`Server`::
 
    nohup qcfractal-server start &
 
-You may optionally provide a TLS cerficiate to enable host verification for the :term:`Server` using the ``--tls-cert`` and ``--tls-key`` options. 
-If a TLS certificate is not provided, communications with the server will still be encrypted, but host verification will be unavailable. 
+You may optionally provide a TLS cerficiate to enable host verification for the :term:`Server` 
+using the ``--tls-cert`` and ``--tls-key`` options. 
+If a TLS certificate is not provided, communications with the server will still be encrypted, 
+but host verification will be unavailable 
+(and :term:`Managers <Manager>` and clients will need to specify ``--verify False``).
 
-Because the :term:`Server` will be exposed to the internet, you may wish to add users to control permissions. 
-Add a user to control access for the managers:
+Next, add users for admin, the :term:`Manager`, and a user 
+(you may choose whatever usernames you like)::
+
+   qcfractal-server user add admin --permissions admin
+   qcfractal-server user add manager --permissions queue
+   qcfractal-server user add user --permissions read write compute
+
+Passwords will be automatically generated and printed. You may instead specify a password with the ``--password`` option. 
+See :doc:`server_user` for more information.
+
 
 Finally, :ref:`test your setup. <quickstart-test>`
 
