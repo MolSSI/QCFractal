@@ -155,8 +155,8 @@ Five permission types are available:
 
 * ``read`` allows read access to existing records. 
 * ``write`` allows write access to existing records and the ability to add new records.
-* ``queue`` allows enqueuing new calculations.
-* ``compute`` allows for consumption of compute tasks.
+* ``queue`` allows enqueuing new :term:`Tasks <Task>`.
+* ``compute`` allows for consumption of compute :term:`Tasks <Task>`.
   This permission is intended for use by a :term:`Manager`.
 * ``admin`` allows all permissions.
 
