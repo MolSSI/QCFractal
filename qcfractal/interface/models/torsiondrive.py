@@ -7,7 +7,7 @@ import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from pydantic import BaseModel, constr, validator
+from pydantic import BaseModel, constr, validator, Schema
 from qcelemental import constants
 
 from .common_models import Molecule, ObjectId, OptimizationSpecification, QCSpecification
@@ -22,11 +22,32 @@ class TDKeywords(BaseModel):
     """
     TorsionDriveRecord options
     """
-    dihedrals: List[Tuple[int, int, int, int]]
-    grid_spacing: List[int]
-    dihedral_ranges: Optional[List[Tuple[int, int]]] = None
-    energy_decrease_thresh: Optional[float] = None
-    energy_upper_limit: Optional[float] = None
+    dihedrals: List[Tuple[int, int, int, int]] = Schema(
+        ...,
+        description="The list of dihedrals to select for the TorsionDrive operation. Each entry is a tuple of integers "
+                    "of for particle indices."
+    )
+    grid_spacing: List[int] = Schema(
+        ...,
+        description="List of grid spacing for dihedral scan in degrees. Multiple values will be mapped to each "
+                    "dihedral angle."
+    )
+    dihedral_ranges: Optional[List[Tuple[int, int]]] = Schema(
+        None,
+        description="A list of dihedral range limits as a pair (lower, upper). "
+                    "Each range corresponds to the dihedrals in input."
+    )
+    energy_decrease_thresh: Optional[float] = Schema(
+        None,
+        description="The threshold of the smallest energy decrease amount to trigger activating optimizations from "
+                    "grid point."
+    )
+    energy_upper_limit: Optional[float] = Schema(
+        None,
+        description="The threshold if the energy of a grid point that is higher than the current global minimum, to "
+                    "start new optimizations, in unit of a.u. I.e. if energy_upper_limit = 0.05, current global "
+                    "minimum energy is -9.9 , then a new task starting with energy -9.8 will be skipped."
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**recursive_normalizer(kwargs))
@@ -45,12 +66,33 @@ class TorsionDriveInput(BaseModel):
     A TorsionDriveRecord Input base class
     """
 
-    program: _td_constr = "torsiondrive"
-    procedure: _td_constr = "torsiondrive"
-    initial_molecule: List[Union[ObjectId, Molecule]]
-    keywords: TDKeywords
-    optimization_spec: OptimizationSpecification
-    qc_spec: QCSpecification
+    program: _td_constr = Schema(
+        "torsiondrive",
+        description="The name of the program. Fixed to 'torsiondrive' since this input model is only valid for it."
+    )
+    procedure: _td_constr = Schema(
+        "torsiondrive",
+        description="The name of the Procedure. Fixed to 'torsiondrive' since this input model is only valid for it."
+    )
+    initial_molecule: List[Union[ObjectId, Molecule]] = Schema(
+        ...,
+        description="The Molecule(s) to begin the TorsionDrive with. This can either be an existing Molecule in "
+                    "the database (through its :class:`ObjectId`) or a fully specified :class:`Molecule` model."
+    )
+    keywords: TDKeywords = Schema(
+        ...,
+        description="TorsionDrive-specific input arguments to pass into the TorsionDrive Procedure"
+    )
+    optimization_spec: OptimizationSpecification = Schema(
+        ...,
+        description="The settings which describe how to conduct the energy optimizations at each step of the torsion "
+                    "scan."
+    )
+    qc_spec: QCSpecification = Schema(
+        ...,
+        description="The settings which describe the individual quantum chemistry calculations at each step of the "
+                    "optimization."
+    )
 
     @validator('initial_molecule', pre=True, whole=True)
     def check_initial_molecules(cls, v):
@@ -69,25 +111,62 @@ class TorsionDriveRecord(RecordBase):
     A interface to the raw JSON data of a TorsionDriveRecord torsion scan run.
     """
 
-    # Classdata
+    # Class data
     _hash_indices = {"initial_molecule", "keywords", "optimization_spec", "qc_spec"}
 
     # Version data
-    version: int = 1
-    procedure: _td_constr = "torsiondrive"
-    program: _td_constr = "torsiondrive"
+    version: int = Schema(
+        1,
+        description="The version number of the Record."
+    )
+    procedure: _td_constr = Schema(
+        "torsiondrive",
+        description="The name of the procedure. Fixed to 'torsiondrive' since this is the Record explicit to "
+                    "TorsionDrive."
+    )
+    program: _td_constr = Schema(
+        "torsiondrive",
+        description="The name of the program. Fixed to 'torsiondrive' since this is the Record explicit to "
+                    "TorsionDrive."
+    )
 
     # Input data
-    initial_molecule: List[ObjectId]
-    keywords: TDKeywords
-    optimization_spec: OptimizationSpecification
-    qc_spec: QCSpecification
+    initial_molecule: List[ObjectId] = Schema(
+        ...,
+        description="Id(s) of the initial molecule(s) in the database."
+    )
+    keywords: TDKeywords = Schema(
+        ...,
+        description="The TorsionDrive-specific input arguments used for this operation."
+    )
+    optimization_spec: OptimizationSpecification = Schema(
+        ...,
+        description="The settings which describe how the energy optimizations at each step of the torsion "
+                    "scan used for this operation."
+    )
+    qc_spec: QCSpecification = Schema(
+        ...,
+        description="The settings which describe how the individual quantum chemistry calculations are handled for "
+                    "this operation."
+    )
 
     # Output data
-    final_energy_dict: Dict[str, float]
+    final_energy_dict: Dict[str, float] = Schema(
+        ...,
+        description="The final energy at each angle of the TorsionDrive scan."
+    )
 
-    optimization_history: Dict[str, List[ObjectId]]
-    minimum_positions: Dict[str, int]
+    optimization_history: Dict[str, List[ObjectId]] = Schema(
+        ...,
+        description="The map of each angle of the TorsionDrive scan to each optimization computations. "
+                    "Each value of the dict maps to a sequence of :class:`ObjectId` strings which each "
+                    "point to a single computation in the Database."
+    )
+    minimum_positions: Dict[str, int] = Schema(  # TODO: This could use review
+        ...,
+        description="A map of each TorsionDrive angle to the integer index of that angle's optimization "
+                    "trajectory which has the minimum-energy of the trajectory."
+    )
 
     class Config(RecordBase.Config):
         pass
@@ -121,7 +200,7 @@ class TorsionDriveRecord(RecordBase):
 
 ## Query
 
-    def get_history(self, key: Union[int, Tuple[int, ...], str]=None, minimum: bool=False) -> Dict[str, List['ResultRecord']]:
+    def get_history(self, key: Union[int, Tuple[int, ...], str] = None, minimum: bool = False) -> Dict[str, List['ResultRecord']]:
         """Queries the server for all optimization trajectories.
 
         Parameters
@@ -159,8 +238,7 @@ class TorsionDriveRecord(RecordBase):
 
         return self._organize_return(data, key, minimum=minimum)
 
-
-    def get_final_energies(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, float]:
+    def get_final_energies(self, key: Union[int, Tuple[int, ...], str] = None) -> Dict[str, float]:
         """
         Provides the final optimized energies at each grid point.
 
@@ -184,8 +262,7 @@ class TorsionDriveRecord(RecordBase):
 
         return self._organize_return(self.final_energy_dict, key)
 
-
-    def get_final_molecules(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, 'Molecule']:
+    def get_final_molecules(self, key: Union[int, Tuple[int, ...], str] = None) -> Dict[str, 'Molecule']:
         """Returns the optimized molecules at each grid point
 
         Parameters
@@ -225,8 +302,7 @@ class TorsionDriveRecord(RecordBase):
 
         return self._organize_return(data, key)
 
-
-    def get_final_results(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, 'ResultRecord']:
+    def get_final_results(self, key: Union[int, Tuple[int, ...], str] = None) -> Dict[str, 'ResultRecord']:
         """Returns the final opt gradient result records at each grid point
 
         Parameters
@@ -277,11 +353,11 @@ class TorsionDriveRecord(RecordBase):
         return self._organize_return(data, key)
 
     def visualize(self,
-                  relative: bool=True,
-                  units: str="kcal / mol",
-                  digits: int=3,
-                  use_measured_angle: bool=False,
-                  return_figure: Optional[bool]=None) -> 'plotly.Figure':
+                  relative: bool = True,
+                  units: str = "kcal / mol",
+                  digits: int = 3,
+                  use_measured_angle: bool = False,
+                  return_figure: Optional[bool] = None) -> 'plotly.Figure':
         """
         Parameters
         ----------
@@ -323,7 +399,7 @@ class TorsionDriveRecord(RecordBase):
 
             y.append(v)
 
-            # Update minmum energy
+            # Update minimum energy
             if v < min_energy:
                 min_energy = v
 

@@ -8,7 +8,16 @@ from typing import Any, Union
 
 from pydantic import BaseModel, BaseSettings
 
-__all__ = ["auto_gen_docs_on_demand", "replace_dict_keys"]
+__all__ = ["auto_gen_docs_on_demand", "replace_dict_keys", "get_base_docs"]
+
+
+class AutoDocError(ValueError):
+    """
+    Helper error Raised when the autodoc application failed.
+
+    Traps this very specific error and not other ValueErrors
+    """
+    pass
 
 
 def type_to_string(input_type):
@@ -155,17 +164,19 @@ class AutoPydanticDocGenerator:
     Dynamic Doc generator, should never be called directly and only though augo_gen_docs_on_demand
     """
     ALREADY_AUTODOCED_ATTR = "__model_autodoc_applied__"
+    AUTODOC_BASE_DOC_REFERENCE_ATTR = "__base_doc__"
 
     def __init__(self, target: Union[BaseModel, type(BaseModel)], allow_failure: bool = True):
         # Checks against already instanced and uninstanced classes while avoiding unhahsable type error
         if isinstance(target, BaseModel) or (isinstance(target, type) and issubclass(target, BaseModel)):
             if hasattr(target, self.ALREADY_AUTODOCED_ATTR) and getattr(target, self.ALREADY_AUTODOCED_ATTR) is True:
-                raise ValueError("Object already has autodoc rules applied to it, cannot re-apply auto documentation"
-                                 f"without first resetting the __doc__ attribute and setting "
-                                 f"{self.ALREADY_AUTODOCED_ATTR} to False (or deleting it)")
+                raise AutoDocError("Object already has autodoc rules applied to it, cannot re-apply auto documentation"
+                                   f"without first resetting the __doc__ attribute and setting "
+                                   f"{self.ALREADY_AUTODOCED_ATTR} to False (or deleting it)")
         else:
             raise TypeError("Cannot use auto-doc tech on non-BaseModel subclasses")
         self.base_doc = target.__doc__
+        setattr(target, self.AUTODOC_BASE_DOC_REFERENCE_ATTR, self.base_doc)
         self.target = target
         setattr(target, self.ALREADY_AUTODOCED_ATTR, True)
         self.allow_failure = allow_failure
@@ -184,9 +195,27 @@ class AutoPydanticDocGenerator:
             pass
 
 
-def auto_gen_docs_on_demand(target: Union[BaseModel, type(BaseModel)], allow_failure: bool = True):
+def auto_gen_docs_on_demand(target: Union[BaseModel, type(BaseModel)], allow_failure: bool = True,
+                            ignore_reapply: bool = True, force_reapply: bool = False):
     """Tell a Pydantic base model to generate its docstrings on the fly with the tech here """
-    target.__doc__ = AutoPydanticDocGenerator(target, allow_failure=allow_failure)
+    try:
+        target.__doc__ = AutoPydanticDocGenerator(target, allow_failure=allow_failure)
+    except AutoDocError:
+        if ignore_reapply:
+            pass
+        else:
+            raise
+    # Reapply by force to allow inherited models to auto doc as well
+    if force_reapply:
+        del target.__doc__
+        auto_gen_docs_on_demand(target, allow_failure=allow_failure, ignore_reapply=ignore_reapply, force_reapply=False)
+
+
+def get_base_docs(target: object):
+    """Get the non-auto formatted docs, if present, otherwise just get the basic docstring"""
+    if hasattr(target, AutoPydanticDocGenerator.AUTODOC_BASE_DOC_REFERENCE_ATTR):
+        return getattr(target, AutoPydanticDocGenerator.AUTODOC_BASE_DOC_REFERENCE_ATTR)
+    return target.__doc__
 
 
 def replace_dict_keys(data, replacement):

@@ -17,7 +17,7 @@ __all__ = ["GridOptimizationInput", "GridOptimizationRecord"]
 
 class ScanTypeEnum(str, Enum):
     """
-    The scan types allowed by the scan dimensions.
+    The type of scan to perform. This choices is limited to the scan types allowed by the scan dimensions.
     """
     distance = 'distance'
     angle = 'angle'
@@ -26,7 +26,9 @@ class ScanTypeEnum(str, Enum):
 
 class StepTypeEnum(str, Enum):
     """
-    The types of steps to take in a scna..
+    The types of steps to take in a scan dimension: either in absolute or relative terms. ``relative`` indicates that
+    the values are relative to the starting value (e.g., a bond starts as 2.1 Bohr, relative steps of [-0.1, 0, 1.0]
+    indicate grid points of [2.0, 2.1, 3.1] Bohr. An ``absolute`` ``step_type`` will be exactly those values instead."
     """
     absolute = 'absolute'
     relative = 'relative'
@@ -38,7 +40,7 @@ class ScanDimension(BaseModel):
     """
     type: ScanTypeEnum = Schema(
         ...,
-        description="The type of scan to perform."
+        description=str(ScanTypeEnum.__doc__)
     )
     indices: List[int] = Schema(
         ...,
@@ -53,10 +55,7 @@ class ScanDimension(BaseModel):
     )
     step_type: StepTypeEnum = Schema(
         ...,
-        description="How to interpret the ``steps`` values in either an absolute or relative terms. ``relative`` "
-                    "indicates that the values are relative to the starting value (e.g., a bond starts as 2.1 Bohr, "
-                    "relative steps of [-0.1, 0, 1.0] indicate grid points of [2.0, 2.1, 3.1] Bohr. An ``absolute`` "
-                    "``step_type`` will be exactly."
+        description=str(StepTypeEnum.__doc__)
     )
 
     class Config:
@@ -97,7 +96,7 @@ class GOKeywords(BaseModel):
     preoptimization: bool = Schema(
         True,
         description="If ``True``, first runs an unrestricted optimization before starting the grid computations. "
-                    "This is espeically useful when combined with ``relative`` ``step_types``."
+                    "This is especially useful when combined with ``relative`` ``step_types``."
     )
 
     class Config:
@@ -179,7 +178,7 @@ class GridOptimizationRecord(RecordBase):
     # Input data
     initial_molecule: ObjectId = Schema(
         ...,
-        description="Id of the intial molecule in the database."
+        description="Id of the initial molecule in the database."
     )
     keywords: GOKeywords = Schema(
         ...,
@@ -229,8 +228,9 @@ class GridOptimizationRecord(RecordBase):
 
         return copy.deepcopy(data[key])
 
-    def serialize_key(self, key: Union[int, Tuple[int]]) -> str:
-        """Serializes the key ot map to the internal keys.
+    @staticmethod
+    def serialize_key(key: Union[int, Tuple[int]]) -> str:
+        """Serializes the key to map to the internal keys.
 
         Parameters
         ----------
@@ -248,7 +248,8 @@ class GridOptimizationRecord(RecordBase):
 
         return json.dumps(key)
 
-    def deserialize_key(self, key:str)->Tuple[int]:
+    @staticmethod
+    def deserialize_key(key: str) -> Tuple[int]:
         """Unpacks a string key to a python object.
 
         Parameters
@@ -263,36 +264,36 @@ class GridOptimizationRecord(RecordBase):
         """
         return tuple(json.loads(key))
 
-    def get_scan_value(self, scan_number: int) -> Tuple[List[float]]:
+    def get_scan_value(self, scan_number: Union[str, int, Tuple[int]]) -> Tuple[float, ...]:
         """
         Obtains the scan parameters at a given grid point.
 
         Parameters
         ----------
-        key : Union[str, int, Tuple[int]]
+        scan_number : Union[str, int, Tuple[int]]
             The key of the scan.
 
         Returns
         -------
-        Tuple[List[float]]
+        Tuple[float, ...]
             Description
         """
-        if isinstance(key, str):
-            key = self.deserialize_key(key)
+        if isinstance(scan_number, str):
+            scan_number = self.deserialize_key(scan_number)
 
         ret = []
-        for n, idx in enumerate(key):
+        for n, idx in enumerate(scan_number):
             ret.append(self.keywords.scans[n].steps[idx])
 
         return tuple(ret)
 
-    def get_scan_dimensions(self) -> Tuple[List[float]]:
+    def get_scan_dimensions(self) -> Tuple[float, ...]:
         """
         Returns the overall dimensions of the scan.
 
         Returns
         -------
-        Tuple[List[float]]
+        Tuple[float, ...]
             The size of each dimension in the scan.
         """
         ret = []
@@ -303,7 +304,7 @@ class GridOptimizationRecord(RecordBase):
 
 ## Query
 
-    def get_final_energies(self, key: Union[int, str, None]=None) -> Dict[str, float]:
+    def get_final_energies(self, key: Union[int, str, None] = None) -> Dict[str, float]:
         """
         Provides the final optimized energies at each grid point.
 
@@ -367,7 +368,6 @@ class GridOptimizationRecord(RecordBase):
 
         data = self.cache["final_molecules"]
         return self._organize_return(data, key)
-
 
     def get_final_results(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, 'ResultRecord']:
         """Returns the final opt gradient result records at each grid point.

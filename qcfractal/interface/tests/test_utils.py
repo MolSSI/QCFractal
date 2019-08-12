@@ -72,7 +72,7 @@ def test_replace_dict_keys():
 
 def test_auto_gen_doc(doc_fixture):
     assert "this is complicated" not in doc_fixture.__doc__
-    portal.util.auto_gen_docs_on_demand(doc_fixture, allow_failure=False)
+    portal.util.auto_gen_docs_on_demand(doc_fixture, allow_failure=False, ignore_reapply=False)
     assert "this is complicated" in doc_fixture.__doc__
     assert "z3 : float, Optional" in doc_fixture.__doc__
     # Check that docstring does not get duplicated for some reason
@@ -81,22 +81,21 @@ def test_auto_gen_doc(doc_fixture):
 
 def test_auto_gen_doc_exiting(doc_fixture):
     doc_fixture.__doc__ = "Parameters\n"
-    portal.util.auto_gen_docs_on_demand(doc_fixture, allow_failure=False)
+    portal.util.auto_gen_docs_on_demand(doc_fixture, allow_failure=False, ignore_reapply=False)
     assert "this is complicated" not in doc_fixture.__doc__
 
 
 def test_auto_gen_doc_reapply_failure(doc_fixture):
-    portal.util.auto_gen_docs_on_demand(doc_fixture, allow_failure=False)
+    portal.util.auto_gen_docs_on_demand(doc_fixture, allow_failure=False, ignore_reapply=False)
     with raises(ValueError):
         # Allow true here because we are testing application, not errors in the doc generation itself
-        portal.util.auto_gen_docs_on_demand(doc_fixture, allow_failure=True)
+        portal.util.auto_gen_docs_on_demand(doc_fixture, allow_failure=True, ignore_reapply=False)
 
 
 def test_auto_gen_doc_delete(doc_fixture):
-    portal.util.auto_gen_docs_on_demand(doc_fixture, allow_failure=False)
+    portal.util.auto_gen_docs_on_demand(doc_fixture, allow_failure=False, ignore_reapply=False)
     assert "this is complicated" in doc_fixture.__doc__
     assert "A Pydantic model" in doc_fixture.__doc__
     del doc_fixture.__doc__
     assert "this is complicated" not in doc_fixture.__doc__
     assert "A Pydantic model" in doc_fixture.__doc__
-
