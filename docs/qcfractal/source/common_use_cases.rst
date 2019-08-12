@@ -28,23 +28,23 @@ The table below lists some common use cases for QCFractal:
      - Snowflake
      - Snowflake
      - Snowflake
-   * - :ref:`Single workstation <single-workstation-quickstart>`
+   * - :ref:`Single workstation <quickstart-single-workstation>`
      - Local
      - Local
      - Pool
-   * - :ref:`Private cluster <private-cluster-quickstart>`
+   * - :ref:`Private cluster <quickstart-private-cluster>`
      - Head node
      - Head node
      - Parsl
-   * - :ref:`Shared Cluster/Supercomputer <shared-cluster-quickstart>`
+   * - :ref:`Shared Cluster/Supercomputer <quickstart-shared-cluster>`
      - Personal server, head node (if permitted)
      - Head node
      - Parsl
-   * - :ref:`Multiple Clusters <multiple-clusters-quickstart>`
+   * - :ref:`Multiple Clusters <quickstart-shared-clusters>`
      - Personal server
      - Head node of each cluster
      - Parsl
-   * - :ref:`Cloud <cloud-quickstart>`
+   * - :ref:`Cloud <quickstart-cloud>`
      - Cloud instance
      - Cloud instance
      - Parsl
@@ -62,7 +62,7 @@ More detailed guides are available:
 * :doc:`setup_server`
 * :doc:`setup_compute`
 
-.. _single-workstation-quickstart:
+.. _quickstart-single-workstation:
 
 Single Workstation
 ++++++++++++++++++
@@ -79,6 +79,104 @@ Next, start the :term:`Server` and ProcessPoolExecutor :term:`Manager`::
 The second command starts ``qcfractal-server`` in the background.
 It also starts one :term:`Worker` which will pull :term:`tasks <Task>` from the :term:`Server` and run them. 
 
+Finally, :ref:`test your setup. <quickstart-test>`
+
+.. _quickstart-private-cluster:
+
+Private Cluster
++++++++++++++++
+
+This quickstart guide addresses QCFractal setup on a private cluster comprising a head node and compute nodes, with a scheduler such as SLURM, PBS, or Torque. 
+This guide requires `Parsl <https://parsl.readthedocs.io/en/stable/quickstart.html>`_ which may be installed with ``pip``.
+
+Begin by initializing the :term:`Server` on the cluster head node::
+
+    qcfractal-server init
+
+Next, start the :term:`Server` in the background::
+
+   nohup qcfractal-server start &
+
+The :term:`Manager` must be configured before use. Create a configuration file (e.g. in ``~/.qca/qcfractal/my_manager.yaml``) based on the following template::
+
+   common:
+    adapter: parsl
+    tasks_per_worker: 1
+    cores_per_worker: 6
+    memory_per_worker: 64
+    max_workers: 5
+    scratch_directory: "$TMPDIR"
+   
+   cluster:
+    node_exclusivity: True
+    scheduler: slurm
+   
+   parsl:
+    provider:
+     partition: CLUSTER
+     cmd_timeout: 30 
+
+You may need to modify these values to match the particulars on your cluster. In particular:
+
+* The `scheduler` and `partition` options should be set to match the details of your scheduler (e.g. SLURM, PBS, Torque).
+* Options related to workers should be set appropriately for the compute node on your cluster. 
+  Note that Parsl requires that full nodes be allocated to each worker (i.e. ``node_exclusivity: True``).
+
+For more information on :term:`Manager` configuration, see :ref:`managers` and :ref:`managers_samples`.
+
+Finally, start the :term:`Manager` in the background on the cluster head node::
+
+    nohup qcfractal-manager --config-file <path to config YAML> --verify=False
+
+Note that TLS certificate verification is disabled (``--verify=False``) because the :term:`Manager` and :term:`Server` are both run on the head node.
+
+Finally, :ref:`test your setup. <quickstart-test>`
+
+.. _quickstart-shared-cluster:
+
+Shared Clusters, Supercomputers, and Multiple Clusters
+++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+This quickstart guide addresses QCFractal setup on one or more shared cluster. 
+The :term:`Server` should be set up on a persistant server from which you have permission to expose ports. 
+For example, this may be a dedicated webserver, the head node of a private cluster, or a cloud instance.
+The :term:`Manager` should be set up on each shared cluster. 
+In most cases, the :term:`Manager` may be run on the head node; contact your system administrator.
+This guide requires `Parsl <https://parsl.readthedocs.io/en/stable/quickstart.html>`_ to be installed for the :term:`Manager`. It may be installed with ``pip``.
+
+Begin by initializing the :term:`Server` on your persistant server::
+
+    qcfractal-server init 
+
+The QCFractal server recieves connections from :term:`Managers <Manager>` and clients on port 7777. 
+You may optionally specify the `--port` option to choose a custom port. 
+You may need to configure your firewall to allow access to this port.
+
+Start the :term:`Server`::
+
+   nohup qcfractal-server start &
+
+You may optionally provide a TLS cerficiate to enable host verification for the :term:`Server` using the ``--tls-cert`` and ``--tls-key`` options. 
+If a TLS certificate is not provided, communications with the server will still be encrypted, but host verification will be unavailable. 
+
+Because the :term:`Server` will be exposed to the internet, you may wish to add users to control permissions. 
+Add a user to control access for the managers:
+
+Finally, :ref:`test your setup. <quickstart-test>`
+
+.. _quickstart-cloud:
+
+Cloud
++++++
+
+This guide requires `Parsl <https://parsl.readthedocs.io/en/stable/quickstart.html>`_ which may be installed with ``pip``.
+
+Finally, :ref:`test your setup. <quickstart-test>`
+
+.. _quickstart-test:
+
+Test
+++++
 Test if the everything is setup by running a Hartee-Fock calculation a single hydrogen molecule, as in the :doc:`quickstart` (note this requires ``psi4``)::
 
    python
@@ -95,29 +193,3 @@ Test if the everything is setup by running a Hartee-Fock calculation a single hy
    >>> print(proc.properties.scf_total_energy)
    -0.6865598095254312 
 
-
-.. _private-cluster-quickstart:
-
-Private Cluster
-+++++++++++++++
-
-This quickstart guide addresses QCFractal setup on a private cluster comprising a head node and compute nodes, with a scheduler such as SLURM, PBS, or Torque. 
-This guide requires `Parsl <https://parsl.readthedocs.io/en/stable/quickstart.html>`_ which may be installed with ``pip``.
-
-.. _shared-cluster-quickstart:
-
-Shared Cluster
-++++++++++++++
-This guide requires `Parsl <https://parsl.readthedocs.io/en/stable/quickstart.html>`_ to be installed on the head node of the shared cluster. It may be installed with ``pip``.
-
-.. _multiple-clusters-quickstart:
-
-Multiple Clusters
-+++++++++++++++++
-This guide requires `Parsl <https://parsl.readthedocs.io/en/stable/quickstart.html>`_ to be installed on the head nodes of each cluster. It may be installed with ``pip``.
-
-.. _cloud-quickstart:
-
-Cloud
-+++++
-This guide requires `Parsl <https://parsl.readthedocs.io/en/stable/quickstart.html>`_ which may be installed with ``pip``.
