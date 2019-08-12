@@ -15,6 +15,21 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+Next version / ???
+-------------------
+
+New Features
+++++++++++++
+
+- (:pr:`358`) Fractal Server now exposes a CLI for user/permissions management through the ``qcfractal-server user`` command.
+  `See the full documentation for details <https://qcfractal.readthedocs.io/en/latest/server_user.html>`_
+
+Enhancements
+++++++++++++
+
+Bug Fixes
++++++++++
+
 0.8.0 / 2019-07-25
 ------------------
 
