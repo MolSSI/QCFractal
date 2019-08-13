@@ -115,10 +115,10 @@ The :term:`Manager` must be configured before use. Create a configuration file (
 You may need to modify these values to match the particulars on your cluster. In particular:
 
 * The `scheduler` and `partition` options should be set to match the details of your :term:`Scheduler` (e.g. SLURM, PBS, Torque).
-* Options related to :term:`Workers <worker>` should be set appropriately for the compute node on your cluster. 
+* Options related to :term:`Workers <Worker>` should be set appropriately for the compute node on your cluster. 
   Note that Parsl requires that full nodes be allocated to each :term:`Worker` (i.e. ``node_exclusivity: True``).
 
-For more information on :term:`Manager` configuration, see :ref:`managers` and :ref:`managers_samples`.
+For more information on :term:`Manager` configuration, see :doc:`managers` and :doc:`managers_samples`.
 
 Finally, start the :term:`Manager` in the background on the cluster head node::
 
@@ -204,10 +204,10 @@ Create a configuration file (e.g. in ``~/.qca/qcfractal/my_manager.yaml``) based
 You may need to modify these values to match the particulars on each cluster. In particular:
 
 * The `scheduler` and `partition` options should be set to match the details of your :term:`Scheduler` (e.g. SLURM, PBS, Torque).
-* Options related to :term:`Worker <Workers>` should be set appropriately for the compute node on your cluster. 
+* Options related to :term:`Workers <Worker>` should be set appropriately for the compute node on your cluster. 
   Note that Parsl requires that full nodes be allocated to each :term:`Worker` (i.e. ``node_exclusivity: True``).
 
-For more information on :term:`Manager` configuration, see :ref:`managers` and :ref:`managers_samples`.
+For more information on :term:`Manager` configuration, see :doc:`managers` and :doc:`managers_samples`.
 
 Finally, start the :term:`Manager` in the background on each cluster head node::
 
