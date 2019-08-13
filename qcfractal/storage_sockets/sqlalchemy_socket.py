@@ -1945,7 +1945,7 @@ class SQLAlchemySocket:
 
 ### UserORMs
 
-    VALID_PERMISSIONS = {'read', 'write', 'compute', 'queue', 'admin'}
+    _valid_permissions = frozenset({'read', 'write', 'compute', 'queue', 'admin'})
 
     @staticmethod
     def _generate_password() -> str:
@@ -1986,9 +1986,9 @@ class SQLAlchemySocket:
         """
 
         # Make sure permissions are valid
-        if not self.VALID_PERMISSIONS >= set(permissions):
+        if not self._valid_permissions >= set(permissions):
             raise KeyError("Permissions settings not understood: {}".format(
-                set(permissions) - self.VALID_PERMISSIONS))
+                set(permissions) - self._valid_permissions))
 
         if password is None:
             password = self._generate_password()
@@ -2119,9 +2119,9 @@ class SQLAlchemySocket:
 
             if permissions is not None:
                 # Make sure permissions are valid
-                if not self.VALID_PERMISSIONS >= set(permissions):
+                if not self._valid_permissions >= set(permissions):
                     return False, "Permissions not understood: {}".format(
-                        set(permissions) - self.VALID_PERMISSIONS)
+                        set(permissions) - self._valid_permissions)
                 blob["permissions"] = permissions
             if reset_password:
                 password = self._generate_password()
