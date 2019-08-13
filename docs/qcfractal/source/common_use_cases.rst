@@ -181,6 +181,7 @@ Next, add users for admin, the :term:`Manager`, and a user
 Passwords will be automatically generated and printed. You may instead specify a password with the ``--password`` option. 
 See :doc:`server_user` for more information.
 
+    qcfractal-manager --config-file ~/.qca/qcfractal/manager.yaml --fractal-uri URL:port --username manager -password 
 
 Finally, :ref:`test your setup. <quickstart-test>`
 
