@@ -110,7 +110,8 @@ def test_security_auth_accept(sec_server):
 
 def test_security_auth_password_gen(sec_server):
 
-    pw = sec_server.storage.add_user("autogenpw", None, ["read"])
+    success, pw = sec_server.storage.add_user("autogenpw", None, ["read"])
+    assert success
     assert sec_server.storage.verify_user("autogenpw", pw, "read")[0]
     assert isinstance(pw, str)
     assert len(pw) > 20
@@ -119,10 +120,12 @@ def test_security_auth_password_gen(sec_server):
 def test_security_auth_overwrite(sec_server):
 
     user = "auth_overwrite"
-    pw1 = sec_server.storage.add_user(user, None, ["read"])
+    success1, pw1 = sec_server.storage.add_user(user, None, ["read"])
+    assert success1
     assert sec_server.storage.verify_user(user, pw1, "read")[0]
 
-    pw2 = sec_server.storage.add_user(user, None, ["read"], overwrite=True)
+    success2, pw2 = sec_server.storage.add_user(user, None, ["read"], overwrite=True)
+    assert success2
     assert isinstance(pw2, str)
     assert pw1 != pw2
 

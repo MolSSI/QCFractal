@@ -140,9 +140,10 @@ Setting up and running Fractal's Queue Managers on your system.
 
 Configuring and running the Server from the CLI and Config Files
 
-* :doc:`server_config`
 * :doc:`server_init`
+* :doc:`server_config`
 * :doc:`server_start`
+* :doc:`server_user`
 * :doc:`server_upgrade`
 
 .. toctree::
@@ -150,9 +151,10 @@ Configuring and running the Server from the CLI and Config Files
    :hidden:
    :caption: Server Configuration and Running Documentation
 
-   server_config.rst
    server_init.rst
+   server_config.rst
    server_start.rst
+   server_user.rst
    server_upgrade.rst
 
 **Developer Documentation**
