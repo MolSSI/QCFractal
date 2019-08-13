@@ -4,7 +4,7 @@ Setup Quickstart
 QCFractal comprises two components:
 
 1. The :term:`Server` (``qcfractal-server``), which accepts compute and data queuries and maintains a database of :term:`tasks <task>` and results. The :term:`Server` should be run continuously on a persistant machine. 
-2. One or more :term:`Managers <Manager>` (``qcfractal-manager``). The Managers pull work from the :term:`Server`, use attached compute resources to complete the work, and report results back to the server. :term:`Managers <Manager>` may be turned off and on at any time. :term:`Managers <Manager>` connect to compute resource through :term:`Adapters <Adapter>`.
+2. One or more :term:`Managers <Manager>` (``qcfractal-manager``). The :term:`Managers <Manager>` pull work from the :term:`Server`, use attached compute resources to complete the work, and report results back to the server. :term:`Managers <Manager>` may be turned off and on at any time. :term:`Managers <Manager>` connect to compute resource through :term:`Adapters <Adapter>`.
 
 In the :doc:`Quickstart Tutorial <quickstart>`, the above components were comined within a python envionment using ``FractalSnowflake``. 
 In general, the :term:`Server` and :term:`Manager(s) <Manager>` are run seapately, on separate machines.
@@ -28,11 +28,11 @@ The table below lists some common use cases for QCFractal:
      - Snowflake
      - Snowflake
      - Snowflake
-   * - :ref:`Single workstation <quickstart-single-workstation>`
+   * - :ref:`Single Workstation <quickstart-single-workstation>`
      - Local
      - Local
      - Pool
-   * - :ref:`Private cluster <quickstart-private-cluster>`
+   * - :ref:`Private Cluster <quickstart-private-cluster>`
      - Head node
      - Head node
      - Parsl
@@ -53,7 +53,7 @@ Quickstart Setups
 -----------------
 This section presents quickstart setup guides for the above common use cases.
 The guides assume that QCFractal has been installed (see :doc:`install`).
-More detailed guides are available:
+General guides are also available:
 
 * :doc:`setup_server`
 * :doc:`setup_compute`
@@ -135,7 +135,7 @@ The :term:`Manager` must be configured before use. Create a configuration file (
 
 You may need to modify these values to match the particulars on your cluster. In particular:
 
-* The `scheduler` and `partition` options should be set to match the details of your :term:`Scheduler` (e.g. SLURM, PBS, Torque).
+* The ``scheduler`` and ``partition`` options should be set to match the details of your :term:`Scheduler` (e.g. SLURM, PBS, Torque).
 * Options related to :term:`Workers <Worker>` should be set appropriately for the compute node on your cluster. 
   Note that Parsl requires that full nodes be allocated to each :term:`Worker` (i.e. ``node_exclusivity: True``).
 
@@ -173,7 +173,7 @@ as in the :doc:`quickstart` (note this requires ``psi4``):
 Shared Clusters, Supercomputers, and Multiple Clusters
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-This quickstart guide addresses QCFractal setup on one or more shared cluster. 
+This quickstart guide addresses QCFractal setup on one or more shared cluster(s). 
 The :term:`Server` should be set up on a persistant server for which you have permission to expose ports. 
 For example, this may be a dedicated webserver, the head node of a private cluster, or a cloud instance.
 The :term:`Manager` should be set up on each shared cluster. 
@@ -245,7 +245,7 @@ Create a configuration file (e.g. in ``~/.qca/qcfractal/my_manager.yaml``) based
 
 You may need to modify these values to match the particulars on each cluster. In particular:
 
-* The `scheduler` and `partition` options should be set to match the details of your :term:`Scheduler` (e.g. SLURM, PBS, Torque).
+* The ``scheduler`` and ``partition`` options should be set to match the details of your :term:`Scheduler` (e.g. SLURM, PBS, Torque).
 * Options related to :term:`Workers <Worker>` should be set appropriately for the compute node on your cluster. 
   Note that Parsl requires that full nodes be allocated to each :term:`Worker` (i.e. ``node_exclusivity: True``).
 
@@ -253,12 +253,14 @@ For more information on :term:`Manager` configuration, see :doc:`managers` and :
 
 Finally, start the :term:`Manager` in the background on each cluster head node::
 
-    nohup qcfractal-manager --config-file ~/.qca/qcfractal/manager.yaml --fractal-uri <URL:port of Server> --username manager -password <manager's password> &
+    nohup qcfractal-manager --config-file <path to config YAML> --fractal-uri <URL:port of Server> --username manager -password <password> &
 
-(If you did not specify a TLS certificate in the ``qcfractal-server start`` step, you will additionally need to specify ``--verify False`` in the above command.)
+If you did not specify a TLS certificate in the ``qcfractal-server start`` step, you will additionally need to specify ``--verify False`` in the above command.
 
 Test if the everything is setup by running a Hartee-Fock calculation a single hydrogen molecule, 
-as in the :doc:`quickstart` (note this requires ``psi4``). This test may be run from any machine.
+as in the :doc:`quickstart` 
+(note this requires ``psi4`` to be installed on at least one compute resource). 
+This test may be run from any machine.
 
 .. code-block:: python
 
