@@ -1,12 +1,12 @@
-Setup Overview and Quickstart
-=============================
+Setup Quickstart
+================
 
 QCFractal comprises two components:
 
 1. The :term:`Server` (``qcfractal-server``), which accepts compute and data queuries and maintains a database of :term:`tasks <task>` and results. The :term:`Server` should be run continuously on a persistant machine. 
 2. One or more :term:`Managers <Manager>` (``qcfractal-manager``). The Managers pull work from the :term:`Server`, use attached compute resources to complete the work, and report results back to the server. :term:`Managers <Manager>` may be turned off and on at any time. :term:`Managers <Manager>` connect to compute resource through :term:`Adapters <Adapter>`.
 
-In the :doc:`Quickstart Tutorial <quickstart>`, the above components were comined within a python envionment using `FractalSnowflake`. 
+In the :doc:`Quickstart Tutorial <quickstart>`, the above components were comined within a python envionment using ``FractalSnowflake``. 
 In general, the :term:`Server` and :term:`Manager(s) <Manager>` are run seapately, on separate machines.
 For detailed information about the relationship between :term:`Server` and :term:`Manager`, see :doc:`managers`.
 
@@ -76,9 +76,12 @@ The second command starts ``qcfractal-server`` in the background.
 It also starts one :term:`Worker` which will pull :term:`tasks <Task>` from the :term:`Server` and run them. 
 
 Test if the everything is setup by running a Hartee-Fock calculation a single hydrogen molecule, 
-as in the :doc:`quickstart` (note this requires ``psi4``)::
+as in the :doc:`quickstart` (note this requires ``psi4``):
+
+.. code-block:: python
 
    python
+
    >>> import qcfractal.interface as ptl
    # Note that server TLS verification is turned off (verify=False) since all components are run locally.
    >>> client = ptl.FractalClient(address="localhost:7777", verify=False)
@@ -109,7 +112,9 @@ Next, start the :term:`Server` in the background::
 
    nohup qcfractal-server start &
 
-The :term:`Manager` must be configured before use. Create a configuration file (e.g. in ``~/.qca/qcfractal/my_manager.yaml``) based on the following template::
+The :term:`Manager` must be configured before use. Create a configuration file (e.g. in ``~/.qca/qcfractal/my_manager.yaml``) based on the following template:
+
+.. code-block:: yaml
 
    common:
     adapter: parsl
@@ -138,14 +143,17 @@ For more information on :term:`Manager` configuration, see :doc:`managers` and :
 
 Finally, start the :term:`Manager` in the background on the cluster head node::
 
-    nohup qcfractal-manager --config-file <path to config YAML> --verify=False
+    nohup qcfractal-manager --config-file <path to config YAML> --verify=False &
 
 Note that TLS certificate verification is disabled (``--verify=False``) because the :term:`Manager` and :term:`Server` are both run on the head node.
 
 Test if the everything is setup by running a Hartee-Fock calculation a single hydrogen molecule, 
-as in the :doc:`quickstart` (note this requires ``psi4``)::
+as in the :doc:`quickstart` (note this requires ``psi4``):
+
+.. code-block:: python
 
    python
+
    >>> import qcfractal.interface as ptl
    # Note that server TLS verification is turned off (verify=False) since all components are run locally.
    >>> client = ptl.FractalClient(address="localhost:7777", verify=False)
