@@ -88,7 +88,7 @@ as in the :doc:`quickstart` (note this requires ``psi4``):
    >>> mol = ptl.Molecule(symbols=["H", "H"], geometry=[0, 0, 0, 0, 5, 0])
    >>> mol_id = client.add_molecules([mol])[0]
    >>> r = client.add_compute("psi4", "HF", "STO-3G", "energy", None, [mol_id])
-   >>> # Wait a minute for the job to complete
+   # Wait a minute for the job to complete
    >>> proc = client.query_procedures(id=r.ids)[0]
    >>> print(proc)
    <ResultRecord(id='0' status='COMPLETE')>
@@ -160,7 +160,7 @@ as in the :doc:`quickstart` (note this requires ``psi4``):
    >>> mol = ptl.Molecule(symbols=["H", "H"], geometry=[0, 0, 0, 0, 5, 0])
    >>> mol_id = client.add_molecules([mol])[0]
    >>> r = client.add_compute("psi4", "HF", "STO-3G", "energy", None, [mol_id])
-   >>> # Wait a minute for the job to complete
+   # Wait a minute for the job to complete
    >>> proc = client.query_procedures(id=r.ids)[0]
    >>> print(proc)
    <ResultRecord(id='0' status='COMPLETE')>
@@ -263,13 +263,15 @@ as in the :doc:`quickstart` (note this requires ``psi4``). This test may be run 
 .. code-block:: python
 
    python
+
    >>> import qcfractal.interface as ptl
-   # Note that server TLS verification is turned off (verify=False) since all components are run locally.
-   >>> client = ptl.FractalClient(address="localhost:7777", verify=False)
+   # Note that server TLS verification may need to be turned off if (verify=False).
+   # Note that the Server URL and the password for user will need to be filled in.
+   >>> client = ptl.FractalClient(address="URL:Port", username="user", password="***")
    >>> mol = ptl.Molecule(symbols=["H", "H"], geometry=[0, 0, 0, 0, 5, 0])
    >>> mol_id = client.add_molecules([mol])[0]
    >>> r = client.add_compute("psi4", "HF", "STO-3G", "energy", None, [mol_id])
-   >>> # Wait a minute for the job to complete
+   # Wait a minute for the job to complete
    >>> proc = client.query_procedures(id=r.ids)[0]
    >>> print(proc)
    <ResultRecord(id='0' status='COMPLETE')>
