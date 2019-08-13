@@ -1986,12 +1986,12 @@ class SQLAlchemySocket:
         """
 
         # Make sure permissions are valid
-        if not SQLAlchemySocket.VALID_PERMISSIONS >= set(permissions):
+        if not self.VALID_PERMISSIONS >= set(permissions):
             raise KeyError("Permissions settings not understood: {}".format(
-                set(permissions) - SQLAlchemySocket.VALID_PERMISSIONS))
+                set(permissions) - self.VALID_PERMISSIONS))
 
         if password is None:
-            password = SQLAlchemySocket._generate_password()
+            password = self._generate_password()
 
         hashed = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
 
@@ -2119,12 +2119,12 @@ class SQLAlchemySocket:
 
             if permissions is not None:
                 # Make sure permissions are valid
-                if not SQLAlchemySocket.VALID_PERMISSIONS >= set(permissions):
+                if not self.VALID_PERMISSIONS >= set(permissions):
                     return False, "Permissions not understood: {}".format(
-                        set(permissions) - SQLAlchemySocket.VALID_PERMISSIONS)
+                        set(permissions) - self.VALID_PERMISSIONS)
                 blob["permissions"] = permissions
             if reset_password:
-                password = SQLAlchemySocket._generate_password()
+                password = self._generate_password()
             if password is not None:
                 blob["password"] = bcrypt.hashpw(password.encode("UTF-8"), bcrypt.gensalt(6))
 
