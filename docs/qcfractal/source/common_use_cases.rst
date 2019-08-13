@@ -44,10 +44,6 @@ The table below lists some common use cases for QCFractal:
      - Personal server
      - Head node of each cluster
      - Parsl
-   * - :ref:`Cloud <quickstart-cloud>`
-     - Cloud instance
-     - Cloud instance
-     - Parsl
 
 QCFractal is highly adaptable and is not limited to the above use cases. 
 For example, it possible to mix local, cluster, supercomputer, and cloud :term:`Managers <Manager>`. 
@@ -182,15 +178,6 @@ Passwords will be automatically generated and printed. You may instead specify a
 See :doc:`server_user` for more information.
 
     qcfractal-manager --config-file ~/.qca/qcfractal/manager.yaml --fractal-uri URL:port --username manager -password 
-
-Finally, :ref:`test your setup. <quickstart-test>`
-
-.. _quickstart-cloud:
-
-Cloud
-+++++
-
-This guide requires `Parsl <https://parsl.readthedocs.io/en/stable/quickstart.html>`_ which may be installed with ``pip``.
 
 Finally, :ref:`test your setup. <quickstart-test>`
 
