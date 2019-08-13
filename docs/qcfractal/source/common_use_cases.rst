@@ -115,8 +115,8 @@ The :term:`Manager` must be configured before use. Create a configuration file (
 You may need to modify these values to match the particulars on your cluster. In particular:
 
 * The `scheduler` and `partition` options should be set to match the details of your :term:`Scheduler` (e.g. SLURM, PBS, Torque).
-* Options related to workers should be set appropriately for the compute node on your cluster. 
-  Note that Parsl requires that full nodes be allocated to each worker (i.e. ``node_exclusivity: True``).
+* Options related to :term:`Workers <worker>` should be set appropriately for the compute node on your cluster. 
+  Note that Parsl requires that full nodes be allocated to each :term:`Worker` (i.e. ``node_exclusivity: True``).
 
 For more information on :term:`Manager` configuration, see :ref:`managers` and :ref:`managers_samples`.
 
@@ -177,7 +177,43 @@ Next, add users for admin, the :term:`Manager`, and a user
 Passwords will be automatically generated and printed. You may instead specify a password with the ``--password`` option. 
 See :doc:`server_user` for more information.
 
-    qcfractal-manager --config-file ~/.qca/qcfractal/manager.yaml --fractal-uri URL:port --username manager -password 
+:term:`Managers <Manager>` should be set up on each shared cluster. 
+In most cases, the :term:`Manager` may be run on the head node; 
+contact your system administrator if you are unsure.
+
+The :term:`Manager` must be configured before use. 
+Create a configuration file (e.g. in ``~/.qca/qcfractal/my_manager.yaml``) based on the following template::
+
+   common:
+    adapter: parsl
+    tasks_per_worker: 1
+    cores_per_worker: 6
+    memory_per_worker: 64
+    max_workers: 5
+    scratch_directory: "$TMPDIR"
+   
+   cluster:
+    node_exclusivity: True
+    scheduler: slurm
+   
+   parsl:
+    provider:
+     partition: CLUSTER
+     cmd_timeout: 30 
+
+You may need to modify these values to match the particulars on each cluster. In particular:
+
+* The `scheduler` and `partition` options should be set to match the details of your :term:`Scheduler` (e.g. SLURM, PBS, Torque).
+* Options related to :term:`Worker <Workers>` should be set appropriately for the compute node on your cluster. 
+  Note that Parsl requires that full nodes be allocated to each :term:`Worker` (i.e. ``node_exclusivity: True``).
+
+For more information on :term:`Manager` configuration, see :ref:`managers` and :ref:`managers_samples`.
+
+Finally, start the :term:`Manager` in the background on each cluster head node::
+
+    nohup qcfractal-manager --config-file ~/.qca/qcfractal/manager.yaml --fractal-uri <URL:port of Server> --username manager -password <manager's password> &
+
+(If you did not specify a TLS certificate in the ``qcfractal-server start`` step, you will additionally need to specify ``--verify False`` in the above command.)
 
 Finally, :ref:`test your setup. <quickstart-test>`
 
