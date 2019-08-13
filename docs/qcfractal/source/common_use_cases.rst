@@ -276,3 +276,10 @@ as in the :doc:`quickstart` (note this requires ``psi4``). This test may be run 
    >>> print(proc.properties.scf_total_energy)
    -0.6865598095254312 
 
+
+Other Use Cases
+---------------
+
+QCFractal is highly configurable and supports many use cases beyond those described here.
+For more information, see the :doc:`Server <server_init>` and :doc:`Manager <managers>` documentation sections.
+You may also :ref:`contact us <work-with-us>`. 
