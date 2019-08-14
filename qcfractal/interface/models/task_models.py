@@ -10,8 +10,7 @@ from qcelemental.models import ComputeError
 from .common_models import ObjectId, ProtoModel
 
 
-<<<<<<< HEAD
-class DBRef(BaseModel):
+class DBRef(ProtoModel):
     """
     Database locator reference object. Identifies an exact record in a database.
     """
@@ -23,11 +22,6 @@ class DBRef(BaseModel):
         ...,
         description="The Database assigned Id of the entry in the ``ref`` table."
     )
-=======
-class DBRef(ProtoModel):
-    ref: str
-    id: ObjectId
->>>>>>> Models: More protomodels in REST models
 
 
 class TaskStatusEnum(str, Enum):
@@ -62,7 +56,7 @@ class BaseResultEnum(str, Enum):
     procedure = "procedure"
 
 
-class PythonComputeSpec(BaseModel):
+class PythonComputeSpec(ProtoModel):
     function: str = Schema(
         ...,
         description="The module and function name of a Python-callable to call. Of the form 'module.function'."

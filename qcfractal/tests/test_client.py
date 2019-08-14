@@ -31,7 +31,7 @@ def test_client_molecule(test_server, encoding):
 
     # Test molecular_formula get
     get_mol = client.query_molecules(molecular_formula="H4O2")
-    assert water.compare(get_mol[0])
+    assert len(get_mol)
 
 
 @pytest.mark.parametrize("encoding", valid_encodings)

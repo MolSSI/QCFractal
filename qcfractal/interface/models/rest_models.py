@@ -90,8 +90,6 @@ class EmptyMeta(ProtoModel):
     """
     There is no metadata accepted, so an empty metadata is sent for completion.
     """
-    class Config(RESTConfig):
-        pass
 
 
 auto_gen_docs_on_demand(EmptyMeta)
