@@ -87,8 +87,9 @@ def parse_args():
                               help='Creates a local pool QueueManager attached to the server.')
 
     ### Config subcommands
-    config = subparsers.add_parser('config', help="Manage users and permissions on a QCFractal server instance.")
-    config.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+    show = subparsers.add_parser('show', help="Manage users and permissions on a QCFractal server instance.")
+    show.add_argument("category", nargs="?", default="config", choices=["config", "alembic"], help="The config category to show.")
+    show.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     ### User subcommands
     user = subparsers.add_parser('user', help="Configure a QCFractal server instance.")
@@ -118,7 +119,6 @@ def parse_args():
 
     user_remove = user_subparsers.add_parser("remove", help="Remove a user.")
     user_remove.add_argument("username", default=None, type=str, help="The username to remove.")
-
 
     ### Move args around
     args = vars(parser.parse_args())
@@ -235,10 +235,16 @@ def server_init(args, config):
     print("\n>>> Success! Please run `qcfractal-server start` to boot a FractalServer!")
 
 
-def server_config(args, config):
+def server_show(args, config):
 
-    print(f"Displaying QCFractal configuration:\n")
-    print(yaml.dump(config.dict(), default_flow_style=False))
+    psql = PostgresHarness(config, quiet=False, logger=print)
+
+    if args["category"] == "config":
+        print(f"Displaying QCFractal configuration:\n")
+        print(yaml.dump(config.dict(), default_flow_style=False))
+    elif args["category"] == "alembic":
+        print(f"Displaying QCFractal Alembic CLI configuration:\n")
+        print(" ".join(psql.alembic_commands()))
 
 
 def server_start(args, config):
@@ -354,6 +360,14 @@ def server_upgrade(args, config):
         print(str(e))
         sys.exit(1)
 
+def server_upgrade(args, config):
+    # alembic upgrade head
+
+    print("QCFractal server configuration.\n")
+
+
+    psql = PostgresHarness(config, quiet=False, logger=print)
+
 
 def server_user(args, config):
 
@@ -452,8 +466,8 @@ def main(args=None):
 
     if command == "init":
         server_init(args, config)
-    elif command == "config":
-        server_config(args, config)
+    elif command == "show":
+        server_show(args, config)
     elif command == "start":
         server_start(args, config)
     elif command == 'upgrade':
