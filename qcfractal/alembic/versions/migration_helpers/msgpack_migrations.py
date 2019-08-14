@@ -40,7 +40,10 @@ def _intermediate_table(table_name, columns, read_columns=None):
     return table, cols
 
 
-def json_to_msgpack_table(table_name, block_size, update_columns,  transformer, read_columns):
+def json_to_msgpack_table(table_name, block_size, update_columns,  transformer, read_columns=None):
+
+    if read_columns is None:
+        read_columns = {}
 
     update_columns = list(update_columns)
 
@@ -76,6 +79,8 @@ def json_to_msgpack_table(table_name, block_size, update_columns,  transformer, 
             row = transformer(data)
 
             connection.execute(table.update().where(table.c.id == data["id"]).values(**row))
+
+        connection.execute('commit;')
 
 
 def json_to_msgpack_table_dropcols(table_name, block_size, update_columns):

@@ -49,7 +49,7 @@ def transformer(old_data):
 
 
 def upgrade():
-    msgpack_migrations.json_to_msgpack_table(table_name, block_size, converters.keys(), [], transformer)
+    msgpack_migrations.json_to_msgpack_table(table_name, block_size, converters.keys(), transformer)
 
 
 def downgrade():

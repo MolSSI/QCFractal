@@ -35,7 +35,7 @@ update_columns = {"extras"}
 
 
 def upgrade():
-    msgpack_migrations.json_to_msgpack_table(table_name, block_size, update_columns, transformer, {})
+    msgpack_migrations.json_to_msgpack_table(table_name, block_size, update_columns, transformer)
 
 
 def downgrade():

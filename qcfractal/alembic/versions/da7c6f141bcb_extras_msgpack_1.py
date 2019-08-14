@@ -43,7 +43,7 @@ def upgrade():
 
         return {"spec_": msgpackext_dumps(spec)}
 
-    msgpack_migrations.json_to_msgpack_table(table_name, block_size, update_columns, transformer, {})
+    msgpack_migrations.json_to_msgpack_table(table_name, block_size, update_columns, transformer)
 
     ## Service Queue
     table_name = "service_queue"
