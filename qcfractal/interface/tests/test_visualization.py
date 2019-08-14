@@ -8,7 +8,6 @@ import requests
 from . import portal
 
 try:
-    import plotly
     _has_ploty = True
 except ModuleNotFoundError:
     _has_ploty = False

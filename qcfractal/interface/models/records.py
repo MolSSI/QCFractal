@@ -4,7 +4,6 @@ A model for Compute Records
 
 import abc
 import datetime
-import json
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Union
 
@@ -15,7 +14,7 @@ import qcelemental as qcel
 
 from ..visualization import scatter_plot
 from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification
-from .model_utils import hash_dictionary, json_encoders, prepare_basis, recursive_normalizer
+from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
 __all__ = ["OptimizationRecord", "ResultRecord", "OptimizationRecord", "RecordBase"]
 

@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
 
-from ..models import ObjectId, ProtoModel, json_encoders
+from ..models import ObjectId, ProtoModel
 
 
 class Collection(abc.ABC):

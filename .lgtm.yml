@@ -9,6 +9,7 @@ path_classifiers:
     - versioneer.py  # Set Versioneer.py to an external "library" (3rd party code)
     - devtools/*
     - qcfractal/dashboard/* # Very early state, some conditions forcing LGTM issues
+    - qcfractal/alembic/* # One-shot, from templates
   generated:
     - qcfractal/_version.py
 queries:

@@ -3,11 +3,10 @@ Models for the REST interface
 """
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from pydantic import BaseConfig, Schema, constr, validator
+from pydantic import Schema, constr, validator
 
 from .common_models import KeywordSet, Molecule, ObjectId, ProtoModel
 from .gridoptimization import GridOptimizationInput
-from .model_utils import json_encoders
 from .records import ResultRecord
 from .task_models import PriorityEnum, TaskRecord
 from .torsiondrive import TorsionDriveInput

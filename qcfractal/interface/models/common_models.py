@@ -1,13 +1,12 @@
 """
 Common models for QCPortal/Fractal
 """
-import json
 from enum import Enum
 from typing import Any, Dict, Optional
 
 from pydantic import Schema, validator
 
-from qcelemental.models import Molecule, ProtoModel, Provenance
+from qcelemental.models import ProtoModel
 
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 

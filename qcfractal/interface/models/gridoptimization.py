@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Tuple, Union
 from pydantic import Schema, constr, validator
 
 from .common_models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
-from .model_utils import json_encoders, recursive_normalizer
+from .model_utils import recursive_normalizer
 from .records import RecordBase
 
 __all__ = ["GridOptimizationInput", "GridOptimizationRecord"]
