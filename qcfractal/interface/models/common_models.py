@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 
 from pydantic import Schema, validator
 
-from qcelemental.models import ProtoModel
+from qcelemental.models import Molecule, Provenance, ProtoModel
 
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 

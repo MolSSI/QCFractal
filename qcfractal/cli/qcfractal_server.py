@@ -87,9 +87,9 @@ def parse_args():
                               help='Creates a local pool QueueManager attached to the server.')
 
     ### Config subcommands
-    show = subparsers.add_parser('show', help="Manage users and permissions on a QCFractal server instance.")
-    show.add_argument("category", nargs="?", default="config", choices=["config", "alembic"], help="The config category to show.")
-    show.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+    info = subparsers.add_parser('info', help="Manage users and permissions on a QCFractal server instance.")
+    info.add_argument("category", nargs="?", default="config", choices=["config", "alembic"], help="The config category to show.")
+    info.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     ### User subcommands
     user = subparsers.add_parser('user', help="Configure a QCFractal server instance.")
@@ -104,7 +104,7 @@ def parse_args():
     user_add.add_argument("--permissions", nargs='+', default=None, type=str, required=True,
                           help="Permissions for the user. Allowed values: read, write, queue, compute, admin.")
 
-    user_show = user_subparsers.add_parser("show", help="Show the user's current permissions.")
+    user_show = user_subparsers.add_parser("info", help="Show the user's current permissions.")
     user_show.add_argument("username", default=None, type=str, help="The username to show.")
 
     user_modify = user_subparsers.add_parser("modify", help="Change a user's password or permissions.")
@@ -235,7 +235,7 @@ def server_init(args, config):
     print("\n>>> Success! Please run `qcfractal-server start` to boot a FractalServer!")
 
 
-def server_show(args, config):
+def server_info(args, config):
 
     psql = PostgresHarness(config, quiet=False, logger=print)
 
@@ -360,14 +360,6 @@ def server_upgrade(args, config):
         print(str(e))
         sys.exit(1)
 
-def server_upgrade(args, config):
-    # alembic upgrade head
-
-    print("QCFractal server configuration.\n")
-
-
-    psql = PostgresHarness(config, quiet=False, logger=print)
-
 
 def server_user(args, config):
 
@@ -395,7 +387,7 @@ def server_user(args, config):
             else:
                 print("\n>>> Failed to add user. Perhaps the username is already taken?")
                 sys.exit(1)
-        elif args["user_command"] == "show":
+        elif args["user_command"] == "info":
             print(f"\n>>> Showing permissions for user '{args['username']}'...")
             permissions = storage.get_user_permissions(args["username"])
             if permissions is None:
@@ -466,8 +458,8 @@ def main(args=None):
 
     if command == "init":
         server_init(args, config)
-    elif command == "show":
-        server_show(args, config)
+    elif command == "info":
+        server_info(args, config)
     elif command == "start":
         server_start(args, config)
     elif command == 'upgrade':
