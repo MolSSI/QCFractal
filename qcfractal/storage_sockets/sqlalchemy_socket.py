@@ -1439,6 +1439,22 @@ class SQLAlchemySocket:
 
         return updated_count
 
+    def update_service_status(self,
+                     status: str,
+                     id: Union[List[str], str] = None,
+                     procedure_id: Union[List[str], str] = None) -> int:
+
+        if (id is None) and (procedure_id is None):
+            raise KeyError("id or procedure_id must not be None.")
+
+        status = status.lower()
+        with self.session_scope() as session:
+
+            query = format_query(ServiceQueueORM, id=id, procedure_id=procedure_id)
+            ret = session.query(ServiceQueueORM).filter(*query).update({"status": status})
+
+        return ret
+
     def services_completed(self, records_list: List["BaseService"]) -> int:
 
         done = 0
