@@ -48,6 +48,7 @@ def torsiondrive_fixture(fractal_compute_server):
     } # yapf: disable
 
     def spin_up_test(**keyword_augments):
+        run_service = keyword_augments.pop("run_service", True)
 
         instance_options = copy.deepcopy(torsiondrive_options)
         recursive_dict_merge(instance_options, keyword_augments)
@@ -60,11 +61,28 @@ def torsiondrive_fixture(fractal_compute_server):
             service = client.query_services(procedure_id=compute_key)[0]
             assert 'WAITING' in service['status']
 
-        fractal_compute_server.await_services()
-        assert len(fractal_compute_server.list_current_tasks()) == 0
+        if run_service:
+            fractal_compute_server.await_services()
+            assert len(fractal_compute_server.list_current_tasks()) == 0
+
         return ret.data
 
     yield spin_up_test, client
+
+
+def test_service_manipulation(torsiondrive_fixture):
+
+    spin_up_test, client = torsiondrive_fixture
+
+    ret = spin_up_test(run_service=False)
+
+    service = client.query_services(procedure_id=ret.ids)[0]
+    assert service["status"] == "WAITING"
+
+    client.modify_services("restart", id=service["id"])
+
+    service = client.query_services(procedure_id=ret.ids)[0]
+    assert service["status"] == "RUNNING"
 
 
 def test_service_torsiondrive_single(torsiondrive_fixture):
@@ -133,15 +151,15 @@ def test_service_torsiondrive_option_dihedral_ranges(torsiondrive_fixture):
 
     # The dihedral range should be limited to -150, -90, -60
     final_energies = result.get_final_energies()
-    assert set(final_energies.keys()) == {(-150,), (-120,), (-90,), (-60,)}
-    assert pytest.approx(0.0005683235570009067, abs=1e-6) == final_energies[(-150,)]
-    assert pytest.approx(0.0002170694130912583, abs=1e-6) == final_energies[(-120,)]
-    assert pytest.approx(0.0001565537585121726, abs=1e-6) == final_energies[(-90,)]
-    assert pytest.approx(0.0007991274441437338, abs=1e-6) == final_energies[(-60,)]
+    assert set(final_energies.keys()) == {(-150, ), (-120, ), (-90, ), (-60, )}
+    assert pytest.approx(0.0005683235570009067, abs=1e-6) == final_energies[(-150, )]
+    assert pytest.approx(0.0002170694130912583, abs=1e-6) == final_energies[(-120, )]
+    assert pytest.approx(0.0001565537585121726, abs=1e-6) == final_energies[(-90, )]
+    assert pytest.approx(0.0007991274441437338, abs=1e-6) == final_energies[(-60, )]
 
     # Check final molecules
     final_molecules = result.get_final_molecules()
-    assert set(final_molecules.keys()) == {(-150,), (-120,), (-90,), (-60,)}
+    assert set(final_molecules.keys()) == {(-150, ), (-120, ), (-90, ), (-60, )}
     assert all(hasattr(m, "symbols") for m in final_molecules.values())
 
 
@@ -157,11 +175,11 @@ def test_service_torsiondrive_option_energy_decrease_thresh(torsiondrive_fixture
 
     # the final energies are the same as the default setting, because this molecule is too simple
     final_energies = result.get_final_energies()
-    assert set(final_energies.keys()) == {(-90,), (-0,), (90,), (180,)}
-    assert pytest.approx(0.002597541340221565, abs=1e-6) == final_energies[(0,)]
-    assert pytest.approx(0.000156553761859276, abs=1e-6) == final_energies[(90,)]
-    assert pytest.approx(0.000156553761859271, abs=1e-6) == final_energies[(-90,)]
-    assert pytest.approx(0.000753492556057886, abs=1e-6) == final_energies[(180,)]
+    assert set(final_energies.keys()) == {(-90, ), (-0, ), (90, ), (180, )}
+    assert pytest.approx(0.002597541340221565, abs=1e-6) == final_energies[(0, )]
+    assert pytest.approx(0.000156553761859276, abs=1e-6) == final_energies[(90, )]
+    assert pytest.approx(0.000156553761859271, abs=1e-6) == final_energies[(-90, )]
+    assert pytest.approx(0.000753492556057886, abs=1e-6) == final_energies[(180, )]
 
 
 @mark_slow
@@ -176,11 +194,11 @@ def test_service_torsiondrive_option_energy_upper_limit(torsiondrive_fixture):
 
     # The energy_upper_limit should limit the range of the scan
     final_energies = result.get_final_energies()
-    assert set(final_energies.keys()) == {(-150,), (-120,), (-90,), (-60,)}
-    assert pytest.approx(0.0005683235570009067, abs=1e-6) == final_energies[(-150,)]
-    assert pytest.approx(0.0002170694130912583, abs=1e-6) == final_energies[(-120,)]
-    assert pytest.approx(0.0001565537585121726, abs=1e-6) == final_energies[(-90,)]
-    assert pytest.approx(0.0007991274441437338, abs=1e-6) == final_energies[(-60,)]
+    assert set(final_energies.keys()) == {(-150, ), (-120, ), (-90, ), (-60, )}
+    assert pytest.approx(0.0005683235570009067, abs=1e-6) == final_energies[(-150, )]
+    assert pytest.approx(0.0002170694130912583, abs=1e-6) == final_energies[(-120, )]
+    assert pytest.approx(0.0001565537585121726, abs=1e-6) == final_energies[(-90, )]
+    assert pytest.approx(0.0007991274441437338, abs=1e-6) == final_energies[(-60, )]
 
 
 @mark_slow
@@ -188,29 +206,30 @@ def test_service_torsiondrive_option_extra_constraints(torsiondrive_fixture):
     """"Tests torsiondrive with extra_constraints in optimization_spec """
 
     spin_up_test, client = torsiondrive_fixture
-    ret = spin_up_test(optimization_spec={
-        "program": "geometric",
-        "keywords": {
-            "coordsys": "tric",
-            "constraints": {
-                "freeze": [{
-                    'type': 'xyz',
-                    'indices': [0],
-                }]
+    ret = spin_up_test(
+        optimization_spec={
+            "program": "geometric",
+            "keywords": {
+                "coordsys": "tric",
+                "constraints": {
+                    "freeze": [{
+                        'type': 'xyz',
+                        'indices': [0],
+                    }]
+                }
             }
-        }
-    })
+        })
 
     result = client.query_procedures(id=ret.ids)[0]
     assert result.status == "COMPLETE"
 
     # The final energies are the same as the default setting, because this molecule is too simple
     final_energies = result.get_final_energies()
-    assert set(final_energies.keys()) == {(-90,), (-0,), (90,), (180,)}
-    assert pytest.approx(0.002597541340221565, abs=1e-6) == final_energies[(0,)]
-    assert pytest.approx(0.000156553761859276, abs=1e-6) == final_energies[(90,)]
-    assert pytest.approx(0.000156553761859271, abs=1e-6) == final_energies[(-90,)]
-    assert pytest.approx(0.000753492556057886, abs=1e-6) == final_energies[(180,)]
+    assert set(final_energies.keys()) == {(-90, ), (-0, ), (90, ), (180, )}
+    assert pytest.approx(0.002597541340221565, abs=1e-6) == final_energies[(0, )]
+    assert pytest.approx(0.000156553761859276, abs=1e-6) == final_energies[(90, )]
+    assert pytest.approx(0.000156553761859271, abs=1e-6) == final_energies[(-90, )]
+    assert pytest.approx(0.000753492556057886, abs=1e-6) == final_energies[(180, )]
 
     # Check final molecules
     hooh = ptl.data.get_molecule("hooh.json")
@@ -274,7 +293,7 @@ def test_service_torsiondrive_get_final_results(torsiondrive_fixture):
     assert result.status == "COMPLETE"
 
     final_result_records = result.get_final_results()
-    assert set(final_result_records.keys()) == {(-90,), (-0,), (90,), (180,)}
+    assert set(final_result_records.keys()) == {(-90, ), (-0, ), (90, ), (180, )}
 
 
 @using_geometric
@@ -419,7 +438,7 @@ def test_query_time(fractal_compute_server):
     total = time.time() - t
     print(total)
     print(len(p))
-    print('---- per optmization proc: ', total/len(p))
+    print('---- per optmization proc: ', total / len(p))
 
     import time
     t = time.time()
@@ -427,6 +446,4 @@ def test_query_time(fractal_compute_server):
     total = time.time() - t
     print(total)
     print(len(p))
-    print('---- per Torsion proc: ', total/len(p))
-
-
+    print('---- per Torsion proc: ', total / len(p))

@@ -1008,3 +1008,45 @@ class FractalClient(object):
             }
         }
         return self._automodel_request("service_queue", "get", payload, full_return=full_return)
+
+    def modify_services(self,
+                       operation: str,
+                       id: 'QueryObjectId' = None,
+                       procedure_id: 'QueryObjectId' = None,
+                       full_return: bool = False) -> int:
+        """Checks the status of services in the Fractal queue.
+
+        Parameters
+        ----------
+        operation : str
+            The operation to perform on the selected tasks. Valid operations are:
+             - `restart` - Restarts a task by moving its status from 'ERROR'/'WAITING' to 'RUNNING'
+        id : QueryObjectId, optional
+            Queries the Services ``id`` field.
+        procedure_id : QueryObjectId, optional
+            Queries the Services ``procedure_id`` field, or the ObjectId of the procedure associated with the service.
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        int
+            The number of modified tasks.
+        """
+        operation = operation.lower()
+        valid_ops = {"restart"}
+
+        if operation not in valid_ops:
+            raise ValueError(f"Operation '{operation}' is not available, valid operations are: {valid_ops}")
+
+        payload = {
+            "meta": {
+                "operation": operation
+            },
+            "data": {
+                "id": id,
+                "procedure_id": procedure_id,
+            }
+        }
+
+        return self._automodel_request("service_queue", "put", payload, full_return=full_return)
