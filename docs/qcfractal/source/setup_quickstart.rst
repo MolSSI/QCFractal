@@ -3,11 +3,11 @@ Setup Quickstart
 
 QCFractal comprises two components:
 
-1. The :term:`Server` (``qcfractal-server``), which accepts compute and data queuries and maintains a database of :term:`tasks <task>` and results. The :term:`Server` should be run continuously on a persistant machine. 
+1. The :term:`Server` (``qcfractal-server``), which accepts compute and data queries and maintains a database of :term:`tasks <task>` and results. The :term:`Server` should be run continuously on a persistent machine.
 2. One or more :term:`Managers <Manager>` (``qcfractal-manager``). The :term:`Managers <Manager>` pull work from the :term:`Server`, use attached compute resources to complete the work, and report results back to the server. :term:`Managers <Manager>` may be turned off and on at any time. :term:`Managers <Manager>` connect to compute resource through :term:`Adapters <Adapter>`.
 
-In the :doc:`Quickstart Tutorial <quickstart>`, the above components were comined within a python envionment using ``FractalSnowflake``. 
-In general, the :term:`Server` and :term:`Manager(s) <Manager>` are run seapately, on separate machines.
+In the :doc:`Quickstart Tutorial <quickstart>`, the above components were combined within a python environment using ``FractalSnowflake``.
+In general, the :term:`Server` and :term:`Manager(s) <Manager>` are run separately in different process, often on different machines.
 For detailed information about the relationship between :term:`Server` and :term:`Manager`, see :doc:`managers`.
 
 
@@ -46,7 +46,7 @@ The table below lists some common use cases for QCFractal:
      - Parsl
 
 QCFractal is highly adaptable and is not limited to the above use cases. 
-For example, it possible to mix local, cluster, supercomputer, and cloud :term:`Managers <Manager>`. 
+For example, it possible to mix local, cluster, supercomputer, and cloud :term:`Managers <Manager>` simultaneously.
 In addition, a cloud instance may provide a good option for running ``qcfractal-server`` when a persistent web-exposed server is not otherwise available. 
 
 Quickstart Setups
@@ -75,7 +75,7 @@ Next, start the :term:`Server` and ProcessPoolExecutor :term:`Manager`::
 The second command starts ``qcfractal-server`` in the background.
 It also starts one :term:`Worker` which will pull :term:`tasks <Task>` from the :term:`Server` and run them. 
 
-Test if the everything is setup by running a Hartee-Fock calculation a single hydrogen molecule, 
+Test if everything is setup by running a Hartree-Fock calculation a single hydrogen molecule,
 as in the :doc:`quickstart` (note this requires ``psi4``):
 
 .. code-block:: python
@@ -83,11 +83,13 @@ as in the :doc:`quickstart` (note this requires ``psi4``):
    python
 
    >>> import qcfractal.interface as ptl
+
    # Note that server TLS verification is turned off (verify=False) since all components are run locally.
    >>> client = ptl.FractalClient(address="localhost:7777", verify=False)
    >>> mol = ptl.Molecule(symbols=["H", "H"], geometry=[0, 0, 0, 0, 5, 0])
    >>> mol_id = client.add_molecules([mol])[0]
    >>> r = client.add_compute("psi4", "HF", "STO-3G", "energy", None, [mol_id])
+
    # Wait a minute for the job to complete
    >>> proc = client.query_procedures(id=r.ids)[0]
    >>> print(proc)
@@ -147,7 +149,7 @@ Finally, start the :term:`Manager` in the background on the cluster head node::
 
 Note that TLS certificate verification is disabled (``--verify=False``) because the :term:`Manager` and :term:`Server` are both run on the head node.
 
-Test if the everything is setup by running a Hartee-Fock calculation a single hydrogen molecule, 
+Test if everything is setup by running a Hartree-Fock calculation a single hydrogen molecule,
 as in the :doc:`quickstart` (note this requires ``psi4``):
 
 .. code-block:: python
@@ -155,11 +157,13 @@ as in the :doc:`quickstart` (note this requires ``psi4``):
    python
 
    >>> import qcfractal.interface as ptl
+
    # Note that server TLS verification is turned off (verify=False) since all components are run locally.
    >>> client = ptl.FractalClient(address="localhost:7777", verify=False)
    >>> mol = ptl.Molecule(symbols=["H", "H"], geometry=[0, 0, 0, 0, 5, 0])
    >>> mol_id = client.add_molecules([mol])[0]
    >>> r = client.add_compute("psi4", "HF", "STO-3G", "energy", None, [mol_id])
+
    # Wait a minute for the job to complete
    >>> proc = client.query_procedures(id=r.ids)[0]
    >>> print(proc)
@@ -174,18 +178,18 @@ Shared Clusters, Supercomputers, and Multiple Clusters
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 This quickstart guide addresses QCFractal setup on one or more shared cluster(s). 
-The :term:`Server` should be set up on a persistant server for which you have permission to expose ports. 
+The :term:`Server` should be set up on a persistent server for which you have permission to expose ports. 
 For example, this may be a dedicated webserver, the head node of a private cluster, or a cloud instance.
 The :term:`Manager` should be set up on each shared cluster. 
 In most cases, the :term:`Manager` may be run on the head node; 
 contact your system administrator if you are unsure.
 This guide requires `Parsl <https://parsl.readthedocs.io/en/stable/quickstart.html>`_ to be installed for the :term:`Manager`. It may be installed with ``pip``.
 
-Begin by initializing the :term:`Server` on your persistant server::
+Begin by initializing the :term:`Server` on your persistent server::
 
     qcfractal-server init 
 
-The QCFractal server recieves connections from :term:`Managers <Manager>` and clients on TCP port 7777. 
+The QCFractal server receives connections from :term:`Managers <Manager>` and clients on TCP port 7777. 
 You may optionally specify the ``--port`` option to choose a custom port. 
 You may need to configure your firewall to allow access to this port.
 
@@ -201,7 +205,7 @@ Start the :term:`Server`::
 
    nohup qcfractal-server start &
 
-You may optionally provide a TLS cerficiate to enable host verification for the :term:`Server` 
+You may optionally provide a TLS certificate to enable host verification for the :term:`Server` 
 using the ``--tls-cert`` and ``--tls-key`` options. 
 If a TLS certificate is not provided, communications with the server will still be encrypted, 
 but host verification will be unavailable 
@@ -257,7 +261,7 @@ Finally, start the :term:`Manager` in the background on each cluster head node::
 
 If you did not specify a TLS certificate in the ``qcfractal-server start`` step, you will additionally need to specify ``--verify False`` in the above command.
 
-Test if the everything is setup by running a Hartee-Fock calculation a single hydrogen molecule, 
+Test if everything is setup by running a Hartree-Fock calculation a single hydrogen molecule,
 as in the :doc:`quickstart` 
 (note this requires ``psi4`` to be installed on at least one compute resource). 
 This test may be run from any machine.
@@ -267,12 +271,14 @@ This test may be run from any machine.
    python
 
    >>> import qcfractal.interface as ptl
+
    # Note that server TLS verification may need to be turned off if (verify=False).
    # Note that the Server URL and the password for user will need to be filled in.
    >>> client = ptl.FractalClient(address="URL:Port", username="user", password="***")
    >>> mol = ptl.Molecule(symbols=["H", "H"], geometry=[0, 0, 0, 0, 5, 0])
    >>> mol_id = client.add_molecules([mol])[0]
    >>> r = client.add_compute("psi4", "HF", "STO-3G", "energy", None, [mol_id])
+
    # Wait a minute for the job to complete
    >>> proc = client.query_procedures(id=r.ids)[0]
    >>> print(proc)
