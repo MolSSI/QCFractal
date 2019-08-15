@@ -1,4 +1,5 @@
 import atexit
+import os
 import shutil
 import subprocess
 import tempfile
@@ -62,7 +63,7 @@ Could not find 'pg_ctl' in the current path. Please install PostgreSQL with 'con
 Alternatively, you can install a system PostgreSQL manually, please see the following link: https://www.postgresql.org/download/
 """
 
-        if shutil.which("pg_ctl") is None:
+        if (shutil.which("pg_ctl") is None and shutil.which("pg_ctlcluster") is None):
             raise ValueError(msg)
         else:
             self._checked = True
@@ -155,8 +156,17 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         """
         self._check_psql()
 
+        names = ["pg_ctl", "pg_ctlcluster"]
+        for name in names:
+            psql_cmd = shutil.which(name)
+            if psql_cmd is not None and name == "pg_ctlcluster":
+                PATH = "/usr/lib/postgresql/"
+                version = os.listdir(PATH)[0]
+                psql_cmd = "{}{}/bin/pg_ctl".format(PATH, version)
+                break
+
         self.logger(f"pg_ctl command: {cmds}")
-        psql_cmd = [shutil.which("pg_ctl"), "-D", str(self.config.database_path)]
+        psql_cmd = [psql_cmd, "-D", str(self.config.database_path)]
         return self._run(psql_cmd + cmds)
 
     def create_database(self, database_name: str) -> bool:
