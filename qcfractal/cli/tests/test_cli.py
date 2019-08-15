@@ -7,6 +7,8 @@ import tempfile
 
 import pytest
 
+import qcfractal
+
 from qcfractal import testing
 from qcfractal.cli.cli_utils import read_config_file
 import yaml
@@ -17,14 +19,15 @@ _pwd = os.path.dirname(os.path.abspath(__file__))
 
 
 @pytest.fixture(scope="module")
-def qcfractal_base_init(postgres_server):
+def qcfractal_base_init():
 
+    storage = qcfractal.TemporaryPostgres()
     tmpdir = tempfile.TemporaryDirectory()
 
     args = [
         "qcfractal-server", "init", "--base-folder",
         str(tmpdir.name), "--db-own=False", "--clear-database",
-        f"--db-port={postgres_server.config.database.port}"
+        f"--db-port={storage.config.database.port}"
     ]
     assert testing.run_process(args, **_options)
 
@@ -65,10 +68,10 @@ def test_cli_user_show(qcfractal_base_init):
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_show", "--permissions", "admin"]
     assert testing.run_process(args, **_options)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "show", "test_user_show"]
+    args = ["qcfractal-server", "user", qcfractal_base_init, "info", "test_user_show"]
     assert testing.run_process(args, **_options)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "show", "badname_1234"]
+    args = ["qcfractal-server", "user", qcfractal_base_init, "info", "badname_1234"]
     assert testing.run_process(args, **_options) is False
 
 
