@@ -131,7 +131,7 @@ class SingleResultTasks(BaseTasks):
             task = TaskRecord(**{
                 "spec": {
                     "function": "qcengine.compute",  # todo: add defaults in models
-                    "args": [inp.json_dict(), data.meta.program],  # todo: json_dict should come from results
+                    "args": [inp.dict(), data.meta.program],
                     "kwargs": {}  # todo: add defaults in models
                 },
                 "parser": "single",
@@ -164,7 +164,7 @@ class SingleResultTasks(BaseTasks):
             rdata["stderr"] = stderr
             rdata["error"] = error
 
-            result.consume_output(rdata)
+            result._consume_output(rdata)
             updates.append(result)
             completed_tasks.append(data["task_id"])
 
@@ -292,7 +292,7 @@ class OptimizationTasks(BaseTasks):
             task = TaskRecord(**{
                 "spec": {
                     "function": "qcengine.compute_procedure",
-                    "args": [inp.json_dict(), data.meta.program],
+                    "args": [inp.dict(), data.meta.program],
                     "kwargs": {}
                 },
                 "parser": "optimization",

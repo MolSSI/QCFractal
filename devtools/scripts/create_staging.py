@@ -5,7 +5,7 @@ development DB.
 """
 
 from qcfractal.storage_sockets import storage_socket_factory
-from qcfractal.storage_sockets.models import (BaseResultORM, ResultORM, CollectionORM,
+from qcfractal.storage_sockets.sql_models import (BaseResultORM, ResultORM, CollectionORM,
                                               OptimizationProcedureORM, GridOptimizationProcedureORM,
                                               TorsionDriveProcedureORM, TaskQueueORM)
 from qcfractal.interface.models import (ResultRecord, OptimizationRecord,
@@ -13,9 +13,10 @@ from qcfractal.interface.models import (ResultRecord, OptimizationRecord,
 
 # production_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb"
 production_uri = "postgresql+psycopg2://postgres:@localhost:11711/qcarchivedb"
-staging_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/staging_qcarchivedb"
+staging_uri = "postgresql+psycopg2://localhost:5432/staging_qcarchivedb"
 SAMPLE_SIZE = 0.0001  # 0.1 is 10%
 MAX_LIMIT = 10000
+VERBOSE = False
 
 
 def connect_to_DBs(staging_uri, production_uri, max_limit):
@@ -34,7 +35,7 @@ def connect_to_DBs(staging_uri, production_uri, max_limit):
 def get_number_to_copy(total_size, sample_size):
     to_copy = int(total_size*sample_size)
     if to_copy:
-        return to_copy
+        return max(to_copy, 10)
     else:
         return 1  # avoid zero because zero means no limit in storage
 
@@ -48,12 +49,15 @@ def copy_molecules(staging_storage, prod_storage, prod_ids):
     print('----Total # of Molecules to copy: ', len(prod_ids))
 
     ret = prod_storage.get_molecules(id=prod_ids)
-    print('Get from prod:', ret)
+    if VERBOSE:
+        print('Get from prod:', ret)
     staging_ids = staging_storage.add_molecules(ret['data'])
-    print('Add to staging:', staging_ids)
+    if VERBOSE:
+        print('Add to staging:', staging_ids)
 
     map = {m1: m2 for m1, m2 in zip(prod_ids, staging_ids['data'])}
-    print('MAP: ', map)
+    if VERBOSE:
+        print('MAP: ', map)
 
     print('---- Done copying molecules\n\n')
 
@@ -71,12 +75,14 @@ def copy_keywords(staging_storage, prod_storage, prod_ids):
 
 
     ret = prod_storage.get_keywords(id=prod_ids)
-    print('Get from prod:', ret)
+    if VERBOSE:
+        print('Get from prod:', ret)
     staging_ids = staging_storage.add_keywords(ret['data'])
     print('Add to staging:', staging_ids)
 
     map = {m1: m2 for m1, m2 in zip(prod_ids, staging_ids['data'])}
-    print('MAP: ', map)
+    if VERBOSE:
+        print('MAP: ', map)
 
     print('---- Done copying keywords\n\n')
 
@@ -94,12 +100,15 @@ def copy_kv_store(staging_storage, prod_storage, prod_ids):
 
 
     ret = prod_storage.get_kvstore(id=prod_ids)
-    print('Get from prod:', ret)
+    if VERBOSE:
+        print('Get from prod:', ret)
     staging_ids = staging_storage.add_kvstore(ret['data'].values())
-    print('Add to staging:', staging_ids)
+    if VERBOSE:
+        print('Add to staging:', staging_ids)
 
     map = {m1: m2 for m1, m2 in zip(prod_ids, staging_ids['data'])}
-    print('MAP: ', map)
+    if VERBOSE:
+        print('MAP: ', map)
 
     print('---- Done copying KV_store \n\n')
 
@@ -113,7 +122,8 @@ def copy_users(staging_storage, prod_storage):
     print('-----Total # of Users in the DB is: ', len(prod_users))
 
     sql_insered = staging_storage._copy_users(prod_users)['data']
-    print('Inserted in SQL:', len(sql_insered))
+    if VERBOSE:
+        print('Inserted in SQL:', len(sql_insered))
 
 
     print('---- Done copying Users\n\n')
@@ -130,7 +140,8 @@ def copy_managers(staging_storage, prod_storage, mang_list):
 
 
     sql_insered = staging_storage._copy_managers(prod_mangers)['data']
-    print('Inserted in SQL:', len(sql_insered))
+    if VERBOSE:
+        print('Inserted in SQL:', len(sql_insered))
 
     print('---- Done copying Queue Manager\n\n')
 
@@ -149,7 +160,8 @@ def copy_collections(staging_storage, production_storage, SAMPLE_SIZE=0):
     for col in prod_results:
         ret = staging_storage.add_collection(col)['data']
         sql_insered += 1
-    print('Inserted in SQL:', sql_insered)
+    if VERBOSE:
+        print('Inserted in SQL:', sql_insered)
 
     print('---- Done copying Collections\n\n')
 
@@ -204,7 +216,8 @@ def copy_results(staging_storage, production_storage, SAMPLE_SIZE=0, results_ids
 
     results_py = [ResultRecord(**res) for res in prod_results]
     staging_ids = staging_storage.add_results(results_py)['data']
-    print('Inserted in SQL:', len(staging_ids))
+    if VERBOSE:
+        print('Inserted in SQL:', len(staging_ids))
 
     print('---- Done copying Results\n\n')
 
@@ -265,7 +278,8 @@ def copy_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE
 
     procedures_py = [OptimizationRecord(**proc) for proc in prod_proc]
     staging_ids = staging_storage.add_procedures(procedures_py)['data']
-    print('Inserted in SQL:', len(staging_ids))
+    if VERBOSE:
+        print('Inserted in SQL:', len(staging_ids))
 
     print('---- Done copying Optimization procedures\n\n')
 
@@ -325,7 +339,8 @@ def copy_torsiondrive_procedure(staging_storage, production_storage, SAMPLE_SIZE
 
     procedures_py = [TorsionDriveRecord(**proc) for proc in prod_proc]
     staging_ids = staging_storage.add_procedures(procedures_py)['data']
-    print('Inserted in SQL:', len(staging_ids))
+    if VERBOSE:
+        print('Inserted in SQL:', len(staging_ids))
 
     print('---- Done copying Torsiondrive procedures\n\n')
 
@@ -450,7 +465,8 @@ def copy_task_queue(staging_storage, production_storage, SAMPLE_SIZE=None):
             raise Exception('Result not found!', rec.base_result.id)
 
     staging_ids = staging_storage._copy_task_to_queue(prod_tasks)['data']
-    print('Inserted in SQL:', len(staging_ids))
+    if VERBOSE:
+        print('Inserted in SQL:', len(staging_ids))
 
     print('---- Done copying Task Queue\n\n')
 
@@ -488,6 +504,11 @@ def main():
         print('Exit without creating the DB.')
         return
 
+    # Copy metadata
+    #with production_storage.session_scope() as session:
+    #    alembic = session.execute("select * from alembic_version") 
+    #    version = alembic.first()[0]
+
     # copy all users, small tables, no need for sampling
     copy_users(staging_storage, production_storage)
 
@@ -512,6 +533,7 @@ def main():
 
     print('\n---------------- Alembic -----------------------')
     copy_alembic(staging_storage, production_storage)
+
 
 
 if __name__ == "__main__":

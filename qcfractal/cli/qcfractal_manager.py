@@ -527,6 +527,7 @@ def parse_args():
         description='A CLI for a QCFractal QueueManager with a ProcessPoolExecutor, Dask, or Parsl backend. '
         'The Dask and Parsl backends *requires* a config file due to the complexity of its setup. If a config '
         'file is specified, the remaining options serve as CLI overwrites of the config.')
+    parser.add_argument('--version', action='version', version=f"{qcfractal.__version__}")
 
     parser.add_argument("--config-file", type=str, default=None)
 

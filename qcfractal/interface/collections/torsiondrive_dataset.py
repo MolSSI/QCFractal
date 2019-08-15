@@ -4,16 +4,15 @@ QCPortal Database ODM
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
-from pydantic import BaseModel
 
-from ..models import Molecule, ObjectId, OptimizationSpecification, QCSpecification, TorsionDriveInput
+from ..models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification, TorsionDriveInput
 from ..models.torsiondrive import TDKeywords
 from ..visualization import custom_plot
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
 
-class TDEntry(BaseModel):
+class TDEntry(ProtoModel):
     """Data model for the `reactions` list in Dataset"""
     name: str
     initial_molecules: Set[ObjectId]
@@ -22,7 +21,7 @@ class TDEntry(BaseModel):
     object_map: Dict[str, ObjectId] = {}
 
 
-class TDEntrySpecification(BaseModel):
+class TDEntrySpecification(ProtoModel):
     name: str
     description: Optional[str]
     optimization_spec: OptimizationSpecification

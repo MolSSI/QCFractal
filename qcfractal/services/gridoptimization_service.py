@@ -9,7 +9,7 @@ import numpy as np
 
 from .service_util import BaseService, expand_ndimensional_grid
 from ..extras import get_information
-from ..interface.models import GridOptimizationRecord, Molecule, json_encoders
+from ..interface.models import GridOptimizationRecord, Molecule
 
 __all__ = ["GridOptimizationService"]
 
@@ -20,6 +20,9 @@ class GridOptimizationService(BaseService):
     service: str = "gridoptimization"
     program: str = "qcfractal"
     procedure: str = "gridoptimization"
+
+    # Program info
+    optimization_program: str
 
     # Output
     output: GridOptimizationRecord
@@ -41,9 +44,6 @@ class GridOptimizationService(BaseService):
     optimization_template: str
     # keyword_template: KeywordSet
     starting_molecule: Molecule
-
-    class Config:
-        json_encoders = json_encoders
 
     @classmethod
     def initialize_from_api(cls, storage_socket, logger, service_input, tag=None, priority=None):
