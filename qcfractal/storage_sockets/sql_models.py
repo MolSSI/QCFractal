@@ -588,7 +588,8 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
 
         except Exception as err:
             # raises exception of first access!!
-            print(err)
+            pass
+            #print(err)
 
         return ret
 
@@ -696,7 +697,8 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
 
         except Exception as err:
             # raises exception of first access!!
-            print(err)
+            pass
+            #print(err)
 
         return ret
 
