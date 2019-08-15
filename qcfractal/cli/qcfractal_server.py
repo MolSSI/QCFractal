@@ -28,6 +28,8 @@ def ensure_postgres_alive(psql):
 
 def parse_args():
     parser = argparse.ArgumentParser(description='A CLI for the QCFractalServer.')
+    parser.add_argument('--version', action='version', version=f"{qcfractal.__version__}")
+
     subparsers = parser.add_subparsers(dest="command")
 
     ### Init subcommands
