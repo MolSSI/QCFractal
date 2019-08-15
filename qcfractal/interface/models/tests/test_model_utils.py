@@ -1,7 +1,8 @@
-import pytest
 import numpy as np
+import pytest
 
-from ..model_utils import recursive_normalizer, hash_dictionary
+from ..model_utils import hash_dictionary, recursive_normalizer
+
 
 @pytest.mark.parametrize("unormalized, normalized", [
     (5.0 + 1.e-12, 5.0),

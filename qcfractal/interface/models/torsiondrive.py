@@ -7,18 +7,18 @@ import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from pydantic import BaseModel, constr, validator, Schema
+from pydantic import constr, validator, Schema
 from qcelemental import constants
 
-from .common_models import Molecule, ObjectId, OptimizationSpecification, QCSpecification
-from .model_utils import json_encoders, recursive_normalizer
-from .records import RecordBase
 from ..visualization import scatter_plot
+from .common_models import Molecule, ObjectId, OptimizationSpecification, QCSpecification, ProtoModel
+from .model_utils import recursive_normalizer
+from .records import RecordBase
 
 __all__ = ["TorsionDriveInput", "TorsionDriveRecord"]
 
 
-class TDKeywords(BaseModel):
+class TDKeywords(ProtoModel):
     """
     TorsionDriveRecord options
     """
@@ -52,16 +52,12 @@ class TDKeywords(BaseModel):
     def __init__(self, **kwargs):
         super().__init__(**recursive_normalizer(kwargs))
 
-    class Config:
-        extra = "allow"
-        allow_mutation = False
-
 
 _td_constr = constr(strip_whitespace=True, regex="torsiondrive")
 _qcfractal_constr = constr(strip_whitespace=True, regex="qcfractal")
 
 
-class TorsionDriveInput(BaseModel):
+class TorsionDriveInput(ProtoModel):
     """
     A TorsionDriveRecord Input base class
     """
@@ -99,11 +95,6 @@ class TorsionDriveInput(BaseModel):
         if isinstance(v, (str, dict, Molecule)):
             v = [v]
         return v
-
-    class Config:
-        extras = "forbid"
-        allow_mutation = False
-        json_encoders = json_encoders
 
 
 class TorsionDriveRecord(RecordBase):
@@ -185,7 +176,7 @@ class TorsionDriveRecord(RecordBase):
         return tuple(json.loads(key))
 
     def _organize_return(self, data: Dict[str, Any], key: Union[int, str, None],
-                         minimum: bool=False) -> Dict[str, Any]:
+                         minimum: bool = False) -> Dict[str, Any]:
 
         if key is None:
             return {self._deserialize_key(k): copy.deepcopy(v) for k, v in data.items()}
@@ -198,9 +189,11 @@ class TorsionDriveRecord(RecordBase):
         else:
             return copy.deepcopy(data[key])
 
+
 ## Query
 
-    def get_history(self, key: Union[int, Tuple[int, ...], str] = None, minimum: bool = False) -> Dict[str, List['ResultRecord']]:
+    def get_history(self, key: Union[int, Tuple[int, ...], str] = None,
+                    minimum: bool = False) -> Dict[str, List['ResultRecord']]:
         """Queries the server for all optimization trajectories.
 
         Parameters

@@ -4,17 +4,17 @@ A model for Compute Records
 
 import abc
 import datetime
-import json
-import numpy as np
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Union
 
-import qcelemental as qcel
-from pydantic import BaseModel, constr, validator, Schema
+import numpy as np
+from pydantic import Schema, constr, validator
 
-from .common_models import DriverEnum, ObjectId, QCSpecification
-from .model_utils import hash_dictionary, json_encoders, prepare_basis, recursive_normalizer
+import qcelemental as qcel
+
 from ..visualization import scatter_plot
+from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification
+from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
 __all__ = ["OptimizationRecord", "ResultRecord", "OptimizationRecord", "RecordBase"]
 
@@ -29,7 +29,7 @@ class RecordStatusEnum(str, Enum):
     error = "ERROR"
 
 
-class RecordBase(BaseModel, abc.ABC):
+class RecordBase(ProtoModel, abc.ABC):
     """
     A BaseRecord object for Result and Procedure records. Contains all basic
     fields common to the all records.
@@ -122,9 +122,7 @@ class RecordBase(BaseModel, abc.ABC):
                     "program which was involved in generating the data for this record."
     )
 
-    class Config:
-        json_encoders = json_encoders
-        extra = "forbid"
+    class Config(ProtoModel.Config):
         build_hash_index = True
 
     @validator('program')
@@ -141,7 +139,7 @@ class RecordBase(BaseModel, abc.ABC):
 
         # Set hash index if not present
         if self.Config.build_hash_index and (self.hash_index is None):
-            self.hash_index = self.get_hash_index()
+            self.__values__["hash_index"] = self.get_hash_index()
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(id='{self.id}' status='{self.status}')"
@@ -173,7 +171,7 @@ class RecordBase(BaseModel, abc.ABC):
         str
             The objects unique hash index.
         """
-        data = self.json_dict(include=self.get_hash_fields())
+        data = self.dict(include=self.get_hash_fields(), encoding="json")
 
         return hash_dictionary(data)
 
@@ -181,9 +179,6 @@ class RecordBase(BaseModel, abc.ABC):
         kwargs["exclude"] = (kwargs.pop("exclude", None) or set()) | {"client", "cache"}
         # kwargs["skip_defaults"] = True
         return super().dict(*args, **kwargs)
-
-    def json_dict(self, *args, **kwargs):
-        return json.loads(self.json(*args, **kwargs))
 
 ### Checkers
 
@@ -310,7 +305,7 @@ class ResultRecord(RecordBase):
     )
 
     # Output data
-    return_result: Union[float, List[float], Dict[str, Any]] = Schema(
+    return_result: Union[float, qcel.models.types.Array[float], Dict[str, Any]] = Schema(
         None,
         description="The primary result of the calculation, output is a function of the specified ``driver``."
     )
@@ -365,21 +360,22 @@ class ResultRecord(RecordBase):
                                         extras=self.extras)
         return model
 
-    def consume_output(self, data: Dict[str, Any], checks: bool = True):
+    def _consume_output(self, data: Dict[str, Any], checks: bool = True):
         assert self.method == data["model"]["method"]
+        values = self.__dict__
 
         # Result specific
-        self.extras = data["extras"]
-        self.extras.pop("_qcfractal_tags", None)
-        self.return_result = data["return_result"]
-        self.properties = data["properties"]
+        values["extras"] = data["extras"]
+        values["extras"].pop("_qcfractal_tags", None)
+        values["return_result"] = data["return_result"]
+        values["properties"] = data["properties"]
 
         # Standard blocks
-        self.provenance = data["provenance"]
-        self.error = data["error"]
-        self.stdout = data["stdout"]
-        self.stderr = data["stderr"]
-        self.status = "COMPLETE"
+        values["provenance"] = data["provenance"]
+        values["error"] = data["error"]
+        values["stdout"] = data["stdout"]
+        values["stderr"] = data["stderr"]
+        values["status"] = "COMPLETE"
 
 ## QCSchema constructors
 

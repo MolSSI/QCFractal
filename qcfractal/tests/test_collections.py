@@ -186,7 +186,7 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
         "units": "hartree"
     }
     ds.add_contributed_values(contrib)
-    ds.data.default_benchmark = "Benchmark"
+    ds.set_default_benchmark("Benchmark")
 
     # Save the DB and overwrite the result, reacquire via client
     r = ds.save()
@@ -260,125 +260,6 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     # Check keywords
     kw = ds.get_keywords("df", "psi4")
     assert kw.values["scf_type"] == "df"
-
-
-@mark_slow
-@testing.using_torsiondrive
-@testing.using_geometric
-@testing.using_rdkit
-def test_compute_openffworkflow(fractal_compute_server):
-    """
-    Tests the openffworkflow collection
-    """
-
-    # Obtain a client and build a BioFragment
-    client = ptl.FractalClient(fractal_compute_server)
-
-    openff_workflow_options = {
-        # Blank Fragmenter options
-        "enumerate_states": {},
-        "enumerate_fragments": {},
-        "torsiondrive_input": {},
-
-        # TorsionDriveRecord, Geometric, and QC options
-        "torsiondrive_static_options": {
-            "keywords": {},
-            "optimization_spec": {
-                "program": "geometric",
-                "keywords": {
-                    "coordsys": "tric",
-                }
-            },
-            "qc_spec": {
-                "driver": "gradient",
-                "method": "UFF",
-                "basis": "",
-                "keywords": None,
-                "program": "rdkit",
-            }
-        },
-        "optimization_static_options": {
-            "program": "geometric",
-            "keywords": {
-                "coordsys": "tric",
-            },
-            "qc_spec": {
-                "driver": "gradient",
-                "method": "UFF",
-                "basis": "",
-                "keywords": None,
-                "program": "rdkit",
-            }
-        }
-    }
-    wf = ptl.collections.OpenFFWorkflow("Workflow1", client=client, **openff_workflow_options)
-
-    # # Add a fragment and wait for the compute
-    hooh = ptl.data.get_molecule("hooh.json")
-    fragment_input = {
-        "label1": {
-            "type": "torsiondrive_input",
-            "initial_molecule": hooh.json_dict(),
-            "grid_spacing": [90],
-            "dihedrals": [[0, 1, 2, 3]],
-        },
-    }
-    wf.add_fragment("HOOH", fragment_input)
-    assert set(wf.list_fragments()) == {"HOOH"}
-    fractal_compute_server.await_services(max_iter=5)
-
-    final_energies = wf.list_final_energies()
-    assert final_energies.keys() == {"HOOH"}
-    assert final_energies["HOOH"].keys() == {"label1"}
-
-    final_molecules = wf.list_final_molecules()
-    assert final_molecules.keys() == {"HOOH"}
-    assert final_molecules["HOOH"].keys() == {"label1"}
-
-    optimization_input = {
-        "label2": {
-            "type": "optimization_input",
-            "initial_molecule": hooh.json_dict(),
-            "constraints": {
-                'set': [{
-                    "type": 'dihedral',
-                    "indices": [0, 1, 2, 3],
-                    "value": 0
-                }]
-            }
-        }
-    }
-
-    wf.add_fragment("HOOH", optimization_input)
-    fractal_compute_server.await_services(max_iter=5)
-
-    final_energies = wf.list_final_energies()
-    assert final_energies["HOOH"].keys() == {"label1", "label2"}
-    assert pytest.approx(0.00259754, 1.e-4) == final_energies["HOOH"]["label2"]
-
-    final_molecules = wf.list_final_molecules()
-    assert final_molecules.keys() == {"HOOH"}
-    assert final_molecules["HOOH"].keys() == {"label1", "label2"}
-
-    # Add a second fragment
-    butane = ptl.data.get_molecule("butane.json")
-    butane_id = butane.identifiers.canonical_isomeric_explicit_hydrogen_mapped_smiles
-
-    fragment_input = {
-        "label1": {
-            "type": "torsiondrive_input",
-            "initial_molecule": butane.json_dict(),
-            "grid_spacing": [90],
-            "dihedrals": [[0, 2, 3, 1]],
-        },
-    }
-    wf.add_fragment(butane_id, fragment_input)
-    assert set(wf.list_fragments()) == {butane_id, "HOOH"}
-
-    final_energies = wf.list_final_energies()
-    assert final_energies.keys() == {butane_id, "HOOH"}
-    assert final_energies[butane_id].keys() == {"label1"}
-    assert final_energies[butane_id]["label1"] == {}
 
 
 def test_generic_collection(fractal_compute_server):

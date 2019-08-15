@@ -3,6 +3,7 @@ Tests the DQM Server class
 """
 
 import os
+import json
 import threading
 
 import pytest
@@ -29,8 +30,9 @@ def test_molecule_socket(test_server):
     mol_api_addr = test_server.get_address("molecule")
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
 
+    water_json = json.loads(water.json())
     # Add a molecule
-    r = requests.post(mol_api_addr, json={"meta": {}, "data": [water.json_dict()]})
+    r = requests.post(mol_api_addr, json={"meta": {}, "data": [water_json]})
     assert r.status_code == 200
 
     pdata = r.json()

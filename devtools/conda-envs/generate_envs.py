@@ -15,6 +15,7 @@ channels:
 dependencies:
   - python
   - numpy
+  - msgpack-python>=0.6.1
   - pandas
   - tornado
   - requests
@@ -27,13 +28,14 @@ dependencies:
   - psycopg2>=2.7
   - postgresql
   - alembic
+  - tqdm
 
 # Test depends
   - pytest
   - pytest-cov
   - codecov
 """
-qca_ecosystem_template = ["qcengine>=0.8.2", "qcelemental>=0.5.0"]
+qca_ecosystem_template = ["qcengine>=0.9.0", "qcelemental>=0.6.0"]
 
 pip_depends_template = []
 

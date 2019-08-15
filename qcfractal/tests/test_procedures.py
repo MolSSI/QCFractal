@@ -4,6 +4,7 @@ Tests the server compute capabilities.
 
 import pytest
 import requests
+import numpy as np
 
 import qcfractal.interface as ptl
 from qcfractal import testing
@@ -36,7 +37,7 @@ def test_compute_queue_stack(fractal_compute_server):
             "keywords": kw_id,
             "program": "psi4",
         },
-        "data": [hydrogen_mol_id, helium.json_dict()],
+        "data": [hydrogen_mol_id, helium],
     }
 
     # Ask the server to compute a new computation
@@ -119,7 +120,7 @@ def test_procedure_optimization(fractal_compute_server):
         traj = opt_result.get_trajectory()
         assert len(traj) == len(opt_result.energies)
 
-        assert opt_result.get_final_molecule().symbols == ["H", "H"]
+        assert np.array_equal(opt_result.get_final_molecule().symbols, ["H", "H"])
 
         # Check individual elements
         for ind in range(len(opt_result.trajectory)):

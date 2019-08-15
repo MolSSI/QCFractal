@@ -87,7 +87,7 @@ def water_ds():
     ds.add_ie_rxn("Water dimer", dimer.to_string("psi4"))
 
     # Add unverified records (requires a active server)
-    ds.data.records = ds._new_records
+    ds.data.__dict__["records"] = ds._new_records
 
     return ds
 
@@ -189,7 +189,7 @@ def nbody_ds():
     }
 
     # Add unverified records (requires a active server)
-    ds.data.records = ds._new_records
+    ds.data.__dict__["records"] = ds._new_records
 
     return ds
 

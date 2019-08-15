@@ -7,6 +7,8 @@ import tempfile
 
 import pytest
 
+import qcfractal
+
 from qcfractal import testing
 from qcfractal.cli.cli_utils import read_config_file
 import yaml
@@ -17,14 +19,15 @@ _pwd = os.path.dirname(os.path.abspath(__file__))
 
 
 @pytest.fixture(scope="module")
-def qcfractal_base_init(postgres_server):
+def qcfractal_base_init():
 
+    storage = qcfractal.TemporaryPostgres()
     tmpdir = tempfile.TemporaryDirectory()
 
     args = [
         "qcfractal-server", "init", "--base-folder",
         str(tmpdir.name), "--db-own=False", "--clear-database",
-        f"--db-port={postgres_server.config.database.port}"
+        f"--db-port={storage.config.database.port}"
     ]
     assert testing.run_process(args, **_options)
 
@@ -65,10 +68,10 @@ def test_cli_user_show(qcfractal_base_init):
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_show", "--permissions", "admin"]
     assert testing.run_process(args, **_options)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "show", "test_user_show"]
+    args = ["qcfractal-server", "user", qcfractal_base_init, "info", "test_user_show"]
     assert testing.run_process(args, **_options)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "show", "badname_1234"]
+    args = ["qcfractal-server", "user", qcfractal_base_init, "info", "badname_1234"]
     assert testing.run_process(args, **_options) is False
 
 
@@ -177,6 +180,7 @@ def test_manager_executor_manager_boot_from_file(active_server, tmp_path):
     assert testing.run_process(args, interupt_after=7, **_options)
 
 
+@testing.mark_slow
 def cli_manager_runs(config_data, tmp_path):
     temp_config = tmp_path / "temp_config.yaml"
     temp_config.write_text(yaml.dump(config_data))
@@ -184,6 +188,7 @@ def cli_manager_runs(config_data, tmp_path):
     assert testing.run_process(args, **_options)
 
 
+@testing.mark_slow
 def load_manager_config(adapter, scheduler):
     config = read_config_file(os.path.join(_pwd, "manager_boot_template.yaml"))
     config["common"]["adapter"] = adapter
@@ -247,18 +252,21 @@ def test_cli_managers_none(adapter, tmp_path):
     cli_manager_runs(config, tmp_path)
 
 
+@testing.mark_slow
 def test_cli_managers_help():
     """Test that qcfractal_manager --help works"""
     args = ["qcfractal-manager", "--help"]
     testing.run_process(args, **_options)
 
 
+@testing.mark_slow
 def test_cli_managers_schema():
     """Test that qcfractal_manager --schema works"""
     args = ["qcfractal-manager", "--schema"]
     testing.run_process(args, **_options)
 
 
+@testing.mark_slow
 def test_cli_managers_skel(tmp_path):
     """Test that qcfractal_manager --skeleton works"""
     config = tmp_path / "config.yaml"

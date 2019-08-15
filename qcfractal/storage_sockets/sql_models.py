@@ -2,6 +2,8 @@ import datetime
 # from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (Column, Integer, String, DateTime, Boolean, ForeignKey, JSON, Enum, Float, Binary, Table,
                         inspect, Index, UniqueConstraint)
+from sqlalchemy.dialects.postgresql import BYTEA
+from sqlalchemy.types import TypeDecorator
 from sqlalchemy.orm import relationship, object_session, column_property
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
@@ -12,8 +14,20 @@ from sqlalchemy.ext.orderinglist import ordering_list
 # from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.dialects.postgresql import aggregate_order_by
 
+from qcelemental.util import msgpackext_dumps, msgpackext_loads
+
 # Base = declarative_base()
 
+class MsgpackExt(TypeDecorator):
+    '''Converts JSON-like data to msgpack with full NumPy Array support.'''
+
+    impl = BYTEA
+
+    def process_bind_param(self, value, dialect):
+        return msgpackext_dumps(value)
+
+    def process_result_value(self, value, dialect):
+        return msgpackext_loads(value)
 
 @as_declarative()
 class Base:
@@ -213,8 +227,8 @@ class MoleculeORM(Base):
     # Required data
     schema_name = Column(String)
     schema_version = Column(Integer, default=2)
-    symbols = Column(JSON)  # Column(ARRAY(String))
-    geometry = Column(JSON)  # Column(ARRAY(Float))
+    symbols = Column(MsgpackExt)
+    geometry = Column(MsgpackExt)
 
     # Molecule data
     name = Column(String, default="")
@@ -224,15 +238,15 @@ class MoleculeORM(Base):
     molecular_multiplicity = Column(Integer, default=1)
 
     # Atom data
-    masses = Column(JSON)  # Column(ARRAY(Float))
-    real = Column(JSON)  # Column(ARRAY(Boolean))
-    atom_labels = Column(JSON)  # Column(ARRAY(String))
-    atomic_numbers = Column(JSON)  # Column(ARRAY(Integer))
-    mass_numbers = Column(JSON)  # Column(ARRAY(Integer))
+    masses = Column(MsgpackExt)
+    real = Column(MsgpackExt)
+    atom_labels = Column(MsgpackExt)
+    atomic_numbers = Column(MsgpackExt)
+    mass_numbers = Column(MsgpackExt)
 
     # Fragment and connection data
     connectivity = Column(JSON)
-    fragments = Column(JSON)
+    fragments = Column(MsgpackExt)
     fragment_charges = Column(JSON)  # Column(ARRAY(Float))
     fragment_multiplicities = Column(JSON)  # Column(ARRAY(Integer))
 
@@ -308,7 +322,7 @@ class BaseResultORM(Base):
     id = Column(Integer, primary_key=True)
      # ondelete="SET NULL": when manger is deleted, set this field to None
     manager_name = Column(String, ForeignKey('queue_manager.name', ondelete="SET NULL"),
-                        nullable=True,)
+                        nullable=True)
 
     hash_index = Column(String)  # TODO
     procedure = Column(String(100))  # TODO: may remove
@@ -316,7 +330,7 @@ class BaseResultORM(Base):
     version = Column(Integer)
 
     # Extra fields
-    extras = Column(JSON)
+    extras = Column(MsgpackExt)
     stdout = Column(Integer, ForeignKey('kv_store.id'))
     stdout_obj = relationship(KVStoreORM,
                               lazy='noload',
@@ -381,7 +395,7 @@ class ResultORM(BaseResultORM):
     keywords_obj = relationship(KeywordsORM, lazy='select')
 
     # output related
-    return_result = Column(JSON)  # one of 3 types
+    return_result = Column(MsgpackExt)
     properties = Column(JSON)  # TODO: may use JSONB in the future
 
     # TODO: Do they still exist?
@@ -735,7 +749,7 @@ class TaskQueueORM(Base):
 
     id = Column(Integer, primary_key=True)
 
-    spec = Column(JSON)
+    spec = Column(MsgpackExt)
 
     # others
     tag = Column(String, default=None)
@@ -802,7 +816,7 @@ class ServiceQueueORM(Base):
     created_on = Column(DateTime, default=datetime.datetime.utcnow)
     modified_on = Column(DateTime, default=datetime.datetime.utcnow)
 
-    extra = Column(JSON)
+    extra = Column(MsgpackExt)
 
     __table_args__ = (
         Index('ix_service_queue_status', "status"),

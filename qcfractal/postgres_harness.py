@@ -206,15 +206,10 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         The database data won't be deleted.
         """
 
-        cmd = [shutil.which('alembic'),
-               '-c', self._alembic_ini,
-               '-x', 'uri='+self.config.database_uri(),
-               'upgrade', 'head']
-
-        ret = self._run(cmd)
+        ret = self._run(self.alembic_commands() + ['upgrade', 'head'])
 
         if ret['retcode'] != 0:
-            self.logger(ret)
+            self.logger(ret["stderr"])
             raise ValueError(f"\nFailed to Upgrade the database, make sure to init the database first before being able to upgrade it.\n")
 
         return True
@@ -284,7 +279,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         ret = self.pg_ctl(["stop"])
         return ret
 
-    def initialize_postgres(self):
+    def initialize_postgres(self) -> None:
         """Initializes and starts the current postgres instance.
         """
 
@@ -321,7 +316,12 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
 
         self.logger("\nDatabase server successfully started!")
 
-    def init_database(self):
+    def alembic_commands(self) -> List[str]:
+         return [shutil.which('alembic'),
+                         '-c', self._alembic_ini,
+                         '-x', 'uri='+self.config.database_uri()]
+
+    def init_database(self) -> None:
 
         # TODO: drop tables
 
@@ -331,10 +331,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         # update alembic_version table with the current version
         self.logger(f'\nStamping Database with current version..')
 
-        ret = self._run([shutil.which('alembic'),
-                         '-c', self._alembic_ini,
-                         '-x', 'uri='+self.config.database_uri(),
-                         'stamp', 'head'])
+        ret = self._run(self.alembic_commands() + ['stamp', 'head'])
 
         if ret['retcode'] != 0:
             self.logger(ret)

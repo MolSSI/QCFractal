@@ -5,24 +5,23 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel
 from qcelemental import constants
 
 from .collection import Collection
 from .collection_utils import composition_planner, register_collection
-from ..models import ComputeResponse, Molecule, ObjectId
+from ..models import ComputeResponse, Molecule, ObjectId, ProtoModel
 from ..statistics import wrap_statistics
 from ..visualization import bar_plot, violin_plot
 
 
-class MoleculeRecord(BaseModel):
+class MoleculeRecord(ProtoModel):
     name: str
     molecule_id: ObjectId
     comment: Optional[str] = None
     local_results: Dict[str, Any] = {}
 
 
-class ContributedValues(BaseModel):
+class ContributedValues(ProtoModel):
     name: str
     doi: Optional[str] = None
     theory_level: Union[str, Dict[str, str]]
@@ -649,7 +648,21 @@ class Dataset(Collection):
             The program to default to.
         """
 
-        self.data.default_program = program.lower()
+        self.data.__dict__["default_program"] = program.lower()
+        return True
+
+    def set_default_benchmark(self, benchmark: str) -> bool:
+        """
+        Sets the default benchmark value.
+
+        Parameters
+        ----------
+        benchmark : str
+            The benchmark to default to.
+        """
+
+        self.data.__dict__["default_benchmark"] = benchmark
+        return True
 
     def add_keywords(self, alias: str, program: str, keyword: 'KeywordSet', default: bool=False) -> bool:
         """
@@ -784,7 +797,11 @@ class Dataset(Collection):
         if isinstance(next(iter(data.values.values())), (int, float)):
             values = data.values
         else:
-            values = {k: [v] for k, v in data.values.items()}
+            # TODO temporary patch until msgpack collections
+            if self.data.default_driver == "gradient":
+                values = {k: [np.array(v).reshape(-1, 3)] for k, v in data.values.items()}
+            else:
+                values = {k: [np.array(v)] for k, v in data.values.items()}
 
         tmp_idx = pd.DataFrame.from_dict(values, orient="index", columns=[data.name])
 

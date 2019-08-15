@@ -80,6 +80,7 @@ class FractalClient(object):
         self.username = username
         self._verify = verify
         self._headers = {}
+        self.encoding = "msgpack-ext"
 
         # Mode toggle for network error testing, not public facing
         self._mock_network_error = False
@@ -95,7 +96,7 @@ class FractalClient(object):
 
         from . import __version__  # Import here to avoid circular import
         from . import _isportal
-        self._headers["content_type"] = 'application/json'
+        self._headers["Content-Type"] = f'application/{self.encoding}'
         self._headers["User-Agent"] = f"qcportal/{__version__}"
 
         # Try to connect and pull general data
@@ -152,6 +153,10 @@ class FractalClient(object):
   <li><b>Username: &nbsp; </b>{self.username}</li>
 </ul>
 """
+
+    def _set_encoding(self, encoding):
+        self.encoding = encoding
+        self._headers["Content-Type"] = f'application/{self.encoding}'
 
     def _request(self, method: str, service: str, *, data: str = None, noraise: bool = False, timeout: int = None):
 
@@ -219,8 +224,9 @@ class FractalClient(object):
         except ValidationError as exc:
             raise TypeError(str(exc))
 
-        r = self._request(rest, name, data=payload.json(), timeout=timeout)
-        response = response_model.parse_raw(r.text)
+        r = self._request(rest, name, data=payload.serialize(self.encoding), timeout=timeout)
+        encoding = r.headers["Content-Type"].split("/")[1]
+        response = response_model.parse_raw(r.content, encoding=encoding)
 
         if full_return:
             return response
@@ -607,7 +613,7 @@ class FractalClient(object):
         # Add references back to the client
         if not projection:
             for result in response.data:
-                result.client = self
+                result.__dict__["client"] = self
 
         if full_return:
             return response

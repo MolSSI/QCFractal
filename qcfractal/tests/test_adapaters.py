@@ -13,11 +13,13 @@ from qcfractal.testing import adapter_client_fixture, managed_compute_server, re
 @testing.using_rdkit
 def test_adapter_single(managed_compute_server):
     client, server, manager = managed_compute_server
+
     reset_server_database(server)
+    manager.heartbeat() # Re-register with server after clear
 
     # Add compute
     hooh = ptl.data.get_molecule("hooh.json")
-    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh.json_dict()], tag="other")
+    ret = client.add_compute("rdkit", "UFF", "", "energy", None, [hooh], tag="other")
 
     # Force manager compute and get results
     manager.await_results()
@@ -47,7 +49,7 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
                 "function":
                 "qcengine.compute",
                 "args": [{
-                    "molecule": ptl.data.get_molecule("hooh.json").json_dict(),
+                    "molecule": ptl.data.get_molecule("hooh.json"),
                     "driver": "energy",
                     "model": {
                         "method": "HF",
@@ -93,10 +95,12 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
 @testing.using_rdkit
 def test_adapter_error_message(managed_compute_server):
     client, server, manager = managed_compute_server
+
     reset_server_database(server)
+    manager.heartbeat() # Re-register with server after clear
 
     # HOOH without connectivity, RDKit should fail
-    hooh = ptl.data.get_molecule("hooh.json").json_dict()
+    hooh = ptl.data.get_molecule("hooh.json").dict()
     del hooh["connectivity"]
     mol_ret = client.add_molecules([hooh])
 
@@ -124,10 +128,12 @@ def test_adapter_error_message(managed_compute_server):
 @testing.using_rdkit
 def test_adapter_raised_error(managed_compute_server):
     client, server, manager = managed_compute_server
+
     reset_server_database(server)
+    manager.heartbeat() # Re-register with server after clear
 
     # HOOH without connectivity, RDKit should fail
-    hooh = ptl.data.get_molecule("hooh.json").json_dict()
+    hooh = ptl.data.get_molecule("hooh.json")
 
     ret = client.add_compute("rdkit", "UFF", "", "hessian", None, hooh)
     queue_id = ret.submitted[0]
