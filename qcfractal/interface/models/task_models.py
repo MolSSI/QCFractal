@@ -1,15 +1,15 @@
 import datetime
-import json
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from pydantic import BaseModel, validator, Schema
+from pydantic import  validator, Schema
+
 from qcelemental.models import ComputeError
 
-from .common_models import ObjectId
+from .common_models import ObjectId, ProtoModel
 
 
-class DBRef(BaseModel):
+class DBRef(ProtoModel):
     """
     Database locator reference object. Identifies an exact record in a database.
     """
@@ -55,7 +55,7 @@ class BaseResultEnum(str, Enum):
     procedure = "procedure"
 
 
-class PythonComputeSpec(BaseModel):
+class PythonComputeSpec(ProtoModel):
     function: str = Schema(
         ...,
         description="The module and function name of a Python-callable to call. Of the form 'module.function'."
@@ -70,7 +70,7 @@ class PythonComputeSpec(BaseModel):
     )
 
 
-class TaskRecord(BaseModel):
+class TaskRecord(ProtoModel):
 
     id: ObjectId = Schema(
         None,
@@ -143,9 +143,6 @@ class TaskRecord(BaseModel):
 
         super().__init__(**data)
 
-    class Config:
-        extra = "forbid"
-
     @validator('priority', pre=True)
     def munge_priority(cls, v):
         if isinstance(v, str):
@@ -161,6 +158,3 @@ class TaskRecord(BaseModel):
     @validator('procedure')
     def check_procedure(cls, v):
         return v.lower()
-
-    def json_dict(self, *args, **kwargs):
-        return json.loads(self.json(*args, **kwargs))

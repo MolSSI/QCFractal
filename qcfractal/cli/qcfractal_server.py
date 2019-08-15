@@ -28,6 +28,8 @@ def ensure_postgres_alive(psql):
 
 def parse_args():
     parser = argparse.ArgumentParser(description='A CLI for the QCFractalServer.')
+    parser.add_argument('--version', action='version', version=f"{qcfractal.__version__}")
+
     subparsers = parser.add_subparsers(dest="command")
 
     ### Init subcommands
@@ -87,8 +89,9 @@ def parse_args():
                               help='Creates a local pool QueueManager attached to the server.')
 
     ### Config subcommands
-    config = subparsers.add_parser('config', help="Manage users and permissions on a QCFractal server instance.")
-    config.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+    info = subparsers.add_parser('info', help="Manage users and permissions on a QCFractal server instance.")
+    info.add_argument("category", nargs="?", default="config", choices=["config", "alembic"], help="The config category to show.")
+    info.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     ### User subcommands
     user = subparsers.add_parser('user', help="Configure a QCFractal server instance.")
@@ -103,7 +106,7 @@ def parse_args():
     user_add.add_argument("--permissions", nargs='+', default=None, type=str, required=True,
                           help="Permissions for the user. Allowed values: read, write, queue, compute, admin.")
 
-    user_show = user_subparsers.add_parser("show", help="Show the user's current permissions.")
+    user_show = user_subparsers.add_parser("info", help="Show the user's current permissions.")
     user_show.add_argument("username", default=None, type=str, help="The username to show.")
 
     user_modify = user_subparsers.add_parser("modify", help="Change a user's password or permissions.")
@@ -118,7 +121,6 @@ def parse_args():
 
     user_remove = user_subparsers.add_parser("remove", help="Remove a user.")
     user_remove.add_argument("username", default=None, type=str, help="The username to remove.")
-
 
     ### Move args around
     args = vars(parser.parse_args())
@@ -235,10 +237,16 @@ def server_init(args, config):
     print("\n>>> Success! Please run `qcfractal-server start` to boot a FractalServer!")
 
 
-def server_config(args, config):
+def server_info(args, config):
 
-    print(f"Displaying QCFractal configuration:\n")
-    print(yaml.dump(config.dict(), default_flow_style=False))
+    psql = PostgresHarness(config, quiet=False, logger=print)
+
+    if args["category"] == "config":
+        print(f"Displaying QCFractal configuration:\n")
+        print(yaml.dump(config.dict(), default_flow_style=False))
+    elif args["category"] == "alembic":
+        print(f"Displaying QCFractal Alembic CLI configuration:\n")
+        print(" ".join(psql.alembic_commands()))
 
 
 def server_start(args, config):
@@ -381,7 +389,7 @@ def server_user(args, config):
             else:
                 print("\n>>> Failed to add user. Perhaps the username is already taken?")
                 sys.exit(1)
-        elif args["user_command"] == "show":
+        elif args["user_command"] == "info":
             print(f"\n>>> Showing permissions for user '{args['username']}'...")
             permissions = storage.get_user_permissions(args["username"])
             if permissions is None:
@@ -452,8 +460,8 @@ def main(args=None):
 
     if command == "init":
         server_init(args, config)
-    elif command == "config":
-        server_config(args, config)
+    elif command == "info":
+        server_info(args, config)
     elif command == "start":
         server_start(args, config)
     elif command == 'upgrade':

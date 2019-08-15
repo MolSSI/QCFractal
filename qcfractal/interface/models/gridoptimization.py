@@ -6,10 +6,10 @@ import json
 from enum import Enum
 from typing import Any, Dict, List, Tuple, Union
 
-from pydantic import BaseModel, constr, validator, Schema
+from pydantic import Schema, constr, validator
 
-from .common_models import Molecule, ObjectId, OptimizationSpecification, QCSpecification
-from .model_utils import json_encoders, recursive_normalizer
+from .common_models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
+from .model_utils import recursive_normalizer
 from .records import RecordBase
 
 __all__ = ["GridOptimizationInput", "GridOptimizationRecord"]
@@ -34,7 +34,7 @@ class StepTypeEnum(str, Enum):
     relative = 'relative'
 
 
-class ScanDimension(BaseModel):
+class ScanDimension(ProtoModel):
     """
     A full description of a dimension to scan over.
     """
@@ -57,10 +57,6 @@ class ScanDimension(BaseModel):
         ...,
         description=str(StepTypeEnum.__doc__)
     )
-
-    class Config:
-        extra = "forbid"
-        allow_mutation = False
 
     @validator('type', 'step_type', pre=True)
     def check_lower_type_step_type(cls, v):
@@ -85,7 +81,7 @@ class ScanDimension(BaseModel):
         return v
 
 
-class GOKeywords(BaseModel):
+class GOKeywords(ProtoModel):
     """
     GridOptimizationRecord options.
     """
@@ -99,16 +95,13 @@ class GOKeywords(BaseModel):
                     "This is especially useful when combined with ``relative`` ``step_types``."
     )
 
-    class Config:
-        extra = "forbid"
-        allow_mutation = False
 
 
 _gridopt_constr = constr(strip_whitespace=True, regex="gridoptimization")
 _qcfractal_constr = constr(strip_whitespace=True, regex="qcfractal")
 
 
-class GridOptimizationInput(BaseModel):
+class GridOptimizationInput(ProtoModel):
     """
     The input to create a GridOptimization Service with.
 
@@ -141,10 +134,6 @@ class GridOptimizationInput(BaseModel):
         description="The specification for each of the quantum chemistry calculations run in each geometry "
                     "optimization."
     )
-
-    class Config:
-        allow_mutation = False
-        json_encoders = json_encoders
 
 
 class GridOptimizationRecord(RecordBase):
@@ -212,10 +201,7 @@ class GridOptimizationRecord(RecordBase):
         ...,
         description="Initial grid point from which the Grid Optimization started. This grid point is the closest in "
                     "structure to the ``starting_molecule``."
-    )
-
-    class Config(RecordBase.Config):
-        pass
+    ) # yapf: disable
 
 ## Utility
 

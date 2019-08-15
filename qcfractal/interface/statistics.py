@@ -19,6 +19,9 @@ def mean_signed_error(value, bench, **kwargs):
 
 
 def mean_unsigned_error(value, bench, **kwargs):
+    print()
+    print(value)
+    print(bench)
     return np.mean(np.abs(value - bench))
 
 

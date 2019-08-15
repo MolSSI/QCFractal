@@ -4,14 +4,13 @@ QCPortal Database ODM
 from typing import Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
-from pydantic import BaseModel
 
-from ..models import Molecule, ObjectId, OptimizationSpecification, QCSpecification
+from ..models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
 
-class OptEntry(BaseModel):
+class OptEntry(ProtoModel):
     """Data model for the optimizations in a Dataset"""
     name: str
     initial_molecule: ObjectId
@@ -20,7 +19,7 @@ class OptEntry(BaseModel):
     object_map: Dict[str, ObjectId] = {}
 
 
-class OptEntrySpecification(BaseModel):
+class OptEntrySpecification(ProtoModel):
     name: str
     description: Optional[str]
     optimization_spec: OptimizationSpecification

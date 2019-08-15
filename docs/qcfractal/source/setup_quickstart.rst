@@ -209,7 +209,7 @@ You may optionally provide a TLS certificate to enable host verification for the
 using the ``--tls-cert`` and ``--tls-key`` options. 
 If a TLS certificate is not provided, communications with the server will still be encrypted, 
 but host verification will be unavailable 
-(and :term:`Managers <Manager>` and clients will need to specify ``--verify False``).
+(and :term:`Managers <Manager>` and clients will need to specify ``verify=False``).
 
 Next, add users for admin, the :term:`Manager`, and a user 
 (you may choose whatever usernames you like)::

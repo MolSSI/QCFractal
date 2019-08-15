@@ -7,12 +7,11 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel
 
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
 from ..util import replace_dict_keys
-from ..models import ComputeResponse, Molecule
+from ..models import ComputeResponse, Molecule, ProtoModel
 
 
 class _ReactionTypeEnum(str, Enum):
@@ -21,12 +20,13 @@ class _ReactionTypeEnum(str, Enum):
     ie = 'ie'
 
 
-class ReactionRecord(BaseModel):
+class ReactionRecord(ProtoModel):
     """Data model for the `reactions` list in Dataset"""
     attributes: Dict[str, Union[int, float, str]]  # Might be overloaded key types
     reaction_results: Dict[str, dict]
     name: str
     stoichiometry: Dict[str, Dict[str, float]]
+    extras: Dict[str, Any] = {}
 
 
 class ReactionDataset(Dataset):
@@ -495,13 +495,13 @@ class ReactionDataset(Dataset):
                 molecule_hash = qcf_mol.get_hash()
 
                 if molecule_hash not in list(self._new_molecules):
-                    self._new_molecules[molecule_hash] = qcf_mol.json_dict()
+                    self._new_molecules[molecule_hash] = qcf_mol
 
             elif isinstance(mol, Molecule):
                 molecule_hash = mol.get_hash()
 
                 if molecule_hash not in list(self._new_molecules):
-                    self._new_molecules[molecule_hash] = mol.json_dict()
+                    self._new_molecules[molecule_hash] = mol
 
             else:
                 raise TypeError("Dataset: Parse stoichiometry: first value must either be a molecule hash, "
@@ -587,8 +587,7 @@ class ReactionDataset(Dataset):
         if not isinstance(other_fields, dict):
             raise TypeError("Dataset:add_rxn: other_fields must be a dictionary, not '{}'".format(type(attributes)))
 
-        for k, v in other_fields.items():
-            rxn_dict[k] = v
+        rxn_dict["extras"] = other_fields
 
         if "default" in list(reaction_results):
             rxn_dict["reaction_results"] = reaction_results

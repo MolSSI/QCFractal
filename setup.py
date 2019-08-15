@@ -26,11 +26,14 @@ if __name__ == "__main__":
             'bcrypt',
             'cryptography',
             'numpy>=1.7',
+            'msgpack>=0.6.1',
             'pandas',
             'pydantic>=0.30.1',
+            'msgpack>=0.6.1',
+            'pyyaml>=5.1',
             'requests',
             'tornado',
-            'pyyaml>=5.1',
+            'tqdm',
 
             # Database
             'sqlalchemy>=1.3',
@@ -38,8 +41,8 @@ if __name__ == "__main__":
             'alembic',
 
             # QCArchive depends
-            'qcengine>=0.8.2',
-            'qcelemental>=0.5.0',
+            'qcengine>=0.9.0',
+            'qcelemental>=0.6.0',
 
             # Testing
             'pytest',
