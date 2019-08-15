@@ -143,8 +143,32 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self._check_psql()
 
         self.logger(f"pqsl command: {cmd}")
-        psql_cmd = [shutil.which("psql"), "-p", str(self.config.database.port), "-c"]
+        psql_cmd = self.get_psql_cmd()
+        psql_cmd = [psql_cmd, "-p", str(self.config.database.port), "-c"]
         return self._run(psql_cmd + [cmd])
+
+    def get_psql_cmd(self, command_name):
+        """Return psql command path
+
+        Parameters
+        ----------
+        command_name : str
+            Name of the psql command.
+
+        Returns
+        -------
+        psql_cmd
+            Path to psql_cmd.
+        """
+        names = ["pg_ctl", "pg_ctlcluster"]
+        for name in names:
+            psql_cmd = shutil.which(name)
+            if psql_cmd is not None and name == "pg_ctlcluster":
+                PATH = "/usr/lib/postgresql/"
+                version = os.listdir(PATH)[0]
+                psql_cmd = "{}{}/bin/{}".format(PATH, version, command_name)
+                break
+        return psql_cmd
 
     def pg_ctl(self, cmds: List[str]) -> Any:
         """Runs pg_ctl commands and returns their output while connected to the correct postgres instance.
@@ -156,15 +180,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         """
         self._check_psql()
 
-        names = ["pg_ctl", "pg_ctlcluster"]
-        for name in names:
-            psql_cmd = shutil.which(name)
-            if psql_cmd is not None and name == "pg_ctlcluster":
-                PATH = "/usr/lib/postgresql/"
-                version = os.listdir(PATH)[0]
-                psql_cmd = "{}{}/bin/pg_ctl".format(PATH, version)
-                break
-
+        psql_cmd = self.get_psql_cmd("pg_ctl")
         self.logger(f"pg_ctl command: {cmds}")
         psql_cmd = [psql_cmd, "-D", str(self.config.database_path)]
         return self._run(psql_cmd + cmds)
@@ -277,8 +293,9 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
 
             self.logger("PostgreSQL successfully started in a background process, current_status:\n")
             if not self.quiet:
+                psql_cmd = self.get_psql_cmd("pg_ctl")
                 start_status = self._run([
-                    shutil.which("pg_ctl"),
+                    psql_cmd,
                     "-D", str(self.config.database_path),
                     "status"]) # yapf: disable
 
@@ -303,7 +320,8 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self.logger("Initializing the Postgresql database:")
 
         # Initialize the database
-        init_status = self._run([shutil.which("initdb"), "-D", self.config.database_path])
+        psql_cmd = self.get_psql_cmd("initdb")
+        init_status = self._run([psql_cmd, "-D", self.config.database_path])
         if "Success." not in init_status["stdout"]:
             raise ValueError(f"Could not initialize the PostgreSQL server. Error below:\n\n{init_status['stderr']}")
 
