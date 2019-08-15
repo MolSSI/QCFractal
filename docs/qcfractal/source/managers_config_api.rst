@@ -24,51 +24,51 @@ Each section below here is summarized the same way, showing all the options for 
 .. autoclass:: qcfractal.cli.qcfractal_manager.ManagerSettings
 
 
-``common``
-----------
+common
+------
 
 .. autoclass:: qcfractal.cli.qcfractal_manager.CommonManagerSettings
 
 
 .. _managers_server:
 
-``server``
-----------
+server
+------
 
 .. autoclass:: qcfractal.cli.qcfractal_manager.FractalServerSettings
 
 
-``manager``
------------
+manager
+-------
 
 .. autoclass:: qcfractal.cli.qcfractal_manager.QueueManagerSettings
 
 
-``cluster``
------------
+cluster
+-------
 
 .. autoclass:: qcfractal.cli.qcfractal_manager.ClusterSettings
 
 
-``dask``
---------
+dask
+----
 
 .. autoclass:: qcfractal.cli.qcfractal_manager.DaskQueueSettings
 
 
-``parsl``
----------
+parsl
+-----
 
 .. autoclass:: qcfractal.cli.qcfractal_manager.ParslQueueSettings
 
 
-``executor``
-++++++++++++
+executor
+++++++++
 
 .. autoclass:: qcfractal.cli.qcfractal_manager.ParslExecutorSettings
 
 
-``provider``
-++++++++++++
+provider
+++++++++
 
 .. autoclass:: qcfractal.cli.qcfractal_manager.ParslProviderSettings
