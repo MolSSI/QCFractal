@@ -1,5 +1,5 @@
-Fractal Server Config CLI and File
-==================================
+Fractal Server Config
+=====================
 
 This page documents the valid options for the YAML file inputs to the :doc:`Config File <server_config>`.
 This first section outlines each of the headers (top level objects) and a description for each one.

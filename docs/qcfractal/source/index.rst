@@ -80,8 +80,9 @@ Index
 
 * :doc:`install`
 * :doc:`quickstart`
-* :doc:`setup_compute`
+* :doc:`setup_quickstart`
 * :doc:`setup_server`
+* :doc:`setup_compute`
 * :doc:`community`
 * :doc:`roadmap`
 
@@ -92,9 +93,10 @@ Index
 
    install.rst
    quickstart.ipynb
-   community.rst
-   setup_compute.rst
+   setup_quickstart.rst
    setup_server.rst
+   setup_compute.rst
+   community.rst
    roadmap.rst
 
 **Records Documentation**
@@ -149,7 +151,7 @@ Configuring and running the Server from the CLI and Config Files
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Server Configuration and Running Documentation
+   :caption: Server Configuration
 
    server_init.rst
    server_config.rst
