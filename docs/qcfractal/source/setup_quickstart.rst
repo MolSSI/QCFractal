@@ -4,10 +4,10 @@ Setup Quickstart
 QCFractal comprises two components:
 
 1. The :term:`Server` (``qcfractal-server``), which accepts compute and data queries and maintains a database of :term:`tasks <task>` and results. The :term:`Server` should be run continuously on a persistent machine.
-2. One or more :term:`Managers <Manager>` (``qcfractal-manager``). The :term:`Managers <Manager>` pull work from the :term:`Server`, use attached compute resources to complete the work, and report results back to the server. :term:`Managers <Manager>` may be turned off and on at any time. :term:`Managers <Manager>` connect to compute resource through :term:`Adapters <Adapter>`.
+2. One or more :term:`Managers <Manager>` (``qcfractal-manager``). The :term:`Managers <Manager>` pull work from the :term:`Server`, use attached compute resources to complete the work, and report results back to the server. :term:`Managers <Manager>` may be turned off and on at any time. :term:`Managers <Manager>` connect to compute resources through :term:`Adapters <Adapter>`.
 
 In the :doc:`Quickstart Tutorial <quickstart>`, the above components were combined within a python environment using ``FractalSnowflake``.
-In general, the :term:`Server` and :term:`Manager(s) <Manager>` are run separately in different process, often on different machines.
+In general, the :term:`Server` and :term:`Manager(s) <Manager>` are run separately in different processes, often on different machines.
 For detailed information about the relationship between :term:`Server` and :term:`Manager`, see :doc:`managers`.
 
 
@@ -75,7 +75,7 @@ Next, start the :term:`Server` and ProcessPoolExecutor :term:`Manager`::
 The second command starts ``qcfractal-server`` in the background.
 It also starts one :term:`Worker` which will pull :term:`tasks <Task>` from the :term:`Server` and run them. 
 
-Test if everything is setup by running a Hartree-Fock calculation a single hydrogen molecule,
+Test if everything is setup by running a Hartree-Fock calculation on a single hydrogen molecule,
 as in the :doc:`quickstart` (note this requires ``psi4``):
 
 .. code-block:: python
@@ -135,7 +135,7 @@ The :term:`Manager` must be configured before use. Create a configuration file (
      partition: CLUSTER
      cmd_timeout: 30 
 
-You may need to modify these values to match the particulars on your cluster. In particular:
+You may need to modify these values to match the particulars of your cluster. In particular:
 
 * The ``scheduler`` and ``partition`` options should be set to match the details of your :term:`Scheduler` (e.g. SLURM, PBS, Torque).
 * Options related to :term:`Workers <Worker>` should be set appropriately for the compute node on your cluster. 
@@ -149,7 +149,7 @@ Finally, start the :term:`Manager` in the background on the cluster head node::
 
 Note that TLS certificate verification is disabled (``--verify=False``) because the :term:`Manager` and :term:`Server` are both run on the head node.
 
-Test if everything is setup by running a Hartree-Fock calculation a single hydrogen molecule,
+Test if everything is setup by running a Hartree-Fock calculation on a single hydrogen molecule,
 as in the :doc:`quickstart` (note this requires ``psi4``):
 
 .. code-block:: python
@@ -247,7 +247,7 @@ Create a configuration file (e.g. in ``~/.qca/qcfractal/my_manager.yaml``) based
      partition: CLUSTER
      cmd_timeout: 30 
 
-You may need to modify these values to match the particulars on each cluster. In particular:
+You may need to modify these values to match the particulars of each cluster. In particular:
 
 * The ``scheduler`` and ``partition`` options should be set to match the details of your :term:`Scheduler` (e.g. SLURM, PBS, Torque).
 * Options related to :term:`Workers <Worker>` should be set appropriately for the compute node on your cluster. 
@@ -261,7 +261,7 @@ Finally, start the :term:`Manager` in the background on each cluster head node::
 
 If you did not specify a TLS certificate in the ``qcfractal-server start`` step, you will additionally need to specify ``--verify False`` in the above command.
 
-Test if everything is setup by running a Hartree-Fock calculation a single hydrogen molecule,
+Test if everything is setup by running a Hartree-Fock calculation on a single hydrogen molecule,
 as in the :doc:`quickstart` 
 (note this requires ``psi4`` to be installed on at least one compute resource). 
 This test may be run from any machine.
