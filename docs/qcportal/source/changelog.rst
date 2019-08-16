@@ -15,6 +15,39 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.9.0 / 2019-08-16
+------------------
+
+New Features
+++++++++++++
+
+- (:pr:`354`) Fractal now takes advantage of Elemental's new Msgpack serialization option for Models. Serialization
+  defaults to msgpack when available (``conda install msgpack-python [-c conda-forge]``), falling back to JSON
+  otherwise. This results in substantial speedups for both serialization and deserialization actions and should be a
+  transparent replacement for users within Fractal, Engine, and Elemental themselves.
+- (:pr:`358`) Fractal Server now exposes a CLI for user/permissions management through the ``qcfractal-server user``
+  command. `See the full documentation for details <https://qcfractal.readthedocs.io/en/latest/server_user.html>`_.
+- (:pr:`358`) Fractal Server's CLI now supports user manipulations through the ``qcfractal-server user`` subcommand.
+  This allows server administrators to control users and their access without directly interacting with the storage
+  socket.
+
+Enhancements
+++++++++++++
+
+- (:pr:`330`, :pr:`340`, :pr:`348`, :pr:`349`) Many Pydantic based Models attributes are now documented and in an
+  on-the-fly manner derived from the Pydantic Schema of those attributes.
+- (:pr:`338`) The Queue Manager which generated a ``Result`` is now stored in the ``Result`` records themselves.
+- (:pr:`341`) Skeletal Queue Manager YAML files can now be generated through the ``--skel`` or ``--skeleton`` CLI flag
+  on ``qcfractal-manager``
+- (:pr:`361`) Staged DB's in Fractal copy Alembic alongside them.
+- (:pr:`363`) A new REST API hook for services has been added so Clients can manage Services.
+
+Bug Fixes
++++++++++
+
+- (:pr:`359`) A `FutureWarning` from Pandas has been addressed before it becomes an error.
+
+
 0.8.1 / 2019-07-30
 ------------------
 
