@@ -42,6 +42,7 @@ Enhancements
 - (:pr:`341`) Skeletal Queue Manager YAML files can now be generated through the ``--skel`` or ``--skeleton`` CLI flag
   on ``qcfractal-manager``
 - (:pr:`361`) Staged DB's in Fractal copy Alembic alongside them.
+- (:pr:`363`) A new REST API hook for services has been added so Clients can manage Services.
 
 Bug Fixes
 +++++++++
