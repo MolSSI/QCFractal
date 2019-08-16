@@ -98,6 +98,10 @@ Service Queue
 
 .. autoclass:: qcportal.models.rest_models.ServiceQueuePOSTResponse
 
+.. autoclass:: qcportal.models.rest_models.ServiceQueuePUTBody
+
+.. autoclass:: qcportal.models.rest_models.ServiceQueuePUTResponse
+
 -------------
 Queue Manager
 -------------

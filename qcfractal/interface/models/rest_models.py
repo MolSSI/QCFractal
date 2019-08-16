@@ -968,6 +968,58 @@ register_model("service_queue", "POST", ServiceQueuePOSTBody, ServiceQueuePOSTRe
 auto_gen_docs_on_demand(ServiceQueuePOSTBody)
 auto_gen_docs_on_demand(ServiceQueuePOSTResponse)
 
+class ServiceQueuePUTBody(ProtoModel):
+    class Data(ProtoModel):
+        id: QueryObjectId = Schema(
+            None,
+            description="The Id of the Service."
+        )
+        procedure_id: QueryObjectId = Schema(
+            None,
+            description="The Id of the Procedure that the Service is linked to."
+        )
+
+    class Meta(ProtoModel):
+        operation: str = Schema(
+            ...,
+            description="The update action to perform."
+        )
+
+        @validator("operation")
+        def cast_to_lower(cls, v):
+            return v.lower()
+
+    meta: Meta = Schema(
+        ...,
+        description="The instructions to pass to the targeted Service."
+    )
+    data: Data = Schema(
+        ...,
+        description="The information which contains the Service target in the database."
+    )
+
+
+class ServiceQueuePUTResponse(ProtoModel):
+    class Data(ProtoModel):
+        n_updated: int = Schema(
+            ...,
+            description="The number of services which were changed."
+        )
+
+    meta: ResponseMeta = Schema(
+        ...,
+        description=common_docs[ResponseMeta]
+    )
+    data: Data = Schema(
+        ...,
+        description="Information returned from attempting updates of Services."
+    )
+
+
+register_model("service_queue", "PUT", ServiceQueuePUTBody, ServiceQueuePUTResponse)
+auto_gen_docs_on_demand(ServiceQueuePUTBody)
+auto_gen_docs_on_demand(ServiceQueuePUTResponse)
+
 
 ### Queue Manager
 
