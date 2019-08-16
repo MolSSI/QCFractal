@@ -133,7 +133,9 @@ class FractalSnowflake(FractalServer):
                          query_limit=int(1.e6))
 
         if self._storage:
-            self.logger.warning("Warning! This is a temporary instance, data will be lost upon shutdown.")
+            self.logger.warning("Warning! This is a temporary instance, data will be lost upon shutdown. "
+                                "For information about how to set up a permanent QCFractal instance, see "
+                                "http://docs.qcarchive.molssi.org/projects/qcfractal/en/latest/setup_quickstart.html")
 
         if start_server:
             self.start(start_loop=False)
