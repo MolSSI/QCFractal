@@ -15,20 +15,45 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
-Next version / ???
--------------------
+0.9.0 / 2019-08-16
+------------------
 
 New Features
 ++++++++++++
 
-- (:pr:`358`) Fractal Server now exposes a CLI for user/permissions management through the ``qcfractal-server user`` command.
-  `See the full documentation for details <https://qcfractal.readthedocs.io/en/latest/server_user.html>`_
+- (:pr:`354`) Fractal now takes advantage of Elemental's new Msgpack serialization option for Models. Serialization
+  defaults to msgpack when available (``conda install msgpack-python [-c conda-forge]``), falling back to JSON
+  otherwise. This results in substantial speedups for both serialization and deserialization actions and should be a
+  transparent replacement for users within Fractal, Engine, and Elemental themselves.
+- (:pr:`358`) Fractal Server now exposes a CLI for user/permissions management through the ``qcfractal-server user``
+  command. `See the full documentation for details <https://qcfractal.readthedocs.io/en/latest/server_user.html>`_.
+- (:pr:`358`) Fractal Server's CLI now supports user manipulations through the ``qcfractal-server user`` subcommand.
+  This allows server administrators to control users and their access without directly interacting with the storage
+  socket.
 
 Enhancements
 ++++++++++++
 
+- (:pr:`330`, :pr:`340`, :pr:`348`, :pr:`349`) Many Pydantic based Models attributes are now documented and in an
+  on-the-fly manner derived from the Pydantic Schema of those attributes.
+- (:pr:`335`) Dataset's ``get_history`` function is fixed by allowing the ability to force a new query even if one has
+  already been cached.
+- (:pr:`338`) The Queue Manager which generated a ``Result`` is now stored in the ``Result`` records themselves.
+- (:pr:`341`) Skeletal Queue Manager YAML files can now be generated through the ``--skel`` or ``--skeleton`` CLI flag
+  on ``qcfractal-manager``
+- (:pr:`361`) Staged DB's in Fractal copy Alembic alongside them.
+
 Bug Fixes
 +++++++++
+
+- (:pr:`359`) A `FutureWarning` from Pandas has been addressed before it becomes an error.
+
+Documentation Improvements
+++++++++++++++++++++++++++
+
+- (:pr:`351`, :pr:`352`, :pr:`353`, :pr:`360`, :pr:`362`, :pr:`364`, :pr:`366`, :pr:`368`) The documentation has been
+  significantly edited to be up to date, fix numerous typos, reworded and refined for clarity, and overall flow better
+  between pages.
 
 0.8.0 / 2019-07-25
 ------------------
