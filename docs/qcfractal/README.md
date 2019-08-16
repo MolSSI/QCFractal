@@ -3,7 +3,8 @@
 The docs for this project are built with Sphinx. To compile the docs, first ensure that Sphinx and the ReadTheDocs theme are installed.
 
 ```
-conda install sphinx sphinx_rtd_theme 
+conda install sphinx sphinx_rtd_theme nbsphinx
+pip install sphinx_automodapi
 ```
 
 Once installed, you can use the Makefile in this directory to compile static HTML pages by
