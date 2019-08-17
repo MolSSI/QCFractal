@@ -29,7 +29,7 @@ The service technology allows the ``FractalServer`` to complete very complex
 workflows of arbitrary design. To see a pictorial representation of this
 process, please see the
 :ref:`flowchart showing the pseudo-calls <flowchart_add_procedure>` when a
-service is added to the ``FractalServrer``
+service is added to the ``FractalServer``
 
 
 .. toctree::
