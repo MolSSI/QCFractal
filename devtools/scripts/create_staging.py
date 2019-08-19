@@ -13,9 +13,9 @@ from qcfractal.interface.models import (ResultRecord, OptimizationRecord,
 
 # production_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb"
 production_uri = "postgresql+psycopg2://postgres:@localhost:11711/qcarchivedb"
-staging_uri = "postgresql+psycopg2://localhost:5432/staging_qcarchivedb"
-SAMPLE_SIZE = 0.0001  # 0.1 is 10%
-MAX_LIMIT = 10000
+staging_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/staging_qcarchivedb"
+SAMPLE_SIZE = 0.00001  # 0.1 is 10%
+MAX_LIMIT = 100000
 VERBOSE = False
 
 
@@ -152,12 +152,24 @@ def copy_collections(staging_storage, production_storage, SAMPLE_SIZE=0):
     total_count = production_storage.get_total_count(CollectionORM)
     print('------Total # of Collections in the DB is: ', total_count)
     count_to_copy = get_number_to_copy(total_count, SAMPLE_SIZE)
-    prod_results = production_storage.get_collections(limit=count_to_copy)['data']
+    colletions = production_storage.get_collections(limit=count_to_copy)['data']
 
     print('Copying {} collections'.format(count_to_copy))
 
+    mol_ids = []
+    for col in colletions:
+        if col['collection'] == 'dataset' and 'records' in col:
+            for rec in col['records']:
+                mol_ids.append(rec['molecule_id'])
+
+    mols_map = copy_molecules(staging_storage, production_storage, mol_ids)
+
+
     sql_insered = 0
-    for col in prod_results:
+    for col in colletions:
+        if col['collection'] == 'dataset' and 'records' in col:
+            for rec in col['records']:
+                rec['molecule_id'] = mols_map[rec['molecule_id']]
         ret = staging_storage.add_collection(col)['data']
         sql_insered += 1
     if VERBOSE:
@@ -454,13 +466,13 @@ def copy_task_queue(staging_storage, production_storage, SAMPLE_SIZE=None):
     for rec in prod_tasks:
         id = int(rec.base_result.id)
         if id in results_map:
-            rec.base_result.id = results_map[id]
+            rec.base_result.__dict__["id"] = results_map[id]
         elif id in proc_map1:
-            rec.base_result.id = proc_map1[id]
+            rec.base_result.__dict__["id"] = proc_map1[id]
         elif id in proc_map2:
-            rec.base_result.id = proc_map2[id]
+            rec.base_result.__dict__["id"] = proc_map2[id]
         elif id in proc_map3:
-            rec.base_result.id = proc_map3[id]
+            rec.base_result.__dict__["id"] = proc_map3[id]
         else:
             raise Exception('Result not found!', rec.base_result.id)
 
@@ -488,8 +500,10 @@ def copy_alembic(staging_storage, production_storage):
 
     with staging_storage.engine.connect() as conn:
         conn.execute(create_table)
-        conn.execute(f"insert into alembic_version values ('{alembic_version}')")
-
+        try:
+            conn.execute(f"insert into alembic_version values ('{alembic_version}')")
+        except Exception as err:
+            print(err)
 
 def main():
 
@@ -526,10 +540,10 @@ def main():
     copy_grid_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE=SAMPLE_SIZE*2)
 
     print('\n---------------- Task Queue -----------------------')
-    copy_task_queue(staging_storage, production_storage, SAMPLE_SIZE=SAMPLE_SIZE*2)
+    copy_task_queue(staging_storage, production_storage, SAMPLE_SIZE=SAMPLE_SIZE)
 
     print('\n---------------- Collections -----------------------')
-    copy_collections(staging_storage, production_storage, SAMPLE_SIZE=SAMPLE_SIZE*2)
+    copy_collections(staging_storage, production_storage, SAMPLE_SIZE=0.1)
 
     print('\n---------------- Alembic -----------------------')
     copy_alembic(staging_storage, production_storage)
