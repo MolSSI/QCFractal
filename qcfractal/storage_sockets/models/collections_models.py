@@ -131,7 +131,7 @@ class DatasetORM(CollectionORM, DatasetMixin):
         ret = []
         try:
             for rec in self.records_obj:
-                ret.append(rec.to_dict(exclude='dataset_id'))
+                ret.append(rec.to_dict(exclude=['dataset_id']))
         except Exception as err:
             # raises exception of first access!!
             pass
@@ -176,6 +176,7 @@ class ReactionDatasetRecordsORM(Base):
     name = Column(String, nullable=False, primary_key=True)
     reaction_results = Column(JSON)
     stoichiometry = Column(JSON)
+    extras = Column(JSON)
 
 
 class ReactionDatasetORM(CollectionORM, DatasetMixin):
@@ -210,11 +211,11 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
         ret = []
         try:
             for rec in self.records_obj:
-                ret.append(rec.to_dict(exclude='reaction_dataset_id'))
+                ret.append(rec.to_dict(exclude=['reaction_dataset_id']))
         except Exception as err:
             # raises exception of first access!!
             pass
-
+        print('in records', ret)
         return ret
 
     @records.setter
