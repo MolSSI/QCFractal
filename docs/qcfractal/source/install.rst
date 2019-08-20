@@ -7,7 +7,7 @@ The below commands install QCFractal and its required dependencies, but *not* an
 chemistry codes nor the software to run :term:`Queue Managers <Manager>`. This is done to avoid requiring *all* software
 which *can* interface with Fractal, and instead requires the user to obtain the software they individually *require*.
 
-.. _conda_install:
+.. _conda-install:
 
 Conda
 -----
@@ -49,7 +49,7 @@ Pip
    through a native install on your device (e.g. managed clusters), a direct installer, ``yum`` install, a ``conda``
    install, or otherwise; it must be installed first or the ``Psycopg2`` package will complain about missing the
    ``pg_config``. Installation of PostgreSQL manually is beyond the scope of these instructions, so we recommend
-   either using a `Conda Install of Fractal <conda_install>`_ or contacting your systems administrator.
+   either using a :ref:`Conda install of Fractal <conda-install>` or contacting your systems administrator.
 
 If you have PosgreSQL installed already, you can also install QCFractal using ``pip``:
 
@@ -64,7 +64,7 @@ Test the Installation
 .. note::
 
    There are several optional packages Fractal can interface with for additional features such as visualization,
-   :term:`Queue Adapter`s, and services. These are not installed by default and so you can expect many of the tests
+   :term:`Queue Adapters <Queue Adapter>`, and services. These are not installed by default and so you can expect many of the tests
    will be marked with ``skip`` or ``s``.
 
 You can test to make sure that Fractal is installed correctly by first installing ``pytest``.
