@@ -111,6 +111,7 @@ def test_storage_socket(test_server):
     # got a default values when created
     pdata["data"][0].pop("tags", None)
     pdata["data"][0].pop("tagline", None)
+    pdata["data"][0].pop("provenance", None)
     assert pdata["data"][0] == storage
 
 

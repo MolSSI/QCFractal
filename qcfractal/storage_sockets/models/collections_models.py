@@ -1,12 +1,10 @@
 import datetime
-from sqlalchemy import (Column, Integer, String, DateTime, Boolean, ForeignKey, JSON,
-                        Enum, Float, Binary, Table, ARRAY,
-                        inspect, Index, UniqueConstraint)
+from sqlalchemy import (Column, Integer, String, ForeignKey, JSON,
+                        ARRAY, Index)
 from sqlalchemy.orm import relationship, column_property
-from sqlalchemy import select, func, tuple_, text, cast
+# from sqlalchemy import select, func, tuple_, text, cast
 from qcfractal.storage_sockets.models import Base
-from qcfractal.storage_sockets.models import MoleculeORM
-from sqlalchemy.dialects.postgresql import array_agg
+# from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql.functions import GenericFunction
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -38,6 +36,9 @@ class CollectionORM(Base):
 
     tags = Column(JSON)
     tagline = Column(String)
+
+    provenance = Column(JSON)
+
     extra = Column(JSON)  # extra data related to specific collection type
 
     def update_relations(self, **kwarg):
@@ -67,8 +68,6 @@ class DatasetMixin:
     default_program  = Column(String, nullable=True)
 
     contributed_values = Column(JSON)
-
-    provenance = Column(JSON)  # TODO: in extra?
 
     history_keys = Column(ARRAY(String, as_tuple=True))
     history = Column(ARRAY(String, as_tuple=True))
@@ -215,7 +214,6 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
         except Exception as err:
             # raises exception of first access!!
             pass
-        print('in records', ret)
         return ret
 
     @records.setter

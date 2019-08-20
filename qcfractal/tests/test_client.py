@@ -108,6 +108,7 @@ def test_collection_portal(test_server, encoding):
     # got a default values when created
     get_db.data[0].pop("tags", None)
     get_db.data[0].pop("tagline", None)
+    get_db.data[0].pop("provenance", None)
 
     assert db == get_db.data[0]
 
