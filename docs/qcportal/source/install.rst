@@ -12,7 +12,7 @@ You can install qcportal using `conda <https://www.anaconda.com/download/>`_:
 
     >>> conda install qcportal -c conda-forge
 
-This installs QCFractal and its dependencies. The qcfractal package is maintained on the
+This installs QCPortal and its dependencies. The qcportal package is maintained on the
 `conda-forge channel <https://conda-forge.github.io/>`_.
 
 
