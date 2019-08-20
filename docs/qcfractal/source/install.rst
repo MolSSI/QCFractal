@@ -1,30 +1,35 @@
 Install QCFractal
 =================
 
-You can install qcfractal with ``conda``, with ``pip``, or by installing from source.
+You can install QCFractal with ``conda`` (recommended) or with ``pip`` (with some caveats).
+
+The below commands install QCFractal and its required dependencies, but *not* any of the quantum
+chemistry codes nor the software to run :term:`Queue Managers <Manager>`. This is done to avoid requiring *all* software
+which *can* interface with QCFractal, and instead requires the user to obtain the software they individually *require*.
+
+.. _conda-install:
 
 Conda
 -----
 
-You can install or update qcfractal using `conda <https://www.anaconda.com/download/>`_::
+You can install QCFractal using `conda <https://www.anaconda.com/download/>`_:
 
-    conda install qcfractal -c conda-forge
+.. code-block:: console
 
-The above command installs qcfractal and its required dependencies, but *not* any of the quantum
-chemistry codes nor the software to run :term:`Queue Managers <Manager>`. This is done to avoid requiring *all* software
-which *can* interface with Fractal, and instead requires the user to obtain the software they individually *require*.
+    >>> conda install qcfractal -c conda-forge
 
-The qcfractal package is maintained on the
+This installs QCFractal and its dependencies. The QCFractal package is maintained on the
 `conda-forge channel <https://conda-forge.github.io/>`_.
-
 
 Conda Pre-Created Environments
 ++++++++++++++++++++++++++++++
 
-Fractal can also be installed through pre-configured environments you can pull through our Conda Channel::
+QCFractal can also be installed through pre-configured environments you can pull through our Conda Channel:
 
-    conda env create qcarchive/{environment name}
-    conda activate {environment name}
+.. code-block:: console
+
+   >>> conda env create qcarchive/{environment name}
+   >>> conda activate {environment name}
 
 The environments are created from the YAML files hosted on the Anaconda Cloud, which then need to be activated
 to use. You can find all of the environments `here <https://anaconda.org/QCArchive/environments>`_.
@@ -34,42 +39,62 @@ If you want to use a different name than the environment file, you can add a ``-
 
 The environments must be installed as new environments and cannot be installed into existing ones.
 
+The environments are designed to provide pre-built environments which include additional programs beyond QCFractal
+itself which are designed for use in production or practical experimentation. For instance, the ``qcf-manager-openff``
+environment also installs a couple quantum chemistry programs, a distributed compute :term:`Queue Adapter`, and a
+service which QCFractal can run. This environment can be deployed for immediate use on a remote compute
+site (e.g. a cluster) and connect to a QCFractal instance to consume compute tasks.
+
 Pip
 ---
 
-qcfractal may be installed with ``pip``::
+.. warning::
 
-    pip install qcfractal
+   Installing QCFractal from PyPi/``pip`` requires an existing PostgreSQL installation on your computer. Whether that be
+   through a native install on your device (e.g. managed clusters), a direct installer, ``yum`` install, a ``conda``
+   install, or otherwise; it must be installed first or the ``Psycopg2`` package will complain about missing the
+   ``pg_config``. Installation of PostgreSQL manually is beyond the scope of these instructions, so we recommend
+   either using a :ref:`Conda install of QCFractal <conda-install>` or contacting your systems administrator.
 
-Install from Source
--------------------
+If you have PosgreSQL installed already, you can also install QCFractal using ``pip``:
 
-To install qcfractal from source, clone the repository from `github
-<https://github.com/molssi/qcfractal>`_::
+.. code-block:: console
 
-    git clone https://github.com/molssi/qcfractal.git
-    cd qcfractal
-    python setup.py install
+   >>> pip install qcfractal
 
-or use ``pip`` for a local install::
 
-    pip install -e .
+Test the Installation
+---------------------
 
-It is recommended to setup a testing environment using ``conda``. This can be accomplished by::
+.. note::
 
-    cd qcfractal
-    python devtools/scripts/conda_env.py -n=qcf_test -p=3.7 devtools/conda-envs/openff.yaml
-    conda activate qcarchive
-    pip install -e .
+   There are several optional packages QCFractal can interface with for additional features such as visualization,
+   :term:`Queue Adapters <Queue Adapter>`, and services. These are not installed by default and so you can expect many
+   of the tests will be marked with ``skip`` or ``s``.
 
-This installs all the dependencies to setup a production background in a new conda environment,
-activate the environment, and then install Fractal into development mode.
+You can test to make sure that Fractal is installed correctly by first installing ``pytest``.
 
-Test
-----
+From ``conda``:
 
-Test qcfractal with ``pytest``::
+.. code-block:: console
 
-    cd qcfractal
-    pytest
+   >>> conda install pytest -c conda-forge
 
+From ``pip``:
+
+.. code-block:: console
+
+   >>> pip install pytest
+
+Then, run the following command:
+
+.. code-block::
+
+   >>> pytest -p qcfractal.testing --pyargs qcfractal
+
+
+Developing from Source
+----------------------
+
+If you are a developer and want to make contributions QCFractal, you can access the source code from
+`github <https://github.com/molssi/qcfractal>`_.
