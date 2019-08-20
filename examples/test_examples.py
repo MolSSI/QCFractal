@@ -4,6 +4,9 @@ Test the examples
 
 import os
 import time
+
+import pytest
+
 from qcfractal import testing
 
 _pwd = os.path.abspath(os.path.dirname(__file__))
@@ -20,10 +23,9 @@ def wait_true(wait_time, func, *args, **kwargs):
 
     return False
 
-
+@pytest.mark.example
 @testing.using_psi4
 @testing.using_unix
-@testing.mark_example
 def test_local_server_example():
     """Make sure the Fireworks example works as intended"""
 

@@ -7,7 +7,7 @@ import pytest
 
 import qcfractal.interface as ptl
 from qcfractal import testing
-from qcfractal.testing import fractal_compute_server, mark_slow
+from qcfractal.testing import fractal_compute_server
 
 
 def test_collection_query(fractal_compute_server):
@@ -292,7 +292,7 @@ def test_missing_collection(fractal_compute_server):
         client.get_collection("reactiondataset", "_waffles_")
 
 
-@mark_slow
+@pytest.mark.slow
 @testing.using_torsiondrive
 @testing.using_geometric
 @testing.using_rdkit

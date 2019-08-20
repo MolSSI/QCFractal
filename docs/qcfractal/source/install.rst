@@ -90,7 +90,12 @@ Then, run the following command:
 
 .. code-block::
 
-   >>> pytest -p qcfractal.testing --pyargs qcfractal
+   >>> pytest --pyargs qcfractal
+
+QCFractal ships with a small testing plugin which should be automatically detected and gives you access to the
+``--runslow`` and ``--runexamples`` PyTest CLI flags. The ``--runslow`` flag tells the testing suite to run any test
+the developers think are a bit more time consuming than the others. Without this flag, you will see many tests (such
+as those for the CLI) skipped.
 
 
 Developing from Source
