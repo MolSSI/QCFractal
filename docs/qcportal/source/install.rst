@@ -1,39 +1,64 @@
 Install QCPortal
 =================
 
-You can install ``qcportal`` with ``conda``, with ``pip``, or by installing from source.
+You can install ``qcportal`` with ``conda`` or with ``pip``.
 
 Conda
 -----
 
-You can install or update ``qcportal`` using `conda <https://www.anaconda.com/download/>`_::
+You can install qcportal using `conda <https://www.anaconda.com/download/>`_:
 
-    conda install qcportal -c conda-forge
+.. code-block:: console
 
-The ``qcportal`` package is maintained on the
+    >>> conda install qcportal -c conda-forge
+
+This installs QCFractal and its dependencies. The qcfractal package is maintained on the
 `conda-forge channel <https://conda-forge.github.io/>`_.
 
 
 Pip
 ---
 
-To install or update ``qcportal`` with ``pip``::
+you can also install QCPortal using ``pip``:
 
-    pip install -U qcportal
+.. code-block:: console
 
-Developer Install
------------------
+   >>> pip install qcportal
 
-The QCPortal package is part of the QCFractal package and is the
-``qcfractal.interface`` folder. To install QCFractal from source, clone the
-repository from `GitHub <https://github.com/molssi/qcfractal>`_::
 
-    git clone https://github.com/MolSSI/QCFractal.git
-    cd qcfractal
-    pip install -e .
+Test the Installation
+---------------------
 
-A developer version of ``qcportal`` can then be imported as:
+.. note::
 
-.. code-block:: python
+   QCPortal can interface with `Plotly <https://plot.ly/>`_ for additional visualization features.
+   This is not installed by default and so you can expect the visualization tests to all be marked with
+   ``skip`` or ``s``.
 
-    >>> import qcfractal.interface as ptl
+You can test to make sure that QCPortal is installed correctly by first installing ``pytest``.
+
+From ``conda``:
+
+.. code-block:: console
+
+   >>> conda install pytest -c conda-forge
+
+From ``pip``:
+
+.. code-block:: console
+
+   >>> pip install pytest
+
+Then, run the following command:
+
+.. code-block::
+
+   >>> pytest --pyargs qcportal
+
+
+Developing from Source
+----------------------
+
+The QCPortal package is part of the QCFractal package and is the ``qcfractal.interface`` folder. If you are a developer
+and want to make contributions Portal, you can access the source code from
+`github <https://github.com/molssi/qcfractal>`_ and the aforementioned folder.
