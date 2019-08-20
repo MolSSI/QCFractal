@@ -29,12 +29,6 @@ you can also install QCPortal using ``pip``:
 Test the Installation
 ---------------------
 
-.. note::
-
-   QCPortal can interface with `Plotly <https://plot.ly/>`_ for additional visualization features.
-   This is not installed by default and so you can expect the visualization tests to all be marked with
-   ``skip`` or ``s``.
-
 You can test to make sure that QCPortal is installed correctly by first installing ``pytest``.
 
 From ``conda``:

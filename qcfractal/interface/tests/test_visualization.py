@@ -18,7 +18,6 @@ using_plotly = pytest.mark.skipif(
 
 def live_fractal_or_skip():
     """Ensure Fractal live connection can be made"""
-    return pytest.skip("REST version mismatch for CI, main server needs an update after 0.8 release.")
 
     try:
         return portal.FractalClient()
@@ -34,7 +33,7 @@ def S22Fixture():
 
     S22 = client.get_collection("ReactionDataset", "S22")
 
-    return (client, S22)
+    return client, S22
 
 
 @using_plotly
@@ -79,7 +78,7 @@ def TDDSFixture():
     client = live_fractal_or_skip()
     TDDs = client.get_collection("TorsionDriveDataset", "OpenFF Fragmenter Phenyl Benchmark")
 
-    return (client, TDDs)
+    return client, TDDs
 
 
 @using_plotly
