@@ -5,7 +5,7 @@ development DB.
 """
 
 from qcfractal.storage_sockets import storage_socket_factory
-from qcfractal.storage_sockets.sql_models import (BaseResultORM, ResultORM, CollectionORM,
+from qcfractal.storage_sockets.models import (BaseResultORM, ResultORM, CollectionORM,
                                               OptimizationProcedureORM, GridOptimizationProcedureORM,
                                               TorsionDriveProcedureORM, TaskQueueORM)
 from qcfractal.interface.models import (ResultRecord, OptimizationRecord,
