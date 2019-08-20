@@ -34,20 +34,20 @@ def qcfractal_base_init():
     yield f"--base-folder={tmpdir.name}"
 
 
-@testing.mark_slow
+@pytest.mark.slow
 def test_cli_server_boot(qcfractal_base_init):
     port = "--port=" + str(testing.find_open_port())
     args = ["qcfractal-server", "start", qcfractal_base_init, port]
     assert testing.run_process(args, interupt_after=10, **_options)
 
 
-@testing.mark_slow
+@pytest.mark.slow
 def test_cli_upgrade(qcfractal_base_init):
     args = ["qcfractal-server", "upgrade", qcfractal_base_init]
     assert testing.run_process(args, interupt_after=10, **_options)
 
 
-@testing.mark_slow
+@pytest.mark.slow
 def test_cli_user_add(qcfractal_base_init):
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_add_1", "--permissions", "admin"]
     assert testing.run_process(args, **_options)
@@ -63,7 +63,7 @@ def test_cli_user_add(qcfractal_base_init):
     assert testing.run_process(args, **_options) is False
 
 
-@testing.mark_slow
+@pytest.mark.slow
 def test_cli_user_show(qcfractal_base_init):
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_show", "--permissions", "admin"]
     assert testing.run_process(args, **_options)
@@ -75,7 +75,7 @@ def test_cli_user_show(qcfractal_base_init):
     assert testing.run_process(args, **_options) is False
 
 
-@testing.mark_slow
+@pytest.mark.slow
 def test_cli_user_modify(qcfractal_base_init):
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_modify", "--permissions", "read"]
     assert testing.run_process(args, **_options)
@@ -96,7 +96,7 @@ def test_cli_user_modify(qcfractal_base_init):
     assert testing.run_process(args, **_options) is False
 
 
-@testing.mark_slow
+@pytest.mark.slow
 def test_cli_user_remove(qcfractal_base_init):
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_remove", "--permissions", "admin"]
     assert testing.run_process(args, **_options)
@@ -109,7 +109,7 @@ def test_cli_user_remove(qcfractal_base_init):
 
 
 @pytest.mark.skip(reason="Failing on Travis for unknown reasons.")
-@testing.mark_slow
+@pytest.mark.slow
 def test_cli_server_local_boot(qcfractal_base_init):
     port = "--port=" + str(testing.find_open_port())
     args = ["qcfractal-server", "start", "--local-manager=1", port, qcfractal_base_init]
@@ -128,7 +128,7 @@ def active_server(request, qcfractal_base_init):
         yield server
 
 
-@testing.mark_slow
+@pytest.mark.slow
 @pytest.mark.parametrize("log_apis", [0, 1])
 def test_with_api_logging(postgres_server, log_apis):
 
@@ -147,12 +147,12 @@ def test_with_api_logging(postgres_server, log_apis):
     assert testing.run_process(args, interupt_after=10, **_options)
 
 
-@testing.mark_slow
+@pytest.mark.slow
 def test_manager_local_testing_process():
     assert testing.run_process(["qcfractal-manager", "--adapter=pool", "--test", "--tasks-per-worker=2"], **_options)
 
 
-@testing.mark_slow
+@pytest.mark.slow
 def test_manager_executor_manager_boot(active_server):
     args = [
         "qcfractal-manager", active_server.test_uri_cli, "--adapter=pool", "--tasks-per-worker=2", "--verify=False"
@@ -160,7 +160,7 @@ def test_manager_executor_manager_boot(active_server):
     assert testing.run_process(args, interupt_after=7, **_options)
 
 
-@testing.mark_slow
+@pytest.mark.slow
 def test_manager_executor_manager_boot_from_file(active_server, tmp_path):
 
     yaml_file = """
@@ -180,7 +180,7 @@ def test_manager_executor_manager_boot_from_file(active_server, tmp_path):
     assert testing.run_process(args, interupt_after=7, **_options)
 
 
-@testing.mark_slow
+@pytest.mark.slow
 def cli_manager_runs(config_data, tmp_path):
     temp_config = tmp_path / "temp_config.yaml"
     temp_config.write_text(yaml.dump(config_data))
@@ -188,7 +188,7 @@ def cli_manager_runs(config_data, tmp_path):
     assert testing.run_process(args, **_options)
 
 
-@testing.mark_slow
+@pytest.mark.slow
 def load_manager_config(adapter, scheduler):
     config = read_config_file(os.path.join(_pwd, "manager_boot_template.yaml"))
     config["common"]["adapter"] = adapter
@@ -196,7 +196,7 @@ def load_manager_config(adapter, scheduler):
     return config
 
 
-@testing.mark_slow
+@pytest.mark.slow
 @pytest.mark.parametrize(
     "adapter,scheduler",
     [
@@ -220,7 +220,7 @@ def test_cli_managers(adapter, scheduler, tmp_path):
     cli_manager_runs(config, tmp_path)
 
 
-@testing.mark_slow
+@pytest.mark.slow
 @testing.using_parsl
 def test_cli_manager_parsl_launchers(tmp_path):
     config = load_manager_config("parsl", "slurm")
@@ -228,7 +228,7 @@ def test_cli_manager_parsl_launchers(tmp_path):
     cli_manager_runs(config, tmp_path)
 
 
-@testing.mark_slow
+@pytest.mark.slow
 @pytest.mark.parametrize("adapter", [
     pytest.param("dask", marks=testing.using_dask_jobqueue),
     pytest.param("parsl", marks=testing.using_parsl),
@@ -240,7 +240,7 @@ def test_cli_managers_missing(adapter, tmp_path):
     cli_manager_runs(config, tmp_path)
 
 
-@testing.mark_slow
+@pytest.mark.slow
 @pytest.mark.parametrize("adapter", [
     pytest.param("dask", marks=testing.using_dask_jobqueue),
     pytest.param("parsl", marks=testing.using_parsl),
@@ -252,21 +252,21 @@ def test_cli_managers_none(adapter, tmp_path):
     cli_manager_runs(config, tmp_path)
 
 
-@testing.mark_slow
+@pytest.mark.slow
 def test_cli_managers_help():
     """Test that qcfractal_manager --help works"""
     args = ["qcfractal-manager", "--help"]
     testing.run_process(args, **_options)
 
 
-@testing.mark_slow
+@pytest.mark.slow
 def test_cli_managers_schema():
     """Test that qcfractal_manager --schema works"""
     args = ["qcfractal-manager", "--schema"]
     testing.run_process(args, **_options)
 
 
-@testing.mark_slow
+@pytest.mark.slow
 def test_cli_managers_skel(tmp_path):
     """Test that qcfractal_manager --skeleton works"""
     config = tmp_path / "config.yaml"

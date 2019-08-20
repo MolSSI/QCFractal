@@ -27,6 +27,43 @@ from .storage_sockets import storage_socket_factory
 ### Addon testing capabilities
 
 
+def pytest_addoption(parser):
+    """
+    Additional PyTest CLI flags to add, see `pytest_collection_modifyitems` for handling.
+    """
+    parser.addoption("--runslow", action="store_true", default=False, help="run slow tests")
+    parser.addoption("--runexamples", action="store_true", default=False, help="run example tests")
+
+
+def pytest_collection_modifyitems(config, items):
+    """
+    Handle test triggers based on the CLI flags
+
+    Use decorators:
+    @pytest.mark.slow
+    @pyrest.mark.example
+    """
+    runslow = config.getoption("--runslow")
+    runexamples = config.getoption("--runexamples")
+    skip_slow = pytest.mark.skip(reason="need --runslow option to run")
+    skip_example = pytest.mark.skip(reason="need --runexamples option to run")
+    for item in items:
+        if "slow" in item.keywords and not runslow:
+            item.add_marker(skip_slow)
+        if "example" in item.keywords and not runexamples:
+            item.add_marker(skip_example)
+
+
+def pytest_configure(config):
+    import sys
+    sys._called_from_test = True
+
+
+def pytest_unconfigure(config):
+    import sys
+    del sys._called_from_test
+
+
 def _plugin_import(plug):
     plug_spec = pkgutil.find_loader(plug)
     if plug_spec is None:
@@ -82,35 +119,13 @@ using_unix = pytest.mark.skipif(os.name.lower() != 'posix',
                                 reason='Not on Unix operating system, '
                                 'assuming Bash is not present')
 
+
 ### Generic helpers
-
-
-def mark_slow(func):
-    try:
-        if not pytest.config.getoption("--runslow"):
-            func = pytest.mark.skip("need --runslow option to run")(func)
-    except (AttributeError, ValueError):
-        # AttributeError: module 'pytest' has no attribute 'config'
-        pass
-
-    return func
-
-
-def mark_example(func):
-    try:
-        if not pytest.config.getoption("--runexamples"):
-            func = pytest.mark.skip("need --runexample option to run")(func)
-    except AttributeError:
-        # AttributeError: module 'pytest' has no attribute 'config'
-        pass
-
-    return func
-
 
 def recursive_dict_merge(base_dict, dict_to_merge_in):
     """Recursive merge for more complex than a simple top-level merge {**x, **y} which does not handle nested dict."""
     for k, v in dict_to_merge_in.items():
-        if (k in base_dict and isinstance(base_dict[k], dict) and isinstance(dict_to_merge_in[k], Mapping)):
+        if k in base_dict and isinstance(base_dict[k], dict) and isinstance(dict_to_merge_in[k], Mapping):
             recursive_dict_merge(base_dict[k], dict_to_merge_in[k])
         else:
             base_dict[k] = dict_to_merge_in[k]

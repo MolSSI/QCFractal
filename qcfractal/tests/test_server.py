@@ -11,7 +11,7 @@ import requests
 
 import qcfractal.interface as ptl
 from qcfractal import FractalServer, FractalSnowflake, FractalSnowflakeHandler
-from qcfractal.testing import (await_true, find_open_port, mark_slow, pristine_loop,
+from qcfractal.testing import (await_true, find_open_port, pristine_loop,
                                test_server, using_geometric, using_rdkit, using_torsiondrive)
 
 meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
@@ -114,7 +114,7 @@ def test_storage_socket(test_server):
     assert pdata["data"][0] == storage
 
 
-@mark_slow
+@pytest.mark.slow
 def test_snowflakehandler_restart():
 
     with FractalSnowflakeHandler() as server:
@@ -142,7 +142,7 @@ def test_snowflakehandler_log():
     assert proc.poll() is not None
 
 
-@mark_slow
+@pytest.mark.slow
 @using_geometric
 @using_torsiondrive
 @using_rdkit
