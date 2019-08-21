@@ -1,9 +1,9 @@
 import datetime
-from sqlalchemy import (Column, Integer, String, DateTime, Boolean, ForeignKey, JSON, Enum, Float, Binary, Table,
-                        inspect, Index, UniqueConstraint)
+from sqlalchemy import (Column, Integer, String, DateTime, ForeignKey, JSON, Enum, Table,
+                        Index, UniqueConstraint)
 from sqlalchemy.orm import relationship, column_property
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
-from sqlalchemy import select, func, and_
+from sqlalchemy import select, func
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.dialects.postgresql import aggregate_order_by

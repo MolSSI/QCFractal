@@ -5,12 +5,11 @@ Revises: e32b61e2516f
 Create Date: 2019-08-19 16:35:19.100113
 
 """
-from alembic import op, context
+from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.orm import with_polymorphic
 from sqlalchemy.orm.session import Session
 
-from qcfractal.storage_sockets.models import Base, CollectionORM, DatasetORM, ReactionDatasetORM
+from qcfractal.storage_sockets.models import CollectionORM, DatasetORM, ReactionDatasetORM
 
 
 # revision identifiers, used by Alembic.

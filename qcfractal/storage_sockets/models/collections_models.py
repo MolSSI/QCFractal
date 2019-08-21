@@ -1,6 +1,4 @@
-import datetime
-from sqlalchemy import (Column, Integer, String, ForeignKey, JSON,
-                        ARRAY, Index)
+from sqlalchemy import (Column, Integer, String, ForeignKey, JSON, Index)
 from sqlalchemy.orm import relationship, column_property
 # from sqlalchemy import select, func, tuple_, text, cast
 from qcfractal.storage_sockets.models import Base
