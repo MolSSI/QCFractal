@@ -69,8 +69,8 @@ class DatasetMixin:
 
     contributed_values = Column(JSON)
 
-    history_keys = Column(ARRAY(String, as_tuple=True))
-    history = Column(ARRAY(String, as_tuple=True))
+    history_keys = Column(JSON)
+    history = Column(JSON)
 
 
 class DatasetRecordsORM(Base):
@@ -197,7 +197,7 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
     def update_relations(self, records=None, **kwarg):
 
         self.records_obj = []
-        records = [] if not records else records
+        records = records or []
         for rec_dict in records:
             rec = ReactionDatasetRecordsORM(reaction_dataset_id=int(self.id),**rec_dict)
             self.records_obj.append(rec)
