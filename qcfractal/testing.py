@@ -475,7 +475,7 @@ def fractal_compute_server(postgres_server):
                           storage_uri=postgres_server.database_uri(),
                           reset_database=True,
                           start_server=False) as server:
-        # reset_server_database(server)
+        reset_server_database(server)
         yield server
 
 

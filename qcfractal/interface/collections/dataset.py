@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
+import warnings
 from qcelemental import constants
 
 from .collection import Collection
@@ -75,7 +76,7 @@ class Dataset(Collection):
 
         # Inherited classes need to call this themselves
         for cv in self.data.contributed_values.values():
-            tmp_idx = self.get_contributed_values_column(cv.name)
+            tmp_idx = self.get_contributed_values(cv.name)
             self.df[tmp_idx.columns[0]] = tmp_idx
 
     class DataModel(Collection.DataModel):
@@ -124,6 +125,29 @@ class Dataset(Collection):
 
         self._new_records = []
         self._new_molecules = {}
+
+    def _molecule_indexer(self, subset: Optional[Union[str, Set[str]]] = None) -> Dict[str, 'ObjectId']:
+        """Provides a {index: molecule_id} mapping for a given subset.
+
+        Parameters
+        ----------
+        subset : Optional[Union[str, Set[str]]], optional
+            The indices of the desired subset. Return all indices if subset is None.
+
+        Returns
+        -------
+        Dict[str, 'ObjectId']
+            Molecule index to molecule ObjectId map
+        """
+        if subset:
+            if isinstance(subset, str):
+                subset = {subset}
+
+            indexer = {e.name: e.molecule_id for e in self.data.records if e.name in subset}
+        else:
+            indexer = {e.name: e.molecule_id for e in self.data.records}
+
+        return indexer
 
     def _add_history(self, **history: Dict[str, Optional[str]]) -> None:
         """
@@ -764,22 +788,7 @@ class Dataset(Collection):
 
         return list(self.data.contributed_values)
 
-    def get_contributed_values(self, key: str) -> ContributedValues:
-        """Returns a copy of the requested ContributedValues object.
-
-        Parameters
-        ----------
-        key : str
-            The ContributedValues object key.
-
-        Returns
-        -------
-        ContributedValues
-            The requested ContributedValues object.
-        """
-        return self.data.contributed_values[key.lower()].copy()
-
-    def get_contributed_values_column(self, key: str) -> 'Series':
+    def get_contributed_values(self, key: str) -> 'Series':
         """Returns a Pandas column with the requested contributed values
 
         Parameters
@@ -794,7 +803,7 @@ class Dataset(Collection):
         Series
             A pandas Series containing the request values.
         """
-        data = self.get_contributed_values(key)
+        data = self.data.contributed_values[key.lower()].copy()
 
         # Annoying work around to prevent some pands magic
         if isinstance(next(iter(data.values.values())), (int, float)):
@@ -813,6 +822,47 @@ class Dataset(Collection):
             data.units, self.units)
 
         return tmp_idx
+
+    def get_records(self, method: str,
+              basis: Optional[str]=None,
+              *,
+              keywords: Optional[str]=None,
+              program: Optional[str]=None,
+              projection: Optional[Dict[str, bool]]=None,
+              subset: Optional[Union[str, Set[str]]] = None) -> [pd.DataFrame, 'ResultRecord']:
+        """Summary
+
+        Parameters
+        ----------
+        method : str
+            The computational method to query on (B3LYP)
+        basis : Optional[str], optional
+            The computational basis query on (6-31G)
+        keywords : Optional[str], optional
+            The option token desired
+        program : Optional[str], optional
+            The program to query on
+        projection : Optional[Dict[str, bool]], optional
+            The attribute project to perform on the query, otherwise returns ResultRecord objects.
+        subset : Optional[Union[str, Set[str]]], optional
+            The index subset to query on
+
+        Returns
+        -------
+        pd.DataFrame, 'ResultRecord'
+            Description
+        """
+        name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
+        indexer = self._molecule_indexer(subset)
+        df = self._get_records(indexer, dbkeys, projection=projection, merge=False)
+
+        if len(df) == 1:
+            df = df[0]
+
+        if isinstance(subset, str):
+            return df.iloc[0, 0]
+        else:
+            return df
 
     def add_entry(self, name: str, molecule: Molecule, **kwargs: Dict[str, Any]):
         """Adds a new entry to the Dataset
@@ -837,7 +887,6 @@ class Dataset(Collection):
               keywords: Optional[str]=None,
               program: Optional[str]=None,
               field: str=None,
-              as_array: bool=False,
               force: bool=False) -> str:
         """
         Queries the local Portal for the requested keys.
@@ -854,8 +903,6 @@ class Dataset(Collection):
             The program to query on
         field : str, optional
             The result field to query on
-        as_array : bool, optional
-            Converts the returned values to NumPy arrays
         force : bool, optional
             Forces a requery if data is already present
 
@@ -870,6 +917,8 @@ class Dataset(Collection):
         >>> ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
 
         """
+
+        warnings.warn("This is function is deprecated and will be removed in 0.11.0, please `get_records(..., projection='return_result')` for a similar result", DeprecationWarning)
 
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
 
@@ -888,9 +937,6 @@ class Dataset(Collection):
 
         tmp_idx = self._get_records(indexer, dbkeys, projection={field: True}, merge=True)
         tmp_idx.rename(columns={field: name}, inplace=True)
-
-        if as_array:
-            tmp_idx[tmp_idx.columns[0]] = tmp_idx[tmp_idx.columns[0]].apply(lambda x: np.array(x))
 
         tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', self.units)
 

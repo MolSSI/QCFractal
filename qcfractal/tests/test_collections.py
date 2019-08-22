@@ -27,7 +27,8 @@ def test_collection_query(fractal_compute_server):
 
 
 @testing.using_psi4
-def test_dataset_compute_gradient(fractal_compute_server):
+@pytest.fixture(scope="module")
+def gradient_dataset_fixture(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
 
     # Build a dataset
@@ -52,13 +53,40 @@ def test_dataset_compute_gradient(fractal_compute_server):
     ds.add_contributed_values(contrib)
     ds.save()
 
-    ds = client.get_collection("dataset", "ds_gradient")
-
-    # Compute
     ds.compute("HF", "sto-3g")
     fractal_compute_server.await_results()
 
-    ds.query("HF", "sto-3g", as_array=True)
+    assert ds.get_records("HF", "sto-3g").iloc[0, 0].status == "COMPLETE"
+    assert ds.get_records("HF", "sto-3g").iloc[1, 0].status == "COMPLETE"
+
+    yield client, client.get_collection("dataset", "ds_gradient")
+
+
+def test_gradient_dataset_get_records(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    records = ds.get_records("HF", "sto-3g")
+    assert records.iloc[0, 0].status == "COMPLETE"
+    assert records.iloc[1, 0].status == "COMPLETE"
+    assert records.shape == (2, 1)
+
+    records_subset1 = ds.get_records("HF", "sto-3g", subset="He2")
+    assert records_subset1.status == "COMPLETE"
+
+    records_subset2 = ds.get_records("HF", "sto-3g", subset=["He2"])
+    assert records_subset2.iloc[0,0].status == "COMPLETE"
+    assert records_subset2.shape == (1, 1)
+
+    rec_proj = ds.get_records("HF", "sto-3g", projection={"extras": True, "return_result": True})
+    assert set(rec_proj.columns) == {"extras", "return_result"}
+    assert rec_proj.shape == (2, 2)
+
+# def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
+
+def test_gradient_dataset_statistics(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    ds.get_history()
 
     # Test out some statistics
     stats = ds.statistics("MUE", "HF/sto-3g", "Gradient")
@@ -67,9 +95,6 @@ def test_dataset_compute_gradient(fractal_compute_server):
     stats = ds.statistics("UE", "HF/sto-3g", "Gradient")
     assert pytest.approx(stats.loc["He1"].mean(), 1.e-5) == 0.01635020639
     assert pytest.approx(stats.loc["He2"].mean(), 1.e-5) == 0.00333333333
-
-    assert ds.list_history().shape[0] == 1
-    assert ds.get_history().shape[0] == 1
 
 
 def test_dataset_compute_response(fractal_compute_server):

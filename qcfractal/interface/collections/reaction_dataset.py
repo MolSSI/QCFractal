@@ -135,7 +135,7 @@ class ReactionDataset(Dataset):
         tmp_idx = tmp_idx.reset_index(drop=True)
 
         indexer = {x: x for x in tmp_idx["molecule"]}
-        results = self._get_records(indexer, keys, field=field)
+        results = self._get_records(indexer, dbkeys, projection={field: True}, merge=True)
         tmp_idx = tmp_idx.join(results, on="molecule", how="left")
 
         # Apply stoich values
@@ -318,7 +318,7 @@ class ReactionDataset(Dataset):
         # Apply to df
         self.df[name] = tmp_idx[name]
 
-        return name
+        return tmp_idx
 
     def compute(self,
                 method: Optional[str],
