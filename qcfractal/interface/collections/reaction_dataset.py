@@ -284,11 +284,9 @@ class ReactionDataset(Dataset):
 
 
         """
+        self._check_client()
         self._check_state()
         method = method.upper()
-
-        if self.client is None:
-            raise AttributeError("DataBase: FractalClient was not set.")
 
         self._validate_stoich(stoich)
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=stoich)
@@ -363,10 +361,8 @@ class ReactionDataset(Dataset):
               - existing: A list of ObjectId's of tasks already in the database
 
         """
+        self._check_client()
         self._check_state()
-
-        if self.client is None:
-            raise AttributeError("Dataset: Compute: Client was not set.")
 
         self._validate_stoich(stoich)
         compute_keys = {"program": program, "method": method, "basis": basis, "keywords": keywords, "stoich": stoich}

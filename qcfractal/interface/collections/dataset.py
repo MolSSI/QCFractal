@@ -541,6 +541,7 @@ class Dataset(Collection):
         Series
             A Series of the data results
         """
+        self._check_client()
         self._check_state()
 
         field = field.lower()
@@ -592,10 +593,8 @@ class Dataset(Collection):
             compute_keys["keywords"],
             stoich=compute_keys.get("stoich", None))
 
+        self._check_client()
         self._check_state()
-
-        if self.client is None:
-            raise AttributeError("Dataset: Compute: Client was not set.")
 
         umols = list(set(molecules))
 
@@ -712,8 +711,7 @@ class Dataset(Collection):
             The requested KeywordSet
 
         """
-        if self.client is None:
-            raise AttributeError("Dataset: Client was not set.")
+        self._check_client()
 
         alias = alias.lower()
         program = program.lower()
@@ -878,8 +876,7 @@ class Dataset(Collection):
         if (name in self.df) and (force is False):
             return name
 
-        if self.client is None:
-            raise AttributeError("DataBase: FractalClient was not set.")
+        self._check_client()
 
         # # If reaction results
         indexer = {e.name: e.molecule_id for e in self.data.records}
