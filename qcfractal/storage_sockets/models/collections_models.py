@@ -71,14 +71,14 @@ class DatasetMixin:
     history = Column(JSON)
 
 
-class DatasetRecordsORM(Base):
+class DatasetEntryORM(Base):
     """Association table for many to many"""
 
-    __tablename__ = 'dataset_records'
+    __tablename__ = 'dataset_entry'
 
     dataset_id = Column(Integer, ForeignKey('dataset.id', ondelete='cascade'), primary_key=True)
     #TODO: check the cascase_delete with molecule
-    molecule_id = Column(Integer, ForeignKey('molecule.id', ondelete='cascade'), primary_key=True)
+    molecule_id = Column(Integer, ForeignKey('molecule.id'), primary_key=True)
 
     name = Column(String, nullable=False)
     comment = Column(String)
@@ -115,7 +115,7 @@ class DatasetORM(CollectionORM, DatasetMixin):
     #         .where(DatasetRecordsORM.dataset_id == id))  #, deferred=True)
 
 
-    records_obj = relationship(DatasetRecordsORM,
+    records_obj = relationship(DatasetEntryORM,
                                lazy='selectin',   #lazy='noload', # when using column_property
                                cascade="all, delete-orphan",
                                backref="dataset")
@@ -144,7 +144,7 @@ class DatasetORM(CollectionORM, DatasetMixin):
         self.records_obj = []
         records = [] if not records else records
         for rec_dict in records:
-            rec = DatasetRecordsORM(dataset_id=int(self.id),**rec_dict)
+            rec = DatasetEntryORM(dataset_id=int(self.id),**rec_dict)
             self.records_obj.append(rec)
 
 
@@ -162,10 +162,10 @@ class DatasetORM(CollectionORM, DatasetMixin):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-class ReactionDatasetRecordsORM(Base):
+class ReactionDatasetEntryORM(Base):
     """Association table for many to many"""
 
-    __tablename__ = 'reaction_dataset_records'
+    __tablename__ = 'reaction_dataset_entry'
 
     reaction_dataset_id = Column(Integer, ForeignKey('reaction_dataset.id', ondelete='cascade'), primary_key=True)
 
@@ -187,7 +187,7 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
 
     ds_type  = Column(String, nullable=True)
 
-    records_obj = relationship(ReactionDatasetRecordsORM,
+    records_obj = relationship(ReactionDatasetEntryORM,
                                lazy='selectin',
                                cascade="all, delete-orphan",
                                backref="reaction_dataset")
@@ -197,7 +197,7 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
         self.records_obj = []
         records = records or []
         for rec_dict in records:
-            rec = ReactionDatasetRecordsORM(reaction_dataset_id=int(self.id),**rec_dict)
+            rec = ReactionDatasetEntryORM(reaction_dataset_id=int(self.id),**rec_dict)
             self.records_obj.append(rec)
 
     @hybrid_property

@@ -51,7 +51,7 @@ def upgrade():
         sa.ForeignKeyConstraint(['id'], ['collection.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('dataset_records',
+    op.create_table('dataset_entry',
         sa.Column('dataset_id', sa.Integer(), nullable=False),
         sa.Column('molecule_id', sa.Integer(), nullable=False),
         sa.Column('name', sa.String(), nullable=False),
@@ -61,7 +61,7 @@ def upgrade():
         sa.ForeignKeyConstraint(['molecule_id'], ['molecule.id'], ondelete='cascade'),
         sa.PrimaryKeyConstraint('dataset_id', 'molecule_id')
     )
-    op.create_table('reaction_dataset_records',
+    op.create_table('reaction_dataset_entry',
         sa.Column('reaction_dataset_id', sa.Integer(), nullable=False),
         sa.Column('attributes', sa.JSON(), nullable=True),
         sa.Column('name', sa.String(), nullable=False),
@@ -119,8 +119,8 @@ def downgrade():
     op.drop_index('ix_collection_type', table_name='collection')
     op.drop_column('collection', 'collection_type')
     op.drop_column('collection', 'provenance')
-    op.drop_table('reaction_dataset_records')
-    op.drop_table('dataset_records')
+    op.drop_table('reaction_dataset_entry')
+    op.drop_table('dataset_entry')
     op.drop_table('reaction_dataset')
     op.drop_table('dataset')
     # ### end Alembic commands ###
