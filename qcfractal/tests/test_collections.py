@@ -62,26 +62,40 @@ def gradient_dataset_fixture(fractal_compute_server):
     yield client, client.get_collection("dataset", "ds_gradient")
 
 
+def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    he1_dist = 2.672476322216822
+    mols = ds.get_molecules()
+    assert mols.shape == (2, 1)
+    assert mols.iloc[0, 0].measure([0, 1]) == pytest.approx(he1_dist)
+
+    mol = ds.get_molecules(subset="He1")
+    assert mol.measure([0, 1]) == pytest.approx(he1_dist)
+
+    mols_subset = ds.get_molecules(subset=["He1"])
+    assert mols_subset.iloc[0, 0].measure([0, 1]) == pytest.approx(he1_dist)
+
+
 def test_gradient_dataset_get_records(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
     records = ds.get_records("HF", "sto-3g")
+    assert records.shape == (2, 1)
     assert records.iloc[0, 0].status == "COMPLETE"
     assert records.iloc[1, 0].status == "COMPLETE"
-    assert records.shape == (2, 1)
 
     records_subset1 = ds.get_records("HF", "sto-3g", subset="He2")
     assert records_subset1.status == "COMPLETE"
 
     records_subset2 = ds.get_records("HF", "sto-3g", subset=["He2"])
-    assert records_subset2.iloc[0,0].status == "COMPLETE"
     assert records_subset2.shape == (1, 1)
+    assert records_subset2.iloc[0, 0].status == "COMPLETE"
 
     rec_proj = ds.get_records("HF", "sto-3g", projection={"extras": True, "return_result": True})
-    assert set(rec_proj.columns) == {"extras", "return_result"}
     assert rec_proj.shape == (2, 2)
+    assert set(rec_proj.columns) == {"extras", "return_result"}
 
-# def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
 
 def test_gradient_dataset_statistics(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture

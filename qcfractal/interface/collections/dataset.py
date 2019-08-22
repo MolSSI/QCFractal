@@ -545,11 +545,42 @@ class Dataset(Collection):
 
         return name, dbkeys, history
 
+    def _get_molecules(self, indexer: Dict[str, 'ObjectId']) -> 'pd.Series':
+        """Queries a list of molecules using a molecule inder
+
+        Parameters
+        ----------
+        indexer : Dict[str, 'ObjectId']
+            A key/value index of molecules to query
+
+        Returns
+        -------
+        pd.Series
+            A series of Molecules
+        """
+
+        molecules = []
+        molecule_ids = list(set(indexer.values()))
+        for i in range(0, len(molecule_ids), self.client.query_limit):
+            molecules.extend(self.client.query_molecules(id=molecule_ids[i:i + self.client.query_limit]))
+
+        molecules = pd.DataFrame.from_dict([{"molecule_id": x.id, "molecule": x} for x in molecules])
+
+        df = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule_id"])
+        df.reset_index(inplace=True)
+
+        # Outer join on left to merge duplicate molecules
+        df = df.merge(molecules, how="left", on="molecule_id")
+        df.set_index("index", inplace=True)
+        df.drop("molecule_id", axis=1, inplace=True)
+
+        return df
+
     def _get_records(self,
                      indexer: Dict[str, 'ObjectId'],
                      query: Dict[str, Any],
                      projection: Optional[Dict[str, bool]] = None,
-                     merge: bool = False) -> 'Series':
+                     merge: bool = False) -> 'pd.Series':
         """
         Runs a query based on an indexer which is index : molecule_id
 
@@ -823,14 +854,36 @@ class Dataset(Collection):
 
         return tmp_idx
 
-    def get_records(self, method: str,
+    def get_molecules(self, subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'Molecule']:
+        """Queries full Molecules from the database.
+
+        Parameters
+        ----------
+        subset : Optional[Union[str, Set[str]]], optional
+            The index subset to query on
+
+        Returns
+        -------
+        Union[pd.DataFrame, 'Molecule']
+            Either a DataFrame of indexed Molecules or a single Molecule if a single subset string was provided.
+        """
+        indexer = self._molecule_indexer(subset)
+        df = self._get_molecules(indexer)
+
+        if isinstance(subset, str):
+            return df.iloc[0, 0]
+        else:
+            return df
+
+    def get_records(self,
+              method: str,
               basis: Optional[str]=None,
               *,
               keywords: Optional[str]=None,
               program: Optional[str]=None,
               projection: Optional[Dict[str, bool]]=None,
-              subset: Optional[Union[str, Set[str]]] = None) -> [pd.DataFrame, 'ResultRecord']:
-        """Summary
+              subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'ResultRecord']:
+        """Queries full ResultRecord objects from the database.
 
         Parameters
         ----------
@@ -849,8 +902,8 @@ class Dataset(Collection):
 
         Returns
         -------
-        pd.DataFrame, 'ResultRecord'
-            Description
+        Union[pd.DataFrame, 'ResultRecord']
+            Either a DataFrame of indexed ResultRecords or a single ResultRecord if a singel subset string was provided.
         """
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
         indexer = self._molecule_indexer(subset)
