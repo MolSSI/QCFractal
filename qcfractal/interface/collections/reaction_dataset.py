@@ -135,7 +135,7 @@ class ReactionDataset(Dataset):
         tmp_idx = tmp_idx.reset_index(drop=True)
 
         indexer = {x: x for x in tmp_idx["molecule"]}
-        results = self._query(indexer, keys, field=field)
+        results = self._get_records(indexer, keys, field=field)
         tmp_idx = tmp_idx.join(results, on="molecule", how="left")
 
         # Apply stoich values

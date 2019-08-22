@@ -521,20 +521,24 @@ class Dataset(Collection):
 
         return name, dbkeys, history
 
-    def _query(self, indexer: str, query: Dict[str, Any], field: str="return_result") -> 'Series':
+    def _get_records(self,
+                     indexer: Dict[str, 'ObjectId'],
+                     query: Dict[str, Any],
+                     projection: Optional[Dict[str, bool]] = None,
+                     merge: bool = False) -> 'Series':
         """
         Runs a query based on an indexer which is index : molecule_id
 
         Parameters
         ----------
-        indexer : str
-            The primary index of the query
+        indexer : Dict[str, 'ObjectId']
+            A key/value index of molecules to query
         query : Dict[str, Any]
             A results query
-        field : str, optional
-            The field to pull from the ResultEntry
-        scale : str, optional
-            The scale of the computation
+        projection : Optional[Dict[str, bool]], optional
+            Description
+        merge : bool, optional
+            Sum compound queries together, useful for mixing results
 
         Returns
         -------
@@ -544,14 +548,15 @@ class Dataset(Collection):
         self._check_client()
         self._check_state()
 
-        field = field.lower()
-
         ret = []
         for query_set in composition_planner(**query):
 
             # Set the index to remove duplicates
             molecules = list(set(indexer.values()))
-            query_set["projection"] = {"molecule": True, field: True}
+            if projection:
+                proj = {k.lower(): v for k, v in projection.items()}
+                proj["molecule"] = True
+                query_set["projection"] = proj
 
             # Chunk up the queries
             records = []
@@ -559,7 +564,10 @@ class Dataset(Collection):
                 query_set["molecule"] = molecules[i:i + self.client.query_limit]
                 records.extend(self.client.query_results(**query_set))
 
-            records = pd.DataFrame(records, columns=["molecule", field])
+            if projection is None:
+                records = [{"molecule" : x.molecule, "record": x} for x in records]
+
+            records = pd.DataFrame.from_dict(records)
 
             df = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule"])
             df.reset_index(inplace=True)
@@ -570,16 +578,13 @@ class Dataset(Collection):
             df.drop("molecule", axis=1, inplace=True)
             ret.append(df)
 
-        if len(ret) == 1:
-            retdf = ret[0]
-        else:
+        if merge:
             retdf = ret[0]
             for df in ret[1:]:
                 retdf += df
-
-        retdf[retdf.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', self.units)
-
-        return retdf
+            return retdf
+        else:
+            return ret
 
     def _compute(self, compute_keys, molecules, tag, priority):
         """
@@ -881,16 +886,18 @@ class Dataset(Collection):
         # # If reaction results
         indexer = {e.name: e.molecule_id for e in self.data.records}
 
-        tmp_idx = self._query(indexer, dbkeys, field=field)
+        tmp_idx = self._get_records(indexer, dbkeys, projection={field: True}, merge=True)
         tmp_idx.rename(columns={field: name}, inplace=True)
 
         if as_array:
             tmp_idx[tmp_idx.columns[0]] = tmp_idx[tmp_idx.columns[0]].apply(lambda x: np.array(x))
 
+        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', self.units)
+
         # Apply to df
         self.df[tmp_idx.columns] = tmp_idx
 
-        return tmp_idx.columns[0]
+        return tmp_idx
 
     def compute(self,
                 method: str,
