@@ -100,7 +100,9 @@ def test_gradient_dataset_get_records(gradient_dataset_fixture):
 def test_gradient_dataset_statistics(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
-    ds.get_history()
+    df = ds.get_values()
+    assert df.shape == (2, 1)
+    assert np.sum(df.loc["He2", "HF/sto-3g"]) == pytest.approx(0.0)
 
     # Test out some statistics
     stats = ds.statistics("MUE", "HF/sto-3g", "Gradient")

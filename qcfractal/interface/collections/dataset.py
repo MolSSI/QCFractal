@@ -228,7 +228,7 @@ class Dataset(Collection):
         ret.sort_index(inplace=True)
         return ret
 
-    def _get_history(self, force: bool = False, **search: Dict[str, Optional[str]]) -> 'DataFrame':
+    def _get_values(self, force: bool = False, **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """Queries for all history that matches the search
 
         Parameters
@@ -241,23 +241,67 @@ class Dataset(Collection):
         Returns
         -------
         DataFrame
-            A DataFrame of the queried parameters
+            A DataFrame of the queried values
         """
 
         queries = self.list_history(**search, dftd3=True, pretty=False).reset_index()
         if queries.shape[0] > 10:
             raise TypeError("More than 10 queries formed, please narrow the search.")
 
-        # queries["name"] = None
+        ret = []
         for name, query in queries.iterrows():
 
             query = query.replace({np.nan: None}).to_dict()
             query.pop("driver")
             if "stoichiometry" in query:
                 query["stoich"] = query.pop("stoichiometry")
-            queries.loc[name, "name"] = self.query(query.pop("method").upper(), force=force, **query)
+            name = self._canonical_name(**query)
+            if force or (name not in self.df.columns):
+                self.df[name] = self.get_records(query.pop("method").upper(),
+                                                 projection={"return_result": True},
+                                                 **query)["return_result"]
+            ret.append(self.df[name])
 
-        return queries
+        return pd.concat(ret, axis=1)
+
+    def get_values(self,
+                    method: Optional[str]=None,
+                    basis: Optional[str]=None,
+                    keywords: Optional[str]=None,
+                    program: Optional[str]=None,
+                    force: bool=False) -> 'DataFrame':
+        """Obtains values from the known history from the search paramaters provided for the expected `return_result` values. Defaults to the standard
+        programs and keywords if not provided.
+
+        Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method and basis combination simultaneously.
+
+        Parameters
+        ----------
+        method : Optional[str]
+            The computational method to compute (B3LYP)
+        basis : Optional[str], optional
+            The computational basis to compute (6-31G)
+        keywords : Optional[str], optional
+            The keyword alias for the requested compute
+        program : Optional[str], optional
+            The underlying QC program
+
+        Returns
+        -------
+        DataFrame
+            A DataFrame of the queried parameters
+        """
+
+        name, dbkeys, history = self._default_parameters(program, "nan", "nan", keywords)
+
+        for k, v in [("method", method), ("basis", basis)]:
+
+            if v is not None:
+                history[k] = v
+            else:
+                history.pop(k, None)
+
+        return self._get_values(**history, force=force)
 
     def get_history(self,
                     method: Optional[str]=None,
@@ -285,17 +329,10 @@ class Dataset(Collection):
             A DataFrame of the queried parameters
         """
 
+        warnings.warn("This is function is deprecated and will be removed in 0.11.0, please use `get_values(..., )` for a instead.", DeprecationWarning)
+
         # Get default program/keywords
-        name, dbkeys, history = self._default_parameters(program, "nan", "nan", keywords)
-
-        for k, v in [("method", method), ("basis", basis)]:
-
-            if v is not None:
-                history[k] = v
-            else:
-                history.pop(k, None)
-
-        return self._get_history(**history, force=force)
+        return self.get_values(method=method, basis=basis, keywords=keywords, program=program, force=force)
 
     def _visualize(self,
                    metric,
