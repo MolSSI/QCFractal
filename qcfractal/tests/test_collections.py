@@ -148,18 +148,18 @@ def test_reactiondataset_check_state(fractal_compute_server):
         ds.compute("SCF", "STO-3G")
 
     with pytest.raises(ValueError):
-        ds.query("SCF", "STO-3G")
+        ds.get_values("SCF", "STO-3G")
 
     ds.save()
-    assert ds.query("SCF", "STO-3G")
+    assert ds.get_values("SCF", "STO-3G")
 
     ds.add_keywords("default", "psi4", ptl.models.KeywordSet(values={"a": 5}))
 
     with pytest.raises(ValueError):
-        ds.query("SCF", "STO-3G")
+        ds.get_values("SCF", "STO-3G")
 
     ds.save()
-    assert ds.query("SCF", "STO-3G")
+    assert ds.get_values("SCF", "STO-3G")
 
     contrib = {
         "name": "Benchmark",
@@ -173,15 +173,15 @@ def test_reactiondataset_check_state(fractal_compute_server):
     }
     ds.add_contributed_values(contrib)
     with pytest.raises(ValueError):
-        ds.query("SCF", "STO-3G")
+        ds.get_values("SCF", "STO-3G")
 
     assert "benchmark" in ds.list_contributed_values()
     assert ds.get_contributed_values("benchmark").name == "Benchmark"
 
-
 @testing.using_psi4
 @testing.using_dftd3
-def test_compute_reactiondataset_dftd3(fractal_compute_server):
+@pytest.fixture(scope="module")
+def reactiondataset_dftd3_fixture_fixture(fractal_compute_server):
 
     client = ptl.FractalClient(fractal_compute_server)
     ds_name = "He_DFTD3"
@@ -203,9 +203,20 @@ def test_compute_reactiondataset_dftd3(fractal_compute_server):
     assert len(ncomp2.submitted) == 2
 
     fractal_compute_server.await_results()
-    assert ds.query("B3LYP", "6-31G")
-    assert ds.query("B3LYP-D3", "6-31G")
-    assert ds.query("B3LYP-D3(BJ)", "6-31G")
+
+    yield client, ds
+
+def test_rectiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
+    client, ds = reactiondataset_dftd3_fixture_fixture
+
+def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
+    client, ds = reactiondataset_dftd3_fixture_fixture
+
+    assert ds.get_values("B3LYP", "6-31G")
+    assert ds.get_values("B3LYP-D3", "6-31G")
+    assert ds.get_values("B3LYP-D3(BJ)", "6-31G")
+
+    # Should be in ds.df now as wells
 
     for key, value in {"B3LYP/6-31g": -0.002135, "B3LYP-D3/6-31g": -0.005818, "B3LYP-D3(BJ)/6-31g": -0.005636}.items():
 

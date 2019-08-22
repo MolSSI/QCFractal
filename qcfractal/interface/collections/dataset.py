@@ -1,18 +1,19 @@
 """
 QCPortal Database ODM
 """
+import warnings
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
-import warnings
+
 from qcelemental import constants
 
-from .collection import Collection
-from .collection_utils import composition_planner, register_collection
 from ..models import ComputeResponse, Molecule, ObjectId, ProtoModel
 from ..statistics import wrap_statistics
 from ..visualization import bar_plot, violin_plot
+from .collection import Collection
+from .collection_utils import composition_planner, register_collection
 
 
 class MoleculeEntry(ProtoModel):
@@ -257,9 +258,8 @@ class Dataset(Collection):
                 query["stoich"] = query.pop("stoichiometry")
             name = self._canonical_name(**query)
             if force or (name not in self.df.columns):
-                self.df[name] = self.get_records(query.pop("method").upper(),
-                                                 projection={"return_result": True},
-                                                 **query)["return_result"]
+                data = self.get_records(query.pop("method").upper(), projection={"return_result": True}, **query)
+                self.df[name] = data["return_result"] * constants.conversion_factor('hartree', self.units)
             ret.append(self.df[name])
 
         return pd.concat(ret, axis=1)

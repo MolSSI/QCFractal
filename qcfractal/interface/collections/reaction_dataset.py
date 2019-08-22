@@ -2,16 +2,17 @@
 QCPortal Database ODM
 """
 import itertools as it
+import warnings
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
+from ..models import ComputeResponse, Molecule, ProtoModel
+from ..util import replace_dict_keys
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
-from ..util import replace_dict_keys
-from ..models import ComputeResponse, Molecule, ProtoModel
 
 
 class _ReactionTypeEnum(str, Enum):
@@ -238,6 +239,77 @@ class ReactionDataset(Dataset):
         query = {k: v for k, v in query.items() if v is not None}
 
         return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind)
+
+    def get_records(
+              method,
+              basis: Optional[str]=None,
+              *,
+              keywords: Optional[str]=None,
+              program: Optional[str]=None,
+              stoich: Union[str, List[str]]="default",
+              projection: Optional[Dict[str, bool]]=None,
+              subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'ResultRecord']:
+        """
+        Queries the local Portal for the requested keys and stoichiometry.
+
+        Parameters
+        ----------
+        method : str
+            The computational method to query on (B3LYP)
+        basis : Optional[str], optional
+            The computational basis to query on (6-31G)
+        keywords : Optional[str], optional
+            The option token desired
+        program : Optional[str], optional
+            The program to query on
+        stoich : Union[str, List[str]], optional
+            The given stoichiometry to compute.
+        projection : Optional[Dict[str, bool]], optional
+            The attribute project to perform on the query, otherwise returns ResultRecord objects.
+        subset : Optional[Union[str, Set[str]]], optional
+            The index subset to query on
+
+        Returns
+        -------
+        Union[pd.DataFrame, 'ResultRecord']
+            The name of the queried column
+
+        Examples
+        --------
+        ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
+
+        """
+
+        warnings.warn("This is function is deprecated and will be removed in 0.11.0, please `get_records(..., projection='return_result')` for a similar result", DeprecationWarning)
+
+        self._check_client()
+        self._check_state()
+        method = method.upper()
+
+        self._validate_stoich(stoich)
+        name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=stoich)
+
+
+        # # # If reaction results
+        # if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
+        #     monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
+        #     tmp_idx_complex = self._unroll_query(dbkeys, stoich, field=field)
+        #     tmp_idx_monomers = self._unroll_query(dbkeys, monomer_stoich, field=field)
+
+        #     # Combine
+        #     tmp_idx = tmp_idx_complex - tmp_idx_monomers
+
+        # else:
+        #     tmp_idx = self._unroll_query(dbkeys, stoich, field=field)
+        # tmp_idx.columns = [name]
+
+        # # scale
+        # tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
+
+        # # Apply to df
+        # self.df[name] = tmp_idx[name]
+
+        # return tmp_idx
 
     def query(self,
               method,
