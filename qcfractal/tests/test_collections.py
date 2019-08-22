@@ -142,13 +142,18 @@ def test_dataset_compute_response(fractal_compute_server):
 def test_reactiondataset_check_state(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
     ds = ptl.collections.ReactionDataset("check_state", client, ds_type="ie", default_program="rdkit")
-    ds.add_ie_rxn("He1", ptl.Molecule.from_data("He -3 0 0\n--\nHe 0 0 2"))
+    ds.add_ie_rxn("He1", ptl.Molecule.from_data("He -3 0 0\n--\nNe 0 0 2"))
+
+    ds.save()
+    print()
+    print(ds.get_molecules(stoich=["default1", "default"]))
+    raise Exception()
 
     with pytest.raises(ValueError):
         ds.compute("SCF", "STO-3G")
 
     with pytest.raises(ValueError):
-        ds.get_values("SCF", "STO-3G")
+        ds.get_records("SCF", "STO-3G")
 
     ds.save()
     assert ds.get_values("SCF", "STO-3G")
@@ -156,10 +161,10 @@ def test_reactiondataset_check_state(fractal_compute_server):
     ds.add_keywords("default", "psi4", ptl.models.KeywordSet(values={"a": 5}))
 
     with pytest.raises(ValueError):
-        ds.get_values("SCF", "STO-3G")
+        ds.get_records("SCF", "STO-3G")
 
     ds.save()
-    assert ds.get_values("SCF", "STO-3G")
+    assert ds.get_records("SCF", "STO-3G")
 
     contrib = {
         "name": "Benchmark",
@@ -173,10 +178,11 @@ def test_reactiondataset_check_state(fractal_compute_server):
     }
     ds.add_contributed_values(contrib)
     with pytest.raises(ValueError):
-        ds.get_values("SCF", "STO-3G")
+        ds.get_records("SCF", "STO-3G")
 
     assert "benchmark" in ds.list_contributed_values()
     assert ds.get_contributed_values("benchmark").name == "Benchmark"
+
 
 @testing.using_psi4
 @testing.using_dftd3

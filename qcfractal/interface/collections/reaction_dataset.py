@@ -93,6 +93,39 @@ class ReactionDataset(Dataset):
         self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule", "coefficient"])
         self.valid_stoich = set(self.rxn_index["stoichiometry"].unique())
 
+    def _molecule_indexer(self, stoich: Union[str, List[str]],
+                          subset: Optional[Union[str, Set[str]]] = None) -> Dict[Tuple[str, ...], 'ObjectId']:
+        """Provides a {index: molecule_id} mapping for a given subset.
+
+        Parameters
+        ----------
+        stoich : Union[str, List[str]]
+            The stoichiometries, or list of stoichiometries to return
+        subset : Optional[Union[str, Set[str]]], optional
+            The indices of the desired subset. Return all indices if subset is None.
+
+        No Longer Returned
+        ------------------
+        Dict[str, 'ObjectId']
+            Molecule index to molecule ObjectId map
+        """
+        print(self.rxn_index)
+        if isinstance(stoich, str):
+            stoich = [stoich]
+
+        pattern = "(^" + "$)|(^".join(stoich) + "$)"
+        matched_rows = self.rxn_index[self.rxn_index["stoichiometry"].str.match(pattern)]
+
+        ret = {}
+        for gb_idx, group in matched_rows.groupby(["name", "stoichiometry"]):
+            for cnt, (idx, row) in enumerate(group.iterrows()):
+                print(gb_idx)
+                print(gb_idx + (cnt, ))
+                print(row["molecule"])
+                ret[gb_idx + (cnt, )] = row["molecule"]
+
+        return ret
+
     def _validate_stoich(self, stoich):
         if stoich.lower() not in self.valid_stoich:
             raise KeyError("Stoichiometry not understood, valid keys are {}.".format(self.valid_stoich))
@@ -113,7 +146,7 @@ class ReactionDataset(Dataset):
 
         self._form_index()
 
-    def _unroll_query(self, keys: Dict[str, Any], stoich: str, field: str="return_result") -> 'Series':
+    def _unroll_query(self, keys: Dict[str, Any], stoich: str, field: str = "return_result") -> 'Series':
         """Unrolls a complex query into a "flat" query for the server object
 
         Parameters
@@ -154,11 +187,11 @@ class ReactionDataset(Dataset):
         return tmp_idx
 
     def get_history(self,
-                    method: Optional[str]=None,
-                    basis: Optional[str]=None,
-                    keywords: Optional[str]=None,
-                    program: Optional[str]=None,
-                    stoich: str="default") -> 'DataFrame':
+                    method: Optional[str] = None,
+                    basis: Optional[str] = None,
+                    keywords: Optional[str] = None,
+                    program: Optional[str] = None,
+                    stoich: str = "default") -> 'DataFrame':
         """ Queries known history from the search paramaters provided. Defaults to the standard
         programs and keywords if not provided.
 
@@ -195,16 +228,16 @@ class ReactionDataset(Dataset):
         return self._get_history(**history)
 
     def visualize(self,
-                  method: Optional[str]=None,
-                  basis: Optional[str]=None,
-                  keywords: Optional[str]=None,
-                  program: Optional[str]=None,
-                  stoich: Optional[str]=None,
-                  groupby: Optional[str]=None,
-                  metric: str="UE",
-                  bench: Optional[str]=None,
-                  kind: str="bar",
-                  return_figure: Optional[bool]=None) -> 'plotly.Figure':
+                  method: Optional[str] = None,
+                  basis: Optional[str] = None,
+                  keywords: Optional[str] = None,
+                  program: Optional[str] = None,
+                  stoich: Optional[str] = None,
+                  groupby: Optional[str] = None,
+                  metric: str = "UE",
+                  bench: Optional[str] = None,
+                  kind: str = "bar",
+                  return_figure: Optional[bool] = None) -> 'plotly.Figure':
         """
         Parameters
         ----------
@@ -240,15 +273,39 @@ class ReactionDataset(Dataset):
 
         return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind)
 
-    def get_records(
-              method,
-              basis: Optional[str]=None,
-              *,
-              keywords: Optional[str]=None,
-              program: Optional[str]=None,
-              stoich: Union[str, List[str]]="default",
-              projection: Optional[Dict[str, bool]]=None,
-              subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'ResultRecord']:
+    def get_molecules(self, subset: Optional[Union[str, Set[str]]] = None,
+                      stoich: Union[str, List[str]] = "default") -> Union[pd.DataFrame, 'Molecule']:
+        """Queries full Molecules from the database.
+
+        Parameters
+        ----------
+        subset : Optional[Union[str, Set[str]]], optional
+            The index subset to query on
+        stoich : Union[str, List[str]], optional
+            The stoichiometries to pull from, either a single or multiple stoichiometries
+
+        Returns
+        -------
+        Union[pd.DataFrame, 'Molecule']
+            Either a DataFrame of indexed Molecules or a single Molecule if a single subset string was provided.
+        """
+        indexer = self._molecule_indexer(stoich, subset)
+        df = self._get_molecules(indexer)
+
+        if isinstance(subset, str) and isinstance(stoich, str):
+            return df.iloc[0, 0]
+        else:
+            return df
+
+    def get_records(self,
+                    method,
+                    basis: Optional[str] = None,
+                    *,
+                    keywords: Optional[str] = None,
+                    program: Optional[str] = None,
+                    stoich: Union[str, List[str]] = "default",
+                    projection: Optional[Dict[str, bool]] = None,
+                    subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'ResultRecord']:
         """
         Queries the local Portal for the requested keys and stoichiometry.
 
@@ -280,7 +337,9 @@ class ReactionDataset(Dataset):
 
         """
 
-        warnings.warn("This is function is deprecated and will be removed in 0.11.0, please `get_records(..., projection='return_result')` for a similar result", DeprecationWarning)
+        warnings.warn(
+            "This is function is deprecated and will be removed in 0.11.0, please `get_records(..., projection='return_result')` for a similar result",
+            DeprecationWarning)
 
         self._check_client()
         self._check_state()
@@ -288,7 +347,6 @@ class ReactionDataset(Dataset):
 
         self._validate_stoich(stoich)
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=stoich)
-
 
         # # # If reaction results
         # if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
@@ -313,14 +371,14 @@ class ReactionDataset(Dataset):
 
     def query(self,
               method,
-              basis: Optional[str]=None,
+              basis: Optional[str] = None,
               *,
-              keywords: Optional[str]=None,
-              program: Optional[str]=None,
-              stoich: str="default",
-              field: Optional[str]=None,
-              ignore_ds_type: bool=False,
-              force: bool=False) -> str:
+              keywords: Optional[str] = None,
+              program: Optional[str] = None,
+              stoich: str = "default",
+              field: Optional[str] = None,
+              ignore_ds_type: bool = False,
+              force: bool = False) -> str:
         """
         Queries the local Portal for the requested keys and stoichiometry.
 
@@ -356,7 +414,9 @@ class ReactionDataset(Dataset):
 
 
         """
-        warnings.warn("This is function is deprecated and will be removed in 0.11.0, please `get_records(..., projection='return_result')` for a similar result", DeprecationWarning)
+        warnings.warn(
+            "This is function is deprecated and will be removed in 0.11.0, please `get_records(..., projection='return_result')` for a similar result",
+            DeprecationWarning)
 
         self._check_client()
         self._check_state()
@@ -396,14 +456,14 @@ class ReactionDataset(Dataset):
 
     def compute(self,
                 method: Optional[str],
-                basis: Optional[str]=None,
+                basis: Optional[str] = None,
                 *,
-                keywords: Optional[str]=None,
-                program: Optional[str]=None,
-                stoich: str="default",
-                ignore_ds_type: bool=False,
-                tag: Optional[str]=None,
-                priority: Optional[str]=None) -> ComputeResponse:
+                keywords: Optional[str] = None,
+                program: Optional[str] = None,
+                stoich: str = "default",
+                ignore_ds_type: bool = False,
+                tag: Optional[str] = None,
+                priority: Optional[str] = None) -> ComputeResponse:
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -444,8 +504,8 @@ class ReactionDataset(Dataset):
         # Figure out molecules that we need
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
             if ("-D3" in method.upper()) and stoich.lower() != "default":
-                raise KeyError("Please only run -D3 as default at the moment, running with CP could lead to extra computations.")
-
+                raise KeyError(
+                    "Please only run -D3 as default at the moment, running with CP could lead to extra computations.")
 
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
             tmp_monomer = self.rxn_index[self.rxn_index["stoichiometry"] == monomer_stoich].copy()
@@ -505,6 +565,7 @@ class ReactionDataset(Dataset):
 
         """
         raise Exception("MPL not avail")
+
 
 #        return visualization.Ternary2D(self.df, cvals=cvals)
 
@@ -696,8 +757,11 @@ class ReactionDataset(Dataset):
         other_fields = kwargs.pop("other_fields", {})
 
         stoichiometry = self.build_ie_fragments(mol, name=name, **kwargs)
-        return self.add_rxn(
-            name, stoichiometry, reaction_results=reaction_results, attributes=attributes, other_fields=other_fields)
+        return self.add_rxn(name,
+                            stoichiometry,
+                            reaction_results=reaction_results,
+                            attributes=attributes,
+                            other_fields=other_fields)
 
     @staticmethod
     def build_ie_fragments(mol, **kwargs):
