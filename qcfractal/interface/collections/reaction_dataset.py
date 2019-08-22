@@ -20,7 +20,7 @@ class _ReactionTypeEnum(str, Enum):
     ie = 'ie'
 
 
-class ReactionRecord(ProtoModel):
+class ReactionEntry(ProtoModel):
     """Data model for the `reactions` list in Dataset"""
     attributes: Dict[str, Union[int, float, str]]  # Might be overloaded key types
     reaction_results: Dict[str, dict]
@@ -74,7 +74,7 @@ class ReactionDataset(Dataset):
     class DataModel(Dataset.DataModel):
 
         ds_type: _ReactionTypeEnum = _ReactionTypeEnum.rxn
-        records: List[ReactionRecord] = []
+        records: List[ReactionEntry] = []
 
         history: Set[Tuple[str, str, str, Optional[str], Optional[str], str]] = set()
         history_keys: Tuple[str, str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords",
@@ -395,7 +395,7 @@ class ReactionDataset(Dataset):
 
         return ret
 
-    def get_rxn(self, name: str) -> ReactionRecord:
+    def get_rxn(self, name: str) -> ReactionEntry:
         """
         Returns the JSON object of a specific reaction.
 
@@ -597,7 +597,7 @@ class ReactionDataset(Dataset):
         else:
             raise TypeError("Passed in reaction_results not understood.")
 
-        rxn = ReactionRecord(**rxn_dict)
+        rxn = ReactionEntry(**rxn_dict)
 
         self._new_records.append(rxn)
 

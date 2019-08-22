@@ -14,7 +14,7 @@ from ..statistics import wrap_statistics
 from ..visualization import bar_plot, violin_plot
 
 
-class MoleculeRecord(ProtoModel):
+class MoleculeEntry(ProtoModel):
     name: str
     molecule_id: ObjectId
     comment: Optional[str] = None
@@ -90,7 +90,7 @@ class Dataset(Collection):
         alias_keywords: Dict[str, Dict[str, str]] = {}
 
         # Data
-        records: List[MoleculeRecord] = []
+        records: List[MoleculeEntry] = []
         contributed_values: Dict[str, ContributedValues] = {}
 
         # History, driver, program, method (basis, options)
@@ -119,7 +119,7 @@ class Dataset(Collection):
         # Update internal molecule UUID's to servers UUID's
         for record in self._new_records:
             molecule_hash = record.pop("molecule_hash")
-            new_record = MoleculeRecord(molecule_id=mol_ret[molecule_hash], **record)
+            new_record = MoleculeEntry(molecule_id=mol_ret[molecule_hash], **record)
             self.data.records.append(new_record)
 
         self._new_records = []
@@ -532,7 +532,7 @@ class Dataset(Collection):
         query : Dict[str, Any]
             A results query
         field : str, optional
-            The field to pull from the ResultRecords
+            The field to pull from the ResultEntry
         scale : str, optional
             The scale of the computation
 
