@@ -285,7 +285,7 @@ class Dataset(Collection):
 
         Parameters
         ----------
-        method : Optional[str]
+        method : Optional[str], optional
             The computational method to compute (B3LYP)
         basis : Optional[str], optional
             The computational basis to compute (6-31G)
@@ -293,6 +293,8 @@ class Dataset(Collection):
             The keyword alias for the requested compute
         program : Optional[str], optional
             The underlying QC program
+        force : bool, optional
+            Data is typically cached, forces a new query if True.
 
         Returns
         -------
@@ -309,7 +311,26 @@ class Dataset(Collection):
             else:
                 history.pop(k, None)
 
-        return self._get_values(**history, force=force)
+        queries = self.list_history(**history, dftd3=True, pretty=False).reset_index()
+        if queries.shape[0] > 10:
+            raise TypeError("More than 10 queries formed, please narrow the search.")
+
+        ret = []
+        for name, query in queries.iterrows():
+
+            query = query.replace({np.nan: None}).to_dict()
+            query.pop("driver")
+            if "stoichiometry" in query:
+                query["stoich"] = query.pop("stoichiometry")
+
+            name = self._canonical_name(**query)
+            if force or (name not in self.df.columns):
+                data = self.get_records(query.pop("method").upper(), projection={"return_result": True}, **query)
+                self.df[name] = data["return_result"] * constants.conversion_factor('hartree', self.units)
+
+            ret.append(self.df[name])
+
+        return pd.concat(ret, axis=1)
 
     def get_history(self,
                     method: Optional[str]=None,
@@ -519,7 +540,8 @@ class Dataset(Collection):
                         method: Optional[str]=None,
                         basis: Optional[str]=None,
                         keywords: Optional[str]=None,
-                        stoich: Optional[str]=None) -> str:
+                        stoich: Optional[str]=None,
+                        driver: Optional[str]=None) -> str:
         """
         Attempts to build a canonical name for a DataFrame column
         """
@@ -658,6 +680,8 @@ class Dataset(Collection):
         """
         self._check_client()
         self._check_state()
+        print(self.client.query_results(program="psi4", status=None))
+        print(self.client.query_results(program="dftd3", status=None))
 
         ret = []
         plan = composition_planner(**query)
@@ -668,6 +692,7 @@ class Dataset(Collection):
                 raise KeyError(raise_on_plan)
 
         for query_set in plan:
+            print(query_set)
 
             # Set the index to remove duplicates
             molecules = list(set(indexer.values()))
@@ -677,6 +702,7 @@ class Dataset(Collection):
                 query_set["projection"] = proj
 
             # Chunk up the queries
+            print(self.client.query_results(**query_set))
             records = []
             for i in range(0, len(molecules), self.client.query_limit):
                 query_set["molecule"] = molecules[i:i + self.client.query_limit]
@@ -690,10 +716,23 @@ class Dataset(Collection):
             df = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule"])
             df.reset_index(inplace=True)
 
-            # Outer join on left to merge duplicate molecules
-            df = df.merge(records, how="left", on="molecule")
+            if records.shape[0] > 0:
+                # Outer join on left to merge duplicate molecules
+                df = df.merge(records, how="left", on="molecule")
+            else:
+                # No results, fill NaN values
+                if projection is None:
+                    df["record"] = None
+                else:
+                    for k, v in projection.items():
+                        if v:
+                            df[k] = np.nan
+
             df.set_index("index", inplace=True)
             df.drop("molecule", axis=1, inplace=True)
+            print(df)
+            print('---')
+
             ret.append(df)
 
         if len(molecules) == 0:
