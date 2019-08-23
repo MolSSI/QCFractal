@@ -76,6 +76,9 @@ def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
     mols_subset = ds.get_molecules(subset=["He1"])
     assert mols_subset.iloc[0, 0].measure([0, 1]) == pytest.approx(he1_dist)
 
+    with pytest.raises(KeyError):
+        ds.get_molecules(subset="NotInDataset")
+
 
 def test_gradient_dataset_get_records(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
@@ -95,6 +98,16 @@ def test_gradient_dataset_get_records(gradient_dataset_fixture):
     rec_proj = ds.get_records("HF", "sto-3g", projection={"extras": True, "return_result": True})
     assert rec_proj.shape == (2, 2)
     assert set(rec_proj.columns) == {"extras", "return_result"}
+
+    with pytest.raises(KeyError):
+        ds.get_records(method="NotInDataset")
+
+
+def test_gradient_dataset_get_values_no_match(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    with pytest.raises(KeyError):
+        ds.get_values(method="NotInDataset")
 
 
 def test_gradient_dataset_statistics(gradient_dataset_fixture):

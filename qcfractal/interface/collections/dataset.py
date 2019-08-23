@@ -243,6 +243,11 @@ class Dataset(Collection):
         -------
         DataFrame
             A DataFrame of the queried values
+
+        Raises
+        ------
+        KeyError
+            If no records match the query
         """
 
         queries = self.list_history(**search, dftd3=True, pretty=False).reset_index()
@@ -261,6 +266,9 @@ class Dataset(Collection):
                 data = self.get_records(query.pop("method").upper(), projection={"return_result": True}, **query)
                 self.df[name] = data["return_result"] * constants.conversion_factor('hartree', self.units)
             ret.append(self.df[name])
+
+        if len(ret) == 0:
+            raise KeyError("Query matched 0 records.")
 
         return pd.concat(ret, axis=1)
 
@@ -594,6 +602,11 @@ class Dataset(Collection):
         -------
         pd.Series
             A series of Molecules
+
+        Raises
+        ------
+        KeyError
+            If no records match the query
         """
 
         molecules = []
@@ -602,6 +615,8 @@ class Dataset(Collection):
             molecules.extend(self.client.query_molecules(id=molecule_ids[i:i + self.client.query_limit]))
 
         molecules = pd.DataFrame.from_dict([{"molecule_id": x.id, "molecule": x} for x in molecules])
+        if len(molecules) == 0:
+            raise KeyError("Query matched 0 records.")
 
         df = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule_id"])
         df.reset_index(inplace=True)
@@ -636,6 +651,11 @@ class Dataset(Collection):
         -------
         Series
             A Series of the data results
+
+        Raises
+        ------
+        KeyError
+            If no records match the query
         """
         self._check_client()
         self._check_state()
@@ -669,6 +689,9 @@ class Dataset(Collection):
             df.set_index("index", inplace=True)
             df.drop("molecule", axis=1, inplace=True)
             ret.append(df)
+
+        if len(molecules) == 0:
+            raise KeyError("Query matched 0 records.")
 
         if merge:
             retdf = ret[0]
