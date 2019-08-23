@@ -164,46 +164,6 @@ class ReactionDataset(Dataset):
 
         self._form_index()
 
-    def _unroll_query(self, keys: Dict[str, Any], stoich: str, field: str = "return_result") -> 'Series':
-        """Unrolls a complex query into a "flat" query for the server object
-
-        Parameters
-        ----------
-        keys : Dict[str, Any]
-            Server query fields
-        stoich : str
-            The stoichiometry to access for the query (default/cp/cp3/etc)
-        field : str, optional
-            The results field to query on
-
-        Returns
-        -------
-        ret : Series
-            A DataFrame representation of the unrolled query
-        """
-        self._check_state()
-
-        tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
-        tmp_idx = tmp_idx.reset_index(drop=True)
-
-        indexer = {x: x for x in tmp_idx["molecule"]}
-        results = self._get_records(indexer, dbkeys, projection={field: True}, merge=True)
-        tmp_idx = tmp_idx.join(results, on="molecule", how="left")
-
-        # Apply stoich values
-        tmp_idx[field] *= tmp_idx["coefficient"]
-        tmp_idx = tmp_idx.drop(['stoichiometry', 'molecule', 'coefficient'], axis=1)
-
-        # If *any* value is null in the stoich sum, the whole thing should be Null. Pandas is being too clever
-        null_mask = tmp_idx.copy()
-        null_mask[field] = null_mask[field].isnull()
-        null_mask = null_mask.groupby(["name"]).sum() != False
-
-        tmp_idx = tmp_idx.groupby(["name"]).sum()
-        tmp_idx[null_mask] = np.nan
-
-        return tmp_idx
-
     def get_values(self,
                    method: Optional[str] = None,
                    basis: Optional[str] = None,
@@ -254,15 +214,19 @@ class ReactionDataset(Dataset):
         stoich_monomer = ''.join([x for x in stoich if not x.isdigit()]) + '1'
 
         def _query_apply_coeffients(stoich, query):
+
+            # Build the starting table
             indexer, names = self._molecule_indexer(stoich, coefficients=True)
             df = self._get_records(indexer, query, projection={"return_result": True}, merge=True)
             df.index = pd.MultiIndex.from_tuples(df.index, names=names)
             df.reset_index(inplace=True)
 
-            null_mask = df[["name", "return_result"]]
+            # Block out null values `groupby.sum()` will return 0 rather than NaN in all cases
+            null_mask = df[["name", "return_result"]].copy()
             null_mask["return_result"] = null_mask["return_result"].isnull()
             null_mask = null_mask.groupby(["name"])["return_result"].sum() != False
 
+            # Multiply by coefficients and sum
             df["return_result"] *= df["coefficient"]
             df = df.groupby(["name"])["return_result"].sum(skipna=False)
             df[null_mask] = np.nan

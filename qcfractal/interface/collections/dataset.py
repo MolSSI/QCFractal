@@ -680,8 +680,6 @@ class Dataset(Collection):
         """
         self._check_client()
         self._check_state()
-        print(self.client.query_results(program="psi4", status=None))
-        print(self.client.query_results(program="dftd3", status=None))
 
         ret = []
         plan = composition_planner(**query)
@@ -692,7 +690,9 @@ class Dataset(Collection):
                 raise KeyError(raise_on_plan)
 
         for query_set in plan:
-            print(query_set)
+
+            if isinstance(query_set["keywords"], str):
+                query_set["keywords"] = self.data.alias_keywords[query_set["program"]][query_set["keywords"]]
 
             # Set the index to remove duplicates
             molecules = list(set(indexer.values()))
@@ -702,7 +702,6 @@ class Dataset(Collection):
                 query_set["projection"] = proj
 
             # Chunk up the queries
-            print(self.client.query_results(**query_set))
             records = []
             for i in range(0, len(molecules), self.client.query_limit):
                 query_set["molecule"] = molecules[i:i + self.client.query_limit]
@@ -730,8 +729,6 @@ class Dataset(Collection):
 
             df.set_index("index", inplace=True)
             df.drop("molecule", axis=1, inplace=True)
-            print(df)
-            print('---')
 
             ret.append(df)
 

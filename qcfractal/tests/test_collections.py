@@ -164,7 +164,7 @@ def test_reactiondataset_check_state(fractal_compute_server):
         ds.get_records("SCF", "STO-3G")
 
     ds.save()
-    assert ds.get_records("SCF", "STO-3G")
+    ds.get_records("SCF", "STO-3G")
 
     ds.add_keywords("default", "psi4", ptl.models.KeywordSet(values={"a": 5}))
 
@@ -172,7 +172,7 @@ def test_reactiondataset_check_state(fractal_compute_server):
         ds.get_records("SCF", "STO-3G")
 
     ds.save()
-    assert ds.get_records("SCF", "STO-3G")
+    ds.get_records("SCF", "STO-3G")
 
     contrib = {
         "name": "Benchmark",
@@ -189,7 +189,7 @@ def test_reactiondataset_check_state(fractal_compute_server):
         ds.get_records("SCF", "STO-3G")
 
     assert "benchmark" in ds.list_contributed_values()
-    assert ds.get_contributed_values("benchmark").name == "Benchmark"
+    assert "Benchmark" in ds.get_contributed_values("benchmark").columns
 
 
 @testing.using_psi4
@@ -235,16 +235,24 @@ def test_rectiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
 def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
 
-    assert ds.get_values("B3LYP", "6-31G")
-    assert ds.get_values("B3LYP-D3", "6-31G")
-    assert ds.get_values("B3LYP-D3(BJ)", "6-31G")
+    bench = {
+        "B3LYP/6-31g": pytest.approx(-0.002135, 1.e-3),
+        "B3LYP-D3/6-31g": pytest.approx(-0.005818, 1.e-3),
+        "B3LYP-D3(BJ)/6-31g": pytest.approx(-0.005636, 1.e-3)
+    }
+
+    ret = ds.get_values("B3LYP", "6-31G")
+    assert ret.loc["HeDimer", "B3LYP/6-31g"] == bench["B3LYP/6-31g"]
+
+    ret = ds.get_values("B3LYP-D3", "6-31G")
+    assert ret.loc["HeDimer", "B3LYP-D3/6-31g"] == bench["B3LYP-D3/6-31g"]
+
+    ret = ds.get_values("B3LYP-D3(BJ)", "6-31G")
+    assert ret.loc["HeDimer", "B3LYP-D3(BJ)/6-31g"] == bench["B3LYP-D3(BJ)/6-31g"]
 
     # Should be in ds.df now as wells
-
-    for key, value in {"B3LYP/6-31g": -0.002135, "B3LYP-D3/6-31g": -0.005818, "B3LYP-D3(BJ)/6-31g": -0.005636}.items():
-
-        assert pytest.approx(value, 1.e-3) == ds.df.loc["HeDimer", key]
-
+    for key, value in bench.items():
+        assert value == ds.df.loc["HeDimer", key]
 
 @testing.using_psi4
 def test_compute_reactiondataset_regression(fractal_compute_server):
@@ -302,7 +310,8 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     fractal_compute_server.await_results()
 
     # Query computed results
-    assert ds.query("SCF", "STO-3G")
+    ret = ds.get_values("SCF", "STO-3G")
+    assert ret.shape == (2, 1)
     assert pytest.approx(0.6024530476, 1.e-5) == ds.df.loc["He1", "SCF/sto-3g"]
     assert pytest.approx(-0.0068950359, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g"]
 
@@ -341,12 +350,12 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     # Compute, should default to direct options
     r = ds.compute("SCF", "STO-3G")
     fractal_compute_server.await_results()
-    assert ds.query("SCF", "STO-3G")
+    ret = ds.get_values("SCF", "STO-3G")
     assert pytest.approx(0.39323818102293856, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g"]
 
     r = ds.compute("SCF", "sto-3g", keywords="df")
     fractal_compute_server.await_results()
-    assert ds.query("SCF", "sto-3g", keywords="df") == "SCF/sto-3g-df"
+    ds.get_values("SCF", "sto-3g", keywords="df") == "SCF/sto-3g-df"
     assert pytest.approx(0.38748602675524185, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g-df"]
 
     assert ds.list_history().shape[0] == 2
