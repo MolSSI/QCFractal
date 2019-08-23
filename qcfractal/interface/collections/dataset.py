@@ -632,7 +632,8 @@ class Dataset(Collection):
                      indexer: Dict[str, 'ObjectId'],
                      query: Dict[str, Any],
                      projection: Optional[Dict[str, bool]] = None,
-                     merge: bool = False) -> 'pd.Series':
+                     merge: bool = False,
+                     raise_on_plan: Union[str, bool] = False) -> 'pd.Series':
         """
         Runs a query based on an indexer which is index : molecule_id
 
@@ -646,22 +647,27 @@ class Dataset(Collection):
             Description
         merge : bool, optional
             Sum compound queries together, useful for mixing results
+        raise_on_plan : Union[str, bool], optional
+            Raises a KeyError is True or string if a multi-stage plan is detected.
 
         Returns
         -------
-        Series
+        pd.Series
             A Series of the data results
 
-        Raises
-        ------
-        KeyError
-            If no records match the query
         """
         self._check_client()
         self._check_state()
 
         ret = []
-        for query_set in composition_planner(**query):
+        plan = composition_planner(**query)
+        if raise_on_plan and (len(plan) > 1):
+            if raise_on_plan is True:
+                raise KeyError("Recieved a multi-stage plan when this function does not support multi-staged plans.")
+            else:
+                raise KeyError(raise_on_plan)
+
+        for query_set in plan:
 
             # Set the index to remove duplicates
             molecules = list(set(indexer.values()))

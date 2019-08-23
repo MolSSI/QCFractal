@@ -93,8 +93,8 @@ class ReactionDataset(Dataset):
         self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule", "coefficient"])
         self.valid_stoich = set(self.rxn_index["stoichiometry"].unique())
 
-    def _molecule_indexer(self, stoich: Union[str, List[str]],
-                          subset: Optional[Union[str, Set[str]]] = None) -> Dict[Tuple[str, ...], 'ObjectId']:
+    def _molecule_indexer(self, stoich: Union[str, List[str]], subset: Optional[Union[str, Set[str]]] = None
+                          ) -> Tuple[Dict[Tuple[str, ...], 'ObjectId'], Tuple[str]]:
         """Provides a {index: molecule_id} mapping for a given subset.
 
         Parameters
@@ -107,9 +107,14 @@ class ReactionDataset(Dataset):
         No Longer Returned
         ------------------
         Dict[str, 'ObjectId']
+        Dict[str, 'ObjectId']
             Molecule index to molecule ObjectId map
+
+        Returns
+        -------
+        Tuple[Dict[Tuple[str, ...], 'ObjectId'], Tuple[str]]
+            Molecule index to molecule ObjectId map, and index names
         """
-        print(self.rxn_index)
         if isinstance(stoich, str):
             stoich = [stoich]
 
@@ -119,16 +124,17 @@ class ReactionDataset(Dataset):
         ret = {}
         for gb_idx, group in matched_rows.groupby(["name", "stoichiometry"]):
             for cnt, (idx, row) in enumerate(group.iterrows()):
-                print(gb_idx)
-                print(gb_idx + (cnt, ))
-                print(row["molecule"])
                 ret[gb_idx + (cnt, )] = row["molecule"]
 
-        return ret
+        return ret, ("name", "stoichiometry", "idx")
 
     def _validate_stoich(self, stoich):
-        if stoich.lower() not in self.valid_stoich:
-            raise KeyError("Stoichiometry not understood, valid keys are {}.".format(self.valid_stoich))
+        if isinstance(stoich, str):
+            stoich = [stoich]
+
+        for s in stoich:
+            if s.lower() not in self.valid_stoich:
+                raise KeyError("Stoichiometry not understood, valid keys are {}.".format(self.valid_stoich))
 
     def _pre_save_prep(self, client):
         self._canonical_pre_save(client)
@@ -289,8 +295,14 @@ class ReactionDataset(Dataset):
         Union[pd.DataFrame, 'Molecule']
             Either a DataFrame of indexed Molecules or a single Molecule if a single subset string was provided.
         """
-        indexer = self._molecule_indexer(stoich, subset)
+
+        self._check_client()
+        self._check_state()
+        self._validate_stoich(stoich)
+
+        indexer, names = self._molecule_indexer(stoich, subset)
         df = self._get_molecules(indexer)
+        df.index = pd.MultiIndex.from_tuples(df.index, names=names)
 
         if isinstance(subset, str) and isinstance(stoich, str):
             return df.iloc[0, 0]
@@ -343,31 +355,34 @@ class ReactionDataset(Dataset):
 
         self._check_client()
         self._check_state()
-        method = method.upper()
-
         self._validate_stoich(stoich)
-        name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=stoich)
 
-        # # # If reaction results
-        # if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
-        #     monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
-        #     tmp_idx_complex = self._unroll_query(dbkeys, stoich, field=field)
-        #     tmp_idx_monomers = self._unroll_query(dbkeys, monomer_stoich, field=field)
+        method = method.upper()
+        if isinstance(stoich, str):
+            stoich = [stoich]
 
-        #     # Combine
-        #     tmp_idx = tmp_idx_complex - tmp_idx_monomers
+        ret = []
+        for s in stoich:
+            name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=s)
 
-        # else:
-        #     tmp_idx = self._unroll_query(dbkeys, stoich, field=field)
-        # tmp_idx.columns = [name]
+            indexer, names = self._molecule_indexer(s, subset)
+            df = self._get_records(
+                indexer,
+                dbkeys,
+                projection=projection,
+                merge=False,
+                raise_on_plan=
+                "`get_records` can only be used for non-composite quantities. You likely queried a DFT+D method or similar that requires a combination of DFT and -D. Please query each piece separately."
+            )
+            df = df[0]
+            df.index = pd.MultiIndex.from_tuples(df.index, names=names)
+            ret.append(df)
 
-        # # scale
-        # tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
+        ret = pd.concat(ret)
+        ret.sort_index(inplace=True)
 
-        # # Apply to df
-        # self.df[name] = tmp_idx[name]
+        return ret
 
-        # return tmp_idx
 
     def query(self,
               method,

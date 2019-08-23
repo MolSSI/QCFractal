@@ -157,11 +157,6 @@ def test_reactiondataset_check_state(fractal_compute_server):
     ds = ptl.collections.ReactionDataset("check_state", client, ds_type="ie", default_program="rdkit")
     ds.add_ie_rxn("He1", ptl.Molecule.from_data("He -3 0 0\n--\nNe 0 0 2"))
 
-    ds.save()
-    print()
-    print(ds.get_molecules(stoich=["default1", "default"]))
-    raise Exception()
-
     with pytest.raises(ValueError):
         ds.compute("SCF", "STO-3G")
 
@@ -169,7 +164,7 @@ def test_reactiondataset_check_state(fractal_compute_server):
         ds.get_records("SCF", "STO-3G")
 
     ds.save()
-    assert ds.get_values("SCF", "STO-3G")
+    assert ds.get_records("SCF", "STO-3G")
 
     ds.add_keywords("default", "psi4", ptl.models.KeywordSet(values={"a": 5}))
 
@@ -213,11 +208,11 @@ def reactiondataset_dftd3_fixture_fixture(fractal_compute_server):
 
     ds.save()
 
-    ncomp1 = ds.compute("B3LYP-D3", "6-31G")
+    ncomp1 = ds.compute("B3LYP-D3", "6-31g")
     assert len(ncomp1.ids) == 4
     assert len(ncomp1.submitted) == 4
 
-    ncomp2 = ds.compute("B3LYP-D3(BJ)", "6-31G")
+    ncomp2 = ds.compute("B3LYP-D3(BJ)", "6-31g")
     assert len(ncomp2.ids) == 4
     assert len(ncomp2.submitted) == 2
 
@@ -227,6 +222,15 @@ def reactiondataset_dftd3_fixture_fixture(fractal_compute_server):
 
 def test_rectiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
+
+    records = ds.get_records("B3LYP", "6-31g")
+    assert records.shape == (1, 1)
+    assert records.iloc[0, 0].status == "COMPLETE"
+
+    records = ds.get_records("B3LYP", "6-31g", stoich=["cp", "default"])
+    assert records.shape == (2, 1)
+    assert records.iloc[0, 0].status == "COMPLETE"
+    assert records.iloc[0, 0].id == records.iloc[1, 0].id
 
 def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
