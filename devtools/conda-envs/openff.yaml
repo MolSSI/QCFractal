@@ -34,4 +34,4 @@ dependencies:
 
 # QCArchive includes
   - qcengine>=0.9.0
-  - qcelemental>=0.6.0
+  - qcelemental>=0.7.0

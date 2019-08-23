@@ -17,10 +17,10 @@ import tornado.log
 
 import qcengine as qcng
 import qcfractal
-from pydantic import BaseModel, BaseSettings, validator, Schema
+from pydantic import validator, Schema
 
 from . import cli_utils
-from ..interface.util import auto_gen_docs_on_demand
+from ..interface.models import AutodocBaseSettings, ProtoModel
 
 __all__ = ["main"]
 
@@ -41,7 +41,7 @@ class AdapterEnum(str, Enum):
     parsl = "parsl"
 
 
-class CommonManagerSettings(BaseSettings):
+class CommonManagerSettings(AutodocBaseSettings):
     """
     The Common settings are the settings most users will need to adjust regularly to control the nature of
     task execution and the hardware under which tasks are executed on. This block is often unique to each deployment,
@@ -108,10 +108,7 @@ class CommonManagerSettings(BaseSettings):
         pass
 
 
-auto_gen_docs_on_demand(CommonManagerSettings)
-
-
-class FractalServerSettings(BaseSettings):
+class FractalServerSettings(AutodocBaseSettings):
     """
     Settings pertaining to the Fractal Server you wish to pull tasks from and push completed tasks to. Each manager
     supports exactly 1 Fractal Server to be in communication with, and exactly 1 user on that Fractal Server. These
@@ -143,10 +140,7 @@ class FractalServerSettings(BaseSettings):
         pass
 
 
-auto_gen_docs_on_demand(FractalServerSettings)
-
-
-class QueueManagerSettings(BaseSettings):
+class QueueManagerSettings(AutodocBaseSettings):
     """
     Fractal Queue Manger settings. These are options which control the setup and execution of the Fractal Manager
     itself.
@@ -207,9 +201,6 @@ class QueueManagerSettings(BaseSettings):
     )
 
 
-auto_gen_docs_on_demand(QueueManagerSettings)
-
-
 class SchedulerEnum(str, Enum):
     slurm = "slurm"
     pbs = "pbs"
@@ -223,7 +214,7 @@ class AdaptiveCluster(str, Enum):
     adaptive = "adaptive"
 
 
-class ClusterSettings(BaseSettings):
+class ClusterSettings(AutodocBaseSettings):
     """
     Settings tied to the cluster you are running on. These settings are mostly tied to the nature of the cluster
     jobs you are submitting, separate from the nature of the compute tasks you will be running within them. As such,
@@ -284,10 +275,7 @@ class ClusterSettings(BaseSettings):
         return v.lower()
 
 
-auto_gen_docs_on_demand(ClusterSettings)
-
-
-class SettingsBlocker(BaseSettings):
+class SettingsBlocker(AutodocBaseSettings):
     """Helper class to auto block certain entries, overwrite hidden methods to access"""
     _forbidden_set = set()
     _forbidden_name = "SettingsBlocker"
@@ -347,9 +335,6 @@ class DaskQueueSettings(SettingsBlocker):
     _forbidden_name = "dask_jobqueue"
 
 
-auto_gen_docs_on_demand(DaskQueueSettings)
-
-
 class ParslExecutorSettings(SettingsBlocker):
     """
     Settings for the Parsl Executor class. This serves as the primary mechanism for distributing Workers to jobs.
@@ -378,10 +363,7 @@ class ParslExecutorSettings(SettingsBlocker):
     _forbidden_name = "the parsl executor"
 
 
-auto_gen_docs_on_demand(ParslExecutorSettings)
-
-
-class ParslLauncherSettings(BaseSettings):
+class ParslLauncherSettings(AutodocBaseSettings):
     """
     Set the Launcher in a Parsl Provider, and its options, if not set, the defaults are used.
 
@@ -439,9 +421,6 @@ class ParslLauncherSettings(BaseSettings):
         pass
 
 
-auto_gen_docs_on_demand(ParslLauncherSettings)
-
-
 class ParslProviderSettings(SettingsBlocker):
     """
     Settings for the Parsl Provider class. Valid values for this field are functions of your cluster.scheduler and no
@@ -476,10 +455,7 @@ class ParslProviderSettings(SettingsBlocker):
     _forbidden_name = "parsl's provider"
 
 
-auto_gen_docs_on_demand(ParslProviderSettings)
-
-
-class ParslQueueSettings(BaseSettings):
+class ParslQueueSettings(AutodocBaseSettings):
     """
     The Parsl-specific configurations used with the `common.adapter = parsl` setting. The parsl config is broken up into
     a top level `Config` class, an `Executor` sub-class, and a `Provider` sub-class of the `Executor`.
@@ -497,10 +473,7 @@ class ParslQueueSettings(BaseSettings):
         extra = "allow"
 
 
-auto_gen_docs_on_demand(ParslQueueSettings)
-
-
-class ManagerSettings(BaseModel):
+class ManagerSettings(ProtoModel):
     """
     The config file for setting up a QCFractal Manager, all sub fields of this model are at equal top-level of the
     YAML file. No additional top-level fields are permitted, but sub-fields may have their own additions.
@@ -515,11 +488,8 @@ class ManagerSettings(BaseModel):
     dask: Optional[DaskQueueSettings] = DaskQueueSettings()
     parsl: Optional[ParslQueueSettings] = ParslQueueSettings()
 
-    class Config:
+    class Config(ProtoModel.Config):
         extra = "forbid"
-
-
-auto_gen_docs_on_demand(ManagerSettings)
 
 
 def parse_args():

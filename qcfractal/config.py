@@ -7,10 +7,10 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from pydantic import BaseSettings, Schema, validator
+from pydantic import Schema, validator
 import yaml
 
-from .interface.util import auto_gen_docs_on_demand
+from .interface.models import AutodocBaseSettings
 
 
 def _str2bool(v):
@@ -30,7 +30,7 @@ class SettingsCommonConfig:
     extra = "forbid"
 
 
-class ConfigSettings(BaseSettings):
+class ConfigSettings(AutodocBaseSettings):
 
     _type_map = {"string": str, "integer": int, "float": float, "boolean": _str2bool}
 
@@ -74,9 +74,6 @@ class DatabaseSettings(ConfigSettings):
         pass
 
 
-auto_gen_docs_on_demand(DatabaseSettings)
-
-
 class FractalServerSettings(ConfigSettings):
     """
     Fractal Server settings
@@ -118,9 +115,6 @@ class FractalServerSettings(ConfigSettings):
 
     class Config(SettingsCommonConfig):
         pass
-
-
-auto_gen_docs_on_demand(FractalServerSettings)
 
 
 class FractalConfig(ConfigSettings):
@@ -204,6 +198,3 @@ class FractalConfig(ConfigSettings):
             return self.fractal.geo_file_path
         else:
             return os.path.join(self.base_folder, self.fractal._default_geo_filename)
-
-
-auto_gen_docs_on_demand(FractalConfig)
