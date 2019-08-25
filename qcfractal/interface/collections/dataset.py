@@ -330,6 +330,9 @@ class Dataset(Collection):
 
             ret.append(self.df[name])
 
+        if len(ret) == 0:
+            raise KeyError("Query matched no records!")
+
         return pd.concat(ret, axis=1)
 
     def get_history(self,
@@ -1013,6 +1016,9 @@ class Dataset(Collection):
 
         if len(df) == 1:
             df = df[0]
+
+        if np.all(df.count() == 0):
+            raise KeyError("Query matched no records!")
 
         if isinstance(subset, str):
             return df.iloc[0, 0]
