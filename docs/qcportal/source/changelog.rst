@@ -15,6 +15,40 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.10.0 / 2019-08-26
+-------------------
+
+.. note:: Stable Beta Release
+
+    This release marks Fractal's official Stable Beta Release. This means that future, non-backwards compatible
+    changes to the API will result in depreciation warnings.
+
+New Features
+++++++++++++
+- (:pr:`385`) ``Dataset``s and ``ReactionDatasets`` have three new functions for accessing data.
+  1. `get_values` returns the canonical headline value for a dataset (e.g. the interaction energy for S22) in data columns with caching. This function replaces the now-deprecated `get_history`.
+  2. `get_records` either returns `ResultRecord`s or a projection. For the case of ``ReactionDatasets``, the results are broken down into component calculcations. The function replaces the now-deprecated `query`.
+  3. `get_molecules` returns the `Molecule`s associated with a dataset.
+  In addition, `get_contributed_values` now returns a data column.
+
+Enhancements
+++++++++++++
+
+- (:pr:`356`) Collections' database representations have been improved to better support future upgrade paths.
+- (:pr:`375`) Dataset Records are now copied alongside the Collections.
+- (:pr:`377`) The ``testing`` suite from Fractal now exposes as a PyTest entry-point when Fractal is installed so
+  that tests can be run from anywhere with the ``--pyargs qcfractal`` flag of ``pytest``.
+- (:pr:`384`) "Dataset Records" and "Reaction Dataset Records" have been renamed to "Dataset Entry" and "Reaction
+  Dataset Entry" respectively.
+- (:pr:`387`) The auto-documentation tech introduced in :pr:`321` has been replaced by the improved implementation in
+  Elemental.
+
+Documentation Improvements
+++++++++++++++++++++++++++
+
+- (:pr:`372`, :pr:`376`) Installation instructions have been updated and typo-corrected such that they are accurate
+  now for both Conda and PyPi.
+
 0.9.0 / 2019-08-16
 ------------------
 
