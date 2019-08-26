@@ -23,13 +23,6 @@ Changelog
     This release marks Fractal's official Stable Beta Release. This means that future, non-backwards compatible
     changes to the API will result in depreciation warnings.
 
-New Features
-++++++++++++
-- (:pr:`385`) ``Dataset``s and ``ReactionDatasets`` have three new functions for accessing data.
-  1. `get_values` returns the canonical headline value for a dataset (e.g. the interaction energy for S22) in data columns with caching. This function replaces the now-deprecated `get_history`.
-  2. `get_records` either returns `ResultRecord`s or a projection. For the case of ``ReactionDatasets``, the results are broken down into component calculcations. The function replaces the now-deprecated `query`.
-  3. `get_molecules` returns the `Molecule`s associated with a dataset.
-  In addition, `get_contributed_values` now returns a data column.
 
 Enhancements
 ++++++++++++
