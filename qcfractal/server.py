@@ -251,7 +251,7 @@ class FractalServer:
             "version": get_information("version"),
             "query_limit": self.storage.get_limit(1.e9),
             "client_lower_version_limit": "0.9.0",  # Must be XX.YY.ZZ
-            "client_upper_version_limit": "0.9.1"   # Must be XX.YY.ZZ
+            "client_upper_version_limit": "0.10.1"   # Must be XX.YY.ZZ
         }
 
         endpoints = [

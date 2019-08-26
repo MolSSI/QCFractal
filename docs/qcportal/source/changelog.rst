@@ -15,6 +15,38 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.10.0 / 2019-08-26
+-------------------
+
+.. note:: Stable Beta Release
+
+    This release marks Fractal's official Stable Beta Release. This means that future, non-backwards compatible
+    changes to the API will result in depreciation warnings.
+
+
+Enhancements
+++++++++++++
+
+- (:pr:`356`) Collections' database representations have been improved to better support future upgrade paths.
+- (:pr:`375`) Dataset Records are now copied alongside the Collections.
+- (:pr:`377`) The ``testing`` suite from Fractal now exposes as a PyTest entry-point when Fractal is installed so
+  that tests can be run from anywhere with the ``--pyargs qcfractal`` flag of ``pytest``.
+- (:pr:`384`) "Dataset Records" and "Reaction Dataset Records" have been renamed to "Dataset Entry" and "Reaction
+  Dataset Entry" respectively.
+- (:pr:`387`) The auto-documentation tech introduced in :pr:`321` has been replaced by the improved implementation in
+  Elemental.
+
+Bug Fixes
++++++++++
+
+- (:pr:`388`) Queue Manager shutdowns will now signal to reset any running tasks they own.
+
+Documentation Improvements
+++++++++++++++++++++++++++
+
+- (:pr:`372`, :pr:`376`) Installation instructions have been updated and typo-corrected such that they are accurate
+  now for both Conda and PyPi.
+
 0.9.0 / 2019-08-16
 ------------------
 
