@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
             # QCArchive depends
             'qcengine>=0.9.0',
-            'qcelemental>=0.6.0',
+            'qcelemental>=0.7.0',
 
             # Testing
             'pytest',

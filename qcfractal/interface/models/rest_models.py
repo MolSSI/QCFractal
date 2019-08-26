@@ -5,12 +5,13 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import Schema, constr, validator
 
+from qcelemental.util import get_base_docs
+
 from .common_models import KeywordSet, Molecule, ObjectId, ProtoModel
 from .gridoptimization import GridOptimizationInput
 from .records import ResultRecord
 from .task_models import PriorityEnum, TaskRecord
 from .torsiondrive import TorsionDriveInput
-from ..util import auto_gen_docs_on_demand, get_base_docs
 
 __all__ = ["ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryProjection"]
 
@@ -82,16 +83,9 @@ QueryProjection = Optional[Dict[str, bool]]
 
 
 class EmptyMeta(ProtoModel):
-    pass
-
-
-class EmptyMeta(ProtoModel):
     """
     There is no metadata accepted, so an empty metadata is sent for completion.
     """
-
-
-auto_gen_docs_on_demand(EmptyMeta)
 
 
 class ResponseMeta(ProtoModel):
@@ -114,9 +108,6 @@ class ResponseMeta(ProtoModel):
     )
 
 
-auto_gen_docs_on_demand(ResponseMeta)
-
-
 class ResponseGETMeta(ResponseMeta):
     """
     Standard Fractal Server response metadata for GET/fetch type requests.
@@ -129,9 +120,6 @@ class ResponseGETMeta(ResponseMeta):
         ...,
         description="The number of entries which were already found in the database from the set which was provided."
     )
-
-
-auto_gen_docs_on_demand(ResponseGETMeta, force_reapply=True)
 
 
 class ResponsePOSTMeta(ResponseMeta):
@@ -153,9 +141,6 @@ class ResponsePOSTMeta(ResponseMeta):
     )
 
 
-auto_gen_docs_on_demand(ResponsePOSTMeta, force_reapply=True)
-
-
 class QueryMeta(ProtoModel):
     """
     Standard Fractal Server metadata for Database queries containing pagination information
@@ -170,9 +155,6 @@ class QueryMeta(ProtoModel):
     )
 
 
-auto_gen_docs_on_demand(QueryMeta)
-
-
 class QueryMetaProjection(QueryMeta):
     """
     Fractal Server metadata for Database queries containing pagination information and query projection parameters
@@ -181,9 +163,6 @@ class QueryMetaProjection(QueryMeta):
         None,
         description="Additional projection information to pass to the query. Expert-level object."
     )
-
-
-auto_gen_docs_on_demand(QueryMetaProjection, force_reapply=True)
 
 
 class ComputeResponse(ProtoModel):
@@ -227,8 +206,6 @@ class ComputeResponse(ProtoModel):
             submitted=(self.submitted + other.submitted),
             existing=(self.existing + other.existing))
 
-
-auto_gen_docs_on_demand(ComputeResponse)
 
 common_docs = {
     EmptyMeta: str(get_base_docs(EmptyMeta)),
@@ -287,8 +264,6 @@ class KVStoreGETResponse(ProtoModel):
 
 
 register_model("kvstore", "GET", KVStoreGETBody, KVStoreGETResponse)
-auto_gen_docs_on_demand(KVStoreGETBody)
-auto_gen_docs_on_demand(KVStoreGETResponse)
 
 
 ### Molecule response
@@ -332,8 +307,6 @@ class MoleculeGETResponse(ProtoModel):
 
 
 register_model("molecule", "GET", MoleculeGETBody, MoleculeGETResponse)
-auto_gen_docs_on_demand(MoleculeGETBody)
-auto_gen_docs_on_demand(MoleculeGETResponse)
 
 
 class MoleculePOSTBody(ProtoModel):
@@ -361,8 +334,6 @@ class MoleculePOSTResponse(ProtoModel):
 
 
 register_model("molecule", "POST", MoleculePOSTBody, MoleculePOSTResponse)
-auto_gen_docs_on_demand(MoleculePOSTBody)
-auto_gen_docs_on_demand(MoleculePOSTResponse)
 
 
 ### Keywords
@@ -394,8 +365,6 @@ class KeywordGETResponse(ProtoModel):
 
 
 register_model("keyword", "GET", KeywordGETBody, KeywordGETResponse)
-auto_gen_docs_on_demand(KeywordGETBody)
-auto_gen_docs_on_demand(KeywordGETResponse)
 
 
 class KeywordPOSTBody(ProtoModel):
@@ -422,8 +391,6 @@ class KeywordPOSTResponse(ProtoModel):
 
 
 register_model("keyword", "POST", KeywordPOSTBody, KeywordPOSTResponse)
-auto_gen_docs_on_demand(KeywordPOSTBody)
-auto_gen_docs_on_demand(KeywordPOSTResponse)
 
 
 ### Collections
@@ -479,8 +446,6 @@ class CollectionGETResponse(ProtoModel):
 
 
 register_model("collection", "GET", CollectionGETBody, CollectionGETResponse)
-auto_gen_docs_on_demand(CollectionGETBody)
-auto_gen_docs_on_demand(CollectionGETResponse)
 
 
 class CollectionPOSTBody(ProtoModel):
@@ -538,8 +503,6 @@ class CollectionPOSTResponse(ProtoModel):
 
 
 register_model("collection", "POST", CollectionPOSTBody, CollectionPOSTResponse)
-auto_gen_docs_on_demand(CollectionPOSTBody)
-auto_gen_docs_on_demand(CollectionPOSTResponse)
 
 
 ### Result
@@ -634,8 +597,6 @@ class ResultGETResponse(ProtoModel):
 
 
 register_model("result", "GET", ResultGETBody, ResultGETResponse)
-auto_gen_docs_on_demand(ResultGETBody)
-auto_gen_docs_on_demand(ResultGETResponse)
 
 
 ### Procedures
@@ -697,8 +658,6 @@ class ProcedureGETResponse(ProtoModel):
 
 
 register_model("procedure", "GET", ProcedureGETBody, ProcedureGETResponse)
-auto_gen_docs_on_demand(ProcedureGETBody)
-auto_gen_docs_on_demand(ProcedureGETResponse)
 
 
 ### Task Queue
@@ -757,8 +716,6 @@ class TaskQueueGETResponse(ProtoModel):
 
 
 register_model("task_queue", "GET", TaskQueueGETBody, TaskQueueGETResponse)
-auto_gen_docs_on_demand(TaskQueueGETBody)
-auto_gen_docs_on_demand(TaskQueueGETResponse)
 
 
 class TaskQueuePOSTBody(ProtoModel):
@@ -815,8 +772,6 @@ class TaskQueuePOSTResponse(ProtoModel):
 
 
 register_model("task_queue", "POST", TaskQueuePOSTBody, TaskQueuePOSTResponse)
-auto_gen_docs_on_demand(TaskQueuePOSTBody)
-auto_gen_docs_on_demand(TaskQueuePOSTResponse)
 
 
 class TaskQueuePUTBody(ProtoModel):
@@ -871,8 +826,6 @@ class TaskQueuePUTResponse(ProtoModel):
 
 
 register_model("task_queue", "PUT", TaskQueuePUTBody, TaskQueuePUTResponse)
-auto_gen_docs_on_demand(TaskQueuePUTBody)
-auto_gen_docs_on_demand(TaskQueuePUTResponse)
 
 
 ### Service Queue
@@ -925,8 +878,6 @@ class ServiceQueueGETResponse(ProtoModel):
 
 
 register_model("service_queue", "GET", ServiceQueueGETBody, ServiceQueueGETResponse)
-auto_gen_docs_on_demand(ServiceQueueGETBody)
-auto_gen_docs_on_demand(ServiceQueueGETResponse)
 
 
 class ServiceQueuePOSTBody(ProtoModel):
@@ -965,8 +916,7 @@ class ServiceQueuePOSTResponse(ProtoModel):
 
 
 register_model("service_queue", "POST", ServiceQueuePOSTBody, ServiceQueuePOSTResponse)
-auto_gen_docs_on_demand(ServiceQueuePOSTBody)
-auto_gen_docs_on_demand(ServiceQueuePOSTResponse)
+
 
 class ServiceQueuePUTBody(ProtoModel):
     class Data(ProtoModel):
@@ -1017,8 +967,6 @@ class ServiceQueuePUTResponse(ProtoModel):
 
 
 register_model("service_queue", "PUT", ServiceQueuePUTBody, ServiceQueuePUTResponse)
-auto_gen_docs_on_demand(ServiceQueuePUTBody)
-auto_gen_docs_on_demand(ServiceQueuePUTResponse)
 
 
 ### Queue Manager
@@ -1075,7 +1023,6 @@ class QueueManagerMeta(ProtoModel):
 
 
 # Add the new QueueManagerMeta to the docs
-auto_gen_docs_on_demand(QueueManagerMeta)
 common_docs[QueueManagerMeta] = str(get_base_docs(QueueManagerMeta))
 
 
@@ -1107,9 +1054,8 @@ class QueueManagerGETResponse(ProtoModel):
         description="A list of tasks retrieved from the server to compute."
     )
 
+
 register_model("queue_manager", "GET", QueueManagerGETBody, QueueManagerGETResponse)
-auto_gen_docs_on_demand(QueueManagerGETBody)
-auto_gen_docs_on_demand(QueueManagerGETResponse)
 
 
 class QueueManagerPOSTBody(ProtoModel):
@@ -1135,8 +1081,6 @@ class QueueManagerPOSTResponse(ProtoModel):
 
 
 register_model("queue_manager", "POST", QueueManagerPOSTBody, QueueManagerPOSTResponse)
-auto_gen_docs_on_demand(QueueManagerPOSTBody)
-auto_gen_docs_on_demand(QueueManagerPOSTResponse)
 
 
 class QueueManagerPUTBody(ProtoModel):
@@ -1170,6 +1114,3 @@ class QueueManagerPUTResponse(ProtoModel):
 
 
 register_model("queue_manager", "PUT", QueueManagerPUTBody, QueueManagerPUTResponse)
-auto_gen_docs_on_demand(QueueManagerPUTBody)
-auto_gen_docs_on_demand(QueueManagerPUTResponse)
-
