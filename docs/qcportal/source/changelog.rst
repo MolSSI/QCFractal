@@ -43,6 +43,11 @@ Enhancements
 - (:pr:`387`) The auto-documentation tech introduced in :pr:`321` has been replaced by the improved implementation in
   Elemental.
 
+Bug Fixes
++++++++++
+
+- (:pr:`388`) Queue Manager shutdowns will now signal to reset any running tasks they own.
+
 Documentation Improvements
 ++++++++++++++++++++++++++
 
