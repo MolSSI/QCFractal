@@ -512,7 +512,7 @@ class FractalServer:
         ret = self.storage.get_managers(status="ACTIVE", modified_before=dt)
 
         for blob in ret["data"]:
-            nshutdown = self.storage.queue_reset_status(manager=blob["name"])
+            nshutdown = self.storage.queue_reset_status(manager=blob["name"], reset_running=True)
             self.storage.manager_update(blob["name"], returned=nshutdown, status="INACTIVE")
 
             self.logger.info("Hearbeat missing from {}. Shutting down, recycling {} incomplete tasks.".format(
