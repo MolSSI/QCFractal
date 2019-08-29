@@ -812,7 +812,7 @@ class Dataset(Collection):
         return tmp_idx
 
     def add_entry(self, name: str, molecule: Molecule, **kwargs: Dict[str, Any]):
-        """Adds a new entry to the Datset
+        """Adds a new entry to the Dataset
 
         Parameters
         ----------
@@ -821,7 +821,7 @@ class Dataset(Collection):
         molecule : Molecule
             The Molecule associated with this record
         **kwargs : Dict[str, Any]
-            Additional arguements to pass to the record
+            Additional arguments to pass to the record
         """
         mhash = molecule.get_hash()
         self._new_molecules[mhash] = molecule

@@ -1608,6 +1608,8 @@ class SQLAlchemySocket:
                   program=None,
                   status: str = None,
                   base_result: str = None,
+                  tag=None,
+                  manager=None,
                   projection=None,
                   limit: int = None,
                   skip: int = 0,
@@ -1650,7 +1652,9 @@ class SQLAlchemySocket:
                              id=id,
                              hash_index=hash_index,
                              status=status,
-                             base_result_id=base_result)
+                             base_result_id=base_result,
+                             tag=tag,
+                             manager=manager)
 
         data = []
         try:
