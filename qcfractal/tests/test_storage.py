@@ -619,7 +619,6 @@ def test_queue_submit_many_order(storage_results):
         "parser": "",
     }
 
-
     task1 = ptl.models.TaskRecord(**task_template, base_result=dict(ref='result', id=results[3]['id']))
     task2 = ptl.models.TaskRecord(**task_template, base_result=dict(ref='result', id=results[4]['id']))
     task3 = ptl.models.TaskRecord(**task_template, base_result=dict(ref='result', id=results[5]['id']))

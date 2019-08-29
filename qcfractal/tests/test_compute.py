@@ -385,7 +385,7 @@ def test_queue_order_procedure_priority(fractal_compute_server):
     assert queue_id3 == ret1
 
 
-def test_queue_query_tag_manager(fractal_compute_server):
+def test_queue_query_tag(fractal_compute_server):
     reset_server_database(fractal_compute_server)
 
     client = ptl.FractalClient(fractal_compute_server)
@@ -400,26 +400,37 @@ def test_queue_query_tag_manager(fractal_compute_server):
 
     tasks_tag_test = client.query_tasks(tag="test")
     assert len(tasks_tag_test) == 1
-    assert tasks_tag_test[0].id == ret2
+    assert tasks_tag_test[0].base_result.id == ret2
 
     tasks_tag_none = client.query_tasks()
     assert len(tasks_tag_none) == 3
 
     tasks_tagged = client.query_tasks(tag=["test", "test2"])
+    assert tasks_tagged[0].base_result.id == ret2
+    assert tasks_tagged[1].base_result.id == ret3
     assert len(tasks_tagged) == 2
 
+
+def test_queue_query_manager(fractal_compute_server):
+    reset_server_database(fractal_compute_server)
+
+    client = ptl.FractalClient(fractal_compute_server)
+
+    mol1 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 1.1")
+    mol2 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 2.2")
+    mol3 = ptl.Molecule.from_data("He 0 0 0\nHe 0 0 3.3")
+
+    ret1 = client.add_compute("rdkit", "uff", "", "energy", None, mol1).ids[0]
+    ret2 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol2).ids[0]
+    ret3 = client.add_compute("RDKIT", "UFF", "", "energy", None, mol3).ids[0]
+
     manager = get_manager_name(fractal_compute_server)
-    fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], [], limit=1)[0].base_result.id
+    fractal_compute_server.storage.queue_get_next(manager, ["rdkit"], [], limit=1)[0]
     tasks_manager = client.query_tasks(manager=manager)
     assert len(tasks_manager) == 1
-    assert tasks_manager[0].id == ret1
+    assert tasks_manager[0].base_result.id == ret1
 
-    fractal_compute_server.storage.queue_get_next(manager, ["RDkit"], [], limit=1)[0].base_result.id
-    tasks_manager_tag = client.query_tasks(manager=manager, tag="test")
-    assert len(tasks_manager_tag) == 1
-    assert tasks_manager_tag[0].id == ret2
-
-    fractal_compute_server.storage.queue_get_next(manager, ["RDKIT"], [], limit=1)[0].base_result.id
-
+    fractal_compute_server.storage.queue_get_next(manager, ["RDkit"], [], limit=1)[0]
+    fractal_compute_server.storage.queue_get_next(manager, ["RDKIT"], [], limit=1)[0]
     tasks_manager = client.query_tasks(manager=manager)
     assert len(tasks_manager) == 3
