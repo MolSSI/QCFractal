@@ -172,6 +172,11 @@ class QueueManagerSettings(AutodocBaseSettings):
                     "itself down to maintain integrity between it and the Fractal Server. Units of seconds",
         gt=0
     )
+    throttle_task_request: int = Schema(
+        -1,
+        description="Maximum number of jobs that will be requested every update. Setting to -1 disables throttling, and setting to 0 prevents any work from being received",
+        gt=-2
+    )
     test: bool = Schema(
         False,
         description="Turn on testing mode for this Manager. The Manager will not connect to any Fractal Server, and "
@@ -836,6 +841,7 @@ def main(args=None):
         queue_tag=settings.manager.queue_tag,
         manager_name=settings.manager.manager_name,
         update_frequency=settings.manager.update_frequency,
+        throttle_task_request=settings.manager.throttle_task_request,
         cores_per_task=cores_per_task,
         memory_per_task=memory_per_task,
         scratch_directory=settings.common.scratch_directory,

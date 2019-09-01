@@ -82,6 +82,7 @@ class QueueManager:
                  queue_tag: str = None,
                  manager_name: str = "unlabeled",
                  update_frequency: Union[int, float] = 2,
+                 throttle_task_request: int = -1,
                  verbose: bool = True,
                  server_error_retries: Optional[int] = 1,
                  stale_update_limit: Optional[int] = 10,
@@ -106,6 +107,9 @@ class QueueManager:
             The cluster the manager belongs to
         update_frequency : int
             The frequency to check for new tasks in seconds
+        throttle_task_request : int, optional, Default: -1
+            Maximum number of jobs that will be requested every update. Setting to -1 disables throttling,
+            and setting to 0 prevents any work from being received
         verbose: bool, optional, Default: True
             Whether or not to have the manager be verbose (logger level debug and up)
         server_error_retries: int, optional, Default: 1
@@ -164,6 +168,7 @@ class QueueManager:
 
         self.scheduler = None
         self.update_frequency = update_frequency
+        self.throttle_task_request = throttle_task_request
         self.periodic = {}
         self.active = 0
         self.exit_callbacks = []
@@ -548,6 +553,11 @@ class QueueManager:
 
         open_slots = max(0, self.max_tasks - self.active)
 
+        self.logger.info("Preparing to request {} new jobs.".format(open_slots))
+        if self.throttle_task_request >= 0:
+            open_slots = min(open_slots, self.throttle_task_request)
+            self.logger.info("Job requests throttled to {}.".format(open_slots))
+
         # Crunch Statistics
         self.statistics.total_failed_tasks += n_fail
         self.statistics.total_successful_tasks += n_success
@@ -698,7 +708,20 @@ class QueueManager:
                 tasks.append(task)
                 found_programs.append(program_id)
 
-        self.queue_adapter.submit_tasks(tasks)
+        if self.throttle_task_request > 0:
+            ntasks = len(tasks)
+            for i in range(0, ntasks, self.throttle_task_request):
+                j = i + self.throttle_task_request
+                if j > ntasks:
+                    j = ntasks
+                self.queue_adapter.submit_tasks(tasks[i:j])
+                time.sleep(self.update_frequency)
+                self.logger.info("Submitted {}/{} tasks. Waiting {} seconds.\n".format(j, ntasks, self.update_frequency))
+        elif self.throttle_task_request < 0:
+            self.queue_adapter.submit_tasks(tasks)
+        else:
+            self.logger.info("Throttling is set to 0; no tasks run.\n")
+            return 0
 
         self.logger.info("Testing tasks submitting, awaiting results.\n")
         self.queue_adapter.await_results()
