@@ -72,6 +72,32 @@ def test_dataset_compute_gradient(fractal_compute_server):
     assert ds.get_history().shape[0] == 1
 
 
+def test_dataset_compute_response(fractal_compute_server):
+    """ Tests that the full compute response is returned when calling Dataset.compute """
+    client = ptl.FractalClient(fractal_compute_server)
+
+    # Build a dataset
+    ds = ptl.collections.Dataset("ds",
+                                 client,
+                                 default_program="psi4",
+                                 default_driver="energy",
+                                 default_units="hartree")
+
+    ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
+    ds.add_entry("He2", ptl.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"))
+
+    ds.save()
+
+    # Compute fewer molecules than query limit
+    response = ds.compute("HF", "sto-3g")
+    assert len(response.ids) == 2
+
+    # Compute more molecules than query limit
+    client.query_limit = 1
+    response = ds.compute("HF", "sto-3g")
+    assert len(response.ids) == 2
+
+
 def test_reactiondataset_check_state(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
     ds = ptl.collections.ReactionDataset("check_state", client, ds_type="ie", default_program="rdkit")
