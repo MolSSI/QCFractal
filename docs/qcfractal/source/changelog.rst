@@ -15,6 +15,21 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+X.Y.0 / 2019-MM-DD
+-------------------
+
+New Features
+++++++++++++
+
+Enhancements
+++++++++++++
+- (:pr:`394`) Adds `tag` and `manager` selector fields to client.query_tasks.
+  This is helpful for managing jobs in the queue and detecting failures.
+
+Bug Fixes
++++++++++
+
+
 0.10.0 / 2019-08-26
 -------------------
 
