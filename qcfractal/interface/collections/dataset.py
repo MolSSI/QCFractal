@@ -616,9 +616,9 @@ class Dataset(Collection):
                     tag=tag,
                     priority=priority)
 
-            ids.extend(ret.ids)
-            submitted.extend(ret.submitted)
-            existing.extend(ret.existing)
+                ids.extend(ret.ids)
+                submitted.extend(ret.submitted)
+                existing.extend(ret.existing)
 
             qhistory = history.copy()
             qhistory["program"] = compute_set["program"]
