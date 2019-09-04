@@ -1,34 +1,36 @@
-Collections
-===========
+Overview
+========
 
-Collections are an organizational objects that keeps track of collections of results
-results, provides the ability to analyize and visualize these results, and is
-able to compute new results.
+Collections are an organizational objects that keep track of collections of
+results, compute new results, and provide helper functions for analysis and visualization.
 
 
 Collections Querying
 ---------------------
 
-Once a FractalClient has been created the client can query a list of all
+Once a `FractalClient` has been created, the client can query a list of all
 collections currently held on the server.
 
 .. code-block:: python
 
     >>> client.list_collections()
-    {"dataset": ["S22"]}
+    {"ReactionDataset": ["S22"]}
 
 A collection can then be pulled from the server as follows:
 
 .. code-block:: python
 
-    >>> client.get_collection("dataset", "S22")
+    >>> client.get_collection("ReactionDataset", "S22")
     Dataset(id=`5b7f1fd57b87872d2c5d0a6d`, name=`S22`, client="localhost:7777")
 
 Available Collections
 ---------------------
 
-Below is a complete list of collections available from QCPortal:
+Below is a complete list of collection types available from QCPortal.
+All collections support the possibility of computing with and comparing multiple methods.
 
-* :doc:`collection-dataset` - A collection for running a single set of reactions under many methods.
-* :doc:`collection-torsiondrive` - A collection for running a single set of TorsionDrives under different methods.
+* :doc:`collection-dataset` - A collection for a set of molecules and their computed properties.
+* :doc:`collection-reactiondataset` - A collection for chemical reactions and intermolecular interactions.
+* :doc:`collection-optimization` - A collection for geometry optimization of a set of molecules.
+* :doc:`collection-torsiondrive` - A collection for the TorsionDrive pipeline.
 

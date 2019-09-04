@@ -40,7 +40,7 @@ class ReactionDataset(Dataset):
     ----------
     client : client.FractalClient
         A FractalClient connected to a server
-    data : DataModel
+    data : ReactionDataset.DataModel
         A Model representation of the database backbone
     df : pd.DataFrame
         The underlying dataframe for the Dataset object
