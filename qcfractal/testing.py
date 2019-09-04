@@ -476,6 +476,7 @@ def fractal_compute_server(postgres_server):
                           reset_database=True,
                           start_server=False) as server:
         reset_server_database(server)
+        server.await_results() # Force a heartbeat after database clean.
         yield server
 
 

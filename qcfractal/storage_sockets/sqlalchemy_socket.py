@@ -244,17 +244,27 @@ class SQLAlchemySocket:
         """TODO: needs more testing"""
 
         with self.session_scope() as session:
+            # Metadata
+            session.query(VersionsORM).delete(synchronize_session=False)
+
+            # Task and services
             session.query(TaskQueueORM).delete(synchronize_session=False)
+            session.query(QueueManagerORM).delete(synchronize_session=False)
             session.query(ServiceQueueORM).delete(synchronize_session=False)
-            session.query(GridOptimizationProcedureORM).delete(synchronize_session=False)
+
+            # Collections
+            session.query(CollectionORM).delete(synchronize_session=False)
+
+            # Records
             session.query(TorsionDriveProcedureORM).delete(synchronize_session=False)
+            session.query(GridOptimizationProcedureORM).delete(synchronize_session=False)
             session.query(OptimizationProcedureORM).delete(synchronize_session=False)
             session.query(ResultORM).delete(synchronize_session=False)
             session.query(BaseResultORM).delete(synchronize_session=False)
-            session.query(MoleculeORM).delete(synchronize_session=False)
+
+            # Auxiliary tables
             session.query(KVStoreORM).delete(synchronize_session=False)
-            session.query(CollectionORM).delete(synchronize_session=False)
-            session.query(VersionsORM).delete(synchronize_session=False)
+            session.query(MoleculeORM).delete(synchronize_session=False)
 
     def get_project_name(self) -> str:
         return self._project_name
