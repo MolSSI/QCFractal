@@ -413,7 +413,7 @@ class Dataset(Collection):
 
 
             if (groupby == "d3"):
-                full_history = self.get_history(**query)
+                full_history = self.get_values(**query)
                 full_history["base"] = [x.split("-d3")[0] for x in full_history["method"]]
                 full_history["d3"] = [
                     method.replace(base, "").replace("-d", "d")
@@ -440,14 +440,14 @@ class Dataset(Collection):
                     gb_query = query.copy()
                     gb_query[groupby] = gb
 
-                    queries.append(self.get_history(**gb_query))
+                    queries.append(self.get_values(**gb_query))
                     query_names.append(self._canonical_name(**{groupby: gb}))
 
             if (kind == "violin") and (len(queries) != 2):
                 raise KeyError(f"Groupby option for violin plots must have two entries.")
 
         else:
-            queries = [self.get_history(**query)]
+            queries = [self.get_values(**query)]
             query_names = ["Stats"]
 
         title = f"{self.data.name} Dataset Statistics"

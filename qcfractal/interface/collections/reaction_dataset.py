@@ -123,8 +123,9 @@ class ReactionDataset(Dataset):
         if isinstance(stoich, str):
             stoich = [stoich]
 
-        pattern = "(^" + "$)|(^".join(stoich) + "$)"
-        matched_rows = self.rxn_index[self.rxn_index["stoichiometry"].str.match(pattern)]
+        matched_rows = self.rxn_index[np.in1d(self.rxn_index["stoichiometry"], stoich)]
+        if subset:
+            matched_rows = matched_rows[np.in1d(matched_rows["name"], subset)]
 
         names = ("name", "stoichiometry", "idx")
         if coefficients:
@@ -284,47 +285,6 @@ class ReactionDataset(Dataset):
 
         # Get default program/keywords
         return self.get_values(method=method, basis=basis, keywords=keywords, program=program, force=force)
-
-    def get_history(self,
-                    method: Optional[str] = None,
-                    basis: Optional[str] = None,
-                    keywords: Optional[str] = None,
-                    program: Optional[str] = None,
-                    stoich: str = "default") -> 'DataFrame':
-        """ Queries known history from the search paramaters provided. Defaults to the standard
-        programs and keywords if not provided.
-
-        Parameters
-        ----------
-        method : Optional[str]
-            The computational method to compute (B3LYP)
-        basis : Optional[str], optional
-            The computational basis to compute (6-31G)
-        keywords : Optional[str], optional
-            The keyword alias for the requested compute
-        program : Optional[str], optional
-            The underlying QC program
-        stoich : str, optional
-            The given stoichiometry to compute.
-
-        Returns
-        -------
-        DataFrame
-            A DataFrame of the queried parameters
-        """
-
-        self._validate_stoich(stoich)
-
-        name, dbkeys, history = self._default_parameters(program, "nan", "nan", keywords, stoich=stoich)
-
-        for k, v in [("method", method), ("basis", basis)]:
-
-            if v is not None:
-                history[k] = v
-            else:
-                history.pop(k, None)
-
-        return self._get_history(**history)
 
     def visualize(self,
                   method: Optional[str] = None,
