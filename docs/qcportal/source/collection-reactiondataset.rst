@@ -3,7 +3,7 @@ Reaction Dataset
 
 See also the `QCArchive example <https://qcarchivetutorials.readthedocs.io/en/latest/basic_examples/reaction_datasets.html>`_ for ReactionDataset.
 
-.. This looks to be out of date
+.. todo:: This looks to be out of date
 
 ReactionDatasets are useful for computing many methods for a single set of reactions where a reaction in a combination of molecules such as. There are currently two types of datasets:
 
@@ -20,7 +20,7 @@ Visualizing
 Creating
 --------
 
-Blank dataset can be constructed by choosing a dataset name and a dataset type (``dtype``).
+An empty dataset can be constructed by choosing a dataset name and a dataset type (``dtype``).
 
 .. code-block:: python
 
