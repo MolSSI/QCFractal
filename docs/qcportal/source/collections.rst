@@ -5,10 +5,10 @@ Collections are an organizational objects that keep track of collections of
 results, compute new results, and provide helper functions for analysis and visualization.
 
 
-Collections Querying
+Collections querying
 ---------------------
 
-Once a `FractalClient` has been created, the client can query a list of all
+Once a ``FractalClient`` has been created, the client can query a list of all
 collections currently held on the server.
 
 .. code-block:: python
@@ -23,7 +23,7 @@ A collection can then be pulled from the server as follows:
     >>> client.get_collection("ReactionDataset", "S22")
     Dataset(id=`5b7f1fd57b87872d2c5d0a6d`, name=`S22`, client="localhost:7777")
 
-Available Collections
+Available collections
 ---------------------
 
 Below is a complete list of collection types available from QCPortal.

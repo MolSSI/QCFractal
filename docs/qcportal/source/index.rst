@@ -66,6 +66,8 @@ Collections are the primary way of viewing and generating new data.
 * :doc:`collection-reactiondataset`
 * :doc:`collection-optimization`
 * :doc:`collection-torsiondrive`
+* :doc:`collection-tasks`
+
 
 .. toctree::
    :maxdepth: 2
@@ -73,10 +75,11 @@ Collections are the primary way of viewing and generating new data.
    :caption: Collections
 
    collections.rst
-   collection-dataset
-   collection-reactiondataset
-   collection-optimization
-   collection-torsiondrive
+   collection-dataset.rst
+   collection-reactiondataset.rst
+   collection-optimization.rst
+   collection-torsiondrive.rst
+   collection-tasks.rst
 
 **Record Documentation**
 
