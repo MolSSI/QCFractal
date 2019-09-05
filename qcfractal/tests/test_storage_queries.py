@@ -7,7 +7,7 @@ import copy
 import pytest
 
 import qcfractal.interface as ptl
-from qcfractal.interface.models import GridOptimizationInput, TorsionDriveInput
+from qcfractal.interface.models import GridOptimizationInput, TorsionDriveInput, Molecule
 from qcfractal.testing import fractal_compute_server, recursive_dict_merge, using_geometric, using_rdkit
 
 
@@ -95,12 +95,16 @@ def test_torsiondrive_initial_molecule(torsiondrive_fixture, fractal_compute_ser
     # torsion_id = fractal_compute_server.storage.get_procedures(procedure='torsiondrive')['data'][0]['id']
     torsion_id = ret.ids[0]
 
-    r = fractal_compute_server.storage.query('torsiondrive', 'initial_molecule', torsion_id=torsion_id)
-    print(r)
+    r = fractal_compute_server.storage.query('torsiondrive', 'initial_molecule',
+                                             torsion_id=torsion_id)
+    # print(r)
 
     assert r['meta']['success']
 
     assert len(r['data']) == 9  # TODO
+
+    # TODO: can't convert msgpack
+    # assert Molecule(**r['data'][0], validate=False, validated=True)
 
 
 @pytest.mark.slow

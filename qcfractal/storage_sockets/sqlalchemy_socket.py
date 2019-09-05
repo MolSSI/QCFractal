@@ -36,7 +36,7 @@ from qcfractal.storage_sockets.models import (BaseResultORM, CollectionORM, Keyw
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
-from . import query_classes_registery
+from qcfractal.storage_sockets.db_queries import TorsionDriveQueries
 from .models import Base
 
 
@@ -183,8 +183,10 @@ class SQLAlchemySocket:
         except Exception as e:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
 
-        # Advanced queries obj
-        self._query_classes = query_classes_registery
+        # Advanced queries objects
+        self._query_classes =  {
+            TorsionDriveQueries._class_name: TorsionDriveQueries(max_limit=max_limit),
+        }
 
         # if expanded_uri["password"] is not None:
         #     # connect to mongoengine
@@ -346,7 +348,7 @@ class SQLAlchemySocket:
                 raise AttributeError(f'Class name {class_name} is not found.')
 
             session = self.Session()
-            ret['data'] = self._query_classes[class_name]().query(session, query_key, **kwargs)
+            ret['data'] = self._query_classes[class_name].query(session, query_key, **kwargs)
         except Exception as err:
             ret['meta']['success'] = False
             ret['meta']['error_description'] = str(err)
@@ -513,7 +515,7 @@ class SQLAlchemySocket:
             for dmol in molecules:
 
                 if dmol.validated is False:
-                    dmol = Molecule(**dmol.dicT(), validate=True)
+                    dmol = Molecule(**dmol.dict(), validate=True)
 
                 mol_dict = dmol.dict(exclude={"id", "validated"})
 
