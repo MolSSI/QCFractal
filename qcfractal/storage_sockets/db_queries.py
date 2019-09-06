@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from qcelemental.util import msgpackext_dumps, msgpackext_loads
 
 
@@ -52,19 +52,20 @@ class TorsionDriveQueries(QueryBase):
     _class_name = 'torsiondrive'
 
     _query_method_map = {
-        'initial_molecules' : '_get_initial_molecule',
-        'initial_molecules_ids' : '_get_initial_molecule_id',
+        'initial_molecules' : '_get_initial_molecules',
+        'initial_molecules_ids' : '_get_initial_molecules_ids',
+        'return_results': '_get_return_results'
     }
 
-    def _get_initial_molecule_id(self, torsion_id=None):
+    def _get_initial_molecules_ids(self, torsion_id=None):
 
         if torsion_id is None:
-            self._raise_missing_attribute('initial_molecule', 'torsion drive id')
+            self._raise_missing_attribute('initial_molecules_ids', 'torsion drive id')
 
         sql_statement = f"""
-                Select initial_molecule from optimization_procedure as opt where opt.id in
+                select initial_molecule from optimization_procedure as opt where opt.id in
                 (
-                    Select opt_id from optimization_history where torsion_id = {torsion_id}
+                    select opt_id from optimization_history where torsion_id = {torsion_id}
                 )  
                 order by opt.id
         """
@@ -72,20 +73,37 @@ class TorsionDriveQueries(QueryBase):
         return self.execute_query(sql_statement, with_keys=False)
 
 
-    def _get_initial_molecule(self, torsion_id=None):
+    def _get_initial_molecules(self, torsion_id=None):
 
         if torsion_id is None:
-            self._raise_missing_attribute('initial_molecule', 'torsion drive id')
+            self._raise_missing_attribute('initial_molecules', 'torsion drive id')
 
         # TODO: include opt.id as opt_id, ?
         # TODO: order by opt.id ?
         sql_statement = f"""
-                Select molecule.* from molecule
+                select molecule.* from molecule
                 join optimization_procedure as opt
                 on molecule.id = opt.initial_molecule
                 where opt.id in
-                    (Select opt_id from optimization_history where torsion_id = {torsion_id})  
+                    (select opt_id from optimization_history where torsion_id = {torsion_id})
         """
 
-        return self.execute_query(sql_statement)
+        return self.execute_query(sql_statement, with_keys=True)
 
+
+    def _get_return_results(self, torsion_id=None):
+
+        if torsion_id is None:
+            self._raise_missing_attribute('return_results', 'torsion drive id')
+
+        sql_statement = f"""
+                select result.id as result_id, result.return_result from result
+                join opt_result_association as opt_res
+                on result.id = opt_res.result_id
+                where opt_res.opt_id in 
+                (
+                    select opt_id from optimization_history where torsion_id = {torsion_id}
+                )
+        """
+
+        return self.execute_query(sql_statement, with_keys=False)

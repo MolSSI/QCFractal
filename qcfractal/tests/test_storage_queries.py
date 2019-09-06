@@ -105,9 +105,7 @@ def test_torsiondrive_initial_molecule(torsiondrive_fixture, fractal_compute_ser
 
     r = fractal_compute_server.storage.query('torsiondrive', 'initial_molecules',
                                              torsion_id=torsion_id)
-
     assert r['meta']['success']
-
     assert len(r['data']) == 9
     mol = r['data'][0]
 
@@ -120,6 +118,21 @@ def test_torsiondrive_initial_molecule(torsiondrive_fixture, fractal_compute_ser
 
     # TODO: can't automatically convert msgpack
     # assert Molecule(**r['data'][0], validate=False, validated=True)
+
+
+def test_torsiondrive_return_results(torsiondrive_fixture, fractal_compute_server):
+    """ With single initial molecule in torsion proc"""
+
+    spin_up_test, client = torsiondrive_fixture
+
+    ret = spin_up_test()
+    torsion_id = ret.ids[0]
+
+    r = fractal_compute_server.storage.query('torsiondrive', 'return_results',
+                                             torsion_id=torsion_id)
+    assert r['meta']['success']
+    assert len(r['data'])
+    assert all(x in r['data'][0] for x in ['result_id', 'return_result'])
 
 
 @pytest.mark.slow
