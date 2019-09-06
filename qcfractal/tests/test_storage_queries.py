@@ -9,6 +9,8 @@ import pytest
 import qcfractal.interface as ptl
 from qcfractal.interface.models import GridOptimizationInput, TorsionDriveInput, Molecule
 from qcfractal.testing import fractal_compute_server, recursive_dict_merge, using_geometric, using_rdkit
+from qcelemental.util import msgpackext_dumps, msgpackext_loads
+import numpy as np
 
 
 @pytest.fixture(scope="module")
@@ -95,15 +97,28 @@ def test_torsiondrive_initial_molecule(torsiondrive_fixture, fractal_compute_ser
     # torsion_id = fractal_compute_server.storage.get_procedures(procedure='torsiondrive')['data'][0]['id']
     torsion_id = ret.ids[0]
 
-    r = fractal_compute_server.storage.query('torsiondrive', 'initial_molecule',
+    r = fractal_compute_server.storage.query('torsiondrive', 'initial_molecules_ids',
                                              torsion_id=torsion_id)
-    # print(r)
+
+    assert r['meta']['success']
+    assert len(r['data']) == 9
+
+    r = fractal_compute_server.storage.query('torsiondrive', 'initial_molecules',
+                                             torsion_id=torsion_id)
 
     assert r['meta']['success']
 
-    assert len(r['data']) == 9  # TODO
+    assert len(r['data']) == 9
+    mol = r['data'][0]
 
-    # TODO: can't convert msgpack
+    # Msgpack field
+    assert isinstance(msgpackext_loads(mol['mass_numbers']), np.ndarray)  # TODO
+
+    # Sample fields in the molecule dict
+    assert all(x in mol.keys()
+               for x in ['schema_name', 'symbols', 'geometry',  'molecular_charge'])
+
+    # TODO: can't automatically convert msgpack
     # assert Molecule(**r['data'][0], validate=False, validated=True)
 
 

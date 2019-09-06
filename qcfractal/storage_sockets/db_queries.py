@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from .models import TorsionDriveProcedureORM
+from qcelemental.util import msgpackext_dumps, msgpackext_loads
 
 
 class QueryBase(ABC):
@@ -25,6 +25,8 @@ class QueryBase(ABC):
     def execute_query(self, sql_statement, with_keys=True):
         """Execute sql statemet, apply limit, and return results as dict if needed"""
 
+         # TODO: check count first, way to iterate
+
         sql_statement += f' LIMIT {self.max_limit}'
         result = self.session.execute(sql_statement)
         keys = result.keys()  # get keys before fetching
@@ -43,13 +45,15 @@ class QueryBase(ABC):
         raise AttributeError(f'To query {cls._class_name} for {query_key} '
                              f'you must provide {missing_attribute}.')
 
+# ----------------------------------------------------------------------------
 
 class TorsionDriveQueries(QueryBase):
 
     _class_name = 'torsiondrive'
 
     _query_method_map = {
-        'initial_molecule' : '_get_initial_molecule'
+        'initial_molecules' : '_get_initial_molecule',
+        'initial_molecules_ids' : '_get_initial_molecule_id',
     }
 
     def _get_initial_molecule_id(self, torsion_id=None):
@@ -57,7 +61,6 @@ class TorsionDriveQueries(QueryBase):
         if torsion_id is None:
             self._raise_missing_attribute('initial_molecule', 'torsion drive id')
 
-        # TODO: check count first for other queries, have defensive LIMIT
         sql_statement = f"""
                 Select initial_molecule from optimization_procedure as opt where opt.id in
                 (
@@ -66,9 +69,7 @@ class TorsionDriveQueries(QueryBase):
                 order by opt.id
         """
 
-        result = self.session.execute(sql_statement).fetchall()
-
-        return [ele[0] for ele in result]
+        return self.execute_query(sql_statement, with_keys=False)
 
 
     def _get_initial_molecule(self, torsion_id=None):
@@ -76,7 +77,6 @@ class TorsionDriveQueries(QueryBase):
         if torsion_id is None:
             self._raise_missing_attribute('initial_molecule', 'torsion drive id')
 
-        # TODO: check count first for other queries, have defensive LIMIT
         # TODO: include opt.id as opt_id, ?
         # TODO: order by opt.id ?
         sql_statement = f"""
@@ -87,13 +87,5 @@ class TorsionDriveQueries(QueryBase):
                     (Select opt_id from optimization_history where torsion_id = {torsion_id})  
         """
 
-        result = self.session.execute(sql_statement)
-        keys = result.keys()
-        result = result.fetchall()
-
-        # create a list of dict with the keys and values of the results (instead of tuples)
-        return_results = [dict(zip(keys, res)) for res in result]
-
-        return return_results
-
+        return self.execute_query(sql_statement)
 
