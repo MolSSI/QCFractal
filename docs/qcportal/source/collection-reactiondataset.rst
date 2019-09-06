@@ -40,7 +40,7 @@ linear combinations area automatically combined for the caller.
     unit angstrom
     """)
 
-    N_atom = ptl.Molecule("""
+    N_atom = ptl.Molecule.from_data("""
     0 2
     N 0.0 0.0 0.0
     """)

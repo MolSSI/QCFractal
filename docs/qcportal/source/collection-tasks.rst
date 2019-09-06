@@ -9,9 +9,13 @@ Check computation progress
 Find Errors
 ***********
 
+
 Restart Jobs
 ************
 
+.. code-block:: python
+    res = client.modify_tasks("restart", [e.base_result.id for e in myq])
+    print(res.n_updated)
 
 Delete a column
 +++++++++++++++
