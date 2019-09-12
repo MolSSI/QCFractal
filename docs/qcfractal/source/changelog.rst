@@ -25,6 +25,7 @@ Enhancements
 ++++++++++++
 - (:pr:`394`) Adds `tag` and `manager` selector fields to client.query_tasks.
   This is helpful for managing jobs in the queue and detecting failures.
+- (:pr:`400`) Adds Dockerfiles corresponding to builds on `Docker Hub <https://cloud.docker.com/u/molssi/repository/list>`_.
 
 Bug Fixes
 +++++++++
