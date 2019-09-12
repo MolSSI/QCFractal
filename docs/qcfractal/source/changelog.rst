@@ -30,6 +30,10 @@ Enhancements
 Bug Fixes
 +++++++++
 
+Documentation Improvements
+++++++++++++++++++++++++++
+
+- (:pr:`399`) A Kubernetes quickstart guide has been added.
 
 0.10.0 / 2019-08-26
 -------------------
