@@ -1,5 +1,7 @@
 from abc import ABC
 from qcelemental.util import msgpackext_dumps, msgpackext_loads
+from typing import List, Union
+from sqlalchemy.sql import text, bindparam
 
 
 class QueryBase(ABC):
@@ -22,13 +24,13 @@ class QueryBase(ABC):
 
         return getattr(self, self._query_method_map[query_key])(**kwargs)
 
-    def execute_query(self, sql_statement, with_keys=True):
+    def execute_query(self, sql_statement, with_keys=True, **kwargs):
         """Execute sql statemet, apply limit, and return results as dict if needed"""
 
          # TODO: check count first, way to iterate
 
-        sql_statement += f' LIMIT {self.max_limit}'
-        result = self.session.execute(sql_statement)
+        # sql_statement += f' LIMIT {self.max_limit}'
+        result = self.session.execute(sql_statement, kwargs)
         keys = result.keys()  # get keys before fetching
         result = result.fetchall()
 
@@ -54,7 +56,9 @@ class TorsionDriveQueries(QueryBase):
     _query_method_map = {
         'initial_molecules' : '_get_initial_molecules',
         'initial_molecules_ids' : '_get_initial_molecules_ids',
-        'return_results': '_get_return_results'
+        'return_results': '_get_return_results',
+        'all_opt_results': '_get_all_opt_results',
+        'best_opt_results': '_get_best_opt_results'
     }
 
     def _get_initial_molecules_ids(self, torsion_id=None):
@@ -92,12 +96,13 @@ class TorsionDriveQueries(QueryBase):
 
 
     def _get_return_results(self, torsion_id=None):
+        """All return results ids of a torsion drive"""
 
         if torsion_id is None:
             self._raise_missing_attribute('return_results', 'torsion drive id')
 
         sql_statement = f"""
-                select result.id as result_id, result.return_result from result
+                select opt_res.opt_id, result.id as result_id, result.return_result from result
                 join opt_result_association as opt_res
                 on result.id = opt_res.result_id
                 where opt_res.opt_id in 
@@ -107,3 +112,40 @@ class TorsionDriveQueries(QueryBase):
         """
 
         return self.execute_query(sql_statement, with_keys=False)
+
+    def _get_all_opt_results(self, opt_ids : List[Union[int, str]]=None):
+        """Returns all the results objects (trajectory) of each optmization
+        Returns list(list) """
+
+        if opt_ids is None:
+            self._raise_missing_attribute('all_opt_results', 'List of optimizations ids')
+
+        sql_statement = f"""
+        """
+
+        return self.execute_query(sql_statement, with_keys=False)
+
+    def _get_best_opt_results(self, opt_ids : List[Union[int, str]]=None):
+        """Return the actual results objects of the best result in each optimization"""
+
+        if opt_ids is None:
+            self._raise_missing_attribute('best_opt_results', 'List of optimizations ids')
+
+        sql_statement = text("""
+            select opt_id, result.* from result
+            join (
+                select opt.opt_id, opt.result_id, max_pos from opt_result_association as opt
+                inner join (
+                        select opt_id, max(position) as max_pos from opt_result_association
+                        where opt_id in :opt_ids
+                        group by opt_id
+                    ) opt2
+                on opt.opt_id = opt2.opt_id and opt.position = opt2.max_pos
+            ) traj
+            on result.id = traj.result_id
+        """)
+
+        # bind and expand ids list
+        sql_statement = sql_statement.bindparams(bindparam("opt_ids", expanding=True))
+
+        return self.execute_query(sql_statement, opt_ids=list(opt_ids))

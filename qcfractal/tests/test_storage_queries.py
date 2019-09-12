@@ -134,6 +134,28 @@ def test_torsiondrive_return_results(torsiondrive_fixture, fractal_compute_serve
     assert len(r['data'])
     assert all(x in r['data'][0] for x in ['result_id', 'return_result'])
 
+def test_torsiondrive_return_best_opt_results(torsiondrive_fixture, fractal_compute_server):
+    """ Test return best optimization proc results in one query"""
+
+    spin_up_test, client = torsiondrive_fixture
+
+    ret = spin_up_test()
+    torsion_id = ret.ids[0]
+
+    torsion = fractal_compute_server.storage.get_procedures(id=torsion_id)['data'][0]
+
+    opt_ids = [torsion['optimization_history'][k][v] for k,v in torsion['minimum_positions'].items()]
+
+    # TODO; is unique values needed?
+    opt_ids = set(opt_ids)
+
+    r = fractal_compute_server.storage.query('torsiondrive', 'best_opt_results', opt_ids=opt_ids)
+
+    assert r['meta']['success']
+    assert len(r['data']) == len(opt_ids)
+    found = {str(result['opt_id']) for result in r['data']}
+    assert  found == opt_ids
+
 
 @pytest.mark.slow
 def test_service_torsiondrive_multi_single(torsiondrive_fixture):
