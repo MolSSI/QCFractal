@@ -120,10 +120,20 @@ class TorsionDriveQueries(QueryBase):
         if opt_ids is None:
             self._raise_missing_attribute('all_opt_results', 'List of optimizations ids')
 
-        sql_statement = f"""
-        """
+        # row_to_json(result.*)
+        sql_statement = text("""
+            select opt_id, json_agg(result.*) as trajectory_results from result
+            join opt_result_association as traj
+            on result.id = traj.result_id
+            where traj.opt_id in :opt_ids
+            group by opt_id
+        """)
 
-        return self.execute_query(sql_statement, with_keys=False)
+        # bind and expand ids list
+        sql_statement = sql_statement.bindparams(bindparam("opt_ids", expanding=True))
+
+        return self.execute_query(sql_statement, opt_ids=list(opt_ids))
+
 
     def _get_best_opt_results(self, opt_ids : List[Union[int, str]]=None):
         """Return the actual results objects of the best result in each optimization"""

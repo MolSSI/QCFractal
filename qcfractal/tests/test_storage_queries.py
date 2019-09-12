@@ -134,7 +134,7 @@ def test_torsiondrive_return_results(torsiondrive_fixture, fractal_compute_serve
     assert len(r['data'])
     assert all(x in r['data'][0] for x in ['result_id', 'return_result'])
 
-def test_torsiondrive_return_best_opt_results(torsiondrive_fixture, fractal_compute_server):
+def test_torsiondrive_best_opt_results(torsiondrive_fixture, fractal_compute_server):
     """ Test return best optimization proc results in one query"""
 
     spin_up_test, client = torsiondrive_fixture
@@ -155,6 +155,29 @@ def test_torsiondrive_return_best_opt_results(torsiondrive_fixture, fractal_comp
     assert len(r['data']) == len(opt_ids)
     found = {str(result['opt_id']) for result in r['data']}
     assert  found == opt_ids
+
+def test_torsiondrive_all_opt_results(torsiondrive_fixture, fractal_compute_server):
+    """ Test return best optimization proc results in one query"""
+
+    spin_up_test, client = torsiondrive_fixture
+
+    ret = spin_up_test()
+    torsion_id = ret.ids[0]
+
+    torsion = fractal_compute_server.storage.get_procedures(id=torsion_id)['data'][0]
+
+    opt_ids = [torsion['optimization_history'][k][v] for k,v in torsion['minimum_positions'].items()]
+
+    # TODO; is unique values needed?
+    opt_ids = set(opt_ids)
+
+    r = fractal_compute_server.storage.query('torsiondrive', 'all_opt_results', opt_ids=opt_ids)
+
+    print('len of data:', len(r['data']), '\n')
+    print('Data[0]:', r['data'][0])
+
+    assert r['meta']['success']
+    assert len(r['data']) == len(opt_ids)
 
 
 @pytest.mark.slow

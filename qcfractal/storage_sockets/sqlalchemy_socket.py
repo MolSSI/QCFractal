@@ -343,15 +343,15 @@ class SQLAlchemySocket:
             'meta': {"success": True, "error_description": None}
         }
 
-        try:
-            if class_name not in self._query_classes:
-                raise AttributeError(f'Class name {class_name} is not found.')
+        # try:
+        if class_name not in self._query_classes:
+            raise AttributeError(f'Class name {class_name} is not found.')
 
-            session = self.Session()
-            ret['data'] = self._query_classes[class_name].query(session, query_key, **kwargs)
-        except Exception as err:
-            ret['meta']['success'] = False
-            ret['meta']['error_description'] = str(err)
+        session = self.Session()
+        ret['data'] = self._query_classes[class_name].query(session, query_key, **kwargs)
+        # except Exception as err:
+        #     ret['meta']['success'] = False
+        #     ret['meta']['error_description'] = str(err)
 
         return ret
 
