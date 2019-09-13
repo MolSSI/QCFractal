@@ -56,7 +56,9 @@ class TorsionDriveQueries(QueryBase):
     _query_method_map = {
         'initial_molecules' : '_get_initial_molecules',
         'initial_molecules_ids' : '_get_initial_molecules_ids',
-        'return_results': '_get_return_results',
+        'final_molecules' : '_get_final_molecules',
+        'final_molecules_ids' : '_get_final_molecules_ids',
+        'return_results': '_get_return_results',  # TODO: maybe not used
         'all_opt_results': '_get_all_opt_results',
         'best_opt_results': '_get_best_opt_results'
     }
@@ -94,6 +96,36 @@ class TorsionDriveQueries(QueryBase):
 
         return self.execute_query(sql_statement, with_keys=True)
 
+    def _get_final_molecules_ids(self, torsion_id=None):
+
+        if torsion_id is None:
+            self._raise_missing_attribute('final_molecules_ids', 'torsion drive id')
+
+        sql_statement = f"""
+                select final_molecule from optimization_procedure as opt where opt.id in
+                (
+                    select opt_id from optimization_history where torsion_id = {torsion_id}
+                )  
+                order by opt.id
+        """
+
+        return self.execute_query(sql_statement, with_keys=False)
+
+
+    def _get_final_molecules(self, torsion_id=None):
+
+        if torsion_id is None:
+            self._raise_missing_attribute('final_molecules', 'torsion drive id')
+
+        sql_statement = f"""
+                select molecule.* from molecule
+                join optimization_procedure as opt
+                on molecule.id = opt.final_molecule
+                where opt.id in
+                    (select opt_id from optimization_history where torsion_id = {torsion_id})
+        """
+
+        return self.execute_query(sql_statement, with_keys=True)
 
     def _get_return_results(self, torsion_id=None):
         """All return results ids of a torsion drive"""

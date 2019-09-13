@@ -72,7 +72,7 @@ def torsiondrive_fixture(fractal_compute_server):
     yield spin_up_test, client
 
 
-def test_torsiondrive_initial_molecule(torsiondrive_fixture, fractal_compute_server):
+def test_torsiondrive_initial_final_molecule(torsiondrive_fixture, fractal_compute_server):
     """ With single initial molecule in torsion proc"""
 
     spin_up_test, client = torsiondrive_fixture
@@ -116,6 +116,18 @@ def test_torsiondrive_initial_molecule(torsiondrive_fixture, fractal_compute_ser
     assert all(x in mol.keys()
                for x in ['schema_name', 'symbols', 'geometry',  'molecular_charge'])
 
+    r = fractal_compute_server.storage.query('torsiondrive', 'final_molecules_ids',
+                                             torsion_id=torsion_id)
+
+    assert r['meta']['success']
+    assert len(r['data']) == 9
+
+    r = fractal_compute_server.storage.query('torsiondrive', 'final_molecules',
+                                             torsion_id=torsion_id)
+    assert r['meta']['success']
+    assert len(r['data']) == 9
+    mol = r['data'][0]
+
     # TODO: can't automatically convert msgpack
     # assert Molecule(**r['data'][0], validate=False, validated=True)
 
@@ -133,6 +145,7 @@ def test_torsiondrive_return_results(torsiondrive_fixture, fractal_compute_serve
     assert r['meta']['success']
     assert len(r['data'])
     assert all(x in r['data'][0] for x in ['result_id', 'return_result'])
+
 
 def test_torsiondrive_best_opt_results(torsiondrive_fixture, fractal_compute_server):
     """ Test return best optimization proc results in one query"""
@@ -156,10 +169,11 @@ def test_torsiondrive_best_opt_results(torsiondrive_fixture, fractal_compute_ser
     found = {str(result['opt_id']) for result in r['data']}
     assert  found == opt_ids
 
-     # Msgpack field
-    print('Return_results raw:', bytes(r['data'][0]['return_result']))
+    # Msgpack field
+    # print('Return_results raw:', bytes(r['data'][0]['return_result']))
 
     assert isinstance(msgpackext_loads(r['data'][0]['return_result']), np.ndarray)
+
 
 def test_torsiondrive_all_opt_results(torsiondrive_fixture, fractal_compute_server):
     """ Test return best optimization proc results in one query"""
@@ -178,8 +192,7 @@ def test_torsiondrive_all_opt_results(torsiondrive_fixture, fractal_compute_serv
 
     r = fractal_compute_server.storage.query('torsiondrive', 'all_opt_results', opt_ids=opt_ids)
 
-    print('len of data:', len(r['data']), '\n')
-    # print('Data[0]:', r['data'][0])
+    # print('len of data:', len(r['data']), '\n')
 
     assert r['meta']['success']
     assert len(r['data']) == len(opt_ids)
@@ -187,9 +200,9 @@ def test_torsiondrive_all_opt_results(torsiondrive_fixture, fractal_compute_serv
 
     # Msgpack field
     sample_res = r['data'][0]['trajectory_results'][0]
-    print('Return_results raw:', sample_res['return_result'])
+    # print('Return_results raw:', sample_res['return_result'])
     bytes_arr = bytes.fromhex(sample_res['return_result'][2:])  # slice to remove the '\x'
-    print('Return_results bytes.fromhex:', bytes_arr)
+    # print('Return_results bytes.fromhex:', bytes_arr)
 
     assert isinstance(msgpackext_loads(bytes_arr), np.ndarray)
 
