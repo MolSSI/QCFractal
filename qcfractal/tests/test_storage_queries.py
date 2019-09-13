@@ -156,6 +156,11 @@ def test_torsiondrive_best_opt_results(torsiondrive_fixture, fractal_compute_ser
     found = {str(result['opt_id']) for result in r['data']}
     assert  found == opt_ids
 
+     # Msgpack field
+    print('Return_results raw:', bytes(r['data'][0]['return_result']))
+
+    assert isinstance(msgpackext_loads(r['data'][0]['return_result']), np.ndarray)
+
 def test_torsiondrive_all_opt_results(torsiondrive_fixture, fractal_compute_server):
     """ Test return best optimization proc results in one query"""
 
@@ -174,10 +179,19 @@ def test_torsiondrive_all_opt_results(torsiondrive_fixture, fractal_compute_serv
     r = fractal_compute_server.storage.query('torsiondrive', 'all_opt_results', opt_ids=opt_ids)
 
     print('len of data:', len(r['data']), '\n')
-    print('Data[0]:', r['data'][0])
+    # print('Data[0]:', r['data'][0])
 
     assert r['meta']['success']
     assert len(r['data']) == len(opt_ids)
+
+
+    # Msgpack field
+    sample_res = r['data'][0]['trajectory_results'][0]
+    print('Return_results raw:', sample_res['return_result'])
+    bytes_arr = bytes.fromhex(sample_res['return_result'][2:])  # slice to remove the '\x'
+    print('Return_results bytes.fromhex:', bytes_arr)
+
+    assert isinstance(msgpackext_loads(bytes_arr), np.ndarray)
 
 
 @pytest.mark.slow
