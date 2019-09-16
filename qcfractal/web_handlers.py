@@ -52,7 +52,12 @@ class APIHandler(tornado.web.RequestHandler):
             self.authenticate(self._required_auth)
 
         try:
-            self.data = deserialize(self.request.body, self.encoding)
+            if (self.encoding == "json") and isinstance(self.request.body, bytes):
+                blob = self.request.body.decode()
+            else:
+                blob = self.request.body
+
+            self.data = deserialize(blob, self.encoding)
         except:
             raise tornado.web.HTTPError(status_code=401, reason="Could not deserialize body.")
 
