@@ -26,10 +26,11 @@ def test_collection_query(fractal_compute_server):
     assert ds.name == "CAPITAL"
 
 
-@testing.using_psi4
 @pytest.fixture(scope="module")
 def gradient_dataset_fixture(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
+
+    testing.check_has_module("psi4")
 
     # Build a dataset
     ds = ptl.collections.Dataset("ds_gradient",
@@ -196,10 +197,11 @@ def test_reactiondataset_check_state(fractal_compute_server):
     assert "Benchmark" in ds.get_contributed_values("benchmark").columns
 
 
-@testing.using_psi4
-@testing.using_dftd3
 @pytest.fixture(scope="module")
 def reactiondataset_dftd3_fixture_fixture(fractal_compute_server):
+
+    testing.check_has_module("psi4")
+    testing.check_has_module("dftd3")
 
     client = ptl.FractalClient(fractal_compute_server)
     ds_name = "He_DFTD3"

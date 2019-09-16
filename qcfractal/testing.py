@@ -104,6 +104,11 @@ _programs["dftd3"] = "dftd3" in qcng.list_available_programs()
 def has_module(name):
     return _programs[name]
 
+def check_has_module(program):
+    import_message = "Not detecting module {}. Install package if necessary to enable tests."
+    if has_module(program) is False:
+        pytest.skip(import_message.format(program))
+
 
 def _build_pytest_skip(program):
     import_message = "Not detecting module {}. Install package if necessary to enable tests."
