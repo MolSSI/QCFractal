@@ -359,6 +359,10 @@ def reset_server_database(server):
 
     server.storage._delete_DB_data(server.storage._project_name)
 
+    # Force a heartbeat after database clean if a manager is present.
+    if server.queue_socket:
+        server.await_results()
+
 
 @pytest.fixture(scope="module")
 def test_server(request, postgres_server):
@@ -476,7 +480,6 @@ def fractal_compute_server(postgres_server):
                           reset_database=True,
                           start_server=False) as server:
         reset_server_database(server)
-        server.await_results() # Force a heartbeat after database clean.
         yield server
 
 
