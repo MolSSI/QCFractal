@@ -396,10 +396,6 @@ class ReactionDataset(Dataset):
 
         """
 
-        warnings.warn(
-            "This is function is deprecated and will be removed in 0.11.0, please `get_records(..., projection='return_result')` for a similar result",
-            DeprecationWarning)
-
         self._check_client()
         self._check_state()
         self._validate_stoich(stoich)
