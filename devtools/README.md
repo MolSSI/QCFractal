@@ -56,6 +56,7 @@ These are also used for autobuilds on [Docker Hub](https://cloud.docker.com/u/mo
 - [ ] Debug the PR as needed until tests pass
 - [ ] Get the PR merged in
 - [ ] Create a GitHub Release and use the version formatted as `vXX.YY.ZZ` for the tag name.
+- [ ] Add tag to Docker Hub builds.
 - [ ] When ready, create a PyPi release from the checkout of the tag you made above
 - [ ] Create a new release on conda forge, updating to the version you just uploaded on PyPi
 
