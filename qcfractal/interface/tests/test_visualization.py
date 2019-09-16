@@ -39,13 +39,13 @@ def S22Fixture():
 
 
 @using_plotly
-@pytest.mark.parametrize("kind", ["violin", "bar"])
+@pytest.mark.parametrize("kind", ["bar", "violin"])
 def test_plot_dataset(S22Fixture, kind):
 
     client, S22 = S22Fixture
 
     fig = S22.visualize(
-        method=["b2plyp", "b3lyp", "pbe"],
+        method=["b2plyp", "pbe"],
         basis=["def2-svp", "def2-TZVP"],
         return_figure=True,
         bench="S22a",

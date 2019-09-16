@@ -74,6 +74,7 @@ class Dataset(Collection):
 
         # Initialize internal data frames and load in contrib
         self.df = pd.DataFrame(index=self.get_index())
+        self._column_metadata = {}
 
         # Inherited classes need to call this themselves
         for cv in self.data.contributed_values.values():
@@ -273,11 +274,11 @@ class Dataset(Collection):
         return pd.concat(ret, axis=1)
 
     def get_values(self,
-                    method: Optional[str]=None,
-                    basis: Optional[str]=None,
-                    keywords: Optional[str]=None,
-                    program: Optional[str]=None,
-                    force: bool=False) -> 'DataFrame':
+                   method: Optional[str] = None,
+                   basis: Optional[str] = None,
+                   keywords: Optional[str] = None,
+                   program: Optional[str] = None,
+                   force: bool = False) -> 'DataFrame':
         """Obtains values from the known history from the search paramaters provided for the expected `return_result` values. Defaults to the standard
         programs and keywords if not provided.
 
@@ -325,6 +326,7 @@ class Dataset(Collection):
 
             name = self._canonical_name(**query)
             if force or (name not in self.df.columns):
+                self._column_metadata[name] = query
                 data = self.get_records(query.pop("method").upper(), projection={"return_result": True}, **query)
                 self.df[name] = data["return_result"] * constants.conversion_factor('hartree', self.units)
 
@@ -411,43 +413,20 @@ class Dataset(Collection):
             if (groupby != "d3") and (not isinstance(query[groupby], (tuple, list))):
                 raise KeyError(f"Groupby option {groupby} must be a list.")
 
+            query_names = []
+            queries = []
+            for gb in query[groupby]:
+                gb_query = query.copy()
+                gb_query[groupby] = gb
 
-            if (groupby == "d3"):
-                full_history = self.get_values(**query)
-                full_history["base"] = [x.split("-d3")[0] for x in full_history["method"]]
-                full_history["d3"] = [
-                    method.replace(base, "").replace("-d", "d")
-                    for method, base in zip(full_history["method"], full_history["base"])
-                ]
-
-
-                query_names = []
-                queries = []
-                for name, gb in full_history.groupby("d3"):
-                    gb = gb.copy()
-
-                    queries.append(gb)
-                    if name == "":
-                        query_names.append("No -D3")
-                    else:
-                        query_names.append(name.upper())
-
-            else:
-
-                query_names = []
-                queries = []
-                for gb in query[groupby]:
-                    gb_query = query.copy()
-                    gb_query[groupby] = gb
-
-                    queries.append(self.get_values(**gb_query))
-                    query_names.append(self._canonical_name(**{groupby: gb}))
+                queries.append(gb_query)
+                query_names.append(self._canonical_name(**{groupby: gb}))
 
             if (kind == "violin") and (len(queries) != 2):
                 raise KeyError(f"Groupby option for violin plots must have two entries.")
 
         else:
-            queries = [self.get_values(**query)]
+            queries = [query]
             query_names = ["Stats"]
 
         title = f"{self.data.name} Dataset Statistics"
@@ -457,13 +436,22 @@ class Dataset(Collection):
 
             if len(q) == 0:
                 raise KeyError("No query matches, nothing to visualize!")
-            stat = self.statistics(metric, list(q["name"]), bench=bench)
+
+            # Pull the values
+            if "stoichiometry" in q:
+                q["stoich"] = q.pop("stoichiometry")
+            values = self.get_values(**q)
+
+            # Create the statistics
+            stat = self.statistics(metric, values, bench=bench)
             stat = stat.round(digits)
             stat.sort_index(inplace=True)
             stat.name = name
 
+            # Munge the column names based on the groupby parameter
             col_names = {}
-            for record in q.to_dict(orient="records"):
+            for k, v in stat.iteritems():
+                record = self._column_metadata[k]
                 if (groupby == "d3"):
                     record["method"] = record["base"]
 
@@ -477,7 +465,7 @@ class Dataset(Collection):
                     record["keywords"],
                     stoich=record.get("stoich"))
 
-                col_names[record["name"]] = index_name
+                col_names[k] = index_name
 
             if kind == "bar":
                 stat.index = [col_names[x] for x in stat.index]

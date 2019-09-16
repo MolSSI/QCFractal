@@ -236,6 +236,13 @@ def test_rectiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
     assert records.iloc[0, 0].status == "COMPLETE"
     assert records.iloc[0, 0].id == records.iloc[1, 0].id
 
+    records = ds.get_records("B3LYP", "6-31g", stoich=["cp", "default"], subset="HeDimer")
+    assert records.shape == (2, 1)
+
+    # No molecules
+    with pytest.raises(KeyError):
+        records = ds.get_records("B3LYP", "6-31g", stoich=["cp", "default"], subset="Gibberish")
+
 def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
 

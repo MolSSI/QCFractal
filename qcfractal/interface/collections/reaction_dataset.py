@@ -240,6 +240,7 @@ class ReactionDataset(Dataset):
             name = self._canonical_name(**query)
 
             if force or (name not in self.df.columns):
+                self._column_metadata[name] = query
 
                 data_complex = _query_apply_coeffients(stoich_complex, query)
                 data_monomer = _query_apply_coeffients(stoich_monomer, query)
@@ -291,7 +292,7 @@ class ReactionDataset(Dataset):
                   basis: Optional[str] = None,
                   keywords: Optional[str] = None,
                   program: Optional[str] = None,
-                  stoich: Optional[str] = None,
+                  stoich: str = "default",
                   groupby: Optional[str] = None,
                   metric: str = "UE",
                   bench: Optional[str] = None,
@@ -308,7 +309,7 @@ class ReactionDataset(Dataset):
             Keyword aliases to query
         program : Optional[str], optional
             Programs aliases to query
-        stoich : Optional[str], optional
+        stoich : str, optional
             Stoichiometry to query
         groupby : Optional[str], optional
             Groups the plot by this index.
@@ -327,7 +328,7 @@ class ReactionDataset(Dataset):
             The requested figure.
         """
 
-        query = {"method": method, "basis": basis, "keywords": keywords, "program": program, "stoich": stoich}
+        query = {"method": method, "basis": basis, "keywords": keywords, "program": program, "stoichiometry": stoich}
         query = {k: v for k, v in query.items() if v is not None}
 
         return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind)
@@ -395,10 +396,6 @@ class ReactionDataset(Dataset):
         -------
         Union[pd.DataFrame, 'ResultRecord']
             The name of the queried column
-
-        Examples
-        --------
-        ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
 
         """
 
@@ -472,13 +469,6 @@ class ReactionDataset(Dataset):
         -------
         str
             The name of the queried column
-
-
-        Examples
-        --------
-
-        ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
-
 
         """
         warnings.warn(
@@ -660,10 +650,6 @@ class ReactionDataset(Dataset):
             - Molecule string - Molecule will be converted to a Molecule class and the same process as the above will occur.
 
 
-        Examples
-        --------
-
-
         """
 
         ret = {}
@@ -736,9 +722,6 @@ class ReactionDataset(Dataset):
 
         Notes
         -----
-
-        Examples
-        --------
 
         Returns
         -------
@@ -850,9 +833,6 @@ class ReactionDataset(Dataset):
 
         Notes
         -----
-
-        Examples
-        --------
 
         Returns
         -------
