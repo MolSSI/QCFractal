@@ -682,8 +682,7 @@ class Dataset(Collection):
 
         for query_set in plan:
 
-            if isinstance(query_set["keywords"], str):
-                query_set["keywords"] = self.data.alias_keywords[query_set["program"]][query_set["keywords"]]
+            query_set["keywords"] = self.get_keywords(query_set["keywords"], query_set["program"], return_id=True)
 
             # Set the index to remove duplicates
             molecules = list(set(indexer.values()))
@@ -848,7 +847,7 @@ class Dataset(Collection):
             self.data.default_keywords[program] = alias
         return True
 
-    def get_keywords(self, alias: str, program: str) -> 'KeywordSet':
+    def get_keywords(self, alias: str, program: str, return_id: bool = False) -> Union['KeywordSet', str]:
         """Pulls the keywords alias from the server for inspection.
 
         Parameters
@@ -857,14 +856,22 @@ class Dataset(Collection):
             The keywords alias.
         program : str
             The program the keywords correspond to.
+        return_id : bool, optional
+            If True, returns the ``id`` rather than the ``KeywordSet`` object.
+            Description
 
         Returns
         -------
-        KeywordSet
-            The requested KeywordSet
+        Union['KeywordSet', str]
+            The requested ``KeywordSet`` or ``KeywordSet`` ``id``.
 
         """
         self._check_client()
+        if alias is None:
+            if return_id:
+                return None
+            else:
+                return {}
 
         alias = alias.lower()
         program = program.lower()
@@ -872,7 +879,10 @@ class Dataset(Collection):
             raise KeyError("Keywords {}: {} not found.".format(program, alias))
 
         kwid = self.data.alias_keywords[program][alias]
-        return self.client.query_keywords([kwid])[0]
+        if return_id:
+            return kwid
+        else:
+            return self.client.query_keywords([kwid])[0]
 
     def add_contributed_values(self, contrib: ContributedValues, overwrite=False) -> None:
         """Adds a ContributedValues to the database.

@@ -267,6 +267,28 @@ def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     for key, value in bench.items():
         assert value == ds.df.loc["HeDimer", key]
 
+
+def test_rectiondataset_dftd3_molecules(reactiondataset_dftd3_fixture_fixture):
+    client, ds = reactiondataset_dftd3_fixture_fixture
+
+    mols = ds.get_molecules()
+    assert mols.shape == (1, 1)
+    assert np.all(mols.iloc[0, 0].real)  # Should be all real
+    assert tuple(mols.index) == (("HeDimer", "default", 0), )
+
+    mols = ds.get_molecules(stoich="cp1")
+    assert mols.shape == (1, 1)
+    assert not np.all(mols.iloc[0, 0].real)  # Should be half real
+    assert tuple(mols.index) == (("HeDimer", "cp1", 0), )
+
+    stoichs = ["cp1", "default1", "cp", "default"]
+    mols = ds.get_molecules(stoich=stoichs)
+    assert mols.shape == (4, 1)
+
+    mols = mols.reset_index()
+    assert set(stoichs) == set(mols["stoichiometry"])
+
+
 @testing.using_psi4
 def test_compute_reactiondataset_regression(fractal_compute_server):
     """
@@ -340,6 +362,13 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
 
     ds.units = "eV"
     assert pytest.approx(0.00010614635, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g", floor=10)
+
+    # Check get_molecules
+    mols = ds.get_molecules()
+    assert mols.shape == (2, 1)
+
+    mols = ds.get_molecules(stoich="cp1")
+    assert mols.shape == (2, 1)
 
 
 @testing.using_psi4
