@@ -166,13 +166,15 @@ def test_torsiondrive_best_opt_results(torsiondrive_fixture, fractal_compute_ser
 
     assert r['meta']['success']
     assert len(r['data']) == len(opt_ids)
-    found = {str(result['opt_id']) for result in r['data']}
-    assert  found == opt_ids
+    # found = {str(result['opt_id']) for result in r['data']}
+    assert  set(r['data'].keys()) == set(map(int, opt_ids))
 
     # Msgpack field
-    # print('Return_results raw:', bytes(r['data'][0]['return_result']))
+    res = list(r['data'].values())[0]
+    # print('Data[0]: \n', res, '\n')
+    # print('Return_results raw:', bytes(res['return_result']))
 
-    assert isinstance(msgpackext_loads(r['data'][0]['return_result']), np.ndarray)
+    assert isinstance(msgpackext_loads(res['return_result']), np.ndarray)
 
 
 def test_torsiondrive_all_opt_results(torsiondrive_fixture, fractal_compute_server):

@@ -660,6 +660,40 @@ class ProcedureGETResponse(ProtoModel):
 register_model("procedure", "GET", ProcedureGETBody, ProcedureGETResponse)
 
 
+## advanced procedures queries
+
+class ProcedureBestOptResultsBody(ProtoModel):
+    class Data(ProtoModel):
+        opt_ids: QueryObjectId = Schema(
+            None,
+            description="List of optimization procedure Ids to fetch their BEST result from the database."
+        )
+
+    # TODO: not yet supported
+    meta: QueryMetaProjection = Schema(
+        QueryMetaProjection(),
+        description=common_docs[QueryMetaProjection]
+    )
+    data: Data = Schema(
+        ...,
+        description="The keys with data to search the database on for Procedures."
+    )
+
+
+class ProcedureBestOptResultsResponse(ProtoModel):
+    meta: ResponseGETMeta = Schema(
+        ...,
+        description=common_docs[ResponseGETMeta]
+    )
+    # Either a record or dict depending if projection
+    data: Union[List[ResultRecord], List[Dict[str, Any]]] = Schema(
+        ...,
+        description="List of Results found from the query."
+    )
+
+register_model("procedure", "best_opt_results", ProcedureBestOptResultsBody, ProcedureBestOptResultsResponse)
+
+
 ### Task Queue
 
 class TaskQueueGETBody(ProtoModel):

@@ -263,7 +263,8 @@ class FractalServer:
             (r"/keyword", KeywordHandler, self.objects),
             (r"/collection", CollectionHandler, self.objects),
             (r"/result", ResultHandler, self.objects),
-            (r"/procedure", ProcedureHandler, self.objects),
+            (r"/procedure/?", ProcedureHandler, self.objects),
+            (r"/procedure/(.*)/?", ProcedureHandler, self.objects),
 
             # Queue Schedulers
             (r"/task_queue", TaskQueueHandler, self.objects),

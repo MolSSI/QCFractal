@@ -335,13 +335,16 @@ class ProcedureHandler(APIHandler):
     _required_auth = "read"
     _logging_param_counts = {"id"}
 
-    def get(self):
+    def get(self, query_type='get'):
 
-        body_model, response_model = rest_model("procedure", "get")
+        body_model, response_model = rest_model("procedure", query_type)
         body = self.parse_bodymodel(body_model)
 
         try:
-            ret = self.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
+            if query_type == 'get':
+                ret = self.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
+            else:  # all other queries, like 'best_opt_results'
+                ret = self.storage.query('procedure', query_type, **{**body.data.dict(), **body.meta.dict()})
         except KeyError as e:
             raise tornado.web.HTTPError(status_code=401, reason=str(e))
 

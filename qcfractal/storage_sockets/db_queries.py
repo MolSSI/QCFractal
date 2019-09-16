@@ -182,20 +182,33 @@ class ProcedureQueries(QueryBase):
             self._raise_missing_attribute('best_opt_results', 'List of optimizations ids')
 
         sql_statement = text("""
-            select opt_id, result.* from result
-            join (
-                select opt.opt_id, opt.result_id, max_pos from opt_result_association as opt
-                inner join (
-                        select opt_id, max(position) as max_pos from opt_result_association
-                        where opt_id in :opt_ids
-                        group by opt_id
-                    ) opt2
-                on opt.opt_id = opt2.opt_id and opt.position = opt2.max_pos
-            ) traj
-            on result.id = traj.result_id
+            select * from base_result
+            join (        
+                select opt_id, result.* from result
+                join (
+                    select opt.opt_id, opt.result_id, max_pos from opt_result_association as opt
+                    inner join (
+                            select opt_id, max(position) as max_pos from opt_result_association
+                            where opt_id in :opt_ids
+                            group by opt_id
+                        ) opt2
+                    on opt.opt_id = opt2.opt_id and opt.position = opt2.max_pos
+                ) traj
+                on result.id = traj.result_id
+            ) result
+            on base_result.id = result.id
         """)
 
         # bind and expand ids list
         sql_statement = sql_statement.bindparams(bindparam("opt_ids", expanding=True))
 
-        return self.execute_query(sql_statement, opt_ids=list(opt_ids))
+        query_result = self.execute_query(sql_statement, opt_ids=list(opt_ids))
+
+        print(query_result)
+        ret = {}
+        for rec in query_result:
+            key = rec.pop('opt_id')
+            rec.pop('result_type')
+            ret[key] = rec
+
+        return ret

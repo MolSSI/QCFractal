@@ -1058,3 +1058,56 @@ class FractalClient(object):
         }
 
         return self._automodel_request("service_queue", "put", payload, full_return=full_return)
+
+    # -------------------------------------------------------------------------
+    # ------------------   Advanced Queries -----------------------------------
+    # -------------------------------------------------------------------------
+
+    def get_best_optimization_results(self,
+                         id: 'QueryObjectId' = None,
+                         limit: Optional[int] = None,
+                         skip: int = 0,
+                         projection: 'QueryProjection' = None,
+                         full_return: bool = False) -> Union[List['RecordBase'], Dict[str, Any]]:
+        """Get best results of each optimization procedure in one query.
+
+        Parameters
+        ----------
+        id : QueryObjectId, optional
+            List of procedure ``id``s .
+        limit : Optional[int], optional
+            The maximum number of Procedures to query
+        skip : int, optional
+            The number of Procedures to skip in the query, used during pagination
+        projection : QueryProjection, optional
+            Filters the returned fields, will return a dictionary rather than an object.
+        full_return : bool, optional
+            Returns the full server response if True that contains additional metadata.
+
+        Returns
+        -------
+        Union[List['RecordBase'], Dict[str, Any]]
+            Returns a List of found RecordResult's without projection, or a
+            dictionary of results with projection.
+        """
+
+        payload = {
+            "meta": {
+                "limit": limit,           # Todo
+                "skip": skip,
+                "projection": projection  # Todo
+            },
+            "data": {
+                "opt_ids": id,
+            }
+        }
+        response = self._automodel_request("procedure", "best_opt_results", payload, full_return=True)
+
+        if not projection:
+            for ind in range(len(response.data)):
+                response.data[ind] = build_procedure(response.data[ind], client=self)
+
+        if full_return:
+            return response
+        else:
+            return response.data
