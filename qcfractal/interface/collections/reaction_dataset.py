@@ -407,11 +407,11 @@ class ReactionDataset(Dataset):
         ret = []
         for s in stoich:
             name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=s)
-
+            history.pop('stoichiometry')
             indexer, names = self._molecule_indexer(s, subset)
             df = self._get_records(
                 indexer,
-                dbkeys,
+                history,
                 projection=projection,
                 merge=False,
                 raise_on_plan=

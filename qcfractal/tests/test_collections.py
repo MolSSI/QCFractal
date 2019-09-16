@@ -52,6 +52,8 @@ def gradient_dataset_fixture(fractal_compute_server):
         "units": "hartree"
     }
     ds.add_contributed_values(contrib)
+
+    ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={}), default=True)
     ds.save()
 
     ds.compute("HF", "sto-3g")
@@ -177,6 +179,7 @@ def test_reactiondataset_check_state(fractal_compute_server):
         ds.get_records("SCF", "STO-3G")
 
     ds.save()
+
     ds.get_records("SCF", "STO-3G")
 
     contrib = {
@@ -211,6 +214,7 @@ def reactiondataset_dftd3_fixture_fixture(fractal_compute_server):
     HeDimer = ptl.Molecule.from_data([[2, 0, 0, -4.123], [2, 0, 0, 4.123]], dtype="numpy", units="bohr", frags=[1])
     ds.add_ie_rxn("HeDimer", HeDimer, attributes={"r": 4})
     ds.set_default_program("psi4")
+    ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={}), default=True)
 
     ds.save()
 

@@ -683,7 +683,6 @@ class Dataset(Collection):
         for query_set in plan:
 
             query_set["keywords"] = self.get_keywords(query_set["keywords"], query_set["program"], return_id=True)
-
             # Set the index to remove duplicates
             molecules = list(set(indexer.values()))
             if projection:
@@ -1010,8 +1009,7 @@ class Dataset(Collection):
         """
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
         indexer = self._molecule_indexer(subset)
-        df = self._get_records(indexer, dbkeys, projection=projection, merge=False)
-
+        df = self._get_records(indexer, history, projection=projection, merge=False)
         if len(df) == 1:
             df = df[0]
 
@@ -1094,7 +1092,7 @@ class Dataset(Collection):
         # # If reaction results
         indexer = {e.name: e.molecule_id for e in self.data.records}
 
-        tmp_idx = self._get_records(indexer, dbkeys, projection={field: True}, merge=True)
+        tmp_idx = self._get_records(indexer, history, projection={field: True}, merge=True)
         tmp_idx.rename(columns={field: name}, inplace=True)
 
         tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', self.units)
