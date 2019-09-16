@@ -12,7 +12,7 @@ class QueryBase(ABC):
     # Mapping of the requested feature and the internal query method
     _query_method_map = {}
 
-    def __init__(self, max_limit=10000):
+    def __init__(self, max_limit=1000):
         self.max_limit = max_limit
 
     def query(self, session, query_key, **kwargs):
@@ -59,8 +59,6 @@ class TorsionDriveQueries(QueryBase):
         'final_molecules' : '_get_final_molecules',
         'final_molecules_ids' : '_get_final_molecules_ids',
         'return_results': '_get_return_results',  # TODO: maybe not used
-        'all_opt_results': '_get_all_opt_results',
-        'best_opt_results': '_get_best_opt_results'
     }
 
     def _get_initial_molecules_ids(self, torsion_id=None):
@@ -144,6 +142,16 @@ class TorsionDriveQueries(QueryBase):
         """
 
         return self.execute_query(sql_statement, with_keys=False)
+
+
+class ProcedureQueries(QueryBase):
+
+    _class_name = 'procedure'
+
+    _query_method_map = {
+        'all_opt_results': '_get_all_opt_results',
+        'best_opt_results': '_get_best_opt_results'
+    }
 
     def _get_all_opt_results(self, opt_ids : List[Union[int, str]]=None):
         """Returns all the results objects (trajectory) of each optmization

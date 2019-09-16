@@ -162,7 +162,7 @@ def test_torsiondrive_best_opt_results(torsiondrive_fixture, fractal_compute_ser
     # TODO; is unique values needed?
     opt_ids = set(opt_ids)
 
-    r = fractal_compute_server.storage.query('torsiondrive', 'best_opt_results', opt_ids=opt_ids)
+    r = fractal_compute_server.storage.query('procedure', 'best_opt_results', opt_ids=opt_ids)
 
     assert r['meta']['success']
     assert len(r['data']) == len(opt_ids)
@@ -190,7 +190,7 @@ def test_torsiondrive_all_opt_results(torsiondrive_fixture, fractal_compute_serv
     # TODO; is unique values needed?
     opt_ids = set(opt_ids)
 
-    r = fractal_compute_server.storage.query('torsiondrive', 'all_opt_results', opt_ids=opt_ids)
+    r = fractal_compute_server.storage.query('procedure', 'all_opt_results', opt_ids=opt_ids)
 
     # print('len of data:', len(r['data']), '\n')
 
@@ -205,22 +205,6 @@ def test_torsiondrive_all_opt_results(torsiondrive_fixture, fractal_compute_serv
     # print('Return_results bytes.fromhex:', bytes_arr)
 
     assert isinstance(msgpackext_loads(bytes_arr), np.ndarray)
-
-
-@pytest.mark.slow
-def test_service_torsiondrive_multi_single(torsiondrive_fixture):
-    """Muliple inistal molecules in torsion procedure"""
-
-    spin_up_test, client = torsiondrive_fixture
-
-    hooh = ptl.data.get_molecule("hooh.json")
-    hooh2 = hooh.copy(deep=True)
-    hooh2.geometry[0] += 0.0004
-
-    ret = spin_up_test(initial_molecule=[hooh, hooh2])
-
-    result = client.query_procedures(id=ret.ids)[0]
-    assert result.status == "COMPLETE"
 
 
 

@@ -36,7 +36,7 @@ from qcfractal.storage_sockets.models import (BaseResultORM, CollectionORM, Keyw
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
-from qcfractal.storage_sockets.db_queries import TorsionDriveQueries
+from qcfractal.storage_sockets.db_queries import TorsionDriveQueries, ProcedureQueries
 from .models import Base
 
 
@@ -186,6 +186,7 @@ class SQLAlchemySocket:
         # Advanced queries objects
         self._query_classes =  {
             TorsionDriveQueries._class_name: TorsionDriveQueries(max_limit=max_limit),
+            ProcedureQueries._class_name: ProcedureQueries(max_limit=max_limit),
         }
 
         # if expanded_uri["password"] is not None:
