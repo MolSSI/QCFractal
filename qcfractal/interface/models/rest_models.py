@@ -679,6 +679,23 @@ class OptimizationBestResultsBody(ProtoModel):
         description="The keys with data to search the database on for Procedures."
     )
 
+class OptimizationAllResultsBody(ProtoModel):
+    class Data(ProtoModel):
+        opt_ids: QueryObjectId = Schema(
+            None,
+            description="List of optimization procedure Ids to fetch their ALL their results from the database."
+        )
+
+    # TODO: not yet supported
+    meta: QueryMetaProjection = Schema(
+        QueryMetaProjection(),
+        description=common_docs[QueryMetaProjection]
+    )
+    data: Data = Schema(
+        ...,
+        description="The keys with data to search the database on for Procedures."
+    )
+
 class ListResultsResponse(ProtoModel):
     meta: ResponseGETMeta = Schema(
         ...,
@@ -691,6 +708,7 @@ class ListResultsResponse(ProtoModel):
     )
 
 register_model("optimization", "best_opt_results", OptimizationBestResultsBody, ListResultsResponse)
+register_model("optimization", "best_all_results", OptimizationAllResultsBody, ListResultsResponse)
 
 
 ### Task Queue
