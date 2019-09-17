@@ -21,8 +21,9 @@ def live_fractal_or_skip():
     """Ensure Fractal live connection can be made"""
 
     try:
+        requests.get('https://api.qcarchive.molssi.org:443', json={}, timeout=5)
         return portal.FractalClient()
-    except requests.exceptions.ConnectionError:
+    except (requests.exceptions.ConnectionError, ConnectionRefusedError):
         return pytest.skip("Could not make a connection to central Fractal server")
 
 
@@ -38,13 +39,13 @@ def S22Fixture():
 
 
 @using_plotly
-@pytest.mark.parametrize("kind", ["violin", "bar"])
+@pytest.mark.parametrize("kind", ["bar", "violin"])
 def test_plot_dataset(S22Fixture, kind):
 
     client, S22 = S22Fixture
 
     fig = S22.visualize(
-        method=["b2plyp", "b3lyp", "pbe"],
+        method=["b2plyp", "pbe"],
         basis=["def2-svp", "def2-TZVP"],
         return_figure=True,
         bench="S22a",

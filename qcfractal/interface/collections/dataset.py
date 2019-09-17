@@ -1,17 +1,19 @@
 """
 QCPortal Database ODM
 """
+import warnings
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
+
 from qcelemental import constants
 
-from .collection import Collection
-from .collection_utils import composition_planner, register_collection
 from ..models import ComputeResponse, Molecule, ObjectId, ProtoModel
 from ..statistics import wrap_statistics
 from ..visualization import bar_plot, violin_plot
+from .collection import Collection
+from .collection_utils import composition_planner, register_collection
 
 
 class MoleculeEntry(ProtoModel):
@@ -72,10 +74,11 @@ class Dataset(Collection):
 
         # Initialize internal data frames and load in contrib
         self.df = pd.DataFrame(index=self.get_index())
+        self._column_metadata = {}
 
         # Inherited classes need to call this themselves
         for cv in self.data.contributed_values.values():
-            tmp_idx = self.get_contributed_values_column(cv.name)
+            tmp_idx = self.get_contributed_values(cv.name)
             self.df[tmp_idx.columns[0]] = tmp_idx
 
     class DataModel(Collection.DataModel):
@@ -124,6 +127,29 @@ class Dataset(Collection):
 
         self._new_records = []
         self._new_molecules = {}
+
+    def _molecule_indexer(self, subset: Optional[Union[str, Set[str]]] = None) -> Dict[str, 'ObjectId']:
+        """Provides a {index: molecule_id} mapping for a given subset.
+
+        Parameters
+        ----------
+        subset : Optional[Union[str, Set[str]]], optional
+            The indices of the desired subset. Return all indices if subset is None.
+
+        Returns
+        -------
+        Dict[str, 'ObjectId']
+            Molecule index to molecule ObjectId map
+        """
+        if subset:
+            if isinstance(subset, str):
+                subset = {subset}
+
+            indexer = {e.name: e.molecule_id for e in self.data.records if e.name in subset}
+        else:
+            indexer = {e.name: e.molecule_id for e in self.data.records}
+
+        return indexer
 
     def _add_history(self, **history: Dict[str, Optional[str]]) -> None:
         """
@@ -204,7 +230,7 @@ class Dataset(Collection):
         ret.sort_index(inplace=True)
         return ret
 
-    def _get_history(self, force: bool = False, **search: Dict[str, Optional[str]]) -> 'DataFrame':
+    def _get_values(self, force: bool = False, **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """Queries for all history that matches the search
 
         Parameters
@@ -217,23 +243,99 @@ class Dataset(Collection):
         Returns
         -------
         DataFrame
-            A DataFrame of the queried parameters
+            A DataFrame of the queried values
+
+        Raises
+        ------
+        KeyError
+            If no records match the query
         """
 
         queries = self.list_history(**search, dftd3=True, pretty=False).reset_index()
         if queries.shape[0] > 10:
             raise TypeError("More than 10 queries formed, please narrow the search.")
 
-        # queries["name"] = None
+        ret = []
         for name, query in queries.iterrows():
 
             query = query.replace({np.nan: None}).to_dict()
             query.pop("driver")
             if "stoichiometry" in query:
                 query["stoich"] = query.pop("stoichiometry")
-            queries.loc[name, "name"] = self.query(query.pop("method").upper(), force=force, **query)
+            name = self._canonical_name(**query)
+            if force or (name not in self.df.columns):
+                data = self.get_records(query.pop("method").upper(), projection={"return_result": True}, **query)
+                self.df[name] = data["return_result"] * constants.conversion_factor('hartree', self.units)
+            ret.append(self.df[name])
 
-        return queries
+        if len(ret) == 0:
+            raise KeyError("Query matched 0 records.")
+
+        return pd.concat(ret, axis=1)
+
+    def get_values(self,
+                   method: Optional[str] = None,
+                   basis: Optional[str] = None,
+                   keywords: Optional[str] = None,
+                   program: Optional[str] = None,
+                   force: bool = False) -> 'DataFrame':
+        """Obtains values from the known history from the search paramaters provided for the expected `return_result` values. Defaults to the standard
+        programs and keywords if not provided.
+
+        Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method and basis combination simultaneously.
+
+        Parameters
+        ----------
+        method : Optional[str], optional
+            The computational method to compute (B3LYP)
+        basis : Optional[str], optional
+            The computational basis to compute (6-31G)
+        keywords : Optional[str], optional
+            The keyword alias for the requested compute
+        program : Optional[str], optional
+            The underlying QC program
+        force : bool, optional
+            Data is typically cached, forces a new query if True.
+
+        Returns
+        -------
+        DataFrame
+            A DataFrame of the queried parameters
+        """
+
+        name, dbkeys, history = self._default_parameters(program, "nan", "nan", keywords)
+
+        for k, v in [("method", method), ("basis", basis)]:
+
+            if v is not None:
+                history[k] = v
+            else:
+                history.pop(k, None)
+
+        queries = self.list_history(**history, dftd3=True, pretty=False).reset_index()
+        if queries.shape[0] > 10:
+            raise TypeError("More than 10 queries formed, please narrow the search.")
+
+        ret = []
+        for name, query in queries.iterrows():
+
+            query = query.replace({np.nan: None}).to_dict()
+            query.pop("driver")
+            if "stoichiometry" in query:
+                query["stoich"] = query.pop("stoichiometry")
+
+            name = self._canonical_name(**query)
+            if force or (name not in self.df.columns):
+                self._column_metadata[name] = query
+                data = self.get_records(query.pop("method").upper(), projection={"return_result": True}, **query)
+                self.df[name] = data["return_result"] * constants.conversion_factor('hartree', self.units)
+
+            ret.append(self.df[name])
+
+        if len(ret) == 0:
+            raise KeyError("Query matched no records!")
+
+        return pd.concat(ret, axis=1)
 
     def get_history(self,
                     method: Optional[str]=None,
@@ -261,17 +363,10 @@ class Dataset(Collection):
             A DataFrame of the queried parameters
         """
 
+        warnings.warn("This is function is deprecated and will be removed in 0.11.0, please use `get_values(..., )` for a instead.", DeprecationWarning)
+
         # Get default program/keywords
-        name, dbkeys, history = self._default_parameters(program, "nan", "nan", keywords)
-
-        for k, v in [("method", method), ("basis", basis)]:
-
-            if v is not None:
-                history[k] = v
-            else:
-                history.pop(k, None)
-
-        return self._get_history(**history, force=force)
+        return self.get_values(method=method, basis=basis, keywords=keywords, program=program, force=force)
 
     def _visualize(self,
                    metric,
@@ -318,43 +413,20 @@ class Dataset(Collection):
             if (groupby != "d3") and (not isinstance(query[groupby], (tuple, list))):
                 raise KeyError(f"Groupby option {groupby} must be a list.")
 
+            query_names = []
+            queries = []
+            for gb in query[groupby]:
+                gb_query = query.copy()
+                gb_query[groupby] = gb
 
-            if (groupby == "d3"):
-                full_history = self.get_history(**query)
-                full_history["base"] = [x.split("-d3")[0] for x in full_history["method"]]
-                full_history["d3"] = [
-                    method.replace(base, "").replace("-d", "d")
-                    for method, base in zip(full_history["method"], full_history["base"])
-                ]
-
-
-                query_names = []
-                queries = []
-                for name, gb in full_history.groupby("d3"):
-                    gb = gb.copy()
-
-                    queries.append(gb)
-                    if name == "":
-                        query_names.append("No -D3")
-                    else:
-                        query_names.append(name.upper())
-
-            else:
-
-                query_names = []
-                queries = []
-                for gb in query[groupby]:
-                    gb_query = query.copy()
-                    gb_query[groupby] = gb
-
-                    queries.append(self.get_history(**gb_query))
-                    query_names.append(self._canonical_name(**{groupby: gb}))
+                queries.append(gb_query)
+                query_names.append(self._canonical_name(**{groupby: gb}))
 
             if (kind == "violin") and (len(queries) != 2):
                 raise KeyError(f"Groupby option for violin plots must have two entries.")
 
         else:
-            queries = [self.get_history(**query)]
+            queries = [query]
             query_names = ["Stats"]
 
         title = f"{self.data.name} Dataset Statistics"
@@ -364,13 +436,22 @@ class Dataset(Collection):
 
             if len(q) == 0:
                 raise KeyError("No query matches, nothing to visualize!")
-            stat = self.statistics(metric, list(q["name"]), bench=bench)
+
+            # Pull the values
+            if "stoichiometry" in q:
+                q["stoich"] = q.pop("stoichiometry")
+            values = self.get_values(**q)
+
+            # Create the statistics
+            stat = self.statistics(metric, values, bench=bench)
             stat = stat.round(digits)
             stat.sort_index(inplace=True)
             stat.name = name
 
+            # Munge the column names based on the groupby parameter
             col_names = {}
-            for record in q.to_dict(orient="records"):
+            for k, v in stat.iteritems():
+                record = self._column_metadata[k]
                 if (groupby == "d3"):
                     record["method"] = record["base"]
 
@@ -384,7 +465,7 @@ class Dataset(Collection):
                     record["keywords"],
                     stoich=record.get("stoich"))
 
-                col_names[record["name"]] = index_name
+                col_names[k] = index_name
 
             if kind == "bar":
                 stat.index = [col_names[x] for x in stat.index]
@@ -450,7 +531,8 @@ class Dataset(Collection):
                         method: Optional[str]=None,
                         basis: Optional[str]=None,
                         keywords: Optional[str]=None,
-                        stoich: Optional[str]=None) -> str:
+                        stoich: Optional[str]=None,
+                        driver: Optional[str]=None) -> str:
         """
         Attempts to build a canonical name for a DataFrame column
         """
@@ -521,36 +603,92 @@ class Dataset(Collection):
 
         return name, dbkeys, history
 
-    def _query(self, indexer: str, query: Dict[str, Any], field: str="return_result") -> 'Series':
+    def _get_molecules(self, indexer: Dict[str, 'ObjectId']) -> 'pd.Series':
+        """Queries a list of molecules using a molecule inder
+
+        Parameters
+        ----------
+        indexer : Dict[str, 'ObjectId']
+            A key/value index of molecules to query
+
+        Returns
+        -------
+        pd.Series
+            A series of Molecules
+
+        Raises
+        ------
+        KeyError
+            If no records match the query
+        """
+
+        molecules = []
+        molecule_ids = list(set(indexer.values()))
+        for i in range(0, len(molecule_ids), self.client.query_limit):
+            molecules.extend(self.client.query_molecules(id=molecule_ids[i:i + self.client.query_limit]))
+
+        molecules = pd.DataFrame.from_dict([{"molecule_id": x.id, "molecule": x} for x in molecules])
+        if len(molecules) == 0:
+            raise KeyError("Query matched 0 records.")
+
+        df = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule_id"])
+        df.reset_index(inplace=True)
+
+        # Outer join on left to merge duplicate molecules
+        df = df.merge(molecules, how="left", on="molecule_id")
+        df.set_index("index", inplace=True)
+        df.drop("molecule_id", axis=1, inplace=True)
+
+        return df
+
+    def _get_records(self,
+                     indexer: Dict[str, 'ObjectId'],
+                     query: Dict[str, Any],
+                     projection: Optional[Dict[str, bool]] = None,
+                     merge: bool = False,
+                     raise_on_plan: Union[str, bool] = False) -> 'pd.Series':
         """
         Runs a query based on an indexer which is index : molecule_id
 
         Parameters
         ----------
-        indexer : str
-            The primary index of the query
+        indexer : Dict[str, 'ObjectId']
+            A key/value index of molecules to query
         query : Dict[str, Any]
             A results query
-        field : str, optional
-            The field to pull from the ResultEntry
-        scale : str, optional
-            The scale of the computation
+        projection : Optional[Dict[str, bool]], optional
+            Description
+        merge : bool, optional
+            Sum compound queries together, useful for mixing results
+        raise_on_plan : Union[str, bool], optional
+            Raises a KeyError is True or string if a multi-stage plan is detected.
 
         Returns
         -------
-        Series
+        pd.Series
             A Series of the data results
+
         """
+        self._check_client()
         self._check_state()
 
-        field = field.lower()
-
         ret = []
-        for query_set in composition_planner(**query):
+        plan = composition_planner(**query)
+        if raise_on_plan and (len(plan) > 1):
+            if raise_on_plan is True:
+                raise KeyError("Recieved a multi-stage plan when this function does not support multi-staged plans.")
+            else:
+                raise KeyError(raise_on_plan)
 
+        for query_set in plan:
+
+            query_set["keywords"] = self.get_keywords(query_set["keywords"], query_set["program"], return_id=True)
             # Set the index to remove duplicates
             molecules = list(set(indexer.values()))
-            query_set["projection"] = {"molecule": True, field: True}
+            if projection:
+                proj = {k.lower(): v for k, v in projection.items()}
+                proj["molecule"] = True
+                query_set["projection"] = proj
 
             # Chunk up the queries
             records = []
@@ -558,27 +696,41 @@ class Dataset(Collection):
                 query_set["molecule"] = molecules[i:i + self.client.query_limit]
                 records.extend(self.client.query_results(**query_set))
 
-            records = pd.DataFrame(records, columns=["molecule", field])
+            if projection is None:
+                records = [{"molecule" : x.molecule, "record": x} for x in records]
+
+            records = pd.DataFrame.from_dict(records)
 
             df = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule"])
             df.reset_index(inplace=True)
 
-            # Outer join on left to merge duplicate molecules
-            df = df.merge(records, how="left", on="molecule")
+            if records.shape[0] > 0:
+                # Outer join on left to merge duplicate molecules
+                df = df.merge(records, how="left", on="molecule")
+            else:
+                # No results, fill NaN values
+                if projection is None:
+                    df["record"] = None
+                else:
+                    for k, v in projection.items():
+                        if v:
+                            df[k] = np.nan
+
             df.set_index("index", inplace=True)
             df.drop("molecule", axis=1, inplace=True)
+
             ret.append(df)
 
-        if len(ret) == 1:
-            retdf = ret[0]
-        else:
+        if len(molecules) == 0:
+            raise KeyError("Query matched 0 records.")
+
+        if merge:
             retdf = ret[0]
             for df in ret[1:]:
                 retdf += df
-
-        retdf[retdf.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', self.units)
-
-        return retdf
+            return retdf
+        else:
+            return ret
 
     def _compute(self, compute_keys, molecules, tag, priority):
         """
@@ -592,10 +744,8 @@ class Dataset(Collection):
             compute_keys["keywords"],
             stoich=compute_keys.get("stoich", None))
 
+        self._check_client()
         self._check_state()
-
-        if self.client is None:
-            raise AttributeError("Dataset: Compute: Client was not set.")
 
         umols = list(set(molecules))
 
@@ -696,7 +846,7 @@ class Dataset(Collection):
             self.data.default_keywords[program] = alias
         return True
 
-    def get_keywords(self, alias: str, program: str) -> 'KeywordSet':
+    def get_keywords(self, alias: str, program: str, return_id: bool = False) -> Union['KeywordSet', str]:
         """Pulls the keywords alias from the server for inspection.
 
         Parameters
@@ -705,15 +855,22 @@ class Dataset(Collection):
             The keywords alias.
         program : str
             The program the keywords correspond to.
+        return_id : bool, optional
+            If True, returns the ``id`` rather than the ``KeywordSet`` object.
+            Description
 
         Returns
         -------
-        KeywordSet
-            The requested KeywordSet
+        Union['KeywordSet', str]
+            The requested ``KeywordSet`` or ``KeywordSet`` ``id``.
 
         """
-        if self.client is None:
-            raise AttributeError("Dataset: Client was not set.")
+        self._check_client()
+        if alias is None:
+            if return_id:
+                return None
+            else:
+                return {}
 
         alias = alias.lower()
         program = program.lower()
@@ -721,7 +878,10 @@ class Dataset(Collection):
             raise KeyError("Keywords {}: {} not found.".format(program, alias))
 
         kwid = self.data.alias_keywords[program][alias]
-        return self.client.query_keywords([kwid])[0]
+        if return_id:
+            return kwid
+        else:
+            return self.client.query_keywords([kwid])[0]
 
     def add_contributed_values(self, contrib: ContributedValues, overwrite=False) -> None:
         """Adds a ContributedValues to the database.
@@ -761,22 +921,7 @@ class Dataset(Collection):
 
         return list(self.data.contributed_values)
 
-    def get_contributed_values(self, key: str) -> ContributedValues:
-        """Returns a copy of the requested ContributedValues object.
-
-        Parameters
-        ----------
-        key : str
-            The ContributedValues object key.
-
-        Returns
-        -------
-        ContributedValues
-            The requested ContributedValues object.
-        """
-        return self.data.contributed_values[key.lower()].copy()
-
-    def get_contributed_values_column(self, key: str) -> 'Series':
+    def get_contributed_values(self, key: str) -> 'Series':
         """Returns a Pandas column with the requested contributed values
 
         Parameters
@@ -791,7 +936,7 @@ class Dataset(Collection):
         Series
             A pandas Series containing the request values.
         """
-        data = self.get_contributed_values(key)
+        data = self.data.contributed_values[key.lower()].copy()
 
         # Annoying work around to prevent some pands magic
         if isinstance(next(iter(data.values.values())), (int, float)):
@@ -810,6 +955,71 @@ class Dataset(Collection):
             data.units, self.units)
 
         return tmp_idx
+
+    def get_molecules(self, subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'Molecule']:
+        """Queries full Molecules from the database.
+
+        Parameters
+        ----------
+        subset : Optional[Union[str, Set[str]]], optional
+            The index subset to query on
+
+        Returns
+        -------
+        Union[pd.DataFrame, 'Molecule']
+            Either a DataFrame of indexed Molecules or a single Molecule if a single subset string was provided.
+        """
+        indexer = self._molecule_indexer(subset)
+        df = self._get_molecules(indexer)
+
+        if isinstance(subset, str):
+            return df.iloc[0, 0]
+        else:
+            return df
+
+    def get_records(self,
+              method: str,
+              basis: Optional[str]=None,
+              *,
+              keywords: Optional[str]=None,
+              program: Optional[str]=None,
+              projection: Optional[Dict[str, bool]]=None,
+              subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'ResultRecord']:
+        """Queries full ResultRecord objects from the database.
+
+        Parameters
+        ----------
+        method : str
+            The computational method to query on (B3LYP)
+        basis : Optional[str], optional
+            The computational basis query on (6-31G)
+        keywords : Optional[str], optional
+            The option token desired
+        program : Optional[str], optional
+            The program to query on
+        projection : Optional[Dict[str, bool]], optional
+            The attribute project to perform on the query, otherwise returns ResultRecord objects.
+        subset : Optional[Union[str, Set[str]]], optional
+            The index subset to query on
+
+        Returns
+        -------
+        Union[pd.DataFrame, 'ResultRecord']
+            Either a DataFrame of indexed ResultRecords or a single ResultRecord if a singel subset string was provided.
+        """
+        name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
+        indexer = self._molecule_indexer(subset)
+        df = self._get_records(indexer, history, projection=projection, merge=False)
+        if len(df) == 1:
+            df = df[0]
+
+        if np.all(df.count() == 0):
+            raise KeyError("Query matched no records!")
+
+        if isinstance(subset, str):
+            return df.iloc[0, 0]
+        else:
+            return df
 
     def add_entry(self, name: str, molecule: Molecule, **kwargs: Dict[str, Any]):
         """Adds a new entry to the Dataset
@@ -834,7 +1044,6 @@ class Dataset(Collection):
               keywords: Optional[str]=None,
               program: Optional[str]=None,
               field: str=None,
-              as_array: bool=False,
               force: bool=False) -> str:
         """
         Queries the local Portal for the requested keys.
@@ -851,8 +1060,6 @@ class Dataset(Collection):
             The program to query on
         field : str, optional
             The result field to query on
-        as_array : bool, optional
-            Converts the returned values to NumPy arrays
         force : bool, optional
             Forces a requery if data is already present
 
@@ -868,6 +1075,8 @@ class Dataset(Collection):
 
         """
 
+        warnings.warn("This is function is deprecated and will be removed in 0.11.0, please `get_records(..., projection='return_result')` for a similar result", DeprecationWarning)
+
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
 
         if field is None:
@@ -878,22 +1087,20 @@ class Dataset(Collection):
         if (name in self.df) and (force is False):
             return name
 
-        if self.client is None:
-            raise AttributeError("DataBase: FractalClient was not set.")
+        self._check_client()
 
         # # If reaction results
         indexer = {e.name: e.molecule_id for e in self.data.records}
 
-        tmp_idx = self._query(indexer, dbkeys, field=field)
+        tmp_idx = self._get_records(indexer, history, projection={field: True}, merge=True)
         tmp_idx.rename(columns={field: name}, inplace=True)
 
-        if as_array:
-            tmp_idx[tmp_idx.columns[0]] = tmp_idx[tmp_idx.columns[0]].apply(lambda x: np.array(x))
+        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', self.units)
 
         # Apply to df
         self.df[tmp_idx.columns] = tmp_idx
 
-        return tmp_idx.columns[0]
+        return tmp_idx
 
     def compute(self,
                 method: str,

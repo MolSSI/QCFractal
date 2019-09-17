@@ -26,9 +26,11 @@ def test_collection_query(fractal_compute_server):
     assert ds.name == "CAPITAL"
 
 
-@testing.using_psi4
-def test_dataset_compute_gradient(fractal_compute_server):
+@pytest.fixture(scope="module")
+def gradient_dataset_fixture(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
+
+    testing.check_has_module("psi4")
 
     # Build a dataset
     ds = ptl.collections.Dataset("ds_gradient",
@@ -50,15 +52,77 @@ def test_dataset_compute_gradient(fractal_compute_server):
         "units": "hartree"
     }
     ds.add_contributed_values(contrib)
+
+    ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={}), default=True)
     ds.save()
 
-    ds = client.get_collection("dataset", "ds_gradient")
-
-    # Compute
     ds.compute("HF", "sto-3g")
     fractal_compute_server.await_results()
 
-    ds.query("HF", "sto-3g", as_array=True)
+    assert ds.get_records("HF", "sto-3g").iloc[0, 0].status == "COMPLETE"
+    assert ds.get_records("HF", "sto-3g").iloc[1, 0].status == "COMPLETE"
+
+    yield client, client.get_collection("dataset", "ds_gradient")
+
+
+def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    he1_dist = 2.672476322216822
+    he2_dist = 2.939723950195864
+    mols = ds.get_molecules()
+    assert mols.shape == (2, 1)
+    assert mols.iloc[0, 0].measure([0, 1]) == pytest.approx(he1_dist)
+
+    mol = ds.get_molecules(subset="He1")
+    assert mol.measure([0, 1]) == pytest.approx(he1_dist)
+
+    mol = ds.get_molecules(subset="He2")
+    assert mol.measure([0, 1]) == pytest.approx(he2_dist)
+
+    mols_subset = ds.get_molecules(subset=["He1"])
+    assert mols_subset.iloc[0, 0].measure([0, 1]) == pytest.approx(he1_dist)
+
+    with pytest.raises(KeyError):
+        ds.get_molecules(subset="NotInDataset")
+
+
+def test_gradient_dataset_get_records(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    records = ds.get_records("HF", "sto-3g")
+    assert records.shape == (2, 1)
+    assert records.iloc[0, 0].status == "COMPLETE"
+    assert records.iloc[1, 0].status == "COMPLETE"
+
+    records_subset1 = ds.get_records("HF", "sto-3g", subset="He2")
+    assert records_subset1.status == "COMPLETE"
+
+    records_subset2 = ds.get_records("HF", "sto-3g", subset=["He2"])
+    assert records_subset2.shape == (1, 1)
+    assert records_subset2.iloc[0, 0].status == "COMPLETE"
+
+    rec_proj = ds.get_records("HF", "sto-3g", projection={"extras": True, "return_result": True})
+    assert rec_proj.shape == (2, 2)
+    assert set(rec_proj.columns) == {"extras", "return_result"}
+
+    with pytest.raises(KeyError):
+        ds.get_records(method="NotInDataset")
+
+
+def test_gradient_dataset_get_values_no_match(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    with pytest.raises(KeyError):
+        ds.get_values(method="NotInDataset")
+
+
+def test_gradient_dataset_statistics(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    df = ds.get_values()
+    assert df.shape == (2, 1)
+    assert np.sum(df.loc["He2", "HF/sto-3g"]) == pytest.approx(0.0)
 
     # Test out some statistics
     stats = ds.statistics("MUE", "HF/sto-3g", "Gradient")
@@ -67,9 +131,6 @@ def test_dataset_compute_gradient(fractal_compute_server):
     stats = ds.statistics("UE", "HF/sto-3g", "Gradient")
     assert pytest.approx(stats.loc["He1"].mean(), 1.e-5) == 0.01635020639
     assert pytest.approx(stats.loc["He2"].mean(), 1.e-5) == 0.00333333333
-
-    assert ds.list_history().shape[0] == 1
-    assert ds.get_history().shape[0] == 1
 
 
 def test_dataset_compute_response(fractal_compute_server):
@@ -101,24 +162,25 @@ def test_dataset_compute_response(fractal_compute_server):
 def test_reactiondataset_check_state(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
     ds = ptl.collections.ReactionDataset("check_state", client, ds_type="ie", default_program="rdkit")
-    ds.add_ie_rxn("He1", ptl.Molecule.from_data("He -3 0 0\n--\nHe 0 0 2"))
+    ds.add_ie_rxn("He1", ptl.Molecule.from_data("He -3 0 0\n--\nNe 0 0 2"))
 
     with pytest.raises(ValueError):
         ds.compute("SCF", "STO-3G")
 
     with pytest.raises(ValueError):
-        ds.query("SCF", "STO-3G")
+        ds.get_records("SCF", "STO-3G")
 
     ds.save()
-    assert ds.query("SCF", "STO-3G")
+    ds.get_records("SCF", "STO-3G")
 
     ds.add_keywords("default", "psi4", ptl.models.KeywordSet(values={"a": 5}))
 
     with pytest.raises(ValueError):
-        ds.query("SCF", "STO-3G")
+        ds.get_records("SCF", "STO-3G")
 
     ds.save()
-    assert ds.query("SCF", "STO-3G")
+
+    ds.get_records("SCF", "STO-3G")
 
     contrib = {
         "name": "Benchmark",
@@ -132,15 +194,17 @@ def test_reactiondataset_check_state(fractal_compute_server):
     }
     ds.add_contributed_values(contrib)
     with pytest.raises(ValueError):
-        ds.query("SCF", "STO-3G")
+        ds.get_records("SCF", "STO-3G")
 
     assert "benchmark" in ds.list_contributed_values()
-    assert ds.get_contributed_values("benchmark").name == "Benchmark"
+    assert "Benchmark" in ds.get_contributed_values("benchmark").columns
 
 
-@testing.using_psi4
-@testing.using_dftd3
-def test_compute_reactiondataset_dftd3(fractal_compute_server):
+@pytest.fixture(scope="module")
+def reactiondataset_dftd3_fixture_fixture(fractal_compute_server):
+
+    testing.check_has_module("psi4")
+    testing.check_has_module("dftd3")
 
     client = ptl.FractalClient(fractal_compute_server)
     ds_name = "He_DFTD3"
@@ -150,25 +214,83 @@ def test_compute_reactiondataset_dftd3(fractal_compute_server):
     HeDimer = ptl.Molecule.from_data([[2, 0, 0, -4.123], [2, 0, 0, 4.123]], dtype="numpy", units="bohr", frags=[1])
     ds.add_ie_rxn("HeDimer", HeDimer, attributes={"r": 4})
     ds.set_default_program("psi4")
+    ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={}), default=True)
 
     ds.save()
 
-    ncomp1 = ds.compute("B3LYP-D3", "6-31G")
+    ncomp1 = ds.compute("B3LYP-D3", "6-31g")
     assert len(ncomp1.ids) == 4
     assert len(ncomp1.submitted) == 4
 
-    ncomp2 = ds.compute("B3LYP-D3(BJ)", "6-31G")
+    ncomp2 = ds.compute("B3LYP-D3(BJ)", "6-31g")
     assert len(ncomp2.ids) == 4
     assert len(ncomp2.submitted) == 2
 
     fractal_compute_server.await_results()
-    assert ds.query("B3LYP", "6-31G")
-    assert ds.query("B3LYP-D3", "6-31G")
-    assert ds.query("B3LYP-D3(BJ)", "6-31G")
 
-    for key, value in {"B3LYP/6-31g": -0.002135, "B3LYP-D3/6-31g": -0.005818, "B3LYP-D3(BJ)/6-31g": -0.005636}.items():
+    yield client, ds
 
-        assert pytest.approx(value, 1.e-3) == ds.df.loc["HeDimer", key]
+def test_rectiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
+    client, ds = reactiondataset_dftd3_fixture_fixture
+
+    records = ds.get_records("B3LYP", "6-31g")
+    assert records.shape == (1, 1)
+    assert records.iloc[0, 0].status == "COMPLETE"
+
+    records = ds.get_records("B3LYP", "6-31g", stoich=["cp", "default"])
+    assert records.shape == (2, 1)
+    assert records.iloc[0, 0].status == "COMPLETE"
+    assert records.iloc[0, 0].id == records.iloc[1, 0].id
+
+    records = ds.get_records("B3LYP", "6-31g", stoich=["cp", "default"], subset="HeDimer")
+    assert records.shape == (2, 1)
+
+    # No molecules
+    with pytest.raises(KeyError):
+        records = ds.get_records("B3LYP", "6-31g", stoich=["cp", "default"], subset="Gibberish")
+
+def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
+    client, ds = reactiondataset_dftd3_fixture_fixture
+
+    bench = {
+        "B3LYP/6-31g": pytest.approx(-0.002135, 1.e-3),
+        "B3LYP-D3/6-31g": pytest.approx(-0.005818, 1.e-3),
+        "B3LYP-D3(BJ)/6-31g": pytest.approx(-0.005636, 1.e-3)
+    }
+
+    ret = ds.get_values("B3LYP", "6-31G")
+    assert ret.loc["HeDimer", "B3LYP/6-31g"] == bench["B3LYP/6-31g"]
+
+    ret = ds.get_values("B3LYP-D3", "6-31G")
+    assert ret.loc["HeDimer", "B3LYP-D3/6-31g"] == bench["B3LYP-D3/6-31g"]
+
+    ret = ds.get_values("B3LYP-D3(BJ)", "6-31G")
+    assert ret.loc["HeDimer", "B3LYP-D3(BJ)/6-31g"] == bench["B3LYP-D3(BJ)/6-31g"]
+
+    # Should be in ds.df now as wells
+    for key, value in bench.items():
+        assert value == ds.df.loc["HeDimer", key]
+
+
+def test_rectiondataset_dftd3_molecules(reactiondataset_dftd3_fixture_fixture):
+    client, ds = reactiondataset_dftd3_fixture_fixture
+
+    mols = ds.get_molecules()
+    assert mols.shape == (1, 1)
+    assert np.all(mols.iloc[0, 0].real)  # Should be all real
+    assert tuple(mols.index) == (("HeDimer", "default", 0), )
+
+    mols = ds.get_molecules(stoich="cp1")
+    assert mols.shape == (1, 1)
+    assert not np.all(mols.iloc[0, 0].real)  # Should be half real
+    assert tuple(mols.index) == (("HeDimer", "cp1", 0), )
+
+    stoichs = ["cp1", "default1", "cp", "default"]
+    mols = ds.get_molecules(stoich=stoichs)
+    assert mols.shape == (4, 1)
+
+    mols = mols.reset_index()
+    assert set(stoichs) == set(mols["stoichiometry"])
 
 
 @testing.using_psi4
@@ -227,7 +349,8 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     fractal_compute_server.await_results()
 
     # Query computed results
-    assert ds.query("SCF", "STO-3G")
+    ret = ds.get_values("SCF", "STO-3G")
+    assert ret.shape == (2, 1)
     assert pytest.approx(0.6024530476, 1.e-5) == ds.df.loc["He1", "SCF/sto-3g"]
     assert pytest.approx(-0.0068950359, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g"]
 
@@ -243,6 +366,13 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
 
     ds.units = "eV"
     assert pytest.approx(0.00010614635, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g", floor=10)
+
+    # Check get_molecules
+    mols = ds.get_molecules()
+    assert mols.shape == (2, 1)
+
+    mols = ds.get_molecules(stoich="cp1")
+    assert mols.shape == (2, 1)
 
 
 @testing.using_psi4
@@ -266,12 +396,12 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     # Compute, should default to direct options
     r = ds.compute("SCF", "STO-3G")
     fractal_compute_server.await_results()
-    assert ds.query("SCF", "STO-3G")
+    ret = ds.get_values("SCF", "STO-3G")
     assert pytest.approx(0.39323818102293856, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g"]
 
     r = ds.compute("SCF", "sto-3g", keywords="df")
     fractal_compute_server.await_results()
-    assert ds.query("SCF", "sto-3g", keywords="df") == "SCF/sto-3g-df"
+    ds.get_values("SCF", "sto-3g", keywords="df").columns[0] == "SCF/sto-3g-df"
     assert pytest.approx(0.38748602675524185, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g-df"]
 
     assert ds.list_history().shape[0] == 2

@@ -92,6 +92,11 @@ class Collection(abc.ABC):
     def __repr__(self) -> str:
         return f"<{self}>"
 
+    def _check_client(self):
+        if self.client is None:
+            raise AttributeError("This method requires a FractalClient and no client was set")
+
+
     @property
     def name(self) -> str:
         return self.data.name
@@ -211,10 +216,9 @@ class Collection(abc.ABC):
         if self.data.name == "":
             raise AttributeError("Collection:save: {} must have a name!".format(class_name))
 
+
         if client is None:
-            if self.client is None:
-                raise AttributeError("Collection:save: {} does not own a Storage Database "
-                                     "instance and one was not passed in.".format(class_name))
+            self._check_client()
             client = self.client
 
         self._pre_save_prep(client)
