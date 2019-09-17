@@ -1063,18 +1063,24 @@ class FractalClient(object):
     # ------------------   Advanced Queries -----------------------------------
     # -------------------------------------------------------------------------
 
-    def get_best_optimization_results(self,
-                         id: 'QueryObjectId' = None,
-                         limit: Optional[int] = None,
-                         skip: int = 0,
-                         projection: 'QueryProjection' = None,
-                         full_return: bool = False) -> Union[List['RecordBase'], Dict[str, Any]]:
-        """Get best results of each optimization procedure in one query.
+    def custom_query(self,
+             class_name: str,
+             query_type: str,
+             data: Dict,
+             limit: Optional[int] = None,
+             skip: int = 0,
+             projection: 'QueryProjection' = None,
+             full_return: bool = False):
+        """ Custom queries that are supported by the REST APIs.
 
         Parameters
         ----------
-        id : QueryObjectId, optional
-            List of procedure ``id``s .
+        class_name: str
+            class name like optimization, datasets, etc (TODO: add more)
+        query_type: str
+            The required query within the given class
+        data : dict
+            a dictionary of the keys to be used in the query
         limit : Optional[int], optional
             The maximum number of Procedures to query
         skip : int, optional
@@ -1086,26 +1092,23 @@ class FractalClient(object):
 
         Returns
         -------
-        Union[List['RecordBase'], Dict[str, Any]]
-            Returns a List of found RecordResult's without projection, or a
-            dictionary of results with projection.
+            Arbitrary returns for each query type.
+            In the form of Dict[str, Any] (TODO)
         """
 
         payload = {
             "meta": {
-                "limit": limit,           # Todo
+                "limit": limit,
                 "skip": skip,
-                "projection": projection  # Todo
+                "projection": projection
             },
-            "data": {
-                "opt_ids": id,
-            }
+            "data": data
         }
-        response = self._automodel_request("procedure", "best_opt_results", payload, full_return=True)
+        response = self._automodel_request(class_name, query_type, payload, full_return=True)
 
-        if not projection:
-            for ind in range(len(response.data)):
-                response.data[ind] = build_procedure(response.data[ind], client=self)
+        # if not projection:
+        #     for ind in range(len(response.data)):
+        #         response.data[ind] = build_procedure(response.data[ind], client=self)
 
         if full_return:
             return response
