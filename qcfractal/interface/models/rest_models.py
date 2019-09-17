@@ -1208,14 +1208,26 @@ class OptimizationFinalMoleculesBody(ProtoModel):
         description="The keys with data to search the database on for Procedures."
     )
 
+class ResultsResponse(ProtoModel):
+    meta: ResponseGETMeta = Schema(
+        ...,
+        description=common_docs[ResponseGETMeta]
+    )
+    # Either a record or dict depending if projection
+    data: Union[Dict[str, ResultRecord],
+                Dict[str, Any]] = Schema(
+        ...,
+        description="A List of Results found from the query per optimization id."
+    )
+
 class ListResultsResponse(ProtoModel):
     meta: ResponseGETMeta = Schema(
         ...,
         description=common_docs[ResponseGETMeta]
     )
     # Either a record or dict depending if projection
-    data: Union[List[Dict[str,List[ResultRecord]]],
-                List[Dict[str, Any]]] = Schema(
+    data: Union[Dict[str, List[ResultRecord]],
+                Dict[str, Any]] = Schema(
         ...,
         description="A List of Results found from the query per optimization id."
     )
@@ -1226,13 +1238,13 @@ class ListMoleculesResponse(ProtoModel):
         description=common_docs[ResponseGETMeta]
     )
     # Either a record or dict depending if projection
-    data: Union[List[Dict[str,List[Molecule]]],
-                List[Dict[str, Any]]] = Schema(
+    data: Union[Dict[str, List[Molecule]],
+                Dict[str, Any]] = Schema(
         ...,
         description="A List of Molecules found from the query per optimization id."
     )
 
-register_custom_model("optimization", "best_opt_results", OptimizationBestResultsBody, ListResultsResponse)
+register_custom_model("optimization", "best_opt_results", OptimizationBestResultsBody, ResultsResponse)
 register_custom_model("optimization", "best_all_results", OptimizationAllResultsBody, ListResultsResponse)
 register_custom_model("optimization", "initial_molecules", OptimizationAllResultsBody, ListMoleculesResponse)
 register_custom_model("optimization", "final_molecules", OptimizationAllResultsBody, ListMoleculesResponse)
