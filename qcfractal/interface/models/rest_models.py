@@ -18,14 +18,23 @@ __all__ = ["ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryP
 ### Utility functions
 
 __rest_models = {}
+__custom_rest_models = {}
 
 
 def register_model(name: str, rest: str, body: 'ProtoModel', response: 'ProtoModel') -> None:
+    _register_model(False, name, rest, body, response)
+
+def register_custom_model(name: str, rest: str, body: 'ProtoModel', response: 'ProtoModel') -> None:
+    _register_model(True, name, rest, body, response)
+
+def _register_model(is_custom_queries: bool, name: str, rest: str, body: 'ProtoModel', response: 'ProtoModel') -> None:
     """
     Register a REST model.
 
     Parameters
     ----------
+    is_custom_queries: bool
+        Model will be added to advanced (custom) queries
     name : str
         The REST endpoint name.
     rest : str
@@ -37,16 +46,21 @@ def register_model(name: str, rest: str, body: 'ProtoModel', response: 'ProtoMod
 
     """
 
+    if is_custom_queries:
+        models_dict = __custom_rest_models
+    else:
+        models_dict = __rest_models
+
     name = name.lower()
     rest = rest.upper()
 
-    if (name in __rest_models) and (rest in __rest_models[name]):
+    if (name in models_dict) and (rest in models_dict[name]):
         raise KeyError(f"Model name {name} already registered.")
 
-    if name not in __rest_models:
-        __rest_models[name] = {}
+    if name not in models_dict:
+        models_dict[name] = {}
 
-    __rest_models[name][rest] = (body, response)
+    models_dict[name][rest] = (body, response)
 
 
 def rest_model(name: str, rest: str) -> Tuple['ProtoModel', 'ProtoModel']:
@@ -660,57 +674,6 @@ class ProcedureGETResponse(ProtoModel):
 register_model("procedure", "GET", ProcedureGETBody, ProcedureGETResponse)
 
 
-## advanced procedures queries
-
-class OptimizationBestResultsBody(ProtoModel):
-    class Data(ProtoModel):
-        opt_ids: QueryObjectId = Schema(
-            None,
-            description="List of optimization procedure Ids to fetch their BEST results from the database."
-        )
-
-    # TODO: not yet supported
-    meta: QueryMetaProjection = Schema(
-        QueryMetaProjection(),
-        description=common_docs[QueryMetaProjection]
-    )
-    data: Data = Schema(
-        ...,
-        description="The keys with data to search the database on for Procedures."
-    )
-
-class OptimizationAllResultsBody(ProtoModel):
-    class Data(ProtoModel):
-        opt_ids: QueryObjectId = Schema(
-            None,
-            description="List of optimization procedure Ids to fetch their ALL their results from the database."
-        )
-
-    # TODO: not yet supported
-    meta: QueryMetaProjection = Schema(
-        QueryMetaProjection(),
-        description=common_docs[QueryMetaProjection]
-    )
-    data: Data = Schema(
-        ...,
-        description="The keys with data to search the database on for Procedures."
-    )
-
-class ListResultsResponse(ProtoModel):
-    meta: ResponseGETMeta = Schema(
-        ...,
-        description=common_docs[ResponseGETMeta]
-    )
-    # Either a record or dict depending if projection
-    data: Union[List[ResultRecord], List[Dict[str, Any]]] = Schema(
-        ...,
-        description="List of Results found from the query."
-    )
-
-register_model("optimization", "best_opt_results", OptimizationBestResultsBody, ListResultsResponse)
-register_model("optimization", "best_all_results", OptimizationAllResultsBody, ListResultsResponse)
-
-
 ### Task Queue
 
 class TaskQueueGETBody(ProtoModel):
@@ -1173,3 +1136,103 @@ class QueueManagerPUTResponse(ProtoModel):
 
 
 register_model("queue_manager", "PUT", QueueManagerPUTBody, QueueManagerPUTResponse)
+
+
+## advanced procedures queries
+
+class OptimizationBestResultsBody(ProtoModel):
+    class Data(ProtoModel):
+        opt_ids: QueryObjectId = Schema(
+            None,
+            description="List of optimization procedure Ids to fetch their BEST results from the database."
+        )
+
+    # TODO: not yet supported
+    meta: QueryMetaProjection = Schema(
+        QueryMetaProjection(),
+        description=common_docs[QueryMetaProjection]
+    )
+    data: Data = Schema(
+        ...,
+        description="The keys with data to search the database on for Procedures."
+    )
+
+class OptimizationAllResultsBody(ProtoModel):
+    class Data(ProtoModel):
+        opt_ids: QueryObjectId = Schema(
+            None,
+            description="List of optimization procedure Ids to fetch their ALL their results from the database."
+        )
+
+    # TODO: not yet supported
+    meta: QueryMetaProjection = Schema(
+        QueryMetaProjection(),
+        description=common_docs[QueryMetaProjection]
+    )
+    data: Data = Schema(
+        ...,
+        description="The keys with data to search the database on for Procedures."
+    )
+
+class OptimizationInitialMoleculesBody(ProtoModel):
+    class Data(ProtoModel):
+        opt_ids: QueryObjectId = Schema(
+            None,
+            description="List of optimization procedure Ids to fetch their initial  molecules from the database."
+        )
+
+    # TODO: not yet supported
+    meta: QueryMetaProjection = Schema(
+        QueryMetaProjection(),
+        description=common_docs[QueryMetaProjection]
+    )
+    data: Data = Schema(
+        ...,
+        description="The keys with data to search the database on for Procedures."
+    )
+
+class OptimizationFinalMoleculesBody(ProtoModel):
+    class Data(ProtoModel):
+        opt_ids: QueryObjectId = Schema(
+            None,
+            description="List of optimization procedure Ids to fetch their final molecules from the database."
+        )
+
+    # TODO: not yet supported
+    meta: QueryMetaProjection = Schema(
+        QueryMetaProjection(),
+        description=common_docs[QueryMetaProjection]
+    )
+    data: Data = Schema(
+        ...,
+        description="The keys with data to search the database on for Procedures."
+    )
+
+class ListResultsResponse(ProtoModel):
+    meta: ResponseGETMeta = Schema(
+        ...,
+        description=common_docs[ResponseGETMeta]
+    )
+    # Either a record or dict depending if projection
+    data: Union[List[Dict[str,List[ResultRecord]]],
+                List[Dict[str, Any]]] = Schema(
+        ...,
+        description="A List of Results found from the query per optimization id."
+    )
+
+class ListMoleculesResponse(ProtoModel):
+    meta: ResponseGETMeta = Schema(
+        ...,
+        description=common_docs[ResponseGETMeta]
+    )
+    # Either a record or dict depending if projection
+    data: Union[List[Dict[str,List[Molecule]]],
+                List[Dict[str, Any]]] = Schema(
+        ...,
+        description="A List of Molecules found from the query per optimization id."
+    )
+
+register_custom_model("optimization", "best_opt_results", OptimizationBestResultsBody, ListResultsResponse)
+register_custom_model("optimization", "best_all_results", OptimizationAllResultsBody, ListResultsResponse)
+register_custom_model("optimization", "initial_molecules", OptimizationAllResultsBody, ListMoleculesResponse)
+register_custom_model("optimization", "final_molecules", OptimizationAllResultsBody, ListMoleculesResponse)
