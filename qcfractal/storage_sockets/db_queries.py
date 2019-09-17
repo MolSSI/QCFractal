@@ -3,8 +3,8 @@ from qcelemental.util import msgpackext_dumps, msgpackext_loads
 from typing import List, Union
 from sqlalchemy.sql import text, bindparam
 from sqlalchemy import inspect, Integer
-from qcfractal.storage_sockets.models import ResultORM
-from qcfractal.interface.models import ResultRecord
+from qcfractal.storage_sockets.models import ResultORM, MoleculeORM
+from qcfractal.interface.models import ResultRecord, Molecule
 
 
 class QueryBase(ABC):
@@ -61,7 +61,7 @@ class TorsionDriveQueries(QueryBase):
         'initial_molecules_ids' : '_get_initial_molecules_ids',
         'final_molecules' : '_get_final_molecules',
         'final_molecules_ids' : '_get_final_molecules_ids',
-        'return_results': '_get_return_results',  # TODO: maybe not used
+        'return_results': '_get_return_results',
     }
 
     def _get_initial_molecules_ids(self, torsion_id=None):
@@ -85,8 +85,6 @@ class TorsionDriveQueries(QueryBase):
         if torsion_id is None:
             self._raise_missing_attribute('initial_molecules', 'torsion drive id')
 
-        # TODO: include opt.id as opt_id, ?
-        # TODO: order by opt.id ?
         sql_statement = f"""
                 select molecule.* from molecule
                 join optimization_procedure as opt
@@ -150,11 +148,18 @@ class TorsionDriveQueries(QueryBase):
 class OptimizationQueries(QueryBase):
 
     _class_name = 'optimization'
-
+    _exclude = ['molecule_hash', 'molecular_formula', 'result_type']
     _query_method_map = {
         'all_opt_results': '_get_all_opt_results',
-        'best_opt_results': '_get_best_opt_results'
+        'best_opt_results': '_get_best_opt_results',
+        'initial_molecules' : '_get_initial_molecules',
+        'final_molecules' : '_get_final_molecules',
     }
+
+
+    def _remove_excluded_keys(self, data):
+        for key in self._exclude:
+            data.pop(key, None)
 
     def _get_all_opt_results(self, opt_ids : List[Union[int, str]]=None):
         """Returns all the results objects (trajectory) of each optmization
@@ -179,17 +184,17 @@ class OptimizationQueries(QueryBase):
         sql_statement = sql_statement.bindparams(bindparam("opt_ids", expanding=True))
 
         # column types:
-        res_columns = inspect(ResultORM).columns
-        sql_statement = sql_statement.columns(opt_ids=Integer, *res_columns)
+        columns = inspect(ResultORM).columns
+        sql_statement = sql_statement.columns(opt_ids=Integer, *columns)
         query_result = self.execute_query(sql_statement, opt_ids=list(opt_ids))
 
         ret = {}
         for rec in query_result:
+            self._remove_excluded_keys(rec)
             key = rec.pop('opt_id')
             if key not in ret:
                 ret[key] = []
 
-            rec.pop('result_type')
             ret[key].append(ResultRecord(**rec))
 
         return ret
@@ -223,14 +228,70 @@ class OptimizationQueries(QueryBase):
         sql_statement = sql_statement.bindparams(bindparam("opt_ids", expanding=True))
 
         # column types:
-        res_columns = inspect(ResultORM).columns
-        sql_statement = sql_statement.columns(opt_ids=Integer, *res_columns)
+        columns = inspect(ResultORM).columns
+        sql_statement = sql_statement.columns(opt_ids=Integer, *columns)
         query_result = self.execute_query(sql_statement, opt_ids=list(opt_ids))
 
         ret = {}
         for rec in query_result:
+            self._remove_excluded_keys(rec)
             key = rec.pop('opt_id')
-            rec.pop('result_type')
             ret[key] = ResultRecord(**rec)
+
+        return ret
+
+    def _get_initial_molecules(self, opt_ids=None):
+
+        if opt_ids is None:
+            self._raise_missing_attribute('initial_molecules', 'List of optimizations ids')
+
+        sql_statement = text("""
+                select opt.id as opt_id, molecule.* from molecule
+                join optimization_procedure as opt
+                on molecule.id = opt.initial_molecule
+                where opt.id in :opt_ids
+        """)
+
+        # bind and expand ids list
+        sql_statement = sql_statement.bindparams(bindparam("opt_ids", expanding=True))
+
+        # column types:
+        columns = inspect(MoleculeORM).columns
+        sql_statement = sql_statement.columns(opt_ids=Integer, *columns)
+        query_result = self.execute_query(sql_statement, opt_ids=list(opt_ids))
+
+        ret = {}
+        for rec in query_result:
+            self._remove_excluded_keys(rec)
+            key = rec.pop('opt_id')
+            ret[key] = Molecule(**rec)
+
+        return ret
+
+    def _get_final_molecules(self, opt_ids=None):
+
+        if opt_ids is None:
+            self._raise_missing_attribute('final_molecules', 'List of optimizations ids')
+
+        sql_statement = text("""
+                select opt.id as opt_id, molecule.* from molecule
+                join optimization_procedure as opt
+                on molecule.id = opt.final_molecule
+                where opt.id in :opt_ids
+        """)
+
+         # bind and expand ids list
+        sql_statement = sql_statement.bindparams(bindparam("opt_ids", expanding=True))
+
+        # column types:
+        columns = inspect(MoleculeORM).columns
+        sql_statement = sql_statement.columns(opt_ids=Integer, *columns)
+        query_result = self.execute_query(sql_statement, opt_ids=list(opt_ids))
+
+        ret = {}
+        for rec in query_result:
+            self._remove_excluded_keys(rec)
+            key = rec.pop('opt_id')
+            ret[key] = Molecule(**rec)
 
         return ret

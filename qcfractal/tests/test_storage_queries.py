@@ -69,42 +69,26 @@ def torsiondrive_fixture(fractal_compute_server):
 
         return ret.data
 
-    yield spin_up_test, client
+    ret = spin_up_test()
+
+    torsion = fractal_compute_server.storage.get_procedures(id=ret.ids[0])['data'][0]
+
+    yield torsion, client
 
 
 def test_torsiondrive_initial_final_molecule(torsiondrive_fixture, fractal_compute_server):
     """ With single initial molecule in torsion proc"""
 
-    spin_up_test, client = torsiondrive_fixture
-
-    ret = spin_up_test()
-
-    # Get a TorsionDriveORM result and check data
-    result = client.query_procedures(id=ret.ids)[0]
-
-    assert result.status == "COMPLETE"
-    assert isinstance(str(result), str)  # Check that repr runs
-
-    # copy from test_services
-    assert pytest.approx(0.002597541340221565, abs=1e-6) == result.get_final_energies(0)
-    assert pytest.approx(0.000156553761859276, abs=1e-6) == result.get_final_energies(90)
-    assert pytest.approx(0.000156553761859271, abs=1e-6) == result.get_final_energies(-90)
-    assert pytest.approx(0.000753492556057886, abs=1e-6) == result.get_final_energies(180)
-
-    assert hasattr(result.get_final_molecules()[(-90, )], "symbols")
-
-    # print(fractal_compute_server.storage.uri)
-    # torsion_id = fractal_compute_server.storage.get_procedures(procedure='torsiondrive')['data'][0]['id']
-    torsion_id = ret.ids[0]
+    torsion, client = torsiondrive_fixture
 
     r = fractal_compute_server.storage.query('torsiondrive', 'initial_molecules_ids',
-                                             torsion_id=torsion_id)
+                                             torsion_id=torsion['id'])
 
     assert r['meta']['success']
     assert len(r['data']) == 9
 
     r = fractal_compute_server.storage.query('torsiondrive', 'initial_molecules',
-                                             torsion_id=torsion_id)
+                                             torsion_id=torsion['id'])
     assert r['meta']['success']
     assert len(r['data']) == 9
     mol = r['data'][0]
@@ -117,13 +101,13 @@ def test_torsiondrive_initial_final_molecule(torsiondrive_fixture, fractal_compu
                for x in ['schema_name', 'symbols', 'geometry',  'molecular_charge'])
 
     r = fractal_compute_server.storage.query('torsiondrive', 'final_molecules_ids',
-                                             torsion_id=torsion_id)
+                                             torsion_id=torsion['id'])
 
     assert r['meta']['success']
     assert len(r['data']) == 9
 
     r = fractal_compute_server.storage.query('torsiondrive', 'final_molecules',
-                                             torsion_id=torsion_id)
+                                             torsion_id=torsion['id'])
     assert r['meta']['success']
     assert len(r['data']) == 9
     mol = r['data'][0]
@@ -135,31 +119,21 @@ def test_torsiondrive_initial_final_molecule(torsiondrive_fixture, fractal_compu
 def test_torsiondrive_return_results(torsiondrive_fixture, fractal_compute_server):
     """ With single initial molecule in torsion proc"""
 
-    spin_up_test, client = torsiondrive_fixture
-
-    ret = spin_up_test()
-    torsion_id = ret.ids[0]
+    torsion, client = torsiondrive_fixture
 
     r = fractal_compute_server.storage.query('torsiondrive', 'return_results',
-                                             torsion_id=torsion_id)
+                                             torsion_id=torsion['id'])
     assert r['meta']['success']
     assert len(r['data'])
     assert all(x in r['data'][0] for x in ['result_id', 'return_result'])
 
 
-def test_torsiondrive_best_opt_results(torsiondrive_fixture, fractal_compute_server):
+def test_optimization_best_results(torsiondrive_fixture, fractal_compute_server):
     """ Test return best optimization proc results in one query"""
 
-    spin_up_test, client = torsiondrive_fixture
-
-    ret = spin_up_test()
-    torsion_id = ret.ids[0]
-
-    torsion = fractal_compute_server.storage.get_procedures(id=torsion_id)['data'][0]
+    torsion, client = torsiondrive_fixture
 
     opt_ids = [torsion['optimization_history'][k][v] for k,v in torsion['minimum_positions'].items()]
-
-    # TODO; is unique values needed?
     opt_ids = set(opt_ids)
 
     r = fractal_compute_server.storage.query('optimization', 'best_opt_results', opt_ids=opt_ids)
@@ -168,31 +142,13 @@ def test_torsiondrive_best_opt_results(torsiondrive_fixture, fractal_compute_ser
     assert len(r['data']) == len(opt_ids)
     assert  set(r['data'].keys()) == set(map(int, opt_ids))
 
-    # print('All return: \n-----------', r['data'], '\n\n')
-    # print(r['data'].keys(), '\n\n')
-    # print(list(r['data'].values())[0])
 
-    # Msgpack field
-    # res = list(r['data'].values())[0]
-    # print('Data[0]: \n', res, '\n')
-    # print('Return_results raw:', bytes(res['return_result']))
-    #
-    # assert isinstance(msgpackext_loads(res['return_result']), np.ndarray)
-
-
-def test_torsiondrive_all_opt_results(torsiondrive_fixture, fractal_compute_server):
+def test_optimization_all_results(torsiondrive_fixture, fractal_compute_server):
     """ Test return best optimization proc results in one query"""
 
-    spin_up_test, client = torsiondrive_fixture
-
-    ret = spin_up_test()
-    torsion_id = ret.ids[0]
-
-    torsion = fractal_compute_server.storage.get_procedures(id=torsion_id)['data'][0]
+    torsion, client = torsiondrive_fixture
 
     opt_ids = [torsion['optimization_history'][k][v] for k,v in torsion['minimum_positions'].items()]
-
-    # TODO; is unique values needed?
     opt_ids = set(opt_ids)
 
     r = fractal_compute_server.storage.query('optimization', 'all_opt_results', opt_ids=opt_ids)
@@ -203,10 +159,32 @@ def test_torsiondrive_all_opt_results(torsiondrive_fixture, fractal_compute_serv
     assert len(r['data']) == len(opt_ids)
     assert  set(r['data'].keys()) == set(map(int, opt_ids))
 
-    # Msgpack field
-    # sample_res = r['data'][0]['trajectory_results'][0]
-    # # print('Return_results raw:', sample_res['return_result'])
-    # bytes_arr = bytes.fromhex(sample_res['return_result'][2:])  # slice to remove the '\x'
-    # # print('Return_results bytes.fromhex:', bytes_arr)
-    #
-    # assert isinstance(msgpackext_loads(bytes_arr), np.ndarray)
+
+def test_optimization_initial_molecules(torsiondrive_fixture, fractal_compute_server):
+    """ Test return best optimization proc results in one query"""
+
+    torsion, client = torsiondrive_fixture
+
+    opt_ids = [torsion['optimization_history'][k][v] for k,v in torsion['minimum_positions'].items()]
+    opt_ids = set(opt_ids)
+
+    r = fractal_compute_server.storage.query('optimization', 'initial_molecules', opt_ids=opt_ids)
+
+    assert r['meta']['success']
+    assert len(r['data']) == len(opt_ids)
+    assert  set(r['data'].keys()) == set(map(int, opt_ids))
+
+
+def test_optimization_final_molecules(torsiondrive_fixture, fractal_compute_server):
+    """ Test return best optimization proc results in one query"""
+
+    torsion, client = torsiondrive_fixture
+
+    opt_ids = [torsion['optimization_history'][k][v] for k,v in torsion['minimum_positions'].items()]
+    opt_ids = set(opt_ids)
+
+    r = fractal_compute_server.storage.query('optimization', 'final_molecules', opt_ids=opt_ids)
+
+    assert r['meta']['success']
+    assert len(r['data']) == len(opt_ids)
+    assert  set(r['data'].keys()) == set(map(int, opt_ids))
