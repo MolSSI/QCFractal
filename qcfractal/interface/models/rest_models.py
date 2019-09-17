@@ -662,11 +662,11 @@ register_model("procedure", "GET", ProcedureGETBody, ProcedureGETResponse)
 
 ## advanced procedures queries
 
-class ProcedureBestOptResultsBody(ProtoModel):
+class OptimizationBestResultsBody(ProtoModel):
     class Data(ProtoModel):
         opt_ids: QueryObjectId = Schema(
             None,
-            description="List of optimization procedure Ids to fetch their BEST result from the database."
+            description="List of optimization procedure Ids to fetch their BEST results from the database."
         )
 
     # TODO: not yet supported
@@ -679,8 +679,7 @@ class ProcedureBestOptResultsBody(ProtoModel):
         description="The keys with data to search the database on for Procedures."
     )
 
-
-class ProcedureBestOptResultsResponse(ProtoModel):
+class ListResultsResponse(ProtoModel):
     meta: ResponseGETMeta = Schema(
         ...,
         description=common_docs[ResponseGETMeta]
@@ -691,7 +690,7 @@ class ProcedureBestOptResultsResponse(ProtoModel):
         description="List of Results found from the query."
     )
 
-register_model("procedure", "best_opt_results", ProcedureBestOptResultsBody, ProcedureBestOptResultsResponse)
+register_model("optimization", "best_opt_results", OptimizationBestResultsBody, ListResultsResponse)
 
 
 ### Task Queue

@@ -352,3 +352,29 @@ class ProcedureHandler(APIHandler):
 
         self.logger.info("GET: Procedures - {} pulls.".format(len(response.data)))
         self.write(response)
+
+class OptimizationHandler(APIHandler):
+    """
+    A handler to push and get molecules.
+    """
+
+    _required_auth = "read"
+    _logging_param_counts = {"id"}
+
+    def get(self, query_type='get'):
+
+        body_model, response_model = rest_model("optimization", query_type)
+        body = self.parse_bodymodel(body_model)
+
+        try:
+            if query_type == 'get':
+                ret = self.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
+            else:  # all other queries, like 'best_opt_results'
+                ret = self.storage.query('procedure', query_type, **{**body.data.dict(), **body.meta.dict()})
+        except KeyError as e:
+            raise tornado.web.HTTPError(status_code=401, reason=str(e))
+
+        response = response_model(**ret)
+
+        self.logger.info("GET: Optimization ({}) - {} pulls.".format(query_type, len(response.data)))
+        self.write(response)
