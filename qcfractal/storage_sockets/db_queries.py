@@ -2,6 +2,9 @@ from abc import ABC
 from qcelemental.util import msgpackext_dumps, msgpackext_loads
 from typing import List, Union
 from sqlalchemy.sql import text, bindparam
+from sqlalchemy import inspect, Integer
+from qcfractal.storage_sockets.models import ResultORM
+from qcfractal.interface.models import ResultRecord
 
 
 class QueryBase(ABC):
@@ -144,9 +147,9 @@ class TorsionDriveQueries(QueryBase):
         return self.execute_query(sql_statement, with_keys=False)
 
 
-class ProcedureQueries(QueryBase):
+class OptimizationQueries(QueryBase):
 
-    _class_name = 'procedure'
+    _class_name = 'optimization'
 
     _query_method_map = {
         'all_opt_results': '_get_all_opt_results',
@@ -162,17 +165,34 @@ class ProcedureQueries(QueryBase):
 
         # row_to_json(result.*)
         sql_statement = text("""
-            select opt_id, json_agg(result.*) as trajectory_results from result
-            join opt_result_association as traj
-            on result.id = traj.result_id
-            where traj.opt_id in :opt_ids
-            group by opt_id
+            select * from base_result
+            join (
+                select opt_id, result.* from result
+                join opt_result_association as traj
+                on result.id = traj.result_id
+                where traj.opt_id in :opt_ids
+            ) result
+            on base_result.id = result.id
         """)
 
         # bind and expand ids list
         sql_statement = sql_statement.bindparams(bindparam("opt_ids", expanding=True))
 
-        return self.execute_query(sql_statement, opt_ids=list(opt_ids))
+        # column types:
+        res_columns = inspect(ResultORM).columns
+        sql_statement = sql_statement.columns(opt_ids=Integer, *res_columns)
+        query_result = self.execute_query(sql_statement, opt_ids=list(opt_ids))
+
+        ret = {}
+        for rec in query_result:
+            key = rec.pop('opt_id')
+            if key not in ret:
+                ret[key] = []
+
+            rec.pop('result_type')
+            ret[key].append(ResultRecord(**rec))
+
+        return ret
 
 
     def _get_best_opt_results(self, opt_ids : List[Union[int, str]]=None):
@@ -202,13 +222,15 @@ class ProcedureQueries(QueryBase):
         # bind and expand ids list
         sql_statement = sql_statement.bindparams(bindparam("opt_ids", expanding=True))
 
+        # column types:
+        res_columns = inspect(ResultORM).columns
+        sql_statement = sql_statement.columns(opt_ids=Integer, *res_columns)
         query_result = self.execute_query(sql_statement, opt_ids=list(opt_ids))
 
-        print(query_result)
         ret = {}
         for rec in query_result:
             key = rec.pop('opt_id')
             rec.pop('result_type')
-            ret[key] = rec
+            ret[key] = ResultRecord(**rec)
 
         return ret

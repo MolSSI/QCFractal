@@ -162,19 +162,22 @@ def test_torsiondrive_best_opt_results(torsiondrive_fixture, fractal_compute_ser
     # TODO; is unique values needed?
     opt_ids = set(opt_ids)
 
-    r = fractal_compute_server.storage.query('procedure', 'best_opt_results', opt_ids=opt_ids)
+    r = fractal_compute_server.storage.query('optimization', 'best_opt_results', opt_ids=opt_ids)
 
     assert r['meta']['success']
     assert len(r['data']) == len(opt_ids)
-    # found = {str(result['opt_id']) for result in r['data']}
     assert  set(r['data'].keys()) == set(map(int, opt_ids))
 
+    # print('All return: \n-----------', r['data'], '\n\n')
+    # print(r['data'].keys(), '\n\n')
+    # print(list(r['data'].values())[0])
+
     # Msgpack field
-    res = list(r['data'].values())[0]
+    # res = list(r['data'].values())[0]
     # print('Data[0]: \n', res, '\n')
     # print('Return_results raw:', bytes(res['return_result']))
-
-    assert isinstance(msgpackext_loads(res['return_result']), np.ndarray)
+    #
+    # assert isinstance(msgpackext_loads(res['return_result']), np.ndarray)
 
 
 def test_torsiondrive_all_opt_results(torsiondrive_fixture, fractal_compute_server):
@@ -192,92 +195,18 @@ def test_torsiondrive_all_opt_results(torsiondrive_fixture, fractal_compute_serv
     # TODO; is unique values needed?
     opt_ids = set(opt_ids)
 
-    r = fractal_compute_server.storage.query('procedure', 'all_opt_results', opt_ids=opt_ids)
+    r = fractal_compute_server.storage.query('optimization', 'all_opt_results', opt_ids=opt_ids)
 
-    # print('len of data:', len(r['data']), '\n')
+    # print('\ndata: \n--------\n', r['data'])
 
     assert r['meta']['success']
     assert len(r['data']) == len(opt_ids)
-
+    assert  set(r['data'].keys()) == set(map(int, opt_ids))
 
     # Msgpack field
-    sample_res = r['data'][0]['trajectory_results'][0]
-    # print('Return_results raw:', sample_res['return_result'])
-    bytes_arr = bytes.fromhex(sample_res['return_result'][2:])  # slice to remove the '\x'
-    # print('Return_results bytes.fromhex:', bytes_arr)
-
-    assert isinstance(msgpackext_loads(bytes_arr), np.ndarray)
-
-
-
-# def test_service_torsiondrive_get_final_results(torsiondrive_fixture):
-#     """Test the get_final_results function for the 1-D case"""
-#
-#     spin_up_test, client = torsiondrive_fixture
-#     ret = spin_up_test()
-#
-#     # Get a TorsionDriveORM result and check data
-#     result = client.query_procedures(id=ret.ids)[0]
-#     assert result.status == "COMPLETE"
-#
-#     final_result_records = result.get_final_results()
-#     assert set(final_result_records.keys()) == {(-90, ), (-0, ), (90, ), (180, )}
-
-
-
-# @using_geometric
-# @using_rdkit
-# def test_service_gridoptimization_single_noopt(fractal_compute_server):
-#
-#     client = ptl.FractalClient(fractal_compute_server)
-#
-#     # Add a HOOH
-#     hooh = ptl.data.get_molecule("hooh.json")
-#     initial_distance = hooh.measure([1, 2])
-#
-#     # Options
-#     service = GridOptimizationInput(**{
-#         "keywords": {
-#             "preoptimization": False,
-#             "scans": [{
-#                 "type": "distance",
-#                 "indices": [1, 2],
-#                 "steps": [-0.1, 0.0],
-#                 "step_type": "relative"
-#             }]
-#         },
-#         "optimization_spec": {
-#             "program": "geometric",
-#             "keywords": {
-#                 "coordsys": "tric",
-#             }
-#         },
-#         "qc_spec": {
-#             "driver": "gradient",
-#             "method": "UFF",
-#             "basis": "",
-#             "keywords": None,
-#             "program": "rdkit",
-#         },
-#         "initial_molecule": hooh,
-#     }) # yapf: disable
-#
-#     ret = client.add_service([service])
-#     fractal_compute_server.await_services()
-#     assert len(fractal_compute_server.list_current_tasks()) == 0
-#
-#     result = client.query_procedures(id=ret.ids)[0]
-#
-#     assert result.status == "COMPLETE"
-#     assert result.starting_grid == (1, )
-#     assert pytest.approx(result.get_final_energies((0, )), abs=1.e-4) == 0.00032145876568280524
-#
-#     assert result.starting_molecule == result.initial_molecule
-#
-#     # Check initial vs startin molecule
-#     assert result.initial_molecule == result.starting_molecule
-#
-#     mol = client.query_molecules(id=result.starting_molecule)[0]
-#     assert pytest.approx(mol.measure([1, 2])) == initial_distance
-#
-#
+    # sample_res = r['data'][0]['trajectory_results'][0]
+    # # print('Return_results raw:', sample_res['return_result'])
+    # bytes_arr = bytes.fromhex(sample_res['return_result'][2:])  # slice to remove the '\x'
+    # # print('Return_results bytes.fromhex:', bytes_arr)
+    #
+    # assert isinstance(msgpackext_loads(bytes_arr), np.ndarray)
