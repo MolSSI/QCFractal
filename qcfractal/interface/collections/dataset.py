@@ -1014,6 +1014,9 @@ class Dataset(Collection):
         indexer = self._molecule_indexer(subset)
         df = self._get_records(indexer, history, projection=projection, merge=merge)
 
+        if not merge and len(df) == 1:
+            df = df[0]
+
         if np.all(df.count() == 0):
             raise KeyError("Query matched no records!")
 

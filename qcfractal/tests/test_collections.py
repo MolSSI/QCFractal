@@ -175,8 +175,8 @@ def test_dataset_d3(fractal_compute_server):
 
     ds.save()
 
-    ds.compute("B3LYP", "6-31g")
-    ds.compute("B3LYP-D3", "6-31g")
+    ds.compute("B3LYP", "sto-3g")
+    ds.compute("B3LYP-D3", "sto-3g")
 
     fractal_compute_server.await_results()
 
