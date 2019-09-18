@@ -3,6 +3,7 @@ Tests the server collection compute capabilities.
 """
 
 import numpy as np
+import pandas as pd
 import pytest
 from contextlib import contextmanager
 
@@ -47,7 +48,7 @@ def gradient_dataset_fixture(fractal_compute_server):
         "theory_level": "pseudo-random values",
         "values": {
             "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
-            "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
+            "He2": [0.03, 0, 0.02, -0.02, 0, -0.03],
         },
         "units": "hartree"
     }
@@ -57,10 +58,14 @@ def gradient_dataset_fixture(fractal_compute_server):
     ds.save()
 
     ds.compute("HF", "sto-3g")
+    ds.compute("HF", "3-21g")
     fractal_compute_server.await_results()
 
     assert ds.get_records("HF", "sto-3g").iloc[0, 0].status == "COMPLETE"
     assert ds.get_records("HF", "sto-3g").iloc[1, 0].status == "COMPLETE"
+
+    assert ds.get_records("HF", "3-21g").iloc[0, 0].status == "COMPLETE"
+    assert ds.get_records("HF", "3-21g").iloc[1, 0].status == "COMPLETE"
 
     yield client, client.get_collection("dataset", "ds_gradient")
 
@@ -149,7 +154,7 @@ def test_gradient_dataset_statistics(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
     df = ds.get_values()
-    assert df.shape == (2, 1)
+    assert df.shape == (2, 2)
     assert np.sum(df.loc["He2", "HF/sto-3g"]) == pytest.approx(0.0)
 
     # Test out some statistics
@@ -159,6 +164,85 @@ def test_gradient_dataset_statistics(gradient_dataset_fixture):
     stats = ds.statistics("UE", "HF/sto-3g", "Gradient")
     assert pytest.approx(stats.loc["He1"].mean(), 1.e-5) == 0.01635020639
     assert pytest.approx(stats.loc["He2"].mean(), 1.e-5) == 0.00333333333
+
+
+def test_gradient_dataset_get_values_caching(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    @contextmanager
+    def monitor_requests(request_made=True):
+        before = client._request_counter[("result", "get")]
+        yield
+        after = client._request_counter[("result", "get")]
+
+        if request_made:
+            assert after > before
+        else:
+            assert after == before
+
+    ds._clear_cache()
+
+    with monitor_requests(request_made=True):
+        ds.get_values()
+
+    with monitor_requests(request_made=False):
+        ds.get_values()
+
+    ds._clear_cache()
+
+    with monitor_requests(request_made=True):
+        ds.get_values(basis='sto-3g')
+
+    with monitor_requests(request_made=False):
+        ds.get_values(basis='sto-3g', subset=['He1'])
+        ds.get_values(basis='sto-3g', subset='He2')
+        ds.get_values(basis='sto-3g', subset=['He1', 'He2'])
+
+    with monitor_requests(request_made=True):
+        ds.get_values(basis='3-21g', subset='He1')
+
+    with monitor_requests(request_made=True):
+        ds.get_values(basis='3-21g', subset=['He1', 'He2'])
+
+    with monitor_requests(request_made=False):
+        ds.get_values(basis='3-21g', subset='He2')
+
+    with monitor_requests(request_made=False):
+        ds.get_values()
+
+
+def test_gradient_dataset_get_values_subset(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    assert isinstance(ds.get_values(subset=['He1']), pd.DataFrame)
+    assert isinstance(ds.get_values(subset='He1', basis='3-21g'), np.ndarray)
+
+    with pytest.raises(KeyError):
+        ds.get_values(subset='He1')
+
+
+def test_gradient_dataset_get_records_subset(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    assert isinstance(ds.get_records(method='HF', basis='3-21g', subset=['He1']), pd.DataFrame)
+    assert isinstance(ds.get_records(method='HF', basis='3-21g', subset='He1'), ptl.models.ResultRecord)
+
+    with pytest.raises(KeyError):
+        ds.get_records(method='HF', subset='He1')
+
+
+def test_voluntary_query_limit(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    client.voluntary_query_limit = 1
+    with pytest.raises(ValueError):
+        ds.get_values(force=True)
+    with pytest.raises(ValueError):
+        ds.get_molecules()
+
+    client.voluntary_query_limit = 1_000_000
+    ds.get_values(force=True)
+    ds.get_molecules()
 
 
 def test_dataset_compute_response(fractal_compute_server):

@@ -279,7 +279,8 @@ class Dataset(Collection):
                    basis: Optional[str] = None,
                    keywords: Optional[str] = None,
                    program: Optional[str] = None,
-                   force: bool = False) -> 'DataFrame':
+                   force: bool = False,
+                   subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'ResultRecord']:
         """Obtains values from the known history from the search paramaters provided for the expected `return_result` values. Defaults to the standard
         programs and keywords if not provided.
 
@@ -297,11 +298,16 @@ class Dataset(Collection):
             The underlying QC program
         force : bool, optional
             Data is typically cached, forces a new query if True.
-
+        subset : Optional[Union[str, Set[str]]], optional
+            The index subset to query on
         Returns
         -------
-        DataFrame
-            A DataFrame of the queried parameters
+         Union[pd.DataFrame, 'ResultRecord']
+            Either a DataFrame of indexed values or a single value if a single subset string was provided.
+        Raises
+        ------
+        KeyError
+            If more than one record is matched when a single subset string is provided.
         """
 
         name, dbkeys, history = self._default_parameters(program, "nan", "nan", keywords)
@@ -326,17 +332,38 @@ class Dataset(Collection):
                 query["stoich"] = query.pop("stoichiometry")
 
             name = self._canonical_name(**query)
-            if force or (name not in self.df.columns):
+
+            missing_subset = self._missing_subset(name, subset, force)
+            if missing_subset is None or len(missing_subset) > 0:
                 self._column_metadata[name] = query
-                data = self.get_records(query.pop("method").upper(), projection={"return_result": True}, **query)
-                self.df[name] = data["return_result"] * constants.conversion_factor('hartree', self.units)
+                data = self.get_records(query.pop("method").upper(),
+                                        projection={"return_result": True},
+                                        subset=missing_subset,
+                                        **query)
+                column = data["return_result"] * constants.conversion_factor('hartree', self.units)
+                if name not in self.df:
+                    self.df[name] = column
+                else:
+                    self.df[name].update(column)
 
             ret.append(self.df[name])
 
         if len(ret) == 0:
             raise KeyError("Query matched no records!")
 
-        return pd.concat(ret, axis=1)
+        ret = pd.concat(ret, axis=1)
+        if subset is None:
+            return ret
+        elif isinstance(subset, str):
+            print(ret)
+            if len(ret.loc[subset]) != 1:
+                raise KeyError("More than one value matched for single string subset. "
+                               "Either provide a more specific query or wrap subset "
+                               "into a single-item list.")
+            else:
+                return ret.loc[subset][0]
+        else:
+            return ret.loc[subset]
 
     def get_history(self,
                     method: Optional[str]=None,
@@ -698,7 +725,7 @@ class Dataset(Collection):
         plan = composition_planner(**query)
         if raise_on_plan and (len(plan) > 1):
             if raise_on_plan is True:
-                raise KeyError("Recieved a multi-stage plan when this function does not support multi-staged plans.")
+                raise KeyError("Received a multi-stage plan when this function does not support multi-staged plans.")
             else:
                 raise KeyError(raise_on_plan)
 
@@ -714,6 +741,7 @@ class Dataset(Collection):
 
             # Chunk up the queries
             records = []
+            self.client.apply_voluntary_query_limit(len(molecules))
             for i in range(0, len(molecules), self.client.query_limit):
                 query_set["molecule"] = molecules[i:i + self.client.query_limit]
                 records.extend(self.client.query_results(**query_set))
@@ -753,6 +781,28 @@ class Dataset(Collection):
             return retdf
         else:
             return ret
+
+    def _missing_subset(self, name, subset, force):
+        """
+        Helper for finding which indexes in a query are not already in the cache
+        """
+        print(name, subset, force)
+        if force or (name not in self.df.columns):
+            missing_subset = subset
+            if isinstance(missing_subset, str):
+                missing_subset = [missing_subset]
+        elif subset is None:
+            missing_subset = list(self.df[name].index[self.df[name].isna()])
+        else:
+            lsubset = [subset] if isinstance(subset, str) else subset
+            isna = self.df[name].loc[lsubset].isna()
+            missing_subset = [idx for idx in lsubset if isna[idx]]
+        print(missing_subset)
+        return missing_subset
+
+    def _clear_cache(self):
+        self.df = pd.DataFrame(index=self.get_index())
+        self._molecule_cache = {}
 
     def _compute(self, compute_keys, molecules, tag, priority):
         """
@@ -1027,7 +1077,12 @@ class Dataset(Collection):
         Returns
         -------
         Union[pd.DataFrame, 'ResultRecord']
-            Either a DataFrame of indexed ResultRecords or a single ResultRecord if a singel subset string was provided.
+            Either a DataFrame of indexed ResultRecords or a single ResultRecord if a single subset string was provided.
+
+        Raises
+        ------
+        KeyError
+            If more than one record is matched when a single subset string is provided.
         """
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
         indexer = self._molecule_indexer(subset)
@@ -1039,7 +1094,12 @@ class Dataset(Collection):
             raise KeyError("Query matched no records!")
 
         if isinstance(subset, str):
-            return df.iloc[0, 0]
+            if len(df) != 1:
+                raise KeyError("More than one record matched for single string subset. "
+                               "Either provide a more specific query or wrap subset "
+                               "into a single-item list.")
+            else:
+                return df.iloc[0, 0]
         else:
             return df
 
