@@ -324,19 +324,17 @@ class TorsionDriveRecord(RecordBase):
 
             map_id_key = {}
             ret = {}
-            for k, tasks in self.get_history().items():
+            for k, tasks in self.optimization_history.items():
                 k = self._serialize_key(k)
                 minpos = self.minimum_positions[k]
-                final_opt_task = tasks[minpos]
-                if len(final_opt_task.trajectory) > 0:
-                    final_grad_record_id = final_opt_task.trajectory[-1]
-                    # store the id -> grid id mapping
-                    map_id_key[final_grad_record_id] = k
+                final_opt_id = tasks[minpos]
+                map_id_key[final_opt_id] = k
             # combine the ids into one query
-            query_result_ids = list(map_id_key.keys())
-            # run the query on this batch
-            for grad_result_record in self.client.query_results(id=query_result_ids):
-                k = map_id_key[grad_result_record.id]
+            opt_ids = list(map_id_key.keys())
+            results = self.client.custom_query('optimization', 'best_results', {'opt_ids': opt_ids})
+
+            for opt_id, grad_result_record in results.items():
+                k = map_id_key[opt_id]
                 ret[k] = grad_result_record
 
             self.cache["final_results"] = ret
