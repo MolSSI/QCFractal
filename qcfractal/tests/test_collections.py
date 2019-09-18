@@ -4,11 +4,11 @@ Tests the server collection compute capabilities.
 
 import numpy as np
 import pytest
+from contextlib import contextmanager
 
 import qcfractal.interface as ptl
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
-
 
 def test_collection_query(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
@@ -85,6 +85,34 @@ def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
 
     with pytest.raises(KeyError):
         ds.get_molecules(subset="NotInDataset")
+
+
+def test_gradient_dataset_get_molecules_caching(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    @contextmanager
+    def monitor_requests(request_made=True):
+        before = client._request_counter[("molecule", "get")]
+        yield
+        after = client._request_counter[("molecule", "get")]
+
+        if request_made:
+            assert after > before
+        else:
+            assert after == before
+
+    ds._clear_cache()
+
+    with monitor_requests(request_made=True):
+        ds.get_molecules('He1')
+
+    with monitor_requests(request_made=True):
+        ds.get_molecules(['He1', 'He2'])
+
+    with monitor_requests(request_made=False):
+        ds.get_molecules('He1')
+        ds.get_molecules(['He1', 'He2'])
+        ds.get_molecules()
 
 
 def test_gradient_dataset_get_records(gradient_dataset_fixture):

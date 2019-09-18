@@ -74,6 +74,7 @@ class Dataset(Collection):
 
         # Initialize internal data frames and load in contrib
         self.df = pd.DataFrame(index=self.get_index())
+        self._molecule_cache = {}
         self._column_metadata = {}
 
         # Inherited classes need to call this themselves
@@ -622,20 +623,41 @@ class Dataset(Collection):
             If no records match the query
         """
 
-        molecules = []
         molecule_ids = list(set(indexer.values()))
-        for i in range(0, len(molecule_ids), self.client.query_limit):
-            molecules.extend(self.client.query_molecules(id=molecule_ids[i:i + self.client.query_limit]))
 
-        molecules = pd.DataFrame.from_dict([{"molecule_id": x.id, "molecule": x} for x in molecules])
-        if len(molecules) == 0:
+        # Partition request into cached and uncached molecules
+        cached_ids = []
+        cached_molecules = []
+        uncached_ids = []
+        uncached_molecules = []
+        for molecule_id in molecule_ids:
+            if molecule_id in self._molecule_cache:
+                cached_ids.append(molecule_id)
+                cached_molecules.append(self._molecule_cache[molecule_id])
+            else:
+                uncached_ids.append(molecule_id)
+        cached = pd.DataFrame.from_dict({"molecule_id": cached_ids, "molecule": cached_molecules})
+
+        # Fetch uncached molecules
+        self.client.apply_voluntary_query_limit(len(uncached_ids))
+        for i in range(0, len(uncached_ids), self.client.query_limit):
+            uncached_molecules.extend(self.client.query_molecules(id=uncached_ids[i:i + self.client.query_limit]))
+
+        uncached = pd.DataFrame.from_dict([{"molecule_id": x.id, "molecule": x} for x in uncached_molecules])
+
+        # Update cache
+        for molecule in uncached_molecules:
+            self._molecule_cache[molecule.id] = molecule
+
+        ret = pd.concat([cached, uncached])
+        if len(ret) == 0:
             raise KeyError("Query matched 0 records.")
 
         df = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule_id"])
         df.reset_index(inplace=True)
 
         # Outer join on left to merge duplicate molecules
-        df = df.merge(molecules, how="left", on="molecule_id")
+        df = df.merge(ret, how="left", on="molecule_id")
         df.set_index("index", inplace=True)
         df.drop("molecule_id", axis=1, inplace=True)
 
@@ -1179,11 +1201,14 @@ class Dataset(Collection):
             Returns a DataFrame, Series, or float with the requested statistics depending on input.
         """
 
-        if (bench is None):
+        if bench is None:
             bench = self.data.default_benchmark
 
-        if (bench is None):
+        if bench is None:
             raise KeyError("No benchmark provided and default_benchmark is None!")
+
+        if bench not in self.df:
+            self.df[bench] = self.get_contributed_values(bench)
 
         return wrap_statistics(stype.upper(), self.df, value, bench, **kwargs)
 

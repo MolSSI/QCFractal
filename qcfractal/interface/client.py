@@ -1,5 +1,4 @@
 """Provides an interface the QCDB Server instance"""
-
 import json
 import os
 import re
@@ -60,7 +59,6 @@ class FractalClient(object):
             FractalServer was not provided a SSL certificate and defaults back to self-signed
             SSL keys.
         """
-
         if hasattr(address, "get_address"):
             # We are a FractalServer-like object
             verify = address.client_verify
@@ -99,11 +97,16 @@ class FractalClient(object):
         self._headers["Content-Type"] = f'application/{self.encoding}'
         self._headers["User-Agent"] = f"qcportal/{__version__}"
 
+        self._request_counter = defaultdict(int)
+
+        ### Define all attributes before this line
+
         # Try to connect and pull general data
         self.server_info = self._automodel_request("information", "get", {}, full_return=True).dict()
 
         self.server_name = self.server_info["name"]
         self.query_limit = self.server_info["query_limit"]
+        self.voluntary_query_limit = 100_000
 
         if _isportal:
             try:
@@ -216,6 +219,7 @@ class FractalClient(object):
         Any
             The REST response object
         """
+        self._request_counter[(name, rest)] += 1
         body_model, response_model = rest_model(name, rest)
 
         # Provide a reasonable traceback
@@ -1058,3 +1062,24 @@ class FractalClient(object):
         }
 
         return self._automodel_request("service_queue", "put", payload, full_return=full_return)
+
+    def apply_voluntary_query_limit(self, nqueries: int) -> None:
+        """
+        Checks that a planned number of queries is not larger than a guardrail value.
+
+        Parameters
+        ----------
+        nqueries: int
+            The number of planned queries.
+        Returns
+        -------
+        None
+        Raises
+        ------
+        ValueError
+            If nqueries exceeds self.voluntary_query_limit
+        """
+
+        if nqueries > self.voluntary_query_limit:
+            raise ValueError(f"You may be attempting more queries ({nqueries}) than you intend. "
+                             f"If you would like to proceed, please increase client.voluntary_query_limit." )
