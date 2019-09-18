@@ -363,14 +363,14 @@ class OptimizationHandler(APIHandler):
 
     def get(self, query_type='get'):
 
-        body_model, response_model = rest_model("optimization", query_type)
+        body_model, response_model = rest_model("optimization", 'get', query_type)
         body = self.parse_bodymodel(body_model)
 
         try:
             if query_type == 'get':
                 ret = self.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
             else:  # all other queries, like 'best_opt_results'
-                ret = self.storage.query('procedure', query_type, **{**body.data.dict(), **body.meta.dict()})
+                ret = self.storage.query('optimization', query_type, **{**body.data.dict(), **body.meta.dict()})
         except KeyError as e:
             raise tornado.web.HTTPError(status_code=401, reason=str(e))
 

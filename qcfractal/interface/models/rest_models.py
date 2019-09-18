@@ -1248,7 +1248,7 @@ class ListMoleculesResponse(ProtoModel):
         description="A List of Molecules found from the query per optimization id."
     )
 
-register_custom_model("optimization", "best_opt_results", OptimizationBestResultsBody, ResultsResponse)
-register_custom_model("optimization", "best_all_results", OptimizationAllResultsBody, ListResultsResponse)
+register_custom_model("optimization", "best_results", OptimizationBestResultsBody, ResultsResponse)
+register_custom_model("optimization", "all_results", OptimizationAllResultsBody, ListResultsResponse)
 register_custom_model("optimization", "initial_molecules", OptimizationAllResultsBody, ListMoleculesResponse)
 register_custom_model("optimization", "final_molecules", OptimizationAllResultsBody, ListMoleculesResponse)

@@ -341,7 +341,7 @@ class SQLAlchemySocket:
 
         ret = {
             'data': [],
-            'meta': {"success": True, "error_description": None}
+            'meta': get_metadata_template()
         }
 
         try:
@@ -350,8 +350,9 @@ class SQLAlchemySocket:
 
             session = self.Session()
             ret['data'] = self._query_classes[class_name].query(session, query_key, **kwargs)
+            ret['meta']['success'] = True
+            ret['meta']['n_found'] = len(ret['data'])
         except Exception as err:
-            ret['meta']['success'] = False
             ret['meta']['error_description'] = str(err)
 
         return ret

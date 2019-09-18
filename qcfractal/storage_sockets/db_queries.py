@@ -18,7 +18,7 @@ class QueryBase(ABC):
     def __init__(self, max_limit=1000):
         self.max_limit = max_limit
 
-    def query(self, session, query_key, **kwargs):
+    def query(self, session, query_key, limit=0, skip=0, projection=None, **kwargs):
 
         if query_key not in self._query_method_map:
             raise TypeError(f'Query type {query_key} is unimplemented for class {self._class_name}')
@@ -150,8 +150,8 @@ class OptimizationQueries(QueryBase):
     _class_name = 'optimization'
     _exclude = ['molecule_hash', 'molecular_formula', 'result_type']
     _query_method_map = {
-        'all_opt_results': '_get_all_opt_results',
-        'best_opt_results': '_get_best_opt_results',
+        'all_results': '_get_all_opt_results',
+        'best_results': '_get_best_opt_results',
         'initial_molecules' : '_get_initial_molecules',
         'final_molecules' : '_get_final_molecules',
     }

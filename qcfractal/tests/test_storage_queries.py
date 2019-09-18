@@ -136,7 +136,7 @@ def test_optimization_best_results(torsiondrive_fixture, fractal_compute_server)
     opt_ids = [torsion['optimization_history'][k][v] for k,v in torsion['minimum_positions'].items()]
     opt_ids = set(opt_ids)
 
-    r = fractal_compute_server.storage.query('optimization', 'best_opt_results', opt_ids=opt_ids)
+    r = fractal_compute_server.storage.query('optimization', 'best_results', opt_ids=opt_ids)
 
     assert r['meta']['success']
     assert len(r['data']) == len(opt_ids)
@@ -151,7 +151,7 @@ def test_optimization_all_results(torsiondrive_fixture, fractal_compute_server):
     opt_ids = [torsion['optimization_history'][k][v] for k,v in torsion['minimum_positions'].items()]
     opt_ids = set(opt_ids)
 
-    r = fractal_compute_server.storage.query('optimization', 'all_opt_results', opt_ids=opt_ids)
+    r = fractal_compute_server.storage.query('optimization', 'all_results', opt_ids=opt_ids)
 
     # print('\ndata: \n--------\n', r['data'])
 
