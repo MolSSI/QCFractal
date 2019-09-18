@@ -158,36 +158,6 @@ def test_dataset_compute_response(fractal_compute_server):
     response = ds.compute("HF", "sto-3g")
     assert len(response.ids) == 2
 
-
-def test_dataset_d3(fractal_compute_server):
-    testing.check_has_module("psi4")
-    testing.check_has_module("dftd3")
-
-    client = ptl.FractalClient(fractal_compute_server)
-    ds_name = "He_DFTD3"
-    ds = ptl.collections.Dataset(ds_name, client)
-
-    # Add two helium dimers to the DB at 4 and 8 bohr
-    HeDimer = ptl.Molecule.from_data([[2, 0.343, 0, -4.123], [2, 0, 0, 4.123]], dtype="numpy", units="bohr", frags=[1])
-    ds.add_entry("HeDimer", HeDimer)
-    ds.set_default_program("psi4")
-    ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={}), default=True)
-
-    ds.save()
-
-    ds.compute("B3LYP", "sto-3g")
-    ds.compute("B3LYP-D3", "sto-3g")
-
-    fractal_compute_server.await_results()
-
-    assert len(ds.list_history()) == 2
-
-    d3 = ds.get_values(method="b3lyp-d3")
-    assert d3.shape == (1, 1)
-    b3lyp = ds.get_values(method="b3lyp")
-    assert d3.iloc[0, 0] != b3lyp.iloc[0, 0]
-
-
 def test_reactiondataset_check_state(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
     ds = ptl.collections.ReactionDataset("check_state", client, ds_type="ie", default_program="rdkit")
@@ -320,6 +290,29 @@ def test_rectiondataset_dftd3_molecules(reactiondataset_dftd3_fixture_fixture):
 
     mols = mols.reset_index()
     assert set(stoichs) == set(mols["stoichiometry"])
+
+
+def test_dataset_d3(reactiondataset_dftd3_fixture_fixture):
+    client, rxn_ds = reactiondataset_dftd3_fixture_fixture
+
+    ds_name = "He_DFTD3"
+    ds = ptl.collections.Dataset(ds_name, client)
+
+    HeDimer = rxn_ds.get_molecules(subset='HeDimer').iloc[0, 0]
+    ds.add_entry("HeDimer", HeDimer)
+    ds.set_default_program(rxn_ds.data.default_program)
+    ds.add_keywords("scf_default", rxn_ds.data.default_program, ptl.models.KeywordSet(values={}), default=True)
+
+    ds.save()
+
+    ds.compute("B3LYP-D3", "6-31g")
+
+    d3 = ds.get_values(method="b3lyp-d3")
+    assert d3.shape == (1, 1)
+    b3lyp = ds.get_values(method="b3lyp")
+    assert b3lyp.shape == (1, 1)
+
+    assert d3.iloc[0, 0] != b3lyp.iloc[0, 0]
 
 
 @testing.using_psi4

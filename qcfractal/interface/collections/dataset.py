@@ -1003,7 +1003,8 @@ class Dataset(Collection):
         subset : Optional[Union[str, Set[str]]], optional
             The index subset to query on
         merge : bool
-            Merge multiple results into one (as in the case of DFT-D3)
+            Merge multiple results into one (as in the case of DFT-D3).
+            This only works when projection={'return_results'=True}, as in get_values.
 
         Returns
         -------
