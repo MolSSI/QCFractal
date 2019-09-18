@@ -327,7 +327,7 @@ class Dataset(Collection):
             name = self._canonical_name(**query)
             if force or (name not in self.df.columns):
                 self._column_metadata[name] = query
-                data = self.get_records(query.pop("method").upper(), projection={"return_result": True}, **query)
+                data = self.get_records(query.pop("method").upper(), projection={"return_result": True}, merge=True, **query)
                 self.df[name] = data["return_result"] * constants.conversion_factor('hartree', self.units)
 
             ret.append(self.df[name])
@@ -984,7 +984,8 @@ class Dataset(Collection):
               keywords: Optional[str]=None,
               program: Optional[str]=None,
               projection: Optional[Dict[str, bool]]=None,
-              subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'ResultRecord']:
+              subset: Optional[Union[str, Set[str]]] = None,
+              merge: bool = False) -> Union[pd.DataFrame, 'ResultRecord']:
         """Queries full ResultRecord objects from the database.
 
         Parameters
@@ -1001,6 +1002,8 @@ class Dataset(Collection):
             The attribute project to perform on the query, otherwise returns ResultRecord objects.
         subset : Optional[Union[str, Set[str]]], optional
             The index subset to query on
+        merge : bool
+            Merge multiple results into one (as in the case of DFT-D3)
 
         Returns
         -------
@@ -1009,9 +1012,7 @@ class Dataset(Collection):
         """
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
         indexer = self._molecule_indexer(subset)
-        df = self._get_records(indexer, history, projection=projection, merge=False)
-        if len(df) == 1:
-            df = df[0]
+        df = self._get_records(indexer, history, projection=projection, merge=merge)
 
         if np.all(df.count() == 0):
             raise KeyError("Query matched no records!")
