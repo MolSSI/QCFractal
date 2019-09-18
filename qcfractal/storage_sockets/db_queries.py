@@ -36,6 +36,7 @@ class QueryBase(ABC):
         result = self.session.execute(sql_statement, kwargs)
         keys = result.keys()  # get keys before fetching
         result = result.fetchall()
+        self.session.commit()
 
         # create a list of dict with the keys and values of the results (instead of tuples)
         if with_keys:
