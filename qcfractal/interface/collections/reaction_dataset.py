@@ -171,7 +171,8 @@ class ReactionDataset(Dataset):
                    keywords: Optional[str] = None,
                    program: Optional[str] = None,
                    stoich: str = "default",
-                   force: bool = False) -> 'DataFrame':
+                   force: bool = False,
+                   subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, Any]:
         """Obtains values from the known history from the search paramaters provided for the expected `return_result` values. Defaults to the standard
         programs and keywords if not provided.
 
@@ -189,11 +190,18 @@ class ReactionDataset(Dataset):
             The underlying QC program
         stoich : str, optional
             The given stoichiometry to compute.
-
+        force : bool, optional
+            Data is typically cached, forces a new query if True.
+        subset : Optional[Union[str, Set[str]]], optional
+            The index subset to query on
         Returns
         -------
-        DataFrame
-            A DataFrame of the queried parameters
+         Union[pd.DataFrame, Any]
+            Either a DataFrame of indexed values or a single value if a single subset string was provided.
+        Raises
+        ------
+        KeyError
+            If more than one record is matched when a single subset string is provided.
         """
 
         self._validate_stoich(stoich)
@@ -214,10 +222,10 @@ class ReactionDataset(Dataset):
         stoich_complex = queries.pop("stoichiometry")
         stoich_monomer = ''.join([x for x in stoich if not x.isdigit()]) + '1'
 
-        def _query_apply_coeffients(stoich, query):
+        def _query_apply_coeffients(stoich, query, subset):
 
             # Build the starting table
-            indexer, names = self._molecule_indexer(stoich, coefficients=True)
+            indexer, names = self._molecule_indexer(stoich, subset=subset, coefficients=True)
             df = self._get_records(indexer, query, projection={"return_result": True}, merge=True)
             df.index = pd.MultiIndex.from_tuples(df.index, names=names)
             df.reset_index(inplace=True)
@@ -239,19 +247,26 @@ class ReactionDataset(Dataset):
             query = query.replace({np.nan: None}).to_dict()
             name = self._canonical_name(**query)
 
-            if force or (name not in self.df.columns):
+            missing_subset = self._missing_subset(name, subset, force)
+            if missing_subset is None or len(missing_subset) > 0:
                 self._column_metadata[name] = query
 
-                data_complex = _query_apply_coeffients(stoich_complex, query)
-                data_monomer = _query_apply_coeffients(stoich_monomer, query)
+                data_complex = _query_apply_coeffients(stoich_complex, query, missing_subset)
+                data_monomer = _query_apply_coeffients(stoich_monomer, query, missing_subset)
 
                 data = data_complex - data_monomer
 
-                self.df[name] = data * constants.conversion_factor('hartree', self.units)
+                column = data * constants.conversion_factor('hartree', self.units)
+                if name not in self.df:
+                    self.df[name] = column
+                else:
+                    self.df[name].update(column)
 
             ret.append(self.df[name])
 
-        return pd.concat(ret, axis=1)
+        ret = pd.concat(ret, axis=1)
+
+        return self._get_values_subset_return(subset, ret)
 
     def get_history(self,
                     method: Optional[str] = None,
@@ -368,7 +383,7 @@ class ReactionDataset(Dataset):
                     program: Optional[str] = None,
                     stoich: Union[str, List[str]] = "default",
                     projection: Optional[Dict[str, bool]] = None,
-                    subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'ResultRecord']:
+                    subset: Optional[Union[str, Set[str]]] = None) -> pd.DataFrame:
         """
         Queries the local Portal for the requested keys and stoichiometry.
 
@@ -391,9 +406,8 @@ class ReactionDataset(Dataset):
 
         Returns
         -------
-        Union[pd.DataFrame, 'ResultRecord']
-            The name of the queried column
-
+        pd.DataFrame
+            The result of the query
         """
 
         self._check_client()

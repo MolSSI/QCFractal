@@ -27,6 +27,18 @@ def test_collection_query(fractal_compute_server):
     assert ds.name == "CAPITAL"
 
 
+@contextmanager
+def monitor_requests(client, request, request_made=True, kind="get"):
+    before = client._request_counter[(request, kind)]
+    yield
+    after = client._request_counter[(request, kind)]
+
+    if request_made:
+        assert after > before
+    else:
+        assert after == before
+
+
 @pytest.fixture(scope="module")
 def gradient_dataset_fixture(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
@@ -95,26 +107,16 @@ def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
 def test_gradient_dataset_get_molecules_caching(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
-    @contextmanager
-    def monitor_requests(request_made=True):
-        before = client._request_counter[("molecule", "get")]
-        yield
-        after = client._request_counter[("molecule", "get")]
-
-        if request_made:
-            assert after > before
-        else:
-            assert after == before
 
     ds._clear_cache()
 
-    with monitor_requests(request_made=True):
+    with monitor_requests(client, "molecule", request_made=True):
         ds.get_molecules('He1')
 
-    with monitor_requests(request_made=True):
+    with monitor_requests(client, "molecule", request_made=True):
         ds.get_molecules(['He1', 'He2'])
 
-    with monitor_requests(request_made=False):
+    with monitor_requests(client, "molecule", request_made=False):
         ds.get_molecules('He1')
         ds.get_molecules(['He1', 'He2'])
         ds.get_molecules()
@@ -169,45 +171,34 @@ def test_gradient_dataset_statistics(gradient_dataset_fixture):
 def test_gradient_dataset_get_values_caching(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
-    @contextmanager
-    def monitor_requests(request_made=True):
-        before = client._request_counter[("result", "get")]
-        yield
-        after = client._request_counter[("result", "get")]
-
-        if request_made:
-            assert after > before
-        else:
-            assert after == before
-
     ds._clear_cache()
 
-    with monitor_requests(request_made=True):
+    with monitor_requests(client, "result", request_made=True):
         ds.get_values()
 
-    with monitor_requests(request_made=False):
+    with monitor_requests(client, "result", request_made=False):
         ds.get_values()
 
     ds._clear_cache()
 
-    with monitor_requests(request_made=True):
+    with monitor_requests(client, "result", request_made=True):
         ds.get_values(basis='sto-3g')
 
-    with monitor_requests(request_made=False):
+    with monitor_requests(client, "result", request_made=False):
         ds.get_values(basis='sto-3g', subset=['He1'])
         ds.get_values(basis='sto-3g', subset='He2')
         ds.get_values(basis='sto-3g', subset=['He1', 'He2'])
 
-    with monitor_requests(request_made=True):
+    with monitor_requests(client, "result", request_made=True):
         ds.get_values(basis='3-21g', subset='He1')
 
-    with monitor_requests(request_made=True):
+    with monitor_requests(client, "result", request_made=True):
         ds.get_values(basis='3-21g', subset=['He1', 'He2'])
 
-    with monitor_requests(request_made=False):
+    with monitor_requests(client, "result", request_made=False):
         ds.get_values(basis='3-21g', subset='He2')
 
-    with monitor_requests(request_made=False):
+    with monitor_requests(client, "result", request_made=False):
         ds.get_values()
 
 
@@ -359,7 +350,8 @@ def test_rectiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
 
     # No molecules
     with pytest.raises(KeyError):
-        records = ds.get_records("B3LYP", "6-31g", stoich=["cp", "default"], subset="Gibberish")
+        ds.get_records("B3LYP", "6-31g", stoich=["cp", "default"], subset="Gibberish")
+
 
 def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
@@ -369,6 +361,10 @@ def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
         "B3LYP-D3/6-31g": pytest.approx(-0.005818, 1.e-3),
         "B3LYP-D3(BJ)/6-31g": pytest.approx(-0.005636, 1.e-3)
     }
+
+    # Test string subset multiple return value error
+    with pytest.raises(KeyError):
+        ds.get_values(subset="HeDimer")
 
     ret = ds.get_values("B3LYP", "6-31G")
     assert ret.loc["HeDimer", "B3LYP/6-31g"] == bench["B3LYP/6-31g"]
@@ -382,6 +378,25 @@ def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     # Should be in ds.df now as wells
     for key, value in bench.items():
         assert value == ds.df.loc["HeDimer", key]
+
+
+def test_rectiondataset_dftd3_values_caching(reactiondataset_dftd3_fixture_fixture):
+    client, ds = reactiondataset_dftd3_fixture_fixture
+    ds._clear_cache()
+
+    with monitor_requests(client, "result", request_made=True):
+        ds.get_values("B3LYP", "6-31G")
+
+    with monitor_requests(client, "result", request_made=True):
+        ds.get_values("B3LYP-D3", "6-31G")
+
+    with monitor_requests(client, "result", request_made=True):
+        ds.get_values("B3LYP-D3(BJ)", "6-31G")
+
+    with monitor_requests(client, "result", request_made=False):
+        ds.get_values("B3LYP", "6-31G", subset=None)
+        ds.get_values("B3LYP", "6-31G", subset="HeDimer")
+        ds.get_values("B3LYP", "6-31G", subset=["HeDimer"])
 
 
 def test_rectiondataset_dftd3_molecules(reactiondataset_dftd3_fixture_fixture):
@@ -403,6 +418,28 @@ def test_rectiondataset_dftd3_molecules(reactiondataset_dftd3_fixture_fixture):
 
     mols = mols.reset_index()
     assert set(stoichs) == set(mols["stoichiometry"])
+
+
+def test_rectiondataset_dftd3_molecule_caching(reactiondataset_dftd3_fixture_fixture):
+    client, ds = reactiondataset_dftd3_fixture_fixture
+    ds._clear_cache()
+
+    with monitor_requests(client, "molecule", request_made=True):
+        ds.get_molecules()
+
+    with monitor_requests(client, "molecule", request_made=True):
+        ds.get_molecules(stoich="cp1")
+
+    with monitor_requests(client, "molecule", request_made=True):
+        stoichs = ["cp1", "default1", "cp", "default"]
+        ds.get_molecules(stoich=stoichs)
+
+    with monitor_requests(client, "molecule", request_made=False):
+        ds.get_molecules()
+        ds.get_molecules(stoich="cp1")
+        ds.get_molecules(stoich="default")
+        ds.get_molecules(subset="HeDimer")
+        ds.get_molecules(subset=["HeDimer"])
 
 
 @testing.using_psi4

@@ -280,7 +280,7 @@ class Dataset(Collection):
                    keywords: Optional[str] = None,
                    program: Optional[str] = None,
                    force: bool = False,
-                   subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'ResultRecord']:
+                   subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, Any]:
         """Obtains values from the known history from the search paramaters provided for the expected `return_result` values. Defaults to the standard
         programs and keywords if not provided.
 
@@ -302,7 +302,7 @@ class Dataset(Collection):
             The index subset to query on
         Returns
         -------
-         Union[pd.DataFrame, 'ResultRecord']
+         Union[pd.DataFrame, Any]
             Either a DataFrame of indexed values or a single value if a single subset string was provided.
         Raises
         ------
@@ -352,18 +352,7 @@ class Dataset(Collection):
             raise KeyError("Query matched no records!")
 
         ret = pd.concat(ret, axis=1)
-        if subset is None:
-            return ret
-        elif isinstance(subset, str):
-            print(ret)
-            if len(ret.loc[subset]) != 1:
-                raise KeyError("More than one value matched for single string subset. "
-                               "Either provide a more specific query or wrap subset "
-                               "into a single-item list.")
-            else:
-                return ret.loc[subset][0]
-        else:
-            return ret.loc[subset]
+        return self._get_values_subset_return(subset, ret)
 
     def get_history(self,
                     method: Optional[str]=None,
@@ -786,7 +775,6 @@ class Dataset(Collection):
         """
         Helper for finding which indexes in a query are not already in the cache
         """
-        print(name, subset, force)
         if force or (name not in self.df.columns):
             missing_subset = subset
             if isinstance(missing_subset, str):
@@ -797,8 +785,24 @@ class Dataset(Collection):
             lsubset = [subset] if isinstance(subset, str) else subset
             isna = self.df[name].loc[lsubset].isna()
             missing_subset = [idx for idx in lsubset if isna[idx]]
-        print(missing_subset)
         return missing_subset
+
+    @staticmethod
+    def _get_values_subset_return(subset, ret):
+        """
+        Helper for handling different get_values return types based on subset provided.
+        """
+        if subset is None:
+            return ret
+        elif isinstance(subset, str):
+            if len(ret.loc[subset]) != 1:
+                raise KeyError("More than one value matched for single string subset. "
+                               "Either provide a more specific query or wrap subset "
+                               "into a single-item list.")
+            else:
+                return ret.loc[subset][0]
+        else:
+            return ret.loc[subset]
 
     def _clear_cache(self):
         self.df = pd.DataFrame(index=self.get_index())
