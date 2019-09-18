@@ -18,14 +18,14 @@ __all__ = ["ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryP
 ### Utility functions
 
 __rest_models = {}
-__custom_rest_models = {}
+__custom_rest_models = {}  # get requests models, with resource and subresources
 
 
-def register_model(name: str, rest: str, body: 'ProtoModel', response: 'ProtoModel') -> None:
-    _register_model(False, name, rest, body, response)
+def register_model(resource: str, rest: str, body: 'ProtoModel', response: 'ProtoModel') -> None:
+    _register_model(False, resource, rest, body, response)
 
-def register_custom_model(name: str, rest: str, body: 'ProtoModel', response: 'ProtoModel') -> None:
-    _register_model(True, name, rest, body, response)
+def register_custom_model(resource: str, rest: str, body: 'ProtoModel', response: 'ProtoModel') -> None:
+    _register_model(True, resource, rest, body, response)
 
 def _register_model(is_custom_queries: bool, name: str, rest: str, body: 'ProtoModel', response: 'ProtoModel') -> None:
     """
@@ -63,16 +63,17 @@ def _register_model(is_custom_queries: bool, name: str, rest: str, body: 'ProtoM
     models_dict[name][rest] = (body, response)
 
 
-def rest_model(name: str, rest: str) -> Tuple['ProtoModel', 'ProtoModel']:
+def rest_model(resource: str, rest: str, subresource: str=None) -> Tuple['ProtoModel', 'ProtoModel']:
     """Aquires a REST Model
 
     Parameters
     ----------
-    name : str
-        The REST endpoint name.
+    resource : str
+        The REST endpoint resource name.
     rest : str
-        The REST endpoint type.
-
+        The REST endpoint type: GET, POST, PUT, DELETE
+    subresource: str
+        A subresource under the main resource
     Returns
     -------
     Tuple['ProtoModel', 'ProtoModel']
@@ -80,7 +81,10 @@ def rest_model(name: str, rest: str) -> Tuple['ProtoModel', 'ProtoModel']:
 
     """
     try:
-        return __rest_models[name.lower()][rest.upper()]
+        if resource.lower() in __custom_rest_models:
+            return __custom_rest_models[resource.lower()][subresource.upper()]
+        else:
+            return __rest_models[resource.lower()][rest.upper()]
     except KeyError:
         raise KeyError(f"REST Model {name.lower()}:{rest.upper()} could not be found.")
 

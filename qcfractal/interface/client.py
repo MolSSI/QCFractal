@@ -216,7 +216,12 @@ class FractalClient(object):
         Any
             The REST response object
         """
-        body_model, response_model = rest_model(name, rest)
+
+        subnames = name.strip('/').split('/')
+        if len(subnames) == 2:      # get resource and subresource
+            body_model, response_model = rest_model(subnames[0], 'get', subnames[1])
+        else:
+            body_model, response_model = rest_model(name, rest)
 
         # Provide a reasonable traceback
         try:
@@ -1064,7 +1069,7 @@ class FractalClient(object):
     # -------------------------------------------------------------------------
 
     def custom_query(self,
-             class_name: str,
+             object_name: str,
              query_type: str,
              data: Dict,
              limit: Optional[int] = None,
@@ -1075,8 +1080,8 @@ class FractalClient(object):
 
         Parameters
         ----------
-        class_name: str
-            class name like optimization, datasets, etc (TODO: add more)
+        object_name: str
+            Object name like optimization, datasets, etc (TODO: add more)
         query_type: str
             The required query within the given class
         data : dict
@@ -1104,7 +1109,8 @@ class FractalClient(object):
             },
             "data": data
         }
-        response = self._automodel_request(class_name, query_type, payload, full_return=True)
+        response = self._automodel_request(object_name + '/' + query_type, "get",
+                                           payload, full_return=True)
 
         # if not projection:
         #     for ind in range(len(response.data)):
