@@ -35,6 +35,8 @@ Enhancements
 
 - (:pr:`400`) Adds Dockerfiles corresponding to builds on `Docker Hub <https://cloud.docker.com/u/molssi/repository/list>`_.
 
+- (:pr:`404`) ``Dataset`` and ``ReactionDataset`` member function ``get_history`` has been renamed to ``get_records``.
+
 Bug Fixes
 +++++++++
 

@@ -207,7 +207,7 @@ class ReactionDataset(Dataset):
             else:
                 history.pop(k, None)
 
-        queries = self.list_history(**history, dftd3=True, pretty=False).reset_index()
+        queries = self.list_records(**history, dftd3=True, pretty=False).reset_index()
         if queries.shape[0] > 10:
             raise TypeError("More than 10 queries formed, please narrow the search.")
 
