@@ -151,10 +151,10 @@ class OptimizationQueries(QueryBase):
     _class_name = 'optimization'
     _exclude = ['molecule_hash', 'molecular_formula', 'result_type']
     _query_method_map = {
-        'all_results': '_get_all_opt_results',
-        'final_results': '_get_final_opt_results',
-        'initial_molecules' : '_get_initial_molecules',
-        'final_molecules' : '_get_final_molecules',
+        'all_results': '_get_all_results',
+        'final_result': '_get_final_results',
+        'initial_molecule' : '_get_initial_molecules',
+        'final_molecule' : '_get_final_molecules',
     }
 
 
@@ -162,12 +162,12 @@ class OptimizationQueries(QueryBase):
         for key in self._exclude:
             data.pop(key, None)
 
-    def _get_all_opt_results(self, optimization_ids : List[Union[int, str]]=None):
+    def _get_all_results(self, optimization_ids : List[Union[int, str]]=None):
         """Returns all the results objects (trajectory) of each optmization
         Returns list(list) """
 
         if optimization_ids is None:
-            self._raise_missing_attribute('all_opt_results', 'List of optimizations ids')
+            self._raise_missing_attribute('all_results', 'List of optimizations ids')
 
         # row_to_json(result.*)
         sql_statement = text("""
@@ -201,11 +201,11 @@ class OptimizationQueries(QueryBase):
         return ret
 
 
-    def _get_final_opt_results(self, optimization_ids : List[Union[int, str]]=None):
+    def _get_final_results(self, optimization_ids : List[Union[int, str]]=None):
         """Return the actual results objects of the best result in each optimization"""
 
         if optimization_ids is None:
-            self._raise_missing_attribute('final_opt_results', 'List of optimizations ids')
+            self._raise_missing_attribute('final_result', 'List of optimizations ids')
 
         sql_statement = text("""
             select * from base_result
@@ -244,7 +244,7 @@ class OptimizationQueries(QueryBase):
     def _get_initial_molecules(self, optimization_ids=None):
 
         if optimization_ids is None:
-            self._raise_missing_attribute('initial_molecules', 'List of optimizations ids')
+            self._raise_missing_attribute('initial_molecule', 'List of optimizations ids')
 
         sql_statement = text("""
                 select opt.id as opt_id, molecule.* from molecule
@@ -272,7 +272,7 @@ class OptimizationQueries(QueryBase):
     def _get_final_molecules(self, optimization_ids=None):
 
         if optimization_ids is None:
-            self._raise_missing_attribute('final_molecules', 'List of optimizations ids')
+            self._raise_missing_attribute('final_molecule', 'List of optimizations ids')
 
         sql_statement = text("""
                 select opt.id as opt_id, molecule.* from molecule

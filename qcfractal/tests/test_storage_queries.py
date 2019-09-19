@@ -136,7 +136,7 @@ def test_optimization_best_results(torsiondrive_fixture, fractal_compute_server)
     opt_ids = [torsion['optimization_history'][k][v] for k,v in torsion['minimum_positions'].items()]
     opt_ids = set(opt_ids)
 
-    r = fractal_compute_server.storage.custom_query('optimization', 'final_results', optimization_ids=opt_ids)
+    r = fractal_compute_server.storage.custom_query('optimization', 'final_result', optimization_ids=opt_ids)
 
     assert r['meta']['success']
     assert len(r['data']) == len(opt_ids)
@@ -168,7 +168,7 @@ def test_optimization_initial_molecules(torsiondrive_fixture, fractal_compute_se
     opt_ids = [torsion['optimization_history'][k][v] for k,v in torsion['minimum_positions'].items()]
     opt_ids = set(opt_ids)
 
-    r = fractal_compute_server.storage.custom_query('optimization', 'initial_molecules', optimization_ids=opt_ids)
+    r = fractal_compute_server.storage.custom_query('optimization', 'initial_molecule', optimization_ids=opt_ids)
 
     assert r['meta']['success']
     assert len(r['data']) == len(opt_ids)
@@ -183,7 +183,7 @@ def test_optimization_final_molecules(torsiondrive_fixture, fractal_compute_serv
     opt_ids = [torsion['optimization_history'][k][v] for k,v in torsion['minimum_positions'].items()]
     opt_ids = set(opt_ids)
 
-    r = fractal_compute_server.storage.custom_query('optimization', 'final_molecules', optimization_ids=opt_ids)
+    r = fractal_compute_server.storage.custom_query('optimization', 'final_molecule', optimization_ids=opt_ids)
 
     assert r['meta']['success']
     assert len(r['data']) == len(opt_ids)

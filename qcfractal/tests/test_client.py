@@ -141,7 +141,7 @@ def test_custom_queries(test_server, encoding):
     client._set_encoding(encoding)
 
     # Dummy test, not found
-    ret = client.custom_query('optimization', 'final_results', {'optimization_ids':[1]}, full_return=True)
+    ret = client.custom_query('optimization', 'final_result', {'optimization_ids':[1]}, full_return=True)
 
     assert ret.meta.success
     assert ret.meta.n_found == 0

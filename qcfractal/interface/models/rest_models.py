@@ -1145,7 +1145,7 @@ register_model("queue_manager", "PUT", QueueManagerPUTBody, QueueManagerPUTRespo
 
 ## advanced procedures queries
 
-class OptimizationFinalResultsBody(ProtoModel):
+class OptimizationFinalResultBody(ProtoModel):
     class Data(ProtoModel):
         optimization_ids: QueryObjectId = Schema(
             None,
@@ -1162,7 +1162,7 @@ class OptimizationFinalResultsBody(ProtoModel):
         description="The keys with data to search the database on for Procedures."
     )
 
-class OptimizationAllResultsBody(ProtoModel):
+class OptimizationAllResultBody(ProtoModel):
     class Data(ProtoModel):
         optimization_ids: QueryObjectId = Schema(
             None,
@@ -1179,7 +1179,7 @@ class OptimizationAllResultsBody(ProtoModel):
         description="The keys with data to search the database on for Procedures."
     )
 
-class OptimizationInitialMoleculesBody(ProtoModel):
+class OptimizationInitialMoleculeBody(ProtoModel):
     class Data(ProtoModel):
         optimization_ids: QueryObjectId = Schema(
             None,
@@ -1196,7 +1196,7 @@ class OptimizationInitialMoleculesBody(ProtoModel):
         description="The keys with data to search the database on for Procedures."
     )
 
-class OptimizationFinalMoleculesBody(ProtoModel):
+class OptimizationFinalMoleculeBody(ProtoModel):
     class Data(ProtoModel):
         optimization_ids: QueryObjectId = Schema(
             None,
@@ -1213,7 +1213,7 @@ class OptimizationFinalMoleculesBody(ProtoModel):
         description="The keys with data to search the database on for Procedures."
     )
 
-class ResultsResponse(ProtoModel):
+class ResultResponse(ProtoModel):
     meta: ResponseGETMeta = Schema(
         ...,
         description=common_docs[ResponseGETMeta]
@@ -1225,7 +1225,7 @@ class ResultsResponse(ProtoModel):
         description="A List of Results found from the query per optimization id."
     )
 
-class ListResultsResponse(ProtoModel):
+class ListResultResponse(ProtoModel):
     meta: ResponseGETMeta = Schema(
         ...,
         description=common_docs[ResponseGETMeta]
@@ -1237,7 +1237,7 @@ class ListResultsResponse(ProtoModel):
         description="A List of Results found from the query per optimization id."
     )
 
-class ListMoleculesResponse(ProtoModel):
+class ListMoleculeResponse(ProtoModel):
     meta: ResponseGETMeta = Schema(
         ...,
         description=common_docs[ResponseGETMeta]
@@ -1249,7 +1249,7 @@ class ListMoleculesResponse(ProtoModel):
         description="A List of Molecules found from the query per optimization id."
     )
 
-register_custom_model("optimization", "final_results", OptimizationFinalResultsBody, ResultsResponse)
-register_custom_model("optimization", "all_results", OptimizationAllResultsBody, ListResultsResponse)
-register_custom_model("optimization", "initial_molecules", OptimizationAllResultsBody, ListMoleculesResponse)
-register_custom_model("optimization", "final_molecules", OptimizationAllResultsBody, ListMoleculesResponse)
+register_custom_model("optimization", "final_result", OptimizationFinalResultBody, ResultResponse)
+register_custom_model("optimization", "all_results", OptimizationAllResultBody, ListResultResponse)
+register_custom_model("optimization", "initial_molecule", OptimizationAllResultBody, ListMoleculeResponse)
+register_custom_model("optimization", "final_molecule", OptimizationAllResultBody, ListMoleculeResponse)
