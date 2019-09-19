@@ -78,7 +78,7 @@ class DatasetEntryORM(Base):
 
     dataset_id = Column(Integer, ForeignKey('dataset.id', ondelete='cascade'), primary_key=True)
     #TODO: check the cascase_delete with molecule
-    molecule_id = Column(Integer, ForeignKey('molecule.id'))
+    molecule_id = Column(Integer, ForeignKey('molecule.id'), nullable=False)
 
     name = Column(String, nullable=False, primary_key=True)
     comment = Column(String)
