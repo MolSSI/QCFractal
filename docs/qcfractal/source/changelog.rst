@@ -37,6 +37,9 @@ Enhancements
 
 - (:pr:`404`) ``Dataset`` and ``ReactionDataset`` member function ``get_history`` has been renamed to ``get_records``.
 
+- (:pr:`393`) A new feature added to ``Client`` to be able to have more custom and fast queries, the ``custom_query`` method.
+  Those fast queries are now used in ``torsiondrive.get_final_moelcules`` and ``torsiondrive.get_final_results``. More Advanced queries will be added.
+
 Bug Fixes
 +++++++++
 
