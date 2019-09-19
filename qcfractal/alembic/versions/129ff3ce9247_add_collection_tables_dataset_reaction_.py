@@ -59,7 +59,7 @@ def upgrade():
         sa.Column('local_results', sa.JSON(), nullable=True),
         sa.ForeignKeyConstraint(['dataset_id'], ['dataset.id'], ondelete='cascade'),
         sa.ForeignKeyConstraint(['molecule_id'], ['molecule.id'], ondelete='cascade'),
-        sa.PrimaryKeyConstraint('dataset_id', 'molecule_id')
+        sa.PrimaryKeyConstraint('dataset_id', 'name')
     )
     op.create_table('reaction_dataset_entry',
         sa.Column('reaction_dataset_id', sa.Integer(), nullable=False),
