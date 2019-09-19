@@ -255,6 +255,7 @@ class TorsionDriveRecord(RecordBase):
 
         return self._organize_return(self.final_energy_dict, key)
 
+
     def get_final_molecules(self, key: Union[int, Tuple[int, ...], str] = None) -> Dict[str, 'Molecule']:
         """Returns the optimized molecules at each grid point
 
@@ -282,12 +283,13 @@ class TorsionDriveRecord(RecordBase):
 
         if "final_molecules" not in self.cache:
 
-            ret = {}
-            for k, tasks in self.get_history().items():
-                k = self._serialize_key(k)
-                minpos = self.minimum_positions[k]
+            map_id_key = self._get_min_optimization_map()
 
-                ret[k] = tasks[minpos].get_final_molecule()
+            opt_ids = list(map_id_key.keys())
+            results = self.client.custom_query('optimization', 'final_molecules',
+                                               {'opt_ids': opt_ids})
+
+            ret = {map_id_key[opt_id]: mol_record for opt_id, mol_record in results.items()}
 
             self.cache["final_molecules"] = ret
 
@@ -322,13 +324,9 @@ class TorsionDriveRecord(RecordBase):
 
         if "final_results" not in self.cache:
 
-            map_id_key = {}
+            map_id_key = self._get_min_optimization_map()
             ret = {}
-            for k, tasks in self.optimization_history.items():
-                k = self._serialize_key(k)
-                minpos = self.minimum_positions[k]
-                final_opt_id = tasks[minpos]
-                map_id_key[final_opt_id] = k
+
             # combine the ids into one query
             opt_ids = list(map_id_key.keys())
             results = self.client.custom_query('optimization', 'best_results', {'opt_ids': opt_ids})
@@ -429,3 +427,14 @@ class TorsionDriveRecord(RecordBase):
         }
 
         return scatter_plot([trace], custom_layout=custom_layout, return_figure=return_figure)
+
+    def _get_min_optimization_map(self):
+
+        map_id_key = {}
+        for k, tasks in self.optimization_history.items():
+                k = self._serialize_key(k)
+                minpos = self.minimum_positions[k]
+                final_opt_id = tasks[minpos]
+                map_id_key[final_opt_id] = k
+
+        return map_id_key

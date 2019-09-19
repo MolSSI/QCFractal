@@ -1242,7 +1242,7 @@ class ListMoleculesResponse(ProtoModel):
         description=common_docs[ResponseGETMeta]
     )
     # Either a record or dict depending if projection
-    data: Union[Dict[str, List[Molecule]],
+    data: Union[Dict[str, Molecule],
                 Dict[str, Any]] = Schema(
         ...,
         description="A List of Molecules found from the query per optimization id."
