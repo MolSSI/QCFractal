@@ -292,7 +292,7 @@ def test_rectiondataset_dftd3_molecules(reactiondataset_dftd3_fixture_fixture):
     assert set(stoichs) == set(mols["stoichiometry"])
 
 
-def test_dataset_d3(reactiondataset_dftd3_fixture_fixture):
+def test_dataset_dftd3(reactiondataset_dftd3_fixture_fixture):
     client, rxn_ds = reactiondataset_dftd3_fixture_fixture
 
     ds_name = "He_DFTD3"
