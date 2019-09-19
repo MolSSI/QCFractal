@@ -316,7 +316,7 @@ class SQLAlchemySocket:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def query(self, class_name : str, query_key : str, **kwargs):
+    def custom_query(self, class_name : str, query_key : str, **kwargs):
         """
         Run advanced or specialized queries on different classes
 

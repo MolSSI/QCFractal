@@ -81,13 +81,13 @@ def test_torsiondrive_initial_final_molecule(torsiondrive_fixture, fractal_compu
 
     torsion, client = torsiondrive_fixture
 
-    r = fractal_compute_server.storage.query('torsiondrive', 'initial_molecules_ids',
+    r = fractal_compute_server.storage.custom_query('torsiondrive', 'initial_molecules_ids',
                                              torsion_id=torsion['id'])
 
     assert r['meta']['success']
     assert len(r['data']) == 9
 
-    r = fractal_compute_server.storage.query('torsiondrive', 'initial_molecules',
+    r = fractal_compute_server.storage.custom_query('torsiondrive', 'initial_molecules',
                                              torsion_id=torsion['id'])
     assert r['meta']['success']
     assert len(r['data']) == 9
@@ -100,13 +100,13 @@ def test_torsiondrive_initial_final_molecule(torsiondrive_fixture, fractal_compu
     assert all(x in mol.keys()
                for x in ['schema_name', 'symbols', 'geometry',  'molecular_charge'])
 
-    r = fractal_compute_server.storage.query('torsiondrive', 'final_molecules_ids',
+    r = fractal_compute_server.storage.custom_query('torsiondrive', 'final_molecules_ids',
                                              torsion_id=torsion['id'])
 
     assert r['meta']['success']
     assert len(r['data']) == 9
 
-    r = fractal_compute_server.storage.query('torsiondrive', 'final_molecules',
+    r = fractal_compute_server.storage.custom_query('torsiondrive', 'final_molecules',
                                              torsion_id=torsion['id'])
     assert r['meta']['success']
     assert len(r['data']) == 9
@@ -121,7 +121,7 @@ def test_torsiondrive_return_results(torsiondrive_fixture, fractal_compute_serve
 
     torsion, client = torsiondrive_fixture
 
-    r = fractal_compute_server.storage.query('torsiondrive', 'return_results',
+    r = fractal_compute_server.storage.custom_query('torsiondrive', 'return_results',
                                              torsion_id=torsion['id'])
     assert r['meta']['success']
     assert len(r['data'])
@@ -136,7 +136,7 @@ def test_optimization_best_results(torsiondrive_fixture, fractal_compute_server)
     opt_ids = [torsion['optimization_history'][k][v] for k,v in torsion['minimum_positions'].items()]
     opt_ids = set(opt_ids)
 
-    r = fractal_compute_server.storage.query('optimization', 'best_results', opt_ids=opt_ids)
+    r = fractal_compute_server.storage.custom_query('optimization', 'final_results', optimization_ids=opt_ids)
 
     assert r['meta']['success']
     assert len(r['data']) == len(opt_ids)
@@ -151,7 +151,7 @@ def test_optimization_all_results(torsiondrive_fixture, fractal_compute_server):
     opt_ids = [torsion['optimization_history'][k][v] for k,v in torsion['minimum_positions'].items()]
     opt_ids = set(opt_ids)
 
-    r = fractal_compute_server.storage.query('optimization', 'all_results', opt_ids=opt_ids)
+    r = fractal_compute_server.storage.custom_query('optimization', 'all_results', optimization_ids=opt_ids)
 
     # print('\ndata: \n--------\n', r['data'])
 
@@ -168,7 +168,7 @@ def test_optimization_initial_molecules(torsiondrive_fixture, fractal_compute_se
     opt_ids = [torsion['optimization_history'][k][v] for k,v in torsion['minimum_positions'].items()]
     opt_ids = set(opt_ids)
 
-    r = fractal_compute_server.storage.query('optimization', 'initial_molecules', opt_ids=opt_ids)
+    r = fractal_compute_server.storage.custom_query('optimization', 'initial_molecules', optimization_ids=opt_ids)
 
     assert r['meta']['success']
     assert len(r['data']) == len(opt_ids)
@@ -183,7 +183,7 @@ def test_optimization_final_molecules(torsiondrive_fixture, fractal_compute_serv
     opt_ids = [torsion['optimization_history'][k][v] for k,v in torsion['minimum_positions'].items()]
     opt_ids = set(opt_ids)
 
-    r = fractal_compute_server.storage.query('optimization', 'final_molecules', opt_ids=opt_ids)
+    r = fractal_compute_server.storage.custom_query('optimization', 'final_molecules', optimization_ids=opt_ids)
 
     assert r['meta']['success']
     assert len(r['data']) == len(opt_ids)

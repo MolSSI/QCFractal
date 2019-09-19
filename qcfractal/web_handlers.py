@@ -344,7 +344,7 @@ class ProcedureHandler(APIHandler):
             if query_type == 'get':
                 ret = self.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
             else:  # all other queries, like 'best_opt_results'
-                ret = self.storage.query('procedure', query_type, **{**body.data.dict(), **body.meta.dict()})
+                ret = self.storage.custom_query('procedure', query_type, **{**body.data.dict(), **body.meta.dict()})
         except KeyError as e:
             raise tornado.web.HTTPError(status_code=401, reason=str(e))
 
@@ -370,7 +370,7 @@ class OptimizationHandler(APIHandler):
             if query_type == 'get':
                 ret = self.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
             else:  # all other queries, like 'best_opt_results'
-                ret = self.storage.query('optimization', query_type, **{**body.data.dict(), **body.meta.dict()})
+                ret = self.storage.custom_query('optimization', query_type, **{**body.data.dict(), **body.meta.dict()})
         except KeyError as e:
             raise tornado.web.HTTPError(status_code=401, reason=str(e))
 

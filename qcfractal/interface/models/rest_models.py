@@ -86,7 +86,8 @@ def rest_model(resource: str, rest: str, subresource: str=None) -> Tuple['ProtoM
         else:
             return __rest_models[resource.lower()][rest.upper()]
     except KeyError:
-        raise KeyError(f"REST Model {name.lower()}:{rest.upper()} could not be found.")
+        sub = subresource.lower() if subresource else ''
+        raise KeyError(f"REST Model {rest.upper()} {resource.lower()}:{sub} could not be found.")
 
 
 ### Generic Types and Common Models
@@ -1144,11 +1145,11 @@ register_model("queue_manager", "PUT", QueueManagerPUTBody, QueueManagerPUTRespo
 
 ## advanced procedures queries
 
-class OptimizationBestResultsBody(ProtoModel):
+class OptimizationFinalResultsBody(ProtoModel):
     class Data(ProtoModel):
-        opt_ids: QueryObjectId = Schema(
+        optimization_ids: QueryObjectId = Schema(
             None,
-            description="List of optimization procedure Ids to fetch their BEST results from the database."
+            description="List of optimization procedure Ids to fetch their final results from the database."
         )
 
     # TODO: not yet supported
@@ -1163,7 +1164,7 @@ class OptimizationBestResultsBody(ProtoModel):
 
 class OptimizationAllResultsBody(ProtoModel):
     class Data(ProtoModel):
-        opt_ids: QueryObjectId = Schema(
+        optimization_ids: QueryObjectId = Schema(
             None,
             description="List of optimization procedure Ids to fetch their ALL their results from the database."
         )
@@ -1180,7 +1181,7 @@ class OptimizationAllResultsBody(ProtoModel):
 
 class OptimizationInitialMoleculesBody(ProtoModel):
     class Data(ProtoModel):
-        opt_ids: QueryObjectId = Schema(
+        optimization_ids: QueryObjectId = Schema(
             None,
             description="List of optimization procedure Ids to fetch their initial  molecules from the database."
         )
@@ -1197,7 +1198,7 @@ class OptimizationInitialMoleculesBody(ProtoModel):
 
 class OptimizationFinalMoleculesBody(ProtoModel):
     class Data(ProtoModel):
-        opt_ids: QueryObjectId = Schema(
+        optimization_ids: QueryObjectId = Schema(
             None,
             description="List of optimization procedure Ids to fetch their final molecules from the database."
         )
@@ -1248,7 +1249,7 @@ class ListMoleculesResponse(ProtoModel):
         description="A List of Molecules found from the query per optimization id."
     )
 
-register_custom_model("optimization", "best_results", OptimizationBestResultsBody, ResultsResponse)
+register_custom_model("optimization", "final_results", OptimizationFinalResultsBody, ResultsResponse)
 register_custom_model("optimization", "all_results", OptimizationAllResultsBody, ListResultsResponse)
 register_custom_model("optimization", "initial_molecules", OptimizationAllResultsBody, ListMoleculesResponse)
 register_custom_model("optimization", "final_molecules", OptimizationAllResultsBody, ListMoleculesResponse)

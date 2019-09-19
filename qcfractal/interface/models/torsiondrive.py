@@ -287,7 +287,7 @@ class TorsionDriveRecord(RecordBase):
 
             opt_ids = list(map_id_key.keys())
             results = self.client.custom_query('optimization', 'final_molecules',
-                                               {'opt_ids': opt_ids})
+                                               {'optimization_ids': opt_ids})
 
             ret = {map_id_key[opt_id]: mol_record for opt_id, mol_record in results.items()}
 
@@ -329,7 +329,7 @@ class TorsionDriveRecord(RecordBase):
 
             # combine the ids into one query
             opt_ids = list(map_id_key.keys())
-            results = self.client.custom_query('optimization', 'best_results', {'opt_ids': opt_ids})
+            results = self.client.custom_query('optimization', 'final_results', {'optimization_ids': opt_ids})
 
             for opt_id, grad_result_record in results.items():
                 k = map_id_key[opt_id]

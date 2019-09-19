@@ -152,7 +152,7 @@ class OptimizationQueries(QueryBase):
     _exclude = ['molecule_hash', 'molecular_formula', 'result_type']
     _query_method_map = {
         'all_results': '_get_all_opt_results',
-        'best_results': '_get_best_opt_results',
+        'final_results': '_get_final_opt_results',
         'initial_molecules' : '_get_initial_molecules',
         'final_molecules' : '_get_final_molecules',
     }
@@ -162,11 +162,11 @@ class OptimizationQueries(QueryBase):
         for key in self._exclude:
             data.pop(key, None)
 
-    def _get_all_opt_results(self, opt_ids : List[Union[int, str]]=None):
+    def _get_all_opt_results(self, optimization_ids : List[Union[int, str]]=None):
         """Returns all the results objects (trajectory) of each optmization
         Returns list(list) """
 
-        if opt_ids is None:
+        if optimization_ids is None:
             self._raise_missing_attribute('all_opt_results', 'List of optimizations ids')
 
         # row_to_json(result.*)
@@ -176,18 +176,18 @@ class OptimizationQueries(QueryBase):
                 select opt_id, result.* from result
                 join opt_result_association as traj
                 on result.id = traj.result_id
-                where traj.opt_id in :opt_ids
+                where traj.opt_id in :optimization_ids
             ) result
             on base_result.id = result.id
         """)
 
         # bind and expand ids list
-        sql_statement = sql_statement.bindparams(bindparam("opt_ids", expanding=True))
+        sql_statement = sql_statement.bindparams(bindparam("optimization_ids", expanding=True))
 
         # column types:
         columns = inspect(ResultORM).columns
-        sql_statement = sql_statement.columns(opt_ids=Integer, *columns)
-        query_result = self.execute_query(sql_statement, opt_ids=list(opt_ids))
+        sql_statement = sql_statement.columns(opt_id=Integer, *columns)
+        query_result = self.execute_query(sql_statement, optimization_ids=list(optimization_ids))
 
         ret = {}
         for rec in query_result:
@@ -201,11 +201,11 @@ class OptimizationQueries(QueryBase):
         return ret
 
 
-    def _get_best_opt_results(self, opt_ids : List[Union[int, str]]=None):
+    def _get_final_opt_results(self, optimization_ids : List[Union[int, str]]=None):
         """Return the actual results objects of the best result in each optimization"""
 
-        if opt_ids is None:
-            self._raise_missing_attribute('best_opt_results', 'List of optimizations ids')
+        if optimization_ids is None:
+            self._raise_missing_attribute('final_opt_results', 'List of optimizations ids')
 
         sql_statement = text("""
             select * from base_result
@@ -215,7 +215,7 @@ class OptimizationQueries(QueryBase):
                     select opt.opt_id, opt.result_id, max_pos from opt_result_association as opt
                     inner join (
                             select opt_id, max(position) as max_pos from opt_result_association
-                            where opt_id in :opt_ids
+                            where opt_id in :optimization_ids
                             group by opt_id
                         ) opt2
                     on opt.opt_id = opt2.opt_id and opt.position = opt2.max_pos
@@ -226,12 +226,12 @@ class OptimizationQueries(QueryBase):
         """)
 
         # bind and expand ids list
-        sql_statement = sql_statement.bindparams(bindparam("opt_ids", expanding=True))
+        sql_statement = sql_statement.bindparams(bindparam("optimization_ids", expanding=True))
 
         # column types:
         columns = inspect(ResultORM).columns
-        sql_statement = sql_statement.columns(opt_ids=Integer, *columns)
-        query_result = self.execute_query(sql_statement, opt_ids=list(opt_ids))
+        sql_statement = sql_statement.columns(opt_id=Integer, *columns)
+        query_result = self.execute_query(sql_statement, optimization_ids=list(optimization_ids))
 
         ret = {}
         for rec in query_result:
@@ -241,25 +241,25 @@ class OptimizationQueries(QueryBase):
 
         return ret
 
-    def _get_initial_molecules(self, opt_ids=None):
+    def _get_initial_molecules(self, optimization_ids=None):
 
-        if opt_ids is None:
+        if optimization_ids is None:
             self._raise_missing_attribute('initial_molecules', 'List of optimizations ids')
 
         sql_statement = text("""
                 select opt.id as opt_id, molecule.* from molecule
                 join optimization_procedure as opt
                 on molecule.id = opt.initial_molecule
-                where opt.id in :opt_ids
+                where opt.id in :optimization_ids
         """)
 
         # bind and expand ids list
-        sql_statement = sql_statement.bindparams(bindparam("opt_ids", expanding=True))
+        sql_statement = sql_statement.bindparams(bindparam("optimization_ids", expanding=True))
 
         # column types:
         columns = inspect(MoleculeORM).columns
-        sql_statement = sql_statement.columns(opt_ids=Integer, *columns)
-        query_result = self.execute_query(sql_statement, opt_ids=list(opt_ids))
+        sql_statement = sql_statement.columns(opt_id=Integer, *columns)
+        query_result = self.execute_query(sql_statement, optimization_ids=list(optimization_ids))
 
         ret = {}
         for rec in query_result:
@@ -269,25 +269,25 @@ class OptimizationQueries(QueryBase):
 
         return ret
 
-    def _get_final_molecules(self, opt_ids=None):
+    def _get_final_molecules(self, optimization_ids=None):
 
-        if opt_ids is None:
+        if optimization_ids is None:
             self._raise_missing_attribute('final_molecules', 'List of optimizations ids')
 
         sql_statement = text("""
                 select opt.id as opt_id, molecule.* from molecule
                 join optimization_procedure as opt
                 on molecule.id = opt.final_molecule
-                where opt.id in :opt_ids
+                where opt.id in :optimization_ids
         """)
 
          # bind and expand ids list
-        sql_statement = sql_statement.bindparams(bindparam("opt_ids", expanding=True))
+        sql_statement = sql_statement.bindparams(bindparam("optimization_ids", expanding=True))
 
         # column types:
         columns = inspect(MoleculeORM).columns
-        sql_statement = sql_statement.columns(opt_ids=Integer, *columns)
-        query_result = self.execute_query(sql_statement, opt_ids=list(opt_ids))
+        sql_statement = sql_statement.columns(opt_id=Integer, *columns)
+        query_result = self.execute_query(sql_statement, optimization_ids=list(optimization_ids))
 
         ret = {}
         for rec in query_result:
