@@ -104,6 +104,11 @@ _programs["dftd3"] = "dftd3" in qcng.list_available_programs()
 def has_module(name):
     return _programs[name]
 
+def check_has_module(program):
+    import_message = "Not detecting module {}. Install package if necessary to enable tests."
+    if has_module(program) is False:
+        pytest.skip(import_message.format(program))
+
 
 def _build_pytest_skip(program):
     import_message = "Not detecting module {}. Install package if necessary to enable tests."
@@ -359,6 +364,10 @@ def reset_server_database(server):
 
     server.storage._delete_DB_data(server.storage._project_name)
 
+    # Force a heartbeat after database clean if a manager is present.
+    if server.queue_socket:
+        server.await_results()
+
 
 @pytest.fixture(scope="module")
 def test_server(request, postgres_server):
@@ -475,7 +484,7 @@ def fractal_compute_server(postgres_server):
                           storage_uri=postgres_server.database_uri(),
                           reset_database=True,
                           start_server=False) as server:
-        # reset_server_database(server)
+        reset_server_database(server)
         yield server
 
 

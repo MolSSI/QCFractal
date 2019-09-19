@@ -2,16 +2,19 @@
 QCPortal Database ODM
 """
 import itertools as it
+import warnings
 from enum import Enum
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
+from qcelemental import constants
+
+from ..models import ComputeResponse, Molecule, ProtoModel
+from ..util import replace_dict_keys
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
-from ..util import replace_dict_keys
-from ..models import ComputeResponse, Molecule, ProtoModel
 
 
 class _ReactionTypeEnum(str, Enum):
@@ -92,9 +95,59 @@ class ReactionDataset(Dataset):
         self.rxn_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule", "coefficient"])
         self.valid_stoich = set(self.rxn_index["stoichiometry"].unique())
 
+    def _molecule_indexer(self,
+                          stoich: Union[str, List[str]],
+                          subset: Optional[Union[str, Set[str]]] = None,
+                          coefficients: bool = False) -> Tuple[Dict[Tuple[str, ...], 'ObjectId'], Tuple[str]]:
+        """Provides a {index: molecule_id} mapping for a given subset.
+
+        Parameters
+        ----------
+        stoich : Union[str, List[str]]
+            The stoichiometries, or list of stoichiometries to return
+        subset : Optional[Union[str, Set[str]]], optional
+            The indices of the desired subset. Return all indices if subset is None.
+        coefficients : bool, optional
+            Returns the coefficients if as part of the index if True
+
+        No Longer Returned
+        ------------------
+        Dict[str, 'ObjectId']
+            Molecule index to molecule ObjectId map
+
+        Returns
+        -------
+        Tuple[Dict[Tuple[str, ...], 'ObjectId'], Tuple[str]]
+            Molecule index to molecule ObjectId map, and index names
+        """
+        if isinstance(stoich, str):
+            stoich = [stoich]
+
+        matched_rows = self.rxn_index[np.in1d(self.rxn_index["stoichiometry"], stoich)]
+        if subset:
+            matched_rows = matched_rows[np.in1d(matched_rows["name"], subset)]
+
+        names = ("name", "stoichiometry", "idx")
+        if coefficients:
+            names = names + ("coefficient", )
+
+        ret = {}
+        for gb_idx, group in matched_rows.groupby(["name", "stoichiometry"]):
+            for cnt, (idx, row) in enumerate(group.iterrows()):
+                if coefficients:
+                    ret[gb_idx + (cnt, row["coefficient"])] = row["molecule"]
+                else:
+                    ret[gb_idx + (cnt, )] = row["molecule"]
+
+        return ret, names
+
     def _validate_stoich(self, stoich):
-        if stoich.lower() not in self.valid_stoich:
-            raise KeyError("Stoichiometry not understood, valid keys are {}.".format(self.valid_stoich))
+        if isinstance(stoich, str):
+            stoich = [stoich]
+
+        for s in stoich:
+            if s.lower() not in self.valid_stoich:
+                raise KeyError("Stoichiometry not understood, valid keys are {}.".format(self.valid_stoich))
 
     def _pre_save_prep(self, client):
         self._canonical_pre_save(client)
@@ -112,54 +165,17 @@ class ReactionDataset(Dataset):
 
         self._form_index()
 
-    def _unroll_query(self, keys: Dict[str, Any], stoich: str, field: str="return_result") -> 'Series':
-        """Unrolls a complex query into a "flat" query for the server object
-
-        Parameters
-        ----------
-        keys : Dict[str, Any]
-            Server query fields
-        stoich : str
-            The stoichiometry to access for the query (default/cp/cp3/etc)
-        field : str, optional
-            The results field to query on
-
-        Returns
-        -------
-        ret : Series
-            A DataFrame representation of the unrolled query
-        """
-        self._check_state()
-
-        tmp_idx = self.rxn_index[self.rxn_index["stoichiometry"] == stoich].copy()
-        tmp_idx = tmp_idx.reset_index(drop=True)
-
-        indexer = {x: x for x in tmp_idx["molecule"]}
-        results = self._query(indexer, keys, field=field)
-        tmp_idx = tmp_idx.join(results, on="molecule", how="left")
-
-        # Apply stoich values
-        tmp_idx[field] *= tmp_idx["coefficient"]
-        tmp_idx = tmp_idx.drop(['stoichiometry', 'molecule', 'coefficient'], axis=1)
-
-        # If *any* value is null in the stoich sum, the whole thing should be Null. Pandas is being too clever
-        null_mask = tmp_idx.copy()
-        null_mask[field] = null_mask[field].isnull()
-        null_mask = null_mask.groupby(["name"]).sum() != False
-
-        tmp_idx = tmp_idx.groupby(["name"]).sum()
-        tmp_idx[null_mask] = np.nan
-
-        return tmp_idx
-
-    def get_history(self,
-                    method: Optional[str]=None,
-                    basis: Optional[str]=None,
-                    keywords: Optional[str]=None,
-                    program: Optional[str]=None,
-                    stoich: str="default") -> 'DataFrame':
-        """ Queries known history from the search paramaters provided. Defaults to the standard
+    def get_values(self,
+                   method: Optional[str] = None,
+                   basis: Optional[str] = None,
+                   keywords: Optional[str] = None,
+                   program: Optional[str] = None,
+                   stoich: str = "default",
+                   force: bool = False) -> 'DataFrame':
+        """Obtains values from the known history from the search paramaters provided for the expected `return_result` values. Defaults to the standard
         programs and keywords if not provided.
+
+        Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method and basis combination simultaneously.
 
         Parameters
         ----------
@@ -191,19 +207,97 @@ class ReactionDataset(Dataset):
             else:
                 history.pop(k, None)
 
-        return self._get_history(**history)
+        queries = self.list_history(**history, dftd3=True, pretty=False).reset_index()
+        if queries.shape[0] > 10:
+            raise TypeError("More than 10 queries formed, please narrow the search.")
+
+        stoich_complex = queries.pop("stoichiometry")
+        stoich_monomer = ''.join([x for x in stoich if not x.isdigit()]) + '1'
+
+        def _query_apply_coeffients(stoich, query):
+
+            # Build the starting table
+            indexer, names = self._molecule_indexer(stoich, coefficients=True)
+            df = self._get_records(indexer, query, projection={"return_result": True}, merge=True)
+            df.index = pd.MultiIndex.from_tuples(df.index, names=names)
+            df.reset_index(inplace=True)
+
+            # Block out null values `groupby.sum()` will return 0 rather than NaN in all cases
+            null_mask = df[["name", "return_result"]].copy()
+            null_mask["return_result"] = null_mask["return_result"].isnull()
+            null_mask = null_mask.groupby(["name"])["return_result"].sum() != False
+
+            # Multiply by coefficients and sum
+            df["return_result"] *= df["coefficient"]
+            df = df.groupby(["name"])["return_result"].sum(skipna=False)
+            df[null_mask] = np.nan
+            return df
+
+        ret = []
+        for name, query in queries.iterrows():
+
+            query = query.replace({np.nan: None}).to_dict()
+            name = self._canonical_name(**query)
+
+            if force or (name not in self.df.columns):
+                self._column_metadata[name] = query
+
+                data_complex = _query_apply_coeffients(stoich_complex, query)
+                data_monomer = _query_apply_coeffients(stoich_monomer, query)
+
+                data = data_complex - data_monomer
+
+                self.df[name] = data * constants.conversion_factor('hartree', self.units)
+
+            ret.append(self.df[name])
+
+        return pd.concat(ret, axis=1)
+
+    def get_history(self,
+                    method: Optional[str] = None,
+                    basis: Optional[str] = None,
+                    keywords: Optional[str] = None,
+                    program: Optional[str] = None,
+                    stoich: str = "default") -> 'DataFrame':
+        """ Queries known history from the search paramaters provided. Defaults to the standard
+        programs and keywords if not provided.
+
+        Parameters
+        ----------
+        method : Optional[str]
+            The computational method to compute (B3LYP)
+        basis : Optional[str], optional
+            The computational basis to compute (6-31G)
+        keywords : Optional[str], optional
+            The keyword alias for the requested compute
+        program : Optional[str], optional
+            The underlying QC program
+        stoich : str, optional
+            The given stoichiometry to compute.
+
+        Returns
+        -------
+        DataFrame
+            A DataFrame of the queried parameters
+        """
+        warnings.warn(
+            "This is function is deprecated and will be removed in 0.11.0, please use `get_values(..., )` for a instead.",
+            DeprecationWarning)
+
+        # Get default program/keywords
+        return self.get_values(method=method, basis=basis, keywords=keywords, program=program, force=force)
 
     def visualize(self,
-                  method: Optional[str]=None,
-                  basis: Optional[str]=None,
-                  keywords: Optional[str]=None,
-                  program: Optional[str]=None,
-                  stoich: Optional[str]=None,
-                  groupby: Optional[str]=None,
-                  metric: str="UE",
-                  bench: Optional[str]=None,
-                  kind: str="bar",
-                  return_figure: Optional[bool]=None) -> 'plotly.Figure':
+                  method: Optional[str] = None,
+                  basis: Optional[str] = None,
+                  keywords: Optional[str] = None,
+                  program: Optional[str] = None,
+                  stoich: str = "default",
+                  groupby: Optional[str] = None,
+                  metric: str = "UE",
+                  bench: Optional[str] = None,
+                  kind: str = "bar",
+                  return_figure: Optional[bool] = None) -> 'plotly.Figure':
         """
         Parameters
         ----------
@@ -215,7 +309,7 @@ class ReactionDataset(Dataset):
             Keyword aliases to query
         program : Optional[str], optional
             Programs aliases to query
-        stoich : Optional[str], optional
+        stoich : str, optional
             Stoichiometry to query
         groupby : Optional[str], optional
             Groups the plot by this index.
@@ -234,21 +328,114 @@ class ReactionDataset(Dataset):
             The requested figure.
         """
 
-        query = {"method": method, "basis": basis, "keywords": keywords, "program": program, "stoich": stoich}
+        query = {"method": method, "basis": basis, "keywords": keywords, "program": program, "stoichiometry": stoich}
         query = {k: v for k, v in query.items() if v is not None}
 
         return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind)
 
+    def get_molecules(self, subset: Optional[Union[str, Set[str]]] = None,
+                      stoich: Union[str, List[str]] = "default") -> pd.DataFrame:
+        """Queries full Molecules from the database.
+
+        Parameters
+        ----------
+        subset : Optional[Union[str, Set[str]]], optional
+            The index subset to query on
+        stoich : Union[str, List[str]], optional
+            The stoichiometries to pull from, either a single or multiple stoichiometries
+
+        Return
+        ------
+        pd.DataFrame
+            Indexed Molecules which match the stoich and subset string.
+        """
+
+        self._check_client()
+        self._check_state()
+        self._validate_stoich(stoich)
+
+        indexer, names = self._molecule_indexer(stoich, subset)
+        df = self._get_molecules(indexer)
+        df.index = pd.MultiIndex.from_tuples(df.index, names=names)
+
+        return df
+
+    def get_records(self,
+                    method,
+                    basis: Optional[str] = None,
+                    *,
+                    keywords: Optional[str] = None,
+                    program: Optional[str] = None,
+                    stoich: Union[str, List[str]] = "default",
+                    projection: Optional[Dict[str, bool]] = None,
+                    subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'ResultRecord']:
+        """
+        Queries the local Portal for the requested keys and stoichiometry.
+
+        Parameters
+        ----------
+        method : str
+            The computational method to query on (B3LYP)
+        basis : Optional[str], optional
+            The computational basis to query on (6-31G)
+        keywords : Optional[str], optional
+            The option token desired
+        program : Optional[str], optional
+            The program to query on
+        stoich : Union[str, List[str]], optional
+            The given stoichiometry to compute.
+        projection : Optional[Dict[str, bool]], optional
+            The attribute project to perform on the query, otherwise returns ResultRecord objects.
+        subset : Optional[Union[str, Set[str]]], optional
+            The index subset to query on
+
+        Returns
+        -------
+        Union[pd.DataFrame, 'ResultRecord']
+            The name of the queried column
+
+        """
+
+        self._check_client()
+        self._check_state()
+        self._validate_stoich(stoich)
+
+        method = method.upper()
+        if isinstance(stoich, str):
+            stoich = [stoich]
+
+        ret = []
+        for s in stoich:
+            name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=s)
+            history.pop('stoichiometry')
+            indexer, names = self._molecule_indexer(s, subset)
+            df = self._get_records(
+                indexer,
+                history,
+                projection=projection,
+                merge=False,
+                raise_on_plan=
+                "`get_records` can only be used for non-composite quantities. You likely queried a DFT+D method or similar that requires a combination of DFT and -D. Please query each piece separately."
+            )
+            df = df[0]
+            df.index = pd.MultiIndex.from_tuples(df.index, names=names)
+            ret.append(df)
+
+        ret = pd.concat(ret)
+        ret.sort_index(inplace=True)
+
+        return ret
+
     def query(self,
               method,
-              basis: Optional[str]=None,
+              basis: Optional[str] = None,
               *,
-              keywords: Optional[str]=None,
-              program: Optional[str]=None,
-              stoich: str="default",
-              field: Optional[str]=None,
-              ignore_ds_type: bool=False,
-              force: bool=False) -> str:
+              keywords: Optional[str] = None,
+              program: Optional[str] = None,
+              stoich: str = "default",
+              field: Optional[str] = None,
+              ignore_ds_type: bool = False,
+              force: bool = False) -> str:
         """
         Queries the local Portal for the requested keys and stoichiometry.
 
@@ -276,19 +463,14 @@ class ReactionDataset(Dataset):
         str
             The name of the queried column
 
-
-        Examples
-        --------
-
-        ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
-
-
         """
+        warnings.warn(
+            "This is function is deprecated and will be removed in 0.11.0, please `get_records(..., projection='return_result')` for a similar result",
+            DeprecationWarning)
+
+        self._check_client()
         self._check_state()
         method = method.upper()
-
-        if self.client is None:
-            raise AttributeError("DataBase: FractalClient was not set.")
 
         self._validate_stoich(stoich)
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=stoich)
@@ -320,18 +502,18 @@ class ReactionDataset(Dataset):
         # Apply to df
         self.df[name] = tmp_idx[name]
 
-        return name
+        return tmp_idx
 
     def compute(self,
                 method: Optional[str],
-                basis: Optional[str]=None,
+                basis: Optional[str] = None,
                 *,
-                keywords: Optional[str]=None,
-                program: Optional[str]=None,
-                stoich: str="default",
-                ignore_ds_type: bool=False,
-                tag: Optional[str]=None,
-                priority: Optional[str]=None) -> ComputeResponse:
+                keywords: Optional[str] = None,
+                program: Optional[str] = None,
+                stoich: str = "default",
+                ignore_ds_type: bool = False,
+                tag: Optional[str] = None,
+                priority: Optional[str] = None) -> ComputeResponse:
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -363,10 +545,8 @@ class ReactionDataset(Dataset):
               - existing: A list of ObjectId's of tasks already in the database
 
         """
+        self._check_client()
         self._check_state()
-
-        if self.client is None:
-            raise AttributeError("Dataset: Compute: Client was not set.")
 
         self._validate_stoich(stoich)
         compute_keys = {"program": program, "method": method, "basis": basis, "keywords": keywords, "stoich": stoich}
@@ -374,8 +554,8 @@ class ReactionDataset(Dataset):
         # Figure out molecules that we need
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
             if ("-D3" in method.upper()) and stoich.lower() != "default":
-                raise KeyError("Please only run -D3 as default at the moment, running with CP could lead to extra computations.")
-
+                raise KeyError(
+                    "Please only run -D3 as default at the moment, running with CP could lead to extra computations.")
 
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
             tmp_monomer = self.rxn_index[self.rxn_index["stoichiometry"] == monomer_stoich].copy()
@@ -436,6 +616,7 @@ class ReactionDataset(Dataset):
         """
         raise Exception("MPL not avail")
 
+
 #        return visualization.Ternary2D(self.df, cvals=cvals)
 
 # Adders
@@ -460,10 +641,6 @@ class ReactionDataset(Dataset):
             - Molecule hash - Used directly in the stoichiometry.
             - Molecule class - Hash is obtained and the molecule will be added to the database upon saving.
             - Molecule string - Molecule will be converted to a Molecule class and the same process as the above will occur.
-
-
-        Examples
-        --------
 
 
         """
@@ -538,9 +715,6 @@ class ReactionDataset(Dataset):
 
         Notes
         -----
-
-        Examples
-        --------
 
         Returns
         -------
@@ -626,8 +800,11 @@ class ReactionDataset(Dataset):
         other_fields = kwargs.pop("other_fields", {})
 
         stoichiometry = self.build_ie_fragments(mol, name=name, **kwargs)
-        return self.add_rxn(
-            name, stoichiometry, reaction_results=reaction_results, attributes=attributes, other_fields=other_fields)
+        return self.add_rxn(name,
+                            stoichiometry,
+                            reaction_results=reaction_results,
+                            attributes=attributes,
+                            other_fields=other_fields)
 
     @staticmethod
     def build_ie_fragments(mol, **kwargs):
@@ -649,9 +826,6 @@ class ReactionDataset(Dataset):
 
         Notes
         -----
-
-        Examples
-        --------
 
         Returns
         -------

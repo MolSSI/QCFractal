@@ -26,6 +26,10 @@ These directories contain the files to build [Conda](https://conda.io/) environm
 * `prod-envs`: End-user production install files for Fractal. These install Fractal from the Anaconda Cloud for use 
   at production level sites. No further installations needed from these files. 
 
+### Docker:
+
+These directories contain the files to build [Docker](https://www.docker.com/) images. 
+These are also used for autobuilds on [Docker Hub](https://cloud.docker.com/u/molssi/repository/list).
 
 ## How to contribute changes
 - Fork the repository
@@ -52,6 +56,7 @@ These directories contain the files to build [Conda](https://conda.io/) environm
 - [ ] Debug the PR as needed until tests pass
 - [ ] Get the PR merged in
 - [ ] Create a GitHub Release and use the version formatted as `vXX.YY.ZZ` for the tag name.
+- [ ] Add tag to Docker Hub builds.
 - [ ] When ready, create a PyPi release from the checkout of the tag you made above
 - [ ] Create a new release on conda forge, updating to the version you just uploaded on PyPi
 

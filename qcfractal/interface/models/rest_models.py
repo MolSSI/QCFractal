@@ -678,7 +678,7 @@ class TaskQueueGETBody(ProtoModel):
         )
         program: QueryStr = Schema(
             None,
-            description="Tasks will be searched based on the program which is responsible for executing this task."
+            description="Tasks will be searched based on the program responsible for executing this task."
         )
         status: QueryStr = Schema(
             None,
@@ -690,6 +690,14 @@ class TaskQueueGETBody(ProtoModel):
             description="The exact Id of the Result which this Task is linked to. If this is set as a "
                         "search condition, there is no reason to set anything else as this will be unique in the "
                         "database, if it exists. See also :class:`ResultRecord`."
+        )
+        tag: QueryStr = Schema(
+            None,
+            description="Tasks will be searched based on their associated tag."
+        )
+        manager: QueryStr = Schema(
+            None,
+            description="Tasks will be searched based on the manager responsible for executing the task."
         )
 
     meta: QueryMetaProjection = Schema(

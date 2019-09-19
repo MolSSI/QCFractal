@@ -167,7 +167,7 @@ class TaskQueueORM(Base):
     """A queue of tasks corresponding to a procedure
 
        Notes: don't sort query results without having the index sorted
-              will impact the performce
+              will impact the performance
     """
 
     __tablename__ = "task_queue"

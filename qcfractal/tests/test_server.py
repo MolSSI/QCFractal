@@ -33,14 +33,14 @@ def test_molecule_socket(test_server):
     water_json = json.loads(water.json())
     # Add a molecule
     r = requests.post(mol_api_addr, json={"meta": {}, "data": [water_json]})
-    assert r.status_code == 200
+    assert r.status_code == 200, r.reason
 
     pdata = r.json()
     assert pdata["meta"].keys() == meta_set
 
     # Retrieve said molecule
     r = requests.get(mol_api_addr, json={"meta": {}, "data": {"id": pdata["data"][0]}})
-    assert r.status_code == 200
+    assert r.status_code == 200, r.reason
 
     gdata = r.json()
     assert isinstance(gdata["data"], list)
@@ -49,7 +49,7 @@ def test_molecule_socket(test_server):
 
     # Retrieve said molecule via hash
     r = requests.get(mol_api_addr, json={"meta": {}, "data": {"molecule_hash": water.get_hash()}})
-    assert r.status_code == 200
+    assert r.status_code == 200, r.reason
 
     gdata = r.json()
     assert isinstance(gdata["data"], list)
@@ -63,7 +63,7 @@ def test_keywords_socket(test_server):
     opts = {"values": {"opt": "a"}}
     # Add a molecule
     r = requests.post(opt_api_addr, json={"meta": {}, "data": [opts]})
-    assert r.status_code == 200
+    assert r.status_code == 200, r.reason
 
     pdata = r.json()
     assert pdata["meta"].keys() == meta_set
@@ -72,13 +72,13 @@ def test_keywords_socket(test_server):
     data_payload = {"id": pdata["data"][0]}
 
     r = requests.get(opt_api_addr, json={"meta": {}, "data": data_payload})
-    assert r.status_code == 200
+    assert r.status_code == 200, r.reason
 
     assert r.json()["data"][0]["values"] == opts["values"]
 
     # Try duplicates
     r = requests.post(opt_api_addr, json={"meta": {}, "data": [opts]})
-    assert r.status_code == 200
+    assert r.status_code == 200, r.reason
     assert len(r.json()["meta"]["duplicates"]) == 1
 
 
@@ -90,7 +90,7 @@ def test_storage_socket(test_server):
     storage['collection'] = storage['collection'].lower()
 
     r = requests.post(storage_api_addr, json={"meta": {}, "data": storage})
-    assert r.status_code == 200
+    assert r.status_code == 200, r.reason
 
     pdata = r.json()
     assert pdata["meta"].keys() == meta_set
@@ -104,7 +104,7 @@ def test_storage_socket(test_server):
                              "name": storage["name"]
                          }
                      })
-    assert r.status_code == 200
+    assert r.status_code == 200, r.reason
 
     pdata = r.json()
     del pdata["data"][0]["id"]

@@ -15,6 +15,34 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+X.Y.0 / 2019-MM-DD
+-------------------
+
+New Features
+++++++++++++
+
+Enhancements
+++++++++++++
+
+- (:pr:`385`) ``Dataset`` and ``ReactionDataset`` have three new functions for accessing data.
+  ``get_values`` returns the canonical headline value for a dataset (e.g. the interaction energy for S22) in data columns with caching. This function replaces the now-deprecated ``get_history``.
+  ``get_records`` either returns ``ResultRecord`` or a projection. For the case of ``ReactionDataset``, the results are broken down into component calculcations. The function replaces the now-deprecated ``query``.
+  ``get_molecules`` returns the ``Molecule`` associated with a dataset.
+  In addition, ``get_contributed_values`` now returns a data column.
+
+- (:pr:`394`) Adds ``tag`` and ``manager`` selector fields to ``client.query_tasks``.
+  This is helpful for managing jobs in the queue and detecting failures.
+
+- (:pr:`400`) Adds Dockerfiles corresponding to builds on `Docker Hub <https://cloud.docker.com/u/molssi/repository/list>`_.
+
+Bug Fixes
++++++++++
+
+Documentation Improvements
+++++++++++++++++++++++++++
+
+- (:pr:`399`) A Kubernetes quickstart guide has been added.
+
 0.10.0 / 2019-08-26
 -------------------
 

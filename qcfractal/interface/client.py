@@ -819,6 +819,8 @@ class FractalClient(object):
                     program: 'QueryStr' = None,
                     status: 'QueryStr' = None,
                     base_result: 'QueryStr' = None,
+                    tag: 'QueryStr' = None,
+                    manager: 'QueryStr' = None,
                     limit: Optional[int] = None,
                     skip: int = 0,
                     projection: 'QueryProjection' = None,
@@ -837,6 +839,10 @@ class FractalClient(object):
             Queries the Tasks ``status`` field.
         base_result : QueryStr, optional
             Queries the Tasks ``base_result`` field.
+        tag : QueryStr, optional
+            Queries the Tasks ``tag`` field.
+        manager : QueryStr, optional
+            Queries the Tasks ``manager`` field.
         limit : Optional[int], optional
             The maximum number of Tasks to query
         skip : int, optional
@@ -872,7 +878,9 @@ class FractalClient(object):
                 "hash_index": hash_index,
                 "program": program,
                 "status": status,
-                "base_result": base_result
+                "base_result": base_result,
+                "tag": tag,
+                "manager": manager
             }
         }
 
