@@ -31,7 +31,7 @@ dependencies:
   - rdkit
   - geometric>=0.9.3
   - torsiondrive
-  - intel-openmp!=2019.5-281
+  - intel-openmp!=2019.5
 
 # QCArchive includes
   - qcengine>=0.9.0
