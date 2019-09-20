@@ -1,7 +1,7 @@
 name: qcarchive
 channels:
   - defaults
-  - psi4/label/dev
+  - psi4
   - conda-forge
 dependencies:
   - python
@@ -20,6 +20,7 @@ dependencies:
   - postgresql
   - alembic
   - tqdm
+  - intel-openmp=2019.4
 
 # Test depends
   - pytest
