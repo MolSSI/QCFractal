@@ -169,19 +169,53 @@ class Dataset(Collection):
 
         self.data.history.add(tuple(new_history))
 
-    def list_history(self, dftd3: bool=False, get_base: bool=False, pretty: bool=True, **search: Dict[str, Optional[str]]) -> 'DataFrame':
+    def list_history(self,
+                     dftd3: bool = False,
+                     pretty: bool = True,
+                     **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """
         Lists the history of computations completed.
 
         Parameters
         ----------
+        dftd3: bool, optional
+            Include dftd3 program record specifications in addition to composite DFT-D3 record specifications
+        pretty: bool
+            Replace NaN with "None" in returned DataFrame
         **search : Dict[str, Optional[str]]
             Allows searching to narrow down return.
 
         Returns
         -------
         DataFrame
-            The computed keys.
+            Record specifications matching **search.
+
+        """
+        warnings.warn("This function has been renamed to `list_records`.  "
+                      "`list_history` will be removed in 0.11.0", DeprecationWarning)
+
+        return self.list_records(dftd3, pretty, **search)
+
+    def list_records(self,
+                     dftd3: bool = False,
+                     pretty: bool = True,
+                     **search: Dict[str, Optional[str]]) -> 'DataFrame':
+        """
+        Lists specifications of available records, i.e. method, program, basis set, keyword set, driver combinations
+
+        Parameters
+        ----------
+        dftd3: bool, optional
+            Include dftd3 program record specifications in addition to composite DFT-D3 record specifications
+        pretty: bool
+            Replace NaN with "None" in returned DataFrame
+        **search : Dict[str, Optional[str]]
+            Allows searching to narrow down return.
+
+        Returns
+        -------
+        DataFrame
+            Record specifications matching **search.
 
         """
 
@@ -219,7 +253,6 @@ class Dataset(Collection):
             else:
                 raise TypeError(f"Search type {type(value)} not understood.")
 
-
         if show_dftd3 is False:
             ret = ret[ret["program"] != "dftd3"]
 
@@ -251,7 +284,7 @@ class Dataset(Collection):
             If no records match the query
         """
 
-        queries = self.list_history(**search, dftd3=True, pretty=False).reset_index()
+        queries = self.list_records(**search, dftd3=True, pretty=False).reset_index()
         if queries.shape[0] > 10:
             raise TypeError("More than 10 queries formed, please narrow the search.")
 
@@ -312,7 +345,7 @@ class Dataset(Collection):
             else:
                 history.pop(k, None)
 
-        queries = self.list_history(**history, dftd3=True, pretty=False).reset_index()
+        queries = self.list_records(**history, dftd3=True, pretty=False).reset_index()
         if queries.shape[0] > 10:
             raise TypeError("More than 10 queries formed, please narrow the search.")
 

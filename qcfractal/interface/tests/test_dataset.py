@@ -240,7 +240,7 @@ def test_database_history():
     for h in history:
         ds._add_history(driver=h[0], program=h[1], method=h[2], basis=h[3], keywords=h[4])
 
-    assert ds.list_history().shape[0] == 5
-    assert ds.list_history(program="P1").shape[0] == 4
-    assert ds.list_history(basis=None).shape[0] == 3
-    assert ds.list_history(keywords=None).shape[0] == 1
+    assert ds.list_records().shape[0] == 5
+    assert ds.list_records(program="P1").shape[0] == 4
+    assert ds.list_records(basis=None).shape[0] == 3
+    assert ds.list_records(keywords=None).shape[0] == 1

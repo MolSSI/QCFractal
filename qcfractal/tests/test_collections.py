@@ -384,7 +384,7 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     assert pytest.approx(0.002447793, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g", floor=10)
 
     assert isinstance(ds.to_json(), dict)
-    assert ds.list_history(keywords=None).shape[0] == 1
+    assert ds.list_records(keywords=None).shape[0] == 1
 
     ds.units = "eV"
     assert pytest.approx(0.00010614635, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g", floor=10)
@@ -426,14 +426,14 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     ds.get_values("SCF", "sto-3g", keywords="df").columns[0] == "SCF/sto-3g-df"
     assert pytest.approx(0.38748602675524185, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g-df"]
 
-    assert ds.list_history().shape[0] == 2
-    assert ds.list_history(keywords="DF").shape[0] == 1
-    assert ds.list_history(keywords="DIRECT").shape[0] == 1
+    assert ds.list_records().shape[0] == 2
+    assert ds.list_records(keywords="DF").shape[0] == 1
+    assert ds.list_records(keywords="DIRECT").shape[0] == 1
 
     # Check saved history
     ds = client.get_collection("reactiondataset", "dataset_options")
-    assert ds.list_history().shape[0] == 2
-    assert {"df", "direct"} == set(ds.list_history().reset_index()["keywords"])
+    assert ds.list_records().shape[0] == 2
+    assert {"df", "direct"} == set(ds.list_records().reset_index()["keywords"])
 
     # Check keywords
     kw = ds.get_keywords("df", "psi4")
