@@ -1,3 +1,4 @@
 sut:
   build: .
+  working_dir: /home/qcfractal
   command: pytest -v -rsx --runslow --pyargs qcfractal
