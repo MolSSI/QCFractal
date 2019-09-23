@@ -1,5 +1,5 @@
 FROM continuumio/miniconda3
-RUN conda install -c psi4/label/dev -c conda-forge psi4 dftd3 mp2d qcengine qcfractal rdkit geometric 
+RUN conda install -c psi4/label/dev -c conda-forge psi4 dftd3 mp2d qcengine qcfractal rdkit geometric pytest
 RUN groupadd -g 999 qcfractal && \
     useradd -m -r -u 999 -g qcfractal qcfractal
 USER qcfractal
