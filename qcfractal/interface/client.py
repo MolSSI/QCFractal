@@ -856,7 +856,7 @@ class FractalClient(object):
         -------
         List[Dict[str, Any]]
             A dictionary of each match that contains the current status
-            and, if an error has occured, the error message.
+            and, if an error has occurred, the error message.
 
         Examples
         --------

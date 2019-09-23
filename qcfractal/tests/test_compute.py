@@ -404,11 +404,11 @@ def test_queue_query_tag(fractal_compute_server):
 
     tasks_tag_none = client.query_tasks()
     assert len(tasks_tag_none) == 3
+    assert {task.base_result.id for task in tasks_tag_none} == {ret1, ret2, ret3}
 
     tasks_tagged = client.query_tasks(tag=["test", "test2"])
-    assert tasks_tagged[0].base_result.id == ret2
-    assert tasks_tagged[1].base_result.id == ret3
     assert len(tasks_tagged) == 2
+    assert {task.base_result.id for task in tasks_tagged} == {ret2, ret3}
 
 
 def test_queue_query_manager(fractal_compute_server):
