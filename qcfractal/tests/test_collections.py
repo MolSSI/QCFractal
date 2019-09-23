@@ -37,7 +37,7 @@ def gradient_dataset_fixture(fractal_compute_server):
                                  client,
                                  default_program="psi4",
                                  default_driver="gradient",
-                                 default_units="hartree")
+                                 default_units="hartree/bohr")
 
     ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
     ds.add_entry("He2", ptl.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"))
@@ -49,9 +49,39 @@ def gradient_dataset_fixture(fractal_compute_server):
             "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
             "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
         },
-        "units": "hartree"
+        "theory_level_details": {
+            "driver": "gradient"
+        },
+        "units": "hartree/bohr"
+    }
+    contrib_no_details = {
+        "name": "no details",
+        "theory_level": "pseudo-random values",
+        "values": {
+            "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
+            "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
+        },
+        "units": "hartree/bohr"
+    }
+    contrib_all_details = {
+        "name": "all details",
+        "theory_level": "pseudo-random values",
+        "values": {
+            "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
+            "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
+        },
+        "theory_level_details": {
+            "driver": "gradient",
+            "program": "fake_program",
+            "basis": "fake_basis",
+            "method": "fake_method",
+            "keywords": "fake_keywords"
+        },
+        "units": "hartree/bohr"
     }
     ds.add_contributed_values(contrib)
+    ds.add_contributed_values(contrib_no_details)
+    ds.add_contributed_values(contrib_all_details)
 
     ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={}), default=True)
     ds.save()
@@ -64,6 +94,93 @@ def gradient_dataset_fixture(fractal_compute_server):
 
     yield client, client.get_collection("dataset", "ds_gradient")
 
+
+@pytest.fixture(scope="module")
+def contributed_dataset_fixture(fractal_compute_server):
+    """ Fixture for testing rich contributed datasets with many properties and molecules of different sizes"""
+    client = ptl.FractalClient(fractal_compute_server)
+
+    testing.check_has_module("psi4")
+
+    # Build a dataset
+    ds = ptl.collections.Dataset("ds_contributed",
+                                 client)
+
+    ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
+    ds.add_entry("He", ptl.Molecule.from_data("He -1.1 0 0"))
+
+    energy = {
+        "name": "Fake Energy",
+        "theory_level": "pseudo-random values",
+        "values": {
+            "He1": 1234.5,
+            "He": 5.4321
+        },
+        "theory_level_details": {
+            "driver": "energy",
+            "program": "fake_program",
+            "basis": "fake_basis",
+            "method": "fake_method",
+        },
+        "units": "hartree"
+    }
+    gradient = {
+        "name": "Fake Gradient",
+        "theory_level": "pseudo-random values",
+        "values": {
+            "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
+            "He": [0.03, 0, 0.02]
+        },
+        "theory_level_details": {
+            "driver": "gradient",
+            "program": "fake_program",
+            "basis": "fake_basis",
+            "method": "fake_method",
+        },
+        "units": "hartree/bohr"
+    }
+    hessian = {
+        "name": "Fake Hessian",
+        "theory_level": "pseudo-random values",
+        "values": {
+            "He1": list(np.eye(6).ravel()),
+            "He": [1, 0.2, 0.1, 0.2, 1, 0.4, 0.1, 0.4, 1]
+        },
+        "theory_level_details": {
+            "driver": "hessian",
+            "program": "fake_program",
+            "basis": "fake_basis",
+            "method": "fake_method",
+        },
+        "units": "hartree/bohr**2"
+    }
+    dipole = {
+        "name": "Fake Dipole",
+        "theory_level": "pseudo-random values",
+        "values": {
+            "He": [1., 2., 3.],
+            "He1": [1., -2., 0.]
+        },
+        "theory_level_details": {
+            "driver": "dipole",
+            "program": "fake_program",
+            "basis": "fake_basis",
+            "method": "fake_method",
+        },
+        "units": "e * bohr"
+    }
+
+    ds.add_contributed_values(energy)
+    ds.add_contributed_values(gradient)
+    ds.add_contributed_values(hessian)
+    ds.add_contributed_values(dipole)
+
+    with pytest.raises(KeyError):
+        ds.add_contributed_values(energy)
+
+    ds.save()
+
+    yield client, client.get_collection("dataset", "ds_contributed")
 
 def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
@@ -115,6 +232,21 @@ def test_gradient_dataset_get_values_no_match(gradient_dataset_fixture):
 
     with pytest.raises(KeyError):
         ds.get_values(method="NotInDataset")
+
+
+def test_gradient_dataset_contributed_values(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    df = ds.list_contributed_values().reset_index()
+    assert df.shape == (3, 6)
+    assert set(df['name']) == set(ds.data.contributed_values.keys())
+
+    df = ds.list_contributed_values(driver="graDieNt").reset_index()
+    assert set(df['name']) == set(["gradient", "all details"])
+
+    names = ["GrAdIeNt", "no details"]
+    df = ds.list_contributed_values(name=names).reset_index()
+    assert set(df['name']) == {name.lower() for name in names}
 
 
 def test_gradient_dataset_statistics(gradient_dataset_fixture):
@@ -195,8 +327,12 @@ def test_reactiondataset_check_state(fractal_compute_server):
     with pytest.raises(ValueError):
         ds.get_records("SCF", "STO-3G")
 
-    assert "benchmark" in ds.list_contributed_values()
-    assert "Benchmark" in ds.get_contributed_values("benchmark").columns
+    assert "benchmark" == ds.list_contributed_values()["name"][0]
+    ds.units = "hartree"
+    bench = ds.get_values(name="benchmark", native=False)
+    assert "(contributed)" in bench.columns[0]
+    assert bench["He1"] == contrib["values"]["He1"]
+    assert bench["He2"] == contrib["values"]["He2"]
 
 
 @pytest.fixture(scope="module")

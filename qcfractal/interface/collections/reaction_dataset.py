@@ -237,7 +237,7 @@ class ReactionDataset(Dataset):
         for name, query in queries.iterrows():
 
             query = query.replace({np.nan: None}).to_dict()
-            name = self._canonical_name(**query)
+            name = query.pop("name")
 
             if force or (name not in self.df.columns):
                 self._column_metadata[name] = query

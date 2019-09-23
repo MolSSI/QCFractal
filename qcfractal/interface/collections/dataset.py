@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
+import pint
 
 from qcelemental import constants
 
@@ -76,10 +77,6 @@ class Dataset(Collection):
         self.df = pd.DataFrame(index=self.get_index())
         self._column_metadata = {}
 
-        # Inherited classes need to call this themselves
-        for cv in self.data.contributed_values.values():
-            tmp_idx = self.get_contributed_values(cv.name)
-            self.df[tmp_idx.columns[0]] = tmp_idx
 
     class DataModel(Collection.DataModel):
 
@@ -169,6 +166,69 @@ class Dataset(Collection):
 
         self.data.history.add(tuple(new_history))
 
+    def list_values(self,
+                    method: Optional[str] = None,
+                    basis: Optional[str] = None,
+                    keywords: Optional[str] = None,
+                    program: Optional[str] = None,
+                    driver: Optional[str] = None,
+                    name: Optional[str] = None,
+                    native: Optional[bool] = None,
+                    force: bool = False):
+        """
+        Lists available data that may be queried with get_values.
+        Results may be narrowed by providing search keys.
+
+        Parameters
+        ----------
+        method : Optional[str], optional
+            The computational method (B3LYP)
+        basis : Optional[str], optional
+            The computational basis (6-31G)
+        keywords : Optional[str], optional
+            The keyword alias
+        program : Optional[str], optional
+            The underlying QC program
+        driver : Optional[str], optional
+            The type of calculation (e.g. energy, gradient, hessian, dipole...)
+        name : Optional[str], optional
+            The name of the data column
+        native: Optional[bool], optional
+            True: only include data computed with QCFractal
+            False: only include data contributed from outside sources
+            None: include both
+        force : bool, optional
+            Data is typically cached, forces a new query if True
+
+        Returns
+        -------
+        DataFrame
+            A DataFrame of the matching data specifications
+        """
+        ret = []
+        spec = {"method": method,
+                "basis": basis,
+                "keywords": keywords,
+                "program": program,
+                "name": name,
+                "driver": driver}
+
+        if native is True or native is None:
+            df = self.list_records(dftd3=False, **spec)
+            df['native'] = True
+            ret.append(df)
+
+        if native is False or native is None:
+            df = self.list_contributed_values(force=force, **spec)
+            df['native'] = False
+            ret.append(df)
+
+        ret = pd.concat(ret)
+        ret.reset_index(inplace=True)
+        ret.set_index(["native"] + list(self.data.history_keys[:-1]), inplace=True)
+        ret.sort_index(inplace=True)
+        return ret
+
     def list_history(self,
                      dftd3: bool = False,
                      pretty: bool = True,
@@ -221,10 +281,17 @@ class Dataset(Collection):
 
         show_dftd3 = dftd3
 
-        if not (search.keys() <= set(self.data.history_keys)):
+        if not (search.keys() <= set(self.data.history_keys + tuple(["name"]))):
             raise KeyError("Not all query keys were understood.")
 
         history = pd.DataFrame(list(self.data.history), columns=self.data.history_keys)
+
+        # Short circuit because merge and apply below require data
+        if history.shape[0] == 0:
+            ret = history.copy()
+            ret['name'] = None
+            ret.set_index(list(self.data.history_keys[:-1]), inplace=True)
+            return ret
 
         # Build out -D3 combos
         dftd3 = history[history["program"] == "dftd3"].copy()
@@ -241,9 +308,17 @@ class Dataset(Collection):
 
         # Find the returned subset
         ret = history.copy()
+        # Add name column
+        ret['name'] = ret.apply(lambda row: self._canonical_name(program=row["program"],
+                                                                 method=row["method"],
+                                                                 basis=row["basis"],
+                                                                 keywords=row["keywords"],
+                                                                 stoich=row.get("stoichiometry", None),
+                                                                 driver=row["driver"]), axis=1)
+        # Find the returned subset
         for key, value in search.items():
             if value is None:
-                ret = ret[ret[key].isnull()]
+                pass
             elif isinstance(value, str):
                 value = value.lower()
                 ret = ret[ret[key] == value]
@@ -263,25 +338,47 @@ class Dataset(Collection):
         ret.sort_index(inplace=True)
         return ret
 
-    def _get_values(self, force: bool = False, **search: Dict[str, Optional[str]]) -> 'DataFrame':
-        """Queries for all history that matches the search
+    def get_values(self,
+                   method: Optional[str] = None,
+                   basis: Optional[str] = None,
+                   keywords: Optional[str] = None,
+                   program: Optional[str] = None,
+                   driver: Optional[str] = None,
+                   name: Optional[str] = None,
+                   native: Optional[bool] = None,
+                   force: bool = False) -> pd.DataFrame:
+        """
+       Obtains values from the known history from the search paramaters provided for the expected `return_result` values.
+       Defaults to the standard programs and keywords if not provided.
 
-        Parameters
-        ----------
-        force : bool, optional
-            Force a query even if the data is already present
-        **search : Dict[str, Optional[str]]
-            History query paramters
+       Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method
+       and basis combinations simultaneously.
 
-        Returns
-        -------
-        DataFrame
-            A DataFrame of the queried values
+       Parameters
+       ----------
+       method : Optional[str], optional
+           The computational method (B3LYP)
+       basis : Optional[str], optional
+           The computational basis (6-31G)
+       keywords : Optional[str], optional
+           The keyword alias
+       program : Optional[str], optional
+           The underlying QC program
+       driver : Optional[str], optional
+           The type of calculation (e.g. energy, gradient, hessian, dipole...)
+       name : Optional[str], optional
+           The name of the data column. This parameter is only applied to contributed (native = False) columns.
+       native: Optional[bool], optional
+           True: only include data computed with QCFractal
+           False: only include data contributed from outside sources
+           None: include both
+       force : bool, optional
+           Data is typically cached, forces a new query if True
 
-        Raises
-        ------
-        KeyError
-            If no records match the query
+       Returns
+       -------
+       DataFrame
+           A DataFrame of values
         """
 
         queries = self.list_records(**search, dftd3=True, pretty=False).reset_index()
@@ -289,29 +386,28 @@ class Dataset(Collection):
             raise TypeError("More than 10 queries formed, please narrow the search.")
 
         ret = []
-        for name, query in queries.iterrows():
+        if native is True or native is None:
+            if driver is not None and driver != self.data.default_driver:
+                raise KeyError(f"For native values, driver ({driver}) must be the same as the dataset's default driver "
+                               f"({self.data.default_driver}). Consider using get_records instead.")
+            if name is not None:
+                raise KeyError(f"Name argument only supported if native=False.")
+            df = self._get_values_from_records(method, basis, keywords, program, force)
+            ret.append(df)
+        if native is False or native is None:
+            df = self._get_contributed_values(method, basis, keywords, program, name)
+            df.rename(columns={column: column+" (contributed)" for column in df.columns}, inplace=True)
+            ret.append(df)
+        ret = pd.concat(ret, axis=1)
+        ret.sort_index(inplace=True)
+        return ret
 
-            query = query.replace({np.nan: None}).to_dict()
-            query.pop("driver")
-            if "stoichiometry" in query:
-                query["stoich"] = query.pop("stoichiometry")
-            name = self._canonical_name(**query)
-            if force or (name not in self.df.columns):
-                data = self.get_records(query.pop("method").upper(), projection={"return_result": True}, **query)
-                self.df[name] = data["return_result"] * constants.conversion_factor('hartree', self.units)
-            ret.append(self.df[name])
-
-        if len(ret) == 0:
-            raise KeyError("Query matched 0 records.")
-
-        return pd.concat(ret, axis=1)
-
-    def get_values(self,
+    def _get_values_from_records(self,
                    method: Optional[str] = None,
                    basis: Optional[str] = None,
                    keywords: Optional[str] = None,
                    program: Optional[str] = None,
-                   force: bool = False) -> 'DataFrame':
+                   force: bool = False) -> pd.DataFrame:
         """Obtains values from the known history from the search paramaters provided for the expected `return_result` values. Defaults to the standard
         programs and keywords if not provided.
 
@@ -336,6 +432,15 @@ class Dataset(Collection):
             A DataFrame of the queried parameters
         """
 
+        # TODO: is this somewhere in elemental?
+        au_units = {'energy': 'hartree',
+                    'gradient': 'hartree/bohr',
+                    'hessian': 'hartree/bohr**2'}
+
+        # So that datasets with no records do not require a default program and default keywords
+        if len(self.list_records()) == 0:
+            return pd.DataFrame()
+
         name, dbkeys, history = self._default_parameters(program, "nan", "nan", keywords)
 
         for k, v in [("method", method), ("basis", basis)]:
@@ -353,15 +458,15 @@ class Dataset(Collection):
         for name, query in queries.iterrows():
 
             query = query.replace({np.nan: None}).to_dict()
-            query.pop("driver")
+            driver = query.pop("driver")
             if "stoichiometry" in query:
                 query["stoich"] = query.pop("stoichiometry")
 
-            name = self._canonical_name(**query)
+            name = query.pop("name")
             if force or (name not in self.df.columns):
                 self._column_metadata[name] = query
                 data = self.get_records(query.pop("method").upper(), projection={"return_result": True}, merge=True, **query)
-                self.df[name] = data["return_result"] * constants.conversion_factor('hartree', self.units)
+                self.df[name] = data["return_result"] * constants.conversion_factor(au_units[driver], self.units)
 
             ret.append(self.df[name])
 
@@ -942,52 +1047,75 @@ class Dataset(Collection):
         self.data.contributed_values[key] = contrib
         self._updated_state = True
 
-    def list_contributed_values(self) -> List[str]:
+    def list_contributed_values(self,
+                                pretty: bool = True,
+                                force: bool = False,
+                                **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """
-        Lists the known keys for all contributed values.
-
-        Returns
-        -------
-        List[str]
-            A list of all known contributed values.
-        """
-
-        return list(self.data.contributed_values)
-
-    def get_contributed_values(self, key: str) -> 'Series':
-        """Returns a Pandas column with the requested contributed values
+        Lists specifications of available records, i.e. method, program, basis set, keyword set, driver combinations
 
         Parameters
         ----------
-        key : str
-            The ContributedValues object key.
-        scale : None, optional
-            All units are based in Hartree, the default scaling is to kcal/mol.
+        pretty: bool
+            Replace NaN with "None" in returned DataFrame
+        **search : Dict[str, Optional[str]]
+            Allows searching to narrow down return.
 
         Returns
         -------
-        Series
-            A pandas Series containing the request values.
+        DataFrame
+            Contributed value specifications matching **search.
         """
-        data = self.data.contributed_values[key.lower()].copy()
+        ret = pd.DataFrame(columns=self.data.history_keys+tuple(["name"]))
 
-        # Annoying work around to prevent some pands magic
-        if isinstance(next(iter(data.values.values())), (int, float)):
-            values = data.values
-        else:
-            # TODO temporary patch until msgpack collections
-            if self.data.default_driver == "gradient":
-                values = {k: [np.array(v).reshape(-1, 3)] for k, v in data.values.items()}
+        cvs = ((cv_name, cv_data.theory_level_details) for (cv_name, cv_data) in self.data.contributed_values.items())
+
+        for cv_name, theory_level_details in cvs:
+            spec = {"name": cv_name}
+            if isinstance(theory_level_details, dict):
+                spec.update(**theory_level_details)
+            if self._spec_matches_search(spec, search):
+                ret = ret.append(spec, ignore_index=True)
+        if pretty:
+            ret.fillna("None", inplace=True)
+        ret.set_index(list(self.data.history_keys[:-1]), inplace=True)
+        ret.sort_index(inplace=True)
+        return ret
+
+    def _get_contributed_values(self,
+                        method: Optional[str] = None,
+                                basis: Optional[str] = None,
+                                keywords: Optional[str] = None,
+                                program: Optional[str] = None,
+                         name: Optional[str] = None) -> pd.DataFrame:
+        spec = locals()
+        spec.pop("self")
+        queries = self.list_contributed_values(**spec).reset_index().to_dict("records")
+        ret = pd.DataFrame(columns=["index"])
+        for query in queries:
+            data = self.data.contributed_values[query["name"]].copy()
+
+            # Annoying work around to prevent some pands magic
+            if isinstance(next(iter(data.values.values())), (int, float)):
+                values = data.values
             else:
-                values = {k: [np.array(v)] for k, v in data.values.items()}
-
-        tmp_idx = pd.DataFrame.from_dict(values, orient="index", columns=[data.name])
-
-        # Convert to numeric
-        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor(
-            data.units, self.units)
-
-        return tmp_idx
+                # TODO temporary patch until msgpack collections
+                if self.data.default_driver == "gradient":
+                    values = {k: np.array(v).reshape(-1, 3) for k, v in data.values.items()}
+                else:
+                    values = {k: np.array(v) for k, v in data.values.items()}
+            column_name = data.name
+            df = pd.DataFrame({"index": list(values.keys()), column_name: list(values.values())})
+            # Convert to numeric
+            # TODO what if cvals aren't the same type as dataset driver?
+            try:
+                df[column_name] *= constants.conversion_factor(
+                    data.units, self.units)
+            except pint.errors.DimensionalityError:
+                df.rename(columns={column_name: f"{column_name} [{data.units}]"}, inplace=True)
+            ret = pd.merge(ret, df, on="index", how="outer")
+        ret.set_index("index", inplace=True)
+        return ret
 
     def get_molecules(self, subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'Molecule']:
         """Queries full Molecules from the database.
