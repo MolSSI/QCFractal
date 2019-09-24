@@ -231,9 +231,8 @@ def test_gradient_dataset_get_records(gradient_dataset_fixture):
 def test_gradient_dataset_get_values(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
-    cols = set(ds.get_values().reset_index().columns)
+    cols = set(ds.get_values().columns.str.replace(' (contributed)', '', regex=False))
     names = set(ds.list_values().reset_index()['name'])
-    cols -= {'index'}
     assert cols == names
 
     df = ds.get_values()
@@ -361,8 +360,9 @@ def test_reactiondataset_check_state(fractal_compute_server):
     with pytest.raises(ValueError):
         ds.get_records("SCF", "STO-3G")
 
-    assert "benchmark" == ds._list_contributed_values()["name"][0]
+    assert "benchmark" == ds.list_values(native=False).reset_index()["name"][0].lower()
     ds.units = "hartree"
+    print(ds.get_values())
     bench = ds.get_values(name="benchmark", native=False)
     assert "(contributed)" in bench.columns[0]
     assert bench["He1"] == contrib["values"]["He1"]

@@ -165,51 +165,17 @@ class ReactionDataset(Dataset):
 
         self._form_index()
 
-    def get_values(self,
-                   method: Optional[str] = None,
-                   basis: Optional[str] = None,
-                   keywords: Optional[str] = None,
-                   program: Optional[str] = None,
-                   stoich: str = "default",
-                   driver: Optional[str] = None,
-                   name: Optional[str] = None,
-                   native: Optional[bool] = None,
-                   force: bool = False) -> pd.DataFrame:
-        """Obtains values from the known history from the search paramaters provided for the expected `return_result` values. Defaults to the standard
-        programs and keywords if not provided.
-
-        Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method and basis combination simultaneously.
-
-        Parameters
-        ----------
-        method : Optional[str]
-            The computational method to compute (B3LYP)
-        basis : Optional[str], optional
-            The computational basis to compute (6-31G)
-        keywords : Optional[str], optional
-            The keyword alias for the requested compute
-        program : Optional[str], optional
-            The underlying QC program
-        stoich : str, optional
-            The given stoichiometry to compute.
-        driver : Optional[str], optional
-            The type of calculation (e.g. energy, gradient, hessian, dipole...)
-        name : Optional[str], optional
-            The name of the data column. This parameter is only applied to contributed (native = False) columns.
-        native: Optional[bool], optional
-            True: only include data computed with QCFractal
-            False: only include data contributed from outside sources
-            None: include both
-
-        Returns
-        -------
-        DataFrame
-            A DataFrame of the queried parameters
-        """
-
+    def _get_values_from_records(self,
+                                     method: Optional[str] = None,
+                                     basis: Optional[str] = None,
+                                     keywords: Optional[str] = None,
+                                     program: Optional[str] = None,
+                                     stoich: Optional[str] = None,
+                                     name: Optional[str] = None,
+                                     force: bool = False) -> pd.DataFrame:
         self._validate_stoich(stoich)
 
-        name, dbkeys, history = self._default_parameters(program, "nan", "nan", keywords, stoich=stoich)
+        _, _, history = self._default_parameters(program, "nan", "nan", keywords, stoich=stoich)
 
         for k, v in [("method", method), ("basis", basis)]:
 
@@ -245,10 +211,12 @@ class ReactionDataset(Dataset):
             return df
 
         ret = []
-        for name, query in queries.iterrows():
+        names = []
+        for _, query in queries.iterrows():
 
             query = query.replace({np.nan: None}).to_dict()
             name = query.pop("name")
+            names.append(name)
 
             if force or (name not in self.df.columns):
                 self._column_metadata[name] = query
@@ -262,7 +230,7 @@ class ReactionDataset(Dataset):
 
             ret.append(self.df[name])
 
-        return pd.concat(ret, axis=1)
+        return self.df[names]
 
     def get_history(self,
                     method: Optional[str] = None,

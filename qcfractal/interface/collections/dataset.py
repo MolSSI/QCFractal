@@ -378,26 +378,33 @@ class Dataset(Collection):
        Returns
        -------
        DataFrame
-           A DataFrame of values
+           A DataFrame of values with columns corresponding to methods and rows corresponding to molecule entries.
+           Contributed (native=False) columns are marked with "(contributed)" and may include units in square brackets
+           if their units differ in dimensionality from the Dataset's default units.
         """
+        return self._get_values(**locals())
 
+    def _get_values(self,
+                    name: Optional[str] = None,
+                    native: Optional[bool] = None,
+                    force: bool = False,
+                    **spec):
         ret = []
         if native is True or native is None:
             if driver is not None and driver != self.data.default_driver:
                 raise KeyError(f"For native values, driver ({driver}) must be the same as the dataset's default driver "
                                f"({self.data.default_driver}). Consider using get_records instead.")
-            df = self._get_values_from_records(method, basis, keywords, program, name, force)
+            df = self._get_values_from_records(method, basis, keywords, program, stoich, name, force)
             print(df.columns)
             ret.append(df)
         if native is False or native is None:
-            df = self._get_contributed_values(method, basis, keywords, program, name)
+            df = self._get_contributed_values(method, basis, keywords, program, stoich, name)
             print(df.columns)
-            #df.rename(columns={column: column+" (contributed)" for column in df.columns}, inplace=True)
+            df.rename(columns={column: column+" (contributed)" for column in df.columns}, inplace=True)
             ret.append(df)
         ret = pd.concat(ret, axis=1)
         ret.sort_index(inplace=True)
-        if len(ret) == 0:
-            raise KeyError("Query returned no results.")
+
         return ret
 
     def _get_values_from_records(self,
@@ -405,6 +412,7 @@ class Dataset(Collection):
                    basis: Optional[str] = None,
                    keywords: Optional[str] = None,
                    program: Optional[str] = None,
+                   stoich: None = None,
                    name: Optional[str] = None,
                    force: bool = False) -> pd.DataFrame:
         """Obtains values from the known history from the search parameters provided for the expected `return_result` values. Defaults to the standard
@@ -422,6 +430,8 @@ class Dataset(Collection):
             The keyword alias for the requested compute
         program : Optional[str], optional
             The underlying QC program
+        stoich: None
+            ignored
         force : bool, optional
             Data is typically cached, forces a new query if True.
 
@@ -1089,6 +1099,7 @@ class Dataset(Collection):
                                 basis: Optional[str] = None,
                                 keywords: Optional[str] = None,
                                 program: Optional[str] = None,
+                                stoich: Optional[str] = None,
                          name: Optional[str] = None) -> pd.DataFrame:
         spec = locals()
         spec.pop("self")
