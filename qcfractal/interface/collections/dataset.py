@@ -367,7 +367,7 @@ class Dataset(Collection):
        driver : Optional[str], optional
            The type of calculation (e.g. energy, gradient, hessian, dipole...)
        name : Optional[str], optional
-           The name of the data column. This parameter is only applied to contributed (native = False) columns.
+           The name of the data column.
        native: Optional[bool], optional
            True: only include data computed with QCFractal
            False: only include data contributed from outside sources
@@ -382,24 +382,27 @@ class Dataset(Collection):
            Contributed (native=False) columns are marked with "(contributed)" and may include units in square brackets
            if their units differ in dimensionality from the Dataset's default units.
         """
-        return self._get_values(**locals())
+        spec = locals()
+        spec.pop("self")
+        return self._get_values(**spec)
 
     def _get_values(self,
-                    name: Optional[str] = None,
                     native: Optional[bool] = None,
                     force: bool = False,
                     **spec):
         ret = []
+
         if native is True or native is None:
+            spec_nodriver = spec.copy()
+            driver = spec_nodriver.pop("driver")
             if driver is not None and driver != self.data.default_driver:
                 raise KeyError(f"For native values, driver ({driver}) must be the same as the dataset's default driver "
                                f"({self.data.default_driver}). Consider using get_records instead.")
-            df = self._get_values_from_records(method, basis, keywords, program, stoich, name, force)
-            print(df.columns)
+            df = self._get_values_from_records(force=force, **spec_nodriver)
             ret.append(df)
+
         if native is False or native is None:
-            df = self._get_contributed_values(method, basis, keywords, program, stoich, name)
-            print(df.columns)
+            df = self._get_contributed_values(**spec)
             df.rename(columns={column: column+" (contributed)" for column in df.columns}, inplace=True)
             ret.append(df)
         ret = pd.concat(ret, axis=1)
@@ -412,7 +415,6 @@ class Dataset(Collection):
                    basis: Optional[str] = None,
                    keywords: Optional[str] = None,
                    program: Optional[str] = None,
-                   stoich: None = None,
                    name: Optional[str] = None,
                    force: bool = False) -> pd.DataFrame:
         """Obtains values from the known history from the search parameters provided for the expected `return_result` values. Defaults to the standard
@@ -464,7 +466,6 @@ class Dataset(Collection):
             if any((field is not None for field in {program, method, basis, keywords})):
                 warnings.warn("Name and additional field were provided. Only name will be used as a selector.")
             queries = self.list_records(**{"name": name}, dftd3=True, pretty=False).reset_index()
-            print(queries)
 
         if queries.shape[0] > 10:
             raise TypeError("More than 10 queries formed, please narrow the search.")
@@ -1049,7 +1050,8 @@ class Dataset(Collection):
             contrib = contrib.copy()
         else:
             contrib = ContributedValues(**contrib)
-
+        if set(contrib.values.keys()) != set(self.get_index()):
+            raise ValueError("Contributed values indices do not match the entries in the dataset.")
         # Check the key
         key = contrib.name.lower()
         if (key in self.data.contributed_values) and (overwrite is False):
@@ -1094,17 +1096,10 @@ class Dataset(Collection):
         ret.sort_index(inplace=True)
         return ret
 
-    def _get_contributed_values(self,
-                        method: Optional[str] = None,
-                                basis: Optional[str] = None,
-                                keywords: Optional[str] = None,
-                                program: Optional[str] = None,
-                                stoich: Optional[str] = None,
-                         name: Optional[str] = None) -> pd.DataFrame:
-        spec = locals()
-        spec.pop("self")
+    def _get_contributed_values(self, **spec) -> pd.DataFrame:
         queries = self._list_contributed_values(**spec).reset_index().to_dict("records")
         ret = pd.DataFrame({"index": self.get_index()})
+        print("Index:", self.get_index())
         for query in queries:
             data = self.data.contributed_values[query["name"].lower()].copy()
 
@@ -1118,6 +1113,7 @@ class Dataset(Collection):
                 else:
                     values = {k: np.array(v) for k, v in data.values.items()}
             column_name = data.name
+            print(list(values.values()), column_name)
             ret[column_name] = list(values.values())
             # Convert to numeric
             # TODO what if cvals aren't the same type as dataset driver?
@@ -1362,7 +1358,7 @@ class Dataset(Collection):
 
         if (bench is None):
             raise KeyError("No benchmark provided and default_benchmark is None!")
-
+        print("bench", bench)
         return wrap_statistics(stype.upper(), self, value, bench, **kwargs)
 
     @staticmethod

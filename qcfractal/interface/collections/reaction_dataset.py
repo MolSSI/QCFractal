@@ -165,6 +165,57 @@ class ReactionDataset(Dataset):
 
         self._form_index()
 
+    def get_values(self,
+                   method: Optional[str] = None,
+                   basis: Optional[str] = None,
+                   keywords: Optional[str] = None,
+                   program: Optional[str] = None,
+                   driver: Optional[str] = None,
+                   stoich: str = "default",
+                   name: Optional[str] = None,
+                   native: Optional[bool] = None,
+                   force: bool = False) -> pd.DataFrame:
+        """
+       Obtains values from the known history from the search paramaters provided for the expected `return_result` values.
+       Defaults to the standard programs and keywords if not provided.
+
+       Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method
+       and basis combinations simultaneously.
+
+       Parameters
+       ----------
+       method : Optional[str], optional
+           The computational method (B3LYP)
+       basis : Optional[str], optional
+           The computational basis (6-31G)
+       keywords : Optional[str], optional
+           The keyword alias
+       program : Optional[str], optional
+           The underlying QC program
+       driver : Optional[str], optional
+           The type of calculation (e.g. energy, gradient, hessian, dipole...)
+       stoich : str, optional
+            Stoichiometry of the reaction.
+       name : Optional[str], optional
+           The name of the data column.
+       native: Optional[bool], optional
+           True: only include data computed with QCFractal
+           False: only include data contributed from outside sources
+           None: include both
+       force : bool, optional
+           Data is typically cached, forces a new query if True
+
+       Returns
+       -------
+       DataFrame
+           A DataFrame of values with columns corresponding to methods and rows corresponding to reaction entries.
+           Contributed (native=False) columns are marked with "(contributed)" and may include units in square brackets
+           if their units differ in dimensionality from the ReactionDataset's default units.
+        """
+        spec = locals()
+        spec.pop("self")
+        return self._get_values(**spec)
+
     def _get_values_from_records(self,
                                      method: Optional[str] = None,
                                      basis: Optional[str] = None,
@@ -175,16 +226,25 @@ class ReactionDataset(Dataset):
                                      force: bool = False) -> pd.DataFrame:
         self._validate_stoich(stoich)
 
-        _, _, history = self._default_parameters(program, "nan", "nan", keywords, stoich=stoich)
+        # So that datasets with no records do not require a default program and default keywords
+        if len(self.list_records()) == 0:
+            return pd.DataFrame(columns=['index']).set_index('index')
 
-        for k, v in [("method", method), ("basis", basis)]:
+        if name is None:
+            _, _, history = self._default_parameters(program, "nan", "nan", keywords, stoich=stoich)
+            for k, v in [("method", method), ("basis", basis)]:
 
-            if v is not None:
-                history[k] = v
-            else:
-                history.pop(k, None)
+                if v is not None:
+                    history[k] = v
+                else:
+                    history.pop(k, None)
 
-        queries = self.list_records(**history, dftd3=True, pretty=False).reset_index()
+            queries = self.list_records(**history, dftd3=True, pretty=False).reset_index()
+        else:
+            if any((field is not None for field in {program, method, basis, keywords})):
+                warnings.warn("Name and additional field were provided. Only name will be used as a selector.")
+            queries = self.list_records(**{"name": name}, dftd3=True, pretty=False).reset_index()
+
         if queries.shape[0] > 10:
             raise TypeError("More than 10 queries formed, please narrow the search.")
 

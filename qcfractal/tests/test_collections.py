@@ -41,6 +41,7 @@ def gradient_dataset_fixture(fractal_compute_server):
 
     ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
     ds.add_entry("He2", ptl.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"))
+    ds.save()
 
     contrib = {
         "name": "Gradient",
@@ -350,23 +351,34 @@ def test_reactiondataset_check_state(fractal_compute_server):
         "name": "Benchmark",
         "doi": None,
         "theory_level": "very high",
+        "theory_level_details": {
+            "stoich": "default"
+        },
         "values": {
             "He1": 0.0009608501557,
             "He2": -0.00001098794749
         },
         "units": "hartree"
     }
+    # No entry for He2 in the dataset
+    with pytest.raises(ValueError):
+        ds.add_contributed_values(contrib)
+
+    ds.add_ie_rxn("He2", ptl.Molecule.from_data("He -2 0 0\n--\nNe 0 0 2"))
+    ds.save()
+
     ds.add_contributed_values(contrib)
+
     with pytest.raises(ValueError):
         ds.get_records("SCF", "STO-3G")
 
     assert "benchmark" == ds.list_values(native=False).reset_index()["name"][0].lower()
     ds.units = "hartree"
-    print(ds.get_values())
     bench = ds.get_values(name="benchmark", native=False)
     assert "(contributed)" in bench.columns[0]
-    assert bench["He1"] == contrib["values"]["He1"]
-    assert bench["He2"] == contrib["values"]["He2"]
+    assert bench.shape == (2, 1)
+    assert bench.loc["He1"][0] == contrib["values"]["He1"]
+    assert bench.loc["He2"][0] == contrib["values"]["He2"]
 
 
 @pytest.fixture(scope="module")
@@ -514,11 +526,15 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
 
     He2 = ptl.Molecule.from_data([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
     ds.add_ie_rxn("He2", He2, attributes={"r": 4})
+    ds.save()
 
     contrib = {
         "name": "Benchmark",
         "doi": None,
         "theory_level": "very high",
+        "theory_level_details": {
+            "stoich": "default"
+        },
         "values": {
             "He1": 0.0009608501557,
             "He2": -0.00001098794749
@@ -529,11 +545,11 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     ds.set_default_benchmark("Benchmark")
 
     # Save the DB and overwrite the result, reacquire via client
-    r = ds.save()
+    ds.save()
     ds = client.get_collection("reactiondataset", ds_name)
 
     with pytest.raises(KeyError):
-        ret = ds.compute("SCF", "STO-3G", stoich="nocp")  # Should be 'default' not 'nocp'
+        ds.compute("SCF", "STO-3G", stoich="nocp")  # Should be 'default' not 'nocp'
 
     # Compute SCF/sto-3g
     ret = ds.compute("SCF", "STO-3G")
@@ -543,8 +559,8 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     # Query computed results
     ret = ds.get_values("SCF", "STO-3G")
     assert ret.shape == (2, 1)
-    assert pytest.approx(0.6024530476, 1.e-5) == ds.df.loc["He1", "SCF/sto-3g"]
-    assert pytest.approx(-0.0068950359, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g"]
+    assert pytest.approx(0.6024530476, 1.e-5) == ret.loc["He1", "SCF/sto-3g"]
+    assert pytest.approx(-0.0068950359, 1.e-5) == ret.loc["He2", "SCF/sto-3g"]
 
     # Check results
     assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/sto-3g")

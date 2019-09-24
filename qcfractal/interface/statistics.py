@@ -60,6 +60,13 @@ def wrap_statistics(description, ds, value, bench, **kwargs):
 
     if isinstance(value, str):
         rvalue = ds.get_values(name=value).iloc[:, 0]
+        print("rvalue", rvalue)
+        print(ds.get_values(name=value))
+        print("------------")
+        print("rbecnch", rbench)
+        print(f"What is bench ({bench}) and value ({value})")
+        print(ds.get_values(name=bench))
+        print("------------")
         return _stats_dict[description](rvalue, rbench, **kwargs)
 
     elif isinstance(value, pd.Series):
