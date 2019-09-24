@@ -47,11 +47,10 @@ _stats_dict['MURE'] = mean_unsigned_relative_error
 _return_series = ['ME', 'MUE', 'MURE', 'WMURE']
 
 
-def wrap_statistics(description, df, value, bench, **kwargs):
-
+def wrap_statistics(description, ds, value, bench, **kwargs):
     # Get benchmark
     if isinstance(bench, str):
-        rbench = df[bench]
+        rbench = ds.get_values(name=bench).iloc[:, 0]
     elif isinstance(bench, (np.ndarray, pd.Series)):
         if len(bench.shape) != 1:
             raise ValueError('Only 1D numpy arrays can be passed to statistical quantities.')
@@ -60,7 +59,7 @@ def wrap_statistics(description, df, value, bench, **kwargs):
         raise TypeError('Benchmark must be a column of the dataframe or a 1D numpy array.')
 
     if isinstance(value, str):
-        rvalue = df[value]
+        rvalue = ds.get_values(name=value).iloc[:, 0]
         return _stats_dict[description](rvalue, rbench, **kwargs)
 
     elif isinstance(value, pd.Series):
@@ -78,7 +77,7 @@ def wrap_statistics(description, df, value, bench, **kwargs):
 
         method = _stats_dict[description]
         for col in value:
-            ret[col] = method(df[col], rbench, **kwargs)
+            ret[col] = method(ds.get_values(name=col), rbench, **kwargs)
         return ret
 
     else:

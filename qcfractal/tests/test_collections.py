@@ -182,6 +182,7 @@ def contributed_dataset_fixture(fractal_compute_server):
 
     yield client, client.get_collection("dataset", "ds_contributed")
 
+
 def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
@@ -227,32 +228,64 @@ def test_gradient_dataset_get_records(gradient_dataset_fixture):
         ds.get_records(method="NotInDataset")
 
 
-def test_gradient_dataset_get_values_no_match(gradient_dataset_fixture):
+def test_gradient_dataset_get_values(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
-    with pytest.raises(KeyError):
-        ds.get_values(method="NotInDataset")
+    cols = set(ds.get_values().reset_index().columns)
+    names = set(ds.list_values().reset_index()['name'])
+    cols -= {'index'}
+    assert cols == names
+
+    df = ds.get_values()
+    assert df.shape == (len(ds.get_index()), 4)
+    for entry in ds.get_index():
+        assert (df.loc[entry, "HF/sto-3g"] == ds.get_records(subset=entry, method="hf", basis="sto-3g", projection={'return_result': True})).all()
+
+    assert ds.get_values(method="NotInDataset").shape[1] == 0  # 0-length DFs can cause exceptions
 
 
-def test_gradient_dataset_contributed_values(gradient_dataset_fixture):
+def test_gradient_dataset_list_values(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
-    df = ds.list_contributed_values().reset_index()
-    assert df.shape == (3, 6)
-    assert set(df['name']) == set(ds.data.contributed_values.keys())
+    # List contributed values
+    df = ds.list_values(native=False).reset_index()
+    assert df.shape == (3, 7)
+    assert set(df.columns) == {*ds.data.history_keys, "name", "native"}
+    assert set(map(lambda x: x.lower(), df['name'])) == set(ds.data.contributed_values.keys())
 
-    df = ds.list_contributed_values(driver="graDieNt").reset_index()
-    assert set(df['name']) == set(["gradient", "all details"])
+    df = ds.list_values(driver="graDieNt", native=False).reset_index()
+    assert set(map(lambda x: x.lower(), df['name'])) == set(["gradient", "all details"])
 
     names = ["GrAdIeNt", "no details"]
-    df = ds.list_contributed_values(name=names).reset_index()
-    assert set(df['name']) == {name.lower() for name in names}
+    df = ds.list_values(name=names, native=False).reset_index()
+    assert set(map(lambda x: x.lower(), df['name'])) == {name.lower() for name in names}
+
+    # List native values
+    df1 = ds.list_values(native=True).reset_index()
+    assert df1.shape == (1, 7)
+    assert set(df1.columns) == {*ds.data.history_keys, "name", "native"}
+
+    df2 = ds.list_values(method='hf', basis='sto-3g', native=True).reset_index()
+    df3 = ds.list_values(name='hf/sto-3g', native=True).reset_index()
+    assert (df1 == df2).all().all()
+    assert (df1 == df3).all().all()
+
+    # All values
+    df = ds.list_values().reset_index()
+    assert df.shape == (4, 7)
+    assert set(df.columns) == {*ds.data.history_keys, "name", "native"}
+
+    df = ds.list_values(driver="gradient").reset_index()
+    assert df.shape == (3, 7)
+
+    df = ds.list_values(name="Not in dataset").reset_index()
+    assert len(df) == 0
 
 
 def test_gradient_dataset_statistics(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
-    df = ds.get_values()
+    df = ds.get_values(native=True)
     assert df.shape == (2, 1)
     assert np.sum(df.loc["He2", "HF/sto-3g"]) == pytest.approx(0.0)
 
@@ -289,6 +322,7 @@ def test_dataset_compute_response(fractal_compute_server):
     client.query_limit = 1
     response = ds.compute("HF", "sto-3g")
     assert len(response.ids) == 2
+
 
 def test_reactiondataset_check_state(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
@@ -327,7 +361,7 @@ def test_reactiondataset_check_state(fractal_compute_server):
     with pytest.raises(ValueError):
         ds.get_records("SCF", "STO-3G")
 
-    assert "benchmark" == ds.list_contributed_values()["name"][0]
+    assert "benchmark" == ds._list_contributed_values()["name"][0]
     ds.units = "hartree"
     bench = ds.get_values(name="benchmark", native=False)
     assert "(contributed)" in bench.columns[0]

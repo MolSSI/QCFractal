@@ -171,7 +171,10 @@ class ReactionDataset(Dataset):
                    keywords: Optional[str] = None,
                    program: Optional[str] = None,
                    stoich: str = "default",
-                   force: bool = False) -> 'DataFrame':
+                   driver: Optional[str] = None,
+                   name: Optional[str] = None,
+                   native: Optional[bool] = None,
+                   force: bool = False) -> pd.DataFrame:
         """Obtains values from the known history from the search paramaters provided for the expected `return_result` values. Defaults to the standard
         programs and keywords if not provided.
 
@@ -189,6 +192,14 @@ class ReactionDataset(Dataset):
             The underlying QC program
         stoich : str, optional
             The given stoichiometry to compute.
+        driver : Optional[str], optional
+            The type of calculation (e.g. energy, gradient, hessian, dipole...)
+        name : Optional[str], optional
+            The name of the data column. This parameter is only applied to contributed (native = False) columns.
+        native: Optional[bool], optional
+            True: only include data computed with QCFractal
+            False: only include data contributed from outside sources
+            None: include both
 
         Returns
         -------

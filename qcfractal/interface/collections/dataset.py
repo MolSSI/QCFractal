@@ -219,7 +219,7 @@ class Dataset(Collection):
             ret.append(df)
 
         if native is False or native is None:
-            df = self.list_contributed_values(force=force, **spec)
+            df = self._list_contributed_values(force=force, **spec)
             df['native'] = False
             ret.append(df)
 
@@ -321,10 +321,10 @@ class Dataset(Collection):
                 pass
             elif isinstance(value, str):
                 value = value.lower()
-                ret = ret[ret[key] == value]
+                ret = ret[ret[key].str.lower() == value]
             elif isinstance(value, (list, tuple)):
                 query = [x.lower() for x in value]
-                ret = ret[ret[key].isin(query)]
+                ret = ret[ret[key].str.lower().isin(query)]
             else:
                 raise TypeError(f"Search type {type(value)} not understood.")
 
@@ -381,25 +381,23 @@ class Dataset(Collection):
            A DataFrame of values
         """
 
-        queries = self.list_records(**search, dftd3=True, pretty=False).reset_index()
-        if queries.shape[0] > 10:
-            raise TypeError("More than 10 queries formed, please narrow the search.")
-
         ret = []
         if native is True or native is None:
             if driver is not None and driver != self.data.default_driver:
                 raise KeyError(f"For native values, driver ({driver}) must be the same as the dataset's default driver "
                                f"({self.data.default_driver}). Consider using get_records instead.")
-            if name is not None:
-                raise KeyError(f"Name argument only supported if native=False.")
-            df = self._get_values_from_records(method, basis, keywords, program, force)
+            df = self._get_values_from_records(method, basis, keywords, program, name, force)
+            print(df.columns)
             ret.append(df)
         if native is False or native is None:
             df = self._get_contributed_values(method, basis, keywords, program, name)
-            df.rename(columns={column: column+" (contributed)" for column in df.columns}, inplace=True)
+            print(df.columns)
+            #df.rename(columns={column: column+" (contributed)" for column in df.columns}, inplace=True)
             ret.append(df)
         ret = pd.concat(ret, axis=1)
         ret.sort_index(inplace=True)
+        if len(ret) == 0:
+            raise KeyError("Query returned no results.")
         return ret
 
     def _get_values_from_records(self,
@@ -407,8 +405,9 @@ class Dataset(Collection):
                    basis: Optional[str] = None,
                    keywords: Optional[str] = None,
                    program: Optional[str] = None,
+                   name: Optional[str] = None,
                    force: bool = False) -> pd.DataFrame:
-        """Obtains values from the known history from the search paramaters provided for the expected `return_result` values. Defaults to the standard
+        """Obtains values from the known history from the search parameters provided for the expected `return_result` values. Defaults to the standard
         programs and keywords if not provided.
 
         Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method and basis combination simultaneously.
@@ -439,23 +438,30 @@ class Dataset(Collection):
 
         # So that datasets with no records do not require a default program and default keywords
         if len(self.list_records()) == 0:
-            return pd.DataFrame()
+            return pd.DataFrame(columns=['index']).set_index('index')
 
-        name, dbkeys, history = self._default_parameters(program, "nan", "nan", keywords)
+        if name is None:
+            _, _, history = self._default_parameters(program, "nan", "nan", keywords)
+            for k, v in [("method", method), ("basis", basis)]:
 
-        for k, v in [("method", method), ("basis", basis)]:
+                if v is not None:
+                    history[k] = v
+                else:
+                    history.pop(k, None)
 
-            if v is not None:
-                history[k] = v
-            else:
-                history.pop(k, None)
+            queries = self.list_records(**history, dftd3=True, pretty=False).reset_index()
+        else:
+            if any((field is not None for field in {program, method, basis, keywords})):
+                warnings.warn("Name and additional field were provided. Only name will be used as a selector.")
+            queries = self.list_records(**{"name": name}, dftd3=True, pretty=False).reset_index()
+            print(queries)
 
-        queries = self.list_records(**history, dftd3=True, pretty=False).reset_index()
         if queries.shape[0] > 10:
             raise TypeError("More than 10 queries formed, please narrow the search.")
 
-        ret = []
-        for name, query in queries.iterrows():
+        # TODO: add index here
+        names = []
+        for _, query in queries.iterrows():
 
             query = query.replace({np.nan: None}).to_dict()
             driver = query.pop("driver")
@@ -463,17 +469,13 @@ class Dataset(Collection):
                 query["stoich"] = query.pop("stoichiometry")
 
             name = query.pop("name")
+            names.append(name)
             if force or (name not in self.df.columns):
                 self._column_metadata[name] = query
                 data = self.get_records(query.pop("method").upper(), projection={"return_result": True}, merge=True, **query)
                 self.df[name] = data["return_result"] * constants.conversion_factor(au_units[driver], self.units)
 
-            ret.append(self.df[name])
-
-        if len(ret) == 0:
-            raise KeyError("Query matched no records!")
-
-        return pd.concat(ret, axis=1)
+        return self.df[names]
 
     def get_history(self,
                     method: Optional[str]=None,
@@ -1047,10 +1049,10 @@ class Dataset(Collection):
         self.data.contributed_values[key] = contrib
         self._updated_state = True
 
-    def list_contributed_values(self,
-                                pretty: bool = True,
-                                force: bool = False,
-                                **search: Dict[str, Optional[str]]) -> 'DataFrame':
+    def _list_contributed_values(self,
+                                 pretty: bool = True,
+                                 force: bool = False,
+                                 **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """
         Lists specifications of available records, i.e. method, program, basis set, keyword set, driver combinations
 
@@ -1068,7 +1070,7 @@ class Dataset(Collection):
         """
         ret = pd.DataFrame(columns=self.data.history_keys+tuple(["name"]))
 
-        cvs = ((cv_name, cv_data.theory_level_details) for (cv_name, cv_data) in self.data.contributed_values.items())
+        cvs = ((cv_data.name, cv_data.theory_level_details) for (cv_name, cv_data) in self.data.contributed_values.items())
 
         for cv_name, theory_level_details in cvs:
             spec = {"name": cv_name}
@@ -1090,10 +1092,10 @@ class Dataset(Collection):
                          name: Optional[str] = None) -> pd.DataFrame:
         spec = locals()
         spec.pop("self")
-        queries = self.list_contributed_values(**spec).reset_index().to_dict("records")
-        ret = pd.DataFrame(columns=["index"])
+        queries = self._list_contributed_values(**spec).reset_index().to_dict("records")
+        ret = pd.DataFrame({"index": self.get_index()})
         for query in queries:
-            data = self.data.contributed_values[query["name"]].copy()
+            data = self.data.contributed_values[query["name"].lower()].copy()
 
             # Annoying work around to prevent some pands magic
             if isinstance(next(iter(data.values.values())), (int, float)):
@@ -1105,15 +1107,14 @@ class Dataset(Collection):
                 else:
                     values = {k: np.array(v) for k, v in data.values.items()}
             column_name = data.name
-            df = pd.DataFrame({"index": list(values.keys()), column_name: list(values.values())})
+            ret[column_name] = list(values.values())
             # Convert to numeric
             # TODO what if cvals aren't the same type as dataset driver?
             try:
-                df[column_name] *= constants.conversion_factor(
+                ret[column_name] *= constants.conversion_factor(
                     data.units, self.units)
             except pint.errors.DimensionalityError:
-                df.rename(columns={column_name: f"{column_name} [{data.units}]"}, inplace=True)
-            ret = pd.merge(ret, df, on="index", how="outer")
+                ret.rename(columns={column_name: f"{column_name} [{data.units}]"}, inplace=True)
         ret.set_index("index", inplace=True)
         return ret
 
@@ -1351,7 +1352,28 @@ class Dataset(Collection):
         if (bench is None):
             raise KeyError("No benchmark provided and default_benchmark is None!")
 
-        return wrap_statistics(stype.upper(), self.df, value, bench, **kwargs)
+        return wrap_statistics(stype.upper(), self, value, bench, **kwargs)
+
+    @staticmethod
+    def _spec_matches_search(spec, search):
+        """
+        Helper function for searching contributed values.
+        TODO: justify this being its own function.
+        """
+        for key, value in search.items():
+            if value is None:
+                continue
+            elif isinstance(value, str):
+                value = value.lower()
+                if not (key in spec and value == spec[key].lower()):
+                    return False
+            elif isinstance(value, (list, tuple)):
+                query = [x.lower() for x in value]
+                if not (key in spec and spec[key].lower() in query):
+                    return False
+            else:
+                raise TypeError(f"Search type {type(value)} not understood.")
+        return True
 
     # Getters
     def __getitem__(self, args: str) -> 'Series':
