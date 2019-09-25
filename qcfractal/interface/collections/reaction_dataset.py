@@ -176,34 +176,34 @@ class ReactionDataset(Dataset):
                    native: Optional[bool] = None,
                    force: bool = False) -> pd.DataFrame:
         """
-       Obtains values from the known history from the search paramaters provided for the expected `return_result` values.
-       Defaults to the standard programs and keywords if not provided.
+        Obtains values from the known history from the search paramaters provided for the expected `return_result` values.
+        Defaults to the standard programs and keywords if not provided.
 
-       Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method
-       and basis combinations simultaneously.
+        Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method
+        and basis combinations simultaneously.
 
-       Parameters
-       ----------
-       method : Optional[str], optional
-           The computational method (B3LYP)
-       basis : Optional[str], optional
-           The computational basis (6-31G)
-       keywords : Optional[str], optional
-           The keyword alias
-       program : Optional[str], optional
-           The underlying QC program
-       driver : Optional[str], optional
-           The type of calculation (e.g. energy, gradient, hessian, dipole...)
-       stoich : str, optional
+        Parameters
+        ----------
+        method : Optional[str], optional
+            The computational method (B3LYP)
+        basis : Optional[str], optional
+            The computational basis (6-31G)
+        keywords : Optional[str], optional
+            The keyword alias
+        program : Optional[str], optional
+            The underlying QC program
+        driver : Optional[str], optional
+            The type of calculation (e.g. energy, gradient, hessian, dipole...)
+        stoich : str, optional
             Stoichiometry of the reaction.
-       name : Optional[str], optional
-           The name of the data column.
-       native: Optional[bool], optional
-           True: only include data computed with QCFractal
-           False: only include data contributed from outside sources
-           None: include both
-       force : bool, optional
-           Data is typically cached, forces a new query if True
+        name : Optional[str], optional
+            Canonical name of the record. Overrides the above selectors.
+        native: Optional[bool], optional
+            True: only include data computed with QCFractal
+            False: only include data contributed from outside sources
+            None: include both
+        force : bool, optional
+            Data is typically cached, forces a new query if True
 
        Returns
        -------

@@ -192,7 +192,7 @@ class Dataset(Collection):
         driver : Optional[str], optional
             The type of calculation (e.g. energy, gradient, hessian, dipole...)
         name : Optional[str], optional
-            The name of the data column
+            The canonical name of the data column
         native: Optional[bool], optional
             True: only include data computed with QCFractal
             False: only include data contributed from outside sources
@@ -348,39 +348,39 @@ class Dataset(Collection):
                    native: Optional[bool] = None,
                    force: bool = False) -> pd.DataFrame:
         """
-       Obtains values from the known history from the search paramaters provided for the expected `return_result` values.
-       Defaults to the standard programs and keywords if not provided.
+        Obtains values from the known history from the search paramaters provided for the expected `return_result` values.
+        Defaults to the standard programs and keywords if not provided.
 
-       Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method
-       and basis combinations simultaneously.
+        Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method
+        and basis combinations simultaneously.
 
-       Parameters
-       ----------
-       method : Optional[str], optional
-           The computational method (B3LYP)
-       basis : Optional[str], optional
-           The computational basis (6-31G)
-       keywords : Optional[str], optional
-           The keyword alias
-       program : Optional[str], optional
-           The underlying QC program
-       driver : Optional[str], optional
-           The type of calculation (e.g. energy, gradient, hessian, dipole...)
-       name : Optional[str], optional
-           The name of the data column.
-       native: Optional[bool], optional
-           True: only include data computed with QCFractal
-           False: only include data contributed from outside sources
-           None: include both
-       force : bool, optional
-           Data is typically cached, forces a new query if True
+        Parameters
+        ----------
+        method : Optional[str], optional
+            The computational method (B3LYP)
+        basis : Optional[str], optional
+            The computational basis (6-31G)
+        keywords : Optional[str], optional
+            The keyword alias
+        program : Optional[str], optional
+            The underlying QC program
+        driver : Optional[str], optional
+            The type of calculation (e.g. energy, gradient, hessian, dipole...)
+        name : Optional[str], optional
+            Canonical name of the record. Overrides the above selectors.
+        native: Optional[bool], optional
+            True: only include data computed with QCFractal
+            False: only include data contributed from outside sources
+            None: include both
+        force : bool, optional
+            Data is typically cached, forces a new query if True
 
-       Returns
-       -------
-       DataFrame
-           A DataFrame of values with columns corresponding to methods and rows corresponding to molecule entries.
-           Contributed (native=False) columns are marked with "(contributed)" and may include units in square brackets
-           if their units differ in dimensionality from the Dataset's default units.
+        Returns
+        -------
+        DataFrame
+            A DataFrame of values with columns corresponding to methods and rows corresponding to molecule entries.
+            Contributed (native=False) columns are marked with "(contributed)" and may include units in square brackets
+            if their units differ in dimensionality from the Dataset's default units.
         """
         spec = locals()
         spec.pop("self")
@@ -432,6 +432,8 @@ class Dataset(Collection):
             The keyword alias for the requested compute
         program : Optional[str], optional
             The underlying QC program
+        name : Optional[str], optional
+            Canonical name of the record. Overrides the above selectors.
         force : bool, optional
             Data is typically cached, forces a new query if True.
 
@@ -1046,7 +1048,8 @@ class Dataset(Collection):
             return self.client.query_keywords([kwid])[0]
 
     def add_contributed_values(self, contrib: ContributedValues, overwrite=False) -> None:
-        """Adds a ContributedValues to the database.
+        """
+        Adds a ContributedValues to the database. Be sure to call save() to commit changes to the server.
 
         Parameters
         ----------
@@ -1054,6 +1057,13 @@ class Dataset(Collection):
             The ContributedValues to add.
         overwrite : bool, optional
             Overwrites pre-existing values
+
+        Raises
+        ------
+        ValueError:
+            If contrib's indexes do not match those of the dataset's entries
+        KeyError:
+            If values with the same name already exist, and overwrite is False.
         """
 
         # Convert and validate
