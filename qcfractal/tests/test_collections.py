@@ -212,7 +212,6 @@ def test_gradient_dataset_statistics(gradient_dataset_fixture):
     assert pytest.approx(stats.loc["He1"].mean(), 1.e-5) == 0.01635020639
     assert pytest.approx(stats.loc["He2"].mean(), 1.e-5) == 0.00333333333
 
-
 @pytest.fixture(scope="module")
 def contributed_dataset_fixture(fractal_compute_server):
     """ Fixture for testing rich contributed datasets with many properties and molecules of different sizes"""
@@ -648,6 +647,27 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     # Check keywords
     kw = ds.get_keywords("df", "psi4")
     assert kw.values["scf_type"] == "df"
+
+
+def test_dataset_list_get_values(gradient_dataset_fixture,
+                                 contributed_dataset_fixture,
+                                 reactiondataset_dftd3_fixture_fixture):
+    """ Tests that the output of list_values can be used as input to get_values"""
+    for dataset_fixture in locals().values():
+        client, ds = dataset_fixture
+
+        columns = ds.list_values().reset_index()
+
+        for row in columns.to_dict("records"):
+            spec = row.copy()
+            name = spec.pop("name")
+            if "stoichiometry" in spec:
+                spec["stoich"] = spec.pop("stoichiometry")
+            from_name = ds.get_values(name=name)
+            from_spec = ds.get_values(**spec)
+            assert from_name.shape == (len(ds.get_index()), 1)
+            assert from_spec.shape == (len(ds.get_index()), 1)
+            assert from_name.columns[0] == from_spec.columns[0]
 
 
 def test_generic_collection(fractal_compute_server):

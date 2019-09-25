@@ -1088,6 +1088,8 @@ class Dataset(Collection):
 
         for cv_name, theory_level_details in cvs:
             spec = {"name": cv_name}
+            for k in self.data.history_keys:
+                spec[k] = "Unknown"
             # ReactionDataset uses "default" as a default value for stoich, but many contributed datasets lack a stoich field
             if "stoichiometry" in self.data.history_keys:
                 spec["stoich"] = "default"
