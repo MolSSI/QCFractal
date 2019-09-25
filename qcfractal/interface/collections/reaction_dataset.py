@@ -212,9 +212,7 @@ class ReactionDataset(Dataset):
            Contributed (native=False) columns are marked with "(contributed)" and may include units in square brackets
            if their units differ in dimensionality from the ReactionDataset's default units.
         """
-        spec = locals()
-        spec.pop("self")
-        return self._get_values(**spec)
+        return self._get_values(method=method, basis=basis, keywords=keywords, program=program, driver=driver, stoich=stoich, name=name, native=native, force=force)
 
     def _get_values_from_records(self,
                                      method: Optional[str] = None,
@@ -226,15 +224,11 @@ class ReactionDataset(Dataset):
                                      force: bool = False) -> pd.DataFrame:
         self._validate_stoich(stoich)
 
-        spec = locals()
-        spec.pop("force")
-        spec.pop("self")
-
         # So that datasets with no records do not require a default program and default keywords
         if len(self.list_records()) == 0:
             return pd.DataFrame(columns=['index']).set_index('index')
 
-        queries = self._form_queries(**spec)
+        queries = self._form_queries(method=method, basis=basis, keywords=keywords, program=program, stoich=stoich, name=name)
 
         stoich_complex = queries.pop("stoichiometry")
         stoich_monomer = ''.join([x for x in stoich if not x.isdigit()]) + '1'

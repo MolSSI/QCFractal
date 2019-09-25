@@ -382,9 +382,7 @@ class Dataset(Collection):
             Contributed (native=False) columns are marked with "(contributed)" and may include units in square brackets
             if their units differ in dimensionality from the Dataset's default units.
         """
-        spec = locals()
-        spec.pop("self")
-        return self._get_values(**spec)
+        return self._get_values(method=method, basis=basis, keywords=keywords, program=program, driver=driver, name=name, native=native, force=force)
 
     def _get_values(self,
                     native: Optional[bool] = None,
@@ -442,9 +440,6 @@ class Dataset(Collection):
         DataFrame
             A DataFrame of the queried parameters
         """
-        spec = locals()
-        spec.pop("force")
-        spec.pop("self")
         # TODO: is this somewhere in elemental?
         au_units = {'energy': 'hartree',
                     'gradient': 'hartree/bohr',
@@ -454,7 +449,7 @@ class Dataset(Collection):
         if len(self.list_records()) == 0:
             return pd.DataFrame(columns=['index']).set_index('index')
 
-        queries = self._form_queries(**spec)
+        queries = self._form_queries(method=method, basis=basis, keywords=keywords, program=program, name=name)
 
         names = []
         for _, query in queries.iterrows():
