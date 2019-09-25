@@ -6,7 +6,6 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
-import pint
 
 from qcelemental import constants
 
@@ -1154,8 +1153,12 @@ class Dataset(Collection):
             try:
                 ret[column_name] *= constants.conversion_factor(
                     data.units, self.units)
-            except pint.errors.DimensionalityError:
-                ret.rename(columns={column_name: f"{column_name} [{data.units}]"}, inplace=True)
+            except ValueError as e:
+                # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
+                if e.__class__.__name__ == "DimensionalityError":
+                    ret.rename(columns={column_name: f"{column_name} [{data.units}]"}, inplace=True)
+                else:
+                    raise
         ret.set_index("index", inplace=True)
         return ret
 
