@@ -439,7 +439,6 @@ class Dataset(Collection):
         DataFrame
             A DataFrame of the queried parameters
         """
-        # TODO: is this somewhere in elemental?
         au_units = {'energy': 'hartree',
                     'gradient': 'hartree/bohr',
                     'hessian': 'hartree/bohr**2'}
