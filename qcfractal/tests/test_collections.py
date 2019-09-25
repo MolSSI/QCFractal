@@ -96,6 +96,123 @@ def gradient_dataset_fixture(fractal_compute_server):
     yield client, client.get_collection("dataset", "ds_gradient")
 
 
+def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    he1_dist = 2.672476322216822
+    he2_dist = 2.939723950195864
+    mols = ds.get_molecules()
+    assert mols.shape == (2, 1)
+    assert mols.iloc[0, 0].measure([0, 1]) == pytest.approx(he1_dist)
+
+    mol = ds.get_molecules(subset="He1")
+    assert mol.measure([0, 1]) == pytest.approx(he1_dist)
+
+    mol = ds.get_molecules(subset="He2")
+    assert mol.measure([0, 1]) == pytest.approx(he2_dist)
+
+    mols_subset = ds.get_molecules(subset=["He1"])
+    assert mols_subset.iloc[0, 0].measure([0, 1]) == pytest.approx(he1_dist)
+
+    with pytest.raises(KeyError):
+        ds.get_molecules(subset="NotInDataset")
+
+
+def test_gradient_dataset_get_records(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    records = ds.get_records("HF", "sto-3g")
+    assert records.shape == (2, 1)
+    assert records.iloc[0, 0].status == "COMPLETE"
+    assert records.iloc[1, 0].status == "COMPLETE"
+
+    records_subset1 = ds.get_records("HF", "sto-3g", subset="He2")
+    assert records_subset1.status == "COMPLETE"
+
+    records_subset2 = ds.get_records("HF", "sto-3g", subset=["He2"])
+    assert records_subset2.shape == (1, 1)
+    assert records_subset2.iloc[0, 0].status == "COMPLETE"
+
+    rec_proj = ds.get_records("HF", "sto-3g", projection={"extras": True, "return_result": True})
+    assert rec_proj.shape == (2, 2)
+    assert set(rec_proj.columns) == {"extras", "return_result"}
+
+    with pytest.raises(KeyError):
+        ds.get_records(method="NotInDataset")
+
+
+def test_gradient_dataset_get_values(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    cols = set(ds.get_values().columns.str.replace(' (contributed)', '', regex=False))
+    names = set(ds.list_values().reset_index()['name'])
+    assert cols == names
+
+    df = ds.get_values()
+    assert df.shape == (len(ds.get_index()), 4)
+    for entry in ds.get_index():
+        assert (df.loc[entry, "HF/sto-3g"] == ds.get_records(subset=entry, method="hf", basis="sto-3g", projection={'return_result': True})).all()
+
+    assert ds.get_values(method="NotInDataset").shape[1] == 0  # 0-length DFs can cause exceptions
+
+    with pytest.warns(RuntimeWarning):
+        ds.get_values(name="HF/sto-3g", basis="sto-3g")
+
+
+def test_gradient_dataset_list_values(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    # List contributed values
+    df = ds.list_values(native=False).reset_index()
+    assert df.shape == (3, 7)
+    assert set(df.columns) == {*ds.data.history_keys, "name", "native"}
+    assert set(map(lambda x: x.lower(), df['name'])) == set(ds.data.contributed_values.keys())
+
+    df = ds.list_values(driver="graDieNt", native=False).reset_index()
+    assert set(map(lambda x: x.lower(), df['name'])) == set(["gradient", "all details"])
+
+    names = ["GrAdIeNt", "no details"]
+    df = ds.list_values(name=names, native=False).reset_index()
+    assert set(map(lambda x: x.lower(), df['name'])) == {name.lower() for name in names}
+
+    # List native values
+    df1 = ds.list_values(native=True).reset_index()
+    assert df1.shape == (1, 7)
+    assert set(df1.columns) == {*ds.data.history_keys, "name", "native"}
+
+    df2 = ds.list_values(method='hf', basis='sto-3g', native=True).reset_index()
+    df3 = ds.list_values(name='hf/sto-3g', native=True).reset_index()
+    assert (df1 == df2).all().all()
+    assert (df1 == df3).all().all()
+
+    # All values
+    df = ds.list_values().reset_index()
+    assert df.shape == (4, 7)
+    assert set(df.columns) == {*ds.data.history_keys, "name", "native"}
+
+    df = ds.list_values(driver="gradient").reset_index()
+    assert df.shape == (3, 7)
+
+    df = ds.list_values(name="Not in dataset").reset_index()
+    assert len(df) == 0
+
+
+def test_gradient_dataset_statistics(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    df = ds.get_values(native=True)
+    assert df.shape == (2, 1)
+    assert np.sum(df.loc["He2", "HF/sto-3g"]) == pytest.approx(0.0)
+
+    # Test out some statistics
+    stats = ds.statistics("MUE", "HF/sto-3g", "Gradient")
+    assert pytest.approx(stats.mean(), 1.e-5) == 0.00984176986312362
+
+    stats = ds.statistics("UE", "HF/sto-3g", "Gradient")
+    assert pytest.approx(stats.loc["He1"].mean(), 1.e-5) == 0.01635020639
+    assert pytest.approx(stats.loc["He2"].mean(), 1.e-5) == 0.00333333333
+
+
 @pytest.fixture(scope="module")
 def contributed_dataset_fixture(fractal_compute_server):
     """ Fixture for testing rich contributed datasets with many properties and molecules of different sizes"""
@@ -109,6 +226,8 @@ def contributed_dataset_fixture(fractal_compute_server):
 
     ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
     ds.add_entry("He", ptl.Molecule.from_data("He -1.1 0 0"))
+    ds.units = "hartree"
+    ds.save()
 
     energy = {
         "name": "Fake Energy",
@@ -184,118 +303,23 @@ def contributed_dataset_fixture(fractal_compute_server):
     yield client, client.get_collection("dataset", "ds_contributed")
 
 
-def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
-    client, ds = gradient_dataset_fixture
+def test_dataset_contributed_units(contributed_dataset_fixture):
+    _, ds = contributed_dataset_fixture
 
-    he1_dist = 2.672476322216822
-    he2_dist = 2.939723950195864
-    mols = ds.get_molecules()
-    assert mols.shape == (2, 1)
-    assert mols.iloc[0, 0].measure([0, 1]) == pytest.approx(he1_dist)
-
-    mol = ds.get_molecules(subset="He1")
-    assert mol.measure([0, 1]) == pytest.approx(he1_dist)
-
-    mol = ds.get_molecules(subset="He2")
-    assert mol.measure([0, 1]) == pytest.approx(he2_dist)
-
-    mols_subset = ds.get_molecules(subset=["He1"])
-    assert mols_subset.iloc[0, 0].measure([0, 1]) == pytest.approx(he1_dist)
-
-    with pytest.raises(KeyError):
-        ds.get_molecules(subset="NotInDataset")
+    assert "[hartree]" not in ds.get_values(name="Fake Energy").columns[0]
+    assert "[hartree/bohr]" in ds.get_values(name="Fake Gradient").columns[0]
+    assert "[hartree/bohr**2]" in ds.get_values(name="Fake Hessian").columns[0]
+    assert "[e * bohr]" in ds.get_values(name="Fake Dipole").columns[0]
 
 
-def test_gradient_dataset_get_records(gradient_dataset_fixture):
-    client, ds = gradient_dataset_fixture
+def test_dataset_contributed_mixed_values(contributed_dataset_fixture):
+    _, ds = contributed_dataset_fixture
 
-    records = ds.get_records("HF", "sto-3g")
-    assert records.shape == (2, 1)
-    assert records.iloc[0, 0].status == "COMPLETE"
-    assert records.iloc[1, 0].status == "COMPLETE"
+    unselected_values = ds.get_values()
+    assert(unselected_values.shape == (2, 4))
+    selected_values = ds.get_values(program='fake_program')
+    assert(selected_values.shape == (2, 4))
 
-    records_subset1 = ds.get_records("HF", "sto-3g", subset="He2")
-    assert records_subset1.status == "COMPLETE"
-
-    records_subset2 = ds.get_records("HF", "sto-3g", subset=["He2"])
-    assert records_subset2.shape == (1, 1)
-    assert records_subset2.iloc[0, 0].status == "COMPLETE"
-
-    rec_proj = ds.get_records("HF", "sto-3g", projection={"extras": True, "return_result": True})
-    assert rec_proj.shape == (2, 2)
-    assert set(rec_proj.columns) == {"extras", "return_result"}
-
-    with pytest.raises(KeyError):
-        ds.get_records(method="NotInDataset")
-
-
-def test_gradient_dataset_get_values(gradient_dataset_fixture):
-    client, ds = gradient_dataset_fixture
-
-    cols = set(ds.get_values().columns.str.replace(' (contributed)', '', regex=False))
-    names = set(ds.list_values().reset_index()['name'])
-    assert cols == names
-
-    df = ds.get_values()
-    assert df.shape == (len(ds.get_index()), 4)
-    for entry in ds.get_index():
-        assert (df.loc[entry, "HF/sto-3g"] == ds.get_records(subset=entry, method="hf", basis="sto-3g", projection={'return_result': True})).all()
-
-    assert ds.get_values(method="NotInDataset").shape[1] == 0  # 0-length DFs can cause exceptions
-
-
-def test_gradient_dataset_list_values(gradient_dataset_fixture):
-    client, ds = gradient_dataset_fixture
-
-    # List contributed values
-    df = ds.list_values(native=False).reset_index()
-    assert df.shape == (3, 7)
-    assert set(df.columns) == {*ds.data.history_keys, "name", "native"}
-    assert set(map(lambda x: x.lower(), df['name'])) == set(ds.data.contributed_values.keys())
-
-    df = ds.list_values(driver="graDieNt", native=False).reset_index()
-    assert set(map(lambda x: x.lower(), df['name'])) == set(["gradient", "all details"])
-
-    names = ["GrAdIeNt", "no details"]
-    df = ds.list_values(name=names, native=False).reset_index()
-    assert set(map(lambda x: x.lower(), df['name'])) == {name.lower() for name in names}
-
-    # List native values
-    df1 = ds.list_values(native=True).reset_index()
-    assert df1.shape == (1, 7)
-    assert set(df1.columns) == {*ds.data.history_keys, "name", "native"}
-
-    df2 = ds.list_values(method='hf', basis='sto-3g', native=True).reset_index()
-    df3 = ds.list_values(name='hf/sto-3g', native=True).reset_index()
-    assert (df1 == df2).all().all()
-    assert (df1 == df3).all().all()
-
-    # All values
-    df = ds.list_values().reset_index()
-    assert df.shape == (4, 7)
-    assert set(df.columns) == {*ds.data.history_keys, "name", "native"}
-
-    df = ds.list_values(driver="gradient").reset_index()
-    assert df.shape == (3, 7)
-
-    df = ds.list_values(name="Not in dataset").reset_index()
-    assert len(df) == 0
-
-
-def test_gradient_dataset_statistics(gradient_dataset_fixture):
-    client, ds = gradient_dataset_fixture
-
-    df = ds.get_values(native=True)
-    assert df.shape == (2, 1)
-    assert np.sum(df.loc["He2", "HF/sto-3g"]) == pytest.approx(0.0)
-
-    # Test out some statistics
-    stats = ds.statistics("MUE", "HF/sto-3g", "Gradient")
-    assert pytest.approx(stats.mean(), 1.e-5) == 0.00984176986312362
-
-    stats = ds.statistics("UE", "HF/sto-3g", "Gradient")
-    assert pytest.approx(stats.loc["He1"].mean(), 1.e-5) == 0.01635020639
-    assert pytest.approx(stats.loc["He2"].mean(), 1.e-5) == 0.00333333333
 
 
 def test_dataset_compute_response(fractal_compute_server):

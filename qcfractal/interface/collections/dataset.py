@@ -252,7 +252,7 @@ class Dataset(Collection):
 
         """
         warnings.warn("This function has been renamed to `list_records`.  "
-                      "`list_history` will be removed in 0.11.0", DeprecationWarning)
+                      "`list_history` will be removed in 0.12.0", DeprecationWarning)
 
         return self.list_records(dftd3, pretty, **search)
 
@@ -464,7 +464,8 @@ class Dataset(Collection):
             queries = self.list_records(**history, dftd3=True, pretty=False).reset_index()
         else:
             if any((field is not None for field in {program, method, basis, keywords})):
-                warnings.warn("Name and additional field were provided. Only name will be used as a selector.")
+                warnings.warn("Name and additional field were provided. Only name will be used as a selector.",
+                              RuntimeWarning)
             queries = self.list_records(**{"name": name}, dftd3=True, pretty=False).reset_index()
 
         if queries.shape[0] > 10:
@@ -514,7 +515,8 @@ class Dataset(Collection):
             A DataFrame of the queried parameters
         """
 
-        warnings.warn("This is function is deprecated and will be removed in 0.11.0, please use `get_values(..., )` for a instead.", DeprecationWarning)
+        warnings.warn("This is function is deprecated and will be removed in 0.12.0, "
+                      "please use `get_values(..., )` for a instead.", DeprecationWarning)
 
         # Get default program/keywords
         return self.get_values(method=method, basis=basis, keywords=keywords, program=program, force=force)
@@ -1086,6 +1088,9 @@ class Dataset(Collection):
 
         for cv_name, theory_level_details in cvs:
             spec = {"name": cv_name}
+            # ReactionDataset uses "default" as a default value for stoich, but many contributed datasets lack a stoich field
+            if "stoichiometry" in self.data.history_keys:
+                spec["stoich"] = "default"
             if isinstance(theory_level_details, dict):
                 spec.update(**theory_level_details)
             if self._spec_matches_search(spec, search):
@@ -1099,7 +1104,6 @@ class Dataset(Collection):
     def _get_contributed_values(self, **spec) -> pd.DataFrame:
         queries = self._list_contributed_values(**spec).reset_index().to_dict("records")
         ret = pd.DataFrame({"index": self.get_index()})
-        print("Index:", self.get_index())
         for query in queries:
             data = self.data.contributed_values[query["name"].lower()].copy()
 
@@ -1113,10 +1117,8 @@ class Dataset(Collection):
                 else:
                     values = {k: np.array(v) for k, v in data.values.items()}
             column_name = data.name
-            print(list(values.values()), column_name)
             ret[column_name] = list(values.values())
             # Convert to numeric
-            # TODO what if cvals aren't the same type as dataset driver?
             try:
                 ret[column_name] *= constants.conversion_factor(
                     data.units, self.units)
@@ -1249,7 +1251,8 @@ class Dataset(Collection):
 
         """
 
-        warnings.warn("This is function is deprecated and will be removed in 0.11.0, please `get_records(..., projection='return_result')` for a similar result", DeprecationWarning)
+        warnings.warn("This is function is deprecated and will be removed in 0.12.0, "
+                      "please `get_records(..., projection='return_result')` for a similar result", DeprecationWarning)
 
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
 
@@ -1358,7 +1361,6 @@ class Dataset(Collection):
 
         if (bench is None):
             raise KeyError("No benchmark provided and default_benchmark is None!")
-        print("bench", bench)
         return wrap_statistics(stype.upper(), self, value, bench, **kwargs)
 
     @staticmethod
