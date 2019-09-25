@@ -374,9 +374,6 @@ def test_reactiondataset_check_state(fractal_compute_server):
         "name": "Benchmark",
         "doi": None,
         "theory_level": "very high",
-        "theory_level_details": {
-            "stoich": "default"
-        },
         "values": {
             "He1": 0.0009608501557,
             "He2": -0.00001098794749
@@ -555,9 +552,6 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
         "name": "Benchmark",
         "doi": None,
         "theory_level": "very high",
-        "theory_level_details": {
-            "stoich": "default"
-        },
         "values": {
             "He1": 0.0009608501557,
             "He2": -0.00001098794749

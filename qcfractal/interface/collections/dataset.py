@@ -281,7 +281,7 @@ class Dataset(Collection):
 
         show_dftd3 = dftd3
 
-        if not (search.keys() <= set(self.data.history_keys + tuple(["name"]))):
+        if not (search.keys() <= set(self.data.history_keys) | {"name"}):
             raise KeyError("Not all query keys were understood.")
 
         history = pd.DataFrame(list(self.data.history), columns=self.data.history_keys)
@@ -491,7 +491,7 @@ class Dataset(Collection):
 
             queries = self.list_records(**history, dftd3=True, pretty=False).reset_index()
         else:
-            if any((field is not None for field in {program, method, basis, keywords})):
+            if any((field is not None for field in {program, method, basis, keywords, stoich})):
                 warnings.warn("Name and additional field were provided. Only name will be used as a selector.",
                               RuntimeWarning)
             queries = self.list_records(**{"name": name}, dftd3=True, pretty=False).reset_index()
@@ -1101,7 +1101,7 @@ class Dataset(Collection):
         DataFrame
             Contributed value specifications matching **search.
         """
-        ret = pd.DataFrame(columns=self.data.history_keys+tuple(["name"]))
+        ret = pd.DataFrame(columns=self.data.history_keys + tuple(["name"]))
 
         cvs = ((cv_data.name, cv_data.theory_level_details) for (cv_name, cv_data) in self.data.contributed_values.items())
 
@@ -1114,8 +1114,24 @@ class Dataset(Collection):
                 spec["stoich"] = "default"
             if isinstance(theory_level_details, dict):
                 spec.update(**theory_level_details)
-            if self._spec_matches_search(spec, search):
+
+            # check is search matches CV column
+            for key, value in search.items():
+                if value is None:
+                    continue
+                elif isinstance(value, str):
+                    value = value.lower()
+                    if not (key in spec and value == spec[key].lower()):
+                        break
+                elif isinstance(value, (list, tuple)):
+                    query = [x.lower() for x in value]
+                    if not (key in spec and spec[key].lower() in query):
+                        break
+                else:
+                    raise TypeError(f"Search type {type(value)} not understood.")
+            else:
                 ret = ret.append(spec, ignore_index=True)
+
         if pretty:
             ret.fillna("None", inplace=True)
         ret.set_index(list(self.data.history_keys[:-1]), inplace=True)
@@ -1383,27 +1399,6 @@ class Dataset(Collection):
         if (bench is None):
             raise KeyError("No benchmark provided and default_benchmark is None!")
         return wrap_statistics(stype.upper(), self, value, bench, **kwargs)
-
-    @staticmethod
-    def _spec_matches_search(spec, search):
-        """
-        Helper function for searching contributed values.
-        TODO: justify this being its own function.
-        """
-        for key, value in search.items():
-            if value is None:
-                continue
-            elif isinstance(value, str):
-                value = value.lower()
-                if not (key in spec and value == spec[key].lower()):
-                    return False
-            elif isinstance(value, (list, tuple)):
-                query = [x.lower() for x in value]
-                if not (key in spec and spec[key].lower() in query):
-                    return False
-            else:
-                raise TypeError(f"Search type {type(value)} not understood.")
-        return True
 
     # Getters
     def __getitem__(self, args: str) -> 'Series':
