@@ -36,6 +36,7 @@ from qcfractal.storage_sockets.models import (BaseResultORM, CollectionORM, Keyw
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
+from qcfractal.storage_sockets.db_queries import TorsionDriveQueries, OptimizationQueries
 from .models import Base
 
 
@@ -182,6 +183,12 @@ class SQLAlchemySocket:
         except Exception as e:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
 
+        # Advanced queries objects
+        self._query_classes =  {
+            TorsionDriveQueries._class_name: TorsionDriveQueries(max_limit=max_limit),
+            OptimizationQueries._class_name: OptimizationQueries(max_limit=max_limit),
+        }
+
         # if expanded_uri["password"] is not None:
         #     # connect to mongoengine
         #     self.client = db.connect(db=project, host=uri, authMechanism=authMechanism, authSource=authSource)
@@ -306,6 +313,49 @@ class SQLAlchemySocket:
                 rdata = [d.to_dict(exclude=exclude) for d in data]
 
         return rdata, n_found
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    def custom_query(self, class_name : str, query_key : str, **kwargs):
+        """
+        Run advanced or specialized queries on different classes
+
+        Parameters
+        ----------
+        class_name : str
+            REST APIs name of the class (not the actual python name),
+             e.g., torsiondrive
+        query_key : str
+            The feature or attribute to look for, like initial_molecule
+        kwargs
+            Extra arguments needed by the query, like the id of the torison drive
+
+        Returns
+        -------
+            Query results dict:
+                data: returned data by the query (variable format)
+                meta:
+                    success: True or False
+                    error_description: Error msg to show to the user
+        """
+
+        ret = {
+            'data': [],
+            'meta': get_metadata_template()
+        }
+
+        try:
+            if class_name not in self._query_classes:
+                raise AttributeError(f'Class name {class_name} is not found.')
+
+            session = self.Session()
+            ret['data'] = self._query_classes[class_name].query(session, query_key, **kwargs)
+            ret['meta']['success'] = True
+            ret['meta']['n_found'] = len(ret['data'])
+        except Exception as err:
+            ret['meta']['error_description'] = str(err)
+
+        return ret
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -467,7 +517,7 @@ class SQLAlchemySocket:
             for dmol in molecules:
 
                 if dmol.validated is False:
-                    dmol = Molecule(**dmol.dicT(), validate=True)
+                    dmol = Molecule(**dmol.dict(), validate=True)
 
                 mol_dict = dmol.dict(exclude={"id", "validated"})
 

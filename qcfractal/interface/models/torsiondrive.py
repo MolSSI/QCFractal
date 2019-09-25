@@ -255,6 +255,7 @@ class TorsionDriveRecord(RecordBase):
 
         return self._organize_return(self.final_energy_dict, key)
 
+
     def get_final_molecules(self, key: Union[int, Tuple[int, ...], str] = None) -> Dict[str, 'Molecule']:
         """Returns the optimized molecules at each grid point
 
@@ -282,12 +283,13 @@ class TorsionDriveRecord(RecordBase):
 
         if "final_molecules" not in self.cache:
 
-            ret = {}
-            for k, tasks in self.get_history().items():
-                k = self._serialize_key(k)
-                minpos = self.minimum_positions[k]
+            map_id_key = self._get_min_optimization_map()
 
-                ret[k] = tasks[minpos].get_final_molecule()
+            opt_ids = list(map_id_key.keys())
+            results = self.client.custom_query('optimization', 'final_molecule',
+                                               {'optimization_ids': opt_ids})
+
+            ret = {map_id_key[opt_id]: mol_record for opt_id, mol_record in results.items()}
 
             self.cache["final_molecules"] = ret
 
@@ -322,21 +324,15 @@ class TorsionDriveRecord(RecordBase):
 
         if "final_results" not in self.cache:
 
-            map_id_key = {}
+            map_id_key = self._get_min_optimization_map()
             ret = {}
-            for k, tasks in self.get_history().items():
-                k = self._serialize_key(k)
-                minpos = self.minimum_positions[k]
-                final_opt_task = tasks[minpos]
-                if len(final_opt_task.trajectory) > 0:
-                    final_grad_record_id = final_opt_task.trajectory[-1]
-                    # store the id -> grid id mapping
-                    map_id_key[final_grad_record_id] = k
+
             # combine the ids into one query
-            query_result_ids = list(map_id_key.keys())
-            # run the query on this batch
-            for grad_result_record in self.client.query_results(id=query_result_ids):
-                k = map_id_key[grad_result_record.id]
+            opt_ids = list(map_id_key.keys())
+            results = self.client.custom_query('optimization', 'final_result', {'optimization_ids': opt_ids})
+
+            for opt_id, grad_result_record in results.items():
+                k = map_id_key[opt_id]
                 ret[k] = grad_result_record
 
             self.cache["final_results"] = ret
@@ -431,3 +427,14 @@ class TorsionDriveRecord(RecordBase):
         }
 
         return scatter_plot([trace], custom_layout=custom_layout, return_figure=return_figure)
+
+    def _get_min_optimization_map(self):
+
+        map_id_key = {}
+        for k, tasks in self.optimization_history.items():
+                k = self._serialize_key(k)
+                minpos = self.minimum_positions[k]
+                final_opt_id = tasks[minpos]
+                map_id_key[final_opt_id] = k
+
+        return map_id_key

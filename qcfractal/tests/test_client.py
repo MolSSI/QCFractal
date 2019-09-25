@@ -131,3 +131,18 @@ def test_collection_portal(test_server, encoding):
     r = client.add_collection(db, overwrite=True)
     get_db = client.get_collection(db["collection"], db["name"], full_return=True)
     assert get_db.data[0]['array'] == ["6789"]
+
+
+@pytest.mark.parametrize("encoding", valid_encodings)
+def test_custom_queries(test_server, encoding):
+    """ Test the round trip between client and server in custom queries"""
+
+    client = ptl.FractalClient(test_server)
+    client._set_encoding(encoding)
+
+    # Dummy test, not found
+    ret = client.custom_query('optimization', 'final_result', {'optimization_ids':[1]}, full_return=True)
+
+    assert ret.meta.success
+    assert ret.meta.n_found == 0
+

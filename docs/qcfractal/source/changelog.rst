@@ -33,10 +33,14 @@ Enhancements
   ``list_records`` returns the list of data columns available from ``get_records``.
   ``get_molecules`` returns the ``Molecule`` associated with a dataset.
 
+- (:pr:`393`) A new feature added to ``Client`` to be able to have more custom and fast queries, the ``custom_query`` method.
+  Those fast queries are now used in ``torsiondrive.get_final_molecules`` and ``torsiondrive.get_final_results``. More Advanced queries will be added.
+
 - (:pr:`394`) Adds ``tag`` and ``manager`` selector fields to ``client.query_tasks``.
   This is helpful for managing jobs in the queue and detecting failures.
 
 - (:pr:`400`) Adds Dockerfiles corresponding to builds on `Docker Hub <https://cloud.docker.com/u/molssi/repository/list>`_.
+
 
 Bug Fixes
 +++++++++
