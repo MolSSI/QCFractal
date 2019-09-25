@@ -90,16 +90,16 @@ For Linux distributions, create an env and install pgAdmin4 it using pip wheel.
 
 ```bash
 conda create -n pgadmin python=3.6
-source activate pgadmin
-wget https://ftp.postgresql.org/pub/pgadmin/pgadmin4/v4.2/pip/pgadmin4-4.2-py2.py3-none-any.whl
-pip install pgadmin4-4.2-py2.py3-none-any.whl
+conda activate pgadmin
+wget https://ftp.postgresql.org/pub/pgadmin/pgadmin4/v4.12/pip/pgadmin4-4.12-py2.py3-none-any.whl
+pip install pgadmin4-4.12-py2.py3-none-any.whl
 ```
 
 Now, configure pgAdmin in the installation directory (in the conda env):
 
 ```bash
 which python
-vi ~/anaconda3/envs/pgadmin/lib/python3.6/site-packages/pgadmin4/config_local.py
+vi ~/anaconda/envs/pgadmin/lib/python3.6/site-packages/pgadmin4/config_local.py
 ```
 
 Then past the configuration
@@ -116,11 +116,11 @@ STORAGE_DIR = os.path.join(DATA_DIR, 'storage')
 
 Then run the setup file
 
-`python ~/anaconda3/envs/pgadmin/lib/python3.6/site-packages/pgadmin4/setup.py`
+`python ~/anaconda/envs/pgadmin/lib/python3.6/site-packages/pgadmin4/setup.py`
 
 Finally, you can run phAdmin by running the server using:
 
-`python ~/anaconda3/envs/pgadmin/lib/python3.6/site-packages/pgadmin4/pgAdmin4.py`
+`python ~/anaconda/envs/pgadmin/lib/python3.6/site-packages/pgadmin4/pgAdmin4.py`
 
 and opening the browser [http://localhost:5050](http://localhost:5050)
 
@@ -137,15 +137,15 @@ chmod +x ~/pgadmin4.sh
 ```
 #!/usr/bin/env bash
  
-source activate pgadmin
-python ~/anaconda3/envs/pgadmin/lib/python3.6/site-packages/pgadmin4/pgAdmin4.py
+conda activate pgadmin
+python ~/anaconda/envs/pgadmin/lib/python3.6/site-packages/pgadmin4/pgAdmin4.py
 ```
 
 Then add an alias to the bashrc `vi ~/.bashrc` the following
 
 `alias pgadmin4=~/pgadmin4.sh`
 
-Reload bashrc `source ~./bashrc`
+Reload bashrc `source ~/.bashrc`
 
 
 ## Connecting SQLAlchemy to PostgreSQL

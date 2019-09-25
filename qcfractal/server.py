@@ -22,7 +22,7 @@ from .services import construct_service
 from .storage_sockets import storage_socket_factory
 from .storage_sockets.api_logger import API_AccessLogger
 from .web_handlers import (CollectionHandler, InformationHandler, KeywordHandler, KVStoreHandler, MoleculeHandler,
-                           ProcedureHandler, ResultHandler)
+                           ProcedureHandler, ResultHandler, OptimizationHandler)
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -263,7 +263,9 @@ class FractalServer:
             (r"/keyword", KeywordHandler, self.objects),
             (r"/collection", CollectionHandler, self.objects),
             (r"/result", ResultHandler, self.objects),
-            (r"/procedure", ProcedureHandler, self.objects),
+            (r"/procedure/?", ProcedureHandler, self.objects),
+
+            (r"/optimization/(.*)/?", OptimizationHandler, self.objects),
 
             # Queue Schedulers
             (r"/task_queue", TaskQueueHandler, self.objects),
