@@ -226,27 +226,15 @@ class ReactionDataset(Dataset):
                                      force: bool = False) -> pd.DataFrame:
         self._validate_stoich(stoich)
 
+        spec = locals()
+        spec.pop("force")
+        spec.pop("self")
+
         # So that datasets with no records do not require a default program and default keywords
         if len(self.list_records()) == 0:
             return pd.DataFrame(columns=['index']).set_index('index')
 
-        if name is None:
-            _, _, history = self._default_parameters(program, "nan", "nan", keywords, stoich=stoich)
-            for k, v in [("method", method), ("basis", basis)]:
-
-                if v is not None:
-                    history[k] = v
-                else:
-                    history.pop(k, None)
-
-            queries = self.list_records(**history, dftd3=True, pretty=False).reset_index()
-        else:
-            if any((field is not None for field in {program, method, basis, keywords})):
-                warnings.warn("Name and additional field were provided. Only name will be used as a selector.")
-            queries = self.list_records(**{"name": name}, dftd3=True, pretty=False).reset_index()
-
-        if queries.shape[0] > 10:
-            raise TypeError("More than 10 queries formed, please narrow the search.")
+        queries = self._form_queries(**spec)
 
         stoich_complex = queries.pop("stoichiometry")
         stoich_monomer = ''.join([x for x in stoich if not x.isdigit()]) + '1'
@@ -270,7 +258,6 @@ class ReactionDataset(Dataset):
             df[null_mask] = np.nan
             return df
 
-        ret = []
         names = []
         for _, query in queries.iterrows():
 
@@ -287,8 +274,6 @@ class ReactionDataset(Dataset):
                 data = data_complex - data_monomer
 
                 self.df[name] = data * constants.conversion_factor('hartree', self.units)
-
-            ret.append(self.df[name])
 
         return self.df[names]
 

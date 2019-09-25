@@ -432,8 +432,6 @@ class Dataset(Collection):
             The keyword alias for the requested compute
         program : Optional[str], optional
             The underlying QC program
-        stoich: None
-            ignored
         force : bool, optional
             Data is typically cached, forces a new query if True.
 
@@ -442,7 +440,9 @@ class Dataset(Collection):
         DataFrame
             A DataFrame of the queried parameters
         """
-
+        spec = locals()
+        spec.pop("force")
+        spec.pop("self")
         # TODO: is this somewhere in elemental?
         au_units = {'energy': 'hartree',
                     'gradient': 'hartree/bohr',
@@ -452,26 +452,8 @@ class Dataset(Collection):
         if len(self.list_records()) == 0:
             return pd.DataFrame(columns=['index']).set_index('index')
 
-        if name is None:
-            _, _, history = self._default_parameters(program, "nan", "nan", keywords)
-            for k, v in [("method", method), ("basis", basis)]:
+        queries = self._form_queries(**spec)
 
-                if v is not None:
-                    history[k] = v
-                else:
-                    history.pop(k, None)
-
-            queries = self.list_records(**history, dftd3=True, pretty=False).reset_index()
-        else:
-            if any((field is not None for field in {program, method, basis, keywords})):
-                warnings.warn("Name and additional field were provided. Only name will be used as a selector.",
-                              RuntimeWarning)
-            queries = self.list_records(**{"name": name}, dftd3=True, pretty=False).reset_index()
-
-        if queries.shape[0] > 10:
-            raise TypeError("More than 10 queries formed, please narrow the search.")
-
-        # TODO: add index here
         names = []
         for _, query in queries.iterrows():
 
@@ -488,6 +470,33 @@ class Dataset(Collection):
                 self.df[name] = data["return_result"] * constants.conversion_factor(au_units[driver], self.units)
 
         return self.df[names]
+
+    def _form_queries(self,
+                      method: Optional[str] = None,
+                   basis: Optional[str] = None,
+                   keywords: Optional[str] = None,
+                   program: Optional[str] = None,
+                   stoich: Optional[str] = None,
+                   name: Optional[str] = None):
+        if name is None:
+            _, _, history = self._default_parameters(program, "nan", "nan", keywords, stoich=stoich)
+            for k, v in [("method", method), ("basis", basis)]:
+
+                if v is not None:
+                    history[k] = v
+                else:
+                    history.pop(k, None)
+
+            queries = self.list_records(**history, dftd3=True, pretty=False).reset_index()
+        else:
+            if any((field is not None for field in {program, method, basis, keywords})):
+                warnings.warn("Name and additional field were provided. Only name will be used as a selector.",
+                              RuntimeWarning)
+            queries = self.list_records(**{"name": name}, dftd3=True, pretty=False).reset_index()
+
+        if queries.shape[0] > 10:
+            raise TypeError("More than 10 queries formed, please narrow the search.")
+        return queries
 
     def get_history(self,
                     method: Optional[str]=None,
