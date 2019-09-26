@@ -157,6 +157,7 @@ class HDF5View(DatasetView):
 
         def _serialize_fields(datamodel, names):
             """ Convert a pydantic datamodel into strings for storage in HDF5 metadata """
+            # TODO: Can I use elemental for this?
             for name in names:
                 if getattr(datamodel, name) is None:
                     continue
@@ -174,7 +175,7 @@ class HDF5View(DatasetView):
             entry_dset = f.create_dataset("entry", shape=default_shape, dtype=utf8_t, **dataset_kwargs)
             entry_dset[:] = ds.get_index()
 
-            # Export data columns
+            # Export native data columns
             value_group = f.create_group("value")
             history = ds.list_values(native=True, force=True).reset_index().to_dict("records")
             for specification in history:
@@ -195,6 +196,7 @@ class HDF5View(DatasetView):
 
                 _write_dataset(dataset, df, entry_dset)
 
+            # Export contributed data columns
             contributed_group = f.create_group("contributed_value")
             for cv_name in self.list_values(force=True, native=False)["name"]:
                 cv_df = self.get_values(name=cv_name, force=True, native=False)
