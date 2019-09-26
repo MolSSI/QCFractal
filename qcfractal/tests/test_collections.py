@@ -144,7 +144,7 @@ def test_gradient_dataset_get_records(gradient_dataset_fixture):
 def test_gradient_dataset_get_values(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
-    cols = set(ds.get_values().columns.str.replace(' (contributed)', '', regex=False))
+    cols = set(ds.get_values().columns)
     names = set(ds.list_values().reset_index()['name'])
     assert cols == names
 
@@ -166,14 +166,14 @@ def test_gradient_dataset_list_values(gradient_dataset_fixture):
     df = ds.list_values(native=False).reset_index()
     assert df.shape == (3, 7)
     assert set(df.columns) == {*ds.data.history_keys, "name", "native"}
-    assert set(map(lambda x: x.lower(), df['name'])) == set(ds.data.contributed_values.keys())
+    assert {x.lower() for x in df['name']} == set(ds.data.contributed_values.keys())
 
     df = ds.list_values(driver="graDieNt", native=False).reset_index()
-    assert set(map(lambda x: x.lower(), df['name'])) == set(["gradient", "all details"])
+    assert {x.lower() for x in df['name']} == {"gradient", "all details"}
 
     names = ["GrAdIeNt", "no details"]
     df = ds.list_values(name=names, native=False).reset_index()
-    assert set(map(lambda x: x.lower(), df['name'])) == {name.lower() for name in names}
+    assert {x.lower() for x in df['name']} == {name.lower() for name in names}
 
     # List native values
     df1 = ds.list_values(native=True).reset_index()
@@ -305,10 +305,10 @@ def contributed_dataset_fixture(fractal_compute_server):
 def test_dataset_contributed_units(contributed_dataset_fixture):
     _, ds = contributed_dataset_fixture
 
-    assert "[hartree]" not in ds.get_values(name="Fake Energy").columns[0]
-    assert "[hartree/bohr]" in ds.get_values(name="Fake Gradient").columns[0]
-    assert "[hartree/bohr**2]" in ds.get_values(name="Fake Hessian").columns[0]
-    assert "[e * bohr]" in ds.get_values(name="Fake Dipole").columns[0]
+    assert ds._column_metadata[ds.get_values(name="Fake Energy").columns[0]]["units"] == "kcal / mol"
+    assert ds._column_metadata[ds.get_values(name="Fake Gradient").columns[0]]["units"] == "hartree/bohr"
+    assert ds._column_metadata[ds.get_values(name="Fake Hessian").columns[0]]["units"] == "hartree/bohr**2"
+    assert ds._column_metadata[ds.get_values(name="Fake Dipole").columns[0]]["units"] == "e * bohr"
 
 
 def test_dataset_contributed_mixed_values(contributed_dataset_fixture):
@@ -318,7 +318,6 @@ def test_dataset_contributed_mixed_values(contributed_dataset_fixture):
     assert(unselected_values.shape == (2, 4))
     selected_values = ds.get_values(program='fake_program')
     assert(selected_values.shape == (2, 4))
-
 
 
 def test_dataset_compute_response(fractal_compute_server):
@@ -395,7 +394,7 @@ def test_reactiondataset_check_state(fractal_compute_server):
     assert "benchmark" == ds.list_values(native=False).reset_index()["name"][0].lower()
     ds.units = "hartree"
     bench = ds.get_values(name="benchmark", native=False)
-    assert "(contributed)" in bench.columns[0]
+    assert ds._column_metadata[bench.columns[0]]["native"] is False
     assert bench.shape == (2, 1)
     assert bench.loc["He1"][0] == contrib["values"]["He1"]
     assert bench.loc["He2"][0] == contrib["values"]["He2"]

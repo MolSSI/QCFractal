@@ -212,12 +212,12 @@ class Dataset(Collection):
                 "name": name,
                 "driver": driver}
 
-        if native is True or native is None:
+        if native in {True, None}:
             df = self.list_records(dftd3=False, **spec)
             df['native'] = True
             ret.append(df)
 
-        if native is False or native is None:
+        if native in {False, None}:
             df = self._list_contributed_values(force=force, **spec)
             df['native'] = False
             ret.append(df)
@@ -378,8 +378,6 @@ class Dataset(Collection):
         -------
         DataFrame
             A DataFrame of values with columns corresponding to methods and rows corresponding to molecule entries.
-            Contributed (native=False) columns are marked with "(contributed)" and may include units in square brackets
-            if their units differ in dimensionality from the Dataset's default units.
         """
         return self._get_values(method=method, basis=basis, keywords=keywords, program=program, driver=driver, name=name, native=native, force=force)
 
@@ -389,7 +387,7 @@ class Dataset(Collection):
                     **spec):
         ret = []
 
-        if native is True or native is None:
+        if native in {True, None}:
             spec_nodriver = spec.copy()
             driver = spec_nodriver.pop("driver")
             if driver is not None and driver != self.data.default_driver:
@@ -398,9 +396,8 @@ class Dataset(Collection):
             df = self._get_values_from_records(force=force, **spec_nodriver)
             ret.append(df)
 
-        if native is False or native is None:
+        if native in {False, None}:
             df = self._get_contributed_values(**spec)
-            df.rename(columns={column: column+" (contributed)" for column in df.columns}, inplace=True)
             ret.append(df)
         ret = pd.concat(ret, axis=1)
         ret.sort_index(inplace=True)
@@ -463,6 +460,7 @@ class Dataset(Collection):
                 self._column_metadata[name] = query
                 data = self.get_records(query.pop("method").upper(), projection={"return_result": True}, merge=True, **query)
                 self.df[name] = data["return_result"] * constants.conversion_factor(au_units[driver], self.units)
+                self._column_metadata[name].update({"native": True, "units": self.units})
 
         return self.df[names]
 
@@ -1131,35 +1129,41 @@ class Dataset(Collection):
         ret.sort_index(inplace=True)
         return ret
 
-    def _get_contributed_values(self, **spec) -> pd.DataFrame:
+    def _get_contributed_values(self, force: bool = False, **spec) -> pd.DataFrame:
         queries = self._list_contributed_values(**spec).reset_index().to_dict("records")
-        ret = pd.DataFrame({"index": self.get_index()})
+        column_names = []
         for query in queries:
             data = self.data.contributed_values[query["name"].lower()].copy()
-
-            # Annoying work around to prevent some pands magic
-            if isinstance(next(iter(data.values.values())), (int, float)):
-                values = data.values
-            else:
-                # TODO temporary patch until msgpack collections
-                if self.data.default_driver == "gradient":
-                    values = {k: np.array(v).reshape(-1, 3) for k, v in data.values.items()}
-                else:
-                    values = {k: np.array(v) for k, v in data.values.items()}
             column_name = data.name
-            ret[column_name] = list(values.values())
-            # Convert to numeric
-            try:
-                ret[column_name] *= constants.conversion_factor(
-                    data.units, self.units)
-            except ValueError as e:
-                # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
-                if e.__class__.__name__ == "DimensionalityError":
-                    ret.rename(columns={column_name: f"{column_name} [{data.units}]"}, inplace=True)
+            column_names.append(column_name)
+            if force or (column_name not in self.df.columns):
+                # Annoying work around to prevent some pandas magic
+                if isinstance(next(iter(data.values.values())), (int, float)):
+                    values = data.values
                 else:
-                    raise
-        ret.set_index("index", inplace=True)
-        return ret
+                    # TODO temporary patch until msgpack collections
+                    if self.data.default_driver == "gradient":
+                        values = {k: np.array(v).reshape(-1, 3) for k, v in data.values.items()}
+                    else:
+                        values = {k: np.array(v) for k, v in data.values.items()}
+                self._column_metadata[column_name] = query
+                self.df[column_name] = pd.Series(list(values.values()), index=list(values.keys()))
+
+                # Convert to numeric
+                metadata = {"native": False}
+                try:
+                    self.df[column_name] *= constants.conversion_factor(
+                        data.units, self.units)
+                    metadata["units"] = self.units
+                except ValueError as e:
+                    # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
+                    if e.__class__.__name__ == "DimensionalityError":
+                        metadata["units"] = data.units
+                    else:
+                        raise
+                self._column_metadata[column_name].update(metadata)
+
+        return self.df[column_names]
 
     def get_molecules(self, subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'Molecule']:
         """Queries full Molecules from the database.

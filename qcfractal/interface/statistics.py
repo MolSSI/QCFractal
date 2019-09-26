@@ -50,7 +50,7 @@ _return_series = ['ME', 'MUE', 'MURE', 'WMURE']
 def wrap_statistics(description, ds, value, bench, **kwargs):
     # Get benchmark
     if isinstance(bench, str):
-        rbench = ds.get_values(name=bench).iloc[:, 0]
+        rbench = ds.get_values(name=bench)[bench]
     elif isinstance(bench, (np.ndarray, pd.Series)):
         if len(bench.shape) != 1:
             raise ValueError('Only 1D numpy arrays can be passed to statistical quantities.')
@@ -59,7 +59,7 @@ def wrap_statistics(description, ds, value, bench, **kwargs):
         raise TypeError('Benchmark must be a column of the dataframe or a 1D numpy array.')
 
     if isinstance(value, str):
-        rvalue = ds.get_values(name=value).iloc[:, 0]
+        rvalue = ds.get_values(name=value)[value]
         return _stats_dict[description](rvalue, rbench, **kwargs)
 
     elif isinstance(value, pd.Series):

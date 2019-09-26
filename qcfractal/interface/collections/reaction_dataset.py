@@ -268,6 +268,7 @@ class ReactionDataset(Dataset):
                 data = data_complex - data_monomer
 
                 self.df[name] = data * constants.conversion_factor('hartree', self.units)
+                self._column_metadata[name].update({"native": True, "units": self.units})
 
         return self.df[names]
 
@@ -790,7 +791,6 @@ class ReactionDataset(Dataset):
             raise TypeError("Passed in reaction_results not understood.")
 
         rxn = ReactionEntry(**rxn_dict)
-
         self._new_records.append(rxn)
 
         return rxn
