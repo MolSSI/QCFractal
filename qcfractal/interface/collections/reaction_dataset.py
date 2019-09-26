@@ -47,7 +47,6 @@ class ReactionDataset(Dataset):
     rxn_index : pd.Index
         The unrolled reaction index for all reactions in the Dataset
     """
-
     def __init__(self, name, client=None, ds_type="rxn", **kwargs):
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
@@ -214,23 +213,36 @@ class ReactionDataset(Dataset):
            Contributed (native=False) columns are marked with "(contributed)" and may include units in square brackets
            if their units differ in dimensionality from the ReactionDataset's default units.
         """
-        return self._get_values(method=method, basis=basis, keywords=keywords, program=program, driver=driver, stoich=stoich, name=name, native=native, force=force)
+        return self._get_values(method=method,
+                                basis=basis,
+                                keywords=keywords,
+                                program=program,
+                                driver=driver,
+                                stoich=stoich,
+                                name=name,
+                                native=native,
+                                force=force)
 
     def _get_values_from_records(self,
-                                     method: Optional[str] = None,
-                                     basis: Optional[str] = None,
-                                     keywords: Optional[str] = None,
-                                     program: Optional[str] = None,
-                                     stoich: Optional[str] = None,
-                                     name: Optional[str] = None,
-                                     force: bool = False) -> pd.DataFrame:
+                                 method: Optional[str] = None,
+                                 basis: Optional[str] = None,
+                                 keywords: Optional[str] = None,
+                                 program: Optional[str] = None,
+                                 stoich: Optional[str] = None,
+                                 name: Optional[str] = None,
+                                 force: bool = False) -> pd.DataFrame:
         self._validate_stoich(stoich)
 
         # So that datasets with no records do not require a default program and default keywords
         if len(self.list_records()) == 0:
             return pd.DataFrame(columns=['index']).set_index('index')
 
-        queries = self._form_queries(method=method, basis=basis, keywords=keywords, program=program, stoich=stoich, name=name)
+        queries = self._form_queries(method=method,
+                                     basis=basis,
+                                     keywords=keywords,
+                                     program=program,
+                                     stoich=stoich,
+                                     name=name)
 
         stoich_complex = queries.pop("stoichiometry")
         stoich_monomer = ''.join([x for x in stoich if not x.isdigit()]) + '1'

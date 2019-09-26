@@ -10,6 +10,7 @@ from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
 import qcelemental as qcel
 
+
 def test_collection_query(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
 
@@ -151,7 +152,10 @@ def test_gradient_dataset_get_values(gradient_dataset_fixture):
     df = ds.get_values()
     assert df.shape == (len(ds.get_index()), 4)
     for entry in ds.get_index():
-        assert (df.loc[entry, "HF/sto-3g"] == ds.get_records(subset=entry, method="hf", basis="sto-3g", projection={'return_result': True})).all()
+        assert (df.loc[entry, "HF/sto-3g"] == ds.get_records(subset=entry,
+                                                             method="hf",
+                                                             basis="sto-3g",
+                                                             projection={'return_result': True})).all()
 
     assert ds.get_values(method="NotInDataset").shape[1] == 0  # 0-length DFs can cause exceptions
 
@@ -212,6 +216,7 @@ def test_gradient_dataset_statistics(gradient_dataset_fixture):
     assert pytest.approx(stats.loc["He1"].mean(), 1.e-5) == 0.01635020639
     assert pytest.approx(stats.loc["He2"].mean(), 1.e-5) == 0.00333333333
 
+
 @pytest.fixture(scope="module")
 def contributed_dataset_fixture(fractal_compute_server):
     """ Fixture for testing rich contributed datasets with many properties and molecules of different sizes"""
@@ -220,8 +225,7 @@ def contributed_dataset_fixture(fractal_compute_server):
     testing.check_has_module("psi4")
 
     # Build a dataset
-    ds = ptl.collections.Dataset("ds_contributed",
-                                 client)
+    ds = ptl.collections.Dataset("ds_contributed", client)
 
     ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
     ds.add_entry("He", ptl.Molecule.from_data("He -1.1 0 0"))
@@ -321,10 +325,14 @@ def contributed_dataset_fixture(fractal_compute_server):
 def test_dataset_contributed_units(contributed_dataset_fixture):
     _, ds = contributed_dataset_fixture
 
-    assert qcel.constants.ureg(ds._column_metadata[ds.get_values(name="Fake Energy").columns[0]]["units"]) == qcel.constants.ureg("kcal / mol")
-    assert qcel.constants.ureg(ds._column_metadata[ds.get_values(name="Fake Gradient").columns[0]]["units"]) == qcel.constants.ureg("hartree/bohr")
-    assert qcel.constants.ureg(ds._column_metadata[ds.get_values(name="Fake Hessian").columns[0]]["units"]) == qcel.constants.ureg("hartree/bohr**2")
-    assert qcel.constants.ureg(ds._column_metadata[ds.get_values(name="Fake Dipole").columns[0]]["units"]) == qcel.constants.ureg("e * bohr")
+    assert qcel.constants.ureg(ds._column_metadata[ds.get_values(
+        name="Fake Energy").columns[0]]["units"]) == qcel.constants.ureg("kcal / mol")
+    assert qcel.constants.ureg(ds._column_metadata[ds.get_values(
+        name="Fake Gradient").columns[0]]["units"]) == qcel.constants.ureg("hartree/bohr")
+    assert qcel.constants.ureg(ds._column_metadata[ds.get_values(
+        name="Fake Hessian").columns[0]]["units"]) == qcel.constants.ureg("hartree/bohr**2")
+    assert qcel.constants.ureg(
+        ds._column_metadata[ds.get_values(name="Fake Dipole").columns[0]]["units"]) == qcel.constants.ureg("e * bohr")
 
 
 def test_dataset_contributed_mixed_values(contributed_dataset_fixture):
@@ -449,6 +457,7 @@ def reactiondataset_dftd3_fixture_fixture(fractal_compute_server):
 
     yield client, ds
 
+
 def test_rectiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
 
@@ -467,6 +476,7 @@ def test_rectiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
     # No molecules
     with pytest.raises(KeyError):
         records = ds.get_records("B3LYP", "6-31g", stoich=["cp", "default"], subset="Gibberish")
+
 
 def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
@@ -661,8 +671,7 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     assert kw.values["scf_type"] == "df"
 
 
-def test_dataset_list_get_values(gradient_dataset_fixture,
-                                 contributed_dataset_fixture,
+def test_dataset_list_get_values(gradient_dataset_fixture, contributed_dataset_fixture,
                                  reactiondataset_dftd3_fixture_fixture):
     """ Tests that the output of list_values can be used as input to get_values"""
     for dataset_fixture in locals().values():
