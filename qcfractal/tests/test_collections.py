@@ -288,11 +288,27 @@ def contributed_dataset_fixture(fractal_compute_server):
         },
         "units": "e * bohr"
     }
+    energy_FF = {
+        "name": "Fake FF Energy",
+        "theory_level": "some force field",
+        "values": {
+            "He1": 0.5,
+            "He": 42.
+        },
+        "theory_level_details": {
+            "driver": "energy",
+            "program": "fake_program",
+            "basis": None,
+            "method": "fake_method"
+        },
+        "units": "hartree"
+    }
 
     ds.add_contributed_values(energy)
     ds.add_contributed_values(gradient)
     ds.add_contributed_values(hessian)
     ds.add_contributed_values(dipole)
+    ds.add_contributed_values(energy_FF)
 
     with pytest.raises(KeyError):
         ds.add_contributed_values(energy)
@@ -315,9 +331,12 @@ def test_dataset_contributed_mixed_values(contributed_dataset_fixture):
     _, ds = contributed_dataset_fixture
 
     unselected_values = ds.get_values()
-    assert(unselected_values.shape == (2, 4))
+    assert unselected_values.shape == (2, 5)
     selected_values = ds.get_values(program='fake_program')
-    assert(selected_values.shape == (2, 4))
+    assert selected_values.shape == (2, 5)
+    selected_values = ds.get_values(basis="None")
+    assert selected_values.shape == (2, 1)
+    assert selected_values.columns[0] == "Fake FF Energy"
 
 
 def test_dataset_compute_response(fractal_compute_server):

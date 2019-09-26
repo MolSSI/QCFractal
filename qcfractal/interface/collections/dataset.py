@@ -27,7 +27,7 @@ class ContributedValues(ProtoModel):
     name: str
     doi: Optional[str] = None
     theory_level: Union[str, Dict[str, str]]
-    theory_level_details: Union[str, Dict[str, str]] = None
+    theory_level_details: Union[str, Dict[str, Optional[str]]] = None
     comments: Optional[str] = None
     values: Dict[str, Any]
     units: str
@@ -92,7 +92,7 @@ class Dataset(Collection):
         records: List[MoleculeEntry] = []
         contributed_values: Dict[str, ContributedValues] = {}
 
-        # History, driver, program, method (basis, options)
+        # History: driver, program, method (basis, keywords)
         history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
         history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
 
@@ -177,6 +177,7 @@ class Dataset(Collection):
         """
         Lists available data that may be queried with get_values.
         Results may be narrowed by providing search keys.
+        `None` is a wildcard selector. To search for `None`, use `"None"`.
 
         Parameters
         ----------
@@ -261,6 +262,7 @@ class Dataset(Collection):
                      **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """
         Lists specifications of available records, i.e. method, program, basis set, keyword set, driver combinations
+        `None` is a wildcard selector. To search for `None`, use `"None"`.
 
         Parameters
         ----------
@@ -317,7 +319,9 @@ class Dataset(Collection):
         # Find the returned subset
         for key, value in search.items():
             if value is None:
-                pass
+                continue
+            elif value is "None":
+                ret = ret[ret[key].isna()]
             elif isinstance(value, str):
                 value = value.lower()
                 ret = ret[ret[key].str.lower() == value]
@@ -352,6 +356,8 @@ class Dataset(Collection):
 
         Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method
         and basis combinations simultaneously.
+
+        `None` is a wildcard selector. To search for `None`, use `"None"`.
 
         Parameters
         ----------
@@ -1106,17 +1112,24 @@ class Dataset(Collection):
             if isinstance(theory_level_details, dict):
                 spec.update(**theory_level_details)
 
-            # check is search matches CV column
+            # check if search matches CV column
             for key, value in search.items():
+                def check_str_query(v):
+                    if key not in spec:
+                        return False
+                    if isinstance(spec[key], str) and v.lower() != spec[key].lower():
+                        return False
+                    if spec[key] is None and v.lower() != "none":
+                        return False
+                    return True
+
                 if value is None:
                     continue
                 elif isinstance(value, str):
-                    value = value.lower()
-                    if not (key in spec and value == spec[key].lower()):
+                    if not check_str_query(value):
                         break
                 elif isinstance(value, (list, tuple)):
-                    query = [x.lower() for x in value]
-                    if not (key in spec and spec[key].lower() in query):
+                    if not any([check_str_query(x) for x in value]):
                         break
                 else:
                     raise TypeError(f"Search type {type(value)} not understood.")

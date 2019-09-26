@@ -182,6 +182,8 @@ class ReactionDataset(Dataset):
         Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method
         and basis combinations simultaneously.
 
+        `None` is a wildcard selector. To search for `None`, use `"None"`.
+
         Parameters
         ----------
         method : Optional[str], optional
