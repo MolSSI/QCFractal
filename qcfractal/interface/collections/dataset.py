@@ -214,19 +214,41 @@ class Dataset(Collection):
                 "driver": driver}
 
         if native in {True, None}:
-            df = self.list_records(dftd3=False, **spec)
+            df = self._list_records(dftd3=False)
             df['native'] = True
             ret.append(df)
 
         if native in {False, None}:
-            df = self._list_contributed_values(force=force, **spec)
+            df = self._list_contributed_values()
             df['native'] = False
             ret.append(df)
 
         ret = pd.concat(ret)
-        ret.reset_index(inplace=True)
+
+        # Filter
+        ret.fillna("None", inplace=True)
+        ret = self._filter_records(ret, **spec)
         ret.set_index(["native"] + list(self.data.history_keys[:-1]), inplace=True)
         ret.sort_index(inplace=True)
+        return ret
+
+    @staticmethod
+    def _filter_records(df: pd.DataFrame, **spec):
+        """
+        Helper for filtering records on a spec. Note that `None` is a wildcard while `"None"` matches `None` and NaN.
+        """
+        ret = df.copy()
+        for key, value in spec.items():
+            if value is None:
+                continue
+            elif isinstance(value, str):
+                value = value.lower()
+                ret = ret[ret[key].fillna("None").str.lower() == value]
+            elif isinstance(value, (list, tuple)):
+                query = [x.lower() for x in value]
+                ret = ret[ret[key].fillna("None").str.lower().isin(query)]
+            else:
+                raise TypeError(f"Search type {type(value)} not understood.")
         return ret
 
     def list_history(self,
@@ -259,15 +281,13 @@ class Dataset(Collection):
     def list_records(self,
                      dftd3: bool = False,
                      pretty: bool = True,
-                     **search: Dict[str, Optional[str]]) -> 'DataFrame':
+                     **search: Dict[str, Optional[str]]) -> pd.DataFrame:
         """
         Lists specifications of available records, i.e. method, program, basis set, keyword set, driver combinations
         `None` is a wildcard selector. To search for `None`, use `"None"`.
 
         Parameters
         ----------
-        dftd3: bool, optional
-            Include dftd3 program record specifications in addition to composite DFT-D3 record specifications
         pretty: bool
             Replace NaN with "None" in returned DataFrame
         **search : Dict[str, Optional[str]]
@@ -279,11 +299,29 @@ class Dataset(Collection):
             Record specifications matching **search.
 
         """
+        ret = self._list_records(dftd3=dftd3)
+        ret = self._filter_records(ret, **search)
+        if pretty:
+            ret.fillna("None", inplace=True)
+        return ret
 
+    def _list_records(self, dftd3: bool = False) -> pd.DataFrame:
+        """
+        Lists specifications of available records, i.e. method, program, basis set, keyword set, driver combinations
+        `None` is a wildcard selector. To search for `None`, use `"None"`.
+
+        Parameters
+        ----------
+        dftd3: bool, optional
+            Include dftd3 program record specifications in addition to composite DFT-D3 record specifications
+
+        Returns
+        -------
+        DataFrame
+            Record specifications matching **search.
+
+        """
         show_dftd3 = dftd3
-
-        if not (search.keys() <= set(self.data.history_keys) | {"name"}):
-            raise KeyError("Not all query keys were understood.")
 
         history = pd.DataFrame(list(self.data.history), columns=self.data.history_keys)
 
@@ -291,7 +329,6 @@ class Dataset(Collection):
         if history.shape[0] == 0:
             ret = history.copy()
             ret['name'] = None
-            ret.set_index(list(self.data.history_keys[:-1]), inplace=True)
             return ret
 
         # Build out -D3 combos
@@ -316,29 +353,9 @@ class Dataset(Collection):
                                                                  keywords=row["keywords"],
                                                                  stoich=row.get("stoichiometry", None),
                                                                  driver=row["driver"]), axis=1)
-        # Find the returned subset
-        for key, value in search.items():
-            if value is None:
-                continue
-            elif value is "None":
-                ret = ret[ret[key].isna()]
-            elif isinstance(value, str):
-                value = value.lower()
-                ret = ret[ret[key].str.lower() == value]
-            elif isinstance(value, (list, tuple)):
-                query = [x.lower() for x in value]
-                ret = ret[ret[key].str.lower().isin(query)]
-            else:
-                raise TypeError(f"Search type {type(value)} not understood.")
-
         if show_dftd3 is False:
             ret = ret[ret["program"] != "dftd3"]
 
-        if pretty:
-            ret.fillna("None", inplace=True)
-
-        ret.set_index(list(self.data.history_keys[:-1]), inplace=True)
-        ret.sort_index(inplace=True)
         return ret
 
     def get_values(self,
@@ -451,7 +468,6 @@ class Dataset(Collection):
             return pd.DataFrame(columns=['index']).set_index('index')
 
         queries = self._form_queries(method=method, basis=basis, keywords=keywords, program=program, name=name)
-
         names = []
         for _, query in queries.iterrows():
 
@@ -485,13 +501,12 @@ class Dataset(Collection):
                     history[k] = v
                 else:
                     history.pop(k, None)
-
-            queries = self.list_records(**history, dftd3=True, pretty=False).reset_index()
+            queries = self.list_records(**history, dftd3=True, pretty=False)
         else:
             if any((field is not None for field in {program, method, basis, keywords, stoich})):
                 warnings.warn("Name and additional field were provided. Only name will be used as a selector.",
                               RuntimeWarning)
-            queries = self.list_records(**{"name": name}, dftd3=True, pretty=False).reset_index()
+            queries = self.list_records(name=name, dftd3=True, pretty=False)
 
         if queries.shape[0] > 10:
             raise TypeError("More than 10 queries formed, please narrow the search.")
@@ -1079,24 +1094,14 @@ class Dataset(Collection):
         self.data.contributed_values[key] = contrib
         self._updated_state = True
 
-    def _list_contributed_values(self,
-                                 pretty: bool = True,
-                                 force: bool = False,
-                                 **search: Dict[str, Optional[str]]) -> 'DataFrame':
+    def _list_contributed_values(self) -> pd.DataFrame:
         """
-        Lists specifications of available records, i.e. method, program, basis set, keyword set, driver combinations
-
-        Parameters
-        ----------
-        pretty: bool
-            Replace NaN with "None" in returned DataFrame
-        **search : Dict[str, Optional[str]]
-            Allows searching to narrow down return.
+        Lists all specifications of contributed data, i.e. method, program, basis set, keyword set, driver combinations
 
         Returns
         -------
         DataFrame
-            Contributed value specifications matching **search.
+            Contributed value specifications.
         """
         ret = pd.DataFrame(columns=self.data.history_keys + tuple(["name"]))
 
@@ -1108,42 +1113,16 @@ class Dataset(Collection):
                 spec[k] = "Unknown"
             # ReactionDataset uses "default" as a default value for stoich, but many contributed datasets lack a stoich field
             if "stoichiometry" in self.data.history_keys:
-                spec["stoich"] = "default"
+                spec["stoichiometry"] = "default"
             if isinstance(theory_level_details, dict):
                 spec.update(**theory_level_details)
+            ret = ret.append(spec, ignore_index=True)
 
-            # check if search matches CV column
-            for key, value in search.items():
-                def check_str_query(v):
-                    if key not in spec:
-                        return False
-                    if isinstance(spec[key], str) and v.lower() != spec[key].lower():
-                        return False
-                    if spec[key] is None and v.lower() != "none":
-                        return False
-                    return True
-
-                if value is None:
-                    continue
-                elif isinstance(value, str):
-                    if not check_str_query(value):
-                        break
-                elif isinstance(value, (list, tuple)):
-                    if not any([check_str_query(x) for x in value]):
-                        break
-                else:
-                    raise TypeError(f"Search type {type(value)} not understood.")
-            else:
-                ret = ret.append(spec, ignore_index=True)
-
-        if pretty:
-            ret.fillna("None", inplace=True)
-        ret.set_index(list(self.data.history_keys[:-1]), inplace=True)
-        ret.sort_index(inplace=True)
         return ret
 
     def _get_contributed_values(self, force: bool = False, **spec) -> pd.DataFrame:
-        queries = self._list_contributed_values(**spec).reset_index().to_dict("records")
+        queries = self._filter_records(self._list_contributed_values().rename(columns={'stoichiometry': 'stoich'}), **spec).to_dict("records")
+
         column_names = []
         for query in queries:
             data = self.data.contributed_values[query["name"].lower()].copy()
