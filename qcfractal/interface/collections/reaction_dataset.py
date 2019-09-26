@@ -47,7 +47,6 @@ class ReactionDataset(Dataset):
     rxn_index : pd.Index
         The unrolled reaction index for all reactions in the Dataset
     """
-
     def __init__(self, name, client=None, ds_type="rxn", **kwargs):
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
@@ -170,46 +169,80 @@ class ReactionDataset(Dataset):
                    basis: Optional[str] = None,
                    keywords: Optional[str] = None,
                    program: Optional[str] = None,
+                   driver: Optional[str] = None,
                    stoich: str = "default",
-                   force: bool = False) -> 'DataFrame':
-        """Obtains values from the known history from the search paramaters provided for the expected `return_result` values. Defaults to the standard
-        programs and keywords if not provided.
+                   name: Optional[str] = None,
+                   native: Optional[bool] = None,
+                   force: bool = False) -> pd.DataFrame:
+        """
+        Obtains values from the known history from the search paramaters provided for the expected `return_result` values.
+        Defaults to the standard programs and keywords if not provided.
 
-        Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method and basis combination simultaneously.
+        Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method
+        and basis combinations simultaneously.
+
+        `None` is a wildcard selector. To search for `None`, use `"None"`.
 
         Parameters
         ----------
-        method : Optional[str]
-            The computational method to compute (B3LYP)
+        method : Optional[str], optional
+            The computational method (B3LYP)
         basis : Optional[str], optional
-            The computational basis to compute (6-31G)
+            The computational basis (6-31G)
         keywords : Optional[str], optional
-            The keyword alias for the requested compute
+            The keyword alias
         program : Optional[str], optional
             The underlying QC program
+        driver : Optional[str], optional
+            The type of calculation (e.g. energy, gradient, hessian, dipole...)
         stoich : str, optional
-            The given stoichiometry to compute.
+            Stoichiometry of the reaction.
+        name : Optional[str], optional
+            Canonical name of the record. Overrides the above selectors.
+        native: Optional[bool], optional
+            True: only include data computed with QCFractal
+            False: only include data contributed from outside sources
+            None: include both
+        force : bool, optional
+            Data is typically cached, forces a new query if True
 
-        Returns
-        -------
-        DataFrame
-            A DataFrame of the queried parameters
+       Returns
+       -------
+       DataFrame
+           A DataFrame of values with columns corresponding to methods and rows corresponding to reaction entries.
+           Contributed (native=False) columns are marked with "(contributed)" and may include units in square brackets
+           if their units differ in dimensionality from the ReactionDataset's default units.
         """
+        return self._get_values(method=method,
+                                basis=basis,
+                                keywords=keywords,
+                                program=program,
+                                driver=driver,
+                                stoich=stoich,
+                                name=name,
+                                native=native,
+                                force=force)
 
+    def _get_values_from_records(self,
+                                 method: Optional[str] = None,
+                                 basis: Optional[str] = None,
+                                 keywords: Optional[str] = None,
+                                 program: Optional[str] = None,
+                                 stoich: Optional[str] = None,
+                                 name: Optional[str] = None,
+                                 force: bool = False) -> pd.DataFrame:
         self._validate_stoich(stoich)
 
-        name, dbkeys, history = self._default_parameters(program, "nan", "nan", keywords, stoich=stoich)
+        # So that datasets with no records do not require a default program and default keywords
+        if len(self.list_records()) == 0:
+            return pd.DataFrame(columns=['index']).set_index('index')
 
-        for k, v in [("method", method), ("basis", basis)]:
-
-            if v is not None:
-                history[k] = v
-            else:
-                history.pop(k, None)
-
-        queries = self.list_records(**history, dftd3=True, pretty=False).reset_index()
-        if queries.shape[0] > 10:
-            raise TypeError("More than 10 queries formed, please narrow the search.")
+        queries = self._form_queries(method=method,
+                                     basis=basis,
+                                     keywords=keywords,
+                                     program=program,
+                                     stoich=stoich,
+                                     name=name)
 
         stoich_complex = queries.pop("stoichiometry")
         stoich_monomer = ''.join([x for x in stoich if not x.isdigit()]) + '1'
@@ -233,11 +266,12 @@ class ReactionDataset(Dataset):
             df[null_mask] = np.nan
             return df
 
-        ret = []
-        for name, query in queries.iterrows():
+        names = []
+        for _, query in queries.iterrows():
 
             query = query.replace({np.nan: None}).to_dict()
-            name = self._canonical_name(**query)
+            name = query.pop("name")
+            names.append(name)
 
             if force or (name not in self.df.columns):
                 self._column_metadata[name] = query
@@ -248,10 +282,9 @@ class ReactionDataset(Dataset):
                 data = data_complex - data_monomer
 
                 self.df[name] = data * constants.conversion_factor('hartree', self.units)
+                self._column_metadata[name].update({"native": True, "units": self.units})
 
-            ret.append(self.df[name])
-
-        return pd.concat(ret, axis=1)
+        return self.df[names]
 
     def get_history(self,
                     method: Optional[str] = None,
@@ -772,7 +805,6 @@ class ReactionDataset(Dataset):
             raise TypeError("Passed in reaction_results not understood.")
 
         rxn = ReactionEntry(**rxn_dict)
-
         self._new_records.append(rxn)
 
         return rxn

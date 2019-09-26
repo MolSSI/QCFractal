@@ -24,21 +24,23 @@ New Features
 Enhancements
 ++++++++++++
 
-- (:pr:`385`) ``Dataset`` and ``ReactionDataset`` have three new functions for accessing data.
-  ``get_values`` returns the canonical headline value for a dataset (e.g. the interaction energy for S22) in data columns with caching. This function replaces the now-deprecated ``get_history``.
-  ``get_records`` either returns ``ResultRecord`` or a projection. For the case of ``ReactionDataset``, the results are broken down into component calculcations. The function replaces the now-deprecated ``query``.
+- (:pr:`385`, :pr:`404`, :pr:`411`) ``Dataset`` and ``ReactionDataset`` have five new functions for accessing data.
+  ``get_values`` returns the canonical headline value for a dataset (e.g. the interaction energy for S22) in data columns with caching,
+  both for result-backed values and contributed values. This function replaces the now-deprecated ``get_history`` and ``get_contributed_values``.
+  ``list_values`` returns the list of data columns available from ``get_values``. This function replaces the now-deprecated ``list_history`` and ``list_contributed_values``.
+  ``get_records`` either returns ``ResultRecord`` or a projection. For the case of ``ReactionDataset``, the results are broken down into component calculcations.
+  The function replaces the now-deprecated ``query``.
+  ``list_records`` returns the list of data columns available from ``get_records``.
   ``get_molecules`` returns the ``Molecule`` associated with a dataset.
-  In addition, ``get_contributed_values`` now returns a data column.
+
+- (:pr:`393`) A new feature added to ``Client`` to be able to have more custom and fast queries, the ``custom_query`` method.
+  Those fast queries are now used in ``torsiondrive.get_final_molecules`` and ``torsiondrive.get_final_results``. More Advanced queries will be added.
 
 - (:pr:`394`) Adds ``tag`` and ``manager`` selector fields to ``client.query_tasks``.
   This is helpful for managing jobs in the queue and detecting failures.
 
 - (:pr:`400`) Adds Dockerfiles corresponding to builds on `Docker Hub <https://cloud.docker.com/u/molssi/repository/list>`_.
 
-- (:pr:`404`) ``Dataset`` and ``ReactionDataset`` member function ``get_history`` has been renamed to ``get_records``.
-
-- (:pr:`393`) A new feature added to ``Client`` to be able to have more custom and fast queries, the ``custom_query`` method.
-  Those fast queries are now used in ``torsiondrive.get_final_moelcules`` and ``torsiondrive.get_final_results``. More Advanced queries will be added.
 
 Bug Fixes
 +++++++++

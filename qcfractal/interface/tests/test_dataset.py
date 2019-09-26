@@ -28,7 +28,6 @@ def _compare_rxn_stoichs(ref, new):
     assert th.compare_lists(keys, keys_other)
 
     for k in keys:
-        # print(k)
         _compare_stoichs(stoich[k], stoich_other[k])
 
     return True
@@ -235,12 +234,12 @@ def test_database_history():
                ("energy", "p1", "m1", None, "o1"),
                ("energy", "p1", "m1", None, "o2"),
                ("energy", "p1", "m2", "b3", "o1"),
-               ("gradient", "p1", "m2", None, None)] # yapf: disable
+               ("gradient", "p1", "m2", None, None)]  # yapf: disable
 
     for h in history:
         ds._add_history(driver=h[0], program=h[1], method=h[2], basis=h[3], keywords=h[4])
 
     assert ds.list_records().shape[0] == 5
     assert ds.list_records(program="P1").shape[0] == 4
-    assert ds.list_records(basis=None).shape[0] == 3
-    assert ds.list_records(keywords=None).shape[0] == 1
+    assert ds.list_records(basis="None").shape[0] == 3
+    assert ds.list_records(keywords="None").shape[0] == 1

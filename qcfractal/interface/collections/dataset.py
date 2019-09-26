@@ -27,7 +27,7 @@ class ContributedValues(ProtoModel):
     name: str
     doi: Optional[str] = None
     theory_level: Union[str, Dict[str, str]]
-    theory_level_details: Union[str, Dict[str, str]] = None
+    theory_level_details: Union[str, Dict[str, Optional[str]]] = None
     comments: Optional[str] = None
     values: Dict[str, Any]
     units: str
@@ -46,8 +46,7 @@ class Dataset(Collection):
     df : pd.DataFrame
         The underlying dataframe for the Dataset object
     """
-
-    def __init__(self, name: str, client: Optional['FractalClient']=None, **kwargs: Dict[str, Any]):
+    def __init__(self, name: str, client: Optional['FractalClient'] = None, **kwargs: Dict[str, Any]):
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -76,11 +75,6 @@ class Dataset(Collection):
         self.df = pd.DataFrame(index=self.get_index())
         self._column_metadata = {}
 
-        # Inherited classes need to call this themselves
-        for cv in self.data.contributed_values.values():
-            tmp_idx = self.get_contributed_values(cv.name)
-            self.df[tmp_idx.columns[0]] = tmp_idx
-
     class DataModel(Collection.DataModel):
 
         # Defaults
@@ -96,7 +90,7 @@ class Dataset(Collection):
         records: List[MoleculeEntry] = []
         contributed_values: Dict[str, ContributedValues] = {}
 
-        # History, driver, program, method (basis, options)
+        # History: driver, program, method (basis, keywords)
         history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
         history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
 
@@ -169,9 +163,95 @@ class Dataset(Collection):
 
         self.data.history.add(tuple(new_history))
 
-    def list_history(self,
-                     dftd3: bool = False,
-                     pretty: bool = True,
+    def list_values(self,
+                    method: Optional[str] = None,
+                    basis: Optional[str] = None,
+                    keywords: Optional[str] = None,
+                    program: Optional[str] = None,
+                    driver: Optional[str] = None,
+                    name: Optional[str] = None,
+                    native: Optional[bool] = None,
+                    force: bool = False):
+        """
+        Lists available data that may be queried with get_values.
+        Results may be narrowed by providing search keys.
+        `None` is a wildcard selector. To search for `None`, use `"None"`.
+
+        Parameters
+        ----------
+        method : Optional[str], optional
+            The computational method (B3LYP)
+        basis : Optional[str], optional
+            The computational basis (6-31G)
+        keywords : Optional[str], optional
+            The keyword alias
+        program : Optional[str], optional
+            The underlying QC program
+        driver : Optional[str], optional
+            The type of calculation (e.g. energy, gradient, hessian, dipole...)
+        name : Optional[str], optional
+            The canonical name of the data column
+        native: Optional[bool], optional
+            True: only include data computed with QCFractal
+            False: only include data contributed from outside sources
+            None: include both
+        force : bool, optional
+            Data is typically cached, forces a new query if True
+
+        Returns
+        -------
+        DataFrame
+            A DataFrame of the matching data specifications
+        """
+        ret = []
+        spec = {
+            "method": method,
+            "basis": basis,
+            "keywords": keywords,
+            "program": program,
+            "name": name,
+            "driver": driver
+        }
+
+        if native in {True, None}:
+            df = self._list_records(dftd3=False)
+            df['native'] = True
+            ret.append(df)
+
+        if native in {False, None}:
+            df = self._list_contributed_values()
+            df['native'] = False
+            ret.append(df)
+
+        ret = pd.concat(ret)
+
+        # Filter
+        ret.fillna("None", inplace=True)
+        ret = self._filter_records(ret, **spec)
+        ret.set_index(["native"] + list(self.data.history_keys[:-1]), inplace=True)
+        ret.sort_index(inplace=True)
+        return ret
+
+    @staticmethod
+    def _filter_records(df: pd.DataFrame, **spec):
+        """
+        Helper for filtering records on a spec. Note that `None` is a wildcard while `"None"` matches `None` and NaN.
+        """
+        ret = df.copy()
+        for key, value in spec.items():
+            if value is None:
+                continue
+            elif isinstance(value, str):
+                value = value.lower()
+                ret = ret[ret[key].fillna("None").str.lower() == value]
+            elif isinstance(value, (list, tuple)):
+                query = [x.lower() for x in value]
+                ret = ret[ret[key].fillna("None").str.lower().isin(query)]
+            else:
+                raise TypeError(f"Search type {type(value)} not understood.")
+        return ret
+
+    def list_history(self, dftd3: bool = False, pretty: bool = True,
                      **search: Dict[str, Optional[str]]) -> 'DataFrame':
         """
         Lists the history of computations completed.
@@ -192,21 +272,18 @@ class Dataset(Collection):
 
         """
         warnings.warn("This function has been renamed to `list_records`.  "
-                      "`list_history` will be removed in 0.11.0", DeprecationWarning)
+                      "`list_history` will be removed in 0.12.0", DeprecationWarning)
 
         return self.list_records(dftd3, pretty, **search)
 
-    def list_records(self,
-                     dftd3: bool = False,
-                     pretty: bool = True,
-                     **search: Dict[str, Optional[str]]) -> 'DataFrame':
+    def list_records(self, dftd3: bool = False, pretty: bool = True,
+                     **search: Dict[str, Optional[str]]) -> pd.DataFrame:
         """
         Lists specifications of available records, i.e. method, program, basis set, keyword set, driver combinations
+        `None` is a wildcard selector. To search for `None`, use `"None"`.
 
         Parameters
         ----------
-        dftd3: bool, optional
-            Include dftd3 program record specifications in addition to composite DFT-D3 record specifications
         pretty: bool
             Replace NaN with "None" in returned DataFrame
         **search : Dict[str, Optional[str]]
@@ -218,13 +295,37 @@ class Dataset(Collection):
             Record specifications matching **search.
 
         """
+        ret = self._list_records(dftd3=dftd3)
+        ret = self._filter_records(ret, **search)
+        if pretty:
+            ret.fillna("None", inplace=True)
+        return ret
 
+    def _list_records(self, dftd3: bool = False) -> pd.DataFrame:
+        """
+        Lists specifications of available records, i.e. method, program, basis set, keyword set, driver combinations
+        `None` is a wildcard selector. To search for `None`, use `"None"`.
+
+        Parameters
+        ----------
+        dftd3: bool, optional
+            Include dftd3 program record specifications in addition to composite DFT-D3 record specifications
+
+        Returns
+        -------
+        DataFrame
+            Record specifications matching **search.
+
+        """
         show_dftd3 = dftd3
 
-        if not (search.keys() <= set(self.data.history_keys)):
-            raise KeyError("Not all query keys were understood.")
-
         history = pd.DataFrame(list(self.data.history), columns=self.data.history_keys)
+
+        # Short circuit because merge and apply below require data
+        if history.shape[0] == 0:
+            ret = history.copy()
+            ret['name'] = None
+            return ret
 
         # Build out -D3 combos
         dftd3 = history[history["program"] == "dftd3"].copy()
@@ -241,78 +342,101 @@ class Dataset(Collection):
 
         # Find the returned subset
         ret = history.copy()
-        for key, value in search.items():
-            if value is None:
-                ret = ret[ret[key].isnull()]
-            elif isinstance(value, str):
-                value = value.lower()
-                ret = ret[ret[key] == value]
-            elif isinstance(value, (list, tuple)):
-                query = [x.lower() for x in value]
-                ret = ret[ret[key].isin(query)]
-            else:
-                raise TypeError(f"Search type {type(value)} not understood.")
-
+        # Add name column
+        ret['name'] = ret.apply(lambda row: self._canonical_name(program=row["program"],
+                                                                 method=row["method"],
+                                                                 basis=row["basis"],
+                                                                 keywords=row["keywords"],
+                                                                 stoich=row.get("stoichiometry", None),
+                                                                 driver=row["driver"]),
+                                axis=1)
         if show_dftd3 is False:
             ret = ret[ret["program"] != "dftd3"]
 
-        if pretty:
-            ret.fillna("None", inplace=True)
-
-        ret.set_index(list(self.data.history_keys[:-1]), inplace=True)
-        ret.sort_index(inplace=True)
         return ret
-
-    def _get_values(self, force: bool = False, **search: Dict[str, Optional[str]]) -> 'DataFrame':
-        """Queries for all history that matches the search
-
-        Parameters
-        ----------
-        force : bool, optional
-            Force a query even if the data is already present
-        **search : Dict[str, Optional[str]]
-            History query paramters
-
-        Returns
-        -------
-        DataFrame
-            A DataFrame of the queried values
-
-        Raises
-        ------
-        KeyError
-            If no records match the query
-        """
-
-        queries = self.list_records(**search, dftd3=True, pretty=False).reset_index()
-        if queries.shape[0] > 10:
-            raise TypeError("More than 10 queries formed, please narrow the search.")
-
-        ret = []
-        for name, query in queries.iterrows():
-
-            query = query.replace({np.nan: None}).to_dict()
-            query.pop("driver")
-            if "stoichiometry" in query:
-                query["stoich"] = query.pop("stoichiometry")
-            name = self._canonical_name(**query)
-            if force or (name not in self.df.columns):
-                data = self.get_records(query.pop("method").upper(), projection={"return_result": True}, **query)
-                self.df[name] = data["return_result"] * constants.conversion_factor('hartree', self.units)
-            ret.append(self.df[name])
-
-        if len(ret) == 0:
-            raise KeyError("Query matched 0 records.")
-
-        return pd.concat(ret, axis=1)
 
     def get_values(self,
                    method: Optional[str] = None,
                    basis: Optional[str] = None,
                    keywords: Optional[str] = None,
                    program: Optional[str] = None,
-                   force: bool = False) -> 'DataFrame':
-        """Obtains values from the known history from the search paramaters provided for the expected `return_result` values. Defaults to the standard
+                   driver: Optional[str] = None,
+                   name: Optional[str] = None,
+                   native: Optional[bool] = None,
+                   force: bool = False) -> pd.DataFrame:
+        """
+        Obtains values from the known history from the search paramaters provided for the expected `return_result` values.
+        Defaults to the standard programs and keywords if not provided.
+
+        Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method
+        and basis combinations simultaneously.
+
+        `None` is a wildcard selector. To search for `None`, use `"None"`.
+
+        Parameters
+        ----------
+        method : Optional[str], optional
+            The computational method (B3LYP)
+        basis : Optional[str], optional
+            The computational basis (6-31G)
+        keywords : Optional[str], optional
+            The keyword alias
+        program : Optional[str], optional
+            The underlying QC program
+        driver : Optional[str], optional
+            The type of calculation (e.g. energy, gradient, hessian, dipole...)
+        name : Optional[str], optional
+            Canonical name of the record. Overrides the above selectors.
+        native: Optional[bool], optional
+            True: only include data computed with QCFractal
+            False: only include data contributed from outside sources
+            None: include both
+        force : bool, optional
+            Data is typically cached, forces a new query if True
+
+        Returns
+        -------
+        DataFrame
+            A DataFrame of values with columns corresponding to methods and rows corresponding to molecule entries.
+        """
+        return self._get_values(method=method,
+                                basis=basis,
+                                keywords=keywords,
+                                program=program,
+                                driver=driver,
+                                name=name,
+                                native=native,
+                                force=force)
+
+    def _get_values(self, native: Optional[bool] = None, force: bool = False, **spec):
+        ret = []
+
+        if native in {True, None}:
+            spec_nodriver = spec.copy()
+            driver = spec_nodriver.pop("driver")
+            if driver is not None and driver != self.data.default_driver:
+                raise KeyError(
+                    f"For native values, driver ({driver}) must be the same as the dataset's default driver "
+                    f"({self.data.default_driver}). Consider using get_records instead.")
+            df = self._get_values_from_records(force=force, **spec_nodriver)
+            ret.append(df)
+
+        if native in {False, None}:
+            df = self._get_contributed_values(**spec)
+            ret.append(df)
+        ret = pd.concat(ret, axis=1)
+        ret.sort_index(inplace=True)
+
+        return ret
+
+    def _get_values_from_records(self,
+                                 method: Optional[str] = None,
+                                 basis: Optional[str] = None,
+                                 keywords: Optional[str] = None,
+                                 program: Optional[str] = None,
+                                 name: Optional[str] = None,
+                                 force: bool = False) -> pd.DataFrame:
+        """Obtains values from the known history from the search parameters provided for the expected `return_result` values. Defaults to the standard
         programs and keywords if not provided.
 
         Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method and basis combination simultaneously.
@@ -327,6 +451,8 @@ class Dataset(Collection):
             The keyword alias for the requested compute
         program : Optional[str], optional
             The underlying QC program
+        name : Optional[str], optional
+            Canonical name of the record. Overrides the above selectors.
         force : bool, optional
             Data is typically cached, forces a new query if True.
 
@@ -335,47 +461,66 @@ class Dataset(Collection):
         DataFrame
             A DataFrame of the queried parameters
         """
+        au_units = {'energy': 'hartree', 'gradient': 'hartree/bohr', 'hessian': 'hartree/bohr**2'}
 
-        name, dbkeys, history = self._default_parameters(program, "nan", "nan", keywords)
+        # So that datasets with no records do not require a default program and default keywords
+        if len(self.list_records()) == 0:
+            return pd.DataFrame(columns=['index']).set_index('index')
 
-        for k, v in [("method", method), ("basis", basis)]:
-
-            if v is not None:
-                history[k] = v
-            else:
-                history.pop(k, None)
-
-        queries = self.list_records(**history, dftd3=True, pretty=False).reset_index()
-        if queries.shape[0] > 10:
-            raise TypeError("More than 10 queries formed, please narrow the search.")
-
-        ret = []
-        for name, query in queries.iterrows():
+        queries = self._form_queries(method=method, basis=basis, keywords=keywords, program=program, name=name)
+        names = []
+        for _, query in queries.iterrows():
 
             query = query.replace({np.nan: None}).to_dict()
-            query.pop("driver")
+            driver = query.pop("driver")
             if "stoichiometry" in query:
                 query["stoich"] = query.pop("stoichiometry")
 
-            name = self._canonical_name(**query)
+            name = query.pop("name")
+            names.append(name)
             if force or (name not in self.df.columns):
                 self._column_metadata[name] = query
-                data = self.get_records(query.pop("method").upper(), projection={"return_result": True}, merge=True, **query)
-                self.df[name] = data["return_result"] * constants.conversion_factor('hartree', self.units)
+                data = self.get_records(query.pop("method").upper(),
+                                        projection={"return_result": True},
+                                        merge=True,
+                                        **query)
+                self.df[name] = data["return_result"] * constants.conversion_factor(au_units[driver], self.units)
+                self._column_metadata[name].update({"native": True, "units": self.units})
 
-            ret.append(self.df[name])
+        return self.df[names]
 
-        if len(ret) == 0:
-            raise KeyError("Query matched no records!")
+    def _form_queries(self,
+                      method: Optional[str] = None,
+                      basis: Optional[str] = None,
+                      keywords: Optional[str] = None,
+                      program: Optional[str] = None,
+                      stoich: Optional[str] = None,
+                      name: Optional[str] = None):
+        if name is None:
+            _, _, history = self._default_parameters(program, "nan", "nan", keywords, stoich=stoich)
+            for k, v in [("method", method), ("basis", basis)]:
 
-        return pd.concat(ret, axis=1)
+                if v is not None:
+                    history[k] = v
+                else:
+                    history.pop(k, None)
+            queries = self.list_records(**history, dftd3=True, pretty=False)
+        else:
+            if any((field is not None for field in {program, method, basis, keywords, stoich})):
+                warnings.warn("Name and additional field were provided. Only name will be used as a selector.",
+                              RuntimeWarning)
+            queries = self.list_records(name=name, dftd3=True, pretty=False)
+
+        if queries.shape[0] > 10:
+            raise TypeError("More than 10 queries formed, please narrow the search.")
+        return queries
 
     def get_history(self,
-                    method: Optional[str]=None,
-                    basis: Optional[str]=None,
-                    keywords: Optional[str]=None,
-                    program: Optional[str]=None,
-                    force: bool=False) -> 'DataFrame':
+                    method: Optional[str] = None,
+                    basis: Optional[str] = None,
+                    keywords: Optional[str] = None,
+                    program: Optional[str] = None,
+                    force: bool = False) -> 'DataFrame':
         """ Queries known history from the search paramaters provided. Defaults to the standard
         programs and keywords if not provided.
 
@@ -396,7 +541,9 @@ class Dataset(Collection):
             A DataFrame of the queried parameters
         """
 
-        warnings.warn("This is function is deprecated and will be removed in 0.11.0, please use `get_values(..., )` for a instead.", DeprecationWarning)
+        warnings.warn(
+            "This is function is deprecated and will be removed in 0.12.0, "
+            "please use `get_values(..., )` for a instead.", DeprecationWarning)
 
         # Get default program/keywords
         return self.get_values(method=method, basis=basis, keywords=keywords, program=program, force=force)
@@ -405,7 +552,7 @@ class Dataset(Collection):
                    metric,
                    bench,
                    query: Dict[str, Optional[str]],
-                   groupby: Optional[str]=None,
+                   groupby: Optional[str] = None,
                    return_figure=None,
                    digits=3,
                    kind="bar") -> 'plotly.Figure':
@@ -491,12 +638,11 @@ class Dataset(Collection):
                 elif groupby:
                     record[groupby] = None
 
-                index_name = self._canonical_name(
-                    record["program"],
-                    record["method"],
-                    record["basis"],
-                    record["keywords"],
-                    stoich=record.get("stoich"))
+                index_name = self._canonical_name(record["program"],
+                                                  record["method"],
+                                                  record["basis"],
+                                                  record["keywords"],
+                                                  stoich=record.get("stoich"))
 
                 col_names[k] = index_name
 
@@ -517,15 +663,15 @@ class Dataset(Collection):
             return violin_plot(series[0], negative=negative, title=title, ylabel=ylabel, return_figure=return_figure)
 
     def visualize(self,
-                  method: Optional[str]=None,
-                  basis: Optional[str]=None,
-                  keywords: Optional[str]=None,
-                  program: Optional[str]=None,
-                  groupby: Optional[str]=None,
-                  metric: str="UE",
-                  bench: Optional[str]=None,
-                  kind: str="bar",
-                  return_figure: Optional[bool]=None) -> 'plotly.Figure':
+                  method: Optional[str] = None,
+                  basis: Optional[str] = None,
+                  keywords: Optional[str] = None,
+                  program: Optional[str] = None,
+                  groupby: Optional[str] = None,
+                  metric: str = "UE",
+                  bench: Optional[str] = None,
+                  kind: str = "bar",
+                  return_figure: Optional[bool] = None) -> 'plotly.Figure':
         """
         Parameters
         ----------
@@ -560,12 +706,12 @@ class Dataset(Collection):
         return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind)
 
     def _canonical_name(self,
-                        program: Optional[str]=None,
-                        method: Optional[str]=None,
-                        basis: Optional[str]=None,
-                        keywords: Optional[str]=None,
-                        stoich: Optional[str]=None,
-                        driver: Optional[str]=None) -> str:
+                        program: Optional[str] = None,
+                        method: Optional[str] = None,
+                        basis: Optional[str] = None,
+                        keywords: Optional[str] = None,
+                        stoich: Optional[str] = None,
+                        driver: Optional[str] = None) -> str:
         """
         Attempts to build a canonical name for a DataFrame column
         """
@@ -598,7 +744,7 @@ class Dataset(Collection):
                             method: str,
                             basis: Optional[str],
                             keywords: Optional[str],
-                            stoich: Optional[str]=None) -> Tuple[str, str, str, str]:
+                            stoich: Optional[str] = None) -> Tuple[str, str, str, str]:
         """
         Takes raw input parsed parameters and applies defaults to them.
         """
@@ -730,7 +876,7 @@ class Dataset(Collection):
                 records.extend(self.client.query_results(**query_set))
 
             if projection is None:
-                records = [{"molecule" : x.molecule, "record": x} for x in records]
+                records = [{"molecule": x.molecule, "record": x} for x in records]
 
             records = pd.DataFrame.from_dict(records)
 
@@ -770,12 +916,11 @@ class Dataset(Collection):
         Internal compute function
         """
 
-        name, dbkeys, history = self._default_parameters(
-            compute_keys["program"],
-            compute_keys["method"],
-            compute_keys["basis"],
-            compute_keys["keywords"],
-            stoich=compute_keys.get("stoich", None))
+        name, dbkeys, history = self._default_parameters(compute_keys["program"],
+                                                         compute_keys["method"],
+                                                         compute_keys["basis"],
+                                                         compute_keys["keywords"],
+                                                         stoich=compute_keys.get("stoich", None))
 
         self._check_client()
         self._check_state()
@@ -789,15 +934,14 @@ class Dataset(Collection):
 
             for i in range(0, len(umols), self.client.query_limit):
                 chunk_mols = umols[i:i + self.client.query_limit]
-                ret = self.client.add_compute(
-                    compute_set["program"],
-                    compute_set["method"],
-                    compute_set["basis"],
-                    compute_set["driver"],
-                    compute_set["keywords"],
-                    chunk_mols,
-                    tag=tag,
-                    priority=priority)
+                ret = self.client.add_compute(compute_set["program"],
+                                              compute_set["method"],
+                                              compute_set["basis"],
+                                              compute_set["driver"],
+                                              compute_set["keywords"],
+                                              chunk_mols,
+                                              tag=tag,
+                                              priority=priority)
 
                 ids.extend(ret.ids)
                 submitted.extend(ret.submitted)
@@ -847,7 +991,7 @@ class Dataset(Collection):
         self.data.__dict__["default_benchmark"] = benchmark
         return True
 
-    def add_keywords(self, alias: str, program: str, keyword: 'KeywordSet', default: bool=False) -> bool:
+    def add_keywords(self, alias: str, program: str, keyword: 'KeywordSet', default: bool = False) -> bool:
         """
         Adds an option alias to the dataset. Not that keywords are not present
         until a save call has been completed.
@@ -917,7 +1061,8 @@ class Dataset(Collection):
             return self.client.query_keywords([kwid])[0]
 
     def add_contributed_values(self, contrib: ContributedValues, overwrite=False) -> None:
-        """Adds a ContributedValues to the database.
+        """
+        Adds a ContributedValues to the database. Be sure to call save() to commit changes to the server.
 
         Parameters
         ----------
@@ -932,7 +1077,8 @@ class Dataset(Collection):
             contrib = contrib.copy()
         else:
             contrib = ContributedValues(**contrib)
-
+        if set(contrib.values.keys()) != set(self.get_index()):
+            raise ValueError("Contributed values indices do not match the entries in the dataset.")
         # Check the key
         key = contrib.name.lower()
         if (key in self.data.contributed_values) and (overwrite is False):
@@ -942,52 +1088,69 @@ class Dataset(Collection):
         self.data.contributed_values[key] = contrib
         self._updated_state = True
 
-    def list_contributed_values(self) -> List[str]:
+    def _list_contributed_values(self) -> pd.DataFrame:
         """
-        Lists the known keys for all contributed values.
+        Lists all specifications of contributed data, i.e. method, program, basis set, keyword set, driver combinations
 
         Returns
         -------
-        List[str]
-            A list of all known contributed values.
+        DataFrame
+            Contributed value specifications.
         """
+        ret = pd.DataFrame(columns=self.data.history_keys + tuple(["name"]))
 
-        return list(self.data.contributed_values)
+        cvs = ((cv_data.name, cv_data.theory_level_details)
+               for (cv_name, cv_data) in self.data.contributed_values.items())
 
-    def get_contributed_values(self, key: str) -> 'Series':
-        """Returns a Pandas column with the requested contributed values
+        for cv_name, theory_level_details in cvs:
+            spec = {"name": cv_name}
+            for k in self.data.history_keys:
+                spec[k] = "Unknown"
+            # ReactionDataset uses "default" as a default value for stoich, but many contributed datasets lack a stoich field
+            if "stoichiometry" in self.data.history_keys:
+                spec["stoichiometry"] = "default"
+            if isinstance(theory_level_details, dict):
+                spec.update(**theory_level_details)
+            ret = ret.append(spec, ignore_index=True)
 
-        Parameters
-        ----------
-        key : str
-            The ContributedValues object key.
-        scale : None, optional
-            All units are based in Hartree, the default scaling is to kcal/mol.
+        return ret
 
-        Returns
-        -------
-        Series
-            A pandas Series containing the request values.
-        """
-        data = self.data.contributed_values[key.lower()].copy()
+    def _get_contributed_values(self, force: bool = False, **spec) -> pd.DataFrame:
+        queries = self._filter_records(self._list_contributed_values().rename(columns={'stoichiometry': 'stoich'}),
+                                       **spec).to_dict("records")
 
-        # Annoying work around to prevent some pands magic
-        if isinstance(next(iter(data.values.values())), (int, float)):
-            values = data.values
-        else:
-            # TODO temporary patch until msgpack collections
-            if self.data.default_driver == "gradient":
-                values = {k: [np.array(v).reshape(-1, 3)] for k, v in data.values.items()}
-            else:
-                values = {k: [np.array(v)] for k, v in data.values.items()}
+        column_names = []
+        for query in queries:
+            data = self.data.contributed_values[query["name"].lower()].copy()
+            column_name = data.name
+            column_names.append(column_name)
+            if force or (column_name not in self.df.columns):
+                # Annoying work around to prevent some pandas magic
+                if isinstance(next(iter(data.values.values())), (int, float)):
+                    values = data.values
+                else:
+                    # TODO temporary patch until msgpack collections
+                    if self.data.default_driver == "gradient":
+                        values = {k: np.array(v).reshape(-1, 3) for k, v in data.values.items()}
+                    else:
+                        values = {k: np.array(v) for k, v in data.values.items()}
+                self._column_metadata[column_name] = query
+                self.df[column_name] = pd.Series(list(values.values()), index=list(values.keys()))
 
-        tmp_idx = pd.DataFrame.from_dict(values, orient="index", columns=[data.name])
+                # Convert to numeric
+                metadata = {"native": False}
+                try:
+                    self.df[column_name] *= constants.conversion_factor(data.units, self.units)
+                    metadata["units"] = self.units
+                except ValueError as e:
+                    # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
+                    if e.__class__.__name__ == "DimensionalityError":
+                        metadata["units"] = data.units
+                    else:
+                        raise
+                self._column_metadata[column_name].update(metadata)
 
-        # Convert to numeric
-        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor(
-            data.units, self.units)
-
-        return tmp_idx
+        return self.df[column_names]
 
     def get_molecules(self, subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'Molecule']:
         """Queries full Molecules from the database.
@@ -1011,14 +1174,14 @@ class Dataset(Collection):
             return df
 
     def get_records(self,
-              method: str,
-              basis: Optional[str]=None,
-              *,
-              keywords: Optional[str]=None,
-              program: Optional[str]=None,
-              projection: Optional[Dict[str, bool]]=None,
-              subset: Optional[Union[str, Set[str]]] = None,
-              merge: bool = False) -> Union[pd.DataFrame, 'ResultRecord']:
+                    method: str,
+                    basis: Optional[str] = None,
+                    *,
+                    keywords: Optional[str] = None,
+                    program: Optional[str] = None,
+                    projection: Optional[Dict[str, bool]] = None,
+                    subset: Optional[Union[str, Set[str]]] = None,
+                    merge: bool = False) -> Union[pd.DataFrame, 'ResultRecord']:
         """Queries full ResultRecord objects from the database.
 
         Parameters
@@ -1077,12 +1240,12 @@ class Dataset(Collection):
 
     def query(self,
               method: str,
-              basis: Optional[str]=None,
+              basis: Optional[str] = None,
               *,
-              keywords: Optional[str]=None,
-              program: Optional[str]=None,
-              field: str=None,
-              force: bool=False) -> str:
+              keywords: Optional[str] = None,
+              program: Optional[str] = None,
+              field: str = None,
+              force: bool = False) -> str:
         """
         Queries the local Portal for the requested keys.
 
@@ -1113,7 +1276,9 @@ class Dataset(Collection):
 
         """
 
-        warnings.warn("This is function is deprecated and will be removed in 0.11.0, please `get_records(..., projection='return_result')` for a similar result", DeprecationWarning)
+        warnings.warn(
+            "This is function is deprecated and will be removed in 0.12.0, "
+            "please `get_records(..., projection='return_result')` for a similar result", DeprecationWarning)
 
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
 
@@ -1133,7 +1298,8 @@ class Dataset(Collection):
         tmp_idx = self._get_records(indexer, history, projection={field: True}, merge=True)
         tmp_idx.rename(columns={field: name}, inplace=True)
 
-        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor('hartree', self.units)
+        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor(
+            'hartree', self.units)
 
         # Apply to df
         self.df[tmp_idx.columns] = tmp_idx
@@ -1142,12 +1308,12 @@ class Dataset(Collection):
 
     def compute(self,
                 method: str,
-                basis: Optional[str]=None,
+                basis: Optional[str] = None,
                 *,
-                keywords: Optional[str]=None,
-                program: Optional[str]=None,
-                tag: Optional[str]=None,
-                priority: Optional[str]=None) -> ComputeResponse:
+                keywords: Optional[str] = None,
+                program: Optional[str] = None,
+                tag: Optional[str] = None,
+                priority: Optional[str] = None) -> ComputeResponse:
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -1196,7 +1362,7 @@ class Dataset(Collection):
         return [x.name for x in self.data.records]
 
     # Statistical quantities
-    def statistics(self, stype: str, value: str, bench: Optional[str]=None, **kwargs: Dict[str, Any]):
+    def statistics(self, stype: str, value: str, bench: Optional[str] = None, **kwargs: Dict[str, Any]):
         """Provides statistics for various columns in the underlying dataframe.
 
         Parameters
@@ -1222,8 +1388,7 @@ class Dataset(Collection):
 
         if (bench is None):
             raise KeyError("No benchmark provided and default_benchmark is None!")
-
-        return wrap_statistics(stype.upper(), self.df, value, bench, **kwargs)
+        return wrap_statistics(stype.upper(), self, value, bench, **kwargs)
 
     # Getters
     def __getitem__(self, args: str) -> 'Series':
