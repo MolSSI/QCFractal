@@ -1069,13 +1069,6 @@ class Dataset(Collection):
             The ContributedValues to add.
         overwrite : bool, optional
             Overwrites pre-existing values
-
-        Raises
-        ------
-        ValueError:
-            If contrib's indexes do not match those of the dataset's entries
-        KeyError:
-            If values with the same name already exist, and overwrite is False.
         """
 
         # Convert and validate

@@ -8,7 +8,7 @@ import pytest
 import qcfractal.interface as ptl
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
-
+import qcelemental as qcel
 
 def test_collection_query(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
@@ -321,10 +321,10 @@ def contributed_dataset_fixture(fractal_compute_server):
 def test_dataset_contributed_units(contributed_dataset_fixture):
     _, ds = contributed_dataset_fixture
 
-    assert ds._column_metadata[ds.get_values(name="Fake Energy").columns[0]]["units"] == "kcal / mol"
-    assert ds._column_metadata[ds.get_values(name="Fake Gradient").columns[0]]["units"] == "hartree/bohr"
-    assert ds._column_metadata[ds.get_values(name="Fake Hessian").columns[0]]["units"] == "hartree/bohr**2"
-    assert ds._column_metadata[ds.get_values(name="Fake Dipole").columns[0]]["units"] == "e * bohr"
+    assert qcel.constants.ureg(ds._column_metadata[ds.get_values(name="Fake Energy").columns[0]]["units"]) == qcel.constants.ureg("kcal / mol")
+    assert qcel.constants.ureg(ds._column_metadata[ds.get_values(name="Fake Gradient").columns[0]]["units"]) == qcel.constants.ureg("hartree/bohr")
+    assert qcel.constants.ureg(ds._column_metadata[ds.get_values(name="Fake Hessian").columns[0]]["units"]) == qcel.constants.ureg("hartree/bohr**2")
+    assert qcel.constants.ureg(ds._column_metadata[ds.get_values(name="Fake Dipole").columns[0]]["units"]) == qcel.constants.ureg("e * bohr")
 
 
 def test_dataset_contributed_mixed_values(contributed_dataset_fixture):
