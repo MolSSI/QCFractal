@@ -1,6 +1,7 @@
 """
 Tests the server collection compute capabilities.
 """
+import pathlib
 
 import numpy as np
 import pytest
@@ -689,6 +690,45 @@ def test_dataset_list_get_values(gradient_dataset_fixture, contributed_dataset_f
             assert from_name.shape == (len(ds.get_index()), 1)
             assert from_spec.shape == (len(ds.get_index()), 1)
             assert from_name.columns[0] == from_spec.columns[0]
+
+
+def test_dataset_view(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    def df_equals(df1, df2):
+        """ checks equality even when columns contain numpy arrays, which .equals and == struggle with """
+        if not all(df1.columns == df2.columns):
+            return False
+        if not all(df1.index.values == df2.index.values):
+            return False
+        for i in range(df1.shape[0]):
+            for j in range(df1.shape[1]):
+                if isinstance(df1.iloc[i, j], np.ndarray):
+                    if not np.array_equal(df1.iloc[i, j], df2.iloc[i, j]):
+                        return False
+                else:
+                    if not df1.iloc[i, j] == df2.iloc[i, j]:
+                        return False
+        return True
+
+    ds._disable_view = True
+    list_ds = ds.list_values()
+    cv_ds = ds.get_values(native=False)
+    nv_ds = ds.get_values(native=True)
+    v_ds = ds.get_values()
+
+    ds._disable_view = False
+    list_view = ds.list_values()
+    assert list_ds.equals(list_view)
+
+    cv_view = ds.get_values(native=False)
+    nv_view = ds.get_values(native=True)
+    v_view = ds.get_values()
+
+    # 'no details' column does not match because there is not enough info to interpret it as a gradient
+    assert df_equals(cv_view.drop('no details', axis=1), cv_ds.drop('no details', axis=1))
+    assert df_equals(nv_view, nv_ds)
+    assert df_equals(v_view.drop('no details', axis=1), v_ds.drop('no details', axis=1))
 
 
 def test_generic_collection(fractal_compute_server):

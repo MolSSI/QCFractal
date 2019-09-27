@@ -41,7 +41,7 @@ class DatasetView(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def list_values(self) -> pd.Dataframe:
+    def list_values(self) -> pd.DataFrame:
         """
         Get a list of all available value columns.
 
@@ -71,19 +71,38 @@ class DatasetView(abc.ABC):
 class HDF5View(DatasetView):
 
     def __init__(self, path: Union[str, pathlib.Path]):
-        super.__init__(path)
+        super().__init__(path)
 
-    def list_values(self) -> pd.Dataframe:
+    def list_values(self) -> pd.DataFrame:
         df = pd.DataFrame()
         with self._read_file() as f:
+            history_keys = json.loads(f.attrs['history_keys'])
             for dataset in f['value'].values():
-                df.append(dict(dataset.attrs))
+                row = {k: json.loads(dataset.attrs[k]) for k in history_keys}
+                row["name"] = json.loads(dataset.attrs["name"])
+                row["native"] = True
+                df = df.append(row, ignore_index=True)
             for dataset in f['contributed_value'].values():
-                df.append(dict(dataset.attrs))
+                # TODO: duplicate
+                row = dict()
+                row["name"] = json.loads(dataset.attrs["name"])
+                for k in history_keys:
+                    row[k] = "Unknown"
+                # ReactionDataset uses "default" as a default value for stoich, but many contributed datasets lack a stoich field
+                if "stoichiometry" in history_keys:
+                    row["stoichiometry"] = "default"
+                if "theory_level_details" in dataset.attrs:
+                    theory_level_details = json.loads(dataset.attrs["theory_level_details"])
+                    if isinstance(theory_level_details, dict):
+                        row.update(**theory_level_details)
+                row["native"] = False
+                print(row)
+                df = df.append(row, ignore_index=True)
+        print(df)
         return df
 
     def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, List[str]]:
-        units = []
+        units = {}
         with self._read_file() as f:
             ret = pd.DataFrame(index=f["entry"][:])
 
@@ -109,10 +128,10 @@ class HDF5View(DatasetView):
                         warnings.warn(f"Variable length data type not understood, returning flat array "
                                       f"(driver = {driver}).", RuntimeWarning)
                         data = list(dataset[:])
-                column_name = dataset.attrs["name"]
-                column_units = dataset.attrs["units"]
+                column_name = query["name"]
+                column_units = json.loads(dataset.attrs["units"])
                 ret[column_name] = data
-                units.append(column_units)
+                units[column_name] = column_units
 
         return ret, units
 
@@ -159,17 +178,12 @@ class HDF5View(DatasetView):
             """ Convert a pydantic datamodel into strings for storage in HDF5 metadata """
             # TODO: Can I use elemental for this?
             for name in names:
-                if getattr(datamodel, name) is None:
-                    continue
-                elif not datamodel.fields[name].is_complex():
-                    str_val = str(getattr(datamodel, name))
-                    yield name, str_val
-                else:
-                    yield name, json.dumps(getattr(datamodel, name))
+                yield name, json.dumps(getattr(datamodel, name))
 
         with self._write_file() as f:
+            ## TODO: save some info about the server
             # Collection attributes
-            f.attrs.update(_serialize_fields(ds.data,  {"name", "collection", "provenance", "tagline", "tags", "id"}))
+            f.attrs.update(_serialize_fields(ds.data,  {"name", "collection", "provenance", "tagline", "tags", "id", "history_keys"}))
 
             # Export entries
             entry_dset = f.create_dataset("entry", shape=default_shape, dtype=utf8_t, **dataset_kwargs)
@@ -181,7 +195,7 @@ class HDF5View(DatasetView):
             for specification in history:
                 name = specification.pop("name")
                 dataset_name = self._normalize_hdf5_name(name)
-                df = self.get_values(**specification, force=True)
+                df = ds.get_values(**specification, force=True)
                 specification["name"] = name
                 driver = specification["driver"]
 
@@ -191,28 +205,27 @@ class HDF5View(DatasetView):
                 dataset = value_group.create_dataset(dataset_name, **dataspec, **dataset_kwargs)
 
                 for key in specification:
-                    dataset.attrs[key] = specification[key]
-                dataset.attrs["units"] = self.units
+                    dataset.attrs[key] = json.dumps(specification[key])
+                dataset.attrs["units"] = json.dumps(ds.units)
 
                 _write_dataset(dataset, df, entry_dset)
 
             # Export contributed data columns
             contributed_group = f.create_group("contributed_value")
-            for cv_name in self.list_values(force=True, native=False)["name"]:
-                cv_df = self.get_values(name=cv_name, force=True, native=False)
-                cv_model = self.data.contributed_values[cv_name]
+            for cv_name in ds.list_values(force=True, native=False)["name"]:
+                cv_df = ds.get_values(name=cv_name, force=True, native=False)
+                cv_model = ds.data.contributed_values[cv_name.lower()]
 
                 try:
                     dataspec = driver_dataspec[cv_model.theory_level_details["driver"]]
                 except (KeyError, TypeError):
                     warnings.warn(
                         f"Contributed values column {cv_name} does not provide driver in theory_level_details. "
-                        f"Assuming default driver for the dataset ({self.data.default_driver}).")
-                    dataspec = driver_dataspec[self.data.default_driver]
+                        f"Assuming default driver for the dataset ({ds.data.default_driver}).")
+                    dataspec = driver_dataspec[ds.data.default_driver]
 
                 dataset = contributed_group.create_dataset(self._normalize_hdf5_name(cv_name),
                                                            **dataspec, **dataset_kwargs)
-
                 dataset.attrs.update(
                         _serialize_fields(cv_model, {"name", "theory_level", "units", "doi", "comments", "theory_level", "theory_level_details"}))
 
@@ -227,8 +240,8 @@ class HDF5View(DatasetView):
 
     @contextmanager
     def _read_file(self):
-        yield h5py.File(self.path, 'r')
+        yield h5py.File(self._path, 'r')
 
     @contextmanager
     def _write_file(self):
-        yield h5py.File(self.path, 'w')
+        yield h5py.File(self._path, 'w')

@@ -71,6 +71,9 @@ class Dataset(Collection):
         self._new_records = []
         self._updated_state = False
 
+        self._view = None
+        self._disable_view: bool = False  # for debug and testing
+
         # Initialize internal data frames and load in contrib
         self.df = pd.DataFrame(index=self.get_index())
         self._column_metadata = {}
@@ -213,17 +216,20 @@ class Dataset(Collection):
             "driver": driver
         }
 
-        if native in {True, None}:
-            df = self._list_records(dftd3=False)
-            df['native'] = True
-            ret.append(df)
+        if self._use_view(force):
+            ret = self._view.list_values()
+        else:
+            if native in {True, None}:
+                df = self._list_records(dftd3=False)
+                df['native'] = True
+                ret.append(df)
 
-        if native in {False, None}:
-            df = self._list_contributed_values()
-            df['native'] = False
-            ret.append(df)
+            if native in {False, None}:
+                df = self._list_contributed_values()
+                df['native'] = False
+                ret.append(df)
 
-        ret = pd.concat(ret)
+            ret = pd.concat(ret)
 
         # Filter
         ret.fillna("None", inplace=True)
@@ -1142,10 +1148,17 @@ class Dataset(Collection):
 
     def _get_contributed_values(self, force: bool = False, **spec) -> pd.DataFrame:
         queries = self._filter_records(self._list_contributed_values().rename(columns={'stoichiometry': 'stoich'}),
-                                       **spec).to_dict("records")
+                                       **spec)
+        if self._use_view(force):
+            queries['native'] = False
+            ret, units = self._view.get_values(queries.to_dict("records"))
+            for k in units:
+                self._column_metadata[k]["units"] = units[k]
+                self._column_metadata[k]["native"] = False
+            return ret
 
         column_names = []
-        for query in queries:
+        for query in queries.to_dict("records"):
             data = self.data.contributed_values[query["name"].lower()].copy()
             column_name = data.name
             column_names.append(column_name)
@@ -1155,7 +1168,11 @@ class Dataset(Collection):
                     values = data.values
                 else:
                     # TODO temporary patch until msgpack collections
-                    if self.data.default_driver == "gradient":
+                    if isinstance(data.theory_level_details, dict) and "driver" in data.theory_level_details:
+                        cv_driver = data.theory_level_details["driver"]
+                    else:
+                        cv_driver = self.data.default_driver
+                    if cv_driver == "gradient":
                         values = {k: np.array(v).reshape(-1, 3) for k, v in data.values.items()}
                     else:
                         values = {k: np.array(v) for k, v in data.values.items()}
@@ -1415,6 +1432,10 @@ class Dataset(Collection):
         if (bench is None):
             raise KeyError("No benchmark provided and default_benchmark is None!")
         return wrap_statistics(stype.upper(), self, value, bench, **kwargs)
+
+    def _use_view(self, force: bool = False):
+        """Helper function to decide whether to use a locally available HDF5 view"""
+        return force is False and self._view is not None and not self._disable_view
 
     # Getters
     def __getitem__(self, args: str) -> 'Series':
