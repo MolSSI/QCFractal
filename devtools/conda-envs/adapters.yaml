@@ -19,6 +19,7 @@ dependencies:
   - postgresql
   - alembic
   - tqdm
+  - h5py
 
 # Test depends
   - pytest

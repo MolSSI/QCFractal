@@ -34,6 +34,7 @@ if __name__ == "__main__":
             'requests',
             'tornado',
             'tqdm',
+            'h5py',
 
             # Database
             'sqlalchemy>=1.3',
