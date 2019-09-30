@@ -493,11 +493,15 @@ class Dataset(Collection):
                                             projection={"return_result": True},
                                             merge=True,
                                             **query)
-                    self.df[name] = data["return_result"] * constants.conversion_factor(au_units[driver], self.units)
+                    self.df[name] = data["return_result"]
+                    units = au_units[driver]
                 else:
                     query["native"] = True
                     data, units = self._view.get_values([query])
-                    self.df[name] = data[name] * constants.conversion_factor(units[name], self.units)
+                    self.df[name] = data[name]
+                    units = units[name]
+
+                self.df[name] *= constants.conversion_factor(units, self.units)
                 self._column_metadata[name].update({"native": True, "units": self.units})
 
         return self.df[names]
@@ -1161,9 +1165,6 @@ class Dataset(Collection):
             queries['native'] = False
             ret, units = self._view.get_values(queries.to_dict("records"))
             for k in units:
-                # TODO: add spec to column metadata?
-                # TODO: convert units
-                # TODO: caching
                 self._column_metadata[k]["units"] = units[k]
                 self._column_metadata[k]["native"] = False
 
@@ -1175,31 +1176,37 @@ class Dataset(Collection):
             column_name = data.name
             column_names.append(column_name)
             if force or (column_name not in self.df.columns):
-                # Annoying work around to prevent some pandas magic
-                if isinstance(next(iter(data.values.values())), (int, float)):
-                    values = data.values
-                else:
-                    # TODO temporary patch until msgpack collections
-                    if isinstance(data.theory_level_details, dict) and "driver" in data.theory_level_details:
-                        cv_driver = data.theory_level_details["driver"]
-                    else:
-                        cv_driver = self.data.default_driver
-                    if cv_driver == "gradient":
-                        values = {k: np.array(v).reshape(-1, 3) for k, v in data.values.items()}
-                    else:
-                        values = {k: np.array(v) for k, v in data.values.items()}
                 self._column_metadata[column_name] = query
-                self.df[column_name] = pd.Series(list(values.values()), index=list(values.keys()))
+                if not self._use_view(force):
+                    # Annoying work around to prevent some pandas magic
+                    if isinstance(next(iter(data.values.values())), (int, float)):
+                        values = data.values
+                    else:
+                        # TODO temporary patch until msgpack collections
+                        if isinstance(data.theory_level_details, dict) and "driver" in data.theory_level_details:
+                            cv_driver = data.theory_level_details["driver"]
+                        else:
+                            cv_driver = self.data.default_driver
+                        if cv_driver == "gradient":
+                            values = {k: np.array(v).reshape(-1, 3) for k, v in data.values.items()}
+                        else:
+                            values = {k: np.array(v) for k, v in data.values.items()}
+                    self.df[column_name] = pd.Series(list(values.values()), index=list(values.keys()))
+                    units = data.units
+                else:
+                    query["native"] = False
+                    ret, units = self._view.get_values([query])
+                    self.df[column_name] = ret[column_name]
 
-                # Convert to numeric
+                # convert units
                 metadata = {"native": False}
                 try:
-                    self.df[column_name] *= constants.conversion_factor(data.units, self.units)
+                    self.df[column_name] *= constants.conversion_factor(units, self.units)
                     metadata["units"] = self.units
                 except ValueError as e:
                     # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
                     if e.__class__.__name__ == "DimensionalityError":
-                        metadata["units"] = data.units
+                        metadata["units"] = units
                     else:
                         raise
                 self._column_metadata[column_name].update(metadata)
