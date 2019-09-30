@@ -1,10 +1,16 @@
 Dataset
 =======
 
+The ``Dataset`` collection represents a table whose rows correspond to molecules, and whose columns correspond
+to properties. Columns may either result from QCSchema-backed calculations or be contributed from outside sources.
+Existing ``Datasets`` can be listed with ``client.list_collections("Dataset")``
+and obtained with ``client.get_collection("Dataset", name)``.
+
 Querying
 --------
 
-.. todo:: write this after get_results, get_values PR
+Available results in a ``Dataset`` may be listed with the :meth:`qcportal.collections.Dataset.list_values` method.
+
 
 Visualizing
 -----------
@@ -79,5 +85,5 @@ Note that this requires `compute permissions <http://docs.qcarchive.molssi.org/p
 API
 ---
 
-.. autoclass:: qcfractal.interface.collections.Dataset
+.. autoclass:: qcportal.collections.Dataset
     :members:

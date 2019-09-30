@@ -33,6 +33,7 @@ Models are stored in ``Dataset.data.history``, and can be removed from there:
 
     ds.data.history.remove(('energy', 'psi4', 'lda', 'sto-3g', 'scf_default'))
     ds.save()
+
     ds = client.get_collection(...)
     print(ds.data.history)
     # Output e.g.
