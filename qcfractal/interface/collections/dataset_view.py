@@ -10,7 +10,7 @@ from typing import Union, List, Tuple
 import numpy as np
 import pandas as pd
 import h5py
-from pydantic.fields import Field
+
 
 class DatasetView(abc.ABC):
     def __init__(self, path: Union[str, pathlib.Path]):
@@ -73,23 +73,22 @@ class HDF5View(DatasetView):
     def list_values(self) -> pd.DataFrame:
         df = pd.DataFrame()
         with self._read_file() as f:
-            history_keys = json.loads(f.attrs['history_keys'])
+            history_keys = self._deserialize_field(f.attrs['history_keys'])
             for dataset in f['value'].values():
-                row = {k: json.loads(dataset.attrs[k]) for k in history_keys}
-                row["name"] = json.loads(dataset.attrs["name"])
+                row = {k: self._deserialize_field(dataset.attrs[k]) for k in history_keys}
+                row["name"] = self._deserialize_field(dataset.attrs["name"])
                 row["native"] = True
                 df = df.append(row, ignore_index=True)
             for dataset in f['contributed_value'].values():
-                # TODO: duplicate
                 row = dict()
-                row["name"] = json.loads(dataset.attrs["name"])
+                row["name"] = self._deserialize_field(dataset.attrs["name"])
                 for k in history_keys:
                     row[k] = "Unknown"
                 # ReactionDataset uses "default" as a default value for stoich, but many contributed datasets lack a stoich field
                 if "stoichiometry" in history_keys:
                     row["stoichiometry"] = "default"
                 if "theory_level_details" in dataset.attrs:
-                    theory_level_details = json.loads(dataset.attrs["theory_level_details"])
+                    theory_level_details = self._deserialize_field(dataset.attrs["theory_level_details"])
                     if isinstance(theory_level_details, dict):
                         row.update(**theory_level_details)
                 row["native"] = False
@@ -125,7 +124,7 @@ class HDF5View(DatasetView):
                                       f"(driver = {driver}).", RuntimeWarning)
                         data = list(dataset[:])
                 column_name = query["name"]
-                column_units = json.loads(dataset.attrs["units"])
+                column_units = self._deserialize_field(dataset.attrs["units"])
                 ret[column_name] = data
                 units[column_name] = column_units
 
@@ -170,16 +169,11 @@ class HDF5View(DatasetView):
                         else:
                             raise
 
-        def _serialize_fields(datamodel, names):
-            """ Convert a pydantic datamodel into strings for storage in HDF5 metadata """
-            # TODO: Can I use elemental for this?
-            for name in names:
-                yield name, json.dumps(getattr(datamodel, name))
-
         with self._write_file() as f:
-            ## TODO: save some info about the server
             # Collection attributes
-            f.attrs.update(_serialize_fields(ds.data,  {"name", "collection", "provenance", "tagline", "tags", "id", "history_keys"}))
+            for field in {"name", "collection", "provenance", "tagline", "tags", "id", "history_keys"}:
+                f.attrs[field] = self._serialize_field(getattr(ds.data, field))
+            f.attrs["server_information"] = self._serialize_field(ds.client.server_information())
 
             # Export entries
             entry_dset = f.create_dataset("entry", shape=default_shape, dtype=utf8_t, **dataset_kwargs)
@@ -202,8 +196,8 @@ class HDF5View(DatasetView):
                 dataset = value_group.create_dataset(dataset_name, **dataspec, **dataset_kwargs)
 
                 for key in specification:
-                    dataset.attrs[key] = json.dumps(specification[key])
-                dataset.attrs["units"] = json.dumps(ds.units)
+                    dataset.attrs[key] = self._serialize_field(specification[key])
+                dataset.attrs["units"] = self._serialize_field(ds.units)
 
                 _write_dataset(dataset, df, entry_dset)
 
@@ -223,8 +217,8 @@ class HDF5View(DatasetView):
 
                 dataset = contributed_group.create_dataset(self._normalize_hdf5_name(cv_name),
                                                            **dataspec, **dataset_kwargs)
-                dataset.attrs.update(
-                        _serialize_fields(cv_model, {"name", "theory_level", "units", "doi", "comments", "theory_level", "theory_level_details"}))
+                for field in {"name", "theory_level", "units", "doi", "comments", "theory_level", "theory_level_details"}:
+                    dataset.attrs[field] = self._serialize_field(getattr(cv_model, field))
 
                 _write_dataset(dataset, cv_df, entry_dset)
 
@@ -242,3 +236,12 @@ class HDF5View(DatasetView):
     @contextmanager
     def _write_file(self):
         yield h5py.File(self._path, 'w')
+
+    # Methods for turning objects into strings for storage in HDF5 metadata fields ("attrs")
+    @staticmethod
+    def _serialize_field(field):
+        return json.dumps(field)
+
+    @staticmethod
+    def _deserialize_field(field):
+        return json.loads(field)
