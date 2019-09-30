@@ -77,6 +77,9 @@ class QCSpecification(ProtoModel):
         description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs"
         " support all combinations of driver/method/basis.")
 
+    class Config:
+        force_skip_defaults = True
+
     @validator('basis')
     def check_basis(cls, v):
         return prepare_basis(v)
@@ -123,6 +126,9 @@ class OptimizationSpecification(ProtoModel):
                     ":class:`KeywordSet`. "
     )
     protocols: OptimizationProtocols = Schema(OptimizationProtocols(), description=str(OptimizationProtocols.__doc__))
+
+    class Config:
+        force_skip_defaults = True
 
     @validator('program')
     def check_program(cls, v):
