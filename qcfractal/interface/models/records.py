@@ -492,7 +492,8 @@ class OptimizationRecord(RecordBase):
                                               keywords=self.keywords,
                                               extras=self.extras,
                                               hash_index=self.hash_index,
-                                              input_specification=qcinput_spec)
+                                              input_specification=qcinput_spec,
+                                              protocols=self.protocols)
         return model
 
 ## Standard function

@@ -73,7 +73,7 @@ def test_compute_queue_stack(fractal_compute_server):
 ### Tests the compute queue stack
 @testing.using_geometric
 @testing.using_psi4
-def test_procedure_optimization(fractal_compute_server):
+def test_procedure_optimization_single(fractal_compute_server):
 
     # Add a hydrogen molecule
     hydrogen = ptl.Molecule.from_data([[1, 0, 0, -0.672], [1, 0, 0, 0.672]], dtype="numpy", units="bohr")
@@ -148,3 +148,42 @@ def test_procedure_optimization(fractal_compute_server):
     r = client.add_procedure("optimization", "geometric", options, [mol_ret[0]])
     assert len(r.ids) == 1
     assert len(r.existing) == 1
+
+
+@testing.using_geometric
+@testing.using_psi4
+def test_procedure_optimization_protocols(fractal_compute_server):
+
+    # Add a hydrogen molecule
+    hydrogen = ptl.Molecule.from_data([[1, 0, 0, -0.673], [1, 0, 0, 0.673]], dtype="numpy", units="bohr")
+    client = fractal_compute_server.client()
+
+    # Add compute
+    options = {
+        "keywords": None,
+        "qc_spec": {
+            "driver": "gradient",
+            "method": "HF",
+            "basis": "sto-3g",
+            "program": "psi4"
+        },
+        "protocols": {
+            "trajectory": "final"
+        }
+    }
+
+    # Ask the server to compute a new computation
+    r = client.add_procedure("optimization", "geometric", options, [hydrogen])
+    assert len(r.ids) == 1
+    compute_key = r.ids[0]
+
+    # Manually handle the compute
+    fractal_compute_server.await_results()
+    assert len(fractal_compute_server.list_current_tasks()) == 0
+
+    # # Query result and check against out manual pul
+    proc = client.query_procedures(id=r.ids)[0]
+    assert proc.status == "COMPLETE"
+
+    assert len(proc.trajectory) == 1
+    assert len(proc.energies) > 1
