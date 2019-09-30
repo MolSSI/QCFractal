@@ -370,8 +370,8 @@ def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, reques
 def test_dataset_contributed_units(contributed_dataset_fixture):
     _, ds = contributed_dataset_fixture
 
-    assert qcel.constants.ureg(ds._column_metadata[ds.get_values(
-        name="Fake Energy").columns[0]]["units"]) == qcel.constants.ureg(ds.units)
+    assert qcel.constants.ureg(
+        ds._column_metadata[ds.get_values(name="Fake Energy").columns[0]]["units"]) == qcel.constants.ureg(ds.units)
     assert qcel.constants.ureg(ds._column_metadata[ds.get_values(
         name="Fake Gradient").columns[0]]["units"]) == qcel.constants.ureg("hartree/bohr")
     assert qcel.constants.ureg(ds._column_metadata[ds.get_values(
@@ -484,7 +484,6 @@ def reactiondataset_dftd3_fixture_fixture(fractal_compute_server, tmp_path_facto
         testing.check_has_module("psi4")
         testing.check_has_module("dftd3")
 
-
         ds = ptl.collections.ReactionDataset(ds_name, client, ds_type="ie")
 
         # Add two helium dimers to the DB at 4 and 8 bohr
@@ -507,8 +506,7 @@ def reactiondataset_dftd3_fixture_fixture(fractal_compute_server, tmp_path_facto
 
     # with view
     if request.param:
-        view = ptl.collections.HDF5View(
-            pathlib.Path(tmp_path_factory.mktemp('test_collections'), f'{ds_name}.hdf5'))
+        view = ptl.collections.HDF5View(pathlib.Path(tmp_path_factory.mktemp('test_collections'), f'{ds_name}.hdf5'))
         view.write(ds)
         ds._view = view
     else:

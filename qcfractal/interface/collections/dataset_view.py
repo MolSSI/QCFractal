@@ -38,7 +38,6 @@ class DatasetView(abc.ABC):
         -------
             None
         """
-
     @abc.abstractmethod
     def list_values(self) -> pd.DataFrame:
         """
@@ -48,7 +47,6 @@ class DatasetView(abc.ABC):
         -------
             A Dataframe with specification of available columns.
         """
-
     @abc.abstractmethod
     def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, List[str]]:
         """
@@ -66,7 +64,6 @@ class DatasetView(abc.ABC):
 
 
 class HDF5View(DatasetView):
-
     def __init__(self, path: Union[str, pathlib.Path]):
         super().__init__(path)
 
@@ -120,8 +117,9 @@ class HDF5View(DatasetView):
                             n = int(round(np.sqrt(n2)))
                             data.append(np.reshape(dataset[i], (n, n)))
                     else:
-                        warnings.warn(f"Variable length data type not understood, returning flat array "
-                                      f"(driver = {driver}).", RuntimeWarning)
+                        warnings.warn(
+                            f"Variable length data type not understood, returning flat array "
+                            f"(driver = {driver}).", RuntimeWarning)
                         data = list(dataset[:])
                 column_name = query["name"]
                 column_units = self._deserialize_field(dataset.attrs["units"])
@@ -132,11 +130,10 @@ class HDF5View(DatasetView):
 
     def write(self, ds: Dataset):
         # For data checksums
-        dataset_kwargs = {"chunks": True,
-                          "fletcher32": True}
+        dataset_kwargs = {"chunks": True, "fletcher32": True}
 
         n_records = len(ds.data.records)
-        default_shape = (n_records,)
+        default_shape = (n_records, )
 
         if h5py.__version__ >= distutils.version.StrictVersion("2.9.0"):
             vlen_double_t = h5py.vlen_dtype(np.dtype("float64"))
@@ -147,11 +144,24 @@ class HDF5View(DatasetView):
             utf8_t = h5py.special_dtype(vlen=str)
             vlen_utf8_t = h5py.special_dtype(vlen=utf8_t)
 
-        driver_dataspec = {"energy": {"dtype": np.dtype("float64"), "shape": default_shape},
-                           "gradient": {"dtype": vlen_double_t, "shape": default_shape},
-                           "hessian": {"dtype": vlen_double_t, "shape": default_shape},
-                           "dipole": {"dtype": np.dtype("float64"), "shape": (n_records, 3)}
-                           }
+        driver_dataspec = {
+            "energy": {
+                "dtype": np.dtype("float64"),
+                "shape": default_shape
+            },
+            "gradient": {
+                "dtype": vlen_double_t,
+                "shape": default_shape
+            },
+            "hessian": {
+                "dtype": vlen_double_t,
+                "shape": default_shape
+            },
+            "dipole": {
+                "dtype": np.dtype("float64"),
+                "shape": (n_records, 3)
+            }
+        }
 
         def _write_dataset(dataset, column, entry_dset):
             assert column.shape[1] == 1
@@ -215,9 +225,11 @@ class HDF5View(DatasetView):
                         f"Assuming default driver for the dataset ({ds.data.default_driver}).")
                     dataspec = driver_dataspec[ds.data.default_driver]
 
-                dataset = contributed_group.create_dataset(self._normalize_hdf5_name(cv_name),
-                                                           **dataspec, **dataset_kwargs)
-                for field in {"name", "theory_level", "units", "doi", "comments", "theory_level", "theory_level_details"}:
+                dataset = contributed_group.create_dataset(self._normalize_hdf5_name(cv_name), **dataspec,
+                                                           **dataset_kwargs)
+                for field in {
+                        "name", "theory_level", "units", "doi", "comments", "theory_level", "theory_level_details"
+                }:
                     dataset.attrs[field] = self._serialize_field(getattr(cv_model, field))
 
                 _write_dataset(dataset, cv_df, entry_dset)

@@ -244,7 +244,6 @@ class ReactionDataset(Dataset):
                                      stoich=stoich,
                                      name=name)
 
-
         stoich_complex = queries.pop("stoichiometry")
         stoich_monomer = ''.join([x for x in stoich if not x.isdigit()]) + '1'
 
