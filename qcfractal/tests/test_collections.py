@@ -430,6 +430,7 @@ def test_reactiondataset_check_state(fractal_compute_server):
         ds.get_records("SCF", "STO-3G")
 
     ds.save()
+
     ds.get_records("SCF", "STO-3G")
 
     ds.add_keywords("default", "psi4", ptl.models.KeywordSet(values={"a": 5}))
@@ -538,13 +539,17 @@ def test_rectiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
 def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
 
+    request_made = not ds._use_view(False)
+    ds._clear_cache()
+
     bench = {
         "B3LYP/6-31g": pytest.approx(-0.002135, 1.e-3),
         "B3LYP-D3/6-31g": pytest.approx(-0.005818, 1.e-3),
         "B3LYP-D3(BJ)/6-31g": pytest.approx(-0.005636, 1.e-3)
     }
 
-    ret = ds.get_values("B3LYP", "6-31G")
+    with monitor_requests(client, "result", request_made=request_made):
+        ret = ds.get_values("B3LYP", "6-31G")
     assert ret.loc["HeDimer", "B3LYP/6-31g"] == bench["B3LYP/6-31g"]
 
     ret = ds.get_values("B3LYP-D3", "6-31G")

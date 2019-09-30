@@ -244,6 +244,7 @@ class ReactionDataset(Dataset):
                                      stoich=stoich,
                                      name=name)
 
+
         stoich_complex = queries.pop("stoichiometry")
         stoich_monomer = ''.join([x for x in stoich if not x.isdigit()]) + '1'
 
@@ -270,20 +271,24 @@ class ReactionDataset(Dataset):
         for _, query in queries.iterrows():
 
             query = query.replace({np.nan: None}).to_dict()
-            name = query.pop("name")
+            name = query["name"]
             names.append(name)
 
             if force or (name not in self.df.columns):
                 self._column_metadata[name] = query
+                if not self._use_view(force):
+                    query.pop("name")
+                    data_complex = _query_apply_coeffients(stoich_complex, query)
+                    data_monomer = _query_apply_coeffients(stoich_monomer, query)
 
-                data_complex = _query_apply_coeffients(stoich_complex, query)
-                data_monomer = _query_apply_coeffients(stoich_monomer, query)
+                    data = data_complex - data_monomer
 
-                data = data_complex - data_monomer
-
-                self.df[name] = data * constants.conversion_factor('hartree', self.units)
+                    self.df[name] = data * constants.conversion_factor('hartree', self.units)
+                else:
+                    query["native"] = True
+                    data, units = self._view.get_values([query])
+                    self.df[name] = data[name] * constants.conversion_factor(units[name], self.units)
                 self._column_metadata[name].update({"native": True, "units": self.units})
-
         return self.df[names]
 
     def get_history(self,
