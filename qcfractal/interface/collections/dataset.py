@@ -72,7 +72,6 @@ class Dataset(Collection):
         self._updated_state = False
 
         self._view = None
-        self._disable_view: bool = False  # for debug and testing
 
         # Initialize internal data frames and load in contrib
         self.df = pd.DataFrame(index=self.get_index())
@@ -218,6 +217,7 @@ class Dataset(Collection):
 
         if self._use_view(force):
             ret = self._view.list_values()
+            spec["native"] = native
         else:
             if native in {True, None}:
                 df = self._list_records(dftd3=False)
@@ -247,6 +247,8 @@ class Dataset(Collection):
         for key, value in spec.items():
             if value is None:
                 continue
+            if isinstance(value, bool):
+                ret = ret[ret[key] == value]
             elif isinstance(value, str):
                 value = value.lower()
                 ret = ret[ret[key].fillna("None").str.lower() == value]
@@ -477,19 +479,25 @@ class Dataset(Collection):
         for _, query in queries.iterrows():
 
             query = query.replace({np.nan: None}).to_dict()
-            driver = query.pop("driver")
             if "stoichiometry" in query:
                 query["stoich"] = query.pop("stoichiometry")
 
-            name = query.pop("name")
+            name = query["name"]
             names.append(name)
             if force or (name not in self.df.columns):
                 self._column_metadata[name] = query
-                data = self.get_records(query.pop("method").upper(),
-                                        projection={"return_result": True},
-                                        merge=True,
-                                        **query)
-                self.df[name] = data["return_result"] * constants.conversion_factor(au_units[driver], self.units)
+                if not self._use_view(force):
+                    driver = query.pop("driver")
+                    query.pop("name")
+                    data = self.get_records(query.pop("method").upper(),
+                                            projection={"return_result": True},
+                                            merge=True,
+                                            **query)
+                    self.df[name] = data["return_result"] * constants.conversion_factor(au_units[driver], self.units)
+                else:
+                    query["native"] = True
+                    data, units = self._view.get_values([query])
+                    self.df[name] = data[name] * constants.conversion_factor(units[name], self.units)
                 self._column_metadata[name].update({"native": True, "units": self.units})
 
         return self.df[names]
@@ -1153,8 +1161,12 @@ class Dataset(Collection):
             queries['native'] = False
             ret, units = self._view.get_values(queries.to_dict("records"))
             for k in units:
+                # TODO: add spec to column metadata?
+                # TODO: convert units
+                # TODO: caching
                 self._column_metadata[k]["units"] = units[k]
                 self._column_metadata[k]["native"] = False
+
             return ret
 
         column_names = []
@@ -1435,7 +1447,10 @@ class Dataset(Collection):
 
     def _use_view(self, force: bool = False):
         """Helper function to decide whether to use a locally available HDF5 view"""
-        return force is False and self._view is not None and not self._disable_view
+        return force is False and self._view is not None
+
+    def _clear_cache(self):
+        self.df = pd.DataFrame(index=self.get_index())
 
     # Getters
     def __getitem__(self, args: str) -> 'Series':

@@ -2,6 +2,7 @@
 Tests the server collection compute capabilities.
 """
 import pathlib
+from contextlib import contextmanager
 
 import numpy as np
 import pytest
@@ -26,6 +27,18 @@ def test_collection_query(fractal_compute_server):
 
     ds = client.get_collection("DATAset", "CAPital")
     assert ds.name == "CAPITAL"
+
+
+@contextmanager
+def monitor_requests(client, request, request_made=True, kind="get"):
+    before = client._request_counter[(request, kind)]
+    yield
+    after = client._request_counter[(request, kind)]
+
+    if request_made:
+        assert after > before
+    else:
+        assert after == before
 
 
 @pytest.fixture(scope="module", params=[True, False], ids=["with view", "without view"])
@@ -134,30 +147,39 @@ def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
 def test_gradient_dataset_get_records(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
-    records = ds.get_records("HF", "sto-3g")
+    with monitor_requests(client, "result", request_made=True):
+        records = ds.get_records("HF", "sto-3g")
     assert records.shape == (2, 1)
     assert records.iloc[0, 0].status == "COMPLETE"
     assert records.iloc[1, 0].status == "COMPLETE"
 
-    records_subset1 = ds.get_records("HF", "sto-3g", subset="He2")
+    with monitor_requests(client, "result", request_made=True):
+        records_subset1 = ds.get_records("HF", "sto-3g", subset="He2")
     assert records_subset1.status == "COMPLETE"
 
-    records_subset2 = ds.get_records("HF", "sto-3g", subset=["He2"])
+    with monitor_requests(client, "result", request_made=True):
+        records_subset2 = ds.get_records("HF", "sto-3g", subset=["He2"])
     assert records_subset2.shape == (1, 1)
     assert records_subset2.iloc[0, 0].status == "COMPLETE"
 
-    rec_proj = ds.get_records("HF", "sto-3g", projection={"extras": True, "return_result": True})
+    with monitor_requests(client, "result", request_made=True):
+        rec_proj = ds.get_records("HF", "sto-3g", projection={"extras": True, "return_result": True})
     assert rec_proj.shape == (2, 2)
     assert set(rec_proj.columns) == {"extras", "return_result"}
 
     with pytest.raises(KeyError):
-        ds.get_records(method="NotInDataset")
+        with monitor_requests(client, "result", request_made=False):
+            ds.get_records(method="NotInDataset")
 
 
 def test_gradient_dataset_get_values(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
-    cols = set(ds.get_values().columns)
+    request_made = not ds._use_view(False)
+    ds._clear_cache()
+
+    with monitor_requests(client, "result", request_made=request_made):
+        cols = set(ds.get_values().columns)
     names = set(ds.list_values().reset_index()['name'])
     assert cols == names
 

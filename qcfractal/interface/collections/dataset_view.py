@@ -38,7 +38,6 @@ class DatasetView(abc.ABC):
         -------
             None
         """
-        pass
 
     @abc.abstractmethod
     def list_values(self) -> pd.DataFrame:
@@ -49,7 +48,6 @@ class DatasetView(abc.ABC):
         -------
             A Dataframe with specification of available columns.
         """
-        pass
 
     @abc.abstractmethod
     def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, List[str]]:
@@ -65,7 +63,6 @@ class DatasetView(abc.ABC):
         -------
             A Dataframe whose columns correspond to each query and a list of units for each column.
         """
-        pass
 
 
 class HDF5View(DatasetView):
@@ -96,10 +93,9 @@ class HDF5View(DatasetView):
                     if isinstance(theory_level_details, dict):
                         row.update(**theory_level_details)
                 row["native"] = False
-                print(row)
                 df = df.append(row, ignore_index=True)
-        print(df)
-        return df
+        # for some reason, pandas makes native a float column
+        return df.astype({"native": bool})
 
     def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, List[str]]:
         units = {}
@@ -193,14 +189,15 @@ class HDF5View(DatasetView):
             value_group = f.create_group("value")
             history = ds.list_values(native=True, force=True).reset_index().to_dict("records")
             for specification in history:
-                name = specification.pop("name")
+                gv_spec = specification.copy()
+                name = gv_spec.pop("name")
+                if "stoichiometry" in gv_spec:
+                    gv_spec["stoich"] = gv_spec.pop("stoichiometry")
                 dataset_name = self._normalize_hdf5_name(name)
-                df = ds.get_values(**specification, force=True)
-                specification["name"] = name
-                driver = specification["driver"]
-
+                df = ds.get_values(**gv_spec, force=True)
                 assert df.shape[1] == 1
 
+                driver = specification["driver"]
                 dataspec = driver_dataspec[driver]
                 dataset = value_group.create_dataset(dataset_name, **dataspec, **dataset_kwargs)
 

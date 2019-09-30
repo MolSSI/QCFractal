@@ -99,6 +99,10 @@ class FractalClient(object):
         self._headers["Content-Type"] = f'application/{self.encoding}'
         self._headers["User-Agent"] = f"qcportal/{__version__}"
 
+        self._request_counter = defaultdict(int)
+
+        ### Define all attributes before this line
+
         # Try to connect and pull general data
         self.server_info = self._automodel_request("information", "get", {}, full_return=True).dict()
 
@@ -216,7 +220,7 @@ class FractalClient(object):
         Any
             The REST response object
         """
-
+        self._request_counter[(name, rest)] += 1
         subnames = name.strip('/').split('/')
         if len(subnames) == 2:      # get resource and subresource
             body_model, response_model = rest_model(subnames[0], 'get', subnames[1])
