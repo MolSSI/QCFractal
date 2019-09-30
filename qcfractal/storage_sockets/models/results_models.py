@@ -104,6 +104,7 @@ class ResultORM(BaseResultORM):
     # output related
     return_result = Column(MsgpackExt)
     properties = Column(JSON)  # TODO: may use JSONB in the future
+    wavefunction = Column(JSONB, nullable=True)
 
     # TODO: Do they still exist?
     # schema_name = Column(String)  # default="qc_ret_data_output"??

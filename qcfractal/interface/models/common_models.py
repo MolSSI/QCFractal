@@ -7,6 +7,8 @@ from typing import Any, Dict, Optional
 from pydantic import Schema, validator
 
 from qcelemental.models import Molecule, Provenance, ProtoModel, AutodocBaseSettings
+from qcelemental.models.results import ResultProtocols
+from qcelemental.models.procedures import OptimizationProtocols
 
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
@@ -69,6 +71,7 @@ class QCSpecification(ProtoModel):
         description="The Id of the :class:`KeywordSet` registered in the database to run this calculation with. This "
                     "Id must exist in the database."
     )
+    protocols: ResultProtocols = Schema(ResultProtocols(), description=str(ResultProtocols.__doc__))
     program: str = Schema(
         ...,
         description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs"
@@ -119,6 +122,7 @@ class OptimizationSpecification(ProtoModel):
                     "Note that unlike :class:`QCSpecification` this is a dictionary of keywords, not the Id for a "
                     ":class:`KeywordSet`. "
     )
+    protocols: OptimizationProtocols = Schema(OptimizationProtocols(), description=str(OptimizationProtocols.__doc__))
 
     @validator('program')
     def check_program(cls, v):
