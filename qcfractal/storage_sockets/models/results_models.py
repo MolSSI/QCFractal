@@ -6,7 +6,7 @@ from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from sqlalchemy import select, func
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.orderinglist import ordering_list
-from sqlalchemy.dialects.postgresql import aggregate_order_by
+from sqlalchemy.dialects.postgresql import aggregate_order_by, JSONB
 
 
 from qcfractal.storage_sockets.models import Base, MsgpackExt
@@ -34,6 +34,7 @@ class BaseResultORM(Base):
     procedure = Column(String(100))  # TODO: may remove
     # program = Column(String(100))  # moved to subclasses
     version = Column(Integer)
+    protocols = Column(JSONB)
 
     # Extra fields
     extras = Column(MsgpackExt)

@@ -70,6 +70,10 @@ class RecordBase(ProtoModel, abc.ABC):
         ...,
         description="The version of this record object describes."
     )
+    protocols: Dict[str, Any] = Schema(
+        ...,
+        description="Protocols that change the data stored in top level fields."
+    )
 
     # Extra fields
     extras: Dict[str, Any] = Schema(
