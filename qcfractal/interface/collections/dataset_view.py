@@ -135,7 +135,7 @@ class HDF5View(DatasetView):
         n_records = len(ds.data.records)
         default_shape = (n_records, )
 
-        if h5py.__version__ >= distutils.version.StrictVersion("2.9.0"):
+        if h5py.__version__ >= distutils.version.StrictVersion("2.10.0"):
             vlen_double_t = h5py.vlen_dtype(np.dtype("float64"))
             utf8_t = h5py.string_dtype(encoding="utf-8")
             vlen_utf8_t = h5py.vlen_dtype(utf8_t)
