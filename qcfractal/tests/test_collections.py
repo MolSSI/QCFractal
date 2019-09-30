@@ -764,6 +764,7 @@ def test_d3_dataset_list_get_values(gradient_dataset_fixture):
 
 
 def test_gradient_dataset_view(gradient_dataset_fixture):
+    """ Tests if get_values and list_values return the same result with/out a view"""
     client, ds = gradient_dataset_fixture
 
     def df_equals(df1, df2):

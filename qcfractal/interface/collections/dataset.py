@@ -1161,15 +1161,6 @@ class Dataset(Collection):
     def _get_contributed_values(self, force: bool = False, **spec) -> pd.DataFrame:
         queries = self._filter_records(self._list_contributed_values().rename(columns={'stoichiometry': 'stoich'}),
                                        **spec)
-        if self._use_view(force):
-            queries['native'] = False
-            ret, units = self._view.get_values(queries.to_dict("records"))
-            for k in units:
-                self._column_metadata[k]["units"] = units[k]
-                self._column_metadata[k]["native"] = False
-
-            return ret
-
         column_names = []
         for query in queries.to_dict("records"):
             data = self.data.contributed_values[query["name"].lower()].copy()
@@ -1197,6 +1188,7 @@ class Dataset(Collection):
                     query["native"] = False
                     ret, units = self._view.get_values([query])
                     self.df[column_name] = ret[column_name]
+                    units = units[column_name]
 
                 # convert units
                 metadata = {"native": False}
