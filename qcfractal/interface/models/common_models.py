@@ -77,19 +77,25 @@ class QCSpecification(ProtoModel):
         description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs"
         " support all combinations of driver/method/basis.")
 
-    class Config:
-        force_skip_defaults = True
+    def dict(self, *args, **kwargs):
+        ret = super().dict(*args, **kwargs)
+
+        # Maintain hash compatability
+        if len(ret["protocols"]) == 0:
+            ret.pop("protocols", None)
+
+        return ret
 
     @validator('basis')
-    def check_basis(cls, v):
+    def _check_basis(cls, v):
         return prepare_basis(v)
 
     @validator('program')
-    def check_program(cls, v):
+    def _check_program(cls, v):
         return v.lower()
 
     @validator('method')
-    def check_method(cls, v):
+    def _check_method(cls, v):
         return v.lower()
 
     def form_schema_object(self, keywords: Optional['KeywordSet'] = None, checks=True) -> Dict[str, Any]:
@@ -127,15 +133,21 @@ class OptimizationSpecification(ProtoModel):
     )
     protocols: OptimizationProtocols = Schema(OptimizationProtocols(), description=str(OptimizationProtocols.__doc__))
 
-    class Config:
-        force_skip_defaults = True
+    def dict(self, *args, **kwargs):
+        ret = super().dict(*args, **kwargs)
+
+        # Maintain hash compatability
+        if len(ret["protocols"]) == 0:
+            ret.pop("protocols", None)
+
+        return ret
 
     @validator('program')
-    def check_program(cls, v):
+    def _check_program(cls, v):
         return v.lower()
 
     @validator('keywords')
-    def check_keywords(cls, v):
+    def _check_keywords(cls, v):
         if v is not None:
             v = recursive_normalizer(v)
         return v
