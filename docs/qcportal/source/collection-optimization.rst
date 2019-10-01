@@ -18,3 +18,4 @@ API
 
 .. autoclass:: qcfractal.interface.collections.OptimizationDataset
     :members:
+    :inherited-members:
