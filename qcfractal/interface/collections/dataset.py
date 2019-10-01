@@ -9,7 +9,7 @@ import pandas as pd
 
 from qcelemental import constants
 
-from ..models import ComputeResponse, Molecule, ObjectId, ProtoModel
+from ..models import ComputeResponse, Molecule, ObjectId, ProtoModel, KeywordSet
 from ..statistics import wrap_statistics
 from ..visualization import bar_plot, violin_plot
 from .collection import Collection
@@ -252,7 +252,7 @@ class Dataset(Collection):
         return ret
 
     def list_history(self, dftd3: bool = False, pretty: bool = True,
-                     **search: Dict[str, Optional[str]]) -> 'DataFrame':
+                     **search: Dict[str, Optional[str]]) -> pd.DataFrame:
         """
         Lists the history of computations completed.
 
@@ -365,7 +365,7 @@ class Dataset(Collection):
                    native: Optional[bool] = None,
                    force: bool = False) -> pd.DataFrame:
         """
-        Obtains values from the known history from the search paramaters provided for the expected `return_result` values.
+        Obtains values matching the search parameters provided for the expected `return_result` values.
         Defaults to the standard programs and keywords if not provided.
 
         Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method
@@ -436,10 +436,9 @@ class Dataset(Collection):
                                  program: Optional[str] = None,
                                  name: Optional[str] = None,
                                  force: bool = False) -> pd.DataFrame:
-        """Obtains values from the known history from the search parameters provided for the expected `return_result` values. Defaults to the standard
-        programs and keywords if not provided.
-
-        Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method and basis combination simultaneously.
+        """
+        Obtains records matching the provided search criteria.
+        Defaults to the standard programs and keywords if not provided.
 
         Parameters
         ----------
@@ -506,7 +505,7 @@ class Dataset(Collection):
                     history.pop(k, None)
             queries = self.list_records(**history, dftd3=True, pretty=False)
         else:
-            if any((field is not None for field in {program, method, basis, keywords, stoich})):
+            if any((field is not None for field in {program, method, basis, keywords})):
                 warnings.warn("Name and additional field were provided. Only name will be used as a selector.",
                               RuntimeWarning)
             queries = self.list_records(name=name, dftd3=True, pretty=False)
@@ -520,9 +519,10 @@ class Dataset(Collection):
                     basis: Optional[str] = None,
                     keywords: Optional[str] = None,
                     program: Optional[str] = None,
-                    force: bool = False) -> 'DataFrame':
-        """ Queries known history from the search paramaters provided. Defaults to the standard
-        programs and keywords if not provided.
+                    force: bool = False) -> pd.DataFrame:
+        """
+        Queries known history from the search paramaters provided.
+        Defaults to the standard programs and keywords if not provided.
 
         Parameters
         ----------
@@ -581,7 +581,7 @@ class Dataset(Collection):
             metric = "M" + metric
 
         # Are we a groupby?
-        _valid_groupby = {"method", "basis", "keywords", "program", "stoic", "d3"}
+        _valid_groupby = {"method", "basis", "keywords", "program", "stoich", "d3"}
         if groupby is not None:
             groupby = groupby.lower()
             if groupby not in _valid_groupby:
@@ -595,12 +595,35 @@ class Dataset(Collection):
 
             query_names = []
             queries = []
-            for gb in query[groupby]:
-                gb_query = query.copy()
-                gb_query[groupby] = gb
+            if groupby == "d3":
+                base = [method.upper().split("-D3")[0] for method in query["method"]]
+                d3types = [
+                    method.upper().replace(b, "").replace("-D", "D") for method, b in zip(query["method"], base)
+                ]
 
-                queries.append(gb_query)
-                query_names.append(self._canonical_name(**{groupby: gb}))
+                # Preserve order of first unique appearance
+                seen = set()
+                unique_d3types = [x for x in d3types if not (x in seen or seen.add(x))]
+
+                for d3type in unique_d3types:
+                    gb_query = query.copy()
+                    gb_query["method"] = []
+                    for i in range(len(base)):
+                        method = query["method"][i]
+                        if method.upper().replace(base[i], "").replace("-D", "D") == d3type:
+                            gb_query["method"].append(method)
+                    queries.append(gb_query)
+                    if d3type == "":
+                        query_names.append("No -D3")
+                    else:
+                        query_names.append(d3type.upper())
+            else:
+                for gb in query[groupby]:
+                    gb_query = query.copy()
+                    gb_query[groupby] = gb
+
+                    queries.append(gb_query)
+                    query_names.append(self._canonical_name(**{groupby: gb}))
 
             if (kind == "violin") and (len(queries) != 2):
                 raise KeyError(f"Groupby option for violin plots must have two entries.")
@@ -633,7 +656,7 @@ class Dataset(Collection):
             for k, v in stat.iteritems():
                 record = self._column_metadata[k]
                 if (groupby == "d3"):
-                    record["method"] = record["base"]
+                    record["method"] = record["method"].upper().split("-D3")[0]
 
                 elif groupby:
                     record[groupby] = None
@@ -692,7 +715,8 @@ class Dataset(Collection):
         kind : str, optional
             The kind of chart to produce, either 'bar' or 'violin'
         return_figure : Optional[bool], optional
-            If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+            If True, return the raw plotly figure. If False, returns a hosted iPlot.
+            If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
 
         Returns
         -------
@@ -991,7 +1015,7 @@ class Dataset(Collection):
         self.data.__dict__["default_benchmark"] = benchmark
         return True
 
-    def add_keywords(self, alias: str, program: str, keyword: 'KeywordSet', default: bool = False) -> bool:
+    def add_keywords(self, alias: str, program: str, keyword: KeywordSet, default: bool = False) -> bool:
         """
         Adds an option alias to the dataset. Not that keywords are not present
         until a save call has been completed.
@@ -1106,7 +1130,8 @@ class Dataset(Collection):
             spec = {"name": cv_name}
             for k in self.data.history_keys:
                 spec[k] = "Unknown"
-            # ReactionDataset uses "default" as a default value for stoich, but many contributed datasets lack a stoich field
+            # ReactionDataset uses "default" as a default value for stoich,
+            # but many contributed datasets lack a stoich field
             if "stoichiometry" in self.data.history_keys:
                 spec["stoichiometry"] = "default"
             if isinstance(theory_level_details, dict):
@@ -1182,7 +1207,8 @@ class Dataset(Collection):
                     projection: Optional[Dict[str, bool]] = None,
                     subset: Optional[Union[str, Set[str]]] = None,
                     merge: bool = False) -> Union[pd.DataFrame, 'ResultRecord']:
-        """Queries full ResultRecord objects from the database.
+        """
+        Queries full ResultRecord objects from the database.
 
         Parameters
         ----------
@@ -1205,7 +1231,7 @@ class Dataset(Collection):
         Returns
         -------
         Union[pd.DataFrame, 'ResultRecord']
-            Either a DataFrame of indexed ResultRecords or a single ResultRecord if a singel subset string was provided.
+            Either a DataFrame of indexed ResultRecords or a single ResultRecord if a single subset string was provided.
         """
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
         indexer = self._molecule_indexer(subset)
