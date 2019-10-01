@@ -9,7 +9,7 @@ import pandas as pd
 
 from qcelemental import constants
 
-from ..models import ComputeResponse, Molecule, ObjectId, ProtoModel
+from ..models import ComputeResponse, Molecule, ObjectId, ProtoModel, KeywordSet
 from ..statistics import wrap_statistics
 from ..visualization import bar_plot, violin_plot
 from .collection import Collection
@@ -252,7 +252,7 @@ class Dataset(Collection):
         return ret
 
     def list_history(self, dftd3: bool = False, pretty: bool = True,
-                     **search: Dict[str, Optional[str]]) -> 'DataFrame':
+                     **search: Dict[str, Optional[str]]) -> pd.DataFrame:
         """
         Lists the history of computations completed.
 
@@ -365,7 +365,7 @@ class Dataset(Collection):
                    native: Optional[bool] = None,
                    force: bool = False) -> pd.DataFrame:
         """
-        Obtains values from the known history from the search paramaters provided for the expected `return_result` values.
+        Obtains values matching the search parameters provided for the expected `return_result` values.
         Defaults to the standard programs and keywords if not provided.
 
         Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method
@@ -436,10 +436,9 @@ class Dataset(Collection):
                                  program: Optional[str] = None,
                                  name: Optional[str] = None,
                                  force: bool = False) -> pd.DataFrame:
-        """Obtains values from the known history from the search parameters provided for the expected `return_result` values. Defaults to the standard
-        programs and keywords if not provided.
-
-        Note that unlike `get_records`, `get_values` will automatically expand searches and return multiple method and basis combination simultaneously.
+        """
+        Obtains records matching the provided search criteria.
+        Defaults to the standard programs and keywords if not provided.
 
         Parameters
         ----------
@@ -520,9 +519,10 @@ class Dataset(Collection):
                     basis: Optional[str] = None,
                     keywords: Optional[str] = None,
                     program: Optional[str] = None,
-                    force: bool = False) -> 'DataFrame':
-        """ Queries known history from the search paramaters provided. Defaults to the standard
-        programs and keywords if not provided.
+                    force: bool = False) -> pd.DataFrame:
+        """
+        Queries known history from the search paramaters provided.
+        Defaults to the standard programs and keywords if not provided.
 
         Parameters
         ----------
@@ -598,8 +598,7 @@ class Dataset(Collection):
             if groupby == "d3":
                 base = [method.upper().split("-D3")[0] for method in query["method"]]
                 d3types = [
-                    method.upper().replace(b, "").replace("-D", "D")
-                    for method, b in zip(query["method"], base)
+                    method.upper().replace(b, "").replace("-D", "D") for method, b in zip(query["method"], base)
                 ]
 
                 # Preserve order of first unique appearance
@@ -716,7 +715,8 @@ class Dataset(Collection):
         kind : str, optional
             The kind of chart to produce, either 'bar' or 'violin'
         return_figure : Optional[bool], optional
-            If True, return the raw plotly figure. If False, returns a hosted iPlot. If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
+            If True, return the raw plotly figure. If False, returns a hosted iPlot.
+            If None, return a iPlot display in Jupyter notebook and a raw plotly figure in all other circumstances.
 
         Returns
         -------
@@ -1015,7 +1015,7 @@ class Dataset(Collection):
         self.data.__dict__["default_benchmark"] = benchmark
         return True
 
-    def add_keywords(self, alias: str, program: str, keyword: 'KeywordSet', default: bool = False) -> bool:
+    def add_keywords(self, alias: str, program: str, keyword: KeywordSet, default: bool = False) -> bool:
         """
         Adds an option alias to the dataset. Not that keywords are not present
         until a save call has been completed.
@@ -1130,7 +1130,8 @@ class Dataset(Collection):
             spec = {"name": cv_name}
             for k in self.data.history_keys:
                 spec[k] = "Unknown"
-            # ReactionDataset uses "default" as a default value for stoich, but many contributed datasets lack a stoich field
+            # ReactionDataset uses "default" as a default value for stoich,
+            # but many contributed datasets lack a stoich field
             if "stoichiometry" in self.data.history_keys:
                 spec["stoichiometry"] = "default"
             if isinstance(theory_level_details, dict):
@@ -1206,7 +1207,8 @@ class Dataset(Collection):
                     projection: Optional[Dict[str, bool]] = None,
                     subset: Optional[Union[str, Set[str]]] = None,
                     merge: bool = False) -> Union[pd.DataFrame, 'ResultRecord']:
-        """Queries full ResultRecord objects from the database.
+        """
+        Queries full ResultRecord objects from the database.
 
         Parameters
         ----------
@@ -1229,7 +1231,7 @@ class Dataset(Collection):
         Returns
         -------
         Union[pd.DataFrame, 'ResultRecord']
-            Either a DataFrame of indexed ResultRecords or a single ResultRecord if a singel subset string was provided.
+            Either a DataFrame of indexed ResultRecords or a single ResultRecord if a single subset string was provided.
         """
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
         indexer = self._molecule_indexer(subset)
