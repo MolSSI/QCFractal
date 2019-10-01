@@ -258,11 +258,11 @@ class Dataset(Collection):
 
         Parameters
         ----------
-        dftd3: bool, optional
+        dftd3 : bool, optional
             Include dftd3 program record specifications in addition to composite DFT-D3 record specifications
-        pretty: bool
+        pretty : bool, optional
             Replace NaN with "None" in returned DataFrame
-        **search : Dict[str, Optional[str]]
+        search : Dict[str, Optional[str]]
             Allows searching to narrow down return.
 
         Returns

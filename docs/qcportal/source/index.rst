@@ -81,23 +81,23 @@ Collections are the primary way of viewing and generating new data.
    collection-torsiondrive.rst
    collection-tasks.rst
 
-**Record Documentation**
+**Records**
 
 Documentation for compute records.
 
 * :doc:`record-overview`
-* :doc:`results`
-* :doc:`procedures`
+* :doc:`record-result`
+* :doc:`record-optimization`
 * :doc:`record-api`
 
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Records Documentation
+   :caption: Records
 
    record-overview.rst
-   results.rst
-   procedures.rst
+   record-result.rst
+   record-optimization.rst
    record-api.rst
 
 

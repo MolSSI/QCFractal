@@ -10,8 +10,6 @@ and the attributes shown are valid kwargs and values which can be fed into the c
 
 .. autoclass:: qcportal.models.Molecule
 
-.. autoclass:: qcportal.models.ResultRecord
-
 .. autoclass:: qcportal.models.OptimizationRecord
 
 .. autoclass:: qcportal.models.QCSpecification
