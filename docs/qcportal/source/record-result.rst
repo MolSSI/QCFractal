@@ -8,7 +8,7 @@ A result is a single quantum chemistry method evaluation, which can be an energy
    :caption: Example
    :hidden:
 
-   results-example.ipynb
+   record-result-example.ipynb
 
 
 Attributes

@@ -443,7 +443,10 @@ class OptimizationRecord(RecordBase):
         description="The keyword options which were passed into the Optimization program. "
                     "Note: These are a dictionary and not a :class:`KeywordSet` object."
     )
-    protocols: qcel.models.procedures.OptimizationProtocols = Schema(qcel.models.procedures.OptimizationProtocols(), description=str(qcel.models.procedures.OptimizationProtocols.__doc__))
+    protocols: qcel.models.procedures.OptimizationProtocols = Schema(qcel.models.procedures.OptimizationProtocols(), description="")
+
+    # Automatting issue currently
+    # description=str(qcel.models.procedures.OptimizationProtocols.__doc__))
 
     # Results
     energies: List[float] = Schema(
