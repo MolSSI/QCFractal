@@ -506,7 +506,7 @@ class Dataset(Collection):
                     history.pop(k, None)
             queries = self.list_records(**history, dftd3=True, pretty=False)
         else:
-            if any((field is not None for field in {program, method, basis, keywords, stoich})):
+            if any((field is not None for field in {program, method, basis, keywords})):
                 warnings.warn("Name and additional field were provided. Only name will be used as a selector.",
                               RuntimeWarning)
             queries = self.list_records(name=name, dftd3=True, pretty=False)
@@ -581,7 +581,7 @@ class Dataset(Collection):
             metric = "M" + metric
 
         # Are we a groupby?
-        _valid_groupby = {"method", "basis", "keywords", "program", "stoic", "d3"}
+        _valid_groupby = {"method", "basis", "keywords", "program", "stoich", "d3"}
         if groupby is not None:
             groupby = groupby.lower()
             if groupby not in _valid_groupby:
@@ -595,12 +595,36 @@ class Dataset(Collection):
 
             query_names = []
             queries = []
-            for gb in query[groupby]:
-                gb_query = query.copy()
-                gb_query[groupby] = gb
+            if groupby == "d3":
+                base = [method.upper().split("-D3")[0] for method in query["method"]]
+                d3types = [
+                    method.upper().replace(b, "").replace("-D", "D")
+                    for method, b in zip(query["method"], base)
+                ]
 
-                queries.append(gb_query)
-                query_names.append(self._canonical_name(**{groupby: gb}))
+                # Preserve order of first unique appearance
+                seen = set()
+                unique_d3types = [x for x in d3types if not (x in seen or seen.add(x))]
+
+                for d3type in unique_d3types:
+                    gb_query = query.copy()
+                    gb_query["method"] = []
+                    for i in range(len(base)):
+                        method = query["method"][i]
+                        if method.upper().replace(base[i], "").replace("-D", "D") == d3type:
+                            gb_query["method"].append(method)
+                    queries.append(gb_query)
+                    if d3type == "":
+                        query_names.append("No -D3")
+                    else:
+                        query_names.append(d3type.upper())
+            else:
+                for gb in query[groupby]:
+                    gb_query = query.copy()
+                    gb_query[groupby] = gb
+
+                    queries.append(gb_query)
+                    query_names.append(self._canonical_name(**{groupby: gb}))
 
             if (kind == "violin") and (len(queries) != 2):
                 raise KeyError(f"Groupby option for violin plots must have two entries.")
@@ -633,7 +657,7 @@ class Dataset(Collection):
             for k, v in stat.iteritems():
                 record = self._column_metadata[k]
                 if (groupby == "d3"):
-                    record["method"] = record["base"]
+                    record["method"] = record["method"].upper().split("-D3")[0]
 
                 elif groupby:
                     record[groupby] = None
