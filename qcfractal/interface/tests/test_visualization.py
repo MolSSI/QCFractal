@@ -70,6 +70,16 @@ def test_plot_dataset_groupby(S22Fixture, kind, groupby):
     assert "S22" in fig["layout"]["title"]["text"]
 
 
+@using_plotly
+def test_plot_qca_examples(S22Fixture):
+    """ Tests plotting examples from QCArchiveExamples/basic_examples/reaction_dataset.ipynb"""
+    client, S22 = S22Fixture
+    fig = S22.visualize(method=["B3LYP", "B3LYP-D3", "B3LYP-D3M"], basis=["def2-tzvp"], groupby="D3").to_dict()
+    assert "S22" in fig["layout"]["title"]["text"]
+    fig = S22.visualize(method=["B3LYP", "B3LYP-D3", "B2PLYP", "B2PLYP-D3"], basis="def2-tzvp", groupby="D3", kind="violin")
+    assert "S22" in fig["layout"]["title"]["text"]
+
+
 ### Test TorsionDriveDataset scans
 
 @pytest.fixture
