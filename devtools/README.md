@@ -56,9 +56,10 @@ These are also used for autobuilds on [Docker Hub](https://cloud.docker.com/u/mo
 - [ ] Debug the PR as needed until tests pass
 - [ ] Get the PR merged in
 - [ ] Create a GitHub Release and use the version formatted as `vXX.YY.ZZ` for the tag name.
-- [ ] Add tag to Docker Hub builds.
 - [ ] When ready, create a PyPi release from the checkout of the tag you made above
-- [ ] Create a new release on conda forge, updating to the version you just uploaded on PyPi
+- [ ] Create a new release on conda forge, updating to the version you just uploaded on PyPi. Be sure to check pins.
+- [ ] Update Fractal version in Dockerfiles.
+- [ ] Once conda forge has updated, manually build (and test) tagged Docker containers on Docker Hub.
 
 ## Versioneer Auto-version
 [Versioneer](https://github.com/warner/python-versioneer) will automatically infer what version 

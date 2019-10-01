@@ -7,6 +7,7 @@ Generics
 --------
 
 .. autosummary::
+    __init__
     from_file
     server_information
 

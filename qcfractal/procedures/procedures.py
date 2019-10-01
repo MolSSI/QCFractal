@@ -267,11 +267,15 @@ class OptimizationTasks(BaseTasks):
                 results_ids.append(None)
                 continue
 
-            doc = OptimizationRecord(
-                initial_molecule=initial_molecule.id,
-                qc_spec=qc_spec,
-                keywords=opt_keywords,
-                program=data.meta.program)
+            doc_data = {
+                "initial_molecule": initial_molecule.id,
+                "qc_spec": qc_spec,
+                "keywords": opt_keywords,
+                "program": data.meta.program
+            }
+            if hasattr(data.meta, "protocols"):
+                doc_data["protocols"] = data.meta.protocols
+            doc = OptimizationRecord(**doc_data)
 
             inp = doc.build_schema_input(initial_molecule=initial_molecule, qc_keywords=qc_keywords)
             inp.input_specification.extras["_qcfractal_tags"] = {
