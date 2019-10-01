@@ -49,18 +49,17 @@ class GridOptimizationService(BaseService):
     def initialize_from_api(cls, storage_socket, logger, service_input, tag=None, priority=None):
 
         # Build the record
-        output = GridOptimizationRecord(
-            **service_input.dict(exclude={"initial_molecule"}),
-            initial_molecule=service_input.initial_molecule.id,
-            starting_molecule=service_input.initial_molecule.id,
-            provenance={
-                "creator": "qcfractal",
-                "version": get_information("version"),
-                "routine": "qcfractal.services.gridoptimization"
-            },
-            final_energy_dict={},
-            grid_optimizations={},
-            starting_grid=[0])
+        output = GridOptimizationRecord(**service_input.dict(exclude={"initial_molecule"}),
+                                        initial_molecule=service_input.initial_molecule.id,
+                                        starting_molecule=service_input.initial_molecule.id,
+                                        provenance={
+                                            "creator": "qcfractal",
+                                            "version": get_information("version"),
+                                            "routine": "qcfractal.services.gridoptimization"
+                                        },
+                                        final_energy_dict={},
+                                        grid_optimizations={},
+                                        starting_grid=[0])
 
         meta = {"output": output}
 
@@ -231,12 +230,13 @@ class GridOptimizationService(BaseService):
         Finishes adding data to the GridOptimizationRecord object
         """
 
-        self.output = self.output.copy(update={
-            "status": "COMPLETE",
-            "starting_molecule": self.starting_molecule.id,
-            "starting_grid": self.starting_grid,
-            "grid_optimizations": self.grid_optimizations,
-            "final_energy_dict": self.final_energies,
-        })
+        self.output = self.output.copy(
+            update={
+                "status": "COMPLETE",
+                "starting_molecule": self.starting_molecule.id,
+                "starting_grid": self.starting_grid,
+                "grid_optimizations": self.grid_optimizations,
+                "final_energy_dict": self.final_energies,
+            })
 
         return True

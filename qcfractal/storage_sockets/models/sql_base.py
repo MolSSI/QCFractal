@@ -13,6 +13,7 @@ from qcelemental.util import msgpackext_dumps, msgpackext_loads
 
 # Base = declarative_base()
 
+
 class MsgpackExt(TypeDecorator):
     '''Converts JSON-like data to msgpack with full NumPy Array support.'''
 
@@ -29,8 +30,7 @@ class MsgpackExt(TypeDecorator):
 class Base:
     """Base declarative class of all ORM models"""
 
-    db_related_fields = ['result_type', 'base_result_id', 'metadata', '_trajectory',
-                         'collection_type']
+    db_related_fields = ['result_type', 'base_result_id', 'metadata', '_trajectory', 'collection_type']
 
     def to_dict(self, exclude=None):
 

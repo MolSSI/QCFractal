@@ -81,33 +81,33 @@ class FractalServer:
             self,
 
             # Server info options
-            name: str="QCFractal Server",
-            port: int=7777,
-            loop: 'IOLoop'=None,
-            compress_response: bool=True,
+            name: str = "QCFractal Server",
+            port: int = 7777,
+            loop: 'IOLoop' = None,
+            compress_response: bool = True,
 
             # Security
-            security: Optional[str]=None,
-            allow_read: bool=False,
-            ssl_options: Union[bool, Dict[str, str]]=True,
+            security: Optional[str] = None,
+            allow_read: bool = False,
+            ssl_options: Union[bool, Dict[str, str]] = True,
 
             # Database options
-            storage_uri: str="postgresql://localhost:5432",
-            storage_project_name: str="qcfractal_default",
-            query_limit: int=1000,
+            storage_uri: str = "postgresql://localhost:5432",
+            storage_project_name: str = "qcfractal_default",
+            query_limit: int = 1000,
 
             # Log options
-            logfile_prefix: str=None,
-            log_apis: bool=False,
-            geo_file_path: str=None,
+            logfile_prefix: str = None,
+            log_apis: bool = False,
+            geo_file_path: str = None,
 
             # Queue options
-            queue_socket: 'BaseAdapter'=None,
-            heartbeat_frequency: float=1800,
+            queue_socket: 'BaseAdapter' = None,
+            heartbeat_frequency: float = 1800,
 
             # Service options
-            max_active_services: int=20,
-            service_frequency: float=60):
+            max_active_services: int = 20,
+            service_frequency: float = 60):
         """QCFractal initialization
 
         Parameters
@@ -227,12 +227,11 @@ class FractalServer:
         # Setup the database connection
         self.storage_database = storage_project_name
         self.storage_uri = storage_uri
-        self.storage = storage_socket_factory(
-            storage_uri,
-            project_name=storage_project_name,
-            bypass_security=storage_bypass_security,
-            allow_read=allow_read,
-            max_limit=query_limit)
+        self.storage = storage_socket_factory(storage_uri,
+                                              project_name=storage_project_name,
+                                              bypass_security=storage_bypass_security,
+                                              allow_read=allow_read,
+                                              max_limit=query_limit)
 
         # Pull the current loop if we need it
         self.loop = loop or tornado.ioloop.IOLoop.current()
@@ -264,7 +263,6 @@ class FractalServer:
             (r"/collection", CollectionHandler, self.objects),
             (r"/result", ResultHandler, self.objects),
             (r"/procedure/?", ProcedureHandler, self.objects),
-
             (r"/optimization/(.*)/?", OptimizationHandler, self.objects),
 
             # Queue Schedulers
@@ -313,8 +311,11 @@ class FractalServer:
 
             def _build_manager():
                 client = FractalClient(self, username="qcfractal_server")
-                self.objects["queue_manager"] = QueueManager(
-                    client, self.queue_socket, logger=self.logger, manager_name="FractalServer", verbose=False)
+                self.objects["queue_manager"] = QueueManager(client,
+                                                             self.queue_socket,
+                                                             logger=self.logger,
+                                                             manager_name="FractalServer",
+                                                             verbose=False)
 
             # Build the queue manager, will not run until loop starts
             self.objects["queue_manager_future"] = self._run_in_thread(_build_manager)
@@ -335,7 +336,7 @@ class FractalServer:
 
 ## Start/stop functionality
 
-    def start(self, start_loop: bool=True, start_periodics: bool=True) -> None:
+    def start(self, start_loop: bool = True, start_periodics: bool = True) -> None:
         """
         Starts up the IOLoop and periodic calls.
 
@@ -364,7 +365,8 @@ class FractalServer:
             self.periodic["update_services"] = nanny_services
 
             # Add Manager heartbeats
-            heartbeats = tornado.ioloop.PeriodicCallback(self.check_manager_heartbeats, self.heartbeat_frequency * 1000)
+            heartbeats = tornado.ioloop.PeriodicCallback(self.check_manager_heartbeats,
+                                                         self.heartbeat_frequency * 1000)
             heartbeats.start()
             self.periodic["heartbeats"] = heartbeats
 
@@ -374,7 +376,7 @@ class FractalServer:
             self.loop_active = True
             self.loop.start()
 
-    def stop(self, stop_loop: bool=True) -> None:
+    def stop(self, stop_loop: bool = True) -> None:
         """
         Shuts down the IOLoop and periodic updates.
 
@@ -430,7 +432,7 @@ class FractalServer:
 
 ## Helpers
 
-    def get_address(self, endpoint: Optional[str]=None) -> str:
+    def get_address(self, endpoint: Optional[str] = None) -> str:
         """Obtains the full URI for a given function on the FractalServer.
 
         Parameters
@@ -520,7 +522,7 @@ class FractalServer:
             self.logger.info("Hearbeat missing from {}. Shutting down, recycling {} incomplete tasks.".format(
                 blob["name"], nshutdown))
 
-    def list_managers(self, status: Optional[str]=None, name: Optional[str]=None) -> List[Dict[str, Any]]:
+    def list_managers(self, status: Optional[str] = None, name: Optional[str] = None) -> List[Dict[str, Any]]:
         """
         Provides a list of managers associated with the server both active and inactive.
 
@@ -545,6 +547,7 @@ class FractalServer:
         """
 
         return FractalClient(self)
+
 
 ### Functions only available if using a local queue_adapter
 
@@ -598,7 +601,7 @@ class FractalServer:
         self.logger.info("Updating tasks")
         return self.objects["queue_manager"].await_results()
 
-    def await_services(self, max_iter: int=10) -> bool:
+    def await_services(self, max_iter: int = 10) -> bool:
         """A synchronous method that awaits the completion of all services
         before returning.
 

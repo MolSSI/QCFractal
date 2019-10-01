@@ -1,13 +1,11 @@
 import datetime
-from sqlalchemy import (Column, Integer, String, DateTime, ForeignKey, JSON, Enum, Table,
-                        Index, UniqueConstraint)
+from sqlalchemy import (Column, Integer, String, DateTime, ForeignKey, JSON, Enum, Table, Index, UniqueConstraint)
 from sqlalchemy.orm import relationship, column_property
 from qcfractal.interface.models.records import RecordStatusEnum, DriverEnum
 from sqlalchemy import select, func
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.dialects.postgresql import aggregate_order_by, JSONB
-
 
 from qcfractal.storage_sockets.models import Base, MsgpackExt
 from qcfractal.storage_sockets.models import MoleculeORM, KeywordsORM, KVStoreORM
@@ -26,9 +24,8 @@ class BaseResultORM(Base):
 
     # Base identification
     id = Column(Integer, primary_key=True)
-     # ondelete="SET NULL": when manger is deleted, set this field to None
-    manager_name = Column(String, ForeignKey('queue_manager.name', ondelete="SET NULL"),
-                        nullable=True)
+    # ondelete="SET NULL": when manger is deleted, set this field to None
+    manager_name = Column(String, ForeignKey('queue_manager.name', ondelete="SET NULL"), nullable=True)
 
     hash_index = Column(String)  # TODO
     procedure = Column(String(100))  # TODO: may remove
@@ -120,14 +117,15 @@ class ResultORM(BaseResultORM):
         # Index('ix_results_molecule', 'molecule'),  # b-tree index
         UniqueConstraint("program", "driver", "method", "basis", "keywords", "molecule", name='uix_results_keys'), )
 
-
     __mapper_args__ = {
         'polymorphic_identity': 'result',
         # to have separate select when querying BaseResultsORM
         'polymorphic_load': 'selectin',
     }
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 class ProcedureMixin:
     """
@@ -194,10 +192,12 @@ class OptimizationProcedureORM(ProcedureMixin, BaseResultORM):
                                                   Trajectory.position))]).where(Trajectory.opt_id == id))
 
     # array of objects (results) - Lazy - raise error of accessed
-    trajectory_obj = relationship(Trajectory, cascade="all, delete-orphan",
-                                  # backref="optimization_procedure",
-                                  order_by=Trajectory.position,
-                                  collection_class=ordering_list('position'))
+    trajectory_obj = relationship(
+        Trajectory,
+        cascade="all, delete-orphan",
+        # backref="optimization_procedure",
+        order_by=Trajectory.position,
+        collection_class=ordering_list('position'))
 
     __mapper_args__ = {
         'polymorphic_identity': 'optimization_procedure',
@@ -387,7 +387,6 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
         collection_class=ordering_list('position'),
         lazy='selectin')
 
-
     @hybrid_property
     def optimization_history(self):
         """calculated property when accessed, not saved in the DB
@@ -441,5 +440,6 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
         # session.add_all(self.optimization_history_obj)
         # session.add(self)
         # session.commit()
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

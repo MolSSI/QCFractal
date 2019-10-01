@@ -16,6 +16,7 @@ _valid_encodings = {
     "application/msgpack-ext": "msgpack-ext",
 }
 
+
 class APIHandler(tornado.web.RequestHandler):
     """
     A requests handler for API calls.
@@ -30,13 +31,13 @@ class APIHandler(tornado.web.RequestHandler):
         Initializes the request to JSON, adds objects, and logging.
         """
 
-
         self.content_type = "Not Provided"
         try:
             self.content_type = self.request.headers["Content-Type"]
             self.encoding = _valid_encodings[self.content_type]
         except KeyError:
-            raise tornado.web.HTTPError(status_code=401, reason=f"Did not understand 'Content-Type': {self.content_type}")
+            raise tornado.web.HTTPError(status_code=401,
+                                        reason=f"Did not understand 'Content-Type': {self.content_type}")
 
         # Always reply in the format sent
         self.set_header("Content-Type", self.content_type)
@@ -352,6 +353,7 @@ class ProcedureHandler(APIHandler):
 
         self.logger.info("GET: Procedures - {} pulls.".format(len(response.data)))
         self.write(response)
+
 
 class OptimizationHandler(APIHandler):
     """

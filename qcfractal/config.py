@@ -86,10 +86,11 @@ class FractalServerSettings(ConfigSettings):
                                      description="Compress REST responses or not, should be True unless behind a "
                                      "proxy.")
     allow_read: bool = Schema(True, description="Always allows read access to record tables.")
-    security: str = Schema(None, description="Optional user authentication. Specify 'local' to enable "
-                                             "authentication through locally stored usernames. "
-                                             "User permissions may be manipulated through the ``qcfractal-server "
-                                             "user`` CLI.")
+    security: str = Schema(None,
+                           description="Optional user authentication. Specify 'local' to enable "
+                           "authentication through locally stored usernames. "
+                           "User permissions may be manipulated through the ``qcfractal-server "
+                           "user`` CLI.")
 
     query_limit: int = Schema(1000, description="The maximum number of records to return per query.")
     logfile: Optional[str] = Schema("qcfractal_server.log", description="The logfile to write server logs.")

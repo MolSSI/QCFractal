@@ -44,8 +44,11 @@ def initialize_service(storage_socket, logger, service_input, tag=None, priority
 
     """
     name = service_input.procedure
-    return _service_chooser(name).initialize_from_api(
-        storage_socket, logger, service_input, tag=tag, priority=priority)
+    return _service_chooser(name).initialize_from_api(storage_socket,
+                                                      logger,
+                                                      service_input,
+                                                      tag=tag,
+                                                      priority=priority)
 
 
 def construct_service(storage_socket, logger, data):

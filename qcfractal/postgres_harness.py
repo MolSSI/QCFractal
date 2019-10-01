@@ -103,12 +103,11 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         """
         if database is None:
             database = "postgres"
-        return psycopg2.connect(
-            database=database,
-            user=self.config.database.username,
-            host=self.config.database.host,
-            port=self.config.database.port,
-            password=self.config.database.password)
+        return psycopg2.connect(database=database,
+                                user=self.config.database.username,
+                                host=self.config.database.host,
+                                port=self.config.database.port,
+                                password=self.config.database.password)
 
     def is_alive(self, database: Optional[str] = None) -> bool:
         """Checks if the postgres is alive, and optionally if the database is present.
@@ -210,7 +209,9 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
 
         if ret['retcode'] != 0:
             self.logger(ret["stderr"])
-            raise ValueError(f"\nFailed to Upgrade the database, make sure to init the database first before being able to upgrade it.\n")
+            raise ValueError(
+                f"\nFailed to Upgrade the database, make sure to init the database first before being able to upgrade it.\n"
+            )
 
         return True
 
@@ -235,8 +236,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
                     f"A process is already running on 'port:{self.config.database.port}` that is not associated with the PostgreSQL instance at `location:{self.config.database.directory}.`"
                     "\nThis often happens when two PostgreSQL databases are attempted to run on the same port."
                     "\nEither shut down the other PostgreSQL database or change the `qcfractal-server init --db-port`."
-                    "\nStopping."
-                )
+                    "\nStopping.")
 
             if not self.is_alive():
                 raise ValueError(f"PostgreSQL is running, but cannot connect to the default port.")
@@ -258,7 +258,8 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
                 else:
                     time.sleep(0.1)
             else:
-                raise ValueError(f"Could not connect to the server after booting. Boot log:\n\n{start_status['stderr']}")
+                raise ValueError(
+                    f"Could not connect to the server after booting. Boot log:\n\n{start_status['stderr']}")
 
             self.logger("PostgreSQL successfully started in a background process, current_status:\n")
             if not self.quiet:
@@ -317,9 +318,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         self.logger("\nDatabase server successfully started!")
 
     def alembic_commands(self) -> List[str]:
-         return [shutil.which('alembic'),
-                         '-c', self._alembic_ini,
-                         '-x', 'uri='+self.config.database_uri()]
+        return [shutil.which('alembic'), '-c', self._alembic_ini, '-x', 'uri=' + self.config.database_uri()]
 
     def init_database(self) -> None:
 
@@ -336,7 +335,6 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
         if ret['retcode'] != 0:
             self.logger(ret)
             raise ValueError("\nFailed to Stamp the database with current version.\n")
-
 
 
 class TemporaryPostgres:

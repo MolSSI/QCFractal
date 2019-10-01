@@ -5,11 +5,9 @@ Note: avoid circular import here by including the name of the class
 in relations and foreign keys are a string (see TaskQueueORM.base_result_obj)
 """
 
-
 import datetime
 # from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import (Column, Integer, String, DateTime, Boolean, ForeignKey,
-                        JSON, Enum, Float, Binary, Index)
+from sqlalchemy import (Column, Integer, String, DateTime, Boolean, ForeignKey, JSON, Enum, Float, Binary, Index)
 from sqlalchemy.orm import relationship
 from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -42,9 +40,8 @@ class AccessLogORM(Base):
     postal_code = Column(String)
     subdivision = Column(String)
 
-    __table_args__ = (
-        Index('access_type', "access_date"),
-    )
+    __table_args__ = (Index('access_type', "access_date"), )
+
 
 class VersionsORM(Base):
     __tablename__ = 'versions'
@@ -71,6 +68,7 @@ class KVStoreORM(Base):
 #     value = Column(JSON, nullable=False)
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 class MoleculeORM(Base):
     """
@@ -140,7 +138,9 @@ class MoleculeORM(Base):
     #     ]
     # }
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 class KeywordsORM(Base):
     """
@@ -162,6 +162,7 @@ class KeywordsORM(Base):
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 class TaskQueueORM(Base):
     """A queue of tasks corresponding to a procedure
@@ -215,11 +216,11 @@ class TaskQueueORM(Base):
     # rows, but if there is an index matching the ORDER BY, the first n rows
     # can be retrieved directly, without scanning the remainder at all.
 
-    __table_args__ = (Index('ix_task_queue_created_on', "created_on"),
-                      Index('ix_task_queue_keys', "status", "program", "procedure", "tag"),
-                      Index('ix_task_queue_manager', "manager"),
-                      Index('ix_task_queue_base_result_id', "base_result_id")
-                      )
+    __table_args__ = (Index('ix_task_queue_created_on',
+                            "created_on"), Index('ix_task_queue_keys', "status", "program", "procedure", "tag"),
+                      Index('ix_task_queue_manager', "manager"), Index('ix_task_queue_base_result_id',
+                                                                       "base_result_id"))
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -250,6 +251,7 @@ class ServiceQueueORM(Base):
         Index('ix_service_queue_status_tag_hash', "status", "tag"),
         Index('ix_service_queue_hash_index', "hash_index"),
     )
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -296,6 +298,4 @@ class QueueManagerORM(Base):
     programs = Column(JSON)
     procedures = Column(JSON)
 
-    __table_args__ = (Index('ix_queue_manager_status', "status"),
-                      Index('ix_queue_manager_modified_on', "modified_on")
-                      )
+    __table_args__ = (Index('ix_queue_manager_status', "status"), Index('ix_queue_manager_modified_on', "modified_on"))

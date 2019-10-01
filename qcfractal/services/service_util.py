@@ -37,9 +37,11 @@ class TaskManager(ProtoModel):
         if len(self.required_tasks) == 0:
             return True
 
-        task_query = self.storage_socket.get_procedures(
-            id=list(self.required_tasks.values()), projection={"status": True,
-                                                               "error": True})
+        task_query = self.storage_socket.get_procedures(id=list(self.required_tasks.values()),
+                                                        projection={
+                                                            "status": True,
+                                                            "error": True
+                                                        })
 
         status_values = set(x["status"] for x in task_query["data"])
         if status_values == {"COMPLETE"}:
@@ -146,7 +148,6 @@ class BaseService(ProtoModel, abc.ABC):
         self.task_manager.storage_socket = self.storage_socket
         self.task_manager.tag = self.task_tag
         self.task_manager.priority = self.task_priority
-
 
     @validator('task_priority', pre=True)
     def munge_priority(cls, v):

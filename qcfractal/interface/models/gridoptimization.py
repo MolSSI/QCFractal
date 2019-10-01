@@ -38,25 +38,17 @@ class ScanDimension(ProtoModel):
     """
     A full description of a dimension to scan over.
     """
-    type: ScanTypeEnum = Schema(
-        ...,
-        description=str(ScanTypeEnum.__doc__)
-    )
+    type: ScanTypeEnum = Schema(..., description=str(ScanTypeEnum.__doc__))
     indices: List[int] = Schema(
         ...,
         description="The indices of atoms to select for the scan. The size of this is a function of the type. e.g., "
-                    "distances, angles and dihedrals require 2, 3, and 4 atoms, respectively."
-    )
+        "distances, angles and dihedrals require 2, 3, and 4 atoms, respectively.")
     steps: List[float] = Schema(
         ...,
         description="Step sizes to scan in relative to your current location in the scan. This must be a strictly "
-                    "monotonic series.",
-        units=["Bohr", "degrees"]
-    )
-    step_type: StepTypeEnum = Schema(
-        ...,
-        description=str(StepTypeEnum.__doc__)
-    )
+        "monotonic series.",
+        units=["Bohr", "degrees"])
+    step_type: StepTypeEnum = Schema(..., description=str(StepTypeEnum.__doc__))
 
     @validator('type', 'step_type', pre=True)
     def check_lower_type_step_type(cls, v):
@@ -86,15 +78,11 @@ class GOKeywords(ProtoModel):
     GridOptimizationRecord options.
     """
     scans: List[ScanDimension] = Schema(
-        ...,
-        description="The dimensions to scan along (along with their options) for the GridOptimization."
-    )
+        ..., description="The dimensions to scan along (along with their options) for the GridOptimization.")
     preoptimization: bool = Schema(
         True,
         description="If ``True``, first runs an unrestricted optimization before starting the grid computations. "
-                    "This is especially useful when combined with ``relative`` ``step_types``."
-    )
-
+        "This is especially useful when combined with ``relative`` ``step_types``.")
 
 
 _gridopt_constr = constr(strip_whitespace=True, regex="gridoptimization")
@@ -110,30 +98,21 @@ class GridOptimizationInput(ProtoModel):
     program: _qcfractal_constr = Schema(
         "qcfractal",
         description="The name of the source program which initializes the Grid Optimization. This is a constant "
-                    "and is used for provenance information."
-    )
+        "and is used for provenance information.")
     procedure: _gridopt_constr = Schema(
         "gridoptimization",
-        description="The name of the procedure being run. This is a constant and is used for provenance information."
-    )
+        description="The name of the procedure being run. This is a constant and is used for provenance information.")
     initial_molecule: Union[ObjectId, Molecule] = Schema(
         ...,
         description="The Molecule to begin the Grid Optimization with. This can either be an existing Molecule in "
-                    "the database (through its :class:`ObjectId`) or a fully specified :class:`Molecule` model."
-    )
-    keywords: GOKeywords = Schema(
-        ...,
-        description="The keyword options to run the Grid Optimization."
-    )
+        "the database (through its :class:`ObjectId`) or a fully specified :class:`Molecule` model.")
+    keywords: GOKeywords = Schema(..., description="The keyword options to run the Grid Optimization.")
     optimization_spec: OptimizationSpecification = Schema(
-        ...,
-        description="The specification to run the underlying optimization through at each grid point."
-    )
+        ..., description="The specification to run the underlying optimization through at each grid point.")
     qc_spec: QCSpecification = Schema(
         ...,
         description="The specification for each of the quantum chemistry calculations run in each geometry "
-                    "optimization."
-    )
+        "optimization.")
 
 
 class GridOptimizationRecord(RecordBase):
@@ -149,61 +128,42 @@ class GridOptimizationRecord(RecordBase):
     _hash_indices = {"initial_molecule", "keywords", "optimization_meta", "qc_spec"}
 
     # Version data
-    version: int = Schema(
-        1,
-        description="The version number of the Record."
-    )
+    version: int = Schema(1, description="The version number of the Record.")
     procedure: _gridopt_constr = Schema(
         "gridoptimization",
         description="The name of the procedure being run, which is Grid Optimization. This is a constant "
-                    "and is used for provenance information."
-    )
+        "and is used for provenance information.")
     program: _qcfractal_constr = Schema(
         "qcfractal",
         description="The name of the source program which initializes the Grid Optimization. This is a constant "
-                    "and is used for provenance information."
-    )
+        "and is used for provenance information.")
 
     # Input data
-    initial_molecule: ObjectId = Schema(
-        ...,
-        description="Id of the initial molecule in the database."
-    )
-    keywords: GOKeywords = Schema(
-        ...,
-        description="The keywords for this Grid Optimization."
-    )
+    initial_molecule: ObjectId = Schema(..., description="Id of the initial molecule in the database.")
+    keywords: GOKeywords = Schema(..., description="The keywords for this Grid Optimization.")
     optimization_spec: OptimizationSpecification = Schema(
-        ...,
-        description="The specification of each geometry optimization."
-    )
+        ..., description="The specification of each geometry optimization.")
     qc_spec: QCSpecification = Schema(
         ...,
         description="The specification for each of the quantum chemistry computations used by the geometry "
-                    "optimizations."
-    )
+        "optimizations.")
 
     # Output data
     starting_molecule: ObjectId = Schema(
         ...,
         description="Id of the molecule in the database begins the grid optimization. "
-                    "This will differ from the ``initial_molecule`` if ``preoptimization`` is True."
-    )
+        "This will differ from the ``initial_molecule`` if ``preoptimization`` is True.")
     final_energy_dict: Dict[str, float] = Schema(
-        ...,
-        description="Map of the final energy from the grid optimization at each grid point."
-    )
-    grid_optimizations: Dict[str, ObjectId] = Schema(
-        ...,
-        description="The Id of each optimization at each grid point."
-    )
+        ..., description="Map of the final energy from the grid optimization at each grid point.")
+    grid_optimizations: Dict[str, ObjectId] = Schema(...,
+                                                     description="The Id of each optimization at each grid point.")
     starting_grid: tuple = Schema(
         ...,
         description="Initial grid point from which the Grid Optimization started. This grid point is the closest in "
                     "structure to the ``starting_molecule``."
     ) # yapf: disable
 
-## Utility
+    ## Utility
 
     def _organize_return(self, data: Dict[str, Any], key: Union[int, str, None]) -> Dict[str, Any]:
 
@@ -288,6 +248,7 @@ class GridOptimizationRecord(RecordBase):
 
         return tuple(ret)
 
+
 ## Query
 
     def get_final_energies(self, key: Union[int, str, None] = None) -> Dict[str, float]:
@@ -317,7 +278,7 @@ class GridOptimizationRecord(RecordBase):
 
         return self._organize_return(self.final_energy_dict, key)
 
-    def get_final_molecules(self, key: Union[int, str, None]=None) -> Dict[str, 'Molecule']:
+    def get_final_molecules(self, key: Union[int, str, None] = None) -> Dict[str, 'Molecule']:
         """
         Provides the final optimized molecules at each grid point.
 
@@ -355,7 +316,7 @@ class GridOptimizationRecord(RecordBase):
         data = self.cache["final_molecules"]
         return self._organize_return(data, key)
 
-    def get_final_results(self, key: Union[int, Tuple[int, ...], str]=None) -> Dict[str, 'ResultRecord']:
+    def get_final_results(self, key: Union[int, Tuple[int, ...], str] = None) -> Dict[str, 'ResultRecord']:
         """Returns the final opt gradient result records at each grid point.
 
         Parameters

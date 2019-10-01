@@ -114,7 +114,7 @@ def bar_plot(traces: 'List[Series]', title=None, ylabel=None, return_figure=True
 
 
 def violin_plot(traces: 'DataFrame',
-                negative: 'DataFrame'=None,
+                negative: 'DataFrame' = None,
                 title=None,
                 points=False,
                 ylabel=None,

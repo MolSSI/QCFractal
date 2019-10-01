@@ -29,11 +29,10 @@ class API_AccessLogger:
                          f'to install it manually using `pip install geoip2`')
         except FileNotFoundError:
             logger.error(f'Geoip cites file cannot be read from {geo_file_path}.\n'
-                        f'Make sure to manually download the file from: \n'
-                        f'https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz\n'
-                        f'Then, set the geo_file_path in qcfractal_config.yaml in your base_folder '
-                        f'(default base_folder is ~/.qca/qcfractal/qcfractal_config.yaml).')
-
+                         f'Make sure to manually download the file from: \n'
+                         f'https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz\n'
+                         f'Then, set the geo_file_path in qcfractal_config.yaml in your base_folder '
+                         f'(default base_folder is ~/.qca/qcfractal/qcfractal_config.yaml).')
 
     def get_api_access_log(self, request, access_type=None, extra_params=None):
 
@@ -45,7 +44,6 @@ class API_AccessLogger:
             log['access_type'] = access_type
 
         log['access_method'] = request.method  # GET or POST
-
 
         # get the real IP address behind a proxy or ngnix
         x_real_ip = request.headers.get("X-Real-IP", None)
@@ -63,7 +61,6 @@ class API_AccessLogger:
         log.update(extra)
 
         return log
-
 
     def get_geoip2_data(self, ip_address):
         out = {}

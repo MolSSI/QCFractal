@@ -2,7 +2,6 @@
 SQLAlchemy Database class to handle access to Pstgres through ORM
 """
 
-
 try:
     from sqlalchemy import create_engine, or_, case
     from sqlalchemy.exc import IntegrityError
@@ -10,9 +9,8 @@ try:
     from sqlalchemy.sql.expression import func
     # from sqlalchemy.dialects import postgresql
 except ImportError:
-    raise ImportError(
-        "SQLAlchemy_socket requires sqlalchemy, please install this python "
-        "module or try a different db_socket.")
+    raise ImportError("SQLAlchemy_socket requires sqlalchemy, please install this python "
+                      "module or try a different db_socket.")
 
 import logging
 import secrets
@@ -28,17 +26,16 @@ import json
 from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
                                         TaskStatusEnum, TorsionDriveRecord, prepare_basis, GridOptimizationRecord)
 # SQL ORMs
-from qcfractal.storage_sockets.models import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM,
-                                       MoleculeORM, OptimizationProcedureORM, QueueManagerORM, ResultORM,
-                                       ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
-                                       GridOptimizationProcedureORM, VersionsORM, AccessLogORM, DatasetORM,
-                                       ReactionDatasetORM)
+from qcfractal.storage_sockets.models import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM, MoleculeORM,
+                                              OptimizationProcedureORM, QueueManagerORM, ResultORM, ServiceQueueORM,
+                                              TaskQueueORM, TorsionDriveProcedureORM, UserORM,
+                                              GridOptimizationProcedureORM, VersionsORM, AccessLogORM, DatasetORM,
+                                              ReactionDatasetORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
 from qcfractal.storage_sockets.db_queries import TorsionDriveQueries, OptimizationQueries
 from .models import Base
-
 
 _null_keys = {"basis", "keywords"}
 _id_keys = {"id", "molecule", "keywords", "procedure_id"}
@@ -48,6 +45,7 @@ _prepare_keys = {"program": _lower_func, "basis": prepare_basis, "method": _lowe
 
 def dict_from_tuple(keys, values):
     return [dict(zip(keys, row)) for row in values]
+
 
 def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[str, Union[str, List[str]]]:
     """
@@ -64,7 +62,6 @@ def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[st
         if (k in _null_keys) and (v == 'null'):
             v = None
 
-
         if k in _prepare_keys:
             f = _prepare_keys[k]
             if isinstance(v, (list, tuple)):
@@ -79,6 +76,7 @@ def format_query(ORMClass, **query: Dict[str, Union[str, List[str]]]) -> Dict[st
             ret.append(getattr(ORMClass, k) == v)
 
     return ret
+
 
 def get_count_fast(query):
     """
@@ -104,15 +102,15 @@ def get_procedure_class(record):
     elif isinstance(record, GridOptimizationRecord):
         procedure_class = GridOptimizationProcedureORM
     else:
-        raise TypeError('Procedure of type {} is not valid or supported yet.'
-                        .format(type(record)))
+        raise TypeError('Procedure of type {} is not valid or supported yet.'.format(type(record)))
 
     return procedure_class
+
 
 def get_collection_class(collection_type):
 
     collection_map = {
-        'dataset' : DatasetORM,
+        'dataset': DatasetORM,
         'reactiondataset': ReactionDatasetORM,
     }
 
@@ -184,7 +182,7 @@ class SQLAlchemySocket:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
 
         # Advanced queries objects
-        self._query_classes =  {
+        self._query_classes = {
             TorsionDriveQueries._class_name: TorsionDriveQueries(max_limit=max_limit),
             OptimizationQueries._class_name: OptimizationQueries(max_limit=max_limit),
         }
@@ -316,7 +314,7 @@ class SQLAlchemySocket:
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def custom_query(self, class_name : str, query_key : str, **kwargs):
+    def custom_query(self, class_name: str, query_key: str, **kwargs):
         """
         Run advanced or specialized queries on different classes
 
@@ -339,10 +337,7 @@ class SQLAlchemySocket:
                     error_description: Error msg to show to the user
         """
 
-        ret = {
-            'data': [],
-            'meta': get_metadata_template()
-        }
+        ret = {'data': [], 'meta': get_metadata_template()}
 
         try:
             if class_name not in self._query_classes:
@@ -365,7 +360,6 @@ class SQLAlchemySocket:
             log = AccessLogORM(**log_data)
             session.add(log)
             session.commit()
-
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Logs (KV store) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1416,7 +1410,7 @@ class SQLAlchemySocket:
                 if doc.count() == 0:
                     doc = ServiceQueueORM(**service.dict(include=set(ServiceQueueORM.__dict__.keys())))
                     doc.extra = service.dict(exclude=set(ServiceQueueORM.__dict__.keys()))
-                    doc.priority = doc.priority.value # Must be an integer for sorting
+                    doc.priority = doc.priority.value  # Must be an integer for sorting
                     session.add(doc)
                     session.commit()  # TODO
                     procedure_ids.append(proc_id)
@@ -1521,9 +1515,9 @@ class SQLAlchemySocket:
         return updated_count
 
     def update_service_status(self,
-                     status: str,
-                     id: Union[List[str], str] = None,
-                     procedure_id: Union[List[str], str] = None) -> int:
+                              status: str,
+                              id: Union[List[str], str] = None,
+                              procedure_id: Union[List[str], str] = None) -> int:
 
         if (id is None) and (procedure_id is None):
             raise KeyError("id or procedure_id must not be None.")
@@ -1603,7 +1597,7 @@ class SQLAlchemySocket:
                     # if isinstance(task_dict['base_result'], dict):
                     #     task_dict['base_result'] = task_dict['base_result']['id']
                     task = TaskQueueORM(**task_dict)
-                    task.priority = task.priority.value # Must be an integer for sorting
+                    task.priority = task.priority.value  # Must be an integer for sorting
                     session.add(task)
                     session.commit()
                     results.append(str(task.id))
@@ -1818,7 +1812,6 @@ class SQLAlchemySocket:
                                    .filter(TaskQueueORM.id.in_(sorted_data.keys()))\
                                    .order_by(TaskQueueORM.id).all()
 
-
             for (task_id, msg), task_obj, base_result in zip(sorted_data.items(), task_objects, base_results):
 
                 task_ids.append(task_id)
@@ -1880,11 +1873,7 @@ class SQLAlchemySocket:
         if reset_error:
             status.append(TaskStatusEnum.error)
 
-        query = format_query(TaskQueueORM,
-                             id=id,
-                             base_result_id=base_result,
-                             manager=manager,
-                             status=status)
+        query = format_query(TaskQueueORM, id=id, base_result_id=base_result, manager=manager, status=status)
 
         # Must have status + something, checking above as well(being paranoid)
         if len(query) < 2:
@@ -2094,8 +2083,8 @@ class SQLAlchemySocket:
 
         # Make sure permissions are valid
         if not self._valid_permissions >= set(permissions):
-            raise KeyError("Permissions settings not understood: {}".format(
-                set(permissions) - self._valid_permissions))
+            raise KeyError(
+                "Permissions settings not understood: {}".format(set(permissions) - self._valid_permissions))
 
         if password is None:
             password = self._generate_password()
@@ -2124,10 +2113,7 @@ class SQLAlchemySocket:
 
         return success, password
 
-    def verify_user(self,
-                    username: str,
-                    password: str,
-                    permission: str) -> Tuple[bool, str]:
+    def verify_user(self, username: str, password: str, permission: str) -> Tuple[bool, str]:
         """
         Verifies if a user has the requested permissions or not.
 
@@ -2174,7 +2160,9 @@ class SQLAlchemySocket:
                 pwcheck = bcrypt.checkpw(password.encode("UTF-8"), data.password)
             except Exception as e:
                 self.logger.warning(f"Password check failure, error: {str(e)}")
-                self.logger.warning(f"Error likely caused by encryption salt mismatch, potentially fixed by creating a new password for user {username}.")
+                self.logger.warning(
+                    f"Error likely caused by encryption salt mismatch, potentially fixed by creating a new password for user {username}."
+                )
                 return (False, "Password decryption failure, please contact your database administrator.")
 
             if pwcheck is False:
@@ -2227,8 +2215,7 @@ class SQLAlchemySocket:
             if permissions is not None:
                 # Make sure permissions are valid
                 if not self._valid_permissions >= set(permissions):
-                    return False, "Permissions not understood: {}".format(
-                        set(permissions) - self._valid_permissions)
+                    return False, "Permissions not understood: {}".format(set(permissions) - self._valid_permissions)
                 blob["permissions"] = permissions
             if reset_password:
                 password = self._generate_password()
@@ -2243,8 +2230,7 @@ class SQLAlchemySocket:
         else:
             return False, f"Failed to modify user {username}"
 
-    def remove_user(self,
-                    username: str) -> bool:
+    def remove_user(self, username: str) -> bool:
         """Removes a user
 
         Parameters
@@ -2264,8 +2250,7 @@ class SQLAlchemySocket:
 
         return count == 1
 
-    def get_user_permissions(self,
-                             username: str) -> Optional[List[str]]:
+    def get_user_permissions(self, username: str) -> Optional[List[str]]:
         """
 
         Parameters
@@ -2287,7 +2272,6 @@ class SQLAlchemySocket:
                 ret = None
 
         return ret
-
 
     def _get_users(self):
 
@@ -2320,7 +2304,7 @@ class SQLAlchemySocket:
 
                 if get_count_fast(doc) == 0:
                     doc = UserORM(**user)
-                    if (isinstance(doc.password, str)): #TODO, for mongo
+                    if (isinstance(doc.password, str)):  #TODO, for mongo
                         doc.password = doc.password.encode('ascii')
                     session.add(doc)
                     session.commit()

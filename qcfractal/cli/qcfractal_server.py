@@ -90,7 +90,11 @@ def parse_args():
 
     ### Config subcommands
     info = subparsers.add_parser('info', help="Manage users and permissions on a QCFractal server instance.")
-    info.add_argument("category", nargs="?", default="config", choices=["config", "alembic"], help="The config category to show.")
+    info.add_argument("category",
+                      nargs="?",
+                      default="config",
+                      choices=["config", "alembic"],
+                      help="The config category to show.")
     info.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     ### User subcommands
@@ -101,9 +105,16 @@ def parse_args():
 
     user_add = user_subparsers.add_parser("add", help="Add a user to the QCFractal server.")
     user_add.add_argument("username", default=None, type=str, help="The username to add.")
-    user_add.add_argument("--password", default=None, type=str, required=False,
+    user_add.add_argument("--password",
+                          default=None,
+                          type=str,
+                          required=False,
                           help="The password for the user. If None, a default one will be created and printed.")
-    user_add.add_argument("--permissions", nargs='+', default=None, type=str, required=True,
+    user_add.add_argument("--permissions",
+                          nargs='+',
+                          default=None,
+                          type=str,
+                          required=True,
                           help="Permissions for the user. Allowed values: read, write, queue, compute, admin.")
 
     user_show = user_subparsers.add_parser("info", help="Show the user's current permissions.")
@@ -112,12 +123,21 @@ def parse_args():
     user_modify = user_subparsers.add_parser("modify", help="Change a user's password or permissions.")
     user_modify.add_argument("username", default=None, type=str, help="The username to modify.")
     user_modify_password = user_modify.add_mutually_exclusive_group()
-    user_modify_password.add_argument("--password", type=str, default=None, required=False,
+    user_modify_password.add_argument("--password",
+                                      type=str,
+                                      default=None,
+                                      required=False,
                                       help="Change the user's password to the specified value.")
-    user_modify_password.add_argument("--reset-password", action='store_true',
+    user_modify_password.add_argument("--reset-password",
+                                      action='store_true',
                                       help="Reset the user's password. A new password will be generated and printed.")
-    user_modify.add_argument("--permissions", nargs='+', default=None, type=str, required=False,
-                             help="Change the users's permissions. Allowed values: read, write, compute, queue, admin.")
+    user_modify.add_argument(
+        "--permissions",
+        nargs='+',
+        default=None,
+        type=str,
+        required=False,
+        help="Change the users's permissions. Allowed values: read, write, compute, queue, admin.")
 
     user_remove = user_subparsers.add_parser("remove", help="Remove a user.")
     user_remove.add_argument("username", default=None, type=str, help="The username to remove.")
@@ -385,7 +405,9 @@ def server_user(args, config):
     try:
         if args["user_command"] == "add":
             print("\n>>> Adding new user...")
-            success, pw = storage.add_user(args["username"], password=args["password"], permissions=args["permissions"])
+            success, pw = storage.add_user(args["username"],
+                                           password=args["password"],
+                                           permissions=args["permissions"])
             if success:
                 print(f"\n>>> New user successfully added, password:\n{pw}")
                 if config.fractal.security is None:
@@ -404,9 +426,7 @@ def server_user(args, config):
                 print(permissions)
         elif args["user_command"] == "modify":
             print(f"\n>>> Modifying user '{args['username']}'...")
-            success, message = storage.modify_user(args["username"],
-                                                   args["password"],
-                                                   args["reset_password"],
+            success, message = storage.modify_user(args["username"], args["password"], args["reset_password"],
                                                    args["permissions"])
             if success:
                 info = "Successfully modified user\n"

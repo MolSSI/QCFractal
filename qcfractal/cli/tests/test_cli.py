@@ -26,8 +26,7 @@ def qcfractal_base_init():
 
     args = [
         "qcfractal-server", "init", "--base-folder",
-        str(tmpdir.name), "--db-own=False", "--clear-database",
-        f"--db-port={storage.config.database.port}"
+        str(tmpdir.name), "--db-own=False", "--clear-database", f"--db-port={storage.config.database.port}"
     ]
     assert testing.run_process(args, **_options)
 
@@ -55,8 +54,10 @@ def test_cli_user_add(qcfractal_base_init):
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_add_1", "--permissions", "admin"]
     assert testing.run_process(args, **_options) is False
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_add_2", "--password", "foo",
-            "--permissions", "admin"]
+    args = [
+        "qcfractal-server", "user", qcfractal_base_init, "add", "test_user_add_2", "--password", "foo",
+        "--permissions", "admin"
+    ]
     assert testing.run_process(args, **_options)
 
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_add_3"]
@@ -80,16 +81,16 @@ def test_cli_user_modify(qcfractal_base_init):
     args = ["qcfractal-server", "user", qcfractal_base_init, "add", "test_user_modify", "--permissions", "read"]
     assert testing.run_process(args, **_options)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "test_user_modify",
-            "--permissions", "read", "write", "--reset-password"]
+    args = [
+        "qcfractal-server", "user", qcfractal_base_init, "modify", "test_user_modify", "--permissions", "read",
+        "write", "--reset-password"
+    ]
     assert testing.run_process(args, **_options)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "test_user_modify",
-            "--password", "foopass"]
+    args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "test_user_modify", "--password", "foopass"]
     assert testing.run_process(args, **_options)
 
-    args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "test_user_modify",
-            "--permissions", "read"]
+    args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "test_user_modify", "--permissions", "read"]
     assert testing.run_process(args, **_options)
 
     args = ["qcfractal-server", "user", qcfractal_base_init, "modify", "badname_1234"]
@@ -136,8 +137,7 @@ def test_with_api_logging(postgres_server, log_apis):
 
     args = [
         "qcfractal-server", "init", "--base-folder",
-        str(tmpdir.name), "--db-own=False", "--clear-database",
-        f"--db-port={postgres_server.config.database.port}",
+        str(tmpdir.name), "--db-own=False", "--clear-database", f"--db-port={postgres_server.config.database.port}",
         f"--log-apis={log_apis}"
     ]
     assert testing.run_process(args, **_options)
@@ -272,4 +272,3 @@ def test_cli_managers_skel(tmp_path):
     config = tmp_path / "config.yaml"
     args = ["qcfractal-manager", "--skel", config.as_posix()]
     testing.run_process(args, **_options)
-

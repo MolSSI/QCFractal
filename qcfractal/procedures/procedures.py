@@ -128,21 +128,22 @@ class SingleResultTasks(BaseTasks):
                 continue
 
             # Build task object
-            task = TaskRecord(**{
-                "spec": {
-                    "function": "qcengine.compute",  # todo: add defaults in models
-                    "args": [inp.dict(), data.meta.program],
-                    "kwargs": {}  # todo: add defaults in models
-                },
-                "parser": "single",
-                "program": data.meta.program,
-                "tag": tag,
-                "priority": priority,
-                "base_result": {
-                    "ref": "result",
-                    "id": base_id
-                }
-            })
+            task = TaskRecord(
+                **{
+                    "spec": {
+                        "function": "qcengine.compute",  # todo: add defaults in models
+                        "args": [inp.dict(), data.meta.program],
+                        "kwargs": {}  # todo: add defaults in models
+                    },
+                    "parser": "single",
+                    "program": data.meta.program,
+                    "tag": tag,
+                    "priority": priority,
+                    "base_result": {
+                        "ref": "result",
+                        "id": base_id
+                    }
+                })
 
             new_tasks.append(task)
 
@@ -293,22 +294,23 @@ class OptimizationTasks(BaseTasks):
                 continue
 
             # Build task object
-            task = TaskRecord(**{
-                "spec": {
-                    "function": "qcengine.compute_procedure",
-                    "args": [inp.dict(), data.meta.program],
-                    "kwargs": {}
-                },
-                "parser": "optimization",
-                "program": qc_spec.program,
-                "procedure": data.meta.program,
-                "tag": tag,
-                "priority": priority,
-                "base_result": {
-                    "ref": "procedure",
-                    "id": base_id
-                }
-            })
+            task = TaskRecord(
+                **{
+                    "spec": {
+                        "function": "qcengine.compute_procedure",
+                        "args": [inp.dict(), data.meta.program],
+                        "kwargs": {}
+                    },
+                    "parser": "optimization",
+                    "program": qc_spec.program,
+                    "procedure": data.meta.program,
+                    "tag": tag,
+                    "priority": priority,
+                    "base_result": {
+                        "ref": "procedure",
+                        "id": base_id
+                    }
+                })
 
             new_tasks.append(task)
 
