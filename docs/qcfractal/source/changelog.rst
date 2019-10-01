@@ -21,7 +21,9 @@ Changelog
 New Features
 ++++++++++++
 
-- (:pr:`XXX`) @dgasmith Placeholder issue
+- (:pr:`420`) Pre-storage data handling through Elemental's ``Protocols`` feature are now present in Fractal. Although
+  only optimization protocols are implemented functionally, the database side has been upgraded to store protocol
+  settings.
 
 Enhancements
 ++++++++++++
