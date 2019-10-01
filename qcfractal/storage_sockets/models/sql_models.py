@@ -13,7 +13,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
 from qcfractal.interface.models.task_models import ManagerStatusEnum, PriorityEnum, TaskStatusEnum
-from qcfractal.storage_sockets.models import Base, MsgpackExt
+from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
 
 
 class AccessLogORM(Base):

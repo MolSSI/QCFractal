@@ -77,7 +77,7 @@ class API_AccessLogger:
             out['ip_long'] = str(loc_data.location.longitude)
             out['postal_code'] = loc_data.postal.code
             out['subdivision'] = loc_data.subdivisions.most_specific.name
-        except:
+        except: # lgtm [py/catch-base-exception]
             logger.error(f'Problem getting geoip2 data for {ip_address}')
 
         return out

@@ -4,7 +4,6 @@ from typing import List, Union
 from sqlalchemy import Integer, inspect
 from sqlalchemy.sql import bindparam, text
 
-from qcelemental.util import msgpackext_dumps, msgpackext_loads
 from qcfractal.interface.models import Molecule, ResultRecord
 from qcfractal.storage_sockets.models import MoleculeORM, ResultORM
 
@@ -77,7 +76,7 @@ class TorsionDriveQueries(QueryBase):
                 select initial_molecule from optimization_procedure as opt where opt.id in
                 (
                     select opt_id from optimization_history where torsion_id = {torsion_id}
-                )  
+                )
                 order by opt.id
         """
 
@@ -107,7 +106,7 @@ class TorsionDriveQueries(QueryBase):
                 select final_molecule from optimization_procedure as opt where opt.id in
                 (
                     select opt_id from optimization_history where torsion_id = {torsion_id}
-                )  
+                )
                 order by opt.id
         """
 
@@ -138,7 +137,7 @@ class TorsionDriveQueries(QueryBase):
                 select opt_res.opt_id, result.id as result_id, result.return_result from result
                 join opt_result_association as opt_res
                 on result.id = opt_res.result_id
-                where opt_res.opt_id in 
+                where opt_res.opt_id in
                 (
                     select opt_id from optimization_history where torsion_id = {torsion_id}
                 )
@@ -208,7 +207,7 @@ class OptimizationQueries(QueryBase):
 
         sql_statement = text("""
             select * from base_result
-            join (        
+            join (
                 select opt_id, result.* from result
                 join (
                     select opt.opt_id, opt.result_id, max_pos from opt_result_association as opt

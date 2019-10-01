@@ -889,7 +889,7 @@ class FractalClient(object):
 
         return self._automodel_request("task_queue", "get", payload, full_return=full_return)
 
-    def modify_tasks(self,
+    def modify_tasks(self, # lgtm [py/similar-function]
                      operation: str,
                      base_result: 'QueryObjectId',
                      id: 'QueryObjectId' = None,
@@ -932,7 +932,7 @@ class FractalClient(object):
 
         return self._automodel_request("task_queue", "put", payload, full_return=full_return)
 
-    def add_service(self,
+    def add_service(self, # lgtm [py/similar-function]
                     service: Union[GridOptimizationInput, TorsionDriveInput],
                     tag: Optional[str] = None,
                     priority: Optional[str] = None,

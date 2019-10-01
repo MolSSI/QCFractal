@@ -8,7 +8,8 @@ from sqlalchemy.ext.orderinglist import ordering_list
 from sqlalchemy.orm import column_property, relationship
 
 from qcfractal.interface.models.records import DriverEnum, RecordStatusEnum
-from qcfractal.storage_sockets.models import Base, KeywordsORM, KVStoreORM, MoleculeORM, MsgpackExt
+from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
+from qcfractal.storage_sockets.models.sql_models import KeywordsORM, KVStoreORM, MoleculeORM
 
 
 class BaseResultORM(Base):

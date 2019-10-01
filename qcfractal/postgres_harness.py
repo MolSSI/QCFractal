@@ -264,7 +264,7 @@ Alternatively, you can install a system PostgreSQL manually, please see the foll
 
             self.logger("PostgreSQL successfully started in a background process, current_status:\n")
             if not self.quiet:
-                start_status = self._run([
+                self._run([
                     shutil.which("pg_ctl"),
                     "-D", str(self.config.database_path),
                     "status"]) # yapf: disable
