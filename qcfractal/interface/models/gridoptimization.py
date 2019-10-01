@@ -208,7 +208,11 @@ class GridOptimizationRecord(RecordBase):
         Tuple[int]
             The unpacked key.
         """
-        return tuple(json.loads(key))
+        data = json.loads(key)
+        if data == "preoptimization":
+            return data
+        else:
+            return tuple(data)
 
     def get_scan_value(self, scan_number: Union[str, int, Tuple[int]]) -> Tuple[float, ...]:
         """

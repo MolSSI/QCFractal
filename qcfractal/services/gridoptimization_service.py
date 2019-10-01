@@ -138,6 +138,7 @@ class GridOptimizationService(BaseService):
                 return False
 
             complete_tasks = self.task_manager.get_tasks()
+            self.grid_optimizations[self.output.serialize_key("preoptimization")] = complete_tasks["initial_opt"]["id"]
 
             self.starting_molecule = self.storage_socket.get_molecules(
                 id=[complete_tasks["initial_opt"]["final_molecule"]])["data"][0]
