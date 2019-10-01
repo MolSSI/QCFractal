@@ -19,11 +19,14 @@ Collections
 -----------
 
 Collections are objects that can reference tens or millions of individual
-computations and provide handles to access and visualize this data. There are
-many types of collections such as:
+computations and provide handles to access and visualize this data.
+All collections support the possibility of computing with and comparing multiple methods.
+There are many types of collections such as:
 
-- ``ReactionDataset`` - A dataset that allows hold many chemical reactions which can be computed with a large vareity of computational methods.
-- ``TorsionDriveDataset`` - A dataset of molecules where torsion scans can be executed with a variety of computational methods.
+* :doc:`collection-dataset` - A collection for a set of molecules and their computed properties.
+* :doc:`collection-reactiondataset` - A collection for chemical reactions and intermolecular interactions.
+* :doc:`collection-optimization` - A collection for geometry optimization of a set of molecules.
+* :doc:`collection-torsiondrive` - A collection for the TorsionDrive pipeline.
 
 There are many types of collections and more are being added to index and
 organize computations for every use case.
@@ -60,6 +63,11 @@ Collections are the primary way of viewing and generating new data.
 
 * :doc:`collections`
 * :doc:`collection-dataset`
+* :doc:`collection-reactiondataset`
+* :doc:`collection-optimization`
+* :doc:`collection-torsiondrive`
+* :doc:`collection-tasks`
+
 
 .. toctree::
    :maxdepth: 2
@@ -67,8 +75,11 @@ Collections are the primary way of viewing and generating new data.
    :caption: Collections
 
    collections.rst
-   collection-dataset
-   collection-torsiondrive
+   collection-dataset.rst
+   collection-reactiondataset.rst
+   collection-optimization.rst
+   collection-torsiondrive.rst
+   collection-tasks.rst
 
 **Record Documentation**
 
