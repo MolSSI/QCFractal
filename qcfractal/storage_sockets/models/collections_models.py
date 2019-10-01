@@ -1,15 +1,16 @@
-from sqlalchemy import (Column, Integer, String, ForeignKey, JSON, Index)
-from sqlalchemy.orm import relationship, column_property
-# from sqlalchemy import select, func, tuple_, text, cast
-from qcfractal.storage_sockets.models import Base
+from sqlalchemy import JSON, Column, ForeignKey, Index, Integer, String
 # from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.sql.functions import GenericFunction
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql.functions import GenericFunction
 
+# from sqlalchemy import select, func, tuple_, text, cast
+from qcfractal.storage_sockets.models.sql_base import Base
 
 # class json_agg(GenericFunction):
 #     type = postgresql.JSON
+
 
 class json_build_object(GenericFunction):
     type = postgresql.JSON
@@ -42,7 +43,6 @@ class CollectionORM(Base):
     def update_relations(self, **kwarg):
         pass
 
-
     __table_args__ = (
         Index('ix_collection_lname', "collection", "lname", unique=True),
         Index('ix_collection_type', 'collection_type'),
@@ -50,7 +50,9 @@ class CollectionORM(Base):
 
     __mapper_args__ = {'polymorphic_on': 'collection_type'}
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 class DatasetMixin:
     """
@@ -58,12 +60,12 @@ class DatasetMixin:
     """
 
     default_benchmark = Column(String, nullable=True)
-    default_keywords  = Column(JSON, nullable=True)
+    default_keywords = Column(JSON, nullable=True)
 
     default_driver = Column(String, nullable=True)
     default_units = Column(String, nullable=True)
     alias_keywords = Column(JSON, nullable=True)
-    default_program  = Column(String, nullable=True)
+    default_program = Column(String, nullable=True)
 
     contributed_values = Column(JSON)
 
@@ -114,11 +116,11 @@ class DatasetORM(CollectionORM, DatasetMixin):
     #         # .select_from(DatasetRecordsAssociation.__tablename__) # doesn't work
     #         .where(DatasetRecordsORM.dataset_id == id))  #, deferred=True)
 
-
-    records_obj = relationship(DatasetEntryORM,
-                               lazy='selectin',   #lazy='noload', # when using column_property
-                               cascade="all, delete-orphan",
-                               backref="dataset")
+    records_obj = relationship(
+        DatasetEntryORM,
+        lazy='selectin',  #lazy='noload', # when using column_property
+        cascade="all, delete-orphan",
+        backref="dataset")
 
     @hybrid_property
     def records(self):
@@ -144,15 +146,13 @@ class DatasetORM(CollectionORM, DatasetMixin):
         self.records_obj = []
         records = [] if not records else records
         for rec_dict in records:
-            rec = DatasetEntryORM(dataset_id=int(self.id),**rec_dict)
+            rec = DatasetEntryORM(dataset_id=int(self.id), **rec_dict)
             self.records_obj.append(rec)
-
 
     __table_args__ = (
         # Index('ix_results_molecule', 'molecule'),  # b-tree index
         # UniqueConstraint("program", "driver", "method", "basis", "keywords", "molecule", name='uix_results_keys'),
     )
-
 
     __mapper_args__ = {
         'polymorphic_identity': 'dataset',
@@ -160,7 +160,9 @@ class DatasetORM(CollectionORM, DatasetMixin):
         'polymorphic_load': 'selectin',
     }
 
+
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 
 class ReactionDatasetEntryORM(Base):
     """Association table for many to many"""
@@ -185,7 +187,7 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
 
     id = Column(Integer, ForeignKey('collection.id', ondelete="CASCADE"), primary_key=True)
 
-    ds_type  = Column(String, nullable=True)
+    ds_type = Column(String, nullable=True)
 
     records_obj = relationship(ReactionDatasetEntryORM,
                                lazy='selectin',
@@ -197,7 +199,7 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
         self.records_obj = []
         records = records or []
         for rec_dict in records:
-            rec = ReactionDatasetEntryORM(reaction_dataset_id=int(self.id),**rec_dict)
+            rec = ReactionDatasetEntryORM(reaction_dataset_id=int(self.id), **rec_dict)
             self.records_obj.append(rec)
 
     @hybrid_property
@@ -218,17 +220,16 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
     def records(self, dict_values):
         return dict_values
 
-
     __table_args__ = (
         # Index('ix_results_molecule', 'molecule'),  # b-tree index
         # UniqueConstraint("program", "driver", "method", "basis", "keywords", "molecule", name='uix_results_keys'),
     )
-
 
     __mapper_args__ = {
         'polymorphic_identity': 'reactiondataset',
         # to have separate select when querying CollectionORM
         'polymorphic_load': 'selectin',
     }
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

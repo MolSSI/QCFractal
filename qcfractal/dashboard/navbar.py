@@ -16,4 +16,3 @@ navbar = dbc.NavbarSimple(
     brand_href="/",
     sticky="top",
 )
-

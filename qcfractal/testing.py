@@ -15,8 +15,9 @@ from collections import Mapping
 from contextlib import contextmanager
 
 import pytest
-import qcengine as qcng
 from tornado.ioloop import IOLoop
+
+import qcengine as qcng
 
 from .postgres_harness import PostgresHarness, TemporaryPostgres
 from .queue import build_queue_adapter
@@ -60,8 +61,9 @@ def pytest_configure(config):
     import sys
     sys._called_from_test = True
     config.addinivalue_line("markers", "example: Mark a given test as an example which can be run")
-    config.addinivalue_line("markers", "slow: Mark a given test as slower than most other tests, needing a special "
-                                       "flag to run.")
+    config.addinivalue_line(
+        "markers", "slow: Mark a given test as slower than most other tests, needing a special "
+        "flag to run.")
 
 
 def pytest_unconfigure(config):
@@ -104,6 +106,7 @@ _programs["dftd3"] = "dftd3" in qcng.list_available_programs()
 def has_module(name):
     return _programs[name]
 
+
 def check_has_module(program):
     import_message = "Not detecting module {}. Install package if necessary to enable tests."
     if has_module(program) is False:
@@ -129,8 +132,8 @@ using_unix = pytest.mark.skipif(os.name.lower() != 'posix',
                                 reason='Not on Unix operating system, '
                                 'assuming Bash is not present')
 
-
 ### Generic helpers
+
 
 def recursive_dict_merge(base_dict, dict_to_merge_in):
     """Recursive merge for more complex than a simple top-level merge {**x, **y} which does not handle nested dict."""

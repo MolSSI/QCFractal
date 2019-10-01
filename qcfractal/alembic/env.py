@@ -1,15 +1,12 @@
 
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+import yaml
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-
-from qcfractal.storage_sockets.models import Base
-
-import yaml
 from qcfractal.config import FractalConfig
+from qcfractal.storage_sockets.models import Base
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

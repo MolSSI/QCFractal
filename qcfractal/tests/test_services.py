@@ -368,7 +368,8 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
 
     # Check final ResultRecords
     final_result_records = result.get_final_results()
-    assert len(final_result_records) == 4
+    assert len(final_result_records) == 5
+    assert final_result_records["preoptimization"].molecule == result.starting_molecule
 
 
 @using_geometric

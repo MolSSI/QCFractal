@@ -1,17 +1,20 @@
 # from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import inspect, and_
+from sqlalchemy import and_, inspect
 from sqlalchemy.dialects.postgresql import BYTEA
-from sqlalchemy.types import TypeDecorator
-from sqlalchemy.orm import object_session
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import object_session
+from sqlalchemy.types import TypeDecorator
+
+from qcelemental.util import msgpackext_dumps, msgpackext_loads
+
 # from sqlalchemy.ext.orderinglist import ordering_list
 # from sqlalchemy.ext.associationproxy import association_proxy
 # from sqlalchemy.dialects.postgresql import aggregate_order_by
 
-from qcelemental.util import msgpackext_dumps, msgpackext_loads
 
 # Base = declarative_base()
+
 
 class MsgpackExt(TypeDecorator):
     '''Converts JSON-like data to msgpack with full NumPy Array support.'''
@@ -29,8 +32,7 @@ class MsgpackExt(TypeDecorator):
 class Base:
     """Base declarative class of all ORM models"""
 
-    db_related_fields = ['result_type', 'base_result_id', 'metadata', '_trajectory',
-                         'collection_type']
+    db_related_fields = ['result_type', 'base_result_id', 'metadata', '_trajectory', 'collection_type']
 
     def to_dict(self, exclude=None):
 

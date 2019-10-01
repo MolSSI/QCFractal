@@ -1,10 +1,11 @@
 from abc import ABC
-from qcelemental.util import msgpackext_dumps, msgpackext_loads
 from typing import List, Union
-from sqlalchemy.sql import text, bindparam
-from sqlalchemy import inspect, Integer
-from qcfractal.storage_sockets.models import ResultORM, MoleculeORM
-from qcfractal.interface.models import ResultRecord, Molecule
+
+from sqlalchemy import Integer, inspect
+from sqlalchemy.sql import bindparam, text
+
+from qcfractal.interface.models import Molecule, ResultRecord
+from qcfractal.storage_sockets.models import MoleculeORM, ResultORM
 
 
 class QueryBase(ABC):
@@ -30,7 +31,7 @@ class QueryBase(ABC):
     def execute_query(self, sql_statement, with_keys=True, **kwargs):
         """Execute sql statemet, apply limit, and return results as dict if needed"""
 
-         # TODO: check count first, way to iterate
+        # TODO: check count first, way to iterate
 
         # sql_statement += f' LIMIT {self.max_limit}'
         result = self.session.execute(sql_statement, kwargs)
@@ -48,20 +49,21 @@ class QueryBase(ABC):
     def _raise_missing_attribute(cls, query_key, missing_attribute, amend_msg=''):
         """Raises error for missinfg attribute in a message suitable for the REST user"""
 
-        raise AttributeError(f'To query {cls._class_name} for {query_key} '
-                             f'you must provide {missing_attribute}.')
+        raise AttributeError(f'To query {cls._class_name} for {query_key} ' f'you must provide {missing_attribute}.')
+
 
 # ----------------------------------------------------------------------------
+
 
 class TorsionDriveQueries(QueryBase):
 
     _class_name = 'torsiondrive'
 
     _query_method_map = {
-        'initial_molecules' : '_get_initial_molecules',
-        'initial_molecules_ids' : '_get_initial_molecules_ids',
-        'final_molecules' : '_get_final_molecules',
-        'final_molecules_ids' : '_get_final_molecules_ids',
+        'initial_molecules': '_get_initial_molecules',
+        'initial_molecules_ids': '_get_initial_molecules_ids',
+        'final_molecules': '_get_final_molecules',
+        'final_molecules_ids': '_get_final_molecules_ids',
         'return_results': '_get_return_results',
     }
 
@@ -74,12 +76,11 @@ class TorsionDriveQueries(QueryBase):
                 select initial_molecule from optimization_procedure as opt where opt.id in
                 (
                     select opt_id from optimization_history where torsion_id = {torsion_id}
-                )  
+                )
                 order by opt.id
         """
 
         return self.execute_query(sql_statement, with_keys=False)
-
 
     def _get_initial_molecules(self, torsion_id=None):
 
@@ -105,12 +106,11 @@ class TorsionDriveQueries(QueryBase):
                 select final_molecule from optimization_procedure as opt where opt.id in
                 (
                     select opt_id from optimization_history where torsion_id = {torsion_id}
-                )  
+                )
                 order by opt.id
         """
 
         return self.execute_query(sql_statement, with_keys=False)
-
 
     def _get_final_molecules(self, torsion_id=None):
 
@@ -137,7 +137,7 @@ class TorsionDriveQueries(QueryBase):
                 select opt_res.opt_id, result.id as result_id, result.return_result from result
                 join opt_result_association as opt_res
                 on result.id = opt_res.result_id
-                where opt_res.opt_id in 
+                where opt_res.opt_id in
                 (
                     select opt_id from optimization_history where torsion_id = {torsion_id}
                 )
@@ -153,16 +153,15 @@ class OptimizationQueries(QueryBase):
     _query_method_map = {
         'all_results': '_get_all_results',
         'final_result': '_get_final_results',
-        'initial_molecule' : '_get_initial_molecules',
-        'final_molecule' : '_get_final_molecules',
+        'initial_molecule': '_get_initial_molecules',
+        'final_molecule': '_get_final_molecules',
     }
-
 
     def _remove_excluded_keys(self, data):
         for key in self._exclude:
             data.pop(key, None)
 
-    def _get_all_results(self, optimization_ids : List[Union[int, str]]=None):
+    def _get_all_results(self, optimization_ids: List[Union[int, str]] = None):
         """Returns all the results objects (trajectory) of each optmization
         Returns list(list) """
 
@@ -200,8 +199,7 @@ class OptimizationQueries(QueryBase):
 
         return ret
 
-
-    def _get_final_results(self, optimization_ids : List[Union[int, str]]=None):
+    def _get_final_results(self, optimization_ids: List[Union[int, str]] = None):
         """Return the actual results objects of the best result in each optimization"""
 
         if optimization_ids is None:
@@ -209,7 +207,7 @@ class OptimizationQueries(QueryBase):
 
         sql_statement = text("""
             select * from base_result
-            join (        
+            join (
                 select opt_id, result.* from result
                 join (
                     select opt.opt_id, opt.result_id, max_pos from opt_result_association as opt
@@ -281,7 +279,7 @@ class OptimizationQueries(QueryBase):
                 where opt.id in :optimization_ids
         """)
 
-         # bind and expand ids list
+        # bind and expand ids list
         sql_statement = sql_statement.bindparams(bindparam("optimization_ids", expanding=True))
 
         # column types:

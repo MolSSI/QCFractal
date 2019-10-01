@@ -7,8 +7,9 @@ import copy
 import importlib
 import json
 import signal
-import yaml
 from functools import partial
+
+import yaml
 
 
 def import_module(module, package=None):

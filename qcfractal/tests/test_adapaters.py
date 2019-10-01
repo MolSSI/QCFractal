@@ -2,8 +2,9 @@
 Explicit tests for queue manipulation.
 """
 
-import pytest
 import tempfile
+
+import pytest
 
 import qcfractal.interface as ptl
 from qcfractal import QueueManager, testing
