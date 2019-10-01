@@ -1,24 +1,13 @@
 Overview
 ========
 
-A :term:`Record` is a
+A :term:`Record` is the stored values of a completed computation. Each ``Record`` type corresponds to a specific operation that QCArchive has formatted.
 
-A result is a single quantum chemistry method evaluation, which might be an energy, an analytic gradient or Hessian, or a property evaluation.
-Collections of evaluations such
-as finite-difference gradients, complete basis set extrapolation, or geometry
-optimizations belong under the "Procedures" heading.
+Several examples are:
 
-Single Results
---------------
+- :doc:`Results <results>` - A single quantum chemistry (or quantum chemistry-like) energy, gradient, Hesssian, or property computation.
+- ``Optimization`` - A geometry optimization at a given level of theory.
+- ``GridOptimization`` - Chains of geometry optimizations where starting structures depend on previous structures.
+- ``TorsionDrive`` - A special type of GridOptimization specifically for torsion scans that is able to overcome local minimum structures to find globally optimal ones.
 
-Procedures
-----------
-
-A result can be found based off a unique tuple of ``(program, molecule_id, options_set, method, basis)``:
-
-- ``program`` - A lowercase string representation of the quantum chemistry program used (``gamess``, ``nwchem``, ``psi4``)
-- ``molecule_id`` - The :term:`ObjectId` of the molecule used in the computation.
-- ``keywords_set`` - The key to the options set stored in the database (``default`` -> ``{"e_convergence": 1.e-7, "scf_type": "df", ...}``)
-- ``method`` - A lowercase string representation of the method used in the computation (``b3lyp``, ``mp2``, ``ccsd(t)``).
-- ``basis`` - A lowercase string representation of the basis used in the computation (``6-31g``, ``cc-pvdz``, ``def2-svp``)
-
+In general records are indexed based off a hash and are often found and queried through a Collection rather than directly.

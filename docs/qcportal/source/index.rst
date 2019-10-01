@@ -70,7 +70,7 @@ Collections are the primary way of viewing and generating new data.
    collection-dataset
    collection-torsiondrive
 
-**Record Documentation**
+**Records**
 
 Documentation for compute records.
 
@@ -82,7 +82,7 @@ Documentation for compute records.
 .. toctree::
    :maxdepth: 1
    :hidden:
-   :caption: Records Documentation
+   :caption: Records
 
    record-overview.rst
    results.rst

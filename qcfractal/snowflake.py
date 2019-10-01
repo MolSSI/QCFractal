@@ -301,7 +301,7 @@ class FractalSnowflakeHandler:
             f"--base-folder={self._qcfdir.name}",
             f"--port={self._server_port}",
             "--db-own=False",
-            f"--db-database-name={self._dbname}",
+            f"--db-database-name=FractalSnowflake_{self._dbname[:8]}",
             f"--db-port={self._storage.config.database.port}",
             "--query-limit=100000",
             "--service-frequency=2",
