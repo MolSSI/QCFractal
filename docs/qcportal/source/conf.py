@@ -130,8 +130,7 @@ except ModuleNotFoundError:
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = []
-#html_static_path = ['_static']
+html_static_path = ['_static']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -226,3 +225,5 @@ extlinks = {
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+html_context = {'extra_js_files': ["https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"]}
