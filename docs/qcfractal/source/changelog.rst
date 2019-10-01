@@ -43,7 +43,7 @@ Enhancements
   This is helpful for managing jobs in the queue and detecting failures.
 - (:pr:`400`, :pr:`401`, :pr:`410`) Adds Dockerfiles corresponding to builds on
   `Docker Hub <https://cloud.docker.com/u/molssi/repository/list>`_.
-- (:pr:`406`) The ``Datset`` collection's primary indices (database level) have been updated to reflect its new
+- (:pr:`406`) The ``Dataset`` collection's primary indices (database level) have been updated to reflect its new
   understanding.
 
 
