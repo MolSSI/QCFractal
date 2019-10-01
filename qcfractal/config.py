@@ -7,8 +7,8 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from pydantic import Schema, validator
 import yaml
+from pydantic import Schema, validator
 
 from .interface.models import AutodocBaseSettings
 

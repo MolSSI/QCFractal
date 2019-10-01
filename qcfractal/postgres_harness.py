@@ -1,17 +1,18 @@
 import atexit
+import os
 import shutil
 import subprocess
 import tempfile
 import time
-from typing import Any, Dict, List, Union, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import psycopg2
+from sqlalchemy import create_engine
+
+from qcfractal.storage_sockets.models import Base
 
 from .config import FractalConfig
 from .util import find_port, is_port_open
-import os
-from qcfractal.storage_sockets.models import Base
-from sqlalchemy import create_engine
 
 
 class PostgresHarness:

@@ -6,12 +6,13 @@ in relations and foreign keys are a string (see TaskQueueORM.base_result_obj)
 """
 
 import datetime
-# from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import (Column, Integer, String, DateTime, Boolean, ForeignKey, JSON, Enum, Float, Binary, Index)
-from sqlalchemy.orm import relationship
-from qcfractal.interface.models.task_models import TaskStatusEnum, ManagerStatusEnum, PriorityEnum
-from sqlalchemy.ext.hybrid import hybrid_property
 
+# from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import JSON, Binary, Boolean, Column, DateTime, Enum, Float, ForeignKey, Index, Integer, String
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import relationship
+
+from qcfractal.interface.models.task_models import ManagerStatusEnum, PriorityEnum, TaskStatusEnum
 from qcfractal.storage_sockets.models import Base, MsgpackExt
 
 

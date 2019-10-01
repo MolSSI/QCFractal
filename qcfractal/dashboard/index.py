@@ -1,14 +1,11 @@
+import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
-import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 
+from . import dash_managers, dash_queue, dash_service
 from .app import app
 from .navbar import navbar
-
-from . import dash_managers
-from . import dash_queue
-from . import dash_service
 
 body = dbc.Container(
     [

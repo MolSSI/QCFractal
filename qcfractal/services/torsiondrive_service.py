@@ -8,9 +8,9 @@ from typing import Any, Dict, List
 
 import numpy as np
 
-from .service_util import BaseService, TaskManager
-from ..interface.models import TorsionDriveRecord
 from ..extras import find_module
+from ..interface.models import TorsionDriveRecord
+from .service_util import BaseService, TaskManager
 
 __all__ = ["TorsionDriveService"]
 

@@ -4,16 +4,16 @@ Utilities and base functions for Services.
 
 import abc
 import datetime
-from typing import Any, Dict, List, Set, Tuple, Optional
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from pydantic import validator
+
+from qcelemental.models import ComputeError
 
 from ..interface.models import ObjectId, ProtoModel
 from ..interface.models.rest_models import TaskQueuePOSTBody
 from ..interface.models.task_models import PriorityEnum
 from ..procedures import get_procedure_parser
-
-from qcelemental.models import ComputeError
 
 
 class TaskManager(ProtoModel):

@@ -8,7 +8,6 @@ from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 import requests
-
 from pydantic import ValidationError
 
 from .collections import collection_factory, collections_name_map

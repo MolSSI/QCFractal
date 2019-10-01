@@ -22,7 +22,7 @@ from .services import construct_service
 from .storage_sockets import storage_socket_factory
 from .storage_sockets.api_logger import API_AccessLogger
 from .web_handlers import (CollectionHandler, InformationHandler, KeywordHandler, KVStoreHandler, MoleculeHandler,
-                           ProcedureHandler, ResultHandler, OptimizationHandler)
+                           OptimizationHandler, ProcedureHandler, ResultHandler)
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 

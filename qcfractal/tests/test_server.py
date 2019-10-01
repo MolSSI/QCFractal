@@ -2,8 +2,8 @@
 Tests the DQM Server class
 """
 
-import os
 import json
+import os
 import threading
 
 import pytest
@@ -11,8 +11,8 @@ import requests
 
 import qcfractal.interface as ptl
 from qcfractal import FractalServer, FractalSnowflake, FractalSnowflakeHandler
-from qcfractal.testing import (await_true, find_open_port, pristine_loop,
-                               test_server, using_geometric, using_rdkit, using_torsiondrive)
+from qcfractal.testing import (await_true, find_open_port, pristine_loop, test_server, using_geometric, using_rdkit,
+                               using_torsiondrive)
 
 meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
 

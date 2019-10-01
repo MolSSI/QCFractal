@@ -12,29 +12,29 @@ except ImportError:
     raise ImportError("SQLAlchemy_socket requires sqlalchemy, please install this python "
                       "module or try a different db_socket.")
 
+import json
 import logging
 import secrets
+from collections.abc import Iterable
 from contextlib import contextmanager
 from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import bcrypt
-from collections.abc import Iterable
-import json
 
 # pydantic classes
-from qcfractal.interface.models import (KeywordSet, Molecule, ObjectId, OptimizationRecord, ResultRecord, TaskRecord,
-                                        TaskStatusEnum, TorsionDriveRecord, prepare_basis, GridOptimizationRecord)
+from qcfractal.interface.models import (GridOptimizationRecord, KeywordSet, Molecule, ObjectId, OptimizationRecord,
+                                        ResultRecord, TaskRecord, TaskStatusEnum, TorsionDriveRecord, prepare_basis)
+from qcfractal.storage_sockets.db_queries import OptimizationQueries, TorsionDriveQueries
 # SQL ORMs
-from qcfractal.storage_sockets.models import (BaseResultORM, CollectionORM, KeywordsORM, KVStoreORM, MoleculeORM,
-                                              OptimizationProcedureORM, QueueManagerORM, ResultORM, ServiceQueueORM,
-                                              TaskQueueORM, TorsionDriveProcedureORM, UserORM,
-                                              GridOptimizationProcedureORM, VersionsORM, AccessLogORM, DatasetORM,
-                                              ReactionDatasetORM)
+from qcfractal.storage_sockets.models import (AccessLogORM, BaseResultORM, CollectionORM, DatasetORM,
+                                              GridOptimizationProcedureORM, KeywordsORM, KVStoreORM, MoleculeORM,
+                                              OptimizationProcedureORM, QueueManagerORM, ReactionDatasetORM, ResultORM,
+                                              ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
+                                              VersionsORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
-from qcfractal.storage_sockets.db_queries import TorsionDriveQueries, OptimizationQueries
 from .models import Base
 
 _null_keys = {"basis", "keywords"}

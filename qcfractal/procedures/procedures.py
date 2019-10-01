@@ -4,10 +4,10 @@ All procedures tasks involved in on-node computation.
 
 from typing import List, Union
 
-from .procedures_util import parse_single_tasks
-from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord
-
 import qcengine as qcng
+
+from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord
+from .procedures_util import parse_single_tasks
 
 
 class BaseTasks:

@@ -2,9 +2,9 @@
 Tests the server compute capabilities.
 """
 
+import numpy as np
 import pytest
 import requests
-import numpy as np
 
 import qcfractal.interface as ptl
 from qcfractal import testing

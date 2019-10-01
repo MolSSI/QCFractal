@@ -3,24 +3,23 @@ A command line interface to the qcfractal server.
 """
 
 import argparse
-import signal
 import json
 import logging
+import os
+import signal
 from enum import Enum
 from math import ceil
-import os
-import yaml
-
 from typing import List, Optional
 
 import tornado.log
+import yaml
+from pydantic import Schema, validator
 
 import qcengine as qcng
 import qcfractal
-from pydantic import validator, Schema
 
-from . import cli_utils
 from ..interface.models import AutodocBaseSettings, ProtoModel
+from . import cli_utils
 
 __all__ = ["main"]
 

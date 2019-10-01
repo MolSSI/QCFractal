@@ -7,11 +7,12 @@ import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from pydantic import constr, validator, Schema
+from pydantic import Schema, constr, validator
+
 from qcelemental import constants
 
 from ..visualization import scatter_plot
-from .common_models import Molecule, ObjectId, OptimizationSpecification, QCSpecification, ProtoModel
+from .common_models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
 from .model_utils import recursive_normalizer
 from .records import RecordBase
 

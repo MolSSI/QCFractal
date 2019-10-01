@@ -1,10 +1,12 @@
 from abc import ABC
-from qcelemental.util import msgpackext_dumps, msgpackext_loads
 from typing import List, Union
-from sqlalchemy.sql import text, bindparam
-from sqlalchemy import inspect, Integer
-from qcfractal.storage_sockets.models import ResultORM, MoleculeORM
-from qcfractal.interface.models import ResultRecord, Molecule
+
+from sqlalchemy import Integer, inspect
+from sqlalchemy.sql import bindparam, text
+
+from qcelemental.util import msgpackext_dumps, msgpackext_loads
+from qcfractal.interface.models import Molecule, ResultRecord
+from qcfractal.storage_sockets.models import MoleculeORM, ResultORM
 
 
 class QueryBase(ABC):

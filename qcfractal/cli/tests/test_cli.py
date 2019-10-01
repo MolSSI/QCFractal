@@ -2,16 +2,15 @@
 Tests for QCFractals CLI
 """
 import os
-import time
 import tempfile
+import time
 
 import pytest
+import yaml
 
 import qcfractal
-
 from qcfractal import testing
 from qcfractal.cli.cli_utils import read_config_file
-import yaml
 
 # def _run_tests()
 _options = {"coverage": True, "dump_stdout": True}

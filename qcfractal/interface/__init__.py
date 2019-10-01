@@ -2,11 +2,7 @@
 DQM Client base folder
 """
 
-from . import collections
-from . import data
-from . import models
-from . import util
-
+from . import collections, data, models, util
 # Add imports here
 from .client import FractalClient
 from .models import Molecule

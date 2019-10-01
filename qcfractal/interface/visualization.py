@@ -2,6 +2,8 @@
 Visualization using the plotly library.
 """
 
+# Plotly is an optional library
+from importlib.util import find_spec
 from typing import Any, Dict, List
 
 
@@ -21,8 +23,6 @@ def _isnotebook():
         return False
 
 
-# Plotly is an optional library
-from importlib.util import find_spec
 spec = find_spec('plotly')
 if spec is None:
     _plotly_found = False

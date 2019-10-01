@@ -6,9 +6,9 @@ from typing import Any, Dict, Optional
 
 from pydantic import Schema, validator
 
-from qcelemental.models import Molecule, Provenance, ProtoModel, AutodocBaseSettings
-from qcelemental.models.results import ResultProtocols
+from qcelemental.models import AutodocBaseSettings, Molecule, ProtoModel, Provenance
 from qcelemental.models.procedures import OptimizationProtocols
+from qcelemental.models.results import ResultProtocols
 
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 

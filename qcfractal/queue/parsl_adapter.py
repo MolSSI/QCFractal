@@ -7,8 +7,9 @@ import time
 import traceback
 from typing import Any, Callable, Dict, Hashable, Optional, Tuple
 
-from .base_adapter import BaseAdapter
 from qcelemental.models import FailedOperation
+
+from .base_adapter import BaseAdapter
 
 
 def _get_future(future):

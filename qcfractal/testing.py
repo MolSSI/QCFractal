@@ -15,8 +15,9 @@ from collections import Mapping
 from contextlib import contextmanager
 
 import pytest
-import qcengine as qcng
 from tornado.ioloop import IOLoop
+
+import qcengine as qcng
 
 from .postgres_harness import PostgresHarness, TemporaryPostgres
 from .queue import build_queue_adapter

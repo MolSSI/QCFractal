@@ -8,7 +8,7 @@ import traceback
 import tornado.web
 
 from ..interface.models.rest_models import rest_model
-from ..procedures import get_procedure_parser, check_procedure_available
+from ..procedures import check_procedure_available, get_procedure_parser
 from ..services import initialize_service
 from ..web_handlers import APIHandler
 

@@ -1,11 +1,12 @@
-from sqlalchemy import (Column, Integer, String, ForeignKey, JSON, Index)
-from sqlalchemy.orm import relationship, column_property
-# from sqlalchemy import select, func, tuple_, text, cast
-from qcfractal.storage_sockets.models import Base
+from sqlalchemy import JSON, Column, ForeignKey, Index, Integer, String
 # from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.dialects import postgresql
-from sqlalchemy.sql.functions import GenericFunction
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import column_property, relationship
+from sqlalchemy.sql.functions import GenericFunction
+
+# from sqlalchemy import select, func, tuple_, text, cast
+from qcfractal.storage_sockets.models import Base
 
 # class json_agg(GenericFunction):
 #     type = postgresql.JSON
