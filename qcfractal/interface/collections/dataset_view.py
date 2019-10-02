@@ -152,6 +152,9 @@ class HDF5View(DatasetView):
             slice = []
             for index in indexes:
                 # TODO: this could be very slow, and should be benchmarked
+                # one approach could be to store the HDF5 index of the molecule with the entry
+                # and then make _molecule_indexer call some hdf5 view method
+                # another would be to sort the queries and molecules and do a binary search
                 for i in range(len(mol_id)):
                     if mol_id[i] == index:
                         slice.append(i)
@@ -225,17 +228,24 @@ class HDF5View(DatasetView):
             # Export molecules
             # TODO: duplicate molecules
             molecule_group = f.create_group("molecule")
+
+            if "stoichiometry" in ds.data.history_keys:
+                stoichs = list(ds.data.records[0].stoichiometry.keys())
+                molecules = ds.get_molecules(stoich=stoichs)
+            else:
+                molecules = ds.get_molecules()
+            mol_shape = (len(molecules), )
             mol_geometry = molecule_group.create_dataset("geometry",
-                                                         shape=default_shape,
+                                                         shape=mol_shape,
                                                          dtype=vlen_double_t,
                                                          **dataset_kwargs)
             mol_symbols = molecule_group.create_dataset("symbols",
-                                                        shape=default_shape,
+                                                        shape=mol_shape,
                                                         dtype=vlen_utf8_t,
                                                         **dataset_kwargs)
-            mol_schema = molecule_group.create_dataset("schema", shape=default_shape, dtype=utf8_t, **dataset_kwargs)
-            mol_id = molecule_group.create_dataset("id", shape=default_shape, dtype=utf8_t, **dataset_kwargs)
-            for i, mol_row in enumerate(ds.get_molecules().to_dict("records")):
+            mol_schema = molecule_group.create_dataset("schema", shape=mol_shape, dtype=utf8_t, **dataset_kwargs)
+            mol_id = molecule_group.create_dataset("id", shape=mol_shape, dtype=utf8_t, **dataset_kwargs)
+            for i, mol_row in enumerate(molecules.to_dict("records")):
                 molecule = mol_row["molecule"]
                 mol_geometry[i] = molecule.geometry.ravel()
                 mol_schema[i] = molecule.json()

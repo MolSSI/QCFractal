@@ -567,7 +567,11 @@ def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
 def test_rectiondataset_dftd3_molecules(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
 
-    mols = ds.get_molecules()
+    request_made = not ds._use_view(False)
+    ds._clear_cache()
+
+    with monitor_requests(client, "molecule", request_made=request_made):
+        mols = ds.get_molecules()
     assert mols.shape == (1, 1)
     assert np.all(mols.iloc[0, 0].real)  # Should be all real
     assert tuple(mols.index) == (("HeDimer", "default", 0), )

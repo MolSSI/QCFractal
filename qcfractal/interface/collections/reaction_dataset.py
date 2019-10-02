@@ -336,8 +336,10 @@ class ReactionDataset(Dataset):
 
         return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind)
 
-    def get_molecules(self, subset: Optional[Union[str, Set[str]]] = None,
-                      stoich: Union[str, List[str]] = "default") -> pd.DataFrame:
+    def get_molecules(self,
+                      subset: Optional[Union[str, Set[str]]] = None,
+                      stoich: Union[str, List[str]] = "default",
+                      force: bool = False) -> pd.DataFrame:
         """Queries full Molecules from the database.
 
         Parameters
@@ -346,6 +348,8 @@ class ReactionDataset(Dataset):
             The index subset to query on
         stoich : Union[str, List[str]], optional
             The stoichiometries to pull from, either a single or multiple stoichiometries
+        force : bool, optional
+            Force pull of molecules from server
 
         Return
         ------
@@ -358,7 +362,7 @@ class ReactionDataset(Dataset):
         self._validate_stoich(stoich)
 
         indexer, names = self._molecule_indexer(stoich, subset)
-        df = self._get_molecules(indexer)
+        df = self._get_molecules(indexer, force=force)
         df.index = pd.MultiIndex.from_tuples(df.index, names=names)
 
         return df

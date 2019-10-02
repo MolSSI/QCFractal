@@ -765,13 +765,15 @@ class Dataset(Collection):
 
         return name, dbkeys, history
 
-    def _get_molecules(self, indexer: Dict[str, 'ObjectId']) -> pd.DataFrame:
+    def _get_molecules(self, indexer: Dict[str, 'ObjectId'], force: bool = False) -> pd.DataFrame:
         """Queries a list of molecules using a molecule indexer
 
         Parameters
         ----------
         indexer : Dict[str, 'ObjectId']
             A key/value index of molecules to query
+        force : bool, optional
+            Force pull of molecules from server
 
         Returns
         -------
@@ -785,7 +787,7 @@ class Dataset(Collection):
         """
 
         molecule_ids = list(set(indexer.values()))
-        if not self._use_view(False):
+        if not self._use_view(force):
             molecules = []
             for i in range(0, len(molecule_ids), self.client.query_limit):
                 molecules.extend(self.client.query_molecules(id=molecule_ids[i:i + self.client.query_limit]))
@@ -1149,13 +1151,16 @@ class Dataset(Collection):
 
         return self.df[column_names]
 
-    def get_molecules(self, subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'Molecule']:
+    def get_molecules(self, subset: Optional[Union[str, Set[str]]] = None,
+                      force: bool = False) -> Union[pd.DataFrame, 'Molecule']:
         """Queries full Molecules from the database.
 
         Parameters
         ----------
         subset : Optional[Union[str, Set[str]]], optional
             The index subset to query on
+        force : bool, optional
+            Force pull of molecules from server
 
         Returns
         -------
@@ -1163,7 +1168,7 @@ class Dataset(Collection):
             Either a DataFrame of indexed Molecules or a single Molecule if a single subset string was provided.
         """
         indexer = self._molecule_indexer(subset)
-        df = self._get_molecules(indexer)
+        df = self._get_molecules(indexer, force)
 
         if isinstance(subset, str):
             return df.iloc[0, 0]
