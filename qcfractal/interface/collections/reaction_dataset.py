@@ -223,14 +223,14 @@ class ReactionDataset(Dataset):
                                 native=native,
                                 force=force)
 
-    def _get_values_from_records(self,
-                                 method: Optional[str] = None,
-                                 basis: Optional[str] = None,
-                                 keywords: Optional[str] = None,
-                                 program: Optional[str] = None,
-                                 stoich: Optional[str] = None,
-                                 name: Optional[str] = None,
-                                 force: bool = False) -> pd.DataFrame:
+    def _get_native_values(self,
+                           method: Optional[str] = None,
+                           basis: Optional[str] = None,
+                           keywords: Optional[str] = None,
+                           program: Optional[str] = None,
+                           stoich: Optional[str] = None,
+                           name: Optional[str] = None,
+                           force: bool = False) -> pd.DataFrame:
         self._validate_stoich(stoich)
 
         # So that datasets with no records do not require a default program and default keywords

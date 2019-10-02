@@ -426,7 +426,7 @@ class Dataset(Collection):
                 raise KeyError(
                     f"For native values, driver ({driver}) must be the same as the dataset's default driver "
                     f"({self.data.default_driver}). Consider using get_records instead.")
-            df = self._get_values_from_records(force=force, **spec_nodriver)
+            df = self._get_native_values(force=force, **spec_nodriver)
             ret.append(df)
 
         if native in {False, None}:
@@ -437,13 +437,13 @@ class Dataset(Collection):
 
         return ret
 
-    def _get_values_from_records(self,
-                                 method: Optional[str] = None,
-                                 basis: Optional[str] = None,
-                                 keywords: Optional[str] = None,
-                                 program: Optional[str] = None,
-                                 name: Optional[str] = None,
-                                 force: bool = False) -> pd.DataFrame:
+    def _get_native_values(self,
+                           method: Optional[str] = None,
+                           basis: Optional[str] = None,
+                           keywords: Optional[str] = None,
+                           program: Optional[str] = None,
+                           name: Optional[str] = None,
+                           force: bool = False) -> pd.DataFrame:
         """
         Obtains records matching the provided search criteria.
         Defaults to the standard programs and keywords if not provided.
