@@ -6,10 +6,12 @@ from contextlib import contextmanager
 
 from .dataset import Dataset
 import pathlib
-from typing import Union, List, Tuple
+from typing import Union, List, Tuple, Dict
 import numpy as np
 import pandas as pd
 import h5py
+
+from ..models import Molecule
 
 
 class DatasetView(abc.ABC):
@@ -60,6 +62,21 @@ class DatasetView(abc.ABC):
         Returns
         -------
             A Dataframe whose columns correspond to each query and a list of units for each column.
+        """
+    @abc.abstractmethod
+    def get_molecules(self, indexes: List['ObjectId']) -> List[Molecule]:
+        """
+        Get a list of molecules using a molecule indexer
+
+        Parameters
+        ----------
+        indexes : List['ObjectId']
+            A list of molecule ids to return
+
+        Returns
+        -------
+        List['Molecule']
+            A list of Molecules corresponding to indexes
         """
 
 
@@ -128,6 +145,22 @@ class HDF5View(DatasetView):
 
         return ret, units
 
+    def get_molecules(self, indexes: List['ObjectId']) -> List[Molecule]:
+        with self._read_file() as f:
+            mol_id = f['molecule/id']
+            mol_schema = f['molecule/schema']
+            slice = []
+            for index in indexes:
+                # TODO: this could be very slow, and should be benchmarked
+                for i in range(len(mol_id)):
+                    if mol_id[i] == index:
+                        slice.append(i)
+                        break
+                else:
+                    raise ValueError(f"Unable to find molecule id {index} in HDF5 view {self._path}")
+            ret = [Molecule(**json.loads(mol_schema[i])) for i in slice]
+        return ret
+
     def write(self, ds: Dataset):
         # For data checksums
         dataset_kwargs = {"chunks": True, "fletcher32": True}
@@ -188,6 +221,26 @@ class HDF5View(DatasetView):
             # Export entries
             entry_dset = f.create_dataset("entry", shape=default_shape, dtype=utf8_t, **dataset_kwargs)
             entry_dset[:] = ds.get_index()
+
+            # Export molecules
+            # TODO: duplicate molecules
+            molecule_group = f.create_group("molecule")
+            mol_geometry = molecule_group.create_dataset("geometry",
+                                                         shape=default_shape,
+                                                         dtype=vlen_double_t,
+                                                         **dataset_kwargs)
+            mol_symbols = molecule_group.create_dataset("symbols",
+                                                        shape=default_shape,
+                                                        dtype=vlen_utf8_t,
+                                                        **dataset_kwargs)
+            mol_schema = molecule_group.create_dataset("schema", shape=default_shape, dtype=utf8_t, **dataset_kwargs)
+            mol_id = molecule_group.create_dataset("id", shape=default_shape, dtype=utf8_t, **dataset_kwargs)
+            for i, mol_row in enumerate(ds.get_molecules().to_dict("records")):
+                molecule = mol_row["molecule"]
+                mol_geometry[i] = molecule.geometry.ravel()
+                mol_schema[i] = molecule.json()
+                mol_symbols[i] = molecule.symbols
+                mol_id[i] = molecule.id
 
             # Export native data columns
             value_group = f.create_group("value")

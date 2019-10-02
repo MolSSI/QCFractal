@@ -765,8 +765,8 @@ class Dataset(Collection):
 
         return name, dbkeys, history
 
-    def _get_molecules(self, indexer: Dict[str, 'ObjectId']) -> 'pd.Series':
-        """Queries a list of molecules using a molecule inder
+    def _get_molecules(self, indexer: Dict[str, 'ObjectId']) -> pd.DataFrame:
+        """Queries a list of molecules using a molecule indexer
 
         Parameters
         ----------
@@ -775,8 +775,8 @@ class Dataset(Collection):
 
         Returns
         -------
-        pd.Series
-            A series of Molecules
+        pd.DataFrame
+            A table of Molecules, indexed by Entry names
 
         Raises
         ------
@@ -784,10 +784,13 @@ class Dataset(Collection):
             If no records match the query
         """
 
-        molecules = []
         molecule_ids = list(set(indexer.values()))
-        for i in range(0, len(molecule_ids), self.client.query_limit):
-            molecules.extend(self.client.query_molecules(id=molecule_ids[i:i + self.client.query_limit]))
+        if not self._use_view(False):
+            molecules = []
+            for i in range(0, len(molecule_ids), self.client.query_limit):
+                molecules.extend(self.client.query_molecules(id=molecule_ids[i:i + self.client.query_limit]))
+        else:
+            molecules = self._view.get_molecules(molecule_ids)
 
         molecules = pd.DataFrame.from_dict([{"molecule_id": x.id, "molecule": x} for x in molecules])
         if len(molecules) == 0:

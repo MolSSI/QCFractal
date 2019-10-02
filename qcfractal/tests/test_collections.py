@@ -124,10 +124,13 @@ def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
 
 def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
+    request_made = not ds._use_view(False)
+    ds._clear_cache()
 
     he1_dist = 2.672476322216822
     he2_dist = 2.939723950195864
-    mols = ds.get_molecules()
+    with monitor_requests(client, "molecule", request_made=request_made):
+        mols = ds.get_molecules()
     assert mols.shape == (2, 1)
     assert mols.iloc[0, 0].measure([0, 1]) == pytest.approx(he1_dist)
 
