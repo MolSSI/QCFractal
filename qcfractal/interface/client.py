@@ -8,7 +8,6 @@ from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 import requests
-
 from pydantic import ValidationError
 
 from .collections import collection_factory, collections_name_map
@@ -92,7 +91,6 @@ class FractalClient(object):
 
         if (username is not None) or (password is not None):
             self._headers["Authorization"] = json.dumps({"username": username, "password": password})
-
 
         from . import __version__  # Import here to avoid circular import
         from . import _isportal
@@ -222,7 +220,7 @@ class FractalClient(object):
         """
         self._request_counter[(name, rest)] += 1
         subnames = name.strip('/').split('/')
-        if len(subnames) == 2:      # get resource and subresource
+        if len(subnames) == 2:  # get resource and subresource
             body_model, response_model = rest_model(subnames[0], 'get', subnames[1])
         else:
             body_model, response_model = rest_model(name, rest)
@@ -895,7 +893,7 @@ class FractalClient(object):
 
         return self._automodel_request("task_queue", "get", payload, full_return=full_return)
 
-    def modify_tasks(self,
+    def modify_tasks(self, # lgtm [py/similar-function]
                      operation: str,
                      base_result: 'QueryObjectId',
                      id: 'QueryObjectId' = None,
@@ -938,7 +936,7 @@ class FractalClient(object):
 
         return self._automodel_request("task_queue", "put", payload, full_return=full_return)
 
-    def add_service(self,
+    def add_service(self, # lgtm [py/similar-function]
                     service: Union[GridOptimizationInput, TorsionDriveInput],
                     tag: Optional[str] = None,
                     priority: Optional[str] = None,
@@ -1027,10 +1025,10 @@ class FractalClient(object):
         return self._automodel_request("service_queue", "get", payload, full_return=full_return)
 
     def modify_services(self,
-                       operation: str,
-                       id: 'QueryObjectId' = None,
-                       procedure_id: 'QueryObjectId' = None,
-                       full_return: bool = False) -> int:
+                        operation: str,
+                        id: 'QueryObjectId' = None,
+                        procedure_id: 'QueryObjectId' = None,
+                        full_return: bool = False) -> int:
         """Checks the status of services in the Fractal queue.
 
         Parameters
@@ -1073,13 +1071,13 @@ class FractalClient(object):
     # -------------------------------------------------------------------------
 
     def custom_query(self,
-             object_name: str,
-             query_type: str,
-             data: Dict,
-             limit: Optional[int] = None,
-             skip: int = 0,
-             projection: 'QueryProjection' = None,
-             full_return: bool = False):
+                     object_name: str,
+                     query_type: str,
+                     data: Dict,
+                     limit: Optional[int] = None,
+                     skip: int = 0,
+                     projection: 'QueryProjection' = None,
+                     full_return: bool = False):
         """ Custom queries that are supported by the REST APIs.
 
         Parameters
@@ -1105,16 +1103,8 @@ class FractalClient(object):
             In the form of Dict[str, Any] (TODO)
         """
 
-        payload = {
-            "meta": {
-                "limit": limit,
-                "skip": skip,
-                "projection": projection
-            },
-            "data": data
-        }
-        response = self._automodel_request(object_name + '/' + query_type, "get",
-                                           payload, full_return=True)
+        payload = {"meta": {"limit": limit, "skip": skip, "projection": projection}, "data": data}
+        response = self._automodel_request(object_name + '/' + query_type, "get", payload, full_return=True)
 
         # if not projection:
         #     for ind in range(len(response.data)):

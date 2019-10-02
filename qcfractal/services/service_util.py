@@ -4,16 +4,16 @@ Utilities and base functions for Services.
 
 import abc
 import datetime
-from typing import Any, Dict, List, Set, Tuple, Optional
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from pydantic import validator
+
+from qcelemental.models import ComputeError
 
 from ..interface.models import ObjectId, ProtoModel
 from ..interface.models.rest_models import TaskQueuePOSTBody
 from ..interface.models.task_models import PriorityEnum
 from ..procedures import get_procedure_parser
-
-from qcelemental.models import ComputeError
 
 
 class TaskManager(ProtoModel):
@@ -37,9 +37,11 @@ class TaskManager(ProtoModel):
         if len(self.required_tasks) == 0:
             return True
 
-        task_query = self.storage_socket.get_procedures(
-            id=list(self.required_tasks.values()), projection={"status": True,
-                                                               "error": True})
+        task_query = self.storage_socket.get_procedures(id=list(self.required_tasks.values()),
+                                                        projection={
+                                                            "status": True,
+                                                            "error": True
+                                                        })
 
         status_values = set(x["status"] for x in task_query["data"])
         if status_values == {"COMPLETE"}:
@@ -146,7 +148,6 @@ class BaseService(ProtoModel, abc.ABC):
         self.task_manager.storage_socket = self.storage_socket
         self.task_manager.tag = self.task_tag
         self.task_manager.priority = self.task_priority
-
 
     @validator('task_priority', pre=True)
     def munge_priority(cls, v):

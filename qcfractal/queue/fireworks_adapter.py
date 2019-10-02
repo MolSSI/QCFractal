@@ -5,10 +5,10 @@ Queue adapter for Fireworks
 import logging
 from typing import Any, Dict, Hashable, Optional, Tuple
 
-from .base_adapter import BaseAdapter
-
-from qcelemental.models import Result, Optimization, FailedOperation
+from qcelemental.models import FailedOperation, Optimization, Result
 from qcelemental.models.common_models import qcschema_optimization_output_default, qcschema_output_default
+
+from .base_adapter import BaseAdapter
 
 __all__ = ["FireworksAdapter"]
 

@@ -11,11 +11,12 @@ import uuid
 from typing import Any, Callable, Dict, List, Optional, Union
 
 from pydantic import BaseModel, validator
+
 import qcengine as qcng
 from qcfractal.extras import get_information
 
-from .adapters import build_queue_adapter
 from ..interface.data import get_molecule
+from .adapters import build_queue_adapter
 
 __all__ = ["QueueManager"]
 

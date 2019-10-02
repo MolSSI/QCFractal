@@ -2,8 +2,8 @@
 Tests the interface portal adapter to the REST API
 """
 
-import pytest
 import numpy as np
+import pytest
 
 import qcfractal.interface as ptl
 from qcfractal.testing import test_server
@@ -145,4 +145,3 @@ def test_custom_queries(test_server, encoding):
 
     assert ret.meta.success
     assert ret.meta.n_found == 0
-

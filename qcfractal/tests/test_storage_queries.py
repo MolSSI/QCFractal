@@ -4,13 +4,13 @@ Tests the on-node procedures compute capabilities.
 
 import copy
 
+import numpy as np
 import pytest
 
 import qcfractal.interface as ptl
-from qcfractal.interface.models import GridOptimizationInput, TorsionDriveInput, Molecule
-from qcfractal.testing import fractal_compute_server, recursive_dict_merge, using_geometric, using_rdkit
 from qcelemental.util import msgpackext_dumps, msgpackext_loads
-import numpy as np
+from qcfractal.interface.models import GridOptimizationInput, Molecule, TorsionDriveInput
+from qcfractal.testing import fractal_compute_server, recursive_dict_merge, using_geometric, using_rdkit
 
 
 @pytest.fixture(scope="module")

@@ -5,8 +5,9 @@ Queue adapter for Dask
 import traceback
 from typing import Any, Dict, Hashable, Tuple
 
-from .base_adapter import BaseAdapter
 from qcelemental.models import FailedOperation
+
+from .base_adapter import BaseAdapter
 
 
 def _get_future(future):

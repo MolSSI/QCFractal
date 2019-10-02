@@ -2,6 +2,8 @@
 Visualization using the plotly library.
 """
 
+# Plotly is an optional library
+from importlib.util import find_spec
 from typing import Any, Dict, List
 
 
@@ -21,8 +23,6 @@ def _isnotebook():
         return False
 
 
-# Plotly is an optional library
-from importlib.util import find_spec
 spec = find_spec('plotly')
 if spec is None:
     _plotly_found = False
@@ -114,7 +114,7 @@ def bar_plot(traces: 'List[Series]', title=None, ylabel=None, return_figure=True
 
 
 def violin_plot(traces: 'DataFrame',
-                negative: 'DataFrame'=None,
+                negative: 'DataFrame' = None,
                 title=None,
                 points=False,
                 ylabel=None,

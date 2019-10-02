@@ -42,8 +42,8 @@ if __name__ == "__main__":
             'alembic',
 
             # QCArchive depends
-            'qcengine>=0.9.0',
-            'qcelemental>=0.7.0',
+            'qcengine>=0.11.0',
+            'qcelemental>=0.9.0',
 
             # Testing
             'pytest',
@@ -67,7 +67,7 @@ if __name__ == "__main__":
                 'pytest',
                 'pytest-cov',
             ],
-            'api_logging':[
+            'api_logging': [
                 'geoip2',
             ],
         },

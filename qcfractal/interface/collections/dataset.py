@@ -9,7 +9,7 @@ import pandas as pd
 
 from qcelemental import constants
 
-from ..models import ComputeResponse, Molecule, ObjectId, ProtoModel, KeywordSet
+from ..models import ComputeResponse, KeywordSet, Molecule, ObjectId, ProtoModel
 from ..statistics import wrap_statistics
 from ..visualization import bar_plot, violin_plot
 from .collection import Collection

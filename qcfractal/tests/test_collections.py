@@ -7,10 +7,10 @@ from contextlib import contextmanager
 import numpy as np
 import pytest
 
+import qcelemental as qcel
 import qcfractal.interface as ptl
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
-import qcelemental as qcel
 
 
 def test_collection_query(fractal_compute_server):

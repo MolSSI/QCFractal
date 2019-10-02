@@ -13,4 +13,6 @@ path_classifiers:
   generated:
     - qcfractal/_version.py
 queries:
-- exclude: py/not-named-self # Blocks Pydantic's @validator not accepting `self` until a better fix can be found
+- exclude:
+   - py/not-named-self # Blocks Pydantic's @validator not accepting `self` until a better fix can be found
+   - py/missing-call-to-init
