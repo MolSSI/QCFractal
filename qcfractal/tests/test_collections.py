@@ -133,6 +133,7 @@ def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
         mols = ds.get_molecules()
     assert mols.shape == (2, 1)
     assert mols.iloc[0, 0].measure([0, 1]) == pytest.approx(he1_dist)
+    assert mols.iloc[1, 0].measure([0, 1]) == pytest.approx(he2_dist)
 
     mol = ds.get_molecules(subset="He1")
     assert mol.measure([0, 1]) == pytest.approx(he1_dist)

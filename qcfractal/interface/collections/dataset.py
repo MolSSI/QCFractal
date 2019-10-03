@@ -70,12 +70,14 @@ class Dataset(Collection):
         self._new_keywords = {}
         self._new_records = []
         self._updated_state = False
+        self._entry_index = None
 
         self._view = None
 
         # Initialize internal data frames and load in contrib
         self.df = pd.DataFrame(index=self.get_index())
         self._column_metadata = {}
+        self._form_index()
 
     class DataModel(Collection.DataModel):
 
@@ -95,6 +97,10 @@ class Dataset(Collection):
         # History: driver, program, method (basis, keywords)
         history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
         history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
+
+    def _form_index(self):
+        self._entry_index = pd.DataFrame([[entry.name, entry.molecule_id] for entry in self.data.records],
+                                         columns=["name", "molecule_id"])
 
     def _check_state(self):
         if self._new_molecules or self._new_keywords or self._new_records or self._updated_state:
@@ -123,8 +129,16 @@ class Dataset(Collection):
 
         self._new_records = []
         self._new_molecules = {}
+        self._form_index()
 
-    def _molecule_indexer(self, subset: Optional[Union[str, Set[str]]] = None) -> Dict[str, 'ObjectId']:
+    def get_entries(self, force: bool = False) -> pd.DataFrame:
+        if self._use_view(force):
+            return self._view.get_entries()
+        else:
+            return self._entry_index
+
+    def _molecule_indexer(self, subset: Optional[Union[str, Set[str]]] = None,
+                          force: bool = False) -> Dict[str, 'ObjectId']:
         """Provides a {index: molecule_id} mapping for a given subset.
 
         Parameters
@@ -137,15 +151,14 @@ class Dataset(Collection):
         Dict[str, 'ObjectId']
             Molecule index to molecule ObjectId map
         """
+        index = self.get_entries(force)
         if subset:
             if isinstance(subset, str):
                 subset = {subset}
 
-            indexer = {e.name: e.molecule_id for e in self.data.records if e.name in subset}
-        else:
-            indexer = {e.name: e.molecule_id for e in self.data.records}
+            index = index[index.name.isin(subset)]
 
-        return indexer
+        return {row['name']: row['molecule_id'] for row in index.to_dict('records')}
 
     def _add_history(self, **history: Dict[str, Optional[str]]) -> None:
         """
@@ -791,14 +804,18 @@ class Dataset(Collection):
             molecules = []
             for i in range(0, len(molecule_ids), self.client.query_limit):
                 molecules.extend(self.client.query_molecules(id=molecule_ids[i:i + self.client.query_limit]))
+            # XXX: molecules = pd.DataFrame({"molecule_id": molecule_ids, "molecule": molecules}) fails
+            #      test_gradient_dataset_get_molecules and I don't know why
+            molecules = pd.DataFrame({"molecule_id": molecule.id, "molecule": molecule} for molecule in molecules)
         else:
             molecules = self._view.get_molecules(molecule_ids)
+            molecules = pd.DataFrame({"molecule_id": molecule_ids, "molecule": molecules})
 
-        molecules = pd.DataFrame.from_dict([{"molecule_id": x.id, "molecule": x} for x in molecules])
         if len(molecules) == 0:
             raise KeyError("Query matched 0 records.")
 
         df = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule_id"])
+
         df.reset_index(inplace=True)
 
         # Outer join on left to merge duplicate molecules
@@ -1167,7 +1184,7 @@ class Dataset(Collection):
         Union[pd.DataFrame, 'Molecule']
             Either a DataFrame of indexed Molecules or a single Molecule if a single subset string was provided.
         """
-        indexer = self._molecule_indexer(subset)
+        indexer = self._molecule_indexer(subset=subset, force=force)
         df = self._get_molecules(indexer, force)
 
         if isinstance(subset, str):
@@ -1211,7 +1228,7 @@ class Dataset(Collection):
             Either a DataFrame of indexed ResultRecords or a single ResultRecord if a single subset string was provided.
         """
         name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
-        indexer = self._molecule_indexer(subset)
+        indexer = self._molecule_indexer(subset=subset, force=True)
         df = self._get_records(indexer, history, projection=projection, merge=merge)
 
         if not merge and len(df) == 1:
