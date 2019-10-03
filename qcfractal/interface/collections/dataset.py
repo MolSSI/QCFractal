@@ -259,31 +259,6 @@ class Dataset(Collection):
                 raise TypeError(f"Search type {type(value)} not understood.")
         return ret
 
-    def list_history(self, dftd3: bool = False, pretty: bool = True,
-                     **search: Dict[str, Optional[str]]) -> pd.DataFrame:
-        """
-        Lists the history of computations completed.
-
-        Parameters
-        ----------
-        dftd3 : bool, optional
-            Include dftd3 program record specifications in addition to composite DFT-D3 record specifications
-        pretty : bool, optional
-            Replace NaN with "None" in returned DataFrame
-        search : Dict[str, Optional[str]]
-            Allows searching to narrow down return.
-
-        Returns
-        -------
-        DataFrame
-            Record specifications matching **search.
-
-        """
-        warnings.warn("This function has been renamed to `list_records`.  "
-                      "`list_history` will be removed in 0.12.0", DeprecationWarning)
-
-        return self.list_records(dftd3, pretty, **search)
-
     def list_records(self, dftd3: bool = False, pretty: bool = True,
                      **search: Dict[str, Optional[str]]) -> pd.DataFrame:
         """
@@ -531,40 +506,6 @@ class Dataset(Collection):
         if queries.shape[0] > 10:
             raise TypeError("More than 10 queries formed, please narrow the search.")
         return queries
-
-    def get_history(self,
-                    method: Optional[str] = None,
-                    basis: Optional[str] = None,
-                    keywords: Optional[str] = None,
-                    program: Optional[str] = None,
-                    force: bool = False) -> pd.DataFrame:
-        """
-        Queries known history from the search paramaters provided.
-        Defaults to the standard programs and keywords if not provided.
-
-        Parameters
-        ----------
-        method : Optional[str]
-            The computational method to compute (B3LYP)
-        basis : Optional[str], optional
-            The computational basis to compute (6-31G)
-        keywords : Optional[str], optional
-            The keyword alias for the requested compute
-        program : Optional[str], optional
-            The underlying QC program
-
-        Returns
-        -------
-        DataFrame
-            A DataFrame of the queried parameters
-        """
-
-        warnings.warn(
-            "This is function is deprecated and will be removed in 0.12.0, "
-            "please use `get_values(..., )` for a instead.", DeprecationWarning)
-
-        # Get default program/keywords
-        return self.get_values(method=method, basis=basis, keywords=keywords, program=program, force=force)
 
     def _visualize(self,
                    metric,
@@ -1291,74 +1232,6 @@ class Dataset(Collection):
         mhash = molecule.get_hash()
         self._new_molecules[mhash] = molecule
         self._new_records.append({"name": name, "molecule_hash": mhash, **kwargs})
-
-    def query(self,
-              method: str,
-              basis: Optional[str] = None,
-              *,
-              keywords: Optional[str] = None,
-              program: Optional[str] = None,
-              field: str = None,
-              force: bool = False) -> str:
-        """
-        Queries the local Portal for the requested keys.
-
-        Parameters
-        ----------
-        method : str
-            The computational method to query on (B3LYP)
-        basis : Optional[str], optional
-            The computational basis query on (6-31G)
-        keywords : Optional[str], optional
-            The option token desired
-        program : Optional[str], optional
-            The program to query on
-        field : str, optional
-            The result field to query on
-        force : bool, optional
-            Forces a requery if data is already present
-
-        Returns
-        -------
-        success : str
-            The name of the queried column
-
-        Examples
-        --------
-
-        >>> ds.query("B3LYP", "aug-cc-pVDZ", stoich="cp", prefix="cp-")
-
-        """
-
-        warnings.warn(
-            "This is function is deprecated and will be removed in 0.12.0, "
-            "please `get_records(..., projection='return_result')` for a similar result", DeprecationWarning)
-
-        name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
-
-        if field is None:
-            field = "return_result"
-        else:
-            name = "{}-{}".format(name, field)
-
-        if (name in self.df) and (force is False):
-            return name
-
-        self._check_client()
-
-        # # If reaction results
-        indexer = {e.name: e.molecule_id for e in self.data.records}
-
-        tmp_idx = self._get_records(indexer, history, projection={field: True}, merge=True)
-        tmp_idx.rename(columns={field: name}, inplace=True)
-
-        tmp_idx[tmp_idx.select_dtypes(include=['number']).columns] *= constants.conversion_factor(
-            'hartree', self.units)
-
-        # Apply to df
-        self.df[tmp_idx.columns] = tmp_idx
-
-        return tmp_idx
 
     def compute(self,
                 method: str,
