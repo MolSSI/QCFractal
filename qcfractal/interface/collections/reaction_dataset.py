@@ -290,40 +290,6 @@ class ReactionDataset(Dataset):
                 self._column_metadata[name].update({"native": True, "units": self.units})
         return self.df[names]
 
-    def get_history(self,
-                    method: Optional[str] = None,
-                    basis: Optional[str] = None,
-                    keywords: Optional[str] = None,
-                    program: Optional[str] = None,
-                    stoich: str = "default") -> 'DataFrame':
-        """ Queries known history from the search paramaters provided. Defaults to the standard
-        programs and keywords if not provided.
-
-        Parameters
-        ----------
-        method : Optional[str]
-            The computational method to compute (B3LYP)
-        basis : Optional[str], optional
-            The computational basis to compute (6-31G)
-        keywords : Optional[str], optional
-            The keyword alias for the requested compute
-        program : Optional[str], optional
-            The underlying QC program
-        stoich : str, optional
-            The given stoichiometry to compute.
-
-        Returns
-        -------
-        DataFrame
-            A DataFrame of the queried parameters
-        """
-        warnings.warn(
-            "This is function is deprecated and will be removed in 0.11.0, please use `get_values(..., )` for a instead.",
-            DeprecationWarning)
-
-        # Get default program/keywords
-        return self.get_values(method=method, basis=basis, keywords=keywords, program=program, force=force)
-
     def visualize(self,
                   method: Optional[str] = None,
                   basis: Optional[str] = None,
@@ -462,84 +428,6 @@ class ReactionDataset(Dataset):
         ret.sort_index(inplace=True)
 
         return ret
-
-    def query(self,
-              method,
-              basis: Optional[str] = None,
-              *,
-              keywords: Optional[str] = None,
-              program: Optional[str] = None,
-              stoich: str = "default",
-              field: Optional[str] = None,
-              ignore_ds_type: bool = False,
-              force: bool = False) -> str:
-        """
-        Queries the local Portal for the requested keys and stoichiometry.
-
-        Parameters
-        ----------
-        method : str
-            The computational method to query on (B3LYP)
-        basis : Optional[str], optional
-            The computational basis to query on (6-31G)
-        keywords : Optional[str], optional
-            The option token desired
-        program : Optional[str], optional
-            The program to query on
-        stoich : str, optional
-            The given stoichiometry to compute.
-        field : Optional[str], optional
-            The result field to query on
-        ignore_ds_type : bool, optional
-            Override of "ie" for "rxn" db types.
-        force : bool, optional
-            Forces a requery if data is already present
-
-        Returns
-        -------
-        str
-            The name of the queried column
-
-        """
-        warnings.warn(
-            "This is function is deprecated and will be removed in 0.11.0, please `get_records(..., projection='return_result')` for a similar result",
-            DeprecationWarning)
-
-        self._check_client()
-        self._check_state()
-        method = method.upper()
-
-        self._validate_stoich(stoich)
-        name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=stoich)
-
-        if field is None:
-            field = "return_result"
-        else:
-            name = "{}-{}".format(name, field)
-
-        if (name in self.df) and (force is False):
-            return name
-
-        # # If reaction results
-        if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
-            monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
-            tmp_idx_complex = self._unroll_query(dbkeys, stoich, field=field)
-            tmp_idx_monomers = self._unroll_query(dbkeys, monomer_stoich, field=field)
-
-            # Combine
-            tmp_idx = tmp_idx_complex - tmp_idx_monomers
-
-        else:
-            tmp_idx = self._unroll_query(dbkeys, stoich, field=field)
-        tmp_idx.columns = [name]
-
-        # scale
-        tmp_idx = tmp_idx.apply(lambda x: pd.to_numeric(x, errors='ignore'))
-
-        # Apply to df
-        self.df[name] = tmp_idx[name]
-
-        return tmp_idx
 
     def compute(self,
                 method: Optional[str],
