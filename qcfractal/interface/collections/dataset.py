@@ -71,6 +71,8 @@ class Dataset(Collection):
         self._new_records = []
         self._updated_state = False
 
+        self._view = None
+
         # Initialize internal data frames and load in contrib
         self.df = pd.DataFrame(index=self.get_index())
         self._column_metadata = {}
@@ -213,17 +215,21 @@ class Dataset(Collection):
             "driver": driver
         }
 
-        if native in {True, None}:
-            df = self._list_records(dftd3=False)
-            df['native'] = True
-            ret.append(df)
+        if self._use_view(force):
+            ret = self._view.list_values()
+            spec["native"] = native
+        else:
+            if native in {True, None}:
+                df = self._list_records(dftd3=False)
+                df['native'] = True
+                ret.append(df)
 
-        if native in {False, None}:
-            df = self._list_contributed_values()
-            df['native'] = False
-            ret.append(df)
+            if native in {False, None}:
+                df = self._list_contributed_values()
+                df['native'] = False
+                ret.append(df)
 
-        ret = pd.concat(ret)
+            ret = pd.concat(ret)
 
         # Filter
         ret.fillna("None", inplace=True)
@@ -241,6 +247,8 @@ class Dataset(Collection):
         for key, value in spec.items():
             if value is None:
                 continue
+            if isinstance(value, bool):
+                ret = ret[ret[key] == value]
             elif isinstance(value, str):
                 value = value.lower()
                 ret = ret[ret[key].fillna("None").str.lower() == value]
@@ -418,7 +426,7 @@ class Dataset(Collection):
                 raise KeyError(
                     f"For native values, driver ({driver}) must be the same as the dataset's default driver "
                     f"({self.data.default_driver}). Consider using get_records instead.")
-            df = self._get_values_from_records(force=force, **spec_nodriver)
+            df = self._get_native_values(force=force, **spec_nodriver)
             ret.append(df)
 
         if native in {False, None}:
@@ -429,13 +437,13 @@ class Dataset(Collection):
 
         return ret
 
-    def _get_values_from_records(self,
-                                 method: Optional[str] = None,
-                                 basis: Optional[str] = None,
-                                 keywords: Optional[str] = None,
-                                 program: Optional[str] = None,
-                                 name: Optional[str] = None,
-                                 force: bool = False) -> pd.DataFrame:
+    def _get_native_values(self,
+                           method: Optional[str] = None,
+                           basis: Optional[str] = None,
+                           keywords: Optional[str] = None,
+                           program: Optional[str] = None,
+                           name: Optional[str] = None,
+                           force: bool = False) -> pd.DataFrame:
         """
         Obtains records matching the provided search criteria.
         Defaults to the standard programs and keywords if not provided.
@@ -471,19 +479,29 @@ class Dataset(Collection):
         for _, query in queries.iterrows():
 
             query = query.replace({np.nan: None}).to_dict()
-            driver = query.pop("driver")
             if "stoichiometry" in query:
                 query["stoich"] = query.pop("stoichiometry")
 
-            name = query.pop("name")
+            name = query["name"]
             names.append(name)
             if force or (name not in self.df.columns):
                 self._column_metadata[name] = query
-                data = self.get_records(query.pop("method").upper(),
-                                        projection={"return_result": True},
-                                        merge=True,
-                                        **query)
-                self.df[name] = data["return_result"] * constants.conversion_factor(au_units[driver], self.units)
+                if not self._use_view(force):
+                    driver = query.pop("driver")
+                    query.pop("name")
+                    data = self.get_records(query.pop("method").upper(),
+                                            projection={"return_result": True},
+                                            merge=True,
+                                            **query)
+                    self.df[name] = data["return_result"]
+                    units = au_units[driver]
+                else:
+                    query["native"] = True
+                    data, units = self._view.get_values([query])
+                    self.df[name] = data[name]
+                    units = units[name]
+
+                self.df[name] *= constants.conversion_factor(units, self.units)
                 self._column_metadata[name].update({"native": True, "units": self.units})
 
         return self.df[names]
@@ -1142,35 +1160,45 @@ class Dataset(Collection):
 
     def _get_contributed_values(self, force: bool = False, **spec) -> pd.DataFrame:
         queries = self._filter_records(self._list_contributed_values().rename(columns={'stoichiometry': 'stoich'}),
-                                       **spec).to_dict("records")
-
+                                       **spec)
         column_names = []
-        for query in queries:
+        for query in queries.to_dict("records"):
             data = self.data.contributed_values[query["name"].lower()].copy()
             column_name = data.name
             column_names.append(column_name)
             if force or (column_name not in self.df.columns):
-                # Annoying work around to prevent some pandas magic
-                if isinstance(next(iter(data.values.values())), (int, float)):
-                    values = data.values
-                else:
-                    # TODO temporary patch until msgpack collections
-                    if self.data.default_driver == "gradient":
-                        values = {k: np.array(v).reshape(-1, 3) for k, v in data.values.items()}
-                    else:
-                        values = {k: np.array(v) for k, v in data.values.items()}
                 self._column_metadata[column_name] = query
-                self.df[column_name] = pd.Series(list(values.values()), index=list(values.keys()))
+                if not self._use_view(force):
+                    # Annoying work around to prevent some pandas magic
+                    if isinstance(next(iter(data.values.values())), (int, float)):
+                        values = data.values
+                    else:
+                        # TODO temporary patch until msgpack collections
+                        if isinstance(data.theory_level_details, dict) and "driver" in data.theory_level_details:
+                            cv_driver = data.theory_level_details["driver"]
+                        else:
+                            cv_driver = self.data.default_driver
+                        if cv_driver == "gradient":
+                            values = {k: np.array(v).reshape(-1, 3) for k, v in data.values.items()}
+                        else:
+                            values = {k: np.array(v) for k, v in data.values.items()}
+                    self.df[column_name] = pd.Series(list(values.values()), index=list(values.keys()))
+                    units = data.units
+                else:
+                    query["native"] = False
+                    ret, units = self._view.get_values([query])
+                    self.df[column_name] = ret[column_name]
+                    units = units[column_name]
 
-                # Convert to numeric
+                # convert units
                 metadata = {"native": False}
                 try:
-                    self.df[column_name] *= constants.conversion_factor(data.units, self.units)
+                    self.df[column_name] *= constants.conversion_factor(units, self.units)
                     metadata["units"] = self.units
                 except ValueError as e:
                     # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
                     if e.__class__.__name__ == "DimensionalityError":
-                        metadata["units"] = data.units
+                        metadata["units"] = units
                     else:
                         raise
                 self._column_metadata[column_name].update(metadata)
@@ -1415,6 +1443,13 @@ class Dataset(Collection):
         if (bench is None):
             raise KeyError("No benchmark provided and default_benchmark is None!")
         return wrap_statistics(stype.upper(), self, value, bench, **kwargs)
+
+    def _use_view(self, force: bool = False):
+        """Helper function to decide whether to use a locally available HDF5 view"""
+        return force is False and self._view is not None
+
+    def _clear_cache(self):
+        self.df = pd.DataFrame(index=self.get_index())
 
     # Getters
     def __getitem__(self, args: str) -> 'Series':

@@ -1,6 +1,8 @@
 """
 Tests the server collection compute capabilities.
 """
+import pathlib
+from contextlib import contextmanager
 
 import numpy as np
 import pytest
@@ -27,74 +29,97 @@ def test_collection_query(fractal_compute_server):
     assert ds.name == "CAPITAL"
 
 
-@pytest.fixture(scope="module")
-def gradient_dataset_fixture(fractal_compute_server):
+@contextmanager
+def monitor_requests(client, request, request_made=True, kind="get"):
+    before = client._request_counter[(request, kind)]
+    yield
+    after = client._request_counter[(request, kind)]
+
+    if request_made:
+        assert after > before
+    else:
+        assert after == before
+
+
+@pytest.fixture(scope="module", params=[True, False], ids=["with view", "without view"])
+def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
     client = ptl.FractalClient(fractal_compute_server)
 
-    testing.check_has_module("psi4")
+    try:
+        ds = client.get_collection("Dataset", "ds_gradient")
+    except KeyError:
+        testing.check_has_module("psi4")
 
-    # Build a dataset
-    ds = ptl.collections.Dataset("ds_gradient",
-                                 client,
-                                 default_program="psi4",
-                                 default_driver="gradient",
-                                 default_units="hartree/bohr")
+        # Build a dataset
+        ds = ptl.collections.Dataset("ds_gradient",
+                                     client,
+                                     default_program="psi4",
+                                     default_driver="gradient",
+                                     default_units="hartree/bohr")
 
-    ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
-    ds.add_entry("He2", ptl.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"))
-    ds.save()
+        ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
+        ds.add_entry("He2", ptl.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"))
+        ds.save()
 
-    contrib = {
-        "name": "Gradient",
-        "theory_level": "pseudo-random values",
-        "values": {
-            "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
-            "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
-        },
-        "theory_level_details": {
-            "driver": "gradient"
-        },
-        "units": "hartree/bohr"
-    }
-    contrib_no_details = {
-        "name": "no details",
-        "theory_level": "pseudo-random values",
-        "values": {
-            "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
-            "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
-        },
-        "units": "hartree/bohr"
-    }
-    contrib_all_details = {
-        "name": "all details",
-        "theory_level": "pseudo-random values",
-        "values": {
-            "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
-            "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
-        },
-        "theory_level_details": {
-            "driver": "gradient",
-            "program": "fake_program",
-            "basis": "fake_basis",
-            "method": "fake_method",
-            "keywords": "fake_keywords"
-        },
-        "units": "hartree/bohr"
-    }
-    ds.add_contributed_values(contrib)
-    ds.add_contributed_values(contrib_no_details)
-    ds.add_contributed_values(contrib_all_details)
+        contrib = {
+            "name": "Gradient",
+            "theory_level": "pseudo-random values",
+            "values": {
+                "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
+                "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
+            },
+            "theory_level_details": {
+                "driver": "gradient"
+            },
+            "units": "hartree/bohr"
+        }
+        contrib_no_details = {
+            "name": "no details",
+            "theory_level": "pseudo-random values",
+            "values": {
+                "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
+                "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
+            },
+            "units": "hartree/bohr"
+        }
+        contrib_all_details = {
+            "name": "all details",
+            "theory_level": "pseudo-random values",
+            "values": {
+                "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
+                "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
+            },
+            "theory_level_details": {
+                "driver": "gradient",
+                "program": "fake_program",
+                "basis": "fake_basis",
+                "method": "fake_method",
+                "keywords": "fake_keywords"
+            },
+            "units": "hartree/bohr"
+        }
+        ds.add_contributed_values(contrib)
+        ds.add_contributed_values(contrib_no_details)
+        ds.add_contributed_values(contrib_all_details)
 
-    ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={}), default=True)
-    ds.save()
+        ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={}), default=True)
+        ds.save()
 
-    ds.compute("HF", "sto-3g")
-    fractal_compute_server.await_results()
+        ds.compute("HF", "sto-3g")
+        fractal_compute_server.await_results()
 
-    assert ds.get_records("HF", "sto-3g").iloc[0, 0].status == "COMPLETE"
-    assert ds.get_records("HF", "sto-3g").iloc[1, 0].status == "COMPLETE"
+        assert ds.get_records("HF", "sto-3g").iloc[0, 0].status == "COMPLETE"
+        assert ds.get_records("HF", "sto-3g").iloc[1, 0].status == "COMPLETE"
 
-    yield client, client.get_collection("dataset", "ds_gradient")
+    # with view
+    if request.param:
+        view = ptl.collections.HDF5View(pathlib.Path(tmp_path_factory.mktemp('test_collections'), 'ds_gradient.hdf5'))
+        view.write(ds)
+        ds._view = view
+    else:
+        ds._view = None
+
+    yield client, ds
 
 
 def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
@@ -122,30 +147,39 @@ def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
 def test_gradient_dataset_get_records(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
-    records = ds.get_records("HF", "sto-3g")
+    with monitor_requests(client, "result", request_made=True):
+        records = ds.get_records("HF", "sto-3g")
     assert records.shape == (2, 1)
     assert records.iloc[0, 0].status == "COMPLETE"
     assert records.iloc[1, 0].status == "COMPLETE"
 
-    records_subset1 = ds.get_records("HF", "sto-3g", subset="He2")
+    with monitor_requests(client, "result", request_made=True):
+        records_subset1 = ds.get_records("HF", "sto-3g", subset="He2")
     assert records_subset1.status == "COMPLETE"
 
-    records_subset2 = ds.get_records("HF", "sto-3g", subset=["He2"])
+    with monitor_requests(client, "result", request_made=True):
+        records_subset2 = ds.get_records("HF", "sto-3g", subset=["He2"])
     assert records_subset2.shape == (1, 1)
     assert records_subset2.iloc[0, 0].status == "COMPLETE"
 
-    rec_proj = ds.get_records("HF", "sto-3g", projection={"extras": True, "return_result": True})
+    with monitor_requests(client, "result", request_made=True):
+        rec_proj = ds.get_records("HF", "sto-3g", projection={"extras": True, "return_result": True})
     assert rec_proj.shape == (2, 2)
     assert set(rec_proj.columns) == {"extras", "return_result"}
 
     with pytest.raises(KeyError):
-        ds.get_records(method="NotInDataset")
+        with monitor_requests(client, "result", request_made=False):
+            ds.get_records(method="NotInDataset")
 
 
 def test_gradient_dataset_get_values(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
-    cols = set(ds.get_values().columns)
+    request_made = not ds._use_view(False)
+    ds._clear_cache()
+
+    with monitor_requests(client, "result", request_made=request_made):
+        cols = set(ds.get_values().columns)
     names = set(ds.list_values().reset_index()['name'])
     assert cols == names
 
@@ -168,6 +202,7 @@ def test_gradient_dataset_list_values(gradient_dataset_fixture):
 
     # List contributed values
     df = ds.list_values(native=False).reset_index()
+
     assert df.shape == (3, 7)
     assert set(df.columns) == {*ds.data.history_keys, "name", "native"}
     assert {x.lower() for x in df['name']} == set(ds.data.contributed_values.keys())
@@ -217,116 +252,126 @@ def test_gradient_dataset_statistics(gradient_dataset_fixture):
     assert pytest.approx(stats.loc["He2"].mean(), 1.e-5) == 0.00333333333
 
 
-@pytest.fixture(scope="module")
-def contributed_dataset_fixture(fractal_compute_server):
+@pytest.fixture(scope="module", params=[True, False], ids=["with view", "without view"])
+def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
     """ Fixture for testing rich contributed datasets with many properties and molecules of different sizes"""
     client = ptl.FractalClient(fractal_compute_server)
+    try:
+        ds = client.get_collection("Dataset", "ds_contributed")
+    except KeyError:
 
-    testing.check_has_module("psi4")
+        # Build a dataset
+        ds = ptl.collections.Dataset("ds_contributed", client)
 
-    # Build a dataset
-    ds = ptl.collections.Dataset("ds_contributed", client)
+        ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
+        ds.add_entry("He", ptl.Molecule.from_data("He -1.1 0 0"))
+        ds.units = "hartree"
+        ds.save()
 
-    ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
-    ds.add_entry("He", ptl.Molecule.from_data("He -1.1 0 0"))
-    ds.units = "hartree"
-    ds.save()
+        energy = {
+            "name": "Fake Energy",
+            "theory_level": "pseudo-random values",
+            "values": {
+                "He1": 1234.5,
+                "He": 5.4321
+            },
+            "theory_level_details": {
+                "driver": "energy",
+                "program": "fake_program",
+                "basis": "fake_basis",
+                "method": "fake_method",
+            },
+            "units": "hartree"
+        }
+        gradient = {
+            "name": "Fake Gradient",
+            "theory_level": "pseudo-random values",
+            "values": {
+                "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
+                "He": [0.03, 0, 0.02]
+            },
+            "theory_level_details": {
+                "driver": "gradient",
+                "program": "fake_program",
+                "basis": "fake_basis",
+                "method": "fake_method",
+            },
+            "units": "hartree/bohr"
+        }
+        hessian = {
+            "name": "Fake Hessian",
+            "theory_level": "pseudo-random values",
+            "values": {
+                "He1": list(np.eye(6).ravel()),
+                "He": [1, 0.2, 0.1, 0.2, 1, 0.4, 0.1, 0.4, 1]
+            },
+            "theory_level_details": {
+                "driver": "hessian",
+                "program": "fake_program",
+                "basis": "fake_basis",
+                "method": "fake_method",
+            },
+            "units": "hartree/bohr**2"
+        }
+        dipole = {
+            "name": "Fake Dipole",
+            "theory_level": "pseudo-random values",
+            "values": {
+                "He": [1., 2., 3.],
+                "He1": [1., -2., 0.]
+            },
+            "theory_level_details": {
+                "driver": "dipole",
+                "program": "fake_program",
+                "basis": "fake_basis",
+                "method": "fake_method",
+            },
+            "units": "e * bohr"
+        }
+        energy_FF = {
+            "name": "Fake FF Energy",
+            "theory_level": "some force field",
+            "values": {
+                "He1": 0.5,
+                "He": 42.
+            },
+            "theory_level_details": {
+                "driver": "energy",
+                "program": "fake_program",
+                "basis": None,
+                "method": "fake_method"
+            },
+            "units": "hartree"
+        }
 
-    energy = {
-        "name": "Fake Energy",
-        "theory_level": "pseudo-random values",
-        "values": {
-            "He1": 1234.5,
-            "He": 5.4321
-        },
-        "theory_level_details": {
-            "driver": "energy",
-            "program": "fake_program",
-            "basis": "fake_basis",
-            "method": "fake_method",
-        },
-        "units": "hartree"
-    }
-    gradient = {
-        "name": "Fake Gradient",
-        "theory_level": "pseudo-random values",
-        "values": {
-            "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
-            "He": [0.03, 0, 0.02]
-        },
-        "theory_level_details": {
-            "driver": "gradient",
-            "program": "fake_program",
-            "basis": "fake_basis",
-            "method": "fake_method",
-        },
-        "units": "hartree/bohr"
-    }
-    hessian = {
-        "name": "Fake Hessian",
-        "theory_level": "pseudo-random values",
-        "values": {
-            "He1": list(np.eye(6).ravel()),
-            "He": [1, 0.2, 0.1, 0.2, 1, 0.4, 0.1, 0.4, 1]
-        },
-        "theory_level_details": {
-            "driver": "hessian",
-            "program": "fake_program",
-            "basis": "fake_basis",
-            "method": "fake_method",
-        },
-        "units": "hartree/bohr**2"
-    }
-    dipole = {
-        "name": "Fake Dipole",
-        "theory_level": "pseudo-random values",
-        "values": {
-            "He": [1., 2., 3.],
-            "He1": [1., -2., 0.]
-        },
-        "theory_level_details": {
-            "driver": "dipole",
-            "program": "fake_program",
-            "basis": "fake_basis",
-            "method": "fake_method",
-        },
-        "units": "e * bohr"
-    }
-    energy_FF = {
-        "name": "Fake FF Energy",
-        "theory_level": "some force field",
-        "values": {
-            "He1": 0.5,
-            "He": 42.
-        },
-        "theory_level_details": {
-            "driver": "energy",
-            "program": "fake_program",
-            "basis": None,
-            "method": "fake_method"
-        },
-        "units": "hartree"
-    }
-
-    ds.add_contributed_values(energy)
-    ds.add_contributed_values(gradient)
-    ds.add_contributed_values(hessian)
-    ds.add_contributed_values(dipole)
-    ds.add_contributed_values(energy_FF)
-
-    with pytest.raises(KeyError):
         ds.add_contributed_values(energy)
+        ds.add_contributed_values(gradient)
+        ds.add_contributed_values(hessian)
+        ds.add_contributed_values(dipole)
+        ds.add_contributed_values(energy_FF)
 
-    ds.save()
+        with pytest.raises(KeyError):
+            ds.add_contributed_values(energy)
 
-    yield client, client.get_collection("dataset", "ds_contributed")
+        ds.save()
+
+        # with view
+        if request.param:
+            view = ptl.collections.HDF5View(
+                pathlib.Path(tmp_path_factory.mktemp('test_collections'), 'ds_contributed.hdf5'))
+            view.write(ds)
+            ds._view = view
+        else:
+            ds._view = None
+
+    yield client, ds
 
 
 def test_dataset_contributed_units(contributed_dataset_fixture):
     _, ds = contributed_dataset_fixture
 
-    assert qcel.constants.ureg(ds._column_metadata[ds.get_values(
-        name="Fake Energy").columns[0]]["units"]) == qcel.constants.ureg("kcal / mol")
+    assert qcel.constants.ureg(
+        ds._column_metadata[ds.get_values(name="Fake Energy").columns[0]]["units"]) == qcel.constants.ureg(ds.units)
     assert qcel.constants.ureg(ds._column_metadata[ds.get_values(
         name="Fake Gradient").columns[0]]["units"]) == qcel.constants.ureg("hartree/bohr")
     assert qcel.constants.ureg(ds._column_metadata[ds.get_values(
@@ -385,6 +430,7 @@ def test_reactiondataset_check_state(fractal_compute_server):
         ds.get_records("SCF", "STO-3G")
 
     ds.save()
+
     ds.get_records("SCF", "STO-3G")
 
     ds.add_keywords("default", "psi4", ptl.models.KeywordSet(values={"a": 5}))
@@ -427,34 +473,44 @@ def test_reactiondataset_check_state(fractal_compute_server):
     assert bench.loc["He2"][0] == contrib["values"]["He2"]
 
 
-@pytest.fixture(scope="module")
-def reactiondataset_dftd3_fixture_fixture(fractal_compute_server):
-
-    testing.check_has_module("psi4")
-    testing.check_has_module("dftd3")
-
-    client = ptl.FractalClient(fractal_compute_server)
+@pytest.fixture(scope="module", params=[True, False], ids=["with view", "without view"])
+def reactiondataset_dftd3_fixture_fixture(fractal_compute_server, tmp_path_factory, request):
     ds_name = "He_DFTD3"
-    ds = ptl.collections.ReactionDataset(ds_name, client, ds_type="ie")
+    client = ptl.FractalClient(fractal_compute_server)
 
-    # Add two helium dimers to the DB at 4 and 8 bohr
-    HeDimer = ptl.Molecule.from_data([[2, 0, 0, -4.123], [2, 0, 0, 4.123]], dtype="numpy", units="bohr", frags=[1])
-    ds.add_ie_rxn("HeDimer", HeDimer, attributes={"r": 4})
-    ds.set_default_program("psi4")
-    ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={}), default=True)
+    try:
+        ds = client.get_collection("ReactionDataset", ds_name)
+    except KeyError:
+        testing.check_has_module("psi4")
+        testing.check_has_module("dftd3")
 
-    ds.save()
+        ds = ptl.collections.ReactionDataset(ds_name, client, ds_type="ie")
 
-    ncomp1 = ds.compute("B3LYP-D3", "6-31g")
-    assert len(ncomp1.ids) == 4
-    assert len(ncomp1.submitted) == 4
+        # Add two helium dimers to the DB at 4 and 8 bohr
+        HeDimer = ptl.Molecule.from_data([[2, 0, 0, -4.123], [2, 0, 0, 4.123]], dtype="numpy", units="bohr", frags=[1])
+        ds.add_ie_rxn("HeDimer", HeDimer, attributes={"r": 4})
+        ds.set_default_program("psi4")
+        ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={}), default=True)
 
-    ncomp2 = ds.compute("B3LYP-D3(BJ)", "6-31g")
-    assert len(ncomp2.ids) == 4
-    assert len(ncomp2.submitted) == 2
+        ds.save()
 
-    fractal_compute_server.await_results()
+        ncomp1 = ds.compute("B3LYP-D3", "6-31g")
+        assert len(ncomp1.ids) == 4
+        assert len(ncomp1.submitted) == 4
 
+        ncomp2 = ds.compute("B3LYP-D3(BJ)", "6-31g")
+        assert len(ncomp2.ids) == 4
+        assert len(ncomp2.submitted) == 2
+
+        fractal_compute_server.await_results()
+
+    # with view
+    if request.param:
+        view = ptl.collections.HDF5View(pathlib.Path(tmp_path_factory.mktemp('test_collections'), f'{ds_name}.hdf5'))
+        view.write(ds)
+        ds._view = view
+    else:
+        ds._view = None
     yield client, ds
 
 
@@ -481,13 +537,17 @@ def test_rectiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
 def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
 
+    request_made = not ds._use_view(False)
+    ds._clear_cache()
+
     bench = {
         "B3LYP/6-31g": pytest.approx(-0.002135, 1.e-3),
         "B3LYP-D3/6-31g": pytest.approx(-0.005818, 1.e-3),
         "B3LYP-D3(BJ)/6-31g": pytest.approx(-0.005636, 1.e-3)
     }
 
-    ret = ds.get_values("B3LYP", "6-31G")
+    with monitor_requests(client, "result", request_made=request_made):
+        ret = ds.get_values("B3LYP", "6-31G")
     assert ret.loc["HeDimer", "B3LYP/6-31g"] == bench["B3LYP/6-31g"]
 
     ret = ds.get_values("B3LYP-D3", "6-31G")
@@ -525,24 +585,25 @@ def test_rectiondataset_dftd3_molecules(reactiondataset_dftd3_fixture_fixture):
 def test_dataset_dftd3(reactiondataset_dftd3_fixture_fixture):
     client, rxn_ds = reactiondataset_dftd3_fixture_fixture
 
-    ds_name = "He_DFTD3"
-    ds = ptl.collections.Dataset(ds_name, client)
+    if not rxn_ds._use_view:
+        ds_name = "He_DFTD3"
+        ds = ptl.collections.Dataset(ds_name, client)
 
-    HeDimer = rxn_ds.get_molecules(subset='HeDimer').iloc[0, 0]
-    ds.add_entry("HeDimer", HeDimer)
-    ds.set_default_program(rxn_ds.data.default_program)
-    ds.add_keywords("scf_default", rxn_ds.data.default_program, ptl.models.KeywordSet(values={}), default=True)
+        HeDimer = rxn_ds.get_molecules(subset='HeDimer').iloc[0, 0]
+        ds.add_entry("HeDimer", HeDimer)
+        ds.set_default_program(rxn_ds.data.default_program)
+        ds.add_keywords("scf_default", rxn_ds.data.default_program, ptl.models.KeywordSet(values={}), default=True)
 
-    ds.save()
+        ds.save()
 
-    ds.compute("B3LYP-D3", "6-31g")
+        ds.compute("B3LYP-D3", "6-31g")
 
-    d3 = ds.get_values(method="b3lyp-d3")
-    assert d3.shape == (1, 1)
-    b3lyp = ds.get_values(method="b3lyp")
-    assert b3lyp.shape == (1, 1)
+        d3 = ds.get_values(method="b3lyp-d3")
+        assert d3.shape == (1, 1)
+        b3lyp = ds.get_values(method="b3lyp")
+        assert b3lyp.shape == (1, 1)
 
-    assert d3.iloc[0, 0] != b3lyp.iloc[0, 0]
+        assert d3.iloc[0, 0] != b3lyp.iloc[0, 0]
 
 
 @testing.using_psi4
@@ -671,24 +732,75 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     assert kw.values["scf_type"] == "df"
 
 
-def test_dataset_list_get_values(gradient_dataset_fixture, contributed_dataset_fixture,
-                                 reactiondataset_dftd3_fixture_fixture):
+def assert_list_get_values(ds):
     """ Tests that the output of list_values can be used as input to get_values"""
-    for dataset_fixture in locals().values():
-        client, ds = dataset_fixture
+    columns = ds.list_values().reset_index()
 
-        columns = ds.list_values().reset_index()
+    for row in columns.to_dict("records"):
+        spec = row.copy()
+        name = spec.pop("name")
+        if "stoichiometry" in spec:
+            spec["stoich"] = spec.pop("stoichiometry")
+        from_name = ds.get_values(name=name)
+        from_spec = ds.get_values(**spec)
+        assert from_name.shape == (len(ds.get_index()), 1)
+        assert from_spec.shape == (len(ds.get_index()), 1)
+        assert from_name.columns[0] == from_spec.columns[0]
 
-        for row in columns.to_dict("records"):
-            spec = row.copy()
-            name = spec.pop("name")
-            if "stoichiometry" in spec:
-                spec["stoich"] = spec.pop("stoichiometry")
-            from_name = ds.get_values(name=name)
-            from_spec = ds.get_values(**spec)
-            assert from_name.shape == (len(ds.get_index()), 1)
-            assert from_spec.shape == (len(ds.get_index()), 1)
-            assert from_name.columns[0] == from_spec.columns[0]
+
+def test_gradient_dataset_list_get_values(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+    assert_list_get_values(ds)
+
+
+def test_contributed_dataset_list_get_values(contributed_dataset_fixture):
+    client, ds = contributed_dataset_fixture
+    assert_list_get_values(ds)
+
+
+def test_d3_dataset_list_get_values(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+    assert_list_get_values(ds)
+
+
+def test_gradient_dataset_view(gradient_dataset_fixture):
+    """ Tests if get_values and list_values return the same result with/out a view"""
+    client, ds = gradient_dataset_fixture
+
+    def df_equals(df1, df2):
+        """ checks equality even when columns contain numpy arrays, which .equals and == struggle with """
+        if not all(df1.columns == df2.columns):
+            return False
+        if not all(df1.index.values == df2.index.values):
+            return False
+        for i in range(df1.shape[0]):
+            for j in range(df1.shape[1]):
+                if isinstance(df1.iloc[i, j], np.ndarray):
+                    if not np.array_equal(df1.iloc[i, j], df2.iloc[i, j]):
+                        return False
+                else:
+                    if not df1.iloc[i, j] == df2.iloc[i, j]:
+                        return False
+        return True
+
+    ds._disable_view = True
+    list_ds = ds.list_values()
+    cv_ds = ds.get_values(native=False)
+    nv_ds = ds.get_values(native=True)
+    v_ds = ds.get_values()
+
+    ds._disable_view = False
+    list_view = ds.list_values()
+    assert list_ds.equals(list_view)
+
+    cv_view = ds.get_values(native=False)
+    nv_view = ds.get_values(native=True)
+    v_view = ds.get_values()
+
+    # 'no details' column does not match because there is not enough info to interpret it as a gradient
+    assert df_equals(cv_view.drop('no details', axis=1), cv_ds.drop('no details', axis=1))
+    assert df_equals(nv_view, nv_ds)
+    assert df_equals(v_view.drop('no details', axis=1), v_ds.drop('no details', axis=1))
 
 
 def test_generic_collection(fractal_compute_server):

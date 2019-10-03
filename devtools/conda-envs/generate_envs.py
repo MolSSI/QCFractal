@@ -29,6 +29,7 @@ dependencies:
   - postgresql
   - alembic
   - tqdm
+  - h5py
 
 # Test depends
   - pytest
@@ -82,35 +83,42 @@ def generate_yaml(filename=None, channels=None, dependencies=None, pip_dependenc
         yaml.dump(env, handle)
 
 
-environs = [{
-    # No extra dependancies, the base env
-    "filename": "base.yaml",
-}, {
-    
-    # Tools to test out all available adapters, ipy is for Parsl
-    "filename": "adapters.yaml",
-    "dependencies": ["rdkit", "dask", "distributed", "dask-jobqueue>=0.5.0", "ipyparallel", "ipykernel",
-                     "parsl>=0.8.0"],
-    "pip_dependencies": ["fireworks"]
-}, {
+environs = [
+    {
+        # No extra dependancies, the base env
+        "filename": "base.yaml",
+    },
+    {
 
-    # Tests for the OpenFF toolchain (geometric and torsiondrive) 
-    "filename": "openff.yaml",
-    "channels": ["psi4"],
-    "dependencies": ["psi4>=1.3", "rdkit", "geometric>=0.9.3", "torsiondrive"],
-}, {
+        # Tools to test out all available adapters, ipy is for Parsl
+        "filename":
+        "adapters.yaml",
+        "dependencies":
+        ["rdkit", "dask", "distributed", "dask-jobqueue>=0.5.0", "ipyparallel", "ipykernel", "parsl>=0.8.0"],
+        "pip_dependencies": ["fireworks"]
+    },
+    {
 
-    # Tests for the current development heads
-    "filename": "dev_head.yaml",
-    "dependencies": ["rdkit"],
-    "qca_ecosystem": [],
-    "pip_dependencies": [
-        "git+git://github.com/MolSSI/QCEngine#egg=qcengine",
-        "git+git://github.com/MolSSI/QCElemental#egg=qcelemental",
-        "git+git://github.com/leeping/geomeTRIC#egg=geometric",
-        "git+git://github.com/lpwgroup/torsiondrive.git#egg=torsiondrive",
-    ] # yapf: disable
-}]
+        # Tests for the OpenFF toolchain (geometric and torsiondrive)
+        "filename": "openff.yaml",
+        "channels": ["psi4"],
+        "dependencies": ["psi4>=1.3", "rdkit", "geometric>=0.9.3", "torsiondrive"],
+    },
+    {
+
+        # Tests for the current development heads
+        "filename":
+        "dev_head.yaml",
+        "dependencies": ["rdkit"],
+        "qca_ecosystem": [],
+        "pip_dependencies": [
+            "git+git://github.com/MolSSI/QCEngine#egg=qcengine",
+            "git+git://github.com/MolSSI/QCElemental#egg=qcelemental",
+            "git+git://github.com/leeping/geomeTRIC#egg=geometric",
+            "git+git://github.com/lpwgroup/torsiondrive.git#egg=torsiondrive",
+        ]  # yapf: disable
+    }
+]
 
 for envdata in environs:
     generate_yaml(**envdata)
