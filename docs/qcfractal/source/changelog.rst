@@ -15,6 +15,23 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.12.0 / 2019-MM-DD
+-------------------
+
+New Features
+++++++++++++
+
+Enhancements
+++++++++++++
+
+Bug Fixes
++++++++++
+
+Deprecated Features
++++++++++++++++++++
+- (:pr:`426`) In ``Dataset`` and ``ReactionDataset`` (``interface.collections``),
+  the previously deprecated functions ``query``, ``get_history``, and ``list_history`` have been removed.
+
 0.11.0 / 2019-10-01
 -------------------
 
@@ -127,7 +144,7 @@ Enhancements
 Bug Fixes
 +++++++++
 
-- (:pr:`359`) A `FutureWarning` from Pandas has been addressed before it becomes an error.
+- (:pr:`359`) A ``FutureWarning`` from Pandas has been addressed before it becomes an error.
 
 Documentation Improvements
 ++++++++++++++++++++++++++
@@ -218,7 +235,7 @@ Deprecated Features
 +++++++++++++++++++
 
 - (:pr:`291`) Queue Manager Template Generator CLI has been removed as its functionality is superseded by the
-  `qcfractal-manager` CLI.
+  ``qcfractal-manager`` CLI.
 
 
 0.7.2 / 2019-05-31
@@ -614,7 +631,7 @@ New Features
 ++++++++++++
 - (:pr:`72`) Queues are no longer required of FractalServer instances, now separate QueueManager instances can be created that push and pull tasks to the server.
 - (:pr:`80`) A `Parsl <http://parsl-project.org>`_ Queue Manager was written.
-- (:pr:`75`) CLI's have been added for the `qcfractal-server` and `qcfractal-manager` instances.
+- (:pr:`75`) CLI's have been added for the ``qcfractal-server`` and ``qcfractal-manager`` instances.
 - (:pr:`83`) The status of server tasks and services can now be queried from a FractalClient.
 - (:pr:`82`) OpenFF Workflows can now add single optimizations for fragments.
 
@@ -622,8 +639,8 @@ Enhancements
 ++++++++++++
 
 - (:pr:`74`) The documentation now has flowcharts showing task and service pathways through the code.
-- (:pr:`73`) Collection `.data` attributes are now typed and validated with pydantic.
-- (:pr:`85`) The CLI has been enhanced to cover additional features such as `queue-manager` ping time.
+- (:pr:`73`) Collection ``.data`` attributes are now typed and validated with pydantic.
+- (:pr:`85`) The CLI has been enhanced to cover additional features such as ``queue-manager`` ping time.
 - (:pr:`84`) QCEngine 0.4.0 and geomeTRIC 0.9.1 versions are now compatible with QCFractal.
 
 
@@ -657,10 +674,10 @@ Enhancements
 - (:pr:`47`) Tests can that require an activate Mongo instance are now correctly skipped.
 - (:pr:`51`) The queue now uses a fast hash index to determine uniqueness and prevent duplicate tasks.
 - (:pr:`52`) QCFractal examples are now tested via CI.
-- (:pr:`53`) The MongoSocket `get_generic_by_id` was deprecated in favor of `get_generic` where an ID can be a search field.
+- (:pr:`53`) The MongoSocket ``get_generic_by_id`` was deprecated in favor of ``get_generic`` where an ID can be a search field.
 - (:pr:`61`, :pr:`64`) TorsionDrive now tracks tasks via ID rather than hash to ensure integrity.
 - (:pr:`63`) The Database collection was renamed Dataset to more correctly illuminate its purpose.
-- (:pr:`65`) Collection can now be aquired directly from a client via the `client.get_collection` function.
+- (:pr:`65`) Collection can now be aquired directly from a client via the ``client.get_collection`` function.
 
 Bug Fixes
 +++++++++
