@@ -9,7 +9,7 @@ import pandas as pd
 
 from qcelemental import constants
 
-from ..models import ComputeResponse, KeywordSet, Molecule, ObjectId, ProtoModel
+from ..models import ComputeResponse, KeywordSet, Molecule, ObjectId, ProtoModel, ResultRecord
 from ..statistics import wrap_statistics
 from ..visualization import bar_plot, violin_plot
 from .collection import Collection
@@ -28,7 +28,7 @@ class ContributedValues(ProtoModel):
     name: str
     doi: Optional[str] = None
     theory_level: Union[str, Dict[str, str]]
-    theory_level_details: Union[str, Dict[str, Optional[str]]] = None
+    theory_level_details: Optional[Union[str, Dict[str, Optional[str]]]] = None
     comments: Optional[str] = None
     values: Dict[str, Any]
     units: str
@@ -67,19 +67,19 @@ class Dataset(Collection):
         self._units = self.data.default_units
 
         # If we making a new database we may need new hashes and json objects
-        self._new_molecules = {}
-        self._new_keywords = {}
-        self._new_records = []
+        self._new_molecules: Dict[str, Molecule] = {}
+        self._new_keywords: Dict[Tuple[str, str], KeywordSet] = {}
+        self._new_records: List[Dict[str, Any]] = []
         self._updated_state = False
         self._entry_index = None
 
-        self._view = None
+        self._view: Optional['DatasetView'] = None
         self._disable_view: bool = False  # for debugging and testing
         self._disable_query_limit: bool = False  # for debugging and testing
 
         # Initialize internal data frames and load in contrib
         self.df = pd.DataFrame(index=self.get_index())
-        self._column_metadata = {}
+        self._column_metadata: Dict[str, Any] = {}
         self._form_index()
 
     class DataModel(Collection.DataModel):
@@ -237,7 +237,6 @@ class Dataset(Collection):
         DataFrame
             A DataFrame of the matching data specifications
         """
-        ret = []
         spec = {
             "method": method,
             "basis": basis,
@@ -251,6 +250,7 @@ class Dataset(Collection):
             ret = self._view.list_values()
             spec["native"] = native
         else:
+            ret = []
             if native in {True, None}:
                 df = self._list_records(dftd3=False)
                 df['native'] = True
@@ -447,10 +447,10 @@ class Dataset(Collection):
         if native in {False, None}:
             df = self._get_contributed_values(**spec)
             ret.append(df)
-        ret = pd.concat(ret, axis=1)
-        ret.sort_index(inplace=True)
+        ret_df = pd.concat(ret, axis=1)
+        ret_df.sort_index(inplace=True)
 
-        return ret
+        return ret_df
 
     def _get_native_values(self,
                            method: Optional[str] = None,
@@ -763,11 +763,12 @@ class Dataset(Collection):
         return name
 
     def _default_parameters(self,
-                            program: str,
+                            program: Optional[str],
                             method: str,
                             basis: Optional[str],
                             keywords: Optional[str],
-                            stoich: Optional[str] = None) -> Tuple[str, str, str]:
+                            stoich: Optional[str] = None
+                            ) -> Tuple[str, Dict[str, Union[str, KeywordSet]], Dict[str, str]]:
         """
         Takes raw input parsed parameters and applies defaults to them.
         """
@@ -1227,7 +1228,7 @@ class Dataset(Collection):
                     program: Optional[str] = None,
                     projection: Optional[Dict[str, bool]] = None,
                     subset: Optional[Union[str, Set[str]]] = None,
-                    merge: bool = False) -> Union[pd.DataFrame, 'ResultRecord']:
+                    merge: bool = False) -> Union[pd.DataFrame, ResultRecord]:
         """
         Queries full ResultRecord objects from the database.
 
@@ -1380,7 +1381,7 @@ class Dataset(Collection):
         self.df = pd.DataFrame(index=self.get_index())
 
     # Getters
-    def __getitem__(self, args: str) -> 'Series':
+    def __getitem__(self, args: str) -> pd.Series:
         """A wrapped to the underlying pd.DataFrame to access columnar data
 
         Parameters
