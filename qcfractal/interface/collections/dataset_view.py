@@ -1,13 +1,13 @@
 import abc
 import distutils
-import json
+from qcelemental.util.serialization import serialize, deserialize
 import warnings
 from contextlib import contextmanager
 
 from .dataset import Dataset, MoleculeEntry
 from .reaction_dataset import ReactionEntry
 import pathlib
-from typing import Union, List, Tuple, Dict
+from typing import Union, List, Tuple, Any
 import numpy as np
 import pandas as pd
 import h5py
@@ -160,7 +160,7 @@ class HDF5View(DatasetView):
     def get_molecules(self, indexes: List['ObjectId']) -> List[Molecule]:
         with self._read_file() as f:
             mol_schema = f['molecule/schema']
-            ret = [Molecule(**json.loads(mol_schema[i])) for i in indexes]
+            ret = [Molecule(**self._deserialize_data(mol_schema[i])) for i in indexes]
         return ret
 
     def get_entries(self) -> pd.DataFrame:
@@ -187,10 +187,12 @@ class HDF5View(DatasetView):
         if h5py.__version__ >= distutils.version.StrictVersion("2.10.0"):
             vlen_double_t = h5py.vlen_dtype(np.dtype("float64"))
             utf8_t = h5py.string_dtype(encoding="utf-8")
+            bytes_t = h5py.vlen_dtype(np.dtype('b'))
             vlen_utf8_t = h5py.vlen_dtype(utf8_t)
         else:
             vlen_double_t = h5py.special_dtype(vlen=np.dtype("float64"))
             utf8_t = h5py.special_dtype(vlen=str)
+            bytes_t = h5py.special_dtype(vlen=np.dtype('b'))
             vlen_utf8_t = h5py.special_dtype(vlen=utf8_t)
 
         driver_dataspec = {
@@ -239,7 +241,6 @@ class HDF5View(DatasetView):
             molecule_group = f.create_group("molecule")
 
             if "stoichiometry" in ds.data.history_keys:
-                #stoichs = list(ds.data.records[0].stoichiometry.keys())
                 molecules = ds.get_molecules(stoich=list(ds.valid_stoich), force=True)
             else:
                 molecules = ds.get_molecules(force=True)
@@ -252,14 +253,23 @@ class HDF5View(DatasetView):
                                                         shape=mol_shape,
                                                         dtype=vlen_utf8_t,
                                                         **dataset_kwargs)
-            mol_schema = molecule_group.create_dataset("schema", shape=mol_shape, dtype=utf8_t, **dataset_kwargs)
-
+            mol_schema = molecule_group.create_dataset("schema", shape=mol_shape, dtype=bytes_t, **dataset_kwargs)
+            mol_charge = molecule_group.create_dataset("charge",
+                                                       shape=mol_shape,
+                                                       dtype=np.dtype('float64'),
+                                                       **dataset_kwargs)
+            mol_spin = molecule_group.create_dataset("multiplicity",
+                                                     shape=mol_shape,
+                                                     dtype=np.dtype('int32'),
+                                                     **dataset_kwargs)
             mol_id_server_view = {}
             for i, mol_row in enumerate(molecules.to_dict("records")):
                 molecule = mol_row["molecule"]
                 mol_geometry[i] = molecule.geometry.ravel()
-                mol_schema[i] = molecule.json()
+                mol_schema[i] = self._serialize_data(molecule)
                 mol_symbols[i] = molecule.symbols
+                mol_charge[i] = molecule.molecular_charge
+                mol_spin[i] = molecule.molecular_multiplicity
                 mol_id_server_view[molecule.id] = i
 
             # Export entries
@@ -355,11 +365,20 @@ class HDF5View(DatasetView):
     def _write_file(self):
         yield h5py.File(self._path, 'w')
 
-    # Methods for turning objects into strings for storage in HDF5 metadata fields ("attrs")
+    # Methods for serializing to strings for storage in HDF5 metadata fields ("attrs")
     @staticmethod
-    def _serialize_field(field):
-        return json.dumps(field)
+    def _serialize_field(field: Any) -> str:
+        return serialize(field, 'json')
 
     @staticmethod
-    def _deserialize_field(field):
-        return json.loads(field)
+    def _deserialize_field(field: str) -> Any:
+        return deserialize(field, 'json')
+
+    # Methods for serializing into HDF5 data fields
+    @staticmethod
+    def _serialize_data(data: Any) -> bytes:
+        return bytearray(serialize(data, 'msgpack-ext'))
+
+    @staticmethod
+    def _deserialize_data(data: bytes) -> Any:
+        return deserialize(bytes(data), 'msgpack-ext')
