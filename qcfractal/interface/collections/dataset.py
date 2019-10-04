@@ -73,6 +73,7 @@ class Dataset(Collection):
         self._entry_index = None
 
         self._view = None
+        self._disable_view: bool = False  # for debugging and testing
 
         # Initialize internal data frames and load in contrib
         self.df = pd.DataFrame(index=self.get_index())
@@ -133,9 +134,10 @@ class Dataset(Collection):
 
     def get_entries(self, force: bool = False) -> pd.DataFrame:
         if self._use_view(force):
-            return self._view.get_entries()
+            ret = self._view.get_entries()
         else:
-            return self._entry_index
+            ret = self._entry_index
+        return ret.copy()
 
     def _molecule_indexer(self, subset: Optional[Union[str, Set[str]]] = None,
                           force: bool = False) -> Dict[str, 'ObjectId']:
@@ -1344,7 +1346,7 @@ class Dataset(Collection):
 
     def _use_view(self, force: bool = False):
         """Helper function to decide whether to use a locally available HDF5 view"""
-        return force is False and self._view is not None
+        return (force is False) and (self._view is not None) and (self._disable_view is False)
 
     def _clear_cache(self):
         self.df = pd.DataFrame(index=self.get_index())

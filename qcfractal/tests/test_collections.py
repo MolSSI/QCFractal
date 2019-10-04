@@ -8,6 +8,8 @@ import numpy as np
 import pytest
 
 import qcelemental as qcel
+from qcelemental.models import Molecule
+
 import qcfractal.interface as ptl
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
@@ -771,10 +773,8 @@ def test_d3_dataset_list_get_values(gradient_dataset_fixture):
     assert_list_get_values(ds)
 
 
-def test_gradient_dataset_view(gradient_dataset_fixture):
-    """ Tests if get_values and list_values return the same result with/out a view"""
-    client, ds = gradient_dataset_fixture
-
+def assert_view_identical(ds):
+    """ Tests if get_values, list_values, get_entries, and get_molecules return the same result with/out a view"""
     def df_equals(df1, df2):
         """ checks equality even when columns contain numpy arrays, which .equals and == struggle with """
         if not all(df1.columns == df2.columns):
@@ -786,29 +786,65 @@ def test_gradient_dataset_view(gradient_dataset_fixture):
                 if isinstance(df1.iloc[i, j], np.ndarray):
                     if not np.array_equal(df1.iloc[i, j], df2.iloc[i, j]):
                         return False
+                elif isinstance(df1.iloc[i, j], Molecule):
+                    if not df1.iloc[i, j].compare(df2.iloc[i, j]):
+                        return False
                 else:
                     if not df1.iloc[i, j] == df2.iloc[i, j]:
                         return False
         return True
 
     ds._disable_view = True
-    list_ds = ds.list_values()
-    cv_ds = ds.get_values(native=False)
-    nv_ds = ds.get_values(native=True)
-    v_ds = ds.get_values()
+    list_ds = ds.list_values(force=True)
+    cv_ds = ds.get_values(native=False, force=True)
+    nv_ds = ds.get_values(native=True, force=True)
+    v_ds = ds.get_values(force=True)
+    entry_ds = ds.get_entries(force=True)
+    mol_ds = ds.get_molecules(force=True)
 
     ds._disable_view = False
     list_view = ds.list_values()
-    assert list_ds.equals(list_view)
-
     cv_view = ds.get_values(native=False)
     nv_view = ds.get_values(native=True)
     v_view = ds.get_values()
+    entry_view = ds.get_entries()
+    mol_view = ds.get_molecules()
 
-    # 'no details' column does not match because there is not enough info to interpret it as a gradient
-    assert df_equals(cv_view.drop('no details', axis=1), cv_ds.drop('no details', axis=1))
+    # 'no details' column in gradient_dataset_fixture does not match
+    # because there is not enough info to interpret it as a gradient
+    if 'no details' in cv_view.columns:
+        cv_view.drop('no details', axis=1, inplace=True)
+        cv_ds.drop('no details', axis=1, inplace=True)
+        v_view.drop('no details', axis=1, inplace=True)
+        v_ds.drop('no details', axis=1, inplace=True)
+
+    # Molecule IDs are different on the server and in the view by design
+    for mid in ["molecule", "molecule_id"]:
+        if mid in entry_ds.columns:
+            entry_ds.drop(mid, axis=1, inplace=True)
+            entry_view.drop(mid, axis=1, inplace=True)
+
+    assert list_ds.equals(list_view)
+    assert df_equals(cv_view, cv_ds)
     assert df_equals(nv_view, nv_ds)
-    assert df_equals(v_view.drop('no details', axis=1), v_ds.drop('no details', axis=1))
+    assert df_equals(v_view, v_ds)
+    assert df_equals(entry_ds, entry_view)
+    assert df_equals(mol_ds, mol_view)
+
+
+def test_gradient_dataset_view_identical(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+    assert_view_identical(ds)
+
+
+def test_contributed_dataset_view_identical(contributed_dataset_fixture):
+    client, ds = contributed_dataset_fixture
+    assert_view_identical(ds)
+
+
+def test_d3_dataset_list_view_identical(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+    assert_view_identical(ds)
 
 
 def test_generic_collection(fractal_compute_server):

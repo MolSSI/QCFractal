@@ -187,12 +187,12 @@ class HDF5View(DatasetView):
         if h5py.__version__ >= distutils.version.StrictVersion("2.10.0"):
             vlen_double_t = h5py.vlen_dtype(np.dtype("float64"))
             utf8_t = h5py.string_dtype(encoding="utf-8")
-            bytes_t = h5py.vlen_dtype(np.dtype('b'))
+            bytes_t = h5py.vlen_dtype(np.dtype("uint8"))
             vlen_utf8_t = h5py.vlen_dtype(utf8_t)
         else:
             vlen_double_t = h5py.special_dtype(vlen=np.dtype("float64"))
             utf8_t = h5py.special_dtype(vlen=str)
-            bytes_t = h5py.special_dtype(vlen=np.dtype('b'))
+            bytes_t = h5py.special_dtype(vlen=np.dtype("uint8"))
             vlen_utf8_t = h5py.special_dtype(vlen=utf8_t)
 
         driver_dataspec = {
@@ -237,7 +237,6 @@ class HDF5View(DatasetView):
             f.attrs["server_information"] = self._serialize_field(ds.client.server_information())
 
             # Export molecules
-            # TODO: duplicate molecules
             molecule_group = f.create_group("molecule")
 
             if "stoichiometry" in ds.data.history_keys:
@@ -350,6 +349,9 @@ class HDF5View(DatasetView):
 
                 _write_dataset(dataset, cv_df, entry_dset)
 
+        # Clean up any caches
+        self._entries = None
+
     @staticmethod
     def _normalize_hdf5_name(name: str) -> str:
         """ Handles names with / in them, which is disallowed in HDF5 """
@@ -376,9 +378,9 @@ class HDF5View(DatasetView):
 
     # Methods for serializing into HDF5 data fields
     @staticmethod
-    def _serialize_data(data: Any) -> bytes:
-        return bytearray(serialize(data, 'msgpack-ext'))
+    def _serialize_data(data: Any) -> np.ndarray:
+        return np.fromstring(serialize(data, 'msgpack-ext'), dtype='uint8')
 
     @staticmethod
-    def _deserialize_data(data: bytes) -> Any:
-        return deserialize(bytes(data), 'msgpack-ext')
+    def _deserialize_data(data: np.ndarray) -> Any:
+        return deserialize(data.tobytes(), 'msgpack-ext')
