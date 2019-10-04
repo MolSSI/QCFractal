@@ -302,7 +302,7 @@ class HDF5View(DatasetView):
                                            dtype=np.dtype("float64"),
                                            **dataset_kwargs)
             else:
-                raise ValueError(f"Unknown entry class ({type(ds.data.records[0])}) while " f"writing HDF5 entries.")
+                raise ValueError(f"Unknown entry class ({type(ds.data.records[0])}) while writing HDF5 entries.")
 
             # Export native data columns
             value_group = f.create_group("value")
