@@ -847,7 +847,7 @@ def assert_view_identical(ds):
                     if not np.array_equal(df1.iloc[i, j], df2.iloc[i, j]):
                         return False
                 elif isinstance(df1.iloc[i, j], Molecule):
-                    if not df1.iloc[i, j].compare(df2.iloc[i, j]):
+                    if not df1.iloc[i, j].get_hash() == df2.iloc[i, j].get_hash():
                         return False
                 # Because nan != nan
                 elif df1.isna().iloc[i, j]:

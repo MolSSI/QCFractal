@@ -265,8 +265,16 @@ class Dataset(Collection):
         # Filter
         ret.fillna("None", inplace=True)
         ret = self._filter_records(ret, **spec)
-        ret.set_index(["native"] + list(self.data.history_keys[:-1]), inplace=True)
+
+        # Sort
+        sort_index = ["native"] + list(self.data.history_keys[:-1])
+        if "stoichiometry" in ret.columns:
+            sort_index += ["stoichiometry"]
+        ret.set_index(sort_index, inplace=True)
         ret.sort_index(inplace=True)
+        ret.reset_index(inplace=True)
+        ret.set_index(["native"] + list(self.data.history_keys[:-1]), inplace=True)
+
         return ret
 
     @staticmethod
