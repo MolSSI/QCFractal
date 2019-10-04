@@ -916,7 +916,7 @@ def test_optimization_dataset(fractal_compute_server):
 
     opt_spec = {"program": "geometric"}
     qc_spec = {"driver": "gradient", "method": "UFF", "program": "rdkit"}
-    ds.add_specification("test", opt_spec, qc_spec)
+    ds.add_specification("test", opt_spec, qc_spec, protocols={"trajectory": "final"})
 
     hooh1 = ptl.data.get_molecule("hooh.json")
     hooh2 = hooh1.copy(update={"geometry": hooh1.geometry + np.array([0, 0, 0.2])})
@@ -931,7 +931,7 @@ def test_optimization_dataset(fractal_compute_server):
     ds.query("test")
     assert ds.status().loc["COMPLETE", "test"] == 3
 
-    assert ds.counts().loc["hooh1", "test"] >= 4
+    assert ds.counts().loc["hooh1", "test"] == 1
 
     final_energy = 0.00011456853977485626
     for idx, row in ds.df["test"].items():

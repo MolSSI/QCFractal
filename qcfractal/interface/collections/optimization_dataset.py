@@ -5,6 +5,8 @@ from typing import Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
 
+import qcelemental as qcel
+
 from ..models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
@@ -24,6 +26,7 @@ class OptEntrySpecification(ProtoModel):
     description: Optional[str]
     optimization_spec: OptimizationSpecification
     qc_spec: QCSpecification
+    protocols: qcel.models.procedures.OptimizationProtocols = qcel.models.procedures.OptimizationProtocols()
 
 
 class OptimizationDataset(BaseProcedureDataset):
@@ -44,7 +47,11 @@ class OptimizationDataset(BaseProcedureDataset):
             general_keywords = {}
         keywords = {**general_keywords, **entry.additional_keywords}
 
-        procedure_parameters = {"keywords": keywords, "qc_spec": spec.qc_spec.dict()}
+        procedure_parameters = {
+            "keywords": keywords,
+            "qc_spec": spec.qc_spec.dict(),
+            "protocols": spec.protocols.dict()
+        }
 
         return self.client.add_procedure("optimization",
                                          spec.optimization_spec.program,
@@ -57,6 +64,7 @@ class OptimizationDataset(BaseProcedureDataset):
                           optimization_spec: OptimizationSpecification,
                           qc_spec: QCSpecification,
                           description: str = None,
+                          protocols: Optional[Dict[str, Any]] = None,
                           overwrite=False) -> None:
         """
         Parameters
@@ -69,15 +77,19 @@ class OptimizationDataset(BaseProcedureDataset):
             A full quantum chemistry specification for Optimization
         description : str, optional
             A short text description of the specification
+        protocols : Optional[Dict[str, Any]], optional
+            Protocols for this specification.
         overwrite : bool, optional
             Overwrite existing specification names
-
         """
+        if protocols is None:
+            protocols = {}
 
         spec = OptEntrySpecification(name=name,
                                      optimization_spec=optimization_spec,
                                      qc_spec=qc_spec,
-                                     description=description)
+                                     description=description,
+                                     protocols=protocols)
 
         return self._add_specification(name, spec, overwrite=overwrite)
 
