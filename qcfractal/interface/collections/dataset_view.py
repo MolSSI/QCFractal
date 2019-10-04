@@ -94,6 +94,7 @@ class DatasetView(abc.ABC):
 class HDF5View(DatasetView):
     def __init__(self, path: Union[str, pathlib.Path]):
         super().__init__(path)
+        self._entries: pd.DataFrame = None
 
     def list_values(self) -> pd.DataFrame:
         df = pd.DataFrame()
@@ -163,16 +164,18 @@ class HDF5View(DatasetView):
         return ret
 
     def get_entries(self) -> pd.DataFrame:
-        with self._read_file() as f:
-            entry_group = f["entry"]
-            if entry_group.attrs["model"] == "MoleculeEntry":
-                fields = ("name", "molecule_id")
-            elif entry_group.attrs["model"] == "ReactionEntry":
-                fields = ("name", "stoichiometry", "molecule", "coefficient")
-            else:
-                raise ValueError(f"Unknown entry class ({entry_group.attrs['model']}) while " f"reading HDF5 entries.")
-            ret = pd.DataFrame({field: entry_group[field][()] for field in fields})
-        return ret
+        if self._entries is None:
+            with self._read_file() as f:
+                entry_group = f["entry"]
+                if entry_group.attrs["model"] == "MoleculeEntry":
+                    fields = ("name", "molecule_id")
+                elif entry_group.attrs["model"] == "ReactionEntry":
+                    fields = ("name", "stoichiometry", "molecule", "coefficient")
+                else:
+                    raise ValueError(f"Unknown entry class ({entry_group.attrs['model']}) while "
+                                     f"reading HDF5 entries.")
+                self._entries = pd.DataFrame({field: entry_group[field][()] for field in fields})
+        return self._entries
 
     def write(self, ds: Dataset):
         # For data checksums
