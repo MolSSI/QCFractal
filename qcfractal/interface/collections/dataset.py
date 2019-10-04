@@ -14,6 +14,7 @@ from ..statistics import wrap_statistics
 from ..visualization import bar_plot, violin_plot
 from .collection import Collection
 from .collection_utils import composition_planner, register_collection
+from ..client import FractalClient
 
 
 class MoleculeEntry(ProtoModel):
@@ -46,7 +47,7 @@ class Dataset(Collection):
     df : pd.DataFrame
         The underlying dataframe for the Dataset object
     """
-    def __init__(self, name: str, client: Optional['FractalClient'] = None, **kwargs: Dict[str, Any]):
+    def __init__(self, name: str, client: Optional[FractalClient] = None, **kwargs: Dict[str, Any]):
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -766,7 +767,7 @@ class Dataset(Collection):
                             method: str,
                             basis: Optional[str],
                             keywords: Optional[str],
-                            stoich: Optional[str] = None) -> Tuple[str, str, str, str]:
+                            stoich: Optional[str] = None) -> Tuple[str, str, str]:
         """
         Takes raw input parsed parameters and applies defaults to them.
         """
@@ -1253,7 +1254,10 @@ class Dataset(Collection):
         Union[pd.DataFrame, 'ResultRecord']
             Either a DataFrame of indexed ResultRecords or a single ResultRecord if a single subset string was provided.
         """
-        name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
+        name, _, history = self._default_parameters(program, method, basis, keywords)
+        if name not in set(self.list_records().reset_index()["name"].unique()):
+            raise KeyError(f"Requested query ({name}) did not match a known record.")
+
         indexer = self._molecule_indexer(subset=subset, force=True)
         df = self._get_records(indexer, history, projection=projection, merge=merge)
 

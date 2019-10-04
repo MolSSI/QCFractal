@@ -5,9 +5,10 @@ import warnings
 from contextlib import contextmanager
 
 from .dataset import Dataset, MoleculeEntry
+from ..models import ObjectId
 from .reaction_dataset import ReactionEntry
 import pathlib
-from typing import Union, List, Tuple, Any
+from typing import Union, List, Tuple, Dict, Any
 import numpy as np
 import pandas as pd
 import h5py
@@ -51,7 +52,7 @@ class DatasetView(abc.ABC):
             A Dataframe with specification of available columns.
         """
     @abc.abstractmethod
-    def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, List[str]]:
+    def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
         """
         Get value columns.
 
@@ -65,7 +66,7 @@ class DatasetView(abc.ABC):
             A Dataframe whose columns correspond to each query and a list of units for each column.
         """
     @abc.abstractmethod
-    def get_molecules(self, indexes: List['ObjectId']) -> List[Molecule]:
+    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> List[Molecule]:
         """
         Get a list of molecules using a molecule indexer
 
@@ -122,7 +123,7 @@ class HDF5View(DatasetView):
         # for some reason, pandas makes native a float column
         return df.astype({"native": bool})
 
-    def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, List[str]]:
+    def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
         units = {}
         with self._read_file() as f:
             ret = pd.DataFrame(index=f["entry/entry"][()])
@@ -157,10 +158,13 @@ class HDF5View(DatasetView):
 
         return ret, units
 
-    def get_molecules(self, indexes: List['ObjectId']) -> List[Molecule]:
+    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> List[Molecule]:
         with self._read_file() as f:
             mol_schema = f['molecule/schema']
-            ret = [Molecule(**self._deserialize_data(mol_schema[i])) for i in indexes]
+            ret = [
+                Molecule(**self._deserialize_data(mol_schema[int(i) if isinstance(i, ObjectId) else i]))
+                for i in indexes
+            ]
         return ret
 
     def get_entries(self) -> pd.DataFrame:
@@ -234,7 +238,9 @@ class HDF5View(DatasetView):
             # Collection attributes
             for field in {"name", "collection", "provenance", "tagline", "tags", "id", "history_keys"}:
                 f.attrs[field] = self._serialize_field(getattr(ds.data, field))
-            f.attrs["server_information"] = self._serialize_field(ds.client.server_information())
+            if ds.client is not None:
+                f.attrs["server_information"] = self._serialize_field(ds.client.server_information())
+                f.attrs["server_address"] = self._serialize_field(ds.client.address)
 
             # Export molecules
             molecule_group = f.create_group("molecule")

@@ -437,16 +437,12 @@ def test_reactiondataset_check_state(fractal_compute_server):
 
     ds.save()
 
-    ds.get_records("SCF", "STO-3G")
-
     ds.add_keywords("default", "psi4", ptl.models.KeywordSet(values={"a": 5}))
 
     with pytest.raises(ValueError):
         ds.get_records("SCF", "STO-3G")
 
     ds.save()
-
-    ds.get_records("SCF", "STO-3G")
 
     contrib = {
         "name": "Benchmark",
@@ -527,17 +523,24 @@ def test_rectiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
     assert records.shape == (1, 1)
     assert records.iloc[0, 0].status == "COMPLETE"
 
-    records = ds.get_records("B3LYP", "6-31g", stoich=["cp", "default"])
-    assert records.shape == (2, 1)
+    records = ds.get_records("B3LYP", "6-31g", stoich="default")
+    assert records.shape == (1, 1)
     assert records.iloc[0, 0].status == "COMPLETE"
-    assert records.iloc[0, 0].id == records.iloc[1, 0].id
 
-    records = ds.get_records("B3LYP", "6-31g", stoich=["cp", "default"], subset="HeDimer")
-    assert records.shape == (2, 1)
+    records = ds.get_records("B3LYP", "6-31g", stoich="default", subset="HeDimer")
+    assert records.shape == (1, 1)
 
     # No molecules
     with pytest.raises(KeyError):
-        records = ds.get_records("B3LYP", "6-31g", stoich=["cp", "default"], subset="Gibberish")
+        records = ds.get_records("B3LYP", "6-31g", stoich="default", subset="Gibberish")
+
+    # Bad stoichiometry
+    with pytest.raises(KeyError):
+        ds.get_records("B3LYP", "6-31g", stoich="cp")
+
+    # Wrong method
+    with pytest.raises(KeyError):
+        ds.get_records("Fake Method", "6-31g", stoich="cp")
 
 
 def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):

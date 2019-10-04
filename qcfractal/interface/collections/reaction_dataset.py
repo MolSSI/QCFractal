@@ -11,6 +11,7 @@ import pandas as pd
 
 from qcelemental import constants
 
+from ..client import FractalClient
 from ..models import ComputeResponse, Molecule, ProtoModel
 from ..util import replace_dict_keys
 from .collection_utils import nCr, register_collection
@@ -47,7 +48,7 @@ class ReactionDataset(Dataset):
     rxn_index : pd.Index
         The unrolled reaction index for all reactions in the Dataset
     """
-    def __init__(self, name, client=None, ds_type="rxn", **kwargs):
+    def __init__(self, name, client: Optional[FractalClient] = None, ds_type="rxn", **kwargs):
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -416,7 +417,9 @@ class ReactionDataset(Dataset):
 
         ret = []
         for s in stoich:
-            name, dbkeys, history = self._default_parameters(program, method, basis, keywords, stoich=s)
+            name, _, history = self._default_parameters(program, method, basis, keywords, stoich=s)
+            if name not in set(self.list_records(stoichiometry=s).reset_index()["name"].unique()):
+                raise KeyError(f"Requested query ({name}) did not match a known record.")
             history.pop('stoichiometry')
             indexer, names = self._molecule_indexer(stoich=s, subset=subset, force=True)
             df = self._get_records(
