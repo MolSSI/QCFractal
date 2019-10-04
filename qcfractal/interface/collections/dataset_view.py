@@ -97,9 +97,9 @@ class HDF5View(DatasetView):
         self._entries: pd.DataFrame = None
 
     def list_values(self) -> pd.DataFrame:
-        df = pd.DataFrame()
         with self._read_file() as f:
             history_keys = self._deserialize_field(f.attrs['history_keys'])
+            df = pd.DataFrame(columns=history_keys + ["name", "native"])
             for dataset in f['value'].values():
                 row = {k: self._deserialize_field(dataset.attrs[k]) for k in history_keys}
                 row["name"] = self._deserialize_field(dataset.attrs["name"])
@@ -379,6 +379,8 @@ class HDF5View(DatasetView):
     # Methods for serializing into HDF5 data fields
     @staticmethod
     def _serialize_data(data: Any) -> np.ndarray:
+        # h5py v3 will support bytes,
+        # but for now the workaround is variable-length np unit8
         return np.fromstring(serialize(data, 'msgpack-ext'), dtype='uint8')
 
     @staticmethod

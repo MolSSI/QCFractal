@@ -742,10 +742,56 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     assert kw.values["scf_type"] == "df"
 
 
+def live_fractal_or_skip():
+    """Ensure Fractal live connection can be made"""
+    import requests
+    try:
+        requests.get('https://api.qcarchive.molssi.org:443', json={}, timeout=5)
+        return ptl.FractalClient()
+    except (requests.exceptions.ConnectionError, ConnectionRefusedError):
+        return pytest.skip("Could not make a connection to central Fractal server")
+
+
+@pytest.fixture(scope="module", params=[True, False], ids=["with view", "without view"])
+def qm3_fixture(request, tmp_path_factory):
+    # Connect to the QCArchive
+    client = live_fractal_or_skip()
+    ds = client.get_collection("Dataset", "QM3")
+    ds._disable_query_limit = True
+
+    # with view
+    if request.param:
+        view = ptl.collections.HDF5View(pathlib.Path(tmp_path_factory.mktemp('test_collections'), 'ds_qm3.hdf5'))
+        view.write(ds)
+        ds._view = view
+    else:
+        ds._view = None
+
+    yield client, ds
+
+
+@pytest.fixture(scope="module", params=[True, False], ids=["with view", "without view"])
+def s22_fixture(request, tmp_path_factory):
+    # Connect to the QCArchive
+    client = live_fractal_or_skip()
+    ds = client.get_collection("ReactionDataset", "S22")
+    ds._disable_query_limit = True
+
+    # with view
+    if request.param:
+        view = ptl.collections.HDF5View(pathlib.Path(tmp_path_factory.mktemp('test_collections'), 'ds_s22.hdf5'))
+        view.write(ds)
+        ds._view = view
+    else:
+        ds._view = None
+
+    yield client, ds
+
+
 def assert_list_get_values(ds):
     """ Tests that the output of list_values can be used as input to get_values"""
     columns = ds.list_values().reset_index()
-
+    all_specs_unique = len(columns.drop("name", axis=1).drop_duplicates()) == len(columns.drop("name", axis=1))
     for row in columns.to_dict("records"):
         spec = row.copy()
         name = spec.pop("name")
@@ -754,6 +800,8 @@ def assert_list_get_values(ds):
         from_name = ds.get_values(name=name)
         from_spec = ds.get_values(**spec)
         assert from_name.shape == (len(ds.get_index()), 1)
+        if not all_specs_unique:
+            continue
         assert from_spec.shape == (len(ds.get_index()), 1)
         assert from_name.columns[0] == from_spec.columns[0]
 
@@ -768,8 +816,20 @@ def test_contributed_dataset_list_get_values(contributed_dataset_fixture):
     assert_list_get_values(ds)
 
 
-def test_d3_dataset_list_get_values(gradient_dataset_fixture):
-    client, ds = gradient_dataset_fixture
+def test_d3_dataset_list_get_values(reactiondataset_dftd3_fixture_fixture):
+    client, ds = reactiondataset_dftd3_fixture_fixture
+    assert_list_get_values(ds)
+
+
+@pytest.mark.slow
+def test_qm3_list_get_values(qm3_fixture):
+    client, ds = qm3_fixture
+    assert_list_get_values(ds)
+
+
+@pytest.mark.slow
+def test_s22_list_get_values(s22_fixture):
+    client, ds = s22_fixture
     assert_list_get_values(ds)
 
 
@@ -788,6 +848,10 @@ def assert_view_identical(ds):
                         return False
                 elif isinstance(df1.iloc[i, j], Molecule):
                     if not df1.iloc[i, j].compare(df2.iloc[i, j]):
+                        return False
+                # Because nan != nan
+                elif df1.isna().iloc[i, j]:
+                    if not df2.isna().iloc[i, j]:
                         return False
                 else:
                     if not df1.iloc[i, j] == df2.iloc[i, j]:
@@ -842,8 +906,20 @@ def test_contributed_dataset_view_identical(contributed_dataset_fixture):
     assert_view_identical(ds)
 
 
-def test_d3_dataset_list_view_identical(gradient_dataset_fixture):
-    client, ds = gradient_dataset_fixture
+def test_d3_dataset_view_identical(reactiondataset_dftd3_fixture_fixture):
+    client, ds = reactiondataset_dftd3_fixture_fixture
+    assert_view_identical(ds)
+
+
+@pytest.mark.slow
+def test_qm3_view_identical(qm3_fixture):
+    client, ds = qm3_fixture
+    assert_view_identical(ds)
+
+
+@pytest.mark.slow
+def test_s22_view_identical(s22_fixture):
+    client, ds = s22_fixture
     assert_view_identical(ds)
 
 

@@ -74,6 +74,7 @@ class Dataset(Collection):
 
         self._view = None
         self._disable_view: bool = False  # for debugging and testing
+        self._disable_query_limit: bool = False  # for debugging and testing
 
         # Initialize internal data frames and load in contrib
         self.df = pd.DataFrame(index=self.get_index())
@@ -133,6 +134,21 @@ class Dataset(Collection):
         self._form_index()
 
     def get_entries(self, force: bool = False) -> pd.DataFrame:
+        """
+        Provides a list of entries for the dataset
+
+        Parameters
+        ----------
+        force: bool, optional
+            skip cache
+
+        Returns
+        -------
+        pd.DataFrame
+            A dataframe containing entry names and specifciations.
+            For Dataset, specifications are molecule ids.
+            For ReactionDataset, specifications describe reaction stoichiometry.
+        """
         if self._use_view(force):
             ret = self._view.get_entries()
         else:
@@ -518,7 +534,7 @@ class Dataset(Collection):
                               RuntimeWarning)
             queries = self.list_records(name=name, dftd3=True, pretty=False)
 
-        if queries.shape[0] > 10:
+        if queries.shape[0] > 10 and self._disable_query_limit is False:
             raise TypeError("More than 10 queries formed, please narrow the search.")
         return queries
 
@@ -1236,7 +1252,7 @@ class Dataset(Collection):
         if not merge and len(df) == 1:
             df = df[0]
 
-        if np.all(df.count() == 0):
+        if len(df) == 0:
             raise KeyError("Query matched no records!")
 
         if isinstance(subset, str):
