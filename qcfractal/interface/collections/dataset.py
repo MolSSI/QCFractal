@@ -9,12 +9,12 @@ import pandas as pd
 
 from qcelemental import constants
 
+from ..client import FractalClient
 from ..models import ComputeResponse, KeywordSet, Molecule, ObjectId, ProtoModel, ResultRecord
 from ..statistics import wrap_statistics
 from ..visualization import bar_plot, violin_plot
 from .collection import Collection
 from .collection_utils import composition_planner, register_collection
-from ..client import FractalClient
 
 
 class MoleculeEntry(ProtoModel):
@@ -47,7 +47,7 @@ class Dataset(Collection):
     df : pd.DataFrame
         The underlying dataframe for the Dataset object
     """
-    def __init__(self, name: str, client: Optional[FractalClient] = None, **kwargs: Dict[str, Any]):
+    def __init__(self, name: str, client: Optional[FractalClient] = None, **kwargs: Dict[str, Any]) -> None:
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -101,15 +101,15 @@ class Dataset(Collection):
         history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
         history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
 
-    def _form_index(self):
+    def _form_index(self) -> None:
         self._entry_index = pd.DataFrame([[entry.name, entry.molecule_id] for entry in self.data.records],
                                          columns=["name", "molecule_id"])
 
-    def _check_state(self):
+    def _check_state(self) -> None:
         if self._new_molecules or self._new_keywords or self._new_records or self._updated_state:
             raise ValueError("New molecules, keywords, or records detected, run save before submitting new tasks.")
 
-    def _canonical_pre_save(self, client):
+    def _canonical_pre_save(self, client: FractalClient) -> None:
 
         for k in list(self._new_keywords.keys()):
             ret = client.add_keywords([self._new_keywords[k]])
@@ -118,7 +118,7 @@ class Dataset(Collection):
             del self._new_keywords[k]
         self._updated_state = False
 
-    def _pre_save_prep(self, client):
+    def _pre_save_prep(self, client: FractalClient) -> None:
         self._canonical_pre_save(client)
 
         # Preps any new molecules introduced to the Dataset before storing data.
@@ -157,7 +157,7 @@ class Dataset(Collection):
         return ret.copy()
 
     def _molecule_indexer(self, subset: Optional[Union[str, Set[str]]] = None,
-                          force: bool = False) -> Dict[str, 'ObjectId']:
+                          force: bool = False) -> Dict[str, ObjectId]:
         """Provides a {index: molecule_id} mapping for a given subset.
 
         Parameters
@@ -205,7 +205,7 @@ class Dataset(Collection):
                     driver: Optional[str] = None,
                     name: Optional[str] = None,
                     native: Optional[bool] = None,
-                    force: bool = False):
+                    force: bool = False) -> pd.DataFrame:
         """
         Lists available data that may be queried with get_values.
         Results may be narrowed by providing search keys.
@@ -237,7 +237,7 @@ class Dataset(Collection):
         DataFrame
             A DataFrame of the matching data specifications
         """
-        spec = {
+        spec: Dict[str, Optional[Union[str, bool]]] = {
             "method": method,
             "basis": basis,
             "keywords": keywords,
@@ -279,7 +279,7 @@ class Dataset(Collection):
         return ret
 
     @staticmethod
-    def _filter_records(df: pd.DataFrame, **spec):
+    def _filter_records(df: pd.DataFrame, **spec) -> pd.DataFrame:
         """
         Helper for filtering records on a spec. Note that `None` is a wildcard while `"None"` matches `None` and NaN.
         """
@@ -431,7 +431,7 @@ class Dataset(Collection):
                                 native=native,
                                 force=force)
 
-    def _get_values(self, native: Optional[bool] = None, force: bool = False, **spec):
+    def _get_values(self, native: Optional[bool] = None, force: bool = False, **spec) -> pd.DataFrame:
         ret = []
 
         if native in {True, None}:
@@ -527,7 +527,7 @@ class Dataset(Collection):
                       keywords: Optional[str] = None,
                       program: Optional[str] = None,
                       stoich: Optional[str] = None,
-                      name: Optional[str] = None):
+                      name: Optional[str] = None) -> pd.DataFrame:
         if name is None:
             _, _, history = self._default_parameters(program, "nan", "nan", keywords, stoich=stoich)
             for k, v in [("method", method), ("basis", basis)]:
@@ -601,7 +601,7 @@ class Dataset(Collection):
                 ]
 
                 # Preserve order of first unique appearance
-                seen = set()
+                seen: Set[str] = set()
                 unique_d3types = [x for x in d3types if not (x in seen or seen.add(x))]
 
                 for d3type in unique_d3types:
@@ -829,7 +829,7 @@ class Dataset(Collection):
 
         molecule_ids = list(set(indexer.values()))
         if not self._use_view(force):
-            molecules = []
+            molecules: List[Molecule] = []
             for i in range(0, len(molecule_ids), self.client.query_limit):
                 molecules.extend(self.client.query_molecules(id=molecule_ids[i:i + self.client.query_limit]))
             # XXX: molecules = pd.DataFrame({"molecule_id": molecule_ids, "molecule": molecules}) fails
@@ -903,7 +903,7 @@ class Dataset(Collection):
                 query_set["projection"] = proj
 
             # Chunk up the queries
-            records = []
+            records: List[ResultRecord] = []
             for i in range(0, len(molecules), self.client.query_limit):
                 query_set["molecule"] = molecules[i:i + self.client.query_limit]
                 records.extend(self.client.query_results(**query_set))
@@ -944,7 +944,11 @@ class Dataset(Collection):
         else:
             return ret
 
-    def _compute(self, compute_keys, molecules, tag, priority):
+    def _compute(self,
+                 compute_keys: Dict[str, Union[str, None]],
+                 molecules: Union[List[str], pd.Series],
+                 tag: Optional[str] = None,
+                 priority: Optional[str] = None) -> ComputeResponse:
         """
         Internal compute function
         """
@@ -960,9 +964,9 @@ class Dataset(Collection):
 
         umols = list(set(molecules))
 
-        ids = []
-        submitted = []
-        existing = []
+        ids: List[Optional[ObjectId]] = []
+        submitted: List[ObjectId] = []
+        existing: List[ObjectId] = []
         for compute_set in composition_planner(**dbkeys):
 
             for i in range(0, len(umols), self.client.query_limit):
@@ -1093,7 +1097,7 @@ class Dataset(Collection):
         else:
             return self.client.query_keywords([kwid])[0]
 
-    def add_contributed_values(self, contrib: ContributedValues, overwrite=False) -> None:
+    def add_contributed_values(self, contrib: ContributedValues, overwrite: bool = False) -> None:
         """
         Adds a ContributedValues to the database. Be sure to call save() to commit changes to the server.
 
@@ -1273,7 +1277,7 @@ class Dataset(Collection):
         else:
             return df
 
-    def add_entry(self, name: str, molecule: Molecule, **kwargs: Dict[str, Any]):
+    def add_entry(self, name: str, molecule: Molecule, **kwargs: Dict[str, Any]) -> None:
         """Adds a new entry to the Dataset
 
         Parameters
@@ -1345,7 +1349,8 @@ class Dataset(Collection):
         return [x.name for x in self.data.records]
 
     # Statistical quantities
-    def statistics(self, stype: str, value: str, bench: Optional[str] = None, **kwargs: Dict[str, Any]):
+    def statistics(self, stype: str, value: str, bench: Optional[str] = None,
+                   **kwargs: Dict[str, Any]) -> Union[np.ndarray, pd.Series, np.float64]:
         """Provides statistics for various columns in the underlying dataframe.
 
         Parameters
@@ -1362,22 +1367,23 @@ class Dataset(Collection):
 
         Returns
         -------
-        ret : pd.DataFrame, pd.Series, float
-            Returns a DataFrame, Series, or float with the requested statistics depending on input.
+        np.ndarray, pd.Series, float
+            Returns an ndarray, Series, or float with the requested statistics depending on input.
         """
 
-        if (bench is None):
+        if bench is None:
             bench = self.data.default_benchmark
 
-        if (bench is None):
+        if bench is None:
             raise KeyError("No benchmark provided and default_benchmark is None!")
+
         return wrap_statistics(stype.upper(), self, value, bench, **kwargs)
 
-    def _use_view(self, force: bool = False):
+    def _use_view(self, force: bool = False) -> bool:
         """Helper function to decide whether to use a locally available HDF5 view"""
         return (force is False) and (self._view is not None) and (self._disable_view is False)
 
-    def _clear_cache(self):
+    def _clear_cache(self) -> None:
         self.df = pd.DataFrame(index=self.get_index())
 
     # Getters

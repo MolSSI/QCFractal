@@ -3,7 +3,7 @@ import distutils
 import pathlib
 import warnings
 from contextlib import contextmanager
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, Iterator, List, Tuple, Union
 
 # TODO(mattwelborn): Determine if h5py can/should be optionally imported
 import h5py
@@ -367,11 +367,11 @@ class HDF5View(DatasetView):
         return name.replace("/", ":")
 
     @contextmanager
-    def _read_file(self):
+    def _read_file(self) -> Iterator[h5py.File]:
         yield h5py.File(self._path, 'r')
 
     @contextmanager
-    def _write_file(self):
+    def _write_file(self) -> Iterator[h5py.File]:
         yield h5py.File(self._path, 'w')
 
     # Methods for serializing to strings for storage in HDF5 metadata fields ("attrs")
