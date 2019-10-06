@@ -10,7 +10,7 @@ import pandas as pd
 
 from qcelemental import constants
 
-from ..models import ComputeResponse, Molecule, ObjectId, ProtoModel
+from ..models import ComputeResponse, Molecule, ObjectId, ProtoModel, ResultRecord
 from ..util import replace_dict_keys
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
@@ -68,8 +68,6 @@ class ReactionDataset(Dataset):
         # Internal data
         self._entry_index = pd.DataFrame()
 
-        self._entry_index = None
-        self.valid_stoich = None
         self._form_index()
 
     class DataModel(Dataset.DataModel):
@@ -161,7 +159,7 @@ class ReactionDataset(Dataset):
             new_record = record.copy(update={"stoichiometry": stoichiometry})
             self.data.records.append(new_record)
 
-        self._new_records = []
+        self._new_records: List[ReactionEntry] = []
         self._new_molecules = {}
 
         self._form_index()
@@ -377,7 +375,7 @@ class ReactionDataset(Dataset):
                     program: Optional[str] = None,
                     stoich: Union[str, List[str]] = "default",
                     projection: Optional[Dict[str, bool]] = None,
-                    subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'ResultRecord']:
+                    subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, ResultRecord]:
         """
         Queries the local Portal for the requested keys and stoichiometry.
 
@@ -438,7 +436,7 @@ class ReactionDataset(Dataset):
         return ret
 
     def compute(self,
-                method: Optional[str],
+                method: str,
                 basis: Optional[str] = None,
                 *,
                 keywords: Optional[str] = None,
@@ -452,7 +450,7 @@ class ReactionDataset(Dataset):
 
         Parameters
         ----------
-        method : Optional[str]
+        method : str
             The computational method to compute (B3LYP)
         basis : Optional[str], optional
             The computational basis to compute (6-31G)
@@ -579,8 +577,6 @@ class ReactionDataset(Dataset):
 
         """
 
-        ret = {}
-
         mol_hashes = []
         mol_values = []
 
@@ -621,7 +617,7 @@ class ReactionDataset(Dataset):
             mol_hashes.append(molecule_hash)
 
         # Sum together the coefficients of duplicates
-        ret = {}
+        ret: Dict[str, float] = {}
         for mol, coef in zip(mol_hashes, mol_values):
             if mol in list(ret):
                 ret[mol] += coef
@@ -663,7 +659,7 @@ class ReactionDataset(Dataset):
             attributes = {}
         if other_fields is None:
             other_fields = {}
-        rxn_dict = {"name": name}
+        rxn_dict: Dict[str, Any] = {"name": name}
 
         # Set name
         if name in self.get_index():

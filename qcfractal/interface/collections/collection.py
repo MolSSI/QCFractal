@@ -478,7 +478,7 @@ class BaseProcedureDataset(Collection):
 
         return submitted
 
-    def query(self, specification: str, force: bool = False) -> None:
+    def query(self, specification: str, force: bool = False) -> str:
         """Queries a given specification from the server
 
         Parameters

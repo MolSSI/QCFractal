@@ -63,7 +63,7 @@ class OptimizationDataset(BaseProcedureDataset):
                           name: str,
                           optimization_spec: OptimizationSpecification,
                           qc_spec: QCSpecification,
-                          description: str = None,
+                          description: Optional[str] = None,
                           protocols: Optional[Dict[str, Any]] = None,
                           overwrite=False) -> None:
         """
@@ -96,8 +96,8 @@ class OptimizationDataset(BaseProcedureDataset):
     def add_entry(self,
                   name: str,
                   initial_molecule: Molecule,
-                  additional_keywords: Dict[str, Any] = None,
-                  attributes: Dict[str, Any] = None,
+                  additional_keywords: Optional[Dict[str, Any]] = None,
+                  attributes: Optional[Dict[str, Any]] = None,
                   save: bool = True) -> None:
         """
         Parameters
@@ -133,7 +133,7 @@ class OptimizationDataset(BaseProcedureDataset):
         self._add_entry(name, entry, save)
 
     def counts(self, entries: Optional[Union[str, List[str]]] = None,
-               specs: Optional[Union[str, List[str]]] = None) -> 'DataFrame':
+               specs: Optional[Union[str, List[str]]] = None) -> pd.DataFrame:
         """Counts the number of optimization or gradient evaluations associated with the
         Optimizations.
 

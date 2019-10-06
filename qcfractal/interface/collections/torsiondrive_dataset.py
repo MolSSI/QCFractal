@@ -51,8 +51,8 @@ class TorsionDriveDataset(BaseProcedureDataset):
                           name: str,
                           optimization_spec: OptimizationSpecification,
                           qc_spec: QCSpecification,
-                          description: str = None,
-                          overwrite=False) -> None:
+                          description: Optional[str] = None,
+                          overwrite: bool = False) -> None:
         """
         Parameters
         ----------
@@ -130,7 +130,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
     def counts(self,
                entries: Union[str, List[str]],
                specs: Optional[Union[str, List[str]]] = None,
-               count_gradients=False) -> 'DataFrame':
+               count_gradients: bool = False) -> pd.DataFrame:
         """Counts the number of optimization or gradient evaluations associated with the
         TorsionDrives.
 
@@ -299,7 +299,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
                specs: Union[str, List[str]] = None,
                collapse: bool = True,
                status: Optional[str] = None,
-               detail: bool = False) -> 'DataFrame':
+               detail: bool = False) -> pd.DataFrame:
         """Returns the status of all current specifications.
 
         Parameters
@@ -335,7 +335,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
         data = []
 
         for service in services:
-            row = {}
+            row: Dict[str, Union[str, int]] = {}
             row["Name"] = reverse_map[service["procedure_id"]]
             row["Status"] = service["status"]
 

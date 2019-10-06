@@ -70,7 +70,6 @@ class Dataset(Collection):
         self._new_keywords: Dict[Tuple[str, str], KeywordSet] = {}
         self._new_records: List[Dict[str, Any]] = []
         self._updated_state = False
-        self._entry_index = None
 
         self._view: Optional['DatasetView'] = None
         self._disable_view: bool = False  # for debugging and testing
@@ -178,7 +177,7 @@ class Dataset(Collection):
 
         return {row['name']: row['molecule_id'] for row in index.to_dict('records')}
 
-    def _add_history(self, **history: Dict[str, Optional[str]]) -> None:
+    def _add_history(self, **history: Optional[str]) -> None:
         """
         Adds compute history to the dataset
         """
@@ -278,7 +277,8 @@ class Dataset(Collection):
         return ret
 
     @staticmethod
-    def _filter_records(df: pd.DataFrame, **spec) -> pd.DataFrame:
+    def _filter_records(df: pd.DataFrame,
+                        **spec: Optional[Union[str, bool, List[Union[str, bool]], Tuple]]) -> pd.DataFrame:
         """
         Helper for filtering records on a spec. Note that `None` is a wildcard while `"None"` matches `None` and NaN.
         """
@@ -298,8 +298,7 @@ class Dataset(Collection):
                 raise TypeError(f"Search type {type(value)} not understood.")
         return ret
 
-    def list_records(self, dftd3: bool = False, pretty: bool = True,
-                     **search: Dict[str, Optional[str]]) -> pd.DataFrame:
+    def list_records(self, dftd3: bool = False, pretty: bool = True, **search: Optional[str]) -> pd.DataFrame:
         """
         Lists specifications of available records, i.e. method, program, basis set, keyword set, driver combinations
         `None` is a wildcard selector. To search for `None`, use `"None"`.
@@ -549,7 +548,7 @@ class Dataset(Collection):
     def _visualize(self,
                    metric,
                    bench,
-                   query: Dict[str, Optional[str]],
+                   query: Dict[str, Union[Optional[str], List[str]]],
                    groupby: Optional[str] = None,
                    return_figure=None,
                    digits=3,
@@ -805,7 +804,7 @@ class Dataset(Collection):
 
         return name, dbkeys, history
 
-    def _get_molecules(self, indexer: Dict[str, 'ObjectId'], force: bool = False) -> pd.DataFrame:
+    def _get_molecules(self, indexer: Dict[Any, ObjectId], force: bool = False) -> pd.DataFrame:
         """Queries a list of molecules using a molecule indexer
 
         Parameters
@@ -853,7 +852,7 @@ class Dataset(Collection):
         return df
 
     def _get_records(self,
-                     indexer: Dict[str, 'ObjectId'],
+                     indexer: Dict[Any, ObjectId],
                      query: Dict[str, Any],
                      projection: Optional[Dict[str, bool]] = None,
                      merge: bool = False,
@@ -863,7 +862,7 @@ class Dataset(Collection):
 
         Parameters
         ----------
-        indexer : Dict[str, 'ObjectId']
+        indexer : Dict[str, ObjectId]
             A key/value index of molecules to query
         query : Dict[str, Any]
             A results query
