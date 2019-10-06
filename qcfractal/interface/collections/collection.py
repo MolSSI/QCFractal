@@ -12,11 +12,10 @@ from typing import Any, Dict, List, Optional, Set, Union
 import pandas as pd
 
 from ..models import ObjectId, ProtoModel
-from ..client import FractalClient
 
 
 class Collection(abc.ABC):
-    def __init__(self, name: str, client: FractalClient = None, **kwargs: Dict[str, Any]):
+    def __init__(self, name: str, client: Optional['FractalClient'] = None, **kwargs: Dict[str, Any]):
         """
         Initializer for the Collection objects. If no Portal is supplied or the Collection name
         is not present on the server that the Portal is connected to a blank Collection will be

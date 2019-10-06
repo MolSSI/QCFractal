@@ -4,7 +4,6 @@ Models for the REST interface
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import Schema, constr, validator
-
 from qcelemental.util import get_base_docs
 
 from .common_models import KeywordSet, Molecule, ObjectId, ProtoModel
@@ -13,7 +12,7 @@ from .records import ResultRecord
 from .task_models import PriorityEnum, TaskRecord
 from .torsiondrive import TorsionDriveInput
 
-__all__ = ["ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryProjection"]
+__all__ = ["ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryProjection", "ResultResponse"]
 
 ### Utility functions
 
@@ -21,15 +20,15 @@ __rest_models = {}
 __custom_rest_models = {}  # get requests models, with resource and subresources
 
 
-def register_model(resource: str, rest: str, body: 'ProtoModel', response: 'ProtoModel') -> None:
+def register_model(resource: str, rest: str, body: ProtoModel, response: ProtoModel) -> None:
     _register_model(False, resource, rest, body, response)
 
 
-def register_custom_model(resource: str, rest: str, body: 'ProtoModel', response: 'ProtoModel') -> None:
+def register_custom_model(resource: str, rest: str, body: ProtoModel, response: ProtoModel) -> None:
     _register_model(True, resource, rest, body, response)
 
 
-def _register_model(is_custom_queries: bool, name: str, rest: str, body: 'ProtoModel', response: 'ProtoModel') -> None:
+def _register_model(is_custom_queries: bool, name: str, rest: str, body: ProtoModel, response: ProtoModel) -> None:
     """
     Register a REST model.
 
@@ -65,7 +64,7 @@ def _register_model(is_custom_queries: bool, name: str, rest: str, body: 'ProtoM
     models_dict[name][rest] = (body, response)
 
 
-def rest_model(resource: str, rest: str, subresource: str = None) -> Tuple['ProtoModel', 'ProtoModel']:
+def rest_model(resource: str, rest: str, subresource: str = None) -> Tuple[ProtoModel, ProtoModel]:
     """Aquires a REST Model
 
     Parameters
@@ -78,7 +77,7 @@ def rest_model(resource: str, rest: str, subresource: str = None) -> Tuple['Prot
         A subresource under the main resource
     Returns
     -------
-    Tuple['ProtoModel', 'ProtoModel']
+    Tuple[ProtoModel, ProtoModel]
         The (body, response) models of the REST request.
 
     """

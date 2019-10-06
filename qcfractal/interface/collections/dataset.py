@@ -9,7 +9,6 @@ import pandas as pd
 
 from qcelemental import constants
 
-from ..client import FractalClient
 from ..models import ComputeResponse, KeywordSet, Molecule, ObjectId, ProtoModel, ResultRecord
 from ..statistics import wrap_statistics
 from ..visualization import bar_plot, violin_plot
@@ -47,7 +46,7 @@ class Dataset(Collection):
     df : pd.DataFrame
         The underlying dataframe for the Dataset object
     """
-    def __init__(self, name: str, client: Optional[FractalClient] = None, **kwargs: Dict[str, Any]) -> None:
+    def __init__(self, name: str, client: Optional['FractalClient'] = None, **kwargs: Dict[str, Any]) -> None:
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -109,7 +108,7 @@ class Dataset(Collection):
         if self._new_molecules or self._new_keywords or self._new_records or self._updated_state:
             raise ValueError("New molecules, keywords, or records detected, run save before submitting new tasks.")
 
-    def _canonical_pre_save(self, client: FractalClient) -> None:
+    def _canonical_pre_save(self, client: 'FractalClient') -> None:
 
         for k in list(self._new_keywords.keys()):
             ret = client.add_keywords([self._new_keywords[k]])
@@ -118,7 +117,7 @@ class Dataset(Collection):
             del self._new_keywords[k]
         self._updated_state = False
 
-    def _pre_save_prep(self, client: FractalClient) -> None:
+    def _pre_save_prep(self, client: 'FractalClient') -> None:
         self._canonical_pre_save(client)
 
         # Preps any new molecules introduced to the Dataset before storing data.

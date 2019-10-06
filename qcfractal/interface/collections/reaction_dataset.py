@@ -10,7 +10,6 @@ import pandas as pd
 
 from qcelemental import constants
 
-from ..client import FractalClient
 from ..models import ComputeResponse, Molecule, ObjectId, ProtoModel
 from ..util import replace_dict_keys
 from .collection_utils import nCr, register_collection
@@ -47,7 +46,7 @@ class ReactionDataset(Dataset):
     rxn_index : pd.Index
         The unrolled reaction index for all reactions in the Dataset
     """
-    def __init__(self, name: str, client: Optional[FractalClient] = None, ds_type: str = "rxn", **kwargs) -> None:
+    def __init__(self, name: str, client: Optional['FractalClient'] = None, ds_type: str = "rxn", **kwargs) -> None:
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -151,7 +150,7 @@ class ReactionDataset(Dataset):
             if s.lower() not in self.valid_stoich:
                 raise KeyError("Stoichiometry not understood, valid keys are {}.".format(self.valid_stoich))
 
-    def _pre_save_prep(self, client: FractalClient) -> None:
+    def _pre_save_prep(self, client: 'FractalClient') -> None:
         self._canonical_pre_save(client)
 
         mol_ret = self._add_molecules_by_dict(client, self._new_molecules)
