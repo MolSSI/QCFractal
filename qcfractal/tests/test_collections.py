@@ -8,9 +8,8 @@ import numpy as np
 import pytest
 
 import qcelemental as qcel
-from qcelemental.models import Molecule
-
 import qcfractal.interface as ptl
+from qcelemental.models import Molecule
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
 
@@ -762,6 +761,12 @@ def qm3_fixture(request, tmp_path_factory):
     ds = client.get_collection("Dataset", "QM3")
     ds._disable_query_limit = True
 
+    # Trim down dataset for faster test
+    to_remove = {row for row in ds.data.history if row[2].lower() != 'b3lyp'}
+    for row in to_remove:
+        ds.data.history.remove(row)
+    ds._form_index()
+
     # with view
     if request.param:
         view = ptl.collections.HDF5View(pathlib.Path(tmp_path_factory.mktemp('test_collections'), 'ds_qm3.hdf5'))
@@ -779,6 +784,12 @@ def s22_fixture(request, tmp_path_factory):
     client = live_fractal_or_skip()
     ds = client.get_collection("ReactionDataset", "S22")
     ds._disable_query_limit = True
+
+    # Trim down dataset for faster test
+    to_remove = {row for row in ds.data.history if row[2].lower() != 'b3lyp'}
+    for row in to_remove:
+        ds.data.history.remove(row)
+    ds._form_index()
 
     # with view
     if request.param:
