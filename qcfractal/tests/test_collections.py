@@ -11,7 +11,7 @@ import qcelemental as qcel
 import qcfractal.interface as ptl
 from qcelemental.models import Molecule
 from qcfractal import testing
-from qcfractal.testing import fractal_compute_server
+from qcfractal.testing import fractal_compute_server, live_fractal_or_skip
 
 
 def test_collection_query(fractal_compute_server):
@@ -31,15 +31,15 @@ def test_collection_query(fractal_compute_server):
 
 
 @contextmanager
-def monitor_requests(client, request, request_made=True, kind="get"):
+def check_requests_monitor(client, request, request_made=True, kind="get"):
     before = client._request_counter[(request, kind)]
     yield
     after = client._request_counter[(request, kind)]
 
     if request_made:
-        assert after > before
+        assert after > before, f"Requests were were expected, but none were made. Request type: {request} ({kind})"
     else:
-        assert after == before
+        assert after == before, f"Requests were made when none were expected. Request type: {request} ({kind})"
 
 
 @pytest.fixture(scope="module", params=[True, False], ids=["with view", "without view"])
@@ -130,7 +130,7 @@ def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
 
     he1_dist = 2.672476322216822
     he2_dist = 2.939723950195864
-    with monitor_requests(client, "molecule", request_made=request_made):
+    with check_requests_monitor(client, "molecule", request_made=request_made):
         mols = ds.get_molecules()
     assert mols.shape == (2, 1)
     assert mols.iloc[0, 0].measure([0, 1]) == pytest.approx(he1_dist)
@@ -152,28 +152,28 @@ def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
 def test_gradient_dataset_get_records(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
-    with monitor_requests(client, "result", request_made=True):
+    with check_requests_monitor(client, "result", request_made=True):
         records = ds.get_records("HF", "sto-3g")
     assert records.shape == (2, 1)
     assert records.iloc[0, 0].status == "COMPLETE"
     assert records.iloc[1, 0].status == "COMPLETE"
 
-    with monitor_requests(client, "result", request_made=True):
+    with check_requests_monitor(client, "result", request_made=True):
         records_subset1 = ds.get_records("HF", "sto-3g", subset="He2")
     assert records_subset1.status == "COMPLETE"
 
-    with monitor_requests(client, "result", request_made=True):
+    with check_requests_monitor(client, "result", request_made=True):
         records_subset2 = ds.get_records("HF", "sto-3g", subset=["He2"])
     assert records_subset2.shape == (1, 1)
     assert records_subset2.iloc[0, 0].status == "COMPLETE"
 
-    with monitor_requests(client, "result", request_made=True):
+    with check_requests_monitor(client, "result", request_made=True):
         rec_proj = ds.get_records("HF", "sto-3g", projection={"extras": True, "return_result": True})
     assert rec_proj.shape == (2, 2)
     assert set(rec_proj.columns) == {"extras", "return_result"}
 
     with pytest.raises(KeyError):
-        with monitor_requests(client, "result", request_made=False):
+        with check_requests_monitor(client, "result", request_made=False):
             ds.get_records(method="NotInDataset")
 
 
@@ -183,7 +183,7 @@ def test_gradient_dataset_get_values(gradient_dataset_fixture):
     request_made = not ds._use_view(False)
     ds._clear_cache()
 
-    with monitor_requests(client, "result", request_made=request_made):
+    with check_requests_monitor(client, "result", request_made=request_made):
         cols = set(ds.get_values().columns)
     names = set(ds.list_values().reset_index()['name'])
     assert cols == names
@@ -554,7 +554,7 @@ def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
         "B3LYP-D3(BJ)/6-31g": pytest.approx(-0.005636, 1.e-3)
     }
 
-    with monitor_requests(client, "result", request_made=request_made):
+    with check_requests_monitor(client, "result", request_made=request_made):
         ret = ds.get_values("B3LYP", "6-31G")
     assert ret.loc["HeDimer", "B3LYP/6-31g"] == bench["B3LYP/6-31g"]
 
@@ -575,7 +575,7 @@ def test_rectiondataset_dftd3_molecules(reactiondataset_dftd3_fixture_fixture):
     request_made = not ds._use_view(False)
     ds._clear_cache()
 
-    with monitor_requests(client, "molecule", request_made=request_made):
+    with check_requests_monitor(client, "molecule", request_made=request_made):
         mols = ds.get_molecules()
     assert mols.shape == (1, 1)
     assert np.all(mols.iloc[0, 0].real)  # Should be all real
@@ -742,16 +742,6 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     # Check keywords
     kw = ds.get_keywords("df", "psi4")
     assert kw.values["scf_type"] == "df"
-
-
-def live_fractal_or_skip():
-    """Ensure Fractal live connection can be made"""
-    import requests
-    try:
-        requests.get('https://api.qcarchive.molssi.org:443', json={}, timeout=5)
-        return ptl.FractalClient()
-    except (requests.exceptions.ConnectionError, ConnectionRefusedError):
-        return pytest.skip("Could not make a connection to central Fractal server")
 
 
 @pytest.fixture(scope="module", params=[True, False], ids=["with view", "without view"])

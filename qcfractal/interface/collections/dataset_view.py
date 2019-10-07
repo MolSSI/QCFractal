@@ -5,6 +5,7 @@ import warnings
 from contextlib import contextmanager
 from typing import Any, Dict, List, Tuple, Union
 
+# TODO(mattwelborn): Determine if h5py can/should be optionally imported
 import h5py
 import numpy as np
 import pandas as pd
