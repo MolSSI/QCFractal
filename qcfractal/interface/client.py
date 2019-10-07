@@ -12,17 +12,17 @@ import requests
 from pydantic import ValidationError
 
 from .collections import collection_factory, collections_name_map
-from .models import (GridOptimizationInput, KeywordSet, Molecule, ObjectId, ResultRecord, TorsionDriveInput,
-                     build_procedure)
+from .models import build_procedure
+from .models.rest_models import rest_model
 
 if TYPE_CHECKING:
     from qcfractal import FractalServer
 
     from .collections.collection import Collection
-    from .models import TaskRecord
+    from .models import GridOptimizationInput, KeywordSet, Molecule, ObjectId, ResultRecord, TaskRecord, TorsionDriveInput
     from .models.rest_models import (CollectionGETResponse, ComputeResponse, KeywordGETResponse, MoleculeGETResponse,
                                      ProcedureGETResponse, QueryObjectId, QueryProjection, QueryStr, ResultGETResponse,
-                                     ServiceQueueGETResponse, TaskQueueGETResponse, rest_model)
+                                     ServiceQueueGETResponse, TaskQueueGETResponse)
 
 ### Common docs
 
@@ -347,7 +347,7 @@ class FractalClient(object):
                         molecular_formula: Optional['QueryStr'] = None,
                         limit: Optional[int] = None,
                         skip: int = 0,
-                        full_return: bool = False) -> Union['MoleculeGETResponse', List[Molecule]]:
+                        full_return: bool = False) -> Union['MoleculeGETResponse', List['Molecule']]:
         """Queries molecules from the database.
 
         Parameters
@@ -385,7 +385,7 @@ class FractalClient(object):
         response = self._automodel_request("molecule", "get", payload, full_return=full_return)
         return response
 
-    def add_molecules(self, mol_list: List[Molecule], full_return: bool = False) -> List[str]:
+    def add_molecules(self, mol_list: List['Molecule'], full_return: bool = False) -> List[str]:
         """Adds molecules to the Server.
 
         Parameters
@@ -412,7 +412,7 @@ class FractalClient(object):
                        hash_index: Optional['QueryStr'] = None,
                        limit: Optional[int] = None,
                        skip: int = 0,
-                       full_return: bool = False) -> Union['KeywordGETResponse', List[KeywordSet]]:
+                       full_return: bool = False) -> Union['KeywordGETResponse', List['KeywordSet']]:
         """Obtains KeywordSets from the server using keyword ids.
 
         Parameters
@@ -533,7 +533,7 @@ class FractalClient(object):
             raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
 
     def add_collection(self, collection: Dict[str, Any], overwrite: bool = False,
-                       full_return: bool = False) -> Union['CollectionGETResponse', List[ObjectId]]:
+                       full_return: bool = False) -> Union['CollectionGETResponse', List['ObjectId']]:
         """Adds a new Collection to the server.
 
         Parameters
@@ -575,7 +575,7 @@ class FractalClient(object):
                       limit: Optional[int] = None,
                       skip: int = 0,
                       projection: Optional['QueryProjection'] = None,
-                      full_return: bool = False) -> Union['ResultGETResponse', List[ResultRecord], Dict[str, Any]]:
+                      full_return: bool = False) -> Union['ResultGETResponse', List['ResultRecord'], Dict[str, Any]]:
         """Queries ResultRecords from the server.
 
         Parameters
@@ -719,8 +719,8 @@ class FractalClient(object):
                     method: str,
                     basis: str,
                     driver: str,
-                    keywords: Union[ObjectId, None],
-                    molecule: Union[ObjectId, Molecule, List[Union[str, Molecule]]],
+                    keywords: Union['ObjectId', None],
+                    molecule: Union['ObjectId', 'Molecule', List[Union[str, 'Molecule']]],
                     priority: Optional[str] = None,
                     tag: Optional[str] = None,
                     full_return: bool = False) -> 'ComputeResponse':
@@ -784,7 +784,7 @@ class FractalClient(object):
                       procedure: str,
                       program: str,
                       program_options: Dict[str, Any],
-                      molecule: Union[ObjectId, Molecule, List[Union[str, Molecule]]],
+                      molecule: Union['ObjectId', 'Molecule', List[Union[str, 'Molecule']]],
                       priority: Optional[str] = None,
                       tag: Optional[str] = None,
                       full_return: bool = False) -> 'ComputeResponse':
@@ -957,7 +957,7 @@ class FractalClient(object):
 
     def add_service(
             self,  # lgtm [py/similar-function]
-            service: Union[GridOptimizationInput, TorsionDriveInput],
+            service: Union['GridOptimizationInput', 'TorsionDriveInput'],
             tag: Optional[str] = None,
             priority: Optional[str] = None,
             full_return: bool = False) -> 'ComputeResponse':
