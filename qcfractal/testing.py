@@ -15,10 +15,12 @@ from collections import Mapping
 from contextlib import contextmanager
 
 import pytest
+import requests
 from tornado.ioloop import IOLoop
 
 import qcengine as qcng
 
+from .interface import FractalClient
 from .postgres_harness import PostgresHarness, TemporaryPostgres
 from .queue import build_queue_adapter
 from .server import FractalServer
@@ -528,3 +530,13 @@ def socket_fixture(request):
 def sqlalchemy_socket_fixture(request, postgres_server):
 
     yield from build_socket_fixture("sqlalchemy", postgres_server)
+
+
+def live_fractal_or_skip():
+    """Ensure Fractal live connection can be made"""
+    try:
+        import qcfractal.interface
+        requests.get('https://api.qcarchive.molssi.org:443', json={}, timeout=5)
+        return FractalClient()
+    except (requests.exceptions.ConnectionError, ConnectionRefusedError):
+        return pytest.skip("Could not make a connection to central Fractal server")
