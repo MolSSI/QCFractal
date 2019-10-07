@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 import yaml
+
 from pydantic import Schema, validator
 
 from .interface.models import AutodocBaseSettings
@@ -100,7 +101,7 @@ class FractalServerSettings(ConfigSettings):
                                       description="The frequency (in seconds) to check the heartbeat of workers.")
     log_apis: bool = Schema(False,
                             description="True or False. Store API access in the Database. This is an advanced "
-                            "option for servers accessed by extranl users through QCPortal.")
+                            "option for servers accessed by external users through QCPortal.")
     geo_file_path: Optional[str] = Schema(
         None,
         description=

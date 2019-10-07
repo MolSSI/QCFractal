@@ -12,10 +12,11 @@ from typing import Any, Dict, List, Optional, Set, Union
 import pandas as pd
 
 from ..models import ObjectId, ProtoModel
+from ..client import FractalClient
 
 
 class Collection(abc.ABC):
-    def __init__(self, name: str, client: 'FractalClient' = None, **kwargs: Dict[str, Any]):
+    def __init__(self, name: str, client: FractalClient = None, **kwargs: Dict[str, Any]):
         """
         Initializer for the Collection objects. If no Portal is supplied or the Collection name
         is not present on the server that the Portal is connected to a blank Collection will be
@@ -95,7 +96,6 @@ class Collection(abc.ABC):
     def _check_client(self):
         if self.client is None:
             raise AttributeError("This method requires a FractalClient and no client was set")
-
 
     @property
     def name(self) -> str:
@@ -215,7 +215,6 @@ class Collection(abc.ABC):
         class_name = self.__class__.__name__.lower()
         if self.data.name == "":
             raise AttributeError("Collection:save: {} must have a name!".format(class_name))
-
 
         if client is None:
             self._check_client()

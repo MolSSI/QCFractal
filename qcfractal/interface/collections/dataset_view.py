@@ -1,15 +1,20 @@
 import abc
 import distutils
-import json
+import pathlib
 import warnings
 from contextlib import contextmanager
+from typing import Any, Dict, List, Tuple, Union
 
-from .dataset import Dataset
-import pathlib
-from typing import Union, List, Tuple
+# TODO(mattwelborn): Determine if h5py can/should be optionally imported
+import h5py
 import numpy as np
 import pandas as pd
-import h5py
+
+from qcelemental.util.serialization import deserialize, serialize
+
+from ..models import Molecule, ObjectId
+from .dataset import Dataset, MoleculeEntry
+from .reaction_dataset import ReactionEntry
 
 
 class DatasetView(abc.ABC):
@@ -48,7 +53,7 @@ class DatasetView(abc.ABC):
             A Dataframe with specification of available columns.
         """
     @abc.abstractmethod
-    def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, List[str]]:
+    def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
         """
         Get value columns.
 
@@ -61,16 +66,42 @@ class DatasetView(abc.ABC):
         -------
             A Dataframe whose columns correspond to each query and a list of units for each column.
         """
+    @abc.abstractmethod
+    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> List[Molecule]:
+        """
+        Get a list of molecules using a molecule indexer
+
+        Parameters
+        ----------
+        indexes : List['ObjectId']
+            A list of molecule ids to return
+
+        Returns
+        -------
+        List['Molecule']
+            A list of Molecules corresponding to indexes
+        """
+    @abc.abstractmethod
+    def get_entries(self) -> pd.DataFrame:
+        """
+        Get a list of entries in the dataset
+
+        Returns
+        -------
+        pd.DataFrame
+            A dataframe of entries
+        """
 
 
 class HDF5View(DatasetView):
     def __init__(self, path: Union[str, pathlib.Path]):
         super().__init__(path)
+        self._entries: pd.DataFrame = None
 
     def list_values(self) -> pd.DataFrame:
-        df = pd.DataFrame()
         with self._read_file() as f:
             history_keys = self._deserialize_field(f.attrs['history_keys'])
+            df = pd.DataFrame(columns=history_keys + ["name", "native"])
             for dataset in f['value'].values():
                 row = {k: self._deserialize_field(dataset.attrs[k]) for k in history_keys}
                 row["name"] = self._deserialize_field(dataset.attrs["name"])
@@ -93,10 +124,10 @@ class HDF5View(DatasetView):
         # for some reason, pandas makes native a float column
         return df.astype({"native": bool})
 
-    def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, List[str]]:
+    def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
         units = {}
         with self._read_file() as f:
-            ret = pd.DataFrame(index=f["entry"][:])
+            ret = pd.DataFrame(index=f["entry/entry"][()])
 
             for query in queries:
                 dataset_name = "value/" if query["native"] else "contributed_value/"
@@ -128,6 +159,29 @@ class HDF5View(DatasetView):
 
         return ret, units
 
+    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> List[Molecule]:
+        with self._read_file() as f:
+            mol_schema = f['molecule/schema']
+            ret = [
+                Molecule(**self._deserialize_data(mol_schema[int(i) if isinstance(i, ObjectId) else i]),
+                         validate=False) for i in indexes
+            ]
+        return ret
+
+    def get_entries(self) -> pd.DataFrame:
+        if self._entries is None:
+            with self._read_file() as f:
+                entry_group = f["entry"]
+                if entry_group.attrs["model"] == "MoleculeEntry":
+                    fields = ("name", "molecule_id")
+                elif entry_group.attrs["model"] == "ReactionEntry":
+                    fields = ("name", "stoichiometry", "molecule", "coefficient")
+                else:
+                    raise ValueError(f"Unknown entry class ({entry_group.attrs['model']}) while "
+                                     f"reading HDF5 entries.")
+                self._entries = pd.DataFrame({field: entry_group[field][()] for field in fields})
+        return self._entries
+
     def write(self, ds: Dataset):
         # For data checksums
         dataset_kwargs = {"chunks": True, "fletcher32": True}
@@ -138,10 +192,12 @@ class HDF5View(DatasetView):
         if h5py.__version__ >= distutils.version.StrictVersion("2.10.0"):
             vlen_double_t = h5py.vlen_dtype(np.dtype("float64"))
             utf8_t = h5py.string_dtype(encoding="utf-8")
+            bytes_t = h5py.vlen_dtype(np.dtype("uint8"))
             vlen_utf8_t = h5py.vlen_dtype(utf8_t)
         else:
             vlen_double_t = h5py.special_dtype(vlen=np.dtype("float64"))
             utf8_t = h5py.special_dtype(vlen=str)
+            bytes_t = h5py.special_dtype(vlen=np.dtype("uint8"))
             vlen_utf8_t = h5py.special_dtype(vlen=utf8_t)
 
         driver_dataspec = {
@@ -183,11 +239,77 @@ class HDF5View(DatasetView):
             # Collection attributes
             for field in {"name", "collection", "provenance", "tagline", "tags", "id", "history_keys"}:
                 f.attrs[field] = self._serialize_field(getattr(ds.data, field))
-            f.attrs["server_information"] = self._serialize_field(ds.client.server_information())
+            if ds.client is not None:
+                f.attrs["server_information"] = self._serialize_field(ds.client.server_information())
+                f.attrs["server_address"] = self._serialize_field(ds.client.address)
+
+            # Export molecules
+            molecule_group = f.create_group("molecule")
+
+            if "stoichiometry" in ds.data.history_keys:
+                molecules = ds.get_molecules(stoich=list(ds.valid_stoich), force=True)
+            else:
+                molecules = ds.get_molecules(force=True)
+            mol_shape = (len(molecules), )
+            mol_geometry = molecule_group.create_dataset("geometry",
+                                                         shape=mol_shape,
+                                                         dtype=vlen_double_t,
+                                                         **dataset_kwargs)
+            mol_symbols = molecule_group.create_dataset("symbols",
+                                                        shape=mol_shape,
+                                                        dtype=vlen_utf8_t,
+                                                        **dataset_kwargs)
+            mol_schema = molecule_group.create_dataset("schema", shape=mol_shape, dtype=bytes_t, **dataset_kwargs)
+            mol_charge = molecule_group.create_dataset("charge",
+                                                       shape=mol_shape,
+                                                       dtype=np.dtype('float64'),
+                                                       **dataset_kwargs)
+            mol_spin = molecule_group.create_dataset("multiplicity",
+                                                     shape=mol_shape,
+                                                     dtype=np.dtype('int32'),
+                                                     **dataset_kwargs)
+            mol_id_server_view = {}
+            for i, mol_row in enumerate(molecules.to_dict("records")):
+                molecule = mol_row["molecule"]
+                mol_geometry[i] = molecule.geometry.ravel()
+                mol_schema[i] = self._serialize_data(molecule)
+                mol_symbols[i] = molecule.symbols
+                mol_charge[i] = molecule.molecular_charge
+                mol_spin[i] = molecule.molecular_multiplicity
+                mol_id_server_view[molecule.id] = i
 
             # Export entries
-            entry_dset = f.create_dataset("entry", shape=default_shape, dtype=utf8_t, **dataset_kwargs)
+            entry_group = f.create_group("entry")
+            entry_dset = entry_group.create_dataset("entry", shape=default_shape, dtype=utf8_t, **dataset_kwargs)
             entry_dset[:] = ds.get_index()
+
+            entries = ds.get_entries(force=True)
+            if isinstance(ds.data.records[0], MoleculeEntry):
+                entry_group.attrs["model"] = "MoleculeEntry"
+                entries["hdf5_molecule_id"] = entries["molecule_id"].map(mol_id_server_view)
+                entry_group.create_dataset("name", data=entries["name"], dtype=utf8_t, **dataset_kwargs)
+                entry_group.create_dataset("molecule_id",
+                                           data=entries["hdf5_molecule_id"],
+                                           dtype=np.dtype("int64"),
+                                           **dataset_kwargs)
+            elif isinstance(ds.data.records[0], ReactionEntry):
+                entry_group.attrs["model"] = "ReactionEntry"
+                entries["hdf5_molecule_id"] = entries["molecule"].map(mol_id_server_view)
+                entry_group.create_dataset("name", data=entries["name"], dtype=utf8_t, **dataset_kwargs)
+                entry_group.create_dataset("stoichiometry",
+                                           data=entries["stoichiometry"],
+                                           dtype=utf8_t,
+                                           **dataset_kwargs)
+                entry_group.create_dataset("molecule",
+                                           data=entries["hdf5_molecule_id"],
+                                           dtype=np.dtype("int64"),
+                                           **dataset_kwargs)
+                entry_group.create_dataset("coefficient",
+                                           data=entries["coefficient"],
+                                           dtype=np.dtype("float64"),
+                                           **dataset_kwargs)
+            else:
+                raise ValueError(f"Unknown entry class ({type(ds.data.records[0])}) while writing HDF5 entries.")
 
             # Export native data columns
             value_group = f.create_group("value")
@@ -234,6 +356,9 @@ class HDF5View(DatasetView):
 
                 _write_dataset(dataset, cv_df, entry_dset)
 
+        # Clean up any caches
+        self._entries = None
+
     @staticmethod
     def _normalize_hdf5_name(name: str) -> str:
         """ Handles names with / in them, which is disallowed in HDF5 """
@@ -249,11 +374,22 @@ class HDF5View(DatasetView):
     def _write_file(self):
         yield h5py.File(self._path, 'w')
 
-    # Methods for turning objects into strings for storage in HDF5 metadata fields ("attrs")
+    # Methods for serializing to strings for storage in HDF5 metadata fields ("attrs")
     @staticmethod
-    def _serialize_field(field):
-        return json.dumps(field)
+    def _serialize_field(field: Any) -> str:
+        return serialize(field, 'json')
 
     @staticmethod
-    def _deserialize_field(field):
-        return json.loads(field)
+    def _deserialize_field(field: str) -> Any:
+        return deserialize(field, 'json')
+
+    # Methods for serializing into HDF5 data fields
+    @staticmethod
+    def _serialize_data(data: Any) -> np.ndarray:
+        # h5py v3 will support bytes,
+        # but for now the workaround is variable-length np unit8
+        return np.fromstring(serialize(data, 'msgpack-ext'), dtype='uint8')
+
+    @staticmethod
+    def _deserialize_data(data: np.ndarray) -> Any:
+        return deserialize(data.tobytes(), 'msgpack-ext')

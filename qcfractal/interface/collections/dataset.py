@@ -14,6 +14,7 @@ from ..statistics import wrap_statistics
 from ..visualization import bar_plot, violin_plot
 from .collection import Collection
 from .collection_utils import composition_planner, register_collection
+from ..client import FractalClient
 
 
 class MoleculeEntry(ProtoModel):
@@ -46,7 +47,7 @@ class Dataset(Collection):
     df : pd.DataFrame
         The underlying dataframe for the Dataset object
     """
-    def __init__(self, name: str, client: Optional['FractalClient'] = None, **kwargs: Dict[str, Any]):
+    def __init__(self, name: str, client: Optional[FractalClient] = None, **kwargs: Dict[str, Any]):
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -70,12 +71,16 @@ class Dataset(Collection):
         self._new_keywords = {}
         self._new_records = []
         self._updated_state = False
+        self._entry_index = None
 
         self._view = None
+        self._disable_view: bool = False  # for debugging and testing
+        self._disable_query_limit: bool = False  # for debugging and testing
 
         # Initialize internal data frames and load in contrib
         self.df = pd.DataFrame(index=self.get_index())
         self._column_metadata = {}
+        self._form_index()
 
     class DataModel(Collection.DataModel):
 
@@ -95,6 +100,10 @@ class Dataset(Collection):
         # History: driver, program, method (basis, keywords)
         history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
         history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
+
+    def _form_index(self):
+        self._entry_index = pd.DataFrame([[entry.name, entry.molecule_id] for entry in self.data.records],
+                                         columns=["name", "molecule_id"])
 
     def _check_state(self):
         if self._new_molecules or self._new_keywords or self._new_records or self._updated_state:
@@ -123,8 +132,32 @@ class Dataset(Collection):
 
         self._new_records = []
         self._new_molecules = {}
+        self._form_index()
 
-    def _molecule_indexer(self, subset: Optional[Union[str, Set[str]]] = None) -> Dict[str, 'ObjectId']:
+    def get_entries(self, force: bool = False) -> pd.DataFrame:
+        """
+        Provides a list of entries for the dataset
+
+        Parameters
+        ----------
+        force: bool, optional
+            skip cache
+
+        Returns
+        -------
+        pd.DataFrame
+            A dataframe containing entry names and specifciations.
+            For Dataset, specifications are molecule ids.
+            For ReactionDataset, specifications describe reaction stoichiometry.
+        """
+        if self._use_view(force):
+            ret = self._view.get_entries()
+        else:
+            ret = self._entry_index
+        return ret.copy()
+
+    def _molecule_indexer(self, subset: Optional[Union[str, Set[str]]] = None,
+                          force: bool = False) -> Dict[str, 'ObjectId']:
         """Provides a {index: molecule_id} mapping for a given subset.
 
         Parameters
@@ -137,15 +170,14 @@ class Dataset(Collection):
         Dict[str, 'ObjectId']
             Molecule index to molecule ObjectId map
         """
+        index = self.get_entries(force)
         if subset:
             if isinstance(subset, str):
                 subset = {subset}
 
-            indexer = {e.name: e.molecule_id for e in self.data.records if e.name in subset}
-        else:
-            indexer = {e.name: e.molecule_id for e in self.data.records}
+            index = index[index.name.isin(subset)]
 
-        return indexer
+        return {row['name']: row['molecule_id'] for row in index.to_dict('records')}
 
     def _add_history(self, **history: Dict[str, Optional[str]]) -> None:
         """
@@ -234,8 +266,16 @@ class Dataset(Collection):
         # Filter
         ret.fillna("None", inplace=True)
         ret = self._filter_records(ret, **spec)
-        ret.set_index(["native"] + list(self.data.history_keys[:-1]), inplace=True)
+
+        # Sort
+        sort_index = ["native"] + list(self.data.history_keys[:-1])
+        if "stoichiometry" in ret.columns:
+            sort_index += ["stoichiometry"]
+        ret.set_index(sort_index, inplace=True)
         ret.sort_index(inplace=True)
+        ret.reset_index(inplace=True)
+        ret.set_index(["native"] + list(self.data.history_keys[:-1]), inplace=True)
+
         return ret
 
     @staticmethod
@@ -503,7 +543,7 @@ class Dataset(Collection):
                               RuntimeWarning)
             queries = self.list_records(name=name, dftd3=True, pretty=False)
 
-        if queries.shape[0] > 10:
+        if queries.shape[0] > 10 and self._disable_query_limit is False:
             raise TypeError("More than 10 queries formed, please narrow the search.")
         return queries
 
@@ -727,7 +767,7 @@ class Dataset(Collection):
                             method: str,
                             basis: Optional[str],
                             keywords: Optional[str],
-                            stoich: Optional[str] = None) -> Tuple[str, str, str, str]:
+                            stoich: Optional[str] = None) -> Tuple[str, str, str]:
         """
         Takes raw input parsed parameters and applies defaults to them.
         """
@@ -765,18 +805,20 @@ class Dataset(Collection):
 
         return name, dbkeys, history
 
-    def _get_molecules(self, indexer: Dict[str, 'ObjectId']) -> 'pd.Series':
-        """Queries a list of molecules using a molecule inder
+    def _get_molecules(self, indexer: Dict[str, 'ObjectId'], force: bool = False) -> pd.DataFrame:
+        """Queries a list of molecules using a molecule indexer
 
         Parameters
         ----------
         indexer : Dict[str, 'ObjectId']
             A key/value index of molecules to query
+        force : bool, optional
+            Force pull of molecules from server
 
         Returns
         -------
-        pd.Series
-            A series of Molecules
+        pd.DataFrame
+            A table of Molecules, indexed by Entry names
 
         Raises
         ------
@@ -784,16 +826,23 @@ class Dataset(Collection):
             If no records match the query
         """
 
-        molecules = []
         molecule_ids = list(set(indexer.values()))
-        for i in range(0, len(molecule_ids), self.client.query_limit):
-            molecules.extend(self.client.query_molecules(id=molecule_ids[i:i + self.client.query_limit]))
+        if not self._use_view(force):
+            molecules = []
+            for i in range(0, len(molecule_ids), self.client.query_limit):
+                molecules.extend(self.client.query_molecules(id=molecule_ids[i:i + self.client.query_limit]))
+            # XXX: molecules = pd.DataFrame({"molecule_id": molecule_ids, "molecule": molecules}) fails
+            #      test_gradient_dataset_get_molecules and I don't know why
+            molecules = pd.DataFrame({"molecule_id": molecule.id, "molecule": molecule} for molecule in molecules)
+        else:
+            molecules = self._view.get_molecules(molecule_ids)
+            molecules = pd.DataFrame({"molecule_id": molecule_ids, "molecule": molecules})
 
-        molecules = pd.DataFrame.from_dict([{"molecule_id": x.id, "molecule": x} for x in molecules])
         if len(molecules) == 0:
             raise KeyError("Query matched 0 records.")
 
         df = pd.DataFrame.from_dict(indexer, orient="index", columns=["molecule_id"])
+
         df.reset_index(inplace=True)
 
         # Outer join on left to merge duplicate molecules
@@ -1146,21 +1195,24 @@ class Dataset(Collection):
 
         return self.df[column_names]
 
-    def get_molecules(self, subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'Molecule']:
+    def get_molecules(self, subset: Optional[Union[str, Set[str]]] = None,
+                      force: bool = False) -> Union[pd.DataFrame, 'Molecule']:
         """Queries full Molecules from the database.
 
         Parameters
         ----------
         subset : Optional[Union[str, Set[str]]], optional
             The index subset to query on
+        force : bool, optional
+            Force pull of molecules from server
 
         Returns
         -------
         Union[pd.DataFrame, 'Molecule']
             Either a DataFrame of indexed Molecules or a single Molecule if a single subset string was provided.
         """
-        indexer = self._molecule_indexer(subset)
-        df = self._get_molecules(indexer)
+        indexer = self._molecule_indexer(subset=subset, force=force)
+        df = self._get_molecules(indexer, force)
 
         if isinstance(subset, str):
             return df.iloc[0, 0]
@@ -1202,14 +1254,17 @@ class Dataset(Collection):
         Union[pd.DataFrame, 'ResultRecord']
             Either a DataFrame of indexed ResultRecords or a single ResultRecord if a single subset string was provided.
         """
-        name, dbkeys, history = self._default_parameters(program, method, basis, keywords)
-        indexer = self._molecule_indexer(subset)
+        name, _, history = self._default_parameters(program, method, basis, keywords)
+        if name not in set(self.list_records().reset_index()["name"].unique()):
+            raise KeyError(f"Requested query ({name}) did not match a known record.")
+
+        indexer = self._molecule_indexer(subset=subset, force=True)
         df = self._get_records(indexer, history, projection=projection, merge=merge)
 
         if not merge and len(df) == 1:
             df = df[0]
 
-        if np.all(df.count() == 0):
+        if len(df) == 0:
             raise KeyError("Query matched no records!")
 
         if isinstance(subset, str):
@@ -1319,7 +1374,7 @@ class Dataset(Collection):
 
     def _use_view(self, force: bool = False):
         """Helper function to decide whether to use a locally available HDF5 view"""
-        return force is False and self._view is not None
+        return (force is False) and (self._view is not None) and (self._disable_view is False)
 
     def _clear_cache(self):
         self.df = pd.DataFrame(index=self.get_index())
