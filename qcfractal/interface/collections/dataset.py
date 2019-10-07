@@ -196,12 +196,12 @@ class Dataset(Collection):
         self.data.history.add(tuple(new_history))
 
     def list_values(self,
-                    method: Optional[str] = None,
-                    basis: Optional[str] = None,
+                    method: Optional[Union[str, List[str]]] = None,
+                    basis: Optional[Union[str, List[str]]] = None,
                     keywords: Optional[str] = None,
                     program: Optional[str] = None,
                     driver: Optional[str] = None,
-                    name: Optional[str] = None,
+                    name: Optional[Union[str, List[str]]] = None,
                     native: Optional[bool] = None,
                     force: bool = False) -> pd.DataFrame:
         """
@@ -211,9 +211,9 @@ class Dataset(Collection):
 
         Parameters
         ----------
-        method : Optional[str], optional
+        method : Optional[Union[str, List[str]]], optional
             The computational method (B3LYP)
-        basis : Optional[str], optional
+        basis : Optional[Union[str, List[str]]], optional
             The computational basis (6-31G)
         keywords : Optional[str], optional
             The keyword alias
@@ -221,7 +221,7 @@ class Dataset(Collection):
             The underlying QC program
         driver : Optional[str], optional
             The type of calculation (e.g. energy, gradient, hessian, dipole...)
-        name : Optional[str], optional
+        name : Optional[Union[str, List[str]]], optional
             The canonical name of the data column
         native: Optional[bool], optional
             True: only include data computed with QCFractal
@@ -298,7 +298,8 @@ class Dataset(Collection):
                 raise TypeError(f"Search type {type(value)} not understood.")
         return ret
 
-    def list_records(self, dftd3: bool = False, pretty: bool = True, **search: Optional[str]) -> pd.DataFrame:
+    def list_records(self, dftd3: bool = False, pretty: bool = True,
+                     **search: Optional[Union[str, List[str]]]) -> pd.DataFrame:
         """
         Lists specifications of available records, i.e. method, program, basis set, keyword set, driver combinations
         `None` is a wildcard selector. To search for `None`, use `"None"`.
@@ -377,12 +378,12 @@ class Dataset(Collection):
         return ret
 
     def get_values(self,
-                   method: Optional[str] = None,
-                   basis: Optional[str] = None,
+                   method: Optional[Union[str, List[str]]] = None,
+                   basis: Optional[Union[str, List[str]]] = None,
                    keywords: Optional[str] = None,
                    program: Optional[str] = None,
                    driver: Optional[str] = None,
-                   name: Optional[str] = None,
+                   name: Optional[Union[str, List[str]]] = None,
                    native: Optional[bool] = None,
                    force: bool = False) -> pd.DataFrame:
         """
@@ -396,9 +397,9 @@ class Dataset(Collection):
 
         Parameters
         ----------
-        method : Optional[str], optional
+        method : Optional[Union[str, List[str]]], optional
             The computational method (B3LYP)
-        basis : Optional[str], optional
+        basis : Optional[Union[str, List[str]]], optional
             The computational basis (6-31G)
         keywords : Optional[str], optional
             The keyword alias
@@ -406,7 +407,7 @@ class Dataset(Collection):
             The underlying QC program
         driver : Optional[str], optional
             The type of calculation (e.g. energy, gradient, hessian, dipole...)
-        name : Optional[str], optional
+        name : Optional[Union[str, List[str]]], optional
             Canonical name of the record. Overrides the above selectors.
         native: Optional[bool], optional
             True: only include data computed with QCFractal

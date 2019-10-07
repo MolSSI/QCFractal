@@ -165,13 +165,13 @@ class ReactionDataset(Dataset):
         self._form_index()
 
     def get_values(self,
-                   method: Optional[str] = None,
-                   basis: Optional[str] = None,
+                   method: Optional[Union[str, List[str]]] = None,
+                   basis: Optional[Union[str, List[str]]] = None,
                    keywords: Optional[str] = None,
                    program: Optional[str] = None,
                    driver: Optional[str] = None,
                    stoich: str = "default",
-                   name: Optional[str] = None,
+                   name: Optional[Union[str, List[str]]] = None,
                    native: Optional[bool] = None,
                    force: bool = False) -> pd.DataFrame:
         """
@@ -185,9 +185,9 @@ class ReactionDataset(Dataset):
 
         Parameters
         ----------
-        method : Optional[str], optional
+        method : Optional[Union[str, List[str]]], optional
             The computational method (B3LYP)
-        basis : Optional[str], optional
+        basis : Optional[Union[str, List[str]]], optional
             The computational basis (6-31G)
         keywords : Optional[str], optional
             The keyword alias
@@ -197,7 +197,7 @@ class ReactionDataset(Dataset):
             The type of calculation (e.g. energy, gradient, hessian, dipole...)
         stoich : str, optional
             Stoichiometry of the reaction.
-        name : Optional[str], optional
+        name : Optional[Union[str, List[str]]], optional
             Canonical name of the record. Overrides the above selectors.
         native: Optional[bool], optional
             True: only include data computed with QCFractal
