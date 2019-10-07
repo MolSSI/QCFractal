@@ -1,19 +1,19 @@
 import abc
 import distutils
-from qcelemental.util.serialization import serialize, deserialize
+import pathlib
 import warnings
 from contextlib import contextmanager
+from typing import Any, Dict, List, Tuple, Union
 
-from .dataset import Dataset, MoleculeEntry
-from ..models import ObjectId
-from .reaction_dataset import ReactionEntry
-import pathlib
-from typing import Union, List, Tuple, Dict, Any
+import h5py
 import numpy as np
 import pandas as pd
-import h5py
 
-from ..models import Molecule
+from qcelemental.util.serialization import deserialize, serialize
+
+from ..models import Molecule, ObjectId
+from .dataset import Dataset, MoleculeEntry
+from .reaction_dataset import ReactionEntry
 
 
 class DatasetView(abc.ABC):
@@ -162,8 +162,8 @@ class HDF5View(DatasetView):
         with self._read_file() as f:
             mol_schema = f['molecule/schema']
             ret = [
-                Molecule(**self._deserialize_data(mol_schema[int(i) if isinstance(i, ObjectId) else i]))
-                for i in indexes
+                Molecule(**self._deserialize_data(mol_schema[int(i) if isinstance(i, ObjectId) else i]),
+                         validate=False) for i in indexes
             ]
         return ret
 
