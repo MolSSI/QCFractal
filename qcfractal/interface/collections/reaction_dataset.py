@@ -3,17 +3,21 @@ QCPortal Database ODM
 """
 import itertools as it
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
 from qcelemental import constants
 
-from ..models import ComputeResponse, Molecule, ObjectId, ProtoModel, ResultRecord
+from ..models import Molecule, ProtoModel
 from ..util import replace_dict_keys
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
+
+if TYPE_CHECKING:
+    from .. import FractalClient
+    from ..models import ComputeResponse, ObjectId, ResultRecord
 
 
 class _ReactionTypeEnum(str, Enum):
@@ -95,7 +99,7 @@ class ReactionDataset(Dataset):
                           stoich: Union[str, List[str]],
                           subset: Optional[Union[str, Set[str]]] = None,
                           coefficients: bool = False,
-                          force: bool = False) -> Tuple[Dict[Tuple[str, ...], ObjectId], Tuple[str]]:
+                          force: bool = False) -> Tuple[Dict[Tuple[str, ...], 'ObjectId'], Tuple[str]]:
         """Provides a {index: molecule_id} mapping for a given subset.
 
         Parameters
@@ -375,7 +379,7 @@ class ReactionDataset(Dataset):
                     program: Optional[str] = None,
                     stoich: Union[str, List[str]] = "default",
                     projection: Optional[Dict[str, bool]] = None,
-                    subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, ResultRecord]:
+                    subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'ResultRecord']:
         """
         Queries the local Portal for the requested keys and stoichiometry.
 
@@ -444,7 +448,7 @@ class ReactionDataset(Dataset):
                 stoich: str = "default",
                 ignore_ds_type: bool = False,
                 tag: Optional[str] = None,
-                priority: Optional[str] = None) -> ComputeResponse:
+                priority: Optional[str] = None) -> 'ComputeResponse':
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 

@@ -4,21 +4,25 @@ import json
 import os
 import re
 from collections import defaultdict
-from typing import Any, DefaultDict, Dict, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 import requests
 
 from pydantic import ValidationError
-from qcfractal.interface.models import TaskRecord
 
 from .collections import collection_factory, collections_name_map
-from .collections.collection import Collection
 from .models import (GridOptimizationInput, KeywordSet, Molecule, ObjectId, ResultRecord, TorsionDriveInput,
                      build_procedure)
-from .models.rest_models import (ComputeResponse, KeywordGETResponse, MoleculeGETResponse, ProcedureGETResponse,
-                                 QueryObjectId, QueryProjection, QueryStr, ResultGETResponse, ServiceQueueGETResponse,
-                                 TaskQueueGETResponse, rest_model)
+
+if TYPE_CHECKING:
+    from qcfractal import FractalServer
+
+    from .collections.collection import Collection
+    from .models import TaskRecord
+    from .models.rest_models import (CollectionGETResponse, ComputeResponse, KeywordGETResponse, MoleculeGETResponse,
+                                     ProcedureGETResponse, QueryObjectId, QueryProjection, QueryStr, ResultGETResponse,
+                                     ServiceQueueGETResponse, TaskQueueGETResponse, rest_model)
 
 ### Common docs
 
@@ -111,7 +115,7 @@ class FractalClient(object):
         self.server_info = self._automodel_request("information", "get", {}, full_return=True).dict()
 
         self.server_name = self.server_info["name"]
-        self.query_limit = self.server_info["query_limit"]
+        self.query_limit: int = self.server_info["query_limit"]
 
         if _isportal:
             try:
@@ -338,12 +342,12 @@ class FractalClient(object):
 ### Molecule section
 
     def query_molecules(self,
-                        id: Optional[QueryObjectId] = None,
-                        molecule_hash: Optional[QueryStr] = None,
-                        molecular_formula: Optional[QueryStr] = None,
+                        id: Optional['QueryObjectId'] = None,
+                        molecule_hash: Optional['QueryStr'] = None,
+                        molecular_formula: Optional['QueryStr'] = None,
                         limit: Optional[int] = None,
                         skip: int = 0,
-                        full_return: bool = False) -> Union[MoleculeGETResponse, List[Molecule]]:
+                        full_return: bool = False) -> Union['MoleculeGETResponse', List[Molecule]]:
         """Queries molecules from the database.
 
         Parameters
@@ -403,12 +407,12 @@ class FractalClient(object):
 ### Keywords section
 
     def query_keywords(self,
-                       id: Optional[QueryObjectId] = None,
+                       id: Optional['QueryObjectId'] = None,
                        *,
-                       hash_index: Optional[QueryStr] = None,
+                       hash_index: Optional['QueryStr'] = None,
                        limit: Optional[int] = None,
                        skip: int = 0,
-                       full_return: bool = False) -> Union[KeywordGETResponse, List[KeywordSet]]:
+                       full_return: bool = False) -> Union['KeywordGETResponse', List[KeywordSet]]:
         """Obtains KeywordSets from the server using keyword ids.
 
         Parameters
@@ -497,7 +501,7 @@ class FractalClient(object):
             df.sort_index(inplace=True)
             return df
 
-    def get_collection(self, collection_type: str, name: str, full_return: bool = False) -> Collection:
+    def get_collection(self, collection_type: str, name: str, full_return: bool = False) -> 'Collection':
         """Acquires a given collection from the server.
 
         Parameters
@@ -529,7 +533,7 @@ class FractalClient(object):
             raise KeyError("Collection '{}:{}' not found.".format(collection_type, name))
 
     def add_collection(self, collection: Dict[str, Any], overwrite: bool = False,
-                       full_return: bool = False) -> List[ObjectId]:
+                       full_return: bool = False) -> Union['CollectionGETResponse', List[ObjectId]]:
         """Adds a new Collection to the server.
 
         Parameters
@@ -559,19 +563,19 @@ class FractalClient(object):
 ### Results section
 
     def query_results(self,
-                      id: Optional[QueryObjectId] = None,
-                      task_id: Optional[QueryObjectId] = None,
-                      program: Optional[QueryStr] = None,
-                      molecule: Optional[QueryObjectId] = None,
-                      driver: Optional[QueryStr] = None,
-                      method: Optional[QueryStr] = None,
-                      basis: Optional[QueryStr] = None,
-                      keywords: Optional[QueryObjectId] = None,
-                      status: QueryStr = "COMPLETE",
+                      id: Optional['QueryObjectId'] = None,
+                      task_id: Optional['QueryObjectId'] = None,
+                      program: Optional['QueryStr'] = None,
+                      molecule: Optional['QueryObjectId'] = None,
+                      driver: Optional['QueryStr'] = None,
+                      method: Optional['QueryStr'] = None,
+                      basis: Optional['QueryStr'] = None,
+                      keywords: Optional['QueryObjectId'] = None,
+                      status: 'QueryStr' = "COMPLETE",
                       limit: Optional[int] = None,
                       skip: int = 0,
-                      projection: Optional[QueryProjection] = None,
-                      full_return: bool = False) -> Union[ResultGETResponse, List[ResultRecord], Dict[str, Any]]:
+                      projection: Optional['QueryProjection'] = None,
+                      full_return: bool = False) -> Union['ResultGETResponse', List[ResultRecord], Dict[str, Any]]:
         """Queries ResultRecords from the server.
 
         Parameters
@@ -640,16 +644,16 @@ class FractalClient(object):
             return response.data
 
     def query_procedures(self,
-                         id: Optional[QueryObjectId] = None,
-                         task_id: Optional[QueryObjectId] = None,
-                         procedure: Optional[QueryStr] = None,
-                         program: Optional[QueryStr] = None,
-                         hash_index: Optional[QueryStr] = None,
-                         status: QueryStr = "COMPLETE",
+                         id: Optional['QueryObjectId'] = None,
+                         task_id: Optional['QueryObjectId'] = None,
+                         procedure: Optional['QueryStr'] = None,
+                         program: Optional['QueryStr'] = None,
+                         hash_index: Optional['QueryStr'] = None,
+                         status: 'QueryStr' = "COMPLETE",
                          limit: Optional[int] = None,
                          skip: int = 0,
-                         projection: Optional[QueryProjection] = None,
-                         full_return: bool = False) -> Union[ProcedureGETResponse, Dict[str, Any]]:
+                         projection: Optional['QueryProjection'] = None,
+                         full_return: bool = False) -> Union['ProcedureGETResponse', List[Dict[str, Any]]]:
         """Queries Procedures from the server.
 
         Parameters
@@ -719,7 +723,7 @@ class FractalClient(object):
                     molecule: Union[ObjectId, Molecule, List[Union[str, Molecule]]],
                     priority: Optional[str] = None,
                     tag: Optional[str] = None,
-                    full_return: bool = False) -> ComputeResponse:
+                    full_return: bool = False) -> 'ComputeResponse':
         """
         Adds a "single" compute to the server.
 
@@ -783,7 +787,7 @@ class FractalClient(object):
                       molecule: Union[ObjectId, Molecule, List[Union[str, Molecule]]],
                       priority: Optional[str] = None,
                       tag: Optional[str] = None,
-                      full_return: bool = False) -> ComputeResponse:
+                      full_return: bool = False) -> 'ComputeResponse':
         """
         Adds a "single" Procedure to the server.
 
@@ -834,17 +838,18 @@ class FractalClient(object):
         return self._automodel_request("task_queue", "post", payload, full_return=full_return)
 
     def query_tasks(self,
-                    id: Optional[QueryObjectId] = None,
-                    hash_index: Optional[QueryStr] = None,
-                    program: Optional[QueryStr] = None,
-                    status: Optional[QueryStr] = None,
-                    base_result: Optional[QueryStr] = None,
-                    tag: Optional[QueryStr] = None,
-                    manager: Optional[QueryStr] = None,
+                    id: Optional['QueryObjectId'] = None,
+                    hash_index: Optional['QueryStr'] = None,
+                    program: Optional['QueryStr'] = None,
+                    status: Optional['QueryStr'] = None,
+                    base_result: Optional['QueryStr'] = None,
+                    tag: Optional['QueryStr'] = None,
+                    manager: Optional['QueryStr'] = None,
                     limit: Optional[int] = None,
                     skip: int = 0,
-                    projection: Optional[QueryProjection] = None,
-                    full_return: bool = False) -> Union[TaskQueueGETResponse, List[TaskRecord], List[Dict[str, Any]]]:
+                    projection: Optional['QueryProjection'] = None,
+                    full_return: bool = False
+                    ) -> Union['TaskQueueGETResponse', List['TaskRecord'], List[Dict[str, Any]]]:
         """Checks the status of Tasks in the Fractal queue.
 
         Parameters
@@ -909,8 +914,8 @@ class FractalClient(object):
     def modify_tasks(
             self,  # lgtm [py/similar-function]
             operation: str,
-            base_result: QueryObjectId,
-            id: Optional[QueryObjectId] = None,
+            base_result: 'QueryObjectId',
+            id: Optional['QueryObjectId'] = None,
             full_return: bool = False) -> int:
         """Summary
 
@@ -955,7 +960,7 @@ class FractalClient(object):
             service: Union[GridOptimizationInput, TorsionDriveInput],
             tag: Optional[str] = None,
             priority: Optional[str] = None,
-            full_return: bool = False) -> ComputeResponse:
+            full_return: bool = False) -> 'ComputeResponse':
         """Adds a new service to the service queue.
 
         Parameters
@@ -987,13 +992,13 @@ class FractalClient(object):
         return self._automodel_request("service_queue", "post", payload, full_return=full_return)
 
     def query_services(self,
-                       id: Optional[QueryObjectId] = None,
-                       procedure_id: Optional[QueryObjectId] = None,
-                       hash_index: Optional[QueryStr] = None,
-                       status: Optional[QueryStr] = None,
+                       id: Optional['QueryObjectId'] = None,
+                       procedure_id: Optional['QueryObjectId'] = None,
+                       hash_index: Optional['QueryStr'] = None,
+                       status: Optional['QueryStr'] = None,
                        limit: Optional[int] = None,
                        skip: int = 0,
-                       full_return: bool = False) -> Union[ServiceQueueGETResponse, List[Dict[str, Any]]]:
+                       full_return: bool = False) -> Union['ServiceQueueGETResponse', List[Dict[str, Any]]]:
         """Checks the status of services in the Fractal queue.
 
         Parameters
@@ -1041,8 +1046,8 @@ class FractalClient(object):
 
     def modify_services(self,
                         operation: str,
-                        id: Optional[QueryObjectId] = None,
-                        procedure_id: Optional[QueryObjectId] = None,
+                        id: Optional['QueryObjectId'] = None,
+                        procedure_id: Optional['QueryObjectId'] = None,
                         full_return: bool = False) -> int:
         """Checks the status of services in the Fractal queue.
 
@@ -1091,7 +1096,7 @@ class FractalClient(object):
                      data: Dict,
                      limit: Optional[int] = None,
                      skip: int = 0,
-                     projection: Optional[QueryProjection] = None,
+                     projection: Optional['QueryProjection'] = None,
                      full_return: bool = False) -> Any:
         """ Custom queries that are supported by the REST APIs.
 

@@ -2,18 +2,23 @@
 QCPortal Database ODM
 """
 import warnings
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
 from qcelemental import constants
 
-from ..models import ComputeResponse, KeywordSet, Molecule, ObjectId, ProtoModel, ResultRecord
+from ..models import ComputeResponse, ObjectId, ProtoModel
 from ..statistics import wrap_statistics
 from ..visualization import bar_plot, violin_plot
 from .collection import Collection
 from .collection_utils import composition_planner, register_collection
+
+if TYPE_CHECKING:
+    from .. import FractalClient
+    from ..models import KeywordSet, Molecule, ResultRecord
+    from . import DatasetView
 
 
 class MoleculeEntry(ProtoModel):
@@ -46,7 +51,7 @@ class Dataset(Collection):
     df : pd.DataFrame
         The underlying dataframe for the Dataset object
     """
-    def __init__(self, name: str, client: Optional['FractalClient'] = None, **kwargs: Dict[str, Any]) -> None:
+    def __init__(self, name: str, client: Optional['FractalClient'] = None, **kwargs: Any) -> None:
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -71,7 +76,7 @@ class Dataset(Collection):
         self._new_records: List[Dict[str, Any]] = []
         self._updated_state = False
 
-        self._view: Optional['DatasetView'] = None
+        self._view: Optional[DatasetView] = None
         self._disable_view: bool = False  # for debugging and testing
         self._disable_query_limit: bool = False  # for debugging and testing
 
@@ -235,7 +240,7 @@ class Dataset(Collection):
         DataFrame
             A DataFrame of the matching data specifications
         """
-        spec: Dict[str, Optional[Union[str, bool]]] = {
+        spec: Dict[str, Optional[Union[str, bool, List[str]]]] = {
             "method": method,
             "basis": basis,
             "keywords": keywords,
@@ -452,11 +457,11 @@ class Dataset(Collection):
         return ret_df
 
     def _get_native_values(self,
-                           method: Optional[str] = None,
-                           basis: Optional[str] = None,
+                           method: Optional[Union[str, List[str]]] = None,
+                           basis: Optional[Union[str, List[str]]] = None,
                            keywords: Optional[str] = None,
                            program: Optional[str] = None,
-                           name: Optional[str] = None,
+                           name: Optional[Union[str, List[str]]] = None,
                            force: bool = False) -> pd.DataFrame:
         """
         Obtains records matching the provided search criteria.
@@ -464,15 +469,15 @@ class Dataset(Collection):
 
         Parameters
         ----------
-        method : Optional[str], optional
+        method : Optional[Union[str, List[str]]], optional
             The computational method to compute (B3LYP)
-        basis : Optional[str], optional
+        basis : Optional[Union[str, List[str]]], optional
             The computational basis to compute (6-31G)
         keywords : Optional[str], optional
             The keyword alias for the requested compute
         program : Optional[str], optional
             The underlying QC program
-        name : Optional[str], optional
+        name : Optional[Union[str, List[str]]], optional
             Canonical name of the record. Overrides the above selectors.
         force : bool, optional
             Data is typically cached, forces a new query if True.
@@ -511,9 +516,9 @@ class Dataset(Collection):
                     units = au_units[driver]
                 else:
                     query["native"] = True
-                    data, units = self._view.get_values([query])
+                    data, units_dict = self._view.get_values([query])
                     self.df[name] = data[name]
-                    units = units[name]
+                    units = units_dict[name]
 
                 self.df[name] *= constants.conversion_factor(units, self.units)
                 self._column_metadata[name].update({"native": True, "units": self.units})
@@ -521,12 +526,12 @@ class Dataset(Collection):
         return self.df[names]
 
     def _form_queries(self,
-                      method: Optional[str] = None,
-                      basis: Optional[str] = None,
+                      method: Optional[Union[str, List[str]]] = None,
+                      basis: Optional[Union[str, List[str]]] = None,
                       keywords: Optional[str] = None,
                       program: Optional[str] = None,
                       stoich: Optional[str] = None,
-                      name: Optional[str] = None) -> pd.DataFrame:
+                      name: Optional[Union[str, List[str]]] = None) -> pd.DataFrame:
         if name is None:
             _, _, history = self._default_parameters(program, "nan", "nan", keywords, stoich=stoich)
             for k, v in [("method", method), ("basis", basis)]:
@@ -767,7 +772,7 @@ class Dataset(Collection):
                             basis: Optional[str],
                             keywords: Optional[str],
                             stoich: Optional[str] = None
-                            ) -> Tuple[str, Dict[str, Union[str, KeywordSet]], Dict[str, str]]:
+                            ) -> Tuple[str, Dict[str, Union[str, 'KeywordSet']], Dict[str, str]]:
         """
         Takes raw input parsed parameters and applies defaults to them.
         """
@@ -828,7 +833,7 @@ class Dataset(Collection):
 
         molecule_ids = list(set(indexer.values()))
         if not self._use_view(force):
-            molecules: List[Molecule] = []
+            molecules: List['Molecule'] = []
             for i in range(0, len(molecule_ids), self.client.query_limit):
                 molecules.extend(self.client.query_molecules(id=molecule_ids[i:i + self.client.query_limit]))
             # XXX: molecules = pd.DataFrame({"molecule_id": molecule_ids, "molecule": molecules}) fails
@@ -1027,7 +1032,7 @@ class Dataset(Collection):
         self.data.__dict__["default_benchmark"] = benchmark
         return True
 
-    def add_keywords(self, alias: str, program: str, keyword: KeywordSet, default: bool = False) -> bool:
+    def add_keywords(self, alias: str, program: str, keyword: 'KeywordSet', default: bool = False) -> bool:
         """
         Adds an option alias to the dataset. Not that keywords are not present
         until a save call has been completed.
@@ -1231,7 +1236,7 @@ class Dataset(Collection):
                     program: Optional[str] = None,
                     projection: Optional[Dict[str, bool]] = None,
                     subset: Optional[Union[str, Set[str]]] = None,
-                    merge: bool = False) -> Union[pd.DataFrame, ResultRecord]:
+                    merge: bool = False) -> Union[pd.DataFrame, 'ResultRecord']:
         """
         Queries full ResultRecord objects from the database.
 
@@ -1276,7 +1281,7 @@ class Dataset(Collection):
         else:
             return df
 
-    def add_entry(self, name: str, molecule: Molecule, **kwargs: Dict[str, Any]) -> None:
+    def add_entry(self, name: str, molecule: 'Molecule', **kwargs: Dict[str, Any]) -> None:
         """Adds a new entry to the Dataset
 
         Parameters

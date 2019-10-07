@@ -7,15 +7,19 @@ Helper
 import abc
 import copy
 import json
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
 
-from ..models import ObjectId, ProtoModel
+from ..models import ProtoModel
+
+if TYPE_CHECKING:
+    from .. import FractalClient
+    from ..models import ObjectId
 
 
 class Collection(abc.ABC):
-    def __init__(self, name: str, client: Optional['FractalClient'] = None, **kwargs: Dict[str, Any]):
+    def __init__(self, name: str, client: Optional['FractalClient'] = None, **kwargs: Any):
         """
         Initializer for the Collection objects. If no Portal is supplied or the Collection name
         is not present on the server that the Portal is connected to a blank Collection will be
@@ -55,9 +59,9 @@ class Collection(abc.ABC):
         additional data defined by the Collection
         """
         name: str
-        collection: str = None
+        collection: Optional[str] = None
         provenance: Dict[str, str] = {}
-        tagline: str = None
+        tagline: Optional[str] = None
         tags: List[str] = []
         id: str = 'local'
 
@@ -196,7 +200,7 @@ class Collection(abc.ABC):
         """
 
     # Setters
-    def save(self, client: 'FractalClient' = None) -> 'ObjectId':
+    def save(self, client: Optional['FractalClient'] = None) -> 'ObjectId':
         """Uploads the overall structure of the Collection (indices, options, new molecules, etc)
         to the server.
 
@@ -268,7 +272,7 @@ class BaseProcedureDataset(Collection):
             pass
 
     @abc.abstractmethod
-    def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> ObjectId:
+    def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> 'ObjectId':
         pass
 
     def _pre_save_prep(self, client: 'FractalClient') -> None:
@@ -298,7 +302,7 @@ class BaseProcedureDataset(Collection):
         self.data.specs[lname] = spec
         self.save()
 
-    def _get_procedure_ids(self, spec: str, sieve: Optional[List[str]] = None) -> Dict[str, ObjectId]:
+    def _get_procedure_ids(self, spec: str, sieve: Optional[List[str]] = None) -> Dict[str, 'ObjectId']:
         """Aquires the
 
         Parameters
@@ -349,7 +353,7 @@ class BaseProcedureDataset(Collection):
         except KeyError:
             raise KeyError(f"Specification '{name}' not found.")
 
-    def list_specifications(self, description=True) -> Union[List[str], 'DataFrame']:
+    def list_specifications(self, description=True) -> Union[List[str], pd.DataFrame]:
         """Lists all available specifications
 
         Parameters
@@ -388,7 +392,7 @@ class BaseProcedureDataset(Collection):
         if save:
             self.save()
 
-    def get_entry(self, name: str) -> 'Record':
+    def get_entry(self, name: str) -> Any:
         """Obtains a record from the Dataset
 
         Parameters
@@ -498,7 +502,7 @@ class BaseProcedureDataset(Collection):
         query_ids = list(mapper.values())
 
         # Chunk up the queries
-        procedures = []
+        procedures: List[Dict[str, Any]] = []
         for i in range(0, len(query_ids), self.client.query_limit):
             chunk_ids = query_ids[i:i + self.client.query_limit]
             procedures.extend(self.client.query_procedures(id=chunk_ids))
@@ -520,7 +524,7 @@ class BaseProcedureDataset(Collection):
         return spec.name
 
     def status(self, specs: Union[str, List[str]] = None, collapse: bool = True,
-               status: Optional[str] = None) -> 'DataFrame':
+               status: Optional[str] = None) -> pd.DataFrame:
         """Returns the status of all current specifications.
 
         Parameters

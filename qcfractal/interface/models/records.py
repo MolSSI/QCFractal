@@ -5,7 +5,7 @@ A model for Compute Records
 import abc
 import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import numpy as np
 
@@ -13,8 +13,13 @@ import qcelemental as qcel
 from pydantic import Schema, constr, validator
 
 from ..visualization import scatter_plot
-from .common_models import DriverEnum, KeywordSet, Molecule, ObjectId, ProtoModel, QCSpecification
+from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
+
+if TYPE_CHECKING:
+    from qcelemental.models import OptimizationInput, ResultInput
+
+    from .common_models import KeywordSet, Molecule
 
 __all__ = ["OptimizationRecord", "ResultRecord", "OptimizationRecord", "RecordBase"]
 
@@ -281,7 +286,7 @@ class ResultRecord(RecordBase):
 
 ## QCSchema constructors
 
-    def build_schema_input(self, molecule: Molecule, keywords: Optional[KeywordSet] = None,
+    def build_schema_input(self, molecule: 'Molecule', keywords: Optional['KeywordSet'] = None,
                            checks: bool = True) -> 'ResultInput':
         """
         Creates a OptimizationInput schema.
@@ -329,7 +334,7 @@ class ResultRecord(RecordBase):
 
 ## QCSchema constructors
 
-    def get_molecule(self) -> Molecule:
+    def get_molecule(self) -> 'Molecule':
         """
         Pulls the Result's Molecule from the connected database.
 
@@ -399,8 +404,8 @@ class OptimizationRecord(RecordBase):
 ## QCSchema constructors
 
     def build_schema_input(self,
-                           initial_molecule: Molecule,
-                           qc_keywords: Optional[KeywordSet] = None,
+                           initial_molecule: 'Molecule',
+                           qc_keywords: Optional['KeywordSet'] = None,
                            checks: bool = True) -> 'OptimizationInput':
         """
         Creates a OptimizationInput schema.
@@ -452,7 +457,7 @@ class OptimizationRecord(RecordBase):
 
         return self.cache["trajectory"]
 
-    def get_molecular_trajectory(self) -> List[Molecule]:
+    def get_molecular_trajectory(self) -> List['Molecule']:
         """Returns the Molecule at each gradient evaluation in the trajectory.
 
         Returns
@@ -470,7 +475,7 @@ class OptimizationRecord(RecordBase):
 
         return self.cache["molecular_trajectory"]
 
-    def get_initial_molecule(self) -> Molecule:
+    def get_initial_molecule(self) -> 'Molecule':
         """Returns the initial molecule
 
         Returns
@@ -482,7 +487,7 @@ class OptimizationRecord(RecordBase):
         ret = self.client.query_molecules(id=[self.initial_molecule])
         return ret[0]
 
-    def get_final_molecule(self) -> Molecule:
+    def get_final_molecule(self) -> 'Molecule':
         """Returns the optimized molecule
 
         Returns
