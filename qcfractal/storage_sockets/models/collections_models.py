@@ -40,7 +40,7 @@ class CollectionORM(Base):
     owner = Column(String(100), nullable=True)
     visibility = Column(Boolean, nullable=False)
 
-    view_url = Column(String(100), nullable=True)
+    view_url = Column(String, nullable=True)
     view_available = Column(Boolean, nullable=False)
 
     provenance = Column(JSON)
