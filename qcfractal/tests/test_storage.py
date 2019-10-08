@@ -123,6 +123,7 @@ def test_molecules_mixed_add_get(storage_socket):
     ret = storage_socket.del_molecules(id=ret["data"][1].id)
     assert ret == 1
 
+
 # TODO: doesn't handel bad ids yet
 @pytest.mark.skip
 def test_molecules_bad_get(storage_socket):
@@ -188,7 +189,14 @@ def test_collections_add(storage_socket):
 
     collection = 'TorsionDriveRecord'
     name = 'Torsion123'
-    db = {"collection": collection, "name": name, "something": "else", "array": ["54321"]}
+    db = {
+        "collection": collection,
+        "name": name,
+        "something": "else",
+        "array": ["54321"],
+        "visibility": True,
+        "view_available": False
+    }
 
     ret = storage_socket.add_collection(db)
 
@@ -196,7 +204,7 @@ def test_collections_add(storage_socket):
 
     ret = storage_socket.get_collections(collection, name)
 
-    assert ret["meta"]["success"] == True
+    assert ret["meta"]["success"] is True
     assert ret["meta"]["n_found"] == 1
     assert db['something'] == ret["data"][0]['something']
 
@@ -212,7 +220,14 @@ def test_collections_overwrite(storage_socket):
 
     collection = 'TorsionDriveRecord'
     name = 'Torsion123'
-    db = {"collection": collection, "name": name, "something": "else", "array": ["54321"]}
+    db = {
+        "collection": collection,
+        "name": name,
+        "something": "else",
+        "array": ["54321"],
+        "visibility": True,
+        "view_available": False
+    }
 
     ret = storage_socket.add_collection(db)
 
@@ -258,44 +273,47 @@ def test_results_add(storage_socket):
     kw1 = ptl.models.KeywordSet(**{"comments": "a", "values": {}})
     kwid1 = storage_socket.add_keywords([kw1])["data"][0]
 
-    page1 = ptl.models.ResultRecord(**{
-        "molecule": mol_insert["data"][0],
-        "method": "M1",
-        "basis": "B1",
-        "keywords": kwid1,
-        "program": "P1",
-        "driver": "energy",
-        # "extras": {
-        #     "other_data": 5
-        # },
-        "hash_index": 0,
-    })
+    page1 = ptl.models.ResultRecord(
+        **{
+            "molecule": mol_insert["data"][0],
+            "method": "M1",
+            "basis": "B1",
+            "keywords": kwid1,
+            "program": "P1",
+            "driver": "energy",
+            # "extras": {
+            #     "other_data": 5
+            # },
+            "hash_index": 0,
+        })
 
-    page2 = ptl.models.ResultRecord(**{
-        "molecule": mol_insert["data"][1],
-        "method": "M1",
-        "basis": "B1",
-        "keywords": kwid1,
-        "program": "P1",
-        "driver": "energy",
-        # "extras": {
-        #     "other_data": 10
-        # },
-        "hash_index": 1,
-    })
+    page2 = ptl.models.ResultRecord(
+        **{
+            "molecule": mol_insert["data"][1],
+            "method": "M1",
+            "basis": "B1",
+            "keywords": kwid1,
+            "program": "P1",
+            "driver": "energy",
+            # "extras": {
+            #     "other_data": 10
+            # },
+            "hash_index": 1,
+        })
 
-    page3 = ptl.models.ResultRecord(**{
-        "molecule": mol_insert["data"][1],
-        "method": "M22",
-        "basis": "B1",
-        "keywords": None,
-        "program": "P1",
-        "driver": "energy",
-        # "extras": {
-        #     "other_data": 10
-        # },
-        "hash_index": 2,
-    })
+    page3 = ptl.models.ResultRecord(
+        **{
+            "molecule": mol_insert["data"][1],
+            "method": "M22",
+            "basis": "B1",
+            "keywords": None,
+            "program": "P1",
+            "driver": "energy",
+            # "extras": {
+            #     "other_data": 10
+            # },
+            "hash_index": 2,
+        })
     ids = []
     ret = storage_socket.add_results([page1, page2])
     assert ret["meta"]["n_inserted"] == 2
@@ -327,8 +345,8 @@ def storage_results(storage_socket):
 
     assert len(storage_socket.get_molecules()['data']) == 0
     mol_names = [
-        'water_dimer_minima.psimol', 'water_dimer_stretch.psimol',
-        'water_dimer_stretch2.psimol', 'neon_tetramer.psimol'
+        'water_dimer_minima.psimol', 'water_dimer_stretch.psimol', 'water_dimer_stretch2.psimol',
+        'neon_tetramer.psimol'
     ]
 
     molecules = []
@@ -341,77 +359,83 @@ def storage_results(storage_socket):
     kw1 = ptl.models.KeywordSet(**{"values": {}})
     kwid1 = storage_socket.add_keywords([kw1])["data"][0]
 
-    page1 = ptl.models.ResultRecord(**{
-        "molecule": mol_insert["data"][0],
-        "method": "M1",
-        "basis": "B1",
-        "keywords": kwid1,
-        "program": "P1",
-        "driver": "energy",
-        "return_result": 5,
-        "hash_index": 0,
-        "status": 'COMPLETE'
-    })
+    page1 = ptl.models.ResultRecord(
+        **{
+            "molecule": mol_insert["data"][0],
+            "method": "M1",
+            "basis": "B1",
+            "keywords": kwid1,
+            "program": "P1",
+            "driver": "energy",
+            "return_result": 5,
+            "hash_index": 0,
+            "status": 'COMPLETE'
+        })
 
-    page2 = ptl.models.ResultRecord(**{
-        "molecule": mol_insert["data"][1],
-        "method": "M1",
-        "basis": "B1",
-        "keywords": kwid1,
-        "program": "P1",
-        "driver": "energy",
-        "return_result": 10,
-        "hash_index": 1,
-        "status": 'COMPLETE'
-    })
+    page2 = ptl.models.ResultRecord(
+        **{
+            "molecule": mol_insert["data"][1],
+            "method": "M1",
+            "basis": "B1",
+            "keywords": kwid1,
+            "program": "P1",
+            "driver": "energy",
+            "return_result": 10,
+            "hash_index": 1,
+            "status": 'COMPLETE'
+        })
 
-    page3 = ptl.models.ResultRecord(**{
-        "molecule": mol_insert["data"][0],
-        "method": "M1",
-        "basis": "B1",
-        "keywords": kwid1,
-        "program": "P2",
-        "driver": "gradient",
-        "return_result": 15,
-        "hash_index": 2,
-        "status": 'COMPLETE'
-    })
+    page3 = ptl.models.ResultRecord(
+        **{
+            "molecule": mol_insert["data"][0],
+            "method": "M1",
+            "basis": "B1",
+            "keywords": kwid1,
+            "program": "P2",
+            "driver": "gradient",
+            "return_result": 15,
+            "hash_index": 2,
+            "status": 'COMPLETE'
+        })
 
-    page4 = ptl.models.ResultRecord(**{
-        "molecule": mol_insert["data"][0],
-        "method": "M2",
-        "basis": "B1",
-        "keywords": kwid1,
-        "program": "P2",
-        "driver": "gradient",
-        "return_result": 15,
-        "hash_index": 3,
-        "status": 'COMPLETE'
-    })
+    page4 = ptl.models.ResultRecord(
+        **{
+            "molecule": mol_insert["data"][0],
+            "method": "M2",
+            "basis": "B1",
+            "keywords": kwid1,
+            "program": "P2",
+            "driver": "gradient",
+            "return_result": 15,
+            "hash_index": 3,
+            "status": 'COMPLETE'
+        })
 
-    page5 = ptl.models.ResultRecord(**{
-        "molecule": mol_insert["data"][1],
-        "method": "M2",
-        "basis": "B1",
-        "keywords": kwid1,
-        "program": "P1",
-        "driver": "gradient",
-        "return_result": 20,
-        "hash_index": 4,
-        "status": 'COMPLETE'
-    })
+    page5 = ptl.models.ResultRecord(
+        **{
+            "molecule": mol_insert["data"][1],
+            "method": "M2",
+            "basis": "B1",
+            "keywords": kwid1,
+            "program": "P1",
+            "driver": "gradient",
+            "return_result": 20,
+            "hash_index": 4,
+            "status": 'COMPLETE'
+        })
 
-    page6 = ptl.models.ResultRecord(**{
-        "molecule": mol_insert["data"][1],
-        "method": "M3",
-        "basis": "B1",
-        "keywords": None,
-        "program": "P1",
-        "driver": "gradient",
-        "return_result": 20,
-        "hash_index": 5,
-        "status": 'COMPLETE'
-    })
+    page6 = ptl.models.ResultRecord(
+        **{
+            "molecule": mol_insert["data"][1],
+            "method": "M3",
+            "basis": "B1",
+            "keywords": None,
+            "program": "P1",
+            "driver": "gradient",
+            "return_result": 20,
+            "hash_index": 5,
+            "status": 'COMPLETE'
+        })
 
     results_insert = storage_socket.add_results([page1, page2, page3, page4, page5, page6])
     assert results_insert["meta"]["n_inserted"] == 6
@@ -428,7 +452,6 @@ def storage_results(storage_socket):
 
     ret = storage_socket.del_molecules(id=mol_insert["data"])
     assert ret == mol_insert["meta"]["n_inserted"]
-
 
 
 def test_empty_get(storage_results):
@@ -492,8 +515,8 @@ def test_results_get_project(storage_results):
     assert ret["return_result"] == 15
 
     # Note: explicitly set with_ids=False to remove ids
-    ret = storage_results.get_results(
-        method="M2", program="P2", with_ids=False, projection={"return_result"})["data"][0]
+    ret = storage_results.get_results(method="M2", program="P2", with_ids=False,
+                                      projection={"return_result"})["data"][0]
     assert set(ret.keys()) == {"return_result"}
 
 
@@ -510,20 +533,21 @@ def test_queue_submit_sql(storage_results):
 
     result1 = storage_results.get_results()['data'][0]
 
-    task1 = ptl.models.TaskRecord(**{
-        # "hash_index": idx,  # not used anymore
-        "spec": {
-            "function": "qcengine.compute_procedure",
-            "args": [{
-                "json_blob": "data"
-            }],
-            "kwargs": {},
-        },
-        "tag": None,
-        "program": "p1",
-        "parser": "",
-        "base_result": dict(ref='result', id=result1['id'])
-    })
+    task1 = ptl.models.TaskRecord(
+        **{
+            # "hash_index": idx,  # not used anymore
+            "spec": {
+                "function": "qcengine.compute_procedure",
+                "args": [{
+                    "json_blob": "data"
+                }],
+                "kwargs": {},
+            },
+            "tag": None,
+            "program": "p1",
+            "parser": "",
+            "base_result": dict(ref='result', id=result1['id'])
+        })
 
     # Submit a new task
     ret = storage_results.queue_submit([task1])
@@ -540,6 +564,7 @@ def test_queue_submit_sql(storage_results):
 # ----------------------------------------------------------
 
 # Builds tests for the queue - Changed design
+
 
 @pytest.mark.parametrize('status', ['COMPLETE', 'ERROR'])
 def test_storage_queue_roundtrip(storage_results, status):
@@ -687,7 +712,6 @@ def test_modify_user(storage_socket):
     assert storage_socket.remove_user("george") is True
 
 
-
 def test_user_permissions_default(storage_socket):
 
     r, pw = storage_socket.add_user("george", "shortpw")
@@ -769,7 +793,7 @@ def test_procedure_sql(storage_results):
         # [results[0]['id']],  # no change
         # None  # empty
     ]
-     # update relations
+    # update relations
     for trajectory in test_traj:
         new_proc['trajectory'] = trajectory
         ret_count = storage_results.update_procedures([ptl.models.OptimizationRecord(**new_proc)])
@@ -781,10 +805,8 @@ def test_procedure_sql(storage_results):
 
         opt_proc = ret['data'][0]
 
-
     # Torsiondrive procedures
     assert len(storage_results.get_procedures(procedure='torsiondrive', status=None)['data']) == 0
-
 
     torsion_proc = {
         "procedure": "torsiondrive",
@@ -796,8 +818,9 @@ def test_procedure_sql(storage_results):
         "optimization_spec": {
             "program": "geometric",
             "keywords": {
-            "coordsys": "tric",
-        }},
+                "coordsys": "tric",
+            }
+        },
         "qc_spec": {
             "driver": "gradient",
             "method": "HF",
@@ -834,12 +857,18 @@ def test_procedure_sql(storage_results):
         ret = storage_results.get_procedures(procedure='torsiondrive', status=None)
         assert set(ret['data'][0]['initial_molecule']) == set([str(i) for i in init_mol])
 
-
     # optimization history
     opt_hist_tests = [
-        {'90': [opt_proc['id']]},  # add one
-        {'90': [opt_proc['id']], '44': [opt_proc['id']]},
-        {'5': [opt_proc['id']]}
+        {
+            '90': [opt_proc['id']]
+        },  # add one
+        {
+            '90': [opt_proc['id']],
+            '44': [opt_proc['id']]
+        },
+        {
+            '5': [opt_proc['id']]
+        }
     ]
 
     for opt_hist in opt_hist_tests:
@@ -868,8 +897,9 @@ def test_services_sql(storage_results):
         "optimization_spec": {
             "program": "geometric",
             "keywords": {
-            "coordsys": "tric",
-        }},
+                "coordsys": "tric",
+            }
+        },
         "qc_spec": {
             "driver": "gradient",
             "method": "HF",
@@ -891,14 +921,12 @@ def test_services_sql(storage_results):
 
     service_data = {
         "tag": "tag1 tag2",
-        "hash_index" : "123",
+        "hash_index": "123",
         "status": TaskStatusEnum.waiting,
-
         "optimization_program": "gaussian",
 
         # extra fields
         "torsiondrive_state": {},
-
         "dihedral_template": "1",
         "optimization_template": "2",
         "molecule_template": "",
@@ -919,9 +947,7 @@ def test_services_sql(storage_results):
     assert ret['data'][0]['dihedral_template'] == service_data['dihedral_template']
 
     # Create Pydantic object from DB returned object
-    py_obj = TorsionDriveService(**ret['data'][0],
-                               storage_socket=storage_results,
-                               logger=None)
+    py_obj = TorsionDriveService(**ret['data'][0], storage_socket=storage_results, logger=None)
     assert py_obj
 
     # Test update
@@ -1052,6 +1078,7 @@ def test_procedure_pagination(storage_socket):
     storage_socket.del_procedures(inserted['data'])
     storage_socket.del_molecules(mol)
 
+
 def test_mol_pagination(storage_socket):
     """
         Test Molecule pagination
@@ -1083,6 +1110,7 @@ def test_mol_pagination(storage_socket):
 
     # cleanup
     storage_socket.del_molecules(inserted['data'])
+
 
 def test_reset_task_blocks(storage_socket):
     """
