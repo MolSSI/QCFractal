@@ -15,22 +15,6 @@ from qcfractal import testing
 from qcfractal.testing import fractal_compute_server, live_fractal_or_skip
 
 
-def test_collection_query(fractal_compute_server):
-    client = ptl.FractalClient(fractal_compute_server)
-
-    ds = ptl.collections.Dataset("CAPITAL", client)
-    ds.save()
-
-    cols = client.list_collections()
-    assert ("Dataset", "CAPITAL") in cols.index
-
-    ds = client.get_collection("dataset", "capital")
-    assert ds.name == "CAPITAL"
-
-    ds = client.get_collection("DATAset", "CAPital")
-    assert ds.name == "CAPITAL"
-
-
 @contextmanager
 def check_requests_monitor(client, request, request_made=True, kind="get"):
     before = client._request_counter[(request, kind)]
@@ -967,6 +951,45 @@ def test_qm3_view_identical(qm3_fixture):
 def test_s22_view_identical(s22_fixture):
     client, ds = s22_fixture
     assert_view_identical(ds)
+
+
+def test_remote_view(gradient_dataset_fixture, tmp_path_factory):
+    client, ds = gradient_dataset_fixture
+    path = pathlib.Path(tmp_path_factory.mktemp('test_collections'), 'ds_gradient_remote.hdf5')
+    view = ptl.collections.HDF5View(path)
+    view.write(ds)
+
+    model = ds.data.dict()
+    model["view_available"] = True
+    model["view_url"] = str(path)
+    ds.data.__dict__["view_available"] = True
+    ds.data.__dict__["view_url"] = str(path)
+    print(ds.data.dict())
+    assert ds.data.id == ds.save()
+
+    ds = client.get_collection("Dataset", ds.name)
+    print(ds.data.dict())
+    print(ds.data.view_url)
+    ds.download()
+
+
+### Non-dataset tests
+
+
+def test_collection_query(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+
+    ds = ptl.collections.Dataset("CAPITAL", client)
+    ds.save()
+
+    cols = client.list_collections()
+    assert ("Dataset", "CAPITAL") in cols.index
+
+    ds = client.get_collection("dataset", "capital")
+    assert ds.name == "CAPITAL"
+
+    ds = client.get_collection("DATAset", "CAPital")
+    assert ds.name == "CAPITAL"
 
 
 def test_generic_collection(fractal_compute_server):

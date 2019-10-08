@@ -236,12 +236,15 @@ def test_collections_overwrite(storage_socket):
     ret = storage_socket.get_collections(collection, name)
     assert ret["meta"]["n_found"] == 1
 
+    view_url = "fooRL"
     db_update = {
         # "id": ret["data"][0]["id"],
         "collection": "TorsionDriveRecord",  # no need to include
         "name": "Torsion123",  # no need to include
         "something": "New",
         "something2": "else",
+        "view_available": True,
+        "view_url": view_url,
         "array2": ["54321"]
     }
     ret = storage_socket.add_collection(db_update, overwrite=True)
@@ -257,6 +260,8 @@ def test_collections_overwrite(storage_socket):
     # assert "something" not in db_result
     assert "something" in db_result
     assert "something2" in db_result
+    assert db_result["view_available"] is True
+    assert db_result["view_url"] == view_url
     assert db_update['something'] == db_result['something']
 
     ret = storage_socket.del_collection(collection, name)

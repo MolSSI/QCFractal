@@ -1,11 +1,14 @@
 """
 QCPortal Database ODM
 """
+import tempfile
 import warnings
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
+import requests
 
 from qcelemental import constants
 
@@ -103,6 +106,26 @@ class Dataset(Collection):
         # History: driver, program, method (basis, keywords)
         history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
         history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
+
+    def set_view(self, path: Union[str, Path]) -> None:
+        self._view = HDF5View(path)
+
+    def download(self, local_path: Optional[Union[str, Path]] = None) -> None:
+        """ Download a remote view """
+        if self.data.view_url is None:
+            raise ValueError("A view for this dataset is not available on the server")
+
+        if local_path is not None:
+            local_path = Path(local_path)
+        else:
+            self._view_tempfile = tempfile.NamedTemporaryFile()  # keep temp file alive until self is destroyed
+            local_path = self._view_tempfile.name
+
+        r = requests.get(self.data.view_url, stream=True)
+        with open(local_path, 'wb') as fd:
+            for chunk in r.iter_content(chunk_size=8192):
+                fd.write(chunk)
+        self.set_view(local_path)
 
     def _form_index(self) -> None:
         self._entry_index = pd.DataFrame([[entry.name, entry.molecule_id] for entry in self.data.records],
