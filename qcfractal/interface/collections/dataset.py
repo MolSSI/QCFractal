@@ -495,33 +495,41 @@ class Dataset(Collection):
 
         queries = self._form_queries(method=method, basis=basis, keywords=keywords, program=program, name=name)
         names = []
+        new_queries = []
         for _, query in queries.iterrows():
 
             query = query.replace({np.nan: None}).to_dict()
             if "stoichiometry" in query:
                 query["stoich"] = query.pop("stoichiometry")
 
-            name = query["name"]
-            names.append(name)
-            if force or (name not in self.df.columns):
-                self._column_metadata[name] = query
-                if not self._use_view(force):
-                    driver = query.pop("driver")
-                    query.pop("name")
-                    data = self.get_records(query.pop("method").upper(),
-                                            projection={"return_result": True},
-                                            merge=True,
-                                            **query)
-                    self.df[name] = data["return_result"]
-                    units = au_units[driver]
-                else:
-                    query["native"] = True
-                    data, units_dict = self._view.get_values([query])
-                    self.df[name] = data[name]
-                    units = units_dict[name]
+            qname = query["name"]
+            names.append(qname)
+            if force or (qname not in self.df.columns):
+                self._column_metadata[qname] = query
+                new_queries.append(query)
 
-                self.df[name] *= constants.conversion_factor(units, self.units)
-                self._column_metadata[name].update({"native": True, "units": self.units})
+        if not self._use_view(force):
+            units: Dict[str, str] = {}
+            for query in new_queries:
+                driver = query.pop("driver")
+                qname = query.pop("name")
+                data = self.get_records(query.pop("method").upper(),
+                                        projection={"return_result": True},
+                                        merge=True,
+                                        **query)
+                self.df[qname] = data["return_result"]
+                units[qname] = au_units[driver]
+                query["name"] = qname
+        else:
+            for query in new_queries:
+                query["native"] = True
+            data, units = self._view.get_values(new_queries)
+            self.df = pd.concat([self.df, data], axis=1)
+
+        for query in new_queries:
+            qname = query["name"]
+            self.df[qname] *= constants.conversion_factor(units[qname], self.units)
+            self._column_metadata[qname].update({"native": True, "units": self.units})
 
         return self.df[names]
 
@@ -1160,13 +1168,15 @@ class Dataset(Collection):
     def _get_contributed_values(self, force: bool = False, **spec) -> pd.DataFrame:
         queries = self._filter_records(self._list_contributed_values().rename(columns={'stoichiometry': 'stoich'}),
                                        **spec)
-        column_names = []
+        column_names: List[str] = []
+        new_queries = []
         for query in queries.to_dict("records"):
             data = self.data.contributed_values[query["name"].lower()].copy()
             column_name = data.name
             column_names.append(column_name)
             if force or (column_name not in self.df.columns):
                 self._column_metadata[column_name] = query
+                new_queries.append(query)
                 if not self._use_view(force):
                     # Annoying work around to prevent some pandas magic
                     if isinstance(next(iter(data.values.values())), (int, float)):
