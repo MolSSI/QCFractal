@@ -5,16 +5,21 @@ A model for Compute Records
 import abc
 import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import numpy as np
-from pydantic import Schema, constr, validator
 
 import qcelemental as qcel
+from pydantic import Schema, constr, validator
 
 from ..visualization import scatter_plot
 from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
+
+if TYPE_CHECKING:  # pragma: no cover
+    from qcelemental.models import OptimizationInput, ResultInput  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+
+    from .common_models import KeywordSet, Molecule  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
 
 __all__ = ["OptimizationRecord", "ResultRecord", "OptimizationRecord", "RecordBase"]
 
@@ -281,7 +286,7 @@ class ResultRecord(RecordBase):
 
 ## QCSchema constructors
 
-    def build_schema_input(self, molecule: 'Molecule', keywords: Optional['KeywordsSet'] = None,
+    def build_schema_input(self, molecule: 'Molecule', keywords: Optional['KeywordSet'] = None,
                            checks: bool = True) -> 'ResultInput':
         """
         Creates a OptimizationInput schema.
@@ -400,7 +405,7 @@ class OptimizationRecord(RecordBase):
 
     def build_schema_input(self,
                            initial_molecule: 'Molecule',
-                           qc_keywords: Optional['KeywordsSet'] = None,
+                           qc_keywords: Optional['KeywordSet'] = None,
                            checks: bool = True) -> 'OptimizationInput':
         """
         Creates a OptimizationInput schema.
@@ -435,7 +440,7 @@ class OptimizationRecord(RecordBase):
         """
         return self.energies[-1]
 
-    def get_trajectory(self) -> List['ResultRecord']:
+    def get_trajectory(self) -> List[ResultRecord]:
         """Returns the Result records for each gradient evaluation in the trajectory.
 
         Returns

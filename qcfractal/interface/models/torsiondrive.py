@@ -7,8 +7,8 @@ import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-from pydantic import Schema, constr, validator
 
+from pydantic import Schema, constr, validator
 from qcelemental import constants
 
 from ..visualization import scatter_plot
@@ -16,7 +16,7 @@ from .common_models import Molecule, ObjectId, OptimizationSpecification, ProtoM
 from .model_utils import recursive_normalizer
 from .records import RecordBase
 
-__all__ = ["TorsionDriveInput", "TorsionDriveRecord"]
+__all__ = ["TDKeywords", "TorsionDriveInput", "TorsionDriveRecord"]
 
 
 class TDKeywords(ProtoModel):

@@ -1,15 +1,18 @@
 """
 QCPortal Database ODM
 """
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
 
 import qcelemental as qcel
 
-from ..models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
+from ..models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
+
+if TYPE_CHECKING:  # pragma: no cover
+    from ..models import Molecule  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
 
 
 class OptEntry(ProtoModel):
@@ -63,7 +66,7 @@ class OptimizationDataset(BaseProcedureDataset):
                           name: str,
                           optimization_spec: OptimizationSpecification,
                           qc_spec: QCSpecification,
-                          description: str = None,
+                          description: Optional[str] = None,
                           protocols: Optional[Dict[str, Any]] = None,
                           overwrite=False) -> None:
         """
@@ -95,9 +98,9 @@ class OptimizationDataset(BaseProcedureDataset):
 
     def add_entry(self,
                   name: str,
-                  initial_molecule: Molecule,
-                  additional_keywords: Dict[str, Any] = None,
-                  attributes: Dict[str, Any] = None,
+                  initial_molecule: 'Molecule',
+                  additional_keywords: Optional[Dict[str, Any]] = None,
+                  attributes: Optional[Dict[str, Any]] = None,
                   save: bool = True) -> None:
         """
         Parameters
@@ -133,7 +136,7 @@ class OptimizationDataset(BaseProcedureDataset):
         self._add_entry(name, entry, save)
 
     def counts(self, entries: Optional[Union[str, List[str]]] = None,
-               specs: Optional[Union[str, List[str]]] = None) -> 'DataFrame':
+               specs: Optional[Union[str, List[str]]] = None) -> pd.DataFrame:
         """Counts the number of optimization or gradient evaluations associated with the
         Optimizations.
 

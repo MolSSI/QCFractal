@@ -2,20 +2,22 @@
 QCPortal Database ODM
 """
 import itertools as it
-import warnings
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
 
 from qcelemental import constants
 
-from ..client import FractalClient
-from ..models import ComputeResponse, Molecule, ProtoModel
+from ..models import Molecule, ProtoModel
 from ..util import replace_dict_keys
 from .collection_utils import nCr, register_collection
 from .dataset import Dataset
+
+if TYPE_CHECKING:  # pragma: no cover
+    from .. import FractalClient  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    from ..models import ComputeResponse, ObjectId, ResultRecord
 
 
 class _ReactionTypeEnum(str, Enum):
@@ -48,7 +50,7 @@ class ReactionDataset(Dataset):
     rxn_index : pd.Index
         The unrolled reaction index for all reactions in the Dataset
     """
-    def __init__(self, name, client: Optional[FractalClient] = None, ds_type="rxn", **kwargs):
+    def __init__(self, name: str, client: Optional['FractalClient'] = None, ds_type: str = "rxn", **kwargs) -> None:
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -70,8 +72,6 @@ class ReactionDataset(Dataset):
         # Internal data
         self._entry_index = pd.DataFrame()
 
-        self._entry_index = None
-        self.valid_stoich = None
         self._form_index()
 
     class DataModel(Dataset.DataModel):
@@ -83,7 +83,7 @@ class ReactionDataset(Dataset):
         history_keys: Tuple[str, str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords",
                                                              "stoichiometry")
 
-    def _form_index(self):
+    def _form_index(self) -> None:
         # Unroll the index
         tmp_index = []
         for rxn in self.data.records:
@@ -144,7 +144,7 @@ class ReactionDataset(Dataset):
 
         return ret, names
 
-    def _validate_stoich(self, stoich):
+    def _validate_stoich(self, stoich: Union[List[str], str]) -> None:
         if isinstance(stoich, str):
             stoich = [stoich]
 
@@ -152,7 +152,7 @@ class ReactionDataset(Dataset):
             if s.lower() not in self.valid_stoich:
                 raise KeyError("Stoichiometry not understood, valid keys are {}.".format(self.valid_stoich))
 
-    def _pre_save_prep(self, client):
+    def _pre_save_prep(self, client: 'FractalClient') -> None:
         self._canonical_pre_save(client)
 
         mol_ret = self._add_molecules_by_dict(client, self._new_molecules)
@@ -163,19 +163,19 @@ class ReactionDataset(Dataset):
             new_record = record.copy(update={"stoichiometry": stoichiometry})
             self.data.records.append(new_record)
 
-        self._new_records = []
+        self._new_records: List[ReactionEntry] = []
         self._new_molecules = {}
 
         self._form_index()
 
     def get_values(self,
-                   method: Optional[str] = None,
-                   basis: Optional[str] = None,
+                   method: Optional[Union[str, List[str]]] = None,
+                   basis: Optional[Union[str, List[str]]] = None,
                    keywords: Optional[str] = None,
                    program: Optional[str] = None,
                    driver: Optional[str] = None,
                    stoich: str = "default",
-                   name: Optional[str] = None,
+                   name: Optional[Union[str, List[str]]] = None,
                    native: Optional[bool] = None,
                    force: bool = False) -> pd.DataFrame:
         """
@@ -189,9 +189,9 @@ class ReactionDataset(Dataset):
 
         Parameters
         ----------
-        method : Optional[str], optional
+        method : Optional[Union[str, List[str]]], optional
             The computational method (B3LYP)
-        basis : Optional[str], optional
+        basis : Optional[Union[str, List[str]]], optional
             The computational basis (6-31G)
         keywords : Optional[str], optional
             The keyword alias
@@ -201,7 +201,7 @@ class ReactionDataset(Dataset):
             The type of calculation (e.g. energy, gradient, hessian, dipole...)
         stoich : str, optional
             Stoichiometry of the reaction.
-        name : Optional[str], optional
+        name : Optional[Union[str, List[str]]], optional
             Canonical name of the record. Overrides the above selectors.
         native: Optional[bool], optional
             True: only include data computed with QCFractal
@@ -372,7 +372,7 @@ class ReactionDataset(Dataset):
         return df
 
     def get_records(self,
-                    method,
+                    method: str,
                     basis: Optional[str] = None,
                     *,
                     keywords: Optional[str] = None,
@@ -440,7 +440,7 @@ class ReactionDataset(Dataset):
         return ret
 
     def compute(self,
-                method: Optional[str],
+                method: str,
                 basis: Optional[str] = None,
                 *,
                 keywords: Optional[str] = None,
@@ -448,13 +448,13 @@ class ReactionDataset(Dataset):
                 stoich: str = "default",
                 ignore_ds_type: bool = False,
                 tag: Optional[str] = None,
-                priority: Optional[str] = None) -> ComputeResponse:
+                priority: Optional[str] = None) -> 'ComputeResponse':
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
         Parameters
         ----------
-        method : Optional[str]
+        method : str
             The computational method to compute (B3LYP)
         basis : Optional[str], optional
             The computational basis to compute (6-31G)
@@ -556,7 +556,7 @@ class ReactionDataset(Dataset):
 
 # Adders
 
-    def parse_stoichiometry(self, stoichiometry):
+    def parse_stoichiometry(self, stoichiometry: List[Tuple[Union[Molecule, str], float]]) -> Dict[str, float]:
         """
         Parses a stiochiometry list.
 
@@ -567,8 +567,9 @@ class ReactionDataset(Dataset):
 
         Returns
         -------
-        stoich : list
-            A list of formatted tuples describing the stoichiometry for use in a MongoDB.
+        Dict[str, float]
+            A dictionary describing the stoichiometry for use in the database.
+            Keys are molecule hashes. Values are stoichiometric coefficients.
 
         Notes
         -----
@@ -579,8 +580,6 @@ class ReactionDataset(Dataset):
 
 
         """
-
-        ret = {}
 
         mol_hashes = []
         mol_values = []
@@ -622,7 +621,7 @@ class ReactionDataset(Dataset):
             mol_hashes.append(molecule_hash)
 
         # Sum together the coefficients of duplicates
-        ret = {}
+        ret: Dict[str, float] = {}
         for mol, coef in zip(mol_hashes, mol_values):
             if mol in list(ret):
                 ret[mol] += coef
@@ -631,7 +630,12 @@ class ReactionDataset(Dataset):
 
         return ret
 
-    def add_rxn(self, name, stoichiometry, reaction_results=None, attributes=None, other_fields=None):
+    def add_rxn(self,
+                name: str,
+                stoichiometry: Dict[str, List[Tuple[Molecule, float]]],
+                reaction_results: Optional[Dict[str, str]] = None,
+                attributes: Optional[Dict[str, Union[int, float, str]]] = None,
+                other_fields: Optional[Dict[str, Any]] = None) -> ReactionEntry:
         """
         Adds a reaction to a database object.
 
@@ -648,15 +652,10 @@ class ReactionDataset(Dataset):
         other_fields : dict or None, Optional, Default: None
             A dictionary of additional user defined fields to add to the reaction entry
 
-        Notes
-        -----
-
         Returns
         -------
-        ret : dict
-            A complete JSON specification of the reaction
-
-
+        ReactionEntry
+            A complete specification of the reaction
         """
         if reaction_results is None:
             reaction_results = {}
@@ -664,7 +663,7 @@ class ReactionDataset(Dataset):
             attributes = {}
         if other_fields is None:
             other_fields = {}
-        rxn_dict = {"name": name}
+        rxn_dict: Dict[str, Any] = {"name": name}
 
         # Set name
         if name in self.get_index():
@@ -711,7 +710,7 @@ class ReactionDataset(Dataset):
 
         return rxn
 
-    def add_ie_rxn(self, name, mol, **kwargs):
+    def add_ie_rxn(self, name: str, mol: Molecule, **kwargs) -> ReactionEntry:
         """Add a interaction energy reaction entry to the database. Automatically
         builds CP and no-CP reactions for the fragmented molecule.
 
@@ -726,8 +725,8 @@ class ReactionDataset(Dataset):
 
         Returns
         -------
-        ret : dict
-            A JSON representation of the new reaction.
+        ReactionEntry
+            A representation of the new reaction.
         """
         reaction_results = kwargs.pop("reaction_results", {})
         attributes = kwargs.pop("attributes", {})
@@ -741,7 +740,7 @@ class ReactionDataset(Dataset):
                             other_fields=other_fields)
 
     @staticmethod
-    def build_ie_fragments(mol, **kwargs):
+    def build_ie_fragments(mol: Molecule, **kwargs) -> Dict[str, List[Tuple[Molecule, float]]]:
         """
         Build the stoichiometry for an Interaction Energy.
 
