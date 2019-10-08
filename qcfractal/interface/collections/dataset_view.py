@@ -3,7 +3,7 @@ import distutils
 import pathlib
 import warnings
 from contextlib import contextmanager
-from typing import Any, Dict, Iterator, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Tuple, Union
 
 # TODO(mattwelborn): Determine if h5py can/should be optionally imported
 import h5py
@@ -16,18 +16,14 @@ from ..models import Molecule, ObjectId
 from .dataset import Dataset, MoleculeEntry
 from .reaction_dataset import ReactionEntry
 
+if TYPE_CHECKING:  # pragma: no cover
+    from .. import FractalClient  # lgtm [py/unused-import]
+
 
 class DatasetView(abc.ABC):
-    def __init__(self, path: Union[str, pathlib.Path]):
-        """
-        Parameters
-        ----------
-        path: Union[str, pathlib.Path]
-            File path of view
-        """
-        if isinstance(path, str):
-            path = pathlib.Path(path)
-        self._path = path
+    @abc.abstractmethod
+    def __init__(self) -> None:
+        pass
 
     @abc.abstractmethod
     def write(self, ds: Dataset) -> None:
@@ -94,8 +90,16 @@ class DatasetView(abc.ABC):
 
 
 class HDF5View(DatasetView):
-    def __init__(self, path: Union[str, pathlib.Path]):
-        super().__init__(path)
+    def __init__(self, path: Union[str, pathlib.Path]) -> None:
+        """
+        Parameters
+        ----------
+        path: Union[str, pathlib.Path]
+            File path of view
+        """
+        if isinstance(path, str):
+            path = pathlib.Path(path)
+        self._path = path
         self._entries: pd.DataFrame = None
 
     def list_values(self) -> pd.DataFrame:
@@ -393,3 +397,28 @@ class HDF5View(DatasetView):
     @staticmethod
     def _deserialize_data(data: np.ndarray) -> Any:
         return deserialize(data.tobytes(), 'msgpack-ext')
+
+
+class RemoteView(DatasetView):
+    def __init__(self, client: 'FractalClient') -> None:
+        self._client: FractalClient = client
+
+    def get_entries(self) -> pd.DataFrame:
+        # TODO: rest model for entries
+        raise NotImplementedError()
+
+    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> List[Molecule]:
+        # TODO: rest model for molecules
+        raise NotImplementedError()
+
+    def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
+        # TODO: rest model for values
+        raise NotImplementedError()
+
+    def list_values(self) -> pd.DataFrame:
+        # TODO: rest model for values
+        raise NotImplementedError()
+
+    def write(self, ds: Dataset) -> None:
+        # TODO: rest model for dataset writing???
+        raise NotImplementedError()

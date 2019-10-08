@@ -21,7 +21,6 @@ from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import bcrypt
-
 # pydantic classes
 from qcfractal.interface.models import (GridOptimizationRecord, KeywordSet, Molecule, ObjectId, OptimizationRecord,
                                         ResultRecord, TaskRecord, TaskStatusEnum, TorsionDriveRecord, prepare_basis)
@@ -126,7 +125,6 @@ class SQLAlchemySocket:
     """
         SQLAlcehmy QCDB wrapper class.
     """
-
     def __init__(self,
                  uri: str,
                  project: str = "molssidb",
@@ -851,23 +849,18 @@ class SQLAlchemySocket:
         return ret
 
     def get_collections(self,
-                        collection: str = None,
-                        name: str = None,
+                        collection: Optional[str] = None,
+                        name: Optional[str] = None,
                         return_json: bool = True,
                         with_ids: bool = True,
-                        limit: int = None,
-                        projection: Dict[str, Any] = None,
+                        limit: Optional[int] = None,
+                        projection: Optional[Dict[str, Any]] = None,
                         skip: int = 0) -> Dict[str, Any]:
         """Get collection by collection and/or name
 
         Parameters
         ----------
-        collection : str, optional
-        name : str, optional
-        return_json : bool
-        with_ids : bool
-        limit : int
-        skip : int
+
 
         Returns
         -------
@@ -1018,7 +1011,6 @@ class SQLAlchemySocket:
         -------
 
         """
-
     def get_results(self,
                     id: Union[str, List] = None,
                     program: str = None,
