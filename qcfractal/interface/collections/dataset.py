@@ -1171,46 +1171,53 @@ class Dataset(Collection):
         column_names: List[str] = []
         new_queries = []
         for query in queries.to_dict("records"):
-            data = self.data.contributed_values[query["name"].lower()].copy()
-            column_name = data.name
+            column_name = self.data.contributed_values[query["name"].lower()].name
             column_names.append(column_name)
             if force or (column_name not in self.df.columns):
                 self._column_metadata[column_name] = query
                 new_queries.append(query)
-                if not self._use_view(force):
-                    # Annoying work around to prevent some pandas magic
-                    if isinstance(next(iter(data.values.values())), (int, float)):
-                        values = data.values
-                    else:
-                        # TODO temporary patch until msgpack collections
-                        if isinstance(data.theory_level_details, dict) and "driver" in data.theory_level_details:
-                            cv_driver = data.theory_level_details["driver"]
-                        else:
-                            cv_driver = self.data.default_driver
-                        if cv_driver == "gradient":
-                            values = {k: np.array(v).reshape(-1, 3) for k, v in data.values.items()}
-                        else:
-                            values = {k: np.array(v) for k, v in data.values.items()}
-                    self.df[column_name] = pd.Series(list(values.values()), index=list(values.keys()))
-                    units = data.units
-                else:
-                    query["native"] = False
-                    ret, units = self._view.get_values([query])
-                    self.df[column_name] = ret[column_name]
-                    units = units[column_name]
 
-                # convert units
-                metadata = {"native": False}
-                try:
-                    self.df[column_name] *= constants.conversion_factor(units, self.units)
-                    metadata["units"] = self.units
-                except ValueError as e:
-                    # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
-                    if e.__class__.__name__ == "DimensionalityError":
-                        metadata["units"] = units
+        if not self._use_view(force):
+            units: Dict[str, str] = {}
+
+            for query in new_queries:
+                data = self.data.contributed_values[query["name"].lower()].copy()
+                column_name = data.name
+                # Annoying work around to prevent some pandas magic
+                if isinstance(next(iter(data.values.values())), (int, float)):
+                    values = data.values
+                else:
+                    # TODO temporary patch until msgpack collections
+                    if isinstance(data.theory_level_details, dict) and "driver" in data.theory_level_details:
+                        cv_driver = data.theory_level_details["driver"]
                     else:
-                        raise
-                self._column_metadata[column_name].update(metadata)
+                        cv_driver = self.data.default_driver
+                    if cv_driver == "gradient":
+                        values = {k: np.array(v).reshape(-1, 3) for k, v in data.values.items()}
+                    else:
+                        values = {k: np.array(v) for k, v in data.values.items()}
+                self.df[column_name] = pd.Series(list(values.values()), index=list(values.keys()))
+                units[column_name] = data.units
+        else:
+            for query in new_queries:
+                query["native"] = False
+            ret, units = self._view.get_values(new_queries)
+            self.df = pd.concat([self.df, ret], axis=1)
+
+        # convert units
+        for query in new_queries:
+            column_name = self.data.contributed_values[query["name"].lower()].name
+            metadata = {"native": False}
+            try:
+                self.df[column_name] *= constants.conversion_factor(units[column_name], self.units)
+                metadata["units"] = self.units
+            except ValueError as e:
+                # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
+                if e.__class__.__name__ == "DimensionalityError":
+                    metadata["units"] = units[column_name]
+                else:
+                    raise
+            self._column_metadata[column_name].update(metadata)
 
         return self.df[column_names]
 
