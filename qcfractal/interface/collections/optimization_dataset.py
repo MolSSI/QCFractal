@@ -1,15 +1,18 @@
 """
 QCPortal Database ODM
 """
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
 
 import qcelemental as qcel
 
-from ..models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
+from ..models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
+
+if TYPE_CHECKING:  # pragma: no cover
+    from ..models import Molecule  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
 
 
 class OptEntry(ProtoModel):
@@ -95,7 +98,7 @@ class OptimizationDataset(BaseProcedureDataset):
 
     def add_entry(self,
                   name: str,
-                  initial_molecule: Molecule,
+                  initial_molecule: 'Molecule',
                   additional_keywords: Optional[Dict[str, Any]] = None,
                   attributes: Optional[Dict[str, Any]] = None,
                   save: bool = True) -> None:

@@ -15,14 +15,15 @@ from .collections import collection_factory, collections_name_map
 from .models import build_procedure
 from .models.rest_models import rest_model
 
-if TYPE_CHECKING:
-    from qcfractal import FractalServer
+if TYPE_CHECKING:  # pragma: no cover
+    from qcfractal import FractalServer  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
 
-    from .collections.collection import Collection
+    from .collections.collection import Collection  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
     from .models import GridOptimizationInput, KeywordSet, Molecule, ObjectId, ResultRecord, TaskRecord, TorsionDriveInput
     from .models.rest_models import (CollectionGETResponse, ComputeResponse, KeywordGETResponse, MoleculeGETResponse,
                                      ProcedureGETResponse, QueryObjectId, QueryProjection, QueryStr, ResultGETResponse,
-                                     ServiceQueueGETResponse, TaskQueueGETResponse)
+                                     ServiceQueueGETResponse, TaskQueueGETResponse
+                                     )  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
 
 ### Common docs
 
@@ -957,7 +958,7 @@ class FractalClient(object):
 
     def add_service(
             self,  # lgtm [py/similar-function]
-            service: Union['GridOptimizationInput', 'TorsionDriveInput'],
+            service: Union[List['GridOptimizationInput'], List['TorsionDriveInput']],
             tag: Optional[str] = None,
             priority: Optional[str] = None,
             full_return: bool = False) -> 'ComputeResponse':

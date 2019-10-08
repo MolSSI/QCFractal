@@ -1,15 +1,18 @@
 """
 QCPortal Database ODM
 """
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
 
-from ..models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification, TorsionDriveInput
+from ..models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification, TorsionDriveInput
 from ..models.torsiondrive import TDKeywords
 from ..visualization import custom_plot
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
+
+if TYPE_CHECKING:  # pragma: no cover
+    from ..models import Molecule  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
 
 
 class TDEntry(ProtoModel):
@@ -78,7 +81,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
     def add_entry(self,
                   name: str,
-                  initial_molecules: List[Molecule],
+                  initial_molecules: List['Molecule'],
                   dihedrals: List[Tuple[int, int, int, int]],
                   grid_spacing: List[int],
                   dihedral_ranges: Optional[List[Tuple[int, int]]] = None,

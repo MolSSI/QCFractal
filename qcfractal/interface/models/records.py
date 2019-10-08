@@ -16,10 +16,10 @@ from ..visualization import scatter_plot
 from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
-if TYPE_CHECKING:
-    from qcelemental.models import OptimizationInput, ResultInput
+if TYPE_CHECKING:  # pragma: no cover
+    from qcelemental.models import OptimizationInput, ResultInput  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
 
-    from .common_models import KeywordSet, Molecule
+    from .common_models import KeywordSet, Molecule  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
 
 __all__ = ["OptimizationRecord", "ResultRecord", "OptimizationRecord", "RecordBase"]
 
