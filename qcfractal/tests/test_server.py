@@ -85,7 +85,14 @@ def test_keywords_socket(test_server):
 def test_storage_socket(test_server):
 
     storage_api_addr = test_server.get_address("collection")  # Targets and endpoint in the FractalServer
-    storage = {"collection": "TorsionDriveRecord", "name": "Torsion123", "something": "else", "array": ["54321"]}
+    storage = {
+        "collection": "TorsionDriveRecord",
+        "name": "Torsion123",
+        "something": "else",
+        "array": ["54321"],
+        "visibility": True,
+        "view_available": False
+    }
     # Cast collection type to lower since the server-side does it anyways
     storage['collection'] = storage['collection'].lower()
 
@@ -112,6 +119,10 @@ def test_storage_socket(test_server):
     pdata["data"][0].pop("tags", None)
     pdata["data"][0].pop("tagline", None)
     pdata["data"][0].pop("provenance", None)
+    pdata["data"][0].pop("view_url", None)
+    pdata["data"][0].pop("owner", None)
+    pdata["data"][0].pop("description", None)
+
     assert pdata["data"][0] == storage
 
 

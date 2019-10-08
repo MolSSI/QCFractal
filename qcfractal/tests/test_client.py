@@ -13,6 +13,7 @@ from qcfractal.testing import test_server
 
 valid_encodings = ["json", "json-ext", "msgpack-ext"]
 
+
 @pytest.mark.parametrize("encoding", valid_encodings)
 def test_client_molecule(test_server, encoding):
 
@@ -77,6 +78,7 @@ def test_client_duplicate_keywords(test_server, encoding):
     assert len(ret3) == 3
     assert ret3[1] == ret[0]
 
+
 @pytest.mark.parametrize("encoding", valid_encodings)
 def test_empty_query(test_server, encoding):
 
@@ -93,7 +95,14 @@ def test_empty_query(test_server, encoding):
 def test_collection_portal(test_server, encoding):
 
     db_name = f"Torsion123-{encoding}"
-    db = {"collection": "torsiondrive", "name": db_name, "something": "else", "array": ["12345"]}
+    db = {
+        "collection": "torsiondrive",
+        "name": db_name,
+        "something": "else",
+        "array": ["12345"],
+        "visibility": True,
+        "view_available": False
+    }
 
     client = ptl.FractalClient(test_server)
     client._set_encoding(encoding)
@@ -109,6 +118,9 @@ def test_collection_portal(test_server, encoding):
     get_db.data[0].pop("tags", None)
     get_db.data[0].pop("tagline", None)
     get_db.data[0].pop("provenance", None)
+    get_db.data[0].pop("view_url", None)
+    get_db.data[0].pop("owner", None)
+    get_db.data[0].pop("description", None)
 
     assert db == get_db.data[0]
 
@@ -141,7 +153,7 @@ def test_custom_queries(test_server, encoding):
     client._set_encoding(encoding)
 
     # Dummy test, not found
-    ret = client.custom_query('optimization', 'final_result', {'optimization_ids':[1]}, full_return=True)
+    ret = client.custom_query('optimization', 'final_result', {'optimization_ids': [1]}, full_return=True)
 
     assert ret.meta.success
     assert ret.meta.n_found == 0
