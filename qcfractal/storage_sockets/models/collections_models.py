@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, Column, ForeignKey, Index, Integer, String
+from sqlalchemy import Boolean, JSON, Column, ForeignKey, Index, Integer, String
 # from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -35,6 +35,13 @@ class CollectionORM(Base):
 
     tags = Column(JSON)
     tagline = Column(String)
+    description = Column(String, nullable=True)
+
+    owner = Column(String(100), nullable=True)
+    visibility = Column(Boolean, nullable=False)
+
+    view_url = Column(String(100), nullable=True)
+    view_available = Column(Boolean, nullable=False)
 
     provenance = Column(JSON)
 

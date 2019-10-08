@@ -58,12 +58,22 @@ class Collection(abc.ABC):
         Subclasses of Collection can extend this class internally to change the set of
         additional data defined by the Collection
         """
-        name: str
-        collection: Optional[str] = None
-        provenance: Dict[str, str] = {}
-        tagline: Optional[str] = None
-        tags: List[str] = []
+
         id: str = 'local'
+        name: str
+
+        collection: str
+        provenance: Dict[str, str] = {}
+
+        tags: List[str] = []
+        tagline: Optional[str] = None
+        description: Optional[str] = None
+
+        owner: Optional[str] = None
+        visibility: bool = True
+
+        view_url: Optional[str] = None
+        view_available: bool = False
 
     def __str__(self) -> str:
         """
