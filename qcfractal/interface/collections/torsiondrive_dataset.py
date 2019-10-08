@@ -1,15 +1,18 @@
 """
 QCPortal Database ODM
 """
-from typing import Any, Dict, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import pandas as pd
 
-from ..models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification, TorsionDriveInput
+from ..models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification, TorsionDriveInput
 from ..models.torsiondrive import TDKeywords
 from ..visualization import custom_plot
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
+
+if TYPE_CHECKING:  # pragma: no cover
+    from ..models import Molecule  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
 
 
 class TDEntry(ProtoModel):
@@ -51,8 +54,8 @@ class TorsionDriveDataset(BaseProcedureDataset):
                           name: str,
                           optimization_spec: OptimizationSpecification,
                           qc_spec: QCSpecification,
-                          description: str = None,
-                          overwrite=False) -> None:
+                          description: Optional[str] = None,
+                          overwrite: bool = False) -> None:
         """
         Parameters
         ----------
@@ -78,7 +81,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
     def add_entry(self,
                   name: str,
-                  initial_molecules: List[Molecule],
+                  initial_molecules: List['Molecule'],
                   dihedrals: List[Tuple[int, int, int, int]],
                   grid_spacing: List[int],
                   dihedral_ranges: Optional[List[Tuple[int, int]]] = None,
@@ -130,7 +133,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
     def counts(self,
                entries: Union[str, List[str]],
                specs: Optional[Union[str, List[str]]] = None,
-               count_gradients=False) -> 'DataFrame':
+               count_gradients: bool = False) -> pd.DataFrame:
         """Counts the number of optimization or gradient evaluations associated with the
         TorsionDrives.
 
@@ -299,7 +302,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
                specs: Union[str, List[str]] = None,
                collapse: bool = True,
                status: Optional[str] = None,
-               detail: bool = False) -> 'DataFrame':
+               detail: bool = False) -> pd.DataFrame:
         """Returns the status of all current specifications.
 
         Parameters
@@ -335,7 +338,7 @@ class TorsionDriveDataset(BaseProcedureDataset):
         data = []
 
         for service in services:
-            row = {}
+            row: Dict[str, Union[str, int]] = {}
             row["Name"] = reverse_map[service["procedure_id"]]
             row["Status"] = service["status"]
 

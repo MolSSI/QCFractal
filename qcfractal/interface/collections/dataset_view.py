@@ -3,7 +3,7 @@ import distutils
 import pathlib
 import warnings
 from contextlib import contextmanager
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, Iterator, List, Tuple, Union
 
 # TODO(mattwelborn): Determine if h5py can/should be optionally imported
 import h5py
@@ -53,7 +53,7 @@ class DatasetView(abc.ABC):
             A Dataframe with specification of available columns.
         """
     @abc.abstractmethod
-    def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    def get_values(self, queries: List[Dict[str, str]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
         """
         Get value columns.
 
@@ -124,7 +124,7 @@ class HDF5View(DatasetView):
         # for some reason, pandas makes native a float column
         return df.astype({"native": bool})
 
-    def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    def get_values(self, queries: List[Dict[str, str]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
         units = {}
         with self._read_file() as f:
             ret = pd.DataFrame(index=f["entry/entry"][()])
@@ -173,9 +173,9 @@ class HDF5View(DatasetView):
             with self._read_file() as f:
                 entry_group = f["entry"]
                 if entry_group.attrs["model"] == "MoleculeEntry":
-                    fields = ("name", "molecule_id")
+                    fields = ["name", "molecule_id"]
                 elif entry_group.attrs["model"] == "ReactionEntry":
-                    fields = ("name", "stoichiometry", "molecule", "coefficient")
+                    fields = ["name", "stoichiometry", "molecule", "coefficient"]
                 else:
                     raise ValueError(f"Unknown entry class ({entry_group.attrs['model']}) while "
                                      f"reading HDF5 entries.")
@@ -367,11 +367,11 @@ class HDF5View(DatasetView):
         return name.replace("/", ":")
 
     @contextmanager
-    def _read_file(self):
+    def _read_file(self) -> Iterator[h5py.File]:
         yield h5py.File(self._path, 'r')
 
     @contextmanager
-    def _write_file(self):
+    def _write_file(self) -> Iterator[h5py.File]:
         yield h5py.File(self._path, 'w')
 
     # Methods for serializing to strings for storage in HDF5 metadata fields ("attrs")

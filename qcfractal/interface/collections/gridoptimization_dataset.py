@@ -1,12 +1,16 @@
 """
 QCPortal Database ODM
 """
-from typing import Any, Dict, List, Optional, Set
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set
 
-from ..models import GridOptimizationInput, Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
-from ..models.gridoptimization import GOKeywords, ScanDimension
+from ..models import GridOptimizationInput, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
+from ..models.gridoptimization import GOKeywords
 from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
+
+if TYPE_CHECKING:  # pragma: no cover
+    from ..models.gridoptimization import ScanDimension  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    from ..models import Molecule  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
 
 
 class GOEntry(ProtoModel):
@@ -74,8 +78,8 @@ class GridOptimizationDataset(BaseProcedureDataset):
 
     def add_entry(self,
                   name: str,
-                  initial_molecule: Molecule,
-                  scans: List[ScanDimension],
+                  initial_molecule: 'Molecule',
+                  scans: List['ScanDimension'],
                   preoptimization: bool = True,
                   attributes: Dict[str, Any] = None,
                   save: bool = True) -> None:

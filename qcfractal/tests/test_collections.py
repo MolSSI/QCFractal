@@ -1,6 +1,7 @@
 """
 Tests the server collection compute capabilities.
 """
+import itertools
 import pathlib
 from contextlib import contextmanager
 
@@ -752,7 +753,7 @@ def qm3_fixture(request, tmp_path_factory):
     ds._disable_query_limit = True
 
     # Trim down dataset for faster test
-    to_remove = {row for row in ds.data.history if row[2].lower() != 'b3lyp'}
+    to_remove = {row for row in ds.data.history if row[2].lower() not in {'b3lyp', 'pbe'}}
     for row in to_remove:
         ds.data.history.remove(row)
     ds._form_index()
@@ -776,7 +777,7 @@ def s22_fixture(request, tmp_path_factory):
     ds._disable_query_limit = True
 
     # Trim down dataset for faster test
-    to_remove = {row for row in ds.data.history if row[2].lower() != 'b3lyp'}
+    to_remove = {row for row in ds.data.history if row[2].lower() not in {'b3lyp', 'pbe'}}
     for row in to_remove:
         ds.data.history.remove(row)
     ds._form_index()
@@ -790,6 +791,47 @@ def s22_fixture(request, tmp_path_factory):
         ds._view = None
 
     yield client, ds
+
+
+@pytest.mark.slow
+def test_qm3_list_select(qm3_fixture):
+    """ tests list_values and get_values with multiple selections on the method and basis field """
+    client, ds = qm3_fixture
+
+    methods = {'b3lyp', 'pbe'}
+    bases = {'def2-svp', 'def2-tzvp'}
+    names = {f"{method}/{basis}" for (method, basis) in itertools.product(methods, bases)}
+
+    df = ds.list_values(method=['b3lyp', 'pbe'], basis=['def2-svp', 'def2-tzvp']).reset_index()
+    assert names == set(df["name"].str.lower())
+
+    df = ds.get_values(method=['b3lyp', 'pbe'], basis=['def2-svp', 'def2-tzvp'])
+    assert names == set(df.columns.str.lower())
+
+    df = ds.list_values(name=list(names)).reset_index()
+    assert names == set(df["name"].str.lower())
+
+    df = ds.get_values(name=list(names))
+    assert names == set(df.columns.str.lower())
+
+
+@pytest.mark.slow
+def test_s22_list_select(s22_fixture):
+    """ tests list_values and get_values with multiple selections on the method and basis field """
+    client, ds = s22_fixture
+
+    methods = {'b3lyp', 'pbe'}
+    bases = {'def2-svp', 'def2-tzvp'}
+    names = {f"{method}/{basis}" for (method, basis) in itertools.product(methods, bases)}
+
+    df = ds.list_values(method=['b3lyp', 'pbe'], basis=['def2-svp', 'def2-tzvp']).reset_index()
+    assert names == set(df[df["stoichiometry"] == "default"]["name"].str.lower())
+
+    df = ds.get_values(method=['b3lyp', 'pbe'], basis=['def2-svp', 'def2-tzvp'], stoich="default")
+    assert names == set(df.columns.str.lower())
+
+    df = ds.get_values(name=list(names))
+    assert names == set(df.columns.str.lower())
 
 
 def assert_list_get_values(ds):
