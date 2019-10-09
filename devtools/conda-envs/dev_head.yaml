@@ -20,15 +20,16 @@ dependencies:
   - alembic
   - tqdm
   - h5py
+  - pyarrow
 
 # Test depends
   - pytest
   - pytest-cov
   - codecov
-  - requests-mock
 
 # Environment specific includes
   - rdkit
+  - requests-mock
 
 # QCArchive includes
 

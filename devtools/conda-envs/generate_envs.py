@@ -1,8 +1,9 @@
 """
 Automatically generates the QCArchive environments
 """
-from ruamel.yaml import YAML
 import copy
+
+from ruamel.yaml import YAML
 
 yaml = YAML()
 yaml.indent(mapping=2, sequence=2, offset=2)
@@ -30,6 +31,7 @@ dependencies:
   - alembic
   - tqdm
   - h5py
+  - pyarrow
 
 # Test depends
   - pytest
@@ -109,7 +111,7 @@ environs = [
         # Tests for the current development heads
         "filename":
         "dev_head.yaml",
-        "dependencies": ["rdkit"],
+        "dependencies": ["rdkit", "requests-mock"],
         "qca_ecosystem": [],
         "pip_dependencies": [
             "git+git://github.com/MolSSI/QCEngine#egg=qcengine",

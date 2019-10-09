@@ -960,35 +960,40 @@ def test_view_download_remote(s22_fixture):
     ds.download()  # 700 kb
 
 
-def test_view_download_mock(gradient_dataset_fixture, tmp_path_factory, requests_mock):
+def test_view_download_mock(gradient_dataset_fixture, tmp_path_factory):
+    try:
+        import requests_mock
+    except ImportError:
+        pytest.skip("Missing request_mock")
+
     client, ds = gradient_dataset_fixture
-    requests_mock._real_http = True
 
-    path = pathlib.Path(tmp_path_factory.mktemp('test_collections'), 'ds_gradient_remote.hdf5')
-    view = ptl.collections.HDF5View(path)
-    view.write(ds)
+    with requests_mock.Mocker(real_http=True) as m:
+        path = pathlib.Path(tmp_path_factory.mktemp('test_collections'), 'ds_gradient_remote.hdf5')
+        view = ptl.collections.HDF5View(path)
+        view.write(ds)
 
-    fake_url = "https://qcarchiveviews.com/gradient_ds.h5"
-    ds.data.__dict__["view_url"] = fake_url
-    assert ds.data.id == ds.save()
+        fake_url = "https://qcarchiveviews.com/gradient_ds.h5"
+        ds.data.__dict__["view_url"] = fake_url
+        assert ds.data.id == ds.save()
 
-    requests_mock.get(fake_url, body=open(path, 'rb'))
-    ds = client.get_collection("Dataset", ds.name)
-    ds.download(verify=False)
+        m.get(fake_url, body=open(path, 'rb'))
+        ds = client.get_collection("Dataset", ds.name)
+        ds.download(verify=False)
 
-    # Check main functions run
-    ds.get_entries()
-    ds.list_values()
+        # Check main functions run
+        ds.get_entries()
+        ds.list_values()
 
-    with check_requests_monitor(client, "molecule", request_made=False):
-        ds.get_molecules()
+        with check_requests_monitor(client, "molecule", request_made=False):
+            ds.get_molecules()
 
-    with check_requests_monitor(client, "record", request_made=False):
-        ds.get_values()
+        with check_requests_monitor(client, "record", request_made=False):
+            ds.get_values()
 
-    requests_mock.get(fake_url + ".blake2b", text="badhash")
-    with pytest.raises(ValueError):
-        ds.download(verify=True)
+        m.get(fake_url + ".blake2b", text="badhash")
+        with pytest.raises(ValueError):
+            ds.download(verify=True)
 
 
 ### Non-dataset tests

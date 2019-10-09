@@ -21,6 +21,7 @@ dependencies:
   - alembic
   - tqdm
   - h5py
+  - pyarrow
 
 # Test depends
   - pytest
