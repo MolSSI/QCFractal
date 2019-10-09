@@ -47,6 +47,7 @@ class APIHandler(tornado.web.RequestHandler):
         self.storage = self.objects["storage_socket"]
         self.logger = objects["logger"]
         self.api_logger = objects["api_logger"]
+        self.view_handler = objects["view_handler"]
         self.username = None
 
     def prepare(self):
@@ -288,7 +289,7 @@ class CollectionHandler(APIHandler):
     def get(self, collection_id=None, view_function=None):
 
         # List collections
-        if collection_id is None and view_function is None:
+        if (collection_id is None) and (view_function is None):
             body_model, response_model = rest_model("collection", "get")
             body = self.parse_bodymodel(body_model)
 
@@ -297,8 +298,9 @@ class CollectionHandler(APIHandler):
 
             self.logger.info("GET: Collections - {} pulls.".format(len(response.data)))
             self.write(response)
+            return
         # Get specific collection
-        elif collection_id is not None and view_function is None:
+        elif (collection_id is not None) and (view_function is None):
             body_model, response_model = rest_model("collection", "get")
 
             body = self.parse_bodymodel(body_model)
@@ -309,9 +311,27 @@ class CollectionHandler(APIHandler):
 
             self.logger.info("GET: Collections - {} pulls.".format(len(response.data)))
             self.write(response)
+            return
         # View-backed function on collection
-        elif collection_id is not None and view_function is not None:
-            raise NotImplementedError()
+        elif (collection_id is not None) and (view_function is not None):
+            body_model, response_model = rest_model(f"collection/{collection_id}/view/{view_function}", "get")
+            body = self.parse_bodymodel(body_model)
+            if self.view_handler is None:
+                meta = add_metadata_template()
+                meta["success"] = False
+                meta["error_description"] = "Server does not support collection views."
+                self.write(response_model(meta=meta, data=None))
+                self.logger.info("GET: Collections - view request made, but server does not have a view_handler.")
+                return
+            result = self.view_handler.handle_request(collection_id, view_function, body.data.dict())
+            try:
+                response = response_model(**result)
+            except Exception as e:
+                print(e)
+                raise e
+            self.logger.info(f"GET: Collections - {collection_id} view {view_function} pulls.")
+            self.write(response)
+            return
         # Unreachable?
         else:
             body_model, response_model = rest_model("collection", "get")
@@ -321,6 +341,7 @@ class CollectionHandler(APIHandler):
             self.write(response_model(meta=meta, data=None))
             self.logger.info(
                 "GET: Collections - collection id is None, but view function is not None (should be unreachable).")
+            return
 
     def post(self, collection_id=None, view_function=None):
         self.authenticate("write")

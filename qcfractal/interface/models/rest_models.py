@@ -13,7 +13,10 @@ from .records import ResultRecord
 from .task_models import PriorityEnum, TaskRecord
 from .torsiondrive import TorsionDriveInput
 
-__all__ = ["ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryProjection", "ResultResponse"]
+__all__ = [
+    "ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryProjection", "ResultResponse",
+    "CollectionViewGETResponseMeta"
+]
 
 ### Utility functions
 
@@ -411,10 +414,10 @@ class CollectionViewEntryGETBody(ProtoModel):
 
 class CollectionViewEntryGETResponse(ProtoModel):
     meta: CollectionViewGETResponseMeta = Schema(..., description=str(get_base_docs(CollectionViewGETResponseMeta)))
-    data: bytes = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
+    data: Optional[bytes] = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
 
 
-register_model("collection/TODO", "GET", CollectionViewEntryGETBody, CollectionViewEntryGETResponse)
+register_model("collection/[0-9]*/view/entry", "GET", CollectionViewEntryGETBody, CollectionViewEntryGETResponse)
 
 ### Result
 

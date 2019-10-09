@@ -136,6 +136,18 @@ def test_storage_socket(test_server):
     assert len(r["data"]) == 0
 
 
+def test_bad_collection_get(test_server):
+    for storage_api_addr in [
+            test_server.get_address() + "collection/1234/view/entry",
+            test_server.get_address() + "collection/1234/view/value",
+            test_server.get_address() + "collection/1234/view/list",
+            test_server.get_address() + "collection/1234/view/molecule"
+    ]:
+        r = requests.get(storage_api_addr, json={"meta": {}, "data": {}})
+        assert r.status_code == 200, f"{r.reason} {storage_api_addr}"
+        assert r.json()["meta"]["success"] is False, storage_api_addr
+
+
 def test_bad_collection_post(test_server):
     storage = {
         "collection": "TorsionDriveRecord",
@@ -150,7 +162,10 @@ def test_bad_collection_post(test_server):
 
     for storage_api_addr in [
             test_server.get_address() + "collection/1234",
-            test_server.get_address() + "collection/1234/view/value"
+            test_server.get_address() + "collection/1234/view/value",
+            test_server.get_address() + "collection/1234/view/entry",
+            test_server.get_address() + "collection/1234/view/list",
+            test_server.get_address() + "collection/1234/view/molecule"
     ]:
         r = requests.post(storage_api_addr, json={"meta": {}, "data": storage})
         assert r.status_code == 200, r.reason

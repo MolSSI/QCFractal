@@ -10,6 +10,7 @@ import h5py
 import numpy as np
 import pandas as pd
 
+import pyarrow
 from qcelemental.util.serialization import deserialize, serialize
 
 from ..models import Molecule, ObjectId
@@ -18,6 +19,7 @@ from .reaction_dataset import ReactionEntry
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import FractalClient  # lgtm [py/unused-import]
+    from ..models.rest_models import CollectionViewGETResponseMeta  # lgtm [py/unused-import]
 
 
 class DatasetView(abc.ABC):
@@ -63,7 +65,7 @@ class DatasetView(abc.ABC):
             A Dataframe whose columns correspond to each query and a list of units for each column.
         """
     @abc.abstractmethod
-    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> List[Molecule]:
+    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> pd.Series:
         """
         Get a list of molecules using a molecule indexer
 
@@ -74,8 +76,8 @@ class DatasetView(abc.ABC):
 
         Returns
         -------
-        List['Molecule']
-            A list of Molecules corresponding to indexes
+        pd.Series
+            A Series of Molecules corresponding to indexes
         """
     @abc.abstractmethod
     def get_entries(self) -> pd.DataFrame:
@@ -163,14 +165,17 @@ class HDF5View(DatasetView):
 
         return ret, units
 
-    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> List[Molecule]:
+    def get_molecules(self, indexes: List[Union[ObjectId, int]], keep_serialized: bool = False) -> pd.Series:
         with self._read_file() as f:
             mol_schema = f['molecule/schema']
-            ret = [
-                Molecule(**self._deserialize_data(mol_schema[int(i) if isinstance(i, ObjectId) else i]),
-                         validate=False) for i in indexes
-            ]
-        return ret
+            if not keep_serialized:
+                mols = [
+                    Molecule(**self._deserialize_data(mol_schema[int(i) if isinstance(i, ObjectId) else i]),
+                             validate=False) for i in indexes
+                ]
+            else:
+                mols = [mol_schema[int(i) if isinstance(i, ObjectId) else i] for i in indexes]
+        return pd.Series(mols, index=indexes)
 
     def get_entries(self) -> pd.DataFrame:
         if self._entries is None:
@@ -413,25 +418,57 @@ class RemoteView(DatasetView):
 
     def get_entries(self) -> pd.DataFrame:
         # TODO: rest model for entries
-        payload = {
-            "meta": {},
-            "data": {},
-        }
-        response = self._automodel_request("molecule", "get", payload, full_return=full_return)
-        raise NotImplementedError()
+        payload = {"meta": {}, "data": {}}
+
+        response = self._client._automodel_request(f"collection/{self._id}/view/entry",
+                                                   "get",
+                                                   payload,
+                                                   full_return=True)
+        self._check_response_meta(response.meta)
+        return self._deserialize(response.data, response.meta.msgpacked_cols)
 
     def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> List[Molecule]:
         # TODO: rest model for molecules
-        raise NotImplementedError()
+        response = self._client._automodel_request(f"collection/{self._id}/view/molecule",
+                                                   "get",
+                                                   payload,
+                                                   full_return=True)
+        self._check_response_meta(response.meta)
 
     def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
         # TODO: rest model for values
-        raise NotImplementedError()
+        response = self._client._automodel_request(f"collection/{self._id}/view/value",
+                                                   "get",
+                                                   payload,
+                                                   full_return=True)
+        self._check_response_meta(response.meta)
 
     def list_values(self) -> pd.DataFrame:
         # TODO: rest model for values
-        raise NotImplementedError()
+        response = self._client._automodel_request(f"collection/{self._id}/view/list",
+                                                   "get",
+                                                   payload,
+                                                   full_return=True)
+        self._check_response_meta(response.meta)
 
     def write(self, ds: Dataset) -> None:
         # TODO: rest model for dataset writing???
         raise NotImplementedError()
+
+    @staticmethod
+    def _check_response_meta(meta: 'CollectionViewGETResponseMeta'):
+        if not meta.success:
+            raise RuntimeError(f"Remote view query failed with error message: {meta.error_description}")
+
+    @staticmethod
+    def _deserialize(data: bytes, msgpacked_cols: List[str]) -> pd.DataFrame:
+        """
+        Data are returned as feather-packed pandas DataFrames.
+        Due to limitations in pyarrow, some objects are msgpacked inside the DataFrame.
+        """
+
+        df = pd.read_feather(pyarrow.BufferReader(data))
+        for col in msgpacked_cols:
+            df[col] = df[col].apply(lambda element: deserialize(element, 'msgpack-ext'))
+
+        return df
