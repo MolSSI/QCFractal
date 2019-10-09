@@ -111,8 +111,10 @@ class Dataset(Collection):
         from . import HDF5View
         self._view = HDF5View(path)
 
-    def download(self, local_path: Optional[Union[str, Path]] = None) -> None:
+    def download(self, local_path: Optional[Union[str, Path]] = None, verify: bool = True) -> None:
         """ Download a remote view """
+        import hashlib
+
         if self.data.view_url is None:
             raise ValueError("A view for this dataset is not available on the server")
 
@@ -126,6 +128,17 @@ class Dataset(Collection):
         with open(local_path, 'wb') as fd:
             for chunk in r.iter_content(chunk_size=8192):
                 fd.write(chunk)
+
+        if verify:
+            remote_checksum = requests.get(self.data.view_url + ".blake2b").text.rstrip()
+            b2b = hashlib.blake2b()
+            with open(local_path, 'rb') as f:
+                for chunk in iter(lambda: f.read(8192), b""):
+                    b2b.update(chunk)
+            local_checksum = b2b.hexdigest()
+            if remote_checksum != local_checksum:
+                raise ValueError(f"Checksum verification failed. Expected: {remote_checksum}, Got: {local_checksum}")
+
         self.set_view(local_path)
 
     def _form_index(self) -> None:

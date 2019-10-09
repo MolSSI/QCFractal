@@ -974,7 +974,7 @@ def test_view_download_mock(gradient_dataset_fixture, tmp_path_factory, requests
 
     requests_mock.get(fake_url, body=open(path, 'rb'))
     ds = client.get_collection("Dataset", ds.name)
-    ds.download()  # 700 kb
+    ds.download(verify=False)
 
     # Check main functions run
     ds.get_entries()
@@ -985,6 +985,10 @@ def test_view_download_mock(gradient_dataset_fixture, tmp_path_factory, requests
 
     with check_requests_monitor(client, "record", request_made=False):
         ds.get_values()
+
+    requests_mock.get(fake_url + ".blake2b", text="badhash")
+    with pytest.raises(ValueError):
+        ds.download(verify=True)
 
 
 ### Non-dataset tests
