@@ -401,7 +401,7 @@ class OptimizationHandler(APIHandler):
 
     def get(self, query_type='get'):
 
-        body_model, response_model = rest_model("optimization", 'get', query_type)
+        body_model, response_model = rest_model(f"optimization/{query_type}", 'get')
         body = self.parse_bodymodel(body_model)
 
         try:

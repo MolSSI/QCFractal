@@ -1,6 +1,7 @@
 """
 Models for the REST interface
 """
+import re
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import Schema, constr, validator
@@ -17,27 +18,16 @@ __all__ = ["ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryP
 ### Utility functions
 
 __rest_models = {}
-__custom_rest_models = {}  # get requests models, with resource and subresources
 
 
-def register_model(resource: str, rest: str, body: ProtoModel, response: ProtoModel) -> None:
-    _register_model(False, resource, rest, body, response)
-
-
-def register_custom_model(resource: str, rest: str, body: ProtoModel, response: ProtoModel) -> None:
-    _register_model(True, resource, rest, body, response)
-
-
-def _register_model(is_custom_queries: bool, name: str, rest: str, body: ProtoModel, response: ProtoModel) -> None:
+def register_model(name: str, rest: str, body: ProtoModel, response: ProtoModel) -> None:
     """
-    Register a REST model.
+    Registers a new REST model.
 
     Parameters
     ----------
-    is_custom_queries: bool
-        Model will be added to advanced (custom) queries
     name : str
-        The REST endpoint name.
+        A regular expression matching the rest endpoint.
     rest : str
         The REST endpoint type.
     body : ProtoModel
@@ -46,25 +36,18 @@ def _register_model(is_custom_queries: bool, name: str, rest: str, body: ProtoMo
         The REST query response model.
 
     """
-
-    if is_custom_queries:
-        models_dict = __custom_rest_models
-    else:
-        models_dict = __rest_models
-
-    name = name.lower()
     rest = rest.upper()
 
-    if (name in models_dict) and (rest in models_dict[name]):
+    if (name in __rest_models) and (rest in __rest_models[name]):
         raise KeyError(f"Model name {name} already registered.")
 
-    if name not in models_dict:
-        models_dict[name] = {}
+    if name not in __rest_models:
+        __rest_models[name] = {}
 
-    models_dict[name][rest] = (body, response)
+    __rest_models[name][rest] = (body, response)
 
 
-def rest_model(resource: str, rest: str, subresource: str = None) -> Tuple[ProtoModel, ProtoModel]:
+def rest_model(resource: str, rest: str) -> Tuple[ProtoModel, ProtoModel]:
     """Aquires a REST Model
 
     Parameters
@@ -73,22 +56,22 @@ def rest_model(resource: str, rest: str, subresource: str = None) -> Tuple[Proto
         The REST endpoint resource name.
     rest : str
         The REST endpoint type: GET, POST, PUT, DELETE
-    subresource: str
-        A subresource under the main resource
+
     Returns
     -------
     Tuple[ProtoModel, ProtoModel]
         The (body, response) models of the REST request.
 
     """
-    try:
-        if resource.lower() in __custom_rest_models:
-            return __custom_rest_models[resource.lower()][subresource.upper()]
-        else:
-            return __rest_models[resource.lower()][rest.upper()]
-    except KeyError:
-        sub = subresource.lower() if subresource else ''
-        raise KeyError(f"REST Model {rest.upper()} {resource.lower()}:{sub} could not be found.")
+    rest = rest.upper()
+    for model_re in __rest_models.keys():
+        if re.fullmatch(model_re, resource):
+            try:
+                return __rest_models[model_re][rest]
+            except KeyError:
+                raise KeyError(f"REST Model {rest.upper()} {resource} could not be found.")
+    else:
+        raise KeyError(f"REST Model for endpoint {resource} could not be found.")
 
 
 ### Generic Types and Common Models
@@ -427,11 +410,11 @@ class CollectionViewEntryGETBody(ProtoModel):
 
 
 class CollectionViewEntryGETResponse(ProtoModel):
-    meta: CollectionViewGETResponseMeta = Schema(..., description=common_docs[CollectionViewGETResponseMeta])
+    meta: CollectionViewGETResponseMeta = Schema(..., description=str(get_base_docs(CollectionViewGETResponseMeta)))
     data: bytes = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
 
 
-register_model("collection_view_entry", "GET", CollectionViewEntryGETBody, CollectionViewEntryGETResponse)
+register_model("collection/TODO", "GET", CollectionViewEntryGETBody, CollectionViewEntryGETResponse)
 
 ### Result
 
@@ -916,7 +899,7 @@ class ListMoleculeResponse(ProtoModel):
         ..., description="A List of Molecules found from the query per optimization id.")
 
 
-register_custom_model("optimization", "final_result", OptimizationFinalResultBody, ResultResponse)
-register_custom_model("optimization", "all_results", OptimizationAllResultBody, ListResultResponse)
-register_custom_model("optimization", "initial_molecule", OptimizationAllResultBody, ListMoleculeResponse)
-register_custom_model("optimization", "final_molecule", OptimizationAllResultBody, ListMoleculeResponse)
+register_model(r"optimization/final_result", "GET", OptimizationFinalResultBody, ResultResponse)
+register_model(r"optimization/all_results", "GET", OptimizationAllResultBody, ListResultResponse)
+register_model(r"optimization/initial_molecule", "GET", OptimizationAllResultBody, ListMoleculeResponse)
+register_model(r"optimization/final_molecule", "GET", OptimizationAllResultBody, ListMoleculeResponse)
