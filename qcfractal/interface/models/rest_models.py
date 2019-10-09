@@ -408,6 +408,31 @@ class CollectionPOSTResponse(ProtoModel):
 
 register_model("collection", "POST", CollectionPOSTBody, CollectionPOSTResponse)
 
+### Collection views
+
+
+class CollectionViewGETResponseMeta(ResponseMeta):
+    """
+    Response metadata for collection views functions.
+    """
+    msgpacked_cols: List[str] = Schema(..., description="Names of columns which were serialized to msgpack-ext.")
+
+
+class CollectionViewEntryGETBody(ProtoModel):
+    class Data(ProtoModel):
+        subset: QueryStr = Schema(None, description="Not implemented.")
+
+    meta: EmptyMeta = Schema(EmptyMeta(), description=common_docs[EmptyMeta])
+    data: Data = Schema(..., description="Information about which entries to return.")
+
+
+class CollectionViewEntryGETResponse(ProtoModel):
+    meta: CollectionViewGETResponseMeta = Schema(..., description=common_docs[CollectionViewGETResponseMeta])
+    data: bytes = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
+
+
+register_model("collection_view_entry", "GET", CollectionViewEntryGETBody, CollectionViewEntryGETResponse)
+
 ### Result
 
 

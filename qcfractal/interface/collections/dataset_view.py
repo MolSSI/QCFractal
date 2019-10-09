@@ -400,11 +400,24 @@ class HDF5View(DatasetView):
 
 
 class RemoteView(DatasetView):
-    def __init__(self, client: 'FractalClient') -> None:
+    def __init__(self, client: 'FractalClient', collection_id: int) -> None:
+        """
+
+        Parameters
+        ----------
+        client: FractalClient
+        collection_id: int
+        """
         self._client: FractalClient = client
+        self._id: int = collection_id
 
     def get_entries(self) -> pd.DataFrame:
         # TODO: rest model for entries
+        payload = {
+            "meta": {},
+            "data": {},
+        }
+        response = self._automodel_request("molecule", "get", payload, full_return=full_return)
         raise NotImplementedError()
 
     def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> List[Molecule]:
