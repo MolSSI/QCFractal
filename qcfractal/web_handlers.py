@@ -4,11 +4,12 @@ Web handlers for the FractalServer.
 import json
 
 import tornado.web
-from pydantic import ValidationError
 
+from pydantic import ValidationError
 from qcelemental.util import deserialize, serialize
 
 from .interface.models.rest_models import rest_model
+from .storage_sockets.storage_utils import add_metadata_template
 
 _valid_encodings = {
     "application/json": "json",
@@ -284,22 +285,57 @@ class CollectionHandler(APIHandler):
 
     _required_auth = "read"
 
-    def get(self):
+    def get(self, collection_id=None, view_function=None):
 
-        body_model, response_model = rest_model("collection", "get")
-        body = self.parse_bodymodel(body_model)
+        # List collections
+        if collection_id is None and view_function is None:
+            body_model, response_model = rest_model("collection", "get")
+            body = self.parse_bodymodel(body_model)
 
-        cols = self.storage.get_collections(**body.data.dict(), projection=body.meta.projection)
-        response = response_model(**cols)
+            cols = self.storage.get_collections(**body.data.dict(), projection=body.meta.projection)
+            response = response_model(**cols)
 
-        self.logger.info("GET: Collections - {} pulls.".format(len(response.data)))
-        self.write(response)
+            self.logger.info("GET: Collections - {} pulls.".format(len(response.data)))
+            self.write(response)
+        # Get specific collection
+        elif collection_id is not None and view_function is None:
+            body_model, response_model = rest_model("collection", "get")
 
-    def post(self):
+            body = self.parse_bodymodel(body_model)
+            cols = self.storage.get_collections(**body.data.dict(),
+                                                col_id=int(collection_id),
+                                                projection=body.meta.projection)
+            response = response_model(**cols)
+
+            self.logger.info("GET: Collections - {} pulls.".format(len(response.data)))
+            self.write(response)
+        # View-backed function on collection
+        elif collection_id is not None and view_function is not None:
+            raise NotImplementedError()
+        # Unreachable?
+        else:
+            body_model, response_model = rest_model("collection", "get")
+            meta = add_metadata_template()
+            meta["success"] = False
+            meta["error_description"] = "GET request for view with no collection ID not understood."
+            self.write(response_model(meta=meta, data=None))
+            self.logger.info(
+                "GET: Collections - collection id is None, but view function is not None (should be unreachable).")
+
+    def post(self, collection_id=None, view_function=None):
         self.authenticate("write")
 
         body_model, response_model = rest_model("collection", "post")
         body = self.parse_bodymodel(body_model)
+
+        # POST requests not supported for anything other than "/collection"
+        if collection_id is not None or view_function is not None:
+            meta = add_metadata_template()
+            meta["success"] = False
+            meta["error_description"] = "POST requests not supported for sub-resources of /collection"
+            self.write(response_model(meta=meta, data=None))
+            self.logger.info("POST: Collections - Access attempted on subresource.")
+            return
 
         ret = self.storage.add_collection(body.data.dict(), overwrite=body.meta.overwrite)
         response = response_model(**ret)

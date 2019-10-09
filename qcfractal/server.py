@@ -250,7 +250,7 @@ class FractalServer:
             "version": get_information("version"),
             "query_limit": self.storage.get_limit(1.e9),
             "client_lower_version_limit": "0.11.0",  # Must be XX.YY.ZZ
-            "client_upper_version_limit": "0.11.99"   # Must be XX.YY.ZZ
+            "client_upper_version_limit": "0.11.99"  # Must be XX.YY.ZZ
         }
 
         endpoints = [
@@ -260,7 +260,7 @@ class FractalServer:
             (r"/kvstore", KVStoreHandler, self.objects),
             (r"/molecule", MoleculeHandler, self.objects),
             (r"/keyword", KeywordHandler, self.objects),
-            (r"/collection", CollectionHandler, self.objects),
+            (r"/collection(?:/([0-9]*)(?:/view/(value|entry|listvalue|molecule))?)?", CollectionHandler, self.objects),
             (r"/result", ResultHandler, self.objects),
             (r"/procedure/?", ProcedureHandler, self.objects),
             (r"/optimization/(.*)/?", OptimizationHandler, self.objects),

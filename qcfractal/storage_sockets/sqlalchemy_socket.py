@@ -851,8 +851,7 @@ class SQLAlchemySocket:
     def get_collections(self,
                         collection: Optional[str] = None,
                         name: Optional[str] = None,
-                        return_json: bool = True,
-                        with_ids: bool = True,
+                        col_id: Optional[int] = None,
                         limit: Optional[int] = None,
                         projection: Optional[Dict[str, Any]] = None,
                         skip: int = 0) -> Dict[str, Any]:
@@ -875,7 +874,7 @@ class SQLAlchemySocket:
             collection = collection.lower()
 
         collection_class = get_collection_class(collection)
-        query = format_query(collection_class, lname=name, collection=collection)
+        query = format_query(collection_class, lname=name, collection=collection, id=col_id)
 
         # try:
         rdata, meta['n_found'] = self.get_query_projection(collection_class,
