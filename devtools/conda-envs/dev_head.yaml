@@ -25,6 +25,7 @@ dependencies:
   - pytest
   - pytest-cov
   - codecov
+  - requests-mock
 
 # Environment specific includes
   - rdkit

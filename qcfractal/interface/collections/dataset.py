@@ -108,6 +108,7 @@ class Dataset(Collection):
         history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
 
     def set_view(self, path: Union[str, Path]) -> None:
+        from . import HDF5View
         self._view = HDF5View(path)
 
     def download(self, local_path: Optional[Union[str, Path]] = None) -> None:
