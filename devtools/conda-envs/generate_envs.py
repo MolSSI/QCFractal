@@ -32,6 +32,7 @@ dependencies:
   - tqdm
   - h5py
   - pyarrow>=0.13.0
+  - double-conversion>=3.0.0
 
 # Test depends
   - pytest
