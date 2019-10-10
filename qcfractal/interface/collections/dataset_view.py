@@ -473,7 +473,6 @@ class RemoteView(DatasetView):
         return self._deserialize(response.data, response.meta.msgpacked_cols)
 
     def write(self, ds: Dataset) -> None:
-        # TODO: rest model for dataset writing???
         raise NotImplementedError()
 
     @staticmethod

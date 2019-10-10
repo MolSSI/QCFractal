@@ -7,7 +7,6 @@ import pandas as pd
 
 from qcelemental.util.serialization import serialize
 
-# TODO(mattwelborn): names are hard
 from ..interface.collections import HDF5View
 
 

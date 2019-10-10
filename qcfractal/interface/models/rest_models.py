@@ -2,6 +2,7 @@
 Models for the REST interface
 """
 import re
+import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import Schema, constr, validator
@@ -30,7 +31,7 @@ def register_model(name: str, rest: str, body: ProtoModel, response: ProtoModel)
     Parameters
     ----------
     name : str
-        A regular expression matching the rest endpoint.
+        A regular expression describing the rest endpoint.
     rest : str
         The REST endpoint type.
     body : ProtoModel
@@ -51,7 +52,8 @@ def register_model(name: str, rest: str, body: ProtoModel, response: ProtoModel)
 
 
 def rest_model(resource: str, rest: str) -> Tuple[ProtoModel, ProtoModel]:
-    """Aquires a REST Model
+    """
+    Acquires a REST Model.
 
     Parameters
     ----------
@@ -67,14 +69,23 @@ def rest_model(resource: str, rest: str) -> Tuple[ProtoModel, ProtoModel]:
 
     """
     rest = rest.upper()
+    matches = []
     for model_re in __rest_models.keys():
         if re.fullmatch(model_re, resource):
             try:
-                return __rest_models[model_re][rest]
+                matches.append(__rest_models[model_re][rest])
             except KeyError:
-                raise KeyError(f"REST Model {rest.upper()} {resource} could not be found.")
+                pass  # Could have different regexes for different endpoint types
 
-    raise KeyError(f"REST Model for endpoint {resource} could not be found.")
+    if len(matches) == 0:
+        raise KeyError(f"REST Model for endpoint {resource} could not be found.")
+
+    if len(matches) > 1:
+        warnings.warn(
+            f"Multiple REST models were matched for {rest} request at endpoint {resource}. "
+            f"The following models will be used: {matches[0][0]}, {matches[0][1]}.", RuntimeWarning)
+
+    return matches[0]
 
 
 ### Generic Types and Common Models
@@ -419,7 +430,7 @@ class CollectionViewEntryGETResponse(ProtoModel):
     data: Optional[bytes] = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
 
 
-register_model("collection/[0-9]*/view/entry", "GET", CollectionViewEntryGETBody, CollectionViewEntryGETResponse)
+register_model("collection/[0-9]+/view/entry", "GET", CollectionViewEntryGETBody, CollectionViewEntryGETResponse)
 
 
 class CollectionViewMoleculeGETBody(ProtoModel):
@@ -437,7 +448,7 @@ class CollectionViewMoleculeGETResponse(ProtoModel):
     data: Optional[bytes] = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
 
 
-register_model("collection/[0-9]*/view/molecule", "GET", CollectionViewMoleculeGETBody,
+register_model("collection/[0-9]+/view/molecule", "GET", CollectionViewMoleculeGETBody,
                CollectionViewMoleculeGETResponse)
 
 
@@ -465,7 +476,7 @@ class CollectionViewValueGETResponse(ProtoModel):
     data: Optional[Data] = Schema(..., description="Values and units.")
 
 
-register_model("collection/[0-9]*/view/value", "GET", CollectionViewValueGETBody, CollectionViewValueGETResponse)
+register_model("collection/[0-9]+/view/value", "GET", CollectionViewValueGETBody, CollectionViewValueGETResponse)
 
 
 class CollectionViewListGETBody(ProtoModel):
@@ -481,7 +492,7 @@ class CollectionViewListGETResponse(ProtoModel):
     data: Optional[bytes] = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
 
 
-register_model("collection/[0-9]*/view/list", "GET", CollectionViewListGETBody, CollectionViewListGETResponse)
+register_model("collection/[0-9]+/view/list", "GET", CollectionViewListGETBody, CollectionViewListGETResponse)
 
 ### Result
 

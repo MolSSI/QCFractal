@@ -172,6 +172,18 @@ def test_bad_collection_post(test_server):
         assert r.json()["meta"]["success"] is False
 
 
+def test_bad_view_endpoints(test_server):
+    """ Tests that certain misspellings of the view endpoints result in 404s """
+    addr = test_server.get_address()
+
+    assert requests.get(addr + "collection//view/value").status_code == 404
+    assert requests.get(addr + "collection/234/view/values").status_code == 404
+    assert requests.get(addr + "collections/234/view/value").status_code == 404
+    assert requests.get(addr + "collection/234/value").status_code == 404
+    assert requests.get(addr + "collection/value").status_code == 404
+    assert requests.get(addr + "collection/S22").status_code == 404
+
+
 @pytest.mark.slow
 def test_snowflakehandler_restart():
 

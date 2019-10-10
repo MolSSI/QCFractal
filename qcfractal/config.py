@@ -79,8 +79,7 @@ class ViewSettings(ConfigSettings):
     """
     HDF5 view settings
     """
-
-    directory: str = Schema(None, description="Location of frozen-view data. Defaults to the root folder.")
+    directory: str = Schema(None, description="Location of frozen-view data.")
 
 
 class FractalServerSettings(ConfigSettings):

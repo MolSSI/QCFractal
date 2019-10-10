@@ -112,6 +112,14 @@ class Dataset(Collection):
         history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
 
     def set_view(self, path: Union[str, Path]) -> None:
+        """
+        Set a dataset to use a local view.
+
+        Parameters
+        ----------
+        path: Union[str, Path]
+            path to an hdf5 file representing a view for this dataset
+        """
         from . import HDF5View
         self._view = HDF5View(path)
 
@@ -126,7 +134,7 @@ class Dataset(Collection):
         Parameters
         ----------
         local_path: Optional[Union[str, Path]], optional
-            local path the store downloaded view. If None, the view will be stored in a temporary file and deleted on exit.
+            Local path the store downloaded view. If None, the view will be stored in a temporary file and deleted on exit.
         verify: bool, optional
             Verify download checksum. Default: True.
         """
