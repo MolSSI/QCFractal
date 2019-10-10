@@ -84,8 +84,10 @@ class ViewHandler:
         elif request == "molecule":
             series = view.get_molecules(model["indexes"], keep_serialized=True)
             df = pd.DataFrame({'molecule': series})
-        elif request == "values":
+            meta["msgpacked_cols"].append('molecule')
+        elif request == "value":
             df, units = view.get_values(model["queries"])
+            df.reset_index(inplace=True)
         elif request == "list":
             df = view.list_values()
         else:
@@ -94,16 +96,16 @@ class ViewHandler:
             return {"meta": meta, "data": None}
 
         # msgpack columns not supported by pyarrow
-        msgpack_cols = []
         for col in df.columns:
             if len(df) > 0:
-                sample = df.loc[0, col]
+                sample = df[col].iloc[0]
                 if isinstance(sample, np.ndarray):
-                    if len(sample.shape) > 1:
-                        msgpack_cols.append(col)
+                    meta["msgpacked_cols"].append(col)
+                elif isinstance(sample, list):
+                    meta["msgpacked_cols"].append(col)
                 # Add any other datatypes that need to be handled specially here
 
-        for col in msgpack_cols:
+        for col in meta["msgpacked_cols"]:
             df[col] = df[col].apply(lambda x: serialize(x, 'msgpack-ext'))
 
         # serialize
@@ -111,12 +113,11 @@ class ViewHandler:
         df.to_feather(f)
         df_feather = f.getvalue()
 
-        if request == "values":
-            data = (df_feather, units)
+        if request == "value":
+            data = {"values": df_feather, "units": units}
         else:
             data = df_feather
 
         meta["success"] = True
-        meta["msgpacked_cols"] = msgpack_cols
 
         return {"meta": meta, "data": data}

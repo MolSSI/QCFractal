@@ -51,18 +51,18 @@ class DatasetView(abc.ABC):
             A Dataframe with specification of available columns.
         """
     @abc.abstractmethod
-    def get_values(self, queries: List[Dict[str, str]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    def get_values(self, queries: List[Dict[str, Union[str, bool]]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
         """
         Get value columns.
 
         Parameters
         ----------
-        queries: List[Tuple[str]]
+        queries: List[Dict[str, Union[str, bool]]]
             List of column metadata to match.
 
         Returns
         -------
-            A Dataframe whose columns correspond to each query and a list of units for each column.
+            A Dataframe whose columns correspond to each query and a dictionary of units for each column.
         """
     @abc.abstractmethod
     def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> pd.Series:
@@ -130,7 +130,14 @@ class HDF5View(DatasetView):
         # for some reason, pandas makes native a float column
         return df.astype({"native": bool})
 
-    def get_values(self, queries: List[Dict[str, str]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    def get_values(self, queries: List[Dict[str, Union[str, bool]]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
+        """
+        Parameters
+        ----------
+        queries: List[Dict[str, Union[str, bool]]]
+            List of queries. Fields actually used are native, name, driver
+        """
+
         units = {}
         with self._read_file() as f:
             ret = pd.DataFrame(index=f["entry/entry"][()])
@@ -157,7 +164,10 @@ class HDF5View(DatasetView):
                         warnings.warn(
                             f"Variable length data type not understood, returning flat array "
                             f"(driver = {driver}).", RuntimeWarning)
-                        data = list(dataset[:])
+                        try:
+                            data = np.array(dataset[:])
+                        except ValueError:
+                            data = list(data)
                 column_name = query["name"]
                 column_units = self._deserialize_field(dataset.attrs["units"])
                 ret[column_name] = data
@@ -417,7 +427,6 @@ class RemoteView(DatasetView):
         self._id: int = collection_id
 
     def get_entries(self) -> pd.DataFrame:
-        # TODO: rest model for entries
         payload = {"meta": {}, "data": {}}
 
         response = self._client._automodel_request(f"collection/{self._id}/view/entry",
@@ -427,29 +436,41 @@ class RemoteView(DatasetView):
         self._check_response_meta(response.meta)
         return self._deserialize(response.data, response.meta.msgpacked_cols)
 
-    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> List[Molecule]:
-        # TODO: rest model for molecules
+    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> pd.Series:
+        payload = {"meta": {}, "data": {"indexes": indexes}}
         response = self._client._automodel_request(f"collection/{self._id}/view/molecule",
                                                    "get",
                                                    payload,
                                                    full_return=True)
         self._check_response_meta(response.meta)
+        df = self._deserialize(response.data, response.meta.msgpacked_cols)
+        return df['molecule']
 
-    def get_values(self, queries: List[Tuple[str]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
-        # TODO: rest model for values
+    def get_values(self, queries: List[Dict[str, Union[str, bool]]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
+        """
+        Parameters
+        ----------
+        queries: List[Dict[str, Union[str, bool]]]
+            List of queries. Fields actually used are native, name, driver
+        """
+        qlist = [{"name": query["name"], "driver": query["driver"], "native": query["native"]} for query in queries]
+        payload = {"meta": {}, "data": {"queries": qlist}}
+
         response = self._client._automodel_request(f"collection/{self._id}/view/value",
                                                    "get",
                                                    payload,
                                                    full_return=True)
         self._check_response_meta(response.meta)
+        return self._deserialize(response.data.values, response.meta.msgpacked_cols), response.data.units
 
     def list_values(self) -> pd.DataFrame:
-        # TODO: rest model for values
+        payload = {"meta": {}, "data": {}}
         response = self._client._automodel_request(f"collection/{self._id}/view/list",
                                                    "get",
                                                    payload,
                                                    full_return=True)
         self._check_response_meta(response.meta)
+        return self._deserialize(response.data, response.meta.msgpacked_cols)
 
     def write(self, ds: Dataset) -> None:
         # TODO: rest model for dataset writing???
@@ -471,4 +492,7 @@ class RemoteView(DatasetView):
         for col in msgpacked_cols:
             df[col] = df[col].apply(lambda element: deserialize(element, 'msgpack-ext'))
 
+        if "index" in df.columns:
+            df.set_index("index", inplace=True)  # pandas.to_feather does not support indexes,
+            # so we have to send indexless frames over the wire, and set the index here.
         return df

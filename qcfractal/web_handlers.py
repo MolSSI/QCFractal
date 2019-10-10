@@ -299,6 +299,7 @@ class CollectionHandler(APIHandler):
             self.logger.info("GET: Collections - {} pulls.".format(len(response.data)))
             self.write(response)
             return
+
         # Get specific collection
         elif (collection_id is not None) and (view_function is None):
             body_model, response_model = rest_model("collection", "get")
@@ -312,6 +313,7 @@ class CollectionHandler(APIHandler):
             self.logger.info("GET: Collections - {} pulls.".format(len(response.data)))
             self.write(response)
             return
+
         # View-backed function on collection
         elif (collection_id is not None) and (view_function is not None):
             body_model, response_model = rest_model(f"collection/{collection_id}/view/{view_function}", "get")
@@ -323,15 +325,14 @@ class CollectionHandler(APIHandler):
                 self.write(response_model(meta=meta, data=None))
                 self.logger.info("GET: Collections - view request made, but server does not have a view_handler.")
                 return
+
             result = self.view_handler.handle_request(collection_id, view_function, body.data.dict())
-            try:
-                response = response_model(**result)
-            except Exception as e:
-                print(e)
-                raise e
+            response = response_model(**result)
+
             self.logger.info(f"GET: Collections - {collection_id} view {view_function} pulls.")
             self.write(response)
             return
+
         # Unreachable?
         else:
             body_model, response_model = rest_model("collection", "get")

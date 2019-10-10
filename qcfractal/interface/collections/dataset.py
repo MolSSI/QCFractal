@@ -80,6 +80,9 @@ class Dataset(Collection):
         self._updated_state = False
 
         self._view: Optional[DatasetView] = None
+        if self.data.view_available:
+            from . import RemoteView
+            self._view = RemoteView(client, self.data.id)
         self._disable_view: bool = False  # for debugging and testing
         self._disable_query_limit: bool = False  # for debugging and testing
 

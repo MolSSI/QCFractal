@@ -406,7 +406,9 @@ class CollectionViewGETResponseMeta(ResponseMeta):
 
 class CollectionViewEntryGETBody(ProtoModel):
     class Data(ProtoModel):
-        subset: QueryStr = Schema(None, description="Not implemented.")
+        subset: QueryStr = Schema(None,
+                                  description="Not implemented. "
+                                  "See qcfractal.interface.collections.dataset_view.DatasetView.get_entries")
 
     meta: EmptyMeta = Schema(EmptyMeta(), description=common_docs[EmptyMeta])
     data: Data = Schema(..., description="Information about which entries to return.")
@@ -418,6 +420,68 @@ class CollectionViewEntryGETResponse(ProtoModel):
 
 
 register_model("collection/[0-9]*/view/entry", "GET", CollectionViewEntryGETBody, CollectionViewEntryGETResponse)
+
+
+class CollectionViewMoleculeGETBody(ProtoModel):
+    class Data(ProtoModel):
+        indexes: List[int] = Schema(None,
+                                    description="List of molecule indexes to return (returned by get_entries). "
+                                    "See qcfractal.interface.collections.dataset_view.DatasetView.get_molecules")
+
+    meta: EmptyMeta = Schema(EmptyMeta(), description=common_docs[EmptyMeta])
+    data: Data = Schema(..., description="Information about which molecules to return.")
+
+
+class CollectionViewMoleculeGETResponse(ProtoModel):
+    meta: CollectionViewGETResponseMeta = Schema(..., description=str(get_base_docs(CollectionViewGETResponseMeta)))
+    data: Optional[bytes] = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
+
+
+register_model("collection/[0-9]*/view/molecule", "GET", CollectionViewMoleculeGETBody,
+               CollectionViewMoleculeGETResponse)
+
+
+class CollectionViewValueGETBody(ProtoModel):
+    class Data(ProtoModel):
+        class QueryData(ProtoModel):
+            name: str
+            driver: str
+            native: bool
+
+        queries: List[QueryData] = Schema(None,
+                                          description="List of queries to match against values columns. "
+                                          "See qcfractal.interface.collections.dataset_view.DatasetView.get_values")
+
+    meta: EmptyMeta = Schema(EmptyMeta(), description=common_docs[EmptyMeta])
+    data: Data = Schema(..., description="Information about which values to return.")
+
+
+class CollectionViewValueGETResponse(ProtoModel):
+    class Data(ProtoModel):
+        values: bytes = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
+        units: Dict[str, str] = Schema(..., description="Units of value columns.")
+
+    meta: CollectionViewGETResponseMeta = Schema(..., description=str(get_base_docs(CollectionViewGETResponseMeta)))
+    data: Optional[Data] = Schema(..., description="Values and units.")
+
+
+register_model("collection/[0-9]*/view/value", "GET", CollectionViewValueGETBody, CollectionViewValueGETResponse)
+
+
+class CollectionViewListGETBody(ProtoModel):
+    class Data(ProtoModel):
+        pass
+
+    meta: EmptyMeta = Schema(EmptyMeta(), description=common_docs[EmptyMeta])
+    data: Data = Schema(..., description="Empty for now.")
+
+
+class CollectionViewListGETResponse(ProtoModel):
+    meta: CollectionViewGETResponseMeta = Schema(..., description=str(get_base_docs(CollectionViewGETResponseMeta)))
+    data: Optional[bytes] = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
+
+
+register_model("collection/[0-9]*/view/list", "GET", CollectionViewListGETBody, CollectionViewListGETResponse)
 
 ### Result
 

@@ -206,7 +206,7 @@ class FractalConfig(ConfigSettings):
     @property
     def view_path(self):
         if self.view.directory is None:
-            return self.base_path / "view"
+            return None
         else:
             return Path(os.path.expanduser(self.view.directory))
 
