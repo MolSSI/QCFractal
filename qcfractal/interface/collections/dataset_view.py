@@ -184,7 +184,7 @@ class HDF5View(DatasetView):
                              validate=False) for i in indexes
                 ]
             else:
-                mols = [mol_schema[int(i) if isinstance(i, ObjectId) else i] for i in indexes]
+                mols = [mol_schema[int(i) if isinstance(i, ObjectId) else i].tobytes() for i in indexes]
         return pd.Series(mols, index=indexes)
 
     def get_entries(self) -> pd.DataFrame:
@@ -444,7 +444,7 @@ class RemoteView(DatasetView):
                                                    full_return=True)
         self._check_response_meta(response.meta)
         df = self._deserialize(response.data, response.meta.msgpacked_cols)
-        return df['molecule']
+        return df['molecule'].apply(lambda blob: Molecule(**blob, validate=False))
 
     def get_values(self, queries: List[Dict[str, Union[str, bool]]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
         """

@@ -9,7 +9,6 @@ from qcelemental.util.serialization import serialize
 
 # TODO(mattwelborn): names are hard
 from ..interface.collections import HDF5View
-from .storage_utils import get_metadata_template
 
 
 class ViewHandler:
@@ -94,6 +93,7 @@ class ViewHandler:
         elif request == "molecule":
             series = view.get_molecules(model["indexes"], keep_serialized=True)
             df = pd.DataFrame({'molecule': series})
+            df.reset_index(inplace=True)
             meta["msgpacked_cols"].append('molecule')
         elif request == "value":
             df, units = view.get_values(model["queries"])
@@ -106,17 +106,20 @@ class ViewHandler:
             return {"meta": meta, "data": None}
 
         # msgpack columns not supported by pyarrow
+        pack_columns = []
         for col in df.columns:
             if len(df) > 0:
                 sample = df[col].iloc[0]
                 if isinstance(sample, np.ndarray):
-                    meta["msgpacked_cols"].append(col)
+                    pack_columns.append(col)
                 elif isinstance(sample, list):
-                    meta["msgpacked_cols"].append(col)
+                    pack_columns.append(col)
+
                 # Add any other datatypes that need to be handled specially here
 
-        for col in meta["msgpacked_cols"]:
+        for col in pack_columns:
             df[col] = df[col].apply(lambda x: serialize(x, 'msgpack-ext'))
+        meta["msgpacked_cols"] += pack_columns
 
         # serialize
         f = io.BytesIO()
