@@ -37,7 +37,6 @@ if __name__ == "__main__":
             'tqdm',
             'h5py',
             'pyarrow>=0.13.0',
-            'double-conversion>=3.0.0',
 
             # Database
             'sqlalchemy>=1.3',

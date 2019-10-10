@@ -73,8 +73,8 @@ def rest_model(resource: str, rest: str) -> Tuple[ProtoModel, ProtoModel]:
                 return __rest_models[model_re][rest]
             except KeyError:
                 raise KeyError(f"REST Model {rest.upper()} {resource} could not be found.")
-    else:
-        raise KeyError(f"REST Model for endpoint {resource} could not be found.")
+
+    raise KeyError(f"REST Model for endpoint {resource} could not be found.")
 
 
 ### Generic Types and Common Models
