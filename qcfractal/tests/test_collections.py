@@ -1013,38 +1013,6 @@ def test_view_download_mock(gradient_dataset_fixture, tmp_path_factory):
             ds.download(verify=True)
 
 
-def test_view_remote_get_entries(gradient_dataset_fixture, fractal_compute_server):
-    client, ds = gradient_dataset_fixture
-
-    view_path = fractal_compute_server.view_handler._path
-    view = ptl.collections.HDF5View(view_path / f"{ds.data.id}.hdf5")
-    view.write(ds)
-
-    remote_view = ptl.collections.RemoteView(client, ds.data.id)
-    rv = remote_view.get_entries()
-    dv = view.get_entries()
-    assert rv.equals(dv)
-
-
-def test_view_remote(gradient_dataset_fixture, fractal_compute_server):
-    client, ds = gradient_dataset_fixture
-
-    view_path = fractal_compute_server.view_handler._path
-    view = ptl.collections.HDF5View(view_path / f"{ds.data.id}.hdf5")
-    view.write(ds)
-
-    ds.data.__dict__["view_available"] = True
-    ds.save()
-
-    ds = client.get_collection("Dataset", ds.name)
-    assert isinstance(ds._view, ptl.collections.RemoteView)
-
-    ds.get_entries()
-    ds.get_molecules()
-    ds.list_values()
-    ds.get_values()
-
-
 ### Non-dataset tests
 
 
