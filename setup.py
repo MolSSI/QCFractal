@@ -38,7 +38,6 @@ if __name__ == "__main__":
             'h5py',
             'pyarrow',
             'arrow-cpp',
-            'parquet-cpp',
 
             # Database
             'sqlalchemy>=1.3',

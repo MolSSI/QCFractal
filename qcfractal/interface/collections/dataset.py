@@ -1,6 +1,7 @@
 """
 QCPortal Database ODM
 """
+import hashlib
 import tempfile
 import warnings
 from pathlib import Path
@@ -115,9 +116,20 @@ class Dataset(Collection):
         self._view = HDF5View(path)
 
     def download(self, local_path: Optional[Union[str, Path]] = None, verify: bool = True) -> None:
-        """ Download a remote view """
-        import hashlib
+        """
+        Download a remote view if available. The dataset will use this view to avoid server queries for calls to:
+        - get_entries
+        - get_molecules
+        - get_values
+        - list_values
 
+        Parameters
+        ----------
+        local_path: Optional[Union[str, Path]], optional
+            local path the store downloaded view. If None, the view will be stored in a temporary file and deleted on exit.
+        verify: bool, optional
+            Verify download checksum. Default: True.
+        """
         if self.data.view_url is None:
             raise ValueError("A view for this dataset is not available on the server")
 

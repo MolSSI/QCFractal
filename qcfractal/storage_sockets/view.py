@@ -26,7 +26,7 @@ class ViewHandler:
 
     def view_path(self, collection_id: int) -> pathlib.Path:
         """
-        Get path of a view
+        Returns the path to a view corresponding to a collection identified by an id.
 
         Parameters
         ----------
@@ -43,7 +43,7 @@ class ViewHandler:
 
     def view_exists(self, collection_id: int) -> bool:
         """
-        Check if view corresponding to a collection exists
+        Checks if view corresponding to a collection exists.
 
         Parameters
         ----------
@@ -60,16 +60,26 @@ class ViewHandler:
 
     def handle_request(self, collection_id: int, request: str, model: Dict[str, Any]) -> Dict[str, Any]:
         """
+        Handles REST requests related to views. This function implements the GET endpoint
+        /collections/[collection_id]/view/[request]
 
         Parameters
         ----------
-        collection_id
-        request
-        model
+        collection_id: int
+            Collection id corresponding to a view.
+        request: str
+            Requested data. Allowed options and corresponding DatasetView methods:
+            - list: list_values
+            - value: get_values
+            - molecule: get_molecules
+            - entry: get_entries
+        model:
+            REST model containing input options.
 
         Returns
         -------
-
+        Dict[str, Any]:
+            Dictionary corresponding to requested REST model
         """
         meta = {"errors": [], "success": False, "error_description": False, "msgpacked_cols": []}
 

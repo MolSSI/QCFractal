@@ -33,7 +33,6 @@ dependencies:
   - h5py
   - pyarrow
   - arrow-cpp
-  - parquet-cpp
 
 # Test depends
   - pytest
