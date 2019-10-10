@@ -36,8 +36,7 @@ if __name__ == "__main__":
             'tornado',
             'tqdm',
             'h5py',
-            'pyarrow',
-            'arrow-cpp',
+            'pyarrow>=0.13.0',
 
             # Database
             'sqlalchemy>=1.3',

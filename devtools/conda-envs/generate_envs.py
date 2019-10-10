@@ -31,8 +31,7 @@ dependencies:
   - alembic
   - tqdm
   - h5py
-  - pyarrow
-  - arrow-cpp
+  - pyarrow>=0.13.0
 
 # Test depends
   - pytest
