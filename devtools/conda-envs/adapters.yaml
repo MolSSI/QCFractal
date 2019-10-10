@@ -21,11 +21,14 @@ dependencies:
   - tqdm
   - h5py
   - pyarrow
+  - arrow-cpp
+  - parquet-cpp
 
 # Test depends
   - pytest
   - pytest-cov
   - codecov
+  - requests-mock
 
 # Environment specific includes
   - rdkit

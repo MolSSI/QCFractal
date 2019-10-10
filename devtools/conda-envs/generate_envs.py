@@ -32,11 +32,14 @@ dependencies:
   - tqdm
   - h5py
   - pyarrow
+  - arrow-cpp
+  - parquet-cpp
 
 # Test depends
   - pytest
   - pytest-cov
   - codecov
+  - requests-mock
 """
 qca_ecosystem_template = ["qcengine>=0.11.0", "qcelemental>=0.9.0"]
 
@@ -111,7 +114,7 @@ environs = [
         # Tests for the current development heads
         "filename":
         "dev_head.yaml",
-        "dependencies": ["rdkit", "requests-mock"],
+        "dependencies": ["rdkit"],
         "qca_ecosystem": [],
         "pip_dependencies": [
             "git+git://github.com/MolSSI/QCEngine#egg=qcengine",

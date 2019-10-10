@@ -21,11 +21,14 @@ dependencies:
   - tqdm
   - h5py
   - pyarrow
+  - arrow-cpp
+  - parquet-cpp
 
 # Test depends
   - pytest
   - pytest-cov
   - codecov
+  - requests-mock
 
 # QCArchive includes
   - qcengine>=0.11.0

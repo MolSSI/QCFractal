@@ -37,6 +37,8 @@ if __name__ == "__main__":
             'tqdm',
             'h5py',
             'pyarrow',
+            'arrow-cpp',
+            'parquet-cpp',
 
             # Database
             'sqlalchemy>=1.3',
@@ -65,10 +67,7 @@ if __name__ == "__main__":
                 'sphinx_rtd_theme',
                 'numpydoc',
             ],
-            'tests': [
-                'pytest',
-                'pytest-cov',
-            ],
+            'tests': ['pytest', 'pytest-cov', 'requests-mock'],
             'api_logging': [
                 'geoip2',
             ],
