@@ -319,9 +319,12 @@ class CollectionHandler(APIHandler):
             body_model, response_model = rest_model(f"collection/{collection_id}/view/{view_function}", "get")
             body = self.parse_bodymodel(body_model)
             if self.view_handler is None:
-                meta = add_metadata_template()
-                meta["success"] = False
-                meta["error_description"] = "Server does not support collection views."
+                meta = {
+                    "success": False,
+                    "error_description": "Server does not support collection views.",
+                    "errors": [],
+                    "msgpacked_cols": []
+                }
                 self.write(response_model(meta=meta, data=None))
                 self.logger.info("GET: Collections - view request made, but server does not have a view_handler.")
                 return

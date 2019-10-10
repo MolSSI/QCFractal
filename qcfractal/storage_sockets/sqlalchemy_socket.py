@@ -859,7 +859,18 @@ class SQLAlchemySocket:
 
         Parameters
         ----------
-
+        collection: Optional[str], optional
+            Type of the collection, e.g. ReactionDataset
+        name: Optional[str], optional
+            Name of the collection, e.g. S22
+        col_id: Optional[int], optional
+            Database id of the collection
+        limit: Optional[int], optional
+            Maximum number of results to return
+        projection: Optional[Dict[str, Any]], optional
+            Columns to return
+        skip: int, optional
+            Skip the first `skip` results
 
         Returns
         -------

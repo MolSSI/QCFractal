@@ -101,7 +101,7 @@ class ViewHandler:
             df = view.list_values()
         else:
             meta["success"] = False
-            meta["error_description"] = f"Unknown view request {request}."
+            meta["error_description"] = f"Unknown view request: {request}."
             return {"meta": meta, "data": None}
 
         # msgpack columns not supported by pyarrow
@@ -113,8 +113,7 @@ class ViewHandler:
                     pack_columns.append(col)
                 elif isinstance(sample, list):
                     pack_columns.append(col)
-
-                # Add any other datatypes that need to be handled specially here
+                # Add any other datatypes that need to be handled specially go here
 
         for col in pack_columns:
             df[col] = df[col].apply(lambda x: serialize(x, 'msgpack-ext'))
