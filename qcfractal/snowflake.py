@@ -133,6 +133,7 @@ class FractalSnowflake(FractalServer):
                          logfile_prefix=log_prefix,
                          service_frequency=2,
                          query_limit=int(1.e6),
+                         view_enabled=True,
                          view_path=self._view_tempdir.name)
 
         if self._storage:

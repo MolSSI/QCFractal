@@ -336,6 +336,7 @@ def server_start(args, config):
             query_limit=config.fractal.query_limit,
 
             # Collection views
+            view_enabled=config.view.enable,
             view_path=config.view_path,
 
             # Log options

@@ -97,6 +97,7 @@ class FractalServer:
             query_limit: int = 1000,
 
             # View options
+            view_enabled: bool = False,
             view_path: Optional[str] = None,
 
             # Log options
@@ -236,7 +237,7 @@ class FractalServer:
                                               allow_read=allow_read,
                                               max_limit=query_limit)
 
-        if view_path is not None:
+        if view_enabled:
             self.view_handler = ViewHandler(view_path)
         else:
             self.view_handler = None
