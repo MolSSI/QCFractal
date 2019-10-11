@@ -2,6 +2,7 @@
 QCPortal Database ODM
 """
 import hashlib
+import json
 import tempfile
 import warnings
 from pathlib import Path
@@ -11,6 +12,7 @@ import numpy as np
 import pandas as pd
 import requests
 
+import pydantic
 from qcelemental import constants
 
 from ..models import ComputeResponse, ObjectId, ProtoModel
@@ -153,7 +155,12 @@ class Dataset(Collection):
                 fd.write(chunk)
 
         if verify:
-            remote_checksum = requests.get(self.data.view_url + ".blake2b").text.rstrip()
+            remote_blob = requests.get(self.data.view_url + ".meta").text.rstrip()
+
+            class MetaBlob(pydantic.BaseModel):
+                blake2b: str
+
+            remote_checksum = MetaBlob(**json.loads(remote_blob)).blake2b
             b2b = hashlib.blake2b()
             with open(local_path, 'rb') as f:
                 for chunk in iter(lambda: f.read(8192), b""):

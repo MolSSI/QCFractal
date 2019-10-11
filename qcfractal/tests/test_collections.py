@@ -1008,7 +1008,7 @@ def test_view_download_mock(gradient_dataset_fixture, tmp_path_factory):
         with check_requests_monitor(client, "record", request_made=False):
             ds.get_values()
 
-        m.get(fake_url + ".blake2b", text="badhash")
+        m.get(fake_url + ".meta", text="badhash")
         with pytest.raises(ValueError):
             ds.download(verify=True)
 

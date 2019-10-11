@@ -1,6 +1,7 @@
 """
 Models for the REST interface
 """
+import functools
 import re
 import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
@@ -51,6 +52,7 @@ def register_model(name: str, rest: str, body: ProtoModel, response: ProtoModel)
     __rest_models[name][rest] = (body, response)
 
 
+@functools.lru_cache(1000, typed=True)
 def rest_model(resource: str, rest: str) -> Tuple[ProtoModel, ProtoModel]:
     """
     Acquires a REST Model.
