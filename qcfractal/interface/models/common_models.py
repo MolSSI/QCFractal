@@ -5,7 +5,6 @@ from enum import Enum
 from typing import Any, Dict, Optional
 
 from pydantic import Schema, validator
-
 from qcelemental.models import AutodocBaseSettings, Molecule, ProtoModel, Provenance
 from qcelemental.models.procedures import OptimizationProtocols
 from qcelemental.models.results import ResultProtocols
@@ -16,6 +15,9 @@ __all__ = ["QCSpecification", "OptimizationSpecification", "KeywordSet", "Object
 
 # Add in QCElemental models
 __all__.extend(["Molecule", "Provenance", "ProtoModel"])
+
+# Autodoc
+__all__.extend(["OptimizationProtocols", "ResultProtocols"])
 
 
 class ObjectId(str):
@@ -64,7 +66,7 @@ class QCSpecification(ProtoModel):
         None,
         description="The Id of the :class:`KeywordSet` registered in the database to run this calculation with. This "
         "Id must exist in the database.")
-    protocols: ResultProtocols = Schema(ResultProtocols(), description=str(ResultProtocols.__doc__))
+    protocols: ResultProtocols = Schema(ResultProtocols(), description=str(ResultProtocols.__base_doc__))
     program: str = Schema(
         ...,
         description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs"
@@ -123,7 +125,8 @@ class OptimizationSpecification(ProtoModel):
         description="Dictionary of keyword arguments to pass into the ``program`` when the program runs. "
         "Note that unlike :class:`QCSpecification` this is a dictionary of keywords, not the Id for a "
         ":class:`KeywordSet`. ")
-    protocols: OptimizationProtocols = Schema(OptimizationProtocols(), description=str(OptimizationProtocols.__doc__))
+    protocols: OptimizationProtocols = Schema(OptimizationProtocols(),
+                                              description=str(OptimizationProtocols.__base_doc__))
 
     def dict(self, *args, **kwargs):
         ret = super().dict(*args, **kwargs)

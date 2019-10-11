@@ -3,8 +3,8 @@ Either pull in QCEl models or local models
 """
 
 from . import rest_models
-from .common_models import (AutodocBaseSettings, KeywordSet, Molecule, ObjectId, OptimizationSpecification, ProtoModel,
-                            QCSpecification)
+from .common_models import (AutodocBaseSettings, KeywordSet, Molecule, ObjectId, OptimizationProtocols,
+                            OptimizationSpecification, ProtoModel, QCSpecification, ResultProtocols)
 from .gridoptimization import GridOptimizationInput, GridOptimizationRecord
 from .model_builder import build_procedure
 from .model_utils import hash_dictionary, json_encoders, prepare_basis
