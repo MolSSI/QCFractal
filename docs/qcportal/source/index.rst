@@ -10,7 +10,7 @@ QCPortal emphasizes the following virtues:
 
 - **Organize:** Large sets of computations are organized into Collections for easy reference and manipulation.
 - **Reproducibility:** All steps of commonly used pipelines are elucidated in the input without additional human intervention.
-- **Exploration:** Explorate and query of all data contained within a FractalServer.
+- **Exploration:** Explore and query of all data contained within a FractalServer.
 - **Visualize:** Plot graphs within Jupyter notebooks or provide 3D graphics of molecules.
 - **Accessibility:** Easily share quantum chemistry data with colleagues or the community through accessibility settings.
 
