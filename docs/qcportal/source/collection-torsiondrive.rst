@@ -34,3 +34,4 @@ API
 
 .. autoclass:: qcfractal.interface.collections.TorsionDriveDataset
     :members:
+    :inherited-members:

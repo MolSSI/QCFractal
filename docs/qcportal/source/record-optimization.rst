@@ -15,5 +15,4 @@ Attributes
 ----------
 
 .. autoclass:: qcportal.models.OptimizationRecord
-
-
+    :members:
