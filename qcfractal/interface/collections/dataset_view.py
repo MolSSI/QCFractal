@@ -19,7 +19,7 @@ from .reaction_dataset import ReactionEntry
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import FractalClient  # lgtm [py/unused-import]
-    from ..models.rest_models import CollectionViewGETResponseMeta  # lgtm [py/unused-import]
+    from ..models.rest_models import CollectionSubresourceGETResponseMeta  # lgtm [py/unused-import]
 
 
 class DatasetView(abc.ABC):
@@ -429,19 +429,13 @@ class RemoteView(DatasetView):
     def get_entries(self) -> pd.DataFrame:
         payload = {"meta": {}, "data": {}}
 
-        response = self._client._automodel_request(f"collection/{self._id}/view/entry",
-                                                   "get",
-                                                   payload,
-                                                   full_return=True)
+        response = self._client._automodel_request(f"collection/{self._id}/entry", "get", payload, full_return=True)
         self._check_response_meta(response.meta)
         return self._deserialize(response.data, response.meta.msgpacked_cols)
 
     def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> pd.Series:
         payload = {"meta": {}, "data": {"indexes": indexes}}
-        response = self._client._automodel_request(f"collection/{self._id}/view/molecule",
-                                                   "get",
-                                                   payload,
-                                                   full_return=True)
+        response = self._client._automodel_request(f"collection/{self._id}/molecule", "get", payload, full_return=True)
         self._check_response_meta(response.meta)
         df = self._deserialize(response.data, response.meta.msgpacked_cols)
         return df['molecule'].apply(lambda blob: Molecule(**blob, validate=False))
@@ -456,19 +450,13 @@ class RemoteView(DatasetView):
         qlist = [{"name": query["name"], "driver": query["driver"], "native": query["native"]} for query in queries]
         payload = {"meta": {}, "data": {"queries": qlist}}
 
-        response = self._client._automodel_request(f"collection/{self._id}/view/value",
-                                                   "get",
-                                                   payload,
-                                                   full_return=True)
+        response = self._client._automodel_request(f"collection/{self._id}/value", "get", payload, full_return=True)
         self._check_response_meta(response.meta)
         return self._deserialize(response.data.values, response.meta.msgpacked_cols), response.data.units
 
     def list_values(self) -> pd.DataFrame:
         payload = {"meta": {}, "data": {}}
-        response = self._client._automodel_request(f"collection/{self._id}/view/list",
-                                                   "get",
-                                                   payload,
-                                                   full_return=True)
+        response = self._client._automodel_request(f"collection/{self._id}/list", "get", payload, full_return=True)
         self._check_response_meta(response.meta)
         return self._deserialize(response.data, response.meta.msgpacked_cols)
 
@@ -476,7 +464,7 @@ class RemoteView(DatasetView):
         raise NotImplementedError()
 
     @staticmethod
-    def _check_response_meta(meta: 'CollectionViewGETResponseMeta'):
+    def _check_response_meta(meta: 'CollectionSubresourceGETResponseMeta'):
         if not meta.success:
             raise RuntimeError(f"Remote view query failed with error message: {meta.error_description}")
 

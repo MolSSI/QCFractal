@@ -270,7 +270,7 @@ class FractalServer:
             (r"/kvstore", KVStoreHandler, self.objects),
             (r"/molecule", MoleculeHandler, self.objects),
             (r"/keyword", KeywordHandler, self.objects),
-            (r"/collection(?:/([0-9]+)(?:/view/(value|entry|list|molecule))?)?", CollectionHandler, self.objects),
+            (r"/collection(?:/([0-9]+)(?:/(value|entry|list|molecule))?)?", CollectionHandler, self.objects),
             (r"/result", ResultHandler, self.objects),
             (r"/procedure/?", ProcedureHandler, self.objects),
             (r"/optimization/(.*)/?", OptimizationHandler, self.objects),

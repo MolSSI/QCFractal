@@ -138,10 +138,10 @@ def test_storage_socket(test_server):
 
 def test_bad_collection_get(test_server):
     for storage_api_addr in [
-            test_server.get_address() + "collection/1234/view/entry",
-            test_server.get_address() + "collection/1234/view/value",
-            test_server.get_address() + "collection/1234/view/list",
-            test_server.get_address() + "collection/1234/view/molecule"
+            test_server.get_address() + "collection/1234/entry",
+            test_server.get_address() + "collection/1234/value",
+            test_server.get_address() + "collection/1234/list",
+            test_server.get_address() + "collection/1234/molecule"
     ]:
         r = requests.get(storage_api_addr, json={"meta": {}, "data": {}})
         assert r.status_code == 200, f"{r.reason} {storage_api_addr}"
@@ -162,10 +162,10 @@ def test_bad_collection_post(test_server):
 
     for storage_api_addr in [
             test_server.get_address() + "collection/1234",
-            test_server.get_address() + "collection/1234/view/value",
-            test_server.get_address() + "collection/1234/view/entry",
-            test_server.get_address() + "collection/1234/view/list",
-            test_server.get_address() + "collection/1234/view/molecule"
+            test_server.get_address() + "collection/1234/value",
+            test_server.get_address() + "collection/1234/entry",
+            test_server.get_address() + "collection/1234/list",
+            test_server.get_address() + "collection/1234/molecule"
     ]:
         r = requests.post(storage_api_addr, json={"meta": {}, "data": storage})
         assert r.status_code == 200, r.reason
@@ -176,10 +176,10 @@ def test_bad_view_endpoints(test_server):
     """ Tests that certain misspellings of the view endpoints result in 404s """
     addr = test_server.get_address()
 
-    assert requests.get(addr + "collection//view/value").status_code == 404
-    assert requests.get(addr + "collection/234/view/values").status_code == 404
-    assert requests.get(addr + "collections/234/view/value").status_code == 404
-    assert requests.get(addr + "collection/234/value").status_code == 404
+    assert requests.get(addr + "collection//value").status_code == 404
+    assert requests.get(addr + "collection/234/values").status_code == 404
+    assert requests.get(addr + "collections/234/value").status_code == 404
+    assert requests.get(addr + "collection/234/view/value").status_code == 404
     assert requests.get(addr + "collection/value").status_code == 404
     assert requests.get(addr + "collection/S22").status_code == 404
 

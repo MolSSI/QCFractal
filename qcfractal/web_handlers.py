@@ -316,7 +316,7 @@ class CollectionHandler(APIHandler):
 
         # View-backed function on collection
         elif (collection_id is not None) and (view_function is not None):
-            body_model, response_model = rest_model(f"collection/{collection_id}/view/{view_function}", "get")
+            body_model, response_model = rest_model(f"collection/{collection_id}/{view_function}", "get")
             body = self.parse_bodymodel(body_model)
             if self.view_handler is None:
                 meta = {

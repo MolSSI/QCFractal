@@ -17,7 +17,7 @@ from .torsiondrive import TorsionDriveInput
 
 __all__ = [
     "ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryProjection", "ResultResponse",
-    "CollectionViewGETResponseMeta"
+    "CollectionSubresourceGETResponseMeta"
 ]
 
 ### Utility functions
@@ -410,14 +410,14 @@ register_model("collection", "POST", CollectionPOSTBody, CollectionPOSTResponse)
 ### Collection views
 
 
-class CollectionViewGETResponseMeta(ResponseMeta):
+class CollectionSubresourceGETResponseMeta(ResponseMeta):
     """
     Response metadata for collection views functions.
     """
     msgpacked_cols: List[str] = Schema(..., description="Names of columns which were serialized to msgpack-ext.")
 
 
-class CollectionViewEntryGETBody(ProtoModel):
+class CollectionEntryGETBody(ProtoModel):
     class Data(ProtoModel):
         subset: QueryStr = Schema(None,
                                   description="Not implemented. "
@@ -427,15 +427,16 @@ class CollectionViewEntryGETBody(ProtoModel):
     data: Data = Schema(..., description="Information about which entries to return.")
 
 
-class CollectionViewEntryGETResponse(ProtoModel):
-    meta: CollectionViewGETResponseMeta = Schema(..., description=str(get_base_docs(CollectionViewGETResponseMeta)))
+class CollectionEntryGETResponse(ProtoModel):
+    meta: CollectionSubresourceGETResponseMeta = Schema(
+        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
     data: Optional[bytes] = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
 
 
-register_model("collection/[0-9]+/view/entry", "GET", CollectionViewEntryGETBody, CollectionViewEntryGETResponse)
+register_model("collection/[0-9]+/entry", "GET", CollectionEntryGETBody, CollectionEntryGETResponse)
 
 
-class CollectionViewMoleculeGETBody(ProtoModel):
+class CollectionMoleculeGETBody(ProtoModel):
     class Data(ProtoModel):
         indexes: List[int] = Schema(None,
                                     description="List of molecule indexes to return (returned by get_entries). "
@@ -445,16 +446,16 @@ class CollectionViewMoleculeGETBody(ProtoModel):
     data: Data = Schema(..., description="Information about which molecules to return.")
 
 
-class CollectionViewMoleculeGETResponse(ProtoModel):
-    meta: CollectionViewGETResponseMeta = Schema(..., description=str(get_base_docs(CollectionViewGETResponseMeta)))
+class CollectionMoleculeGETResponse(ProtoModel):
+    meta: CollectionSubresourceGETResponseMeta = Schema(
+        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
     data: Optional[bytes] = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
 
 
-register_model("collection/[0-9]+/view/molecule", "GET", CollectionViewMoleculeGETBody,
-               CollectionViewMoleculeGETResponse)
+register_model("collection/[0-9]+/molecule", "GET", CollectionMoleculeGETBody, CollectionMoleculeGETResponse)
 
 
-class CollectionViewValueGETBody(ProtoModel):
+class CollectionValueGETBody(ProtoModel):
     class Data(ProtoModel):
         class QueryData(ProtoModel):
             name: str
@@ -469,19 +470,20 @@ class CollectionViewValueGETBody(ProtoModel):
     data: Data = Schema(..., description="Information about which values to return.")
 
 
-class CollectionViewValueGETResponse(ProtoModel):
+class CollectionValueGETResponse(ProtoModel):
     class Data(ProtoModel):
         values: bytes = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
         units: Dict[str, str] = Schema(..., description="Units of value columns.")
 
-    meta: CollectionViewGETResponseMeta = Schema(..., description=str(get_base_docs(CollectionViewGETResponseMeta)))
+    meta: CollectionSubresourceGETResponseMeta = Schema(
+        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
     data: Optional[Data] = Schema(..., description="Values and units.")
 
 
-register_model("collection/[0-9]+/view/value", "GET", CollectionViewValueGETBody, CollectionViewValueGETResponse)
+register_model("collection/[0-9]+/value", "GET", CollectionValueGETBody, CollectionValueGETResponse)
 
 
-class CollectionViewListGETBody(ProtoModel):
+class CollectionListGETBody(ProtoModel):
     class Data(ProtoModel):
         pass
 
@@ -489,12 +491,13 @@ class CollectionViewListGETBody(ProtoModel):
     data: Data = Schema(..., description="Empty for now.")
 
 
-class CollectionViewListGETResponse(ProtoModel):
-    meta: CollectionViewGETResponseMeta = Schema(..., description=str(get_base_docs(CollectionViewGETResponseMeta)))
+class CollectionListGETResponse(ProtoModel):
+    meta: CollectionSubresourceGETResponseMeta = Schema(
+        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
     data: Optional[bytes] = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
 
 
-register_model("collection/[0-9]+/view/list", "GET", CollectionViewListGETBody, CollectionViewListGETResponse)
+register_model("collection/[0-9]+/list", "GET", CollectionListGETBody, CollectionListGETResponse)
 
 ### Result
 
