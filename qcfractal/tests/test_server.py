@@ -91,7 +91,7 @@ def test_storage_socket(test_server):
         "something": "else",
         "array": ["54321"],
         "visibility": True,
-        "view_available": False
+        "view_available": False,
     }
     # Cast collection type to lower since the server-side does it anyways
     storage['collection'] = storage['collection'].lower()
@@ -120,6 +120,7 @@ def test_storage_socket(test_server):
     pdata["data"][0].pop("tagline", None)
     pdata["data"][0].pop("provenance", None)
     pdata["data"][0].pop("view_url", None)
+    pdata["data"][0].pop("view_metadata", None)
     pdata["data"][0].pop("owner", None)
     pdata["data"][0].pop("description", None)
 

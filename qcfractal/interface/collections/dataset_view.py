@@ -6,12 +6,9 @@ import warnings
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Tuple, Union
 
-# TODO(mattwelborn): Determine if h5py can/should be optionally imported
-import h5py
 import numpy as np
 import pandas as pd
 
-import pyarrow
 from qcelemental.util.serialization import deserialize, serialize
 
 from ..models import Molecule, ObjectId
@@ -21,6 +18,7 @@ from .reaction_dataset import ReactionEntry
 if TYPE_CHECKING:  # pragma: no cover
     from .. import FractalClient  # lgtm [py/unused-import]
     from ..models.rest_models import CollectionSubresourceGETResponseMeta  # lgtm [py/unused-import]
+    import h5py  # lgtm [py/unused-import]
 
 
 class DatasetView(abc.ABC):
@@ -138,6 +136,7 @@ class HDF5View(DatasetView):
         queries: List[Dict[str, Union[str, bool]]]
             List of queries. Fields actually used are native, name, driver
         """
+        import h5py
 
         units = {}
         with self._read_file() as f:
@@ -203,6 +202,7 @@ class HDF5View(DatasetView):
         return self._entries
 
     def write(self, ds: Dataset):
+        import h5py
         # For data checksums
         dataset_kwargs = {"chunks": True, "fletcher32": True}
 
@@ -395,11 +395,13 @@ class HDF5View(DatasetView):
         return name.replace("/", ":")
 
     @contextmanager
-    def _read_file(self) -> Iterator[h5py.File]:
+    def _read_file(self) -> Iterator['h5py.File']:
+        import h5py
         yield h5py.File(self._path, 'r')
 
     @contextmanager
-    def _write_file(self) -> Iterator[h5py.File]:
+    def _write_file(self) -> Iterator['h5py.File']:
+        import h5py
         yield h5py.File(self._path, 'w')
 
     # Methods for serializing to strings for storage in HDF5 metadata fields ("attrs")
@@ -483,6 +485,7 @@ class RemoteView(DatasetView):
         Data are returned as feather-packed pandas DataFrames.
         Due to limitations in pyarrow, some objects are msgpacked inside the DataFrame.
         """
+        import pyarrow
 
         df = pd.read_feather(pyarrow.BufferReader(data))
         for col in msgpacked_cols:

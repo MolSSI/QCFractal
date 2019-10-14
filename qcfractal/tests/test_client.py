@@ -119,6 +119,7 @@ def test_collection_portal(test_server, encoding):
     get_db.data[0].pop("tagline", None)
     get_db.data[0].pop("provenance", None)
     get_db.data[0].pop("view_url", None)
+    get_db.data[0].pop("view_metadata", None)
     get_db.data[0].pop("owner", None)
     get_db.data[0].pop("description", None)
 
