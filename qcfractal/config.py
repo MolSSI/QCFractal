@@ -80,7 +80,7 @@ class ViewSettings(ConfigSettings):
     HDF5 view settings
     """
     enable: bool = Schema(False, description="Enable frozen-views.")
-    directory: str = Schema(None, description="Location of frozen-view data. If None, defaults to base_folder/view.")
+    directory: str = Schema(None, description="Location of frozen-view data. If None, defaults to base_folder/views.")
 
 
 class FractalServerSettings(ConfigSettings):
@@ -206,7 +206,7 @@ class FractalConfig(ConfigSettings):
     @property
     def view_path(self):
         if self.view.directory is None:
-            default_view_path = self.base_path / "view"
+            default_view_path = self.base_path / "views"
             default_view_path.mkdir(parents=False, exist_ok=True)
             return default_view_path
         else:

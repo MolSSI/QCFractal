@@ -38,8 +38,9 @@ def handle_dataset_fixture_params(client, ds_type, ds, fractal_compute_server, r
         except ImportError:
             pytest.skip("Missing request_mock")
         with requests_mock.Mocker(real_http=True) as m:
-            m.get(ds.data.view_url, body=open(fractal_compute_server.view_handler.view_path(ds.data.id), 'rb'))
-            ds.download(verify=True)
+            with open(fractal_compute_server.view_handler.view_path(ds.data.id), 'rb') as f:
+                m.get(ds.data.view_url, body=f)
+                ds.download(verify=True)
     elif request.param == "remote_view":
         ds._disable_view = False
         assert isinstance(ds._view, ptl.collections.RemoteView)
@@ -999,23 +1000,24 @@ def test_view_download_mock(gradient_dataset_fixture, tmp_path_factory):
         ds.data.__dict__["view_url"] = fake_url
         assert ds.data.id == ds.save()
 
-        m.get(fake_url, body=open(path, 'rb'))
-        ds = client.get_collection("Dataset", ds.name)
-        ds.download(verify=False)
+        with open(path, 'rb') as f:
+            m.get(fake_url, body=f)
+            ds = client.get_collection("Dataset", ds.name)
+            ds.download(verify=False)
 
-        # Check main functions run
-        ds.get_entries()
-        ds.list_values()
+            # Check main functions run
+            ds.get_entries()
+            ds.list_values()
 
-        with check_requests_monitor(client, "molecule", request_made=False):
-            ds.get_molecules()
+            with check_requests_monitor(client, "molecule", request_made=False):
+                ds.get_molecules()
 
-        with check_requests_monitor(client, "record", request_made=False):
-            ds.get_values()
+            with check_requests_monitor(client, "record", request_made=False):
+                ds.get_values()
 
-        ds.data.__dict__["view_metadata"] = {"blake2b_checksum": "badhash"}
-        with pytest.raises(ValueError):
-            ds.download(verify=True)
+            ds.data.__dict__["view_metadata"] = {"blake2b_checksum": "badhash"}
+            with pytest.raises(ValueError):
+                ds.download(verify=True)
 
 
 ### Non-dataset tests
