@@ -1,5 +1,6 @@
 import abc
 import distutils
+import hashlib
 import pathlib
 import warnings
 from contextlib import contextmanager
@@ -377,6 +378,14 @@ class HDF5View(DatasetView):
 
         # Clean up any caches
         self._entries = None
+
+    def hash(self) -> str:
+        """ Returns the Blake2b hash of the view """
+        b2b = hashlib.blake2b()
+        with open(self._path, 'rb') as f:
+            for chunk in iter(lambda: f.read(8192), b""):
+                b2b.update(chunk)
+        return b2b.hexdigest()
 
     @staticmethod
     def _normalize_hdf5_name(name: str) -> str:

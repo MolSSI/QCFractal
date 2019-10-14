@@ -155,17 +155,9 @@ class Dataset(Collection):
                 fd.write(chunk)
 
         if verify:
-            remote_blob = requests.get(self.data.view_url + ".meta").text.rstrip()
-
-            class MetaBlob(pydantic.BaseModel):
-                blake2b: str
-
-            remote_checksum = MetaBlob(**json.loads(remote_blob)).blake2b
-            b2b = hashlib.blake2b()
-            with open(local_path, 'rb') as f:
-                for chunk in iter(lambda: f.read(8192), b""):
-                    b2b.update(chunk)
-            local_checksum = b2b.hexdigest()
+            remote_checksum = self.data.view_metadata['blake2b_checksum']
+            from . import HDF5View
+            local_checksum = HDF5View(local_path).hash()
             if remote_checksum != local_checksum:
                 raise ValueError(f"Checksum verification failed. Expected: {remote_checksum}, Got: {local_checksum}")
 

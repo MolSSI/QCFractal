@@ -73,6 +73,7 @@ class Collection(abc.ABC):
         visibility: bool = True
 
         view_url: Optional[str] = None
+        view_metadata: Optional[Dict[str, str]] = None
         view_available: bool = False
 
     def __str__(self) -> str:
