@@ -28,21 +28,22 @@ def test_compute_queue_stack(fractal_compute_server):
     kw_id = client.add_keywords([kw])[0]
 
     # Add compute
-    compute = {
-        "meta": {
-            "procedure": "single",
+    compute_args = {
             "driver": "energy",
             "method": "HF",
             "basis": "sto-3g",
             "keywords": kw_id,
             "program": "psi4",
-        },
-        "data": [hydrogen_mol_id, helium],
     }
 
     # Ask the server to compute a new computation
     r = client.add_compute("psi4", "HF", "sto-3g", "energy", kw_id, [hydrogen_mol_id, helium])
     assert len(r.ids) == 2
+
+    r2 = client.add_compute(**compute_args, molecule=[hydrogen_mol_id, helium])
+    assert len(r2.ids) == 2
+    assert len(r2.submitted) == 0
+    assert set(r2.ids) == set(r.ids)
 
     # Manually handle the compute
     fractal_compute_server.await_results()
@@ -52,8 +53,8 @@ def test_compute_queue_stack(fractal_compute_server):
     results_query = {
         "program": "psi4",
         "molecule": [hydrogen_mol_id, helium_mol_id],
-        "method": compute["meta"]["method"],
-        "basis": compute["meta"]["basis"]
+        "method": compute_args["method"],
+        "basis": compute_args["basis"]
     }
     results = client.query_results(**results_query, status=None)
 

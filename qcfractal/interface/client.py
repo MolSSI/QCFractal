@@ -714,12 +714,13 @@ class FractalClient(object):
     ### Compute section
 
     def add_compute(self,
-                    program: str,
-                    method: str,
-                    basis: str,
-                    driver: str,
-                    keywords: Union['ObjectId', None],
-                    molecule: Union['ObjectId', 'Molecule', List[Union[str, 'Molecule']]],
+                    program: str = None,
+                    method: str = None,
+                    basis: Optional[str] = None,
+                    driver: str = None,
+                    keywords: Optional['ObjectId'] = None,
+                    molecule: Union['ObjectId', 'Molecule', List[Union['ObjectId', 'Molecule']]] = None,
+                    *,
                     priority: Optional[str] = None,
                     tag: Optional[str] = None,
                     full_return: bool = False) -> 'ComputeResponse':
@@ -732,17 +733,17 @@ class FractalClient(object):
             The computational program to execute the result with (e.g., "rdkit", "psi4").
         method : str
             The computational method to use (e.g., "B3LYP", "PBE")
-        basis : str
+        basis : Optional[str], optional
             The basis to apply to the computation (e.g., "cc-pVDZ", "6-31G")
-        driver : str
+        driver : str, optional
             The primary result that the compute will aquire {"energy", "gradient", "hessian", "properties"}
-        keywords : Union[str, None]
+        keywords : Optional['ObjectId'], optional
             The KeywordSet ObjectId to use with the given compute
-        molecule : Union[str, Molecule, List[Union[str, Molecule]]]
+        molecule : Union['ObjectId', 'Molecule', List[Union['ObjectId', 'Molecule']]]
             The Molecules or Molecule ObjectId's to compute with the above methods
-        priority : str, optional
+        priority : Optional[str], optional
             The priority of the job {"HIGH", "MEDIUM", "LOW"}. Default is "MEDIUM".
-        tag : str, optional
+        tag : Optional[str], optional
             The computational tag to add to your compute, managers can optionally only pull
             based off the string tags. These tags are arbitrary, but several examples are to
             use "large", "medium", "small" to denote the size of the job or "project1", "project2"
@@ -757,7 +758,22 @@ class FractalClient(object):
               - ids: The ObjectId's of the task in the order of input molecules
               - submitted: A list of ObjectId's that were submitted to the compute queue
               - existing: A list of ObjectId's of tasks already in the database
+
+        Raises
+        ------
+        ValueError
+            Description
         """
+
+        # Scan the input
+        if program is None:
+            raise ValueError("Program must be specified for the computation.")
+        if method is None:
+            raise ValueError("Method must be specified for the computation.")
+        if driver is None:
+            raise ValueError("Driver must be specified for the computation.")
+        if molecule is None:
+            raise ValueError("Molecule must be specified for the computation.")
 
         # Always a list
         if not isinstance(molecule, list):

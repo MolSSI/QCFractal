@@ -369,7 +369,6 @@ class FractalServer:
 
         # Add services callback
         if start_periodics:
-            print("Starting periodcs")
             nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, self.service_frequency * 1000)
             nanny_services.start()
             self.periodic["update_services"] = nanny_services
