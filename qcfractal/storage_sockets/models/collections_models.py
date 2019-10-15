@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, JSON, Column, ForeignKey, Index, Integer, String
+from sqlalchemy import JSON, Boolean, Column, ForeignKey, Index, Integer, String
 # from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -41,6 +41,7 @@ class CollectionORM(Base):
     visibility = Column(Boolean, nullable=False)
 
     view_url = Column(String, nullable=True)
+    view_metadata = Column(JSON, nullable=True)
     view_available = Column(Boolean, nullable=False)
 
     provenance = Column(JSON)

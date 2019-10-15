@@ -1,12 +1,11 @@
 import abc
 import distutils
+import hashlib
 import pathlib
 import warnings
 from contextlib import contextmanager
-from typing import Any, Dict, Iterator, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Tuple, Union
 
-# TODO(mattwelborn): Determine if h5py can/should be optionally imported
-import h5py
 import numpy as np
 import pandas as pd
 
@@ -16,18 +15,16 @@ from ..models import Molecule, ObjectId
 from .dataset import Dataset, MoleculeEntry
 from .reaction_dataset import ReactionEntry
 
+if TYPE_CHECKING:  # pragma: no cover
+    from .. import FractalClient  # lgtm [py/unused-import]
+    from ..models.rest_models import CollectionSubresourceGETResponseMeta  # lgtm [py/unused-import]
+    import h5py  # lgtm [py/unused-import]
+
 
 class DatasetView(abc.ABC):
-    def __init__(self, path: Union[str, pathlib.Path]):
-        """
-        Parameters
-        ----------
-        path: Union[str, pathlib.Path]
-            File path of view
-        """
-        if isinstance(path, str):
-            path = pathlib.Path(path)
-        self._path = path
+    @abc.abstractmethod
+    def __init__(self) -> None:
+        pass
 
     @abc.abstractmethod
     def write(self, ds: Dataset) -> None:
@@ -53,21 +50,21 @@ class DatasetView(abc.ABC):
             A Dataframe with specification of available columns.
         """
     @abc.abstractmethod
-    def get_values(self, queries: List[Dict[str, str]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    def get_values(self, queries: List[Dict[str, Union[str, bool]]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
         """
         Get value columns.
 
         Parameters
         ----------
-        queries: List[Tuple[str]]
+        queries: List[Dict[str, Union[str, bool]]]
             List of column metadata to match.
 
         Returns
         -------
-            A Dataframe whose columns correspond to each query and a list of units for each column.
+            A Dataframe whose columns correspond to each query and a dictionary of units for each column.
         """
     @abc.abstractmethod
-    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> List[Molecule]:
+    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> pd.Series:
         """
         Get a list of molecules using a molecule indexer
 
@@ -78,8 +75,8 @@ class DatasetView(abc.ABC):
 
         Returns
         -------
-        List['Molecule']
-            A list of Molecules corresponding to indexes
+        pd.Series
+            A Series of Molecules corresponding to indexes
         """
     @abc.abstractmethod
     def get_entries(self) -> pd.DataFrame:
@@ -94,8 +91,16 @@ class DatasetView(abc.ABC):
 
 
 class HDF5View(DatasetView):
-    def __init__(self, path: Union[str, pathlib.Path]):
-        super().__init__(path)
+    def __init__(self, path: Union[str, pathlib.Path]) -> None:
+        """
+        Parameters
+        ----------
+        path: Union[str, pathlib.Path]
+            File path of view
+        """
+        if isinstance(path, str):
+            path = pathlib.Path(path)
+        self._path = path
         self._entries: pd.DataFrame = None
 
     def list_values(self) -> pd.DataFrame:
@@ -124,7 +129,15 @@ class HDF5View(DatasetView):
         # for some reason, pandas makes native a float column
         return df.astype({"native": bool})
 
-    def get_values(self, queries: List[Dict[str, str]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    def get_values(self, queries: List[Dict[str, Union[str, bool]]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
+        """
+        Parameters
+        ----------
+        queries: List[Dict[str, Union[str, bool]]]
+            List of queries. Fields actually used are native, name, driver
+        """
+        import h5py
+
         units = {}
         with self._read_file() as f:
             ret = pd.DataFrame(index=f["entry/entry"][()])
@@ -151,7 +164,10 @@ class HDF5View(DatasetView):
                         warnings.warn(
                             f"Variable length data type not understood, returning flat array "
                             f"(driver = {driver}).", RuntimeWarning)
-                        data = list(dataset[:])
+                        try:
+                            data = np.array(dataset[:])
+                        except ValueError:
+                            data = list(data)
                 column_name = query["name"]
                 column_units = self._deserialize_field(dataset.attrs["units"])
                 ret[column_name] = data
@@ -159,14 +175,17 @@ class HDF5View(DatasetView):
 
         return ret, units
 
-    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> List[Molecule]:
+    def get_molecules(self, indexes: List[Union[ObjectId, int]], keep_serialized: bool = False) -> pd.Series:
         with self._read_file() as f:
             mol_schema = f['molecule/schema']
-            ret = [
-                Molecule(**self._deserialize_data(mol_schema[int(i) if isinstance(i, ObjectId) else i]),
-                         validate=False) for i in indexes
-            ]
-        return ret
+            if not keep_serialized:
+                mols = [
+                    Molecule(**self._deserialize_data(mol_schema[int(i) if isinstance(i, ObjectId) else i]),
+                             validate=False) for i in indexes
+                ]
+            else:
+                mols = [mol_schema[int(i) if isinstance(i, ObjectId) else i].tobytes() for i in indexes]
+        return pd.Series(mols, index=indexes)
 
     def get_entries(self) -> pd.DataFrame:
         if self._entries is None:
@@ -183,6 +202,7 @@ class HDF5View(DatasetView):
         return self._entries
 
     def write(self, ds: Dataset):
+        import h5py
         # For data checksums
         dataset_kwargs = {"chunks": True, "fletcher32": True}
 
@@ -359,6 +379,14 @@ class HDF5View(DatasetView):
         # Clean up any caches
         self._entries = None
 
+    def hash(self) -> str:
+        """ Returns the Blake2b hash of the view """
+        b2b = hashlib.blake2b()
+        with open(self._path, 'rb') as f:
+            for chunk in iter(lambda: f.read(8192), b""):
+                b2b.update(chunk)
+        return b2b.hexdigest()
+
     @staticmethod
     def _normalize_hdf5_name(name: str) -> str:
         """ Handles names with / in them, which is disallowed in HDF5 """
@@ -367,11 +395,13 @@ class HDF5View(DatasetView):
         return name.replace("/", ":")
 
     @contextmanager
-    def _read_file(self) -> Iterator[h5py.File]:
+    def _read_file(self) -> Iterator['h5py.File']:
+        import h5py
         yield h5py.File(self._path, 'r')
 
     @contextmanager
-    def _write_file(self) -> Iterator[h5py.File]:
+    def _write_file(self) -> Iterator['h5py.File']:
+        import h5py
         yield h5py.File(self._path, 'w')
 
     # Methods for serializing to strings for storage in HDF5 metadata fields ("attrs")
@@ -393,3 +423,75 @@ class HDF5View(DatasetView):
     @staticmethod
     def _deserialize_data(data: np.ndarray) -> Any:
         return deserialize(data.tobytes(), 'msgpack-ext')
+
+
+class RemoteView(DatasetView):
+    def __init__(self, client: 'FractalClient', collection_id: int) -> None:
+        """
+
+        Parameters
+        ----------
+        client: FractalClient
+        collection_id: int
+        """
+        self._client: FractalClient = client
+        self._id: int = collection_id
+
+    def get_entries(self) -> pd.DataFrame:
+        payload = {"meta": {}, "data": {}}
+
+        response = self._client._automodel_request(f"collection/{self._id}/entry", "get", payload, full_return=True)
+        self._check_response_meta(response.meta)
+        return self._deserialize(response.data, response.meta.msgpacked_cols)
+
+    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> pd.Series:
+        payload = {"meta": {}, "data": {"indexes": indexes}}
+        response = self._client._automodel_request(f"collection/{self._id}/molecule", "get", payload, full_return=True)
+        self._check_response_meta(response.meta)
+        df = self._deserialize(response.data, response.meta.msgpacked_cols)
+        return df['molecule'].apply(lambda blob: Molecule(**blob, validate=False))
+
+    def get_values(self, queries: List[Dict[str, Union[str, bool]]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
+        """
+        Parameters
+        ----------
+        queries: List[Dict[str, Union[str, bool]]]
+            List of queries. Fields actually used are native, name, driver
+        """
+        qlist = [{"name": query["name"], "driver": query["driver"], "native": query["native"]} for query in queries]
+        payload = {"meta": {}, "data": {"queries": qlist}}
+
+        response = self._client._automodel_request(f"collection/{self._id}/value", "get", payload, full_return=True)
+        self._check_response_meta(response.meta)
+        return self._deserialize(response.data.values, response.meta.msgpacked_cols), response.data.units
+
+    def list_values(self) -> pd.DataFrame:
+        payload = {"meta": {}, "data": {}}
+        response = self._client._automodel_request(f"collection/{self._id}/list", "get", payload, full_return=True)
+        self._check_response_meta(response.meta)
+        return self._deserialize(response.data, response.meta.msgpacked_cols)
+
+    def write(self, ds: Dataset) -> None:
+        raise NotImplementedError()
+
+    @staticmethod
+    def _check_response_meta(meta: 'CollectionSubresourceGETResponseMeta'):
+        if not meta.success:
+            raise RuntimeError(f"Remote view query failed with error message: {meta.error_description}")
+
+    @staticmethod
+    def _deserialize(data: bytes, msgpacked_cols: List[str]) -> pd.DataFrame:
+        """
+        Data are returned as feather-packed pandas DataFrames.
+        Due to limitations in pyarrow, some objects are msgpacked inside the DataFrame.
+        """
+        import pyarrow
+
+        df = pd.read_feather(pyarrow.BufferReader(data))
+        for col in msgpacked_cols:
+            df[col] = df[col].apply(lambda element: deserialize(element, 'msgpack-ext'))
+
+        if "index" in df.columns:
+            df.set_index("index", inplace=True)  # pandas.to_feather does not support indexes,
+            # so we have to send indexless frames over the wire, and set the index here.
+        return df

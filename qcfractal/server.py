@@ -19,7 +19,7 @@ from .extras import get_information
 from .interface import FractalClient
 from .queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, TaskQueueHandler
 from .services import construct_service
-from .storage_sockets import storage_socket_factory
+from .storage_sockets import ViewHandler, storage_socket_factory
 from .storage_sockets.api_logger import API_AccessLogger
 from .web_handlers import (CollectionHandler, InformationHandler, KeywordHandler, KVStoreHandler, MoleculeHandler,
                            OptimizationHandler, ProcedureHandler, ResultHandler)
@@ -95,6 +95,10 @@ class FractalServer:
             storage_uri: str = "postgresql://localhost:5432",
             storage_project_name: str = "qcfractal_default",
             query_limit: int = 1000,
+
+            # View options
+            view_enabled: bool = False,
+            view_path: Optional[str] = None,
 
             # Log options
             logfile_prefix: str = None,
@@ -233,6 +237,11 @@ class FractalServer:
                                               allow_read=allow_read,
                                               max_limit=query_limit)
 
+        if view_enabled:
+            self.view_handler = ViewHandler(view_path)
+        else:
+            self.view_handler = None
+
         # Pull the current loop if we need it
         self.loop = loop or tornado.ioloop.IOLoop.current()
 
@@ -241,6 +250,7 @@ class FractalServer:
             "storage_socket": self.storage,
             "logger": self.logger,
             "api_logger": self.api_logger,
+            "view_handler": self.view_handler
         }
 
         # Public information
@@ -250,7 +260,7 @@ class FractalServer:
             "version": get_information("version"),
             "query_limit": self.storage.get_limit(1.e9),
             "client_lower_version_limit": "0.11.0",  # Must be XX.YY.ZZ
-            "client_upper_version_limit": "0.11.99"   # Must be XX.YY.ZZ
+            "client_upper_version_limit": "0.11.99"  # Must be XX.YY.ZZ
         }
 
         endpoints = [
@@ -260,7 +270,7 @@ class FractalServer:
             (r"/kvstore", KVStoreHandler, self.objects),
             (r"/molecule", MoleculeHandler, self.objects),
             (r"/keyword", KeywordHandler, self.objects),
-            (r"/collection", CollectionHandler, self.objects),
+            (r"/collection(?:/([0-9]+)(?:/(value|entry|list|molecule))?)?", CollectionHandler, self.objects),
             (r"/result", ResultHandler, self.objects),
             (r"/procedure/?", ProcedureHandler, self.objects),
             (r"/optimization/(.*)/?", OptimizationHandler, self.objects),

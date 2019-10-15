@@ -235,12 +235,10 @@ class FractalClient(object):
         Any
             The REST response object
         """
-        self._request_counter[(name, rest)] += 1
-        subnames = name.strip('/').split('/')
-        if len(subnames) == 2:  # get resource and subresource
-            body_model, response_model = rest_model(subnames[0], 'get', subnames[1])
-        else:
-            body_model, response_model = rest_model(name, rest)
+        sname = name.strip('/')
+        self._request_counter[(sname, rest)] += 1
+
+        body_model, response_model = rest_model(sname, rest)
 
         # Provide a reasonable traceback
         try:

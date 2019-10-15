@@ -21,7 +21,6 @@ from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import bcrypt
-
 # pydantic classes
 from qcfractal.interface.models import (GridOptimizationRecord, KeywordSet, Molecule, ObjectId, OptimizationRecord,
                                         ResultRecord, TaskRecord, TaskStatusEnum, TorsionDriveRecord, prepare_basis)
@@ -126,7 +125,6 @@ class SQLAlchemySocket:
     """
         SQLAlcehmy QCDB wrapper class.
     """
-
     def __init__(self,
                  uri: str,
                  project: str = "molssidb",
@@ -851,23 +849,28 @@ class SQLAlchemySocket:
         return ret
 
     def get_collections(self,
-                        collection: str = None,
-                        name: str = None,
-                        return_json: bool = True,
-                        with_ids: bool = True,
-                        limit: int = None,
-                        projection: Dict[str, Any] = None,
+                        collection: Optional[str] = None,
+                        name: Optional[str] = None,
+                        col_id: Optional[int] = None,
+                        limit: Optional[int] = None,
+                        projection: Optional[Dict[str, Any]] = None,
                         skip: int = 0) -> Dict[str, Any]:
         """Get collection by collection and/or name
 
         Parameters
         ----------
-        collection : str, optional
-        name : str, optional
-        return_json : bool
-        with_ids : bool
-        limit : int
-        skip : int
+        collection: Optional[str], optional
+            Type of the collection, e.g. ReactionDataset
+        name: Optional[str], optional
+            Name of the collection, e.g. S22
+        col_id: Optional[int], optional
+            Database id of the collection
+        limit: Optional[int], optional
+            Maximum number of results to return
+        projection: Optional[Dict[str, Any]], optional
+            Columns to return
+        skip: int, optional
+            Skip the first `skip` results
 
         Returns
         -------
@@ -882,7 +885,7 @@ class SQLAlchemySocket:
             collection = collection.lower()
 
         collection_class = get_collection_class(collection)
-        query = format_query(collection_class, lname=name, collection=collection)
+        query = format_query(collection_class, lname=name, collection=collection, id=col_id)
 
         # try:
         rdata, meta['n_found'] = self.get_query_projection(collection_class,
@@ -1018,7 +1021,6 @@ class SQLAlchemySocket:
         -------
 
         """
-
     def get_results(self,
                     id: Union[str, List] = None,
                     program: str = None,

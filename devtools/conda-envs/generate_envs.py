@@ -1,8 +1,9 @@
 """
 Automatically generates the QCArchive environments
 """
-from ruamel.yaml import YAML
 import copy
+
+from ruamel.yaml import YAML
 
 yaml = YAML()
 yaml.indent(mapping=2, sequence=2, offset=2)
@@ -30,11 +31,14 @@ dependencies:
   - alembic
   - tqdm
   - h5py
+  - pyarrow>=0.13.0
+  - double-conversion>=3.0.0
 
 # Test depends
   - pytest
   - pytest-cov
   - codecov
+  - requests-mock
 """
 qca_ecosystem_template = ["qcengine>=0.11.0", "qcelemental>=0.9.0"]
 

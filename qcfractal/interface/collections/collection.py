@@ -73,6 +73,7 @@ class Collection(abc.ABC):
         visibility: bool = True
 
         view_url: Optional[str] = None
+        view_metadata: Optional[Dict[str, str]] = None
         view_available: bool = False
 
     def __str__(self) -> str:
@@ -242,7 +243,9 @@ class Collection(abc.ABC):
                 raise KeyError(f"Error adding collection: \n{response.meta.error_description}")
             self.data.__dict__["id"] = response.data
         else:
-            client.add_collection(self.data.dict(), overwrite=True)
+            response = client.add_collection(self.data.dict(), overwrite=True, full_return=True)
+            if response.meta.success is False:
+                raise KeyError(f"Error updating collection: \n{response.meta.error_description}")
 
         return self.data.id
 

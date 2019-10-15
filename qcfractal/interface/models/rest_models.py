@@ -1,6 +1,9 @@
 """
 Models for the REST interface
 """
+import functools
+import re
+import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import Schema, constr, validator
@@ -12,32 +15,24 @@ from .records import ResultRecord
 from .task_models import PriorityEnum, TaskRecord
 from .torsiondrive import TorsionDriveInput
 
-__all__ = ["ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryProjection", "ResultResponse"]
+__all__ = [
+    "ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryProjection", "ResultResponse",
+    "CollectionSubresourceGETResponseMeta"
+]
 
 ### Utility functions
 
 __rest_models = {}
-__custom_rest_models = {}  # get requests models, with resource and subresources
 
 
-def register_model(resource: str, rest: str, body: ProtoModel, response: ProtoModel) -> None:
-    _register_model(False, resource, rest, body, response)
-
-
-def register_custom_model(resource: str, rest: str, body: ProtoModel, response: ProtoModel) -> None:
-    _register_model(True, resource, rest, body, response)
-
-
-def _register_model(is_custom_queries: bool, name: str, rest: str, body: ProtoModel, response: ProtoModel) -> None:
+def register_model(name: str, rest: str, body: ProtoModel, response: ProtoModel) -> None:
     """
-    Register a REST model.
+    Registers a new REST model.
 
     Parameters
     ----------
-    is_custom_queries: bool
-        Model will be added to advanced (custom) queries
     name : str
-        The REST endpoint name.
+        A regular expression describing the rest endpoint.
     rest : str
         The REST endpoint type.
     body : ProtoModel
@@ -46,26 +41,21 @@ def _register_model(is_custom_queries: bool, name: str, rest: str, body: ProtoMo
         The REST query response model.
 
     """
-
-    if is_custom_queries:
-        models_dict = __custom_rest_models
-    else:
-        models_dict = __rest_models
-
-    name = name.lower()
     rest = rest.upper()
 
-    if (name in models_dict) and (rest in models_dict[name]):
+    if (name in __rest_models) and (rest in __rest_models[name]):
         raise KeyError(f"Model name {name} already registered.")
 
-    if name not in models_dict:
-        models_dict[name] = {}
+    if name not in __rest_models:
+        __rest_models[name] = {}
 
-    models_dict[name][rest] = (body, response)
+    __rest_models[name][rest] = (body, response)
 
 
-def rest_model(resource: str, rest: str, subresource: str = None) -> Tuple[ProtoModel, ProtoModel]:
-    """Aquires a REST Model
+@functools.lru_cache(1000, typed=True)
+def rest_model(resource: str, rest: str) -> Tuple[ProtoModel, ProtoModel]:
+    """
+    Acquires a REST Model.
 
     Parameters
     ----------
@@ -73,22 +63,31 @@ def rest_model(resource: str, rest: str, subresource: str = None) -> Tuple[Proto
         The REST endpoint resource name.
     rest : str
         The REST endpoint type: GET, POST, PUT, DELETE
-    subresource: str
-        A subresource under the main resource
+
     Returns
     -------
     Tuple[ProtoModel, ProtoModel]
         The (body, response) models of the REST request.
 
     """
-    try:
-        if resource.lower() in __custom_rest_models:
-            return __custom_rest_models[resource.lower()][subresource.upper()]
-        else:
-            return __rest_models[resource.lower()][rest.upper()]
-    except KeyError:
-        sub = subresource.lower() if subresource else ''
-        raise KeyError(f"REST Model {rest.upper()} {resource.lower()}:{sub} could not be found.")
+    rest = rest.upper()
+    matches = []
+    for model_re in __rest_models.keys():
+        if re.fullmatch(model_re, resource):
+            try:
+                matches.append(__rest_models[model_re][rest])
+            except KeyError:
+                pass  # Could have different regexes for different endpoint types
+
+    if len(matches) == 0:
+        raise KeyError(f"REST Model for endpoint {resource} could not be found.")
+
+    if len(matches) > 1:
+        warnings.warn(
+            f"Multiple REST models were matched for {rest} request at endpoint {resource}. "
+            f"The following models will be used: {matches[0][0]}, {matches[0][1]}.", RuntimeWarning)
+
+    return matches[0]
 
 
 ### Generic Types and Common Models
@@ -407,6 +406,98 @@ class CollectionPOSTResponse(ProtoModel):
 
 
 register_model("collection", "POST", CollectionPOSTBody, CollectionPOSTResponse)
+
+### Collection views
+
+
+class CollectionSubresourceGETResponseMeta(ResponseMeta):
+    """
+    Response metadata for collection views functions.
+    """
+    msgpacked_cols: List[str] = Schema(..., description="Names of columns which were serialized to msgpack-ext.")
+
+
+class CollectionEntryGETBody(ProtoModel):
+    class Data(ProtoModel):
+        subset: QueryStr = Schema(None,
+                                  description="Not implemented. "
+                                  "See qcfractal.interface.collections.dataset_view.DatasetView.get_entries")
+
+    meta: EmptyMeta = Schema(EmptyMeta(), description=common_docs[EmptyMeta])
+    data: Data = Schema(..., description="Information about which entries to return.")
+
+
+class CollectionEntryGETResponse(ProtoModel):
+    meta: CollectionSubresourceGETResponseMeta = Schema(
+        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
+    data: Optional[bytes] = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
+
+
+register_model("collection/[0-9]+/entry", "GET", CollectionEntryGETBody, CollectionEntryGETResponse)
+
+
+class CollectionMoleculeGETBody(ProtoModel):
+    class Data(ProtoModel):
+        indexes: List[int] = Schema(None,
+                                    description="List of molecule indexes to return (returned by get_entries). "
+                                    "See qcfractal.interface.collections.dataset_view.DatasetView.get_molecules")
+
+    meta: EmptyMeta = Schema(EmptyMeta(), description=common_docs[EmptyMeta])
+    data: Data = Schema(..., description="Information about which molecules to return.")
+
+
+class CollectionMoleculeGETResponse(ProtoModel):
+    meta: CollectionSubresourceGETResponseMeta = Schema(
+        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
+    data: Optional[bytes] = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
+
+
+register_model("collection/[0-9]+/molecule", "GET", CollectionMoleculeGETBody, CollectionMoleculeGETResponse)
+
+
+class CollectionValueGETBody(ProtoModel):
+    class Data(ProtoModel):
+        class QueryData(ProtoModel):
+            name: str
+            driver: str
+            native: bool
+
+        queries: List[QueryData] = Schema(None,
+                                          description="List of queries to match against values columns. "
+                                          "See qcfractal.interface.collections.dataset_view.DatasetView.get_values")
+
+    meta: EmptyMeta = Schema(EmptyMeta(), description=common_docs[EmptyMeta])
+    data: Data = Schema(..., description="Information about which values to return.")
+
+
+class CollectionValueGETResponse(ProtoModel):
+    class Data(ProtoModel):
+        values: bytes = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
+        units: Dict[str, str] = Schema(..., description="Units of value columns.")
+
+    meta: CollectionSubresourceGETResponseMeta = Schema(
+        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
+    data: Optional[Data] = Schema(..., description="Values and units.")
+
+
+register_model("collection/[0-9]+/value", "GET", CollectionValueGETBody, CollectionValueGETResponse)
+
+
+class CollectionListGETBody(ProtoModel):
+    class Data(ProtoModel):
+        pass
+
+    meta: EmptyMeta = Schema(EmptyMeta(), description=common_docs[EmptyMeta])
+    data: Data = Schema(..., description="Empty for now.")
+
+
+class CollectionListGETResponse(ProtoModel):
+    meta: CollectionSubresourceGETResponseMeta = Schema(
+        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
+    data: Optional[bytes] = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
+
+
+register_model("collection/[0-9]+/list", "GET", CollectionListGETBody, CollectionListGETResponse)
 
 ### Result
 
@@ -891,7 +982,7 @@ class ListMoleculeResponse(ProtoModel):
         ..., description="A List of Molecules found from the query per optimization id.")
 
 
-register_custom_model("optimization", "final_result", OptimizationFinalResultBody, ResultResponse)
-register_custom_model("optimization", "all_results", OptimizationAllResultBody, ListResultResponse)
-register_custom_model("optimization", "initial_molecule", OptimizationAllResultBody, ListMoleculeResponse)
-register_custom_model("optimization", "final_molecule", OptimizationAllResultBody, ListMoleculeResponse)
+register_model(r"optimization/final_result", "GET", OptimizationFinalResultBody, ResultResponse)
+register_model(r"optimization/all_results", "GET", OptimizationAllResultBody, ListResultResponse)
+register_model(r"optimization/initial_molecule", "GET", OptimizationAllResultBody, ListMoleculeResponse)
+register_model(r"optimization/final_molecule", "GET", OptimizationAllResultBody, ListMoleculeResponse)

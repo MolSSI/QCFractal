@@ -120,6 +120,8 @@ class FractalSnowflake(FractalServer):
         else:
             raise KeyError(f"Logfile type not recognized {type(logging)}.")
 
+        self._view_tempdir = tempfile.TemporaryDirectory()
+
         super().__init__(name="QCFractal Snowflake Instance",
                          port=find_port(),
                          loop=self.loop,
@@ -130,7 +132,9 @@ class FractalSnowflake(FractalServer):
                          queue_socket=self.queue_socket,
                          logfile_prefix=log_prefix,
                          service_frequency=2,
-                         query_limit=int(1.e6))
+                         query_limit=int(1.e6),
+                         view_enabled=True,
+                         view_path=self._view_tempdir.name)
 
         if self._storage:
             self.logger.warning("Warning! This is a temporary instance, data will be lost upon shutdown. "

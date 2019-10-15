@@ -271,27 +271,41 @@ class ReactionDataset(Dataset):
             return df
 
         names = []
+        new_queries = []
         for _, query in queries.iterrows():
 
             query = query.replace({np.nan: None}).to_dict()
-            name = query["name"]
-            names.append(name)
+            qname = query["name"]
+            names.append(qname)
 
-            if force or (name not in self.df.columns):
-                self._column_metadata[name] = query
-                if not self._use_view(force):
-                    query.pop("name")
-                    data_complex = _query_apply_coeffients(stoich_complex, query)
-                    data_monomer = _query_apply_coeffients(stoich_monomer, query)
+            if force or (qname not in self.df.columns):
+                self._column_metadata[qname] = query
+                new_queries.append(query)
 
-                    data = data_complex - data_monomer
+        if not self._use_view(force):
+            units: Dict[str, str] = {}
+            for query in new_queries:
+                qname = query.pop("name")
+                data_complex = _query_apply_coeffients(stoich_complex, query)
+                data_monomer = _query_apply_coeffients(stoich_monomer, query)
 
-                    self.df[name] = data * constants.conversion_factor('hartree', self.units)
-                else:
-                    query["native"] = True
-                    data, units = self._view.get_values([query])
-                    self.df[name] = data[name] * constants.conversion_factor(units[name], self.units)
-                self._column_metadata[name].update({"native": True, "units": self.units})
+                data = data_complex - data_monomer
+
+                self.df[qname] = data * constants.conversion_factor('hartree', self.units)
+                query["name"] = qname
+                units[qname] = self.units
+        else:
+            for query in new_queries:
+                query["native"] = True
+            data, units = self._view.get_values(new_queries)
+            for query in new_queries:
+                qname = query["name"]
+                self.df[qname] = data[qname] * constants.conversion_factor(units[qname], self.units)
+
+        for query in new_queries:
+            qname = query["name"]
+            self._column_metadata[qname].update({"native": True, "units": units[qname]})
+
         return self.df[names]
 
     def visualize(self,

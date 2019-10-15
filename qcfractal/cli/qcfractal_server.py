@@ -335,6 +335,10 @@ def server_start(args, config):
             storage_project_name=config.database.database_name,
             query_limit=config.fractal.query_limit,
 
+            # Collection views
+            view_enabled=config.view.enable,
+            view_path=config.view_path,
+
             # Log options
             logfile_prefix=logfile,
             log_apis=config.fractal.log_apis,

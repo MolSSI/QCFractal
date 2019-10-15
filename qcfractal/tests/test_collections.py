@@ -15,22 +15,6 @@ from qcfractal import testing
 from qcfractal.testing import fractal_compute_server, live_fractal_or_skip
 
 
-def test_collection_query(fractal_compute_server):
-    client = ptl.FractalClient(fractal_compute_server)
-
-    ds = ptl.collections.Dataset("CAPITAL", client)
-    ds.save()
-
-    cols = client.list_collections()
-    assert ("Dataset", "CAPITAL") in cols.index
-
-    ds = client.get_collection("dataset", "capital")
-    assert ds.name == "CAPITAL"
-
-    ds = client.get_collection("DATAset", "CAPital")
-    assert ds.name == "CAPITAL"
-
-
 @contextmanager
 def check_requests_monitor(client, request, request_made=True, kind="get"):
     before = client._request_counter[(request, kind)]
@@ -43,7 +27,38 @@ def check_requests_monitor(client, request, request_made=True, kind="get"):
         assert after == before, f"Requests were made when none were expected. Request type: {request} ({kind})"
 
 
-@pytest.fixture(scope="module", params=[True, False], ids=["with view", "without view"])
+def handle_dataset_fixture_params(client, ds_type, ds, fractal_compute_server, request):
+    ds = client.get_collection(ds_type, ds.name)
+    if request.param == "no_view":
+        ds._disable_view = True
+    elif request.param == "download_view":
+        ds._disable_view = False
+        try:
+            import requests_mock
+        except ImportError:
+            pytest.skip("Missing request_mock")
+        with requests_mock.Mocker(real_http=True) as m:
+            with open(fractal_compute_server.view_handler.view_path(ds.data.id), 'rb') as f:
+                m.get(ds.data.view_url, body=f)
+                ds.download(verify=True)
+    elif request.param == "remote_view":
+        ds._disable_view = False
+        assert isinstance(ds._view, ptl.collections.RemoteView)
+    else:
+        raise ValueError(f"Unknown dataset fixture parameter: {request.param}.")
+    return ds
+
+
+def build_dataset_fixture_view(ds, fractal_compute_server):
+    view = ptl.collections.HDF5View(fractal_compute_server.view_handler.view_path(ds.data.id))
+    view.write(ds)
+    ds.data.__dict__["view_available"] = True
+    ds.data.__dict__["view_url"] = f"http://mock.repo/{ds.data.id}/latest.hdf5"
+    ds.data.__dict__["view_metadata"] = {"blake2b_checksum": view.hash()}
+    ds.save()
+
+
+@pytest.fixture(scope="module", params=["download_view", "no_view", "remote_view"])
 def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
     client = ptl.FractalClient(fractal_compute_server)
 
@@ -113,13 +128,9 @@ def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
         assert ds.get_records("HF", "sto-3g").iloc[0, 0].status == "COMPLETE"
         assert ds.get_records("HF", "sto-3g").iloc[1, 0].status == "COMPLETE"
 
-    # with view
-    if request.param:
-        view = ptl.collections.HDF5View(pathlib.Path(tmp_path_factory.mktemp('test_collections'), 'ds_gradient.hdf5'))
-        view.write(ds)
-        ds._view = view
-    else:
-        ds._view = None
+        build_dataset_fixture_view(ds, fractal_compute_server)
+
+    ds = handle_dataset_fixture_params(client, "Dataset", ds, fractal_compute_server, request)
 
     yield client, ds
 
@@ -258,7 +269,7 @@ def test_gradient_dataset_statistics(gradient_dataset_fixture):
     assert pytest.approx(stats.loc["He2"].mean(), 1.e-5) == 0.00333333333
 
 
-@pytest.fixture(scope="module", params=[True, False], ids=["with view", "without view"])
+@pytest.fixture(scope="module", params=["download_view", "no_view", "remote_view"])
 def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
     """ Fixture for testing rich contributed datasets with many properties and molecules of different sizes"""
     client = ptl.FractalClient(fractal_compute_server)
@@ -361,14 +372,9 @@ def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, reques
 
         ds.save()
 
-        # with view
-        if request.param:
-            view = ptl.collections.HDF5View(
-                pathlib.Path(tmp_path_factory.mktemp('test_collections'), 'ds_contributed.hdf5'))
-            view.write(ds)
-            ds._view = view
-        else:
-            ds._view = None
+        build_dataset_fixture_view(ds, fractal_compute_server)
+
+    ds = handle_dataset_fixture_params(client, "Dataset", ds, fractal_compute_server, request)
 
     yield client, ds
 
@@ -475,7 +481,7 @@ def test_reactiondataset_check_state(fractal_compute_server):
     assert bench.loc["He2"][0] == contrib["values"]["He2"]
 
 
-@pytest.fixture(scope="module", params=[True, False], ids=["with view", "without view"])
+@pytest.fixture(scope="module", params=["download_view", "no_view", "remote_view"])
 def reactiondataset_dftd3_fixture_fixture(fractal_compute_server, tmp_path_factory, request):
     ds_name = "He_DFTD3"
     client = ptl.FractalClient(fractal_compute_server)
@@ -506,13 +512,10 @@ def reactiondataset_dftd3_fixture_fixture(fractal_compute_server, tmp_path_facto
 
         fractal_compute_server.await_results()
 
-    # with view
-    if request.param:
-        view = ptl.collections.HDF5View(pathlib.Path(tmp_path_factory.mktemp('test_collections'), f'{ds_name}.hdf5'))
-        view.write(ds)
-        ds._view = view
-    else:
-        ds._view = None
+        build_dataset_fixture_view(ds, fractal_compute_server)
+
+    ds = handle_dataset_fixture_params(client, "ReactionDataset", ds, fractal_compute_server, request)
+
     yield client, ds
 
 
@@ -745,7 +748,7 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     assert kw.values["scf_type"] == "df"
 
 
-@pytest.fixture(scope="module", params=[True, False], ids=["with view", "without view"])
+@pytest.fixture(scope="module", params=[True, False], ids=["local_view", "no_view"])
 def qm3_fixture(request, tmp_path_factory):
     # Connect to the QCArchive
     client = live_fractal_or_skip()
@@ -760,7 +763,7 @@ def qm3_fixture(request, tmp_path_factory):
 
     # with view
     if request.param:
-        view = ptl.collections.HDF5View(pathlib.Path(tmp_path_factory.mktemp('test_collections'), 'ds_qm3.hdf5'))
+        view = ptl.collections.HDF5View(pathlib.Path(tmp_path_factory.mktemp("test_collections"), "ds_qm3.hdf5"))
         view.write(ds)
         ds._view = view
     else:
@@ -769,7 +772,7 @@ def qm3_fixture(request, tmp_path_factory):
     yield client, ds
 
 
-@pytest.fixture(scope="module", params=[True, False], ids=["with view", "without view"])
+@pytest.fixture(scope="module", params=[True, False], ids=["local_view", "no_view"])
 def s22_fixture(request, tmp_path_factory):
     # Connect to the QCArchive
     client = live_fractal_or_skip()
@@ -777,14 +780,14 @@ def s22_fixture(request, tmp_path_factory):
     ds._disable_query_limit = True
 
     # Trim down dataset for faster test
-    to_remove = {row for row in ds.data.history if row[2].lower() not in {'b3lyp', 'pbe'}}
+    to_remove = {row for row in ds.data.history if row[2].lower() not in {"b3lyp", "pbe"}}
     for row in to_remove:
         ds.data.history.remove(row)
     ds._form_index()
 
     # with view
     if request.param:
-        view = ptl.collections.HDF5View(pathlib.Path(tmp_path_factory.mktemp('test_collections'), 'ds_s22.hdf5'))
+        view = ptl.collections.HDF5View(pathlib.Path(tmp_path_factory.mktemp("test_collections"), "ds_s22.hdf5"))
         view.write(ds)
         ds._view = view
     else:
@@ -967,6 +970,73 @@ def test_qm3_view_identical(qm3_fixture):
 def test_s22_view_identical(s22_fixture):
     client, ds = s22_fixture
     assert_view_identical(ds)
+
+
+def test_view_download_remote(s22_fixture):
+    client, ds = s22_fixture
+
+    ds.data.__dict__["view_url"] = "https://github.com/mattwelborn/QCArchiveViews/raw/master/S22/latest.hdf5"
+    ds.data.__dict__["view_metadata"] = {
+        "blake2b_checksum":
+        "f9d537a982f63af0c500753b0e4779604252b9289fa26b6d83b657bf6e1039f1af2e44bbc819001fb857f1602280892b48422b8649cea786cdec3d2eb73412a9"
+    }
+    ds.download()  # 700 kb
+
+
+def test_view_download_mock(gradient_dataset_fixture, tmp_path_factory):
+    try:
+        import requests_mock
+    except ImportError:
+        pytest.skip("Missing request_mock")
+
+    client, ds = gradient_dataset_fixture
+
+    with requests_mock.Mocker(real_http=True) as m:
+        path = pathlib.Path(tmp_path_factory.mktemp('test_collections'), 'ds_gradient_remote.hdf5')
+        view = ptl.collections.HDF5View(path)
+        view.write(ds)
+
+        fake_url = "https://qcarchiveviews.com/gradient_ds.h5"
+        ds.data.__dict__["view_url"] = fake_url
+        assert ds.data.id == ds.save()
+
+        with open(path, 'rb') as f:
+            m.get(fake_url, body=f)
+            ds = client.get_collection("Dataset", ds.name)
+            ds.download(verify=False)
+
+            # Check main functions run
+            ds.get_entries()
+            ds.list_values()
+
+            with check_requests_monitor(client, "molecule", request_made=False):
+                ds.get_molecules()
+
+            with check_requests_monitor(client, "record", request_made=False):
+                ds.get_values()
+
+            ds.data.__dict__["view_metadata"] = {"blake2b_checksum": "badhash"}
+            with pytest.raises(ValueError):
+                ds.download(verify=True)
+
+
+### Non-dataset tests
+
+
+def test_collection_query(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+
+    ds = ptl.collections.Dataset("CAPITAL", client)
+    ds.save()
+
+    cols = client.list_collections()
+    assert ("Dataset", "CAPITAL") in cols.index
+
+    ds = client.get_collection("dataset", "capital")
+    assert ds.name == "CAPITAL"
+
+    ds = client.get_collection("DATAset", "CAPital")
+    assert ds.name == "CAPITAL"
 
 
 def test_generic_collection(fractal_compute_server):

@@ -1,4 +1,5 @@
 import setuptools
+
 import versioneer
 
 short_description = "A distributed compute and database platform for quantum chemistry."
@@ -35,6 +36,7 @@ if __name__ == "__main__":
             'tornado',
             'tqdm',
             'h5py',
+            'pyarrow>=0.13.0',
 
             # Database
             'sqlalchemy>=1.3',
@@ -63,10 +65,7 @@ if __name__ == "__main__":
                 'sphinx_rtd_theme',
                 'numpydoc',
             ],
-            'tests': [
-                'pytest',
-                'pytest-cov',
-            ],
+            'tests': ['pytest', 'pytest-cov', 'requests-mock'],
             'api_logging': [
                 'geoip2',
             ],
@@ -82,5 +81,4 @@ if __name__ == "__main__":
         ],
         zip_safe=True,
         long_description=long_description,
-        long_description_content_type="text/markdown"
-    )
+        long_description_content_type="text/markdown")

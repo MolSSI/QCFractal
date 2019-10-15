@@ -75,6 +75,14 @@ class DatabaseSettings(ConfigSettings):
         pass
 
 
+class ViewSettings(ConfigSettings):
+    """
+    HDF5 view settings
+    """
+    enable: bool = Schema(False, description="Enable frozen-views.")
+    directory: str = Schema(None, description="Location of frozen-view data. If None, defaults to base_folder/views.")
+
+
 class FractalServerSettings(ConfigSettings):
     """
     Fractal Server settings
@@ -131,6 +139,7 @@ class FractalConfig(ConfigSettings):
                               description="The QCFractal base instance to attach to. "
                               "Default will be your home directory")
     database: DatabaseSettings = DatabaseSettings()
+    view: ViewSettings = ViewSettings()
     fractal: FractalServerSettings = FractalServerSettings()
 
     class Config(SettingsCommonConfig):
@@ -193,6 +202,15 @@ class FractalConfig(ConfigSettings):
             uri += database
 
         return uri
+
+    @property
+    def view_path(self):
+        if self.view.directory is None:
+            default_view_path = self.base_path / "views"
+            default_view_path.mkdir(parents=False, exist_ok=True)
+            return default_view_path
+        else:
+            return Path(os.path.expanduser(self.view.directory))
 
     def geo_file_path(self):
 

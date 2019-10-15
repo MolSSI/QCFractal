@@ -1,12 +1,18 @@
 """
 QCPortal Database ODM
 """
+import hashlib
+import json
+import tempfile
 import warnings
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
+import requests
 
+import pydantic
 from qcelemental import constants
 
 from ..models import ComputeResponse, ObjectId, ProtoModel
@@ -77,6 +83,9 @@ class Dataset(Collection):
         self._updated_state = False
 
         self._view: Optional[DatasetView] = None
+        if self.data.view_available:
+            from . import RemoteView
+            self._view = RemoteView(client, self.data.id)
         self._disable_view: bool = False  # for debugging and testing
         self._disable_query_limit: bool = False  # for debugging and testing
 
@@ -103,6 +112,56 @@ class Dataset(Collection):
         # History: driver, program, method (basis, keywords)
         history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
         history_keys: Tuple[str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords")
+
+    def set_view(self, path: Union[str, Path]) -> None:
+        """
+        Set a dataset to use a local view.
+
+        Parameters
+        ----------
+        path: Union[str, Path]
+            path to an hdf5 file representing a view for this dataset
+        """
+        from . import HDF5View
+        self._view = HDF5View(path)
+
+    def download(self, local_path: Optional[Union[str, Path]] = None, verify: bool = True) -> None:
+        """
+        Download a remote view if available. The dataset will use this view to avoid server queries for calls to:
+        - get_entries
+        - get_molecules
+        - get_values
+        - list_values
+
+        Parameters
+        ----------
+        local_path: Optional[Union[str, Path]], optional
+            Local path the store downloaded view. If None, the view will be stored in a temporary file and deleted on exit.
+        verify: bool, optional
+            Verify download checksum. Default: True.
+        """
+        if self.data.view_url is None:
+            raise ValueError("A view for this dataset is not available on the server")
+
+        if local_path is not None:
+            local_path = Path(local_path)
+        else:
+            self._view_tempfile = tempfile.NamedTemporaryFile()  # keep temp file alive until self is destroyed
+            local_path = self._view_tempfile.name
+
+        r = requests.get(self.data.view_url, stream=True)
+        with open(local_path, 'wb') as fd:
+            for chunk in r.iter_content(chunk_size=8192):
+                fd.write(chunk)
+
+        if verify:
+            remote_checksum = self.data.view_metadata['blake2b_checksum']
+            from . import HDF5View
+            local_checksum = HDF5View(local_path).hash()
+            if remote_checksum != local_checksum:
+                raise ValueError(f"Checksum verification failed. Expected: {remote_checksum}, Got: {local_checksum}")
+
+        self.set_view(local_path)
 
     def _form_index(self) -> None:
         self._entry_index = pd.DataFrame([[entry.name, entry.molecule_id] for entry in self.data.records],
@@ -495,33 +554,41 @@ class Dataset(Collection):
 
         queries = self._form_queries(method=method, basis=basis, keywords=keywords, program=program, name=name)
         names = []
+        new_queries = []
         for _, query in queries.iterrows():
 
             query = query.replace({np.nan: None}).to_dict()
             if "stoichiometry" in query:
                 query["stoich"] = query.pop("stoichiometry")
 
-            name = query["name"]
-            names.append(name)
-            if force or (name not in self.df.columns):
-                self._column_metadata[name] = query
-                if not self._use_view(force):
-                    driver = query.pop("driver")
-                    query.pop("name")
-                    data = self.get_records(query.pop("method").upper(),
-                                            projection={"return_result": True},
-                                            merge=True,
-                                            **query)
-                    self.df[name] = data["return_result"]
-                    units = au_units[driver]
-                else:
-                    query["native"] = True
-                    data, units_dict = self._view.get_values([query])
-                    self.df[name] = data[name]
-                    units = units_dict[name]
+            qname = query["name"]
+            names.append(qname)
+            if force or (qname not in self.df.columns):
+                self._column_metadata[qname] = query
+                new_queries.append(query)
 
-                self.df[name] *= constants.conversion_factor(units, self.units)
-                self._column_metadata[name].update({"native": True, "units": self.units})
+        if not self._use_view(force):
+            units: Dict[str, str] = {}
+            for query in new_queries:
+                driver = query.pop("driver")
+                qname = query.pop("name")
+                data = self.get_records(query.pop("method").upper(),
+                                        projection={"return_result": True},
+                                        merge=True,
+                                        **query)
+                self.df[qname] = data["return_result"]
+                units[qname] = au_units[driver]
+                query["name"] = qname
+        else:
+            for query in new_queries:
+                query["native"] = True
+            data, units = self._view.get_values(new_queries)
+            self.df = pd.concat([self.df, data], axis=1)
+
+        for query in new_queries:
+            qname = query["name"]
+            self.df[qname] *= constants.conversion_factor(units[qname], self.units)
+            self._column_metadata[qname].update({"native": True, "units": self.units})
 
         return self.df[names]
 
@@ -1160,47 +1227,56 @@ class Dataset(Collection):
     def _get_contributed_values(self, force: bool = False, **spec) -> pd.DataFrame:
         queries = self._filter_records(self._list_contributed_values().rename(columns={'stoichiometry': 'stoich'}),
                                        **spec)
-        column_names = []
+        column_names: List[str] = []
+        new_queries = []
         for query in queries.to_dict("records"):
-            data = self.data.contributed_values[query["name"].lower()].copy()
-            column_name = data.name
+            column_name = self.data.contributed_values[query["name"].lower()].name
             column_names.append(column_name)
             if force or (column_name not in self.df.columns):
                 self._column_metadata[column_name] = query
-                if not self._use_view(force):
-                    # Annoying work around to prevent some pandas magic
-                    if isinstance(next(iter(data.values.values())), (int, float)):
-                        values = data.values
-                    else:
-                        # TODO temporary patch until msgpack collections
-                        if isinstance(data.theory_level_details, dict) and "driver" in data.theory_level_details:
-                            cv_driver = data.theory_level_details["driver"]
-                        else:
-                            cv_driver = self.data.default_driver
-                        if cv_driver == "gradient":
-                            values = {k: np.array(v).reshape(-1, 3) for k, v in data.values.items()}
-                        else:
-                            values = {k: np.array(v) for k, v in data.values.items()}
-                    self.df[column_name] = pd.Series(list(values.values()), index=list(values.keys()))
-                    units = data.units
-                else:
-                    query["native"] = False
-                    ret, units = self._view.get_values([query])
-                    self.df[column_name] = ret[column_name]
-                    units = units[column_name]
+                new_queries.append(query)
 
-                # convert units
-                metadata = {"native": False}
-                try:
-                    self.df[column_name] *= constants.conversion_factor(units, self.units)
-                    metadata["units"] = self.units
-                except ValueError as e:
-                    # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
-                    if e.__class__.__name__ == "DimensionalityError":
-                        metadata["units"] = units
+        if not self._use_view(force):
+            units: Dict[str, str] = {}
+
+            for query in new_queries:
+                data = self.data.contributed_values[query["name"].lower()].copy()
+                column_name = data.name
+                # Annoying work around to prevent some pandas magic
+                if isinstance(next(iter(data.values.values())), (int, float)):
+                    values = data.values
+                else:
+                    # TODO temporary patch until msgpack collections
+                    if isinstance(data.theory_level_details, dict) and "driver" in data.theory_level_details:
+                        cv_driver = data.theory_level_details["driver"]
                     else:
-                        raise
-                self._column_metadata[column_name].update(metadata)
+                        cv_driver = self.data.default_driver
+                    if cv_driver == "gradient":
+                        values = {k: np.array(v).reshape(-1, 3) for k, v in data.values.items()}
+                    else:
+                        values = {k: np.array(v) for k, v in data.values.items()}
+                self.df[column_name] = pd.Series(list(values.values()), index=list(values.keys()))
+                units[column_name] = data.units
+        else:
+            for query in new_queries:
+                query["native"] = False
+            ret, units = self._view.get_values(new_queries)
+            self.df = pd.concat([self.df, ret], axis=1)
+
+        # convert units
+        for query in new_queries:
+            column_name = self.data.contributed_values[query["name"].lower()].name
+            metadata = {"native": False}
+            try:
+                self.df[column_name] *= constants.conversion_factor(units[column_name], self.units)
+                metadata["units"] = self.units
+            except ValueError as e:
+                # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
+                if e.__class__.__name__ == "DimensionalityError":
+                    metadata["units"] = units[column_name]
+                else:
+                    raise
+            self._column_metadata[column_name].update(metadata)
 
         return self.df[column_names]
 
