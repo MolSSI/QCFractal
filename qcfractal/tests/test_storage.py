@@ -484,7 +484,8 @@ def test_get_results_by_ids(storage_results):
     assert ret["meta"]["n_found"] == 6
     assert len(ret["data"]) == 6
 
-    ret = storage_results.get_results(id=ids, projection=['status', 'id'])
+    ret = storage_results.get_results(id=ids, projection={'status': True, 'id': True})
+
     assert ret['data'][0].keys() == {'id', 'status'}
 
 
@@ -515,13 +516,25 @@ def test_results_get_dual(storage_results):
 def test_results_get_project(storage_results):
     """See new changes in design here"""
 
-    ret = storage_results.get_results(method="M2", program="P2", projection={"return_result", "id"})["data"][0]
-    assert set(ret.keys()) == {"id", "return_result"}
-    assert ret["return_result"] == 15
+    ret_true = storage_results.get_results(method="M2", program="P2", projection={
+        "return_result": True,
+        "id": True
+    })["data"][0]
+    assert set(ret_true.keys()) == {"id", "return_result"}
+    assert ret_true["return_result"] == 15
+
+    ret_none = storage_results.get_results(method="M2", program="P2")["data"][0]
+    ret_false = storage_results.get_results(method="M2",
+                                            program="P2",
+                                            projection={
+                                                "return_result": False,
+                                                "id": False
+                                            })["data"][0]
+    assert set(ret_false.keys()) == set(ret_none.keys()) - {"return_result", "id"}
 
     # Note: explicitly set with_ids=False to remove ids
-    ret = storage_results.get_results(method="M2", program="P2", with_ids=False,
-                                      projection={"return_result"})["data"][0]
+    ret = storage_results.get_results(method="M2", program="P2", with_ids=False, projection={"return_result":
+                                                                                             True})["data"][0]
     assert set(ret.keys()) == {"return_result"}
 
 

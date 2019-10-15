@@ -7,7 +7,6 @@ try:
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
     from sqlalchemy.sql.expression import func
-    # from sqlalchemy.dialects import postgresql
 except ImportError:
     raise ImportError("SQLAlchemy_socket requires sqlalchemy, please install this python "
                       "module or try a different db_socket.")
@@ -280,16 +279,26 @@ class SQLAlchemySocket:
 
         return limit if limit and limit < self._max_limit else self._max_limit
 
-    def get_query_projection(self, className, query, projection, limit, skip, exclude=None):
+    def get_query_projection(self,
+                             className,
+                             query,
+                             projection: Optional[Dict[str, bool]],
+                             limit: Optional[int],
+                             skip: Optional[int],
+                             exclude=None):
+
+        if projection and not (all(projection.values()) or not any(projection.values())):
+            raise ValueError("Values in projection must be either all False or all True.")
 
         with self.session_scope() as session:
-            if projection:
+            if projection and all(projection.values()):
+                # XXX: this duplicates a lot of code in Base.to_dict
                 proj = [getattr(className, i) for i in projection]
                 data = session.query(*proj).filter(*query)
+
                 n_found = get_count_fast(data)  # before iterating on the data
                 data = data.limit(self.get_limit(limit)).offset(skip)
                 rdata = [dict(zip(projection, row)) for row in data]
-                # print('----------rdata before: ', rdata)
                 # transform ids from int into str
                 id_fields = className._get_fieldnames_with_DB_ids_()
                 for d in rdata:
@@ -299,14 +308,16 @@ class SQLAlchemySocket:
                                 d[key] = [str(i) for i in d[key]]
                             else:
                                 d[key] = str(d[key])
-                # print('--------rdata after: ', rdata)
             else:
+                to_exclude = exclude.copy() if exclude is not None else []
+                if projection and not any(projection.values()):
+                    to_exclude.extend(projection.keys())
                 data = session.query(className).filter(*query)
                 # from sqlalchemy.dialects import postgresql
                 # print(data.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
                 n_found = get_count_fast(data)
                 data = data.limit(self.get_limit(limit)).offset(skip).all()
-                rdata = [d.to_dict(exclude=exclude) for d in data]
+                rdata = [d.to_dict(exclude=to_exclude) for d in data]
 
         return rdata, n_found
 
@@ -853,7 +864,7 @@ class SQLAlchemySocket:
                         name: Optional[str] = None,
                         col_id: Optional[int] = None,
                         limit: Optional[int] = None,
-                        projection: Optional[Dict[str, Any]] = None,
+                        projection: Optional[Dict[str, bool]] = None,
                         skip: int = 0) -> Dict[str, Any]:
         """Get collection by collection and/or name
 
