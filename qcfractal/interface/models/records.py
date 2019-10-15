@@ -260,6 +260,8 @@ class ResultRecord(RecordBase):
         None,
         description="The Id of the :class:`KeywordSet` which was passed into the quantum chemistry program that "
         "performed this calculation.")
+    protocols: qcel.models.results.ResultProtocols = Schema(qcel.models.results.ResultProtocols(),
+                                                                     description="")
 
     # Output data
     return_result: Union[float, qcel.models.types.Array[float], Dict[str, Any]] = Schema(
@@ -306,12 +308,18 @@ class ResultRecord(RecordBase):
         else:
             keywords = keywords.values
 
+        if not self.protocols:
+            protocols = {}
+        else:
+            protocols = self.protocols
+
         model = qcel.models.ResultInput(id=self.id,
                                         driver=self.driver.name,
                                         model=model,
                                         molecule=molecule,
                                         keywords=keywords,
-                                        extras=self.extras)
+                                        extras=self.extras,
+                                        protocols=protocols)
         return model
 
     def _consume_output(self, data: Dict[str, Any], checks: bool = True):

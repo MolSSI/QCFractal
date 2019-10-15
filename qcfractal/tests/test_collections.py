@@ -13,7 +13,7 @@ import qcfractal.interface as ptl
 from qcelemental.models import Molecule
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server, live_fractal_or_skip
-
+from qcengine.testing import is_program_new_enough
 
 @contextmanager
 def check_requests_monitor(client, request, request_made=True, kind="get"):

@@ -4,6 +4,7 @@ All procedures tasks involved in on-node computation.
 
 from typing import List, Union
 
+import qcelemental as qcel
 import qcengine as qcng
 
 from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord
@@ -66,7 +67,13 @@ class SingleResultTasks(BaseTasks):
     def verify_input(self, data):
         program = data.meta.program.lower()
         if program not in qcng.list_all_programs():
-            return "Program '{}' not available in QCEngine.".format(program)
+            return f"Program '{program}' not available in QCEngine."
+
+        if data.meta.dict().get("protocols", None) is not None:
+            try:
+                r = qcel.models.results.ResultProtocols(**data.meta.protocols)
+            except Exception as e:
+                return f"Could not validate protocols: {str(e)}"
 
         return True
 
@@ -157,6 +164,8 @@ class SingleResultTasks(BaseTasks):
         for data in result_outputs:
             result = self.storage.get_results(id=data["base_result"].id)["data"][0]
             result = ResultRecord(**result)
+            print(data['result'].keys())
+            print(data['result']['wavefunction'])
 
             rdata = data["result"]
             stdout, stderr, error = self.storage.add_kvstore([rdata["stdout"], rdata["stderr"],

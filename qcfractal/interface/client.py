@@ -722,6 +722,7 @@ class FractalClient(object):
                     molecule: Union['ObjectId', 'Molecule', List[Union['ObjectId', 'Molecule']]] = None,
                     *,
                     priority: Optional[str] = None,
+                    protocols: Optional[Dict[str, Any]] = None,
                     tag: Optional[str] = None,
                     full_return: bool = False) -> 'ComputeResponse':
         """
@@ -787,6 +788,7 @@ class FractalClient(object):
                 "method": method,
                 "basis": basis,
                 "keywords": keywords,
+                "protocols": protocols,
                 "tag": tag,
                 "priority": priority,
             },

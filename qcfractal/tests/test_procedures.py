@@ -6,6 +6,8 @@ import numpy as np
 import pytest
 import requests
 
+from qcelemental.util import parse_version
+import qcengine as qcng
 import qcfractal.interface as ptl
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
@@ -69,6 +71,36 @@ def test_compute_queue_stack(fractal_compute_server):
             raise KeyError("Returned unexpected Molecule ID.")
 
     assert "RHF Reference" in results[0].get_stdout()
+
+
+### Tests the compute queue stack
+@testing.using_psi4
+def test_compute_wavefunction(fractal_compute_server):
+
+    psiver = qcng.get_program('psi4').get_version()
+    if parse_version(psiver) < parse_version("1.4a2.dev160"):
+        pytest.skip("Must be used a modern version of Psi4 to execute")
+
+    # Build a client
+    client = ptl.FractalClient(fractal_compute_server)
+
+    # Add a hydrogen and helium molecule
+    hydrogen = ptl.Molecule.from_data([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
+
+
+    # Ask the server to compute a new computation
+    r = client.add_compute(program="psi4",
+                           driver="energy",
+                           method="HF",
+                           basis="sto-3g",
+                           molecule=hydrogen,
+                           protocols={"wavefunction": "orbitals_and_eigenvalues"})
+
+    fractal_compute_server.await_results()
+    assert len(fractal_compute_server.list_current_tasks()) == 0
+
+    results = client.query_results(id=r.ids)[0]
+    print(results)
 
 
 ### Tests the compute queue stack
