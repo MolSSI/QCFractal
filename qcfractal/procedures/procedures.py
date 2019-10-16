@@ -10,6 +10,8 @@ import qcengine as qcng
 from ..interface.models import Molecule, OptimizationRecord, QCSpecification, ResultRecord, TaskRecord
 from .procedures_util import parse_single_tasks
 
+_wfn_return_names = set(qcel.models.results.WavefunctionProperties._return_results_names)
+_wfn_all_fields = set(qcel.models.results.WavefunctionProperties.__fields__.keys())
 
 class BaseTasks:
     def __init__(self, storage, logger):
@@ -164,15 +166,36 @@ class SingleResultTasks(BaseTasks):
         for data in result_outputs:
             result = self.storage.get_results(id=data["base_result"].id)["data"][0]
             result = ResultRecord(**result)
-            print(data['result'].keys())
-            print(data['result']['wavefunction'])
 
             rdata = data["result"]
-            stdout, stderr, error = self.storage.add_kvstore([rdata["stdout"], rdata["stderr"],
-                                                              rdata["error"]])["data"]
+            stdout, stderr, error = self.storage.add_kvstore([rdata["stdout"], rdata["stderr"], rdata["error"]])["data"]
             rdata["stdout"] = stdout
             rdata["stderr"] = stderr
             rdata["error"] = error
+
+            # Store Wavefunction data
+            if data["result"].get("wavefunction", False):
+                wfn = data["result"].get("wavefunction", False)
+                available = set(wfn.keys()) - {"restricted", "basis"}
+                return_map = {k: wfn[k] for k in wfn.keys() & _wfn_return_names}
+
+                rdata["wavefunction"] = {
+                    "available": list(available),
+                    "restricted": wfn["restricted"],
+                    "return_map": return_map
+                }
+
+                # Extra fields are trimmed as we have a column *per* wavefunction structure.
+                available_keys = wfn.keys() - _wfn_return_names
+                if available_keys > _wfn_all_fields:
+                    self.logger.warning(
+                        f"Too much wavefunction data for result {data['base_result'].id}, removing extra data.")
+                    available_keys &= _wfn_all_fields
+
+                wavefunction_save = {k: wfn[k] for k in available_keys}
+                wfn_data_id = self.storage.add_wavefunction_store([wavefunction_save])["data"][0]
+                rdata["wavefunction_data_id"] = wfn_data_id
+
 
             result._consume_output(rdata)
             updates.append(result)
