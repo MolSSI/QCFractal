@@ -90,9 +90,8 @@ class Dataset(Collection):
         self._disable_query_limit: bool = False  # for debugging and testing
 
         # Initialize internal data frames and load in contrib
-        self.df = pd.DataFrame(index=self.get_index())
+        self.df = pd.DataFrame()
         self._column_metadata: Dict[str, Any] = {}
-        self._form_index()
 
     class DataModel(Collection.DataModel):
 
@@ -106,7 +105,7 @@ class Dataset(Collection):
         alias_keywords: Dict[str, Dict[str, str]] = {}
 
         # Data
-        records: List[MoleculeEntry] = []
+        records: Optional[List[MoleculeEntry]] = []
         contributed_values: Dict[str, ContributedValues] = {}
 
         # History: driver, program, method (basis, keywords)
@@ -163,16 +162,37 @@ class Dataset(Collection):
 
         self.set_view(local_path)
 
-    def _form_index(self) -> None:
-        self._entry_index = pd.DataFrame([[entry.name, entry.molecule_id] for entry in self.data.records],
-                                         columns=["name", "molecule_id"])
+    def _get_data_records_from_db(self):
+        self._check_client()
+        payload = {
+            "meta": {},  # TODO: this does not work but should {"projection": {"records": True}},
+            "data": {
+                "collection": "dataset",
+                "name": self.name
+            }
+        }
+        response = self.client._automodel_request("collection", "get", payload, full_return=False)
+        self.data.__dict__["records"] = [MoleculeEntry(**record) for record in response[0]["records"]]
+
+    def _entry_index(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
+        # TODO: make this fast for subsets
+        if self.data.records is None:
+            self._get_data_records_from_db()
+
+        ret = pd.DataFrame([[entry.name, entry.molecule_id] for entry in self.data.records],
+                           columns=["name", "molecule_id"])
+        if subset is None:
+            return ret
+        else:
+            return ret.set_index("name").loc[subset].reset_index()
 
     def _check_state(self) -> None:
         if self._new_molecules or self._new_keywords or self._new_records or self._updated_state:
             raise ValueError("New molecules, keywords, or records detected, run save before submitting new tasks.")
 
     def _canonical_pre_save(self, client: 'FractalClient') -> None:
-
+        if self.data.records is None:
+            self._get_data_records_from_db()
         for k in list(self._new_keywords.keys()):
             ret = client.add_keywords([self._new_keywords[k]])
             assert len(ret) == 1, "KeywordSet added incorrectly"
@@ -194,9 +214,8 @@ class Dataset(Collection):
 
         self._new_records = []
         self._new_molecules = {}
-        self._form_index()
 
-    def get_entries(self, force: bool = False) -> pd.DataFrame:
+    def get_entries(self, subset: Optional[List[str]] = None, force: bool = False) -> pd.DataFrame:
         """
         Provides a list of entries for the dataset
 
@@ -213,9 +232,9 @@ class Dataset(Collection):
             For ReactionDataset, specifications describe reaction stoichiometry.
         """
         if self._use_view(force):
-            ret = self._view.get_entries()
+            ret = self._view.get_entries(subset)
         else:
-            ret = self._entry_index
+            ret = self._entry_index(subset)
         return ret.copy()
 
     def _molecule_indexer(self, subset: Optional[Union[str, Set[str]]] = None,
@@ -232,12 +251,11 @@ class Dataset(Collection):
         Dict[str, 'ObjectId']
             Molecule index to molecule ObjectId map
         """
-        index = self.get_entries(force)
         if subset:
             if isinstance(subset, str):
                 subset = {subset}
-
-            index = index[index.name.isin(subset)]
+        index = self.get_entries(force=force, subset=subset)
+        #index = index[index.name.isin(subset)]
 
         return {row['name']: row['molecule_id'] for row in index.to_dict('records')}
 
@@ -1179,7 +1197,7 @@ class Dataset(Collection):
         overwrite : bool, optional
             Overwrites pre-existing values
         """
-
+        self.get_entries()  # TODO: get entries subset
         # Convert and validate
         if isinstance(contrib, ContributedValues):
             contrib = contrib.copy()
@@ -1407,7 +1425,7 @@ class Dataset(Collection):
               - submitted: A list of ObjectId's that were submitted to the compute queue
               - existing: A list of ObjectId's of tasks already in the database
         """
-
+        self.get_entries(force=True)
         compute_keys = {"program": program, "method": method, "basis": basis, "keywords": keywords}
 
         molecule_idx = [e.molecule_id for e in self.data.records]
@@ -1417,7 +1435,7 @@ class Dataset(Collection):
 
         return ret
 
-    def get_index(self) -> List[str]:
+    def get_index(self, subset: Optional[List[str]] = None, force: bool = False) -> List[str]:
         """
         Returns the current index of the database.
 
@@ -1426,7 +1444,7 @@ class Dataset(Collection):
         ret : List[str]
             The names of all reactions in the database
         """
-        return [x.name for x in self.data.records]
+        return list(self.get_entries(subset=subset, force=force)["name"].unique())
 
     # Statistical quantities
     def statistics(self, stype: str, value: str, bench: Optional[str] = None,
@@ -1464,7 +1482,7 @@ class Dataset(Collection):
         return (force is False) and (self._view is not None) and (self._disable_view is False)
 
     def _clear_cache(self) -> None:
-        self.df = pd.DataFrame(index=self.get_index())
+        self.df = pd.DataFrame()
 
     # Getters
     def __getitem__(self, args: str) -> pd.Series:

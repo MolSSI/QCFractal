@@ -4,7 +4,7 @@ import hashlib
 import pathlib
 import warnings
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -79,7 +79,7 @@ class DatasetView(abc.ABC):
             A Series of Molecules corresponding to indexes
         """
     @abc.abstractmethod
-    def get_entries(self) -> pd.DataFrame:
+    def get_entries(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
         """
         Get a list of entries in the dataset
 
@@ -187,7 +187,8 @@ class HDF5View(DatasetView):
                 mols = [mol_schema[int(i) if isinstance(i, ObjectId) else i].tobytes() for i in indexes]
         return pd.Series(mols, index=indexes)
 
-    def get_entries(self) -> pd.DataFrame:
+    def get_entries(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
+        # TODO: make this fast for subsets
         if self._entries is None:
             with self._read_file() as f:
                 entry_group = f["entry"]
@@ -199,13 +200,16 @@ class HDF5View(DatasetView):
                     raise ValueError(f"Unknown entry class ({entry_group.attrs['model']}) while "
                                      f"reading HDF5 entries.")
                 self._entries = pd.DataFrame({field: entry_group[field][()] for field in fields})
-        return self._entries
+        if subset is None:
+            return self._entries
+        else:
+            return self._entries.set_index("name").loc[subset].reset_index()
 
     def write(self, ds: Dataset):
         import h5py
         # For data checksums
         dataset_kwargs = {"chunks": True, "fletcher32": True}
-
+        ds.get_entries(force=True)
         n_records = len(ds.data.records)
         default_shape = (n_records, )
 
@@ -301,7 +305,7 @@ class HDF5View(DatasetView):
             # Export entries
             entry_group = f.create_group("entry")
             entry_dset = entry_group.create_dataset("entry", shape=default_shape, dtype=utf8_t, **dataset_kwargs)
-            entry_dset[:] = ds.get_index()
+            entry_dset[:] = ds.get_index(force=True)
 
             entries = ds.get_entries(force=True)
             if isinstance(ds.data.records[0], MoleculeEntry):
@@ -437,8 +441,8 @@ class RemoteView(DatasetView):
         self._client: FractalClient = client
         self._id: int = collection_id
 
-    def get_entries(self) -> pd.DataFrame:
-        payload = {"meta": {}, "data": {}}
+    def get_entries(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
+        payload = {"meta": {}, "data": {"subset": subset}}
 
         response = self._client._automodel_request(f"collection/{self._id}/entry", "get", payload, full_return=True)
         self._check_response_meta(response.meta)

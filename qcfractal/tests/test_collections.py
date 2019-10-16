@@ -157,7 +157,7 @@ def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
     mols_subset = ds.get_molecules(subset=["He1"])
     assert mols_subset.iloc[0, 0].measure([0, 1]) == pytest.approx(he1_dist)
 
-    with pytest.raises(KeyError):
+    with pytest.raises((KeyError, RuntimeError)):
         ds.get_molecules(subset="NotInDataset")
 
 
@@ -519,7 +519,7 @@ def reactiondataset_dftd3_fixture_fixture(fractal_compute_server, tmp_path_facto
     yield client, ds
 
 
-def test_rectiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
+def test_reactiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
 
     records = ds.get_records("B3LYP", "6-31g")
@@ -546,7 +546,7 @@ def test_rectiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
         ds.get_records("Fake Method", "6-31g", stoich="cp")
 
 
-def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
+def test_reactiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
 
     request_made = not ds._use_view(False)
@@ -573,7 +573,7 @@ def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
         assert value == ds.df.loc["HeDimer", key]
 
 
-def test_rectiondataset_dftd3_molecules(reactiondataset_dftd3_fixture_fixture):
+def test_reactiondataset_dftd3_molecules(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
 
     request_made = not ds._use_view(False)
@@ -1199,3 +1199,26 @@ def test_grid_optimization_dataset(fractal_compute_server):
 
     ds.query("test")
     assert ds.get_record("hooh1", "test").status == "COMPLETE"
+
+
+@pytest.mark.parametrize("ds_class", [ptl.collections.Dataset, ptl.collections.ReactionDataset])
+def test_get_collection_no_records(ds_class, fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+    ds = ds_class(f"tnr_{ds_class.__name__}", client=client)
+    ds.save()
+
+    ds = client.get_collection(ds_class.__name__, ds.name)
+    assert ds.data.records is None
+
+
+def test_get_collection_no_records_ds(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+    ds = ptl.collections.Dataset(f"tnr_test", client=client)
+    ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
+    ds.save()
+
+    ds = client.get_collection("dataset", ds.name)
+    assert ds.data.records is None
+    ds.get_entries()
+    assert len(ds.data.records) == 1
+    assert ds.data.records[0].name == "He1"

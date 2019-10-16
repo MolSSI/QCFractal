@@ -69,21 +69,30 @@ class ReactionDataset(Dataset):
         ds_type = ds_type.lower()
         super().__init__(name, client=client, ds_type=ds_type, **kwargs)
 
-        # Internal data
-        self._entry_index = pd.DataFrame()
-
-        self._form_index()
-
     class DataModel(Dataset.DataModel):
 
         ds_type: _ReactionTypeEnum = _ReactionTypeEnum.rxn
-        records: List[ReactionEntry] = []
+        records: Optional[List[ReactionEntry]] = []
 
         history: Set[Tuple[str, str, str, Optional[str], Optional[str], str]] = set()
         history_keys: Tuple[str, str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords",
                                                              "stoichiometry")
 
-    def _form_index(self) -> None:
+    def _get_data_records_from_db(self):
+        self._check_client()
+        payload = {
+            "meta": {},  # TODO: this does not work but should {"projection": {"records": True}},
+            "data": {
+                "collection": "reactiondataset",
+                "name": self.name
+            }
+        }
+        response = self.client._automodel_request("collection", "get", payload, full_return=False)
+        self.data.__dict__["records"] = [ReactionEntry(**record) for record in response[0]["records"]]
+
+    def _entry_index(self, subset: Optional[List[str]] = None) -> None:
+        if self.data.records is None:
+            self._get_data_records_from_db()
         # Unroll the index
         tmp_index = []
         for rxn in self.data.records:
@@ -91,9 +100,12 @@ class ReactionDataset(Dataset):
             for stoich_name in list(rxn.stoichiometry):
                 for mol_hash, coef in rxn.stoichiometry[stoich_name].items():
                     tmp_index.append([name, stoich_name, mol_hash, coef])
-
-        self._entry_index = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule", "coefficient"])
-        self.valid_stoich = set(self._entry_index["stoichiometry"].unique())
+        ret = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule", "coefficient"])
+        self.valid_stoich = set(ret["stoichiometry"].unique())
+        if subset is None:
+            return ret
+        else:
+            return ret.set_index("name").loc[subset].reset_index()
 
     def _molecule_indexer(self,
                           stoich: Union[str, List[str]],
@@ -124,8 +136,8 @@ class ReactionDataset(Dataset):
         if isinstance(stoich, str):
             stoich = [stoich]
 
-        index = self.get_entries(force)
-        matched_rows = index[np.in1d(self._entry_index["stoichiometry"], stoich)]
+        index = self.get_entries(subset=subset, force=force)
+        matched_rows = index[np.in1d(self._entry_index()["stoichiometry"], stoich)]
 
         if subset:
             matched_rows = matched_rows[np.in1d(matched_rows["name"], subset)]
@@ -166,7 +178,7 @@ class ReactionDataset(Dataset):
         self._new_records: List[ReactionEntry] = []
         self._new_molecules = {}
 
-        self._form_index()
+        self._entry_index()
 
     def get_values(self,
                    method: Optional[Union[str, List[str]]] = None,
@@ -423,7 +435,6 @@ class ReactionDataset(Dataset):
 
         self._check_client()
         self._check_state()
-        self._validate_stoich(stoich)
 
         method = method.upper()
         if isinstance(stoich, str):
@@ -497,6 +508,8 @@ class ReactionDataset(Dataset):
         self._check_client()
         self._check_state()
 
+        entry_index = self.get_entries(force=True)
+
         self._validate_stoich(stoich)
         compute_keys = {"program": program, "method": method, "basis": basis, "keywords": keywords, "stoich": stoich}
 
@@ -507,16 +520,16 @@ class ReactionDataset(Dataset):
                     "Please only run -D3 as default at the moment, running with CP could lead to extra computations.")
 
             monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
-            tmp_monomer = self._entry_index[self._entry_index["stoichiometry"] == monomer_stoich].copy()
+            tmp_monomer = entry_index[entry_index["stoichiometry"] == monomer_stoich].copy()
 
             ret1 = self._compute(compute_keys, tmp_monomer["molecule"], tag, priority)
 
-            tmp_complex = self._entry_index[self._entry_index["stoichiometry"] == stoich].copy()
+            tmp_complex = entry_index[entry_index["stoichiometry"] == stoich].copy()
             ret2 = self._compute(compute_keys, tmp_complex["molecule"], tag, priority)
 
             ret = ret1.merge(ret2)
         else:
-            tmp_complex = self._entry_index[self._entry_index["stoichiometry"] == stoich].copy()
+            tmp_complex = entry_index[entry_index["stoichiometry"] == stoich].copy()
             ret = self._compute(compute_keys, tmp_complex["molecule"], tag, priority)
 
         # Update the record that this was computed

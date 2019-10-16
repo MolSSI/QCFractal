@@ -172,7 +172,10 @@ class Collection(abc.ABC):
 
         name = data.pop('name')
         # Allow PyDantic to handle type validation
-        return cls(name, client=client, **data)
+        ret = cls(name, client=client, **data)
+        if "records" in ret.data.fields and "records" not in data:
+            ret.data.__dict__["records"] = None
+        return ret
 
     def to_json(self, filename: Optional[str] = None):
         """

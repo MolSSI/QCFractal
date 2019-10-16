@@ -12,7 +12,6 @@ from qcelemental.util import msgpackext_dumps, msgpackext_loads
 # from sqlalchemy.ext.associationproxy import association_proxy
 # from sqlalchemy.dialects.postgresql import aggregate_order_by
 
-
 # Base = declarative_base()
 
 
@@ -49,7 +48,7 @@ class Base:
         class_inspector = inspect(self.__class__)
         # add hybrid properties
         for key, prop in class_inspector.all_orm_descriptors.items():
-            if isinstance(prop, hybrid_property):
+            if isinstance(prop, hybrid_property) and (key not in tobe_deleted_keys):
                 dict_obj.append(key)
 
         # Add the attributes to the final results

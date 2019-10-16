@@ -88,7 +88,12 @@ class ViewHandler:
 
         view = HDF5View(self.view_path(collection_id))
         if request == "entry":
-            df = view.get_entries()
+            try:
+                df = view.get_entries(subset=model["subset"])
+            except KeyError:
+                meta["success"] = False
+                meta["error_description"] = "Unable to find requested entry."
+                return {"meta": meta, "data": None}
         elif request == "molecule":
             series = view.get_molecules(model["indexes"], keep_serialized=True)
             df = pd.DataFrame({'molecule': series})

@@ -519,7 +519,8 @@ class FractalClient(object):
 
         """
 
-        payload = {"meta": {}, "data": {"collection": collection_type, "name": name}}
+        payload = {"meta": {"projection": {"records": False}}, "data": {"collection": collection_type, "name": name}}
+
         response = self._automodel_request("collection", "get", payload, full_return=True)
 
         if full_return:

@@ -340,7 +340,7 @@ class CollectionGETBody(ProtoModel):
             return v.lower()
 
     class Meta(ProtoModel):
-        projection: Dict[str, Any] = Schema(
+        projection: Dict[str, bool] = Schema(
             None, description="Additional projection information to pass to the query. Expert-level object.")
 
     meta: Meta = Schema(
