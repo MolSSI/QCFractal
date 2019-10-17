@@ -287,6 +287,58 @@ class ResultRecord(RecordBase):
     def check_basis(cls, v):
         return prepare_basis(v)
 
+    def get_wavefunction(self, key: Union[str, List[str]]) -> Any:
+        """
+        Pulls down the Wavefunction data associated with the copmutation.
+        """
+
+        if self.wavefunction is None:
+            raise AttributeError("This Record was not computed with Wavefunction data.")
+
+
+        single_return = False
+        if isinstance(key, str):
+            key = [key]
+            single_return = True
+
+        keys = [x.lower() for x in key]
+
+        self.cache.setdefault("wavefunction", {})
+
+        mapped_keys = {self.wavefunction["return_map"].get(x, x) for x in keys}
+        missing = mapped_keys - self.cache["wavefunction"].keys()
+
+        unknown = missing - set(self.wavefunction["available"] + ["basis", "restricted"])
+        if unknown:
+            raise KeyError(
+                f"Wavefunction Key(s) `{unknown}` not understood, available keys are: {self.wavefunction['available']}")
+
+        if missing:
+
+            # Translate a return value
+            proj = {self.wavefunction["return_map"].get(x, x): True for x in missing}
+
+            self.cache["wavefunction"].update(
+                self.client.custom_query("wavefunctionstore",
+                                         None, {"id": self.wavefunction_data_id},
+                                         meta={"projection": proj}))
+
+            if "basis" in missing:
+                self.cache["wavefunction"]["basis"] = qcel.models.BasisSet(**self.cache["wavefunction"]["basis"])
+
+        # Remap once more
+        ret = {}
+        for k in keys:
+            mkey = self.wavefunction["return_map"].get(k, k)
+            ret[k] = self.cache["wavefunction"][mkey]
+
+        if single_return:
+            return ret[keys[0]]
+        else:
+            return ret
+
+
+
 ## QCSchema constructors
 
     def build_schema_input(self, molecule: 'Molecule', keywords: Optional['KeywordSet'] = None,

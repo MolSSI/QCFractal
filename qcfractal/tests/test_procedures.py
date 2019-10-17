@@ -99,8 +99,15 @@ def test_compute_wavefunction(fractal_compute_server):
     fractal_compute_server.await_results()
     assert len(fractal_compute_server.list_current_tasks()) == 0
 
-    results = client.query_results(id=r.ids)[0]
-    print(results)
+    result = client.query_results(id=r.ids)[0]
+    assert result.wavefunction
+
+    r = result.get_wavefunction("orbitals_a")
+    assert isinstance(r, np.ndarray)
+    assert r.shape == (2, 2)
+
+    r = result.get_wavefunction(["orbitals_a", "basis"])
+    assert r.keys() == {"orbitals_a", "basis"}
 
 
 ### Tests the compute queue stack

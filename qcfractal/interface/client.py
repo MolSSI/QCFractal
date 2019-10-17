@@ -1110,42 +1110,48 @@ class FractalClient(object):
     def custom_query(self,
                      object_name: str,
                      query_type: str,
-                     data: Dict,
+                     data: Dict[str, Any],
                      limit: Optional[int] = None,
                      skip: int = 0,
+                     meta: Dict[str, Any] = None,
                      projection: Optional['QueryProjection'] = None,
                      full_return: bool = False) -> Any:
-        """ Custom queries that are supported by the REST APIs.
+        """Custom queries that are supported by the REST APIs.
 
         Parameters
         ----------
-        object_name: str
+        object_name : str
             Object name like optimization, datasets, etc (TODO: add more)
-        query_type: str
+        query_type : str
             The required query within the given class
-        data : dict
+        data : Dict[str, Any]
             a dictionary of the keys to be used in the query
         limit : Optional[int], optional
             The maximum number of Procedures to query
         skip : int, optional
             The number of Procedures to skip in the query, used during pagination
-        projection : QueryProjection, optional
+        meta : Dict[str, Any], optional
+            Additional metadata keys to specify
+        projection : Optional['QueryProjection'], optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
-            Arbitrary returns for each query type.
-            In the form of Dict[str, Any] (TODO)
+        Any
+        In the form of Dict[str, Any] (TODO)
         """
 
         payload = {"meta": {"limit": limit, "skip": skip, "projection": projection}, "data": data}
-        response = self._automodel_request(object_name + '/' + query_type, "get", payload, full_return=True)
+        if meta:
+            payload["meta"].update(meta)
 
-        # if not projection:
-        #     for ind in range(len(response.data)):
-        #         response.data[ind] = build_procedure(response.data[ind], client=self)
+        if query_type:
+            addr = f"{object_name}/{query_type}"
+        else:
+            addr = object_name
+        response = self._automodel_request(addr, "get", payload, full_return=True)
 
         if full_return:
             return response
