@@ -178,6 +178,28 @@ class KVStoreHandler(APIHandler):
         self.write(ret)
 
 
+class WavefunctionStoreHandler(APIHandler):
+    """
+    A handler to push and get molecules.
+    """
+
+    _required_auth = "read"
+    _logging_param_counts = {"id"}
+
+    def get(self):
+
+        body_model, response_model = rest_model("wavefunctionstore", "get")
+        body = self.parse_bodymodel(body_model)
+
+        ret = self.storage.get_wavefunction_store(body.data.id, projection=body.meta.projection)
+        if len(ret["data"]):
+            ret["data"] = ret["data"][0]
+        ret = response_model(**ret)
+
+        self.logger.info("GET: WavefunctionStore - 1 pull.")
+        self.write(ret)
+
+
 class MoleculeHandler(APIHandler):
     """
     A handler to push and get molecules.
