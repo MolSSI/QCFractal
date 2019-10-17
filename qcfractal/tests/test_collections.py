@@ -759,7 +759,7 @@ def qm3_fixture(request, tmp_path_factory):
     to_remove = {row for row in ds.data.history if row[2].lower() not in {'b3lyp', 'pbe'}}
     for row in to_remove:
         ds.data.history.remove(row)
-    ds._form_index()
+    ds.get_entries(force=True)
 
     # with view
     if request.param:
@@ -783,7 +783,7 @@ def s22_fixture(request, tmp_path_factory):
     to_remove = {row for row in ds.data.history if row[2].lower() not in {"b3lyp", "pbe"}}
     for row in to_remove:
         ds.data.history.remove(row)
-    ds._form_index()
+    ds.get_entries(force=True)
 
     # with view
     if request.param:
