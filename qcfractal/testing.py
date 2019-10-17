@@ -83,7 +83,7 @@ def _plugin_import(plug):
 
 _import_message = "Not detecting module {}. Install package if necessary and add to envvar PYTHONPATH"
 
-_adapter_testing = ["pool", "dask", "fireworks", "parsl"]
+_adapter_testing = ["pool", "dask", "fireworks", "parsl", "radical"]
 
 # Figure out what is imported
 _programs = {
@@ -420,6 +420,27 @@ def build_adapter_clients(mtype, storage_name="test_qcfractal_compute_server"):
 
         # Must only be a single thread as we run thread unsafe applications.
         adapter_client = parsl.config.Config(executors=[parsl.executors.threads.ThreadPoolExecutor(max_threads=1)])
+
+    elif mtype == "radical":
+
+        rp = pytest.importorskip("radical.pilot")
+
+        session = rp.Session()
+        pmgr    = rp.PilotManager(session)
+        umgr    = rp.UnitManager(session)
+
+        adapter_client = {
+            "name"    : 'radical.pilot',
+            "session" : session,
+            "pmgr"    : pmgr,
+            "umgr"    : umgr,
+            "config"  : {"mgr" : {"cores"    : 16},
+                         "pd"  : {"cores"    : 16,
+                                  "runtime"  : 10,
+                                  "resource" : "local.localhost"}
+                        }
+        }
+
 
     else:
         raise TypeError("fractal_compute_server: internal parametrize error")

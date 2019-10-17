@@ -5,7 +5,7 @@ Queue backend abstraction manager.
 from .executor_adapter import DaskAdapter, ExecutorAdapter
 from .fireworks_adapter import FireworksAdapter
 from .parsl_adapter import ParslAdapter
-
+from .radical_adapter import RadicalAdapter
 
 def build_queue_adapter(workflow_client, logger=None, **kwargs) -> 'BaseAdapter':
     """Constructs a queue manager based off the incoming queue socket type.
@@ -29,8 +29,11 @@ def build_queue_adapter(workflow_client, logger=None, **kwargs) -> 'BaseAdapter'
     ret : Adapter
         Returns a valid Adapter for the selected computational queue
     """
-
-    adapter_type = type(workflow_client).__module__ + "." + type(workflow_client).__name__
+   
+    if isinstance(workflow_client, dict):
+        adapter_type = workflow_client["name"]
+    else:
+        adapter_type = type(workflow_client).__module__ + "." + type(workflow_client).__name__
 
     if adapter_type == "parsl.config.Config":
         adapter = ParslAdapter(workflow_client, logger=logger, **kwargs)
@@ -43,6 +46,9 @@ def build_queue_adapter(workflow_client, logger=None, **kwargs) -> 'BaseAdapter'
 
     elif adapter_type == "fireworks.core.launchpad.LaunchPad":
         adapter = FireworksAdapter(workflow_client, logger=logger, **kwargs)
+
+    elif adapter_type == "radical.pilot":
+        adapter = RadicalAdapter(workflow_client, logger=logger, **kwargs)
 
     else:
         raise KeyError("QueueAdapter type '{}' not understood".format(adapter_type))
