@@ -886,6 +886,12 @@ def assert_view_identical(ds):
     """ Tests if get_values, list_values, get_entries, and get_molecules return the same result with/out a view"""
     def df_equals(df1, df2):
         """ checks equality even when columns contain numpy arrays, which .equals and == struggle with """
+        for column in df1.columns:
+            if column.startswith("_"):
+                df1.drop(column, axis=1, inplace=True)
+        for column in df2.columns:
+            if column.startswith("_"):
+                df2.drop(column, axis=1, inplace=True)
         if not all(df1.columns == df2.columns):
             return False
         if not all(df1.index.values == df2.index.values):

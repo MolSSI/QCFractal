@@ -465,6 +465,7 @@ class CollectionValueGETBody(ProtoModel):
         queries: List[QueryData] = Schema(None,
                                           description="List of queries to match against values columns. "
                                           "See qcfractal.interface.collections.dataset_view.DatasetView.get_values")
+        subset: QueryStr
 
     meta: EmptyMeta = Schema(EmptyMeta(), description=common_docs[EmptyMeta])
     data: Data = Schema(..., description="Information about which values to return.")

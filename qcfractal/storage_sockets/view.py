@@ -100,7 +100,7 @@ class ViewHandler:
             df.reset_index(inplace=True)
             meta["msgpacked_cols"].append('molecule')
         elif request == "value":
-            df, units = view.get_values(model["queries"])
+            df, units = view.get_values(model["queries"], subset=model["subset"])
             df.reset_index(inplace=True)
         elif request == "list":
             df = view.list_values()
