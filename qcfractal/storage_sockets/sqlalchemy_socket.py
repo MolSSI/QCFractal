@@ -1201,18 +1201,25 @@ class SQLAlchemySocket:
 
         return {"data": blob_ids, "meta": meta}
 
-    def get_wavefunction_store(self, id: List[str] = None, limit: int = None, skip: int = 0):
+    def get_wavefunction_store(self,
+                               id: List[str] = None,
+                               projection: Dict[str, bool] = None,
+                               limit: int = None,
+                               skip: int = 0):
         """
         Pulls from the wavefunction key/value store table.
 
         Parameters
         ----------
-        id : List[str]
+        id : List[str], optional
             A list of ids to query
+        projection : Dict[str, bool], optional
+            Description
         limit : int, optional
             Maximum number of results to return.
         skip : int, optional
             skip the `skip` results
+
         Returns
         -------
         TYPE
@@ -1222,12 +1229,11 @@ class SQLAlchemySocket:
         meta = get_metadata_template()
 
         query = format_query(WavefunctionStoreORM, id=id)
-        rdata, meta['n_found'] = self.get_query_projection(WavefunctionStoreORM, query, None, limit, skip)
+        rdata, meta['n_found'] = self.get_query_projection(WavefunctionStoreORM, query, projection, limit, skip)
 
         meta["success"] = True
-        data = {d["id"]: d for d in rdata}
 
-        return {"data": data, "meta": meta}
+        return {"data": rdata, "meta": meta}
 
 ### Mongo procedure/service functions
 
