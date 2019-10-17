@@ -191,6 +191,7 @@ class Dataset(Collection):
             raise ValueError("New molecules, keywords, or records detected, run save before submitting new tasks.")
 
     def _canonical_pre_save(self, client: 'FractalClient') -> None:
+        self._ensure_contributed_values()
         if self.data.records is None:
             self._get_data_records_from_db()
         for k in list(self._new_keywords.keys()):
@@ -1197,7 +1198,8 @@ class Dataset(Collection):
         overwrite : bool, optional
             Overwrites pre-existing values
         """
-        self.get_entries()  # TODO: get entries subset
+        self.get_entries()
+        self._ensure_contributed_values()
         # Convert and validate
         if isinstance(contrib, ContributedValues):
             contrib = contrib.copy()
@@ -1214,6 +1216,22 @@ class Dataset(Collection):
         self.data.contributed_values[key] = contrib
         self._updated_state = True
 
+    def _ensure_contributed_values(self) -> None:
+        if self.data.contributed_values is None:
+            self._check_client()
+            payload = {
+                "meta": {},  # TODO: this does not work but should {"projection": {"records": True}},
+                "data": {
+                    "collection": self.__class__.__name__.lower(),
+                    "name": self.name
+                }
+            }
+            response = self.client._automodel_request("collection", "get", payload, full_return=False)
+            self.data.__dict__["contributed_values"] = {
+                key: ContributedValues(**value)
+                for key, value in response[0]["contributed_values"].items()
+            }
+
     def _list_contributed_values(self) -> pd.DataFrame:
         """
         Lists all specifications of contributed data, i.e. method, program, basis set, keyword set, driver combinations
@@ -1223,6 +1241,7 @@ class Dataset(Collection):
         DataFrame
             Contributed value specifications.
         """
+        self._ensure_contributed_values()
         ret = pd.DataFrame(columns=self.data.history_keys + tuple(["name"]))
 
         cvs = ((cv_data.name, cv_data.theory_level_details)
@@ -1255,6 +1274,7 @@ class Dataset(Collection):
                 new_queries.append(query)
 
         if not self._use_view(force):
+            self._ensure_contributed_values()
             units: Dict[str, str] = {}
 
             for query in new_queries:
