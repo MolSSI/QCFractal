@@ -780,6 +780,9 @@ class FractalClient(object):
         if not isinstance(molecule, list):
             molecule = [molecule]
 
+        if protocols is None:
+            protocols = {}
+
         payload = {
             "meta": {
                 "procedure": "single",
