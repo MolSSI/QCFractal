@@ -512,7 +512,8 @@ class FractalClient(object):
             The name of the collection to be accessed
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
-
+        heavy : Optional[bool], optional
+            Return the full collection including large data objects. "None" chooses a sensible default.
         Returns
         -------
         Collection

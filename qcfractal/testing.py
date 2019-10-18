@@ -542,6 +542,7 @@ def live_fractal_or_skip():
     except (requests.exceptions.ConnectionError, ConnectionRefusedError):
         print("Failed to connect to localhost")
         try:
+            return pytest.xfail("Until QCA is migrated to v0.12.0")
             requests.get('https://api.qcarchive.molssi.org:443', json={}, timeout=5)
             return FractalClient()
         except (requests.exceptions.ConnectionError, ConnectionRefusedError):

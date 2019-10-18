@@ -20,14 +20,15 @@ Changelog
 
 New Features
 ++++++++++++
-- (:pr:`433`) ``Dataset`` and ``ReactionDataset`` (``interface.collections``) now have a `download` method which
-  downloads a frozen view of the dataset. This view is used to speed up calls to `get_values`, `get_molecules`,
-  `get_entries`, and `list_values`.
+- (:pr:`433`) ``Dataset`` and ``ReactionDataset`` (``interface.collections``) now have a ``download``` method which
+  downloads a frozen view of the dataset. This view is used to speed up calls to ``get_values``, ``get_molecules``,
+  ``get_entries``, and ``list_values``.
 
 Enhancements
 ++++++++++++
-- (:pr:`433`) ``Dataset`` and ``ReactionDataset`` (``interface.collections``) are now faster for calls to calls to `get_values`, `get_molecules`,
-  `get_entries`, and `list_values` for large datasets if the server is configured to use frozen views. See "Server-side Dataset Views" documentation.
+- (:pr:`433`, :pr:`443`) ``Dataset`` and ``ReactionDataset`` (``interface.collections``) are now faster for calls to calls to ``get_values``, ``get_molecules``,
+  ``get_entries``, and ``list_values`` for large datasets if the server is configured to use frozen views. See "Server-side Dataset Views" documentation. Subsets
+  may be passed to ``get_values``, ``get_molecules``, and ``get_entries``
 
 Bug Fixes
 +++++++++
