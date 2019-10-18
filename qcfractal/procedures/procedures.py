@@ -73,7 +73,7 @@ class SingleResultTasks(BaseTasks):
 
         if data.meta.dict().get("protocols", None) is not None:
             try:
-                r = qcel.models.results.ResultProtocols(**data.meta.protocols)
+                qcel.models.results.ResultProtocols(**data.meta.protocols)
             except Exception as e:
                 return f"Could not validate protocols: {str(e)}"
 

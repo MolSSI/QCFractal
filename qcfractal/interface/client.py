@@ -730,9 +730,9 @@ class FractalClient(object):
 
         Parameters
         ----------
-        program : str
+        program : str, optional
             The computational program to execute the result with (e.g., "rdkit", "psi4").
-        method : str
+        method : str, optional
             The computational method to use (e.g., "B3LYP", "PBE")
         basis : Optional[str], optional
             The basis to apply to the computation (e.g., "cc-pVDZ", "6-31G")
@@ -740,10 +740,13 @@ class FractalClient(object):
             The primary result that the compute will aquire {"energy", "gradient", "hessian", "properties"}
         keywords : Optional['ObjectId'], optional
             The KeywordSet ObjectId to use with the given compute
-        molecule : Union['ObjectId', 'Molecule', List[Union['ObjectId', 'Molecule']]]
+        molecule : Union['ObjectId', 'Molecule', List[Union['ObjectId', 'Molecule']]], optional
             The Molecules or Molecule ObjectId's to compute with the above methods
         priority : Optional[str], optional
             The priority of the job {"HIGH", "MEDIUM", "LOW"}. Default is "MEDIUM".
+        protocols : Optional[Dict[str, Any]], optional
+            Protocols for store more or less data per field. Current valid
+            protocols: {'wavefunction'}
         tag : Optional[str], optional
             The computational tag to add to your compute, managers can optionally only pull
             based off the string tags. These tags are arbitrary, but several examples are to

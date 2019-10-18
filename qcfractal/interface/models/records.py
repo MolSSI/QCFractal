@@ -289,7 +289,7 @@ class ResultRecord(RecordBase):
 
     def get_wavefunction(self, key: Union[str, List[str]]) -> Any:
         """
-        Pulls down the Wavefunction data associated with the copmutation.
+        Pulls down the Wavefunction data associated with the computation.
         """
 
         if self.wavefunction is None:
