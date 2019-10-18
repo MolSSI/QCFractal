@@ -564,6 +564,11 @@ def test_results_get_project(storage_results):
     assert set(ret_true.keys()) == {"id", "return_result"}
     assert ret_true["return_result"] == 15
 
+    # Note: explicitly set with_ids=False to remove ids
+    ret = storage_results.get_results(method="M2", program="P2", with_ids=False,
+                                      projection=["return_result"])["data"][0]
+    assert set(ret.keys()) == {"return_result"}
+
 
 def test_results_get_driver(storage_results):
     ret = storage_results.get_results(driver="energy")
