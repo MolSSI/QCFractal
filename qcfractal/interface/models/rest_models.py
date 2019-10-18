@@ -98,7 +98,7 @@ QueryStr = Optional[Union[List[str], str]]
 QueryInt = Optional[Union[List[int], int]]
 QueryObjectId = Optional[Union[List[ObjectId], ObjectId]]
 QueryNullObjectId = Optional[Union[List[ObjectId], ObjectId, List[nullstr], nullstr]]
-QueryProjection = Optional[Dict[str, bool]]
+QueryProjection = Optional[List[str]]
 
 
 class EmptyMeta(ProtoModel):
@@ -340,8 +340,9 @@ class CollectionGETBody(ProtoModel):
             return v.lower()
 
     class Meta(ProtoModel):
-        projection: Dict[str, bool] = Schema(
+        projection: QueryProjection = Schema(
             None, description="Additional projection information to pass to the query. Expert-level object.")
+        heavy: bool = Schema(True, description="Return large data such as entries and contributed values.")
 
     meta: Meta = Schema(
         None,

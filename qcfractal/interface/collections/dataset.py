@@ -164,15 +164,12 @@ class Dataset(Collection):
 
     def _get_data_records_from_db(self):
         self._check_client()
-        payload = {
-            "meta": {},  # TODO: this does not work but should {"projection": {"records": True}},
-            "data": {
-                "collection": "dataset",
-                "name": self.name
-            }
-        }
-        response = self.client._automodel_request("collection", "get", payload, full_return=False)
-        self.data.__dict__["records"] = [MoleculeEntry(**record) for record in response[0]["records"]]
+        response = self.client.get_collection(self.__class__.__name__.lower(),
+                                              self.name,
+                                              full_return=False,
+                                              heavy=True)
+        self.data.__dict__["records"] = response.data.records
+        self.data.__dict__["contributed_values"] = response.data.contributed_values
 
     def _entry_index(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
         # TODO: make this fast for subsets
@@ -610,7 +607,7 @@ class Dataset(Collection):
                 driver = query.pop("driver")
                 qname = query.pop("name")
                 data = self.get_records(query.pop("method").upper(),
-                                        projection={"return_result": True},
+                                        projection=["return_result"],
                                         merge=True,
                                         subset=subset,
                                         **query)
@@ -1007,8 +1004,9 @@ class Dataset(Collection):
             # Set the index to remove duplicates
             molecules = list(set(indexer.values()))
             if projection:
-                proj = {k.lower(): v for k, v in projection.items()}
-                proj["molecule"] = True
+                proj = [k.lower() for k in projection]
+                if "molecule" not in proj:
+                    proj.append("molecule")
                 query_set["projection"] = proj
 
             # Chunk up the queries
@@ -1033,9 +1031,8 @@ class Dataset(Collection):
                 if projection is None:
                     df["record"] = None
                 else:
-                    for k, v in projection.items():
-                        if v:
-                            df[k] = np.nan
+                    for k in projection:
+                        df[k] = np.nan
 
             df.set_index("index", inplace=True)
             df.drop("molecule", axis=1, inplace=True)
@@ -1237,19 +1234,7 @@ class Dataset(Collection):
 
     def _ensure_contributed_values(self) -> None:
         if self.data.contributed_values is None:
-            self._check_client()
-            payload = {
-                "meta": {},  # TODO: this does not work but should {"projection": {"records": True}},
-                "data": {
-                    "collection": self.__class__.__name__.lower(),
-                    "name": self.name
-                }
-            }
-            response = self.client._automodel_request("collection", "get", payload, full_return=False)
-            self.data.__dict__["contributed_values"] = {
-                key: ContributedValues(**value)
-                for key, value in response[0]["contributed_values"].items()
-            }
+            self._get_data_records_from_db()
 
     def _list_contributed_values(self) -> pd.DataFrame:
         """
@@ -1382,7 +1367,7 @@ class Dataset(Collection):
                     *,
                     keywords: Optional[str] = None,
                     program: Optional[str] = None,
-                    projection: Optional[Dict[str, bool]] = None,
+                    projection: Optional[List[str]] = None,
                     subset: Optional[Union[str, Set[str]]] = None,
                     merge: bool = False) -> Union[pd.DataFrame, 'ResultRecord']:
         """

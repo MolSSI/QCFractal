@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
+
 from qcelemental import constants
 
 from ..models import Molecule, ProtoModel
@@ -76,18 +77,6 @@ class ReactionDataset(Dataset):
         history: Set[Tuple[str, str, str, Optional[str], Optional[str], str]] = set()
         history_keys: Tuple[str, str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords",
                                                              "stoichiometry")
-
-    def _get_data_records_from_db(self):
-        self._check_client()
-        payload = {
-            "meta": {},  # TODO: this does not work but should {"projection": {"records": True}},
-            "data": {
-                "collection": "reactiondataset",
-                "name": self.name
-            }
-        }
-        response = self.client._automodel_request("collection", "get", payload, full_return=False)
-        self.data.__dict__["records"] = [ReactionEntry(**record) for record in response[0]["records"]]
 
     def _entry_index(self, subset: Optional[List[str]] = None) -> None:
         if self.data.records is None:
@@ -273,7 +262,7 @@ class ReactionDataset(Dataset):
 
             # Build the starting table
             indexer, names = self._molecule_indexer(stoich=stoich, coefficients=True, force=force)
-            df = self._get_records(indexer, query, projection={"return_result": True}, merge=True)
+            df = self._get_records(indexer, query, projection=["return_result"], merge=True)
             df.index = pd.MultiIndex.from_tuples(df.index, names=names)
             df.reset_index(inplace=True)
 
@@ -413,7 +402,7 @@ class ReactionDataset(Dataset):
                     keywords: Optional[str] = None,
                     program: Optional[str] = None,
                     stoich: Union[str, List[str]] = "default",
-                    projection: Optional[Dict[str, bool]] = None,
+                    projection: Optional[List[str]] = None,
                     subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'ResultRecord']:
         """
         Queries the local Portal for the requested keys and stoichiometry.

@@ -476,7 +476,7 @@ class FractalClient(object):
         if collection_type is not None:
             query = {"collection": collection_type.lower()}
 
-        payload = {"meta": {"projection": {"name": True, "collection": True, "tagline": True}}, "data": query}
+        payload = {"meta": {"projection": ["name", "collection", "tagline"]}, "data": query}
         response: List[Dict[str, Any]] = self._automodel_request("collection", "get", payload, full_return=False)
 
         # Rename collection names
@@ -500,7 +500,8 @@ class FractalClient(object):
             df.sort_index(inplace=True)
             return df
 
-    def get_collection(self, collection_type: str, name: str, full_return: bool = False) -> 'Collection':
+    def get_collection(self, collection_type: str, name: str, full_return: bool = False,
+                       heavy: bool = None) -> 'Collection':
         """Acquires a given collection from the server.
 
         Parameters
@@ -520,10 +521,10 @@ class FractalClient(object):
         """
 
         payload = {"meta": {}, "data": {"collection": collection_type, "name": name}}
-        if collection_type.lower() in ["dataset", "reactiondataset"]:
-            payload["meta"]["projection"] = {"records": False, "contributed_values": False}
+        if heavy is None:
+            heavy = collection_type.lower() not in ["dataset", "reactiondataset"]
+        payload["meta"]["heavy"] = heavy
         response = self._automodel_request("collection", "get", payload, full_return=True)
-
         if full_return:
             return response
 

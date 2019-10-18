@@ -12,6 +12,7 @@ import pytest
 import qcfractal.interface as ptl
 from qcfractal.interface.models.task_models import TaskStatusEnum
 from qcfractal.services.services import TorsionDriveService
+from qcfractal.storage_sockets.models.collections_models import DatasetORM
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
 
 bad_id1 = "000000000000000000000000"
@@ -268,6 +269,49 @@ def test_collections_overwrite(storage_socket):
     assert ret == 1
 
 
+def test_collections_projection(storage_socket):
+
+    collection = 'Dataset'
+    name = 'Dataset123'
+    db = {
+        "collection": collection,
+        "name": name,
+        "something": "else",
+        "array": ["54321"],
+        "visibility": True,
+        "view_available": False
+    }
+
+    ret = storage_socket.add_collection(db)
+
+    assert ret["meta"]["n_inserted"] == 1
+
+    ret = storage_socket.get_collections(collection, name)
+    assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
+
+    projection = DatasetORM.col()
+    projection.remove('update_relations')
+
+    projection.remove('records')
+    projection.remove('contributed_values')
+    projection.remove('records_obj')
+
+    ret = storage_socket.get_collections(collection=collection, name=name, projection=projection)
+
+    assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
+    assert "records" not in ret["data"][0]
+    assert "contributed_values" not in ret["data"][0]
+
+    ret = storage_socket.get_collections(collection=collection, name=name, heavy=False)
+
+    assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
+    assert "records" not in ret["data"][0]
+    assert "contributed_values" not in ret["data"][0]
+
+
 def test_results_add(storage_socket):
 
     # Add two waters
@@ -484,7 +528,7 @@ def test_get_results_by_ids(storage_results):
     assert ret["meta"]["n_found"] == 6
     assert len(ret["data"]) == 6
 
-    ret = storage_results.get_results(id=ids, projection={'status': True, 'id': True})
+    ret = storage_results.get_results(id=ids, projection=['status', 'id'])
 
     assert ret['data'][0].keys() == {'id', 'status'}
 
@@ -516,26 +560,9 @@ def test_results_get_dual(storage_results):
 def test_results_get_project(storage_results):
     """See new changes in design here"""
 
-    ret_true = storage_results.get_results(method="M2", program="P2", projection={
-        "return_result": True,
-        "id": True
-    })["data"][0]
+    ret_true = storage_results.get_results(method="M2", program="P2", projection=["return_result", "id"])["data"][0]
     assert set(ret_true.keys()) == {"id", "return_result"}
     assert ret_true["return_result"] == 15
-
-    ret_none = storage_results.get_results(method="M2", program="P2")["data"][0]
-    ret_false = storage_results.get_results(method="M2",
-                                            program="P2",
-                                            projection={
-                                                "return_result": False,
-                                                "id": False
-                                            })["data"][0]
-    assert set(ret_false.keys()) == set(ret_none.keys()) - {"return_result", "id"}
-
-    # Note: explicitly set with_ids=False to remove ids
-    ret = storage_results.get_results(method="M2", program="P2", with_ids=False, projection={"return_result":
-                                                                                             True})["data"][0]
-    assert set(ret.keys()) == {"return_result"}
 
 
 def test_results_get_driver(storage_results):

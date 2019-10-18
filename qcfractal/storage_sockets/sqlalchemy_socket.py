@@ -5,7 +5,7 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 try:
     from sqlalchemy import create_engine, or_, case
     from sqlalchemy.exc import IntegrityError
-    from sqlalchemy.orm import sessionmaker, with_polymorphic
+    from sqlalchemy.orm import sessionmaker, with_polymorphic, defer
     from sqlalchemy.sql.expression import func
 except ImportError:
     raise ImportError("SQLAlchemy_socket requires sqlalchemy, please install this python "
@@ -279,26 +279,16 @@ class SQLAlchemySocket:
 
         return limit if limit and limit < self._max_limit else self._max_limit
 
-    def get_query_projection(self,
-                             className,
-                             query,
-                             projection: Optional[Dict[str, bool]],
-                             limit: Optional[int],
-                             skip: Optional[int],
-                             exclude=None):
-
-        if projection and not (all(projection.values()) or not any(projection.values())):
-            raise ValueError("Values in projection must be either all False or all True.")
+    def get_query_projection(self, className, query, projection, limit, skip, exclude=None):
 
         with self.session_scope() as session:
-            if projection and all(projection.values()):
-                # XXX: this duplicates a lot of code in Base.to_dict
+            if projection:
                 proj = [getattr(className, i) for i in projection]
                 data = session.query(*proj).filter(*query)
-
                 n_found = get_count_fast(data)  # before iterating on the data
                 data = data.limit(self.get_limit(limit)).offset(skip)
                 rdata = [dict(zip(projection, row)) for row in data]
+                # print('----------rdata before: ', rdata)
                 # transform ids from int into str
                 id_fields = className._get_fieldnames_with_DB_ids_()
                 for d in rdata:
@@ -308,20 +298,19 @@ class SQLAlchemySocket:
                                 d[key] = [str(i) for i in d[key]]
                             else:
                                 d[key] = str(d[key])
+                # print('--------rdata after: ', rdata)
             else:
-                to_exclude = exclude.copy() if exclude is not None else []
-                if projection and not any(projection.values()):
-                    to_exclude.extend(projection.keys())
                 data = session.query(className).filter(*query)
+
                 # from sqlalchemy.dialects import postgresql
                 # print(data.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
                 n_found = get_count_fast(data)
                 data = data.limit(self.get_limit(limit)).offset(skip).all()
-                rdata = [d.to_dict(exclude=to_exclude) for d in data]
+                rdata = [d.to_dict(exclude=exclude) for d in data]
 
         return rdata, n_found
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def custom_query(self, class_name: str, query_key: str, **kwargs):
         """
@@ -864,8 +853,9 @@ class SQLAlchemySocket:
                         name: Optional[str] = None,
                         col_id: Optional[int] = None,
                         limit: Optional[int] = None,
-                        projection: Optional[Dict[str, bool]] = None,
-                        skip: int = 0) -> Dict[str, Any]:
+                        projection: Optional[List[str]] = None,
+                        skip: int = 0,
+                        heavy: bool = True) -> Dict[str, Any]:
         """Get collection by collection and/or name
 
         Parameters
@@ -898,7 +888,15 @@ class SQLAlchemySocket:
         collection_class = get_collection_class(collection)
         query = format_query(collection_class, lname=name, collection=collection, id=col_id)
 
-        # try:
+        if not heavy and projection is None:
+            projection = collection_class.col()
+            for item in [
+                    "contributed_values", "records", "records_obj", "update_relations", "lname", "extra",
+                    "collection_type"
+            ]:
+                if item in projection:
+                    projection.remove(item)
+
         rdata, meta['n_found'] = self.get_query_projection(collection_class,
                                                            query,
                                                            projection,
@@ -907,8 +905,6 @@ class SQLAlchemySocket:
                                                            exclude=['lname'])
 
         meta["success"] = True
-        # except Exception as err:
-        #     meta['error_description'] = str(err)
 
         return {"data": rdata, "meta": meta}
 
