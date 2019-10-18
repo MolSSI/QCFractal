@@ -184,7 +184,7 @@ class Dataset(Collection):
         if subset is None:
             return ret
         else:
-            return ret.set_index("name").loc[subset].reset_index()
+            return ret.reset_index().set_index("name").loc[subset].reset_index().set_index("index")
 
     def _check_state(self) -> None:
         if self._new_molecules or self._new_keywords or self._new_records or self._updated_state:
@@ -546,7 +546,6 @@ class Dataset(Collection):
             ret.append(df)
         ret_df = pd.concat(ret, axis=1)
         ret_df = ret_df.loc[subset if subset is not None else self.get_index()]
-        ret_df.sort_index(inplace=True)
 
         return ret_df
 
@@ -1218,7 +1217,7 @@ class Dataset(Collection):
         overwrite : bool, optional
             Overwrites pre-existing values
         """
-        self.get_entries()
+        self.get_entries(force=True)
         self._ensure_contributed_values()
         # Convert and validate
         if isinstance(contrib, ContributedValues):

@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
-
 from qcelemental import constants
 
 from ..models import Molecule, ProtoModel
@@ -101,11 +100,10 @@ class ReactionDataset(Dataset):
                 for mol_hash, coef in rxn.stoichiometry[stoich_name].items():
                     tmp_index.append([name, stoich_name, mol_hash, coef])
         ret = pd.DataFrame(tmp_index, columns=["name", "stoichiometry", "molecule", "coefficient"])
-        self.valid_stoich = set(ret["stoichiometry"].unique())
         if subset is None:
             return ret
         else:
-            return ret.set_index("name").loc[subset].reset_index()
+            return ret.reset_index().set_index("name").loc[subset].reset_index().set_index("index")
 
     def _molecule_indexer(self,
                           stoich: Union[str, List[str]],
@@ -156,13 +154,18 @@ class ReactionDataset(Dataset):
 
         return ret, names
 
-    def _validate_stoich(self, stoich: Union[List[str], str]) -> None:
+    def valid_stoich(self, subset=None, force: bool = False) -> Set[str]:
+        entries = self.get_entries(subset=subset, force=force)
+        return set(entries["stoichiometry"].unique())
+
+    def _validate_stoich(self, stoich: Union[List[str], str], subset=None, force: bool = False) -> None:
         if isinstance(stoich, str):
             stoich = [stoich]
 
+        valid_stoich = self.valid_stoich(subset=subset, force=force)
         for s in stoich:
-            if s.lower() not in self.valid_stoich:
-                raise KeyError("Stoichiometry not understood, valid keys are {}.".format(self.valid_stoich))
+            if s.lower() not in valid_stoich:
+                raise KeyError("Stoichiometry not understood, valid keys are {}.".format(valid_stoich))
 
     def _pre_save_prep(self, client: 'FractalClient') -> None:
         self._canonical_pre_save(client)
@@ -189,6 +192,7 @@ class ReactionDataset(Dataset):
                    stoich: str = "default",
                    name: Optional[Union[str, List[str]]] = None,
                    native: Optional[bool] = None,
+                   subset: Optional[Union[str, List[str]]] = None,
                    force: bool = False) -> pd.DataFrame:
         """
         Obtains values from the known history from the search paramaters provided for the expected `return_result` values.
@@ -237,6 +241,7 @@ class ReactionDataset(Dataset):
                                 stoich=stoich,
                                 name=name,
                                 native=native,
+                                subset=subset,
                                 force=force)
 
     def _get_native_values(self,
@@ -248,7 +253,7 @@ class ReactionDataset(Dataset):
                            stoich: Optional[str] = None,
                            name: Optional[str] = None,
                            force: bool = False) -> pd.DataFrame:
-        self._validate_stoich(stoich)
+        self._validate_stoich(stoich, subset=subset, force=force)
 
         # So that datasets with no records do not require a default program and default keywords
         if len(self.list_records()) == 0:
@@ -393,7 +398,7 @@ class ReactionDataset(Dataset):
 
         self._check_client()
         self._check_state()
-        self._validate_stoich(stoich)
+        self._validate_stoich(stoich, subset=subset, force=force)
 
         indexer, names = self._molecule_indexer(stoich=stoich, subset=subset, force=force)
         df = self._get_molecules(indexer, force=force)
@@ -514,7 +519,7 @@ class ReactionDataset(Dataset):
 
         entry_index = self.get_entries(force=True)
 
-        self._validate_stoich(stoich)
+        self._validate_stoich(stoich, subset=None, force=True)
         compute_keys = {"program": program, "method": method, "basis": basis, "keywords": keywords, "stoich": stoich}
 
         # Figure out molecules that we need

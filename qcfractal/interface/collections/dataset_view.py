@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple, Un
 
 import numpy as np
 import pandas as pd
-
 from qcelemental.util.serialization import deserialize, serialize
 
 from ..models import Molecule, ObjectId
@@ -221,7 +220,7 @@ class HDF5View(DatasetView):
         if subset is None:
             return self._entries
         else:
-            return self._entries.set_index("name").loc[subset].reset_index()
+            return self._entries.reset_index().set_index("name").loc[subset].reset_index()
 
     def write(self, ds: Dataset):
         import h5py
@@ -289,7 +288,7 @@ class HDF5View(DatasetView):
             molecule_group = f.create_group("molecule")
 
             if "stoichiometry" in ds.data.history_keys:
-                molecules = ds.get_molecules(stoich=list(ds.valid_stoich), force=True)
+                molecules = ds.get_molecules(stoich=list(ds.valid_stoich(force=True)), force=True)
             else:
                 molecules = ds.get_molecules(force=True)
             mol_shape = (len(molecules), )
@@ -460,6 +459,7 @@ class RemoteView(DatasetView):
         self._id: int = collection_id
 
     def get_entries(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
+        # TODO: consider adding a cache
         payload = {"meta": {}, "data": {"subset": subset}}
 
         response = self._client._automodel_request(f"collection/{self._id}/entry", "get", payload, full_return=True)
