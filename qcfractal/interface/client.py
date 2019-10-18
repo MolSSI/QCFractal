@@ -714,13 +714,15 @@ class FractalClient(object):
     ### Compute section
 
     def add_compute(self,
-                    program: str,
-                    method: str,
-                    basis: str,
-                    driver: str,
-                    keywords: Union['ObjectId', None],
-                    molecule: Union['ObjectId', 'Molecule', List[Union[str, 'Molecule']]],
+                    program: str = None,
+                    method: str = None,
+                    basis: Optional[str] = None,
+                    driver: str = None,
+                    keywords: Optional['ObjectId'] = None,
+                    molecule: Union['ObjectId', 'Molecule', List[Union['ObjectId', 'Molecule']]] = None,
+                    *,
                     priority: Optional[str] = None,
+                    protocols: Optional[Dict[str, Any]] = None,
                     tag: Optional[str] = None,
                     full_return: bool = False) -> 'ComputeResponse':
         """
@@ -728,21 +730,24 @@ class FractalClient(object):
 
         Parameters
         ----------
-        program : str
+        program : str, optional
             The computational program to execute the result with (e.g., "rdkit", "psi4").
-        method : str
+        method : str, optional
             The computational method to use (e.g., "B3LYP", "PBE")
-        basis : str
+        basis : Optional[str], optional
             The basis to apply to the computation (e.g., "cc-pVDZ", "6-31G")
-        driver : str
+        driver : str, optional
             The primary result that the compute will aquire {"energy", "gradient", "hessian", "properties"}
-        keywords : Union[str, None]
+        keywords : Optional['ObjectId'], optional
             The KeywordSet ObjectId to use with the given compute
-        molecule : Union[str, Molecule, List[Union[str, Molecule]]]
+        molecule : Union['ObjectId', 'Molecule', List[Union['ObjectId', 'Molecule']]], optional
             The Molecules or Molecule ObjectId's to compute with the above methods
-        priority : str, optional
+        priority : Optional[str], optional
             The priority of the job {"HIGH", "MEDIUM", "LOW"}. Default is "MEDIUM".
-        tag : str, optional
+        protocols : Optional[Dict[str, Any]], optional
+            Protocols for store more or less data per field. Current valid
+            protocols: {'wavefunction'}
+        tag : Optional[str], optional
             The computational tag to add to your compute, managers can optionally only pull
             based off the string tags. These tags are arbitrary, but several examples are to
             use "large", "medium", "small" to denote the size of the job or "project1", "project2"
@@ -757,11 +762,29 @@ class FractalClient(object):
               - ids: The ObjectId's of the task in the order of input molecules
               - submitted: A list of ObjectId's that were submitted to the compute queue
               - existing: A list of ObjectId's of tasks already in the database
+
+        Raises
+        ------
+        ValueError
+            Description
         """
+
+        # Scan the input
+        if program is None:
+            raise ValueError("Program must be specified for the computation.")
+        if method is None:
+            raise ValueError("Method must be specified for the computation.")
+        if driver is None:
+            raise ValueError("Driver must be specified for the computation.")
+        if molecule is None:
+            raise ValueError("Molecule must be specified for the computation.")
 
         # Always a list
         if not isinstance(molecule, list):
             molecule = [molecule]
+
+        if protocols is None:
+            protocols = {}
 
         payload = {
             "meta": {
@@ -771,6 +794,7 @@ class FractalClient(object):
                 "method": method,
                 "basis": basis,
                 "keywords": keywords,
+                "protocols": protocols,
                 "tag": tag,
                 "priority": priority,
             },
@@ -1092,42 +1116,48 @@ class FractalClient(object):
     def custom_query(self,
                      object_name: str,
                      query_type: str,
-                     data: Dict,
+                     data: Dict[str, Any],
                      limit: Optional[int] = None,
                      skip: int = 0,
+                     meta: Dict[str, Any] = None,
                      projection: Optional['QueryProjection'] = None,
                      full_return: bool = False) -> Any:
-        """ Custom queries that are supported by the REST APIs.
+        """Custom queries that are supported by the REST APIs.
 
         Parameters
         ----------
-        object_name: str
+        object_name : str
             Object name like optimization, datasets, etc (TODO: add more)
-        query_type: str
+        query_type : str
             The required query within the given class
-        data : dict
+        data : Dict[str, Any]
             a dictionary of the keys to be used in the query
         limit : Optional[int], optional
             The maximum number of Procedures to query
         skip : int, optional
             The number of Procedures to skip in the query, used during pagination
-        projection : QueryProjection, optional
+        meta : Dict[str, Any], optional
+            Additional metadata keys to specify
+        projection : Optional['QueryProjection'], optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
 
         Returns
         -------
-            Arbitrary returns for each query type.
-            In the form of Dict[str, Any] (TODO)
+        Any
+        In the form of Dict[str, Any] (TODO)
         """
 
         payload = {"meta": {"limit": limit, "skip": skip, "projection": projection}, "data": data}
-        response = self._automodel_request(object_name + '/' + query_type, "get", payload, full_return=True)
+        if meta:
+            payload["meta"].update(meta)
 
-        # if not projection:
-        #     for ind in range(len(response.data)):
-        #         response.data[ind] = build_procedure(response.data[ind], client=self)
+        if query_type:
+            addr = f"{object_name}/{query_type}"
+        else:
+            addr = object_name
+        response = self._automodel_request(addr, "get", payload, full_return=True)
 
         if full_return:
             return response

@@ -21,6 +21,7 @@ from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import bcrypt
+
 # pydantic classes
 from qcfractal.interface.models import (GridOptimizationRecord, KeywordSet, Molecule, ObjectId, OptimizationRecord,
                                         ResultRecord, TaskRecord, TaskStatusEnum, TorsionDriveRecord, prepare_basis)
@@ -30,7 +31,7 @@ from qcfractal.storage_sockets.models import (AccessLogORM, BaseResultORM, Colle
                                               GridOptimizationProcedureORM, KeywordsORM, KVStoreORM, MoleculeORM,
                                               OptimizationProcedureORM, QueueManagerORM, ReactionDatasetORM, ResultORM,
                                               ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
-                                              VersionsORM)
+                                              VersionsORM, WavefunctionStoreORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
@@ -263,6 +264,7 @@ class SQLAlchemySocket:
             session.query(GridOptimizationProcedureORM).delete(synchronize_session=False)
             session.query(OptimizationProcedureORM).delete(synchronize_session=False)
             session.query(ResultORM).delete(synchronize_session=False)
+            session.query(WavefunctionStoreORM).delete(synchronize_session=False)
             session.query(BaseResultORM).delete(synchronize_session=False)
 
             # Auxiliary tables
@@ -426,6 +428,7 @@ class SQLAlchemySocket:
         data = {d["id"]: d["value"] for d in rdata}
 
         return {"data": data, "meta": meta}
+
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Molecule ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1163,6 +1166,74 @@ class SQLAlchemySocket:
             count = len(results)
 
         return count
+
+
+    def add_wavefunction_store(self, blobs_list: List[Dict[str, Any]]):
+        """
+        Adds to the wavefunction key/value store table.
+
+        Parameters
+        ----------
+        blobs_list : List[Dict[str, Any]]
+            A list of wavefunction data blobs to add.
+
+        Returns
+        -------
+        TYPE
+            Description
+        """
+
+        meta = add_metadata_template()
+        blob_ids = []
+        with self.session_scope() as session:
+            for blob in blobs_list:
+                if blob is None:
+                    blob_ids.append(None)
+                    continue
+
+                doc = WavefunctionStoreORM(**blob)
+                session.add(doc)
+                session.commit()
+                blob_ids.append(str(doc.id))
+                meta['n_inserted'] += 1
+
+        meta["success"] = True
+
+        return {"data": blob_ids, "meta": meta}
+
+    def get_wavefunction_store(self,
+                               id: List[str] = None,
+                               projection: Dict[str, bool] = None,
+                               limit: int = None,
+                               skip: int = 0):
+        """
+        Pulls from the wavefunction key/value store table.
+
+        Parameters
+        ----------
+        id : List[str], optional
+            A list of ids to query
+        projection : Dict[str, bool], optional
+            Description
+        limit : int, optional
+            Maximum number of results to return.
+        skip : int, optional
+            skip the `skip` results
+
+        Returns
+        -------
+        TYPE
+            Description
+        """
+
+        meta = get_metadata_template()
+
+        query = format_query(WavefunctionStoreORM, id=id)
+        rdata, meta['n_found'] = self.get_query_projection(WavefunctionStoreORM, query, projection, limit, skip)
+
+        meta["success"] = True
+
+        return {"data": rdata, "meta": meta}
 
 ### Mongo procedure/service functions
 

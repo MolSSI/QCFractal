@@ -575,6 +575,25 @@ class ResultGETResponse(ProtoModel):
 
 register_model("result", "GET", ResultGETBody, ResultGETResponse)
 
+### Wavefunction data
+
+
+class WavefunctionStoreGETBody(ProtoModel):
+    class Data(ProtoModel):
+        id: ObjectId = Schema(None, description="Id of the Wavefunction Key/Value Storage object to get.")
+
+    meta: QueryMetaProjection = Schema(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    data: Data = Schema(
+        ..., description="Data of the Wavefunction Get field: consists of a ObjectId of the Wavefunction object to fetch.")
+
+
+class WavefunctionStoreGETResponse(ProtoModel):
+    meta: ResponseGETMeta = Schema(..., description=common_docs[ResponseGETMeta])
+    data: Dict[str, Any] = Schema(..., description="The entries of the Wavefunction object requested.")
+
+
+register_model("wavefunctionstore", "GET", WavefunctionStoreGETBody, WavefunctionStoreGETResponse)
+
 ### Procedures
 
 

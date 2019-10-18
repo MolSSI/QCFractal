@@ -22,7 +22,7 @@ from .services import construct_service
 from .storage_sockets import ViewHandler, storage_socket_factory
 from .storage_sockets.api_logger import API_AccessLogger
 from .web_handlers import (CollectionHandler, InformationHandler, KeywordHandler, KVStoreHandler, MoleculeHandler,
-                           OptimizationHandler, ProcedureHandler, ResultHandler)
+                           OptimizationHandler, ProcedureHandler, ResultHandler, WavefunctionStoreHandler)
 
 myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 
@@ -272,6 +272,7 @@ class FractalServer:
             (r"/keyword", KeywordHandler, self.objects),
             (r"/collection(?:/([0-9]+)(?:/(value|entry|list|molecule))?)?", CollectionHandler, self.objects),
             (r"/result", ResultHandler, self.objects),
+            (r"/wavefunctionstore", WavefunctionStoreHandler, self.objects),
             (r"/procedure/?", ProcedureHandler, self.objects),
             (r"/optimization/(.*)/?", OptimizationHandler, self.objects),
 
@@ -369,7 +370,6 @@ class FractalServer:
 
         # Add services callback
         if start_periodics:
-            print("Starting periodcs")
             nanny_services = tornado.ioloop.PeriodicCallback(self.update_services, self.service_frequency * 1000)
             nanny_services.start()
             self.periodic["update_services"] = nanny_services

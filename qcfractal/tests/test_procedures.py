@@ -6,6 +6,8 @@ import numpy as np
 import pytest
 import requests
 
+from qcelemental.util import parse_version
+import qcengine as qcng
 import qcfractal.interface as ptl
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
@@ -28,21 +30,22 @@ def test_compute_queue_stack(fractal_compute_server):
     kw_id = client.add_keywords([kw])[0]
 
     # Add compute
-    compute = {
-        "meta": {
-            "procedure": "single",
+    compute_args = {
             "driver": "energy",
             "method": "HF",
             "basis": "sto-3g",
             "keywords": kw_id,
             "program": "psi4",
-        },
-        "data": [hydrogen_mol_id, helium],
     }
 
     # Ask the server to compute a new computation
     r = client.add_compute("psi4", "HF", "sto-3g", "energy", kw_id, [hydrogen_mol_id, helium])
     assert len(r.ids) == 2
+
+    r2 = client.add_compute(**compute_args, molecule=[hydrogen_mol_id, helium])
+    assert len(r2.ids) == 2
+    assert len(r2.submitted) == 0
+    assert set(r2.ids) == set(r.ids)
 
     # Manually handle the compute
     fractal_compute_server.await_results()
@@ -52,8 +55,8 @@ def test_compute_queue_stack(fractal_compute_server):
     results_query = {
         "program": "psi4",
         "molecule": [hydrogen_mol_id, helium_mol_id],
-        "method": compute["meta"]["method"],
-        "basis": compute["meta"]["basis"]
+        "method": compute_args["method"],
+        "basis": compute_args["basis"]
     }
     results = client.query_results(**results_query, status=None)
 
@@ -68,6 +71,43 @@ def test_compute_queue_stack(fractal_compute_server):
             raise KeyError("Returned unexpected Molecule ID.")
 
     assert "RHF Reference" in results[0].get_stdout()
+
+
+### Tests the compute queue stack
+@testing.using_psi4
+def test_compute_wavefunction(fractal_compute_server):
+
+    psiver = qcng.get_program('psi4').get_version()
+    if parse_version(psiver) < parse_version("1.4a2.dev160"):
+        pytest.skip("Must be used a modern version of Psi4 to execute")
+
+    # Build a client
+    client = ptl.FractalClient(fractal_compute_server)
+
+    # Add a hydrogen and helium molecule
+    hydrogen = ptl.Molecule.from_data([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
+
+
+    # Ask the server to compute a new computation
+    r = client.add_compute(program="psi4",
+                           driver="energy",
+                           method="HF",
+                           basis="sto-3g",
+                           molecule=hydrogen,
+                           protocols={"wavefunction": "orbitals_and_eigenvalues"})
+
+    fractal_compute_server.await_results()
+    assert len(fractal_compute_server.list_current_tasks()) == 0
+
+    result = client.query_results(id=r.ids)[0]
+    assert result.wavefunction
+
+    r = result.get_wavefunction("orbitals_a")
+    assert isinstance(r, np.ndarray)
+    assert r.shape == (2, 2)
+
+    r = result.get_wavefunction(["orbitals_a", "basis"])
+    assert r.keys() == {"orbitals_a", "basis"}
 
 
 ### Tests the compute queue stack

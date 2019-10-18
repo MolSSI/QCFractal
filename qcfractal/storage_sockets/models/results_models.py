@@ -1,7 +1,7 @@
 import datetime
 
-from sqlalchemy import (JSON, Column, DateTime, Enum, ForeignKey, Index, Integer, String, Table, UniqueConstraint, func,
-                        select)
+from sqlalchemy import (JSON, Boolean, Column, DateTime, Enum, ForeignKey, Index, Integer, String, Table,
+                        UniqueConstraint, func, select)
 from sqlalchemy.dialects.postgresql import JSONB, aggregate_order_by
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.ext.orderinglist import ordering_list
@@ -76,6 +76,36 @@ class BaseResultORM(Base):
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+class WavefunctionStoreORM(Base):
+
+    __tablename__ = "wavefunction_store"
+
+    id = Column(Integer, primary_key=True)
+
+    # Sparsity is very cheap
+    basis = Column(MsgpackExt, nullable=False)
+    restricted = Column(Boolean, nullable=False)
+
+    # Core Hamiltonian
+    h_core_a = Column(MsgpackExt, nullable=True)
+    h_core_b = Column(MsgpackExt, nullable=True)
+    h_effective_a = Column(MsgpackExt, nullable=True)
+    h_effective_b = Column(MsgpackExt, nullable=True)
+
+    # SCF Results
+    scf_orbitals_a = Column(MsgpackExt, nullable=True)
+    scf_orbitals_b = Column(MsgpackExt, nullable=True)
+    scf_density_a = Column(MsgpackExt, nullable=True)
+    scf_density_b = Column(MsgpackExt, nullable=True)
+    scf_fock_a = Column(MsgpackExt, nullable=True)
+    scf_fock_b = Column(MsgpackExt, nullable=True)
+    scf_eigenvalues_a = Column(MsgpackExt, nullable=True)
+    scf_eigenvalues_b = Column(MsgpackExt, nullable=True)
+    scf_occupations_a = Column(MsgpackExt, nullable=True)
+    scf_occupations_b = Column(MsgpackExt, nullable=True)
+
+    # Extras
+    extras = Column(MsgpackExt, nullable=True)
 
 class ResultORM(BaseResultORM):
     """
@@ -99,14 +129,19 @@ class ResultORM(BaseResultORM):
     keywords = Column(Integer, ForeignKey('keywords.id'))
     keywords_obj = relationship(KeywordsORM, lazy='select')
 
-    # output related
+    # Primary Result output
     return_result = Column(MsgpackExt)
     properties = Column(JSON)  # TODO: may use JSONB in the future
-    wavefunction = Column(JSONB, nullable=True)
 
-    # TODO: Do they still exist?
-    # schema_name = Column(String)  # default="qc_ret_data_output"??
-    # schema_version = Column(Integer)
+    # Wavefunction data
+    wavefunction = Column(JSONB, nullable=True)
+    wavefunction_data_id = Column(Integer, ForeignKey('wavefunction_store.id'), nullable=True)
+    wavefunction_data_obj = relationship(WavefunctionStoreORM,
+                                         lazy='noload',
+                                         foreign_keys=wavefunction_data_id,
+                                         cascade="all, delete-orphan",
+                                         single_parent=True)
+
 
     __table_args__ = (
         # TODO: optimize indexes
