@@ -48,7 +48,7 @@ class Base:
         class_inspector = inspect(self.__class__)
         # add hybrid properties
         for key, prop in class_inspector.all_orm_descriptors.items():
-            if isinstance(prop, hybrid_property) and (key not in tobe_deleted_keys):
+            if isinstance(prop, hybrid_property):
                 dict_obj.append(key)
 
         # Add the attributes to the final results

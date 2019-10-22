@@ -212,6 +212,8 @@ class ReactionDataset(Dataset):
             True: only include data computed with QCFractal
             False: only include data contributed from outside sources
             None: include both
+        subset: Optional[List[str]], optional
+            The indices of the desired subset. Return all indices if subset is None.
         force : bool, optional
             Data is typically cached, forces a new query if True
 

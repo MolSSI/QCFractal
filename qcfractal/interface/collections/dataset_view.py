@@ -57,9 +57,10 @@ class DatasetView(abc.ABC):
 
         Parameters
         ----------
-        subset
         queries: List[Dict[str, Union[str, bool]]]
             List of column metadata to match.
+        subset: Optional[List[str]], optional
+            The indices of the desired subset. Return all indices if subset is None.
 
         Returns
         -------
@@ -84,6 +85,11 @@ class DatasetView(abc.ABC):
     def get_entries(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
         """
         Get a list of entries in the dataset
+
+        Parameters
+        ----------
+        subset: Optional[List[str]], optional
+            The indices of the desired subset. Return all indices if subset is None.
 
         Returns
         -------

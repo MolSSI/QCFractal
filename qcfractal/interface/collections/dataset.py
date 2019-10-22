@@ -219,6 +219,8 @@ class Dataset(Collection):
 
         Parameters
         ----------
+        subset: Optional[List[str]], optional
+            The indices of the desired subset. Return all indices if subset is None.
         force: bool, optional
             skip cache
 
@@ -498,6 +500,8 @@ class Dataset(Collection):
             True: only include data computed with QCFractal
             False: only include data contributed from outside sources
             None: include both
+        subset: Optional[List[str]], optional
+            The indices of the desired subset. Return all indices if subset is None.
         force : bool, optional
             Data is typically cached, forces a new query if True
 
@@ -564,6 +568,8 @@ class Dataset(Collection):
 
         Parameters
         ----------
+        subset: Set[str]
+            The indices of the desired subset.
         method : Optional[Union[str, List[str]]], optional
             The computational method to compute (B3LYP)
         basis : Optional[Union[str, List[str]]], optional
