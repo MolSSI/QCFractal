@@ -363,6 +363,10 @@ class Dataset(Collection):
         Helper for filtering records on a spec. Note that `None` is a wildcard while `"None"` matches `None` and NaN.
         """
         ret = df.copy()
+
+        if len(ret) == 0:  # workaround pandas empty dataframe sharp edges
+            return ret
+
         for key, value in spec.items():
             if value is None:
                 continue
@@ -617,7 +621,7 @@ class Dataset(Collection):
         else:
             for query in new_queries:
                 query["native"] = True
-            new_data, units = self._view.get_values(new_queries)
+            new_data, units = self._view.get_values(new_queries, subset)
 
         for query in new_queries:
             qname = query["name"]
@@ -1279,13 +1283,14 @@ class Dataset(Collection):
         self.df = new_df
 
     def _get_contributed_values(self, subset: Set[str], force: bool = False, **spec) -> pd.DataFrame:
-        queries = self._filter_records(self._list_contributed_values().rename(columns={'stoichiometry': 'stoich'}),
-                                       **spec)
+
+        cv_list = self.list_values(native=False, force=force).reset_index()
+        queries = self._filter_records(cv_list.rename(columns={'stoichiometry': 'stoich'}), **spec)
         column_names: List[str] = []
         new_queries = []
 
         for query in queries.to_dict("records"):
-            column_name = self.data.contributed_values[query["name"].lower()].name
+            column_name = query["name"]
             column_names.append(column_name)
             if force or not self._subset_in_cache(column_name, subset):
                 self._column_metadata[column_name] = query
@@ -1317,11 +1322,11 @@ class Dataset(Collection):
         else:
             for query in new_queries:
                 query["native"] = False
-            new_data, units = self._view.get_values(new_queries)
+            new_data, units = self._view.get_values(new_queries, subset)
 
         # convert units
         for query in new_queries:
-            column_name = self.data.contributed_values[query["name"].lower()].name
+            column_name = query["name"]
             metadata = {"native": False}
             try:
                 new_data[column_name] *= constants.conversion_factor(units[column_name], self.units)
@@ -1522,6 +1527,8 @@ class Dataset(Collection):
 
     def _clear_cache(self) -> None:
         self.df = pd.DataFrame()
+        self.data.__dict__["records"] = None
+        self.data.__dict__["contributed_values"] = None
 
     # Getters
     def __getitem__(self, args: str) -> pd.Series:

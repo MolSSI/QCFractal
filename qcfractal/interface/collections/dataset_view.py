@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple, Un
 
 import numpy as np
 import pandas as pd
+
 from qcelemental.util.serialization import deserialize, serialize
 
 from ..models import Molecule, ObjectId
@@ -143,7 +144,7 @@ class HDF5View(DatasetView):
         import h5py
 
         units = {}
-        entries = self.get_index()
+        entries = self.get_index(subset)
         indexes = entries._h5idx
         with self._read_file() as f:
             ret = pd.DataFrame(index=entries["index"])

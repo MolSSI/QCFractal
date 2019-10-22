@@ -6,14 +6,12 @@ import pathlib
 from contextlib import contextmanager
 
 import numpy as np
-import pandas as pd
 import pytest
 
 import qcelemental as qcel
 import qcfractal.interface as ptl
-from qcelemental.models import Molecule
 from qcfractal import testing
-from qcfractal.testing import fractal_compute_server, live_fractal_or_skip
+from qcfractal.testing import df_equals, fractal_compute_server, live_fractal_or_skip
 
 
 @contextmanager
@@ -26,62 +24,6 @@ def check_requests_monitor(client, request, request_made=True, kind="get"):
         assert after > before, f"Requests were were expected, but none were made. Request type: {request} ({kind})"
     else:
         assert after == before, f"Requests were made when none were expected. Request type: {request} ({kind})"
-
-
-def df_equals(df1, df2, sort=False):
-    """ checks equality even when columns contain numpy arrays, which .equals and == struggle with """
-    if sort:
-        if isinstance(df1, pd.DataFrame):
-            df1 = df1.reindex(sorted(df1.columns), axis=1)
-        elif isinstance(df1, pd.Series):
-            df1 = df1.sort_index()
-        if isinstance(df2, pd.DataFrame):
-            df2 = df2.reindex(sorted(df2.columns), axis=1)
-        elif isinstance(df2, pd.Series):
-            df2 = df2.sort_index()
-
-    def element_equal(e1, e2):
-        if isinstance(e1, np.ndarray):
-            if not np.array_equal(e1, e2):
-                return False
-        elif isinstance(e1, Molecule):
-            if not e1.get_hash() == e2.get_hash():
-                return False
-        # Because nan != nan
-        elif isinstance(e1, float) and np.isnan(e1):
-            if not np.isnan(e2):
-                return False
-        else:
-            if not e1 == e2:
-                return False
-        return True
-
-    if isinstance(df1, pd.Series):
-        if not isinstance(df2, pd.Series):
-            return False
-        if len(df1) != len(df2):
-            return False
-        for i in range(len(df1)):
-            if not element_equal(df1[i], df2[i]):
-                return False
-        return True
-
-    for column in df1.columns:
-        if column.startswith("_"):
-            df1.drop(column, axis=1, inplace=True)
-    for column in df2.columns:
-        if column.startswith("_"):
-            df2.drop(column, axis=1, inplace=True)
-    if not all(df1.columns == df2.columns):
-        return False
-    if not all(df1.index.values == df2.index.values):
-        return False
-    for i in range(df1.shape[0]):
-        for j in range(df1.shape[1]):
-            if not element_equal(df1.iloc[i, j], df2.iloc[i, j]):
-                return False
-
-    return True
 
 
 def handle_dataset_fixture_params(client, ds_type, ds, fractal_compute_server, request):
@@ -185,6 +127,8 @@ def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
 
         assert ds.get_records("HF", "sto-3g").iloc[0, 0].status == "COMPLETE"
         assert ds.get_records("HF", "sto-3g").iloc[1, 0].status == "COMPLETE"
+        assert ds.get_records("HF", "3-21g").iloc[0, 0].status == "COMPLETE"
+        assert ds.get_records("HF", "3-21g").iloc[1, 0].status == "COMPLETE"
 
         build_dataset_fixture_view(ds, fractal_compute_server)
 
@@ -1369,6 +1313,21 @@ def test_get_collection_no_records(ds_class, fractal_compute_server):
 
     ds = client.get_collection(ds_class.__name__, ds.name)
     assert ds.data.records is None
+
+
+def test_gradient_dataset_lazy_entries_values(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    ds._clear_cache()
+    assert ds.data.records is None
+    assert ds.data.contributed_values is None
+
+    ds.get_values(subset=['He1'], basis="3-21g")
+    assert (~ds.df.isna()).sum().sum() == 1
+    if not ds._use_view():
+        assert ds.data.records is not None
+    else:
+        assert ds.data.records is None
 
 
 def test_get_collection_no_records_ds(fractal_compute_server):
