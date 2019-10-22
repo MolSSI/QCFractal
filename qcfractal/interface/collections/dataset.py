@@ -10,9 +10,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
-import requests
-
 import pydantic
+import requests
 from qcelemental import constants
 
 from ..models import ComputeResponse, ObjectId, ProtoModel
@@ -1087,14 +1086,7 @@ class Dataset(Collection):
 
             for i in range(0, len(umols), self.client.query_limit):
                 chunk_mols = umols[i:i + self.client.query_limit]
-                ret = self.client.add_compute(compute_set["program"],
-                                              compute_set["method"],
-                                              compute_set["basis"],
-                                              compute_set["driver"],
-                                              compute_set["keywords"],
-                                              chunk_mols,
-                                              tag=tag,
-                                              priority=priority)
+                ret = self.client.add_compute(**compute_set, molecule=chunk_mols, tag=tag, priority=priority)
 
                 ids.extend(ret.ids)
                 submitted.extend(ret.submitted)

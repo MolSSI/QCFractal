@@ -7,8 +7,9 @@ from contextlib import contextmanager
 
 import numpy as np
 import pytest
-
 import qcelemental as qcel
+from qcengine.testing import is_program_new_enough
+
 import qcfractal.interface as ptl
 from qcfractal import testing
 from qcfractal.testing import df_equals, fractal_compute_server, live_fractal_or_skip
