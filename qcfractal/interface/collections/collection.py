@@ -73,6 +73,7 @@ class Collection(abc.ABC):
         visibility: bool = True
 
         view_url: Optional[str] = None
+        view_url_plaintext: Optional[str] = None
         view_metadata: Optional[Dict[str, str]] = None
         view_available: bool = False
 

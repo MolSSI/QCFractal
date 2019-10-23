@@ -41,6 +41,7 @@ class CollectionORM(Base):
     visibility = Column(Boolean, nullable=False)
 
     view_url = Column(String, nullable=True)
+    view_url_plaintext = Column(String, nullable=True)
     view_metadata = Column(JSON, nullable=True)
     view_available = Column(Boolean, nullable=False)
 
