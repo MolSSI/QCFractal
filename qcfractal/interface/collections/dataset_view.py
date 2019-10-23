@@ -2,6 +2,8 @@ import abc
 import distutils
 import hashlib
 import pathlib
+import shutil
+import tarfile
 import tempfile
 import warnings
 from contextlib import contextmanager
@@ -511,18 +513,45 @@ class PlainTextView(DatasetView):
         self._path = path
 
     def write(self, ds: Dataset) -> None:
-        with tempfile.TemporaryDirectory as tempd:
-            #ds.get_values()
-            #ds.get_entries()
-            molpath = pathlib.Path(tempd.name) / "molecules"
-            molpath.mkdir()
+
+        with tempfile.TemporaryDirectory() as tempd:
+            temppath = pathlib.Path(tempd)
+            mol_path = temppath / "molecules"
+            entry_path = temppath / "entries.csv"
+            value_path = temppath / "values.csv"
+            list_path = temppath / "value_descriptions.csv"
+            readme_path = temppath / "README"
+
+            mol_path.mkdir()
             if "stoichiometry" in ds.data.history_keys:
                 molecules = ds.get_molecules(stoich=list(ds.valid_stoich),
                                              force=True)  #TODO: change to function after pr 442
             else:
                 molecules = ds.get_molecules(force=True)
             for molecule in molecules['molecule']:
-                molecule.to_file(molpath / f"{molecule.id}.xyz")
+                molecule.to_file(mol_path / f"{molecule.id}.xyz")
+
+            ds.get_entries(force=True).to_csv(entry_path)
+            ds_query_limit_state = ds._disable_query_limit
+            ds._disable_query_limit = True
+            ds.get_values(force=True).to_csv(value_path)
+            ds._disable_query_limit = ds_query_limit_state
+            df = ds.list_values(force=True).reset_index().set_index("name")
+            df["units"] = ds.units
+            for name in df.index:
+                if name in ds._column_metadata:
+                    if "units" in ds._column_metadata[name]:
+                        df['units'] = ds._column_metadata[name]["units"]
+            df.to_csv(list_path)
+
+            open(readme_path, 'w').write(self._readme(ds))
+
+            tarpath = temppath / "archive.tar.gz"
+            with tarfile.open(tarpath, 'w:gz') as tarball:
+                for path in [mol_path, entry_path, value_path, list_path, readme_path]:
+                    tarball.add(path, arcname=path.relative_to(temppath))
+
+            shutil.move(tarpath, self._path)
 
     def list_values(self) -> NoReturn:
         raise NotImplementedError()
@@ -535,3 +564,24 @@ class PlainTextView(DatasetView):
 
     def get_entries(self) -> NoReturn:
         raise NotImplementedError()
+
+    @staticmethod
+    def _readme(ds) -> str:
+        # TODO: citations once we add that column
+        ret = f"""Name: {ds.name}
+
+Tagline: {ds.data.tagline}
+Tags: {", ".join(ds.data.tags)}
+Downloaded from: {ds.client.server_information()['name']}
+
+Description:
+{ds.data.description}
+
+Files included:
+- values.csv: Table of computed values. Rows correspond to entries (e.g. molecules, reactions). Columns correspond to methods.
+- value_descriptions.csv: Table of descriptions of columns in values.csv
+- entries.csv: Table of descriptions of rows in values.csv
+- molecules: Folder containing XYZ-formatted geometries of molecules in the dataset. Files are named by the molecule id found in entries.csv
+"""
+
+        return ret
