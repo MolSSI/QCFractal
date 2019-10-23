@@ -79,7 +79,7 @@ class TorsionDriveInput(ProtoModel):
         description="The settings which describe the individual quantum chemistry calculations at each step of the "
         "optimization.")
 
-    @validator('initial_molecule', pre=True, whole=True)
+    @validator('initial_molecule', pre=True)
     def check_initial_molecules(cls, v):
         if isinstance(v, (str, dict, Molecule)):
             v = [v]

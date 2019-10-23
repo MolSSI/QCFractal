@@ -126,6 +126,8 @@ class SingleResultTasks(BaseTasks):
             inp = record.build_schema_input(mol, keywords)
             inp.extras["_qcfractal_tags"] = {"program": record.program, "keywords": record.keywords}
 
+            print(record)
+            print(record.dict())
             ret = self.storage.add_results([record])
 
             base_id = ret["data"][0]

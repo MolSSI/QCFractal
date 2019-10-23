@@ -110,7 +110,7 @@ class RecordBase(ProtoModel, abc.ABC):
 
         # Set hash index if not present
         if self.Config.build_hash_index and (self.hash_index is None):
-            self.__values__["hash_index"] = self.get_hash_index()
+            self.__dict__["hash_index"] = self.get_hash_index()
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(id='{self.id}' status='{self.status}')"
@@ -192,7 +192,7 @@ class RecordBase(ProtoModel, abc.ABC):
         """
         self.check_client()
 
-        oid = self.__values__[field_name]
+        oid = self.__dict__[field_name]
         if oid is None:
             return None
 

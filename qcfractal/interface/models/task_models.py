@@ -110,4 +110,6 @@ class TaskRecord(ProtoModel):
 
     @validator('procedure')
     def check_procedure(cls, v):
-        return v.lower()
+        if v:
+            v = v.lower()
+        return v

@@ -54,7 +54,7 @@ class ScanDimension(ProtoModel):
     def check_lower_type_step_type(cls, v):
         return v.lower()
 
-    @validator('indices', whole=True)
+    @validator('indices')
     def check_indices(cls, v, values, **kwargs):
         sizes = {ScanTypeEnum.distance: 2, ScanTypeEnum.angle: 3, ScanTypeEnum.dihedral: 4}
         if sizes[values["type"]] != len(v):
@@ -63,7 +63,7 @@ class ScanDimension(ProtoModel):
 
         return v
 
-    @validator('steps', whole=True)
+    @validator('steps')
     def check_steps(cls, v):
         if not (all(x < y for x, y in zip(v, v[1:])) or all(x > y for x, y in zip(v, v[1:]))):
             raise ValueError("Steps are not strictly monotonically increasing or decreasing.")

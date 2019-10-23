@@ -158,7 +158,7 @@ class KeywordSet(ProtoModel):
         ...,
         description="The hash of this keyword set to store and check for collisions. This string is automatically "
         "computed.")
-    values: Dict[str, Any] = Field(
+    values: Dict[str, Optional[Any]] = Field(
         ...,
         description="The key-value pairs which make up this KeywordSet. There is no direct relation between this "
         "dictionary and applicable program/spec it can be used on.")
@@ -188,11 +188,11 @@ class KeywordSet(ProtoModel):
         if self.exact_floats:
             kwargs["digits"] = False
 
-        self.__values__["values"] = recursive_normalizer(self.values, **kwargs)
+        self.__dict__["values"] = recursive_normalizer(self.values, **kwargs)
 
         # Build a hash index if we need it
         if build_index:
-            self.__values__["hash_index"] = self.get_hash_index()
+            self.__dict__["hash_index"] = self.get_hash_index()
 
     def get_hash_index(self):
         return hash_dictionary(self.values.copy())
