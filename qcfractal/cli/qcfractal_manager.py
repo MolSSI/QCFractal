@@ -13,10 +13,10 @@ from typing import List, Optional
 
 import tornado.log
 import yaml
-from pydantic import Schema, validator
 
 import qcengine as qcng
 import qcfractal
+from pydantic import Field, validator
 
 from ..interface.models import AutodocBaseSettings, ProtoModel
 from . import cli_utils
@@ -48,21 +48,21 @@ class CommonManagerSettings(AutodocBaseSettings):
     even on the same platform/cluster.
 
     """
-    adapter: AdapterEnum = Schema(AdapterEnum.pool,
+    adapter: AdapterEnum = Field(AdapterEnum.pool,
                                   description="Which type of Distributed adapter to run tasks through.")
-    tasks_per_worker: int = Schema(
+    tasks_per_worker: int = Field(
         1,
         description="Number of concurrent tasks to run *per Worker* which is executed. Total number of concurrent "
         "tasks is this value times max_workers, assuming the hardware is available. With the "
         "pool adapter, and/or if max_workers=1, tasks_per_worker *is* the number of concurrent tasks.")
-    cores_per_worker: int = Schema(
+    cores_per_worker: int = Field(
         qcng.config.get_global("ncores"),
         description="Number of cores to be consumed by the Worker and distributed over the tasks_per_worker. These "
         "cores are divided evenly, so it is recommended that quotient of cores_per_worker/tasks_per_worker "
         "be a whole number else the core distribution is left up to the logic of the adapter. The default "
         "value is read from the number of detected cores on the system you are executing on.",
         gt=0)
-    memory_per_worker: float = Schema(
+    memory_per_worker: float = Field(
         qcng.config.get_global("memory"),
         description="Amount of memory (in GB) to be consumed and distributed over the tasks_per_worker. This memory is "
         "divided evenly, but is ultimately at the control of the adapter. Engine will only allow each of "
@@ -70,7 +70,7 @@ class CommonManagerSettings(AutodocBaseSettings):
         "manager at any one time is this value times max_workers. The default value is read "
         "from the amount of memory detected on the system you are executing on.",
         gt=0)
-    max_workers: int = Schema(
+    max_workers: int = Field(
         1,
         description="The maximum number of Workers which are allowed to be run at the same time. The total number of "
         "concurrent tasks will maximize at this quantity times tasks_per_worker."
@@ -80,14 +80,14 @@ class CommonManagerSettings(AutodocBaseSettings):
         "In node exclusive mode this is equivalent to the maximum number of nodes which you will consume. "
         "This must be a positive, non zero integer.",
         gt=0)
-    retries: int = Schema(
+    retries: int = Field(
         2,
         description="Number of retries that QCEngine will attempt for RandomErrors detected when running "
         "its computations. After this many attempts (or on any other type of error), the "
         "error will be raised.",
         ge=0)
-    scratch_directory: Optional[str] = Schema(None, description="Scratch directory for Engine execution jobs.")
-    verbose: bool = Schema(
+    scratch_directory: Optional[str] = Field(None, description="Scratch directory for Engine execution jobs.")
+    verbose: bool = Field(
         False,
         description="Turn on verbose mode or not. In verbose mode, all messages from DEBUG level and up are shown, "
         "otherwise, defaults are all used for any logger.")
@@ -106,14 +106,14 @@ class FractalServerSettings(AutodocBaseSettings):
     Caution: The password here is written in plain text, so it is up to the owner/writer of the configuration file
     to ensure its security.
     """
-    fractal_uri: str = Schema("localhost:7777", description="Full URI to the Fractal Server you want to connect to")
-    username: Optional[str] = Schema(
+    fractal_uri: str = Field("localhost:7777", description="Full URI to the Fractal Server you want to connect to")
+    username: Optional[str] = Field(
         None,
         description="Username to connect to the Fractal Server with. When not provided, a connection is attempted "
         "as a guest user, which in most default Servers will be unable to return results.")
-    password: Optional[str] = Schema(
+    password: Optional[str] = Field(
         None, description="Password to authenticate to the Fractal Server with (alongside the `username`)")
-    verify: Optional[bool] = Schema(None, description="Use Server-side generated SSL certification or not.")
+    verify: Optional[bool] = Field(None, description="Use Server-side generated SSL certification or not.")
 
     class Config(SettingsCommonConfig):
         pass
@@ -124,43 +124,43 @@ class QueueManagerSettings(AutodocBaseSettings):
     Fractal Queue Manger settings. These are options which control the setup and execution of the Fractal Manager
     itself.
     """
-    manager_name: str = Schema(
+    manager_name: str = Field(
         "unlabeled",
         description="Name of this scheduler to present to the Fractal Server. Descriptive names help the server "
         "identify the manager resource and assists with debugging.")
-    queue_tag: Optional[str] = Schema(
+    queue_tag: Optional[str] = Field(
         None,
         description="Only pull tasks from the Fractal Server with this tag. If not set (None/null), then pull untagged "
         "tasks, which should be the majority of tasks. This option should only be used when you want to "
         "pull very specific tasks which you know have been tagged as such on the server. If the server has "
         "no tasks with this tag, no tasks will be pulled (and no error is raised because this is intended "
         "behavior).")
-    log_file_prefix: Optional[str] = Schema(
+    log_file_prefix: Optional[str] = Field(
         None,
         description="Full path to save a log file to, including the filename. If not provided, information will still "
         "be reported to terminal, but not saved. When set, logger information is sent both to this file "
         "and the terminal.")
-    update_frequency: float = Schema(
+    update_frequency: float = Field(
         30,
         description="Time between heartbeats/update checks between this Manager and the Fractal Server. The lower this "
         "value, the shorter the intervals. If you have an unreliable network connection, consider "
         "increasing this time as repeated, consecutive network failures will cause the Manager to shut "
         "itself down to maintain integrity between it and the Fractal Server. Units of seconds",
         gt=0)
-    test: bool = Schema(
+    test: bool = Field(
         False,
         description="Turn on testing mode for this Manager. The Manager will not connect to any Fractal Server, and "
         "instead submits netsts worth trial tasks per quantum chemistry program it finds. These tasks are "
         "generated locally and do not need a running Fractal Server to work. Helpful for ensuring the "
         "Manager is configured correctly and the quantum chemistry codes are operating as expected.")
-    ntests: int = Schema(
+    ntests: int = Field(
         5,
         description="Number of tests to run if the `test` flag is set to True. Total number of tests will be this "
         "number times the number of found quantum chemistry programs. Does nothing if `test` is False."
         "If set to 0, then this submits no tests, but it will run through the setup and client "
         "initialization.",
         gt=-1)
-    max_queued_tasks: Optional[int] = Schema(
+    max_queued_tasks: Optional[int] = Field(
         None,
         description="Generally should not be set. Number of tasks to pull from the Fractal Server to keep locally at "
         "all times. If `None`, this is automatically computed as "
@@ -193,31 +193,31 @@ class ClusterSettings(AutodocBaseSettings):
     the options here are things like wall time (per job), which Scheduler your cluster has (like PBS or SLURM),
     etc. No additional options are allowed here.
     """
-    node_exclusivity: bool = Schema(
+    node_exclusivity: bool = Field(
         False,
         description="Run your cluster jobs in node-exclusivity mode. This option may not be available to all scheduler "
         "types and thus may not do anything. Related to this, the flags we have found for this option "
         "may not be correct for your scheduler and thus might throw an error. You can always add the "
         "correct flag/parameters to the `scheduler_options` parameter and leave this as False if you "
         "find it gives you problems.")
-    scheduler: SchedulerEnum = Schema(
+    scheduler: SchedulerEnum = Field(
         None,
         description="Option of which Scheduler/Queuing system your cluster uses. Note: not all scheduler options are "
         "available with every adapter.")
-    scheduler_options: List[str] = Schema(
+    scheduler_options: List[str] = Field(
         [],
         description="Additional options which are fed into the header files for your submitted jobs to your cluster's "
         "Scheduler/Queuing system. The directives are automatically filled in, so if you want to set "
         "something like '#PBS -n something', you would instead just do '-n something'. Each directive "
         "should be a separate string entry in the list. No validation is done on this with respect to "
         "valid directives so it is on the user to know what they need to set.")
-    task_startup_commands: List[str] = Schema(
+    task_startup_commands: List[str] = Field(
         [],
         description="Additional commands to be run before starting the Workers and the task distribution. This can "
         "include commands needed to start things like conda environments or setting environment variables "
         "before executing the Workers. These commands are executed first before any of the distributed "
         "commands run and are added to the batch scripts as individual commands per entry, verbatim.")
-    walltime: str = Schema(
+    walltime: str = Field(
         "06:00:00",
         description="Wall clock time of each cluster job started. Presented as a string in HH:MM:SS form, but your "
         "cluster may have a different structural syntax. This number should be set high as there should "
@@ -225,7 +225,7 @@ class ClusterSettings(AutodocBaseSettings):
         "will start, the Worker will land, and the Worker will crunch through as many tasks as it can; "
         "meaning the job which has a Worker in it must continue existing to minimize time spend "
         "redeploying Workers.")
-    adaptive: AdaptiveCluster = Schema(
+    adaptive: AdaptiveCluster = Field(
         AdaptiveCluster.adaptive,
         description="Whether or not to use adaptive scaling of Workers or not. If set to 'static', a fixed number of "
         "Workers will be started (and likely *NOT* restarted when the wall clock is reached). When set to "
@@ -279,17 +279,17 @@ class DaskQueueSettings(SettingsBlocker):
 
     Please see the docs for the provider for more information.
     """
-    interface: Optional[str] = Schema(
+    interface: Optional[str] = Field(
         None,
         description="Name of the network adapter to use as communication between the head node and the compute node."
         "There are oddities of this when the head node and compute node use different ethernet adapter "
         "names and we have not figured out exactly which combination is needed between this and the "
         "poorly documented `ip` keyword which appears to be for Workers, but not the Client.")
-    extra: Optional[List[str]] = Schema(
+    extra: Optional[List[str]] = Field(
         None,
         description="Additional flags which are fed into the Dask Worker CLI startup, can be used to overwrite "
         "pre-configured options. Do not use unless you know exactly which flags to use.")
-    lsf_units: Optional[str] = Schema(
+    lsf_units: Optional[str] = Field(
         None,
         description="Unit system for an LSF cluster limits (e.g. MB, GB, TB). If not set, the units are "
         "are attempted to be set from the `lsf.conf` file in the default locations. This does nothing "
@@ -312,7 +312,7 @@ class ParslExecutorSettings(SettingsBlocker):
     forbidden.
 
     """
-    address: Optional[str] = Schema(
+    address: Optional[str] = Field(
         None,
         description="This only needs to be set in conditional cases when the head node and compute nodes use a "
         "differently named ethernet adapter.\n\n"
@@ -347,7 +347,7 @@ class ParslLauncherSettings(AutodocBaseSettings):
         - ``GnuParallelLauncher``: https://parsl.readthedocs.io/en/latest/stubs/parsl.launchers.GnuParallelLauncher.html
         - ``MpiExecLauncher`` : https://parsl.readthedocs.io/en/latest/stubs/parsl.launchers.MpiExecLauncher.html
     """
-    launcher_class: str = Schema(
+    launcher_class: str = Field(
         ...,
         description="Class of Launcher to use. This is a setting unique to QCArchive which is then used to pass onto "
         "the Provider's ``launcher`` setting and the remaining keys are passed to that Launcher's options.")
@@ -398,13 +398,13 @@ class ParslProviderSettings(SettingsBlocker):
     SGE (Sun GridEngine): https://parsl.readthedocs.io/en/latest/stubs/parsl.providers.GridEngineProvider.html
 
     """
-    partition: str = Schema(
+    partition: str = Field(
         None,
         description="The name of the cluster.scheduler partition being submitted to. Behavior, valid values, and even"
         "its validity as a set variable are a function of what type of queue scheduler your specific "
         "cluster has (e.g. this variable should NOT be present for PBS clusters). "
         "Check with your Sys. Admins and/or your cluster documentation.")
-    launcher: ParslLauncherSettings = Schema(
+    launcher: ParslLauncherSettings = Field(
         None,
         description="The Parsl Launcher do use with your Provider. If left to ``None``, defaults are assumed (check "
         "the Provider's defaults), otherwise this should be a dictionary requiring the option "

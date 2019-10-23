@@ -4,7 +4,7 @@ Common models for QCPortal/Fractal
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from pydantic import Schema, validator
+from pydantic import Field, validator
 from qcelemental.models import AutodocBaseSettings, Molecule, ProtoModel, Provenance
 from qcelemental.models.procedures import OptimizationProtocols
 from qcelemental.models.results import ResultProtocols
@@ -56,18 +56,18 @@ class QCSpecification(ProtoModel):
     """
     The quantum chemistry metadata specification for individual computations such as energy, gradient, and Hessians.
     """
-    driver: DriverEnum = Schema(..., description=str(DriverEnum.__doc__))
-    method: str = Schema(..., description="The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...).")
-    basis: Optional[str] = Schema(
+    driver: DriverEnum = Field(..., description=str(DriverEnum.__doc__))
+    method: str = Field(..., description="The quantum chemistry method to evaluate (e.g., B3LYP, PBE, ...).")
+    basis: Optional[str] = Field(
         None,
         description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for "
         "methods without basis sets.")
-    keywords: Optional[ObjectId] = Schema(
+    keywords: Optional[ObjectId] = Field(
         None,
         description="The Id of the :class:`KeywordSet` registered in the database to run this calculation with. This "
         "Id must exist in the database.")
-    protocols: ResultProtocols = Schema(ResultProtocols(), description=str(ResultProtocols.__base_doc__))
-    program: str = Schema(
+    protocols: ResultProtocols = Field(ResultProtocols(), description=str(ResultProtocols.__base_doc__))
+    program: str = Field(
         ...,
         description="The quantum chemistry program to evaluate the computation with. Not all quantum chemistry programs"
         " support all combinations of driver/method/basis.")
@@ -119,13 +119,13 @@ class OptimizationSpecification(ProtoModel):
     """
     Metadata describing a geometry optimization.
     """
-    program: str = Schema(..., description="Optimization program to run the optimization with")
-    keywords: Optional[Dict[str, Any]] = Schema(
+    program: str = Field(..., description="Optimization program to run the optimization with")
+    keywords: Optional[Dict[str, Any]] = Field(
         None,
         description="Dictionary of keyword arguments to pass into the ``program`` when the program runs. "
         "Note that unlike :class:`QCSpecification` this is a dictionary of keywords, not the Id for a "
         ":class:`KeywordSet`. ")
-    protocols: OptimizationProtocols = Schema(OptimizationProtocols(),
+    protocols: OptimizationProtocols = Field(OptimizationProtocols(),
                                               description=str(OptimizationProtocols.__base_doc__))
 
     def dict(self, *args, **kwargs):
@@ -152,24 +152,24 @@ class KeywordSet(ProtoModel):
     """
     A key:value storage object for Keywords.
     """
-    id: Optional[ObjectId] = Schema(
+    id: Optional[ObjectId] = Field(
         None, description="The Id of this object, will be automatically assigned when added to the database.")
-    hash_index: str = Schema(
+    hash_index: str = Field(
         ...,
         description="The hash of this keyword set to store and check for collisions. This string is automatically "
         "computed.")
-    values: Dict[str, Any] = Schema(
+    values: Dict[str, Any] = Field(
         ...,
         description="The key-value pairs which make up this KeywordSet. There is no direct relation between this "
         "dictionary and applicable program/spec it can be used on.")
-    lowercase: bool = Schema(
+    lowercase: bool = Field(
         True,
         description="String keys are in the ``values`` dict are normalized to lowercase if this is True. Assists in "
         "matching against other :class:`KeywordSet` objects in the database.")
-    exact_floats: bool = Schema(False,
+    exact_floats: bool = Field(False,
                                 description="All floating point numbers are rounded to 1.e-10 if this is False."
                                 "Assists in matching against other :class:`KeywordSet` objects in the database.")
-    comments: Optional[str] = Schema(
+    comments: Optional[str] = Field(
         None,
         description="Additional comments for this KeywordSet. Intended for pure human/user consumption "
         "and clarity.")

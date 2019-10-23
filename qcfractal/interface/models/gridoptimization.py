@@ -6,7 +6,7 @@ import json
 from enum import Enum
 from typing import Any, Dict, List, Tuple, Union
 
-from pydantic import Schema, constr, validator
+from pydantic import Field, constr, validator
 
 from .common_models import Molecule, ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
 from .model_utils import recursive_normalizer
@@ -38,17 +38,17 @@ class ScanDimension(ProtoModel):
     """
     A full description of a dimension to scan over.
     """
-    type: ScanTypeEnum = Schema(..., description=str(ScanTypeEnum.__doc__))
-    indices: List[int] = Schema(
+    type: ScanTypeEnum = Field(..., description=str(ScanTypeEnum.__doc__))
+    indices: List[int] = Field(
         ...,
         description="The indices of atoms to select for the scan. The size of this is a function of the type. e.g., "
         "distances, angles and dihedrals require 2, 3, and 4 atoms, respectively.")
-    steps: List[float] = Schema(
+    steps: List[float] = Field(
         ...,
         description="Step sizes to scan in relative to your current location in the scan. This must be a strictly "
         "monotonic series.",
         units=["Bohr", "degrees"])
-    step_type: StepTypeEnum = Schema(..., description=str(StepTypeEnum.__doc__))
+    step_type: StepTypeEnum = Field(..., description=str(StepTypeEnum.__doc__))
 
     @validator('type', 'step_type', pre=True)
     def check_lower_type_step_type(cls, v):
@@ -77,9 +77,9 @@ class GOKeywords(ProtoModel):
     """
     GridOptimizationRecord options.
     """
-    scans: List[ScanDimension] = Schema(
+    scans: List[ScanDimension] = Field(
         ..., description="The dimensions to scan along (along with their options) for the GridOptimization.")
-    preoptimization: bool = Schema(
+    preoptimization: bool = Field(
         True,
         description="If ``True``, first runs an unrestricted optimization before starting the grid computations. "
         "This is especially useful when combined with ``relative`` ``step_types``.")
@@ -95,21 +95,21 @@ class GridOptimizationInput(ProtoModel):
 
     """
 
-    program: _qcfractal_constr = Schema(
+    program: _qcfractal_constr = Field(
         "qcfractal",
         description="The name of the source program which initializes the Grid Optimization. This is a constant "
         "and is used for provenance information.")
-    procedure: _gridopt_constr = Schema(
+    procedure: _gridopt_constr = Field(
         "gridoptimization",
         description="The name of the procedure being run. This is a constant and is used for provenance information.")
-    initial_molecule: Union[ObjectId, Molecule] = Schema(
+    initial_molecule: Union[ObjectId, Molecule] = Field(
         ...,
         description="The Molecule to begin the Grid Optimization with. This can either be an existing Molecule in "
         "the database (through its :class:`ObjectId`) or a fully specified :class:`Molecule` model.")
-    keywords: GOKeywords = Schema(..., description="The keyword options to run the Grid Optimization.")
-    optimization_spec: OptimizationSpecification = Schema(
+    keywords: GOKeywords = Field(..., description="The keyword options to run the Grid Optimization.")
+    optimization_spec: OptimizationSpecification = Field(
         ..., description="The specification to run the underlying optimization through at each grid point.")
-    qc_spec: QCSpecification = Schema(
+    qc_spec: QCSpecification = Field(
         ...,
         description="The specification for each of the quantum chemistry calculations run in each geometry "
         "optimization.")
@@ -128,36 +128,36 @@ class GridOptimizationRecord(RecordBase):
     _hash_indices = {"initial_molecule", "keywords", "optimization_meta", "qc_spec"}
 
     # Version data
-    version: int = Schema(1, description="The version number of the Record.")
-    procedure: _gridopt_constr = Schema(
+    version: int = Field(1, description="The version number of the Record.")
+    procedure: _gridopt_constr = Field(
         "gridoptimization",
         description="The name of the procedure being run, which is Grid Optimization. This is a constant "
         "and is used for provenance information.")
-    program: _qcfractal_constr = Schema(
+    program: _qcfractal_constr = Field(
         "qcfractal",
         description="The name of the source program which initializes the Grid Optimization. This is a constant "
         "and is used for provenance information.")
 
     # Input data
-    initial_molecule: ObjectId = Schema(..., description="Id of the initial molecule in the database.")
-    keywords: GOKeywords = Schema(..., description="The keywords for this Grid Optimization.")
-    optimization_spec: OptimizationSpecification = Schema(
+    initial_molecule: ObjectId = Field(..., description="Id of the initial molecule in the database.")
+    keywords: GOKeywords = Field(..., description="The keywords for this Grid Optimization.")
+    optimization_spec: OptimizationSpecification = Field(
         ..., description="The specification of each geometry optimization.")
-    qc_spec: QCSpecification = Schema(
+    qc_spec: QCSpecification = Field(
         ...,
         description="The specification for each of the quantum chemistry computations used by the geometry "
         "optimizations.")
 
     # Output data
-    starting_molecule: ObjectId = Schema(
+    starting_molecule: ObjectId = Field(
         ...,
         description="Id of the molecule in the database begins the grid optimization. "
         "This will differ from the ``initial_molecule`` if ``preoptimization`` is True.")
-    final_energy_dict: Dict[str, float] = Schema(
+    final_energy_dict: Dict[str, float] = Field(
         ..., description="Map of the final energy from the grid optimization at each grid point.")
-    grid_optimizations: Dict[str, ObjectId] = Schema(...,
+    grid_optimizations: Dict[str, ObjectId] = Field(...,
                                                      description="The Id of each optimization at each grid point.")
-    starting_grid: tuple = Schema(
+    starting_grid: tuple = Field(
         ...,
         description="Initial grid point from which the Grid Optimization started. This grid point is the closest in "
                     "structure to the ``starting_molecule``."
