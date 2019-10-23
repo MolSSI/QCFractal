@@ -11,9 +11,10 @@ import pytest
 import qcelemental as qcel
 import qcfractal.interface as ptl
 from qcelemental.models import Molecule
+from qcengine.testing import is_program_new_enough
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server, live_fractal_or_skip
-from qcengine.testing import is_program_new_enough
+
 
 @contextmanager
 def check_requests_monitor(client, request, request_made=True, kind="get"):
@@ -1018,6 +1019,31 @@ def test_view_download_mock(gradient_dataset_fixture, tmp_path_factory):
             ds.data.__dict__["view_metadata"] = {"blake2b_checksum": "badhash"}
             with pytest.raises(ValueError):
                 ds.download(verify=True)
+
+
+def test_gradient_dataset_plaintextview_write(gradient_dataset_fixture, tmpdir):
+    _, ds = gradient_dataset_fixture
+    ptl.collections.PlainTextView(tmpdir / "test.tar.gz").write(ds)
+
+
+def test_contributed_dataset_plaintextview_write(contributed_dataset_fixture, tmpdir):
+    _, ds = contributed_dataset_fixture
+    ptl.collections.PlainTextView(tmpdir / "test.tar.gz").write(ds)
+
+
+def test_s22_dataset_plaintextview_write(s22_fixture, tmpdir):
+    _, ds = s22_fixture
+    ptl.collections.PlainTextView(tmpdir / "test.tar.gz").write(ds)
+
+
+def test_qm3_dataset_plaintextview_write(qm3_fixture, tmpdir):
+    _, ds = qm3_fixture
+    ptl.collections.PlainTextView(tmpdir / "test.tar.gz").write(ds)
+
+
+def test_reactiondataset_dftd3_dataset_plaintextview_write(reactiondataset_dftd3_fixture_fixture, tmpdir):
+    _, ds = reactiondataset_dftd3_fixture_fixture
+    ptl.collections.PlainTextView(tmpdir / "test.tar.gz").write(ds)
 
 
 ### Non-dataset tests
