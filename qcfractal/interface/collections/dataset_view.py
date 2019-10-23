@@ -2,9 +2,10 @@ import abc
 import distutils
 import hashlib
 import pathlib
+import tempfile
 import warnings
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, NoReturn, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -471,7 +472,7 @@ class RemoteView(DatasetView):
         self._check_response_meta(response.meta)
         return self._deserialize(response.data, response.meta.msgpacked_cols)
 
-    def write(self, ds: Dataset) -> None:
+    def write(self, ds: Dataset) -> NoReturn:
         raise NotImplementedError()
 
     @staticmethod
@@ -495,3 +496,42 @@ class RemoteView(DatasetView):
             df.set_index("index", inplace=True)  # pandas.to_feather does not support indexes,
             # so we have to send indexless frames over the wire, and set the index here.
         return df
+
+
+class PlainTextView(DatasetView):
+    def __init__(self, path: Union[str, pathlib.Path]) -> None:
+        """
+        Parameters
+        ----------
+        path: Union[str, pathlib.Path]
+            File path of view
+        """
+        if isinstance(path, str):
+            path = pathlib.Path(path)
+        self._path = path
+
+    def write(self, ds: Dataset) -> None:
+        with tempfile.TemporaryDirectory as tempd:
+            #ds.get_values()
+            #ds.get_entries()
+            molpath = pathlib.Path(tempd.name) / "molecules"
+            molpath.mkdir()
+            if "stoichiometry" in ds.data.history_keys:
+                molecules = ds.get_molecules(stoich=list(ds.valid_stoich),
+                                             force=True)  #TODO: change to function after pr 442
+            else:
+                molecules = ds.get_molecules(force=True)
+            for molecule in molecules['molecule']:
+                molecule.to_file(molpath / f"{molecule.id}.xyz")
+
+    def list_values(self) -> NoReturn:
+        raise NotImplementedError()
+
+    def get_values(self, queries: List[Dict[str, Union[str, bool]]]) -> NoReturn:
+        raise NotImplementedError()
+
+    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> NoReturn:
+        raise NotImplementedError()
+
+    def get_entries(self) -> NoReturn:
+        raise NotImplementedError()
