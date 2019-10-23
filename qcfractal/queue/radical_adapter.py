@@ -39,10 +39,6 @@ class RadicalAdapter(BaseAdapter):
         self._nmgrs = math.floor(self._config['pd']['cores'] /
                                  self._config['mgr']['cores'])
 
-        print(self._config['pd'])
-      # pd = rp.ComputePilotDescription(self._config['pd'])
-      # self._pilot = self._pmgr.submit_pilots(pd)
-
         pd = rp.ComputePilotDescription(self._config['pd'])
         self._pilot = self._pmgr.submit_pilots(pd)
         self._umgr.add_pilots(self._pilot)
@@ -92,7 +88,6 @@ class RadicalAdapter(BaseAdapter):
     def acquire_complete(self) -> Dict[str, Any]:
 
         # FIXME: limit on stdout
-        # TODO : filter out previously reported tasks, GC
         done = {task for task in self._tasks
                               if task.uid not in self._gc and
                                  task.state in rp.FINAL}
@@ -108,7 +103,8 @@ class RadicalAdapter(BaseAdapter):
 
         self._umgr.wait_units(uids=[task.uid for task in self._tasks])
 
-        # NOTE: should we purge the watch list here?
+        # NOTE: should we purge the watch list here?  I didn't find that
+        #       specified in the docs.
         self._gc += [task.uid for task in self._tasks]
 
         return True
