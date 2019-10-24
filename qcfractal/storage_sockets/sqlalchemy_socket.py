@@ -215,7 +215,7 @@ class SQLAlchemySocket:
         self.check_lib_versions()
 
     def __str__(self) -> str:
-        return "<SQLAlchemy: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._project_name))
+        return f"<SQLAlchemySocket: address='{self.uri}`>"
 
     @contextmanager
     def session_scope(self):

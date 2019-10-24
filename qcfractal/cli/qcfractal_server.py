@@ -464,13 +464,13 @@ def server_dashboard(args, config):
 
     print("\n>>> Checking the PostgreSQL connection...")
 
-    psql = PostgresHarness(config, quiet=False, logger=print)
-    ensure_postgres_alive(psql)
+    # psql = PostgresHarness(config, quiet=False, logger=print)
+    # ensure_postgres_alive(psql)
 
-    from ..dashboard.app import app
+    from ..dashboard import app
 
     print("\n>>> Starting dashboard...")
-    app.config.update(CONNECTION=config.database_uri(safe=False))
+    app.server.config["DB_CONNECTION"] = config.database_uri(safe=False)
 
     app.run_server(debug=True)
 
