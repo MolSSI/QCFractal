@@ -142,6 +142,10 @@ def parse_args():
     user_remove = user_subparsers.add_parser("remove", help="Remove a user.")
     user_remove.add_argument("username", default=None, type=str, help="The username to remove.")
 
+    # Dsahboard
+    user = subparsers.add_parser('dashboard', help="A Dashboard for the server (beta).")
+    user.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+
     ### Move args around
     args = vars(parser.parse_args())
 
@@ -405,7 +409,6 @@ def server_user(args, config):
 
     storage = storage_socket_factory(config.database_uri(safe=False))
 
-    print(args)
     try:
         if args["user_command"] == "add":
             print("\n>>> Adding new user...")
@@ -453,6 +456,25 @@ def server_user(args, config):
         sys.exit(1)
 
 
+def server_dashboard(args, config):
+
+    print("QCFractal server dashboard.\n")
+
+    print(f"QCFractal server base folder: {config.base_folder}")
+
+    print("\n>>> Checking the PostgreSQL connection...")
+
+    psql = PostgresHarness(config, quiet=False, logger=print)
+    ensure_postgres_alive(psql)
+
+    from ..dashboard.app import app
+
+    print("\n>>> Starting dashboard...")
+    app.config.update(CONNECTION=config.database_uri(safe=False))
+
+    app.run_server(debug=True)
+
+
 def main(args=None):
 
     # Grab CLI args if not present
@@ -497,6 +519,8 @@ def main(args=None):
         server_upgrade(args, config)
     elif command == 'user':
         server_user(args, config)
+    elif command == 'dashboard':
+        server_dashboard(args, config)
 
 
 if __name__ == '__main__':
