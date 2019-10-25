@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 
-from pydantic import Schema, constr, validator
+from pydantic import Field, constr, validator
 from qcelemental import constants
 
 from ..visualization import scatter_plot
@@ -23,23 +23,23 @@ class TDKeywords(ProtoModel):
     """
     TorsionDriveRecord options
     """
-    dihedrals: List[Tuple[int, int, int, int]] = Schema(
+    dihedrals: List[Tuple[int, int, int, int]] = Field(
         ...,
         description="The list of dihedrals to select for the TorsionDrive operation. Each entry is a tuple of integers "
         "of for particle indices.")
-    grid_spacing: List[int] = Schema(
+    grid_spacing: List[int] = Field(
         ...,
         description="List of grid spacing for dihedral scan in degrees. Multiple values will be mapped to each "
         "dihedral angle.")
-    dihedral_ranges: Optional[List[Tuple[int, int]]] = Schema(
+    dihedral_ranges: Optional[List[Tuple[int, int]]] = Field(
         None,
         description="A list of dihedral range limits as a pair (lower, upper). "
         "Each range corresponds to the dihedrals in input.")
-    energy_decrease_thresh: Optional[float] = Schema(
+    energy_decrease_thresh: Optional[float] = Field(
         None,
         description="The threshold of the smallest energy decrease amount to trigger activating optimizations from "
         "grid point.")
-    energy_upper_limit: Optional[float] = Schema(
+    energy_upper_limit: Optional[float] = Field(
         None,
         description="The threshold if the energy of a grid point that is higher than the current global minimum, to "
         "start new optimizations, in unit of a.u. I.e. if energy_upper_limit = 0.05, current global "
@@ -58,28 +58,28 @@ class TorsionDriveInput(ProtoModel):
     A TorsionDriveRecord Input base class
     """
 
-    program: _td_constr = Schema(
+    program: _td_constr = Field(
         "torsiondrive",
         description="The name of the program. Fixed to 'torsiondrive' since this input model is only valid for it.")
-    procedure: _td_constr = Schema(
+    procedure: _td_constr = Field(
         "torsiondrive",
         description="The name of the Procedure. Fixed to 'torsiondrive' since this input model is only valid for it.")
-    initial_molecule: List[Union[ObjectId, Molecule]] = Schema(
+    initial_molecule: List[Union[ObjectId, Molecule]] = Field(
         ...,
         description="The Molecule(s) to begin the TorsionDrive with. This can either be an existing Molecule in "
         "the database (through its :class:`ObjectId`) or a fully specified :class:`Molecule` model.")
-    keywords: TDKeywords = Schema(
+    keywords: TDKeywords = Field(
         ..., description="TorsionDrive-specific input arguments to pass into the TorsionDrive Procedure")
-    optimization_spec: OptimizationSpecification = Schema(
+    optimization_spec: OptimizationSpecification = Field(
         ...,
         description="The settings which describe how to conduct the energy optimizations at each step of the torsion "
         "scan.")
-    qc_spec: QCSpecification = Schema(
+    qc_spec: QCSpecification = Field(
         ...,
         description="The settings which describe the individual quantum chemistry calculations at each step of the "
         "optimization.")
 
-    @validator('initial_molecule', pre=True, whole=True)
+    @validator('initial_molecule', pre=True)
     def check_initial_molecules(cls, v):
         if isinstance(v, (str, dict, Molecule)):
             v = [v]
@@ -95,39 +95,39 @@ class TorsionDriveRecord(RecordBase):
     _hash_indices = {"initial_molecule", "keywords", "optimization_spec", "qc_spec"}
 
     # Version data
-    version: int = Schema(1, description="The version number of the Record.")
-    procedure: _td_constr = Schema(
+    version: int = Field(1, description="The version number of the Record.")
+    procedure: _td_constr = Field(
         "torsiondrive",
         description="The name of the procedure. Fixed to 'torsiondrive' since this is the Record explicit to "
         "TorsionDrive.")
-    program: _td_constr = Schema(
+    program: _td_constr = Field(
         "torsiondrive",
         description="The name of the program. Fixed to 'torsiondrive' since this is the Record explicit to "
         "TorsionDrive.")
 
     # Input data
-    initial_molecule: List[ObjectId] = Schema(..., description="Id(s) of the initial molecule(s) in the database.")
-    keywords: TDKeywords = Schema(...,
+    initial_molecule: List[ObjectId] = Field(..., description="Id(s) of the initial molecule(s) in the database.")
+    keywords: TDKeywords = Field(...,
                                   description="The TorsionDrive-specific input arguments used for this operation.")
-    optimization_spec: OptimizationSpecification = Schema(
+    optimization_spec: OptimizationSpecification = Field(
         ...,
         description="The settings which describe how the energy optimizations at each step of the torsion "
         "scan used for this operation.")
-    qc_spec: QCSpecification = Schema(
+    qc_spec: QCSpecification = Field(
         ...,
         description="The settings which describe how the individual quantum chemistry calculations are handled for "
         "this operation.")
 
     # Output data
-    final_energy_dict: Dict[str, float] = Schema(
+    final_energy_dict: Dict[str, float] = Field(
         ..., description="The final energy at each angle of the TorsionDrive scan.")
 
-    optimization_history: Dict[str, List[ObjectId]] = Schema(
+    optimization_history: Dict[str, List[ObjectId]] = Field(
         ...,
         description="The map of each angle of the TorsionDrive scan to each optimization computations. "
         "Each value of the dict maps to a sequence of :class:`ObjectId` strings which each "
         "point to a single computation in the Database.")
-    minimum_positions: Dict[str, int] = Schema(  # TODO: This could use review
+    minimum_positions: Dict[str, int] = Field(  # TODO: This could use review
         ...,
         description="A map of each TorsionDrive angle to the integer index of that angle's optimization "
         "trajectory which has the minimum-energy of the trajectory.")

@@ -40,7 +40,6 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
         temp_directory = tempfile.TemporaryDirectory()
         scratch_dir = temp_directory.name
 
-    psi4_mem_buffer = 0.95  # Memory consumption buffer on psi4
     adapter_client = adapter_client_fixture
     task_id = "uuid-{}-{}".format(cores_per_task, memory_per_task)
     tasks = [  # Emulate the QueueManager test function
@@ -88,7 +87,7 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
     if cores_per_task is not None:
         assert provenance["nthreads"] == cores_per_task
     if memory_per_task is not None:
-        assert provenance["memory"] == pytest.approx(memory_per_task * psi4_mem_buffer)
+        assert provenance["memory"] == pytest.approx(memory_per_task, rel=0.1) # Unknown Psi4 memory factor
     if scratch_dir is not None:
         assert manager.queue_adapter.qcengine_local_options["scratch_directory"] == scratch_dir
 

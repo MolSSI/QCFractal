@@ -42,7 +42,7 @@ def replace_dict_keys(data, replacement):
     elif isinstance(data, BaseModel):
         # Handle base model structures
         ret = data.copy()  # Create a copy
-        search_keys = data.fields.keys()  # Enumerate keys
+        search_keys = data.__fields__.keys()  # Enumerate keys
         for key in search_keys:
             existing_data = getattr(data, key)
             # Try to replace data recursively
