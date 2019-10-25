@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 import numpy as np
 
 import qcelemental as qcel
-from pydantic import Schema, constr, validator
+from pydantic import Field, constr, validator
 
 from ..visualization import scatter_plot
 from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification
@@ -44,51 +44,51 @@ class RecordBase(ProtoModel, abc.ABC):
     _hash_indices: Set[str]
 
     # Helper data
-    client: Any = Schema(None, description="The client object which the records are fetched from.")
-    cache: Dict[str, Any] = Schema(
+    client: Any = Field(None, description="The client object which the records are fetched from.")
+    cache: Dict[str, Any] = Field(
         {},
         description="Object cache from expensive queries. It should be very rare that this needs to be set manually "
         "by the user.")
 
     # Base identification
-    id: ObjectId = Schema(
+    id: ObjectId = Field(
         None, description="Id of the object on the database. This is assigned automatically by the database.")
-    hash_index: Optional[str] = Schema(
+    hash_index: Optional[str] = Field(
         None, description="Hash of this object used to detect duplication and collisions in the database.")
-    procedure: str = Schema(..., description="Name of the procedure which this Record targets.")
-    program: str = Schema(
+    procedure: str = Field(..., description="Name of the procedure which this Record targets.")
+    program: str = Field(
         ...,
         description="The quantum chemistry program which carries out the individual quantum chemistry calculations.")
-    version: int = Schema(..., description="The version of this record object describes.")
-    protocols: Optional[Dict[str, Any]] = Schema(
+    version: int = Field(..., description="The version of this record object describes.")
+    protocols: Optional[Dict[str, Any]] = Field(
         None, description="Protocols that change the data stored in top level fields.")
 
     # Extra fields
-    extras: Dict[str, Any] = Schema({}, description="Extra information to associate with this record.")
-    stdout: Optional[ObjectId] = Schema(
+    extras: Dict[str, Any] = Field({}, description="Extra information to associate with this record.")
+    stdout: Optional[ObjectId] = Field(
         None,
         description="The Id of the stdout data stored in the database which was used to generate this record from the "
         "various programs which were called in the process.")
-    stderr: Optional[ObjectId] = Schema(
+    stderr: Optional[ObjectId] = Field(
         None,
         description="The Id of the stderr data stored in the database which was used to generate this record from the "
         "various programs which were called in the process.")
-    error: Optional[ObjectId] = Schema(
+    error: Optional[ObjectId] = Field(
         None,
         description="The Id of the error data stored in the database in the event that an error was generated in the "
         "process of carrying out the process this record targets. If no errors were raised, this field "
         "will be empty.")
 
     # Compute status
-    task_id: Optional[ObjectId] = Schema(  # TODO: not used in SQL
+    task_id: Optional[ObjectId] = Field(  # TODO: not used in SQL
         None, description="Id of the compute task tracked by Fractal in its TaskTable.")
-    manager_name: Optional[str] = Schema(None, description="Name of the Queue Manager which generated this record.")
-    status: RecordStatusEnum = Schema(RecordStatusEnum.incomplete, description=str(RecordStatusEnum.__doc__))
-    modified_on: datetime.datetime = Schema(None, description="Last time the data this record points to was modified.")
-    created_on: datetime.datetime = Schema(None, description="Time the data this record points to was first created.")
+    manager_name: Optional[str] = Field(None, description="Name of the Queue Manager which generated this record.")
+    status: RecordStatusEnum = Field(RecordStatusEnum.incomplete, description=str(RecordStatusEnum.__doc__))
+    modified_on: datetime.datetime = Field(None, description="Last time the data this record points to was modified.")
+    created_on: datetime.datetime = Field(None, description="Time the data this record points to was first created.")
 
     # Carry-ons
-    provenance: Optional[qcel.models.Provenance] = Schema(
+    provenance: Optional[qcel.models.Provenance] = Field(
         None,
         description="Provenance information tied to the creation of this record. This includes things such as every "
         "program which was involved in generating the data for this record.")
@@ -110,7 +110,7 @@ class RecordBase(ProtoModel, abc.ABC):
 
         # Set hash index if not present
         if self.Config.build_hash_index and (self.hash_index is None):
-            self.__values__["hash_index"] = self.get_hash_index()
+            self.__dict__["hash_index"] = self.get_hash_index()
 
     def __str__(self) -> str:
         return f"{self.__class__.__name__}(id='{self.id}' status='{self.status}')"
@@ -192,7 +192,7 @@ class RecordBase(ProtoModel, abc.ABC):
         """
         self.check_client()
 
-        oid = self.__values__[field_name]
+        oid = self.__dict__[field_name]
         if oid is None:
             return None
 
@@ -243,33 +243,33 @@ class ResultRecord(RecordBase):
     _hash_indices = {"driver", "method", "basis", "molecule", "keywords", "program"}
 
     # Version data
-    version: int = Schema(1, description="Version of the ResultRecord Model which this data was created with.")
-    procedure: constr(strip_whitespace=True, regex="single") = Schema(
+    version: int = Field(1, description="Version of the ResultRecord Model which this data was created with.")
+    procedure: constr(strip_whitespace=True, regex="single") = Field(
         "single", description='Procedure is fixed as "single" because this is single quantum chemistry result.')
 
     # Input data
-    driver: DriverEnum = Schema(..., description=str(DriverEnum.__doc__))
-    method: str = Schema(..., description="The quantum chemistry method the driver runs with.")
-    molecule: ObjectId = Schema(...,
+    driver: DriverEnum = Field(..., description=str(DriverEnum.__doc__))
+    method: str = Field(..., description="The quantum chemistry method the driver runs with.")
+    molecule: ObjectId = Field(...,
                                 description="The Id of the molecule in the Database which the result is computed on.")
-    basis: Optional[str] = Schema(
+    basis: Optional[str] = Field(
         None,
         description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for "
         "methods without basis sets.")
-    keywords: Optional[ObjectId] = Schema(
+    keywords: Optional[ObjectId] = Field(
         None,
         description="The Id of the :class:`KeywordSet` which was passed into the quantum chemistry program that "
         "performed this calculation.")
-    protocols: qcel.models.results.ResultProtocols = Schema(qcel.models.results.ResultProtocols(),
+    protocols: qcel.models.results.ResultProtocols = Field(qcel.models.results.ResultProtocols(),
                                                                      description="")
 
     # Output data
-    return_result: Union[float, qcel.models.types.Array[float], Dict[str, Any]] = Schema(
+    return_result: Union[float, qcel.models.types.Array[float], Dict[str, Any]] = Field(
         None, description="The primary result of the calculation, output is a function of the specified ``driver``.")
-    properties: qcel.models.ResultProperties = Schema(
+    properties: qcel.models.ResultProperties = Field(
         None, description="Additional data and results computed as part of the ``return_result``.")
-    wavefunction: Optional[Dict[str, Any]] = Schema(None, description="Wavefunction data generated by the Result.")
-    wavefunction_data_id: Optional[ObjectId] = Schema(None, description="The id of the wavefunction")
+    wavefunction: Optional[Dict[str, Any]] = Field(None, description="Wavefunction data generated by the Result.")
+    wavefunction_data_id: Optional[ObjectId] = Field(None, description="The id of the wavefunction")
 
     class Config(RecordBase.Config):
         """A hash index is not used for ResultRecords as they can be
@@ -428,31 +428,31 @@ class OptimizationRecord(RecordBase):
     _hash_indices = {"initial_molecule", "keywords", "qc_spec"}
 
     # Version data
-    version: int = Schema(1, description="Version of the OptimizationRecord Model which this data was created with.")
-    procedure: constr(strip_whitespace=True, regex="optimization") = Schema(
+    version: int = Field(1, description="Version of the OptimizationRecord Model which this data was created with.")
+    procedure: constr(strip_whitespace=True, regex="optimization") = Field(
         "optimization", description='A fixed string indication this is a record for an "Optimization".')
-    schema_version: int = Schema(1, description="The version number of QCSchema under which this record conforms to.")
+    schema_version: int = Field(1, description="The version number of QCSchema under which this record conforms to.")
 
     # Input data
-    initial_molecule: ObjectId = Schema(
+    initial_molecule: ObjectId = Field(
         ..., description="The Id of the molecule which was passed in as the reference for this Optimization.")
-    qc_spec: QCSpecification = Schema(
+    qc_spec: QCSpecification = Field(
         ..., description="The specification of the quantum chemistry calculation to run at each point.")
-    keywords: Dict[str, Any] = Schema(
+    keywords: Dict[str, Any] = Field(
         {},
         description="The keyword options which were passed into the Optimization program. "
         "Note: These are a dictionary and not a :class:`KeywordSet` object.")
-    protocols: qcel.models.procedures.OptimizationProtocols = Schema(qcel.models.procedures.OptimizationProtocols(),
+    protocols: qcel.models.procedures.OptimizationProtocols = Field(qcel.models.procedures.OptimizationProtocols(),
                                                                      description="")
 
     # Automatting issue currently
     # description=str(qcel.models.procedures.OptimizationProtocols.__doc__))
 
     # Results
-    energies: List[float] = Schema(None, description="The ordered list of energies at each step of the Optimization.")
-    final_molecule: ObjectId = Schema(
+    energies: List[float] = Field(None, description="The ordered list of energies at each step of the Optimization.")
+    final_molecule: ObjectId = Field(
         None, description="The ``ObjectId`` of the final, optimized Molecule the Optimization procedure converged to.")
-    trajectory: List[ObjectId] = Schema(
+    trajectory: List[ObjectId] = Field(
         None,
         description="The list of Molecule Id's the Optimization procedure generated at each step of the optimization."
         "``initial_molecule`` will be the first index, and ``final_molecule`` will be the last index.")

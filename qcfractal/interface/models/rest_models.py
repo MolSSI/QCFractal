@@ -6,7 +6,7 @@ import re
 import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from pydantic import Schema, constr, validator
+from pydantic import Field, constr, validator
 from qcelemental.util import get_base_docs
 
 from .common_models import KeywordSet, Molecule, ObjectId, ProtoModel
@@ -111,13 +111,13 @@ class ResponseMeta(ProtoModel):
     """
     Standard Fractal Server response metadata
     """
-    errors: List[Tuple[str, str]] = Schema(
+    errors: List[Tuple[str, str]] = Field(
         ..., description="A list of error pairs in the form of [(error type, error message), ...]")
-    success: bool = Schema(
+    success: bool = Field(
         ...,
         description="Indicates if the passed information was successful in its duties. This is contextual to the "
         "data being passed in.")
-    error_description: Union[str, bool] = Schema(
+    error_description: Union[str, bool] = Field(
         ...,
         description="Details about the error if ``success`` is ``False``, otherwise this is ``False`` in the event "
         "of no errors.")
@@ -127,8 +127,8 @@ class ResponseGETMeta(ResponseMeta):
     """
     Standard Fractal Server response metadata for GET/fetch type requests.
     """
-    missing: List[str] = Schema(..., description="The Id's of the objects which were not found in the database.")
-    n_found: int = Schema(
+    missing: List[str] = Field(..., description="The Id's of the objects which were not found in the database.")
+    n_found: int = Field(
         ...,
         description="The number of entries which were already found in the database from the set which was provided.")
 
@@ -137,14 +137,14 @@ class ResponsePOSTMeta(ResponseMeta):
     """
     Standard Fractal Server response metadata for POST/add type requests.
     """
-    n_inserted: int = Schema(
+    n_inserted: int = Field(
         ...,
         description="The number of new objects amongst the inputs which did not exist already, and are now in the "
         "database.")
-    duplicates: Union[List[str], List[Tuple[str, str]]] = Schema(
+    duplicates: Union[List[str], List[Tuple[str, str]]] = Field(
         ...,
         description="The Ids of the objects which already exist in the database amongst the set which were passed in.")
-    validation_errors: List[str] = Schema(
+    validation_errors: List[str] = Field(
         ..., description="All errors with validating submitted objects will be documented here.")
 
 
@@ -152,16 +152,16 @@ class QueryMeta(ProtoModel):
     """
     Standard Fractal Server metadata for Database queries containing pagination information
     """
-    limit: Optional[int] = Schema(None,
-                                  description="Limit to the number of objects which can be returned with this query.")
-    skip: int = Schema(0, description="The number of records to skip on the query.")
+    limit: Optional[int] = Field(None,
+                                 description="Limit to the number of objects which can be returned with this query.")
+    skip: int = Field(0, description="The number of records to skip on the query.")
 
 
 class QueryMetaProjection(QueryMeta):
     """
     Fractal Server metadata for Database queries containing pagination information and query projection parameters
     """
-    projection: QueryProjection = Schema(
+    projection: QueryProjection = Field(
         None, description="Additional projection information to pass to the query. Expert-level object.")
 
 
@@ -169,10 +169,10 @@ class ComputeResponse(ProtoModel):
     """
     The response model from the Fractal Server when new Compute or Services are added.
     """
-    ids: List[Optional[ObjectId]] = Schema(..., description="The Id's of the records to be computed.")
-    submitted: List[ObjectId] = Schema(
+    ids: List[Optional[ObjectId]] = Field(..., description="The Id's of the records to be computed.")
+    submitted: List[ObjectId] = Field(
         ..., description="The object Ids which were submitted as new entries to the database.")
-    existing: List[ObjectId] = Schema(..., description="The list of object Ids which already existed in the database.")
+    existing: List[ObjectId] = Field(..., description="The list of object Ids which already existed in the database.")
 
     def __str__(self) -> str:
         return f"ComputeResponse(nsubmitted={len(self.submitted)} nexisting={len(self.existing)})"
@@ -227,16 +227,16 @@ register_model("information", "GET", InformationGETBody, InformationGETResponse)
 
 class KVStoreGETBody(ProtoModel):
     class Data(ProtoModel):
-        id: QueryObjectId = Schema(None, description="Id of the Key/Value Storage object to get.")
+        id: QueryObjectId = Field(None, description="Id of the Key/Value Storage object to get.")
 
-    meta: EmptyMeta = Schema({}, description=common_docs[EmptyMeta])
-    data: Data = Schema(
+    meta: EmptyMeta = Field({}, description=common_docs[EmptyMeta])
+    data: Data = Field(
         ..., description="Data of the KV Get field: consists of a dict for Id of the Key/Value object to fetch.")
 
 
 class KVStoreGETResponse(ProtoModel):
-    meta: ResponseGETMeta = Schema(..., description=common_docs[ResponseGETMeta])
-    data: Dict[str, Any] = Schema(..., description="The entries of Key/Value object requested.")
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
+    data: Dict[str, Any] = Field(..., description="The entries of Key/Value object requested.")
 
 
 register_model("kvstore", "GET", KVStoreGETBody, KVStoreGETResponse)
@@ -246,39 +246,39 @@ register_model("kvstore", "GET", KVStoreGETBody, KVStoreGETResponse)
 
 class MoleculeGETBody(ProtoModel):
     class Data(ProtoModel):
-        id: QueryObjectId = Schema(None, description="Exact Id of the Molecule to fetch from the database.")
-        molecule_hash: QueryStr = Schema(
+        id: QueryObjectId = Field(None, description="Exact Id of the Molecule to fetch from the database.")
+        molecule_hash: QueryStr = Field(
             None,
             description="Hash of the Molecule to search for in the database. Can be computed from the Molecule object "
             "directly without direct access to the Database itself.")
-        molecular_formula: QueryStr = Schema(
+        molecular_formula: QueryStr = Field(
             None,
             description="Query is made based on simple molecular formula. This is based on just the formula itself and "
             "contains no connectivity information.")
 
-    meta: QueryMeta = Schema(QueryMeta(), description=common_docs[QueryMeta])
-    data: Data = Schema(
+    meta: QueryMeta = Field(QueryMeta(), description=common_docs[QueryMeta])
+    data: Data = Field(
         ...,
         description="Data fields for a Molecule query."  # Because Data is internal, this may not document sufficiently
     )
 
 
 class MoleculeGETResponse(ProtoModel):
-    meta: ResponseGETMeta = Schema(..., description=common_docs[ResponseGETMeta])
-    data: List[Molecule] = Schema(..., description="The List of Molecule objects found by the query.")
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
+    data: List[Molecule] = Field(..., description="The List of Molecule objects found by the query.")
 
 
 register_model("molecule", "GET", MoleculeGETBody, MoleculeGETResponse)
 
 
 class MoleculePOSTBody(ProtoModel):
-    meta: EmptyMeta = Schema({}, description=common_docs[EmptyMeta])
-    data: List[Molecule] = Schema(..., description="A list of :class:`Molecule` objects to add to the Database.")
+    meta: EmptyMeta = Field({}, description=common_docs[EmptyMeta])
+    data: List[Molecule] = Field(..., description="A list of :class:`Molecule` objects to add to the Database.")
 
 
 class MoleculePOSTResponse(ProtoModel):
-    meta: ResponsePOSTMeta = Schema(..., description=common_docs[ResponsePOSTMeta])
-    data: List[ObjectId] = Schema(
+    meta: ResponsePOSTMeta = Field(..., description=common_docs[ResponsePOSTMeta])
+    data: List[ObjectId] = Field(
         ...,
         description="A list of Id's assigned to the Molecule objects passed in which serves as a unique identifier "
         "in the database. If the Molecule was already in the database, then the Id returned is its "
@@ -295,15 +295,15 @@ class KeywordGETBody(ProtoModel):
         id: QueryObjectId = None
         hash_index: QueryStr = None
 
-    meta: QueryMeta = Schema(QueryMeta(), description=common_docs[QueryMeta])
-    data: Data = Schema(
+    meta: QueryMeta = Field(QueryMeta(), description=common_docs[QueryMeta])
+    data: Data = Field(
         ...,
         description="The formal query for a Keyword fetch, contains ``id`` or ``hash_index`` for the object to fetch.")
 
 
 class KeywordGETResponse(ProtoModel):
-    meta: ResponseGETMeta = Schema(..., description=common_docs[ResponseGETMeta])
-    data: List[KeywordSet] = Schema(
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
+    data: List[KeywordSet] = Field(
         ..., description="The :class:`KeywordSet` found from in the database based on the query.")
 
 
@@ -311,17 +311,17 @@ register_model("keyword", "GET", KeywordGETBody, KeywordGETResponse)
 
 
 class KeywordPOSTBody(ProtoModel):
-    meta: EmptyMeta = Schema(
-        {}, description="There is no metadata with this, so an empty metadata is sent for completion.")
-    data: List[KeywordSet] = Schema(..., description="The list of :class:`KeywordSet` objects to add to the database.")
+    meta: EmptyMeta = Field({},
+                            description="There is no metadata with this, so an empty metadata is sent for completion.")
+    data: List[KeywordSet] = Field(..., description="The list of :class:`KeywordSet` objects to add to the database.")
 
 
 class KeywordPOSTResponse(ProtoModel):
-    data: List[Optional[ObjectId]] = Schema(
+    data: List[Optional[ObjectId]] = Field(
         ...,
         description="The Ids assigned to the added :class:`KeywordSet` objects. In the event of duplicates, the Id "
         "will be the one already found in the database.")
-    meta: ResponsePOSTMeta = Schema(..., description=common_docs[ResponsePOSTMeta])
+    meta: ResponsePOSTMeta = Field(..., description=common_docs[ResponsePOSTMeta])
 
 
 register_model("keyword", "POST", KeywordPOSTBody, KeywordPOSTResponse)
@@ -331,32 +331,34 @@ register_model("keyword", "POST", KeywordPOSTBody, KeywordPOSTResponse)
 
 class CollectionGETBody(ProtoModel):
     class Data(ProtoModel):
-        collection: str = Schema(None,
-                                 description="The specific collection to look up as its identified in the database.")
-        name: str = Schema(None, description="The common name of the collection to look up.")
+        collection: str = Field(None,
+                                description="The specific collection to look up as its identified in the database.")
+        name: str = Field(None, description="The common name of the collection to look up.")
 
         @validator("collection")
         def cast_to_lower(cls, v):
-            return v.lower()
+            if v:
+                v = v.lower()
+            return v
 
     class Meta(ProtoModel):
-        projection: QueryProjection = Schema(
+        projection: QueryProjection = Field(
             None, description="Additional projection information to pass to the query. Expert-level object.")
-        heavy: bool = Schema(True, description="Return large data such as entries and contributed values.")
+        heavy: bool = Field(True, description="Return large data such as entries and contributed values.")
 
-    meta: Meta = Schema(
+    meta: Meta = Field(
         None,
         description="Additional metadata to make with the query. Collections can only have a ``projection`` key in its "
         "meta and therefore does not follow the standard GET metadata model.")
-    data: Data = Schema(..., description="Information about the Collection to search the database with.")
+    data: Data = Field(..., description="Information about the Collection to search the database with.")
 
 
 class CollectionGETResponse(ProtoModel):
-    meta: ResponseGETMeta = Schema(..., description=common_docs[ResponseGETMeta])
-    data: List[Dict[str, Any]] = Schema(
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
+    data: List[Dict[str, Optional[Any]]] = Field(
         ..., description="The Collection objects returned by the server based on the query.")
 
-    @validator("data", whole=True)
+    @validator("data")
     def ensure_collection_name_in_data_get_res(cls, v):
         for col in v:
             if "name" not in col or "collection" not in col:
@@ -369,19 +371,19 @@ register_model("collection", "GET", CollectionGETBody, CollectionGETResponse)
 
 class CollectionPOSTBody(ProtoModel):
     class Meta(ProtoModel):
-        overwrite: bool = Schema(
+        overwrite: bool = Field(
             False,
             description="The existing Collection in the database will be updated if this is True, otherwise will "
             "remain unmodified if it already exists.")
 
     class Data(ProtoModel):
-        id: str = Schema(
+        id: str = Field(
             "local",  # Auto blocks overwriting in a socket
             description="The Id of the object to assign in the database. If 'local', then it will not overwrite "
             "existing keys. There should be very little reason to ever touch this.")
-        collection: str = Schema(
+        collection: str = Field(
             ..., description="The specific identifier for this Collection as it will appear in database.")
-        name: str = Schema(..., description="The common name of this Collection.")
+        name: str = Field(..., description="The common name of this Collection.")
 
         class Config(ProtoModel.Config):
             extra = "allow"
@@ -390,20 +392,20 @@ class CollectionPOSTBody(ProtoModel):
         def cast_to_lower(cls, v):
             return v.lower()
 
-    meta: Meta = Schema(
+    meta: Meta = Field(
         Meta(),
         description="Metadata to specify how the Database should handle adding this Collection if it already exists. "
         "Metadata model for adding Collections can only accept ``overwrite`` as a key to choose to update "
         "existing Collections or not.")
-    data: Data = Schema(..., description="The data associated with this Collection to add to the database.")
+    data: Data = Field(..., description="The data associated with this Collection to add to the database.")
 
 
 class CollectionPOSTResponse(ProtoModel):
-    data: Union[str, None] = Schema(
+    data: Union[str, None] = Field(
         ...,
         description="The Id of the Collection uniquely pointing to it in the Database. If the Collection was not added "
         "(e.g. ``overwrite=False`` for existing Collection), then a None is returned.")
-    meta: ResponsePOSTMeta = Schema(..., description=common_docs[ResponsePOSTMeta])
+    meta: ResponsePOSTMeta = Field(..., description=common_docs[ResponsePOSTMeta])
 
 
 register_model("collection", "POST", CollectionPOSTBody, CollectionPOSTResponse)
@@ -415,23 +417,23 @@ class CollectionSubresourceGETResponseMeta(ResponseMeta):
     """
     Response metadata for collection views functions.
     """
-    msgpacked_cols: List[str] = Schema(..., description="Names of columns which were serialized to msgpack-ext.")
+    msgpacked_cols: List[str] = Field(..., description="Names of columns which were serialized to msgpack-ext.")
 
 
 class CollectionEntryGETBody(ProtoModel):
     class Data(ProtoModel):
-        subset: QueryStr = Schema(None,
-                                  description="Not implemented. "
-                                  "See qcfractal.interface.collections.dataset_view.DatasetView.get_entries")
+        subset: QueryStr = Field(None,
+                                 description="Not implemented. "
+                                 "See qcfractal.interface.collections.dataset_view.DatasetView.get_entries")
 
-    meta: EmptyMeta = Schema(EmptyMeta(), description=common_docs[EmptyMeta])
-    data: Data = Schema(..., description="Information about which entries to return.")
+    meta: EmptyMeta = Field(EmptyMeta(), description=common_docs[EmptyMeta])
+    data: Data = Field(..., description="Information about which entries to return.")
 
 
 class CollectionEntryGETResponse(ProtoModel):
-    meta: CollectionSubresourceGETResponseMeta = Schema(
+    meta: CollectionSubresourceGETResponseMeta = Field(
         ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
-    data: Optional[bytes] = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
+    data: Optional[bytes] = Field(..., description="Feather-serialized bytes representing a pandas DataFrame.")
 
 
 register_model("collection/[0-9]+/entry", "GET", CollectionEntryGETBody, CollectionEntryGETResponse)
@@ -439,18 +441,18 @@ register_model("collection/[0-9]+/entry", "GET", CollectionEntryGETBody, Collect
 
 class CollectionMoleculeGETBody(ProtoModel):
     class Data(ProtoModel):
-        indexes: List[int] = Schema(None,
-                                    description="List of molecule indexes to return (returned by get_entries). "
-                                    "See qcfractal.interface.collections.dataset_view.DatasetView.get_molecules")
+        indexes: List[int] = Field(None,
+                                   description="List of molecule indexes to return (returned by get_entries). "
+                                   "See qcfractal.interface.collections.dataset_view.DatasetView.get_molecules")
 
-    meta: EmptyMeta = Schema(EmptyMeta(), description=common_docs[EmptyMeta])
-    data: Data = Schema(..., description="Information about which molecules to return.")
+    meta: EmptyMeta = Field(EmptyMeta(), description=common_docs[EmptyMeta])
+    data: Data = Field(..., description="Information about which molecules to return.")
 
 
 class CollectionMoleculeGETResponse(ProtoModel):
-    meta: CollectionSubresourceGETResponseMeta = Schema(
+    meta: CollectionSubresourceGETResponseMeta = Field(
         ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
-    data: Optional[bytes] = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
+    data: Optional[bytes] = Field(..., description="Feather-serialized bytes representing a pandas DataFrame.")
 
 
 register_model("collection/[0-9]+/molecule", "GET", CollectionMoleculeGETBody, CollectionMoleculeGETResponse)
@@ -463,23 +465,23 @@ class CollectionValueGETBody(ProtoModel):
             driver: str
             native: bool
 
-        queries: List[QueryData] = Schema(None,
-                                          description="List of queries to match against values columns. "
-                                          "See qcfractal.interface.collections.dataset_view.DatasetView.get_values")
+        queries: List[QueryData] = Field(None,
+                                         description="List of queries to match against values columns. "
+                                         "See qcfractal.interface.collections.dataset_view.DatasetView.get_values")
         subset: QueryStr
 
-    meta: EmptyMeta = Schema(EmptyMeta(), description=common_docs[EmptyMeta])
-    data: Data = Schema(..., description="Information about which values to return.")
+    meta: EmptyMeta = Field(EmptyMeta(), description=common_docs[EmptyMeta])
+    data: Data = Field(..., description="Information about which values to return.")
 
 
 class CollectionValueGETResponse(ProtoModel):
     class Data(ProtoModel):
-        values: bytes = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
-        units: Dict[str, str] = Schema(..., description="Units of value columns.")
+        values: bytes = Field(..., description="Feather-serialized bytes representing a pandas DataFrame.")
+        units: Dict[str, str] = Field(..., description="Units of value columns.")
 
-    meta: CollectionSubresourceGETResponseMeta = Schema(
+    meta: CollectionSubresourceGETResponseMeta = Field(
         ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
-    data: Optional[Data] = Schema(..., description="Values and units.")
+    data: Optional[Data] = Field(..., description="Values and units.")
 
 
 register_model("collection/[0-9]+/value", "GET", CollectionValueGETBody, CollectionValueGETResponse)
@@ -489,14 +491,14 @@ class CollectionListGETBody(ProtoModel):
     class Data(ProtoModel):
         pass
 
-    meta: EmptyMeta = Schema(EmptyMeta(), description=common_docs[EmptyMeta])
-    data: Data = Schema(..., description="Empty for now.")
+    meta: EmptyMeta = Field(EmptyMeta(), description=common_docs[EmptyMeta])
+    data: Data = Field(..., description="Empty for now.")
 
 
 class CollectionListGETResponse(ProtoModel):
-    meta: CollectionSubresourceGETResponseMeta = Schema(
+    meta: CollectionSubresourceGETResponseMeta = Field(
         ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
-    data: Optional[bytes] = Schema(..., description="Feather-serialized bytes representing a pandas DataFrame.")
+    data: Optional[bytes] = Field(..., description="Feather-serialized bytes representing a pandas DataFrame.")
 
 
 register_model("collection/[0-9]+/list", "GET", CollectionListGETBody, CollectionListGETResponse)
@@ -506,69 +508,69 @@ register_model("collection/[0-9]+/list", "GET", CollectionListGETBody, Collectio
 
 class ResultGETBody(ProtoModel):
     class Data(ProtoModel):
-        id: QueryObjectId = Schema(
+        id: QueryObjectId = Field(
             None,
             description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
             "reason to set anything else as this will be unique in the database, if it exists.")
-        task_id: QueryObjectId = Schema(
+        task_id: QueryObjectId = Field(
             None,
             description="The exact Id of the task which carried out this Result's computation. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
             "database, if it exists. See also :class:`TaskRecord`.")
 
-        program: QueryStr = Schema(
+        program: QueryStr = Field(
             None,
             description="Results will be searched to match the quantum chemistry software which carried out the "
             "calculation.")
-        molecule: QueryObjectId = Schema(
+        molecule: QueryObjectId = Field(
             None, description="Results will be searched to match the Molecule Id which was computed on.")
-        driver: QueryStr = Schema(None,
-                                  description="Results will be searched to match what class of computation was done. "
-                                  "See :class:`DriverEnum` for valid choices and more information.")
-        method: QueryStr = Schema(
+        driver: QueryStr = Field(None,
+                                 description="Results will be searched to match what class of computation was done. "
+                                 "See :class:`DriverEnum` for valid choices and more information.")
+        method: QueryStr = Field(
             None,
             description="Results will be searched to match the quantum chemistry method executed to compute the value."
         )
-        basis: QueryStr = Schema(
+        basis: QueryStr = Field(
             None,
             description="Results will be searched to match specified basis sets which were used to compute the values."
         )
-        keywords: QueryNullObjectId = Schema(
+        keywords: QueryNullObjectId = Field(
             None,
             description="Results will be searched based on which :class:`KeywordSet` was used to run the computation.")
 
-        status: QueryStr = Schema(
+        status: QueryStr = Field(
             "COMPLETE",
             description="Results will be searched based on where they are in the compute pipeline. See the "
             ":class:`RecordStatusEnum` for valid statuses and more information.")
 
-        @validator('keywords', pre=True)
+        @validator('keywords', each_item=True, pre=True)
         def validate_keywords(cls, v):
             if v is None:
                 v = 'null'
             return v
 
-        @validator('basis', pre=True)
+        @validator('basis', each_item=True, pre=True)
         def validate_basis(cls, v):
             if (v is None) or (v == ""):
                 v = 'null'
             return v
 
-    meta: QueryMetaProjection = Schema(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
-    data: Data = Schema(
+    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    data: Data = Field(
         ..., description="The keys with data to search the database on for individual quantum chemistry computations.")
 
 
 class ResultGETResponse(ProtoModel):
-    meta: ResponseGETMeta = Schema(..., description=common_docs[ResponseGETMeta])
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
     # Either a record or dict depending if projection
-    data: Union[List[ResultRecord], List[Dict[str, Any]]] = Schema(
+    data: Union[List[ResultRecord], List[Dict[str, Any]]] = Field(
         ...,
         description="Results found from the query. This is a list of :class:`ResultRecord` in most cases, however, "
         "if a projection was specified in the GET request, then a dict is returned with mappings based "
         "on the projection.")
 
-    @validator("data", whole=True, pre=True)
+    @validator("data", pre=True)
     def ensure_list_of_dict(cls, v):
         if isinstance(v, dict):
             return [v]
@@ -582,17 +584,17 @@ register_model("result", "GET", ResultGETBody, ResultGETResponse)
 
 class WavefunctionStoreGETBody(ProtoModel):
     class Data(ProtoModel):
-        id: ObjectId = Schema(None, description="Id of the Wavefunction Key/Value Storage object to get.")
+        id: ObjectId = Field(None, description="Id of the Wavefunction Key/Value Storage object to get.")
 
-    meta: QueryMetaProjection = Schema(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
-    data: Data = Schema(
+    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    data: Data = Field(
         ...,
         description="Data of the Wavefunction Get field: consists of a ObjectId of the Wavefunction object to fetch.")
 
 
 class WavefunctionStoreGETResponse(ProtoModel):
-    meta: ResponseGETMeta = Schema(..., description=common_docs[ResponseGETMeta])
-    data: Dict[str, Any] = Schema(..., description="The entries of the Wavefunction object requested.")
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
+    data: Dict[str, Any] = Field(..., description="The entries of the Wavefunction object requested.")
 
 
 register_model("wavefunctionstore", "GET", WavefunctionStoreGETBody, WavefunctionStoreGETResponse)
@@ -602,39 +604,40 @@ register_model("wavefunctionstore", "GET", WavefunctionStoreGETBody, Wavefunctio
 
 class ProcedureGETBody(ProtoModel):
     class Data(ProtoModel):
-        id: QueryObjectId = Schema(
+        id: QueryObjectId = Field(
             None,
             description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
             "reason to set anything else as this will be unique in the database, if it exists.")
-        task_id: QueryObjectId = Schema(
+        task_id: QueryObjectId = Field(
             None,
             description="The exact Id of a task which is carried out by this Procedure. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
             "database, if it exists. See also :class:`TaskRecord`.")
 
-        procedure: QueryStr = Schema(None,
-                                     description="Procedures will be searched based on the name of the procedure.")
-        program: QueryStr = Schema(
+        procedure: QueryStr = Field(None,
+                                    description="Procedures will be searched based on the name of the procedure.")
+        program: QueryStr = Field(
             None,
             description="Procedures will be searched based on the program which is the main manager of the procedure")
-        hash_index: QueryStr = Schema(
+        hash_index: QueryStr = Field(
             None,
             description="Procedures will be searched based on a hash of the defined procedure. This is something which "
             "can be generated by the Procedure spec itself and does not require server access to compute. "
             "This should be unique in the database so there should be no reason to set anything else "
             "if this is set as a query.")
-        status: QueryStr = Schema(
+        status: QueryStr = Field(
             "COMPLETE",
             description="Procedures will be searched based on where they are in the compute pipeline. See the "
             ":class:`RecordStatusEnum` for valid statuses.")
 
-    meta: QueryMetaProjection = Schema(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
-    data: Data = Schema(..., description="The keys with data to search the database on for Procedures.")
+    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    data: Data = Field(..., description="The keys with data to search the database on for Procedures.")
 
 
 class ProcedureGETResponse(ProtoModel):
-    meta: ResponseGETMeta = Schema(..., description=common_docs[ResponseGETMeta])
-    data: List[Dict[str, Any]] = Schema(..., description="The list of Procedure specs found based on the query.")
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
+    data: List[Dict[str, Optional[Any]]] = Field(...,
+                                                 description="The list of Procedure specs found based on the query.")
 
 
 register_model("procedure", "GET", ProcedureGETBody, ProcedureGETResponse)
@@ -644,38 +647,38 @@ register_model("procedure", "GET", ProcedureGETBody, ProcedureGETResponse)
 
 class TaskQueueGETBody(ProtoModel):
     class Data(ProtoModel):
-        id: QueryObjectId = Schema(
+        id: QueryObjectId = Field(
             None,
             description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
             "reason to set anything else as this will be unique in the database, if it exists.")
-        hash_index: QueryStr = Schema(
+        hash_index: QueryStr = Field(
             None,
             description="Tasks will be searched based on a hash of the defined Task. This is something which can "
             "be generated by the Task spec itself and does not require server access to compute. "
             "This should be unique in the database so there should be no reason to set anything else "
             "if this is set as a query.")
-        program: QueryStr = Schema(
+        program: QueryStr = Field(
             None, description="Tasks will be searched based on the program responsible for executing this task.")
-        status: QueryStr = Schema(
+        status: QueryStr = Field(
             None,
             description="Tasks will be search based on where they are in the compute pipeline. See the "
             ":class:`RecordStatusEnum` for valid statuses.")
-        base_result: QueryStr = Schema(
+        base_result: QueryStr = Field(
             None,
             description="The exact Id of the Result which this Task is linked to. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
             "database, if it exists. See also :class:`ResultRecord`.")
-        tag: QueryStr = Schema(None, description="Tasks will be searched based on their associated tag.")
-        manager: QueryStr = Schema(
+        tag: QueryStr = Field(None, description="Tasks will be searched based on their associated tag.")
+        manager: QueryStr = Field(
             None, description="Tasks will be searched based on the manager responsible for executing the task.")
 
-    meta: QueryMetaProjection = Schema(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
-    data: Data = Schema(..., description="The keys with data to search the database on for Tasks.")
+    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    data: Data = Field(..., description="The keys with data to search the database on for Tasks.")
 
 
 class TaskQueueGETResponse(ProtoModel):
-    meta: ResponseGETMeta = Schema(..., description=common_docs[ResponseGETMeta])
-    data: Union[List[TaskRecord], List[Dict[str, Any]]] = Schema(
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
+    data: Union[List[TaskRecord], List[Dict[str, Any]]] = Field(
         ...,
         description="Tasks found from the query. This is a list of :class:`TaskRecord` in most cases, however, "
         "if a projection was specified in the GET request, then a dict is returned with mappings based "
@@ -687,17 +690,17 @@ register_model("task_queue", "GET", TaskQueueGETBody, TaskQueueGETResponse)
 
 class TaskQueuePOSTBody(ProtoModel):
     class Meta(ProtoModel):
-        procedure: str = Schema(..., description="Name of the procedure which the Task will execute.")
-        program: str = Schema(..., description="The program which this Task will execute.")
+        procedure: str = Field(..., description="Name of the procedure which the Task will execute.")
+        program: str = Field(..., description="The program which this Task will execute.")
 
-        tag: Optional[str] = Schema(
+        tag: Optional[str] = Field(
             None,
             description="Tag to assign to this Task so that Queue Managers can pull only Tasks based on this entry."
             "If no Tag is specified, any Queue Manager can pull this Task.")
-        priority: Union[PriorityEnum, None] = Schema(None, description=str(PriorityEnum.__doc__))
+        priority: Union[PriorityEnum, None] = Field(None, description=str(PriorityEnum.__doc__))
 
         class Config(ProtoModel.Config):
-            allow_extra = "allow"
+            extra = "allow"
 
         @validator('priority', pre=True)
         def munge_priority(cls, v):
@@ -705,9 +708,9 @@ class TaskQueuePOSTBody(ProtoModel):
                 v = PriorityEnum[v.upper()]
             return v
 
-    meta: Meta = Schema(...,
-                        description="The additional specification information for the Task to add to the Database.")
-    data: List[Union[ObjectId, Molecule]] = Schema(
+    meta: Meta = Field(...,
+                       description="The additional specification information for the Task to add to the Database.")
+    data: List[Union[ObjectId, Molecule]] = Field(
         ...,
         description="The list of either Molecule objects or Molecule Id's (those already in the database) to submit as "
         "part of this Task.")
@@ -715,8 +718,8 @@ class TaskQueuePOSTBody(ProtoModel):
 
 class TaskQueuePOSTResponse(ProtoModel):
 
-    meta: ResponsePOSTMeta = Schema(..., description=common_docs[ResponsePOSTMeta])
-    data: ComputeResponse = Schema(..., description="Data returned from the server from adding a Task.")
+    meta: ResponsePOSTMeta = Field(..., description=common_docs[ResponsePOSTMeta])
+    data: ComputeResponse = Field(..., description="Data returned from the server from adding a Task.")
 
 
 register_model("task_queue", "POST", TaskQueuePOSTBody, TaskQueuePOSTResponse)
@@ -724,33 +727,33 @@ register_model("task_queue", "POST", TaskQueuePOSTBody, TaskQueuePOSTResponse)
 
 class TaskQueuePUTBody(ProtoModel):
     class Data(ProtoModel):
-        id: QueryObjectId = Schema(
+        id: QueryObjectId = Field(
             None,
             description="The exact Id to target in database. If this is set as a search condition, there is no "
             "reason to set anything else as this will be unique in the database, if it exists.")
-        base_result: QueryObjectId = Schema(  # TODO: Validate this description is correct
+        base_result: QueryObjectId = Field(  # TODO: Validate this description is correct
             None,
             description="The exact Id of a result which this Task is slated to write to. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
             "database, if it exists. See also :class:`ResultRecord`.")
 
     class Meta(ProtoModel):
-        operation: str = Schema(..., description="The specific action you are taking as part of this update.")
+        operation: str = Field(..., description="The specific action you are taking as part of this update.")
 
         @validator("operation")
         def cast_to_lower(cls, v):
             return v.lower()
 
-    meta: Meta = Schema(..., description="The instructions to pass to the target Task from ``data``.")
-    data: Data = Schema(..., description="The information which contains the Task target in the database.")
+    meta: Meta = Field(..., description="The instructions to pass to the target Task from ``data``.")
+    data: Data = Field(..., description="The information which contains the Task target in the database.")
 
 
 class TaskQueuePUTResponse(ProtoModel):
     class Data(ProtoModel):
-        n_updated: int = Schema(..., description="The number of tasks which were changed.")
+        n_updated: int = Field(..., description="The number of tasks which were changed.")
 
-    meta: ResponseMeta = Schema(..., description=common_docs[ResponseMeta])
-    data: Data = Schema(..., description="Information returned from attempting updates of Tasks.")
+    meta: ResponseMeta = Field(..., description=common_docs[ResponseMeta])
+    data: Data = Field(..., description="Information returned from attempting updates of Tasks.")
 
 
 register_model("task_queue", "PUT", TaskQueuePUTBody, TaskQueuePUTResponse)
@@ -760,33 +763,33 @@ register_model("task_queue", "PUT", TaskQueuePUTBody, TaskQueuePUTResponse)
 
 class ServiceQueueGETBody(ProtoModel):
     class Data(ProtoModel):
-        id: QueryObjectId = Schema(
+        id: QueryObjectId = Field(
             None,
             description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
             "reason to set anything else as this will be unique in the database, if it exists.")
-        procedure_id: QueryObjectId = Schema(  # TODO: Validate this description is correct
+        procedure_id: QueryObjectId = Field(  # TODO: Validate this description is correct
             None,
             description="The exact Id of the Procedure this Service is responsible for executing. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
             "database, if it exists.")
-        hash_index: QueryStr = Schema(
+        hash_index: QueryStr = Field(
             None,
             description="Services are searched based on a hash of the defined Service. This is something which can "
             "be generated by the Service spec itself and does not require server access to compute. "
             "This should be unique in the database so there should be no reason to set anything else "
             "if this is set as a query.")
-        status: QueryStr = Schema(
+        status: QueryStr = Field(
             None,
             description="Services are searched based on where they are in the compute pipeline. See the "
             ":class:`RecordStatusEnum` for valid statuses.")
 
-    meta: QueryMeta = Schema(QueryMeta(), description=common_docs[QueryMeta])
-    data: Data = Schema(..., description="The keys with data to search the database on for Services.")
+    meta: QueryMeta = Field(QueryMeta(), description=common_docs[QueryMeta])
+    data: Data = Field(..., description="The keys with data to search the database on for Services.")
 
 
 class ServiceQueueGETResponse(ProtoModel):
-    meta: ResponseGETMeta = Schema(..., description=common_docs[ResponseGETMeta])
-    data: List[Dict[str, Any]] = Schema(
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
+    data: List[Dict[str, Optional[Any]]] = Field(
         ..., description="The return of Services found in the database mapping their Ids to the Service spec.")
 
 
@@ -795,26 +798,26 @@ register_model("service_queue", "GET", ServiceQueueGETBody, ServiceQueueGETRespo
 
 class ServiceQueuePOSTBody(ProtoModel):
     class Meta(ProtoModel):
-        tag: Optional[str] = Schema(
+        tag: Optional[str] = Field(
             None,
             description="Tag to assign to the Tasks this Service will generate so that Queue Managers can pull only "
             "Tasks based on this entry. If no Tag is specified, any Queue Manager can pull this Tasks "
             "created by this Service.")
-        priority: Union[str, int, None] = Schema(
+        priority: Union[str, int, None] = Field(
             None,
             description="Priority given to this Tasks created by this Service. Higher priority will be pulled first.")
 
-    meta: Meta = Schema(
+    meta: Meta = Field(
         ...,
         description="Metadata information for the Service for the Tag and Priority of Tasks this Service will create.")
-    data: List[Union[TorsionDriveInput, GridOptimizationInput]] = Schema(
+    data: List[Union[TorsionDriveInput, GridOptimizationInput]] = Field(
         ..., description="A list the specification for Procedures this Service will manage and generate Tasks for.")
 
 
 class ServiceQueuePOSTResponse(ProtoModel):
 
-    meta: ResponsePOSTMeta = Schema(..., description=common_docs[ResponsePOSTMeta])
-    data: ComputeResponse = Schema(..., description="Data returned from the server from adding a Service.")
+    meta: ResponsePOSTMeta = Field(..., description=common_docs[ResponsePOSTMeta])
+    data: ComputeResponse = Field(..., description="Data returned from the server from adding a Service.")
 
 
 register_model("service_queue", "POST", ServiceQueuePOSTBody, ServiceQueuePOSTResponse)
@@ -822,27 +825,26 @@ register_model("service_queue", "POST", ServiceQueuePOSTBody, ServiceQueuePOSTRe
 
 class ServiceQueuePUTBody(ProtoModel):
     class Data(ProtoModel):
-        id: QueryObjectId = Schema(None, description="The Id of the Service.")
-        procedure_id: QueryObjectId = Schema(None,
-                                             description="The Id of the Procedure that the Service is linked to.")
+        id: QueryObjectId = Field(None, description="The Id of the Service.")
+        procedure_id: QueryObjectId = Field(None, description="The Id of the Procedure that the Service is linked to.")
 
     class Meta(ProtoModel):
-        operation: str = Schema(..., description="The update action to perform.")
+        operation: str = Field(..., description="The update action to perform.")
 
         @validator("operation")
         def cast_to_lower(cls, v):
             return v.lower()
 
-    meta: Meta = Schema(..., description="The instructions to pass to the targeted Service.")
-    data: Data = Schema(..., description="The information which contains the Service target in the database.")
+    meta: Meta = Field(..., description="The instructions to pass to the targeted Service.")
+    data: Data = Field(..., description="The information which contains the Service target in the database.")
 
 
 class ServiceQueuePUTResponse(ProtoModel):
     class Data(ProtoModel):
-        n_updated: int = Schema(..., description="The number of services which were changed.")
+        n_updated: int = Field(..., description="The number of services which were changed.")
 
-    meta: ResponseMeta = Schema(..., description=common_docs[ResponseMeta])
-    data: Data = Schema(..., description="Information returned from attempting updates of Services.")
+    meta: ResponseMeta = Field(..., description=common_docs[ResponseMeta])
+    data: Data = Field(..., description="Information returned from attempting updates of Services.")
 
 
 register_model("service_queue", "PUT", ServiceQueuePUTBody, ServiceQueuePUTResponse)
@@ -855,28 +857,28 @@ class QueueManagerMeta(ProtoModel):
     Validation and identification Meta information for the Queue Manager's communication with the Fractal Server.
     """
     # Name data
-    cluster: str = Schema(..., description="The Name of the Cluster the Queue Manager is running on.")
-    hostname: str = Schema(..., description="Hostname of the machine the Queue Manager is running on.")
-    uuid: str = Schema(..., description="A UUID assigned to the QueueManager to uniquely identify it.")
+    cluster: str = Field(..., description="The Name of the Cluster the Queue Manager is running on.")
+    hostname: str = Field(..., description="Hostname of the machine the Queue Manager is running on.")
+    uuid: str = Field(..., description="A UUID assigned to the QueueManager to uniquely identify it.")
 
     # Username
-    username: Optional[str] = Schema(None, description="Fractal Username the Manager is being executed under.")
+    username: Optional[str] = Field(None, description="Fractal Username the Manager is being executed under.")
 
     # Version info
-    qcengine_version: str = Schema(..., description="Version of QCEngine which the Manager has access to.")
-    manager_version: str = Schema(
+    qcengine_version: str = Field(..., description="Version of QCEngine which the Manager has access to.")
+    manager_version: str = Field(
         ..., description="Version of the QueueManager (Fractal) which is getting and returning Jobs.")
 
     # search info
-    programs: List[str] = Schema(
+    programs: List[str] = Field(
         ...,
         description="A list of programs which the QueueManager, and thus QCEngine, has access to. Affects which Tasks "
         "the Manager can pull.")
-    procedures: List[str] = Schema(
+    procedures: List[str] = Field(
         ...,
         description="A list of procedures which the QueueManager has access to. Affects which Tasks "
         "the Manager can pull.")
-    tag: Optional[str] = Schema(None, description="Optional queue tag to pull Tasks from.")
+    tag: Optional[str] = Field(None, description="Optional queue tag to pull Tasks from.")
 
 
 # Add the new QueueManagerMeta to the docs
@@ -885,31 +887,32 @@ common_docs[QueueManagerMeta] = str(get_base_docs(QueueManagerMeta))
 
 class QueueManagerGETBody(ProtoModel):
     class Data(ProtoModel):
-        limit: int = Schema(..., description="Max number of Queue Managers to get from the server.")
+        limit: int = Field(..., description="Max number of Queue Managers to get from the server.")
 
-    meta: QueueManagerMeta = Schema(..., description=common_docs[QueueManagerMeta])
-    data: Data = Schema(
+    meta: QueueManagerMeta = Field(..., description=common_docs[QueueManagerMeta])
+    data: Data = Field(
         ...,
         description="A model of Task request data for the Queue Manager to fetch. Accepts ``limit`` as the maximum "
         "number of tasks to pull.")
 
 
 class QueueManagerGETResponse(ProtoModel):
-    meta: ResponseGETMeta = Schema(..., description=common_docs[ResponseGETMeta])
-    data: List[Dict[str, Any]] = Schema(..., description="A list of tasks retrieved from the server to compute.")
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
+    data: List[Dict[str, Optional[Any]]] = Field(...,
+                                                 description="A list of tasks retrieved from the server to compute.")
 
 
 register_model("queue_manager", "GET", QueueManagerGETBody, QueueManagerGETResponse)
 
 
 class QueueManagerPOSTBody(ProtoModel):
-    meta: QueueManagerMeta = Schema(..., description=common_docs[QueueManagerMeta])
-    data: Dict[ObjectId, Any] = Schema(..., description="A Dictionary of tasks to return to the server.")
+    meta: QueueManagerMeta = Field(..., description=common_docs[QueueManagerMeta])
+    data: Dict[ObjectId, Any] = Field(..., description="A Dictionary of tasks to return to the server.")
 
 
 class QueueManagerPOSTResponse(ProtoModel):
-    meta: ResponsePOSTMeta = Schema(..., description=common_docs[ResponsePOSTMeta])
-    data: bool = Schema(..., description="A True/False return on if the server accepted the returned tasks.")
+    meta: ResponsePOSTMeta = Field(..., description=common_docs[ResponsePOSTMeta])
+    data: bool = Field(..., description="A True/False return on if the server accepted the returned tasks.")
 
 
 register_model("queue_manager", "POST", QueueManagerPOSTBody, QueueManagerPOSTResponse)
@@ -919,19 +922,19 @@ class QueueManagerPUTBody(ProtoModel):
     class Data(ProtoModel):
         operation: str
 
-    meta: QueueManagerMeta = Schema(..., description=common_docs[QueueManagerMeta])
-    data: Data = Schema(
+    meta: QueueManagerMeta = Field(..., description=common_docs[QueueManagerMeta])
+    data: Data = Field(
         ...,
         description="The update action which the Queue Manager requests the Server take with respect to how the "
         "Queue Manager is tracked.")
 
 
 class QueueManagerPUTResponse(ProtoModel):
-    meta: Dict[str, Any] = Schema({}, description=common_docs[EmptyMeta])
+    meta: Dict[str, Any] = Field({}, description=common_docs[EmptyMeta])
     # Order on Union[] is important. Union[bool, Dict[str, int]] -> True if the input dict is not empty since
     # Python can resolve dict -> bool since it passes a `is` test. Will not cast bool -> dict[str, int], so make Dict[]
     # check first
-    data: Union[Dict[str, int], bool] = Schema(
+    data: Union[Dict[str, int], bool] = Field(
         ...,
         description="The response from the Server attempting to update the Queue Manager's server-side status. "
         "Response type is a function of the operation made from the PUT request.")
@@ -944,63 +947,63 @@ register_model("queue_manager", "PUT", QueueManagerPUTBody, QueueManagerPUTRespo
 
 class OptimizationFinalResultBody(ProtoModel):
     class Data(ProtoModel):
-        optimization_ids: QueryObjectId = Schema(
+        optimization_ids: QueryObjectId = Field(
             None, description="List of optimization procedure Ids to fetch their final results from the database.")
 
     # TODO: not yet supported
-    meta: QueryMetaProjection = Schema(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
-    data: Data = Schema(..., description="The keys with data to search the database on for Procedures.")
+    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    data: Data = Field(..., description="The keys with data to search the database on for Procedures.")
 
 
 class OptimizationAllResultBody(ProtoModel):
     class Data(ProtoModel):
-        optimization_ids: QueryObjectId = Schema(
+        optimization_ids: QueryObjectId = Field(
             None, description="List of optimization procedure Ids to fetch their ALL their results from the database.")
 
     # TODO: not yet supported
-    meta: QueryMetaProjection = Schema(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
-    data: Data = Schema(..., description="The keys with data to search the database on for Procedures.")
+    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    data: Data = Field(..., description="The keys with data to search the database on for Procedures.")
 
 
 class OptimizationInitialMoleculeBody(ProtoModel):
     class Data(ProtoModel):
-        optimization_ids: QueryObjectId = Schema(
+        optimization_ids: QueryObjectId = Field(
             None,
             description="List of optimization procedure Ids to fetch their initial  molecules from the database.")
 
     # TODO: not yet supported
-    meta: QueryMetaProjection = Schema(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
-    data: Data = Schema(..., description="The keys with data to search the database on for Procedures.")
+    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    data: Data = Field(..., description="The keys with data to search the database on for Procedures.")
 
 
 class OptimizationFinalMoleculeBody(ProtoModel):
     class Data(ProtoModel):
-        optimization_ids: QueryObjectId = Schema(
+        optimization_ids: QueryObjectId = Field(
             None, description="List of optimization procedure Ids to fetch their final molecules from the database.")
 
     # TODO: not yet supported
-    meta: QueryMetaProjection = Schema(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
-    data: Data = Schema(..., description="The keys with data to search the database on for Procedures.")
+    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    data: Data = Field(..., description="The keys with data to search the database on for Procedures.")
 
 
 class ResultResponse(ProtoModel):
-    meta: ResponseGETMeta = Schema(..., description=common_docs[ResponseGETMeta])
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
     # Either a record or dict depending if projection
-    data: Union[Dict[str, ResultRecord], Dict[str, Any]] = Schema(
+    data: Union[Dict[str, ResultRecord], Dict[str, Any]] = Field(
         ..., description="A List of Results found from the query per optimization id.")
 
 
 class ListResultResponse(ProtoModel):
-    meta: ResponseGETMeta = Schema(..., description=common_docs[ResponseGETMeta])
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
     # Either a record or dict depending if projection
-    data: Union[Dict[str, List[ResultRecord]], Dict[str, Any]] = Schema(
+    data: Union[Dict[str, List[ResultRecord]], Dict[str, Any]] = Field(
         ..., description="A List of Results found from the query per optimization id.")
 
 
 class ListMoleculeResponse(ProtoModel):
-    meta: ResponseGETMeta = Schema(..., description=common_docs[ResponseGETMeta])
+    meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
     # Either a record or dict depending if projection
-    data: Union[Dict[str, Molecule], Dict[str, Any]] = Schema(
+    data: Union[Dict[str, Molecule], Dict[str, Any]] = Field(
         ..., description="A List of Molecules found from the query per optimization id.")
 
 

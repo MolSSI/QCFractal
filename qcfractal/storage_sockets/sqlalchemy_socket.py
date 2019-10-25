@@ -1105,13 +1105,8 @@ class SQLAlchemySocket:
                              manager_id=manager_id,
                              status=status)
 
-        data = []
-
-        # try:
         data, meta['n_found'] = self.get_query_projection(ResultORM, query, projection, limit, skip)
         meta["success"] = True
-        # except Exception as err:
-        #     meta['error_description'] = str(err)
 
         return {"data": data, "meta": meta}
 

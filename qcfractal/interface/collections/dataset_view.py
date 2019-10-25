@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple, Un
 
 import numpy as np
 import pandas as pd
-
 from qcelemental.util.serialization import deserialize, serialize
 
 from ..models import Molecule, ObjectId
@@ -446,7 +445,7 @@ class HDF5View(DatasetView):
     def _serialize_data(data: Any) -> np.ndarray:
         # h5py v3 will support bytes,
         # but for now the workaround is variable-length np unit8
-        return np.fromstring(serialize(data, 'msgpack-ext'), dtype='uint8')
+        return np.frombuffer(serialize(data, 'msgpack-ext'), dtype='uint8')
 
     @staticmethod
     def _deserialize_data(data: np.ndarray) -> Any:
