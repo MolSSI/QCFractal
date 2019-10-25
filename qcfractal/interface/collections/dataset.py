@@ -140,7 +140,7 @@ class Dataset(Collection):
         verify: bool, optional
             Verify download checksum. Default: True.
         """
-        if self.data.view_url is None:
+        if self.data.view_url_hdf5 is None:
             raise ValueError("A view for this dataset is not available on the server")
 
         if local_path is not None:
@@ -149,7 +149,7 @@ class Dataset(Collection):
             self._view_tempfile = tempfile.NamedTemporaryFile()  # keep temp file alive until self is destroyed
             local_path = self._view_tempfile.name
 
-        r = requests.get(self.data.view_url, stream=True)
+        r = requests.get(self.data.view_url_hdf5, stream=True)
         with open(local_path, 'wb') as fd:
             for chunk in r.iter_content(chunk_size=8192):
                 fd.write(chunk)

@@ -541,7 +541,7 @@ class PlainTextView(DatasetView):
             mol_path.mkdir()
             molecules = ds._get_molecules(
                 {row[1]: row[2]
-                 for row in entries[['molecule filename', 'molecule_id']].itertuples()})
+                 for row in entries[['molecule filename', 'molecule_id']].itertuples()}, force=True)
             for r in molecules.itertuples():
                 print(r)
             for pathname, molecule in molecules.itertuples():

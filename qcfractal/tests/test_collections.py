@@ -40,7 +40,7 @@ def handle_dataset_fixture_params(client, ds_type, ds, fractal_compute_server, r
             pytest.skip("Missing request_mock")
         with requests_mock.Mocker(real_http=True) as m:
             with open(fractal_compute_server.view_handler.view_path(ds.data.id), 'rb') as f:
-                m.get(ds.data.view_url, body=f)
+                m.get(ds.data.view_url_hdf5, body=f)
                 ds.download(verify=True)
     elif request.param == "remote_view":
         ds._disable_view = False
@@ -54,7 +54,7 @@ def build_dataset_fixture_view(ds, fractal_compute_server):
     view = ptl.collections.HDF5View(fractal_compute_server.view_handler.view_path(ds.data.id))
     view.write(ds)
     ds.data.__dict__["view_available"] = True
-    ds.data.__dict__["view_url"] = f"http://mock.repo/{ds.data.id}/latest.hdf5"
+    ds.data.__dict__["view_url_hdf5"] = f"http://mock.repo/{ds.data.id}/latest.hdf5"
     ds.data.__dict__["view_metadata"] = {"blake2b_checksum": view.hash()}
     ds.save()
 
@@ -977,7 +977,7 @@ def test_s22_view_identical(s22_fixture):
 def test_view_download_remote(s22_fixture):
     client, ds = s22_fixture
 
-    ds.data.__dict__["view_url"] = "https://github.com/mattwelborn/QCArchiveViews/raw/master/S22/latest.hdf5"
+    ds.data.__dict__["view_url_hdf5"] = "https://github.com/mattwelborn/QCArchiveViews/raw/master/S22/latest.hdf5"
     ds.data.__dict__["view_metadata"] = {
         "blake2b_checksum":
         "f9d537a982f63af0c500753b0e4779604252b9289fa26b6d83b657bf6e1039f1af2e44bbc819001fb857f1602280892b48422b8649cea786cdec3d2eb73412a9"
@@ -998,7 +998,7 @@ def test_view_download_mock(gradient_dataset_fixture, tmp_path_factory):
         ds.to_file(path, 'hdf5')
 
         fake_url = "https://qcarchiveviews.com/gradient_ds.h5"
-        ds.data.__dict__["view_url"] = fake_url
+        ds.data.__dict__["view_url_hdf5"] = fake_url
         assert ds.data.id == ds.save()
 
         with open(path, 'rb') as f:
