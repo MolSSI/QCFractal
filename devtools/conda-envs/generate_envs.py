@@ -23,8 +23,8 @@ dependencies:
   - bcrypt
   - cryptography
   - pyyaml>=5.1
-  - pydantic>=0.30.1
-  - plotly
+  - pydantic>=1.0.0
+  - plotly>=4.0.0
   - sqlalchemy>=1.3
   - psycopg2>=2.7
   - postgresql
@@ -56,7 +56,8 @@ def generate_yaml(filename=None, channels=None, dependencies=None, pip_dependenc
     # Handle channels
     env = yaml.load(template)
     if channels is not None:
-        env["channels"][1:1] = channels
+        for c in channels:
+            env["channels"].insert(1, c)
     offset = len(env["channels"])
     env["channels"].yaml_set_comment_before_after_key(offset, before="\n")
 

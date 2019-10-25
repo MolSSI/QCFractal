@@ -166,6 +166,7 @@ def test_gradient_dataset_get_records(gradient_dataset_fixture):
 
     with check_requests_monitor(client, "result", request_made=True):
         records = ds.get_records("HF", "sto-3g")
+
     assert records.shape == (2, 1)
     assert records.iloc[0, 0].status == "COMPLETE"
     assert records.iloc[1, 0].status == "COMPLETE"

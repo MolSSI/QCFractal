@@ -29,7 +29,7 @@ if __name__ == "__main__":
             'numpy>=1.7',
             'msgpack>=0.6.1',
             'pandas',
-            'pydantic>=0.30.1',
+            'pydantic>=1.0.0',
             'msgpack>=0.6.1',
             'pyyaml>=5.1',
             'requests',
