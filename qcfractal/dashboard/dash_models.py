@@ -14,6 +14,25 @@ from .connection import get_socket
 _default_margin = {"t": 5, "b": 5, "r": 5, "l": 5}
 
 
+def list_managers(status=None, modified_after=None):
+    socket = get_socket()
+
+    managers = socket.get_managers(status=status, modified_after=modified_after)
+    cols = [
+        "cluster", "username", "tag", "completed", "submitted", "failures", "returned", "created_on", "modified_on",
+        "programs", "procedures",
+         # "name"
+    ]
+
+    df = pd.DataFrame(managers["data"])
+    df = df[cols]
+    df["programs"] = df["programs"].apply(lambda x : ", ".join(sorted(x)))
+    df["procedures"] = df["procedures"].apply(lambda x : ", ".join(sorted(x)))
+    df.columns = [x.title() for x in cols]
+    df.sort_values('Completed', inplace=True, ascending=False)
+    return dbc.Table.from_dataframe(df, style={"width": "100%"})
+
+
 def manager_graph(status=None, modified_after=None):
     socket = get_socket()
 
@@ -34,18 +53,19 @@ def manager_graph(status=None, modified_after=None):
         for status, color in bar_iter:
             bars.append(go.Bar(name=status.title(), x=data.index, y=data[status], marker_color=color))
 
-    return go.Figure(data=bars,
-                     layout={
-                         # "yaxis_type": "log",
-                         "barmode": "stack",
-                         "yaxis": {
-                             "title": "Completed Tasks"
-                         },
-                         "xaxis": {
-                             "title": "Cluster"
-                         },
-                         "margin": _default_margin
-                     })
+    return go.Figure(
+        data=bars,
+        layout={
+            # "yaxis_type": "log",
+            "barmode": "stack",
+            "yaxis": {
+                "title": "Completed Tasks"
+            },
+            "xaxis": {
+                "title": "Cluster"
+            },
+            "margin": _default_margin
+        })
 
 
 def task_graph():

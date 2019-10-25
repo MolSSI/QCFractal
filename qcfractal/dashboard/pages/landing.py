@@ -10,7 +10,7 @@ from flask import current_app
 
 from ..connection import get_socket
 from ..app import app
-from ..dash_models import manager_graph, task_graph
+from ..dash_models import manager_graph, task_graph, list_managers
 
 ## Layout
 
@@ -20,8 +20,7 @@ top_row = dbc.Row(
             coreui.AppCard([
                 dbc.CardHeader("Server Information"),
                 dbc.CardBody(id='fractal-server-information'),
-            ]),
-        ),
+            ]), ),
         dbc.Col(
             coreui.AppCard([
                 dbc.CardHeader("Database Information"),
@@ -29,11 +28,11 @@ top_row = dbc.Row(
             ], ),
             # className="col-sm-6 col-md-3",
         ),
-        dbc.Col(coreui.AppCard([
-            dbc.CardHeader("Queue Information"),
-            dbc.CardBody(id='fractal-queue-information'),
-        ], ),
-                ),
+        dbc.Col(
+            coreui.AppCard([
+                dbc.CardHeader("Queue Information"),
+                dbc.CardBody(id='fractal-queue-information'),
+            ], ), ),
     ],
     className="w-100")
 
@@ -98,24 +97,51 @@ groupby_items = dcc.Checklist(id="manager-overview-groupby",
                               value=["ACTIVE"],
                               labelStyle={'display': 'inline-block'})
 
+groupby_items2 = dcc.Checklist(id="manager-overview-groupby2",
+                               options=[
+                                   {
+                                       'label': 'ACTIVE',
+                                       'value': 'ACTIVE'
+                                   },
+                                   {
+                                       'label': 'INACTIVE',
+                                       'value': 'INACTIVE'
+                                   },
+                               ],
+                               value=["ACTIVE"],
+                               labelStyle={'display': 'inline-block'})
 
-managers = dbc.Row(
-    [
-        dbc.Col(
-            [
-                coreui.AppCard([
-                    dbc.CardHeader("Manager Information"),
-                    dbc.CardBody([
-                        dbc.Col([
-                            dbc.Row([groupby_items]),
-                        ]),
-                        dcc.Graph(id="manager-overview", style={"width": "100%"}),
-                    ])
-                ])
-            ],
-            className="w-100")
+managers = dbc.Row([
+    dbc.Col([
+        coreui.AppCard([
+            dbc.CardHeader("Manager Information"),
+            dbc.CardBody([
+                dbc.Col([
+                    dbc.Row([groupby_items]),
+                ]),
+                dcc.Graph(id="manager-overview", style={"width": "100%"}),
+            ])
+        ])
     ],
-    className="w-100")
+            className="w-100")
+],
+                   className="w-100")
+
+manager_list = dbc.Row([
+    dbc.Col([
+        coreui.AppCard([
+            dbc.CardHeader("List Managers"),
+            dbc.CardBody([
+                dbc.Col([
+                    dbc.Row([groupby_items2]),
+                ]),
+                dbc.Col(id="manager-list"),
+            ])
+        ])
+    ],
+            className="w-100")
+],
+                       className="w-100")
 
 
 @app.callback(Output('manager-overview', 'figure'), [Input('manager-overview-groupby', 'value')])
@@ -123,8 +149,13 @@ def update_overview_graph(status):
     return manager_graph(status=status)
 
 
+@app.callback(Output('manager-list', 'children'), [Input('manager-overview-groupby2', 'value')])
+def update_overview_list(status):
+    return list_managers(status=status)
+
+
 ### Build page return
-layout = dbc.Row([top_row, managers])
+layout = dbc.Row([top_row, managers, manager_list])
 
 navbar = {
     "name": "Dashboard",
