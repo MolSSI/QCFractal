@@ -25,7 +25,7 @@ import bcrypt
 # pydantic classes
 from qcfractal.interface.models import (GridOptimizationRecord, KeywordSet, Molecule, ObjectId, OptimizationRecord,
                                         ResultRecord, TaskRecord, TaskStatusEnum, TorsionDriveRecord, prepare_basis)
-from qcfractal.storage_sockets.db_queries import OptimizationQueries, TaskQueries, TorsionDriveQueries
+from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
 # SQL ORMs
 from qcfractal.storage_sockets.models import (AccessLogORM, BaseResultORM, CollectionORM, DatasetORM,
                                               GridOptimizationProcedureORM, KeywordsORM, KVStoreORM, MoleculeORM,
@@ -181,11 +181,7 @@ class SQLAlchemySocket:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
 
         # Advanced queries objects
-        self._query_classes = {
-            TaskQueries._class_name: TaskQueries(max_limit=max_limit),
-            TorsionDriveQueries._class_name: TorsionDriveQueries(max_limit=max_limit),
-            OptimizationQueries._class_name: OptimizationQueries(max_limit=max_limit),
-        }
+        self._query_classes = {cls._class_name: cls(max_limit=max_limit) for cls in QUERY_CLASSES}
 
         # if expanded_uri["password"] is not None:
         #     # connect to mongoengine

@@ -1,5 +1,4 @@
-from abc import ABC
-from typing import List, Union
+from typing import List, Optional, Set, Union
 
 from sqlalchemy import Integer, inspect
 from sqlalchemy.sql import bindparam, text
@@ -7,17 +6,25 @@ from sqlalchemy.sql import bindparam, text
 from qcfractal.interface.models import Molecule, ResultRecord
 from qcfractal.storage_sockets.models import MoleculeORM, ResultORM
 
+QUERY_CLASSES = set()
 
-class QueryBase(ABC):
+
+class QueryBase:
 
     # The name/alias used by the REST APIs to access this class
     _class_name = None
+    _available_groupby = set()
 
     # Mapping of the requested feature and the internal query method
     _query_method_map = {}
 
     def __init__(self, max_limit=1000):
         self.max_limit = max_limit
+
+    def __init_subclass__(cls, **kwargs):
+        if cls not in QUERY_CLASSES:
+            QUERY_CLASSES.add(cls)
+        super().__init_subclass__(**kwargs)
 
     def query(self, session, query_key, limit=0, skip=0, projection=None, **kwargs):
 
@@ -44,6 +51,32 @@ class QueryBase(ABC):
             result = [dict(zip(keys, res)) for res in result]
 
         return result
+
+    def _base_count(self, table_name: str, available_groupbys: Set[str], groupby: Optional[List[str]] = None):
+        if groupby:
+            bad_groups = set(groupby) - available_groupbys
+            if bad_groups:
+                raise AttributeError(f"The following groups are not permissible: {missing}")
+
+            global_str = ", ".join(groupby)
+            select_str = global_str + ", "
+            extra_str = f"""GROUP BY {global_str}\nORDER BY {global_str}"""
+
+        else:
+            select_str = ""
+            extra_str = ""
+
+        sql_statement = f"""
+select {select_str}count(*) from {table_name}
+{extra_str}
+"""
+
+        ret = self.execute_query(sql_statement, with_keys=True)
+
+        if groupby:
+            return ret
+        else:
+            return ret[0]["count"]
 
     @staticmethod
     def _raise_missing_attribute(cls, query_key, missing_attribute, amend_msg=''):
@@ -72,6 +105,39 @@ class TaskQueries(QueryBase):
         """
 
         return self.execute_query(sql_statement, with_keys=True)
+
+# ----------------------------------------------------------------------------
+
+
+class ResultQueries(QueryBase):
+
+    _class_name = "result"
+
+    _query_method_map = {
+        'count': '_count',
+    }
+
+    def _count(self, groupby: Optional[List[str]] = None):
+
+        available_groupbys = {'result_type', 'status'}
+
+        return self._base_count("base_result", available_groupbys, groupby=groupby)
+
+
+class MoleculeQueries(QueryBase):
+
+    _class_name = "molecule"
+
+    _query_method_map = {
+        'count': '_count',
+    }
+
+    def _count(self, groupby: Optional[List[str]] = None):
+
+        available_groupbys = set()
+
+        return self._base_count("molecule", available_groupbys, groupby=groupby)
+
 
 # ----------------------------------------------------------------------------
 

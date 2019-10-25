@@ -75,6 +75,28 @@ def torsiondrive_fixture(fractal_compute_server):
 
     yield torsion, client
 
+def test_result_count_queries(torsiondrive_fixture, fractal_compute_server):
+
+    torsion, client = torsiondrive_fixture
+
+    r = fractal_compute_server.storage.custom_query('result', 'count')['data']
+    assert isinstance(r, int)
+    assert r > 10
+
+    r = fractal_compute_server.storage.custom_query('result', 'count', groupby=["result_type", "status"])["data"]
+    assert isinstance(r, list)
+    assert len(r) >= 3
+    assert {'result_type', 'status', 'count'} == r[0].keys()
+    assert r[0]['count'] > 0
+
+def test_molecule_count_queries(torsiondrive_fixture, fractal_compute_server):
+
+    torsion, client = torsiondrive_fixture
+
+    r = fractal_compute_server.storage.custom_query('molecule', 'count')['data']
+    assert isinstance(r, int)
+    assert r > 10
+
 
 def test_torsiondrive_initial_final_molecule(torsiondrive_fixture, fractal_compute_server):
     """ With single initial molecule in torsion proc"""
