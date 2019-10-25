@@ -6,78 +6,60 @@ import pandas as pd
 import plotly.graph_objs as go
 
 import dash_coreui_components as coreui
+from flask import current_app
 
 from ..connection import get_socket
 from ..app import app
+from ..dash_models import manager_graph, task_graph
 
 ## Layout
 
-top_row = dbc.Row([
-    dbc.Col(
-        coreui.AppCard(
-            [
-                dbc.CardHeader("Card Title"),
-                dbc.CardBody([
-                    html.P(
-                        "Some quick example text to build on the card title and "
-                        "make up the bulk of the card's content.",
-                        className="card-text text-white",
-                    )
-                ]),
-            ],
-            className="bg-warning",
+top_row = dbc.Row(
+    [
+        dbc.Col(
+            coreui.AppCard([
+                dbc.CardHeader("Server Information"),
+                dbc.CardBody(id='fractal-server-information'),
+            ]),
         ),
-        className="col-sm-6 col-md-3",
-    ),
-    dbc.Col(
-        coreui.AppCard(
-            [
-                dbc.CardHeader("Card Title"),
-                dbc.CardBody([
-                    html.P(
-                        "Some quick example text to build on the card title and "
-                        "make up the bulk of the card's content.",
-                        className="card-text text-white",
-                    )
-                ]),
-            ],
-            className="bg-info",
+        dbc.Col(
+            coreui.AppCard([
+                dbc.CardHeader("Database Information"),
+                dbc.CardBody(id='fractal-database-information'),
+            ], ),
+            # className="col-sm-6 col-md-3",
         ),
-        className="col-sm-6 col-md-3",
-    ),
-    dbc.Col(
-        coreui.AppCard(
-            [
-                dbc.CardHeader("Card Title"),
-                dbc.CardBody([
-                    html.P(
-                        "Some quick example text to build on the card title and "
-                        "make up the bulk of the card's content.",
-                        className="card-text text-white",
-                    )
-                ]),
-            ],
-            className="bg-success",
-        ),
-        className="col-sm-6 col-md-3",
-    ),
-    dbc.Col(
-        coreui.AppCard(
-            [
-                dbc.CardHeader("Card Title"),
-                dbc.CardBody([
-                    html.P(
-                        "Some quick example text to build on the card title and "
-                        "make up the bulk of the card's content.",
-                        className="card-text text-white",
-                    )
-                ]),
-            ],
-            className="bg-primary",
-        ),
-        className="col-sm-6 col-md-3",
-    )
-])
+        dbc.Col(coreui.AppCard([
+            dbc.CardHeader("Queue Information"),
+            dbc.CardBody(id='fractal-queue-information'),
+        ], ),
+                ),
+    ],
+    className="w-100")
+
+
+@app.callback([
+    Output('fractal-server-information', 'children'),
+    Output('fractal-database-information', 'children'),
+    Output('fractal-queue-information', 'children'),
+], [Input('manager-overview-groupby', 'value')])
+def update_server_information(status):
+    config = current_app.config["FRACTAL_CONFIG"]
+    server = dcc.Markdown(f"""
+**Name:** {config.fractal.name}
+
+**Query Limit:** {config.fractal.query_limit}
+            """)
+    database = dcc.Markdown(f"""
+**Name:** {config.database.database_name}
+
+**Port:** {config.database.port}
+
+**Host:** {config.database.host}
+        """)
+
+    queue = dcc.Graph(figure=task_graph())
+    return server, database, queue
 
 
 def managers_table(status):
@@ -117,44 +99,32 @@ groupby_items = dcc.Checklist(id="manager-overview-groupby",
                               labelStyle={'display': 'inline-block'})
 
 
-def overview_graph(status):
-    socket = get_socket()
-
-    managers = socket.get_managers(status=status)
-    df = pd.DataFrame(managers["data"])
-
-    if df.shape[0] > 0:
-        data = df.groupby("cluster")["completed"].sum().sort_values(ascending=False)
-        bar_data = {"x": data.index, "y": data.values}
-    else:
-        bar_data = {"x": [], "y": []}
-    return go.Figure(data=[go.Bar(bar_data)], layout=go.Layout(margin={"t": 5, "b": 5}))
-
-
-managers = dbc.Row([
-    dbc.Col(
-        [
-            coreui.AppCard([
-                dbc.CardHeader("Manager Information"),
-                dbc.CardBody([
-                    dbc.Col([
-                        dbc.Row([groupby_items]),
-                    ]),
-                    #        dbc.Col([html.H2("Current status"), dcc.Graph(id="manager-overview", figure=overview_graph(None))]),
-                    dcc.Graph(id="manager-overview", style={"width": "100%"}),
+managers = dbc.Row(
+    [
+        dbc.Col(
+            [
+                coreui.AppCard([
+                    dbc.CardHeader("Manager Information"),
+                    dbc.CardBody([
+                        dbc.Col([
+                            dbc.Row([groupby_items]),
+                        ]),
+                        #        dbc.Col([html.H2("Current status"), dcc.Graph(id="manager-overview", figure=overview_graph(None))]),
+                        dcc.Graph(id="manager-overview", style={"width": "100%"}),
+                    ])
+                    #    ]),
+                    #    html.H2("Raw Manager Statistics"),
+                    #    mana#gers_table("ACTIVE"),
                 ])
-                #    ]),
-                #    html.H2("Raw Manager Statistics"),
-                #    mana#gers_table("ACTIVE"),
-            ])
-        ],
-        className="w-100")
-], className="w-100")
+            ],
+            className="w-100")
+    ],
+    className="w-100")
 
 
 @app.callback(Output('manager-overview', 'figure'), [Input('manager-overview-groupby', 'value')])
 def update_overview_graph(status):
-    return overview_graph(status)
+    return manager_graph(status=status)
 
 
 ### Build page return

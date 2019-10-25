@@ -470,7 +470,7 @@ def server_dashboard(args, config):
     from ..dashboard import app
 
     print("\n>>> Starting dashboard...")
-    app.server.config["DB_CONNECTION"] = config.database_uri(safe=False)
+    app.server.config["FRACTAL_CONFIG"] = config
 
     app.run_server(debug=True)
 
