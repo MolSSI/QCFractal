@@ -1,10 +1,12 @@
 """
 Utility functions for QCPortal/QCFractal Interface.
 """
+import re
+import unicodedata
 
 from pydantic import BaseModel
 
-__all__ = ["replace_dict_keys"]
+__all__ = ["replace_dict_keys", "normalize_filename"]
 
 
 def replace_dict_keys(data, replacement):
@@ -54,3 +56,13 @@ def replace_dict_keys(data, replacement):
 
     else:
         return data
+
+
+def normalize_filename(value: str) -> str:
+    """
+    Normalizes string to ASCII, removes non-alpha characters, and converts spaces to underscores.
+    """
+    value = str(value)
+    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
+    value = re.sub(r'[^\w\s-]', '', value).strip()
+    return re.sub(r'[-\s]+', '_', value)

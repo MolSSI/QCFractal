@@ -994,8 +994,7 @@ def test_view_download_mock(gradient_dataset_fixture, tmp_path_factory):
 
     with requests_mock.Mocker(real_http=True) as m:
         path = pathlib.Path(tmp_path_factory.mktemp('test_collections'), 'ds_gradient_remote.hdf5')
-        view = ptl.collections.HDF5View(path)
-        view.write(ds)
+        ds.to_file(path, 'hdf5')
 
         fake_url = "https://qcarchiveviews.com/gradient_ds.h5"
         ds.data.__dict__["view_url"] = fake_url
@@ -1023,27 +1022,27 @@ def test_view_download_mock(gradient_dataset_fixture, tmp_path_factory):
 
 def test_gradient_dataset_plaintextview_write(gradient_dataset_fixture, tmpdir):
     _, ds = gradient_dataset_fixture
-    ptl.collections.PlainTextView(tmpdir / "test.tar.gz").write(ds)
+    ds.to_file(tmpdir / "test.tar.gz", "plaintext")
 
 
 def test_contributed_dataset_plaintextview_write(contributed_dataset_fixture, tmpdir):
     _, ds = contributed_dataset_fixture
-    ptl.collections.PlainTextView(tmpdir / "test.tar.gz").write(ds)
+    ds.to_file(tmpdir / "test.tar.gz", "plaintext")
 
 
 def test_s22_dataset_plaintextview_write(s22_fixture, tmpdir):
     _, ds = s22_fixture
-    ptl.collections.PlainTextView(tmpdir / "test.tar.gz").write(ds)
+    ds.to_file(tmpdir / "test.tar.gz", "plaintext")
 
 
 def test_qm3_dataset_plaintextview_write(qm3_fixture, tmpdir):
     _, ds = qm3_fixture
-    ptl.collections.PlainTextView(tmpdir / "test.tar.gz").write(ds)
+    ds.to_file(tmpdir / "test.tar.gz", "plaintext")
 
 
 def test_reactiondataset_dftd3_dataset_plaintextview_write(reactiondataset_dftd3_fixture_fixture, tmpdir):
     _, ds = reactiondataset_dftd3_fixture_fixture
-    ptl.collections.PlainTextView(tmpdir / "test.tar.gz").write(ds)
+    ds.to_file(tmpdir / "test.tar.gz", "plaintext")
 
 
 ### Non-dataset tests

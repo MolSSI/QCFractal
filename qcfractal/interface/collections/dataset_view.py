@@ -15,8 +15,9 @@ import pandas as pd
 from qcelemental.util.serialization import deserialize, serialize
 
 from ..models import Molecule, ObjectId
+from ..util import normalize_filename
 from .dataset import Dataset, MoleculeEntry
-from .reaction_dataset import ReactionEntry
+from .reaction_dataset import ReactionDataset, ReactionEntry
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import FractalClient  # lgtm [py/unused-import]
@@ -101,8 +102,7 @@ class HDF5View(DatasetView):
         path: Union[str, pathlib.Path]
             File path of view
         """
-        if isinstance(path, str):
-            path = pathlib.Path(path)
+        path = pathlib.Path(path)
         self._path = path
         self._entries: pd.DataFrame = None
 
@@ -508,8 +508,9 @@ class PlainTextView(DatasetView):
         path: Union[str, pathlib.Path]
             File path of view
         """
-        if isinstance(path, str):
-            path = pathlib.Path(path)
+        path = pathlib.Path(path)
+        if len(path.suffixes) == 0:
+            path = path.with_suffix('.tar.gz')
         self._path = path
 
     def write(self, ds: Dataset) -> None:
@@ -522,16 +523,30 @@ class PlainTextView(DatasetView):
             list_path = temppath / "value_descriptions.csv"
             readme_path = temppath / "README"
 
-            mol_path.mkdir()
-            if "stoichiometry" in ds.data.history_keys:
-                molecules = ds.get_molecules(stoich=list(ds.valid_stoich),
-                                             force=True)  #TODO: change to function after pr 442
+            entries = ds.get_entries(force=True)
+            # calculate molecule file name
+            if isinstance(ds, ReactionDataset):
+                entries['molecule filename'] = [
+                    normalize_filename(f"{row[1]}__{row[2]}__{row[3]}") + ".xyz" for row in entries.itertuples()
+                ]
+                entries.rename(columns={'molecule': 'molecule_id'}, inplace=True)
+            elif isinstance(ds, Dataset):
+                entries['molecule filename'] = [
+                    normalize_filename(f"{row[1]}__{row[2]}") + ".xyz" for row in entries.itertuples()
+                ]
             else:
-                molecules = ds.get_molecules(force=True)
-            for molecule in molecules['molecule']:
-                molecule.to_file(mol_path / f"{molecule.id}.xyz")
+                raise NotImplementedError(f"Unknown dataset type: {type(ds)}.")
+            entries.to_csv(entry_path)
 
-            ds.get_entries(force=True).to_csv(entry_path)
+            mol_path.mkdir()
+            molecules = ds._get_molecules(
+                {row[1]: row[2]
+                 for row in entries[['molecule filename', 'molecule_id']].itertuples()})
+            for r in molecules.itertuples():
+                print(r)
+            for pathname, molecule in molecules.itertuples():
+                molecule.to_file(mol_path / pathname)
+
             ds_query_limit_state = ds._disable_query_limit
             ds._disable_query_limit = True
             ds.get_values(force=True).to_csv(value_path)
@@ -544,7 +559,8 @@ class PlainTextView(DatasetView):
                         df['units'] = ds._column_metadata[name]["units"]
             df.to_csv(list_path)
 
-            open(readme_path, 'w').write(self._readme(ds))
+            with open(readme_path, 'w') as readme_file:
+                readme_file.write(self._readme(ds))
 
             tarpath = temppath / "archive.tar.gz"
             with tarfile.open(tarpath, 'w:gz') as tarball:
