@@ -533,10 +533,17 @@ def sqlalchemy_socket_fixture(request, postgres_server):
 
 
 def live_fractal_or_skip():
-    """Ensure Fractal live connection can be made"""
+    """
+    Ensure Fractal live connection can be made
+    First looks for a local staging server, then tries QCArchive.
+    """
     try:
-        import qcfractal.interface
-        requests.get('https://api.qcarchive.molssi.org:443', json={}, timeout=5)
-        return FractalClient()
+        return FractalClient('localhost:7777', verify=False)
     except (requests.exceptions.ConnectionError, ConnectionRefusedError):
-        return pytest.skip("Could not make a connection to central Fractal server")
+        print("Failed to connect to localhost")
+        try:
+            return pytest.xfail("Until QCA is migrated to v0.12.0")
+            requests.get('https://api.qcarchive.molssi.org:443', json={}, timeout=5)
+            return FractalClient()
+        except (requests.exceptions.ConnectionError, ConnectionRefusedError):
+            return pytest.skip("Could not make a connection to central Fractal server")
