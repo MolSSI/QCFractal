@@ -109,12 +109,8 @@ managers = dbc.Row(
                         dbc.Col([
                             dbc.Row([groupby_items]),
                         ]),
-                        #        dbc.Col([html.H2("Current status"), dcc.Graph(id="manager-overview", figure=overview_graph(None))]),
                         dcc.Graph(id="manager-overview", style={"width": "100%"}),
                     ])
-                    #    ]),
-                    #    html.H2("Raw Manager Statistics"),
-                    #    mana#gers_table("ACTIVE"),
                 ])
             ],
             className="w-100")
