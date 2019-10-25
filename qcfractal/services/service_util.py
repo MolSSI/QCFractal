@@ -18,8 +18,8 @@ from ..procedures import get_procedure_parser
 
 class TaskManager(ProtoModel):
 
-    storage_socket: Any = None
-    logger: Any = None
+    storage_socket: Optional[Any] = None
+    logger: Optional[Any] = None
 
     required_tasks: Dict[str, str] = {}
     tag: Optional[str] = None
@@ -104,8 +104,8 @@ class TaskManager(ProtoModel):
 class BaseService(ProtoModel, abc.ABC):
 
     # Excluded fields
-    storage_socket: Any
-    logger: Any
+    storage_socket: Optional[Any]
+    logger: Optional[Any]
 
     # Base identification
     id: Optional[ObjectId] = None

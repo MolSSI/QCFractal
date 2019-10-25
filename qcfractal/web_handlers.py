@@ -404,6 +404,8 @@ class ResultHandler(APIHandler):
         body_model, response_model = rest_model("result", "get")
         body = self.parse_bodymodel(body_model)
 
+        print(body.data)
+        print(body.meta)
         ret = self.storage.get_results(**{**body.data.dict(), **body.meta.dict()})
         result = response_model(**ret)
 

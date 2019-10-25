@@ -238,7 +238,7 @@ class Collection(abc.ABC):
         self._pre_save_prep(client)
 
         # Add the database
-        if (self.data.id == self.data.fields['id'].default):
+        if (self.data.id == self.data.__fields__['id'].default):
             response = client.add_collection(self.data.dict(), overwrite=False, full_return=True)
             if response.meta.success is False:
                 raise KeyError(f"Error adding collection: \n{response.meta.error_description}")
