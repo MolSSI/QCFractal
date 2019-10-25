@@ -237,8 +237,10 @@ class ClusterSettings(AutodocBaseSettings):
         pass
 
     @validator('scheduler', 'adaptive', pre=True)
-    def things_to_lcase(cls, v):
-        return v.lower()
+    def _lcase(cls, v):
+        if v:
+            v = v.lower()
+        return v
 
 
 class SettingsBlocker(AutodocBaseSettings):
