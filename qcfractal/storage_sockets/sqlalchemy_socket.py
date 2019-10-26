@@ -819,7 +819,7 @@ class SQLAlchemySocket:
         collection_class = get_collection_class(collection)
 
         update_fields = {}
-        for field in collection_class.col():
+        for field in collection_class._all_col_names():
             if field in data:
                 update_fields[field] = data.pop(field)
 
@@ -2408,7 +2408,7 @@ class SQLAlchemySocket:
             else:
                 current = db_ver.first()
 
-        return current.to_dict(exclude=['id'])
+            return current.to_dict(exclude=['id'])
 
     def get_total_count(self, className, **kwargs):
 
