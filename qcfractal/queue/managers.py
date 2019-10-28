@@ -31,6 +31,7 @@ class QueueStatistics(BaseModel):
     total_core_hours: float = 0
     total_core_hours_consumed: float = 0
     total_core_hours_possible: float = 0
+
     # Static Quantities
     max_concurrent_tasks: int = 0
     cores_per_task: int = 0
@@ -89,49 +90,52 @@ class QueueManager:
                  cores_per_task: Optional[int] = None,
                  memory_per_task: Optional[Union[int, float]] = None,
                  scratch_directory: Optional[str] = None,
-                 retries: Optional[int] = 2):
+                 retries: Optional[int] = 2,
+                 configuration: Optional[Dict[str, Any]] = None):
         """
         Parameters
         ----------
-        client : FractalClient
+        client : Any
             A FractalClient connected to a server
-        queue_client : QueueAdapter
+        queue_client : Any
             The DBAdapter class for queue abstraction
-        logger : logging.Logger, Optional. Default: None
+        logger : Optional[logging.Logger], optional
             A logger for the QueueManager
-        max_tasks : int
+        max_tasks : int, optional
             The maximum number of tasks to hold at any given time
-        queue_tag : str
+        queue_tag : str, optional
             Allows managers to pull from specific tags
-        manager_name : str
+        manager_name : str, optional
             The cluster the manager belongs to
-        update_frequency : int
+        update_frequency : Union[int, float], optional
             The frequency to check for new tasks in seconds
-        verbose: bool, optional, Default: True
+        verbose : bool, optional
             Whether or not to have the manager be verbose (logger level debug and up)
-        server_error_retries: int, optional, Default: 1
+        server_error_retries : Optional[int], optional
             How many times finished jobs are attempted to be pushed to the server in
             in the event of a server communication error.
             After number of attempts, the failed jobs are dropped from this manager and considered "stale"
             Set to `None` to keep retrying
-        stale_update_limit: int, optional, Default: 10
+        stale_update_limit : Optional[int], optional
             Number of stale update attempts to keep around
             If this limit is ever hit, the server initiates as shutdown as best it can
             since communication with the server has gone wrong too many times.
             Set to `None` for unlimited
-        cores_per_task : int, optional, Default: None
+        cores_per_task : Optional[int], optional
             How many CPU cores per computation task to allocate for QCEngine
             None indicates "use however many you can detect"
-        memory_per_task: int, optional, Default: None
+        memory_per_task : Optional[Union[int, float]], optional
             How much memory, in GiB, per computation task to allocate for QCEngine
             None indicates "use however much you can consume"
-        scratch_directory : str, optional, Default: None
+        scratch_directory : Optional[str], optional
             Scratch directory location to do QCEngine compute
             None indicates "wherever the system default is"'
-        retries : int, optional, Default: 2
+        retries : Optional[int], optional
             Number of retries that QCEngine will attempt for RandomErrors detected when running
             its computations. After this many attempts (or on any other type of error), the
             error will be raised.
+        configuration : Optional[Dict[str, Any]], optional
+            A JSON description of the settings used to create this object for the database.
         """
 
         # Setup logging
@@ -148,6 +152,7 @@ class QueueManager:
         self.memory_per_task = memory_per_task
         self.scratch_directory = scratch_directory
         self.retries = retries
+        self.configuration = configuration
         self.queue_adapter = build_queue_adapter(queue_client,
                                                  logger=self.logger,
                                                  cores_per_task=self.cores_per_task,
@@ -218,6 +223,7 @@ class QueueManager:
             # Tell the server we are up and running
             payload = self._payload_template()
             payload["data"]["operation"] = "startup"
+            payload["data"]["configuration"] = self.configuration
 
             self.client._automodel_request("queue_manager", "put", payload)
 
