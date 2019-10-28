@@ -16,7 +16,7 @@ from tqdm import tqdm
 import pydantic
 from qcelemental import constants
 
-from ..models import ComputeResponse, ObjectId, ProtoModel
+from ..models import Citation, ComputeResponse, ObjectId, ProtoModel
 from ..statistics import wrap_statistics
 from ..visualization import bar_plot, violin_plot
 from .collection import Collection
@@ -38,6 +38,7 @@ class MoleculeEntry(ProtoModel):
 class ContributedValues(ProtoModel):
     name: str
     doi: Optional[str] = None
+    citations: Optional[List[Citation]] = None
     theory_level: Union[str, Dict[str, str]]
     theory_level_details: Optional[Union[str, Dict[str, Optional[str]]]] = None
     comments: Optional[str] = None
