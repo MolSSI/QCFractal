@@ -812,7 +812,7 @@ def main(args=None):
                                            scratch_directory=settings.common.scratch_directory,
                                            retries=settings.common.retries,
                                            verbose=settings.common.verbose,
-                                           configuration=settings.dict())
+                                           configuration=settings)
 
     # Set stats correctly since we buffer the max tasks a bit
     manager.statistics.max_concurrent_tasks = max_concurrent_tasks

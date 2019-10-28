@@ -36,7 +36,7 @@ class ExecutorAdapter(BaseAdapter):
         task = self.client.submit(func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
         return task_spec["id"], task
 
-    def count_running_workers(self) -> int:
+    def count_running_tasks(self) -> int:
         # This is always "running", even if there are no tasks since its running locally
         return 1
 
@@ -83,7 +83,7 @@ class DaskAdapter(ExecutorAdapter):
             func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"], resources={"process": 1})
         return task_spec["id"], task
 
-    def count_running_workers(self) -> int:
+    def count_running_tasks(self) -> int:
         if hasattr(self.client.cluster, '_count_active_workers'):
             # Note: This should be right since its counting Dask Workers, and each Dask Worker = 1 task, which we then
             # Multiply by cores_per_task in the manager.

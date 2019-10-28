@@ -28,15 +28,15 @@ class QueueStatistics(BaseModel):
     # Dynamic quantities
     total_successful_tasks: int = 0
     total_failed_tasks: int = 0
-    total_core_hours: float = 0
-    total_core_hours_consumed: float = 0
-    total_core_hours_possible: float = 0
+    total_worker_walltime: float = 0
+    total_task_walltime: float = 0
+    maximum_possible_walltime: float = 0
+    running_tasks: int = 0
 
     # Static Quantities
     max_concurrent_tasks: int = 0
     cores_per_task: int = 0
     last_update_time: float = None
-    # sum_task(task_wall_time * nthread/task) / sum_time(number_running_worker * nthread/worker * interval)
 
     def __init__(self, **kwargs):
         if kwargs.get('last_update_time', None) is None:
@@ -223,8 +223,9 @@ class QueueManager:
             # Tell the server we are up and running
             payload = self._payload_template()
             payload["data"]["operation"] = "startup"
-            payload["data"]["configuration"] = self.configuration
+            # payload["data"]["configuration"] = self.configuration
 
+            print
             self.client._automodel_request("queue_manager", "put", payload)
 
             if self.verbose:
@@ -347,6 +348,7 @@ class QueueManager:
 
         payload = self._payload_template()
         payload["data"]["operation"] = "heartbeat"
+        # payload["data"]["total_task_walltime"]
         try:
             self.client._automodel_request("queue_manager", "put", payload)
             self.logger.debug("Heartbeat was successful.")
@@ -489,16 +491,15 @@ class QueueManager:
         now = self.statistics.last_update_time = time.time()
         time_delta_seconds = now - last_time
         try:
-            running_workers = self.queue_adapter.count_running_workers()
+            self.statistics.running_tasks = self.queue_adapter.count_running_tasks()
             log_efficiency = True
         except NotImplementedError:
-            running_workers = 0
             log_efficiency = False
-        max_core_hours_running = time_delta_seconds * running_workers * self.statistics.cores_per_task / 3600
+        max_core_hours_running = time_delta_seconds * self.statistics.running_tasks * self.statistics.cores_per_task / 3600
         max_core_hours_possible = (time_delta_seconds * self.statistics.max_concurrent_tasks
                                    * self.statistics.cores_per_task / 3600)
-        self.statistics.total_core_hours_consumed += max_core_hours_running
-        self.statistics.total_core_hours_possible += max_core_hours_possible
+        self.statistics.total_task_walltime += max_core_hours_running
+        self.statistics.maximum_possible_walltime += max_core_hours_possible
 
         # Process jobs
         n_success = 0
@@ -558,7 +559,7 @@ class QueueManager:
         # Crunch Statistics
         self.statistics.total_failed_tasks += n_fail
         self.statistics.total_successful_tasks += n_success
-        self.statistics.total_core_hours += task_cpu_hours
+        self.statistics.total_worker_walltime += task_cpu_hours
         na_format = ''
         float_format = ',.2f'
         if self.statistics.total_completed_tasks == 0:
@@ -570,24 +571,23 @@ class QueueManager:
             task_stats_str = (f"Task Stats: Processed={self.statistics.total_completed_tasks}, "
                               f"Failed={self.statistics.total_failed_tasks}, "
                               f"Success={success_rate:{success_format}}%")
-            worker_stats_str = f"Worker Stats (est.): Core Hours Used={self.statistics.total_core_hours:{float_format}}"
+            worker_stats_str = f"Worker Stats (est.): Core Hours Used={self.statistics.total_worker_walltime:{float_format}}"
 
             # Handle efficiency calculations
             if log_efficiency:
                 # Efficiency calculated as:
                 # sum_task(task_wall_time * nthread / task)
                 # -------------------------------------------------------------
-                # sum_time(number_running_worker * nthread / worker * interval)
-                if self.statistics.total_core_hours_consumed == 0 or self.statistics.total_core_hours_possible == 0:
+                if self.statistics.total_task_walltime == 0 or self.statistics.maximum_possible_walltime == 0:
                     efficiency_of_running = "(N/A yet)"
                     efficiency_of_potential = "(N/A yet)"
                     efficiency_format = na_format
                 else:
-                    efficiency_of_running = (self.statistics.total_core_hours /
-                                             self.statistics.total_core_hours_consumed
+                    efficiency_of_running = (self.statistics.total_worker_walltime /
+                                             self.statistics.total_task_walltime
                                              * 100)
-                    efficiency_of_potential = (self.statistics.total_core_hours /
-                                               self.statistics.total_core_hours_possible
+                    efficiency_of_potential = (self.statistics.total_worker_walltime /
+                                               self.statistics.maximum_possible_walltime
                                                * 100)
                     efficiency_format = float_format
                 worker_stats_str += f", Core Usage Efficiency: {efficiency_of_running:{efficiency_format}}%"

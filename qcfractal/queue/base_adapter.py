@@ -207,7 +207,7 @@ class BaseAdapter(abc.ABC):
             True if the closing was successful.
         """
 
-    def count_running_workers(self) -> int:
+    def count_running_tasks(self) -> int:
         """
         Adapter-specific implementation to count the currently running workers, helpful for resource consumption.
         May not be implemented or possible for each adapter, nor is it required for

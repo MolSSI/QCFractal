@@ -308,7 +308,8 @@ class QueueManagerHandler(APIHandler):
         name = self._get_name_from_metadata(body.meta)
         op = body.data.operation
         if op == "startup":
-            self.storage.manager_update(name, status="ACTIVE", configuration=body.data.configuration, **body.meta.dict(), log=True)
+            configuration = body.data.dict().get("configuration", None)
+            self.storage.manager_update(name, status="ACTIVE", configuration=configuration, **body.meta.dict(), log=True)
             self.logger.info("QueueManager: New active manager {} detected.".format(name))
 
         elif op == "shutdown":
