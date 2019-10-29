@@ -136,9 +136,20 @@ class DatasetORM(CollectionORM, DatasetMixin):
         """calculated property when accessed, not saved in the DB
         A view of the many to many relation"""
 
+        return self._records(self.records_obj)
+
+    @staticmethod
+    def _records(records_obj):
+
+        if not records_obj:
+            return []
+
+        if not isinstance(records_obj, list):
+            records_obj = [records_obj]
+
         ret = []
         try:
-            for rec in self.records_obj:
+            for rec in records_obj:
                 ret.append(rec.to_dict(exclude=['dataset_id']))
         except Exception as err:
             # raises exception of first access!!
@@ -216,9 +227,20 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
         """calculated property when accessed, not saved in the DB
         A view of the many to many relation"""
 
+        return self._records(self.records_obj)
+
+    @staticmethod
+    def _records(records_obj):
+
+        if not records_obj:
+            return []
+
+        if not isinstance(records_obj, list):
+            records_obj = [records_obj]
+
         ret = []
         try:
-            for rec in self.records_obj:
+            for rec in records_obj:
                 ret.append(rec.to_dict(exclude=['reaction_dataset_id']))
         except Exception as err:
             # raises exception of first access!!
