@@ -140,7 +140,7 @@ class Dataset(Collection):
         verify: bool, optional
             Verify download checksum. Default: True.
         """
-        if self.data.view_url is None:
+        if self.data.view_url_hdf5 is None:
             raise ValueError("A view for this dataset is not available on the server")
 
         if local_path is not None:
@@ -149,7 +149,7 @@ class Dataset(Collection):
             self._view_tempfile = tempfile.NamedTemporaryFile()  # keep temp file alive until self is destroyed
             local_path = self._view_tempfile.name
 
-        r = requests.get(self.data.view_url, stream=True)
+        r = requests.get(self.data.view_url_hdf5, stream=True)
         with open(local_path, 'wb') as fd:
             for chunk in r.iter_content(chunk_size=8192):
                 fd.write(chunk)
@@ -162,6 +162,26 @@ class Dataset(Collection):
                 raise ValueError(f"Checksum verification failed. Expected: {remote_checksum}, Got: {local_checksum}")
 
         self.set_view(local_path)
+
+    def to_file(self, path: Union[str, Path], encoding: str) -> None:
+        """
+        Writes a view of the dataset to a file
+
+        Parameters
+        ----------
+        path: Union[str, Path]
+            Where to write the file
+        encoding: str
+            Options: plaintext, hdf5
+        """
+        if encoding.lower() == "plaintext":
+            from . import PlainTextView
+            PlainTextView(path).write(self)
+        elif encoding.lower() in ["hdf5", "h5"]:
+            from . import HDF5View
+            HDF5View(path).write(self)
+        else:
+            raise NotImplementedError(f"Unsupported encoding: {encoding}")
 
     def _form_index(self) -> None:
         self._entry_index = pd.DataFrame([[entry.name, entry.molecule_id] for entry in self.data.records],

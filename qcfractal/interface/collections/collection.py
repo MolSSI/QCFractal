@@ -72,7 +72,8 @@ class Collection(abc.ABC):
         owner: Optional[str] = None
         visibility: bool = True
 
-        view_url: Optional[str] = None
+        view_url_hdf5: Optional[str] = None
+        view_url_plaintext: Optional[str] = None
         view_metadata: Optional[Dict[str, str]] = None
         view_available: bool = False
 
