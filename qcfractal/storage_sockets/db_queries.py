@@ -18,7 +18,8 @@ class QueryBase:
     # Mapping of the requested feature and the internal query method
     _query_method_map = {}
 
-    def __init__(self, max_limit=1000):
+    def __init__(self, database_name, max_limit=1000):
+        self.database_name = database_name
         self.max_limit = max_limit
 
     def __init_subclass__(cls, **kwargs):
@@ -107,6 +108,43 @@ class TaskQueries(QueryBase):
         return self.execute_query(sql_statement, with_keys=True)
 
 # ----------------------------------------------------------------------------
+
+
+class DatabaseStatQueries(QueryBase):
+
+    _class_name = "database_stats"
+
+    _query_method_map = {
+        'database_size': '_database_size',
+        'table_information': '_table_information',
+    }
+
+    def _database_size(self):
+
+        sql_statement = f"SELECT pg_database_size({self.database_name})"
+        return self.execute_query(sql_statement, with_keys=True)
+
+    def _table_information(self, table: Optional[str] = None):
+
+        if table is None:
+            self._raise_missing_attribute('table_information', 'table')
+
+        sql_statement = f"""
+SELECT l.property, l.nr AS "bytes"
+FROM (
+    SELECT min(tableoid) AS tbl, count(*) AS cnt
+    FROM public.{table} t
+) x
+   , LATERAL (
+    VALUES ('table_size', pg_table_size(tbl))
+         , ('index_size', pg_indexes_size(tbl))
+         , ('row_count', cnt)
+         , ('live_tuples', pg_stat_get_live_tuples(tbl))
+         , ('dead_tuples', pg_stat_get_dead_tuples(tbl))
+    ) l(property, nr);
+ """
+
+        return self.execute_query(sql_statement, with_keys=True)
 
 
 class ResultQueries(QueryBase):
