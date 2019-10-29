@@ -283,18 +283,66 @@ class SQLAlchemySocket:
         return limit if limit and limit < self._max_limit else self._max_limit
 
     def get_query_projection(self, className, query, projection, limit, skip, exclude=None):
+        # Todo: projection to be renamed to include_only
+
+        if projection and exclude:
+            raise AttributeError(f'Either projection (include) or exclude can be '
+                                 'used, not both at the same query. '
+                                 'Given projection: {prjection}, exclude: {exclude}')
+
+        prop, hybrids, relationships = className._get_col_types()
+
+        # build projection from include or exclude
+        _projection = []
+        if projection:
+            _projection = projection
+        elif exclude:
+            _projection = set(className._all_col_names()) - set(exclude)
+
+
+        proj = []
+        join_attr = []
+        callbacks = []
+
+        # prepare hybrid attributes for callback and joins
+        for key in _projection:
+            if key in prop: # normal column
+                proj.append(getattr(className, key))
+            # if hybrid property, save callback, and relation if any
+            elif key in hybrids:
+                callbacks.append(key)
+                # if it has a relationship
+                if key + '_obj' in relationships.keys():
+                    join_class_name = relationships[key + '_obj']
+                    proj.append(join_class_name)  # joint class name
+                    join_attr.append(getattr(className, key + '_obj'))
+            else:
+                raise AttributeError(f'Atrribute {key} is not found in class {className}.')
+
 
         with self.session_scope() as session:
-            if projection:
-                proj = [getattr(className, i) for i in projection]
-                data = session.query(*proj).filter(*query)
+            if _projection:
+
+                data = session.query(*proj) \
+                              .join(*join_attr, isouter=True).filter(*query)
                 n_found = get_count_fast(data)  # before iterating on the data
                 data = data.limit(self.get_limit(limit)).offset(skip)
-                rdata = [dict(zip(projection, row)) for row in data]
-                # print('----------rdata before: ', rdata)
-                # transform ids from int into str
+                rdata = [dict(zip(_projection, row)) for row in data]
+
+                # call hybrid methods
+                for callback in callbacks:
+                    for res in rdata:
+                        res[callback] = getattr(className, '_' + callback)(res[callback])
+
+
                 id_fields = className._get_fieldnames_with_DB_ids_()
                 for d in rdata:
+                    # Expand extra json into fields
+                    if 'extra' in d:
+                        d.update(d['extra'])
+                        del d['extra']
+
+                    # transform ids from int into str
                     for key in id_fields:
                         if key in d.keys() and d[key] is not None:
                             if isinstance(d[key], Iterable):
@@ -308,7 +356,7 @@ class SQLAlchemySocket:
                 # print(data.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
                 n_found = get_count_fast(data)
                 data = data.limit(self.get_limit(limit)).offset(skip).all()
-                rdata = [d.to_dict(exclude=exclude) for d in data]
+                rdata = [d.to_dict() for d in data]
 
         return rdata, n_found
 
@@ -895,8 +943,7 @@ class SQLAlchemySocket:
                                                            query,
                                                            projection,
                                                            limit,
-                                                           skip,
-                                                           exclude=['lname'])
+                                                           skip)
 
         meta["success"] = True
         # except Exception as err:
