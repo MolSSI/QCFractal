@@ -167,7 +167,7 @@ class Dataset(Collection):
         response = self.client.get_collection(self.__class__.__name__.lower(),
                                               self.name,
                                               full_return=False,
-                                              include=["records", "contributed_values"])
+                                              include=["records", "contributed_values", "collection", "name"])
         self.data.__dict__["records"] = response.data.records
         self.data.__dict__["contributed_values"] = response.data.contributed_values
 

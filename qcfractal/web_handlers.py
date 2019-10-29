@@ -316,7 +316,6 @@ class CollectionHandler(APIHandler):
             body = self.parse_bodymodel(body_model)
 
             cols = self.storage.get_collections(**body.data.dict(),
-                                                projection=body.meta.projection,
                                                 include=body.meta.include,
                                                 exclude=body.meta.exclude)
             response = response_model(**cols)
@@ -332,8 +331,8 @@ class CollectionHandler(APIHandler):
             body = self.parse_bodymodel(body_model)
             cols = self.storage.get_collections(**body.data.dict(),
                                                 col_id=int(collection_id),
-                                                projection=body.meta.projection,
-                                                heavy=body.meta.heavy)
+                                                include=body.meta.include,
+                                                exclude=body.meta.exclude)
             response = response_model(**cols)
 
             self.logger.info("GET: Collections - {} pulls.".format(len(response.data)))

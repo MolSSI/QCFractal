@@ -940,6 +940,10 @@ class SQLAlchemySocket:
                                                            exclude=exclude,
                                                            limit=limit,
                                                            skip=skip)
+        for rd in rdata:
+            for k in ['collection_type', 'lname']:
+                if k in rd:
+                    del rd[k]
 
         meta["success"] = True
 

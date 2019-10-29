@@ -273,33 +273,80 @@ def test_collections_projection(storage_socket):
 
     collection = 'Dataset'
     name = 'Dataset123'
+
+    # Add two waters
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
+    mol_insert = storage_socket.add_molecules([water, water2])
+
     db = {
-        "collection": collection,
-        "name": name,
-        "something": "else",
-        "array": ["54321"],
-        "visibility": True,
-        "view_available": False
+        "collection":
+        collection,
+        "name":
+        name,
+        "visibility":
+        True,
+        "view_available":
+        False,
+        "records": [{
+            "name": "He1",
+            "molecule_id": mol_insert["data"][0],
+            "comment": None,
+            "local_results": {}
+        }, {
+            "name": "He2",
+            "molecule_id": mol_insert["data"][1],
+            "comment": None,
+            "local_results": {}
+        }],
+        "contributed_values": {
+            "gradient": {
+                "name": "Gradient",
+                "doi": None,
+                "theory_level": "pseudo-random values",
+                "theory_level_details": {
+                    "driver": "gradient"
+                },
+                "comments": None,
+                "values": {
+                    "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
+                    "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
+                },
+                "units": "hartree/bohr"
+            },
+            "no details": {
+                "name": "no details",
+                "doi": None,
+                "theory_level": "pseudo-random values",
+                "theory_level_details": None,
+                "comments": None,
+                "values": {
+                    "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
+                    "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
+                }
+            }
+        }
     }
 
     ret = storage_socket.add_collection(db)
-
     assert ret["meta"]["n_inserted"] == 1
 
-    ret = storage_socket.get_collections(collection, name)
+    ret = storage_socket.get_collections(collection=collection, name=name)
     assert ret["meta"]["success"] is True
     assert len(ret["data"]) == 1
+    assert "records" in ret["data"][0]
+    assert "contributed_values" in ret["data"][0]
+
+    ret = storage_socket.get_collections(collection=collection, name=name, include=["records", "contributed_values"])
+    assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
+    assert set(ret["data"][0].keys()) == {"records", "contributed_values"}
 
     ret = storage_socket.get_collections(collection=collection, name=name, exclude=["records", "contributed_values"])
     assert ret["meta"]["success"] is True
     assert len(ret["data"]) == 1
     assert "records" not in ret["data"][0]
     assert "contributed_values" not in ret["data"][0]
-
-    ret = storage_socket.get_collections(collection=collection, name=name, include=["records", "contributed_values"])
-    assert ret["meta"]["success"] is True
-    assert len(ret["data"]) == 1
-    assert set(ret["data"][0].keys()) == {"records", "contributed_values"}
 
 
 def test_results_add(storage_socket):
