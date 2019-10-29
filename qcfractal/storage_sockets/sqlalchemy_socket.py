@@ -25,7 +25,7 @@ import bcrypt
 # pydantic classes
 from qcfractal.interface.models import (GridOptimizationRecord, KeywordSet, Molecule, ObjectId, OptimizationRecord,
                                         ResultRecord, TaskRecord, TaskStatusEnum, TorsionDriveRecord, prepare_basis)
-from qcfractal.storage_sockets.db_queries import OptimizationQueries, TorsionDriveQueries
+from qcfractal.storage_sockets.db_queries import OptimizationQueries, TaskQueries, TorsionDriveQueries
 # SQL ORMs
 from qcfractal.storage_sockets.models import (AccessLogORM, BaseResultORM, CollectionORM, DatasetORM,
                                               GridOptimizationProcedureORM, KeywordsORM, KVStoreORM, MoleculeORM,
@@ -182,6 +182,7 @@ class SQLAlchemySocket:
 
         # Advanced queries objects
         self._query_classes = {
+            TaskQueries._class_name: TaskQueries(max_limit=max_limit),
             TorsionDriveQueries._class_name: TorsionDriveQueries(max_limit=max_limit),
             OptimizationQueries._class_name: OptimizationQueries(max_limit=max_limit),
         }
@@ -215,7 +216,7 @@ class SQLAlchemySocket:
         self.check_lib_versions()
 
     def __str__(self) -> str:
-        return "<SQLAlchemy: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._project_name))
+        return f"<SQLAlchemySocket: address='{self.uri}`>"
 
     @contextmanager
     def session_scope(self):
@@ -2099,13 +2100,17 @@ class SQLAlchemySocket:
 
         return num_updated == 1
 
-    def get_managers(self, name: str = None, status: str = None, modified_before=None, limit=None, skip=0):
+    def get_managers(self, name: str = None, status: str = None, modified_before=None, modified_after=None, limit=None, skip=0):
 
         meta = get_metadata_template()
         query = format_query(QueueManagerORM, name=name, status=status)
 
         if modified_before:
             query.append(QueueManagerORM.modified_on <= modified_before)
+
+        if modified_after:
+            query.append(QueueManagerORM.modified_on >= modified_after)
+
 
         data, meta['n_found'] = self.get_query_projection(QueueManagerORM, query, None, limit, skip, exclude=['id'])
         meta["success"] = True
