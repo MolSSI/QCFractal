@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Tuple,
 
 import pandas as pd
 import requests
+
 from pydantic import ValidationError
 
 from .collections import collection_factory, collections_name_map
@@ -475,7 +476,7 @@ class FractalClient(object):
         if collection_type is not None:
             query = {"collection": collection_type.lower()}
 
-        payload = {"meta": {"projection": ["name", "collection", "tagline"]}, "data": query}
+        payload = {"meta": {"include": ["name", "collection", "tagline"]}, "data": query}
         response: List[Dict[str, Any]] = self._automodel_request("collection", "get", payload, full_return=False)
 
         # Rename collection names
@@ -499,8 +500,11 @@ class FractalClient(object):
             df.sort_index(inplace=True)
             return df
 
-    def get_collection(self, collection_type: str, name: str, full_return: bool = False,
-                       heavy: bool = None) -> 'Collection':
+    def get_collection(self,
+                       collection_type: str,
+                       name: str,
+                       full_return: bool = False,
+                       include: Optional[List[str]] = None) -> 'Collection':
         """Acquires a given collection from the server.
 
         Parameters
@@ -521,9 +525,12 @@ class FractalClient(object):
         """
 
         payload = {"meta": {}, "data": {"collection": collection_type, "name": name}}
-        if heavy is None:
-            heavy = collection_type.lower() not in ["dataset", "reactiondataset"]
-        payload["meta"]["heavy"] = heavy
+        if include is None:
+            if collection_type.lower() in ["dataset", "reactiondataset"]:  #XXX
+                payload["meta"]["exclude"] = ["contributed_values", "results"]
+        else:
+            payload["meta"]["include"] = include
+
         response = self._automodel_request("collection", "get", payload, full_return=True)
         if full_return:
             return response

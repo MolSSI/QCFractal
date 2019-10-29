@@ -4,6 +4,7 @@ Web handlers for the FractalServer.
 import json
 
 import tornado.web
+
 from pydantic import ValidationError
 from qcelemental.util import deserialize, serialize
 
@@ -316,7 +317,8 @@ class CollectionHandler(APIHandler):
 
             cols = self.storage.get_collections(**body.data.dict(),
                                                 projection=body.meta.projection,
-                                                heavy=body.meta.heavy)
+                                                include=body.meta.include,
+                                                exclude=body.meta.exclude)
             response = response_model(**cols)
 
             self.logger.info("GET: Collections - {} pulls.".format(len(response.data)))

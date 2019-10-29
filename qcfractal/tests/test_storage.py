@@ -290,26 +290,16 @@ def test_collections_projection(storage_socket):
     assert ret["meta"]["success"] is True
     assert len(ret["data"]) == 1
 
-    projection = DatasetORM.col()
-    projection.remove('update_relations')
-
-    projection.remove('records')
-    projection.remove('contributed_values')
-    projection.remove('records_obj')
-
-    ret = storage_socket.get_collections(collection=collection, name=name, projection=projection)
-
+    ret = storage_socket.get_collections(collection=collection, name=name, exclude=["records", "contributed_values"])
     assert ret["meta"]["success"] is True
     assert len(ret["data"]) == 1
     assert "records" not in ret["data"][0]
     assert "contributed_values" not in ret["data"][0]
 
-    ret = storage_socket.get_collections(collection=collection, name=name, heavy=False)
-
+    ret = storage_socket.get_collections(collection=collection, name=name, include=["records", "contributed_values"])
     assert ret["meta"]["success"] is True
     assert len(ret["data"]) == 1
-    assert "records" not in ret["data"][0]
-    assert "contributed_values" not in ret["data"][0]
+    assert set(ret["data"][0].keys()) == {"records", "contributed_values"}
 
 
 def test_results_add(storage_socket):

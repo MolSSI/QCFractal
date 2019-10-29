@@ -20,7 +20,6 @@ from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import bcrypt
-
 # pydantic classes
 from qcfractal.interface.models import (GridOptimizationRecord, KeywordSet, Molecule, ObjectId, OptimizationRecord,
                                         ResultRecord, TaskRecord, TaskStatusEnum, TorsionDriveRecord, prepare_basis)
@@ -286,8 +285,8 @@ class SQLAlchemySocket:
 
         if projection and exclude:
             raise AttributeError(f'Either projection (include) or exclude can be '
-                                 'used, not both at the same query. '
-                                 'Given projection: {prjection}, exclude: {exclude}')
+                                 f'used, not both at the same query. '
+                                 f'Given projection: {projection}, exclude: {exclude}')
 
         prop, hybrids, relationships = className._get_col_types()
 
@@ -298,14 +297,13 @@ class SQLAlchemySocket:
         elif exclude:
             _projection = set(className._all_col_names()) - set(exclude)
 
-
         proj = []
         join_attr = []
         callbacks = []
 
         # prepare hybrid attributes for callback and joins
         for key in _projection:
-            if key in prop: # normal column
+            if key in prop:  # normal column
                 proj.append(getattr(className, key))
             # if hybrid property, save callback, and relation if any
             elif key in hybrids:
@@ -317,7 +315,6 @@ class SQLAlchemySocket:
                     join_attr.append(getattr(className, key + '_obj'))
             else:
                 raise AttributeError(f'Atrribute {key} is not found in class {className}.')
-
 
         with self.session_scope() as session:
             if _projection:
@@ -332,7 +329,6 @@ class SQLAlchemySocket:
                 for callback in callbacks:
                     for res in rdata:
                         res[callback] = getattr(className, '_' + callback)(res[callback])
-
 
                 id_fields = className._get_fieldnames_with_DB_ids_()
                 for d in rdata:
@@ -903,9 +899,9 @@ class SQLAlchemySocket:
                         name: Optional[str] = None,
                         col_id: Optional[int] = None,
                         limit: Optional[int] = None,
-                        projection: Optional[List[str]] = None,
-                        skip: int = 0,
-                        heavy: bool = True) -> Dict[str, Any]:
+                        include: Optional[List[str]] = None,
+                        exclude: Optional[List[str]] = None,
+                        skip: int = 0) -> Dict[str, Any]:
         """Get collection by collection and/or name
 
         Parameters
@@ -938,20 +934,12 @@ class SQLAlchemySocket:
         collection_class = get_collection_class(collection)
         query = format_query(collection_class, lname=name, collection=collection, id=col_id)
 
-        if not heavy and projection is None:
-            projection = collection_class.col()
-            for item in [
-                    "contributed_values", "records", "records_obj", "update_relations", "lname", "extra",
-                    "collection_type"
-            ]:
-                if item in projection:
-                    projection.remove(item)
-
         rdata, meta['n_found'] = self.get_query_projection(collection_class,
                                                            query,
-                                                           projection,
-                                                           limit,
-                                                           skip)
+                                                           projection=include,
+                                                           exclude=exclude,
+                                                           limit=limit,
+                                                           skip=skip)
 
         meta["success"] = True
 

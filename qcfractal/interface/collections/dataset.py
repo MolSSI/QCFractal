@@ -10,8 +10,9 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
-import pydantic
 import requests
+
+import pydantic
 from qcelemental import constants
 
 from ..models import ComputeResponse, ObjectId, ProtoModel
@@ -166,7 +167,7 @@ class Dataset(Collection):
         response = self.client.get_collection(self.__class__.__name__.lower(),
                                               self.name,
                                               full_return=False,
-                                              heavy=True)
+                                              include=["records", "contributed_values"])
         self.data.__dict__["records"] = response.data.records
         self.data.__dict__["contributed_values"] = response.data.contributed_values
 

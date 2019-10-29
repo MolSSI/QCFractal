@@ -6,7 +6,7 @@ import re
 import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from pydantic import Field, constr, validator
+from pydantic import Field, constr, root_validator, validator
 from qcelemental.util import get_base_docs
 
 from .common_models import KeywordSet, Molecule, ObjectId, ProtoModel
@@ -342,9 +342,22 @@ class CollectionGETBody(ProtoModel):
             return v
 
     class Meta(ProtoModel):
-        projection: QueryProjection = Field(
-            None, description="Additional projection information to pass to the query. Expert-level object.")
-        heavy: bool = Field(True, description="Return large data such as entries and contributed values.")
+        include: QueryProjection = Field(
+            None,
+            description=
+            "Return only these fields. Expert-level object. Only one of include and exclude may be specified.")
+        exclude: QueryProjection = Field(
+            None,
+            description=
+            "Return all but these fields. Expert-level object. Only one of include and exclude may be specified.")
+
+        @root_validator
+        def check_include_or_exclude(cls, values):
+            include = values.get("include")
+            exclude = values.get("exclude")
+            if (include is not None) and (exclude is not None):
+                raise ValueError("Only one of include and exclude may be specified.")
+            return values
 
     meta: Meta = Field(
         None,
