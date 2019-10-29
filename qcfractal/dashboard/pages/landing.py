@@ -130,7 +130,7 @@ managers = dbc.Row([
 manager_list = dbc.Row([
     dbc.Col([
         coreui.AppCard([
-            dbc.CardHeader("List Managers"),
+            dbc.CardHeader("Manager List"),
             dbc.CardBody([
                 dbc.Col([
                     dbc.Row([groupby_items2]),

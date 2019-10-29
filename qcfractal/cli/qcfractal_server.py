@@ -143,8 +143,8 @@ def parse_args():
     user_remove.add_argument("username", default=None, type=str, help="The username to remove.")
 
     # Dsahboard
-    user = subparsers.add_parser('dashboard', help="A Dashboard for the server (beta).")
-    user.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
+    dashboard = subparsers.add_parser('dashboard', help="Launches a Dashboard for the server (beta).")
+    dashboard.add_argument("--base-folder", **FractalConfig.help_info("base_folder"))
 
     ### Move args around
     args = vars(parser.parse_args())
@@ -464,8 +464,8 @@ def server_dashboard(args, config):
 
     print("\n>>> Checking the PostgreSQL connection...")
 
-    # psql = PostgresHarness(config, quiet=False, logger=print)
-    # ensure_postgres_alive(psql)
+    psql = PostgresHarness(config, quiet=False, logger=print)
+    ensure_postgres_alive(psql)
 
     from ..dashboard import app
 

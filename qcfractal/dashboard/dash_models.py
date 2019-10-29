@@ -19,15 +19,24 @@ def list_managers(status=None, modified_after=None):
 
     managers = socket.get_managers(status=status, modified_after=modified_after)
     cols = [
-        "cluster", "username", "tag", "completed", "submitted", "failures", "returned", "created_on", "modified_on",
-        "programs", "procedures",
-         # "name"
+        "cluster",
+        "username",
+        "tag",
+        "completed",
+        "submitted",
+        "failures",
+        "returned",
+        "created_on",
+        "modified_on",
+        "programs",
+        "procedures",
+        # "name"
     ]
 
     df = pd.DataFrame(managers["data"])
     df = df[cols]
-    df["programs"] = df["programs"].apply(lambda x : ", ".join(sorted(x)))
-    df["procedures"] = df["procedures"].apply(lambda x : ", ".join(sorted(x)))
+    df["programs"] = df["programs"].apply(lambda x: ", ".join(sorted(x)))
+    df["procedures"] = df["procedures"].apply(lambda x: ", ".join(sorted(x)))
     df.columns = [x.title() for x in cols]
     df.sort_values('Completed', inplace=True, ascending=False)
     return dbc.Table.from_dataframe(df, style={"width": "100%"})
@@ -49,7 +58,6 @@ def manager_graph(status=None, modified_after=None):
                     ("completed", DEFAULT_PLOTLY_COLORS[0])]
 
         data.sort_values("completed", inplace=True, ascending=False)
-        bars = []
         for status, color in bar_iter:
             bars.append(go.Bar(name=status.title(), x=data.index, y=data[status], marker_color=color))
 
@@ -59,7 +67,7 @@ def manager_graph(status=None, modified_after=None):
             # "yaxis_type": "log",
             "barmode": "stack",
             "yaxis": {
-                "title": "Completed Tasks"
+                "title": "Tasks"
             },
             "xaxis": {
                 "title": "Cluster"
@@ -95,7 +103,7 @@ def task_graph():
                         "barmode": "stack",
                         "yaxis_type": "log",
                         "yaxis": {
-                            "title": "nTasks"
+                            "title": "Tasks"
                         },
                         "xaxis": {
                             "title": "Tag"
