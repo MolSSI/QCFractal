@@ -2408,7 +2408,9 @@ class SQLAlchemySocket:
             else:
                 current = db_ver.first()
 
-            return current.to_dict(exclude=['id'])
+            ver = current.to_dict(exclude=['id'])
+
+        return ver
 
     def get_total_count(self, className, **kwargs):
 
