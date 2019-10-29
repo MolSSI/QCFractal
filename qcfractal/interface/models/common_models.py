@@ -201,6 +201,7 @@ class KeywordSet(ProtoModel):
 class Citation(ProtoModel):
     """ A literature citation.  """
     _citation: str  # hand-formatted citation in ACS style. In the future, this could be bibtex, rendered to different formats.
+    _bibtex: Optional[str]  # bibtex blob for later use with bibtex-renderer
     doi: Optional[str]
     url: Optional[str]
 
