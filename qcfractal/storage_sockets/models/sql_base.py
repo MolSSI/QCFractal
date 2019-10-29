@@ -2,9 +2,10 @@
 from sqlalchemy import and_, inspect
 from sqlalchemy.dialects.postgresql import BYTEA
 from sqlalchemy.ext.declarative import as_declarative
-from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.ext.hybrid import hybrid_property, HYBRID_PROPERTY
 from sqlalchemy.orm import object_session
 from sqlalchemy.types import TypeDecorator
+from sqlalchemy.ext.associationproxy import ASSOCIATION_PROXY
 
 from qcelemental.util import msgpackext_dumps, msgpackext_loads
 
@@ -32,7 +33,8 @@ class MsgpackExt(TypeDecorator):
 class Base:
     """Base declarative class of all ORM models"""
 
-    db_related_fields = ['result_type', 'base_result_id', 'metadata', '_trajectory', 'collection_type']
+    db_related_fields = ['result_type', 'base_result_id', '_trajectory',
+                         'collection_type', 'lname']
 
     def to_dict(self, exclude=None):
 
@@ -41,16 +43,10 @@ class Base:
         if exclude:
             tobe_deleted_keys.extend(exclude)
 
-        dict_obj = [
-            x for x in self.__dict__ if not x.startswith('_') and x not in self.db_related_fields
-            and not x.endswith('_obj') and x not in tobe_deleted_keys
+        dict_obj = [x for x in self._all_col_names()
+                        if x not in self.db_related_fields
+                        and x not in tobe_deleted_keys
         ]
-
-        class_inspector = inspect(self.__class__)
-        # add hybrid properties
-        for key, prop in class_inspector.all_orm_descriptors.items():
-            if isinstance(prop, hybrid_property):
-                dict_obj.append(key)
 
         # Add the attributes to the final results
         ret = {k: getattr(self, k) for k in dict_obj}
@@ -60,7 +56,7 @@ class Base:
             del ret['extra']
 
         # transform ids from int into str
-        id_fields = self._get_fieldnames_with_DB_ids_(class_inspector)
+        id_fields = self._get_fieldnames_with_DB_ids_()
         for key in id_fields:
             if key in ret.keys() and ret[key] is not None:
                 if isinstance(ret[key], (list, tuple)):
@@ -71,9 +67,9 @@ class Base:
         return ret
 
     @classmethod
-    def _get_fieldnames_with_DB_ids_(cls, class_inspector=None):
-        if not class_inspector:
-            class_inspector = inspect(cls)
+    def _get_fieldnames_with_DB_ids_(cls):
+
+        class_inspector = inspect(cls)
         id_fields = []
         for key, col in class_inspector.columns.items():
             # if PK, FK, or column property (TODO: work around for column property)
@@ -83,8 +79,37 @@ class Base:
         return id_fields
 
     @classmethod
-    def col(cls):
-        return [col for col in cls.__dict__ if not col.startswith('_')]
+    def _get_col_types(cls):
+
+        # Must use private attributes so that they are not shared by subclasses
+        if hasattr(cls, '__columns') and hasattr(cls, '__hybrids') and hasattr(cls, '__relationships'):
+            return cls.__columns, cls.__hybrids, cls.__relationships
+
+        mapper = inspect(cls)
+
+        cls.__columns = []
+        cls.__hybrids = []
+        cls.__relationships = {k: v.argument for k, v in mapper.relationships.items()}
+
+        for k, c in mapper.all_orm_descriptors.items():
+
+            if k == '__mapper__':
+                continue
+
+            if c.extension_type == ASSOCIATION_PROXY:
+                continue
+
+            if (c.extension_type == HYBRID_PROPERTY):
+                cls.__hybrids.append(k)
+            elif k not in mapper.relationships:
+                cls.__columns.append(k)
+
+        return cls.__columns, cls.__hybrids, cls.__relationships
+
+    @classmethod
+    def _all_col_names(cls):
+        all_cols, hybrid, _ = cls._get_col_types()
+        return all_cols + hybrid
 
     def _update_many_to_many(self, table, parent_id_name, child_id_name, parent_id_val, new_list, old_list=None):
         """Perfomr upsert on a many to many association table
