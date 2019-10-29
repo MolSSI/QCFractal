@@ -382,6 +382,10 @@ class FractalServer:
             heartbeats.start()
             self.periodic["heartbeats"] = heartbeats
 
+            server_log = tornado.ioloop.PeriodicCallback(self.update_server_log, self.heartbeat_frequency * 1000)
+            server_log.start()
+            self.periodic["server_log"] = server_log
+
         # Soft quit with a keyboard interrupt
         self.logger.info("FractalServer successfully started.\n")
         if start_loop:
@@ -518,6 +522,13 @@ class FractalServer:
         self.storage.services_completed(completed_services)
 
         return running_services
+
+    def update_server_log(self) -> Dict[str, Any]:
+        """
+        Updates the servers internal log
+        """
+
+        return self.storage.log_server_stats()["data"]
 
     def check_manager_heartbeats(self) -> None:
         """

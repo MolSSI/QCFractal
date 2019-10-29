@@ -121,8 +121,8 @@ class DatabaseStatQueries(QueryBase):
 
     def _database_size(self):
 
-        sql_statement = f"SELECT pg_database_size({self.database_name})"
-        return self.execute_query(sql_statement, with_keys=True)
+        sql_statement = f"SELECT pg_database_size('{self.database_name}')"
+        return self.execute_query(sql_statement, with_keys=True)[0]['pg_database_size']
 
     def _table_information(self, table: Optional[str] = None):
 
@@ -144,7 +144,16 @@ FROM (
     ) l(property, nr);
  """
 
-        return self.execute_query(sql_statement, with_keys=True)
+        results = self.execute_query(sql_statement, with_keys=False)
+
+        ret = {}
+        for row in results:
+            if row[1]:
+                ret[row[0]] = row[1]
+            else:
+                ret[row[0]] = 0
+
+        return ret
 
 
 class ResultQueries(QueryBase):

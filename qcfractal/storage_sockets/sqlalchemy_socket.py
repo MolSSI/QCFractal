@@ -2513,31 +2513,38 @@ class SQLAlchemySocket:
 
     def log_server_stats(self):
 
+        # This isn't complete, but contains the biggest tables
         tables = [
-            AccessLogORM, BaseResultORM, CollectionORM, KVStoreORM, MoleculeORM, TaskQueueORM, WavefunctionStoreORM
+            AccessLogORM, BaseResultORM, CollectionORM, KVStoreORM, MoleculeORM, TaskQueueORM,
+            WavefunctionStoreORM
         ]
 
         table_size = 0
         index_size = 0
-        table_information = {}
+        table_info = {}
         for table in tables:
             tbname = table.__tablename__
-            table_information[tbname] = self.custom_query("database_stats", "table_information", table=table)
+            info_blob = self.custom_query("database_stats", "table_information", table=tbname)
+            if len(info_blob["data"]):
+                table_info[tbname] = info_blob["data"]
 
-            table_size += table_information[tbname]["table_size"]
-            index_size += table_information[tbname]["index_size"]
+                table_size += info_blob["data"]["table_size"]
+                index_size += info_blob["data"]["index_size"]
+            else:
+                self.logger.warning("Could not pull database stats:")
+                self.logger.warning(info_blob["meta"]["error_description"])
 
         data = {
-            "collection_count ": self.get_total_count(CollectionORM),
-            "molecule_count ": self.get_total_count(MoleculeORM),
-            "result_count ": self.get_total_count(BaseResultORM),
-            "kvstore_count ": self.get_total_count(KVStoreORM),
-            "access_count ": self.get_total_count(AccessLogORM),
-            "result_states": self.custom_query("result", "count", gropuby={'result_type', 'status'}),
-            "db_total_size": self.custom_query("database_stats", "database_size"),
+            "collection_count": self.get_total_count(CollectionORM),
+            "molecule_count": self.get_total_count(MoleculeORM),
+            "result_count": self.get_total_count(BaseResultORM),
+            "kvstore_count": self.get_total_count(KVStoreORM),
+            "access_count": self.get_total_count(AccessLogORM),
+            "result_states": self.custom_query("result", "count", gropuby={'result_type', 'status'})["data"],
+            "db_total_size": self.custom_query("database_stats", "database_size")["data"],
             "db_table_size": table_size,
             "db_index_size": index_size,
-            "db_table_information": table_information,
+            "db_table_information": table_info,
         }
 
         with self.session_scope() as session:

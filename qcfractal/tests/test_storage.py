@@ -1127,3 +1127,22 @@ def test_reset_task_blocks(storage_socket):
 
     with pytest.raises(ValueError):
         storage_socket.queue_reset_status(reset_error=True)
+
+def test_server_log(storage_socket):
+
+    # Add something to double check the test
+    mol_names = [
+        'water_dimer_minima.psimol',
+        'water_dimer_stretch.psimol',
+        'water_dimer_stretch2.psimol',
+    ]
+
+    molecules = [ptl.data.get_molecule(mol_name) for mol_name in mol_names]
+    inserted = storage_socket.add_molecules(molecules)
+
+    ret = storage_socket.log_server_stats()
+    assert ret["molecule_count"] >= 3
+    assert ret["db_table_size"] >= 1000
+    assert ret["db_total_size"] >= 1000
+
+    assert ret["db_table_information"]["molecule"]["table_size"] >= 1000
