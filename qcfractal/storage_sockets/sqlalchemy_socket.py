@@ -6,7 +6,7 @@ try:
     from sqlalchemy import create_engine, or_, case
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
-    from sqlalchemy.sql.expression import func
+    from sqlalchemy.sql.expression import desc, func
     # from sqlalchemy.dialects import postgresql
 except ImportError:
     raise ImportError("SQLAlchemy_socket requires sqlalchemy, please install this python "
@@ -26,12 +26,12 @@ import bcrypt
 from qcfractal.interface.models import (GridOptimizationRecord, KeywordSet, Molecule, ObjectId, OptimizationRecord,
                                         ResultRecord, TaskRecord, TaskStatusEnum, TorsionDriveRecord, prepare_basis)
 from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
-# SQL ORMs
 from qcfractal.storage_sockets.models import (AccessLogORM, BaseResultORM, CollectionORM, DatasetORM,
                                               GridOptimizationProcedureORM, KeywordsORM, KVStoreORM, MoleculeORM,
                                               OptimizationProcedureORM, QueueManagerORM, QueueManagerLogORM,
-                                              ReactionDatasetORM, ResultORM, ServiceQueueORM, TaskQueueORM,
-                                              TorsionDriveProcedureORM, UserORM, VersionsORM, WavefunctionStoreORM)
+                                              ReactionDatasetORM, ResultORM, ServerStatsLogORM, ServiceQueueORM,
+                                              TaskQueueORM, TorsionDriveProcedureORM, UserORM, VersionsORM,
+                                              WavefunctionStoreORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
@@ -182,7 +182,10 @@ class SQLAlchemySocket:
             raise ValueError(f"SQLAlchemy Connection Error\n {str(e)}") from None
 
         # Advanced queries objects
-        self._query_classes = {cls._class_name: cls(max_limit=max_limit) for cls in QUERY_CLASSES}
+        self._query_classes = {
+            cls._class_name: cls(self.engine.url.database, max_limit=max_limit)
+            for cls in QUERY_CLASSES
+        }
 
         # if expanded_uri["password"] is not None:
         #     # connect to mongoengine
@@ -2507,3 +2510,61 @@ class SQLAlchemySocket:
             count = get_count_fast(query)
 
         return count
+
+    def log_server_stats(self):
+
+        tables = [
+            AccessLogORM, BaseResultORM, CollectionORM, KVStoreORM, MoleculeORM, TaskQueueORM, WavefunctionStoreORM
+        ]
+
+        table_size = 0
+        index_size = 0
+        table_information = {}
+        for table in tables:
+            tbname = table.__tablename__
+            table_information[tbname] = self.custom_query("database_stats", "table_information", table=table)
+
+            table_size += table_information[tbname]["table_size"]
+            index_size += table_information[tbname]["index_size"]
+
+        data = {
+            "collection_count ": self.get_total_count(CollectionORM),
+            "molecule_count ": self.get_total_count(MoleculeORM),
+            "result_count ": self.get_total_count(BaseResultORM),
+            "kvstore_count ": self.get_total_count(KVStoreORM),
+            "access_count ": self.get_total_count(AccessLogORM),
+            "result_states": self.custom_query("result", "count", gropuby={'result_type', 'status'}),
+            "db_total_size": self.custom_query("database_stats", "database_size"),
+            "db_table_size": table_size,
+            "db_index_size": index_size,
+            "db_table_information": table_information,
+        }
+
+        with self.session_scope() as session:
+            log = ServerStatsLogORM(**data)
+            session.add(log)
+            session.commit()
+
+        return data
+
+    def get_server_stats_log(self, before=None, after=None, limit=None, skip=0):
+
+        meta = get_metadata_template()
+        query = []
+
+        if before:
+            query.append(ServerStatsLogORM.timestamp <= before)
+
+        if after:
+            query.append(ServerStatsLogORM.timestamp >= after)
+
+        with self.session_scope() as session:
+            pose = session.query(ServerStatsLogORM).filter(*query).order_by(desc('timestamp'))
+            meta["n_found"] = get_count_fast(pose)
+
+            data = pose.limit(self.get_limit(limit)).offset(skip).all()
+            data = [d.to_dict() for d in data]
+
+        meta["success"] = True
+
+        return {"data": data, "meta": meta}

@@ -8,7 +8,7 @@ in relations and foreign keys are a string (see TaskQueueORM.base_result_obj)
 import datetime
 
 # from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import JSON, Binary, Boolean, Column, DateTime, Enum, Float, ForeignKey, Index, Integer, String
+from sqlalchemy import JSON, BigInteger, Binary, Boolean, Column, DateTime, Enum, Float, ForeignKey, Index, Integer, String
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
@@ -43,6 +43,30 @@ class AccessLogORM(Base):
 
     __table_args__ = (Index('access_type', "access_date"), )
 
+
+class ServerStatsLogORM(Base):
+    __tablename__ = 'server_stats_log'
+
+    id = Column(Integer, primary_key=True)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Raw counts
+    collection_count = Column(Integer)
+    molecule_count = Column(Integer)
+    result_count = Column(Integer)
+    kvstore_count = Column(Integer)
+    access_count = Column(Integer)
+
+    # States
+    result_states = Column(JSON)
+
+    # Database
+    db_total_size = Column(BigInteger)
+    db_table_size = Column(BigInteger)
+    db_index_size = Column(BigInteger)
+    db_table_information = Column(JSON)
+
+    __table_args__ = (Index('ix_server_stats_log_timestamp', "timestamp"), )
 
 class VersionsORM(Base):
     __tablename__ = 'versions'
@@ -221,10 +245,12 @@ class TaskQueueORM(Base):
     # rows, but if there is an index matching the ORDER BY, the first n rows
     # can be retrieved directly, without scanning the remainder at all.
 
-    __table_args__ = (Index('ix_task_queue_created_on',
-                            "created_on"), Index('ix_task_queue_keys', "status", "program", "procedure", "tag"),
-                      Index('ix_task_queue_manager', "manager"), Index('ix_task_queue_base_result_id',
-                                                                       "base_result_id"))
+    __table_args__ = (
+            Index('ix_task_queue_created_on', "created_on"),
+            Index('ix_task_queue_keys', "status", "program", "procedure", "tag"),
+            Index('ix_task_queue_manager', "manager"),
+            Index('ix_task_queue_base_result_id', "base_result_id")
+        ) # yapf: disable
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
