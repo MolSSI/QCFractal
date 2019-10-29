@@ -29,7 +29,7 @@ from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
 # SQL ORMs
 from qcfractal.storage_sockets.models import (AccessLogORM, BaseResultORM, CollectionORM, DatasetORM,
                                               GridOptimizationProcedureORM, KeywordsORM, KVStoreORM, MoleculeORM,
-                                              OptimizationProcedureORM, QueueManagerORM, ReactionDatasetORM, ResultORM,
+                                              OptimizationProcedureORM, QueueManagerORM, QueueManagerLogORM, ReactionDatasetORM, ResultORM,
                                               ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
                                               VersionsORM, WavefunctionStoreORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
@@ -250,6 +250,7 @@ class SQLAlchemySocket:
 
             # Task and services
             session.query(TaskQueueORM).delete(synchronize_session=False)
+            session.query(QueueManagerLogORM).delete(synchronize_session=False)
             session.query(QueueManagerORM).delete(synchronize_session=False)
             session.query(ServiceQueueORM).delete(synchronize_session=False)
 
@@ -2072,6 +2073,8 @@ class SQLAlchemySocket:
 
     def manager_update(self, name, **kwargs):
 
+        do_log = kwargs.pop("log", False)
+
         inc_count = {
             # Increment relevant data
             "submitted": QueueManagerORM.submitted + kwargs.pop("submitted", 0),
@@ -2093,6 +2096,25 @@ class SQLAlchemySocket:
                 session.add(manager)
                 session.commit()
                 num_updated = 1
+
+            if do_log:
+                # Pull again in case it was updated
+                manager = session.query(QueueManagerORM).filter_by(name=name).first()
+
+                manager_log = QueueManagerLogORM(
+                    manager_id=manager.id,
+                    completed=manager.completed,
+                    submitted=manager.submitted,
+                    failures=manager.failures,
+                    total_worker_walltime=manager.total_worker_walltime,
+                    total_task_walltime=manager.total_task_walltime,
+                    active_tasks=manager.active_tasks,
+                    active_cores=manager.active_cores,
+                    active_memory=manager.active_memory,
+                )
+
+                session.add(manager_log)
+                session.commit()
 
         return num_updated == 1
 

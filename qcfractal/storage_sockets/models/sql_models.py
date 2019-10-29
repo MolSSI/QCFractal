@@ -272,6 +272,28 @@ class UserORM(Base):
     permissions = Column(JSON)  # Column(ARRAY(String))
 
 
+class QueueManagerLogORM(Base):
+
+    __tablename__ = "queue_manager_logs"
+
+    id = Column(Integer, primary_key=True)
+    manager_id = Column(Integer, ForeignKey('queue_manager.id'), nullable=True)
+
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
+    completed = Column(Integer, nullable=True)
+    submitted = Column(Integer, nullable=True)
+    failures = Column(Integer, nullable=True)
+
+    total_worker_walltime = Column(Float, nullable=True)
+    total_task_walltime = Column(Float, nullable=True)
+    active_tasks = Column(Integer, nullable=True)
+    active_cores = Column(Integer, nullable=True)
+    active_memory = Column(Float, nullable=True)
+
+    __table_args__ = (Index('ix_queue_manager_log_timestamp', "timestamp"), )
+
+
 class QueueManagerORM(Base):
     """
     """
@@ -287,11 +309,20 @@ class QueueManagerORM(Base):
     uuid = Column(String)
     tag = Column(String)
 
-    # counts
+    # Count at current time
     completed = Column(Integer, default=0)
     submitted = Column(Integer, default=0)
     failures = Column(Integer, default=0)
     returned = Column(Integer, default=0)
+
+    total_worker_walltime = Column(Float, nullable=True)
+    total_task_walltime = Column(Float, nullable=True)
+    active_tasks = Column(Integer, nullable=True)
+    active_cores = Column(Integer, nullable=True)
+    active_memory = Column(Float, nullable=True)
+
+    # Adapter Information
+    configuration = Column(JSON, nullable=True)
 
     status = Column(Enum(ManagerStatusEnum), default=ManagerStatusEnum.inactive)
 

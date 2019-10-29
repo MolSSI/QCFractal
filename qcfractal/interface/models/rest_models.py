@@ -878,6 +878,13 @@ class QueueManagerMeta(ProtoModel):
         "the Manager can pull.")
     tag: Optional[str] = Field(None, description="Optional queue tag to pull Tasks from.")
 
+    # Statistics
+    total_worker_walltime: Optional[float] = Field(None, description="The total worker walltime in core-hours.")
+    total_task_walltime: Optional[float] = Field(None, description="The total task walltime in core-hours.")
+    active_tasks: Optional[int] = Field(None, description="The total number of active running tasks.")
+    active_cores: Optional[int] = Field(None, description="The total number of active cores.")
+    active_memory: Optional[float] = Field(None, description="The total amount of active memory in GB.")
+
 
 # Add the new QueueManagerMeta to the docs
 common_docs[QueueManagerMeta] = str(get_base_docs(QueueManagerMeta))

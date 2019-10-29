@@ -326,6 +326,8 @@ class FractalServer:
                                                              self.queue_socket,
                                                              logger=self.logger,
                                                              manager_name="FractalServer",
+                                                             cores_per_task=1,
+                                                             memory_per_task=1,
                                                              verbose=False)
 
             # Build the queue manager, will not run until loop starts
