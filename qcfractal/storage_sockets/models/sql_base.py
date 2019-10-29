@@ -33,7 +33,8 @@ class MsgpackExt(TypeDecorator):
 class Base:
     """Base declarative class of all ORM models"""
 
-    db_related_fields = ['result_type', 'base_result_id', '_trajectory', 'collection_type']
+    db_related_fields = ['result_type', 'base_result_id', '_trajectory',
+                         'collection_type', 'lname']
 
     def to_dict(self, exclude=None):
 
@@ -80,14 +81,15 @@ class Base:
     @classmethod
     def _get_col_types(cls):
 
-        if hasattr(cls, '_columns') and hasattr(cls, '_hybrids') and hasattr(cls, '_relationships'):
-            return cls._columns, cls._hybrids, cls._relationships
+        # Must use private attributes so that they are not shared by subclasses
+        if hasattr(cls, '__columns') and hasattr(cls, '__hybrids') and hasattr(cls, '__relationships'):
+            return cls.__columns, cls.__hybrids, cls.__relationships
 
         mapper = inspect(cls)
 
-        cls._columns = []
-        cls._hybrids = []
-        cls._relationships = {k: v.argument for k, v in mapper.relationships.items()}
+        cls.__columns = []
+        cls.__hybrids = []
+        cls.__relationships = {k: v.argument for k, v in mapper.relationships.items()}
 
         for k, c in mapper.all_orm_descriptors.items():
 
@@ -98,11 +100,11 @@ class Base:
                 continue
 
             if (c.extension_type == HYBRID_PROPERTY):
-                cls._hybrids.append(k)
+                cls.__hybrids.append(k)
             elif k not in mapper.relationships:
-                cls._columns.append(k)
+                cls.__columns.append(k)
 
-        return cls._columns, cls._hybrids, cls._relationships
+        return cls.__columns, cls.__hybrids, cls.__relationships
 
     @classmethod
     def _all_col_names(cls):
