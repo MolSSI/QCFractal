@@ -1128,6 +1128,7 @@ def test_reset_task_blocks(storage_socket):
     with pytest.raises(ValueError):
         storage_socket.queue_reset_status(reset_error=True)
 
+
 def test_server_log(storage_socket):
 
     # Add something to double check the test
@@ -1146,3 +1147,16 @@ def test_server_log(storage_socket):
     assert ret["db_total_size"] >= 1000
 
     assert ret["db_table_information"]["molecule"]["table_size"] >= 1000
+
+    # Check queries
+    now = datetime.utcnow()
+    ret = storage_socket.get_server_stats_log(after=now)
+    assert len(ret["data"]) == 0
+
+    ret = storage_socket.get_server_stats_log(before=now)
+    assert len(ret["data"]) >= 1
+
+    # Make sure we are sorting correctly
+    storage_socket.log_server_stats()
+    ret = storage_socket.get_server_stats_log(limit=1)
+    assert ret["data"][0]['timestamp'] > now
