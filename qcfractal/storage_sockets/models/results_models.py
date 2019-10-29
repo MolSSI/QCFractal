@@ -323,9 +323,20 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
         """calculated property when accessed, not saved in the DB
         A view of the many to many relation in the form of a dict"""
 
+        return self._grid_optimizations(self.grid_optimizations_obj)
+
+    @staticmethod
+    def _grid_optimizations(grid_optimizations_obj):
+
+        if not grid_optimizations_obj:
+            return {}
+
+        if not isinstance(grid_optimizations_obj, list):
+            grid_optimizations_obj = {grid_optimizations_obj}
+
         ret = {}
         try:
-            for obj in self.grid_optimizations_obj:
+            for obj in grid_optimizations_obj:
                 ret[obj.key] = str(obj.opt_id)
 
         except Exception as err:
@@ -428,9 +439,20 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
         """calculated property when accessed, not saved in the DB
         A view of the many to many relation in the form of a dict"""
 
+        return self._optimization_history(self.optimization_history_obj)
+
+    @staticmethod
+    def _optimization_history(optimization_history_obj):
+
+        if not optimization_history_obj:
+            return {}
+
+        if not isinstance(optimization_history_obj, list):
+            optimization_history_obj = {optimization_history_obj}
+
         ret = {}
         try:
-            for opt_history in self.optimization_history_obj:
+            for opt_history in optimization_history_obj:
                 if opt_history.key in ret:
                     ret[opt_history.key].append(str(opt_history.opt_id))
                 else:
