@@ -48,7 +48,7 @@ class ServerStatsLogORM(Base):
     __tablename__ = 'server_stats_log'
 
     id = Column(Integer, primary_key=True)
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
 
     # Raw counts
     collection_count = Column(Integer)
@@ -303,9 +303,9 @@ class QueueManagerLogORM(Base):
     __tablename__ = "queue_manager_logs"
 
     id = Column(Integer, primary_key=True)
-    manager_id = Column(Integer, ForeignKey('queue_manager.id'), nullable=True)
+    manager_id = Column(Integer, ForeignKey('queue_manager.id'), nullable=False)
 
-    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
 
     completed = Column(Integer, nullable=True)
     submitted = Column(Integer, nullable=True)

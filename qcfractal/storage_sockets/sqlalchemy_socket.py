@@ -2519,6 +2519,7 @@ class SQLAlchemySocket:
             WavefunctionStoreORM
         ]
 
+        # Calculate table info
         table_size = 0
         index_size = 0
         table_info = {}
@@ -2534,13 +2535,22 @@ class SQLAlchemySocket:
                 self.logger.warning("Could not pull database stats:")
                 self.logger.warning(info_blob["meta"]["error_description"])
 
+        # Calculate result state info
+        state_data = self.custom_query("result", "count", groupby={'result_type', 'status'})["data"]
+        result_states = {}
+
+        for row in state_data:
+            result_states.setdefault(row["result_type"], {})
+            result_states[row["result_type"]][row["status"]] = row["count"]
+
+        # Build out final data
         data = {
             "collection_count": self.get_total_count(CollectionORM),
             "molecule_count": self.get_total_count(MoleculeORM),
             "result_count": self.get_total_count(BaseResultORM),
             "kvstore_count": self.get_total_count(KVStoreORM),
             "access_count": self.get_total_count(AccessLogORM),
-            "result_states": self.custom_query("result", "count", gropuby={'result_type', 'status'})["data"],
+            "result_states": result_states,
             "db_total_size": self.custom_query("database_stats", "database_size")["data"],
             "db_table_size": table_size,
             "db_index_size": index_size,
