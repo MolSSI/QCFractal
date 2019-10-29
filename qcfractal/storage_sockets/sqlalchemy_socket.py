@@ -29,9 +29,9 @@ from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
 # SQL ORMs
 from qcfractal.storage_sockets.models import (AccessLogORM, BaseResultORM, CollectionORM, DatasetORM,
                                               GridOptimizationProcedureORM, KeywordsORM, KVStoreORM, MoleculeORM,
-                                              OptimizationProcedureORM, QueueManagerORM, QueueManagerLogORM, ReactionDatasetORM, ResultORM,
-                                              ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
-                                              VersionsORM, WavefunctionStoreORM)
+                                              OptimizationProcedureORM, QueueManagerORM, QueueManagerLogORM,
+                                              ReactionDatasetORM, ResultORM, ServiceQueueORM, TaskQueueORM,
+                                              TorsionDriveProcedureORM, UserORM, VersionsORM, WavefunctionStoreORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
@@ -126,6 +126,7 @@ class SQLAlchemySocket:
     """
         SQLAlcehmy QCDB wrapper class.
     """
+
     def __init__(self,
                  uri: str,
                  project: str = "molssidb",
@@ -474,7 +475,6 @@ class SQLAlchemySocket:
         data = {d["id"]: d["value"] for d in rdata}
 
         return {"data": data, "meta": meta}
-
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Molecule ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1069,6 +1069,7 @@ class SQLAlchemySocket:
         -------
 
         """
+
     def get_results(self,
                     id: Union[str, List] = None,
                     program: str = None,
@@ -1206,7 +1207,6 @@ class SQLAlchemySocket:
             count = len(results)
 
         return count
-
 
     def add_wavefunction_store(self, blobs_list: List[Dict[str, Any]]):
         """
@@ -2118,7 +2118,13 @@ class SQLAlchemySocket:
 
         return num_updated == 1
 
-    def get_managers(self, name: str = None, status: str = None, modified_before=None, modified_after=None, limit=None, skip=0):
+    def get_managers(self,
+                     name: str = None,
+                     status: str = None,
+                     modified_before=None,
+                     modified_after=None,
+                     limit=None,
+                     skip=0):
 
         meta = get_metadata_template()
         query = format_query(QueueManagerORM, name=name, status=status)
@@ -2129,8 +2135,20 @@ class SQLAlchemySocket:
         if modified_after:
             query.append(QueueManagerORM.modified_on >= modified_after)
 
+        data, meta['n_found'] = self.get_query_projection(QueueManagerORM, query, None, limit, skip)
+        meta["success"] = True
 
-        data, meta['n_found'] = self.get_query_projection(QueueManagerORM, query, None, limit, skip, exclude=['id'])
+        return {"data": data, "meta": meta}
+
+
+    def get_manager_logs(self, manager_ids: Union[List[str], str], timestamp_after=None, limit=None, skip=0):
+        meta = get_metadata_template()
+        query = format_query(QueueManagerLogORM, manager_id=manager_ids)
+
+        if timestamp_after:
+            query.append(QueueManagerLogORM.timestamp >= timestamp_after)
+
+        data, meta['n_found'] = self.get_query_projection(QueueManagerLogORM, query, None, limit, skip, exclude=['id'])
         meta["success"] = True
 
         return {"data": data, "meta": meta}

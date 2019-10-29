@@ -3,6 +3,7 @@ Explicit tests for queue manipulation.
 """
 
 import contextlib
+import datetime
 import logging
 import re
 import time
@@ -78,13 +79,13 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
 
 @pytest.mark.slow
 @testing.using_rdkit
-def test_queue_manager_statistics(compute_adapter_fixture, caplog):
+def test_queue_manager_log_statistics(compute_adapter_fixture, caplog):
     """Test statistics are correctly generated"""
     # Setup manager and add some compute
     client, server, adapter = compute_adapter_fixture
     reset_server_database(server)
 
-    manager = queue.QueueManager(client, adapter, verbose=True)
+    manager = queue.QueueManager(client, adapter, cores_per_task=1, memory_per_task=1, verbose=True)
 
     hooh = ptl.data.get_molecule("hooh.json")
     client.add_compute("rdkit", "UFF", "", "energy", None, [hooh], tag="other")
@@ -103,9 +104,28 @@ def test_queue_manager_statistics(compute_adapter_fixture, caplog):
         # Ensure some kind of stats are being calculated seemingly correctly
         stats_re = re.search(r'Core Usage Efficiency: (\d+\.\d+)%', caplog.text)
         assert stats_re is not None and float(stats_re.group(1)) != 0.0
+
     # Clean up capture so it does not flood the output
     caplog.records.clear()
     caplog.handler.records.clear()
+
+    # Record a heartbeat
+    timestamp = datetime.datetime.utcnow()
+    manager.heartbeat()
+    manager_record = server.storage.get_managers()["data"][0]
+    logs = server.storage.get_manager_logs(manager_record["id"])["data"]
+
+    # Grab just the last log
+    latest_log = server.storage.get_manager_logs(manager_record["id"], timestamp_after=timestamp)["data"]
+    assert len(latest_log) >= 1
+    assert len(latest_log) < len(logs)
+    state = latest_log[0]
+
+    assert state["completed"] == 1
+    assert state["total_task_walltime"] > 0
+    assert state["total_worker_walltime"] > 0
+    assert state["total_worker_walltime"] >= state["total_task_walltime"]
+    assert state["active_memory"] > 0
 
 
 @testing.using_rdkit
