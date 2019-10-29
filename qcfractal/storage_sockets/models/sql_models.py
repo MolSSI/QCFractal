@@ -194,7 +194,11 @@ class TaskQueueORM(Base):
     # TODO: for back-compatibility with mongo, tobe removed
     @hybrid_property
     def base_result(self):
-        return dict(ref="result", id=str(self.base_result_id))
+        return self._base_result(self.base_result_id)
+
+    @staticmethod
+    def _base_result(base_result_id):
+        return dict(ref="result", id=str(base_result_id))
         # return self.base_result_id   # todo, change to this
 
     @base_result.setter

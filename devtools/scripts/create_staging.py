@@ -4,12 +4,11 @@ development DB.
 
 """
 
+from qcfractal.interface.models import GridOptimizationRecord, OptimizationRecord, ResultRecord, TorsionDriveRecord
 from qcfractal.storage_sockets import storage_socket_factory
-from qcfractal.storage_sockets.models import (BaseResultORM, ResultORM, CollectionORM,
-                                              OptimizationProcedureORM, GridOptimizationProcedureORM,
-                                              TorsionDriveProcedureORM, TaskQueueORM)
-from qcfractal.interface.models import (ResultRecord, OptimizationRecord,
-                                        TorsionDriveRecord, GridOptimizationRecord)
+from qcfractal.storage_sockets.models import (BaseResultORM, CollectionORM, GridOptimizationProcedureORM,
+                                              OptimizationProcedureORM, ResultORM, TaskQueueORM,
+                                              TorsionDriveProcedureORM)
 
 # production_uri = "postgresql+psycopg2://qcarchive:mypass@localhost:5432/test_qcarchivedb"
 production_uri = "postgresql+psycopg2://postgres:@localhost:11711/qcarchivedb"
@@ -21,11 +20,9 @@ VERBOSE = False
 
 def connect_to_DBs(staging_uri, production_uri, max_limit):
 
-    staging_storage = storage_socket_factory(staging_uri, db_type='sqlalchemy',
-                                         max_limit=max_limit)
+    staging_storage = storage_socket_factory(staging_uri, db_type='sqlalchemy', max_limit=max_limit)
 
-    production_storage = storage_socket_factory(production_uri, db_type='sqlalchemy',
-                                         max_limit=max_limit)
+    production_storage = storage_socket_factory(production_uri, db_type='sqlalchemy', max_limit=max_limit)
 
     print("DB limit: ", max_limit)
 
@@ -33,11 +30,12 @@ def connect_to_DBs(staging_uri, production_uri, max_limit):
 
 
 def get_number_to_copy(total_size, sample_size):
-    to_copy = int(total_size*sample_size)
+    to_copy = int(total_size * sample_size)
     if to_copy:
         return max(to_copy, 10)
     else:
         return 1  # avoid zero because zero means no limit in storage
+
 
 def copy_molecules(staging_storage, prod_storage, prod_ids):
     """Copy from production to staging"""
@@ -73,7 +71,6 @@ def copy_keywords(staging_storage, prod_storage, prod_ids):
     prod_ids = list(set(prod_ids))
     print('----Total # of keywords to copy: ', len(prod_ids))
 
-
     ret = prod_storage.get_keywords(id=prod_ids)
     if VERBOSE:
         print('Get from prod:', ret)
@@ -97,7 +94,6 @@ def copy_kv_store(staging_storage, prod_storage, prod_ids):
 
     prod_ids = list(set(prod_ids))
     print('----Total # of KV_store to copy: ', len(prod_ids))
-
 
     ret = prod_storage.get_kvstore(id=prod_ids)
     if VERBOSE:
@@ -125,7 +121,6 @@ def copy_users(staging_storage, prod_storage):
     if VERBOSE:
         print('Inserted in SQL:', len(sql_insered))
 
-
     print('---- Done copying Users\n\n')
 
 
@@ -138,7 +133,6 @@ def copy_managers(staging_storage, prod_storage, mang_list):
 
     print('-----Total # of Managers to copy is: ', len(prod_mangers))
 
-
     sql_insered = staging_storage._copy_managers(prod_mangers)['data']
     if VERBOSE:
         print('Inserted in SQL:', len(sql_insered))
@@ -146,27 +140,33 @@ def copy_managers(staging_storage, prod_storage, mang_list):
     print('---- Done copying Queue Manager\n\n')
 
 
-def copy_collections(staging_storage, production_storage, SAMPLE_SIZE=0):
+def copy_collections(staging_storage, production_storage, SAMPLE_SIZE=0, names=[]):
     """Copy collections from production to staging"""
 
     total_count = production_storage.get_total_count(CollectionORM)
     print('------Total # of Collections in the DB is: ', total_count)
     count_to_copy = get_number_to_copy(total_count, SAMPLE_SIZE)
-    colletions = production_storage.get_collections(limit=count_to_copy)['data']
-
-    print('Copying {} collections'.format(count_to_copy))
+    collections = production_storage.get_collections(limit=count_to_copy)['data']
+    for name in names:
+        if name not in [c['name'] for c in collections]:
+            collections.append(production_storage.get_collections(name=name))['data']
+    print(f'Copying {len(collections)} collections')
 
     mol_ids = []
-    for col in colletions:
+    for col in collections:
         if col['collection'] == 'dataset' and 'records' in col:
             for rec in col['records']:
                 mol_ids.append(rec['molecule_id'])
-
+    results = production_storage.get_results(molecule=mol_ids, projection=['id', 'manager_name'])["data"]
+    res_ids = {res['id'] for res in results}
+    managers = {"".join(res['manager_name'])
+                for res in results}  # Manager names are lists of characters, for whatever reason
+    copy_managers(staging_storage, production_storage, managers)
     mols_map = copy_molecules(staging_storage, production_storage, mol_ids)
-
+    res_ids = copy_results(staging_storage, production_storage, results_ids=res_ids)
 
     sql_insered = 0
-    for col in colletions:
+    for col in collections:
         if col['collection'] == 'dataset' and 'records' in col:
             for rec in col['records']:
                 rec['molecule_id'] = mols_map[rec['molecule_id']]
@@ -194,7 +194,6 @@ def copy_results(staging_storage, production_storage, SAMPLE_SIZE=0, results_ids
         print('------Total # of Results in the DB is: ', total_count)
         count_to_copy = get_number_to_copy(total_count, SAMPLE_SIZE)
         prod_results = production_storage.get_results(status=None, limit=count_to_copy)['data']
-
 
     print('Copying {} results'.format(count_to_copy))
 
@@ -236,8 +235,7 @@ def copy_results(staging_storage, production_storage, SAMPLE_SIZE=0, results_ids
     return {m1: m2 for m1, m2 in zip(results_ids, staging_ids)}
 
 
-def copy_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE=0,
-                                procedure_ids=[]):
+def copy_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE=0, procedure_ids=[]):
     """Copy from prod to staging"""
 
     if SAMPLE_SIZE == 0 and len(procedure_ids) == 0:
@@ -250,10 +248,10 @@ def copy_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE
         total_count = production_storage.get_total_count(OptimizationProcedureORM)
         print('------Total # of Optmization Procedure in the DB is: ', total_count)
         count_to_copy = get_number_to_copy(total_count, SAMPLE_SIZE)
-        prod_proc = production_storage.get_procedures(procedure='optimization', status=None, limit=count_to_copy)['data']
+        prod_proc = production_storage.get_procedures(procedure='optimization', status=None,
+                                                      limit=count_to_copy)['data']
 
     print('Copying {} optimizations'.format(count_to_copy))
-
 
     mols, results, kvstore = [], [], []
     for rec in prod_proc:
@@ -298,8 +296,7 @@ def copy_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE
     return {m1: m2 for m1, m2 in zip(procedure_ids, staging_ids)}
 
 
-def copy_torsiondrive_procedure(staging_storage, production_storage, SAMPLE_SIZE=0,
-                                procedure_ids=[]):
+def copy_torsiondrive_procedure(staging_storage, production_storage, SAMPLE_SIZE=0, procedure_ids=[]):
     """Copy from prod to staging"""
 
     if SAMPLE_SIZE == 0 and len(procedure_ids) == 0:
@@ -312,10 +309,10 @@ def copy_torsiondrive_procedure(staging_storage, production_storage, SAMPLE_SIZE
         total_count = production_storage.get_total_count(TorsionDriveProcedureORM)
         print('------Total # of Torsiondrive Procedure in the DB is: ', total_count)
         count_to_copy = get_number_to_copy(total_count, SAMPLE_SIZE)
-        prod_proc = production_storage.get_procedures(procedure='torsiondrive', status=None, limit=count_to_copy)['data']
+        prod_proc = production_storage.get_procedures(procedure='torsiondrive', status=None,
+                                                      limit=count_to_copy)['data']
 
     print('Copying {} Torsiondrives'.format(count_to_copy))
-
 
     mols, procs, kvstore = [], [], []
     for rec in prod_proc:
@@ -359,25 +356,24 @@ def copy_torsiondrive_procedure(staging_storage, production_storage, SAMPLE_SIZE
     return {m1: m2 for m1, m2 in zip(procedure_ids, staging_ids)}
 
 
-def copy_grid_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE=0,
-                                procedure_ids=[]):
+def copy_grid_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE=0, procedure_ids=[]):
     """Copy from prod to staging"""
 
     if SAMPLE_SIZE == 0 and len(procedure_ids) == 0:
         return []
 
-
     if procedure_ids:
         count_to_copy = len(procedure_ids)
-        prod_proc = production_storage.get_procedures(id=procedure_ids, procedure='gridoptimization', status=None)['data']
+        prod_proc = production_storage.get_procedures(id=procedure_ids, procedure='gridoptimization',
+                                                      status=None)['data']
     else:
         total_count = production_storage.get_total_count(GridOptimizationProcedureORM)
         print('------Total # of Grid optimizations Procedure in the DB is: ', total_count)
         count_to_copy = get_number_to_copy(total_count, SAMPLE_SIZE)
-        prod_proc = production_storage.get_procedures(procedure='gridoptimization', status=None, limit=count_to_copy)['data']
+        prod_proc = production_storage.get_procedures(procedure='gridoptimization', status=None,
+                                                      limit=count_to_copy)['data']
 
     print('Copying {} Grid optimizations'.format(count_to_copy))
-
 
     mols, procs, kvstore = [], [], []
     for rec in prod_proc:
@@ -417,8 +413,7 @@ def copy_grid_optimization_procedure(staging_storage, production_storage, SAMPLE
 
     procedures_py = [GridOptimizationRecord(**proc) for proc in prod_proc]
     staging_ids = staging_storage.add_procedures(procedures_py)
-    print('Inserted in SQL:', len(staging_ids['data']),
-          'duplicates: ', len(staging_ids['meta']['duplicates']))
+    print('Inserted in SQL:', len(staging_ids['data']), 'duplicates: ', len(staging_ids['meta']['duplicates']))
 
     print('---- Done copying Grid Optmization procedures\n\n')
 
@@ -436,7 +431,6 @@ def copy_task_queue(staging_storage, production_storage, SAMPLE_SIZE=None):
 
     print('Copying {} TaskQueues'.format(count_to_copy))
 
-
     base_results, managers = [], []
     results = {
         'result': [],
@@ -450,17 +444,23 @@ def copy_task_queue(staging_storage, production_storage, SAMPLE_SIZE=None):
         managers.append(rec.manager)
 
     with production_storage.session_scope() as session:
-        ret = session.query(BaseResultORM.id, BaseResultORM.result_type).filter(BaseResultORM.id.in_(base_results)).all()
+        ret = session.query(BaseResultORM.id,
+                            BaseResultORM.result_type).filter(BaseResultORM.id.in_(base_results)).all()
 
         for id, type in ret:
             results[type].append(id)
 
-
     # fast way to map, missing ids will be omitted
     results_map = copy_results(staging_storage, production_storage, results_ids=results['result'])
-    proc_map1 = copy_optimization_procedure(staging_storage, production_storage, procedure_ids=results['optimization_procedure'])
-    proc_map2 = copy_grid_optimization_procedure(staging_storage, production_storage, procedure_ids=results['grid_optimization_procedure'])
-    proc_map3 = copy_torsiondrive_procedure(staging_storage, production_storage, procedure_ids=results['torsiondrive_procedure'])
+    proc_map1 = copy_optimization_procedure(staging_storage,
+                                            production_storage,
+                                            procedure_ids=results['optimization_procedure'])
+    proc_map2 = copy_grid_optimization_procedure(staging_storage,
+                                                 production_storage,
+                                                 procedure_ids=results['grid_optimization_procedure'])
+    proc_map3 = copy_torsiondrive_procedure(staging_storage,
+                                            production_storage,
+                                            procedure_ids=results['torsiondrive_procedure'])
     copy_managers(staging_storage, production_storage, managers)
 
     for rec in prod_tasks:
@@ -505,6 +505,7 @@ def copy_alembic(staging_storage, production_storage):
         except Exception as err:
             print(err)
 
+
 def main():
 
     global staging_uri, production_uri, SAMPLE_SIZE, MAX_LIMIT
@@ -520,7 +521,7 @@ def main():
 
     # Copy metadata
     #with production_storage.session_scope() as session:
-    #    alembic = session.execute("select * from alembic_version") 
+    #    alembic = session.execute("select * from alembic_version")
     #    version = alembic.first()[0]
 
     # copy all users, small tables, no need for sampling
@@ -534,10 +535,10 @@ def main():
     copy_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE=SAMPLE_SIZE)
 
     print('\n---------------- Torsiondrive procedure -----------------------')
-    copy_torsiondrive_procedure(staging_storage, production_storage, SAMPLE_SIZE=SAMPLE_SIZE*2)
+    copy_torsiondrive_procedure(staging_storage, production_storage, SAMPLE_SIZE=SAMPLE_SIZE * 2)
 
     print('\n---------------- Grid Optimization procedure -----------------------')
-    copy_grid_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE=SAMPLE_SIZE*2)
+    copy_grid_optimization_procedure(staging_storage, production_storage, SAMPLE_SIZE=SAMPLE_SIZE * 2)
 
     print('\n---------------- Task Queue -----------------------')
     copy_task_queue(staging_storage, production_storage, SAMPLE_SIZE=SAMPLE_SIZE)
@@ -547,7 +548,6 @@ def main():
 
     print('\n---------------- Alembic -----------------------')
     copy_alembic(staging_storage, production_storage)
-
 
 
 if __name__ == "__main__":
