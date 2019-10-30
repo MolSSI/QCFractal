@@ -11,12 +11,12 @@ from enum import Enum
 from math import ceil
 from typing import List, Optional
 
+import qcengine as qcng
 import tornado.log
 import yaml
-
-import qcengine as qcng
-import qcfractal
 from pydantic import Field, validator
+
+import qcfractal
 
 from ..interface.models import AutodocBaseSettings, ProtoModel
 from . import cli_utils
@@ -49,7 +49,7 @@ class CommonManagerSettings(AutodocBaseSettings):
 
     """
     adapter: AdapterEnum = Field(AdapterEnum.pool,
-                                  description="Which type of Distributed adapter to run tasks through.")
+                                 description="Which type of Distributed adapter to run tasks through.")
     tasks_per_worker: int = Field(
         1,
         description="Number of concurrent tasks to run *per Worker* which is executed. Total number of concurrent "
@@ -599,7 +599,6 @@ def main(args=None):
             Based on response:
             https://stackoverflow.com/questions/25108581/python-yaml-dump-bad-indentation/39681672#39681672
             """
-
             def increase_indent(self, flow=False, indentless=False):
                 return super(IndentListDumper, self).increase_indent(flow, False)
 
@@ -742,10 +741,10 @@ def main(args=None):
                                                       package=_provider_loaders[settings.cluster.scheduler])
             provider_class = getattr(provider_module, _provider_loaders[settings.cluster.scheduler])
             provider_header = _provider_headers[settings.cluster.scheduler]
-            if parsl.__version__ < '0.8.0':
+            if parsl.__version__ < '0.9.0':
                 raise ImportError
         except ImportError:
-            raise ImportError("You need `parsl >=0.8.0` to use the `parsl` adapter")
+            raise ImportError("You need `parsl >=0.9.0` to use the `parsl` adapter")
 
         if _provider_loaders[settings.cluster.scheduler] == "moab":
             logger.warning(
@@ -765,6 +764,12 @@ def main(args=None):
             "worker_init": '\n'.join(settings.cluster.task_startup_commands),
             **settings.parsl.provider.dict(skip_defaults=True, exclude={"partition", "launcher"})
         }
+        if settings.cluster.scheduler.lower() == "slurm" and "cores_per_node" not in common_parsl_provider_construct:
+            common_parsl_provider_construct["cores_per_node"] = settings.common.cores_per_worker
+        # TODO: uncomment after Parsl#1416 is resolved
+        #if settings.cluster.scheduler.lower() == "slurm" and "mem_per_node" not in common_parsl_provider_construct:
+        #    common_parsl_provider_construct["mem_per_node"] = settings.common.memory_per_worker
+
         if settings.parsl.provider.launcher:
             common_parsl_provider_construct["launcher"] = settings.parsl.provider.launcher.build_launcher()
         if settings.cluster.scheduler == "slurm":

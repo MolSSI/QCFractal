@@ -38,6 +38,11 @@ Deprecated Features
 - (:pr:`426`) In ``Dataset`` and ``ReactionDataset`` (``interface.collections``),
   the previously deprecated functions ``query``, ``get_history``, and ``list_history`` have been removed.
 
+Optional Dependency Changes
++++++++++++++++++++++++++++
+- (:pr:`454`) Users of the optional Parsl queue adapter are required to upgrade to Parsl v0.9.0, which fixes
+  issues that caused SLURM managers to crash.
+
 0.11.0 / 2019-10-01
 -------------------
 

@@ -99,7 +99,7 @@ environs = [
         "filename":
         "adapters.yaml",
         "dependencies":
-        ["rdkit", "dask", "distributed", "dask-jobqueue>=0.5.0", "ipyparallel", "ipykernel", "parsl>=0.8.0"],
+        ["rdkit", "dask", "distributed", "dask-jobqueue>=0.5.0", "ipyparallel", "ipykernel", "parsl>=0.9.0"],
         "pip_dependencies": ["fireworks"]
     },
     {
