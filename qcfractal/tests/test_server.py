@@ -65,6 +65,7 @@ def test_storage_socket(test_server):
                              "name": storage["name"]
                          }
                      })
+    print(r.content)
     assert r.status_code == 200, r.reason
 
     pdata = r.json()

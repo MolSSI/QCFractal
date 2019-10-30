@@ -7,13 +7,13 @@ from contextlib import contextmanager
 
 import numpy as np
 import pytest
-
 import qcelemental as qcel
-import qcfractal.interface as ptl
 from qcelemental.models import Molecule
 from qcengine.testing import is_program_new_enough
+
+import qcfractal.interface as ptl
 from qcfractal import testing
-from qcfractal.testing import fractal_compute_server, live_fractal_or_skip
+from qcfractal.testing import df_compare, fractal_compute_server, live_fractal_or_skip
 
 
 @contextmanager
@@ -124,10 +124,13 @@ def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
         ds.save()
 
         ds.compute("HF", "sto-3g")
+        ds.compute("HF", "3-21g")
         fractal_compute_server.await_results()
 
         assert ds.get_records("HF", "sto-3g").iloc[0, 0].status == "COMPLETE"
         assert ds.get_records("HF", "sto-3g").iloc[1, 0].status == "COMPLETE"
+        assert ds.get_records("HF", "3-21g").iloc[0, 0].status == "COMPLETE"
+        assert ds.get_records("HF", "3-21g").iloc[1, 0].status == "COMPLETE"
 
         build_dataset_fixture_view(ds, fractal_compute_server)
 
@@ -158,7 +161,7 @@ def test_gradient_dataset_get_molecules(gradient_dataset_fixture):
     mols_subset = ds.get_molecules(subset=["He1"])
     assert mols_subset.iloc[0, 0].measure([0, 1]) == pytest.approx(he1_dist)
 
-    with pytest.raises(KeyError):
+    with pytest.raises((KeyError, RuntimeError)):
         ds.get_molecules(subset="NotInDataset")
 
 
@@ -203,7 +206,7 @@ def test_gradient_dataset_get_values(gradient_dataset_fixture):
     assert cols == names
 
     df = ds.get_values()
-    assert df.shape == (len(ds.get_index()), 4)
+    assert df.shape == (len(ds.get_index()), 5)
     for entry in ds.get_index():
         assert (df.loc[entry, "HF/sto-3g"] == ds.get_records(subset=entry,
                                                              method="hf",
@@ -235,21 +238,20 @@ def test_gradient_dataset_list_values(gradient_dataset_fixture):
 
     # List native values
     df1 = ds.list_values(native=True).reset_index()
-    assert df1.shape == (1, 7)
+    assert df1.shape == (2, 7)
     assert set(df1.columns) == {*ds.data.history_keys, "name", "native"}
 
     df2 = ds.list_values(method='hf', basis='sto-3g', native=True).reset_index()
     df3 = ds.list_values(name='hf/sto-3g', native=True).reset_index()
-    assert (df1 == df2).all().all()
-    assert (df1 == df3).all().all()
+    assert (df2 == df3).all().all()
 
     # All values
     df = ds.list_values().reset_index()
-    assert df.shape == (4, 7)
+    assert df.shape == (5, 7)
     assert set(df.columns) == {*ds.data.history_keys, "name", "native"}
 
     df = ds.list_values(driver="gradient").reset_index()
-    assert df.shape == (3, 7)
+    assert df.shape == (4, 7)
 
     df = ds.list_values(name="Not in dataset").reset_index()
     assert len(df) == 0
@@ -259,7 +261,7 @@ def test_gradient_dataset_statistics(gradient_dataset_fixture):
     client, ds = gradient_dataset_fixture
 
     df = ds.get_values(native=True)
-    assert df.shape == (2, 1)
+    assert df.shape == (2, 2)
     assert np.sum(df.loc["He2", "HF/sto-3g"]) == pytest.approx(0.0)
 
     # Test out some statistics
@@ -269,6 +271,64 @@ def test_gradient_dataset_statistics(gradient_dataset_fixture):
     stats = ds.statistics("UE", "HF/sto-3g", "Gradient")
     assert pytest.approx(stats.loc["He1"].mean(), 1.e-5) == 0.01635020639
     assert pytest.approx(stats.loc["He2"].mean(), 1.e-5) == 0.00333333333
+
+
+def test_gradient_dataset_get_values_caching(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    ds._clear_cache()
+
+    with check_requests_monitor(client, "result", request_made=True and not ds._use_view(False)):
+        ds.get_values()
+
+    with check_requests_monitor(client, "result", request_made=False):
+        ds.get_values()
+
+    ds._clear_cache()
+
+    with check_requests_monitor(client, "result", request_made=True and not ds._use_view(False)):
+        ds.get_values(basis='sto-3g')
+
+    with check_requests_monitor(client, "result", request_made=False):
+        ds.get_values(basis='sto-3g', subset=['He1'])
+        ds.get_values(basis='sto-3g', subset='He2')
+        ds.get_values(basis='sto-3g', subset=['He1', 'He2'])
+
+    with check_requests_monitor(client, "result", request_made=True and not ds._use_view(False)):
+        ds.get_values(basis='3-21g', subset='He1')
+
+    with check_requests_monitor(client, "result", request_made=True and not ds._use_view(False)):
+        ds.get_values(basis='3-21g', subset=['He1', 'He2'])
+
+    with check_requests_monitor(client, "result", request_made=False):
+        ds.get_values(basis='3-21g', subset='He2')
+
+    with check_requests_monitor(client, "result", request_made=False):
+        ds.get_values()
+
+
+@pytest.mark.parametrize('use_cache', [True, False])
+def test_gradient_dataset_values_subset(gradient_dataset_fixture, use_cache):
+    client, ds = gradient_dataset_fixture
+
+    allvals = ds.get_values()
+    ds._clear_cache()
+
+    subsets = [None, 'He1', ['He2'], ['He1', 'He2'], ['He1', 'He2', 'He1', 'He1']]
+    colnames = [None, 'HF/3-21g', ['HF/3-21g', 'HF/sto-3g'], 'no details', ['HF/sto-3g', 'no details']]
+    for subset, colname in itertools.product(subsets, colnames):
+        if not use_cache:
+            ds._clear_cache()
+        df1 = ds.get_values(subset=subset, name=colname)
+
+        if colname is None:
+            c = slice(None)
+        elif isinstance(colname, str):
+            c = [colname]
+        else:
+            c = colname
+        df2 = allvals.loc[subset if subset is not None else slice(None), c]
+        assert df_compare(df1, df2, sort=True)
 
 
 @pytest.fixture(scope="module", params=["download_view", "no_view", "remote_view"])
@@ -483,6 +543,30 @@ def test_reactiondataset_check_state(fractal_compute_server):
     assert bench.loc["He2"][0] == contrib["values"]["He2"]
 
 
+@pytest.mark.parametrize('use_cache', [True, False])
+def test_contributed_dataset_values_subset(contributed_dataset_fixture, use_cache):
+    client, ds = contributed_dataset_fixture
+
+    allvals = ds.get_values()
+    ds._clear_cache()
+
+    subsets = [None, 'He1', ['He'], ['He', 'He1']]
+    colnames = [None, 'Fake Energy', ['Fake Hessian', 'Fake Dipole', 'Fake Energy']]
+    for subset, colname in itertools.product(subsets, colnames):
+        if not use_cache:
+            ds._clear_cache()
+        df1 = ds.get_values(subset=subset, name=colname)
+
+        if colname is None:
+            c = slice(None)
+        elif isinstance(colname, str):
+            c = [colname]
+        else:
+            c = colname
+        df2 = allvals.loc[subset if subset is not None else slice(None), c]
+        assert df_compare(df1, df2, sort=True)
+
+
 @pytest.fixture(scope="module", params=["download_view", "no_view", "remote_view"])
 def reactiondataset_dftd3_fixture_fixture(fractal_compute_server, tmp_path_factory, request):
     ds_name = "He_DFTD3"
@@ -521,7 +605,7 @@ def reactiondataset_dftd3_fixture_fixture(fractal_compute_server, tmp_path_facto
     yield client, ds
 
 
-def test_rectiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
+def test_reactiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
 
     records = ds.get_records("B3LYP", "6-31g")
@@ -548,7 +632,7 @@ def test_rectiondataset_dftd3_records(reactiondataset_dftd3_fixture_fixture):
         ds.get_records("Fake Method", "6-31g", stoich="cp")
 
 
-def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
+def test_reactiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
 
     request_made = not ds._use_view(False)
@@ -575,7 +659,7 @@ def test_rectiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
         assert value == ds.df.loc["HeDimer", key]
 
 
-def test_rectiondataset_dftd3_molecules(reactiondataset_dftd3_fixture_fixture):
+def test_reactiondataset_dftd3_molecules(reactiondataset_dftd3_fixture_fixture):
     client, ds = reactiondataset_dftd3_fixture_fixture
 
     request_made = not ds._use_view(False)
@@ -598,6 +682,49 @@ def test_rectiondataset_dftd3_molecules(reactiondataset_dftd3_fixture_fixture):
 
     mols = mols.reset_index()
     assert set(stoichs) == set(mols["stoichiometry"])
+
+
+def test_rectiondataset_dftd3_values_caching(reactiondataset_dftd3_fixture_fixture):
+    client, ds = reactiondataset_dftd3_fixture_fixture
+    ds._clear_cache()
+
+    with check_requests_monitor(client, "result", request_made=True and not ds._use_view(False)):
+        ds.get_values("B3LYP", "6-31G")
+
+    with check_requests_monitor(client, "result", request_made=True and not ds._use_view(False)):
+        ds.get_values("B3LYP-D3", "6-31G")
+
+    with check_requests_monitor(client, "result", request_made=True and not ds._use_view(False)):
+        ds.get_values("B3LYP-D3(BJ)", "6-31G")
+
+    with check_requests_monitor(client, "result", request_made=False):
+        ds.get_values("B3LYP", "6-31G", subset=None)
+        ds.get_values("B3LYP", "6-31G", subset="HeDimer")
+        ds.get_values("B3LYP", "6-31G", subset=["HeDimer"])
+
+
+@pytest.mark.parametrize('use_cache', [True, False])
+def test_reactiondataset_dftd3_values_subset(reactiondataset_dftd3_fixture_fixture, use_cache):
+    client, ds = reactiondataset_dftd3_fixture_fixture
+
+    allvals = ds.get_values()
+    ds._clear_cache()
+
+    subsets = [None, 'HeDimer', ['HeDimer'], ['HeDimer', 'HeDimer']]
+    colnames = [None, 'B3LYP/6-31g', ['B3LYP-D3/6-31g', 'B3LYP-D3(BJ)/6-31g'], ['B3LYP/6-31g']]
+    for subset, colname in itertools.product(subsets, colnames):
+        if not use_cache:
+            ds._clear_cache()
+        df1 = ds.get_values(subset=subset, name=colname)
+
+        if colname is None:
+            c = slice(None)
+        elif isinstance(colname, str):
+            c = [colname]
+        else:
+            c = colname
+        df2 = allvals.loc[subset if subset is not None else slice(None), c]
+        assert df_compare(df1, df2, sort=True)
 
 
 def test_dataset_dftd3(reactiondataset_dftd3_fixture_fixture):
@@ -761,7 +888,7 @@ def qm3_fixture(request, tmp_path_factory):
     to_remove = {row for row in ds.data.history if row[2].lower() not in {'b3lyp', 'pbe'}}
     for row in to_remove:
         ds.data.history.remove(row)
-    ds._form_index()
+    ds.get_entries(force=True)
 
     # with view
     if request.param:
@@ -785,7 +912,7 @@ def s22_fixture(request, tmp_path_factory):
     to_remove = {row for row in ds.data.history if row[2].lower() not in {"b3lyp", "pbe"}}
     for row in to_remove:
         ds.data.history.remove(row)
-    ds._form_index()
+    ds.get_entries(force=True)
 
     # with view
     if request.param:
@@ -886,28 +1013,6 @@ def test_s22_list_get_values(s22_fixture):
 
 def assert_view_identical(ds):
     """ Tests if get_values, list_values, get_entries, and get_molecules return the same result with/out a view"""
-    def df_equals(df1, df2):
-        """ checks equality even when columns contain numpy arrays, which .equals and == struggle with """
-        if not all(df1.columns == df2.columns):
-            return False
-        if not all(df1.index.values == df2.index.values):
-            return False
-        for i in range(df1.shape[0]):
-            for j in range(df1.shape[1]):
-                if isinstance(df1.iloc[i, j], np.ndarray):
-                    if not np.array_equal(df1.iloc[i, j], df2.iloc[i, j]):
-                        return False
-                elif isinstance(df1.iloc[i, j], Molecule):
-                    if not df1.iloc[i, j].get_hash() == df2.iloc[i, j].get_hash():
-                        return False
-                # Because nan != nan
-                elif df1.isna().iloc[i, j]:
-                    if not df2.isna().iloc[i, j]:
-                        return False
-                else:
-                    if not df1.iloc[i, j] == df2.iloc[i, j]:
-                        return False
-        return True
 
     ds._disable_view = True
     list_ds = ds.list_values(force=True)
@@ -940,11 +1045,11 @@ def assert_view_identical(ds):
             entry_view.drop(mid, axis=1, inplace=True)
 
     assert list_ds.equals(list_view)
-    assert df_equals(cv_view, cv_ds)
-    assert df_equals(nv_view, nv_ds)
-    assert df_equals(v_view, v_ds)
-    assert df_equals(entry_ds, entry_view)
-    assert df_equals(mol_ds, mol_view)
+    assert df_compare(cv_view, cv_ds)
+    assert df_compare(nv_view, nv_ds)
+    assert df_compare(v_view, v_ds)
+    assert df_compare(entry_ds, entry_view)
+    assert df_compare(mol_ds, mol_view)
 
 
 def test_gradient_dataset_view_identical(gradient_dataset_fixture):
@@ -1225,3 +1330,41 @@ def test_grid_optimization_dataset(fractal_compute_server):
 
     ds.query("test")
     assert ds.get_record("hooh1", "test").status == "COMPLETE"
+
+
+@pytest.mark.parametrize("ds_class", [ptl.collections.Dataset, ptl.collections.ReactionDataset])
+def test_get_collection_no_records(ds_class, fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+    ds = ds_class(f"tnr_{ds_class.__name__}", client=client)
+    ds.save()
+
+    ds = client.get_collection(ds_class.__name__, ds.name)
+    assert ds.data.records is None
+
+
+def test_gradient_dataset_lazy_entries_values(gradient_dataset_fixture):
+    client, ds = gradient_dataset_fixture
+
+    ds._clear_cache()
+    assert ds.data.records is None
+    assert ds.data.contributed_values is None
+
+    ds.get_values(subset=['He1'], basis="3-21g")
+    assert (~ds.df.isna()).sum().sum() == 1
+    if not ds._use_view():
+        assert ds.data.records is not None
+    else:
+        assert ds.data.records is None
+
+
+def test_get_collection_no_records_ds(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+    ds = ptl.collections.Dataset(f"tnr_test", client=client)
+    ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
+    ds.save()
+
+    ds = client.get_collection("dataset", ds.name)
+    assert ds.data.records is None
+    ds.get_entries()
+    assert len(ds.data.records) == 1
+    assert ds.data.records[0].name == "He1"

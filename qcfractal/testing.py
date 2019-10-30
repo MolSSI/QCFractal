@@ -14,11 +14,13 @@ import time
 from collections import Mapping
 from contextlib import contextmanager
 
+import numpy as np
+import pandas as pd
 import pytest
-import requests
-from tornado.ioloop import IOLoop
-
 import qcengine as qcng
+import requests
+from qcelemental.models import Molecule
+from tornado.ioloop import IOLoop
 
 from .interface import FractalClient
 from .postgres_harness import PostgresHarness, TemporaryPostgres
@@ -547,3 +549,59 @@ def live_fractal_or_skip():
             return FractalClient()
         except (requests.exceptions.ConnectionError, ConnectionRefusedError):
             return pytest.skip("Could not make a connection to central Fractal server")
+
+
+def df_compare(df1, df2, sort=False):
+    """ checks equality even when columns contain numpy arrays, which .equals and == struggle with """
+    if sort:
+        if isinstance(df1, pd.DataFrame):
+            df1 = df1.reindex(sorted(df1.columns), axis=1)
+        elif isinstance(df1, pd.Series):
+            df1 = df1.sort_index()
+        if isinstance(df2, pd.DataFrame):
+            df2 = df2.reindex(sorted(df2.columns), axis=1)
+        elif isinstance(df2, pd.Series):
+            df2 = df2.sort_index()
+
+    def element_equal(e1, e2):
+        if isinstance(e1, np.ndarray):
+            if not np.array_equal(e1, e2):
+                return False
+        elif isinstance(e1, Molecule):
+            if not e1.get_hash() == e2.get_hash():
+                return False
+        # Because nan != nan
+        elif isinstance(e1, float) and np.isnan(e1):
+            if not np.isnan(e2):
+                return False
+        else:
+            if not e1 == e2:
+                return False
+        return True
+
+    if isinstance(df1, pd.Series):
+        if not isinstance(df2, pd.Series):
+            return False
+        if len(df1) != len(df2):
+            return False
+        for i in range(len(df1)):
+            if not element_equal(df1[i], df2[i]):
+                return False
+        return True
+
+    for column in df1.columns:
+        if column.startswith("_"):
+            df1.drop(column, axis=1, inplace=True)
+    for column in df2.columns:
+        if column.startswith("_"):
+            df2.drop(column, axis=1, inplace=True)
+    if not all(df1.columns == df2.columns):
+        return False
+    if not all(df1.index.values == df2.index.values):
+        return False
+    for i in range(df1.shape[0]):
+        for j in range(df1.shape[1]):
+            if not element_equal(df1.iloc[i, j], df2.iloc[i, j]):
+                return False
+
+    return True

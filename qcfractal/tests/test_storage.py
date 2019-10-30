@@ -12,6 +12,7 @@ import pytest
 import qcfractal.interface as ptl
 from qcfractal.interface.models.task_models import TaskStatusEnum
 from qcfractal.services.services import TorsionDriveService
+from qcfractal.storage_sockets.models.collections_models import DatasetORM
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
 
 bad_id1 = "000000000000000000000000"
@@ -268,6 +269,86 @@ def test_collections_overwrite(storage_socket):
     assert ret == 1
 
 
+def test_collections_projection(storage_socket):
+
+    collection = 'Dataset'
+    name = 'Dataset123'
+
+    # Add two waters
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
+    mol_insert = storage_socket.add_molecules([water, water2])
+
+    db = {
+        "collection":
+        collection,
+        "name":
+        name,
+        "visibility":
+        True,
+        "view_available":
+        False,
+        "records": [{
+            "name": "He1",
+            "molecule_id": mol_insert["data"][0],
+            "comment": None,
+            "local_results": {}
+        }, {
+            "name": "He2",
+            "molecule_id": mol_insert["data"][1],
+            "comment": None,
+            "local_results": {}
+        }],
+        "contributed_values": {
+            "gradient": {
+                "name": "Gradient",
+                "doi": None,
+                "theory_level": "pseudo-random values",
+                "theory_level_details": {
+                    "driver": "gradient"
+                },
+                "comments": None,
+                "values": {
+                    "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
+                    "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
+                },
+                "units": "hartree/bohr"
+            },
+            "no details": {
+                "name": "no details",
+                "doi": None,
+                "theory_level": "pseudo-random values",
+                "theory_level_details": None,
+                "comments": None,
+                "values": {
+                    "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
+                    "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
+                }
+            }
+        }
+    }
+
+    ret = storage_socket.add_collection(db)
+    assert ret["meta"]["n_inserted"] == 1
+
+    ret = storage_socket.get_collections(collection=collection, name=name)
+    assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
+    assert "records" in ret["data"][0]
+    assert "contributed_values" in ret["data"][0]
+
+    ret = storage_socket.get_collections(collection=collection, name=name, include=["records", "contributed_values"])
+    assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
+    assert set(ret["data"][0].keys()) == {"records", "contributed_values"}
+
+    ret = storage_socket.get_collections(collection=collection, name=name, exclude=["records", "contributed_values"])
+    assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
+    assert "records" not in ret["data"][0]
+    assert "contributed_values" not in ret["data"][0]
+
+
 def test_results_add(storage_socket):
 
     # Add two waters
@@ -485,6 +566,7 @@ def test_get_results_by_ids(storage_results):
     assert len(ret["data"]) == 6
 
     ret = storage_results.get_results(id=ids, projection=['status', 'id'])
+
     assert ret['data'][0].keys() == {'id', 'status'}
 
 
@@ -515,13 +597,13 @@ def test_results_get_dual(storage_results):
 def test_results_get_project(storage_results):
     """See new changes in design here"""
 
-    ret = storage_results.get_results(method="M2", program="P2", projection={"return_result", "id"})["data"][0]
-    assert set(ret.keys()) == {"id", "return_result"}
-    assert ret["return_result"] == 15
+    ret_true = storage_results.get_results(method="M2", program="P2", projection=["return_result", "id"])["data"][0]
+    assert set(ret_true.keys()) == {"id", "return_result"}
+    assert ret_true["return_result"] == 15
 
     # Note: explicitly set with_ids=False to remove ids
     ret = storage_results.get_results(method="M2", program="P2", with_ids=False,
-                                      projection={"return_result"})["data"][0]
+                                      projection=["return_result"])["data"][0]
     assert set(ret.keys()) == {"return_result"}
 
 
@@ -1162,3 +1244,77 @@ def test_server_log(storage_results):
     ret = storage_results.get_server_stats_log(limit=1)
     assert ret["data"][0]['timestamp'] > now
 
+
+def test_collections_projection(storage_socket):
+
+    collection = 'Dataset'
+    name = 'Dataset123'
+    name2 = name + '_2'
+
+    # Add two waters
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
+    mol_insert = storage_socket.add_molecules([water, water2])
+
+    db = {
+        "collection":
+        collection,
+        "name":
+        name,
+        "visibility":
+        True,
+        "view_available":
+        False,
+        "records": [{
+            "name": "He1",
+            "molecule_id": mol_insert["data"][0],
+            "comment": None,
+            "local_results": {}
+        }, {
+            "name": "He2",
+            "molecule_id": mol_insert["data"][1],
+            "comment": None,
+            "local_results": {}
+        }]
+    }
+
+    db2 = {"collection": collection, "name": name2, "visibility": True, "view_available": False, "records": []}
+
+    ret = storage_socket.add_collection(db)
+    assert ret["meta"]["n_inserted"] == 1
+
+    ret = storage_socket.add_collection(db2)
+    assert ret["meta"]["n_inserted"] == 1
+
+    ret = storage_socket.get_collections(collection=collection, name=name)
+    assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
+    # print('All: ', ret["data"])
+
+    projection = {"records", "name"}
+    ret = storage_socket.get_collections(collection=collection, name=name, include=projection)
+    assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
+    assert set(ret['data'][0].keys()) == projection
+    assert len(ret['data'][0]['records']) == 2
+    # print('With projection: ', ret["data"])
+
+    projection = {"records", "name"}
+    ret = storage_socket.get_collections(collection=collection, name='none_existing', include=projection)
+    assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 0
+    # print('With projection: ', ret["data"])
+
+    projection = {"records", "name", "id"}
+    ret = storage_socket.get_collections(collection=collection, name=name2, include=projection)
+    assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
+    assert set(ret['data'][0].keys()) == projection
+    assert len(ret['data'][0]['records']) == 0
+    # print('With projection: ', ret["data"])
+
+    exclude = {"records", "name"}
+    ret = storage_socket.get_collections(collection=collection, name=name, exclude=exclude)
+    assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
+    assert len(set(ret['data'][0].keys()) & exclude) == 0

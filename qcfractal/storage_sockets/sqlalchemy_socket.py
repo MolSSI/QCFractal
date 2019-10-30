@@ -3,11 +3,10 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 """
 
 try:
-    from sqlalchemy import create_engine, or_, case
+    from sqlalchemy import create_engine, or_, case, func
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
-    from sqlalchemy.sql.expression import desc, func
-    # from sqlalchemy.dialects import postgresql
+    from sqlalchemy.sql.expression import desc
 except ImportError:
     raise ImportError("SQLAlchemy_socket requires sqlalchemy, please install this python "
                       "module or try a different db_socket.")
@@ -126,7 +125,6 @@ class SQLAlchemySocket:
     """
         SQLAlcehmy QCDB wrapper class.
     """
-
     def __init__(self,
                  uri: str,
                  project: str = "molssidb",
@@ -289,53 +287,78 @@ class SQLAlchemySocket:
 
         if projection and exclude:
             raise AttributeError(f'Either projection (include) or exclude can be '
-                                 'used, not both at the same query. '
-                                 'Given projection: {prjection}, exclude: {exclude}')
+                                 f'used, not both at the same query. '
+                                 f'Given projection: {projection}, exclude: {exclude}')
 
         prop, hybrids, relationships = className._get_col_types()
 
         # build projection from include or exclude
         _projection = []
         if projection:
-            _projection = projection
+            _projection = [p for p in projection]
         elif exclude:
             _projection = set(className._all_col_names()) - set(exclude)
 
-
         proj = []
-        join_attr = []
+        join_attrs = {}
         callbacks = []
 
         # prepare hybrid attributes for callback and joins
         for key in _projection:
-            if key in prop: # normal column
+            if key in prop:  # normal column
                 proj.append(getattr(className, key))
             # if hybrid property, save callback, and relation if any
             elif key in hybrids:
                 callbacks.append(key)
                 # if it has a relationship
                 if key + '_obj' in relationships.keys():
-                    join_class_name = relationships[key + '_obj']
-                    proj.append(join_class_name)  # joint class name
-                    join_attr.append(getattr(className, key + '_obj'))
+                    # join_class_name = relationships[key + '_obj']
+                    join_attrs[key] = relationships[key + '_obj']
             else:
                 raise AttributeError(f'Atrribute {key} is not found in class {className}.')
 
+        for key in join_attrs:
+            _projection.remove(key)
 
         with self.session_scope() as session:
-            if _projection:
+            if _projection or join_attrs:
 
-                data = session.query(*proj) \
-                              .join(*join_attr, isouter=True).filter(*query)
+                if join_attrs and 'id' not in _projection:  # if the id is need for joins
+                    proj.append(getattr(className, 'id'))
+                    _projection.append('_id')  # not to be returned to user
+
+                # query with projection, without joins
+                data = session.query(*proj).filter(*query)
+
                 n_found = get_count_fast(data)  # before iterating on the data
                 data = data.limit(self.get_limit(limit)).offset(skip)
                 rdata = [dict(zip(_projection, row)) for row in data]
+
+                # query for joins if any (relationships and hybrids)
+                if join_attrs:
+                    res_ids = [d.get('id', d.get('_id')) for d in rdata]
+                    res_ids.sort()
+                    join_data = {res_id: {} for res_id in res_ids}
+                    # relations data
+                    for key, relation_details in join_attrs.items():
+                        ret = session.query(relation_details['remote_side_column'].label('id'), relation_details['join_class'])\
+                                                .filter(relation_details['remote_side_column'].in_(res_ids))\
+                                                .order_by(relation_details['remote_side_column']).all()
+                        for res_id in res_ids:
+                            join_data[res_id][key] = []
+                            for res in ret:
+                                if res_id == res[0]:
+                                    join_data[res_id][key].append(res[1])
+
+                        for data in rdata:
+                            parent_id = data.get('id', data.get('_id'))
+                            data[key] = join_data[parent_id][key]
+                            data.pop('_id', None)
 
                 # call hybrid methods
                 for callback in callbacks:
                     for res in rdata:
                         res[callback] = getattr(className, '_' + callback)(res[callback])
-
 
                 id_fields = className._get_fieldnames_with_DB_ids_()
                 for d in rdata:
@@ -354,6 +377,7 @@ class SQLAlchemySocket:
                 # print('--------rdata after: ', rdata)
             else:
                 data = session.query(className).filter(*query)
+
                 # from sqlalchemy.dialects import postgresql
                 # print(data.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
                 n_found = get_count_fast(data)
@@ -362,7 +386,7 @@ class SQLAlchemySocket:
 
         return rdata, n_found
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def custom_query(self, class_name: str, query_key: str, **kwargs):
         """
@@ -905,7 +929,8 @@ class SQLAlchemySocket:
                         name: Optional[str] = None,
                         col_id: Optional[int] = None,
                         limit: Optional[int] = None,
-                        projection: Optional[Dict[str, Any]] = None,
+                        include: Optional[List[str]] = None,
+                        exclude: Optional[List[str]] = None,
                         skip: int = 0) -> Dict[str, Any]:
         """Get collection by collection and/or name
 
@@ -939,16 +964,18 @@ class SQLAlchemySocket:
         collection_class = get_collection_class(collection)
         query = format_query(collection_class, lname=name, collection=collection, id=col_id)
 
-        # try:
         rdata, meta['n_found'] = self.get_query_projection(collection_class,
                                                            query,
-                                                           projection,
-                                                           limit,
-                                                           skip)
+                                                           projection=include,
+                                                           exclude=exclude,
+                                                           limit=limit,
+                                                           skip=skip)
+        for rd in rdata:
+            for k in ['collection_type', 'lname']:
+                if k in rd:
+                    del rd[k]
 
         meta["success"] = True
-        # except Exception as err:
-        #     meta['error_description'] = str(err)
 
         return {"data": rdata, "meta": meta}
 
@@ -1072,7 +1099,6 @@ class SQLAlchemySocket:
         -------
 
         """
-
     def get_results(self,
                     id: Union[str, List] = None,
                     program: str = None,
@@ -2143,7 +2169,6 @@ class SQLAlchemySocket:
 
         return {"data": data, "meta": meta}
 
-
     def get_manager_logs(self, manager_ids: Union[List[str], str], timestamp_after=None, limit=None, skip=0):
         meta = get_metadata_template()
         query = format_query(QueueManagerLogORM, manager_id=manager_ids)
@@ -2515,8 +2540,7 @@ class SQLAlchemySocket:
 
         # This isn't complete, but contains the biggest tables
         tables = [
-            AccessLogORM, BaseResultORM, CollectionORM, KVStoreORM, MoleculeORM, TaskQueueORM,
-            WavefunctionStoreORM
+            AccessLogORM, BaseResultORM, CollectionORM, KVStoreORM, MoleculeORM, TaskQueueORM, WavefunctionStoreORM
         ]
 
         # Calculate table info
