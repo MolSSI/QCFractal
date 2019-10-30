@@ -44,7 +44,7 @@ class ContributedValues(ProtoModel):
     values: Optional[Any] = None
     index: Optional[Any] = None
     external_url: Optional[str] = None
-    external_doi: Optional[str] = None
+    doi: Optional[str] = None
     units: str
 
 
