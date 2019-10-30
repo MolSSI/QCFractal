@@ -288,8 +288,8 @@ class SQLAlchemySocket:
 
         if projection and exclude:
             raise AttributeError(f'Either projection (include) or exclude can be '
-                                 'used, not both at the same query. '
-                                 'Given projection: {projection}, exclude: {exclude}')
+                                 f'used, not both at the same query. '
+                                 f'Given projection: {projection}, exclude: {exclude}')
 
         prop, hybrids, relationships = className._get_col_types()
 
