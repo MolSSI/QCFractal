@@ -37,12 +37,14 @@ class MoleculeEntry(ProtoModel):
 
 class ContributedValues(ProtoModel):
     name: str
-    doi: Optional[str] = None
     citations: Optional[List[Citation]] = None
     theory_level: Union[str, Dict[str, str]]
     theory_level_details: Optional[Union[str, Dict[str, Optional[str]]]] = None
     comments: Optional[str] = None
-    values: Dict[str, Any]
+    values: Optional[Any] = None
+    index: Optional[Any] = None
+    external_url: Optional[str] = None
+    external_doi: Optional[str] = None
     units: str
 
 
