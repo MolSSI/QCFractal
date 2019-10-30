@@ -3,10 +3,10 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 """
 
 try:
-    from sqlalchemy import create_engine, or_, case
+    from sqlalchemy import create_engine, or_, case, func
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
-    from sqlalchemy.sql.expression import func
+    from sqlalchemy.sql import label
     # from sqlalchemy.dialects import postgresql
 except ImportError:
     raise ImportError("SQLAlchemy_socket requires sqlalchemy, please install this python "
@@ -289,20 +289,20 @@ class SQLAlchemySocket:
         if projection and exclude:
             raise AttributeError(f'Either projection (include) or exclude can be '
                                  'used, not both at the same query. '
-                                 'Given projection: {prjection}, exclude: {exclude}')
+                                 'Given projection: {projection}, exclude: {exclude}')
 
         prop, hybrids, relationships = className._get_col_types()
 
         # build projection from include or exclude
         _projection = []
         if projection:
-            _projection = projection
+            _projection = [p for p in projection]
         elif exclude:
             _projection = set(className._all_col_names()) - set(exclude)
 
 
         proj = []
-        join_attr = []
+        join_attrs = {}
         callbacks = []
 
         # prepare hybrid attributes for callback and joins
@@ -314,21 +314,48 @@ class SQLAlchemySocket:
                 callbacks.append(key)
                 # if it has a relationship
                 if key + '_obj' in relationships.keys():
-                    join_class_name = relationships[key + '_obj']
-                    proj.append(join_class_name)  # joint class name
-                    join_attr.append(getattr(className, key + '_obj'))
+                    # join_class_name = relationships[key + '_obj']
+                    join_attrs[key] = relationships[key + '_obj']
             else:
                 raise AttributeError(f'Atrribute {key} is not found in class {className}.')
 
+        for key in join_attrs:
+            _projection.remove(key)
 
         with self.session_scope() as session:
             if _projection:
 
-                data = session.query(*proj) \
-                              .join(*join_attr, isouter=True).filter(*query)
+                if join_attrs and 'id' not in _projection:  # if the id is need for joins
+                    proj.append(getattr(className, 'id'))
+                    _projection.append('_id')  # not to be returned to user
+
+                # query with projection, without joins
+                data = session.query(*proj).filter(*query)
+
                 n_found = get_count_fast(data)  # before iterating on the data
                 data = data.limit(self.get_limit(limit)).offset(skip)
                 rdata = [dict(zip(_projection, row)) for row in data]
+
+                # query for joins if any (relationships and hybrids)
+                if join_attrs:
+                    res_ids = [d.get('id', d.get('_id')) for d in rdata]
+                    res_ids.sort()
+                    join_data = {res_id: {} for res_id in res_ids}
+                    # relations data
+                    for key, relation_details in join_attrs.items():
+                        ret = session.query(relation_details['remote_side_column'].label('id'), relation_details['join_class'])\
+                                                .filter(relation_details['remote_side_column'].in_(res_ids))\
+                                                .order_by(relation_details['remote_side_column']).all()
+                        for res_id in res_ids:
+                            join_data[res_id][key] = []
+                            for res in ret:
+                                if res_id == res[0]:
+                                    join_data[res_id][key].append(res[1])
+
+                        for data in rdata:
+                            parent_id = data.get('id', data.get('_id'))
+                            data[key] = join_data[parent_id][key]
+                            data.pop('_id', None)
 
                 # call hybrid methods
                 for callback in callbacks:
