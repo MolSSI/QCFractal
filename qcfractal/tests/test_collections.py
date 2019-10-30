@@ -13,7 +13,7 @@ from qcengine.testing import is_program_new_enough
 
 import qcfractal.interface as ptl
 from qcfractal import testing
-from qcfractal.testing import df_equals, fractal_compute_server, live_fractal_or_skip
+from qcfractal.testing import df_compare, fractal_compute_server, live_fractal_or_skip
 
 
 @contextmanager
@@ -328,7 +328,7 @@ def test_gradient_dataset_values_subset(gradient_dataset_fixture, use_cache):
         else:
             c = colname
         df2 = allvals.loc[subset if subset is not None else slice(None), c]
-        assert df_equals(df1, df2, sort=True)
+        assert df_compare(df1, df2, sort=True)
 
 
 @pytest.fixture(scope="module", params=["download_view", "no_view", "remote_view"])
@@ -564,7 +564,7 @@ def test_contributed_dataset_values_subset(contributed_dataset_fixture, use_cach
         else:
             c = colname
         df2 = allvals.loc[subset if subset is not None else slice(None), c]
-        assert df_equals(df1, df2, sort=True)
+        assert df_compare(df1, df2, sort=True)
 
 
 @pytest.fixture(scope="module", params=["download_view", "no_view", "remote_view"])
@@ -724,7 +724,7 @@ def test_reactiondataset_dftd3_values_subset(reactiondataset_dftd3_fixture_fixtu
         else:
             c = colname
         df2 = allvals.loc[subset if subset is not None else slice(None), c]
-        assert df_equals(df1, df2, sort=True)
+        assert df_compare(df1, df2, sort=True)
 
 
 def test_dataset_dftd3(reactiondataset_dftd3_fixture_fixture):
@@ -1045,11 +1045,11 @@ def assert_view_identical(ds):
             entry_view.drop(mid, axis=1, inplace=True)
 
     assert list_ds.equals(list_view)
-    assert df_equals(cv_view, cv_ds)
-    assert df_equals(nv_view, nv_ds)
-    assert df_equals(v_view, v_ds)
-    assert df_equals(entry_ds, entry_view)
-    assert df_equals(mol_ds, mol_view)
+    assert df_compare(cv_view, cv_ds)
+    assert df_compare(nv_view, nv_ds)
+    assert df_compare(v_view, v_ds)
+    assert df_compare(entry_ds, entry_view)
+    assert df_compare(mol_ds, mol_view)
 
 
 def test_gradient_dataset_view_identical(gradient_dataset_fixture):

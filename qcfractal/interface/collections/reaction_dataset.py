@@ -72,7 +72,7 @@ class ReactionDataset(Dataset):
     class DataModel(Dataset.DataModel):
 
         ds_type: _ReactionTypeEnum = _ReactionTypeEnum.rxn
-        records: Optional[List[ReactionEntry]] = []
+        records: Optional[List[ReactionEntry]] = None
 
         history: Set[Tuple[str, str, str, Optional[str], Optional[str], str]] = set()
         history_keys: Tuple[str, str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords",

@@ -92,6 +92,13 @@ class Dataset(Collection):
         self.df = pd.DataFrame()
         self._column_metadata: Dict[str, Any] = {}
 
+        # If this is a brand new dataset, initialize the records and cv fields
+        if self.data.id == 'local':
+            if self.data.records is None:
+                self.data.__dict__['records'] = []
+            if self.data.contributed_values is None:
+                self.data.__dict__['contributed_values'] = {}
+
     class DataModel(Collection.DataModel):
 
         # Defaults
@@ -104,8 +111,8 @@ class Dataset(Collection):
         alias_keywords: Dict[str, Dict[str, str]] = {}
 
         # Data
-        records: Optional[List[MoleculeEntry]] = []
-        contributed_values: Dict[str, ContributedValues] = {}
+        records: Optional[List[MoleculeEntry]] = None
+        contributed_values: Dict[str, ContributedValues] = None
 
         # History: driver, program, method (basis, keywords)
         history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
@@ -183,10 +190,17 @@ class Dataset(Collection):
 
     def _get_data_records_from_db(self):
         self._check_client()
+        # This is hacky. What we want to do is get records and contributed values correctly unpacked into pydantic
+        # objects. So what we do is call get_collection with include. But we have to also include collection and
+        # name in the query because they are required in the collection DataModel. But we can use these to check that
+        # we got back the right data, so that's nice.
         response = self.client.get_collection(self.__class__.__name__.lower(),
                                               self.name,
                                               full_return=False,
-                                              include=["records", "contributed_values", "collection", "name"])
+                                              include=["records", "contributed_values", "collection", "name", "id"])
+        if not (response.data.id == self.data.id and response.data.name == self.name):
+            raise ValueError("Got the wrong records and contributed values from the server.")
+        # This works because get_collection builds a validated Dataset object
         self.data.__dict__["records"] = response.data.records
         self.data.__dict__["contributed_values"] = response.data.contributed_values
 
@@ -1290,7 +1304,7 @@ class Dataset(Collection):
     def _subset_in_cache(self, column_name: str, subset: Set[str]) -> bool:
         try:
             return not self.df.loc[subset, column_name].isna().any()
-        except (KeyError):
+        except KeyError:
             return False
 
     def _update_cache(self, new_data: pd.DataFrame) -> None:

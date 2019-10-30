@@ -551,7 +551,7 @@ def live_fractal_or_skip():
             return pytest.skip("Could not make a connection to central Fractal server")
 
 
-def df_equals(df1, df2, sort=False):
+def df_compare(df1, df2, sort=False):
     """ checks equality even when columns contain numpy arrays, which .equals and == struggle with """
     if sort:
         if isinstance(df1, pd.DataFrame):
