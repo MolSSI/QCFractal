@@ -323,7 +323,7 @@ class SQLAlchemySocket:
             _projection.remove(key)
 
         with self.session_scope() as session:
-            if _projection:
+            if _projection or join_attrs:
 
                 if join_attrs and 'id' not in _projection:  # if the id is need for joins
                     proj.append(getattr(className, 'id'))
