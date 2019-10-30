@@ -1,8 +1,7 @@
-# from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import and_, inspect
 from sqlalchemy.dialects.postgresql import BYTEA
 from sqlalchemy.ext.declarative import as_declarative
-from sqlalchemy.ext.hybrid import hybrid_property, HYBRID_PROPERTY
+from sqlalchemy.ext.hybrid import HYBRID_PROPERTY
 from sqlalchemy.orm import object_session
 from sqlalchemy.types import TypeDecorator
 from sqlalchemy.ext.associationproxy import ASSOCIATION_PROXY
@@ -12,9 +11,6 @@ from qcelemental.util import msgpackext_dumps, msgpackext_loads
 # from sqlalchemy.ext.orderinglist import ordering_list
 # from sqlalchemy.ext.associationproxy import association_proxy
 # from sqlalchemy.dialects.postgresql import aggregate_order_by
-
-
-# Base = declarative_base()
 
 
 class MsgpackExt(TypeDecorator):
@@ -89,7 +85,11 @@ class Base:
 
         cls.__columns = []
         cls.__hybrids = []
-        cls.__relationships = {k: v.argument for k, v in mapper.relationships.items()}
+        cls.__relationships = {}
+        for k, v in mapper.relationships.items():
+            cls.__relationships[k] = {}
+            cls.__relationships[k]['join_class'] = v.argument
+            cls.__relationships[k]['remote_side_column'] = list(v.remote_side)[0]
 
         for k, c in mapper.all_orm_descriptors.items():
 
