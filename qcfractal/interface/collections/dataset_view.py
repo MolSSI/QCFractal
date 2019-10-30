@@ -2,17 +2,21 @@ import abc
 import distutils
 import hashlib
 import pathlib
+import shutil
+import tarfile
+import tempfile
 import warnings
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, NoReturn, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
 from qcelemental.util.serialization import deserialize, serialize
 
 from ..models import Molecule, ObjectId
+from ..util import normalize_filename
 from .dataset import Dataset, MoleculeEntry
-from .reaction_dataset import ReactionEntry
+from .reaction_dataset import ReactionDataset, ReactionEntry
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import FractalClient  # lgtm [py/unused-import]
@@ -105,8 +109,7 @@ class HDF5View(DatasetView):
         path: Union[str, pathlib.Path]
             File path of view
         """
-        if isinstance(path, str):
-            path = pathlib.Path(path)
+        path = pathlib.Path(path)
         self._path = path
         self._entries: pd.DataFrame = None
         self._index: pd.DataFrame = None
@@ -501,7 +504,7 @@ class RemoteView(DatasetView):
         self._check_response_meta(response.meta)
         return self._deserialize(response.data, response.meta.msgpacked_cols)
 
-    def write(self, ds: Dataset) -> None:
+    def write(self, ds: Dataset) -> NoReturn:
         raise NotImplementedError()
 
     @staticmethod
@@ -525,3 +528,106 @@ class RemoteView(DatasetView):
             df.set_index("index", inplace=True)  # pandas.to_feather does not support indexes,
             # so we have to send indexless frames over the wire, and set the index here.
         return df
+
+
+class PlainTextView(DatasetView):
+    def __init__(self, path: Union[str, pathlib.Path]) -> None:
+        """
+        Parameters
+        ----------
+        path: Union[str, pathlib.Path]
+            File path of view
+        """
+        path = pathlib.Path(path)
+        if len(path.suffixes) == 0:
+            path = path.with_suffix('.tar.gz')
+        self._path = path
+
+    def write(self, ds: Dataset) -> None:
+
+        with tempfile.TemporaryDirectory() as tempd:
+            temppath = pathlib.Path(tempd)
+            mol_path = temppath / "molecules"
+            entry_path = temppath / "entries.csv"
+            value_path = temppath / "values.csv"
+            list_path = temppath / "value_descriptions.csv"
+            readme_path = temppath / "README"
+
+            entries = ds.get_entries(force=True)
+            # calculate molecule file name
+            if isinstance(ds, ReactionDataset):
+                entries['molecule filename'] = [
+                    normalize_filename(f"{row[1]}__{row[2]}__{row[3]}") + ".xyz" for row in entries.itertuples()
+                ]
+                entries.rename(columns={'molecule': 'molecule_id'}, inplace=True)
+            elif isinstance(ds, Dataset):
+                entries['molecule filename'] = [
+                    normalize_filename(f"{row[1]}__{row[2]}") + ".xyz" for row in entries.itertuples()
+                ]
+            else:
+                raise NotImplementedError(f"Unknown dataset type: {type(ds)}.")
+            entries.to_csv(entry_path)
+
+            mol_path.mkdir()
+            molecules = ds._get_molecules(
+                {row[1]: row[2]
+                 for row in entries[['molecule filename', 'molecule_id']].itertuples()}, force=True)
+            for r in molecules.itertuples():
+                print(r)
+            for pathname, molecule in molecules.itertuples():
+                molecule.to_file(mol_path / pathname)
+
+            ds_query_limit_state = ds._disable_query_limit
+            ds._disable_query_limit = True
+            ds.get_values(force=True).to_csv(value_path)
+            ds._disable_query_limit = ds_query_limit_state
+            df = ds.list_values(force=True).reset_index().set_index("name")
+            df["units"] = ds.units
+            for name in df.index:
+                if name in ds._column_metadata:
+                    if "units" in ds._column_metadata[name]:
+                        df['units'] = ds._column_metadata[name]["units"]
+            df.to_csv(list_path)
+
+            with open(readme_path, 'w') as readme_file:
+                readme_file.write(self._readme(ds))
+
+            tarpath = temppath / "archive.tar.gz"
+            with tarfile.open(tarpath, 'w:gz') as tarball:
+                for path in [mol_path, entry_path, value_path, list_path, readme_path]:
+                    tarball.add(path, arcname=path.relative_to(temppath))
+
+            shutil.move(tarpath, self._path)
+
+    def list_values(self) -> NoReturn:
+        raise NotImplementedError()
+
+    def get_values(self, queries: List[Dict[str, Union[str, bool]]]) -> NoReturn:
+        raise NotImplementedError()
+
+    def get_molecules(self, indexes: List[Union[ObjectId, int]]) -> NoReturn:
+        raise NotImplementedError()
+
+    def get_entries(self) -> NoReturn:
+        raise NotImplementedError()
+
+    @staticmethod
+    def _readme(ds) -> str:
+        # TODO: citations once we add that column
+        ret = f"""Name: {ds.name}
+
+Tagline: {ds.data.tagline}
+Tags: {", ".join(ds.data.tags)}
+Downloaded from: {ds.client.server_information()['name']}
+
+Description:
+{ds.data.description}
+
+Files included:
+- values.csv: Table of computed values. Rows correspond to entries (e.g. molecules, reactions). Columns correspond to methods.
+- value_descriptions.csv: Table of descriptions of columns in values.csv
+- entries.csv: Table of descriptions of rows in values.csv
+- molecules: Folder containing XYZ-formatted geometries of molecules in the dataset. Files are named by the molecule id found in entries.csv
+"""
+
+        return ret

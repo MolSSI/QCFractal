@@ -3,9 +3,9 @@ SQLAlchemy Database class to handle access to Pstgres through ORM
 """
 
 try:
-    from sqlalchemy import create_engine, or_, case
+    from sqlalchemy import create_engine, or_, case, func
     from sqlalchemy.exc import IntegrityError
-    from sqlalchemy.orm import sessionmaker, with_polymorphic, defer
+    from sqlalchemy.orm import sessionmaker, with_polymorphic
     from sqlalchemy.sql.expression import func
 except ImportError:
     raise ImportError("SQLAlchemy_socket requires sqlalchemy, please install this python "
@@ -20,10 +20,11 @@ from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import bcrypt
+
 # pydantic classes
 from qcfractal.interface.models import (GridOptimizationRecord, KeywordSet, Molecule, ObjectId, OptimizationRecord,
                                         ResultRecord, TaskRecord, TaskStatusEnum, TorsionDriveRecord, prepare_basis)
-from qcfractal.storage_sockets.db_queries import OptimizationQueries, TorsionDriveQueries
+from qcfractal.storage_sockets.db_queries import OptimizationQueries, TaskQueries, TorsionDriveQueries
 # SQL ORMs
 from qcfractal.storage_sockets.models import (AccessLogORM, BaseResultORM, CollectionORM, DatasetORM,
                                               GridOptimizationProcedureORM, KeywordsORM, KVStoreORM, MoleculeORM,
@@ -180,6 +181,7 @@ class SQLAlchemySocket:
 
         # Advanced queries objects
         self._query_classes = {
+            TaskQueries._class_name: TaskQueries(max_limit=max_limit),
             TorsionDriveQueries._class_name: TorsionDriveQueries(max_limit=max_limit),
             OptimizationQueries._class_name: OptimizationQueries(max_limit=max_limit),
         }
@@ -213,7 +215,7 @@ class SQLAlchemySocket:
         self.check_lib_versions()
 
     def __str__(self) -> str:
-        return "<SQLAlchemy: address='{0:s}:{1:d}:{2:s}'>".format(str(self._url), self._port, str(self._project_name))
+        return f"<SQLAlchemySocket: address='{self.uri}`>"
 
     @contextmanager
     def session_scope(self):
@@ -293,12 +295,12 @@ class SQLAlchemySocket:
         # build projection from include or exclude
         _projection = []
         if projection:
-            _projection = projection
+            _projection = [p for p in projection]
         elif exclude:
             _projection = set(className._all_col_names()) - set(exclude)
 
         proj = []
-        join_attr = []
+        join_attrs = {}
         callbacks = []
 
         # prepare hybrid attributes for callback and joins
@@ -310,20 +312,48 @@ class SQLAlchemySocket:
                 callbacks.append(key)
                 # if it has a relationship
                 if key + '_obj' in relationships.keys():
-                    join_class_name = relationships[key + '_obj']
-                    proj.append(join_class_name)  # joint class name
-                    join_attr.append(getattr(className, key + '_obj'))
+                    # join_class_name = relationships[key + '_obj']
+                    join_attrs[key] = relationships[key + '_obj']
             else:
                 raise AttributeError(f'Atrribute {key} is not found in class {className}.')
+
+        for key in join_attrs:
+            _projection.remove(key)
 
         with self.session_scope() as session:
             if _projection:
 
-                data = session.query(*proj) \
-                              .join(*join_attr, isouter=True).filter(*query)
+                if join_attrs and 'id' not in _projection:  # if the id is need for joins
+                    proj.append(getattr(className, 'id'))
+                    _projection.append('_id')  # not to be returned to user
+
+                # query with projection, without joins
+                data = session.query(*proj).filter(*query)
+
                 n_found = get_count_fast(data)  # before iterating on the data
                 data = data.limit(self.get_limit(limit)).offset(skip)
                 rdata = [dict(zip(_projection, row)) for row in data]
+
+                # query for joins if any (relationships and hybrids)
+                if join_attrs:
+                    res_ids = [d.get('id', d.get('_id')) for d in rdata]
+                    res_ids.sort()
+                    join_data = {res_id: {} for res_id in res_ids}
+                    # relations data
+                    for key, relation_details in join_attrs.items():
+                        ret = session.query(relation_details['remote_side_column'].label('id'), relation_details['join_class'])\
+                                                .filter(relation_details['remote_side_column'].in_(res_ids))\
+                                                .order_by(relation_details['remote_side_column']).all()
+                        for res_id in res_ids:
+                            join_data[res_id][key] = []
+                            for res in ret:
+                                if res_id == res[0]:
+                                    join_data[res_id][key].append(res[1])
+
+                        for data in rdata:
+                            parent_id = data.get('id', data.get('_id'))
+                            data[key] = join_data[parent_id][key]
+                            data.pop('_id', None)
 
                 # call hybrid methods
                 for callback in callbacks:
@@ -2096,13 +2126,22 @@ class SQLAlchemySocket:
 
         return num_updated == 1
 
-    def get_managers(self, name: str = None, status: str = None, modified_before=None, limit=None, skip=0):
+    def get_managers(self,
+                     name: str = None,
+                     status: str = None,
+                     modified_before=None,
+                     modified_after=None,
+                     limit=None,
+                     skip=0):
 
         meta = get_metadata_template()
         query = format_query(QueueManagerORM, name=name, status=status)
 
         if modified_before:
             query.append(QueueManagerORM.modified_on <= modified_before)
+
+        if modified_after:
+            query.append(QueueManagerORM.modified_on >= modified_after)
 
         data, meta['n_found'] = self.get_query_projection(QueueManagerORM, query, None, limit, skip, exclude=['id'])
         meta["success"] = True

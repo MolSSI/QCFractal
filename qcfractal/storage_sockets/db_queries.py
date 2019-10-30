@@ -51,6 +51,27 @@ class QueryBase(ABC):
 
         raise AttributeError(f'To query {cls._class_name} for {query_key} ' f'you must provide {missing_attribute}.')
 
+# ----------------------------------------------------------------------------
+
+
+class TaskQueries(QueryBase):
+
+    _class_name = 'task'
+    _query_method_map = {
+        'counts': '_task_counts',
+    }
+
+    def _task_counts(self):
+
+        sql_statement = f"""
+            SELECT tag, priority, status, count(*)
+            FROM task_queue
+            WHERE True
+            group by tag, priority, status
+            order by tag, priority, status
+        """
+
+        return self.execute_query(sql_statement, with_keys=True)
 
 # ----------------------------------------------------------------------------
 

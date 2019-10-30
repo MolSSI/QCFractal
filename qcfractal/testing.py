@@ -17,11 +17,10 @@ from contextlib import contextmanager
 import numpy as np
 import pandas as pd
 import pytest
-import requests
-from tornado.ioloop import IOLoop
-
 import qcengine as qcng
+import requests
 from qcelemental.models import Molecule
+from tornado.ioloop import IOLoop
 
 from .interface import FractalClient
 from .postgres_harness import PostgresHarness, TemporaryPostgres

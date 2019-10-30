@@ -1209,3 +1209,66 @@ def test_reset_task_blocks(storage_socket):
 
     with pytest.raises(ValueError):
         storage_socket.queue_reset_status(reset_error=True)
+
+
+def test_collections_projection(storage_socket):
+
+    collection = 'Dataset'
+    name = 'Dataset123'
+    name2 = name + '_2'
+
+    # Add two waters
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
+    mol_insert = storage_socket.add_molecules([water, water2])
+
+    db = {
+        "collection":
+        collection,
+        "name":
+        name,
+        "visibility":
+        True,
+        "view_available":
+        False,
+        "records": [{
+            "name": "He1",
+            "molecule_id": mol_insert["data"][0],
+            "comment": None,
+            "local_results": {}
+        }, {
+            "name": "He2",
+            "molecule_id": mol_insert["data"][1],
+            "comment": None,
+            "local_results": {}
+        }]
+    }
+
+    db2 = {"collection": collection, "name": name2, "visibility": True, "view_available": False, "records": []}
+
+    ret = storage_socket.add_collection(db)
+    assert ret["meta"]["n_inserted"] == 1
+
+    ret = storage_socket.add_collection(db2)
+    assert ret["meta"]["n_inserted"] == 1
+
+    ret = storage_socket.get_collections(collection=collection, name=name)
+    assert ret["meta"]["success"] is True
+    # print('All: ', ret["data"])
+
+    projection = {"records", "name"}
+    ret = storage_socket.get_collections(collection=collection, name=name, projection=projection)
+    assert ret["meta"]["success"] is True
+    assert set(ret['data'][0].keys()) == projection
+    # print('With projection: ', ret["data"])
+
+    projection = {"records", "name"}
+    ret = storage_socket.get_collections(collection=collection, name='none_existing', projection=projection)
+    assert ret["meta"]["success"] is True
+    # print('With projection: ', ret["data"])
+
+    projection = {"records", "name", "id"}
+    ret = storage_socket.get_collections(collection=collection, name=name2, projection=projection)
+    assert ret["meta"]["success"] is True
+    assert set(ret['data'][0].keys()) == projection
+    # print('With projection: ', ret["data"])
