@@ -10,9 +10,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
-import requests
-
 import pydantic
+import requests
 from qcelemental import constants
 
 from ..models import ComputeResponse, ObjectId, ProtoModel
@@ -90,9 +89,15 @@ class Dataset(Collection):
         self._disable_query_limit: bool = False  # for debugging and testing
 
         # Initialize internal data frames and load in contrib
-        self.df = pd.DataFrame(index=self.get_index())
+        self.df = pd.DataFrame()
         self._column_metadata: Dict[str, Any] = {}
-        self._form_index()
+
+        # If this is a brand new dataset, initialize the records and cv fields
+        if self.data.id == 'local':
+            if self.data.records is None:
+                self.data.__dict__['records'] = []
+            if self.data.contributed_values is None:
+                self.data.__dict__['contributed_values'] = {}
 
     class DataModel(Collection.DataModel):
 
@@ -106,8 +111,8 @@ class Dataset(Collection):
         alias_keywords: Dict[str, Dict[str, str]] = {}
 
         # Data
-        records: List[MoleculeEntry] = []
-        contributed_values: Dict[str, ContributedValues] = {}
+        records: Optional[List[MoleculeEntry]] = None
+        contributed_values: Dict[str, ContributedValues] = None
 
         # History: driver, program, method (basis, keywords)
         history: Set[Tuple[str, str, str, Optional[str], Optional[str]]] = set()
@@ -183,16 +188,42 @@ class Dataset(Collection):
         else:
             raise NotImplementedError(f"Unsupported encoding: {encoding}")
 
-    def _form_index(self) -> None:
-        self._entry_index = pd.DataFrame([[entry.name, entry.molecule_id] for entry in self.data.records],
-                                         columns=["name", "molecule_id"])
+    def _get_data_records_from_db(self):
+        self._check_client()
+        # This is hacky. What we want to do is get records and contributed values correctly unpacked into pydantic
+        # objects. So what we do is call get_collection with include. But we have to also include collection and
+        # name in the query because they are required in the collection DataModel. But we can use these to check that
+        # we got back the right data, so that's nice.
+        response = self.client.get_collection(self.__class__.__name__.lower(),
+                                              self.name,
+                                              full_return=False,
+                                              include=["records", "contributed_values", "collection", "name", "id"])
+        if not (response.data.id == self.data.id and response.data.name == self.name):
+            raise ValueError("Got the wrong records and contributed values from the server.")
+        # This works because get_collection builds a validated Dataset object
+        self.data.__dict__["records"] = response.data.records
+        self.data.__dict__["contributed_values"] = response.data.contributed_values
+
+    def _entry_index(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
+        # TODO: make this fast for subsets
+        if self.data.records is None:
+            self._get_data_records_from_db()
+
+        ret = pd.DataFrame([[entry.name, entry.molecule_id] for entry in self.data.records],
+                           columns=["name", "molecule_id"])
+        if subset is None:
+            return ret
+        else:
+            return ret.reset_index().set_index("name").loc[subset].reset_index().set_index("index")
 
     def _check_state(self) -> None:
         if self._new_molecules or self._new_keywords or self._new_records or self._updated_state:
             raise ValueError("New molecules, keywords, or records detected, run save before submitting new tasks.")
 
     def _canonical_pre_save(self, client: 'FractalClient') -> None:
-
+        self._ensure_contributed_values()
+        if self.data.records is None:
+            self._get_data_records_from_db()
         for k in list(self._new_keywords.keys()):
             ret = client.add_keywords([self._new_keywords[k]])
             assert len(ret) == 1, "KeywordSet added incorrectly"
@@ -214,14 +245,15 @@ class Dataset(Collection):
 
         self._new_records = []
         self._new_molecules = {}
-        self._form_index()
 
-    def get_entries(self, force: bool = False) -> pd.DataFrame:
+    def get_entries(self, subset: Optional[List[str]] = None, force: bool = False) -> pd.DataFrame:
         """
         Provides a list of entries for the dataset
 
         Parameters
         ----------
+        subset: Optional[List[str]], optional
+            The indices of the desired subset. Return all indices if subset is None.
         force: bool, optional
             skip cache
 
@@ -233,9 +265,9 @@ class Dataset(Collection):
             For ReactionDataset, specifications describe reaction stoichiometry.
         """
         if self._use_view(force):
-            ret = self._view.get_entries()
+            ret = self._view.get_entries(subset)
         else:
-            ret = self._entry_index
+            ret = self._entry_index(subset)
         return ret.copy()
 
     def _molecule_indexer(self, subset: Optional[Union[str, Set[str]]] = None,
@@ -252,12 +284,11 @@ class Dataset(Collection):
         Dict[str, 'ObjectId']
             Molecule index to molecule ObjectId map
         """
-        index = self.get_entries(force)
         if subset:
             if isinstance(subset, str):
                 subset = {subset}
-
-            index = index[index.name.isin(subset)]
+        index = self.get_entries(force=force, subset=subset)
+        #index = index[index.name.isin(subset)]
 
         return {row['name']: row['molecule_id'] for row in index.to_dict('records')}
 
@@ -367,6 +398,10 @@ class Dataset(Collection):
         Helper for filtering records on a spec. Note that `None` is a wildcard while `"None"` matches `None` and NaN.
         """
         ret = df.copy()
+
+        if len(ret) == 0:  # workaround pandas empty dataframe sharp edges
+            return ret
+
         for key, value in spec.items():
             if value is None:
                 continue
@@ -469,6 +504,7 @@ class Dataset(Collection):
                    driver: Optional[str] = None,
                    name: Optional[Union[str, List[str]]] = None,
                    native: Optional[bool] = None,
+                   subset: Optional[Union[str, List[str]]] = None,
                    force: bool = False) -> pd.DataFrame:
         """
         Obtains values matching the search parameters provided for the expected `return_result` values.
@@ -497,6 +533,8 @@ class Dataset(Collection):
             True: only include data computed with QCFractal
             False: only include data contributed from outside sources
             None: include both
+        subset: Optional[List[str]], optional
+            The indices of the desired subset. Return all indices if subset is None.
         force : bool, optional
             Data is typically cached, forces a new query if True
 
@@ -512,10 +550,24 @@ class Dataset(Collection):
                                 driver=driver,
                                 name=name,
                                 native=native,
+                                subset=subset,
                                 force=force)
 
-    def _get_values(self, native: Optional[bool] = None, force: bool = False, **spec) -> pd.DataFrame:
+    def _get_values(self,
+                    native: Optional[bool] = None,
+                    force: bool = False,
+                    subset: Optional[Union[str, List[str]]] = None,
+                    **spec: Union[List[str], str, None]) -> pd.DataFrame:
         ret = []
+
+        if subset is None:
+            subset_set = set(self.get_index(force=force))
+        elif isinstance(subset, str):
+            subset_set = {subset}
+        elif isinstance(subset, list):
+            subset_set = set(subset)
+        else:
+            raise ValueError(f"Subset must be str, List[str], or None. Got {type(subset)}")
 
         if native in {True, None}:
             spec_nodriver = spec.copy()
@@ -524,18 +576,19 @@ class Dataset(Collection):
                 raise KeyError(
                     f"For native values, driver ({driver}) must be the same as the dataset's default driver "
                     f"({self.data.default_driver}). Consider using get_records instead.")
-            df = self._get_native_values(force=force, **spec_nodriver)
+            df = self._get_native_values(subset=subset_set, force=force, **spec_nodriver)
             ret.append(df)
 
         if native in {False, None}:
-            df = self._get_contributed_values(**spec)
+            df = self._get_contributed_values(subset=subset_set, force=force, **spec)
             ret.append(df)
         ret_df = pd.concat(ret, axis=1)
-        ret_df.sort_index(inplace=True)
+        ret_df = ret_df.loc[subset if subset is not None else self.get_index()]
 
         return ret_df
 
     def _get_native_values(self,
+                           subset: Set[str],
                            method: Optional[Union[str, List[str]]] = None,
                            basis: Optional[Union[str, List[str]]] = None,
                            keywords: Optional[str] = None,
@@ -548,6 +601,8 @@ class Dataset(Collection):
 
         Parameters
         ----------
+        subset: Set[str]
+            The indices of the desired subset.
         method : Optional[Union[str, List[str]]], optional
             The computational method to compute (B3LYP)
         basis : Optional[Union[str, List[str]]], optional
@@ -570,7 +625,7 @@ class Dataset(Collection):
 
         # So that datasets with no records do not require a default program and default keywords
         if len(self.list_records()) == 0:
-            return pd.DataFrame(columns=['index']).set_index('index')
+            return pd.DataFrame(index=self.get_index(subset))
 
         queries = self._form_queries(method=method, basis=basis, keywords=keywords, program=program, name=name)
         names = []
@@ -583,9 +638,11 @@ class Dataset(Collection):
 
             qname = query["name"]
             names.append(qname)
-            if force or (qname not in self.df.columns):
+            if force or not self._subset_in_cache(qname, subset):
                 self._column_metadata[qname] = query
                 new_queries.append(query)
+
+        new_data = pd.DataFrame(index=subset)
 
         if not self._use_view(force):
             units: Dict[str, str] = {}
@@ -593,24 +650,25 @@ class Dataset(Collection):
                 driver = query.pop("driver")
                 qname = query.pop("name")
                 data = self.get_records(query.pop("method").upper(),
-                                        projection={"return_result": True},
+                                        projection=["return_result"],
                                         merge=True,
+                                        subset=subset,
                                         **query)
-                self.df[qname] = data["return_result"]
+                new_data[qname] = data["return_result"]
                 units[qname] = au_units[driver]
                 query["name"] = qname
         else:
             for query in new_queries:
                 query["native"] = True
-            data, units = self._view.get_values(new_queries)
-            self.df = pd.concat([self.df, data], axis=1)
+            new_data, units = self._view.get_values(new_queries, subset)
 
         for query in new_queries:
             qname = query["name"]
-            self.df[qname] *= constants.conversion_factor(units[qname], self.units)
+            new_data[qname] *= constants.conversion_factor(units[qname], self.units)
             self._column_metadata[qname].update({"native": True, "units": self.units})
 
-        return self.df[names]
+        self._update_cache(new_data)
+        return self.df.loc[subset, names]
 
     def _form_queries(self,
                       method: Optional[Union[str, List[str]]] = None,
@@ -989,8 +1047,9 @@ class Dataset(Collection):
             # Set the index to remove duplicates
             molecules = list(set(indexer.values()))
             if projection:
-                proj = {k.lower(): v for k, v in projection.items()}
-                proj["molecule"] = True
+                proj = [k.lower() for k in projection]
+                if "molecule" not in proj:
+                    proj.append("molecule")
                 query_set["projection"] = proj
 
             # Chunk up the queries
@@ -1015,9 +1074,8 @@ class Dataset(Collection):
                 if projection is None:
                     df["record"] = None
                 else:
-                    for k, v in projection.items():
-                        if v:
-                            df[k] = np.nan
+                    for k in projection:
+                        df[k] = np.nan
 
             df.set_index("index", inplace=True)
             df.drop("molecule", axis=1, inplace=True)
@@ -1192,7 +1250,8 @@ class Dataset(Collection):
         overwrite : bool, optional
             Overwrites pre-existing values
         """
-
+        self.get_entries(force=True)
+        self._ensure_contributed_values()
         # Convert and validate
         if isinstance(contrib, ContributedValues):
             contrib = contrib.copy()
@@ -1209,6 +1268,10 @@ class Dataset(Collection):
         self.data.contributed_values[key] = contrib
         self._updated_state = True
 
+    def _ensure_contributed_values(self) -> None:
+        if self.data.contributed_values is None:
+            self._get_data_records_from_db()
+
     def _list_contributed_values(self) -> pd.DataFrame:
         """
         Lists all specifications of contributed data, i.e. method, program, basis set, keyword set, driver combinations
@@ -1218,6 +1281,7 @@ class Dataset(Collection):
         DataFrame
             Contributed value specifications.
         """
+        self._ensure_contributed_values()
         ret = pd.DataFrame(columns=self.data.history_keys + tuple(["name"]))
 
         cvs = ((cv_data.name, cv_data.theory_level_details)
@@ -1237,19 +1301,36 @@ class Dataset(Collection):
 
         return ret
 
-    def _get_contributed_values(self, force: bool = False, **spec) -> pd.DataFrame:
-        queries = self._filter_records(self._list_contributed_values().rename(columns={'stoichiometry': 'stoich'}),
-                                       **spec)
+    def _subset_in_cache(self, column_name: str, subset: Set[str]) -> bool:
+        try:
+            return not self.df.loc[subset, column_name].isna().any()
+        except KeyError:
+            return False
+
+    def _update_cache(self, new_data: pd.DataFrame) -> None:
+        new_df = pd.DataFrame(index=set(self.df.index) | set(new_data.index),
+                              columns=set(self.df.columns) | set(new_data.columns))
+        new_df.update(new_data)
+        new_df.update(self.df)
+        self.df = new_df
+
+    def _get_contributed_values(self, subset: Set[str], force: bool = False, **spec) -> pd.DataFrame:
+
+        cv_list = self.list_values(native=False, force=force).reset_index()
+        queries = self._filter_records(cv_list.rename(columns={'stoichiometry': 'stoich'}), **spec)
         column_names: List[str] = []
         new_queries = []
+
         for query in queries.to_dict("records"):
-            column_name = self.data.contributed_values[query["name"].lower()].name
+            column_name = query["name"]
             column_names.append(column_name)
-            if force or (column_name not in self.df.columns):
+            if force or not self._subset_in_cache(column_name, subset):
                 self._column_metadata[column_name] = query
                 new_queries.append(query)
 
+        new_data = pd.DataFrame(index=subset)
         if not self._use_view(force):
+            self._ensure_contributed_values()
             units: Dict[str, str] = {}
 
             for query in new_queries:
@@ -1268,20 +1349,19 @@ class Dataset(Collection):
                         values = {k: np.array(v).reshape(-1, 3) for k, v in data.values.items()}
                     else:
                         values = {k: np.array(v) for k, v in data.values.items()}
-                self.df[column_name] = pd.Series(list(values.values()), index=list(values.keys()))
+                new_data[column_name] = pd.Series(list(values.values()), index=list(values.keys()))[subset]
                 units[column_name] = data.units
         else:
             for query in new_queries:
                 query["native"] = False
-            ret, units = self._view.get_values(new_queries)
-            self.df = pd.concat([self.df, ret], axis=1)
+            new_data, units = self._view.get_values(new_queries, subset)
 
         # convert units
         for query in new_queries:
-            column_name = self.data.contributed_values[query["name"].lower()].name
+            column_name = query["name"]
             metadata = {"native": False}
             try:
-                self.df[column_name] *= constants.conversion_factor(units[column_name], self.units)
+                new_data[column_name] *= constants.conversion_factor(units[column_name], self.units)
                 metadata["units"] = self.units
             except ValueError as e:
                 # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
@@ -1291,7 +1371,8 @@ class Dataset(Collection):
                     raise
             self._column_metadata[column_name].update(metadata)
 
-        return self.df[column_names]
+        self._update_cache(new_data)
+        return self.df.loc[subset, column_names]
 
     def get_molecules(self, subset: Optional[Union[str, Set[str]]] = None,
                       force: bool = False) -> Union[pd.DataFrame, 'Molecule']:
@@ -1323,7 +1404,7 @@ class Dataset(Collection):
                     *,
                     keywords: Optional[str] = None,
                     program: Optional[str] = None,
-                    projection: Optional[Dict[str, bool]] = None,
+                    projection: Optional[List[str]] = None,
                     subset: Optional[Union[str, Set[str]]] = None,
                     merge: bool = False) -> Union[pd.DataFrame, 'ResultRecord']:
         """
@@ -1420,7 +1501,7 @@ class Dataset(Collection):
               - submitted: A list of ObjectId's that were submitted to the compute queue
               - existing: A list of ObjectId's of tasks already in the database
         """
-
+        self.get_entries(force=True)
         compute_keys = {"program": program, "method": method, "basis": basis, "keywords": keywords}
 
         molecule_idx = [e.molecule_id for e in self.data.records]
@@ -1430,7 +1511,7 @@ class Dataset(Collection):
 
         return ret
 
-    def get_index(self) -> List[str]:
+    def get_index(self, subset: Optional[List[str]] = None, force: bool = False) -> List[str]:
         """
         Returns the current index of the database.
 
@@ -1439,7 +1520,7 @@ class Dataset(Collection):
         ret : List[str]
             The names of all reactions in the database
         """
-        return [x.name for x in self.data.records]
+        return list(self.get_entries(subset=subset, force=force)["name"].unique())
 
     # Statistical quantities
     def statistics(self, stype: str, value: str, bench: Optional[str] = None,
@@ -1477,7 +1558,9 @@ class Dataset(Collection):
         return (force is False) and (self._view is not None) and (self._disable_view is False)
 
     def _clear_cache(self) -> None:
-        self.df = pd.DataFrame(index=self.get_index())
+        self.df = pd.DataFrame()
+        self.data.__dict__["records"] = None
+        self.data.__dict__["contributed_values"] = None
 
     # Getters
     def __getitem__(self, args: str) -> pd.Series:

@@ -18,6 +18,7 @@ class ViewHandler:
         path: Union[str, Path]
             Directory containing dataset views
         """
+        self._view_cache: Dict[int, HDF5View] = {}
         self._path = pathlib.Path(path)
         if not self._path.is_dir():
             raise ValueError(f"Path in ViewHandler must be a directory, got: {self._path}")
@@ -56,6 +57,13 @@ class ViewHandler:
 
         return self.view_path(collection_id).is_file()
 
+    def _get_view(self, collection_id: int):
+        if collection_id not in self._view_cache:
+            if not self.view_exists(collection_id):
+                raise IOError
+            self._view_cache[collection_id] = HDF5View(self.view_path(collection_id))
+        return self._view_cache[collection_id]
+
     def handle_request(self, collection_id: int, request: str, model: Dict[str, Any]) -> Dict[str, Any]:
         """
         Handles REST requests related to views. This function implements the GET endpoint
@@ -81,21 +89,27 @@ class ViewHandler:
         """
         meta = {"errors": [], "success": False, "error_description": False, "msgpacked_cols": []}
 
-        if not self.view_exists(collection_id):
+        try:
+            view = self._get_view(collection_id)
+        except IOError:
             meta["success"] = False
             meta["error_description"] = f"View not available for collection #{collection_id}"
             return {"meta": meta, "data": None}
 
-        view = HDF5View(self.view_path(collection_id))
         if request == "entry":
-            df = view.get_entries()
+            try:
+                df = view.get_entries(subset=model["subset"])
+            except KeyError:
+                meta["success"] = False
+                meta["error_description"] = "Unable to find requested entry."
+                return {"meta": meta, "data": None}
         elif request == "molecule":
             series = view.get_molecules(model["indexes"], keep_serialized=True)
             df = pd.DataFrame({'molecule': series})
             df.reset_index(inplace=True)
             meta["msgpacked_cols"].append('molecule')
         elif request == "value":
-            df, units = view.get_values(model["queries"])
+            df, units = view.get_values(model["queries"], subset=model["subset"])
             df.reset_index(inplace=True)
         elif request == "list":
             df = view.list_values()

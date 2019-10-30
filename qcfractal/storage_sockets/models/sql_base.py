@@ -1,12 +1,11 @@
+from qcelemental.util import msgpackext_dumps, msgpackext_loads
 from sqlalchemy import and_, inspect
 from sqlalchemy.dialects.postgresql import BYTEA
+from sqlalchemy.ext.associationproxy import ASSOCIATION_PROXY
 from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.ext.hybrid import HYBRID_PROPERTY
 from sqlalchemy.orm import object_session
 from sqlalchemy.types import TypeDecorator
-from sqlalchemy.ext.associationproxy import ASSOCIATION_PROXY
-
-from qcelemental.util import msgpackext_dumps, msgpackext_loads
 
 # from sqlalchemy.ext.orderinglist import ordering_list
 # from sqlalchemy.ext.associationproxy import association_proxy
@@ -29,8 +28,7 @@ class MsgpackExt(TypeDecorator):
 class Base:
     """Base declarative class of all ORM models"""
 
-    db_related_fields = ['result_type', 'base_result_id', '_trajectory',
-                         'collection_type', 'lname']
+    db_related_fields = ['result_type', 'base_result_id', '_trajectory', 'collection_type', 'lname']
 
     def to_dict(self, exclude=None):
 
@@ -39,10 +37,7 @@ class Base:
         if exclude:
             tobe_deleted_keys.extend(exclude)
 
-        dict_obj = [x for x in self._all_col_names()
-                        if x not in self.db_related_fields
-                        and x not in tobe_deleted_keys
-        ]
+        dict_obj = [x for x in self._all_col_names() if x not in self.db_related_fields and x not in tobe_deleted_keys]
 
         # Add the attributes to the final results
         ret = {k: getattr(self, k) for k in dict_obj}

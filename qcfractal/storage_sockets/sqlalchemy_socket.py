@@ -6,8 +6,7 @@ try:
     from sqlalchemy import create_engine, or_, case, func
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
-    from sqlalchemy.sql import label
-    # from sqlalchemy.dialects import postgresql
+    from sqlalchemy.sql.expression import func
 except ImportError:
     raise ImportError("SQLAlchemy_socket requires sqlalchemy, please install this python "
                       "module or try a different db_socket.")
@@ -300,14 +299,13 @@ class SQLAlchemySocket:
         elif exclude:
             _projection = set(className._all_col_names()) - set(exclude)
 
-
         proj = []
         join_attrs = {}
         callbacks = []
 
         # prepare hybrid attributes for callback and joins
         for key in _projection:
-            if key in prop: # normal column
+            if key in prop:  # normal column
                 proj.append(getattr(className, key))
             # if hybrid property, save callback, and relation if any
             elif key in hybrids:
@@ -362,7 +360,6 @@ class SQLAlchemySocket:
                     for res in rdata:
                         res[callback] = getattr(className, '_' + callback)(res[callback])
 
-
                 id_fields = className._get_fieldnames_with_DB_ids_()
                 for d in rdata:
                     # Expand extra json into fields
@@ -380,6 +377,7 @@ class SQLAlchemySocket:
                 # print('--------rdata after: ', rdata)
             else:
                 data = session.query(className).filter(*query)
+
                 # from sqlalchemy.dialects import postgresql
                 # print(data.statement.compile(dialect=postgresql.dialect(), compile_kwargs={"literal_binds": True}))
                 n_found = get_count_fast(data)
@@ -388,7 +386,7 @@ class SQLAlchemySocket:
 
         return rdata, n_found
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     def custom_query(self, class_name: str, query_key: str, **kwargs):
         """
@@ -504,7 +502,6 @@ class SQLAlchemySocket:
         data = {d["id"]: d["value"] for d in rdata}
 
         return {"data": data, "meta": meta}
-
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Molecule ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -932,7 +929,8 @@ class SQLAlchemySocket:
                         name: Optional[str] = None,
                         col_id: Optional[int] = None,
                         limit: Optional[int] = None,
-                        projection: Optional[Dict[str, Any]] = None,
+                        include: Optional[List[str]] = None,
+                        exclude: Optional[List[str]] = None,
                         skip: int = 0) -> Dict[str, Any]:
         """Get collection by collection and/or name
 
@@ -966,16 +964,18 @@ class SQLAlchemySocket:
         collection_class = get_collection_class(collection)
         query = format_query(collection_class, lname=name, collection=collection, id=col_id)
 
-        # try:
         rdata, meta['n_found'] = self.get_query_projection(collection_class,
                                                            query,
-                                                           projection,
-                                                           limit,
-                                                           skip)
+                                                           projection=include,
+                                                           exclude=exclude,
+                                                           limit=limit,
+                                                           skip=skip)
+        for rd in rdata:
+            for k in ['collection_type', 'lname']:
+                if k in rd:
+                    del rd[k]
 
         meta["success"] = True
-        # except Exception as err:
-        #     meta['error_description'] = str(err)
 
         return {"data": rdata, "meta": meta}
 
@@ -1236,7 +1236,6 @@ class SQLAlchemySocket:
             count = len(results)
 
         return count
-
 
     def add_wavefunction_store(self, blobs_list: List[Dict[str, Any]]):
         """
@@ -2127,7 +2126,13 @@ class SQLAlchemySocket:
 
         return num_updated == 1
 
-    def get_managers(self, name: str = None, status: str = None, modified_before=None, modified_after=None, limit=None, skip=0):
+    def get_managers(self,
+                     name: str = None,
+                     status: str = None,
+                     modified_before=None,
+                     modified_after=None,
+                     limit=None,
+                     skip=0):
 
         meta = get_metadata_template()
         query = format_query(QueueManagerORM, name=name, status=status)
@@ -2137,7 +2142,6 @@ class SQLAlchemySocket:
 
         if modified_after:
             query.append(QueueManagerORM.modified_on >= modified_after)
-
 
         data, meta['n_found'] = self.get_query_projection(QueueManagerORM, query, None, limit, skip, exclude=['id'])
         meta["success"] = True

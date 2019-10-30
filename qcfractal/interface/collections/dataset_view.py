@@ -7,11 +7,10 @@ import tarfile
 import tempfile
 import warnings
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, NoReturn, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, Iterator, List, NoReturn, Optional, Tuple, Union
 
 import numpy as np
 import pandas as pd
-
 from qcelemental.util.serialization import deserialize, serialize
 
 from ..models import Molecule, ObjectId
@@ -54,7 +53,8 @@ class DatasetView(abc.ABC):
             A Dataframe with specification of available columns.
         """
     @abc.abstractmethod
-    def get_values(self, queries: List[Dict[str, Union[str, bool]]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    def get_values(self, queries: List[Dict[str, Union[str, bool]]],
+                   subset: Optional[List[str]] = None) -> Tuple[pd.DataFrame, Dict[str, str]]:
         """
         Get value columns.
 
@@ -62,6 +62,8 @@ class DatasetView(abc.ABC):
         ----------
         queries: List[Dict[str, Union[str, bool]]]
             List of column metadata to match.
+        subset: Optional[List[str]], optional
+            The indices of the desired subset. Return all indices if subset is None.
 
         Returns
         -------
@@ -83,9 +85,14 @@ class DatasetView(abc.ABC):
             A Series of Molecules corresponding to indexes
         """
     @abc.abstractmethod
-    def get_entries(self) -> pd.DataFrame:
+    def get_entries(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
         """
         Get a list of entries in the dataset
+
+        Parameters
+        ----------
+        subset: Optional[List[str]], optional
+            The indices of the desired subset. Return all indices if subset is None.
 
         Returns
         -------
@@ -105,6 +112,7 @@ class HDF5View(DatasetView):
         path = pathlib.Path(path)
         self._path = path
         self._entries: pd.DataFrame = None
+        self._index: pd.DataFrame = None
 
     def list_values(self) -> pd.DataFrame:
         with self._read_file() as f:
@@ -132,18 +140,22 @@ class HDF5View(DatasetView):
         # for some reason, pandas makes native a float column
         return df.astype({"native": bool})
 
-    def get_values(self, queries: List[Dict[str, Union[str, bool]]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    def get_values(self, queries: List[Dict[str, Union[str, bool]]],
+                   subset: Optional[List[str]] = None) -> Tuple[pd.DataFrame, Dict[str, str]]:
         """
         Parameters
         ----------
+        subset
         queries: List[Dict[str, Union[str, bool]]]
             List of queries. Fields actually used are native, name, driver
         """
         import h5py
 
         units = {}
+        entries = self.get_index(subset)
+        indexes = entries._h5idx
         with self._read_file() as f:
-            ret = pd.DataFrame(index=f["entry/entry"][()])
+            ret = pd.DataFrame(index=entries["index"])
 
             for query in queries:
                 dataset_name = "value/" if query["native"] else "contributed_value/"
@@ -152,14 +164,13 @@ class HDF5View(DatasetView):
 
                 dataset = f[dataset_name]
                 if not h5py.check_dtype(vlen=dataset.dtype):
-                    data = list(dataset[:])
+                    data = [dataset[i] for i in indexes]
                 else:
-                    nentries = dataset.shape[0]
                     if driver.lower() == "gradient":
-                        data = [np.reshape(dataset[i], (-1, 3)) for i in range(nentries)]
+                        data = [np.reshape(dataset[i], (-1, 3)) for i in indexes]
                     elif driver.lower() == "hessian":
                         data = []
-                        for i in range(nentries):
+                        for i in indexes:
                             n2 = len(dataset[i])
                             n = int(round(np.sqrt(n2)))
                             data.append(np.reshape(dataset[i], (n, n)))
@@ -168,9 +179,9 @@ class HDF5View(DatasetView):
                             f"Variable length data type not understood, returning flat array "
                             f"(driver = {driver}).", RuntimeWarning)
                         try:
-                            data = np.array(dataset[:])
+                            data = [np.array(dataset[i]) for i in indexes]
                         except ValueError:
-                            data = list(data)
+                            data = [dataset[i] for i in indexes]
                 column_name = query["name"]
                 column_units = self._deserialize_field(dataset.attrs["units"])
                 ret[column_name] = data
@@ -190,7 +201,20 @@ class HDF5View(DatasetView):
                 mols = [mol_schema[int(i) if isinstance(i, ObjectId) else i].tobytes() for i in indexes]
         return pd.Series(mols, index=indexes)
 
-    def get_entries(self) -> pd.DataFrame:
+    def get_index(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
+        # TODO: make this fast for subsets
+        if self._index is None:
+            with self._read_file() as f:
+                entry_group = f["entry"]
+                self._index = pd.DataFrame({"index": entry_group["entry"][()]})
+                self._index["_h5idx"] = range(len(self._index))
+        if subset is None:
+            return self._index
+        else:
+            return self._index.set_index("index").loc[subset].reset_index()
+
+    def get_entries(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
+        # TODO: make this fast for subsets
         if self._entries is None:
             with self._read_file() as f:
                 entry_group = f["entry"]
@@ -202,13 +226,16 @@ class HDF5View(DatasetView):
                     raise ValueError(f"Unknown entry class ({entry_group.attrs['model']}) while "
                                      f"reading HDF5 entries.")
                 self._entries = pd.DataFrame({field: entry_group[field][()] for field in fields})
-        return self._entries
+        if subset is None:
+            return self._entries
+        else:
+            return self._entries.reset_index().set_index("name").loc[subset].reset_index()
 
     def write(self, ds: Dataset):
         import h5py
         # For data checksums
         dataset_kwargs = {"chunks": True, "fletcher32": True}
-
+        ds.get_entries(force=True)
         n_records = len(ds.data.records)
         default_shape = (n_records, )
 
@@ -270,7 +297,7 @@ class HDF5View(DatasetView):
             molecule_group = f.create_group("molecule")
 
             if "stoichiometry" in ds.data.history_keys:
-                molecules = ds.get_molecules(stoich=list(ds.valid_stoich), force=True)
+                molecules = ds.get_molecules(stoich=list(ds.valid_stoich(force=True)), force=True)
             else:
                 molecules = ds.get_molecules(force=True)
             mol_shape = (len(molecules), )
@@ -304,7 +331,7 @@ class HDF5View(DatasetView):
             # Export entries
             entry_group = f.create_group("entry")
             entry_dset = entry_group.create_dataset("entry", shape=default_shape, dtype=utf8_t, **dataset_kwargs)
-            entry_dset[:] = ds.get_index()
+            entry_dset[:] = ds.get_index(force=True)
 
             entries = ds.get_entries(force=True)
             if isinstance(ds.data.records[0], MoleculeEntry):
@@ -440,8 +467,9 @@ class RemoteView(DatasetView):
         self._client: FractalClient = client
         self._id: int = collection_id
 
-    def get_entries(self) -> pd.DataFrame:
-        payload = {"meta": {}, "data": {}}
+    def get_entries(self, subset: Optional[List[str]] = None) -> pd.DataFrame:
+        # TODO: consider adding a cache
+        payload = {"meta": {}, "data": {"subset": subset}}
 
         response = self._client._automodel_request(f"collection/{self._id}/entry", "get", payload, full_return=True)
         self._check_response_meta(response.meta)
@@ -454,15 +482,17 @@ class RemoteView(DatasetView):
         df = self._deserialize(response.data, response.meta.msgpacked_cols)
         return df['molecule'].apply(lambda blob: Molecule(**blob, validate=False))
 
-    def get_values(self, queries: List[Dict[str, Union[str, bool]]]) -> Tuple[pd.DataFrame, Dict[str, str]]:
+    def get_values(self, queries: List[Dict[str, Union[str, bool]]],
+                   subset: Optional[List[str]] = None) -> Tuple[pd.DataFrame, Dict[str, str]]:
         """
         Parameters
         ----------
+        subset
         queries: List[Dict[str, Union[str, bool]]]
             List of queries. Fields actually used are native, name, driver
         """
         qlist = [{"name": query["name"], "driver": query["driver"], "native": query["native"]} for query in queries]
-        payload = {"meta": {}, "data": {"queries": qlist}}
+        payload = {"meta": {}, "data": {"queries": qlist, "subset": subset}}
 
         response = self._client._automodel_request(f"collection/{self._id}/value", "get", payload, full_return=True)
         self._check_response_meta(response.meta)
