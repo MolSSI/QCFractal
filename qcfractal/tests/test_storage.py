@@ -1254,21 +1254,33 @@ def test_collections_projection(storage_socket):
 
     ret = storage_socket.get_collections(collection=collection, name=name)
     assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
     # print('All: ', ret["data"])
 
     projection = {"records", "name"}
-    ret = storage_socket.get_collections(collection=collection, name=name, projection=projection)
+    ret = storage_socket.get_collections(collection=collection, name=name, include=projection)
     assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
     assert set(ret['data'][0].keys()) == projection
+    assert len(ret['data'][0]['records']) == 2
     # print('With projection: ', ret["data"])
 
     projection = {"records", "name"}
-    ret = storage_socket.get_collections(collection=collection, name='none_existing', projection=projection)
+    ret = storage_socket.get_collections(collection=collection, name='none_existing', include=projection)
     assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 0
     # print('With projection: ', ret["data"])
 
     projection = {"records", "name", "id"}
-    ret = storage_socket.get_collections(collection=collection, name=name2, projection=projection)
+    ret = storage_socket.get_collections(collection=collection, name=name2, include=projection)
     assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
     assert set(ret['data'][0].keys()) == projection
+    assert len(ret['data'][0]['records']) == 0
     # print('With projection: ', ret["data"])
+
+    exclude = {"records", "name"}
+    ret = storage_socket.get_collections(collection=collection, name=name, exclude=exclude)
+    assert ret["meta"]["success"] is True
+    assert len(ret["data"]) == 1
+    assert len(set(ret['data'][0].keys()) & exclude) == 0

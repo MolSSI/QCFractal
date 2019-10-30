@@ -527,7 +527,7 @@ class FractalClient(object):
         payload = {"meta": {}, "data": {"collection": collection_type, "name": name}}
         if include is None:
             if collection_type.lower() in ["dataset", "reactiondataset"]:  #XXX
-                payload["meta"]["exclude"] = ["contributed_values", "results"]
+                payload["meta"]["exclude"] = ["contributed_values", "records"]
         else:
             payload["meta"]["include"] = include
 
