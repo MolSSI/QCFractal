@@ -185,7 +185,7 @@ def test_gradient_dataset_get_records(gradient_dataset_fixture):
     assert records_subset2.iloc[0, 0].status == "COMPLETE"
 
     with check_requests_monitor(client, "result", request_made=True):
-        rec_proj = ds.get_records("HF", "sto-3g", projection={"extras": True, "return_result": True})
+        rec_proj = ds.get_records("HF", "sto-3g", include=["extras", "return_result"])
     assert rec_proj.shape == (2, 2)
     assert set(rec_proj.columns) == {"extras", "return_result"}
 
@@ -211,7 +211,7 @@ def test_gradient_dataset_get_values(gradient_dataset_fixture):
         assert (df.loc[entry, "HF/sto-3g"] == ds.get_records(subset=entry,
                                                              method="hf",
                                                              basis="sto-3g",
-                                                             projection={'return_result': True})).all()
+                                                             include=['return_result'])).all()
 
     assert ds.get_values(method="NotInDataset").shape[1] == 0  # 0-length DFs can cause exceptions
 

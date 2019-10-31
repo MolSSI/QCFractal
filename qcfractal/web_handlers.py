@@ -4,7 +4,6 @@ Web handlers for the FractalServer.
 import json
 
 import tornado.web
-
 from pydantic import ValidationError
 from qcelemental.util import deserialize, serialize
 
@@ -191,7 +190,7 @@ class WavefunctionStoreHandler(APIHandler):
         body_model, response_model = rest_model("wavefunctionstore", "get")
         body = self.parse_bodymodel(body_model)
 
-        ret = self.storage.get_wavefunction_store(body.data.id, projection=body.meta.projection)
+        ret = self.storage.get_wavefunction_store(body.data.id, include=body.meta.include)
         if len(ret["data"]):
             ret["data"] = ret["data"][0]
         ret = response_model(**ret)
