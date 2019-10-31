@@ -35,6 +35,7 @@ dependencies:
   - rdkit
   - geometric>=0.9.3
   - torsiondrive
+  - dftd3
 
 # QCArchive includes
   - qcengine>=0.11.0
