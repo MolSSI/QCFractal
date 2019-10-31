@@ -108,7 +108,7 @@ def test_cli_user_remove(qcfractal_base_init):
     assert testing.run_process(args, **_options) is False
 
 
-@pytest.mark.skip(reason="Failing on Travis for unknown reasons.")
+@pytest.mark.xfail(reason="Failing on Travis for unknown reasons.")
 @pytest.mark.slow
 def test_cli_server_local_boot(qcfractal_base_init):
     port = "--port=" + str(testing.find_open_port())
