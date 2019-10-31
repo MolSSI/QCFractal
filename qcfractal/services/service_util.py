@@ -51,11 +51,13 @@ class TaskManager(ProtoModel):
             for x in task_query["data"]:
                 if x["status"] != "ERROR":
                     continue
+
             self.logger.error("Error in service compute as follows:")
             tasks = self.storage_socket.get_queue()["data"]
             for x in tasks:
                 if "error" not in x:
                     continue
+
                 self.logger.error(x["error"]["error_message"])
 
             raise KeyError("All tasks did not execute successfully.")

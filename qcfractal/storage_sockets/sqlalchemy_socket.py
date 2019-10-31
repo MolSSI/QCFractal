@@ -1652,10 +1652,9 @@ class SQLAlchemySocket:
                 session.add(doc_db)
                 session.commit()
 
-            if service.update_output:
-                procedure = service.output
-                procedure.__dict__["id"] = service.procedure_id
-                self.update_procedures([procedure])
+            procedure = service.output
+            procedure.__dict__["id"] = service.procedure_id
+            self.update_procedures([procedure])
 
             updated_count += 1
 
