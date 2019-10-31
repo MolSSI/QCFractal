@@ -62,12 +62,30 @@ def torsiondrive_fixture(fractal_compute_server):
             assert 'WAITING' in service['status']
 
         if run_service:
-            fractal_compute_server.await_services()
-            assert len(fractal_compute_server.list_current_tasks()) == 0
+            if isinstance(run_service, bool):
+                fractal_compute_server.await_services()
+                assert len(fractal_compute_server.list_current_tasks()) == 0
+            else:
+                fractal_compute_server.await_services(max_iter=run_service)
 
         return ret.data
 
     yield spin_up_test, client
+
+
+def test_service_torsiondrive_service_incomplete(fractal_compute_server, torsiondrive_fixture):
+    hooh = ptl.data.get_molecule("hooh.json")
+    hooh.geometry[0] += 0.00031
+
+    spin_up_test, client = torsiondrive_fixture
+    ret = spin_up_test(run_service=False)
+
+    result = client.query_procedures(id=ret.ids)[0]
+    assert result.status == "INCOMPLETE"
+
+    fractal_compute_server.await_services(max_iter=2)
+    result = client.query_procedures(id=ret.ids)[0]
+    assert result.status == "RUNNING"
 
 
 def test_service_manipulation(torsiondrive_fixture):

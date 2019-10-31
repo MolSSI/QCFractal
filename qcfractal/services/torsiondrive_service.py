@@ -152,11 +152,15 @@ class TorsionDriveService(BaseService):
         # Create new tasks from the current state
         next_tasks = td_api.next_jobs_from_state(self.torsiondrive_state, verbose=True)
 
+
         # All done
         if len(next_tasks) == 0:
-            return self.finalize()
+            self.status = "COMPLETE"
+            self.update_output()
+            return True
 
         self.submit_optimization_tasks(next_tasks)
+        self.update_output()
 
         return False
 
@@ -197,7 +201,7 @@ class TorsionDriveService(BaseService):
         self.task_manager.submit_tasks("optimization", new_tasks)
         self.task_map = task_map
 
-    def finalize(self):
+    def update_output(self):
         """
         Finishes adding data to the TorsionDriveRecord object
         """
@@ -217,7 +221,7 @@ class TorsionDriveService(BaseService):
 
         self.output = self.output.copy(
             update={
-                "status": "COMPLETE",
+                "status": self.status,
                 "minimum_positions": min_positions,
                 "final_energy_dict": final_energy,
                 "optimization_history": history
