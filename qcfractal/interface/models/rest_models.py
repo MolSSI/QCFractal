@@ -158,13 +158,17 @@ class QueryMeta(ProtoModel):
 
 
 class QueryFilter(ProtoModel):
+    """
+    Standard Fractal Server metadata for column filtering
+    """
     include: QueryListStr = Field(
         None,
-        description="Return only these fields. Expert-level object. Only one of include and exclude may be specified.")
+        description="Return only these columns. Expert-level object. Only one of include and exclude may be specified."
+    )
     exclude: QueryListStr = Field(
         None,
         description=
-        "Return all but these fields. Expert-level object. Only one of include and exclude may be specified.")
+        "Return all but these columns. Expert-level object. Only one of include and exclude may be specified.")
 
     @root_validator
     def check_include_or_exclude(cls, values):

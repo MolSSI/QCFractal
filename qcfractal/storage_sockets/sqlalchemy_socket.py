@@ -1138,6 +1138,8 @@ class SQLAlchemySocket:
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
         include : list/set/tuple, default is None
             The fields to return, default to return all
+        exclude : list/set/tuple, default is None
+            The fields to not return, default to return all
         limit : int, default is None
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
@@ -1397,6 +1399,8 @@ class SQLAlchemySocket:
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
         include : list/set/tuple of keys, default is None
             The fields to return, default to return all
+        exclude : list/set/tuple of keys, default is None
+            The fields to not return, default to return all
         limit : int, default is None
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
@@ -1472,7 +1476,7 @@ class SQLAlchemySocket:
                         procedure.hash_index))
                     continue
 
-                proc_db = session.query(className, ).filter_by(id=procedure.id).first()
+                proc_db = session.query(className).filter_by(id=procedure.id).first()
 
                 data = procedure.dict(exclude={'id'})
                 proc_db.update_relations(**data)
@@ -1839,6 +1843,8 @@ class SQLAlchemySocket:
             base_result id
         include : list/set/tuple of keys, default is None
             The fields to return, default to return all
+        exclude : list/set/tuple of keys, default is None
+            The fields to not return, default to return all
         limit : int, default is None
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,

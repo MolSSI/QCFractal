@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Tuple,
 
 import pandas as pd
 import requests
+
 from pydantic import ValidationError
 
 from .collections import collection_factory, collections_name_map
@@ -503,7 +504,8 @@ class FractalClient(object):
                        collection_type: str,
                        name: str,
                        full_return: bool = False,
-                       include: Optional[List[str]] = None) -> 'Collection':
+                       include: 'QueryListStr' = None,
+                       exclude: 'QueryListStr' = None) -> 'Collection':
         """Acquires a given collection from the server.
 
         Parameters
@@ -514,8 +516,10 @@ class FractalClient(object):
             The name of the collection to be accessed
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
-        heavy : Optional[bool], optional
-            Return the full collection including large data objects. "None" chooses a sensible default.
+        include : QueryListStr, optional
+            Return only these columns.
+        exclude : QueryListStr, optional
+            Return all but these columns.
         Returns
         -------
         Collection
@@ -524,11 +528,12 @@ class FractalClient(object):
         """
 
         payload = {"meta": {}, "data": {"collection": collection_type, "name": name}}
-        if include is None:
+        if include is None and exclude is None:
             if collection_type.lower() in ["dataset", "reactiondataset"]:  #XXX
                 payload["meta"]["exclude"] = ["contributed_values", "records"]
         else:
             payload["meta"]["include"] = include
+            payload["meta"]["exclude"] = exclude
 
         response = self._automodel_request("collection", "get", payload, full_return=True)
         if full_return:
@@ -1055,12 +1060,6 @@ class FractalClient(object):
         List[Dict[str, Any]]
             A dictionary of each match that contains the current status
             and, if an error has occurred, the error message.
-
-        Examples
-        --------
-        >>> client.query_services(id="5bd35af47b878715165f8225", include={"status": True})
-        [{"status": "RUNNING"}]
-
         """
         payload = {
             "meta": {
