@@ -496,6 +496,7 @@ class FractalServer:
             except Exception as e:
                 error_message = "FractalServer Service Build and Iterate Error:\n{}".format(traceback.format_exc())
                 self.logger.error(error_message)
+                service.status = "ERROR"
                 service.error = {"error_type": "iteration_error", "error_message": error_message}
                 finished = False
 

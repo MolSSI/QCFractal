@@ -128,8 +128,12 @@ class GridOptimizationService(BaseService):
         if self.iteration == -2:
             packet = json.loads(self.optimization_template)
             packet["data"] = [self.output.initial_molecule]
-            self.task_manager.submit_tasks("optimization", {"initial_opt": packet})
 
+            self.task_manager.submit_tasks("optimization", {"initial_opt": packet})
+            self.grid_optimizations[self.output.serialize_key(
+                "preoptimization")] = self.task_manager.required_tasks["initial_opt"]
+
+            self.update_output()  # normally handled by submit_optimization_tasks
             self.iteration = -1
             return False
 
@@ -138,7 +142,6 @@ class GridOptimizationService(BaseService):
                 return False
 
             complete_tasks = self.task_manager.get_tasks()
-            self.grid_optimizations[self.output.serialize_key("preoptimization")] = complete_tasks["initial_opt"]["id"]
 
             self.starting_molecule = self.storage_socket.get_molecules(
                 id=[complete_tasks["initial_opt"]["final_molecule"]])["data"][0]
@@ -191,7 +194,9 @@ class GridOptimizationService(BaseService):
 
         # All done
         if len(next_tasks) == 0:
-            return self.finalize()
+            self.status = "COMPLETE"
+            self.update_output()
+            return True
 
         self.submit_optimization_tasks(next_tasks)
 
@@ -225,15 +230,18 @@ class GridOptimizationService(BaseService):
             new_tasks[key] = packet
 
         self.task_manager.submit_tasks("optimization", new_tasks)
+        self.grid_optimizations.update(self.task_manager.required_tasks)
 
-    def finalize(self):
+        self.update_output()
+
+    def update_output(self):
         """
         Finishes adding data to the GridOptimizationRecord object
         """
 
         self.output = self.output.copy(
             update={
-                "status": "COMPLETE",
+                "status": self.status,
                 "starting_molecule": self.starting_molecule.id,
                 "starting_grid": self.starting_grid,
                 "grid_optimizations": self.grid_optimizations,

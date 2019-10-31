@@ -62,11 +62,8 @@ def torsiondrive_fixture(fractal_compute_server):
             assert 'WAITING' in service['status']
 
         if run_service:
-            if isinstance(run_service, bool):
-                fractal_compute_server.await_services()
-                assert len(fractal_compute_server.list_current_tasks()) == 0
-            else:
-                fractal_compute_server.await_services(max_iter=run_service)
+            fractal_compute_server.await_services()
+            assert len(fractal_compute_server.list_current_tasks()) == 0
 
         return ret.data
 
@@ -111,7 +108,10 @@ def test_service_manipulation(torsiondrive_fixture):
 
     spin_up_test, client = torsiondrive_fixture
 
-    ret = spin_up_test(run_service=False)
+    hooh = ptl.data.get_molecule("hooh.json")
+    hooh.geometry[0] += 3.1
+
+    ret = spin_up_test(run_service=False, initial_molecule=[hooh])
 
     service = client.query_services(procedure_id=ret.ids)[0]
     assert service["status"] == "WAITING"
@@ -378,12 +378,26 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     }) # yapf: disable
 
     ret = client.add_service([service], tag="gridopt", priority="low")
-    fractal_compute_server.await_services()
-    assert len(fractal_compute_server.list_current_tasks()) == 0
 
+    fractal_compute_server.await_services(max_iter=1)
     result = client.query_procedures(id=ret.ids)[0]
+    assert result.grid_optimizations.keys() == {'"preoptimization"'}
+    assert result.status == "RUNNING"
 
+    fractal_compute_server.await_services(max_iter=1)
+    result = client.query_procedures(id=ret.ids)[0]
+    assert result.grid_optimizations.keys() == {'"preoptimization"', "[1, 0]"}
+    assert result.status == "RUNNING"
+
+    fractal_compute_server.await_services(max_iter=1)
+    result = client.query_procedures(id=ret.ids)[0]
+    assert result.grid_optimizations.keys() == {'"preoptimization"', "[1, 0]", "[0, 0]", "[1, 1]"}
+    assert result.status == "RUNNING"
+
+    fractal_compute_server.await_services(max_iter=6)
+    result = client.query_procedures(id=ret.ids)[0]
     assert result.status == "COMPLETE"
+
     assert result.starting_grid == (1, 0)
     assert pytest.approx(result.get_final_energies((0, 0)), abs=1.e-4) == 0.0010044105443485617
     assert pytest.approx(result.get_final_energies((1, 1)), abs=1.e-4) == 0.0026440964897817623
