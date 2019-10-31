@@ -404,6 +404,9 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
 
     fractal_compute_server.await_services(max_iter=1)
     result = client.query_procedures(id=ret.ids)[0]
+    status = result.detailed_status()
+    assert status["total_points"] == 5
+    assert status["complete_tasks"] == 2
     assert result.grid_optimizations.keys() == {'"preoptimization"', "[1, 0]"}
     assert result.status == "RUNNING"
 
@@ -414,6 +417,8 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
 
     fractal_compute_server.await_services(max_iter=6)
     result = client.query_procedures(id=ret.ids)[0]
+    status = result.detailed_status()
+    assert status["complete_tasks"] == 5
     assert result.status == "COMPLETE"
 
     assert result.starting_grid == (1, 0)
@@ -439,6 +444,11 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     final_result_records = result.get_final_results()
     assert len(final_result_records) == 5
     assert final_result_records["preoptimization"].molecule == result.starting_molecule
+
+    # Pull the full history
+    preopt = result.get_history()['preoptimization']
+    assert preopt.initial_molecule == result.initial_molecule
+    assert preopt.final_molecule == result.starting_molecule
 
 
 @using_geometric

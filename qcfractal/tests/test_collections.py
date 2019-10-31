@@ -1273,7 +1273,6 @@ def test_torsiondrive_dataset(fractal_compute_server):
     assert ds.counts("hooh1", specs="spec1", count_gradients=True).loc["hooh1", "Spec1"] > 30
 
 
-
 @testing.using_geometric
 @testing.using_rdkit
 def test_optimization_dataset(fractal_compute_server):
@@ -1327,6 +1326,13 @@ def test_grid_optimization_dataset(fractal_compute_server):
     ds.add_entry("hooh1", hooh1, scans=scans, preoptimization=False)
 
     ds.compute("test")
+
+    # Test detail status
+    fractal_compute_server.await_services(max_iter=1)
+    status_detail = ds.status("test", detail=True)
+    assert status_detail.loc["hooh1", "Complete Tasks"] == 1
+
+    # Check completions
     fractal_compute_server.await_services()
 
     ds.query("test")

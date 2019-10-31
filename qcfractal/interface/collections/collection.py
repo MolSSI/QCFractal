@@ -538,8 +538,11 @@ class BaseProcedureDataset(Collection):
 
         return spec.name
 
-    def status(self, specs: Union[str, List[str]] = None, collapse: bool = True,
-               status: Optional[str] = None) -> pd.DataFrame:
+    def status(self,
+               specs: Union[str, List[str]] = None,
+               collapse: bool = True,
+               status: Optional[str] = None,
+               detail: bool = False) -> pd.DataFrame:
         """Returns the status of all current specifications.
 
         Parameters
@@ -548,6 +551,8 @@ class BaseProcedureDataset(Collection):
             Collapse the status into summaries per specification or not.
         status : Optional[str], optional
             If not None, only returns results that match the provided status.
+        detail : bool, optional
+            Shows a detailed description of the current status of incomplete jobs.
 
         Returns
         -------
@@ -556,24 +561,57 @@ class BaseProcedureDataset(Collection):
 
         """
 
-        # Specifications
-        if isinstance(specs, str):
-            specs = [specs]
+        # Simple no detail case
+        if detail is False:
+            # Specifications
+            if isinstance(specs, str):
+                specs = [specs]
 
-        # Query all of the specs and make sure they are valid
-        if specs is None:
-            list_specs = list(self.df.columns)
-        else:
-            list_specs = []
-            for spec in specs:
-                list_specs.append(self.query(spec))
+            # Query all of the specs and make sure they are valid
+            if specs is None:
+                list_specs = list(self.df.columns)
+            else:
+                list_specs = []
+                for spec in specs:
+                    list_specs.append(self.query(spec))
 
-        # apply status by column then by row
-        df = self.df[list_specs].apply(lambda col: col.apply(lambda entry: entry.status.value))
-        if status:
-            df = df[(df == status.upper()).all(axis=1)]
+            # apply status by column then by row
+            df = self.df[list_specs].apply(lambda col: col.apply(lambda entry: entry.status.value))
+            if status:
+                df = df[(df == status.upper()).all(axis=1)]
 
-        if collapse:
-            return df.apply(lambda x: x.value_counts())
-        else:
-            return df
+            if collapse:
+                return df.apply(lambda x: x.value_counts())
+            else:
+                return df
+
+        if status not in [None, 'INCOMPLETE']:
+            raise KeyError("Detailed status is only available for incomplete procedures.")
+
+        if not (isinstance(specs, str) or len(specs) == 1):
+            raise KeyError("Detailed status is only available for a single specification at a time.")
+
+        mapper = self._get_procedure_ids(specs)
+        reverse_map = {v: k for k, v in mapper.items()}
+        procedures = self.client.query_procedures(id=list(mapper.values()))
+
+        data = []
+
+        for proc in procedures:
+            if proc.status == "COMPLETE":
+                continue
+
+            try:
+                blob = proc.detailed_status()
+            except:
+                raise AttributeError("Detailed statuses are not available for this dataset type.")
+
+            blob["Name"] = reverse_map[proc.id]
+            data.append(blob)
+
+        df = pd.DataFrame(data)
+        df.rename(columns={x : x.replace("_", " ").title() for x in df.columns}, inplace=True)
+        if df.shape[0]:
+            df = df.set_index("Name")
+
+        return df

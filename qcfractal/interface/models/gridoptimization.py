@@ -252,8 +252,57 @@ class GridOptimizationRecord(RecordBase):
 
         return tuple(ret)
 
+    def detailed_status(self) -> Dict[str, Any]:
+
+        # Compute the total number of grid points
+        tpoints = 1
+        for scan in self.keywords.scans:
+            tpoints *= len(scan.steps)
+
+        if self.keywords.preoptimization:
+            tpoints += 1
+
+        flat_history = list(self.get_history().values())
+
+        ret = {
+            "status": self.status.value,
+            "total_points": tpoints,
+            "computed_points": len(self.grid_optimizations),
+            "complete_tasks": sum(x.status == "COMPLETE" for x in flat_history),
+            "incomplete_tasks": sum((x.status == "INCOMPLETE") or (x.status == "RUNNING") for x in flat_history),
+            "error_tasks": sum(x.status == "ERROR" for x in flat_history),
+        }
+        ret["current_tasks"] = ret["error_tasks"] + ret["incomplete_tasks"]
+        ret["percent_complete"] = ret["computed_points"] / ret["total_points"] * 100
+        ret["errors"] = [x for x in flat_history if x.status == "ERROR"]
+
+        return ret
 
 ## Query
+
+    def get_history(self, key: Union[int, str, None] = None) -> Dict[str, 'Optimization']:
+        """Pulls the optimization history of the computation.
+
+        Parameters
+        ----------
+        key : Union[int, str, None], optional
+            Specifies a single entry to pull from.
+
+        Returns
+        -------
+        Dict[str, 'Optimization']
+            Return the optimizations in the computed history.
+        """
+
+        if "optimization_history" not in self.cache:
+            procs = self.client.query_procedures(id=list(self.grid_optimizations.values()))
+            proc_map = {x.id : x for x in procs}
+
+            self.cache["optimization_history"] = {k : proc_map[v] for k, v in  self.grid_optimizations.items()}
+
+        return self._organize_return(self.cache["optimization_history"], key)
+
+
 
     def get_final_energies(self, key: Union[int, str, None] = None) -> Dict[str, float]:
         """

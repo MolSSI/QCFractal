@@ -171,7 +171,7 @@ class TorsionDriveRecord(RecordBase):
         flat_history = [x for v in self.get_history().values() for x in v]
 
         ret = {
-            "status": str(self.status),
+            "status": self.status.value,
             "total_points": tpoints,
             "computed_points": len(self.optimization_history),
             "complete_tasks": sum(x.status == "COMPLETE" for x in flat_history),
