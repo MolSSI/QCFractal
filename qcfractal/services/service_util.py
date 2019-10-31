@@ -7,7 +7,6 @@ import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from pydantic import validator
-
 from qcelemental.models import ComputeError
 
 from ..interface.models import ObjectId, ProtoModel
@@ -38,10 +37,7 @@ class TaskManager(ProtoModel):
             return True
 
         task_query = self.storage_socket.get_procedures(id=list(self.required_tasks.values()),
-                                                        projection={
-                                                            "status": True,
-                                                            "error": True
-                                                        })
+                                                        include=["status", "error"])
 
         status_values = set(x["status"] for x in task_query["data"])
         if status_values == {"COMPLETE"}:
@@ -163,7 +159,6 @@ class BaseService(ProtoModel, abc.ABC):
         """
         Initalizes a Service from the API.
         """
-
     @abc.abstractmethod
     def iterate(self):
         """
