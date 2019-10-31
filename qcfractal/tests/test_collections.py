@@ -1373,28 +1373,9 @@ def test_get_collection_no_records_ds(fractal_compute_server):
 
 def test_collection_metadata(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
-    name = "test_collection_metadata"
-    ds = ptl.collections.Dataset(name, client=client)
 
-    class MlMetadata(ProtoModel):
-        data_points: int
-        elements: List[str]
-        theory_level: str
-        sampling: str
-        labels: List[str]
-
-    meta = MlMetadata(data_points=133_885,
-                      elements=['C', 'O', 'N', 'F', 'H'],
-                      theory_level="DFT",
-                      sampling="Minima",
-                      labels=[
-                          "energy", "frequency", "polarizability", "rotational constant", "homo", "lumo",
-                          "electronic spatial extent", "dipole", "zpve", "enthalpy", "free energy", "heat capacity"
-                      ])
-    ds.data.metadata.update(meta.dict())
+    ds = ptl.collections.Dataset("test_collection_metadata", client=client)
+    ds.data.metadata["data_points"] = 133_885
     ds.save()
 
-    ds_from_server = client.get_collection("dataset", name)
-    meta_from_server = MlMetadata(**ds_from_server.data.metadata)
-
-    assert meta_from_server == meta
+    assert client.get_collection("dataset", ds.name).data.metadata["data_points"] == 133_885
