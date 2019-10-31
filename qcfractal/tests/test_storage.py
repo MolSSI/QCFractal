@@ -308,7 +308,9 @@ def test_dataset_add_delete_cascade(storage_socket):
         "view_available": False,
         "records": [{"name": "He1", "molecule_id": mol_insert["data"][0], "comment": None, "local_results": {}},
                     {"name": "He2", "molecule_id": mol_insert["data"][1], "comment": None, "local_results": {}}],
-        "contributed_values": [{"name": 'contrib1', "theory_level": 'PBE0', "units": 'kcal/mol'}]
+        "contributed_values": {
+            'contrib1' : {"name": 'contrib1', "theory_level": 'PBE0', "units": 'kcal/mol'}
+        }
     }
 
     ret = storage_socket.add_collection(db.copy())
@@ -321,8 +323,10 @@ def test_dataset_add_delete_cascade(storage_socket):
     ret = storage_socket.get_collections(collection=collection, name=name, projection=['records'])
     assert ret["meta"]["success"] is True
 
-    db["contributed_values"] = [{"name": 'contrib1', "theory_level": 'PBE0 FHI-AIMS', "units": 'kcal/mol'},
-                                {"name": 'contrib2', "theory_level": 'PBE0 FHI-AIMS tight', "units": 'kcal/mol'}]
+    db["contributed_values"] = {
+        'contrib1': {"name": 'contrib1', "theory_level": 'PBE0 FHI-AIMS', "units": 'kcal/mol'},
+        'contrib2': {"name": 'contrib2', "theory_level": 'PBE0 FHI-AIMS tight', "units": 'kcal/mol'}
+    }
 
     ret = storage_socket.add_collection(db.copy(), overwrite=True)
     assert ret["meta"]["n_inserted"] == 1
