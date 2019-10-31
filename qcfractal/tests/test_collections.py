@@ -4,14 +4,15 @@ Tests the server collection compute capabilities.
 import itertools
 import pathlib
 from contextlib import contextmanager
+from typing import List
 
 import numpy as np
 import pytest
-import qcelemental as qcel
-from qcelemental.models import Molecule
-from qcengine.testing import is_program_new_enough
 
+import qcelemental as qcel
 import qcfractal.interface as ptl
+from qcelemental.models import Molecule, ProtoModel
+from qcengine.testing import is_program_new_enough
 from qcfractal import testing
 from qcfractal.testing import df_compare, fractal_compute_server, live_fractal_or_skip
 
@@ -1359,7 +1360,7 @@ def test_gradient_dataset_lazy_entries_values(gradient_dataset_fixture):
 
 def test_get_collection_no_records_ds(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
-    ds = ptl.collections.Dataset(f"tnr_test", client=client)
+    ds = ptl.collections.Dataset("tnr_test", client=client)
     ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
     ds.save()
 
@@ -1368,3 +1369,32 @@ def test_get_collection_no_records_ds(fractal_compute_server):
     ds.get_entries()
     assert len(ds.data.records) == 1
     assert ds.data.records[0].name == "He1"
+
+
+def test_collection_metadata(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+    name = "test_collection_metadata"
+    ds = ptl.collections.Dataset(name, client=client)
+
+    class MlMetadata(ProtoModel):
+        data_points: int
+        elements: List[str]
+        theory_level: str
+        sampling: str
+        labels: List[str]
+
+    meta = MlMetadata(data_points=133_885,
+                      elements=['C', 'O', 'N', 'F', 'H'],
+                      theory_level="DFT",
+                      sampling="Minima",
+                      labels=[
+                          "energy", "frequency", "polarizability", "rotational constant", "homo", "lumo",
+                          "electronic spatial extent", "dipole", "zpve", "enthalpy", "free energy", "heat capacity"
+                      ])
+    ds.data.metadata.update(meta.dict())
+    ds.save()
+
+    ds_from_server = client.get_collection("dataset", name)
+    meta_from_server = MlMetadata(**ds_from_server.data.metadata)
+
+    assert meta_from_server == meta
