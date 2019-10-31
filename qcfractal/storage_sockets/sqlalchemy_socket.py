@@ -297,7 +297,7 @@ class SQLAlchemySocket:
         if projection:
             _projection = [p for p in projection]
         elif exclude:
-            _projection = set(className._all_col_names()) - set(exclude)
+            _projection = set(className._all_col_names()) - set(exclude) - set(className.db_related_fields)
 
         proj = []
         join_attrs = {}
@@ -963,6 +963,7 @@ class SQLAlchemySocket:
                         name: Optional[str] = None,
                         col_id: Optional[int] = None,
                         limit: Optional[int] = None,
+                        projection: Optional[List[str]] = None,
                         include: Optional[List[str]] = None,
                         exclude: Optional[List[str]] = None,
                         skip: int = 0) -> Dict[str, Any]:
@@ -1000,18 +1001,22 @@ class SQLAlchemySocket:
         collection_class = get_collection_class(collection)
         query = format_query(collection_class, lname=name, collection=collection, id=col_id)
 
+        if projection and include:
+            projection.extend(include)
+        if include and not projection:
+            projection = include
+
+        # try:
         rdata, meta['n_found'] = self.get_query_projection(collection_class,
                                                            query,
-                                                           projection=include,
+                                                           projection=projection,
                                                            exclude=exclude,
                                                            limit=limit,
                                                            skip=skip)
-        for rd in rdata:
-            for k in ['collection_type', 'lname']:
-                if k in rd:
-                    del rd[k]
 
         meta["success"] = True
+        # except Exception as err:
+        #     meta['error_description'] = str(err)
 
         return {"data": rdata, "meta": meta}
 
