@@ -496,14 +496,16 @@ class FractalServer:
             except Exception as e:
                 error_message = "FractalServer Service Build and Iterate Error:\n{}".format(traceback.format_exc())
                 self.logger.error(error_message)
-                service.status = "ERROR"
                 service.error = {"error_type": "iteration_error", "error_message": error_message}
                 finished = False
 
             r = self.storage.update_services([service])
 
-            if finished is not False:
+            # Mark procedure and service as error
+            if service.status == "ERROR":
+                self.storage.update_service_status("ERROR", id=service.id)
 
+            if finished is not False:
                 # Add results to procedures, remove complete_ids
                 completed_services.append(service)
             else:

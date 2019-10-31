@@ -1652,6 +1652,11 @@ class SQLAlchemySocket:
                 session.add(doc_db)
                 session.commit()
 
+            if service.update_output:
+                procedure = service.output
+                procedure.__dict__["id"] = service.procedure_id
+                self.update_procedures([procedure])
+
             updated_count += 1
 
         return updated_count
@@ -1668,9 +1673,19 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
 
             query = format_query(ServiceQueueORM, id=id, procedure_id=procedure_id)
-            ret = session.query(ServiceQueueORM).filter(*query).update({"status": status})
 
-        return ret
+            # Update the service
+            service = session.query(ServiceQueueORM).filter(*query).first()
+            service.status = status
+
+            # Update the procedure
+            if status == "waiting":
+                status = "incomplete"
+            session.query(BaseResultORM).filter(BaseResultORM.id == service.procedure_id).update({"status": status})
+
+            session.commit()
+
+        return 1
 
     def services_completed(self, records_list: List["BaseService"]) -> int:
 
