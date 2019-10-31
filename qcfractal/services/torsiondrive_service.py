@@ -152,7 +152,6 @@ class TorsionDriveService(BaseService):
             return True
 
         self.submit_optimization_tasks(next_tasks)
-        self.update_output()
 
         return False
 
@@ -200,6 +199,8 @@ class TorsionDriveService(BaseService):
 
             for task_id in task_ids:
                 self.optimization_history[key].append(self.task_manager.required_tasks[task_id])
+
+        self.update_output()
 
     def update_output(self):
         """

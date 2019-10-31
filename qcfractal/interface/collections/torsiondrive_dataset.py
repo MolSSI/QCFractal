@@ -333,39 +333,23 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
         mapper = self._get_procedure_ids(specs)
         reverse_map = {v: k for k, v in mapper.items()}
-        services = self.client.query_services(procedure_id=list(mapper.values()))
+        torsiondrives = self.client.query_procedures(id=list(mapper.values()))
 
         data = []
 
-        for service in services:
-            row: Dict[str, Union[str, int]] = {}
-            row["Name"] = reverse_map[service["procedure_id"]]
-            row["Status"] = service["status"]
+        for td in torsiondrives:
+            print()
+            if status == "COMPLETE":
+                continue
 
-            tpoints = 1
-            for x in service["output"]["keywords"]["grid_spacing"]:
-                tpoints *= int(360 / x)
-
-            row["Total Points"] = tpoints
-            row["Computed Points"] = len(service["optimization_history"])
-            row["Percent Complete"] = round(row["Computed Points"] / row["Total Points"] * 100, 2)
-
-            tasks = service["task_manager"]["required_tasks"]
-            row["# Current Tasks"] = len(tasks)
-            procs = self.client.query_procedures(id=list(tasks.values()))
-
-            row["Complete"] = sum(x.status == "COMPLETE" for x in procs)
-            row["Incomplete"] = sum(x.status == "INCOMPLETE" for x in procs)
-            row["Error"] = sum(x.status == "ERROR" for x in procs)
-
-            data.append(row)
+            blob = td.detailed_status()
+            blob["Name"] = reverse_map[td.id]
+            data.append(blob)
 
         df = pd.DataFrame(data)
-        df = df[[
-            "Name", "Status", "Computed Points", "Total Points", "Percent Complete", "# Current Tasks", "Complete",
-            "Incomplete", "Error"
-        ]]
-        df = df.set_index("Name")
+        df.rename(columns={x : x.replace("_", " ").title() for x in df.columns}, inplace=True)
+        if df.shape[0]:
+            df = df.set_index("Name")
 
         return df
 

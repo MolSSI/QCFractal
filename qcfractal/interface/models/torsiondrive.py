@@ -107,8 +107,7 @@ class TorsionDriveRecord(RecordBase):
 
     # Input data
     initial_molecule: List[ObjectId] = Field(..., description="Id(s) of the initial molecule(s) in the database.")
-    keywords: TDKeywords = Field(...,
-                                  description="The TorsionDrive-specific input arguments used for this operation.")
+    keywords: TDKeywords = Field(..., description="The TorsionDrive-specific input arguments used for this operation.")
     optimization_spec: OptimizationSpecification = Field(
         ...,
         description="The settings which describe how the energy optimizations at each step of the torsion "
@@ -119,8 +118,8 @@ class TorsionDriveRecord(RecordBase):
         "this operation.")
 
     # Output data
-    final_energy_dict: Dict[str, float] = Field(
-        ..., description="The final energy at each angle of the TorsionDrive scan.")
+    final_energy_dict: Dict[str, float] = Field(...,
+                                                description="The final energy at each angle of the TorsionDrive scan.")
 
     optimization_history: Dict[str, List[ObjectId]] = Field(
         ...,
@@ -161,6 +160,29 @@ class TorsionDriveRecord(RecordBase):
             return copy.deepcopy(data[key][minpos])
         else:
             return copy.deepcopy(data[key])
+
+    def detailed_status(self) -> Dict[str, Any]:
+
+        # Compute the total number of grid points
+        tpoints = 1
+        for x in self.keywords.grid_spacing:
+            tpoints *= int(360 / x)
+
+        flat_history = [x for v in self.get_history().values() for x in v]
+
+        ret = {
+            "status": str(self.status),
+            "total_points": tpoints,
+            "computed_points": len(self.optimization_history),
+            "complete_tasks": sum(x.status == "COMPLETE" for x in flat_history),
+            "incomplete_tasks": sum((x.status == "INCOMPLETE") or (x.status == "RUNNING") for x in flat_history),
+            "error_tasks": sum(x.status == "ERROR" for x in flat_history),
+        }
+        ret["current_tasks"] = ret["error_tasks"] + ret["incomplete_tasks"]
+        ret["percent_complete"] = ret["computed_points"] / ret["total_points"] * 100
+        ret["errors"] = [x for x in flat_history if x.status == "ERROR"]
+
+        return ret
 
 
 ## Query

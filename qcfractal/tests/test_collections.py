@@ -1242,7 +1242,7 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     # Check status
     status_detail = ds.status("Spec1", detail=True)
-    assert status_detail.loc["hooh2", "Complete"] == 1
+    assert status_detail.loc["hooh2", "Complete Tasks"] == 1
     assert status_detail.loc["hooh2", "Total Points"] == 4
 
     fractal_compute_server.await_services(max_iter=5)
@@ -1271,6 +1271,7 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     assert ds.counts("hooh1").loc["hooh1", "Spec1"] > 5
     assert ds.counts("hooh1", specs="spec1", count_gradients=True).loc["hooh1", "Spec1"] > 30
+
 
 
 @testing.using_geometric

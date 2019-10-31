@@ -77,18 +77,35 @@ def test_service_torsiondrive_service_incomplete(fractal_compute_server, torsion
     spin_up_test, client = torsiondrive_fixture
     ret = spin_up_test(run_service=False)
 
+    # Check the blank
     result = client.query_procedures(id=ret.ids)[0]
     assert len(result.final_energy_dict) == 0
     assert len(result.optimization_history) == 0
     assert result.status == "INCOMPLETE"
 
-    fractal_compute_server.await_services(max_iter=2)
+    # Update the service, but no compute
+    fractal_compute_server.update_services()
     result = client.query_procedures(id=ret.ids)[0]
+    status = result.detailed_status()
+    assert result.status == "RUNNING"
+    assert status["incomplete_tasks"] == 1
+
+    fractal_compute_server.await_results()
+
+    # Take a compute step
+    fractal_compute_server.await_services(max_iter=1)
+    result = client.query_procedures(id=ret.ids)[0]
+    status = result.detailed_status()
+    assert status["total_points"] == 4
+    assert status["computed_points"] == 3
+    assert status["complete_tasks"] >= 3
+    assert status["incomplete_tasks"] == 0
     assert len(result.final_energy_dict) == 1  # One complete
     assert len(result.optimization_history) == 3  # Three spawned
     assert result.minimum_positions["[-90]"] == 0
     assert result.status == "RUNNING"
 
+    # Repeat compute step checking for updates
     fractal_compute_server.await_services(max_iter=1)
     result = client.query_procedures(id=ret.ids)[0]
     assert len(result.final_energy_dict) == 3
@@ -96,6 +113,7 @@ def test_service_torsiondrive_service_incomplete(fractal_compute_server, torsion
     assert result.minimum_positions["[-90]"] == 0
     assert result.status == "RUNNING"
 
+    # Finalize
     fractal_compute_server.await_services(max_iter=6)
     result = client.query_procedures(id=ret.ids)[0]
     assert len(result.final_energy_dict) == 4
