@@ -163,13 +163,12 @@ class Dataset(Collection):
         r = requests.get(self.data.view_url_hdf5, stream=True)
 
         pbar = None
-        try:
-            if progress_bar:
+        if progress_bar:
+            try:
                 file_length = int(r.headers.get('content-length'))
-
                 pbar = tqdm(total=file_length, initial=0, unit='B', unit_scale=True)
-        except Exception as e:
-            print(e)
+            except:
+                warnings.warn("Failed to create download progress bar", RuntimeWarning)
 
         with open(local_path, 'wb') as fd:
             for chunk in r.iter_content(chunk_size=chunk_size):
