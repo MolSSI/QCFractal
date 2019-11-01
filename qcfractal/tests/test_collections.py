@@ -1157,7 +1157,7 @@ def test_reactiondataset_dftd3_dataset_plaintextview_write(reactiondataset_dftd3
 def test_collection_query(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
 
-    ds = ptl.collections.Dataset("CAPITAL", client)
+    ds = ptl.collections.Dataset("CAPITAL", client, owner="default")
     ds.save()
 
     cols = client.list_collections()
