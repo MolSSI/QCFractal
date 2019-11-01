@@ -48,8 +48,9 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
     client, server, adapter = compute_adapter_fixture
     reset_server_database(server)
 
-    manager_stuff = queue.QueueManager(client, adapter, queue_tag="stuff")
-    manager_other = queue.QueueManager(client, adapter, queue_tag="other")
+    config = {"Hello": "World"}
+    manager_stuff = queue.QueueManager(client, adapter, queue_tag="stuff", configuration=config)
+    manager_other = queue.QueueManager(client, adapter, queue_tag="other", configuration=config)
 
     # Add compute
     hooh = ptl.data.get_molecule("hooh.json")
@@ -75,6 +76,7 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
         assert manager["submitted"] == value
         assert manager["completed"] == value
         assert manager["username"] == CLIENT_USERNAME
+        assert isinstance(manager['configuration'], dict)
 
 
 @pytest.mark.slow

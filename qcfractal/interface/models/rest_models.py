@@ -941,6 +941,7 @@ register_model("queue_manager", "POST", QueueManagerPOSTBody, QueueManagerPOSTRe
 class QueueManagerPUTBody(ProtoModel):
     class Data(ProtoModel):
         operation: str
+        configuration: Optional[Dict[str, Any]] = None
 
     meta: QueueManagerMeta = Field(..., description=common_docs[QueueManagerMeta])
     data: Data = Field(

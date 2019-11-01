@@ -31,7 +31,7 @@ class QueueStatistics(BaseModel):
     total_failed_tasks: int = 0
     total_worker_walltime: float = 0.0
     total_task_walltime: float = 0.0
-    maximum_possible_walltime: float = 0.0
+    maximum_possible_walltime: float = 0.0 # maximum_workers * time_delta, experimental
     active_tasks: int = 0
     active_cores: int = 0
     active_memory: float = 0.0
@@ -81,8 +81,8 @@ class QueueManager:
     """
 
     def __init__(self,
-                 client: Any,
-                 queue_client: Any,
+                 client: 'FractalClient',
+                 queue_client: 'BaseAdapter',
                  logger: Optional[logging.Logger] = None,
                  max_tasks: int = 200,
                  queue_tag: str = None,
@@ -99,9 +99,9 @@ class QueueManager:
         """
         Parameters
         ----------
-        client : Any
+        client : FractalClient
             A FractalClient connected to a server
-        queue_client : Any
+        queue_client : BaseAdapter
             The DBAdapter class for queue abstraction
         logger : Optional[logging.Logger], optional
             A logger for the QueueManager
@@ -229,7 +229,7 @@ class QueueManager:
             # Tell the server we are up and running
             payload = self._payload_template()
             payload["data"]["operation"] = "startup"
-            # payload["data"]["configuration"] = self.configuration
+            payload["data"]["configuration"] = self.configuration
 
             self.client._automodel_request("queue_manager", "put", payload)
 
@@ -360,7 +360,6 @@ class QueueManager:
 
         payload = self._payload_template()
         payload["data"]["operation"] = "heartbeat"
-        # payload["data"]["total_task_walltime"]
         try:
             self.client._automodel_request("queue_manager", "put", payload)
             self.logger.debug("Heartbeat was successful.")
