@@ -455,7 +455,11 @@ class FractalClient(object):
 
 ### Collections section
 
-    def list_collections(self, collection_type: Optional[str] = None, aslist: bool = False) -> pd.DataFrame:
+    def list_collections(self,
+                         collection_type: Optional[str] = None,
+                         aslist: bool = False,
+                         owner: Optional[str] = None,
+                         show_hidden: bool = False) -> pd.DataFrame:
         """Lists the available collections currently on the server.
 
         Parameters
@@ -465,18 +469,29 @@ class FractalClient(object):
             specified collection type will be returned
         aslist : bool, optional
             Returns a canonical list rather than a dataframe.
-
+        owner: Optional[str], optional
+            Show only collections owned by owner. If None (default):
+            - if client has a username, owner = username
+            - if client does not have a username, owner = "default"
+            To explicitly return all datasets, set owner="*"
+        show_hidden: bool, optional
+            Show datasets whose visibility flag is set to False. Default: False.
         Returns
         -------
         DataFrame
             A dataframe containing the collection, name, and tagline.
         """
+        if owner is None:
+            if self.username is None:
+                owner = "default"
+            else:
+                owner = self.username
 
         query: Dict[str, str] = {}
         if collection_type is not None:
             query = {"collection": collection_type.lower()}
 
-        payload = {"meta": {"include": ["name", "collection", "tagline"]}, "data": query}
+        payload = {"meta": {"include": ["name", "collection", "tagline", "visibility", "owner"]}, "data": query}
         response: List[Dict[str, Any]] = self._automodel_request("collection", "get", payload, full_return=False)
 
         # Rename collection names
@@ -486,19 +501,24 @@ class FractalClient(object):
             if item["collection"] in repl_name_map:
                 item["collection"] = repl_name_map[item["collection"]]
 
-        if aslist:
-            if collection_type is None:
-                ret: DefaultDict[Any, List] = defaultdict(list)
-                for entry in response:
-                    ret[entry["collection"]].append(entry["name"])
-                return dict(ret)
-            else:
-                return [x["name"] for x in response]
-        else:
-            df = pd.DataFrame.from_dict(response)
+        df = pd.DataFrame.from_dict(response)
+        if not show_hidden:
+            df = df[df["visibility"]]
+        if not owner == "*":
+            df = df[df["owner"].str.lower() == owner.lower()]
+        df.drop(["visibility", "owner"], axis=1, inplace=True)
+        if not aslist:
             df.set_index(["collection", "name"], inplace=True)
             df.sort_index(inplace=True)
             return df
+        else:
+            if collection_type is None:
+                ret: DefaultDict[Any, List] = defaultdict(list)
+                for entry in df.iterrows():
+                    ret[entry[1]["collection"]].append(entry[1]["name"])
+                return dict(ret)
+            else:
+                return list(df.name)
 
     def get_collection(self,
                        collection_type: str,

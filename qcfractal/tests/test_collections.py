@@ -7,11 +7,11 @@ from contextlib import contextmanager
 
 import numpy as np
 import pytest
+
 import qcelemental as qcel
+import qcfractal.interface as ptl
 from qcelemental.models import Molecule
 from qcengine.testing import is_program_new_enough
-
-import qcfractal.interface as ptl
 from qcfractal import testing
 from qcfractal.testing import df_compare, fractal_compute_server, live_fractal_or_skip
 
@@ -1375,3 +1375,43 @@ def test_get_collection_no_records_ds(fractal_compute_server):
     ds.get_entries()
     assert len(ds.data.records) == 1
     assert ds.data.records[0].name == "He1"
+
+
+def test_list_collection_owner(fractal_compute_server):
+    client_with_user = ptl.FractalClient(fractal_compute_server, username="test_list_collection_owner")
+    client_without_user = ptl.FractalClient(fractal_compute_server)
+
+    ds1 = ptl.collections.Dataset(name="tlco_ds1", client=client_with_user)
+    ds1.save()
+    assert (client_with_user.list_collections().reset_index().name == "tlco_ds1").any()
+    assert not (client_without_user.list_collections().reset_index().name == "tlco_ds1").any()
+
+    ds2 = ptl.collections.ReactionDataset(name="tlco_ds2", client=client_with_user, owner="default")
+    ds2.save()
+    assert not (client_with_user.list_collections().reset_index().name == "tlco_ds2").any()
+    assert (client_without_user.list_collections().reset_index().name == "tlco_ds2").any()
+
+    assert (client_with_user.list_collections(owner="*").reset_index().name == "tlco_ds1").any()
+    assert (client_without_user.list_collections(owner="*").reset_index().name == "tlco_ds1").any()
+    assert (client_with_user.list_collections(owner="*").reset_index().name == "tlco_ds2").any()
+    assert (client_without_user.list_collections(owner="*").reset_index().name == "tlco_ds2").any()
+
+
+def test_list_collection_visibility(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+    ds1 = ptl.collections.GridOptimizationDataset(name="tlcv_ds1", client=client, owner="default", visibility=False)
+    ds2 = ptl.collections.GridOptimizationDataset(name="tlcv_ds2", client=client, owner="default", visibility=True)
+    ds3 = ptl.collections.GridOptimizationDataset(name="tlcv_ds3", client=client, owner="default")
+    ds1.save()
+    ds2.save()
+    ds3.save()
+
+    names = list(client.list_collections().reset_index().name)
+    assert "tlcv_ds1" not in names
+    assert "tlcv_ds2" in names
+    assert "tlcv_ds3" in names
+
+    names = list(client.list_collections(show_hidden=True).reset_index().name)
+    assert "tlcv_ds1" in names
+    assert "tlcv_ds2" in names
+    assert "tlcv_ds3" in names

@@ -238,6 +238,10 @@ class Collection(abc.ABC):
 
         self._pre_save_prep(client)
 
+        if self.data.owner is None:
+            if self.client.username is not None:
+                self.data.__dict__["owner"] = self.client.username
+
         # Add the database
         if (self.data.id == self.data.__fields__['id'].default):
             response = client.add_collection(self.data.dict(), overwrite=False, full_return=True)
@@ -610,7 +614,7 @@ class BaseProcedureDataset(Collection):
             data.append(blob)
 
         df = pd.DataFrame(data)
-        df.rename(columns={x : x.replace("_", " ").title() for x in df.columns}, inplace=True)
+        df.rename(columns={x: x.replace("_", " ").title() for x in df.columns}, inplace=True)
         if df.shape[0]:
             df = df.set_index("Name")
 
