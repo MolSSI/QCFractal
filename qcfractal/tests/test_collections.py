@@ -1242,7 +1242,7 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     # Check status
     status_detail = ds.status("Spec1", detail=True)
-    assert status_detail.loc["hooh2", "Complete"] == 1
+    assert status_detail.loc["hooh2", "Complete Tasks"] == 1
     assert status_detail.loc["hooh2", "Total Points"] == 4
 
     fractal_compute_server.await_services(max_iter=5)
@@ -1326,6 +1326,13 @@ def test_grid_optimization_dataset(fractal_compute_server):
     ds.add_entry("hooh1", hooh1, scans=scans, preoptimization=False)
 
     ds.compute("test")
+
+    # Test detail status
+    fractal_compute_server.await_services(max_iter=1)
+    status_detail = ds.status("test", detail=True)
+    assert status_detail.loc["hooh1", "Complete Tasks"] == 1
+
+    # Check completions
     fractal_compute_server.await_services()
 
     ds.query("test")

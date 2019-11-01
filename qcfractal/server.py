@@ -502,8 +502,11 @@ class FractalServer:
 
             r = self.storage.update_services([service])
 
-            if finished is not False:
+            # Mark procedure and service as error
+            if service.status == "ERROR":
+                self.storage.update_service_status("ERROR", id=service.id)
 
+            if finished is not False:
                 # Add results to procedures, remove complete_ids
                 completed_services.append(service)
             else:
