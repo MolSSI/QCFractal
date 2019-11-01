@@ -10,8 +10,10 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
-import pydantic
 import requests
+from tqdm import tqdm
+
+import pydantic
 from qcelemental import constants
 
 from ..models import ComputeResponse, ObjectId, ProtoModel
@@ -130,7 +132,8 @@ class Dataset(Collection):
         from . import HDF5View
         self._view = HDF5View(path)
 
-    def download(self, local_path: Optional[Union[str, Path]] = None, verify: bool = True) -> None:
+    def download(self, local_path: Optional[Union[str, Path]] = None, verify: bool = True,
+                 progress_bar: bool = True) -> None:
         """
         Download a remote view if available. The dataset will use this view to avoid server queries for calls to:
         - get_entries
@@ -144,7 +147,10 @@ class Dataset(Collection):
             Local path the store downloaded view. If None, the view will be stored in a temporary file and deleted on exit.
         verify: bool, optional
             Verify download checksum. Default: True.
+        progress_bar: bool, optional
+            Display a download progress bar. Default: True
         """
+        chunk_size = 8192
         if self.data.view_url_hdf5 is None:
             raise ValueError("A view for this dataset is not available on the server")
 
@@ -155,9 +161,21 @@ class Dataset(Collection):
             local_path = self._view_tempfile.name
 
         r = requests.get(self.data.view_url_hdf5, stream=True)
+
+        pbar = None
+        try:
+            if progress_bar:
+                file_length = int(r.headers.get('content-length'))
+
+                pbar = tqdm(total=file_length, initial=0, unit='B', unit_scale=True)
+        except Exception as e:
+            print(e)
+
         with open(local_path, 'wb') as fd:
-            for chunk in r.iter_content(chunk_size=8192):
+            for chunk in r.iter_content(chunk_size=chunk_size):
                 fd.write(chunk)
+                if pbar is not None:
+                    pbar.update(chunk_size)
 
         if verify:
             remote_checksum = self.data.view_metadata['blake2b_checksum']
