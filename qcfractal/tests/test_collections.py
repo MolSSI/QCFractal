@@ -772,10 +772,10 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     assert "ReactionDataset(" in str(ds)
 
     # Test collection lists
-    ret = client.list_collections(aslist=True, owner='*')
+    ret = client.list_collections(aslist=True, group='*')
     assert ds_name in ret["ReactionDataset"]
 
-    ret = client.list_collections("reactiondataset", aslist=True, owner='*')
+    ret = client.list_collections("reactiondataset", aslist=True, group='*')
     assert ds_name in ret
 
     He2 = ptl.Molecule.from_data([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
@@ -1157,7 +1157,7 @@ def test_reactiondataset_dftd3_dataset_plaintextview_write(reactiondataset_dftd3
 def test_collection_query(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
 
-    ds = ptl.collections.Dataset("CAPITAL", client, owner="default")
+    ds = ptl.collections.Dataset("CAPITAL", client)
     ds.save()
 
     cols = client.list_collections()
@@ -1377,31 +1377,26 @@ def test_get_collection_no_records_ds(fractal_compute_server):
     assert ds.data.records[0].name == "He1"
 
 
-def test_list_collection_owner(fractal_compute_server):
-    client_with_user = ptl.FractalClient(fractal_compute_server, username="test_list_collection_owner")
-    client_without_user = ptl.FractalClient(fractal_compute_server)
+def test_list_collection_group(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
 
-    ds1 = ptl.collections.Dataset(name="tlco_ds1", client=client_with_user)
+    ds1 = ptl.collections.Dataset(name="tlco_ds1", client=client)
     ds1.save()
-    assert (client_with_user.list_collections().reset_index().name == "tlco_ds1").any()
-    assert not (client_without_user.list_collections().reset_index().name == "tlco_ds1").any()
+    assert (client.list_collections().reset_index().name == "tlco_ds1").any()
 
-    ds2 = ptl.collections.ReactionDataset(name="tlco_ds2", client=client_with_user, owner="default")
+    ds2 = ptl.collections.ReactionDataset(name="tlco_ds2", client=client, group="group1")
     ds2.save()
-    assert not (client_with_user.list_collections().reset_index().name == "tlco_ds2").any()
-    assert (client_without_user.list_collections().reset_index().name == "tlco_ds2").any()
+    assert not (client.list_collections().reset_index().name == "tlco_ds2").any()
 
-    assert (client_with_user.list_collections(owner="*").reset_index().name == "tlco_ds1").any()
-    assert (client_without_user.list_collections(owner="*").reset_index().name == "tlco_ds1").any()
-    assert (client_with_user.list_collections(owner="*").reset_index().name == "tlco_ds2").any()
-    assert (client_without_user.list_collections(owner="*").reset_index().name == "tlco_ds2").any()
+    assert (client.list_collections().reset_index().name == "tlco_ds1").any()
+    assert (client.list_collections().reset_index().name == "tlco_ds2").any()
 
 
 def test_list_collection_visibility(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
-    ds1 = ptl.collections.GridOptimizationDataset(name="tlcv_ds1", client=client, owner="default", visibility=False)
-    ds2 = ptl.collections.GridOptimizationDataset(name="tlcv_ds2", client=client, owner="default", visibility=True)
-    ds3 = ptl.collections.GridOptimizationDataset(name="tlcv_ds3", client=client, owner="default")
+    ds1 = ptl.collections.GridOptimizationDataset(name="tlcv_ds1", client=client, visibility=False)
+    ds2 = ptl.collections.GridOptimizationDataset(name="tlcv_ds2", client=client, visibility=True)
+    ds3 = ptl.collections.GridOptimizationDataset(name="tlcv_ds3", client=client)
     ds1.save()
     ds2.save()
     ds3.save()

@@ -69,7 +69,7 @@ class Collection(abc.ABC):
         tagline: Optional[str] = None
         description: Optional[str] = None
 
-        owner: Optional[str] = None
+        group: Optional[str] = "default"
         visibility: bool = True
 
         view_url_hdf5: Optional[str] = None
@@ -237,10 +237,6 @@ class Collection(abc.ABC):
             client = self.client
 
         self._pre_save_prep(client)
-
-        if self.data.owner is None:
-            if self.client.username is not None:
-                self.data.__dict__["owner"] = self.client.username
 
         # Add the database
         if (self.data.id == self.data.__fields__['id'].default):

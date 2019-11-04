@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, DefaultDict, Dict, List, Optional, Tuple,
 
 import pandas as pd
 import requests
-
 from pydantic import ValidationError
 
 from .collections import collection_factory, collections_name_map
@@ -458,7 +457,7 @@ class FractalClient(object):
     def list_collections(self,
                          collection_type: Optional[str] = None,
                          aslist: bool = False,
-                         owner: Optional[str] = None,
+                         group: Optional[str] = "default",
                          show_hidden: bool = False) -> pd.DataFrame:
         """Lists the available collections currently on the server.
 
@@ -469,11 +468,9 @@ class FractalClient(object):
             specified collection type will be returned
         aslist : bool, optional
             Returns a canonical list rather than a dataframe.
-        owner: Optional[str], optional
-            Show only collections owned by owner. If None (default):
-            - if client has a username, owner = username
-            - if client does not have a username, owner = "default"
-            To explicitly return all datasets, set owner="*"
+        group: Optional[str], optional
+            Show only collections owned by owner.
+            To explicitly return all datasets, set owner=None
         show_hidden: bool, optional
             Show datasets whose visibility flag is set to False. Default: False.
         Returns
@@ -481,11 +478,6 @@ class FractalClient(object):
         DataFrame
             A dataframe containing the collection, name, and tagline.
         """
-        if owner is None:
-            if self.username is None:
-                owner = "default"
-            else:
-                owner = self.username
 
         query: Dict[str, str] = {}
         if collection_type is not None:
@@ -504,8 +496,8 @@ class FractalClient(object):
         df = pd.DataFrame.from_dict(response)
         if not show_hidden:
             df = df[df["visibility"]]
-        if not owner == "*":
-            df = df[df["owner"].str.lower() == owner.lower()]
+        if group is not None:
+            df = df[df["owner"].str.lower() == group.lower()]
         df.drop(["visibility", "owner"], axis=1, inplace=True)
         if not aslist:
             df.set_index(["collection", "name"], inplace=True)
