@@ -121,7 +121,7 @@ def test_collection_portal(test_server, encoding):
     get_db.data[0].pop("view_url_hdf5", None)
     get_db.data[0].pop("view_url_plaintext", None)
     get_db.data[0].pop("view_metadata", None)
-    get_db.data[0].pop("owner", None)
+    get_db.data[0].pop("group", None)
     get_db.data[0].pop("description", None)
 
     assert db == get_db.data[0]

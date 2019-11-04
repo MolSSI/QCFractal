@@ -469,8 +469,8 @@ class FractalClient(object):
         aslist : bool, optional
             Returns a canonical list rather than a dataframe.
         group: Optional[str], optional
-            Show only collections owned by owner.
-            To explicitly return all datasets, set owner=None
+            Show only collections belonging to a specified group.
+            To explicitly return all datasets, set group=None
         show_hidden: bool, optional
             Show datasets whose visibility flag is set to False. Default: False.
         Returns
@@ -497,8 +497,8 @@ class FractalClient(object):
         if not show_hidden:
             df = df[df["visibility"]]
         if group is not None:
-            df = df[df["owner"].str.lower() == group.lower()]
-        df.drop(["visibility", "owner"], axis=1, inplace=True)
+            df = df[df["group"].str.lower() == group.lower()]
+        df.drop(["visibility", "group"], axis=1, inplace=True)
         if not aslist:
             df.set_index(["collection", "name"], inplace=True)
             df.sort_index(inplace=True)
