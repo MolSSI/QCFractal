@@ -483,7 +483,7 @@ class FractalClient(object):
         if collection_type is not None:
             query = {"collection": collection_type.lower()}
 
-        payload = {"meta": {"include": ["name", "collection", "tagline", "visibility", "owner"]}, "data": query}
+        payload = {"meta": {"include": ["name", "collection", "tagline", "visibility", "group"]}, "data": query}
         response: List[Dict[str, Any]] = self._automodel_request("collection", "get", payload, full_return=False)
 
         # Rename collection names

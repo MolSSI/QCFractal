@@ -773,10 +773,10 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     assert "ReactionDataset(" in str(ds)
 
     # Test collection lists
-    ret = client.list_collections(aslist=True, group='*')
+    ret = client.list_collections(aslist=True)
     assert ds_name in ret["ReactionDataset"]
 
-    ret = client.list_collections("reactiondataset", aslist=True, group='*')
+    ret = client.list_collections("reactiondataset", aslist=True)
     assert ds_name in ret
 
     He2 = ptl.Molecule.from_data([[2, 0, 0, -4], [2, 0, 0, 4]], dtype="numpy", units="bohr", frags=[1])
@@ -1389,8 +1389,8 @@ def test_list_collection_group(fractal_compute_server):
     ds2.save()
     assert not (client.list_collections().reset_index().name == "tlco_ds2").any()
 
-    assert (client.list_collections().reset_index().name == "tlco_ds1").any()
-    assert (client.list_collections().reset_index().name == "tlco_ds2").any()
+    assert (client.list_collections(group=None).reset_index().name == "tlco_ds1").any()
+    assert (client.list_collections(group=None).reset_index().name == "tlco_ds2").any()
 
 
 def test_list_collection_visibility(fractal_compute_server):
