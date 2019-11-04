@@ -8,11 +8,11 @@ from typing import List
 
 import numpy as np
 import pytest
-
 import qcelemental as qcel
-import qcfractal.interface as ptl
 from qcelemental.models import Molecule, ProtoModel
 from qcengine.testing import is_program_new_enough
+
+import qcfractal.interface as ptl
 from qcfractal import testing
 from qcfractal.testing import df_compare, fractal_compute_server, live_fractal_or_skip
 
@@ -1379,3 +1379,11 @@ def test_collection_metadata(fractal_compute_server):
     ds.save()
 
     assert client.get_collection("dataset", ds.name).data.metadata["data_points"] == 133_885
+
+    ds = ptl.collections.Dataset("test_collection_metadata_oldstyle", client=client)
+    ds.data.__dict__["metadata"] = None
+    ds.save()
+
+    ds = client.get_collection("dataset", ds.name)
+    with pytest.raises(AttributeError):
+        ds.metadata
