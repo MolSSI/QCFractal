@@ -109,6 +109,28 @@ def test_molecules_get(storage_socket):
     assert ret == 1
 
 
+def test_molecules_duplicate_insert(storage_socket):
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
+
+    ret = storage_socket.add_molecules([water, water2])
+    assert ret["meta"]["n_inserted"] == 2
+
+    ret2 = storage_socket.add_molecules([water, water2])
+    assert ret2["meta"]["n_inserted"] == 0
+    assert ret["data"][0] == ret2["data"][0]
+    assert ret["data"][1] == ret2["data"][1]
+
+    ret3 = storage_socket.add_molecules([water, water])
+    assert ret2["meta"]["n_inserted"] == 0
+    assert ret["data"][0] == ret3["data"][0]
+    assert ret["data"][0] == ret3["data"][1]
+
+    # Cleanup adds
+    ret = storage_socket.del_molecules(id=ret["data"])
+    assert ret == 2
+
+
 def test_molecules_mixed_add_get(storage_socket):
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
     water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
