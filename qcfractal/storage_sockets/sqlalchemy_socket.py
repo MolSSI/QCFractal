@@ -125,6 +125,7 @@ class SQLAlchemySocket:
     """
         SQLAlcehmy QCDB wrapper class.
     """
+
     def __init__(self,
                  uri: str,
                  project: str = "molssidb",
@@ -582,6 +583,9 @@ class SQLAlchemySocket:
 
         results = []
         with self.session_scope() as session:
+
+            # Build out the ORMs
+            orm_molecules = []
             for dmol in molecules:
 
                 if dmol.validated is False:
@@ -602,26 +606,61 @@ class SQLAlchemySocket:
                 mol_dict["identifiers"]["molecular_formula"] = mol_dict["molecular_formula"]
 
                 # search by index keywords not by all keys, much faster
+                orm_molecules.append(MoleculeORM(**mol_dict))
 
-                doc = session.query(MoleculeORM).filter_by(molecule_hash=mol_dict['molecule_hash'])
+            # Check if we have duplicates
+            hash_list = [x.molecule_hash for x in orm_molecules]
+            query = format_query(MoleculeORM, molecule_hash=hash_list)
+            indices = session.query(MoleculeORM.molecule_hash, MoleculeORM.id).filter(*query)
+            previous_id_map = {k: v for k, v in indices}
 
-                if doc.count() == 0:
-                    doc = MoleculeORM(**mol_dict)
-                    session.add(doc)
-                    # Todo: commit at the end, but list itself might have duplicates
-                    session.commit()
-                    results.append(str(doc.id))
-                    meta['n_inserted'] += 1
-                else:
+            # For a bulk add there must be no pre-existing and there must be no duplicates in the add list
+            bulk_ok = len(hash_list) == len(set(hash_list))
+            bulk_ok &= (len(previous_id_map) == 0)
+            # bulk_ok = False
 
-                    id = str(doc.first().id)
-                    meta['duplicates'].append(id)  # TODO
-                    # If new or duplicate, add the id to the return list
-                    results.append(id)
+            if bulk_ok:
+                # Bulk save, doesn't update fields for speed
+                r = session.bulk_save_objects(orm_molecules)
+                session.commit()
+
+                # Query ID's and reorder based off orm_molecule ordered list
+                query = format_query(MoleculeORM, molecule_hash=hash_list)
+                indices = session.query(MoleculeORM.molecule_hash, MoleculeORM.id).filter(*query)
+
+                id_map = {k: v for k, v in indices}
+                n_inserted = len(orm_molecules)
+
+            else:
+                # Start from old ID map
+                id_map = previous_id_map
+
+                new_molecules = []
+                n_inserted = 0
+
+                for orm_mol in orm_molecules:
+                    duplicate_id = id_map.get(orm_mol.molecule_hash, False)
+                    if duplicate_id is not False:
+                        meta["duplicates"].append(str(duplicate_id))
+                    else:
+                        new_molecules.append(orm_mol)
+                        id_map[orm_mol.molecule_hash] = 'placeholder_id'
+                        n_inserted += 1
+                        session.add(orm_mol)
 
                     # We should make sure there was not a hash collision?
                     # new_mol.compare(old_mol)
                     # raise KeyError("!!! WARNING !!!: Hash collision detected")
+
+                session.commit()
+
+                for new_mol in new_molecules:
+                    id_map[new_mol.molecule_hash] = new_mol.id
+
+            results = [str(id_map[x.molecule_hash]) for x in orm_molecules]
+            assert 'placeholder_id' not in results
+            meta['n_inserted'] = n_inserted
+
         meta["success"] = True
 
         ret = {"data": results, "meta": meta}
@@ -632,10 +671,6 @@ class SQLAlchemySocket:
         meta = get_metadata_template()
 
         query = format_query(MoleculeORM, id=id, molecule_hash=molecule_hash, molecular_formula=molecular_formula)
-        # query = [getattr(MoleculeORM, 'id') == id,
-        #          MoleculeORM.molecule_hash == molecule_hash,
-        #          MoleculeORM.molecular_formula == molecular_formula
-        # ]
 
         # Don't include the hash or the molecular_formula in the returned result
         rdata, meta['n_found'] = self.get_query_projection(MoleculeORM,
@@ -1099,6 +1134,7 @@ class SQLAlchemySocket:
         -------
 
         """
+
     def get_results(self,
                     id: Union[str, List] = None,
                     program: str = None,
