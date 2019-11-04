@@ -27,7 +27,7 @@ class QueryBase:
             QUERY_CLASSES.add(cls)
         super().__init_subclass__(**kwargs)
 
-    def query(self, session, query_key, limit=0, skip=0, projection=None, **kwargs):
+    def query(self, session, query_key, limit=0, skip=0, include=None, exclude=None, **kwargs):
 
         if query_key not in self._query_method_map:
             raise TypeError(f'Query type {query_key} is unimplemented for class {self._class_name}')
@@ -81,9 +81,10 @@ select {select_str}count(*) from {table_name}
 
     @staticmethod
     def _raise_missing_attribute(cls, query_key, missing_attribute, amend_msg=''):
-        """Raises error for missinfg attribute in a message suitable for the REST user"""
+        """Raises error for missing attribute in a message suitable for the REST user"""
 
         raise AttributeError(f'To query {cls._class_name} for {query_key} ' f'you must provide {missing_attribute}.')
+
 
 # ----------------------------------------------------------------------------
 
@@ -106,6 +107,7 @@ class TaskQueries(QueryBase):
         """
 
         return self.execute_query(sql_statement, with_keys=True)
+
 
 # ----------------------------------------------------------------------------
 

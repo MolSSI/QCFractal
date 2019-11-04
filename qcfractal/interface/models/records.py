@@ -8,7 +8,6 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import numpy as np
-
 import qcelemental as qcel
 from pydantic import Field, constr, validator
 
@@ -251,7 +250,7 @@ class ResultRecord(RecordBase):
     driver: DriverEnum = Field(..., description=str(DriverEnum.__doc__))
     method: str = Field(..., description="The quantum chemistry method the driver runs with.")
     molecule: ObjectId = Field(...,
-                                description="The Id of the molecule in the Database which the result is computed on.")
+                               description="The Id of the molecule in the Database which the result is computed on.")
     basis: Optional[str] = Field(
         None,
         description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for "
@@ -260,8 +259,7 @@ class ResultRecord(RecordBase):
         None,
         description="The Id of the :class:`KeywordSet` which was passed into the quantum chemistry program that "
         "performed this calculation.")
-    protocols: qcel.models.results.ResultProtocols = Field(qcel.models.results.ResultProtocols(),
-                                                                     description="")
+    protocols: qcel.models.results.ResultProtocols = Field(qcel.models.results.ResultProtocols(), description="")
 
     # Output data
     return_result: Union[float, qcel.models.types.Array[float], Dict[str, Any]] = Field(
@@ -295,7 +293,6 @@ class ResultRecord(RecordBase):
         if self.wavefunction is None:
             raise AttributeError("This Record was not computed with Wavefunction data.")
 
-
         single_return = False
         if isinstance(key, str):
             key = [key]
@@ -311,7 +308,8 @@ class ResultRecord(RecordBase):
         unknown = missing - set(self.wavefunction["available"] + ["basis", "restricted"])
         if unknown:
             raise KeyError(
-                f"Wavefunction Key(s) `{unknown}` not understood, available keys are: {self.wavefunction['available']}")
+                f"Wavefunction Key(s) `{unknown}` not understood, available keys are: {self.wavefunction['available']}"
+            )
 
         if missing:
 
@@ -321,7 +319,7 @@ class ResultRecord(RecordBase):
             self.cache["wavefunction"].update(
                 self.client.custom_query("wavefunctionstore",
                                          None, {"id": self.wavefunction_data_id},
-                                         meta={"projection": proj}))
+                                         meta={"include": proj}))
 
             if "basis" in missing:
                 self.cache["wavefunction"]["basis"] = qcel.models.BasisSet(**self.cache["wavefunction"]["basis"])
@@ -336,8 +334,6 @@ class ResultRecord(RecordBase):
             return ret[keys[0]]
         else:
             return ret
-
-
 
 ## QCSchema constructors
 
@@ -443,7 +439,7 @@ class OptimizationRecord(RecordBase):
         description="The keyword options which were passed into the Optimization program. "
         "Note: These are a dictionary and not a :class:`KeywordSet` object.")
     protocols: qcel.models.procedures.OptimizationProtocols = Field(qcel.models.procedures.OptimizationProtocols(),
-                                                                     description="")
+                                                                    description="")
 
     # Automatting issue currently
     # description=str(qcel.models.procedures.OptimizationProtocols.__doc__))

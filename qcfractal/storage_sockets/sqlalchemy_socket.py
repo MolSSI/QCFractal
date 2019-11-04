@@ -20,7 +20,6 @@ from datetime import datetime as dt
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import bcrypt
-
 # pydantic classes
 from qcfractal.interface.models import (GridOptimizationRecord, KeywordSet, Molecule, ObjectId, OptimizationRecord,
                                         ResultRecord, TaskRecord, TaskStatusEnum, TorsionDriveRecord, prepare_basis)
@@ -979,8 +978,10 @@ class SQLAlchemySocket:
             Database id of the collection
         limit: Optional[int], optional
             Maximum number of results to return
-        projection: Optional[Dict[str, Any]], optional
+        include: Optional[List[str]], optional
             Columns to return
+        exclude: Optional[List[str]], optional
+            Return all but these columns
         skip: int, optional
             Skip the first `skip` results
 
@@ -1146,7 +1147,8 @@ class SQLAlchemySocket:
                     task_id: Union[str, List] = None,
                     manager_id: Union[str, List] = None,
                     status: str = 'COMPLETE',
-                    projection=None,
+                    include: Optional[List[str]] = None,
+                    exclude: Optional[List[str]] = None,
                     limit: int = None,
                     skip: int = 0,
                     return_json=True,
@@ -1170,8 +1172,10 @@ class SQLAlchemySocket:
             id or a list of ids of queue_mangers
         status : bool, default is 'COMPLETE'
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
-        projection : list/set/tuple of keys, default is None
+        include : list/set/tuple, default is None
             The fields to return, default to return all
+        exclude : list/set/tuple, default is None
+            The fields to not return, default to return all
         limit : int, default is None
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
@@ -1210,7 +1214,12 @@ class SQLAlchemySocket:
                              manager_id=manager_id,
                              status=status)
 
-        data, meta['n_found'] = self.get_query_projection(ResultORM, query, projection, limit, skip)
+        data, meta['n_found'] = self.get_query_projection(ResultORM,
+                                                          query,
+                                                          projection=include,
+                                                          exclude=exclude,
+                                                          limit=limit,
+                                                          skip=skip)
         meta["success"] = True
 
         return {"data": data, "meta": meta}
@@ -1308,7 +1317,8 @@ class SQLAlchemySocket:
 
     def get_wavefunction_store(self,
                                id: List[str] = None,
-                               projection: Dict[str, bool] = None,
+                               include: Optional[List[str]] = None,
+                               exclude: Optional[List[str]] = None,
                                limit: int = None,
                                skip: int = 0):
         """
@@ -1318,7 +1328,7 @@ class SQLAlchemySocket:
         ----------
         id : List[str], optional
             A list of ids to query
-        projection : Dict[str, bool], optional
+        include : Dict[str, bool], optional
             Description
         limit : int, optional
             Maximum number of results to return.
@@ -1334,7 +1344,12 @@ class SQLAlchemySocket:
         meta = get_metadata_template()
 
         query = format_query(WavefunctionStoreORM, id=id)
-        rdata, meta['n_found'] = self.get_query_projection(WavefunctionStoreORM, query, projection, limit, skip)
+        rdata, meta['n_found'] = self.get_query_projection(WavefunctionStoreORM,
+                                                           query,
+                                                           include,
+                                                           limit,
+                                                           skip,
+                                                           exclude=exclude)
 
         meta["success"] = True
 
@@ -1401,7 +1416,8 @@ class SQLAlchemySocket:
                        task_id: Union[str, List] = None,
                        manager_id: Union[str, List] = None,
                        status: str = 'COMPLETE',
-                       projection=None,
+                       include=None,
+                       exclude=None,
                        limit: int = None,
                        skip: int = 0,
                        return_json=True,
@@ -1417,8 +1433,10 @@ class SQLAlchemySocket:
         task_id : str or list
         status : bool, default is 'COMPLETE'
             The status of the result: 'COMPLETE', 'INCOMPLETE', or 'ERROR'
-        projection : list/set/tuple of keys, default is None
+        include : list/set/tuple of keys, default is None
             The fields to return, default to return all
+        exclude : list/set/tuple of keys, default is None
+            The fields to not return, default to return all
         limit : int, default is None
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
@@ -1470,7 +1488,7 @@ class SQLAlchemySocket:
         try:
             # TODO: decide a way to find the right type
 
-            data, meta['n_found'] = self.get_query_projection(className, query, projection, limit, skip)
+            data, meta['n_found'] = self.get_query_projection(className, query, include, limit, skip, exclude=exclude)
             meta["success"] = True
         except Exception as err:
             meta['error_description'] = str(err)
@@ -1856,7 +1874,8 @@ class SQLAlchemySocket:
                   base_result: str = None,
                   tag=None,
                   manager=None,
-                  projection=None,
+                  include=None,
+                  exclude=None,
                   limit: int = None,
                   skip: int = 0,
                   return_json=False,
@@ -1872,8 +1891,10 @@ class SQLAlchemySocket:
             The status of the task: 'COMPLETE', 'RUNNING', 'WAITING', or 'ERROR'
         base_result: str (optional)
             base_result id
-        projection : list/set/tuple of keys, default is None
+        include : list/set/tuple of keys, default is None
             The fields to return, default to return all
+        exclude : list/set/tuple of keys, default is None
+            The fields to not return, default to return all
         limit : int, default is None
             maximum number of results to return
             if 'limit' is greater than the global setting self._max_limit,
@@ -1904,7 +1925,12 @@ class SQLAlchemySocket:
 
         data = []
         try:
-            data, meta['n_found'] = self.get_query_projection(TaskQueueORM, query, projection, limit, skip)
+            data, meta['n_found'] = self.get_query_projection(TaskQueueORM,
+                                                              query,
+                                                              include,
+                                                              limit,
+                                                              skip,
+                                                              exclude=exclude)
             meta["success"] = True
         except Exception as err:
             meta['error_description'] = str(err)

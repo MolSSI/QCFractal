@@ -21,7 +21,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from .collections.collection import Collection  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
     from .models import GridOptimizationInput, KeywordSet, Molecule, ObjectId, ResultRecord, TaskRecord, TorsionDriveInput
     from .models.rest_models import (CollectionGETResponse, ComputeResponse, KeywordGETResponse, MoleculeGETResponse,
-                                     ProcedureGETResponse, QueryObjectId, QueryProjection, QueryStr, ResultGETResponse,
+                                     ProcedureGETResponse, QueryObjectId, QueryListStr, QueryStr, ResultGETResponse,
                                      ServiceQueueGETResponse, TaskQueueGETResponse
                                      )  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
 
@@ -504,7 +504,8 @@ class FractalClient(object):
                        collection_type: str,
                        name: str,
                        full_return: bool = False,
-                       include: Optional[List[str]] = None) -> 'Collection':
+                       include: 'QueryListStr' = None,
+                       exclude: 'QueryListStr' = None) -> 'Collection':
         """Acquires a given collection from the server.
 
         Parameters
@@ -515,8 +516,10 @@ class FractalClient(object):
             The name of the collection to be accessed
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
-        heavy : Optional[bool], optional
-            Return the full collection including large data objects. "None" chooses a sensible default.
+        include : QueryListStr, optional
+            Return only these columns.
+        exclude : QueryListStr, optional
+            Return all but these columns.
         Returns
         -------
         Collection
@@ -525,11 +528,12 @@ class FractalClient(object):
         """
 
         payload = {"meta": {}, "data": {"collection": collection_type, "name": name}}
-        if include is None:
+        if include is None and exclude is None:
             if collection_type.lower() in ["dataset", "reactiondataset"]:  #XXX
                 payload["meta"]["exclude"] = ["contributed_values", "records"]
         else:
             payload["meta"]["include"] = include
+            payload["meta"]["exclude"] = exclude
 
         response = self._automodel_request("collection", "get", payload, full_return=True)
         if full_return:
@@ -583,7 +587,7 @@ class FractalClient(object):
                       status: 'QueryStr' = "COMPLETE",
                       limit: Optional[int] = None,
                       skip: int = 0,
-                      projection: Optional['QueryProjection'] = None,
+                      include: Optional['QueryListStr'] = None,
                       full_return: bool = False) -> Union['ResultGETResponse', List['ResultRecord'], Dict[str, Any]]:
         """Queries ResultRecords from the server.
 
@@ -611,7 +615,7 @@ class FractalClient(object):
             The maximum number of Results to query
         skip : int, optional
             The number of Results to skip in the query, used during pagination
-        projection : QueryProjection, optional
+        include : QueryListStr, optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
@@ -619,14 +623,14 @@ class FractalClient(object):
         Returns
         -------
         Union[List[RecordResult], Dict[str, Any]]
-            Returns a List of found RecordResult's without projection, or a
-            dictionary of results with projection.
+            Returns a List of found RecordResult's without include, or a
+            dictionary of results with include.
         """
         payload = {
             "meta": {
                 "limit": limit,
                 "skip": skip,
-                "projection": projection
+                "include": include
             },
             "data": {
                 "id": id,
@@ -643,7 +647,7 @@ class FractalClient(object):
         response = self._automodel_request("result", "get", payload, full_return=True)
 
         # Add references back to the client
-        if not projection:
+        if not include:
             for result in response.data:
                 result.__dict__["client"] = self
 
@@ -661,7 +665,7 @@ class FractalClient(object):
                          status: 'QueryStr' = "COMPLETE",
                          limit: Optional[int] = None,
                          skip: int = 0,
-                         projection: Optional['QueryProjection'] = None,
+                         include: Optional['QueryListStr'] = None,
                          full_return: bool = False) -> Union['ProcedureGETResponse', List[Dict[str, Any]]]:
         """Queries Procedures from the server.
 
@@ -683,7 +687,7 @@ class FractalClient(object):
             The maximum number of Procedures to query
         skip : int, optional
             The number of Procedures to skip in the query, used during pagination
-        projection : QueryProjection, optional
+        include : QueryListStr, optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
@@ -691,15 +695,15 @@ class FractalClient(object):
         Returns
         -------
         Union[List['RecordBase'], Dict[str, Any]]
-            Returns a List of found RecordResult's without projection, or a
-            dictionary of results with projection.
+            Returns a List of found RecordResult's without include, or a
+            dictionary of results with include.
         """
 
         payload = {
             "meta": {
                 "limit": limit,
                 "skip": skip,
-                "projection": projection
+                "include": include
             },
             "data": {
                 "id": id,
@@ -712,7 +716,7 @@ class FractalClient(object):
         }
         response = self._automodel_request("procedure", "get", payload, full_return=True)
 
-        if not projection:
+        if not include:
             for ind in range(len(response.data)):
                 response.data[ind] = build_procedure(response.data[ind], client=self)
 
@@ -880,7 +884,7 @@ class FractalClient(object):
                     manager: Optional['QueryStr'] = None,
                     limit: Optional[int] = None,
                     skip: int = 0,
-                    projection: Optional['QueryProjection'] = None,
+                    include: Optional['QueryListStr'] = None,
                     full_return: bool = False
                     ) -> Union['TaskQueueGETResponse', List['TaskRecord'], List[Dict[str, Any]]]:
         """Checks the status of Tasks in the Fractal queue.
@@ -905,7 +909,7 @@ class FractalClient(object):
             The maximum number of Tasks to query
         skip : int, optional
             The number of Tasks to skip in the query, used during pagination
-        projection : QueryProjection, optional
+        include : QueryListStr, optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
@@ -919,7 +923,7 @@ class FractalClient(object):
         Examples
         --------
 
-        >>> client.query_tasks(id="5bd35af47b878715165f8225", projection={"status": True})
+        >>> client.query_tasks(id="5bd35af47b878715165f8225",include=["status"])
         [{"status": "WAITING"}]
 
 
@@ -929,7 +933,7 @@ class FractalClient(object):
             "meta": {
                 "limit": limit,
                 "skip": skip,
-                "projection": projection
+                "include": include
             },
             "data": {
                 "id": id,
@@ -1056,12 +1060,6 @@ class FractalClient(object):
         List[Dict[str, Any]]
             A dictionary of each match that contains the current status
             and, if an error has occurred, the error message.
-
-        Examples
-        --------
-        >>> client.query_services(id="5bd35af47b878715165f8225", projection={"status": True})
-        [{"status": "RUNNING"}]
-
         """
         payload = {
             "meta": {
@@ -1130,7 +1128,7 @@ class FractalClient(object):
                      limit: Optional[int] = None,
                      skip: int = 0,
                      meta: Dict[str, Any] = None,
-                     projection: Optional['QueryProjection'] = None,
+                     include: Optional['QueryListStr'] = None,
                      full_return: bool = False) -> Any:
         """Custom queries that are supported by the REST APIs.
 
@@ -1148,7 +1146,7 @@ class FractalClient(object):
             The number of Procedures to skip in the query, used during pagination
         meta : Dict[str, Any], optional
             Additional metadata keys to specify
-        projection : Optional['QueryProjection'], optional
+        include : Optional['QueryListStr'], optional
             Filters the returned fields, will return a dictionary rather than an object.
         full_return : bool, optional
             Returns the full server response if True that contains additional metadata.
@@ -1159,7 +1157,7 @@ class FractalClient(object):
         In the form of Dict[str, Any] (TODO)
         """
 
-        payload = {"meta": {"limit": limit, "skip": skip, "projection": projection}, "data": data}
+        payload = {"meta": {"limit": limit, "skip": skip, "include": include}, "data": data}
         if meta:
             payload["meta"].update(meta)
 

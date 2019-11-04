@@ -667,7 +667,7 @@ class Dataset(Collection):
                 driver = query.pop("driver")
                 qname = query.pop("name")
                 data = self.get_records(query.pop("method").upper(),
-                                        projection=["return_result"],
+                                        include=["return_result"],
                                         merge=True,
                                         subset=subset,
                                         **query)
@@ -1022,7 +1022,7 @@ class Dataset(Collection):
     def _get_records(self,
                      indexer: Dict[Any, ObjectId],
                      query: Dict[str, Any],
-                     projection: Optional[Dict[str, bool]] = None,
+                     include: Optional[List[str]] = None,
                      merge: bool = False,
                      raise_on_plan: Union[str, bool] = False) -> 'pd.Series':
         """
@@ -1034,8 +1034,8 @@ class Dataset(Collection):
             A key/value index of molecules to query
         query : Dict[str, Any]
             A results query
-        projection : Optional[Dict[str, bool]], optional
-            Description
+        include : Optional[List[str]], optional
+            The attributes to return. Otherwise returns ResultRecord objects.
         merge : bool, optional
             Sum compound queries together, useful for mixing results
         raise_on_plan : Union[str, bool], optional
@@ -1063,11 +1063,11 @@ class Dataset(Collection):
             query_set["keywords"] = self.get_keywords(query_set["keywords"], query_set["program"], return_id=True)
             # Set the index to remove duplicates
             molecules = list(set(indexer.values()))
-            if projection:
-                proj = [k.lower() for k in projection]
+            if include:
+                proj = [k.lower() for k in include]
                 if "molecule" not in proj:
                     proj.append("molecule")
-                query_set["projection"] = proj
+                query_set["include"] = proj
 
             # Chunk up the queries
             records: List[ResultRecord] = []
@@ -1075,7 +1075,7 @@ class Dataset(Collection):
                 query_set["molecule"] = molecules[i:i + self.client.query_limit]
                 records.extend(self.client.query_results(**query_set))
 
-            if projection is None:
+            if include is None:
                 records = [{"molecule": x.molecule, "record": x} for x in records]
 
             records = pd.DataFrame.from_dict(records)
@@ -1088,10 +1088,10 @@ class Dataset(Collection):
                 df = df.merge(records, how="left", on="molecule")
             else:
                 # No results, fill NaN values
-                if projection is None:
+                if include is None:
                     df["record"] = None
                 else:
-                    for k in projection:
+                    for k in include:
                         df[k] = np.nan
 
             df.set_index("index", inplace=True)
@@ -1421,7 +1421,7 @@ class Dataset(Collection):
                     *,
                     keywords: Optional[str] = None,
                     program: Optional[str] = None,
-                    projection: Optional[List[str]] = None,
+                    include: Optional[List[str]] = None,
                     subset: Optional[Union[str, Set[str]]] = None,
                     merge: bool = False) -> Union[pd.DataFrame, 'ResultRecord']:
         """
@@ -1437,13 +1437,13 @@ class Dataset(Collection):
             The option token desired
         program : Optional[str], optional
             The program to query on
-        projection : Optional[Dict[str, bool]], optional
-            The attribute project to perform on the query, otherwise returns ResultRecord objects.
+        include : Optional[List[str]], optional
+            The attributes to return. Otherwise returns ResultRecord objects.
         subset : Optional[Union[str, Set[str]]], optional
             The index subset to query on
         merge : bool
             Merge multiple results into one (as in the case of DFT-D3).
-            This only works when projection={'return_results'=True}, as in get_values.
+            This only works when include=['return_results'], as in get_values.
 
         Returns
         -------
@@ -1455,7 +1455,7 @@ class Dataset(Collection):
             raise KeyError(f"Requested query ({name}) did not match a known record.")
 
         indexer = self._molecule_indexer(subset=subset, force=True)
-        df = self._get_records(indexer, history, projection=projection, merge=merge)
+        df = self._get_records(indexer, history, include=include, merge=merge)
 
         if not merge and len(df) == 1:
             df = df[0]

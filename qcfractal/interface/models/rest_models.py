@@ -16,7 +16,7 @@ from .task_models import PriorityEnum, TaskRecord
 from .torsiondrive import TorsionDriveInput
 
 __all__ = [
-    "ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryProjection", "ResultResponse",
+    "ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryListStr", "ResultResponse",
     "CollectionSubresourceGETResponseMeta"
 ]
 
@@ -98,7 +98,7 @@ QueryStr = Optional[Union[List[str], str]]
 QueryInt = Optional[Union[List[int], int]]
 QueryObjectId = Optional[Union[List[ObjectId], ObjectId]]
 QueryNullObjectId = Optional[Union[List[ObjectId], ObjectId, List[nullstr], nullstr]]
-QueryProjection = Optional[List[str]]
+QueryListStr = Optional[List[str]]
 
 
 class EmptyMeta(ProtoModel):
@@ -157,12 +157,32 @@ class QueryMeta(ProtoModel):
     skip: int = Field(0, description="The number of records to skip on the query.")
 
 
-class QueryMetaProjection(QueryMeta):
+class QueryFilter(ProtoModel):
     """
-    Fractal Server metadata for Database queries containing pagination information and query projection parameters
+    Standard Fractal Server metadata for column filtering
     """
-    projection: QueryProjection = Field(
-        None, description="Additional projection information to pass to the query. Expert-level object.")
+    include: QueryListStr = Field(
+        None,
+        description="Return only these columns. Expert-level object. Only one of include and exclude may be specified."
+    )
+    exclude: QueryListStr = Field(
+        None,
+        description=
+        "Return all but these columns. Expert-level object. Only one of include and exclude may be specified.")
+
+    @root_validator
+    def check_include_or_exclude(cls, values):
+        include = values.get("include")
+        exclude = values.get("exclude")
+        if (include is not None) and (exclude is not None):
+            raise ValueError("Only one of include and exclude may be specified.")
+        return values
+
+
+class QueryMetaFilter(QueryMeta, QueryFilter):
+    """
+    Fractal Server metadata for Database queries allowing for filtering and pagination
+    """
 
 
 class ComputeResponse(ProtoModel):
@@ -204,7 +224,7 @@ common_docs = {
     ResponseGETMeta: str(get_base_docs(ResponseGETMeta)),
     ResponsePOSTMeta: str(get_base_docs(ResponsePOSTMeta)),
     QueryMeta: str(get_base_docs(QueryMeta)),
-    QueryMetaProjection: str(get_base_docs(QueryMetaProjection)),
+    QueryMetaFilter: str(get_base_docs(QueryMetaFilter)),
     ComputeResponse: str(get_base_docs(ComputeResponse)),
 }
 
@@ -341,27 +361,10 @@ class CollectionGETBody(ProtoModel):
                 v = v.lower()
             return v
 
-    class Meta(ProtoModel):
-        include: QueryProjection = Field(
-            None,
-            description=
-            "Return only these fields. Expert-level object. Only one of include and exclude may be specified.")
-        exclude: QueryProjection = Field(
-            None,
-            description=
-            "Return all but these fields. Expert-level object. Only one of include and exclude may be specified.")
-
-        @root_validator
-        def check_include_or_exclude(cls, values):
-            include = values.get("include")
-            exclude = values.get("exclude")
-            if (include is not None) and (exclude is not None):
-                raise ValueError("Only one of include and exclude may be specified.")
-            return values
-
-    meta: Meta = Field(
+    meta: QueryFilter = Field(
         None,
-        description="Additional metadata to make with the query. Collections can only have a ``projection`` key in its "
+        description=
+        "Additional metadata to make with the query. Collections can only have an ``include/exclude`` key in its "
         "meta and therefore does not follow the standard GET metadata model.")
     data: Data = Field(..., description="Information about the Collection to search the database with.")
 
@@ -569,7 +572,7 @@ class ResultGETBody(ProtoModel):
                 v = 'null'
             return v
 
-    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
     data: Data = Field(
         ..., description="The keys with data to search the database on for individual quantum chemistry computations.")
 
@@ -599,7 +602,7 @@ class WavefunctionStoreGETBody(ProtoModel):
     class Data(ProtoModel):
         id: ObjectId = Field(None, description="Id of the Wavefunction Key/Value Storage object to get.")
 
-    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
     data: Data = Field(
         ...,
         description="Data of the Wavefunction Get field: consists of a ObjectId of the Wavefunction object to fetch.")
@@ -643,7 +646,7 @@ class ProcedureGETBody(ProtoModel):
             description="Procedures will be searched based on where they are in the compute pipeline. See the "
             ":class:`RecordStatusEnum` for valid statuses.")
 
-    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
     data: Data = Field(..., description="The keys with data to search the database on for Procedures.")
 
 
@@ -685,7 +688,7 @@ class TaskQueueGETBody(ProtoModel):
         manager: QueryStr = Field(
             None, description="Tasks will be searched based on the manager responsible for executing the task.")
 
-    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
     data: Data = Field(..., description="The keys with data to search the database on for Tasks.")
 
 
@@ -972,7 +975,7 @@ class OptimizationFinalResultBody(ProtoModel):
             None, description="List of optimization procedure Ids to fetch their final results from the database.")
 
     # TODO: not yet supported
-    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
     data: Data = Field(..., description="The keys with data to search the database on for Procedures.")
 
 
@@ -982,7 +985,7 @@ class OptimizationAllResultBody(ProtoModel):
             None, description="List of optimization procedure Ids to fetch their ALL their results from the database.")
 
     # TODO: not yet supported
-    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
     data: Data = Field(..., description="The keys with data to search the database on for Procedures.")
 
 
@@ -993,7 +996,7 @@ class OptimizationInitialMoleculeBody(ProtoModel):
             description="List of optimization procedure Ids to fetch their initial  molecules from the database.")
 
     # TODO: not yet supported
-    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
     data: Data = Field(..., description="The keys with data to search the database on for Procedures.")
 
 
@@ -1003,7 +1006,7 @@ class OptimizationFinalMoleculeBody(ProtoModel):
             None, description="List of optimization procedure Ids to fetch their final molecules from the database.")
 
     # TODO: not yet supported
-    meta: QueryMetaProjection = Field(QueryMetaProjection(), description=common_docs[QueryMetaProjection])
+    meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
     data: Data = Field(..., description="The keys with data to search the database on for Procedures.")
 
 

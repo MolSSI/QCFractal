@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
-
 from qcelemental import constants
 
 from ..models import Molecule, ProtoModel
@@ -264,7 +263,7 @@ class ReactionDataset(Dataset):
 
             # Build the starting table
             indexer, names = self._molecule_indexer(stoich=stoich, coefficients=True, force=force)
-            df = self._get_records(indexer, query, projection=["return_result"], merge=True)
+            df = self._get_records(indexer, query, include=["return_result"], merge=True)
             df.index = pd.MultiIndex.from_tuples(df.index, names=names)
             df.reset_index(inplace=True)
 
@@ -404,7 +403,7 @@ class ReactionDataset(Dataset):
                     keywords: Optional[str] = None,
                     program: Optional[str] = None,
                     stoich: Union[str, List[str]] = "default",
-                    projection: Optional[List[str]] = None,
+                    include: Optional[List[str]] = None,
                     subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'ResultRecord']:
         """
         Queries the local Portal for the requested keys and stoichiometry.
@@ -421,7 +420,7 @@ class ReactionDataset(Dataset):
             The program to query on
         stoich : Union[str, List[str]], optional
             The given stoichiometry to compute.
-        projection : Optional[Dict[str, bool]], optional
+        include : Optional[Dict[str, bool]], optional
             The attribute project to perform on the query, otherwise returns ResultRecord objects.
         subset : Optional[Union[str, Set[str]]], optional
             The index subset to query on
@@ -450,7 +449,7 @@ class ReactionDataset(Dataset):
             df = self._get_records(
                 indexer,
                 history,
-                projection=projection,
+                include=include,
                 merge=False,
                 raise_on_plan=
                 "`get_records` can only be used for non-composite quantities. You likely queried a DFT+D method or similar that requires a combination of DFT and -D. Please query each piece separately."
