@@ -6,5 +6,5 @@ from .results_models import (BaseResultORM, GridOptimizationProcedureORM, Optimi
                              ResultORM, TorsionDriveProcedureORM, Trajectory, WavefunctionStoreORM)
 from .sql_base import Base, MsgpackExt
 # ORM general models
-from .sql_models import (AccessLogORM, KeywordsORM, KVStoreORM, MoleculeORM, QueueManagerORM, ServiceQueueORM,
-                         TaskQueueORM, UserORM, VersionsORM)
+from .sql_models import (AccessLogORM, KeywordsORM, KVStoreORM, MoleculeORM, QueueManagerLogORM, QueueManagerORM,
+                         ServerStatsLogORM, ServiceQueueORM, TaskQueueORM, UserORM, VersionsORM)

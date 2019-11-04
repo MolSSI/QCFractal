@@ -6,7 +6,7 @@ try:
     from sqlalchemy import create_engine, or_, case, func
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
-    from sqlalchemy.sql.expression import func
+    from sqlalchemy.sql.expression import desc
 except ImportError:
     raise ImportError("SQLAlchemy_socket requires sqlalchemy, please install this python "
                       "module or try a different db_socket.")
@@ -24,13 +24,13 @@ import bcrypt
 # pydantic classes
 from qcfractal.interface.models import (GridOptimizationRecord, KeywordSet, Molecule, ObjectId, OptimizationRecord,
                                         ResultRecord, TaskRecord, TaskStatusEnum, TorsionDriveRecord, prepare_basis)
-from qcfractal.storage_sockets.db_queries import OptimizationQueries, TaskQueries, TorsionDriveQueries
-# SQL ORMs
+from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
 from qcfractal.storage_sockets.models import (AccessLogORM, BaseResultORM, CollectionORM, DatasetORM,
                                               GridOptimizationProcedureORM, KeywordsORM, KVStoreORM, MoleculeORM,
-                                              OptimizationProcedureORM, QueueManagerORM, ReactionDatasetORM, ResultORM,
-                                              ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
-                                              VersionsORM, WavefunctionStoreORM)
+                                              OptimizationProcedureORM, QueueManagerORM, QueueManagerLogORM,
+                                              ReactionDatasetORM, ResultORM, ServerStatsLogORM, ServiceQueueORM,
+                                              TaskQueueORM, TorsionDriveProcedureORM, UserORM, VersionsORM,
+                                              WavefunctionStoreORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
@@ -181,9 +181,8 @@ class SQLAlchemySocket:
 
         # Advanced queries objects
         self._query_classes = {
-            TaskQueries._class_name: TaskQueries(max_limit=max_limit),
-            TorsionDriveQueries._class_name: TorsionDriveQueries(max_limit=max_limit),
-            OptimizationQueries._class_name: OptimizationQueries(max_limit=max_limit),
+            cls._class_name: cls(self.engine.url.database, max_limit=max_limit)
+            for cls in QUERY_CLASSES
         }
 
         # if expanded_uri["password"] is not None:
@@ -253,6 +252,7 @@ class SQLAlchemySocket:
 
             # Task and services
             session.query(TaskQueueORM).delete(synchronize_session=False)
+            session.query(QueueManagerLogORM).delete(synchronize_session=False)
             session.query(QueueManagerORM).delete(synchronize_session=False)
             session.query(ServiceQueueORM).delete(synchronize_session=False)
 
@@ -2116,6 +2116,8 @@ class SQLAlchemySocket:
 
     def manager_update(self, name, **kwargs):
 
+        do_log = kwargs.pop("log", False)
+
         inc_count = {
             # Increment relevant data
             "submitted": QueueManagerORM.submitted + kwargs.pop("submitted", 0),
@@ -2138,6 +2140,25 @@ class SQLAlchemySocket:
                 session.commit()
                 num_updated = 1
 
+            if do_log:
+                # Pull again in case it was updated
+                manager = session.query(QueueManagerORM).filter_by(name=name).first()
+
+                manager_log = QueueManagerLogORM(
+                    manager_id=manager.id,
+                    completed=manager.completed,
+                    submitted=manager.submitted,
+                    failures=manager.failures,
+                    total_worker_walltime=manager.total_worker_walltime,
+                    total_task_walltime=manager.total_task_walltime,
+                    active_tasks=manager.active_tasks,
+                    active_cores=manager.active_cores,
+                    active_memory=manager.active_memory,
+                )
+
+                session.add(manager_log)
+                session.commit()
+
         return num_updated == 1
 
     def get_managers(self,
@@ -2157,7 +2178,19 @@ class SQLAlchemySocket:
         if modified_after:
             query.append(QueueManagerORM.modified_on >= modified_after)
 
-        data, meta['n_found'] = self.get_query_projection(QueueManagerORM, query, None, limit, skip, exclude=['id'])
+        data, meta['n_found'] = self.get_query_projection(QueueManagerORM, query, None, limit, skip)
+        meta["success"] = True
+
+        return {"data": data, "meta": meta}
+
+    def get_manager_logs(self, manager_ids: Union[List[str], str], timestamp_after=None, limit=None, skip=0):
+        meta = get_metadata_template()
+        query = format_query(QueueManagerLogORM, manager_id=manager_ids)
+
+        if timestamp_after:
+            query.append(QueueManagerLogORM.timestamp >= timestamp_after)
+
+        data, meta['n_found'] = self.get_query_projection(QueueManagerLogORM, query, None, limit, skip, exclude=['id'])
         meta["success"] = True
 
         return {"data": data, "meta": meta}
@@ -2516,3 +2549,77 @@ class SQLAlchemySocket:
             count = get_count_fast(query)
 
         return count
+
+    def log_server_stats(self):
+
+        # This isn't complete, but contains the biggest tables
+        tables = [
+            AccessLogORM, BaseResultORM, CollectionORM, KVStoreORM, MoleculeORM, TaskQueueORM, WavefunctionStoreORM
+        ]
+
+        # Calculate table info
+        table_size = 0
+        index_size = 0
+        table_info = {}
+        for table in tables:
+            tbname = table.__tablename__
+            info_blob = self.custom_query("database_stats", "table_information", table=tbname)
+            if len(info_blob["data"]):
+                table_info[tbname] = info_blob["data"]
+
+                table_size += info_blob["data"]["table_size"]
+                index_size += info_blob["data"]["index_size"]
+            else:
+                self.logger.warning("Could not pull database stats:")
+                self.logger.warning(info_blob["meta"]["error_description"])
+
+        # Calculate result state info
+        state_data = self.custom_query("result", "count", groupby={'result_type', 'status'})["data"]
+        result_states = {}
+
+        for row in state_data:
+            result_states.setdefault(row["result_type"], {})
+            result_states[row["result_type"]][row["status"]] = row["count"]
+
+        # Build out final data
+        data = {
+            "collection_count": self.get_total_count(CollectionORM),
+            "molecule_count": self.get_total_count(MoleculeORM),
+            "result_count": self.get_total_count(BaseResultORM),
+            "kvstore_count": self.get_total_count(KVStoreORM),
+            "access_count": self.get_total_count(AccessLogORM),
+            "result_states": result_states,
+            "db_total_size": self.custom_query("database_stats", "database_size")["data"],
+            "db_table_size": table_size,
+            "db_index_size": index_size,
+            "db_table_information": table_info,
+        }
+
+        with self.session_scope() as session:
+            log = ServerStatsLogORM(**data)
+            session.add(log)
+            session.commit()
+
+        return data
+
+    def get_server_stats_log(self, before=None, after=None, limit=None, skip=0):
+
+        meta = get_metadata_template()
+        query = []
+
+        if before:
+            query.append(ServerStatsLogORM.timestamp <= before)
+
+        if after:
+            query.append(ServerStatsLogORM.timestamp >= after)
+
+        with self.session_scope() as session:
+            pose = session.query(ServerStatsLogORM).filter(*query).order_by(desc('timestamp'))
+            meta["n_found"] = get_count_fast(pose)
+
+            data = pose.limit(self.get_limit(limit)).offset(skip).all()
+            data = [d.to_dict() for d in data]
+
+        meta["success"] = True
+
+        return {"data": data, "meta": meta}

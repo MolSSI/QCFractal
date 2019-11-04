@@ -1211,6 +1211,40 @@ def test_reset_task_blocks(storage_socket):
         storage_socket.queue_reset_status(reset_error=True)
 
 
+def test_server_log(storage_results):
+
+    # Add something to double check the test
+    mol_names = [
+        'water_dimer_minima.psimol',
+        'water_dimer_stretch.psimol',
+        'water_dimer_stretch2.psimol',
+    ]
+
+    molecules = [ptl.data.get_molecule(mol_name) for mol_name in mol_names]
+    inserted = storage_results.add_molecules(molecules)
+
+    ret = storage_results.log_server_stats()
+    assert ret["molecule_count"] >= 3
+    assert ret["db_table_size"] >= 1000
+    assert ret["db_total_size"] >= 1000
+    assert ret["result_states"]["result"]["complete"] >= 6
+
+    assert ret["db_table_information"]["molecule"]["table_size"] >= 1000
+
+    # Check queries
+    now = datetime.utcnow()
+    ret = storage_results.get_server_stats_log(after=now)
+    assert len(ret["data"]) == 0
+
+    ret = storage_results.get_server_stats_log(before=now)
+    assert len(ret["data"]) >= 1
+
+    # Make sure we are sorting correctly
+    storage_results.log_server_stats()
+    ret = storage_results.get_server_stats_log(limit=1)
+    assert ret["data"][0]['timestamp'] > now
+
+
 def test_collections_projection(storage_socket):
 
     collection = 'Dataset'

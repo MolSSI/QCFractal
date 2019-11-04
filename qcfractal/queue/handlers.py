@@ -308,12 +308,12 @@ class QueueManagerHandler(APIHandler):
         name = self._get_name_from_metadata(body.meta)
         op = body.data.operation
         if op == "startup":
-            self.storage.manager_update(name, status="ACTIVE", **body.meta.dict())
+            self.storage.manager_update(name, status="ACTIVE", configuration=body.data.configuration, **body.meta.dict(), log=True)
             self.logger.info("QueueManager: New active manager {} detected.".format(name))
 
         elif op == "shutdown":
             nshutdown = self.storage.queue_reset_status(manager=name, reset_running=True)
-            self.storage.manager_update(name, returned=nshutdown, status="INACTIVE", **body.meta.dict())
+            self.storage.manager_update(name, returned=nshutdown, status="INACTIVE", **body.meta.dict(), log=True)
 
             self.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(
                 name, nshutdown))
@@ -321,7 +321,7 @@ class QueueManagerHandler(APIHandler):
             ret = {"nshutdown": nshutdown}
 
         elif op == "heartbeat":
-            self.storage.manager_update(name, status="ACTIVE", **body.meta.dict())
+            self.storage.manager_update(name, status="ACTIVE", **body.meta.dict(), log=True)
             self.logger.debug("QueueManager: Heartbeat of manager {} detected.".format(name))
 
         else:
