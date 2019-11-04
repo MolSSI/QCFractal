@@ -94,7 +94,7 @@ class ContributedValuesORM(Base):
     theory_level_details = Column(JSON)
     comments = Column(String)
     values = Column(MsgpackExt)
-    index = Column(JSON)
+    index = Column(MsgpackExt)
     external_url = Column(String)
     doi = Column(String)
     units = Column(String)  #

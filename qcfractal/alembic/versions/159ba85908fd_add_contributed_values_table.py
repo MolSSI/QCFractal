@@ -10,8 +10,7 @@ import sqlalchemy as sa
 from sqlalchemy import orm
 from sqlalchemy.dialects import postgresql
 from qcfractal.storage_sockets.models.sql_base import MsgpackExt
-from qcfractal.storage_sockets.models.collections_models import DatasetORM, ReactionDatasetEntryORM, \
-                                                                ContributedValuesORM
+from qcfractal.storage_sockets.models.collections_models import ContributedValuesORM
 # revision identifiers, used by Alembic.
 revision = '159ba85908fd'
 down_revision = '1bd2f7711e68'
@@ -68,7 +67,7 @@ def upgrade():
         sa.Column('theory_level_details', sa.JSON(), nullable=True),
         sa.Column('comments', sa.String(), nullable=True),
         sa.Column('values', MsgpackExt(), nullable=True),
-        sa.Column('index', sa.JSON(), nullable=True),
+        sa.Column('index', MsgpackExt(), nullable=True),
         sa.Column('external_url', sa.String(), nullable=True),
         sa.Column('doi', sa.String(), nullable=True),
         sa.Column('units', sa.String(), nullable=True),
