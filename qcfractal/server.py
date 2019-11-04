@@ -262,6 +262,8 @@ class FractalServer:
             "client_lower_version_limit": "0.11.0",  # Must be XX.YY.ZZ
             "client_upper_version_limit": "0.11.99"  # Must be XX.YY.ZZ
         }
+        self.update_server_log()
+        self.update_public_information()
 
         endpoints = [
 
@@ -326,6 +328,8 @@ class FractalServer:
                                                              self.queue_socket,
                                                              logger=self.logger,
                                                              manager_name="FractalServer",
+                                                             cores_per_task=1,
+                                                             memory_per_task=1,
                                                              verbose=False)
 
             # Build the queue manager, will not run until loop starts
@@ -379,6 +383,15 @@ class FractalServer:
                                                          self.heartbeat_frequency * 1000)
             heartbeats.start()
             self.periodic["heartbeats"] = heartbeats
+
+            server_log = tornado.ioloop.PeriodicCallback(self.update_server_log, self.heartbeat_frequency * 1000)
+            server_log.start()
+            self.periodic["server_log"] = server_log
+
+        # Build callbacks which are always required
+        public_info = tornado.ioloop.PeriodicCallback(self.update_public_information, self.heartbeat_frequency * 1000)
+        public_info.start()
+        self.periodic["public_info"] = public_info
 
         # Soft quit with a keyboard interrupt
         self.logger.info("FractalServer successfully started.\n")
@@ -502,8 +515,11 @@ class FractalServer:
 
             r = self.storage.update_services([service])
 
-            if finished is not False:
+            # Mark procedure and service as error
+            if service.status == "ERROR":
+                self.storage.update_service_status("ERROR", id=service.id)
 
+            if finished is not False:
                 # Add results to procedures, remove complete_ids
                 completed_services.append(service)
             else:
@@ -516,6 +532,30 @@ class FractalServer:
         self.storage.services_completed(completed_services)
 
         return running_services
+
+    def update_server_log(self) -> Dict[str, Any]:
+        """
+        Updates the servers internal log
+        """
+
+        return self.storage.log_server_stats()
+
+    def update_public_information(self) -> None:
+        """
+        Updates the public information data
+        """
+        data = self.storage.get_server_stats_log(limit=1)["data"][0]
+
+        update = {
+            "counts": {
+                "collection": data["collection_count"],
+                "molecule": data["molecule_count"],
+                "result": data["result_count"],
+                "kvstore": data["kvstore_count"],
+            }
+        }
+
+        self.objects["public_information"].update(update)
 
     def check_manager_heartbeats(self) -> None:
         """

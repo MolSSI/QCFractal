@@ -130,10 +130,6 @@ class TorsionDriveService(BaseService):
         for key, task_ids in self.task_map.items():
             task_results[key] = []
 
-            # Check for history key
-            if key not in self.optimization_history:
-                self.optimization_history[key] = []
-
             for task_id in task_ids:
                 # Cycle through all tasks for this entry
                 ret = complete_tasks[task_id]
@@ -144,9 +140,6 @@ class TorsionDriveService(BaseService):
 
                 task_results[key].append((mol_keys[0].geometry, mol_keys[1].geometry, ret["energies"][-1]))
 
-                # Update history
-                self.optimization_history[key].append(ret["id"])
-
         td_api.update_state(self.torsiondrive_state, task_results)
 
         # Create new tasks from the current state
@@ -154,7 +147,9 @@ class TorsionDriveService(BaseService):
 
         # All done
         if len(next_tasks) == 0:
-            return self.finalize()
+            self.status = "COMPLETE"
+            self.update_output()
+            return True
 
         self.submit_optimization_tasks(next_tasks)
 
@@ -197,7 +192,17 @@ class TorsionDriveService(BaseService):
         self.task_manager.submit_tasks("optimization", new_tasks)
         self.task_map = task_map
 
-    def finalize(self):
+        # Update history
+        for key, task_ids in self.task_map.items():
+            if key not in self.optimization_history:
+                self.optimization_history[key] = []
+
+            for task_id in task_ids:
+                self.optimization_history[key].append(self.task_manager.required_tasks[task_id])
+
+        self.update_output()
+
+    def update_output(self):
         """
         Finishes adding data to the TorsionDriveRecord object
         """
@@ -217,7 +222,7 @@ class TorsionDriveService(BaseService):
 
         self.output = self.output.copy(
             update={
-                "status": "COMPLETE",
+                "status": self.status,
                 "minimum_positions": min_positions,
                 "final_energy_dict": final_energy,
                 "optimization_history": history

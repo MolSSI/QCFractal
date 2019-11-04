@@ -6,7 +6,7 @@ try:
     from sqlalchemy import create_engine, or_, case, func
     from sqlalchemy.exc import IntegrityError
     from sqlalchemy.orm import sessionmaker, with_polymorphic
-    from sqlalchemy.sql.expression import func
+    from sqlalchemy.sql.expression import desc
 except ImportError:
     raise ImportError("SQLAlchemy_socket requires sqlalchemy, please install this python "
                       "module or try a different db_socket.")
@@ -23,13 +23,13 @@ import bcrypt
 # pydantic classes
 from qcfractal.interface.models import (GridOptimizationRecord, KeywordSet, Molecule, ObjectId, OptimizationRecord,
                                         ResultRecord, TaskRecord, TaskStatusEnum, TorsionDriveRecord, prepare_basis)
-from qcfractal.storage_sockets.db_queries import OptimizationQueries, TaskQueries, TorsionDriveQueries
-# SQL ORMs
+from qcfractal.storage_sockets.db_queries import QUERY_CLASSES
 from qcfractal.storage_sockets.models import (AccessLogORM, BaseResultORM, CollectionORM, DatasetORM,
                                               GridOptimizationProcedureORM, KeywordsORM, KVStoreORM, MoleculeORM,
-                                              OptimizationProcedureORM, QueueManagerORM, ReactionDatasetORM, ResultORM,
-                                              ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM, UserORM,
-                                              VersionsORM, WavefunctionStoreORM)
+                                              OptimizationProcedureORM, QueueManagerORM, QueueManagerLogORM,
+                                              ReactionDatasetORM, ResultORM, ServerStatsLogORM, ServiceQueueORM,
+                                              TaskQueueORM, TorsionDriveProcedureORM, UserORM, VersionsORM,
+                                              WavefunctionStoreORM)
 # from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
@@ -124,6 +124,7 @@ class SQLAlchemySocket:
     """
         SQLAlcehmy QCDB wrapper class.
     """
+
     def __init__(self,
                  uri: str,
                  project: str = "molssidb",
@@ -180,9 +181,8 @@ class SQLAlchemySocket:
 
         # Advanced queries objects
         self._query_classes = {
-            TaskQueries._class_name: TaskQueries(max_limit=max_limit),
-            TorsionDriveQueries._class_name: TorsionDriveQueries(max_limit=max_limit),
-            OptimizationQueries._class_name: OptimizationQueries(max_limit=max_limit),
+            cls._class_name: cls(self.engine.url.database, max_limit=max_limit)
+            for cls in QUERY_CLASSES
         }
 
         # if expanded_uri["password"] is not None:
@@ -252,6 +252,7 @@ class SQLAlchemySocket:
 
             # Task and services
             session.query(TaskQueueORM).delete(synchronize_session=False)
+            session.query(QueueManagerLogORM).delete(synchronize_session=False)
             session.query(QueueManagerORM).delete(synchronize_session=False)
             session.query(ServiceQueueORM).delete(synchronize_session=False)
 
@@ -581,6 +582,9 @@ class SQLAlchemySocket:
 
         results = []
         with self.session_scope() as session:
+
+            # Build out the ORMs
+            orm_molecules = []
             for dmol in molecules:
 
                 if dmol.validated is False:
@@ -601,26 +605,61 @@ class SQLAlchemySocket:
                 mol_dict["identifiers"]["molecular_formula"] = mol_dict["molecular_formula"]
 
                 # search by index keywords not by all keys, much faster
+                orm_molecules.append(MoleculeORM(**mol_dict))
 
-                doc = session.query(MoleculeORM).filter_by(molecule_hash=mol_dict['molecule_hash'])
+            # Check if we have duplicates
+            hash_list = [x.molecule_hash for x in orm_molecules]
+            query = format_query(MoleculeORM, molecule_hash=hash_list)
+            indices = session.query(MoleculeORM.molecule_hash, MoleculeORM.id).filter(*query)
+            previous_id_map = {k: v for k, v in indices}
 
-                if doc.count() == 0:
-                    doc = MoleculeORM(**mol_dict)
-                    session.add(doc)
-                    # Todo: commit at the end, but list itself might have duplicates
-                    session.commit()
-                    results.append(str(doc.id))
-                    meta['n_inserted'] += 1
-                else:
+            # For a bulk add there must be no pre-existing and there must be no duplicates in the add list
+            bulk_ok = len(hash_list) == len(set(hash_list))
+            bulk_ok &= (len(previous_id_map) == 0)
+            # bulk_ok = False
 
-                    id = str(doc.first().id)
-                    meta['duplicates'].append(id)  # TODO
-                    # If new or duplicate, add the id to the return list
-                    results.append(id)
+            if bulk_ok:
+                # Bulk save, doesn't update fields for speed
+                r = session.bulk_save_objects(orm_molecules)
+                session.commit()
+
+                # Query ID's and reorder based off orm_molecule ordered list
+                query = format_query(MoleculeORM, molecule_hash=hash_list)
+                indices = session.query(MoleculeORM.molecule_hash, MoleculeORM.id).filter(*query)
+
+                id_map = {k: v for k, v in indices}
+                n_inserted = len(orm_molecules)
+
+            else:
+                # Start from old ID map
+                id_map = previous_id_map
+
+                new_molecules = []
+                n_inserted = 0
+
+                for orm_mol in orm_molecules:
+                    duplicate_id = id_map.get(orm_mol.molecule_hash, False)
+                    if duplicate_id is not False:
+                        meta["duplicates"].append(str(duplicate_id))
+                    else:
+                        new_molecules.append(orm_mol)
+                        id_map[orm_mol.molecule_hash] = 'placeholder_id'
+                        n_inserted += 1
+                        session.add(orm_mol)
 
                     # We should make sure there was not a hash collision?
                     # new_mol.compare(old_mol)
                     # raise KeyError("!!! WARNING !!!: Hash collision detected")
+
+                session.commit()
+
+                for new_mol in new_molecules:
+                    id_map[new_mol.molecule_hash] = new_mol.id
+
+            results = [str(id_map[x.molecule_hash]) for x in orm_molecules]
+            assert 'placeholder_id' not in results
+            meta['n_inserted'] = n_inserted
+
         meta["success"] = True
 
         ret = {"data": results, "meta": meta}
@@ -631,10 +670,6 @@ class SQLAlchemySocket:
         meta = get_metadata_template()
 
         query = format_query(MoleculeORM, id=id, molecule_hash=molecule_hash, molecular_formula=molecular_formula)
-        # query = [getattr(MoleculeORM, 'id') == id,
-        #          MoleculeORM.molecule_hash == molecule_hash,
-        #          MoleculeORM.molecular_formula == molecular_formula
-        # ]
 
         # Don't include the hash or the molecular_formula in the returned result
         rdata, meta['n_found'] = self.get_query_projection(MoleculeORM,
@@ -1100,6 +1135,7 @@ class SQLAlchemySocket:
         -------
 
         """
+
     def get_results(self,
                     id: Union[str, List] = None,
                     program: str = None,
@@ -1670,6 +1706,10 @@ class SQLAlchemySocket:
                 session.add(doc_db)
                 session.commit()
 
+            procedure = service.output
+            procedure.__dict__["id"] = service.procedure_id
+            self.update_procedures([procedure])
+
             updated_count += 1
 
         return updated_count
@@ -1686,9 +1726,19 @@ class SQLAlchemySocket:
         with self.session_scope() as session:
 
             query = format_query(ServiceQueueORM, id=id, procedure_id=procedure_id)
-            ret = session.query(ServiceQueueORM).filter(*query).update({"status": status})
 
-        return ret
+            # Update the service
+            service = session.query(ServiceQueueORM).filter(*query).first()
+            service.status = status
+
+            # Update the procedure
+            if status == "waiting":
+                status = "incomplete"
+            session.query(BaseResultORM).filter(BaseResultORM.id == service.procedure_id).update({"status": status})
+
+            session.commit()
+
+        return 1
 
     def services_completed(self, records_list: List["BaseService"]) -> int:
 
@@ -2128,6 +2178,8 @@ class SQLAlchemySocket:
 
     def manager_update(self, name, **kwargs):
 
+        do_log = kwargs.pop("log", False)
+
         inc_count = {
             # Increment relevant data
             "submitted": QueueManagerORM.submitted + kwargs.pop("submitted", 0),
@@ -2150,6 +2202,25 @@ class SQLAlchemySocket:
                 session.commit()
                 num_updated = 1
 
+            if do_log:
+                # Pull again in case it was updated
+                manager = session.query(QueueManagerORM).filter_by(name=name).first()
+
+                manager_log = QueueManagerLogORM(
+                    manager_id=manager.id,
+                    completed=manager.completed,
+                    submitted=manager.submitted,
+                    failures=manager.failures,
+                    total_worker_walltime=manager.total_worker_walltime,
+                    total_task_walltime=manager.total_task_walltime,
+                    active_tasks=manager.active_tasks,
+                    active_cores=manager.active_cores,
+                    active_memory=manager.active_memory,
+                )
+
+                session.add(manager_log)
+                session.commit()
+
         return num_updated == 1
 
     def get_managers(self,
@@ -2169,7 +2240,19 @@ class SQLAlchemySocket:
         if modified_after:
             query.append(QueueManagerORM.modified_on >= modified_after)
 
-        data, meta['n_found'] = self.get_query_projection(QueueManagerORM, query, None, limit, skip, exclude=['id'])
+        data, meta['n_found'] = self.get_query_projection(QueueManagerORM, query, None, limit, skip)
+        meta["success"] = True
+
+        return {"data": data, "meta": meta}
+
+    def get_manager_logs(self, manager_ids: Union[List[str], str], timestamp_after=None, limit=None, skip=0):
+        meta = get_metadata_template()
+        query = format_query(QueueManagerLogORM, manager_id=manager_ids)
+
+        if timestamp_after:
+            query.append(QueueManagerLogORM.timestamp >= timestamp_after)
+
+        data, meta['n_found'] = self.get_query_projection(QueueManagerLogORM, query, None, limit, skip, exclude=['id'])
         meta["success"] = True
 
         return {"data": data, "meta": meta}
@@ -2528,3 +2611,77 @@ class SQLAlchemySocket:
             count = get_count_fast(query)
 
         return count
+
+    def log_server_stats(self):
+
+        # This isn't complete, but contains the biggest tables
+        tables = [
+            AccessLogORM, BaseResultORM, CollectionORM, KVStoreORM, MoleculeORM, TaskQueueORM, WavefunctionStoreORM
+        ]
+
+        # Calculate table info
+        table_size = 0
+        index_size = 0
+        table_info = {}
+        for table in tables:
+            tbname = table.__tablename__
+            info_blob = self.custom_query("database_stats", "table_information", table=tbname)
+            if len(info_blob["data"]):
+                table_info[tbname] = info_blob["data"]
+
+                table_size += info_blob["data"]["table_size"]
+                index_size += info_blob["data"]["index_size"]
+            else:
+                self.logger.warning("Could not pull database stats:")
+                self.logger.warning(info_blob["meta"]["error_description"])
+
+        # Calculate result state info
+        state_data = self.custom_query("result", "count", groupby={'result_type', 'status'})["data"]
+        result_states = {}
+
+        for row in state_data:
+            result_states.setdefault(row["result_type"], {})
+            result_states[row["result_type"]][row["status"]] = row["count"]
+
+        # Build out final data
+        data = {
+            "collection_count": self.get_total_count(CollectionORM),
+            "molecule_count": self.get_total_count(MoleculeORM),
+            "result_count": self.get_total_count(BaseResultORM),
+            "kvstore_count": self.get_total_count(KVStoreORM),
+            "access_count": self.get_total_count(AccessLogORM),
+            "result_states": result_states,
+            "db_total_size": self.custom_query("database_stats", "database_size")["data"],
+            "db_table_size": table_size,
+            "db_index_size": index_size,
+            "db_table_information": table_info,
+        }
+
+        with self.session_scope() as session:
+            log = ServerStatsLogORM(**data)
+            session.add(log)
+            session.commit()
+
+        return data
+
+    def get_server_stats_log(self, before=None, after=None, limit=None, skip=0):
+
+        meta = get_metadata_template()
+        query = []
+
+        if before:
+            query.append(ServerStatsLogORM.timestamp <= before)
+
+        if after:
+            query.append(ServerStatsLogORM.timestamp >= after)
+
+        with self.session_scope() as session:
+            pose = session.query(ServerStatsLogORM).filter(*query).order_by(desc('timestamp'))
+            meta["n_found"] = get_count_fast(pose)
+
+            data = pose.limit(self.get_limit(limit)).offset(skip).all()
+            data = [d.to_dict() for d in data]
+
+        meta["success"] = True
+
+        return {"data": data, "meta": meta}

@@ -4,11 +4,12 @@ Tests the server collection compute capabilities.
 import itertools
 import pathlib
 from contextlib import contextmanager
+from typing import List
 
 import numpy as np
 import pytest
 import qcelemental as qcel
-from qcelemental.models import Molecule
+from qcelemental.models import Molecule, ProtoModel
 from qcengine.testing import is_program_new_enough
 
 import qcfractal.interface as ptl
@@ -1242,7 +1243,7 @@ def test_torsiondrive_dataset(fractal_compute_server):
 
     # Check status
     status_detail = ds.status("Spec1", detail=True)
-    assert status_detail.loc["hooh2", "Complete"] == 1
+    assert status_detail.loc["hooh2", "Complete Tasks"] == 1
     assert status_detail.loc["hooh2", "Total Points"] == 4
 
     fractal_compute_server.await_services(max_iter=5)
@@ -1326,6 +1327,13 @@ def test_grid_optimization_dataset(fractal_compute_server):
     ds.add_entry("hooh1", hooh1, scans=scans, preoptimization=False)
 
     ds.compute("test")
+
+    # Test detail status
+    fractal_compute_server.await_services(max_iter=1)
+    status_detail = ds.status("test", detail=True)
+    assert status_detail.loc["hooh1", "Complete Tasks"] == 1
+
+    # Check completions
     fractal_compute_server.await_services()
 
     ds.query("test")
@@ -1359,7 +1367,7 @@ def test_gradient_dataset_lazy_entries_values(gradient_dataset_fixture):
 
 def test_get_collection_no_records_ds(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
-    ds = ptl.collections.Dataset(f"tnr_test", client=client)
+    ds = ptl.collections.Dataset("tnr_test", client=client)
     ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
     ds.save()
 
@@ -1368,3 +1376,21 @@ def test_get_collection_no_records_ds(fractal_compute_server):
     ds.get_entries()
     assert len(ds.data.records) == 1
     assert ds.data.records[0].name == "He1"
+
+
+def test_collection_metadata(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+
+    ds = ptl.collections.Dataset("test_collection_metadata", client=client)
+    ds.data.metadata["data_points"] = 133_885
+    ds.save()
+
+    assert client.get_collection("dataset", ds.name).data.metadata["data_points"] == 133_885
+
+    ds = ptl.collections.Dataset("test_collection_metadata_oldstyle", client=client)
+    ds.data.__dict__["metadata"] = None
+    ds.save()
+
+    ds = client.get_collection("dataset", ds.name)
+    with pytest.raises(AttributeError):
+        ds.metadata

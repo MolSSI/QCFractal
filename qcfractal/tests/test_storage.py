@@ -15,8 +15,8 @@ from qcfractal.services.services import TorsionDriveService
 from qcfractal.storage_sockets.models.collections_models import DatasetORM
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
 
-bad_id1 = "000000000000000000000000"
-bad_id2 = "000000000000000000000001"
+bad_id1 = "99999000"
+bad_id2 = "99999001"
 
 
 def test_storage_repr(storage_socket):
@@ -109,24 +109,49 @@ def test_molecules_get(storage_socket):
     assert ret == 1
 
 
-# TODO: doesn't handel bad ids yet
-@pytest.mark.skip
+def test_molecules_duplicate_insert(storage_socket):
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
+
+    ret = storage_socket.add_molecules([water, water2])
+    assert ret["meta"]["n_inserted"] == 2
+
+    ret2 = storage_socket.add_molecules([water, water2])
+    assert ret2["meta"]["n_inserted"] == 0
+    assert ret["data"][0] == ret2["data"][0]
+    assert ret["data"][1] == ret2["data"][1]
+
+    ret3 = storage_socket.add_molecules([water, water])
+    assert ret2["meta"]["n_inserted"] == 0
+    assert ret["data"][0] == ret3["data"][0]
+    assert ret["data"][0] == ret3["data"][1]
+
+    # Cleanup adds
+    ret = storage_socket.del_molecules(id=ret["data"])
+    assert ret == 2
+
+
 def test_molecules_mixed_add_get(storage_socket):
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
 
-    ret = storage_socket.get_add_molecules_mixed([bad_id1, water, bad_id2, "bad_id"])
+    del_ids = []
+    water2_id = storage_socket.add_molecules([water2])["data"][0]
+    del_ids.append(water2_id)
+
+    ret = storage_socket.get_add_molecules_mixed([bad_id1, water, bad_id2, water2_id])
     assert ret["data"][0] is None
     assert ret["data"][1].identifiers.molecule_hash == water.get_hash()
     assert ret["data"][2] is None
-    assert set(ret["meta"]["missing"]) == {0, 2, 3}
+    assert ret["data"][3].id == water2_id
+    assert set(ret["meta"]["missing"]) == {0, 2}
 
     # Cleanup adds
-    ret = storage_socket.del_molecules(id=ret["data"][1].id)
-    assert ret == 1
+    del_ids.append(ret["data"][1].id)
+    ret = storage_socket.del_molecules(id=del_ids)
+    assert ret == 2
 
 
-# TODO: doesn't handel bad ids yet
-@pytest.mark.skip
 def test_molecules_bad_get(storage_socket):
 
     water = ptl.data.get_molecule("water_dimer_minima.psimol")
@@ -136,10 +161,9 @@ def test_molecules_bad_get(storage_socket):
     water_id = ret["data"][0]
 
     # Pull molecule from the DB for tests
-    ret = storage_socket.get_molecules(id=[water_id, "something", 5, (3, 2)])
-    assert len(ret["meta"]["errors"]) == 1
-    assert ret["meta"]["errors"][0][0] == "id"
-    assert len(ret["meta"]["errors"][0][1]) == 3
+    ret = storage_socket.get_molecules(id=[water_id, bad_id1, bad_id2])
+
+    assert ret["data"][0].id == water_id
     assert ret["meta"]["n_found"] == 1
 
     # Cleanup adds
@@ -167,8 +191,6 @@ def test_keywords_add(storage_socket):
     assert 1 == storage_socket.del_keywords(id=ret_kw.id)
 
 
-# TODO: doesn't handel bad ids yet
-@pytest.mark.skip
 def test_keywords_mixed_add_get(storage_socket):
 
     opts1 = ptl.models.KeywordSet(values={"o": 5})
@@ -1128,6 +1150,40 @@ def test_reset_task_blocks(storage_socket):
 
     with pytest.raises(ValueError):
         storage_socket.queue_reset_status(reset_error=True)
+
+
+def test_server_log(storage_results):
+
+    # Add something to double check the test
+    mol_names = [
+        'water_dimer_minima.psimol',
+        'water_dimer_stretch.psimol',
+        'water_dimer_stretch2.psimol',
+    ]
+
+    molecules = [ptl.data.get_molecule(mol_name) for mol_name in mol_names]
+    inserted = storage_results.add_molecules(molecules)
+
+    ret = storage_results.log_server_stats()
+    assert ret["molecule_count"] >= 3
+    assert ret["db_table_size"] >= 1000
+    assert ret["db_total_size"] >= 1000
+    assert ret["result_states"]["result"]["complete"] >= 6
+
+    assert ret["db_table_information"]["molecule"]["table_size"] >= 1000
+
+    # Check queries
+    now = datetime.utcnow()
+    ret = storage_results.get_server_stats_log(after=now)
+    assert len(ret["data"]) == 0
+
+    ret = storage_results.get_server_stats_log(before=now)
+    assert len(ret["data"]) >= 1
+
+    # Make sure we are sorting correctly
+    storage_results.log_server_stats()
+    ret = storage_results.get_server_stats_log(limit=1)
+    assert ret["data"][0]['timestamp'] > now
 
 
 def test_collections_include_exclude(storage_socket):

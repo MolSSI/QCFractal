@@ -70,11 +70,66 @@ def torsiondrive_fixture(fractal_compute_server):
     yield spin_up_test, client
 
 
+def test_service_torsiondrive_service_incomplete(fractal_compute_server, torsiondrive_fixture):
+    hooh = ptl.data.get_molecule("hooh.json")
+    hooh.geometry[0] += 0.00031
+
+    spin_up_test, client = torsiondrive_fixture
+    ret = spin_up_test(run_service=False)
+
+    # Check the blank
+    result = client.query_procedures(id=ret.ids)[0]
+    assert len(result.final_energy_dict) == 0
+    assert len(result.optimization_history) == 0
+    assert result.status == "INCOMPLETE"
+
+    # Update the service, but no compute
+    fractal_compute_server.update_services()
+    result = client.query_procedures(id=ret.ids)[0]
+    status = result.detailed_status()
+    assert result.status == "RUNNING"
+    assert status["incomplete_tasks"] == 1
+
+    fractal_compute_server.await_results()
+
+    # Take a compute step
+    fractal_compute_server.await_services(max_iter=1)
+    result = client.query_procedures(id=ret.ids)[0]
+    status = result.detailed_status()
+    assert status["total_points"] == 4
+    assert status["computed_points"] == 3
+    assert status["complete_tasks"] >= 3
+    assert status["incomplete_tasks"] == 0
+    assert len(result.final_energy_dict) == 1  # One complete
+    assert len(result.optimization_history) == 3  # Three spawned
+    assert result.minimum_positions["[-90]"] == 0
+    assert result.status == "RUNNING"
+
+    # Repeat compute step checking for updates
+    fractal_compute_server.await_services(max_iter=1)
+    result = client.query_procedures(id=ret.ids)[0]
+    assert len(result.final_energy_dict) == 3
+    assert len(result.optimization_history) == 4
+    assert result.minimum_positions["[-90]"] == 0
+    assert result.status == "RUNNING"
+
+    # Finalize
+    fractal_compute_server.await_services(max_iter=6)
+    result = client.query_procedures(id=ret.ids)[0]
+    assert len(result.final_energy_dict) == 4
+    assert len(result.optimization_history) == 4
+    assert result.minimum_positions["[-90]"] == 2
+    assert result.status == "COMPLETE"
+
+
 def test_service_manipulation(torsiondrive_fixture):
 
     spin_up_test, client = torsiondrive_fixture
 
-    ret = spin_up_test(run_service=False)
+    hooh = ptl.data.get_molecule("hooh.json")
+    hooh.geometry[0] += 3.1
+
+    ret = spin_up_test(run_service=False, initial_molecule=[hooh])
 
     service = client.query_services(procedure_id=ret.ids)[0]
     assert service["status"] == "WAITING"
@@ -341,12 +396,31 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     }) # yapf: disable
 
     ret = client.add_service([service], tag="gridopt", priority="low")
-    fractal_compute_server.await_services()
-    assert len(fractal_compute_server.list_current_tasks()) == 0
 
+    fractal_compute_server.await_services(max_iter=1)
     result = client.query_procedures(id=ret.ids)[0]
+    assert result.grid_optimizations.keys() == {'"preoptimization"'}
+    assert result.status == "RUNNING"
 
+    fractal_compute_server.await_services(max_iter=1)
+    result = client.query_procedures(id=ret.ids)[0]
+    status = result.detailed_status()
+    assert status["total_points"] == 5
+    assert status["complete_tasks"] == 2
+    assert result.grid_optimizations.keys() == {'"preoptimization"', "[1, 0]"}
+    assert result.status == "RUNNING"
+
+    fractal_compute_server.await_services(max_iter=1)
+    result = client.query_procedures(id=ret.ids)[0]
+    assert result.grid_optimizations.keys() == {'"preoptimization"', "[1, 0]", "[0, 0]", "[1, 1]"}
+    assert result.status == "RUNNING"
+
+    fractal_compute_server.await_services(max_iter=6)
+    result = client.query_procedures(id=ret.ids)[0]
+    status = result.detailed_status()
+    assert status["complete_tasks"] == 5
     assert result.status == "COMPLETE"
+
     assert result.starting_grid == (1, 0)
     assert pytest.approx(result.get_final_energies((0, 0)), abs=1.e-4) == 0.0010044105443485617
     assert pytest.approx(result.get_final_energies((1, 1)), abs=1.e-4) == 0.0026440964897817623
@@ -370,6 +444,11 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     final_result_records = result.get_final_results()
     assert len(final_result_records) == 5
     assert final_result_records["preoptimization"].molecule == result.starting_molecule
+
+    # Pull the full history
+    preopt = result.get_history()['preoptimization']
+    assert preopt.initial_molecule == result.initial_molecule
+    assert preopt.final_molecule == result.starting_molecule
 
 
 @using_geometric
