@@ -1,7 +1,7 @@
 """Add contributed values table
 
 Revision ID: 159ba85908fd
-Revises: 1bd2f7711e68
+Revises: d5d88ac1d291
 Create Date: 2019-11-01 15:39:50.970246
 
 """
@@ -13,7 +13,7 @@ from qcfractal.storage_sockets.models.sql_base import MsgpackExt
 from qcfractal.storage_sockets.models.collections_models import ContributedValuesORM
 # revision identifiers, used by Alembic.
 revision = '159ba85908fd'
-down_revision = '1bd2f7711e68'
+down_revision = 'd5d88ac1d291'
 branch_labels = None
 depends_on = None
 
