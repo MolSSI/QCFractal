@@ -77,6 +77,8 @@ class Collection(abc.ABC):
         view_metadata: Optional[Dict[str, str]] = None
         view_available: bool = False
 
+        metadata: Optional[Dict[str, Any]] = {}
+
     def __str__(self) -> str:
         """
         A simple string representation of the Collection.
