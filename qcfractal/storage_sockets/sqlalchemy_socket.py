@@ -671,10 +671,6 @@ class SQLAlchemySocket:
         meta = get_metadata_template()
 
         query = format_query(MoleculeORM, id=id, molecule_hash=molecule_hash, molecular_formula=molecular_formula)
-        # query = [getattr(MoleculeORM, 'id') == id,
-        #          MoleculeORM.molecule_hash == molecule_hash,
-        #          MoleculeORM.molecular_formula == molecular_formula
-        # ]
 
         # Don't include the hash or the molecular_formula in the returned result
         rdata, meta['n_found'] = self.get_query_projection(MoleculeORM,
