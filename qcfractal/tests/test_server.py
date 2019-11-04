@@ -22,64 +22,18 @@ def test_server_information(test_server):
     client = ptl.FractalClient(test_server)
 
     server_info = client.server_information()
-    assert {"name", "heartbeat_frequency"} <= server_info.keys()
+    assert {"name", "heartbeat_frequency", "counts"} <= server_info.keys()
 
+    mol_count = server_info["counts"]["molecule"]
 
-def test_molecule_socket(test_server):
+    client.add_molecules([ptl.Molecule.from_data("Ne 0 0 3.1415")])
 
-    mol_api_addr = test_server.get_address("molecule")
-    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    test_server.update_server_log()
+    test_server.update_public_information()
 
-    water_json = json.loads(water.json())
-    # Add a molecule
-    r = requests.post(mol_api_addr, json={"meta": {}, "data": [water_json]})
-    assert r.status_code == 200, r.reason
-
-    pdata = r.json()
-    assert pdata["meta"].keys() == meta_set
-
-    # Retrieve said molecule
-    r = requests.get(mol_api_addr, json={"meta": {}, "data": {"id": pdata["data"][0]}})
-    assert r.status_code == 200, r.reason
-
-    gdata = r.json()
-    assert isinstance(gdata["data"], list)
-
-    assert water.compare(gdata["data"][0])
-
-    # Retrieve said molecule via hash
-    r = requests.get(mol_api_addr, json={"meta": {}, "data": {"molecule_hash": water.get_hash()}})
-    assert r.status_code == 200, r.reason
-
-    gdata = r.json()
-    assert isinstance(gdata["data"], list)
-
-    assert water.compare(gdata["data"][0])
-
-
-def test_keywords_socket(test_server):
-
-    opt_api_addr = test_server.get_address("keyword")
-    opts = {"values": {"opt": "a"}}
-    # Add a molecule
-    r = requests.post(opt_api_addr, json={"meta": {}, "data": [opts]})
-    assert r.status_code == 200, r.reason
-
-    pdata = r.json()
-    assert pdata["meta"].keys() == meta_set
-    assert pdata["meta"]["n_inserted"] == 1
-
-    data_payload = {"id": pdata["data"][0]}
-
-    r = requests.get(opt_api_addr, json={"meta": {}, "data": data_payload})
-    assert r.status_code == 200, r.reason
-
-    assert r.json()["data"][0]["values"] == opts["values"]
-
-    # Try duplicates
-    r = requests.post(opt_api_addr, json={"meta": {}, "data": [opts]})
-    assert r.status_code == 200, r.reason
-    assert len(r.json()["meta"]["duplicates"]) == 1
+    client = ptl.FractalClient(test_server)
+    new_mol_count = client.server_information()["counts"]["molecule"]
+    assert new_mol_count == (mol_count + 1)
 
 
 def test_storage_socket(test_server):

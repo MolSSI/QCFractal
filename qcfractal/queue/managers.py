@@ -25,17 +25,22 @@ class QueueStatistics(BaseModel):
     """
     Queue Manager Job statistics
     """
+
     # Dynamic quantities
     total_successful_tasks: int = 0
     total_failed_tasks: int = 0
-    total_core_hours: float = 0
-    total_core_hours_consumed: float = 0
-    total_core_hours_possible: float = 0
+    total_worker_walltime: float = 0.0
+    total_task_walltime: float = 0.0
+    maximum_possible_walltime: float = 0.0 # maximum_workers * time_delta, experimental
+    active_tasks: int = 0
+    active_cores: int = 0
+    active_memory: float = 0.0
+
     # Static Quantities
     max_concurrent_tasks: int = 0
     cores_per_task: int = 0
+    memory_per_task: float = 0.0
     last_update_time: float = None
-    # sum_task(task_wall_time * nthread/task) / sum_time(number_running_worker * nthread/worker * interval)
 
     def __init__(self, **kwargs):
         if kwargs.get('last_update_time', None) is None:
@@ -76,8 +81,8 @@ class QueueManager:
     """
 
     def __init__(self,
-                 client: Any,
-                 queue_client: Any,
+                 client: 'FractalClient',
+                 queue_client: 'BaseAdapter',
                  logger: Optional[logging.Logger] = None,
                  max_tasks: int = 200,
                  queue_tag: str = None,
@@ -87,51 +92,54 @@ class QueueManager:
                  server_error_retries: Optional[int] = 1,
                  stale_update_limit: Optional[int] = 10,
                  cores_per_task: Optional[int] = None,
-                 memory_per_task: Optional[Union[int, float]] = None,
+                 memory_per_task: Optional[float] = None,
                  scratch_directory: Optional[str] = None,
-                 retries: Optional[int] = 2):
+                 retries: Optional[int] = 2,
+                 configuration: Optional[Dict[str, Any]] = None):
         """
         Parameters
         ----------
         client : FractalClient
             A FractalClient connected to a server
-        queue_client : QueueAdapter
+        queue_client : BaseAdapter
             The DBAdapter class for queue abstraction
-        logger : logging.Logger, Optional. Default: None
+        logger : Optional[logging.Logger], optional
             A logger for the QueueManager
-        max_tasks : int
+        max_tasks : int, optional
             The maximum number of tasks to hold at any given time
-        queue_tag : str
+        queue_tag : str, optional
             Allows managers to pull from specific tags
-        manager_name : str
+        manager_name : str, optional
             The cluster the manager belongs to
-        update_frequency : int
+        update_frequency : Union[int, float], optional
             The frequency to check for new tasks in seconds
-        verbose: bool, optional, Default: True
+        verbose : bool, optional
             Whether or not to have the manager be verbose (logger level debug and up)
-        server_error_retries: int, optional, Default: 1
+        server_error_retries : Optional[int], optional
             How many times finished jobs are attempted to be pushed to the server in
             in the event of a server communication error.
             After number of attempts, the failed jobs are dropped from this manager and considered "stale"
             Set to `None` to keep retrying
-        stale_update_limit: int, optional, Default: 10
+        stale_update_limit : Optional[int], optional
             Number of stale update attempts to keep around
             If this limit is ever hit, the server initiates as shutdown as best it can
             since communication with the server has gone wrong too many times.
             Set to `None` for unlimited
-        cores_per_task : int, optional, Default: None
+        cores_per_task : Optional[int], optional
             How many CPU cores per computation task to allocate for QCEngine
             None indicates "use however many you can detect"
-        memory_per_task: int, optional, Default: None
+        memory_per_task : Optional[float], optional
             How much memory, in GiB, per computation task to allocate for QCEngine
             None indicates "use however much you can consume"
-        scratch_directory : str, optional, Default: None
+        scratch_directory : Optional[str], optional
             Scratch directory location to do QCEngine compute
             None indicates "wherever the system default is"'
-        retries : int, optional, Default: 2
+        retries : Optional[int], optional
             Number of retries that QCEngine will attempt for RandomErrors detected when running
             its computations. After this many attempts (or on any other type of error), the
             error will be raised.
+        configuration : Optional[Dict[str, Any]], optional
+            A JSON description of the settings used to create this object for the database.
         """
 
         # Setup logging
@@ -148,6 +156,7 @@ class QueueManager:
         self.memory_per_task = memory_per_task
         self.scratch_directory = scratch_directory
         self.retries = retries
+        self.configuration = configuration
         self.queue_adapter = build_queue_adapter(queue_client,
                                                  logger=self.logger,
                                                  cores_per_task=self.cores_per_task,
@@ -158,8 +167,10 @@ class QueueManager:
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag
         self.verbose = verbose
+
         self.statistics = QueueStatistics(max_concurrent_tasks=self.max_tasks,
-                                          cores_per_task=cores_per_task,
+                                          cores_per_task=(cores_per_task or 0),
+                                          memory_per_task=(memory_per_task or 0),
                                           update_frequency=update_frequency
                                           )
 
@@ -218,6 +229,7 @@ class QueueManager:
             # Tell the server we are up and running
             payload = self._payload_template()
             payload["data"]["operation"] = "startup"
+            payload["data"]["configuration"] = self.configuration
 
             self.client._automodel_request("queue_manager", "put", payload)
 
@@ -247,7 +259,14 @@ class QueueManager:
             # Pull info
             "programs": self.available_programs,
             "procedures": self.available_procedures,
-            "tag": self.queue_tag
+            "tag": self.queue_tag,
+
+            # Statistics
+            "total_worker_walltime": self.statistics.total_worker_walltime,
+            "total_task_walltime": self.statistics.total_task_walltime,
+            "active_tasks": self.statistics.active_tasks,
+            "active_cores": self.statistics.active_cores,
+            "active_memory": self.statistics.active_memory,
         }
 
         return {"meta": meta, "data": {}}
@@ -483,16 +502,19 @@ class QueueManager:
         now = self.statistics.last_update_time = time.time()
         time_delta_seconds = now - last_time
         try:
-            running_workers = self.queue_adapter.count_running_workers()
+            self.statistics.active_tasks = self.queue_adapter.count_running_tasks()
             log_efficiency = True
         except NotImplementedError:
-            running_workers = 0
             log_efficiency = False
-        max_core_hours_running = time_delta_seconds * running_workers * self.statistics.cores_per_task / 3600
-        max_core_hours_possible = (time_delta_seconds * self.statistics.max_concurrent_tasks
-                                   * self.statistics.cores_per_task / 3600)
-        self.statistics.total_core_hours_consumed += max_core_hours_running
-        self.statistics.total_core_hours_possible += max_core_hours_possible
+
+        self.statistics.active_cores = self.statistics.active_tasks * self.statistics.cores_per_task
+        self.statistics.active_memory = self.statistics.active_tasks * self.statistics.memory_per_task
+
+        timedelta_worker_walltime = time_delta_seconds * self.statistics.active_cores / 3600
+        timedelta_maximum_walltime = (time_delta_seconds * self.statistics.max_concurrent_tasks *
+                                      self.statistics.cores_per_task / 3600)
+        self.statistics.total_worker_walltime += timedelta_worker_walltime
+        self.statistics.maximum_possible_walltime += timedelta_maximum_walltime
 
         # Process jobs
         n_success = 0
@@ -552,7 +574,7 @@ class QueueManager:
         # Crunch Statistics
         self.statistics.total_failed_tasks += n_fail
         self.statistics.total_successful_tasks += n_success
-        self.statistics.total_core_hours += task_cpu_hours
+        self.statistics.total_task_walltime += task_cpu_hours
         na_format = ''
         float_format = ',.2f'
         if self.statistics.total_completed_tasks == 0:
@@ -564,24 +586,23 @@ class QueueManager:
             task_stats_str = (f"Task Stats: Processed={self.statistics.total_completed_tasks}, "
                               f"Failed={self.statistics.total_failed_tasks}, "
                               f"Success={success_rate:{success_format}}%")
-            worker_stats_str = f"Worker Stats (est.): Core Hours Used={self.statistics.total_core_hours:{float_format}}"
+            worker_stats_str = f"Worker Stats (est.): Core Hours Used={self.statistics.total_worker_walltime:{float_format}}"
 
             # Handle efficiency calculations
             if log_efficiency:
                 # Efficiency calculated as:
                 # sum_task(task_wall_time * nthread / task)
                 # -------------------------------------------------------------
-                # sum_time(number_running_worker * nthread / worker * interval)
-                if self.statistics.total_core_hours_consumed == 0 or self.statistics.total_core_hours_possible == 0:
+                if self.statistics.total_task_walltime == 0 or self.statistics.maximum_possible_walltime == 0:
                     efficiency_of_running = "(N/A yet)"
                     efficiency_of_potential = "(N/A yet)"
                     efficiency_format = na_format
                 else:
-                    efficiency_of_running = (self.statistics.total_core_hours /
-                                             self.statistics.total_core_hours_consumed
+                    efficiency_of_running = (self.statistics.total_task_walltime /
+                                             self.statistics.total_worker_walltime
                                              * 100)
-                    efficiency_of_potential = (self.statistics.total_core_hours /
-                                               self.statistics.total_core_hours_possible
+                    efficiency_of_potential = (self.statistics.total_worker_walltime /
+                                               self.statistics.maximum_possible_walltime
                                                * 100)
                     efficiency_format = float_format
                 worker_stats_str += f", Core Usage Efficiency: {efficiency_of_running:{efficiency_format}}%"

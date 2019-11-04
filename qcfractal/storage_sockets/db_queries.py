@@ -1,5 +1,4 @@
-from abc import ABC
-from typing import List, Union
+from typing import List, Optional, Set, Union
 
 from sqlalchemy import Integer, inspect
 from sqlalchemy.sql import bindparam, text
@@ -7,17 +6,26 @@ from sqlalchemy.sql import bindparam, text
 from qcfractal.interface.models import Molecule, ResultRecord
 from qcfractal.storage_sockets.models import MoleculeORM, ResultORM
 
+QUERY_CLASSES = set()
 
-class QueryBase(ABC):
+
+class QueryBase:
 
     # The name/alias used by the REST APIs to access this class
     _class_name = None
+    _available_groupby = set()
 
     # Mapping of the requested feature and the internal query method
     _query_method_map = {}
 
-    def __init__(self, max_limit=1000):
+    def __init__(self, database_name, max_limit=1000):
+        self.database_name = database_name
         self.max_limit = max_limit
+
+    def __init_subclass__(cls, **kwargs):
+        if cls not in QUERY_CLASSES:
+            QUERY_CLASSES.add(cls)
+        super().__init_subclass__(**kwargs)
 
     def query(self, session, query_key, limit=0, skip=0, projection=None, **kwargs):
 
@@ -44,6 +52,32 @@ class QueryBase(ABC):
             result = [dict(zip(keys, res)) for res in result]
 
         return result
+
+    def _base_count(self, table_name: str, available_groupbys: Set[str], groupby: Optional[List[str]] = None):
+        if groupby:
+            bad_groups = set(groupby) - available_groupbys
+            if bad_groups:
+                raise AttributeError(f"The following groups are not permissible: {missing}")
+
+            global_str = ", ".join(groupby)
+            select_str = global_str + ", "
+            extra_str = f"""GROUP BY {global_str}\nORDER BY {global_str}"""
+
+        else:
+            select_str = ""
+            extra_str = ""
+
+        sql_statement = f"""
+select {select_str}count(*) from {table_name}
+{extra_str}
+"""
+
+        ret = self.execute_query(sql_statement, with_keys=True)
+
+        if groupby:
+            return ret
+        else:
+            return ret[0]["count"]
 
     @staticmethod
     def _raise_missing_attribute(cls, query_key, missing_attribute, amend_msg=''):
@@ -72,6 +106,85 @@ class TaskQueries(QueryBase):
         """
 
         return self.execute_query(sql_statement, with_keys=True)
+
+# ----------------------------------------------------------------------------
+
+
+class DatabaseStatQueries(QueryBase):
+
+    _class_name = "database_stats"
+
+    _query_method_map = {
+        'database_size': '_database_size',
+        'table_information': '_table_information',
+    }
+
+    def _database_size(self):
+
+        sql_statement = f"SELECT pg_database_size('{self.database_name}')"
+        return self.execute_query(sql_statement, with_keys=True)[0]['pg_database_size']
+
+    def _table_information(self, table: Optional[str] = None):
+
+        if table is None:
+            self._raise_missing_attribute('table_information', 'table')
+
+        sql_statement = f"""
+SELECT l.property, l.nr AS "bytes"
+FROM (
+    SELECT min(tableoid) AS tbl, count(*) AS cnt
+    FROM public.{table} t
+) x
+   , LATERAL (
+    VALUES ('table_size', pg_table_size(tbl))
+         , ('index_size', pg_indexes_size(tbl))
+         , ('row_count', cnt)
+         , ('live_tuples', pg_stat_get_live_tuples(tbl))
+         , ('dead_tuples', pg_stat_get_dead_tuples(tbl))
+    ) l(property, nr);
+ """
+
+        results = self.execute_query(sql_statement, with_keys=False)
+
+        ret = {}
+        for row in results:
+            if row[1]:
+                ret[row[0]] = row[1]
+            else:
+                ret[row[0]] = 0
+
+        return ret
+
+
+class ResultQueries(QueryBase):
+
+    _class_name = "result"
+
+    _query_method_map = {
+        'count': '_count',
+    }
+
+    def _count(self, groupby: Optional[List[str]] = None):
+
+        available_groupbys = {'result_type', 'status'}
+
+        return self._base_count("base_result", available_groupbys, groupby=groupby)
+
+
+class MoleculeQueries(QueryBase):
+
+    _class_name = "molecule"
+
+    _query_method_map = {
+        'count': '_count',
+    }
+
+    def _count(self, groupby: Optional[List[str]] = None):
+
+        available_groupbys = set()
+
+        return self._base_count("molecule", available_groupbys, groupby=groupby)
+
 
 # ----------------------------------------------------------------------------
 

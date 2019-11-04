@@ -79,7 +79,7 @@ class ParslAdapter(BaseAdapter):
         task = func(*task_spec["spec"]["args"], **task_spec["spec"]["kwargs"])
         return task_spec["id"], task
 
-    def count_running_workers(self) -> int:
+    def count_running_tasks(self) -> int:
 
         running = 0
         executor_running_task_map = {key: False for key in self.client.executors.keys()}

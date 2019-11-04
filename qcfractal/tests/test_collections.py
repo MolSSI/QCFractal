@@ -4,11 +4,12 @@ Tests the server collection compute capabilities.
 import itertools
 import pathlib
 from contextlib import contextmanager
+from typing import List
 
 import numpy as np
 import pytest
 import qcelemental as qcel
-from qcelemental.models import Molecule
+from qcelemental.models import Molecule, ProtoModel
 from qcengine.testing import is_program_new_enough
 
 import qcfractal.interface as ptl
@@ -1366,7 +1367,7 @@ def test_gradient_dataset_lazy_entries_values(gradient_dataset_fixture):
 
 def test_get_collection_no_records_ds(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
-    ds = ptl.collections.Dataset(f"tnr_test", client=client)
+    ds = ptl.collections.Dataset("tnr_test", client=client)
     ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
     ds.save()
 
@@ -1410,3 +1411,21 @@ def test_list_collection_visibility(fractal_compute_server):
     assert "tlcv_ds1" in names
     assert "tlcv_ds2" in names
     assert "tlcv_ds3" in names
+
+
+def test_collection_metadata(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+
+    ds = ptl.collections.Dataset("test_collection_metadata", client=client)
+    ds.data.metadata["data_points"] = 133_885
+    ds.save()
+
+    assert client.get_collection("dataset", ds.name).data.metadata["data_points"] == 133_885
+
+    ds = ptl.collections.Dataset("test_collection_metadata_oldstyle", client=client)
+    ds.data.__dict__["metadata"] = None
+    ds.save()
+
+    ds = client.get_collection("dataset", ds.name)
+    with pytest.raises(AttributeError):
+        ds.metadata
