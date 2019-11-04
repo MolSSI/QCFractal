@@ -582,10 +582,12 @@ class SQLAlchemySocket:
 
         results = []
         with self.session_scope() as session:
+            orm_molecules = []
             for dmol in molecules:
 
                 if dmol.validated is False:
                     dmol = Molecule(**dmol.dict(), validate=True)
+
 
                 mol_dict = dmol.dict(exclude={"id", "validated"})
 
@@ -602,22 +604,43 @@ class SQLAlchemySocket:
                 mol_dict["identifiers"]["molecular_formula"] = mol_dict["molecular_formula"]
 
                 # search by index keywords not by all keys, much faster
+                orm_molecules.append(MoleculeORM(**mol_dict))
 
-                doc = session.query(MoleculeORM).filter_by(molecule_hash=mol_dict['molecule_hash'])
+            # Check if we have duplicates
+            hash_list = [x.molecule_hash for x in orm_molecules]
+            query = format_query(MoleculeORM, molecule_hash=hash_list)
+            indices, match_cnt = self.get_query_projection(MoleculeORM, query, {"id"}, None, 0)
 
-                if doc.count() == 0:
-                    doc = MoleculeORM(**mol_dict)
-                    session.add(doc)
-                    # Todo: commit at the end, but list itself might have duplicates
-                    session.commit()
-                    results.append(str(doc.id))
-                    meta['n_inserted'] += 1
-                else:
+            bulk_ok = len(hash_list) == len(set(hash_list))
+            bulk_ok &= (match_cnt == 0)
+            bulk_ok = False
 
-                    id = str(doc.first().id)
-                    meta['duplicates'].append(id)  # TODO
-                    # If new or duplicate, add the id to the return list
-                    results.append(id)
+            if bulk_ok:
+                # Bulk save, doesn't update fields for speed
+                r = session.bulk_save_objects(orm_molecules)
+                session.commit()
+
+                # Query ID's and reorder based off orm_molecule ordered list
+                query = format_query(MoleculeORM, molecule_hash=hash_list)
+                indices = session.query(MoleculeORM.molecule_hash, MoleculeORM.id).filter(*query)
+
+                id_map = {k: v for k, v in indices}
+                results = [str(id_map[x.molecule_hash]) for x in orm_molecules]
+
+                meta['n_inserted'] = len(results)
+            else:
+                for orm_mol in orm_molecules:
+                    doc = session.query(MoleculeORM.id).filter_by(molecule_hash=orm_mol.molecule_hash)
+
+                    if doc.count() == 0:
+                        session.add(orm_mol)
+                        session.commit()
+                        results.append(str(orm_mol.id))
+                        meta['n_inserted'] += 1
+                    else:
+                        id = str(doc.first().id)
+                        meta['duplicates'].append(id)  # TODO
+                        results.append(id)
 
                     # We should make sure there was not a hash collision?
                     # new_mol.compare(old_mol)
