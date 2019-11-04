@@ -125,6 +125,7 @@ class SQLAlchemySocket:
     """
         SQLAlcehmy QCDB wrapper class.
     """
+
     def __init__(self,
                  uri: str,
                  project: str = "molssidb",
@@ -582,12 +583,13 @@ class SQLAlchemySocket:
 
         results = []
         with self.session_scope() as session:
+
+            # Build out the ORMs
             orm_molecules = []
             for dmol in molecules:
 
                 if dmol.validated is False:
                     dmol = Molecule(**dmol.dict(), validate=True)
-
 
                 mol_dict = dmol.dict(exclude={"id", "validated"})
 
@@ -609,11 +611,13 @@ class SQLAlchemySocket:
             # Check if we have duplicates
             hash_list = [x.molecule_hash for x in orm_molecules]
             query = format_query(MoleculeORM, molecule_hash=hash_list)
-            indices, match_cnt = self.get_query_projection(MoleculeORM, query, {"id"}, None, 0)
+            indices = session.query(MoleculeORM.molecule_hash, MoleculeORM.id).filter(*query)
+            previous_id_map = {k: v for k, v in indices}
 
+            # For a bulk add there must be no pre-existing and there must be no duplicates in the add list
             bulk_ok = len(hash_list) == len(set(hash_list))
-            bulk_ok &= (match_cnt == 0)
-            bulk_ok = False
+            bulk_ok &= (len(previous_id_map) == 0)
+            # bulk_ok = False
 
             if bulk_ok:
                 # Bulk save, doesn't update fields for speed
@@ -625,26 +629,38 @@ class SQLAlchemySocket:
                 indices = session.query(MoleculeORM.molecule_hash, MoleculeORM.id).filter(*query)
 
                 id_map = {k: v for k, v in indices}
-                results = [str(id_map[x.molecule_hash]) for x in orm_molecules]
+                n_inserted = len(orm_molecules)
 
-                meta['n_inserted'] = len(results)
             else:
-                for orm_mol in orm_molecules:
-                    doc = session.query(MoleculeORM.id).filter_by(molecule_hash=orm_mol.molecule_hash)
+                # Start from old ID map
+                id_map = previous_id_map
 
-                    if doc.count() == 0:
-                        session.add(orm_mol)
-                        session.commit()
-                        results.append(str(orm_mol.id))
-                        meta['n_inserted'] += 1
+                new_molecules = []
+                n_inserted = 0
+
+                for orm_mol in orm_molecules:
+                    duplicate_id = id_map.get(orm_mol.molecule_hash, False)
+                    if duplicate_id is not False:
+                        meta["duplicates"].append(str(duplicate_id))
                     else:
-                        id = str(doc.first().id)
-                        meta['duplicates'].append(id)  # TODO
-                        results.append(id)
+                        new_molecules.append(orm_mol)
+                        id_map[orm_mol.molecule_hash] = 'placeholder_id'
+                        n_inserted += 1
+                        session.add(orm_mol)
 
                     # We should make sure there was not a hash collision?
                     # new_mol.compare(old_mol)
                     # raise KeyError("!!! WARNING !!!: Hash collision detected")
+
+                session.commit()
+
+                for new_mol in new_molecules:
+                    id_map[new_mol.molecule_hash] = new_mol.id
+
+            results = [str(id_map[x.molecule_hash]) for x in orm_molecules]
+            assert 'placeholder_id' not in results
+            meta['n_inserted'] = n_inserted
+
         meta["success"] = True
 
         ret = {"data": results, "meta": meta}
@@ -1122,6 +1138,7 @@ class SQLAlchemySocket:
         -------
 
         """
+
     def get_results(self,
                     id: Union[str, List] = None,
                     program: str = None,
