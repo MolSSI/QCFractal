@@ -15,6 +15,40 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
+0.12.0 / 2019-10-01
+-------------------
+
+New Features
+++++++++++++
+- (:pr:`433`) ``Dataset`` and ``ReactionDataset`` (``interface.collections``) now have a ``download``` method which
+  downloads a frozen view of the dataset. This view is used to speed up calls to ``get_values``, ``get_molecules``,
+  ``get_entries``, and ``list_values``.
+- (:pr:`440`) Wavefunctions can now be stored in the database using Result ``protocols``.
+
+Enhancements
+++++++++++++
+- (:pr:`429`) Enables protocols for ``OptimizationDataset`` collections.
+- (:pr:`430`) Adds additional QCPortal type hints.
+- (:pr:`433`, :pr:`443`) ``Dataset`` and ``ReactionDataset`` (``interface.collections``) are now faster for calls to calls to ``get_values``, ``get_molecules``,
+  ``get_entries``, and ``list_values`` for large datasets if the server is configured to use frozen views. See "Server-side Dataset Views" documentation. Subsets
+  may be passed to ``get_values``, ``get_molecules``, and ``get_entries``
+- (:pr:`447`) Enables the creation of plaintext (xyz and csv) output from Dataset Collections.
+- (:pr:`458`) Collections now have a metadata field.
+- (:pr:`462`) Dataset downloads now have a TQDM progress bar.
+- (:pr:`463`) ``FractalClient.list_collections`` by default only returns collections whose visibility flag is set to true,
+  and whose group is "default". This change was made to filter out in-progress, intermediate, and specialized collections.
+
+Bug Fixes
++++++++++
+- (:pr:`424`) Fixes a ``ReactionDataset.visualize`` bug with ``groupby='D3'``.
+- (:pr:`456`, :pr:`452`) Queries that project hybrid properties should now work as expected.
+
+Deprecated Features
++++++++++++++++++++
+- (:pr:`426`) In ``Dataset`` and ``ReactionDataset`` (``interface.collections``),
+  the previously deprecated functions ``query``, ``get_history``, and ``list_history`` have been removed.
+
+
 0.11.0 / 2019-10-01
 -------------------
 
