@@ -69,7 +69,7 @@ class Collection(abc.ABC):
         tagline: Optional[str] = None
         description: Optional[str] = None
 
-        owner: Optional[str] = None
+        group: Optional[str] = "default"
         visibility: bool = True
 
         view_url_hdf5: Optional[str] = None
@@ -612,7 +612,7 @@ class BaseProcedureDataset(Collection):
             data.append(blob)
 
         df = pd.DataFrame(data)
-        df.rename(columns={x : x.replace("_", " ").title() for x in df.columns}, inplace=True)
+        df.rename(columns={x: x.replace("_", " ").title() for x in df.columns}, inplace=True)
         if df.shape[0]:
             df = df.set_index("Name")
 

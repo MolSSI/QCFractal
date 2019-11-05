@@ -26,6 +26,8 @@ New Features
 
 Enhancements
 ++++++++++++
+- (:pr:`463`) ``FractalClient.list_collections`` by default only returns collections whose visibility flag is set to true,
+  and whose group is "default". This change was made to filter out in-progress, intermediate, and specialized collections.
 - (:pr:`433`, :pr:`443`) ``Dataset`` and ``ReactionDataset`` (``interface.collections``) are now faster for calls to calls to ``get_values``, ``get_molecules``,
   ``get_entries``, and ``list_values`` for large datasets if the server is configured to use frozen views. See "Server-side Dataset Views" documentation. Subsets
   may be passed to ``get_values``, ``get_molecules``, and ``get_entries``

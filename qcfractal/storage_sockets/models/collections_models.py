@@ -37,7 +37,7 @@ class CollectionORM(Base):
     tagline = Column(String)
     description = Column(String, nullable=True)
 
-    owner = Column(String(100), nullable=True)
+    group = Column(String(100), nullable=True)
     visibility = Column(Boolean, nullable=False)
 
     view_url_hdf5 = Column(String, nullable=True)

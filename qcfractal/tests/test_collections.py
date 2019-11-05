@@ -1378,6 +1378,41 @@ def test_get_collection_no_records_ds(fractal_compute_server):
     assert ds.data.records[0].name == "He1"
 
 
+def test_list_collection_group(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+
+    ds1 = ptl.collections.Dataset(name="tlco_ds1", client=client)
+    ds1.save()
+    assert (client.list_collections().reset_index().name == "tlco_ds1").any()
+
+    ds2 = ptl.collections.ReactionDataset(name="tlco_ds2", client=client, group="group1")
+    ds2.save()
+    assert not (client.list_collections().reset_index().name == "tlco_ds2").any()
+
+    assert (client.list_collections(group=None).reset_index().name == "tlco_ds1").any()
+    assert (client.list_collections(group=None).reset_index().name == "tlco_ds2").any()
+
+
+def test_list_collection_visibility(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+    ds1 = ptl.collections.GridOptimizationDataset(name="tlcv_ds1", client=client, visibility=False)
+    ds2 = ptl.collections.GridOptimizationDataset(name="tlcv_ds2", client=client, visibility=True)
+    ds3 = ptl.collections.GridOptimizationDataset(name="tlcv_ds3", client=client)
+    ds1.save()
+    ds2.save()
+    ds3.save()
+
+    names = list(client.list_collections().reset_index().name)
+    assert "tlcv_ds1" not in names
+    assert "tlcv_ds2" in names
+    assert "tlcv_ds3" in names
+
+    names = list(client.list_collections(show_hidden=True).reset_index().name)
+    assert "tlcv_ds1" in names
+    assert "tlcv_ds2" in names
+    assert "tlcv_ds3" in names
+
+
 def test_collection_metadata(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
 
