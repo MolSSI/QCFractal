@@ -340,7 +340,7 @@ def test_dataset_add_delete_cascade(storage_socket):
     assert ret["meta"]["success"] is True
     assert len(ret['data'][0]['records']) == 2
 
-    ret = storage_socket.get_collections(collection=collection, name=name, projection=['records'])
+    ret = storage_socket.get_collections(collection=collection, name=name, include=['records'])
     assert ret["meta"]["success"] is True
 
     db["contributed_values"] = {

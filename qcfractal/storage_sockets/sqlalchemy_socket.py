@@ -282,22 +282,23 @@ class SQLAlchemySocket:
 
         return limit if limit and limit < self._max_limit else self._max_limit
 
-    def get_query_projection(self, className, query, projection, limit, skip, exclude=None):
+    def get_query_projection(self, className, query, *, limit=None, skip=0, include=None, exclude=None):
         # Todo: projection to be renamed to include_only
 
-        if projection and exclude:
-            raise AttributeError(f'Either projection (include) or exclude can be '
+        if include and exclude:
+            raise AttributeError(f'Either include or exclude can be '
                                  f'used, not both at the same query. '
-                                 f'Given projection: {projection}, exclude: {exclude}')
+                                 f'Given include: {include}, exclude: {exclude}')
 
         prop, hybrids, relationships = className._get_col_types()
 
         # build projection from include or exclude
         _projection = []
-        if projection:
-            _projection = [p for p in projection]
+        if include:
+            _projection = set(include)
         elif exclude:
             _projection = set(className._all_col_names()) - set(exclude) - set(className.db_related_fields)
+        _projection = list(_projection)
 
         proj = []
         join_attrs = {}
@@ -307,11 +308,14 @@ class SQLAlchemySocket:
         for key in _projection:
             if key in prop:  # normal column
                 proj.append(getattr(className, key))
+
             # if hybrid property, save callback, and relation if any
             elif key in hybrids:
                 callbacks.append(key)
+
                 # if it has a relationship
                 if key + '_obj' in relationships.keys():
+
                     # join_class_name = relationships[key + '_obj']
                     join_attrs[key] = relationships[key + '_obj']
             else:
@@ -339,6 +343,7 @@ class SQLAlchemySocket:
                     res_ids = [d.get('id', d.get('_id')) for d in rdata]
                     res_ids.sort()
                     join_data = {res_id: {} for res_id in res_ids}
+
                     # relations data
                     for key, relation_details in join_attrs.items():
                         ret = session.query(relation_details['remote_side_column'].label('id'), relation_details['join_class'])\
@@ -496,7 +501,7 @@ class SQLAlchemySocket:
 
         query = format_query(KVStoreORM, id=id)
 
-        rdata, meta['n_found'] = self.get_query_projection(KVStoreORM, query, None, limit, skip)
+        rdata, meta['n_found'] = self.get_query_projection(KVStoreORM, query, limit=limit, skip=skip)
 
         meta["success"] = True
 
@@ -677,9 +682,8 @@ class SQLAlchemySocket:
         # Don't include the hash or the molecular_formula in the returned result
         rdata, meta['n_found'] = self.get_query_projection(MoleculeORM,
                                                            query,
-                                                           None,
-                                                           limit,
-                                                           skip,
+                                                           limit=limit,
+                                                           skip=skip,
                                                            exclude=['molecule_hash', 'molecular_formula'])
 
         meta["success"] = True
@@ -803,9 +807,8 @@ class SQLAlchemySocket:
 
         rdata, meta['n_found'] = self.get_query_projection(KeywordsORM,
                                                            query,
-                                                           None,
-                                                           limit,
-                                                           skip,
+                                                           limit=limit,
+                                                           skip=skip,
                                                            exclude=[None if with_ids else 'id'])
 
         meta["success"] = True
@@ -966,7 +969,6 @@ class SQLAlchemySocket:
                         name: Optional[str] = None,
                         col_id: Optional[int] = None,
                         limit: Optional[int] = None,
-                        projection: Optional[List[str]] = None,
                         include: Optional[List[str]] = None,
                         exclude: Optional[List[str]] = None,
                         skip: int = 0) -> Dict[str, Any]:
@@ -1004,15 +1006,10 @@ class SQLAlchemySocket:
         collection_class = get_collection_class(collection)
         query = format_query(collection_class, lname=name, collection=collection, id=col_id)
 
-        if projection and include:
-            projection.extend(include)
-        if include and not projection:
-            projection = include
-
         # try:
         rdata, meta['n_found'] = self.get_query_projection(collection_class,
                                                            query,
-                                                           projection=projection,
+                                                           include=include,
                                                            exclude=exclude,
                                                            limit=limit,
                                                            skip=skip)
@@ -1224,7 +1221,7 @@ class SQLAlchemySocket:
 
         data, meta['n_found'] = self.get_query_projection(ResultORM,
                                                           query,
-                                                          projection=include,
+                                                          include=include,
                                                           exclude=exclude,
                                                           limit=limit,
                                                           skip=skip)
@@ -1354,9 +1351,9 @@ class SQLAlchemySocket:
         query = format_query(WavefunctionStoreORM, id=id)
         rdata, meta['n_found'] = self.get_query_projection(WavefunctionStoreORM,
                                                            query,
-                                                           include,
-                                                           limit,
-                                                           skip,
+                                                           limit=limit,
+                                                           skip=skip,
+                                                           include=include,
                                                            exclude=exclude)
 
         meta["success"] = True
@@ -1496,7 +1493,12 @@ class SQLAlchemySocket:
         try:
             # TODO: decide a way to find the right type
 
-            data, meta['n_found'] = self.get_query_projection(className, query, include, limit, skip, exclude=exclude)
+            data, meta['n_found'] = self.get_query_projection(className,
+                                                              query,
+                                                              limit=limit,
+                                                              skip=skip,
+                                                              include=include,
+                                                              exclude=exclude)
             meta["success"] = True
         except Exception as err:
             meta['error_description'] = str(err)
@@ -1935,9 +1937,9 @@ class SQLAlchemySocket:
         try:
             data, meta['n_found'] = self.get_query_projection(TaskQueueORM,
                                                               query,
-                                                              include,
-                                                              limit,
-                                                              skip,
+                                                              limit=limit,
+                                                              skip=skip,
+                                                              include=include,
                                                               exclude=exclude)
             meta["success"] = True
         except Exception as err:
@@ -2248,7 +2250,7 @@ class SQLAlchemySocket:
         if modified_after:
             query.append(QueueManagerORM.modified_on >= modified_after)
 
-        data, meta['n_found'] = self.get_query_projection(QueueManagerORM, query, None, limit, skip)
+        data, meta['n_found'] = self.get_query_projection(QueueManagerORM, query, limit=limit, skip=skip)
         meta["success"] = True
 
         return {"data": data, "meta": meta}
@@ -2260,7 +2262,11 @@ class SQLAlchemySocket:
         if timestamp_after:
             query.append(QueueManagerLogORM.timestamp >= timestamp_after)
 
-        data, meta['n_found'] = self.get_query_projection(QueueManagerLogORM, query, None, limit, skip, exclude=['id'])
+        data, meta['n_found'] = self.get_query_projection(QueueManagerLogORM,
+                                                          query,
+                                                          limit=limit,
+                                                          skip=skip,
+                                                          exclude=['id'])
         meta["success"] = True
 
         return {"data": data, "meta": meta}
