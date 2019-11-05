@@ -11,7 +11,7 @@ from qcelemental.models.results import ResultProtocols
 
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
-__all__ = ["QCSpecification", "OptimizationSpecification", "KeywordSet", "ObjectId", "DriverEnum"]
+__all__ = ["QCSpecification", "OptimizationSpecification", "KeywordSet", "ObjectId", "DriverEnum", "Citation"]
 
 # Add in QCElemental models
 __all__.extend(["Molecule", "Provenance", "ProtoModel"])
@@ -126,7 +126,7 @@ class OptimizationSpecification(ProtoModel):
         "Note that unlike :class:`QCSpecification` this is a dictionary of keywords, not the Id for a "
         ":class:`KeywordSet`. ")
     protocols: OptimizationProtocols = Field(OptimizationProtocols(),
-                                              description=str(OptimizationProtocols.__base_doc__))
+                                             description=str(OptimizationProtocols.__base_doc__))
 
     def dict(self, *args, **kwargs):
         ret = super().dict(*args, **kwargs)
@@ -167,8 +167,8 @@ class KeywordSet(ProtoModel):
         description="String keys are in the ``values`` dict are normalized to lowercase if this is True. Assists in "
         "matching against other :class:`KeywordSet` objects in the database.")
     exact_floats: bool = Field(False,
-                                description="All floating point numbers are rounded to 1.e-10 if this is False."
-                                "Assists in matching against other :class:`KeywordSet` objects in the database.")
+                               description="All floating point numbers are rounded to 1.e-10 if this is False."
+                               "Assists in matching against other :class:`KeywordSet` objects in the database.")
     comments: Optional[str] = Field(
         None,
         description="Additional comments for this KeywordSet. Intended for pure human/user consumption "
@@ -196,3 +196,15 @@ class KeywordSet(ProtoModel):
 
     def get_hash_index(self):
         return hash_dictionary(self.values.copy())
+
+
+class Citation(ProtoModel):
+    """ A literature citation.  """
+    _acs_citation: str  # hand-formatted citation in ACS style. In the future, this could be bibtex, rendered to different formats.
+    _bibtex: Optional[Dict[str, str]]  # bibtex blob for later use with bibtex-renderer
+    doi: Optional[str]
+    url: Optional[str]
+
+    def to_acs(self) -> str:
+        """ Returns an ACS-formatted citation """
+        return self._acs_citation

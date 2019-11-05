@@ -7,12 +7,13 @@ All tests should be atomic, that is create and cleanup their data
 from datetime import datetime
 from time import time
 
+import numpy as np
 import pytest
+import sqlalchemy
 
 import qcfractal.interface as ptl
 from qcfractal.interface.models.task_models import TaskStatusEnum
 from qcfractal.services.services import TorsionDriveService
-from qcfractal.storage_sockets.models.collections_models import DatasetORM
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
 
 bad_id1 = "99999000"
@@ -238,7 +239,6 @@ def test_collections_add(storage_socket):
     # assert len(ret["meta"]["missing"]) == 1
     assert ret["meta"]["n_found"] == 0
 
-
 def test_collections_overwrite(storage_socket):
 
     collection = 'TorsionDriveRecord'
@@ -289,6 +289,110 @@ def test_collections_overwrite(storage_socket):
 
     ret = storage_socket.del_collection(collection, name)
     assert ret == 1
+
+def test_dataset_add_delete_cascade(storage_socket):
+
+    collection = 'dataset'
+    collection2 = 'reactiondataset'
+    name = 'Dataset123'
+    name2 = name + '_2'
+
+    # Add two waters
+    water = ptl.data.get_molecule("water_dimer_minima.psimol")
+    water2 = ptl.data.get_molecule("water_dimer_stretch.psimol")
+    mol_insert = storage_socket.add_molecules([water, water2])
+
+    db = {
+        "collection":
+        collection,
+        "name":
+        name,
+        "visibility":
+        True,
+        "view_available":
+        False,
+        "records": [{
+            "name": "He1",
+            "molecule_id": mol_insert["data"][0],
+            "comment": None,
+            "local_results": {}
+        }, {
+            "name": "He2",
+            "molecule_id": mol_insert["data"][1],
+            "comment": None,
+            "local_results": {}
+        }],
+        "contributed_values": {
+            'contrib1': {
+                "name": 'contrib1',
+                "theory_level": 'PBE0',
+                "units": 'kcal/mol',
+                "values": [5, 10],
+                "index": ["He2", "He1"]
+            }
+        }
+    }
+
+    ret = storage_socket.add_collection(db.copy())
+    assert ret["meta"]["n_inserted"] == 1
+
+    ret = storage_socket.get_collections(collection=collection, name=name)
+    assert ret["meta"]["success"] is True
+    assert len(ret['data'][0]['records']) == 2
+
+    ret = storage_socket.get_collections(collection=collection, name=name, projection=['records'])
+    assert ret["meta"]["success"] is True
+
+    db["contributed_values"] = {
+        'contrib1': {
+            "name": 'contrib1',
+            "theory_level": 'PBE0 FHI-AIMS',
+            "units": 'kcal/mol',
+            "values": np.array([5, 10], dtype=np.int16),
+            "index": ["He2", "He1"]
+        },
+        'contrib2': {
+            "name": 'contrib2',
+            "theory_level": 'PBE0 FHI-AIMS tight',
+            "units": 'kcal/mol',
+            "values": [np.random.rand(2, 3), np.random.rand(2, 3)],
+            "index": ["He2", "He1"]
+        }
+    }
+
+    ret = storage_socket.add_collection(db.copy(), overwrite=True)
+    assert ret["meta"]["n_inserted"] == 1
+
+    ret = storage_socket.get_collections(collection=collection, name=name)
+    assert ret["meta"]["success"] is True
+    assert len(ret['data'][0]['contributed_values'].keys()) == 2
+
+    #  reactiondataset
+
+    db['name'] = name2
+    db['collection'] = collection2
+    db.pop('records')
+
+    ret = storage_socket.add_collection(db.copy())
+    assert ret["meta"]["n_inserted"] == 1
+
+    ret = storage_socket.get_collections(collection=collection2, name=name2)
+    assert ret["meta"]["success"] is True
+    assert len(ret['data'][0]['contributed_values'].keys()) == 2
+    assert len(ret['data'][0]['records']) == 0
+
+
+    # cleanup
+    # Can't delete molecule when datasets refernece it (no cascade)
+    with pytest.raises(sqlalchemy.exc.IntegrityError):
+        storage_socket.del_molecules(mol_insert['data'])
+
+    # should cascade delete entries and records when dataset is deleted
+    assert storage_socket.del_collection(collection=collection, name=name) == 1
+    assert storage_socket.del_collection(collection=collection2, name=name2) == 1
+
+    # Now okay to delete molecules
+    storage_socket.del_molecules(mol_insert['data'])
 
 
 def test_results_add(storage_socket):
@@ -508,7 +612,6 @@ def test_get_results_by_ids(storage_results):
     assert len(ret["data"]) == 6
 
     ret = storage_results.get_results(id=ids, include=['status', 'id'])
-
     assert ret['data'][0].keys() == {'id', 'status'}
 
 
@@ -1198,28 +1301,21 @@ def test_collections_include_exclude(storage_socket):
     mol_insert = storage_socket.add_molecules([water, water2])
 
     db = {
-        "collection":
-        collection,
-        "name":
-        name,
-        "visibility":
-        True,
-        "view_available":
-        False,
-        "records": [{
-            "name": "He1",
-            "molecule_id": mol_insert["data"][0],
-            "comment": None,
-            "local_results": {}
-        }, {
-            "name": "He2",
-            "molecule_id": mol_insert["data"][1],
-            "comment": None,
-            "local_results": {}
-        }]
+        "collection": collection,
+        "name": name,
+        "visibility": True,
+        "view_available": False,
+        "records": [{"name": "He1", "molecule_id": mol_insert["data"][0], "comment": None, "local_results": {}},
+                    {"name": "He2", "molecule_id": mol_insert["data"][1], "comment": None, "local_results": {}}]
     }
 
-    db2 = {"collection": collection, "name": name2, "visibility": True, "view_available": False, "records": []}
+    db2 = {
+        "collection": collection,
+        "name": name2,
+        "visibility": True,
+        "view_available": False,
+        "records": []
+    }
 
     ret = storage_socket.add_collection(db)
     assert ret["meta"]["n_inserted"] == 1
@@ -1259,3 +1355,8 @@ def test_collections_include_exclude(storage_socket):
     assert ret["meta"]["success"] is True
     assert len(ret["data"]) == 1
     assert len(set(ret['data'][0].keys()) & exclude) == 0
+
+    # cleanup
+    storage_socket.del_collection(collection=collection, name=name)
+    storage_socket.del_collection(collection=collection, name=name2)
+    storage_socket.del_molecules(mol_insert['data'])

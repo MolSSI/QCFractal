@@ -6,7 +6,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql.functions import GenericFunction
 
 # from sqlalchemy import select, func, tuple_, text, cast
-from qcfractal.storage_sockets.models.sql_base import Base
+from qcfractal.storage_sockets.models.sql_base import Base, MsgpackExt
 
 # class json_agg(GenericFunction):
 #     type = postgresql.JSON
@@ -76,10 +76,32 @@ class DatasetMixin:
     alias_keywords = Column(JSON, nullable=True)
     default_program = Column(String, nullable=True)
 
-    contributed_values = Column(JSON)
-
     history_keys = Column(JSON)
     history = Column(JSON)
+
+
+class ContributedValuesORM(Base):
+    """One group of a contibuted values per dataset
+    Each dataset can have multiple rows in this table """
+
+    __tablename__ = 'contributed_values'
+
+    collection_id = Column(Integer, ForeignKey('collection.id', ondelete="cascade"), primary_key=True)
+
+    name = Column(String, nullable=False, primary_key=True)
+    values = Column(MsgpackExt, nullable=False)
+    index = Column(MsgpackExt, nullable=False)
+    values_structure = Column(JSON)
+
+    theory_level = Column(JSON, nullable=False)
+    units = Column(String, nullable=False)
+    theory_level_details = Column(JSON)
+
+    citations = Column(JSON)
+    external_url = Column(String)
+    doi = Column(String)
+
+    comments = Column(String)
 
 
 class DatasetEntryORM(Base):
@@ -105,31 +127,38 @@ class DatasetORM(CollectionORM, DatasetMixin):
 
     id = Column(Integer, ForeignKey('collection.id', ondelete="CASCADE"), primary_key=True)
 
-    # records: [{"name": "He1", "molecule_id": "1", "comment": null, "local_results": {}},
-    #             {"name": "He2", "molecule_id": "2", "comment": null, "local_results": {}}],
-    # records = column_property(
-    #     select([func.json_agg(tuple_(
-    #           DatasetRecordsAssociation.molecule_id, DatasetRecordsAssociation.name
-    #
-    #     ))])
-    #         .where(DatasetRecordsAssociation.dataset_id == id))
+    contributed_values_obj = relationship(ContributedValuesORM,
+                                          lazy='selectin',
+                                          cascade="all, delete-orphan")
 
-    ## returns json strings
-    # records = column_property(
-    #     select([array_agg(cast(json_build_object(
-    #         "molecule_id", DatasetRecordsORM.molecule_id,
-    #         "name", DatasetRecordsORM.name,
-    #         "comment", DatasetRecordsORM.comment,
-    #         "local_results", DatasetRecordsORM.local_results
-    #     ), type_=JSON))])
-    #         # .select_from(DatasetRecordsAssociation.__tablename__) # doesn't work
-    #         .where(DatasetRecordsORM.dataset_id == id))  #, deferred=True)
+    records_obj = relationship(DatasetEntryORM,
+                               lazy='selectin',  # lazy='noload',
+                               cascade="all, delete-orphan",
+                               backref="dataset")
 
-    records_obj = relationship(
-        DatasetEntryORM,
-        lazy='selectin',  #lazy='noload', # when using column_property
-        cascade="all, delete-orphan",
-        backref="dataset")
+    @hybrid_property
+    def contributed_values(self):
+        return self._contributed_values(self.contributed_values_obj)
+
+    @staticmethod
+    def _contributed_values(contributed_values_obj):
+        if not contributed_values_obj:
+            return {}
+
+        if not isinstance(contributed_values_obj, list):
+            contributed_values_obj = [contributed_values_obj]
+        ret = {}
+        try:
+            for obj in contributed_values_obj:
+                ret[obj.name.lower()] = obj.to_dict(exclude=['collection_id'])
+        except Exception as err:
+            pass
+
+        return ret
+
+    @contributed_values.setter
+    def contributed_values(self, dict_values):
+        return dict_values
 
     @hybrid_property
     def records(self):
@@ -161,13 +190,19 @@ class DatasetORM(CollectionORM, DatasetMixin):
     def records(self, dict_values):
         return dict_values
 
-    def update_relations(self, records=None, **kwarg):
+    def update_relations(self, records=None, contributed_values=None, **kwarg):
 
         self.records_obj = []
         records = [] if not records else records
         for rec_dict in records:
             rec = DatasetEntryORM(dataset_id=int(self.id), **rec_dict)
             self.records_obj.append(rec)
+
+        self.contributed_values_obj = []
+        contributed_values = {} if not contributed_values else contributed_values
+        for key, rec_dict in contributed_values.items():
+            rec = ContributedValuesORM(collection_id=int(self.id), **rec_dict)
+            self.contributed_values_obj.append(rec)
 
     __table_args__ = (
         # Index('ix_results_molecule', 'molecule'),  # b-tree index
@@ -214,13 +249,36 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
                                cascade="all, delete-orphan",
                                backref="reaction_dataset")
 
-    def update_relations(self, records=None, **kwarg):
+    contributed_values_obj = relationship(ContributedValuesORM,
+                                          lazy='selectin',
+                                          cascade="all, delete-orphan")
+
+    @hybrid_property
+    def contributed_values(self):
+        return self._contributed_values(self.contributed_values_obj)
+
+    @staticmethod
+    def _contributed_values(contributed_values_obj):
+        return DatasetORM._contributed_values(contributed_values_obj)
+
+    @contributed_values.setter
+    def contributed_values(self, dict_values):
+        return dict_values
+
+
+    def update_relations(self, records=None, contributed_values=None, **kwarg):
 
         self.records_obj = []
         records = records or []
         for rec_dict in records:
             rec = ReactionDatasetEntryORM(reaction_dataset_id=int(self.id), **rec_dict)
             self.records_obj.append(rec)
+
+        self.contributed_values_obj = []
+        contributed_values = {} if not contributed_values else contributed_values
+        for key, rec_dict in contributed_values.items():
+            rec = ContributedValuesORM(collection_id=int(self.id), **rec_dict)
+            self.contributed_values_obj.append(rec)
 
     @hybrid_property
     def records(self):

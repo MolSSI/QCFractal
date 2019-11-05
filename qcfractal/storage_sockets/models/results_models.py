@@ -332,7 +332,7 @@ class GridOptimizationProcedureORM(ProcedureMixin, BaseResultORM):
             return {}
 
         if not isinstance(grid_optimizations_obj, list):
-            grid_optimizations_obj = {grid_optimizations_obj}
+            grid_optimizations_obj = [grid_optimizations_obj]
 
         ret = {}
         try:
@@ -448,7 +448,7 @@ class TorsionDriveProcedureORM(ProcedureMixin, BaseResultORM):
             return {}
 
         if not isinstance(optimization_history_obj, list):
-            optimization_history_obj = {optimization_history_obj}
+            optimization_history_obj = [optimization_history_obj]
 
         ret = {}
         try:
