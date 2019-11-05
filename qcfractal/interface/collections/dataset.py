@@ -13,8 +13,9 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 
-import pydantic
+from pydantic import Field
 from qcelemental import constants
+from qcelemental.models.types import Array
 
 from ..models import Citation, ComputeResponse, ObjectId, ProtoModel
 from ..statistics import wrap_statistics
@@ -29,24 +30,34 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class MoleculeEntry(ProtoModel):
-    name: str
-    molecule_id: ObjectId
-    comment: Optional[str] = None
-    local_results: Dict[str, Any] = {}
+    name: str = Field(..., description="The name of entry.")
+    molecule_id: ObjectId = Field(..., description="The id of the Molecule the entry references.")
+    comment: Optional[str] = Field(None, description="A comment for the entry")
+    local_results: Dict[str, Any] = Field({}, description="Additional local values.")
 
 
 class ContributedValues(ProtoModel):
-    name: str
-    citations: Optional[List[Citation]] = None
-    theory_level: Union[str, Dict[str, str]]
-    theory_level_details: Optional[Union[str, Dict[str, Optional[str]]]] = None
-    comments: Optional[str] = None
-    values: Optional[Any] = None
-    index: Optional[Any] = None
-    external_url: Optional[str] = None
-    doi: Optional[str] = None
-    units: str
+    name: str = Field(..., description="The name of the contributed values.")
+    values: Any = Field(..., description="The values in the contributed values.")
+    index: Array[str] = Field(..., description="The entry index for the contributed values, matches the order of the `values` array.")
+    values_structure: Dict[str, Any] = Field({}, description="A machine readable description of the values structure. Typically not needed.")
 
+    theory_level: Union[str, Dict[str, str]] = Field(..., description="A string representation of the theory level.")
+    units: str = Field(..., description="The units of the values, can be any valid QCElemental unit.")
+    theory_level_details: Optional[Union[str, Dict[str, Optional[str]]]] = Field(None, description="A detailed reprsentation of the theory level.")
+
+    citations: Optional[List[Citation]] = Field(None, description="Citations associated with the contributed values.")
+    external_url: Optional[str] = Field(None, description="An external URL to the raw contributed values data.")
+    doi: Optional[str] = Field(None, description="A DOI for the contributed values data.")
+
+    comments: Optional[str] = Field(None, description="Additional comments about the contributed values")
+
+    @validator('values')
+    def _make_array(self, v)
+        if isinstance(v, (list, tuple)) and isinstance(v[0], (float, int, str, bool)):
+            v = np.array(v)
+
+        return v
 
 class Dataset(Collection):
     """

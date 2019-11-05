@@ -86,18 +86,22 @@ class ContributedValuesORM(Base):
 
     __tablename__ = 'contributed_values'
 
-    name = Column(String, nullable=False, primary_key=True)
     collection_id = Column(Integer, ForeignKey('collection.id', ondelete="cascade"), primary_key=True)
 
-    citations = Column(JSON)
-    theory_level = Column(JSON)  #
-    theory_level_details = Column(JSON)
-    comments = Column(String)
+    name = Column(String, nullable=False, primary_key=True)
     values = Column(MsgpackExt)
     index = Column(MsgpackExt)
+    values_structure = Column(JSON)
+
+    theory_level = Column(JSON)
+    units = Column(String)
+    theory_level_details = Column(JSON)
+
+    citations = Column(JSON)
     external_url = Column(String)
     doi = Column(String)
-    units = Column(String)  #
+
+    comments = Column(String)
 
 
 class DatasetEntryORM(Base):
