@@ -69,7 +69,7 @@ class Collection(abc.ABC):
         tagline: Optional[str] = None
         description: Optional[str] = None
 
-        group: Optional[str] = "default"
+        group: str = "default"
         visibility: bool = True
 
         view_url_hdf5: Optional[str] = None
@@ -77,7 +77,7 @@ class Collection(abc.ABC):
         view_metadata: Optional[Dict[str, str]] = None
         view_available: bool = False
 
-        metadata: Optional[Dict[str, Any]] = {}
+        metadata: Dict[str, Any] = {}
 
     def __str__(self) -> str:
         """

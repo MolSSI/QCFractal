@@ -1,4 +1,4 @@
-"""Insturmentation column additions
+"""Instrumentation column additions
 
 Revision ID: d5d88ac1d291
 Revises: 1bd2f7711e68

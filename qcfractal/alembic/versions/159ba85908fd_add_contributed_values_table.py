@@ -11,6 +11,9 @@ from sqlalchemy import orm
 from sqlalchemy.dialects import postgresql
 from qcfractal.storage_sockets.models.sql_base import MsgpackExt
 from qcfractal.storage_sockets.models.collections_models import ContributedValuesORM
+
+import numpy as np
+
 # revision identifiers, used by Alembic.
 revision = '159ba85908fd'
 down_revision = 'd5d88ac1d291'
