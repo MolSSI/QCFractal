@@ -126,34 +126,28 @@ class DatabaseStatQueries(QueryBase):
         sql_statement = f"SELECT pg_database_size('{self.database_name}')"
         return self.execute_query(sql_statement, with_keys=True)[0]['pg_database_size']
 
-    def _table_information(self, table: Optional[str] = None):
-
-        if table is None:
-            self._raise_missing_attribute('table_information', 'table')
+    def _table_information(self):
 
         sql_statement = f"""
-SELECT l.property, l.nr AS "bytes"
-FROM (
-    SELECT min(tableoid) AS tbl, count(*) AS cnt
-    FROM public.{table} t
-) x
-   , LATERAL (
-    VALUES ('table_size', pg_table_size(tbl))
-         , ('index_size', pg_indexes_size(tbl))
-         , ('row_count', cnt)
-         , ('live_tuples', pg_stat_get_live_tuples(tbl))
-         , ('dead_tuples', pg_stat_get_dead_tuples(tbl))
-    ) l(property, nr);
+SELECT relname                                AS table_name
+     , c.reltuples::BIGINT                    AS row_estimate
+     , pg_total_relation_size(c.oid)          AS total_bytes
+     , pg_indexes_size(c.oid)                 AS index_bytes
+     , pg_total_relation_size(reltoastrelid)  AS toast_bytes
+FROM pg_class c
+         LEFT JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE relkind = 'r';
  """
 
-        results = self.execute_query(sql_statement, with_keys=False)
+        result = self.execute_query(sql_statement, with_keys=False)
 
-        ret = {}
-        for row in results:
-            if row[1]:
-                ret[row[0]] = row[1]
-            else:
-                ret[row[0]] = 0
+        ret = []
+        for row in result:
+            if ("pg_" in row[0]) or ("sql_" in row[0]):
+                continue
+            ret.append(list(row))
+
+        ret = {"columns": ["table_name", "row_estimate", "total_bytes", "index_bytes", "toast_bytes"], "rows": ret}
 
         return ret
 

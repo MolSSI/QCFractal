@@ -420,7 +420,10 @@ class SQLAlchemySocket:
             session = self.Session()
             ret['data'] = self._query_classes[class_name].query(session, query_key, **kwargs)
             ret['meta']['success'] = True
-            ret['meta']['n_found'] = len(ret['data'])
+            try:
+                ret['meta']['n_found'] = len(ret['data'])
+            except TypeError:
+                ret['meta']['n_found'] = 1
         except Exception as err:
             ret['meta']['error_description'] = str(err)
 
@@ -2624,37 +2627,33 @@ class SQLAlchemySocket:
             AccessLogORM, BaseResultORM, CollectionORM, KVStoreORM, MoleculeORM, TaskQueueORM, WavefunctionStoreORM
         ]
 
+        table_info = self.custom_query("database_stats", "table_information")["data"]
+
         # Calculate table info
         table_size = 0
         index_size = 0
-        table_info = {}
-        for table in tables:
-            tbname = table.__tablename__
-            info_blob = self.custom_query("database_stats", "table_information", table=tbname)
-            if len(info_blob["data"]):
-                table_info[tbname] = info_blob["data"]
+        counts = {}
+        for row in table_info["rows"]:
+            table_size += row[2] - row[3] - (row[4] or 0)
+            index_size += row[3]
+            counts[row[0]] = row[1]
 
-                table_size += info_blob["data"]["table_size"]
-                index_size += info_blob["data"]["index_size"]
-            else:
-                self.logger.warning("Could not pull database stats:")
-                self.logger.warning(info_blob["meta"]["error_description"])
+        # Calculate result state info, turns out to be very costly for large databases
+        # state_data = self.custom_query("result", "count", groupby={'result_type', 'status'})["data"]
+        # result_states = {}
 
-        # Calculate result state info
-        state_data = self.custom_query("result", "count", groupby={'result_type', 'status'})["data"]
+        # for row in state_data:
+        #     result_states.setdefault(row["result_type"], {})
+        #     result_states[row["result_type"]][row["status"]] = row["count"]
         result_states = {}
-
-        for row in state_data:
-            result_states.setdefault(row["result_type"], {})
-            result_states[row["result_type"]][row["status"]] = row["count"]
 
         # Build out final data
         data = {
-            "collection_count": self.get_total_count(CollectionORM),
-            "molecule_count": self.get_total_count(MoleculeORM),
-            "result_count": self.get_total_count(BaseResultORM),
-            "kvstore_count": self.get_total_count(KVStoreORM),
-            "access_count": self.get_total_count(AccessLogORM),
+            "collection_count": counts["collection"],
+            "molecule_count": counts["molecule"],
+            "result_count": counts["base_result"],
+            "kvstore_count": counts["kv_store"],
+            "access_count": counts["access_log"],
             "result_states": result_states,
             "db_total_size": self.custom_query("database_stats", "database_size")["data"],
             "db_table_size": table_size,
