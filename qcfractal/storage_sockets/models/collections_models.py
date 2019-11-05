@@ -89,12 +89,12 @@ class ContributedValuesORM(Base):
     collection_id = Column(Integer, ForeignKey('collection.id', ondelete="cascade"), primary_key=True)
 
     name = Column(String, nullable=False, primary_key=True)
-    values = Column(MsgpackExt)
-    index = Column(MsgpackExt)
+    values = Column(MsgpackExt, nullable=False)
+    index = Column(MsgpackExt, nullable=False)
     values_structure = Column(JSON)
 
-    theory_level = Column(JSON)
-    units = Column(String)
+    theory_level = Column(JSON, nullable=False)
+    units = Column(String, nullable=False)
     theory_level_details = Column(JSON)
 
     citations = Column(JSON)

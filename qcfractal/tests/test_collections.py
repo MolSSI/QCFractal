@@ -83,10 +83,8 @@ def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
         contrib = {
             "name": "Gradient",
             "theory_level": "pseudo-random values",
-            "values": {
-                "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
-                "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
-            },
+            "values": [[0.03, 0, 0.02, -0.02, 0, -0.03], [0.03, 0, 0.02, -0.02, 0, -0.03]],
+            "index": ["He1", "He2"],
             "theory_level_details": {
                 "driver": "gradient"
             },
@@ -95,19 +93,15 @@ def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
         contrib_no_details = {
             "name": "no details",
             "theory_level": "pseudo-random values",
-            "values": {
-                "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
-                "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
-            },
+            "values": [[0.03, 0, 0.02, -0.02, 0, -0.03], [0.03, 0, 0.02, -0.02, 0, -0.03]],
+            "index": ["He1", "He2"],
             "units": "hartree/bohr"
         }
         contrib_all_details = {
             "name": "all details",
             "theory_level": "pseudo-random values",
-            "values": {
-                "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
-                "He2": [0.03, 0, 0.02, -0.02, 0, -0.03]
-            },
+            "values": [[0.03, 0, 0.02, -0.02, 0, -0.03], [0.03, 0, 0.02, -0.02, 0, -0.03]],
+            "index": ["He1", "He2"],
             "theory_level_details": {
                 "driver": "gradient",
                 "program": "fake_program",
@@ -118,8 +112,8 @@ def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
             "units": "hartree/bohr"
         }
         ds.add_contributed_values(contrib)
-        ds.add_contributed_values(contrib_no_details)
         ds.add_contributed_values(contrib_all_details)
+        ds.add_contributed_values(contrib_no_details)
 
         ds.add_keywords("scf_default", "psi4", ptl.models.KeywordSet(values={}), default=True)
         ds.save()
@@ -351,10 +345,8 @@ def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, reques
         energy = {
             "name": "Fake Energy",
             "theory_level": "pseudo-random values",
-            "values": {
-                "He1": 1234.5,
-                "He": 5.4321
-            },
+            "values": np.array([1234.5, 5.4321]),
+            "index": ["He1", "He"],
             "theory_level_details": {
                 "driver": "energy",
                 "program": "fake_program",
@@ -366,10 +358,9 @@ def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, reques
         gradient = {
             "name": "Fake Gradient",
             "theory_level": "pseudo-random values",
-            "values": {
-                "He1": [0.03, 0, 0.02, -0.02, 0, -0.03],
-                "He": [0.03, 0, 0.02]
-            },
+            "values": [np.array([0.03, 0, 0.02, -0.02, 0, -0.03]),
+                       np.array([0.03, 0, 0.02])],
+            "index": ["He1", "He"],
             "theory_level_details": {
                 "driver": "gradient",
                 "program": "fake_program",
@@ -381,10 +372,8 @@ def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, reques
         hessian = {
             "name": "Fake Hessian",
             "theory_level": "pseudo-random values",
-            "values": {
-                "He1": list(np.eye(6).ravel()),
-                "He": [1, 0.2, 0.1, 0.2, 1, 0.4, 0.1, 0.4, 1]
-            },
+            "values": [np.eye(6).ravel(), np.array([1, 0.2, 0.1, 0.2, 1, 0.4, 0.1, 0.4, 1])],
+            "index": ["He1", "He"],
             "theory_level_details": {
                 "driver": "hessian",
                 "program": "fake_program",
@@ -396,10 +385,8 @@ def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, reques
         dipole = {
             "name": "Fake Dipole",
             "theory_level": "pseudo-random values",
-            "values": {
-                "He": [1., 2., 3.],
-                "He1": [1., -2., 0.]
-            },
+            "values": [np.array([1., 2., 3.]), np.array([1., -2., 0.])],
+            "index": ["He1", "He"],
             "theory_level_details": {
                 "driver": "dipole",
                 "program": "fake_program",
@@ -411,10 +398,8 @@ def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, reques
         energy_FF = {
             "name": "Fake FF Energy",
             "theory_level": "some force field",
-            "values": {
-                "He1": 0.5,
-                "He": 42.
-            },
+            "values": [0.5, 42.],
+            "index": ["He1", "He"],
             "theory_level_details": {
                 "driver": "energy",
                 "program": "fake_program",
@@ -517,10 +502,8 @@ def test_reactiondataset_check_state(fractal_compute_server):
         "name": "Benchmark",
         "doi": None,
         "theory_level": "very high",
-        "values": {
-            "He1": 0.0009608501557,
-            "He2": -0.00001098794749
-        },
+        "values": [-0.00001098794749, 0.0009608501557],
+        "index": ["He2", "He1"],
         "units": "hartree"
     }
     # No entry for He2 in the dataset
@@ -540,8 +523,8 @@ def test_reactiondataset_check_state(fractal_compute_server):
     bench = ds.get_values(name="benchmark", native=False)
     assert ds._column_metadata[bench.columns[0]]["native"] is False
     assert bench.shape == (2, 1)
-    assert bench.loc["He1"][0] == contrib["values"]["He1"]
-    assert bench.loc["He2"][0] == contrib["values"]["He2"]
+    assert bench.loc["He1"][0] == contrib["values"][1]
+    assert bench.loc["He2"][0] == contrib["values"][0]
 
 
 @pytest.mark.parametrize('use_cache', [True, False])
@@ -787,10 +770,8 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
         "name": "Benchmark",
         "doi": None,
         "theory_level": "very high",
-        "values": {
-            "He1": 0.0009608501557,
-            "He2": -0.00001098794749
-        },
+        "values": [0.0009608501557, -0.00001098794749],
+        "index": ["He1", "He2"],
         "units": "hartree"
     }
     ds.add_contributed_values(contrib)

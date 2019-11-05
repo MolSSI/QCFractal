@@ -8,7 +8,7 @@ in relations and foreign keys are a string (see TaskQueueORM.base_result_obj)
 import datetime
 
 # from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import JSON, BigInteger, Binary, Boolean, Column, DateTime, Enum, Float, ForeignKey, Index, Integer, String
+from sqlalchemy import JSON, BigInteger, LargeBinary, Boolean, Column, DateTime, Enum, Float, ForeignKey, Index, Integer, String
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import relationship
 
@@ -294,7 +294,7 @@ class UserORM(Base):
     id = Column(Integer, primary_key=True)
 
     username = Column(String, nullable=False, unique=True)  # indexed and unique
-    password = Column(Binary, nullable=False)
+    password = Column(LargeBinary, nullable=False)
     permissions = Column(JSON)  # Column(ARRAY(String))
 
 

@@ -37,13 +37,14 @@ def migrate_contributed_values_data():
 
         for key, dict_values in ds_contrib.items():
 
-            # should work using keys() and values() in python 3
-            dict_values['index'], _values = [], []
+            idx, vals = [], []
             for key, value in dict_values['values'].items():
-                dict_values['index'].append(key)
-                _values.append(value)
+                idx.append(key)
+                vals.append(value)
 
-            dict_values['values'] = _values
+            dict_values['values'] = np.array(vals)
+            dict_values['index'] = np.array(idx)
+
             cv = ContributedValuesORM(**dict_values)
             cv.collection_id = ds_id
 

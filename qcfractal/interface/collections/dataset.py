@@ -13,7 +13,7 @@ import pandas as pd
 import requests
 from tqdm import tqdm
 
-from pydantic import Field
+from pydantic import Field, validator
 from qcelemental import constants
 from qcelemental.models.types import Array
 
@@ -53,7 +53,7 @@ class ContributedValues(ProtoModel):
     comments: Optional[str] = Field(None, description="Additional comments about the contributed values")
 
     @validator('values')
-    def _make_array(self, v)
+    def _make_array(cls, v):
         if isinstance(v, (list, tuple)) and isinstance(v[0], (float, int, str, bool)):
             v = np.array(v)
 
@@ -1283,13 +1283,16 @@ class Dataset(Collection):
         """
         self.get_entries(force=True)
         self._ensure_contributed_values()
+
         # Convert and validate
         if isinstance(contrib, ContributedValues):
             contrib = contrib.copy()
         else:
             contrib = ContributedValues(**contrib)
-        if set(contrib.values.keys()) != set(self.get_index()):
+
+        if set(contrib.index) != set(self.get_index()):
             raise ValueError("Contributed values indices do not match the entries in the dataset.")
+
         # Check the key
         key = contrib.name.lower()
         if (key in self.data.contributed_values) and (overwrite is False):
@@ -1367,8 +1370,9 @@ class Dataset(Collection):
             for query in new_queries:
                 data = self.data.contributed_values[query["name"].lower()].copy()
                 column_name = data.name
+
                 # Annoying work around to prevent some pandas magic
-                if isinstance(next(iter(data.values.values())), (int, float)):
+                if isinstance(data.values[0], (int, float, bool, np.number)):
                     values = data.values
                 else:
                     # TODO temporary patch until msgpack collections
@@ -1376,11 +1380,13 @@ class Dataset(Collection):
                         cv_driver = data.theory_level_details["driver"]
                     else:
                         cv_driver = self.data.default_driver
+
                     if cv_driver == "gradient":
-                        values = {k: np.array(v).reshape(-1, 3) for k, v in data.values.items()}
+                        values = [np.array(v).reshape(-1, 3) for v in data.values]
                     else:
-                        values = {k: np.array(v) for k, v in data.values.items()}
-                new_data[column_name] = pd.Series(list(values.values()), index=list(values.keys()))[subset]
+                        values = [np.array(v) for v in data.values]
+
+                new_data[column_name] = pd.Series(values, index=data.index)[subset]
                 units[column_name] = data.units
         else:
             for query in new_queries:

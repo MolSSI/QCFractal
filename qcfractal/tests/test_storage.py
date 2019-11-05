@@ -7,13 +7,14 @@ All tests should be atomic, that is create and cleanup their data
 from datetime import datetime
 from time import time
 
+import numpy as np
 import pytest
+import sqlalchemy
 
 import qcfractal.interface as ptl
 from qcfractal.interface.models.task_models import TaskStatusEnum
 from qcfractal.services.services import TorsionDriveService
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
-import sqlalchemy
 
 bad_id1 = "99999000"
 bad_id2 = "99999001"
@@ -302,14 +303,33 @@ def test_dataset_add_delete_cascade(storage_socket):
     mol_insert = storage_socket.add_molecules([water, water2])
 
     db = {
-        "collection": collection,
-        "name": name,
-        "visibility": True,
-        "view_available": False,
-        "records": [{"name": "He1", "molecule_id": mol_insert["data"][0], "comment": None, "local_results": {}},
-                    {"name": "He2", "molecule_id": mol_insert["data"][1], "comment": None, "local_results": {}}],
+        "collection":
+        collection,
+        "name":
+        name,
+        "visibility":
+        True,
+        "view_available":
+        False,
+        "records": [{
+            "name": "He1",
+            "molecule_id": mol_insert["data"][0],
+            "comment": None,
+            "local_results": {}
+        }, {
+            "name": "He2",
+            "molecule_id": mol_insert["data"][1],
+            "comment": None,
+            "local_results": {}
+        }],
         "contributed_values": {
-            'contrib1' : {"name": 'contrib1', "theory_level": 'PBE0', "units": 'kcal/mol'}
+            'contrib1': {
+                "name": 'contrib1',
+                "theory_level": 'PBE0',
+                "units": 'kcal/mol',
+                "values": [5, 10],
+                "index": ["He2", "He1"]
+            }
         }
     }
 
@@ -324,8 +344,20 @@ def test_dataset_add_delete_cascade(storage_socket):
     assert ret["meta"]["success"] is True
 
     db["contributed_values"] = {
-        'contrib1': {"name": 'contrib1', "theory_level": 'PBE0 FHI-AIMS', "units": 'kcal/mol'},
-        'contrib2': {"name": 'contrib2', "theory_level": 'PBE0 FHI-AIMS tight', "units": 'kcal/mol'}
+        'contrib1': {
+            "name": 'contrib1',
+            "theory_level": 'PBE0 FHI-AIMS',
+            "units": 'kcal/mol',
+            "values": np.array([5, 10], dtype=np.int16),
+            "index": ["He2", "He1"]
+        },
+        'contrib2': {
+            "name": 'contrib2',
+            "theory_level": 'PBE0 FHI-AIMS tight',
+            "units": 'kcal/mol',
+            "values": [np.random.rand(2, 3), np.random.rand(2, 3)],
+            "index": ["He2", "He1"]
+        }
     }
 
     ret = storage_socket.add_collection(db.copy(), overwrite=True)
@@ -579,12 +611,7 @@ def test_get_results_by_ids(storage_results):
     assert ret["meta"]["n_found"] == 6
     assert len(ret["data"]) == 6
 
-<<<<<<< HEAD
     ret = storage_results.get_results(id=ids, include=['status', 'id'])
-
-=======
-    ret = storage_results.get_results(id=ids, projection=['status', 'id'])
->>>>>>> Move contributed values into another tables, managed by datasets class
     assert ret['data'][0].keys() == {'id', 'status'}
 
 
@@ -615,22 +642,12 @@ def test_results_get_dual(storage_results):
 def test_results_get_project(storage_results):
     """See new changes in design here"""
 
-<<<<<<< HEAD
     ret_true = storage_results.get_results(method="M2", program="P2", include=["return_result", "id"])["data"][0]
     assert set(ret_true.keys()) == {"id", "return_result"}
     assert ret_true["return_result"] == 15
 
     # Note: explicitly set with_ids=False to remove ids
     ret = storage_results.get_results(method="M2", program="P2", with_ids=False, include=["return_result"])["data"][0]
-=======
-    ret = storage_results.get_results(method="M2", program="P2", projection={"return_result", "id"})["data"][0]
-    assert set(ret.keys()) == {"id", "return_result"}
-    assert ret["return_result"] == 15
-
-    # Note: explicitly set with_ids=False to remove ids
-    ret = storage_results.get_results(method="M2", program="P2", with_ids=False,
-                                      projection={"return_result"})["data"][0]
->>>>>>> Move contributed values into another tables, managed by datasets class
     assert set(ret.keys()) == {"return_result"}
 
 
@@ -1311,37 +1328,22 @@ def test_collections_include_exclude(storage_socket):
     assert len(ret["data"]) == 1
     # print('All: ', ret["data"])
 
-<<<<<<< HEAD
     include = {"records", "name"}
     ret = storage_socket.get_collections(collection=collection, name=name, include=include)
-=======
-    projection = {"records", "name"}
-    ret = storage_socket.get_collections(collection=collection, name=name, projection=projection)
->>>>>>> Move contributed values into another tables, managed by datasets class
     assert ret["meta"]["success"] is True
     assert len(ret["data"]) == 1
     assert set(ret['data'][0].keys()) == include
     assert len(ret['data'][0]['records']) == 2
     # print('With projection: ', ret["data"])
 
-<<<<<<< HEAD
     include = {"records", "name"}
     ret = storage_socket.get_collections(collection=collection, name='none_existing', include=include)
-=======
-    projection = {"records", "name"}
-    ret = storage_socket.get_collections(collection=collection, name='none_existing', projection=projection)
->>>>>>> Move contributed values into another tables, managed by datasets class
     assert ret["meta"]["success"] is True
     assert len(ret["data"]) == 0
     # print('With projection: ', ret["data"])
 
-<<<<<<< HEAD
     include = {"records", "name", "id"}
     ret = storage_socket.get_collections(collection=collection, name=name2, include=include)
-=======
-    projection = {"records", "name", "id"}
-    ret = storage_socket.get_collections(collection=collection, name=name2, projection=projection)
->>>>>>> Move contributed values into another tables, managed by datasets class
     assert ret["meta"]["success"] is True
     assert len(ret["data"]) == 1
     assert set(ret['data'][0].keys()) == include
