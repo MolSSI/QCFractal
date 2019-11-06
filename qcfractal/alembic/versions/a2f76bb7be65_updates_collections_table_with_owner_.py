@@ -22,10 +22,6 @@ def upgrade():
     op.add_column('collection', sa.Column('group', sa.String(), nullable=False, server_default='default'))
     op.alter_column('collection', 'group', server_default=None)
 
-    op.add_column('collection', sa.Column('metadata', sa.JSON(), nullable=True))
-    op.execute("UPDATE collection SET metadata = '{}'::json")
-    op.alter_column('collection', 'metadata', nullable=False)
-
     op.add_column('collection', sa.Column('view_url_hdf5', sa.String(), nullable=True))
     op.add_column('collection', sa.Column('view_url_plaintext', sa.String(), nullable=True))
     op.add_column('collection', sa.Column('view_metadata', sa.JSON(), nullable=True))

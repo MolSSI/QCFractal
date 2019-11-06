@@ -35,14 +35,14 @@ class CollectionORM(Base):
 
     tags = Column(JSON)
     tagline = Column(String)
-    description = Column(String, nullable=True)
+    description = Column(String)
 
-    group = Column(String(100), nullable=True)
+    group = Column(String(100), nullable=False)
     visibility = Column(Boolean, nullable=False)
 
-    view_url_hdf5 = Column(String, nullable=True)
-    view_url_plaintext = Column(String, nullable=True)
-    view_metadata = Column(JSON, nullable=True)
+    view_url_hdf5 = Column(String)
+    view_url_plaintext = Column(String)
+    view_metadata = Column(JSON)
     view_available = Column(Boolean, nullable=False)
 
     provenance = Column(JSON)
@@ -68,13 +68,13 @@ class DatasetMixin:
         Mixin class for common Dataset attributes.
     """
 
-    default_benchmark = Column(String, nullable=True)
-    default_keywords = Column(JSON, nullable=True)
+    default_benchmark = Column(String)
+    default_keywords = Column(JSON)
 
-    default_driver = Column(String, nullable=True)
-    default_units = Column(String, nullable=True)
-    alias_keywords = Column(JSON, nullable=True)
-    default_program = Column(String, nullable=True)
+    default_driver = Column(String)
+    default_units = Column(String)
+    alias_keywords = Column(JSON)
+    default_program = Column(String)
 
     history_keys = Column(JSON)
     history = Column(JSON)
@@ -91,7 +91,7 @@ class ContributedValuesORM(Base):
     name = Column(String, nullable=False, primary_key=True)
     values = Column(MsgpackExt, nullable=False)
     index = Column(MsgpackExt, nullable=False)
-    values_structure = Column(JSON)
+    values_structure = Column(JSON, nullable=False)
 
     theory_level = Column(JSON, nullable=False)
     units = Column(String, nullable=False)
@@ -242,7 +242,7 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
 
     id = Column(Integer, ForeignKey('collection.id', ondelete="CASCADE"), primary_key=True)
 
-    ds_type = Column(String, nullable=True)
+    ds_type = Column(String)
 
     records_obj = relationship(ReactionDatasetEntryORM,
                                lazy='selectin',
