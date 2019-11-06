@@ -283,7 +283,6 @@ class SQLAlchemySocket:
         return limit if limit and limit < self._max_limit else self._max_limit
 
     def get_query_projection(self, className, query, *, limit=None, skip=0, include=None, exclude=None):
-        # Todo: projection to be renamed to include_only
 
         if include and exclude:
             raise AttributeError(f'Either include or exclude can be '
