@@ -260,8 +260,8 @@ class FractalServer:
             "heartbeat_frequency": self.heartbeat_frequency,
             "version": get_information("version"),
             "query_limit": self.storage.get_limit(1.e9),
-            "client_lower_version_limit": "0.11.0",  # Must be XX.YY.ZZ
-            "client_upper_version_limit": "0.11.99"  # Must be XX.YY.ZZ
+            "client_lower_version_limit": "0.12.0",  # Must be XX.YY.ZZ
+            "client_upper_version_limit": "0.12.99"  # Must be XX.YY.ZZ
         }
         self.update_public_information()
 
@@ -550,7 +550,7 @@ class FractalServer:
         """
         data = self.storage.get_server_stats_log(limit=1)["data"]
 
-        counts = {"collection": 0, "molecule": 0, "result": 0}
+        counts = {"collection": 0, "molecule": 0, "result": 0, "kvstore": 0}
         if len(data):
             counts["collection"] = data[0].get("collection_count", 0)
             counts["molecule"] = data[0].get("molecule_count", 0)
