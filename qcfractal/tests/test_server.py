@@ -23,17 +23,7 @@ def test_server_information(test_server):
 
     server_info = client.server_information()
     assert {"name", "heartbeat_frequency", "counts"} <= server_info.keys()
-
-    mol_count = server_info["counts"]["molecule"]
-
-    client.add_molecules([ptl.Molecule.from_data("Ne 0 0 3.1415")])
-
-    test_server.update_server_log()
-    test_server.update_public_information()
-
-    client = ptl.FractalClient(test_server)
-    new_mol_count = client.server_information()["counts"]["molecule"]
-    assert new_mol_count == (mol_count + 1)
+    assert server_info["counts"].keys() >= {"molecule", "kvstore", "result", "collection"}
 
 
 def test_storage_socket(test_server):

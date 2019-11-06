@@ -50,7 +50,6 @@ Enhancements
   and whose group is "default". This change was made to filter out in-progress, intermediate, and specialized collections.
 - (:pr:`464`) Molecule insert speeds are now 4-16x faster.
 
-
 Bug Fixes
 +++++++++
 - (:pr:`424`) Fixes a ``ReactionDataset.visualize`` bug with ``groupby='D3'``.
