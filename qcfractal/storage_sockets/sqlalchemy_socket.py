@@ -2627,11 +2627,6 @@ class SQLAlchemySocket:
 
     def log_server_stats(self):
 
-        # This isn't complete, but contains the biggest tables
-        tables = [
-            AccessLogORM, BaseResultORM, CollectionORM, KVStoreORM, MoleculeORM, TaskQueueORM, WavefunctionStoreORM
-        ]
-
         table_info = self.custom_query("database_stats", "table_information")["data"]
 
         # Calculate table info
