@@ -25,7 +25,7 @@ if __name__ == "__main__":
         install_requires=[
             # Core dependencies
             'numpy',
-            'msgpack-python >=0.6.1',
+            'msgpack >=0.6.1',
             'tornado',
             'requests',
             'pyyaml >=5.1',
@@ -39,7 +39,6 @@ if __name__ == "__main__":
             'sqlalchemy >=1.3',
             'alembic',
             'psycopg2 >=2.7',
-            'postgresql',
 
             # QCPortal dependencies
             'tqdm',
@@ -47,7 +46,7 @@ if __name__ == "__main__":
             'pandas',
             'h5py',
             'pyarrow >=0.13.0',
-            'double-conversion >=3.0.0',
+#            'double-conversion >=3.0.0',
 
             # QCArchive depends
             'qcengine>=0.11.0',
