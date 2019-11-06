@@ -13,5 +13,8 @@ include MANIFEST.in
 include versioneer.py
 include qcfractal/_version.py
 include qcfractal/alembic.ini
+include qcfractal/alembic/README
+include qcfractal/alembic/env.py
+include qcfractal/alembic/script.py.mako
 
 prune benchmarks

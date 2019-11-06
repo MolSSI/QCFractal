@@ -282,22 +282,22 @@ class SQLAlchemySocket:
 
         return limit if limit and limit < self._max_limit else self._max_limit
 
-    def get_query_projection(self, className, query, projection, limit, skip, exclude=None):
-        # Todo: projection to be renamed to include_only
+    def get_query_projection(self, className, query, *, limit=None, skip=0, include=None, exclude=None):
 
-        if projection and exclude:
-            raise AttributeError(f'Either projection (include) or exclude can be '
+        if include and exclude:
+            raise AttributeError(f'Either include or exclude can be '
                                  f'used, not both at the same query. '
-                                 f'Given projection: {projection}, exclude: {exclude}')
+                                 f'Given include: {include}, exclude: {exclude}')
 
         prop, hybrids, relationships = className._get_col_types()
 
         # build projection from include or exclude
         _projection = []
-        if projection:
-            _projection = [p for p in projection]
+        if include:
+            _projection = set(include)
         elif exclude:
             _projection = set(className._all_col_names()) - set(exclude) - set(className.db_related_fields)
+        _projection = list(_projection)
 
         proj = []
         join_attrs = {}
@@ -307,11 +307,14 @@ class SQLAlchemySocket:
         for key in _projection:
             if key in prop:  # normal column
                 proj.append(getattr(className, key))
+
             # if hybrid property, save callback, and relation if any
             elif key in hybrids:
                 callbacks.append(key)
+
                 # if it has a relationship
                 if key + '_obj' in relationships.keys():
+
                     # join_class_name = relationships[key + '_obj']
                     join_attrs[key] = relationships[key + '_obj']
             else:
@@ -339,6 +342,7 @@ class SQLAlchemySocket:
                     res_ids = [d.get('id', d.get('_id')) for d in rdata]
                     res_ids.sort()
                     join_data = {res_id: {} for res_id in res_ids}
+
                     # relations data
                     for key, relation_details in join_attrs.items():
                         ret = session.query(relation_details['remote_side_column'].label('id'), relation_details['join_class'])\
@@ -420,7 +424,10 @@ class SQLAlchemySocket:
             session = self.Session()
             ret['data'] = self._query_classes[class_name].query(session, query_key, **kwargs)
             ret['meta']['success'] = True
-            ret['meta']['n_found'] = len(ret['data'])
+            try:
+                ret['meta']['n_found'] = len(ret['data'])
+            except TypeError:
+                ret['meta']['n_found'] = 1
         except Exception as err:
             ret['meta']['error_description'] = str(err)
 
@@ -493,7 +500,7 @@ class SQLAlchemySocket:
 
         query = format_query(KVStoreORM, id=id)
 
-        rdata, meta['n_found'] = self.get_query_projection(KVStoreORM, query, None, limit, skip)
+        rdata, meta['n_found'] = self.get_query_projection(KVStoreORM, query, limit=limit, skip=skip)
 
         meta["success"] = True
 
@@ -674,9 +681,8 @@ class SQLAlchemySocket:
         # Don't include the hash or the molecular_formula in the returned result
         rdata, meta['n_found'] = self.get_query_projection(MoleculeORM,
                                                            query,
-                                                           None,
-                                                           limit,
-                                                           skip,
+                                                           limit=limit,
+                                                           skip=skip,
                                                            exclude=['molecule_hash', 'molecular_formula'])
 
         meta["success"] = True
@@ -800,9 +806,8 @@ class SQLAlchemySocket:
 
         rdata, meta['n_found'] = self.get_query_projection(KeywordsORM,
                                                            query,
-                                                           None,
-                                                           limit,
-                                                           skip,
+                                                           limit=limit,
+                                                           skip=skip,
                                                            exclude=[None if with_ids else 'id'])
 
         meta["success"] = True
@@ -963,7 +968,6 @@ class SQLAlchemySocket:
                         name: Optional[str] = None,
                         col_id: Optional[int] = None,
                         limit: Optional[int] = None,
-                        projection: Optional[List[str]] = None,
                         include: Optional[List[str]] = None,
                         exclude: Optional[List[str]] = None,
                         skip: int = 0) -> Dict[str, Any]:
@@ -1001,15 +1005,10 @@ class SQLAlchemySocket:
         collection_class = get_collection_class(collection)
         query = format_query(collection_class, lname=name, collection=collection, id=col_id)
 
-        if projection and include:
-            projection.extend(include)
-        if include and not projection:
-            projection = include
-
         # try:
         rdata, meta['n_found'] = self.get_query_projection(collection_class,
                                                            query,
-                                                           projection=projection,
+                                                           include=include,
                                                            exclude=exclude,
                                                            limit=limit,
                                                            skip=skip)
@@ -1221,7 +1220,7 @@ class SQLAlchemySocket:
 
         data, meta['n_found'] = self.get_query_projection(ResultORM,
                                                           query,
-                                                          projection=include,
+                                                          include=include,
                                                           exclude=exclude,
                                                           limit=limit,
                                                           skip=skip)
@@ -1351,9 +1350,9 @@ class SQLAlchemySocket:
         query = format_query(WavefunctionStoreORM, id=id)
         rdata, meta['n_found'] = self.get_query_projection(WavefunctionStoreORM,
                                                            query,
-                                                           include,
-                                                           limit,
-                                                           skip,
+                                                           limit=limit,
+                                                           skip=skip,
+                                                           include=include,
                                                            exclude=exclude)
 
         meta["success"] = True
@@ -1493,7 +1492,12 @@ class SQLAlchemySocket:
         try:
             # TODO: decide a way to find the right type
 
-            data, meta['n_found'] = self.get_query_projection(className, query, include, limit, skip, exclude=exclude)
+            data, meta['n_found'] = self.get_query_projection(className,
+                                                              query,
+                                                              limit=limit,
+                                                              skip=skip,
+                                                              include=include,
+                                                              exclude=exclude)
             meta["success"] = True
         except Exception as err:
             meta['error_description'] = str(err)
@@ -1932,9 +1936,9 @@ class SQLAlchemySocket:
         try:
             data, meta['n_found'] = self.get_query_projection(TaskQueueORM,
                                                               query,
-                                                              include,
-                                                              limit,
-                                                              skip,
+                                                              limit=limit,
+                                                              skip=skip,
+                                                              include=include,
                                                               exclude=exclude)
             meta["success"] = True
         except Exception as err:
@@ -2245,7 +2249,7 @@ class SQLAlchemySocket:
         if modified_after:
             query.append(QueueManagerORM.modified_on >= modified_after)
 
-        data, meta['n_found'] = self.get_query_projection(QueueManagerORM, query, None, limit, skip)
+        data, meta['n_found'] = self.get_query_projection(QueueManagerORM, query, limit=limit, skip=skip)
         meta["success"] = True
 
         return {"data": data, "meta": meta}
@@ -2257,7 +2261,11 @@ class SQLAlchemySocket:
         if timestamp_after:
             query.append(QueueManagerLogORM.timestamp >= timestamp_after)
 
-        data, meta['n_found'] = self.get_query_projection(QueueManagerLogORM, query, None, limit, skip, exclude=['id'])
+        data, meta['n_found'] = self.get_query_projection(QueueManagerLogORM,
+                                                          query,
+                                                          limit=limit,
+                                                          skip=skip,
+                                                          exclude=['id'])
         meta["success"] = True
 
         return {"data": data, "meta": meta}
@@ -2619,42 +2627,33 @@ class SQLAlchemySocket:
 
     def log_server_stats(self):
 
-        # This isn't complete, but contains the biggest tables
-        tables = [
-            AccessLogORM, BaseResultORM, CollectionORM, KVStoreORM, MoleculeORM, TaskQueueORM, WavefunctionStoreORM
-        ]
+        table_info = self.custom_query("database_stats", "table_information")["data"]
 
         # Calculate table info
         table_size = 0
         index_size = 0
-        table_info = {}
-        for table in tables:
-            tbname = table.__tablename__
-            info_blob = self.custom_query("database_stats", "table_information", table=tbname)
-            if len(info_blob["data"]):
-                table_info[tbname] = info_blob["data"]
+        counts = {}
+        for row in table_info["rows"]:
+            table_size += row[2] - row[3] - (row[4] or 0)
+            index_size += row[3]
+            counts[row[0]] = row[1]
 
-                table_size += info_blob["data"]["table_size"]
-                index_size += info_blob["data"]["index_size"]
-            else:
-                self.logger.warning("Could not pull database stats:")
-                self.logger.warning(info_blob["meta"]["error_description"])
+        # Calculate result state info, turns out to be very costly for large databases
+        # state_data = self.custom_query("result", "count", groupby={'result_type', 'status'})["data"]
+        # result_states = {}
 
-        # Calculate result state info
-        state_data = self.custom_query("result", "count", groupby={'result_type', 'status'})["data"]
+        # for row in state_data:
+        #     result_states.setdefault(row["result_type"], {})
+        #     result_states[row["result_type"]][row["status"]] = row["count"]
         result_states = {}
-
-        for row in state_data:
-            result_states.setdefault(row["result_type"], {})
-            result_states[row["result_type"]][row["status"]] = row["count"]
 
         # Build out final data
         data = {
-            "collection_count": self.get_total_count(CollectionORM),
-            "molecule_count": self.get_total_count(MoleculeORM),
-            "result_count": self.get_total_count(BaseResultORM),
-            "kvstore_count": self.get_total_count(KVStoreORM),
-            "access_count": self.get_total_count(AccessLogORM),
+            "collection_count": counts["collection"],
+            "molecule_count": counts["molecule"],
+            "result_count": counts["base_result"],
+            "kvstore_count": counts["kv_store"],
+            "access_count": counts["access_log"],
             "result_states": result_states,
             "db_total_size": self.custom_query("database_stats", "database_size")["data"],
             "db_table_size": table_size,

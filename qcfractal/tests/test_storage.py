@@ -340,7 +340,7 @@ def test_dataset_add_delete_cascade(storage_socket):
     assert ret["meta"]["success"] is True
     assert len(ret['data'][0]['records']) == 2
 
-    ret = storage_socket.get_collections(collection=collection, name=name, projection=['records'])
+    ret = storage_socket.get_collections(collection=collection, name=name, include=['records'])
     assert ret["meta"]["success"] is True
 
     db["contributed_values"] = {
@@ -1268,12 +1268,12 @@ def test_server_log(storage_results):
     inserted = storage_results.add_molecules(molecules)
 
     ret = storage_results.log_server_stats()
-    assert ret["molecule_count"] >= 3
     assert ret["db_table_size"] >= 1000
     assert ret["db_total_size"] >= 1000
-    assert ret["result_states"]["result"]["complete"] >= 6
 
-    assert ret["db_table_information"]["molecule"]["table_size"] >= 1000
+    for row in ret["db_table_information"]["rows"]:
+        if row[0] == 'molecule':
+            assert row[2] >= 1000
 
     # Check queries
     now = datetime.utcnow()

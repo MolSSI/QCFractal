@@ -15,25 +15,46 @@ Changelog
 .. Bug Fixes
 .. +++++++++
 
-0.12.0 / 2019-MM-DD
+0.12.0 / 2019-11-06
 -------------------
+
+Highlights
+++++++++++
+
+- The ability to handle very large datasets (1M+ entries) quickly and efficiently.
+- Store and compute Wavefunction information.
+- Build, serve, and export views for Datasets that can stored in journal supplementary information or services like Zenodo.
+- A new GUI dashboard to observe the current state of the server, see statistics, and fix issues.
 
 New Features
 ++++++++++++
-- (:pr:`433`) ``Dataset`` and ``ReactionDataset`` (``interface.collections``) now have a ``download``` method which
+- (:pr:`433` and :pr:`462`) ``Dataset`` and ``ReactionDataset`` (``interface.collections``) now have a ``download``` method which
   downloads a frozen view of the dataset. This view is used to speed up calls to ``get_values``, ``get_molecules``,
   ``get_entries``, and ``list_values``.
+- (:pr:`440`) Wavefunctions can now be stored in the database using Result ``protocols``.
+- (:pr:`453`) The server now periodically logs manager and current state to provide data over time.
+- (:pr:`460`) Contributed values are now in their own table to speed up access of Collections.
+- (:pr:`461`) Services now update their corresponding record every iteration. An example is a torsiondrive which now updates the ``optimization_history`` field each iteration.
 
 Enhancements
 ++++++++++++
-- (:pr:`463`) ``FractalClient.list_collections`` by default only returns collections whose visibility flag is set to true,
-  and whose group is "default". This change was made to filter out in-progress, intermediate, and specialized collections.
+- (:pr:`429`) Enables protocols for ``OptimizationDataset`` collections.
+- (:pr:`430`) Adds additional QCPortal type hints.
 - (:pr:`433`, :pr:`443`) ``Dataset`` and ``ReactionDataset`` (``interface.collections``) are now faster for calls to calls to ``get_values``, ``get_molecules``,
   ``get_entries``, and ``list_values`` for large datasets if the server is configured to use frozen views. See "Server-side Dataset Views" documentation. Subsets
   may be passed to ``get_values``, ``get_molecules``, and ``get_entries``
+- (:pr:`447`) Enables the creation of plaintext (xyz and csv) output from Dataset Collections.
+- (:pr:`455`) Projection queries should now be much faster as excluded results are not pulled to the server.
+- (:pr:`458`) Collections now have a metadata field.
+- (:pr:`463`) ``FractalClient.list_collections`` by default only returns collections whose visibility flag is set to true,
+  and whose group is "default". This change was made to filter out in-progress, intermediate, and specialized collections.
+- (:pr:`464`) Molecule insert speeds are now 4-16x faster.
 
 Bug Fixes
 +++++++++
+- (:pr:`424`) Fixes a ``ReactionDataset.visualize`` bug with ``groupby='D3'``.
+- (:pr:`456`, :pr:`452`) Queries that project hybrid properties should now work as expected.
+
 
 Deprecated Features
 +++++++++++++++++++

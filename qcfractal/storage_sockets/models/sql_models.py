@@ -68,6 +68,7 @@ class ServerStatsLogORM(Base):
 
     __table_args__ = (Index('ix_server_stats_log_timestamp', "timestamp"), )
 
+
 class VersionsORM(Base):
     __tablename__ = 'versions'
 
@@ -109,8 +110,8 @@ class MoleculeORM(Base):
     # Required data
     schema_name = Column(String)
     schema_version = Column(Integer, default=2)
-    symbols = Column(MsgpackExt)
-    geometry = Column(MsgpackExt)
+    symbols = Column(MsgpackExt, nullable=False)
+    geometry = Column(MsgpackExt, nullable=False)
 
     # Molecule data
     name = Column(String, default="")
@@ -200,7 +201,7 @@ class TaskQueueORM(Base):
 
     id = Column(Integer, primary_key=True)
 
-    spec = Column(MsgpackExt)
+    spec = Column(MsgpackExt, nullable=False)
 
     # others
     tag = Column(String, default=None)

@@ -8,6 +8,7 @@ import logging
 import ssl
 import time
 import traceback
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Dict, List, Optional, Union
 
 import tornado.ioloop
@@ -259,10 +260,9 @@ class FractalServer:
             "heartbeat_frequency": self.heartbeat_frequency,
             "version": get_information("version"),
             "query_limit": self.storage.get_limit(1.e9),
-            "client_lower_version_limit": "0.11.0",  # Must be XX.YY.ZZ
-            "client_upper_version_limit": "0.11.99"  # Must be XX.YY.ZZ
+            "client_lower_version_limit": "0.12.0",  # Must be XX.YY.ZZ
+            "client_upper_version_limit": "0.12.99"  # Must be XX.YY.ZZ
         }
-        self.update_server_log()
         self.update_public_information()
 
         endpoints = [
@@ -310,17 +310,16 @@ class FractalServer:
         self.logger.info("    Query Limit:   {}\n".format(self.storage.get_limit(1.e9)))
         self.loop_active = False
 
+        # Create a executor for background processes
+        self.executor = ThreadPoolExecutor(max_workers=2)
+        self.futures = {}
+
         # Queue manager if direct build
         self.queue_socket = queue_socket
-        self.executor = None
-        self.futures = []
         if (self.queue_socket is not None):
             if security == "local":
                 raise ValueError("Cannot yet use local security with a internal QueueManager")
 
-            # Create the executor
-            from concurrent.futures import ThreadPoolExecutor
-            self.executor = ThreadPoolExecutor(max_workers=2)
 
             def _build_manager():
                 client = FractalClient(self, username="qcfractal_server")
@@ -333,7 +332,7 @@ class FractalServer:
                                                              verbose=False)
 
             # Build the queue manager, will not run until loop starts
-            self.objects["queue_manager_future"] = self._run_in_thread(_build_manager)
+            self.futures["queue_manager_future"] = self._run_in_thread(_build_manager)
 
     def __repr__(self):
 
@@ -363,7 +362,7 @@ class FractalServer:
             If False, does not start the server periodic updates such as
             Service iterations and Manager heartbeat checking.
         """
-        if "queue_manager_future" in self.objects:
+        if "queue_manager_future" in self.futures:
 
             def start_manager():
                 self._check_manager("manager_build")
@@ -378,13 +377,18 @@ class FractalServer:
             nanny_services.start()
             self.periodic["update_services"] = nanny_services
 
-            # Add Manager heartbeats
+            # Check Manager heartbeats, 5x heartbeat frequency
             heartbeats = tornado.ioloop.PeriodicCallback(self.check_manager_heartbeats,
-                                                         self.heartbeat_frequency * 1000)
+                                                         self.heartbeat_frequency * 1000 * 0.2)
             heartbeats.start()
             self.periodic["heartbeats"] = heartbeats
 
-            server_log = tornado.ioloop.PeriodicCallback(self.update_server_log, self.heartbeat_frequency * 1000)
+            # Log can take some time, update in thread
+            def run_log_update_in_thread():
+                self._run_in_thread(self.update_server_log)
+
+            server_log = tornado.ioloop.PeriodicCallback(run_log_update_in_thread, self.heartbeat_frequency * 1000)
+
             server_log.start()
             self.periodic["server_log"] = server_log
 
@@ -422,8 +426,8 @@ class FractalServer:
             func(*args, **kwargs)
 
         # Shutdown executor and futures
-        if "queue_manager_future" in self.objects:
-            self.objects["queue_manager_future"].cancel()
+        for k, v in self.futures.items():
+            v.cancel()
 
         if self.executor is not None:
             self.executor.shutdown()
@@ -544,17 +548,16 @@ class FractalServer:
         """
         Updates the public information data
         """
-        data = self.storage.get_server_stats_log(limit=1)["data"][0]
+        data = self.storage.get_server_stats_log(limit=1)["data"]
 
-        update = {
-            "counts": {
-                "collection": data["collection_count"],
-                "molecule": data["molecule_count"],
-                "result": data["result_count"],
-                "kvstore": data["kvstore_count"],
-            }
-        }
+        counts = {"collection": 0, "molecule": 0, "result": 0, "kvstore": 0}
+        if len(data):
+            counts["collection"] = data[0].get("collection_count", 0)
+            counts["molecule"] = data[0].get("molecule_count", 0)
+            counts["result"] = data[0].get("result_count", 0)
+            counts["kvstore"] = data[0].get("kvstore_count", 0)
 
+        update = {"counts": counts}
         self.objects["public_information"].update(update)
 
     def check_manager_heartbeats(self) -> None:
