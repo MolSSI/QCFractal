@@ -200,11 +200,11 @@ class KeywordSet(ProtoModel):
 
 class Citation(ProtoModel):
     """ A literature citation.  """
-    _acs_citation: str  # hand-formatted citation in ACS style. In the future, this could be bibtex, rendered to different formats.
-    _bibtex: Optional[Dict[str, str]]  # bibtex blob for later use with bibtex-renderer
-    doi: Optional[str]
-    url: Optional[str]
+    acs_citation: str = None  # hand-formatted citation in ACS style. In the future, this could be bibtex, rendered to different formats.
+    bibtex: Optional[str] = None  # bibtex blob for later use with bibtex-renderer
+    doi: Optional[str] = None
+    url: Optional[str] = None
 
     def to_acs(self) -> str:
         """ Returns an ACS-formatted citation """
-        return self._acs_citation
+        return self.acs_citation
