@@ -377,9 +377,9 @@ class FractalServer:
             nanny_services.start()
             self.periodic["update_services"] = nanny_services
 
-            # Add Manager heartbeats
+            # Check Manager heartbeats, 5x heartbeat frequency
             heartbeats = tornado.ioloop.PeriodicCallback(self.check_manager_heartbeats,
-                                                         self.heartbeat_frequency * 1000)
+                                                         self.heartbeat_frequency * 1000 * 0.2)
             heartbeats.start()
             self.periodic["heartbeats"] = heartbeats
 
