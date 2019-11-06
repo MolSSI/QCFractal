@@ -71,3 +71,21 @@ is installed by looking at the `git` tags and how many commits ahead this versio
 If the version of this commit is the same as a `git` tag, the installed version is the same as the tag, 
 e.g. `qcfractal-0.1.2`, otherwise it will be appended with `+X` where `X` is the number of commits 
 ahead from the last tag, and then `-YYYYYY` where the `Y`'s are replaced with the `git` commit hash.
+
+
+# Alembic Migration
+Alembic migrations form the core of changing the databaes schema. A general guideline is below, but keep in
+mind that there often may be required changes to this procedure. When in doubt, ask QCArchive Slack.
+
+Initialize a server from the previous version:
+ - `git checkout 'prevsion version'`
+ - `qcfractal-server init --base-folder=tmp --db-port=9000`
+
+Play upgrades ontop of this server:
+ - `git checkout `master or feature branch'`
+ - `qcfractal-server upgrade --base-folder=tmp`
+
+Pull alembic command line string and create migration:
+ - `qcfractal-server info --base-folder=tmp alembic | tail -1` revision --autogenerate
+
+This will create a new file in `qcfractal/alembic/versions` which should be reviewed and edited as needed.

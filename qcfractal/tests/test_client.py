@@ -101,14 +101,16 @@ def test_collection_portal(test_server, encoding):
         "something": "else",
         "array": ["12345"],
         "visibility": True,
-        "view_available": False
+        "view_available": False,
+        "group": "default"
     }
 
     client = ptl.FractalClient(test_server)
     client._set_encoding(encoding)
 
     # Test add
-    _ = client.add_collection(db)
+    ret = client.add_collection(db, full_return=True)
+    print(ret)
 
     # Test get
     get_db = client.get_collection(db["collection"], db["name"], full_return=True)
@@ -121,7 +123,6 @@ def test_collection_portal(test_server, encoding):
     get_db.data[0].pop("view_url_hdf5", None)
     get_db.data[0].pop("view_url_plaintext", None)
     get_db.data[0].pop("view_metadata", None)
-    get_db.data[0].pop("group", None)
     get_db.data[0].pop("description", None)
 
     assert db == get_db.data[0]
