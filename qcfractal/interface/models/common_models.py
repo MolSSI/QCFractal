@@ -200,7 +200,8 @@ class KeywordSet(ProtoModel):
 
 class Citation(ProtoModel):
     """ A literature citation.  """
-    acs_citation: str = None  # hand-formatted citation in ACS style. In the future, this could be bibtex, rendered to different formats.
+    acs_citation: Optional[
+        str] = None  # hand-formatted citation in ACS style. In the future, this could be bibtex, rendered to different formats.
     bibtex: Optional[str] = None  # bibtex blob for later use with bibtex-renderer
     doi: Optional[str] = None
     url: Optional[str] = None
