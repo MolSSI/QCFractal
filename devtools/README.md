@@ -87,3 +87,5 @@ Play upgrades ontop of this server:
 
 Pull alembic command line string and create migration:
  - `qcfractal-server info --base-folder=tmp alembic | tail -1` revision --autogenerate
+
+This will create a new file in `qcfractal/alembic/versions` which should be reviewed and edited as needed.
