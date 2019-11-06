@@ -37,6 +37,8 @@ def migrate_contributed_values_data():
 
     for ds in ds_ids_data:
         (ds_id, ds_contrib) = ds
+        if ds_contrib is None:
+            continue
 
         for key, dict_values in ds_contrib.items():
 
@@ -67,17 +69,20 @@ def upgrade():
         sa.Column('name', sa.String(), nullable=False),
         sa.Column('collection_id', sa.Integer(), nullable=False),
         sa.Column('citations', sa.JSON(), nullable=True),
-        sa.Column('theory_level', sa.JSON(), nullable=True),
+        sa.Column('theory_level', sa.JSON(), nullable=False),
         sa.Column('theory_level_details', sa.JSON(), nullable=True),
         sa.Column('comments', sa.String(), nullable=True),
-        sa.Column('values', MsgpackExt(), nullable=True),
-        sa.Column('index', MsgpackExt(), nullable=True),
+        sa.Column('values', MsgpackExt(), nullable=False),
+        sa.Column('index', MsgpackExt(), nullable=False),
         sa.Column('external_url', sa.String(), nullable=True),
         sa.Column('doi', sa.String(), nullable=True),
-        sa.Column('units', sa.String(), nullable=True),
+        sa.Column('units', sa.String(), nullable=False),
+        sa.Column('values_structure', sa.JSON(), nullable=True, default=lambda: {}),
         sa.ForeignKeyConstraint(['collection_id'], ['collection.id'], ondelete='cascade'),
         sa.PrimaryKeyConstraint('name', 'collection_id')
     )
+
+    op.alter_column('contributed_values', 'values_structure', server_default=None, nullable=False)
 
     migrate_contributed_values_data()
 
