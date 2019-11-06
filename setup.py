@@ -23,32 +23,35 @@ if __name__ == "__main__":
         cmdclass=versioneer.get_cmdclass(),
         packages=setuptools.find_packages(),
         install_requires=[
-            # Base requires
+            # Core dependencies
+            'numpy',
+            'msgpack-python >=0.6.1',
+            'tornado',
+            'requests',
+            'pyyaml >=5.1',
+            'pydantic >=1.0.0',
+
+            # Security dependencies
             'bcrypt',
             'cryptography',
-            'numpy>=1.7',
-            'msgpack>=0.6.1',
-            'pandas',
-            'pydantic>=1.0.0',
-            'msgpack>=0.6.1',
-            'pyyaml>=5.1',
-            'requests',
-            'tornado',
-            'tqdm',
-            'h5py',
-            'pyarrow>=0.13.0',
 
-            # Database
-            'sqlalchemy>=1.3',
-            'psycopg2>=2.7',
+            # Storage dependencies
+            'sqlalchemy >=1.3',
             'alembic',
+            'psycopg2 >=2.7',
+            'postgresql',
+
+            # QCPortal dependencies
+            'tqdm',
+            'plotly >=4.0.0',
+            'pandas',
+            'h5py',
+            'pyarrow >=0.13.0',
+            'double-conversion >=3.0.0',
 
             # QCArchive depends
             'qcengine>=0.11.0',
-            'qcelemental>=0.9.0',
-
-            # Testing
-            'pytest',
+            'qcelemental>=0.11.0',
         ],
         entry_points={
             "console_scripts": [
