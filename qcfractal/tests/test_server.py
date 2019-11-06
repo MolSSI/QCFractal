@@ -36,6 +36,7 @@ def test_storage_socket(test_server):
         "array": ["54321"],
         "visibility": True,
         "view_available": False,
+        "group": "default",
     }
     # Cast collection type to lower since the server-side does it anyways
     storage['collection'] = storage['collection'].lower()
@@ -67,7 +68,6 @@ def test_storage_socket(test_server):
     pdata["data"][0].pop("view_url_hdf5", None)
     pdata["data"][0].pop("view_url_plaintext", None)
     pdata["data"][0].pop("view_metadata", None)
-    pdata["data"][0].pop("group", None)
     pdata["data"][0].pop("description", None)
 
     assert pdata["data"][0] == storage

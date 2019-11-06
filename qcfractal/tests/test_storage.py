@@ -219,7 +219,8 @@ def test_collections_add(storage_socket):
         "something": "else",
         "array": ["54321"],
         "visibility": True,
-        "view_available": False
+        "view_available": False,
+        "group": "default",
     }
 
     ret = storage_socket.add_collection(db)
@@ -239,6 +240,7 @@ def test_collections_add(storage_socket):
     # assert len(ret["meta"]["missing"]) == 1
     assert ret["meta"]["n_found"] == 0
 
+
 def test_collections_overwrite(storage_socket):
 
     collection = 'TorsionDriveRecord'
@@ -249,7 +251,8 @@ def test_collections_overwrite(storage_socket):
         "something": "else",
         "array": ["54321"],
         "visibility": True,
-        "view_available": False
+        "view_available": False,
+        "group": "default",
     }
 
     ret = storage_socket.add_collection(db)
@@ -264,6 +267,7 @@ def test_collections_overwrite(storage_socket):
         # "id": ret["data"][0]["id"],
         "collection": "TorsionDriveRecord",  # no need to include
         "name": "Torsion123",  # no need to include
+        "group": "default",
         "something": "New",
         "something2": "else",
         "view_available": True,
@@ -290,6 +294,7 @@ def test_collections_overwrite(storage_socket):
     ret = storage_socket.del_collection(collection, name)
     assert ret == 1
 
+
 def test_dataset_add_delete_cascade(storage_socket):
 
     collection = 'dataset'
@@ -311,6 +316,8 @@ def test_dataset_add_delete_cascade(storage_socket):
         True,
         "view_available":
         False,
+        "group":
+        "default",
         "records": [{
             "name": "He1",
             "molecule_id": mol_insert["data"][0],
@@ -328,13 +335,15 @@ def test_dataset_add_delete_cascade(storage_socket):
                 "theory_level": 'PBE0',
                 "units": 'kcal/mol',
                 "values": [5, 10],
-                "index": ["He2", "He1"]
+                "index": ["He2", "He1"],
+                "values_structure": {},
             }
         }
     }
 
     ret = storage_socket.add_collection(db.copy())
-    assert ret["meta"]["n_inserted"] == 1
+    print(ret["meta"]["error_description"])
+    assert ret["meta"]["n_inserted"] == 1, ret["meta"]["error_description"]
 
     ret = storage_socket.get_collections(collection=collection, name=name)
     assert ret["meta"]["success"] is True
@@ -349,14 +358,16 @@ def test_dataset_add_delete_cascade(storage_socket):
             "theory_level": 'PBE0 FHI-AIMS',
             "units": 'kcal/mol',
             "values": np.array([5, 10], dtype=np.int16),
-            "index": ["He2", "He1"]
+            "index": ["He2", "He1"],
+            "values_structure": {},
         },
         'contrib2': {
             "name": 'contrib2',
             "theory_level": 'PBE0 FHI-AIMS tight',
             "units": 'kcal/mol',
             "values": [np.random.rand(2, 3), np.random.rand(2, 3)],
-            "index": ["He2", "He1"]
+            "index": ["He2", "He1"],
+            "values_structure": {},
         }
     }
 
@@ -380,7 +391,6 @@ def test_dataset_add_delete_cascade(storage_socket):
     assert ret["meta"]["success"] is True
     assert len(ret['data'][0]['contributed_values'].keys()) == 2
     assert len(ret['data'][0]['records']) == 0
-
 
     # cleanup
     # Can't delete molecule when datasets refernece it (no cascade)
@@ -1301,12 +1311,27 @@ def test_collections_include_exclude(storage_socket):
     mol_insert = storage_socket.add_molecules([water, water2])
 
     db = {
-        "collection": collection,
-        "name": name,
-        "visibility": True,
-        "view_available": False,
-        "records": [{"name": "He1", "molecule_id": mol_insert["data"][0], "comment": None, "local_results": {}},
-                    {"name": "He2", "molecule_id": mol_insert["data"][1], "comment": None, "local_results": {}}]
+        "collection":
+        collection,
+        "name":
+        name,
+        "visibility":
+        True,
+        "view_available":
+        False,
+        "group":
+        "default",
+        "records": [{
+            "name": "He1",
+            "molecule_id": mol_insert["data"][0],
+            "comment": None,
+            "local_results": {}
+        }, {
+            "name": "He2",
+            "molecule_id": mol_insert["data"][1],
+            "comment": None,
+            "local_results": {}
+        }]
     }
 
     db2 = {
@@ -1314,7 +1339,8 @@ def test_collections_include_exclude(storage_socket):
         "name": name2,
         "visibility": True,
         "view_available": False,
-        "records": []
+        "records": [],
+        "group": "default"
     }
 
     ret = storage_socket.add_collection(db)
