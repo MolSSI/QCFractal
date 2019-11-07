@@ -11,11 +11,10 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 import numpy as np
 import pandas as pd
 import requests
-from tqdm import tqdm
-
 from pydantic import Field, validator
 from qcelemental import constants
 from qcelemental.models.types import Array
+from tqdm import tqdm
 
 from ..models import Citation, ComputeResponse, ObjectId, ProtoModel
 from ..statistics import wrap_statistics
@@ -39,12 +38,15 @@ class MoleculeEntry(ProtoModel):
 class ContributedValues(ProtoModel):
     name: str = Field(..., description="The name of the contributed values.")
     values: Any = Field(..., description="The values in the contributed values.")
-    index: Array[str] = Field(..., description="The entry index for the contributed values, matches the order of the `values` array.")
-    values_structure: Dict[str, Any] = Field({}, description="A machine readable description of the values structure. Typically not needed.")
+    index: Array[str] = Field(
+        ..., description="The entry index for the contributed values, matches the order of the `values` array.")
+    values_structure: Dict[str, Any] = Field(
+        {}, description="A machine readable description of the values structure. Typically not needed.")
 
     theory_level: Union[str, Dict[str, str]] = Field(..., description="A string representation of the theory level.")
     units: str = Field(..., description="The units of the values, can be any valid QCElemental unit.")
-    theory_level_details: Optional[Union[str, Dict[str, Optional[str]]]] = Field(None, description="A detailed reprsentation of the theory level.")
+    theory_level_details: Optional[Union[str, Dict[str, Optional[str]]]] = Field(
+        None, description="A detailed reprsentation of the theory level.")
 
     citations: Optional[List[Citation]] = Field(None, description="Citations associated with the contributed values.")
     external_url: Optional[str] = Field(None, description="An external URL to the raw contributed values data.")
@@ -58,6 +60,7 @@ class ContributedValues(ProtoModel):
             v = np.array(v)
 
         return v
+
 
 class Dataset(Collection):
     """
@@ -1171,8 +1174,19 @@ class Dataset(Collection):
 
     @units.setter
     def units(self, value):
-
-        self.df *= constants.conversion_factor(self._units, value)
+        for column in self.df.columns:
+            try:
+                self.df[column] *= constants.conversion_factor(self._column_metadata[column]["units"], value)
+                if self._column_metadata[column]["units"] != self._units:
+                    warnings.warn(f"Data column '{column}' did not have the same units as the dataset. "
+                                  f"This has been corrected.")
+                self._column_metadata[column]["units"] = value
+            except ValueError as e:
+                # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
+                if e.__class__.__name__ == "DimensionalityError":
+                    pass
+                else:
+                    raise
         self._units = value
 
     def set_default_program(self, program: str) -> bool:

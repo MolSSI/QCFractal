@@ -439,6 +439,17 @@ def test_dataset_contributed_units(contributed_dataset_fixture):
     assert qcel.constants.ureg(
         ds._column_metadata[ds.get_values(name="Fake Dipole").columns[0]]["units"]) == qcel.constants.ureg("e * bohr")
 
+    old_units = ds.units
+    assert old_units == "kcal / mol"
+    ds.units = "kcal/mol"
+    before = ds.get_values()
+    ds.units = "hartree"
+    after = ds.get_values()
+    assert before["Fake Energy"][0] == after["Fake Energy"][0] / qcel.constants.conversion_factor(
+        "kcal/mol", "hartree")
+    assert before["Fake Gradient"][0][0, 0] == after["Fake Gradient"][0][0, 0]
+    ds.units = old_units
+
 
 def test_dataset_contributed_mixed_values(contributed_dataset_fixture):
     _, ds = contributed_dataset_fixture
@@ -531,6 +542,7 @@ def test_reactiondataset_check_state(fractal_compute_server):
 def test_contributed_dataset_values_subset(contributed_dataset_fixture, use_cache):
     client, ds = contributed_dataset_fixture
 
+    ds._clear_cache()
     allvals = ds.get_values()
     ds._clear_cache()
 
@@ -1061,6 +1073,7 @@ def test_s22_view_identical(s22_fixture):
     assert_view_identical(ds)
 
 
+@pytest.mark.slow
 def test_view_download_remote(s22_fixture):
     client, ds = s22_fixture
 
@@ -1118,11 +1131,13 @@ def test_contributed_dataset_plaintextview_write(contributed_dataset_fixture, tm
     ds.to_file(tmpdir / "test.tar.gz", "plaintext")
 
 
+@pytest.mark.slow
 def test_s22_dataset_plaintextview_write(s22_fixture, tmpdir):
     _, ds = s22_fixture
     ds.to_file(tmpdir / "test.tar.gz", "plaintext")
 
 
+@pytest.mark.slow
 def test_qm3_dataset_plaintextview_write(qm3_fixture, tmpdir):
     _, ds = qm3_fixture
     ds.to_file(tmpdir / "test.tar.gz", "plaintext")
