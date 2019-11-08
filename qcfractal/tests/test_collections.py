@@ -8,11 +8,11 @@ from typing import List
 
 import numpy as np
 import pytest
+
 import qcelemental as qcel
+import qcfractal.interface as ptl
 from qcelemental.models import Molecule, ProtoModel
 from qcengine.testing import is_program_new_enough
-
-import qcfractal.interface as ptl
 from qcfractal import testing
 from qcfractal.testing import df_compare, fractal_compute_server, live_fractal_or_skip
 
@@ -40,7 +40,7 @@ def handle_dataset_fixture_params(client, ds_type, ds, fractal_compute_server, r
         except ImportError:
             pytest.skip("Missing request_mock")
         with requests_mock.Mocker(real_http=True) as m:
-            with open(fractal_compute_server.view_handler.view_path(ds.data.id), 'rb') as f:
+            with open(fractal_compute_server.view_handler.view_path(ds.data.id), "rb") as f:
                 m.get(ds.data.view_url_hdf5, body=f)
                 ds.download(verify=True)
     elif request.param == "remote_view":
@@ -70,11 +70,9 @@ def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
         testing.check_has_module("psi4")
 
         # Build a dataset
-        ds = ptl.collections.Dataset("ds_gradient",
-                                     client,
-                                     default_program="psi4",
-                                     default_driver="gradient",
-                                     default_units="hartree/bohr")
+        ds = ptl.collections.Dataset(
+            "ds_gradient", client, default_program="psi4", default_driver="gradient", default_units="hartree/bohr"
+        )
 
         ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
         ds.add_entry("He2", ptl.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"))
@@ -85,17 +83,15 @@ def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
             "theory_level": "pseudo-random values",
             "values": [[0.03, 0, 0.02, -0.02, 0, -0.03], [0.03, 0, 0.02, -0.02, 0, -0.03]],
             "index": ["He1", "He2"],
-            "theory_level_details": {
-                "driver": "gradient"
-            },
-            "units": "hartree/bohr"
+            "theory_level_details": {"driver": "gradient"},
+            "units": "hartree/bohr",
         }
         contrib_no_details = {
             "name": "no details",
             "theory_level": "pseudo-random values",
             "values": [[0.03, 0, 0.02, -0.02, 0, -0.03], [0.03, 0, 0.02, -0.02, 0, -0.03]],
             "index": ["He1", "He2"],
-            "units": "hartree/bohr"
+            "units": "hartree/bohr",
         }
         contrib_all_details = {
             "name": "all details",
@@ -107,9 +103,9 @@ def gradient_dataset_fixture(fractal_compute_server, tmp_path_factory, request):
                 "program": "fake_program",
                 "basis": "fake_basis",
                 "method": "fake_method",
-                "keywords": "fake_keywords"
+                "keywords": "fake_keywords",
             },
-            "units": "hartree/bohr"
+            "units": "hartree/bohr",
         }
         ds.add_contributed_values(contrib)
         ds.add_contributed_values(contrib_all_details)
@@ -197,16 +193,16 @@ def test_gradient_dataset_get_values(gradient_dataset_fixture):
 
     with check_requests_monitor(client, "result", request_made=request_made):
         cols = set(ds.get_values().columns)
-    names = set(ds.list_values().reset_index()['name'])
+    names = set(ds.list_values().reset_index()["name"])
     assert cols == names
 
     df = ds.get_values()
     assert df.shape == (len(ds.get_index()), 5)
     for entry in ds.get_index():
-        assert (df.loc[entry, "HF/sto-3g"] == ds.get_records(subset=entry,
-                                                             method="hf",
-                                                             basis="sto-3g",
-                                                             include=['return_result'])).all()
+        assert (
+            df.loc[entry, "HF/sto-3g"]
+            == ds.get_records(subset=entry, method="hf", basis="sto-3g", include=["return_result"])
+        ).all()
 
     assert ds.get_values(method="NotInDataset").shape[1] == 0  # 0-length DFs can cause exceptions
 
@@ -222,22 +218,22 @@ def test_gradient_dataset_list_values(gradient_dataset_fixture):
 
     assert df.shape == (3, 7)
     assert set(df.columns) == {*ds.data.history_keys, "name", "native"}
-    assert {x.lower() for x in df['name']} == set(ds.data.contributed_values.keys())
+    assert {x.lower() for x in df["name"]} == set(ds.data.contributed_values.keys())
 
     df = ds.list_values(driver="graDieNt", native=False).reset_index()
-    assert {x.lower() for x in df['name']} == {"gradient", "all details"}
+    assert {x.lower() for x in df["name"]} == {"gradient", "all details"}
 
     names = ["GrAdIeNt", "no details"]
     df = ds.list_values(name=names, native=False).reset_index()
-    assert {x.lower() for x in df['name']} == {name.lower() for name in names}
+    assert {x.lower() for x in df["name"]} == {name.lower() for name in names}
 
     # List native values
     df1 = ds.list_values(native=True).reset_index()
     assert df1.shape == (2, 7)
     assert set(df1.columns) == {*ds.data.history_keys, "name", "native"}
 
-    df2 = ds.list_values(method='hf', basis='sto-3g', native=True).reset_index()
-    df3 = ds.list_values(name='hf/sto-3g', native=True).reset_index()
+    df2 = ds.list_values(method="hf", basis="sto-3g", native=True).reset_index()
+    df3 = ds.list_values(name="hf/sto-3g", native=True).reset_index()
     assert (df2 == df3).all().all()
 
     # All values
@@ -261,11 +257,11 @@ def test_gradient_dataset_statistics(gradient_dataset_fixture):
 
     # Test out some statistics
     stats = ds.statistics("MUE", "HF/sto-3g", "Gradient")
-    assert pytest.approx(stats.mean(), 1.e-5) == 0.00984176986312362
+    assert pytest.approx(stats.mean(), 1.0e-5) == 0.00984176986312362
 
     stats = ds.statistics("UE", "HF/sto-3g", "Gradient")
-    assert pytest.approx(stats.loc["He1"].mean(), 1.e-5) == 0.01635020639
-    assert pytest.approx(stats.loc["He2"].mean(), 1.e-5) == 0.00333333333
+    assert pytest.approx(stats.loc["He1"].mean(), 1.0e-5) == 0.01635020639
+    assert pytest.approx(stats.loc["He2"].mean(), 1.0e-5) == 0.00333333333
 
 
 def test_gradient_dataset_get_values_caching(gradient_dataset_fixture):
@@ -282,35 +278,35 @@ def test_gradient_dataset_get_values_caching(gradient_dataset_fixture):
     ds._clear_cache()
 
     with check_requests_monitor(client, "result", request_made=True and not ds._use_view(False)):
-        ds.get_values(basis='sto-3g')
+        ds.get_values(basis="sto-3g")
 
     with check_requests_monitor(client, "result", request_made=False):
-        ds.get_values(basis='sto-3g', subset=['He1'])
-        ds.get_values(basis='sto-3g', subset='He2')
-        ds.get_values(basis='sto-3g', subset=['He1', 'He2'])
+        ds.get_values(basis="sto-3g", subset=["He1"])
+        ds.get_values(basis="sto-3g", subset="He2")
+        ds.get_values(basis="sto-3g", subset=["He1", "He2"])
 
     with check_requests_monitor(client, "result", request_made=True and not ds._use_view(False)):
-        ds.get_values(basis='3-21g', subset='He1')
+        ds.get_values(basis="3-21g", subset="He1")
 
     with check_requests_monitor(client, "result", request_made=True and not ds._use_view(False)):
-        ds.get_values(basis='3-21g', subset=['He1', 'He2'])
+        ds.get_values(basis="3-21g", subset=["He1", "He2"])
 
     with check_requests_monitor(client, "result", request_made=False):
-        ds.get_values(basis='3-21g', subset='He2')
+        ds.get_values(basis="3-21g", subset="He2")
 
     with check_requests_monitor(client, "result", request_made=False):
         ds.get_values()
 
 
-@pytest.mark.parametrize('use_cache', [True, False])
+@pytest.mark.parametrize("use_cache", [True, False])
 def test_gradient_dataset_values_subset(gradient_dataset_fixture, use_cache):
     client, ds = gradient_dataset_fixture
 
     allvals = ds.get_values()
     ds._clear_cache()
 
-    subsets = [None, 'He1', ['He2'], ['He1', 'He2'], ['He1', 'He2', 'He1', 'He1']]
-    colnames = [None, 'HF/3-21g', ['HF/3-21g', 'HF/sto-3g'], 'no details', ['HF/sto-3g', 'no details']]
+    subsets = [None, "He1", ["He2"], ["He1", "He2"], ["He1", "He2", "He1", "He1"]]
+    colnames = [None, "HF/3-21g", ["HF/3-21g", "HF/sto-3g"], "no details", ["HF/sto-3g", "no details"]]
     for subset, colname in itertools.product(subsets, colnames):
         if not use_cache:
             ds._clear_cache()
@@ -353,13 +349,12 @@ def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, reques
                 "basis": "fake_basis",
                 "method": "fake_method",
             },
-            "units": "hartree"
+            "units": "hartree",
         }
         gradient = {
             "name": "Fake Gradient",
             "theory_level": "pseudo-random values",
-            "values": [np.array([0.03, 0, 0.02, -0.02, 0, -0.03]),
-                       np.array([0.03, 0, 0.02])],
+            "values": [np.array([0.03, 0, 0.02, -0.02, 0, -0.03]), np.array([0.03, 0, 0.02])],
             "index": ["He1", "He"],
             "theory_level_details": {
                 "driver": "gradient",
@@ -367,7 +362,7 @@ def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, reques
                 "basis": "fake_basis",
                 "method": "fake_method",
             },
-            "units": "hartree/bohr"
+            "units": "hartree/bohr",
         }
         hessian = {
             "name": "Fake Hessian",
@@ -380,12 +375,12 @@ def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, reques
                 "basis": "fake_basis",
                 "method": "fake_method",
             },
-            "units": "hartree/bohr**2"
+            "units": "hartree/bohr**2",
         }
         dipole = {
             "name": "Fake Dipole",
             "theory_level": "pseudo-random values",
-            "values": [np.array([1., 2., 3.]), np.array([1., -2., 0.])],
+            "values": [np.array([1.0, 2.0, 3.0]), np.array([1.0, -2.0, 0.0])],
             "index": ["He1", "He"],
             "theory_level_details": {
                 "driver": "dipole",
@@ -393,20 +388,20 @@ def contributed_dataset_fixture(fractal_compute_server, tmp_path_factory, reques
                 "basis": "fake_basis",
                 "method": "fake_method",
             },
-            "units": "e * bohr"
+            "units": "e * bohr",
         }
         energy_FF = {
             "name": "Fake FF Energy",
             "theory_level": "some force field",
-            "values": [0.5, 42.],
+            "values": [0.5, 42.0],
             "index": ["He1", "He"],
             "theory_level_details": {
                 "driver": "energy",
                 "program": "fake_program",
                 "basis": None,
-                "method": "fake_method"
+                "method": "fake_method",
             },
-            "units": "hartree"
+            "units": "hartree",
         }
 
         ds.add_contributed_values(energy)
@@ -431,13 +426,17 @@ def test_dataset_contributed_units(contributed_dataset_fixture):
     _, ds = contributed_dataset_fixture
 
     assert qcel.constants.ureg(
-        ds._column_metadata[ds.get_values(name="Fake Energy").columns[0]]["units"]) == qcel.constants.ureg(ds.units)
-    assert qcel.constants.ureg(ds._column_metadata[ds.get_values(
-        name="Fake Gradient").columns[0]]["units"]) == qcel.constants.ureg("hartree/bohr")
-    assert qcel.constants.ureg(ds._column_metadata[ds.get_values(
-        name="Fake Hessian").columns[0]]["units"]) == qcel.constants.ureg("hartree/bohr**2")
+        ds._column_metadata[ds.get_values(name="Fake Energy").columns[0]]["units"]
+    ) == qcel.constants.ureg(ds.units)
     assert qcel.constants.ureg(
-        ds._column_metadata[ds.get_values(name="Fake Dipole").columns[0]]["units"]) == qcel.constants.ureg("e * bohr")
+        ds._column_metadata[ds.get_values(name="Fake Gradient").columns[0]]["units"]
+    ) == qcel.constants.ureg("hartree/bohr")
+    assert qcel.constants.ureg(
+        ds._column_metadata[ds.get_values(name="Fake Hessian").columns[0]]["units"]
+    ) == qcel.constants.ureg("hartree/bohr**2")
+    assert qcel.constants.ureg(
+        ds._column_metadata[ds.get_values(name="Fake Dipole").columns[0]]["units"]
+    ) == qcel.constants.ureg("e * bohr")
 
     old_units = ds.units
     assert old_units == "kcal / mol"
@@ -445,8 +444,7 @@ def test_dataset_contributed_units(contributed_dataset_fixture):
     before = ds.get_values()
     ds.units = "hartree"
     after = ds.get_values()
-    assert before["Fake Energy"][0] == after["Fake Energy"][0] / qcel.constants.conversion_factor(
-        "kcal/mol", "hartree")
+    assert before["Fake Energy"][0] == after["Fake Energy"][0] / qcel.constants.conversion_factor("kcal/mol", "hartree")
     assert before["Fake Gradient"][0][0, 0] == after["Fake Gradient"][0][0, 0]
     ds.units = old_units
 
@@ -456,7 +454,7 @@ def test_dataset_contributed_mixed_values(contributed_dataset_fixture):
 
     unselected_values = ds.get_values()
     assert unselected_values.shape == (2, 5)
-    selected_values = ds.get_values(program='fake_program')
+    selected_values = ds.get_values(program="fake_program")
     assert selected_values.shape == (2, 5)
     selected_values = ds.get_values(basis="None")
     assert selected_values.shape == (2, 1)
@@ -468,11 +466,7 @@ def test_dataset_compute_response(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
 
     # Build a dataset
-    ds = ptl.collections.Dataset("ds",
-                                 client,
-                                 default_program="psi4",
-                                 default_driver="energy",
-                                 default_units="hartree")
+    ds = ptl.collections.Dataset("ds", client, default_program="psi4", default_driver="energy", default_units="hartree")
 
     ds.add_entry("He1", ptl.Molecule.from_data("He -1 0 0\n--\nHe 0 0 1"))
     ds.add_entry("He2", ptl.Molecule.from_data("He -1.1 0 0\n--\nHe 0 0 1.1"))
@@ -515,7 +509,7 @@ def test_reactiondataset_check_state(fractal_compute_server):
         "theory_level": "very high",
         "values": [-0.00001098794749, 0.0009608501557],
         "index": ["He2", "He1"],
-        "units": "hartree"
+        "units": "hartree",
     }
     # No entry for He2 in the dataset
     with pytest.raises(ValueError):
@@ -538,7 +532,7 @@ def test_reactiondataset_check_state(fractal_compute_server):
     assert bench.loc["He2"][0] == contrib["values"][0]
 
 
-@pytest.mark.parametrize('use_cache', [True, False])
+@pytest.mark.parametrize("use_cache", [True, False])
 def test_contributed_dataset_values_subset(contributed_dataset_fixture, use_cache):
     client, ds = contributed_dataset_fixture
 
@@ -546,8 +540,8 @@ def test_contributed_dataset_values_subset(contributed_dataset_fixture, use_cach
     allvals = ds.get_values()
     ds._clear_cache()
 
-    subsets = [None, 'He1', ['He'], ['He', 'He1']]
-    colnames = [None, 'Fake Energy', ['Fake Hessian', 'Fake Dipole', 'Fake Energy']]
+    subsets = [None, "He1", ["He"], ["He", "He1"]]
+    colnames = [None, "Fake Energy", ["Fake Hessian", "Fake Dipole", "Fake Energy"]]
     for subset, colname in itertools.product(subsets, colnames):
         if not use_cache:
             ds._clear_cache()
@@ -635,9 +629,9 @@ def test_reactiondataset_dftd3_energies(reactiondataset_dftd3_fixture_fixture):
     ds._clear_cache()
 
     bench = {
-        "B3LYP/6-31g": pytest.approx(-0.002135, 1.e-3),
-        "B3LYP-D3/6-31g": pytest.approx(-0.005818, 1.e-3),
-        "B3LYP-D3(BJ)/6-31g": pytest.approx(-0.005636, 1.e-3)
+        "B3LYP/6-31g": pytest.approx(-0.002135, 1.0e-3),
+        "B3LYP-D3/6-31g": pytest.approx(-0.005818, 1.0e-3),
+        "B3LYP-D3(BJ)/6-31g": pytest.approx(-0.005636, 1.0e-3),
     }
 
     with check_requests_monitor(client, "result", request_made=request_made):
@@ -665,12 +659,12 @@ def test_reactiondataset_dftd3_molecules(reactiondataset_dftd3_fixture_fixture):
         mols = ds.get_molecules()
     assert mols.shape == (1, 1)
     assert np.all(mols.iloc[0, 0].real)  # Should be all real
-    assert tuple(mols.index) == (("HeDimer", "default", 0), )
+    assert tuple(mols.index) == (("HeDimer", "default", 0),)
 
     mols = ds.get_molecules(stoich="cp1")
     assert mols.shape == (1, 1)
     assert not np.all(mols.iloc[0, 0].real)  # Should be half real
-    assert tuple(mols.index) == (("HeDimer", "cp1", 0), )
+    assert tuple(mols.index) == (("HeDimer", "cp1", 0),)
 
     stoichs = ["cp1", "default1", "cp", "default"]
     mols = ds.get_molecules(stoich=stoichs)
@@ -699,15 +693,15 @@ def test_rectiondataset_dftd3_values_caching(reactiondataset_dftd3_fixture_fixtu
         ds.get_values("B3LYP", "6-31G", subset=["HeDimer"])
 
 
-@pytest.mark.parametrize('use_cache', [True, False])
+@pytest.mark.parametrize("use_cache", [True, False])
 def test_reactiondataset_dftd3_values_subset(reactiondataset_dftd3_fixture_fixture, use_cache):
     client, ds = reactiondataset_dftd3_fixture_fixture
 
     allvals = ds.get_values()
     ds._clear_cache()
 
-    subsets = [None, 'HeDimer', ['HeDimer'], ['HeDimer', 'HeDimer']]
-    colnames = [None, 'B3LYP/6-31g', ['B3LYP-D3/6-31g', 'B3LYP-D3(BJ)/6-31g'], ['B3LYP/6-31g']]
+    subsets = [None, "HeDimer", ["HeDimer"], ["HeDimer", "HeDimer"]]
+    colnames = [None, "B3LYP/6-31g", ["B3LYP-D3/6-31g", "B3LYP-D3(BJ)/6-31g"], ["B3LYP/6-31g"]]
     for subset, colname in itertools.product(subsets, colnames):
         if not use_cache:
             ds._clear_cache()
@@ -730,7 +724,7 @@ def test_dataset_dftd3(reactiondataset_dftd3_fixture_fixture):
         ds_name = "He_DFTD3"
         ds = ptl.collections.Dataset(ds_name, client)
 
-        HeDimer = rxn_ds.get_molecules(subset='HeDimer').iloc[0, 0]
+        HeDimer = rxn_ds.get_molecules(subset="HeDimer").iloc[0, 0]
         ds.add_entry("HeDimer", HeDimer)
         ds.set_default_program(rxn_ds.data.default_program)
         ds.add_keywords("scf_default", rxn_ds.data.default_program, ptl.models.KeywordSet(values={}), default=True)
@@ -784,7 +778,7 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
         "theory_level": "very high",
         "values": [0.0009608501557, -0.00001098794749],
         "index": ["He1", "He2"],
-        "units": "hartree"
+        "units": "hartree",
     }
     ds.add_contributed_values(contrib)
     ds.set_default_benchmark("Benchmark")
@@ -804,21 +798,21 @@ def test_compute_reactiondataset_regression(fractal_compute_server):
     # Query computed results
     ret = ds.get_values("SCF", "STO-3G")
     assert ret.shape == (2, 1)
-    assert pytest.approx(0.6024530476, 1.e-5) == ret.loc["He1", "SCF/sto-3g"]
-    assert pytest.approx(-0.0068950359, 1.e-5) == ret.loc["He2", "SCF/sto-3g"]
+    assert pytest.approx(0.6024530476, 1.0e-5) == ret.loc["He1", "SCF/sto-3g"]
+    assert pytest.approx(-0.0068950359, 1.0e-5) == ret.loc["He2", "SCF/sto-3g"]
 
     # Check results
-    assert pytest.approx(0.00024477933196125805, 1.e-5) == ds.statistics("MUE", "SCF/sto-3g")
+    assert pytest.approx(0.00024477933196125805, 1.0e-5) == ds.statistics("MUE", "SCF/sto-3g")
 
-    assert pytest.approx([0.081193, 7.9533e-05], 1.e-1) == list(ds.statistics("URE", "SCF/sto-3g"))
-    assert pytest.approx(0.0406367, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g")
-    assert pytest.approx(0.002447793, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g", floor=10)
+    assert pytest.approx([0.081193, 7.9533e-05], 1.0e-1) == list(ds.statistics("URE", "SCF/sto-3g"))
+    assert pytest.approx(0.0406367, 1.0e-5) == ds.statistics("MURE", "SCF/sto-3g")
+    assert pytest.approx(0.002447793, 1.0e-5) == ds.statistics("MURE", "SCF/sto-3g", floor=10)
 
     assert isinstance(ds.to_json(), dict)
     assert ds.list_records(keywords=None).shape[0] == 1
 
     ds.units = "eV"
-    assert pytest.approx(0.00010614635, 1.e-5) == ds.statistics("MURE", "SCF/sto-3g", floor=10)
+    assert pytest.approx(0.00010614635, 1.0e-5) == ds.statistics("MURE", "SCF/sto-3g", floor=10)
 
     # Check get_molecules
     mols = ds.get_molecules()
@@ -850,12 +844,12 @@ def test_compute_reactiondataset_keywords(fractal_compute_server):
     r = ds.compute("SCF", "STO-3G")
     fractal_compute_server.await_results()
     ret = ds.get_values("SCF", "STO-3G")
-    assert pytest.approx(0.39323818102293856, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g"]
+    assert pytest.approx(0.39323818102293856, 1.0e-5) == ds.df.loc["He2", "SCF/sto-3g"]
 
     r = ds.compute("SCF", "sto-3g", keywords="df")
     fractal_compute_server.await_results()
     ds.get_values("SCF", "sto-3g", keywords="df").columns[0] == "SCF/sto-3g-df"
-    assert pytest.approx(0.38748602675524185, 1.e-5) == ds.df.loc["He2", "SCF/sto-3g-df"]
+    assert pytest.approx(0.38748602675524185, 1.0e-5) == ds.df.loc["He2", "SCF/sto-3g-df"]
 
     assert ds.list_records().shape[0] == 2
     assert ds.list_records(keywords="DF").shape[0] == 1
@@ -879,7 +873,7 @@ def qm3_fixture(request, tmp_path_factory):
     ds._disable_query_limit = True
 
     # Trim down dataset for faster test
-    to_remove = {row for row in ds.data.history if row[2].lower() not in {'b3lyp', 'pbe'}}
+    to_remove = {row for row in ds.data.history if row[2].lower() not in {"b3lyp", "pbe"}}
     for row in to_remove:
         ds.data.history.remove(row)
     ds.get_entries(force=True)
@@ -924,14 +918,14 @@ def test_qm3_list_select(qm3_fixture):
     """ tests list_values and get_values with multiple selections on the method and basis field """
     client, ds = qm3_fixture
 
-    methods = {'b3lyp', 'pbe'}
-    bases = {'def2-svp', 'def2-tzvp'}
+    methods = {"b3lyp", "pbe"}
+    bases = {"def2-svp", "def2-tzvp"}
     names = {f"{method}/{basis}" for (method, basis) in itertools.product(methods, bases)}
 
-    df = ds.list_values(method=['b3lyp', 'pbe'], basis=['def2-svp', 'def2-tzvp']).reset_index()
+    df = ds.list_values(method=["b3lyp", "pbe"], basis=["def2-svp", "def2-tzvp"]).reset_index()
     assert names == set(df["name"].str.lower())
 
-    df = ds.get_values(method=['b3lyp', 'pbe'], basis=['def2-svp', 'def2-tzvp'])
+    df = ds.get_values(method=["b3lyp", "pbe"], basis=["def2-svp", "def2-tzvp"])
     assert names == set(df.columns.str.lower())
 
     df = ds.list_values(name=list(names)).reset_index()
@@ -946,14 +940,14 @@ def test_s22_list_select(s22_fixture):
     """ tests list_values and get_values with multiple selections on the method and basis field """
     client, ds = s22_fixture
 
-    methods = {'b3lyp', 'pbe'}
-    bases = {'def2-svp', 'def2-tzvp'}
+    methods = {"b3lyp", "pbe"}
+    bases = {"def2-svp", "def2-tzvp"}
     names = {f"{method}/{basis}" for (method, basis) in itertools.product(methods, bases)}
 
-    df = ds.list_values(method=['b3lyp', 'pbe'], basis=['def2-svp', 'def2-tzvp']).reset_index()
+    df = ds.list_values(method=["b3lyp", "pbe"], basis=["def2-svp", "def2-tzvp"]).reset_index()
     assert names == set(df[df["stoichiometry"] == "default"]["name"].str.lower())
 
-    df = ds.get_values(method=['b3lyp', 'pbe'], basis=['def2-svp', 'def2-tzvp'], stoich="default")
+    df = ds.get_values(method=["b3lyp", "pbe"], basis=["def2-svp", "def2-tzvp"], stoich="default")
     assert names == set(df.columns.str.lower())
 
     df = ds.get_values(name=list(names))
@@ -1026,11 +1020,11 @@ def assert_view_identical(ds):
 
     # 'no details' column in gradient_dataset_fixture does not match
     # because there is not enough info to interpret it as a gradient
-    if 'no details' in cv_view.columns:
-        cv_view.drop('no details', axis=1, inplace=True)
-        cv_ds.drop('no details', axis=1, inplace=True)
-        v_view.drop('no details', axis=1, inplace=True)
-        v_ds.drop('no details', axis=1, inplace=True)
+    if "no details" in cv_view.columns:
+        cv_view.drop("no details", axis=1, inplace=True)
+        cv_ds.drop("no details", axis=1, inplace=True)
+        v_view.drop("no details", axis=1, inplace=True)
+        v_ds.drop("no details", axis=1, inplace=True)
 
     # Molecule IDs are different on the server and in the view by design
     for mid in ["molecule", "molecule_id"]:
@@ -1079,8 +1073,7 @@ def test_view_download_remote(s22_fixture):
 
     ds.data.__dict__["view_url_hdf5"] = "https://github.com/mattwelborn/QCArchiveViews/raw/master/S22/latest.hdf5"
     ds.data.__dict__["view_metadata"] = {
-        "blake2b_checksum":
-        "f9d537a982f63af0c500753b0e4779604252b9289fa26b6d83b657bf6e1039f1af2e44bbc819001fb857f1602280892b48422b8649cea786cdec3d2eb73412a9"
+        "blake2b_checksum": "f9d537a982f63af0c500753b0e4779604252b9289fa26b6d83b657bf6e1039f1af2e44bbc819001fb857f1602280892b48422b8649cea786cdec3d2eb73412a9"
     }
     ds.download()  # 700 kb
 
@@ -1094,14 +1087,14 @@ def test_view_download_mock(gradient_dataset_fixture, tmp_path_factory):
     client, ds = gradient_dataset_fixture
 
     with requests_mock.Mocker(real_http=True) as m:
-        path = pathlib.Path(tmp_path_factory.mktemp('test_collections'), 'ds_gradient_remote.hdf5')
-        ds.to_file(path, 'hdf5')
+        path = pathlib.Path(tmp_path_factory.mktemp("test_collections"), "ds_gradient_remote.hdf5")
+        ds.to_file(path, "hdf5")
 
         fake_url = "https://qcarchiveviews.com/gradient_ds.h5"
         ds.data.__dict__["view_url_hdf5"] = fake_url
         assert ds.data.id == ds.save()
 
-        with open(path, 'rb') as f:
+        with open(path, "rb") as f:
             m.get(fake_url, body=f)
             ds = client.get_collection("Dataset", ds.name)
             ds.download(verify=False)
@@ -1213,19 +1206,8 @@ def test_torsiondrive_dataset(fractal_compute_server):
     ds.add_entry("hooh1", [hooh1], [[0, 1, 2, 3]], [90], attributes={"something": "hooh1"})
     ds.add_entry("hooh2", [hooh2], [[0, 1, 2, 3]], [90], attributes={"something": "hooh2"})
 
-    optimization_spec = {
-        "program": "geometric",
-        "keywords": {
-            "coordsys": "tric",
-        }
-    }
-    qc_spec = {
-        "driver": "gradient",
-        "method": "UFF",
-        "basis": "",
-        "keywords": None,
-        "program": "rdkit",
-    }
+    optimization_spec = {"program": "geometric", "keywords": {"coordsys": "tric"}}
+    qc_spec = {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"}
 
     ds.add_specification("Spec1", optimization_spec, qc_spec, description="This is a really cool spec")
 
@@ -1261,7 +1243,7 @@ def test_torsiondrive_dataset(fractal_compute_server):
     # We effectively computed the same thing twice with two duplicate specs
     for row in ["hooh1", "hooh2"]:
         for spec in ["Spec1", "spec2"]:
-            assert pytest.approx(ds.df.loc[row, spec].get_final_energies(90), 1.e-5) == 0.00015655375994799847
+            assert pytest.approx(ds.df.loc[row, spec].get_final_energies(90), 1.0e-5) == 0.00015655375994799847
 
     assert ds.status().loc["COMPLETE", "Spec1"] == 2
     assert ds.status(collapse=False).loc["hooh1", "Spec1"] == "COMPLETE"
@@ -1299,10 +1281,10 @@ def test_optimization_dataset(fractal_compute_server):
 
     final_energy = 0.00011456853977485626
     for idx, row in ds.df["test"].items():
-        assert pytest.approx(row.get_final_energy(), abs=1.e-5) == final_energy
+        assert pytest.approx(row.get_final_energy(), abs=1.0e-5) == final_energy
 
     opt = ds.get_record("hooh1", "test")
-    assert pytest.approx(opt.get_final_energy(), abs=1.e-5) == final_energy
+    assert pytest.approx(opt.get_final_energy(), abs=1.0e-5) == final_energy
 
 
 @testing.using_geometric
@@ -1353,7 +1335,7 @@ def test_gradient_dataset_lazy_entries_values(gradient_dataset_fixture):
     assert ds.data.records is None
     assert ds.data.contributed_values is None
 
-    ds.get_values(subset=['He1'], basis="3-21g")
+    ds.get_values(subset=["He1"], basis="3-21g")
     assert (~ds.df.isna()).sum().sum() == 1
     if not ds._use_view():
         assert ds.data.records is not None

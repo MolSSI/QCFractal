@@ -19,9 +19,10 @@ class ScanTypeEnum(str, Enum):
     """
     The type of scan to perform. This choices is limited to the scan types allowed by the scan dimensions.
     """
-    distance = 'distance'
-    angle = 'angle'
-    dihedral = 'dihedral'
+
+    distance = "distance"
+    angle = "angle"
+    dihedral = "dihedral"
 
 
 class StepTypeEnum(str, Enum):
@@ -30,40 +31,47 @@ class StepTypeEnum(str, Enum):
     the values are relative to the starting value (e.g., a bond starts as 2.1 Bohr, relative steps of [-0.1, 0, 1.0]
     indicate grid points of [2.0, 2.1, 3.1] Bohr. An ``absolute`` ``step_type`` will be exactly those values instead."
     """
-    absolute = 'absolute'
-    relative = 'relative'
+
+    absolute = "absolute"
+    relative = "relative"
 
 
 class ScanDimension(ProtoModel):
     """
     A full description of a dimension to scan over.
     """
+
     type: ScanTypeEnum = Field(..., description=str(ScanTypeEnum.__doc__))
     indices: List[int] = Field(
         ...,
         description="The indices of atoms to select for the scan. The size of this is a function of the type. e.g., "
-        "distances, angles and dihedrals require 2, 3, and 4 atoms, respectively.")
+        "distances, angles and dihedrals require 2, 3, and 4 atoms, respectively.",
+    )
     steps: List[float] = Field(
         ...,
         description="Step sizes to scan in relative to your current location in the scan. This must be a strictly "
         "monotonic series.",
-        units=["Bohr", "degrees"])
+        units=["Bohr", "degrees"],
+    )
     step_type: StepTypeEnum = Field(..., description=str(StepTypeEnum.__doc__))
 
-    @validator('type', 'step_type', pre=True)
+    @validator("type", "step_type", pre=True)
     def check_lower_type_step_type(cls, v):
         return v.lower()
 
-    @validator('indices')
+    @validator("indices")
     def check_indices(cls, v, values, **kwargs):
         sizes = {ScanTypeEnum.distance: 2, ScanTypeEnum.angle: 3, ScanTypeEnum.dihedral: 4}
         if sizes[values["type"]] != len(v):
-            raise ValueError("ScanDimension of type {} must have {} values, found {}.".format(
-                values["type"], sizes[values["type"]], len(v)))
+            raise ValueError(
+                "ScanDimension of type {} must have {} values, found {}.".format(
+                    values["type"], sizes[values["type"]], len(v)
+                )
+            )
 
         return v
 
-    @validator('steps')
+    @validator("steps")
     def check_steps(cls, v):
         if not (all(x < y for x, y in zip(v, v[1:])) or all(x > y for x, y in zip(v, v[1:]))):
             raise ValueError("Steps are not strictly monotonically increasing or decreasing.")
@@ -77,12 +85,15 @@ class GOKeywords(ProtoModel):
     """
     GridOptimizationRecord options.
     """
+
     scans: List[ScanDimension] = Field(
-        ..., description="The dimensions to scan along (along with their options) for the GridOptimization.")
+        ..., description="The dimensions to scan along (along with their options) for the GridOptimization."
+    )
     preoptimization: bool = Field(
         True,
         description="If ``True``, first runs an unrestricted optimization before starting the grid computations. "
-        "This is especially useful when combined with ``relative`` ``step_types``.")
+        "This is especially useful when combined with ``relative`` ``step_types``.",
+    )
 
 
 _gridopt_constr = constr(strip_whitespace=True, regex="gridoptimization")
@@ -98,21 +109,26 @@ class GridOptimizationInput(ProtoModel):
     program: _qcfractal_constr = Field(
         "qcfractal",
         description="The name of the source program which initializes the Grid Optimization. This is a constant "
-        "and is used for provenance information.")
+        "and is used for provenance information.",
+    )
     procedure: _gridopt_constr = Field(
         "gridoptimization",
-        description="The name of the procedure being run. This is a constant and is used for provenance information.")
+        description="The name of the procedure being run. This is a constant and is used for provenance information.",
+    )
     initial_molecule: Union[ObjectId, Molecule] = Field(
         ...,
         description="The Molecule to begin the Grid Optimization with. This can either be an existing Molecule in "
-        "the database (through its :class:`ObjectId`) or a fully specified :class:`Molecule` model.")
+        "the database (through its :class:`ObjectId`) or a fully specified :class:`Molecule` model.",
+    )
     keywords: GOKeywords = Field(..., description="The keyword options to run the Grid Optimization.")
     optimization_spec: OptimizationSpecification = Field(
-        ..., description="The specification to run the underlying optimization through at each grid point.")
+        ..., description="The specification to run the underlying optimization through at each grid point."
+    )
     qc_spec: QCSpecification = Field(
         ...,
         description="The specification for each of the quantum chemistry calculations run in each geometry "
-        "optimization.")
+        "optimization.",
+    )
 
 
 class GridOptimizationRecord(RecordBase):
@@ -132,36 +148,41 @@ class GridOptimizationRecord(RecordBase):
     procedure: _gridopt_constr = Field(
         "gridoptimization",
         description="The name of the procedure being run, which is Grid Optimization. This is a constant "
-        "and is used for provenance information.")
+        "and is used for provenance information.",
+    )
     program: _qcfractal_constr = Field(
         "qcfractal",
         description="The name of the source program which initializes the Grid Optimization. This is a constant "
-        "and is used for provenance information.")
+        "and is used for provenance information.",
+    )
 
     # Input data
     initial_molecule: ObjectId = Field(..., description="Id of the initial molecule in the database.")
     keywords: GOKeywords = Field(..., description="The keywords for this Grid Optimization.")
     optimization_spec: OptimizationSpecification = Field(
-        ..., description="The specification of each geometry optimization.")
+        ..., description="The specification of each geometry optimization."
+    )
     qc_spec: QCSpecification = Field(
         ...,
         description="The specification for each of the quantum chemistry computations used by the geometry "
-        "optimizations.")
+        "optimizations.",
+    )
 
     # Output data
     starting_molecule: ObjectId = Field(
         ...,
         description="Id of the molecule in the database begins the grid optimization. "
-        "This will differ from the ``initial_molecule`` if ``preoptimization`` is True.")
+        "This will differ from the ``initial_molecule`` if ``preoptimization`` is True.",
+    )
     final_energy_dict: Dict[str, float] = Field(
-        ..., description="Map of the final energy from the grid optimization at each grid point.")
-    grid_optimizations: Dict[str, ObjectId] = Field(...,
-                                                     description="The Id of each optimization at each grid point.")
+        ..., description="Map of the final energy from the grid optimization at each grid point."
+    )
+    grid_optimizations: Dict[str, ObjectId] = Field(..., description="The Id of each optimization at each grid point.")
     starting_grid: tuple = Field(
         ...,
         description="Initial grid point from which the Grid Optimization started. This grid point is the closest in "
-                    "structure to the ``starting_molecule``."
-    ) # yapf: disable
+        "structure to the ``starting_molecule``.",
+    )  # yapf: disable
 
     ## Utility
 
@@ -190,7 +211,7 @@ class GridOptimizationRecord(RecordBase):
             The internal key value.
         """
         if isinstance(key, (int, float)):
-            key = (int(key), )
+            key = (int(key),)
 
         return json.dumps(key)
 
@@ -278,9 +299,9 @@ class GridOptimizationRecord(RecordBase):
 
         return ret
 
-## Query
+    ## Query
 
-    def get_history(self, key: Union[int, str, None] = None) -> Dict[str, 'Optimization']:
+    def get_history(self, key: Union[int, str, None] = None) -> Dict[str, "Optimization"]:
         """Pulls the optimization history of the computation.
 
         Parameters
@@ -296,13 +317,11 @@ class GridOptimizationRecord(RecordBase):
 
         if "optimization_history" not in self.cache:
             procs = self.client.query_procedures(id=list(self.grid_optimizations.values()))
-            proc_map = {x.id : x for x in procs}
+            proc_map = {x.id: x for x in procs}
 
-            self.cache["optimization_history"] = {k : proc_map[v] for k, v in  self.grid_optimizations.items()}
+            self.cache["optimization_history"] = {k: proc_map[v] for k, v in self.grid_optimizations.items()}
 
         return self._organize_return(self.cache["optimization_history"], key)
-
-
 
     def get_final_energies(self, key: Union[int, str, None] = None) -> Dict[str, float]:
         """
@@ -331,7 +350,7 @@ class GridOptimizationRecord(RecordBase):
 
         return self._organize_return(self.final_energy_dict, key)
 
-    def get_final_molecules(self, key: Union[int, str, None] = None) -> Dict[str, 'Molecule']:
+    def get_final_molecules(self, key: Union[int, str, None] = None) -> Dict[str, "Molecule"]:
         """
         Provides the final optimized molecules at each grid point.
 
@@ -369,7 +388,7 @@ class GridOptimizationRecord(RecordBase):
         data = self.cache["final_molecules"]
         return self._organize_return(data, key)
 
-    def get_final_results(self, key: Union[int, Tuple[int, ...], str] = None) -> Dict[str, 'ResultRecord']:
+    def get_final_results(self, key: Union[int, Tuple[int, ...], str] = None) -> Dict[str, "ResultRecord"]:
         """Returns the final opt gradient result records at each grid point.
 
         Parameters

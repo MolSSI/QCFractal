@@ -17,6 +17,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class OptEntry(ProtoModel):
     """Data model for the optimizations in a Dataset"""
+
     name: str
     initial_molecule: ObjectId
     additional_keywords: Dict[str, Any] = {}
@@ -53,22 +54,27 @@ class OptimizationDataset(BaseProcedureDataset):
         procedure_parameters = {
             "keywords": keywords,
             "qc_spec": spec.qc_spec.dict(),
-            "protocols": spec.protocols.dict()
+            "protocols": spec.protocols.dict(),
         }
 
-        return self.client.add_procedure("optimization",
-                                         spec.optimization_spec.program,
-                                         procedure_parameters, [entry.initial_molecule],
-                                         tag=tag,
-                                         priority=priority).ids[0]
+        return self.client.add_procedure(
+            "optimization",
+            spec.optimization_spec.program,
+            procedure_parameters,
+            [entry.initial_molecule],
+            tag=tag,
+            priority=priority,
+        ).ids[0]
 
-    def add_specification(self,
-                          name: str,
-                          optimization_spec: OptimizationSpecification,
-                          qc_spec: QCSpecification,
-                          description: Optional[str] = None,
-                          protocols: Optional[Dict[str, Any]] = None,
-                          overwrite=False) -> None:
+    def add_specification(
+        self,
+        name: str,
+        optimization_spec: OptimizationSpecification,
+        qc_spec: QCSpecification,
+        description: Optional[str] = None,
+        protocols: Optional[Dict[str, Any]] = None,
+        overwrite=False,
+    ) -> None:
         """
         Parameters
         ----------
@@ -88,20 +94,24 @@ class OptimizationDataset(BaseProcedureDataset):
         if protocols is None:
             protocols = {}
 
-        spec = OptEntrySpecification(name=name,
-                                     optimization_spec=optimization_spec,
-                                     qc_spec=qc_spec,
-                                     description=description,
-                                     protocols=protocols)
+        spec = OptEntrySpecification(
+            name=name,
+            optimization_spec=optimization_spec,
+            qc_spec=qc_spec,
+            description=description,
+            protocols=protocols,
+        )
 
         return self._add_specification(name, spec, overwrite=overwrite)
 
-    def add_entry(self,
-                  name: str,
-                  initial_molecule: 'Molecule',
-                  additional_keywords: Optional[Dict[str, Any]] = None,
-                  attributes: Optional[Dict[str, Any]] = None,
-                  save: bool = True) -> None:
+    def add_entry(
+        self,
+        name: str,
+        initial_molecule: "Molecule",
+        additional_keywords: Optional[Dict[str, Any]] = None,
+        attributes: Optional[Dict[str, Any]] = None,
+        save: bool = True,
+    ) -> None:
         """
         Parameters
         ----------
@@ -128,15 +138,15 @@ class OptimizationDataset(BaseProcedureDataset):
 
         # Build new objects
         molecule_id = self.client.add_molecules([initial_molecule])[0]
-        entry = OptEntry(name=name,
-                         initial_molecule=molecule_id,
-                         additional_keywords=additional_keywords,
-                         attributes=attributes)
+        entry = OptEntry(
+            name=name, initial_molecule=molecule_id, additional_keywords=additional_keywords, attributes=attributes
+        )
 
         self._add_entry(name, entry, save)
 
-    def counts(self, entries: Optional[Union[str, List[str]]] = None,
-               specs: Optional[Union[str, List[str]]] = None) -> pd.DataFrame:
+    def counts(
+        self, entries: Optional[Union[str, List[str]]] = None, specs: Optional[Union[str, List[str]]] = None
+    ) -> pd.DataFrame:
         """Counts the number of optimization or gradient evaluations associated with the
         Optimizations.
 

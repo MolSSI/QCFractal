@@ -7,8 +7,8 @@ import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
-
 from pydantic import Field, constr, validator
+
 from qcelemental import constants
 
 from ..visualization import scatter_plot
@@ -23,27 +23,33 @@ class TDKeywords(ProtoModel):
     """
     TorsionDriveRecord options
     """
+
     dihedrals: List[Tuple[int, int, int, int]] = Field(
         ...,
         description="The list of dihedrals to select for the TorsionDrive operation. Each entry is a tuple of integers "
-        "of for particle indices.")
+        "of for particle indices.",
+    )
     grid_spacing: List[int] = Field(
         ...,
         description="List of grid spacing for dihedral scan in degrees. Multiple values will be mapped to each "
-        "dihedral angle.")
+        "dihedral angle.",
+    )
     dihedral_ranges: Optional[List[Tuple[int, int]]] = Field(
         None,
         description="A list of dihedral range limits as a pair (lower, upper). "
-        "Each range corresponds to the dihedrals in input.")
+        "Each range corresponds to the dihedrals in input.",
+    )
     energy_decrease_thresh: Optional[float] = Field(
         None,
         description="The threshold of the smallest energy decrease amount to trigger activating optimizations from "
-        "grid point.")
+        "grid point.",
+    )
     energy_upper_limit: Optional[float] = Field(
         None,
         description="The threshold if the energy of a grid point that is higher than the current global minimum, to "
         "start new optimizations, in unit of a.u. I.e. if energy_upper_limit = 0.05, current global "
-        "minimum energy is -9.9 , then a new task starting with energy -9.8 will be skipped.")
+        "minimum energy is -9.9 , then a new task starting with energy -9.8 will be skipped.",
+    )
 
     def __init__(self, **kwargs):
         super().__init__(**recursive_normalizer(kwargs))
@@ -60,26 +66,32 @@ class TorsionDriveInput(ProtoModel):
 
     program: _td_constr = Field(
         "torsiondrive",
-        description="The name of the program. Fixed to 'torsiondrive' since this input model is only valid for it.")
+        description="The name of the program. Fixed to 'torsiondrive' since this input model is only valid for it.",
+    )
     procedure: _td_constr = Field(
         "torsiondrive",
-        description="The name of the Procedure. Fixed to 'torsiondrive' since this input model is only valid for it.")
+        description="The name of the Procedure. Fixed to 'torsiondrive' since this input model is only valid for it.",
+    )
     initial_molecule: List[Union[ObjectId, Molecule]] = Field(
         ...,
         description="The Molecule(s) to begin the TorsionDrive with. This can either be an existing Molecule in "
-        "the database (through its :class:`ObjectId`) or a fully specified :class:`Molecule` model.")
+        "the database (through its :class:`ObjectId`) or a fully specified :class:`Molecule` model.",
+    )
     keywords: TDKeywords = Field(
-        ..., description="TorsionDrive-specific input arguments to pass into the TorsionDrive Procedure")
+        ..., description="TorsionDrive-specific input arguments to pass into the TorsionDrive Procedure"
+    )
     optimization_spec: OptimizationSpecification = Field(
         ...,
         description="The settings which describe how to conduct the energy optimizations at each step of the torsion "
-        "scan.")
+        "scan.",
+    )
     qc_spec: QCSpecification = Field(
         ...,
         description="The settings which describe the individual quantum chemistry calculations at each step of the "
-        "optimization.")
+        "optimization.",
+    )
 
-    @validator('initial_molecule', pre=True)
+    @validator("initial_molecule", pre=True)
     def check_initial_molecules(cls, v):
         if isinstance(v, (str, dict, Molecule)):
             v = [v]
@@ -99,11 +111,13 @@ class TorsionDriveRecord(RecordBase):
     procedure: _td_constr = Field(
         "torsiondrive",
         description="The name of the procedure. Fixed to 'torsiondrive' since this is the Record explicit to "
-        "TorsionDrive.")
+        "TorsionDrive.",
+    )
     program: _td_constr = Field(
         "torsiondrive",
         description="The name of the program. Fixed to 'torsiondrive' since this is the Record explicit to "
-        "TorsionDrive.")
+        "TorsionDrive.",
+    )
 
     # Input data
     initial_molecule: List[ObjectId] = Field(..., description="Id(s) of the initial molecule(s) in the database.")
@@ -111,44 +125,50 @@ class TorsionDriveRecord(RecordBase):
     optimization_spec: OptimizationSpecification = Field(
         ...,
         description="The settings which describe how the energy optimizations at each step of the torsion "
-        "scan used for this operation.")
+        "scan used for this operation.",
+    )
     qc_spec: QCSpecification = Field(
         ...,
         description="The settings which describe how the individual quantum chemistry calculations are handled for "
-        "this operation.")
+        "this operation.",
+    )
 
     # Output data
-    final_energy_dict: Dict[str, float] = Field(...,
-                                                description="The final energy at each angle of the TorsionDrive scan.")
+    final_energy_dict: Dict[str, float] = Field(
+        ..., description="The final energy at each angle of the TorsionDrive scan."
+    )
 
     optimization_history: Dict[str, List[ObjectId]] = Field(
         ...,
         description="The map of each angle of the TorsionDrive scan to each optimization computations. "
         "Each value of the dict maps to a sequence of :class:`ObjectId` strings which each "
-        "point to a single computation in the Database.")
+        "point to a single computation in the Database.",
+    )
     minimum_positions: Dict[str, int] = Field(  # TODO: This could use review
         ...,
         description="A map of each TorsionDrive angle to the integer index of that angle's optimization "
-        "trajectory which has the minimum-energy of the trajectory.")
+        "trajectory which has the minimum-energy of the trajectory.",
+    )
 
     class Config(RecordBase.Config):
         pass
 
-## Utility
+    ## Utility
 
     def _serialize_key(self, key):
         if isinstance(key, str):
             return key
         elif isinstance(key, (int, float)):
-            key = (int(key), )
+            key = (int(key),)
 
         return json.dumps(key)
 
     def _deserialize_key(self, key: str) -> Tuple[int, ...]:
         return tuple(json.loads(key))
 
-    def _organize_return(self, data: Dict[str, Any], key: Union[int, str, None],
-                         minimum: bool = False) -> Dict[str, Any]:
+    def _organize_return(
+        self, data: Dict[str, Any], key: Union[int, str, None], minimum: bool = False
+    ) -> Dict[str, Any]:
 
         if key is None:
             return {self._deserialize_key(k): copy.deepcopy(v) for k, v in data.items()}
@@ -184,11 +204,11 @@ class TorsionDriveRecord(RecordBase):
 
         return ret
 
+    ## Query
 
-## Query
-
-    def get_history(self, key: Union[int, Tuple[int, ...], str] = None,
-                    minimum: bool = False) -> Dict[str, List['ResultRecord']]:
+    def get_history(
+        self, key: Union[int, Tuple[int, ...], str] = None, minimum: bool = False
+    ) -> Dict[str, List["ResultRecord"]]:
         """Queries the server for all optimization trajectories.
 
         Parameters
@@ -250,7 +270,7 @@ class TorsionDriveRecord(RecordBase):
 
         return self._organize_return(self.final_energy_dict, key)
 
-    def get_final_molecules(self, key: Union[int, Tuple[int, ...], str] = None) -> Dict[str, 'Molecule']:
+    def get_final_molecules(self, key: Union[int, Tuple[int, ...], str] = None) -> Dict[str, "Molecule"]:
         """Returns the optimized molecules at each grid point
 
         Parameters
@@ -280,7 +300,7 @@ class TorsionDriveRecord(RecordBase):
             map_id_key = self._get_min_optimization_map()
 
             opt_ids = list(map_id_key.keys())
-            results = self.client.custom_query('optimization', 'final_molecule', {'optimization_ids': opt_ids})
+            results = self.client.custom_query("optimization", "final_molecule", {"optimization_ids": opt_ids})
 
             ret = {map_id_key[opt_id]: mol_record for opt_id, mol_record in results.items()}
 
@@ -290,7 +310,7 @@ class TorsionDriveRecord(RecordBase):
 
         return self._organize_return(data, key)
 
-    def get_final_results(self, key: Union[int, Tuple[int, ...], str] = None) -> Dict[str, 'ResultRecord']:
+    def get_final_results(self, key: Union[int, Tuple[int, ...], str] = None) -> Dict[str, "ResultRecord"]:
         """Returns the final opt gradient result records at each grid point
 
         Parameters
@@ -322,7 +342,7 @@ class TorsionDriveRecord(RecordBase):
 
             # combine the ids into one query
             opt_ids = list(map_id_key.keys())
-            results = self.client.custom_query('optimization', 'final_result', {'optimization_ids': opt_ids})
+            results = self.client.custom_query("optimization", "final_result", {"optimization_ids": opt_ids})
 
             for opt_id, grad_result_record in results.items():
                 k = map_id_key[opt_id]
@@ -334,12 +354,14 @@ class TorsionDriveRecord(RecordBase):
 
         return self._organize_return(data, key)
 
-    def visualize(self,
-                  relative: bool = True,
-                  units: str = "kcal / mol",
-                  digits: int = 3,
-                  use_measured_angle: bool = False,
-                  return_figure: Optional[bool] = None) -> 'plotly.Figure':
+    def visualize(
+        self,
+        relative: bool = True,
+        units: str = "kcal / mol",
+        digits: int = 3,
+        use_measured_angle: bool = False,
+        return_figure: Optional[bool] = None,
+    ) -> "plotly.Figure":
         """
         Parameters
         ----------
@@ -408,15 +430,8 @@ class TorsionDriveRecord(RecordBase):
 
         custom_layout = {
             "title": title,
-            "yaxis": {
-                "title": ylabel,
-                "zeroline": True
-            },
-            "xaxis": {
-                "title": "Dihedral Angle [degrees]",
-                "zeroline": False,
-                "range": [x.min() - 10, x.max() + 10]
-            }
+            "yaxis": {"title": ylabel, "zeroline": True},
+            "xaxis": {"title": "Dihedral Angle [degrees]", "zeroline": False, "range": [x.min() - 10, x.max() + 10]},
         }
 
         return scatter_plot([trace], custom_layout=custom_layout, return_figure=return_figure)

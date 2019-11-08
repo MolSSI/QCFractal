@@ -1,8 +1,6 @@
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
-
 import dash_coreui_components as coreui
+import dash_html_components as html
 
 from .pages import landing
 
@@ -28,7 +26,7 @@ layout = html.Div(
         coreui.AppHeader(
             [
                 coreui.AppNavbarBrand(
-                    full={"src": "/assets/images/logo.png", "width": 140, "height": 25, "alt": "QCArchive Logo"},
+                    full={"src": "/assets/images/logo.png", "width": 140, "height": 25, "alt": "QCArchive Logo"}
                 ),
                 coreui.AppSidebarToggler(id="AppSidebartogglermd", className="d-md-down-none", display="lg"),
             ],

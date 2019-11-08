@@ -22,10 +22,19 @@ from .queue import QueueManager, QueueManagerHandler, ServiceQueueHandler, TaskQ
 from .services import construct_service
 from .storage_sockets import ViewHandler, storage_socket_factory
 from .storage_sockets.api_logger import API_AccessLogger
-from .web_handlers import (CollectionHandler, InformationHandler, KeywordHandler, KVStoreHandler, MoleculeHandler,
-                           OptimizationHandler, ProcedureHandler, ResultHandler, WavefunctionStoreHandler)
+from .web_handlers import (
+    CollectionHandler,
+    InformationHandler,
+    KeywordHandler,
+    KVStoreHandler,
+    MoleculeHandler,
+    OptimizationHandler,
+    ProcedureHandler,
+    ResultHandler,
+    WavefunctionStoreHandler,
+)
 
-myFormatter = logging.Formatter('[%(asctime)s] %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+myFormatter = logging.Formatter("[%(asctime)s] %(message)s", datefmt="%m/%d/%Y %I:%M:%S %p")
 
 
 def _build_ssl():
@@ -55,16 +64,18 @@ def _build_ssl():
     now = datetime.datetime.utcnow()
 
     # Build cert
-    cert = (x509.CertificateBuilder()
+    cert = (
+        x509.CertificateBuilder()
         .subject_name(name)
         .issuer_name(name)
         .public_key(key.public_key())
         .serial_number(int(random.random() * sys.maxsize))
         .not_valid_before(now)
-        .not_valid_after(now + datetime.timedelta(days=10*365))
+        .not_valid_after(now + datetime.timedelta(days=10 * 365))
         .add_extension(basic_contraints, False)
         .add_extension(alt_names, False)
-        .sign(key, hashes.SHA256(), default_backend())) # yapf: disable
+        .sign(key, hashes.SHA256(), default_backend())
+    )  # yapf: disable
 
     # Build and return keys
     cert_pem = cert.public_bytes(encoding=serialization.Encoding.PEM)
@@ -72,47 +83,41 @@ def _build_ssl():
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption(),
-    ) # yapf: disable
+    )  # yapf: disable
 
     return cert_pem, key_pem
 
 
 class FractalServer:
     def __init__(
-            self,
-
-            # Server info options
-            name: str = "QCFractal Server",
-            port: int = 7777,
-            loop: 'IOLoop' = None,
-            compress_response: bool = True,
-
-            # Security
-            security: Optional[str] = None,
-            allow_read: bool = False,
-            ssl_options: Union[bool, Dict[str, str]] = True,
-
-            # Database options
-            storage_uri: str = "postgresql://localhost:5432",
-            storage_project_name: str = "qcfractal_default",
-            query_limit: int = 1000,
-
-            # View options
-            view_enabled: bool = False,
-            view_path: Optional[str] = None,
-
-            # Log options
-            logfile_prefix: str = None,
-            log_apis: bool = False,
-            geo_file_path: str = None,
-
-            # Queue options
-            queue_socket: 'BaseAdapter' = None,
-            heartbeat_frequency: float = 1800,
-
-            # Service options
-            max_active_services: int = 20,
-            service_frequency: float = 60):
+        self,
+        # Server info options
+        name: str = "QCFractal Server",
+        port: int = 7777,
+        loop: "IOLoop" = None,
+        compress_response: bool = True,
+        # Security
+        security: Optional[str] = None,
+        allow_read: bool = False,
+        ssl_options: Union[bool, Dict[str, str]] = True,
+        # Database options
+        storage_uri: str = "postgresql://localhost:5432",
+        storage_project_name: str = "qcfractal_default",
+        query_limit: int = 1000,
+        # View options
+        view_enabled: bool = False,
+        view_path: Optional[str] = None,
+        # Log options
+        logfile_prefix: str = None,
+        log_apis: bool = False,
+        geo_file_path: str = None,
+        # Queue options
+        queue_socket: "BaseAdapter" = None,
+        heartbeat_frequency: float = 1800,
+        # Service options
+        max_active_services: int = 20,
+        service_frequency: float = 60,
+    ):
         """QCFractal initialization
 
         Parameters
@@ -166,7 +171,7 @@ class FractalServer:
 
         # Setup logging.
         if logfile_prefix is not None:
-            tornado.options.options['log_file_prefix'] = logfile_prefix
+            tornado.options.options["log_file_prefix"] = logfile_prefix
 
         tornado.log.enable_pretty_logging()
         self.logger = logging.getLogger("tornado.application")
@@ -213,6 +218,7 @@ class FractalServer:
             # Destroy keyfiles upon close
             import atexit
             import os
+
             atexit.register(os.remove, cert_name)
             atexit.register(os.remove, key_name)
             self.client_verify = False
@@ -232,11 +238,13 @@ class FractalServer:
         # Setup the database connection
         self.storage_database = storage_project_name
         self.storage_uri = storage_uri
-        self.storage = storage_socket_factory(storage_uri,
-                                              project_name=storage_project_name,
-                                              bypass_security=storage_bypass_security,
-                                              allow_read=allow_read,
-                                              max_limit=query_limit)
+        self.storage = storage_socket_factory(
+            storage_uri,
+            project_name=storage_project_name,
+            bypass_security=storage_bypass_security,
+            allow_read=allow_read,
+            max_limit=query_limit,
+        )
 
         if view_enabled:
             self.view_handler = ViewHandler(view_path)
@@ -251,7 +259,7 @@ class FractalServer:
             "storage_socket": self.storage,
             "logger": self.logger,
             "api_logger": self.api_logger,
-            "view_handler": self.view_handler
+            "view_handler": self.view_handler,
         }
 
         # Public information
@@ -259,14 +267,13 @@ class FractalServer:
             "name": self.name,
             "heartbeat_frequency": self.heartbeat_frequency,
             "version": get_information("version"),
-            "query_limit": self.storage.get_limit(1.e9),
+            "query_limit": self.storage.get_limit(1.0e9),
             "client_lower_version_limit": "0.12.0",  # Must be XX.YY.ZZ
-            "client_upper_version_limit": "0.12.99"  # Must be XX.YY.ZZ
+            "client_upper_version_limit": "0.12.99",  # Must be XX.YY.ZZ
         }
         self.update_public_information()
 
         endpoints = [
-
             # Generic web handlers
             (r"/information", InformationHandler, self.objects),
             (r"/kvstore", KVStoreHandler, self.objects),
@@ -277,7 +284,6 @@ class FractalServer:
             (r"/wavefunctionstore", WavefunctionStoreHandler, self.objects),
             (r"/procedure/?", ProcedureHandler, self.objects),
             (r"/optimization/(.*)/?", OptimizationHandler, self.objects),
-
             # Queue Schedulers
             (r"/task_queue", TaskQueueHandler, self.objects),
             (r"/service_queue", ServiceQueueHandler, self.objects),
@@ -285,9 +291,7 @@ class FractalServer:
         ]
 
         # Build the app
-        app_settings = {
-            "compress_response": compress_response,
-        }
+        app_settings = {"compress_response": compress_response}
         self.app = tornado.web.Application(endpoints, **app_settings)
         self.endpoints = set([v[0].replace("/", "", 1) for v in endpoints])
 
@@ -307,7 +311,7 @@ class FractalServer:
         self.logger.info("    Address:       {}".format(self._address))
         self.logger.info("    Database URI:  {}".format(storage_uri))
         self.logger.info("    Database Name: {}".format(storage_project_name))
-        self.logger.info("    Query Limit:   {}\n".format(self.storage.get_limit(1.e9)))
+        self.logger.info("    Query Limit:   {}\n".format(self.storage.get_limit(1.0e9)))
         self.loop_active = False
 
         # Create a executor for background processes
@@ -316,20 +320,21 @@ class FractalServer:
 
         # Queue manager if direct build
         self.queue_socket = queue_socket
-        if (self.queue_socket is not None):
+        if self.queue_socket is not None:
             if security == "local":
                 raise ValueError("Cannot yet use local security with a internal QueueManager")
 
-
             def _build_manager():
                 client = FractalClient(self, username="qcfractal_server")
-                self.objects["queue_manager"] = QueueManager(client,
-                                                             self.queue_socket,
-                                                             logger=self.logger,
-                                                             manager_name="FractalServer",
-                                                             cores_per_task=1,
-                                                             memory_per_task=1,
-                                                             verbose=False)
+                self.objects["queue_manager"] = QueueManager(
+                    client,
+                    self.queue_socket,
+                    logger=self.logger,
+                    manager_name="FractalServer",
+                    cores_per_task=1,
+                    memory_per_task=1,
+                    verbose=False,
+                )
 
             # Build the queue manager, will not run until loop starts
             self.futures["queue_manager_future"] = self._run_in_thread(_build_manager)
@@ -348,7 +353,7 @@ class FractalServer:
         fut = self.loop.run_in_executor(self.executor, func)
         return fut
 
-## Start/stop functionality
+    ## Start/stop functionality
 
     def start(self, start_loop: bool = True, start_periodics: bool = True) -> None:
         """
@@ -378,8 +383,9 @@ class FractalServer:
             self.periodic["update_services"] = nanny_services
 
             # Check Manager heartbeats, 5x heartbeat frequency
-            heartbeats = tornado.ioloop.PeriodicCallback(self.check_manager_heartbeats,
-                                                         self.heartbeat_frequency * 1000 * 0.2)
+            heartbeats = tornado.ioloop.PeriodicCallback(
+                self.check_manager_heartbeats, self.heartbeat_frequency * 1000 * 0.2
+            )
             heartbeats.start()
             self.periodic["heartbeats"] = heartbeats
 
@@ -457,7 +463,7 @@ class FractalServer:
         """
         self.exit_callbacks.append((callback, args, kwargs))
 
-## Helpers
+    ## Helpers
 
     def get_address(self, endpoint: Optional[str] = None) -> str:
         """Obtains the full URI for a given function on the FractalServer.
@@ -482,7 +488,7 @@ class FractalServer:
         else:
             return self._address
 
-## Updates
+    ## Updates
 
     def update_services(self) -> int:
         """Runs through all active services and examines their current status.
@@ -510,14 +516,14 @@ class FractalServer:
             try:
                 service = construct_service(self.storage, self.logger, data)
                 finished = service.iterate()
-            except Exception as e:
+            except Exception:
                 error_message = "FractalServer Service Build and Iterate Error:\n{}".format(traceback.format_exc())
                 self.logger.error(error_message)
                 service.status = "ERROR"
                 service.error = {"error_type": "iteration_error", "error_message": error_message}
                 finished = False
 
-            r = self.storage.update_services([service])
+            self.storage.update_services([service])
 
             # Mark procedure and service as error
             if service.status == "ERROR":
@@ -572,8 +578,11 @@ class FractalServer:
             nshutdown = self.storage.queue_reset_status(manager=blob["name"], reset_running=True)
             self.storage.manager_update(blob["name"], returned=nshutdown, status="INACTIVE")
 
-            self.logger.info("Hearbeat missing from {}. Shutting down, recycling {} incomplete tasks.".format(
-                blob["name"], nshutdown))
+            self.logger.info(
+                "Hearbeat missing from {}. Shutting down, recycling {} incomplete tasks.".format(
+                    blob["name"], nshutdown
+                )
+            )
 
     def list_managers(self, status: Optional[str] = None, name: Optional[str] = None) -> List[Dict[str, Any]]:
         """
@@ -601,13 +610,13 @@ class FractalServer:
 
         return FractalClient(self)
 
-
-### Functions only available if using a local queue_adapter
+    ### Functions only available if using a local queue_adapter
 
     def _check_manager(self, func_name: str) -> None:
         if self.queue_socket is None:
             raise AttributeError(
-                "{} is only available if the server was initialized with a queue manager.".format(func_name))
+                "{} is only available if the server was initialized with a queue manager.".format(func_name)
+            )
 
         # Wait up to one second for the queue manager to build
         if "queue_manager" not in self.objects:

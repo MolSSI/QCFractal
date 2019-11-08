@@ -5,8 +5,9 @@ from .records import OptimizationRecord, ResultRecord
 from .torsiondrive import TorsionDriveRecord
 
 
-def build_procedure(data: Dict[str, Any], procedure: Optional[str] = None,
-                    client: Optional['FractalClient'] = None) -> 'BaseRecord':
+def build_procedure(
+    data: Dict[str, Any], procedure: Optional[str] = None, client: Optional["FractalClient"] = None
+) -> "BaseRecord":
     """
     Constructs a Service ORM from incoming JSON data.
 

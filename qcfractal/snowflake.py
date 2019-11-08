@@ -22,12 +22,12 @@ from .util import find_port, is_port_open
 
 def _background_process(args, **kwargs):
 
-    if sys.platform.startswith('win'):
+    if sys.platform.startswith("win"):
         # Allow using CTRL_C_EVENT / CTRL_BREAK_EVENT
-        kwargs['creationflags'] = subprocess.CREATE_NEW_PROCESS_GROUP
+        kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
 
-    kwargs['stdout'] = subprocess.PIPE
-    kwargs['stderr'] = subprocess.PIPE
+    kwargs["stdout"] = subprocess.PIPE
+    kwargs["stderr"] = subprocess.PIPE
     proc = subprocess.Popen(args, **kwargs)
 
     return proc
@@ -48,14 +48,16 @@ def _terminate_process(proc, timeout: int = 5):
 
 
 class FractalSnowflake(FractalServer):
-    def __init__(self,
-                 max_workers: Optional[int] = 2,
-                 storage_uri: Optional[str] = None,
-                 storage_project_name: str = "temporary_snowflake",
-                 max_active_services: int = 20,
-                 logging: Union[bool, str] = False,
-                 start_server: bool = True,
-                 reset_database: bool = False):
+    def __init__(
+        self,
+        max_workers: Optional[int] = 2,
+        storage_uri: Optional[str] = None,
+        storage_project_name: str = "temporary_snowflake",
+        max_active_services: int = 20,
+        logging: Union[bool, str] = False,
+        start_server: bool = True,
+        reset_database: bool = False,
+    ):
         """A temporary FractalServer that can be used to run complex workflows or try new computations.
 
         ! Warning ! All data is lost when the server is shutdown.
@@ -122,24 +124,28 @@ class FractalSnowflake(FractalServer):
 
         self._view_tempdir = tempfile.TemporaryDirectory()
 
-        super().__init__(name="QCFractal Snowflake Instance",
-                         port=find_port(),
-                         loop=self.loop,
-                         storage_uri=self._storage_uri,
-                         storage_project_name=storage_project_name,
-                         ssl_options=False,
-                         max_active_services=max_active_services,
-                         queue_socket=self.queue_socket,
-                         logfile_prefix=log_prefix,
-                         service_frequency=2,
-                         query_limit=int(1.e6),
-                         view_enabled=True,
-                         view_path=self._view_tempdir.name)
+        super().__init__(
+            name="QCFractal Snowflake Instance",
+            port=find_port(),
+            loop=self.loop,
+            storage_uri=self._storage_uri,
+            storage_project_name=storage_project_name,
+            ssl_options=False,
+            max_active_services=max_active_services,
+            queue_socket=self.queue_socket,
+            logfile_prefix=log_prefix,
+            service_frequency=2,
+            query_limit=int(1.0e6),
+            view_enabled=True,
+            view_path=self._view_tempdir.name,
+        )
 
         if self._storage:
-            self.logger.warning("Warning! This is a temporary instance, data will be lost upon shutdown. "
-                                "For information about how to set up a permanent QCFractal instance, see "
-                                "http://docs.qcarchive.molssi.org/projects/qcfractal/en/latest/setup_quickstart.html")
+            self.logger.warning(
+                "Warning! This is a temporary instance, data will be lost upon shutdown. "
+                "For information about how to set up a permanent QCFractal instance, see "
+                "http://docs.qcarchive.molssi.org/projects/qcfractal/en/latest/setup_quickstart.html"
+            )
 
         if start_server:
             self.start(start_loop=False)
@@ -221,7 +227,7 @@ class FractalSnowflakeHandler:
         # We need to call before threadings cleanup
         atexit.register(self.stop)
 
-### Dunder functions
+    ### Dunder functions
 
     def __repr__(self) -> str:
 
@@ -245,15 +251,14 @@ class FractalSnowflakeHandler:
         self.stop()
         atexit.unregister(self.stop)
 
-    def __enter__(self) -> 'FractalSnowflakeHandler':
+    def __enter__(self) -> "FractalSnowflakeHandler":
         self.start()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> bool:
         self.stop()
 
-
-### Utility funcitons
+    ### Utility funcitons
 
     @property
     def logfilename(self) -> str:
@@ -296,38 +301,43 @@ class FractalSnowflakeHandler:
 
         # Generate a new database name and temporary directory
         self._qcfdir = tempfile.TemporaryDirectory()
-        self._dbname = "db_" + str(uuid.uuid4()).replace('-', '_')
+        self._dbname = "db_" + str(uuid.uuid4()).replace("-", "_")
 
         # Init
-        proc = subprocess.run([
-            shutil.which("qcfractal-server"),
-            "init",
-            f"--base-folder={self._qcfdir.name}",
-            f"--port={self._server_port}",
-            "--db-own=False",
-            f"--db-database-name={self._dbname}",
-            f"--db-port={self._storage.config.database.port}",
-            "--query-limit=100000",
-            "--service-frequency=2",
-        ],
-                              stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE)
+        proc = subprocess.run(
+            [
+                shutil.which("qcfractal-server"),
+                "init",
+                f"--base-folder={self._qcfdir.name}",
+                f"--port={self._server_port}",
+                "--db-own=False",
+                f"--db-database-name={self._dbname}",
+                f"--db-port={self._storage.config.database.port}",
+                "--query-limit=100000",
+                "--service-frequency=2",
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
         stdout = proc.stdout.decode()
         if "Success!" not in stdout:
             raise ValueError(
-                f"Could not initialize temporary server.\n\nStdout:\n{stdout}\n\nStderr:\n{proc.stderr.decode()}")
+                f"Could not initialize temporary server.\n\nStdout:\n{stdout}\n\nStderr:\n{proc.stderr.decode()}"
+            )
 
-
-        self._qcfractal_proc = _background_process([
-            shutil.which("qcfractal-server"),
-            "start",
-            f"--logfile={self._dbname}",
-            f"--base-folder={self._qcfdir.name}",
-            f"--server-name={self._dbname}",
-            f"--port={self._server_port}",
-            f"--local-manager={self._ncores}",
-            f"--server-name=FractalSnowFlake_{self._dbname[:8]}"
-        ], cwd=self._qcfdir.name) # yapf: disable
+        self._qcfractal_proc = _background_process(
+            [
+                shutil.which("qcfractal-server"),
+                "start",
+                f"--logfile={self._dbname}",
+                f"--base-folder={self._qcfdir.name}",
+                f"--server-name={self._dbname}",
+                f"--port={self._server_port}",
+                f"--local-manager={self._ncores}",
+                f"--server-name=FractalSnowFlake_{self._dbname[:8]}",
+            ],
+            cwd=self._qcfdir.name,
+        )  # yapf: disable
 
         for x in range(timeout * 10):
 
@@ -345,7 +355,9 @@ class FractalSnowflakeHandler:
             out, err = self._qcfractal_proc.communicate()
             raise ConnectionRefusedError(
                 "Snowflake instance did not boot properly, try increasing the timeout.\n\n"
-                f"stdout:\n{out.decode()}\n\n", f"stderr:\n{err.decode()}")
+                f"stdout:\n{out.decode()}\n\n",
+                f"stderr:\n{err.decode()}",
+            )
 
         self._running = True
 
@@ -419,7 +431,7 @@ class FractalSnowflakeHandler:
             "200 PUT",
             "200 POST",
             "200 UPDATE",
-        ] # yapf: disable
+        ]  # yapf: disable
 
         ret = []
         if clean:
@@ -444,7 +456,7 @@ class FractalSnowflakeHandler:
         else:
             return ret
 
-    def client(self) -> 'FractalClient':
+    def client(self) -> "FractalClient":
         """
         Builds a client from this server.
 

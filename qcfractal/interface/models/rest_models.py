@@ -7,6 +7,7 @@ import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import Field, constr, root_validator, validator
+
 from qcelemental.util import get_base_docs
 
 from .common_models import KeywordSet, Molecule, ObjectId, ProtoModel
@@ -16,8 +17,13 @@ from .task_models import PriorityEnum, TaskRecord
 from .torsiondrive import TorsionDriveInput
 
 __all__ = [
-    "ComputeResponse", "rest_model", "QueryStr", "QueryObjectId", "QueryListStr", "ResultResponse",
-    "CollectionSubresourceGETResponseMeta"
+    "ComputeResponse",
+    "rest_model",
+    "QueryStr",
+    "QueryObjectId",
+    "QueryListStr",
+    "ResultResponse",
+    "CollectionSubresourceGETResponseMeta",
 ]
 
 ### Utility functions
@@ -85,14 +91,16 @@ def rest_model(resource: str, rest: str) -> Tuple[ProtoModel, ProtoModel]:
     if len(matches) > 1:
         warnings.warn(
             f"Multiple REST models were matched for {rest} request at endpoint {resource}. "
-            f"The following models will be used: {matches[0][0]}, {matches[0][1]}.", RuntimeWarning)
+            f"The following models will be used: {matches[0][0]}, {matches[0][1]}.",
+            RuntimeWarning,
+        )
 
     return matches[0]
 
 
 ### Generic Types and Common Models
 
-nullstr = constr(regex='null')
+nullstr = constr(regex="null")
 
 QueryStr = Optional[Union[List[str], str]]
 QueryInt = Optional[Union[List[int], int]]
@@ -111,49 +119,61 @@ class ResponseMeta(ProtoModel):
     """
     Standard Fractal Server response metadata
     """
+
     errors: List[Tuple[str, str]] = Field(
-        ..., description="A list of error pairs in the form of [(error type, error message), ...]")
+        ..., description="A list of error pairs in the form of [(error type, error message), ...]"
+    )
     success: bool = Field(
         ...,
         description="Indicates if the passed information was successful in its duties. This is contextual to the "
-        "data being passed in.")
+        "data being passed in.",
+    )
     error_description: Union[str, bool] = Field(
         ...,
         description="Details about the error if ``success`` is ``False``, otherwise this is ``False`` in the event "
-        "of no errors.")
+        "of no errors.",
+    )
 
 
 class ResponseGETMeta(ResponseMeta):
     """
     Standard Fractal Server response metadata for GET/fetch type requests.
     """
+
     missing: List[str] = Field(..., description="The Id's of the objects which were not found in the database.")
     n_found: int = Field(
         ...,
-        description="The number of entries which were already found in the database from the set which was provided.")
+        description="The number of entries which were already found in the database from the set which was provided.",
+    )
 
 
 class ResponsePOSTMeta(ResponseMeta):
     """
     Standard Fractal Server response metadata for POST/add type requests.
     """
+
     n_inserted: int = Field(
         ...,
         description="The number of new objects amongst the inputs which did not exist already, and are now in the "
-        "database.")
+        "database.",
+    )
     duplicates: Union[List[str], List[Tuple[str, str]]] = Field(
         ...,
-        description="The Ids of the objects which already exist in the database amongst the set which were passed in.")
+        description="The Ids of the objects which already exist in the database amongst the set which were passed in.",
+    )
     validation_errors: List[str] = Field(
-        ..., description="All errors with validating submitted objects will be documented here.")
+        ..., description="All errors with validating submitted objects will be documented here."
+    )
 
 
 class QueryMeta(ProtoModel):
     """
     Standard Fractal Server metadata for Database queries containing pagination information
     """
-    limit: Optional[int] = Field(None,
-                                 description="Limit to the number of objects which can be returned with this query.")
+
+    limit: Optional[int] = Field(
+        None, description="Limit to the number of objects which can be returned with this query."
+    )
     skip: int = Field(0, description="The number of records to skip on the query.")
 
 
@@ -161,14 +181,15 @@ class QueryFilter(ProtoModel):
     """
     Standard Fractal Server metadata for column filtering
     """
+
     include: QueryListStr = Field(
         None,
-        description="Return only these columns. Expert-level object. Only one of include and exclude may be specified."
+        description="Return only these columns. Expert-level object. Only one of include and exclude may be specified.",
     )
     exclude: QueryListStr = Field(
         None,
-        description=
-        "Return all but these columns. Expert-level object. Only one of include and exclude may be specified.")
+        description="Return all but these columns. Expert-level object. Only one of include and exclude may be specified.",
+    )
 
     @root_validator
     def check_include_or_exclude(cls, values):
@@ -189,9 +210,11 @@ class ComputeResponse(ProtoModel):
     """
     The response model from the Fractal Server when new Compute or Services are added.
     """
+
     ids: List[Optional[ObjectId]] = Field(..., description="The Id's of the records to be computed.")
     submitted: List[ObjectId] = Field(
-        ..., description="The object Ids which were submitted as new entries to the database.")
+        ..., description="The object Ids which were submitted as new entries to the database."
+    )
     existing: List[ObjectId] = Field(..., description="The list of object Ids which already existed in the database.")
 
     def __str__(self) -> str:
@@ -200,7 +223,7 @@ class ComputeResponse(ProtoModel):
     def __repr__(self) -> str:
         return f"<{self}>"
 
-    def merge(self, other: 'ComputeResponse') -> 'ComputeResponse':
+    def merge(self, other: "ComputeResponse") -> "ComputeResponse":
         """Merges two ComputeResponse objects together. The first takes precedence and order is maintained.
 
         Parameters
@@ -213,9 +236,11 @@ class ComputeResponse(ProtoModel):
         ComputeResponse
             The merged compute response
         """
-        return ComputeResponse(ids=(self.ids + other.ids),
-                               submitted=(self.submitted + other.submitted),
-                               existing=(self.existing + other.existing))
+        return ComputeResponse(
+            ids=(self.ids + other.ids),
+            submitted=(self.submitted + other.submitted),
+            existing=(self.existing + other.existing),
+        )
 
 
 common_docs = {
@@ -251,7 +276,8 @@ class KVStoreGETBody(ProtoModel):
 
     meta: EmptyMeta = Field({}, description=common_docs[EmptyMeta])
     data: Data = Field(
-        ..., description="Data of the KV Get field: consists of a dict for Id of the Key/Value object to fetch.")
+        ..., description="Data of the KV Get field: consists of a dict for Id of the Key/Value object to fetch."
+    )
 
 
 class KVStoreGETResponse(ProtoModel):
@@ -270,16 +296,18 @@ class MoleculeGETBody(ProtoModel):
         molecule_hash: QueryStr = Field(
             None,
             description="Hash of the Molecule to search for in the database. Can be computed from the Molecule object "
-            "directly without direct access to the Database itself.")
+            "directly without direct access to the Database itself.",
+        )
         molecular_formula: QueryStr = Field(
             None,
             description="Query is made based on simple molecular formula. This is based on just the formula itself and "
-            "contains no connectivity information.")
+            "contains no connectivity information.",
+        )
 
     meta: QueryMeta = Field(QueryMeta(), description=common_docs[QueryMeta])
     data: Data = Field(
         ...,
-        description="Data fields for a Molecule query."  # Because Data is internal, this may not document sufficiently
+        description="Data fields for a Molecule query.",  # Because Data is internal, this may not document sufficiently
     )
 
 
@@ -302,7 +330,8 @@ class MoleculePOSTResponse(ProtoModel):
         ...,
         description="A list of Id's assigned to the Molecule objects passed in which serves as a unique identifier "
         "in the database. If the Molecule was already in the database, then the Id returned is its "
-        "existing Id (entries are not duplicated).")
+        "existing Id (entries are not duplicated).",
+    )
 
 
 register_model("molecule", "POST", MoleculePOSTBody, MoleculePOSTResponse)
@@ -318,21 +347,24 @@ class KeywordGETBody(ProtoModel):
     meta: QueryMeta = Field(QueryMeta(), description=common_docs[QueryMeta])
     data: Data = Field(
         ...,
-        description="The formal query for a Keyword fetch, contains ``id`` or ``hash_index`` for the object to fetch.")
+        description="The formal query for a Keyword fetch, contains ``id`` or ``hash_index`` for the object to fetch.",
+    )
 
 
 class KeywordGETResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
     data: List[KeywordSet] = Field(
-        ..., description="The :class:`KeywordSet` found from in the database based on the query.")
+        ..., description="The :class:`KeywordSet` found from in the database based on the query."
+    )
 
 
 register_model("keyword", "GET", KeywordGETBody, KeywordGETResponse)
 
 
 class KeywordPOSTBody(ProtoModel):
-    meta: EmptyMeta = Field({},
-                            description="There is no metadata with this, so an empty metadata is sent for completion.")
+    meta: EmptyMeta = Field(
+        {}, description="There is no metadata with this, so an empty metadata is sent for completion."
+    )
     data: List[KeywordSet] = Field(..., description="The list of :class:`KeywordSet` objects to add to the database.")
 
 
@@ -340,7 +372,8 @@ class KeywordPOSTResponse(ProtoModel):
     data: List[Optional[ObjectId]] = Field(
         ...,
         description="The Ids assigned to the added :class:`KeywordSet` objects. In the event of duplicates, the Id "
-        "will be the one already found in the database.")
+        "will be the one already found in the database.",
+    )
     meta: ResponsePOSTMeta = Field(..., description=common_docs[ResponsePOSTMeta])
 
 
@@ -351,8 +384,9 @@ register_model("keyword", "POST", KeywordPOSTBody, KeywordPOSTResponse)
 
 class CollectionGETBody(ProtoModel):
     class Data(ProtoModel):
-        collection: str = Field(None,
-                                description="The specific collection to look up as its identified in the database.")
+        collection: str = Field(
+            None, description="The specific collection to look up as its identified in the database."
+        )
         name: str = Field(None, description="The common name of the collection to look up.")
 
         @validator("collection")
@@ -363,16 +397,17 @@ class CollectionGETBody(ProtoModel):
 
     meta: QueryFilter = Field(
         None,
-        description=
-        "Additional metadata to make with the query. Collections can only have an ``include/exclude`` key in its "
-        "meta and therefore does not follow the standard GET metadata model.")
+        description="Additional metadata to make with the query. Collections can only have an ``include/exclude`` key in its "
+        "meta and therefore does not follow the standard GET metadata model.",
+    )
     data: Data = Field(..., description="Information about the Collection to search the database with.")
 
 
 class CollectionGETResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
     data: List[Dict[str, Optional[Any]]] = Field(
-        ..., description="The Collection objects returned by the server based on the query.")
+        ..., description="The Collection objects returned by the server based on the query."
+    )
 
     @validator("data")
     def ensure_collection_name_in_data_get_res(cls, v):
@@ -390,15 +425,18 @@ class CollectionPOSTBody(ProtoModel):
         overwrite: bool = Field(
             False,
             description="The existing Collection in the database will be updated if this is True, otherwise will "
-            "remain unmodified if it already exists.")
+            "remain unmodified if it already exists.",
+        )
 
     class Data(ProtoModel):
         id: str = Field(
             "local",  # Auto blocks overwriting in a socket
             description="The Id of the object to assign in the database. If 'local', then it will not overwrite "
-            "existing keys. There should be very little reason to ever touch this.")
+            "existing keys. There should be very little reason to ever touch this.",
+        )
         collection: str = Field(
-            ..., description="The specific identifier for this Collection as it will appear in database.")
+            ..., description="The specific identifier for this Collection as it will appear in database."
+        )
         name: str = Field(..., description="The common name of this Collection.")
 
         class Config(ProtoModel.Config):
@@ -412,7 +450,8 @@ class CollectionPOSTBody(ProtoModel):
         Meta(),
         description="Metadata to specify how the Database should handle adding this Collection if it already exists. "
         "Metadata model for adding Collections can only accept ``overwrite`` as a key to choose to update "
-        "existing Collections or not.")
+        "existing Collections or not.",
+    )
     data: Data = Field(..., description="The data associated with this Collection to add to the database.")
 
 
@@ -420,7 +459,8 @@ class CollectionPOSTResponse(ProtoModel):
     data: Union[str, None] = Field(
         ...,
         description="The Id of the Collection uniquely pointing to it in the Database. If the Collection was not added "
-        "(e.g. ``overwrite=False`` for existing Collection), then a None is returned.")
+        "(e.g. ``overwrite=False`` for existing Collection), then a None is returned.",
+    )
     meta: ResponsePOSTMeta = Field(..., description=common_docs[ResponsePOSTMeta])
 
 
@@ -433,14 +473,16 @@ class CollectionSubresourceGETResponseMeta(ResponseMeta):
     """
     Response metadata for collection views functions.
     """
+
     msgpacked_cols: List[str] = Field(..., description="Names of columns which were serialized to msgpack-ext.")
 
 
 class CollectionEntryGETBody(ProtoModel):
     class Data(ProtoModel):
-        subset: QueryStr = Field(None,
-                                 description="Not implemented. "
-                                 "See qcfractal.interface.collections.dataset_view.DatasetView.get_entries")
+        subset: QueryStr = Field(
+            None,
+            description="Not implemented. " "See qcfractal.interface.collections.dataset_view.DatasetView.get_entries",
+        )
 
     meta: EmptyMeta = Field(EmptyMeta(), description=common_docs[EmptyMeta])
     data: Data = Field(..., description="Information about which entries to return.")
@@ -448,7 +490,8 @@ class CollectionEntryGETBody(ProtoModel):
 
 class CollectionEntryGETResponse(ProtoModel):
     meta: CollectionSubresourceGETResponseMeta = Field(
-        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
+        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta))
+    )
     data: Optional[bytes] = Field(..., description="Feather-serialized bytes representing a pandas DataFrame.")
 
 
@@ -457,9 +500,11 @@ register_model("collection/[0-9]+/entry", "GET", CollectionEntryGETBody, Collect
 
 class CollectionMoleculeGETBody(ProtoModel):
     class Data(ProtoModel):
-        indexes: List[int] = Field(None,
-                                   description="List of molecule indexes to return (returned by get_entries). "
-                                   "See qcfractal.interface.collections.dataset_view.DatasetView.get_molecules")
+        indexes: List[int] = Field(
+            None,
+            description="List of molecule indexes to return (returned by get_entries). "
+            "See qcfractal.interface.collections.dataset_view.DatasetView.get_molecules",
+        )
 
     meta: EmptyMeta = Field(EmptyMeta(), description=common_docs[EmptyMeta])
     data: Data = Field(..., description="Information about which molecules to return.")
@@ -467,7 +512,8 @@ class CollectionMoleculeGETBody(ProtoModel):
 
 class CollectionMoleculeGETResponse(ProtoModel):
     meta: CollectionSubresourceGETResponseMeta = Field(
-        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
+        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta))
+    )
     data: Optional[bytes] = Field(..., description="Feather-serialized bytes representing a pandas DataFrame.")
 
 
@@ -481,9 +527,11 @@ class CollectionValueGETBody(ProtoModel):
             driver: str
             native: bool
 
-        queries: List[QueryData] = Field(None,
-                                         description="List of queries to match against values columns. "
-                                         "See qcfractal.interface.collections.dataset_view.DatasetView.get_values")
+        queries: List[QueryData] = Field(
+            None,
+            description="List of queries to match against values columns. "
+            "See qcfractal.interface.collections.dataset_view.DatasetView.get_values",
+        )
         subset: QueryStr
 
     meta: EmptyMeta = Field(EmptyMeta(), description=common_docs[EmptyMeta])
@@ -496,7 +544,8 @@ class CollectionValueGETResponse(ProtoModel):
         units: Dict[str, str] = Field(..., description="Units of value columns.")
 
     meta: CollectionSubresourceGETResponseMeta = Field(
-        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
+        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta))
+    )
     data: Optional[Data] = Field(..., description="Values and units.")
 
 
@@ -513,7 +562,8 @@ class CollectionListGETBody(ProtoModel):
 
 class CollectionListGETResponse(ProtoModel):
     meta: CollectionSubresourceGETResponseMeta = Field(
-        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta)))
+        ..., description=str(get_base_docs(CollectionSubresourceGETResponseMeta))
+    )
     data: Optional[bytes] = Field(..., description="Feather-serialized bytes representing a pandas DataFrame.")
 
 
@@ -527,54 +577,63 @@ class ResultGETBody(ProtoModel):
         id: QueryObjectId = Field(
             None,
             description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
-            "reason to set anything else as this will be unique in the database, if it exists.")
+            "reason to set anything else as this will be unique in the database, if it exists.",
+        )
         task_id: QueryObjectId = Field(
             None,
             description="The exact Id of the task which carried out this Result's computation. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
-            "database, if it exists. See also :class:`TaskRecord`.")
+            "database, if it exists. See also :class:`TaskRecord`.",
+        )
 
         program: QueryStr = Field(
             None,
             description="Results will be searched to match the quantum chemistry software which carried out the "
-            "calculation.")
+            "calculation.",
+        )
         molecule: QueryObjectId = Field(
-            None, description="Results will be searched to match the Molecule Id which was computed on.")
-        driver: QueryStr = Field(None,
-                                 description="Results will be searched to match what class of computation was done. "
-                                 "See :class:`DriverEnum` for valid choices and more information.")
+            None, description="Results will be searched to match the Molecule Id which was computed on."
+        )
+        driver: QueryStr = Field(
+            None,
+            description="Results will be searched to match what class of computation was done. "
+            "See :class:`DriverEnum` for valid choices and more information.",
+        )
         method: QueryStr = Field(
             None,
-            description="Results will be searched to match the quantum chemistry method executed to compute the value."
+            description="Results will be searched to match the quantum chemistry method executed to compute the value.",
         )
         basis: QueryStr = Field(
             None,
-            description="Results will be searched to match specified basis sets which were used to compute the values."
+            description="Results will be searched to match specified basis sets which were used to compute the values.",
         )
         keywords: QueryNullObjectId = Field(
             None,
-            description="Results will be searched based on which :class:`KeywordSet` was used to run the computation.")
+            description="Results will be searched based on which :class:`KeywordSet` was used to run the computation.",
+        )
 
         status: QueryStr = Field(
             "COMPLETE",
             description="Results will be searched based on where they are in the compute pipeline. See the "
-            ":class:`RecordStatusEnum` for valid statuses and more information.")
+            ":class:`RecordStatusEnum` for valid statuses and more information.",
+        )
 
-        @validator('keywords', each_item=True, pre=True)
+        @validator("keywords", each_item=True, pre=True)
         def validate_keywords(cls, v):
             if v is None:
-                v = 'null'
+                v = "null"
             return v
 
-        @validator('basis', each_item=True, pre=True)
+        @validator("basis", each_item=True, pre=True)
         def validate_basis(cls, v):
             if (v is None) or (v == ""):
-                v = 'null'
+                v = "null"
             return v
 
     meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
     data: Data = Field(
-        ..., description="The keys with data to search the database on for individual quantum chemistry computations.")
+        ..., description="The keys with data to search the database on for individual quantum chemistry computations."
+    )
 
 
 class ResultGETResponse(ProtoModel):
@@ -584,7 +643,8 @@ class ResultGETResponse(ProtoModel):
         ...,
         description="Results found from the query. This is a list of :class:`ResultRecord` in most cases, however, "
         "if a projection was specified in the GET request, then a dict is returned with mappings based "
-        "on the projection.")
+        "on the projection.",
+    )
 
     @validator("data", pre=True)
     def ensure_list_of_dict(cls, v):
@@ -605,7 +665,8 @@ class WavefunctionStoreGETBody(ProtoModel):
     meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
     data: Data = Field(
         ...,
-        description="Data of the Wavefunction Get field: consists of a ObjectId of the Wavefunction object to fetch.")
+        description="Data of the Wavefunction Get field: consists of a ObjectId of the Wavefunction object to fetch.",
+    )
 
 
 class WavefunctionStoreGETResponse(ProtoModel):
@@ -623,28 +684,32 @@ class ProcedureGETBody(ProtoModel):
         id: QueryObjectId = Field(
             None,
             description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
-            "reason to set anything else as this will be unique in the database, if it exists.")
+            "reason to set anything else as this will be unique in the database, if it exists.",
+        )
         task_id: QueryObjectId = Field(
             None,
             description="The exact Id of a task which is carried out by this Procedure. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
-            "database, if it exists. See also :class:`TaskRecord`.")
+            "database, if it exists. See also :class:`TaskRecord`.",
+        )
 
-        procedure: QueryStr = Field(None,
-                                    description="Procedures will be searched based on the name of the procedure.")
+        procedure: QueryStr = Field(None, description="Procedures will be searched based on the name of the procedure.")
         program: QueryStr = Field(
             None,
-            description="Procedures will be searched based on the program which is the main manager of the procedure")
+            description="Procedures will be searched based on the program which is the main manager of the procedure",
+        )
         hash_index: QueryStr = Field(
             None,
             description="Procedures will be searched based on a hash of the defined procedure. This is something which "
             "can be generated by the Procedure spec itself and does not require server access to compute. "
             "This should be unique in the database so there should be no reason to set anything else "
-            "if this is set as a query.")
+            "if this is set as a query.",
+        )
         status: QueryStr = Field(
             "COMPLETE",
             description="Procedures will be searched based on where they are in the compute pipeline. See the "
-            ":class:`RecordStatusEnum` for valid statuses.")
+            ":class:`RecordStatusEnum` for valid statuses.",
+        )
 
     meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
     data: Data = Field(..., description="The keys with data to search the database on for Procedures.")
@@ -652,8 +717,9 @@ class ProcedureGETBody(ProtoModel):
 
 class ProcedureGETResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
-    data: List[Dict[str, Optional[Any]]] = Field(...,
-                                                 description="The list of Procedure specs found based on the query.")
+    data: List[Dict[str, Optional[Any]]] = Field(
+        ..., description="The list of Procedure specs found based on the query."
+    )
 
 
 register_model("procedure", "GET", ProcedureGETBody, ProcedureGETResponse)
@@ -666,27 +732,33 @@ class TaskQueueGETBody(ProtoModel):
         id: QueryObjectId = Field(
             None,
             description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
-            "reason to set anything else as this will be unique in the database, if it exists.")
+            "reason to set anything else as this will be unique in the database, if it exists.",
+        )
         hash_index: QueryStr = Field(
             None,
             description="Tasks will be searched based on a hash of the defined Task. This is something which can "
             "be generated by the Task spec itself and does not require server access to compute. "
             "This should be unique in the database so there should be no reason to set anything else "
-            "if this is set as a query.")
+            "if this is set as a query.",
+        )
         program: QueryStr = Field(
-            None, description="Tasks will be searched based on the program responsible for executing this task.")
+            None, description="Tasks will be searched based on the program responsible for executing this task."
+        )
         status: QueryStr = Field(
             None,
             description="Tasks will be search based on where they are in the compute pipeline. See the "
-            ":class:`RecordStatusEnum` for valid statuses.")
+            ":class:`RecordStatusEnum` for valid statuses.",
+        )
         base_result: QueryStr = Field(
             None,
             description="The exact Id of the Result which this Task is linked to. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
-            "database, if it exists. See also :class:`ResultRecord`.")
+            "database, if it exists. See also :class:`ResultRecord`.",
+        )
         tag: QueryStr = Field(None, description="Tasks will be searched based on their associated tag.")
         manager: QueryStr = Field(
-            None, description="Tasks will be searched based on the manager responsible for executing the task.")
+            None, description="Tasks will be searched based on the manager responsible for executing the task."
+        )
 
     meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
     data: Data = Field(..., description="The keys with data to search the database on for Tasks.")
@@ -698,7 +770,8 @@ class TaskQueueGETResponse(ProtoModel):
         ...,
         description="Tasks found from the query. This is a list of :class:`TaskRecord` in most cases, however, "
         "if a projection was specified in the GET request, then a dict is returned with mappings based "
-        "on the projection.")
+        "on the projection.",
+    )
 
 
 register_model("task_queue", "GET", TaskQueueGETBody, TaskQueueGETResponse)
@@ -712,24 +785,25 @@ class TaskQueuePOSTBody(ProtoModel):
         tag: Optional[str] = Field(
             None,
             description="Tag to assign to this Task so that Queue Managers can pull only Tasks based on this entry."
-            "If no Tag is specified, any Queue Manager can pull this Task.")
+            "If no Tag is specified, any Queue Manager can pull this Task.",
+        )
         priority: Union[PriorityEnum, None] = Field(None, description=str(PriorityEnum.__doc__))
 
         class Config(ProtoModel.Config):
             extra = "allow"
 
-        @validator('priority', pre=True)
+        @validator("priority", pre=True)
         def munge_priority(cls, v):
             if isinstance(v, str):
                 v = PriorityEnum[v.upper()]
             return v
 
-    meta: Meta = Field(...,
-                       description="The additional specification information for the Task to add to the Database.")
+    meta: Meta = Field(..., description="The additional specification information for the Task to add to the Database.")
     data: List[Union[ObjectId, Molecule]] = Field(
         ...,
         description="The list of either Molecule objects or Molecule Id's (those already in the database) to submit as "
-        "part of this Task.")
+        "part of this Task.",
+    )
 
 
 class TaskQueuePOSTResponse(ProtoModel):
@@ -746,12 +820,14 @@ class TaskQueuePUTBody(ProtoModel):
         id: QueryObjectId = Field(
             None,
             description="The exact Id to target in database. If this is set as a search condition, there is no "
-            "reason to set anything else as this will be unique in the database, if it exists.")
+            "reason to set anything else as this will be unique in the database, if it exists.",
+        )
         base_result: QueryObjectId = Field(  # TODO: Validate this description is correct
             None,
             description="The exact Id of a result which this Task is slated to write to. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
-            "database, if it exists. See also :class:`ResultRecord`.")
+            "database, if it exists. See also :class:`ResultRecord`.",
+        )
 
     class Meta(ProtoModel):
         operation: str = Field(..., description="The specific action you are taking as part of this update.")
@@ -782,22 +858,26 @@ class ServiceQueueGETBody(ProtoModel):
         id: QueryObjectId = Field(
             None,
             description="The exact Id to fetch from the database. If this is set as a search condition, there is no "
-            "reason to set anything else as this will be unique in the database, if it exists.")
+            "reason to set anything else as this will be unique in the database, if it exists.",
+        )
         procedure_id: QueryObjectId = Field(  # TODO: Validate this description is correct
             None,
             description="The exact Id of the Procedure this Service is responsible for executing. If this is set as a "
             "search condition, there is no reason to set anything else as this will be unique in the "
-            "database, if it exists.")
+            "database, if it exists.",
+        )
         hash_index: QueryStr = Field(
             None,
             description="Services are searched based on a hash of the defined Service. This is something which can "
             "be generated by the Service spec itself and does not require server access to compute. "
             "This should be unique in the database so there should be no reason to set anything else "
-            "if this is set as a query.")
+            "if this is set as a query.",
+        )
         status: QueryStr = Field(
             None,
             description="Services are searched based on where they are in the compute pipeline. See the "
-            ":class:`RecordStatusEnum` for valid statuses.")
+            ":class:`RecordStatusEnum` for valid statuses.",
+        )
 
     meta: QueryMeta = Field(QueryMeta(), description=common_docs[QueryMeta])
     data: Data = Field(..., description="The keys with data to search the database on for Services.")
@@ -806,7 +886,8 @@ class ServiceQueueGETBody(ProtoModel):
 class ServiceQueueGETResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
     data: List[Dict[str, Optional[Any]]] = Field(
-        ..., description="The return of Services found in the database mapping their Ids to the Service spec.")
+        ..., description="The return of Services found in the database mapping their Ids to the Service spec."
+    )
 
 
 register_model("service_queue", "GET", ServiceQueueGETBody, ServiceQueueGETResponse)
@@ -818,16 +899,20 @@ class ServiceQueuePOSTBody(ProtoModel):
             None,
             description="Tag to assign to the Tasks this Service will generate so that Queue Managers can pull only "
             "Tasks based on this entry. If no Tag is specified, any Queue Manager can pull this Tasks "
-            "created by this Service.")
+            "created by this Service.",
+        )
         priority: Union[str, int, None] = Field(
             None,
-            description="Priority given to this Tasks created by this Service. Higher priority will be pulled first.")
+            description="Priority given to this Tasks created by this Service. Higher priority will be pulled first.",
+        )
 
     meta: Meta = Field(
         ...,
-        description="Metadata information for the Service for the Tag and Priority of Tasks this Service will create.")
+        description="Metadata information for the Service for the Tag and Priority of Tasks this Service will create.",
+    )
     data: List[Union[TorsionDriveInput, GridOptimizationInput]] = Field(
-        ..., description="A list the specification for Procedures this Service will manage and generate Tasks for.")
+        ..., description="A list the specification for Procedures this Service will manage and generate Tasks for."
+    )
 
 
 class ServiceQueuePOSTResponse(ProtoModel):
@@ -872,6 +957,7 @@ class QueueManagerMeta(ProtoModel):
     """
     Validation and identification Meta information for the Queue Manager's communication with the Fractal Server.
     """
+
     # Name data
     cluster: str = Field(..., description="The Name of the Cluster the Queue Manager is running on.")
     hostname: str = Field(..., description="Hostname of the machine the Queue Manager is running on.")
@@ -883,17 +969,20 @@ class QueueManagerMeta(ProtoModel):
     # Version info
     qcengine_version: str = Field(..., description="Version of QCEngine which the Manager has access to.")
     manager_version: str = Field(
-        ..., description="Version of the QueueManager (Fractal) which is getting and returning Jobs.")
+        ..., description="Version of the QueueManager (Fractal) which is getting and returning Jobs."
+    )
 
     # search info
     programs: List[str] = Field(
         ...,
         description="A list of programs which the QueueManager, and thus QCEngine, has access to. Affects which Tasks "
-        "the Manager can pull.")
+        "the Manager can pull.",
+    )
     procedures: List[str] = Field(
         ...,
         description="A list of procedures which the QueueManager has access to. Affects which Tasks "
-        "the Manager can pull.")
+        "the Manager can pull.",
+    )
     tag: Optional[str] = Field(None, description="Optional queue tag to pull Tasks from.")
 
     # Statistics
@@ -916,13 +1005,15 @@ class QueueManagerGETBody(ProtoModel):
     data: Data = Field(
         ...,
         description="A model of Task request data for the Queue Manager to fetch. Accepts ``limit`` as the maximum "
-        "number of tasks to pull.")
+        "number of tasks to pull.",
+    )
 
 
 class QueueManagerGETResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
-    data: List[Dict[str, Optional[Any]]] = Field(...,
-                                                 description="A list of tasks retrieved from the server to compute.")
+    data: List[Dict[str, Optional[Any]]] = Field(
+        ..., description="A list of tasks retrieved from the server to compute."
+    )
 
 
 register_model("queue_manager", "GET", QueueManagerGETBody, QueueManagerGETResponse)
@@ -950,7 +1041,8 @@ class QueueManagerPUTBody(ProtoModel):
     data: Data = Field(
         ...,
         description="The update action which the Queue Manager requests the Server take with respect to how the "
-        "Queue Manager is tracked.")
+        "Queue Manager is tracked.",
+    )
 
 
 class QueueManagerPUTResponse(ProtoModel):
@@ -961,7 +1053,8 @@ class QueueManagerPUTResponse(ProtoModel):
     data: Union[Dict[str, int], bool] = Field(
         ...,
         description="The response from the Server attempting to update the Queue Manager's server-side status. "
-        "Response type is a function of the operation made from the PUT request.")
+        "Response type is a function of the operation made from the PUT request.",
+    )
 
 
 register_model("queue_manager", "PUT", QueueManagerPUTBody, QueueManagerPUTResponse)
@@ -972,7 +1065,8 @@ register_model("queue_manager", "PUT", QueueManagerPUTBody, QueueManagerPUTRespo
 class OptimizationFinalResultBody(ProtoModel):
     class Data(ProtoModel):
         optimization_ids: QueryObjectId = Field(
-            None, description="List of optimization procedure Ids to fetch their final results from the database.")
+            None, description="List of optimization procedure Ids to fetch their final results from the database."
+        )
 
     # TODO: not yet supported
     meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
@@ -982,7 +1076,8 @@ class OptimizationFinalResultBody(ProtoModel):
 class OptimizationAllResultBody(ProtoModel):
     class Data(ProtoModel):
         optimization_ids: QueryObjectId = Field(
-            None, description="List of optimization procedure Ids to fetch their ALL their results from the database.")
+            None, description="List of optimization procedure Ids to fetch their ALL their results from the database."
+        )
 
     # TODO: not yet supported
     meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
@@ -992,8 +1087,8 @@ class OptimizationAllResultBody(ProtoModel):
 class OptimizationInitialMoleculeBody(ProtoModel):
     class Data(ProtoModel):
         optimization_ids: QueryObjectId = Field(
-            None,
-            description="List of optimization procedure Ids to fetch their initial  molecules from the database.")
+            None, description="List of optimization procedure Ids to fetch their initial  molecules from the database."
+        )
 
     # TODO: not yet supported
     meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
@@ -1003,7 +1098,8 @@ class OptimizationInitialMoleculeBody(ProtoModel):
 class OptimizationFinalMoleculeBody(ProtoModel):
     class Data(ProtoModel):
         optimization_ids: QueryObjectId = Field(
-            None, description="List of optimization procedure Ids to fetch their final molecules from the database.")
+            None, description="List of optimization procedure Ids to fetch their final molecules from the database."
+        )
 
     # TODO: not yet supported
     meta: QueryMetaFilter = Field(QueryMetaFilter(), description=common_docs[QueryMetaFilter])
@@ -1014,21 +1110,24 @@ class ResultResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
     # Either a record or dict depending if projection
     data: Union[Dict[str, ResultRecord], Dict[str, Any]] = Field(
-        ..., description="A List of Results found from the query per optimization id.")
+        ..., description="A List of Results found from the query per optimization id."
+    )
 
 
 class ListResultResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
     # Either a record or dict depending if projection
     data: Union[Dict[str, List[ResultRecord]], Dict[str, Any]] = Field(
-        ..., description="A List of Results found from the query per optimization id.")
+        ..., description="A List of Results found from the query per optimization id."
+    )
 
 
 class ListMoleculeResponse(ProtoModel):
     meta: ResponseGETMeta = Field(..., description=common_docs[ResponseGETMeta])
     # Either a record or dict depending if projection
     data: Union[Dict[str, Molecule], Dict[str, Any]] = Field(
-        ..., description="A List of Molecules found from the query per optimization id.")
+        ..., description="A List of Molecules found from the query per optimization id."
+    )
 
 
 register_model(r"optimization/final_result", "GET", OptimizationFinalResultBody, ResultResponse)

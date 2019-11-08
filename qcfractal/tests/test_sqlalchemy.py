@@ -12,9 +12,17 @@ from sqlalchemy.orm import joinedload
 
 import qcfractal.interface as ptl
 from qcfractal.services.services import TorsionDriveService
-from qcfractal.storage_sockets.models import (KVStoreORM, MoleculeORM, OptimizationHistory, OptimizationProcedureORM,
-                                              ResultORM, ServiceQueueORM, TaskQueueORM, TorsionDriveProcedureORM,
-                                              Trajectory)
+from qcfractal.storage_sockets.models import (
+    KVStoreORM,
+    MoleculeORM,
+    OptimizationHistory,
+    OptimizationProcedureORM,
+    ResultORM,
+    ServiceQueueORM,
+    TaskQueueORM,
+    TorsionDriveProcedureORM,
+    Trajectory,
+)
 from qcfractal.testing import sqlalchemy_socket_fixture as storage_socket
 
 
@@ -26,7 +34,8 @@ def session_delete_all(session, className):
     session.commit()
     return len(rows)
 
-@pytest.fixture(scope='function')
+
+@pytest.fixture(scope="function")
 def session(storage_socket):
 
     session = storage_socket.Session()
@@ -47,7 +56,7 @@ def molecules_H4O2(storage_socket):
 
     ret = storage_socket.add_molecules([water, water2])
 
-    yield list(ret['data'])
+    yield list(ret["data"])
 
     r = storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
     assert r == 2
@@ -58,9 +67,9 @@ def kw_fixtures(storage_socket):
     kw1 = ptl.models.KeywordSet(**{"values": {"something": "kwfixture"}})
     ret = storage_socket.add_keywords([kw1])
 
-    yield list(ret['data'])
+    yield list(ret["data"])
 
-    r = storage_socket.del_keywords(ret['data'][0])
+    r = storage_socket.del_keywords(ret["data"][0])
     assert r == 1
 
 
@@ -100,7 +109,7 @@ def test_molecule_sql(storage_socket, session):
 
     ret = storage_socket.get_molecules()
 
-    assert ret['meta']['n_found'] == 2
+    assert ret["meta"]["n_found"] == 2
 
     # Use the ORM class
     water_mol = session.query(MoleculeORM).first()
@@ -119,48 +128,41 @@ def test_molecule_sql(storage_socket, session):
     assert len(result_list) == 2
 
     # get unique by hash and formula
-    one_mol = session.query(MoleculeORM).filter_by(molecule_hash=water_mol.molecule_hash,
-                                                   molecular_formula=water_mol.molecular_formula)
+    one_mol = session.query(MoleculeORM).filter_by(
+        molecule_hash=water_mol.molecule_hash, molecular_formula=water_mol.molecular_formula
+    )
     assert len(one_mol.all()) == 1
 
     # Clean up
     storage_socket.del_molecules(molecule_hash=[water.get_hash(), water2.get_hash()])
+
 
 def test_services(storage_socket, session):
 
     assert session.query(OptimizationProcedureORM).count() == 0
 
     proc_data = {
-        "initial_molecule":None,
+        "initial_molecule": None,
         "keywords": None,
         "program": "p7",
-        "qc_spec": {
-            "basis": "b1",
-            "program": "p1",
-            "method": "m1",
-            "driver": "energy"
-        },
+        "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
         "status": "COMPLETE",
     }
 
     service_data = {
         "tag": "tag1 tag2",
-        "hash_index" : "123",
+        "hash_index": "123",
         "status": "COMPLETE",
-
         "optimization_program": "gaussian",
-
         # extra fields
         "torsiondrive_state": {},
-
         "dihedral_template": "1",
         "optimization_template": "2",
         "molecule_template": "",
         "logger": None,
         "storage_socket": storage_socket,
-        "task_priority": 0
+        "task_priority": 0,
     }
-
 
     procedure = OptimizationProcedureORM(**proc_data)
     session.add(procedure)
@@ -172,7 +174,7 @@ def test_services(storage_socket, session):
     doc = ServiceQueueORM(**service_pydantic.dict(include=set(ServiceQueueORM.__dict__.keys())))
     doc.extra = service_pydantic.dict(exclude=set(ServiceQueueORM.__dict__.keys()))
     doc.procedure_id = procedure.id
-    doc.priority = doc.priority.value # Special case where we need the value not the enum
+    doc.priority = doc.priority.value  # Special case where we need the value not the enum
     session.add(doc)
     session.commit()
 
@@ -187,7 +189,6 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
     """
         Handling results throught the ME classes
     """
-
 
     assert session.query(ResultORM).count() == 0
 
@@ -219,16 +220,16 @@ def test_results_sql(storage_socket, session, molecules_H4O2, kw_fixtures):
     session.commit()
 
     # IMPORTANT: To be able to access lazy loading children use joinedload
-    ret = session.query(ResultORM).options(joinedload('molecule_obj')).filter_by(method='m1').first()
-    assert ret.molecule_obj.molecular_formula == 'H4O2'
+    ret = session.query(ResultORM).options(joinedload("molecule_obj")).filter_by(method="m1").first()
+    assert ret.molecule_obj.molecular_formula == "H4O2"
     # Accessing the keywords_obj will issue a DB access
     assert ret.keywords_obj == None
 
     result2 = ResultORM(**page2)
     session.add(result2)
     session.commit()
-    ret = session.query(ResultORM).options(joinedload('molecule_obj')).filter_by(method='m2').first()
-    assert ret.molecule_obj.molecular_formula == 'H4O2'
+    ret = session.query(ResultORM).options(joinedload("molecule_obj")).filter_by(method="m2").first()
+    assert ret.molecule_obj.molecular_formula == "H4O2"
     assert ret.method == "m2"
 
     # clean up
@@ -247,12 +248,7 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
         "initial_molecule": molecules_H4O2[0],
         "keywords": None,
         "program": "p7",
-        "qc_spec": {
-            "basis": "b1",
-            "program": "p1",
-            "method": "m1",
-            "driver": "energy"
-        },
+        "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
         "status": "COMPLETE",
     }
 
@@ -269,10 +265,9 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
     procedure = OptimizationProcedureORM(**data1)
     session.add(procedure)
     session.commit()
-    proc = session.query(OptimizationProcedureORM).options(
-                         joinedload('initial_molecule_obj')).first()
-    assert proc.initial_molecule_obj.molecular_formula == 'H4O2'
-    assert proc.procedure == 'optimization'
+    proc = session.query(OptimizationProcedureORM).options(joinedload("initial_molecule_obj")).first()
+    assert proc.initial_molecule_obj.molecular_formula == "H4O2"
+    assert proc.procedure == "optimization"
 
     # add a trajectory result
     result = ResultORM(**result1)
@@ -283,8 +278,7 @@ def test_optimization_procedure(storage_socket, session, molecules_H4O2):
     # link result to the trajectory
     proc.trajectory_obj = [Trajectory(opt_id=proc.id, result_id=result.id)]
     session.commit()
-    proc = session.query(OptimizationProcedureORM).options(
-                         joinedload('trajectory_obj')).first()
+    proc = session.query(OptimizationProcedureORM).options(joinedload("trajectory_obj")).first()
     assert proc.trajectory_obj
 
     # clean up
@@ -307,12 +301,7 @@ def test_torsiondrive_procedure(storage_socket, session):
         # "molecule": molecules[0],
         "keywords": None,
         "program": "p9",
-        "qc_spec": {
-            "basis": "b1",
-            "program": "p1",
-            "method": "m1",
-            "driver": "energy"
-        },
+        "qc_spec": {"basis": "b1", "program": "p1", "method": "m1", "driver": "energy"},
         "status": "COMPLETE",
     }
 
@@ -328,12 +317,12 @@ def test_torsiondrive_procedure(storage_socket, session):
     session.commit()
     assert opt_proc.id
 
-    opt_hist = OptimizationHistory(torsion_id=torj_proc.id, opt_id=opt_proc.id, key='20')
-    opt_hist2 = OptimizationHistory(torsion_id=torj_proc.id, opt_id=opt_proc2.id, key='20')
+    opt_hist = OptimizationHistory(torsion_id=torj_proc.id, opt_id=opt_proc.id, key="20")
+    opt_hist2 = OptimizationHistory(torsion_id=torj_proc.id, opt_id=opt_proc2.id, key="20")
     torj_proc.optimization_history_obj = [opt_hist, opt_hist2]
     session.commit()
-    torj_proc = session.query(TorsionDriveProcedureORM).options(joinedload('optimization_history_obj')).first()
-    assert torj_proc.optimization_history == {'20': [str(opt_proc.id), str(opt_proc2.id)]}
+    torj_proc = session.query(TorsionDriveProcedureORM).options(joinedload("optimization_history_obj")).first()
+    assert torj_proc.optimization_history == {"20": [str(opt_proc.id), str(opt_proc2.id)]}
 
     # clean up
     session_delete_all(session, OptimizationProcedureORM)
@@ -367,16 +356,15 @@ def test_add_task_queue(storage_socket, session, molecules_H4O2):
     session.commit()
 
     ret = session.query(TaskQueueORM)
-    assert  ret.count() == 1
+    assert ret.count() == 1
 
     task = ret.first()
-    assert task.status == 'WAITING'
-    assert task.base_result_obj.status == 'INCOMPLETE'
+    assert task.status == "WAITING"
+    assert task.base_result_obj.status == "INCOMPLETE"
 
     # cleanup
     session_delete_all(session, TaskQueueORM)
     session_delete_all(session, ResultORM)
-
 
 
 def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures):
@@ -395,7 +383,6 @@ def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures
         "driver": "energy",
     }
 
-
     # Save ~ 1 msec/doc in ME, 0.5 msec/doc in SQL
     # ------------------------------------------
     t1 = time()
@@ -406,27 +393,27 @@ def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures
     skip = 50
 
     for i in range(first_half):
-        result_template['basis'] = str(i)
+        result_template["basis"] = str(i)
         r = ResultORM(**result_template)
         session.add(r)
 
-    result_template['method'] = 'm2'
+    result_template["method"] = "m2"
     for i in range(first_half, total_results):
-        result_template['basis'] = str(i)
+        result_template["basis"] = str(i)
         r = ResultORM(**result_template)
         session.add(r)
 
     session.commit()  # must commit outside the loop, 10 times faster
 
     total_time = (time() - t1) * 1000 / total_results
-    print('Inserted {} results in {:.2f} msec / doc'.format(total_results, total_time))
+    print("Inserted {} results in {:.2f} msec / doc".format(total_results, total_time))
 
     # query (~ 0.13 msec/doc) in ME, and ~0.02 msec/doc in SQL
     # ----------------------------------------
     t1 = time()
 
-    ret1 = session.query(ResultORM).filter_by(method='m1')
-    ret2 = session.query(ResultORM).filter_by(method='m2') .limit(limit) #.offset(skip)
+    ret1 = session.query(ResultORM).filter_by(method="m1")
+    ret2 = session.query(ResultORM).filter_by(method="m2").limit(limit)  # .offset(skip)
 
     data1 = [d.to_dict() for d in ret1]
     data2 = [d.to_dict() for d in ret2]
@@ -446,7 +433,7 @@ def test_results_pagination(storage_socket, session, molecules_H4O2, kw_fixtures
     # assert len(ret) == limit / 2
 
     total_time = (time() - t1) * 1000 / total_results
-    print('Query {} results in {:.3f} msec /doc'.format(total_results, total_time))
+    print("Query {} results in {:.3f} msec /doc".format(total_results, total_time))
 
     # cleanup
     session_delete_all(session, ResultORM)

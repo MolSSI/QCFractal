@@ -14,7 +14,7 @@ def float_prep(array, around):
         # Round array
         array = np.around(array, around)
         # Flip zeros
-        array[np.abs(array) < 5**(-(around + 1))] = 0
+        array[np.abs(array) < 5 ** (-(around + 1))] = 0
 
     elif isinstance(array, (float, int)):
         array = round(array, around)

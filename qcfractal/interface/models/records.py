@@ -8,15 +8,19 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import numpy as np
-import qcelemental as qcel
 from pydantic import Field, constr, validator
+
+import qcelemental as qcel
 
 from ..visualization import scatter_plot
 from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification
 from .model_utils import hash_dictionary, prepare_basis, recursive_normalizer
 
 if TYPE_CHECKING:  # pragma: no cover
-    from qcelemental.models import OptimizationInput, ResultInput  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    from qcelemental.models import (
+        OptimizationInput,
+        ResultInput,
+    )  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
 
     from .common_models import KeywordSet, Molecule  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
 
@@ -27,6 +31,7 @@ class RecordStatusEnum(str, Enum):
     """
     The state of a record object. The states which are available are a finite set.
     """
+
     complete = "COMPLETE"
     incomplete = "INCOMPLETE"
     running = "RUNNING"
@@ -47,40 +52,49 @@ class RecordBase(ProtoModel, abc.ABC):
     cache: Dict[str, Any] = Field(
         {},
         description="Object cache from expensive queries. It should be very rare that this needs to be set manually "
-        "by the user.")
+        "by the user.",
+    )
 
     # Base identification
     id: ObjectId = Field(
-        None, description="Id of the object on the database. This is assigned automatically by the database.")
+        None, description="Id of the object on the database. This is assigned automatically by the database."
+    )
     hash_index: Optional[str] = Field(
-        None, description="Hash of this object used to detect duplication and collisions in the database.")
+        None, description="Hash of this object used to detect duplication and collisions in the database."
+    )
     procedure: str = Field(..., description="Name of the procedure which this Record targets.")
     program: str = Field(
         ...,
-        description="The quantum chemistry program which carries out the individual quantum chemistry calculations.")
+        description="The quantum chemistry program which carries out the individual quantum chemistry calculations.",
+    )
     version: int = Field(..., description="The version of this record object describes.")
     protocols: Optional[Dict[str, Any]] = Field(
-        None, description="Protocols that change the data stored in top level fields.")
+        None, description="Protocols that change the data stored in top level fields."
+    )
 
     # Extra fields
     extras: Dict[str, Any] = Field({}, description="Extra information to associate with this record.")
     stdout: Optional[ObjectId] = Field(
         None,
         description="The Id of the stdout data stored in the database which was used to generate this record from the "
-        "various programs which were called in the process.")
+        "various programs which were called in the process.",
+    )
     stderr: Optional[ObjectId] = Field(
         None,
         description="The Id of the stderr data stored in the database which was used to generate this record from the "
-        "various programs which were called in the process.")
+        "various programs which were called in the process.",
+    )
     error: Optional[ObjectId] = Field(
         None,
         description="The Id of the error data stored in the database in the event that an error was generated in the "
         "process of carrying out the process this record targets. If no errors were raised, this field "
-        "will be empty.")
+        "will be empty.",
+    )
 
     # Compute status
     task_id: Optional[ObjectId] = Field(  # TODO: not used in SQL
-        None, description="Id of the compute task tracked by Fractal in its TaskTable.")
+        None, description="Id of the compute task tracked by Fractal in its TaskTable."
+    )
     manager_name: Optional[str] = Field(None, description="Name of the Queue Manager which generated this record.")
     status: RecordStatusEnum = Field(RecordStatusEnum.incomplete, description=str(RecordStatusEnum.__doc__))
     modified_on: datetime.datetime = Field(None, description="Last time the data this record points to was modified.")
@@ -90,12 +104,13 @@ class RecordBase(ProtoModel, abc.ABC):
     provenance: Optional[qcel.models.Provenance] = Field(
         None,
         description="Provenance information tied to the creation of this record. This includes things such as every "
-        "program which was involved in generating the data for this record.")
+        "program which was involved in generating the data for this record.",
+    )
 
     class Config(ProtoModel.Config):
         build_hash_index = True
 
-    @validator('program')
+    @validator("program")
     def check_program(cls, v):
         return v.lower()
 
@@ -117,7 +132,7 @@ class RecordBase(ProtoModel, abc.ABC):
     def __repr__(self) -> str:
         return f"<{self}>"
 
-### Serialization helpers
+    ### Serialization helpers
 
     @classmethod
     def get_hash_fields(cls) -> Set[str]:
@@ -150,7 +165,7 @@ class RecordBase(ProtoModel, abc.ABC):
         # kwargs["skip_defaults"] = True
         return super().dict(*args, **kwargs)
 
-### Checkers
+    ### Checkers
 
     def check_client(self, noraise: bool = False) -> bool:
         """Checks whether this object owns a FractalClient or not.
@@ -182,8 +197,7 @@ class RecordBase(ProtoModel, abc.ABC):
 
         return True
 
-
-### KVStore Getters
+    ### KVStore Getters
 
     def _kvstore_getter(self, field_name):
         """
@@ -244,28 +258,34 @@ class ResultRecord(RecordBase):
     # Version data
     version: int = Field(1, description="Version of the ResultRecord Model which this data was created with.")
     procedure: constr(strip_whitespace=True, regex="single") = Field(
-        "single", description='Procedure is fixed as "single" because this is single quantum chemistry result.')
+        "single", description='Procedure is fixed as "single" because this is single quantum chemistry result.'
+    )
 
     # Input data
     driver: DriverEnum = Field(..., description=str(DriverEnum.__doc__))
     method: str = Field(..., description="The quantum chemistry method the driver runs with.")
-    molecule: ObjectId = Field(...,
-                               description="The Id of the molecule in the Database which the result is computed on.")
+    molecule: ObjectId = Field(
+        ..., description="The Id of the molecule in the Database which the result is computed on."
+    )
     basis: Optional[str] = Field(
         None,
         description="The quantum chemistry basis set to evaluate (e.g., 6-31g, cc-pVDZ, ...). Can be ``None`` for "
-        "methods without basis sets.")
+        "methods without basis sets.",
+    )
     keywords: Optional[ObjectId] = Field(
         None,
         description="The Id of the :class:`KeywordSet` which was passed into the quantum chemistry program that "
-        "performed this calculation.")
+        "performed this calculation.",
+    )
     protocols: qcel.models.results.ResultProtocols = Field(qcel.models.results.ResultProtocols(), description="")
 
     # Output data
     return_result: Union[float, qcel.models.types.Array[float], Dict[str, Any]] = Field(
-        None, description="The primary result of the calculation, output is a function of the specified ``driver``.")
+        None, description="The primary result of the calculation, output is a function of the specified ``driver``."
+    )
     properties: qcel.models.ResultProperties = Field(
-        None, description="Additional data and results computed as part of the ``return_result``.")
+        None, description="Additional data and results computed as part of the ``return_result``."
+    )
     wavefunction: Optional[Dict[str, Any]] = Field(None, description="Wavefunction data generated by the Result.")
     wavefunction_data_id: Optional[ObjectId] = Field(None, description="The id of the wavefunction")
 
@@ -273,15 +293,16 @@ class ResultRecord(RecordBase):
         """A hash index is not used for ResultRecords as they can be
         uniquely determined with queryable keys.
         """
+
         build_hash_index = False
 
-    @validator('method')
+    @validator("method")
     def check_method(cls, v):
         """Methods should have a lower string to match the database.
         """
         return v.lower()
 
-    @validator('basis')
+    @validator("basis")
     def check_basis(cls, v):
         return prepare_basis(v)
 
@@ -317,9 +338,10 @@ class ResultRecord(RecordBase):
             proj = {self.wavefunction["return_map"].get(x, x): True for x in missing}
 
             self.cache["wavefunction"].update(
-                self.client.custom_query("wavefunctionstore",
-                                         None, {"id": self.wavefunction_data_id},
-                                         meta={"include": proj}))
+                self.client.custom_query(
+                    "wavefunctionstore", None, {"id": self.wavefunction_data_id}, meta={"include": proj}
+                )
+            )
 
             if "basis" in missing:
                 self.cache["wavefunction"]["basis"] = qcel.models.BasisSet(**self.cache["wavefunction"]["basis"])
@@ -335,10 +357,11 @@ class ResultRecord(RecordBase):
         else:
             return ret
 
-## QCSchema constructors
+    ## QCSchema constructors
 
-    def build_schema_input(self, molecule: 'Molecule', keywords: Optional['KeywordSet'] = None,
-                           checks: bool = True) -> 'ResultInput':
+    def build_schema_input(
+        self, molecule: "Molecule", keywords: Optional["KeywordSet"] = None, checks: bool = True
+    ) -> "ResultInput":
         """
         Creates a OptimizationInput schema.
         """
@@ -362,13 +385,15 @@ class ResultRecord(RecordBase):
         else:
             protocols = self.protocols
 
-        model = qcel.models.ResultInput(id=self.id,
-                                        driver=self.driver.name,
-                                        model=model,
-                                        molecule=molecule,
-                                        keywords=keywords,
-                                        extras=self.extras,
-                                        protocols=protocols)
+        model = qcel.models.ResultInput(
+            id=self.id,
+            driver=self.driver.name,
+            model=model,
+            molecule=molecule,
+            keywords=keywords,
+            extras=self.extras,
+            protocols=protocols,
+        )
         return model
 
     def _consume_output(self, data: Dict[str, Any], checks: bool = True):
@@ -392,10 +417,9 @@ class ResultRecord(RecordBase):
         values["stderr"] = data["stderr"]
         values["status"] = "COMPLETE"
 
+    ## QCSchema constructors
 
-## QCSchema constructors
-
-    def get_molecule(self) -> 'Molecule':
+    def get_molecule(self) -> "Molecule":
         """
         Pulls the Result's Molecule from the connected database.
 
@@ -426,20 +450,25 @@ class OptimizationRecord(RecordBase):
     # Version data
     version: int = Field(1, description="Version of the OptimizationRecord Model which this data was created with.")
     procedure: constr(strip_whitespace=True, regex="optimization") = Field(
-        "optimization", description='A fixed string indication this is a record for an "Optimization".')
+        "optimization", description='A fixed string indication this is a record for an "Optimization".'
+    )
     schema_version: int = Field(1, description="The version number of QCSchema under which this record conforms to.")
 
     # Input data
     initial_molecule: ObjectId = Field(
-        ..., description="The Id of the molecule which was passed in as the reference for this Optimization.")
+        ..., description="The Id of the molecule which was passed in as the reference for this Optimization."
+    )
     qc_spec: QCSpecification = Field(
-        ..., description="The specification of the quantum chemistry calculation to run at each point.")
+        ..., description="The specification of the quantum chemistry calculation to run at each point."
+    )
     keywords: Dict[str, Any] = Field(
         {},
         description="The keyword options which were passed into the Optimization program. "
-        "Note: These are a dictionary and not a :class:`KeywordSet` object.")
-    protocols: qcel.models.procedures.OptimizationProtocols = Field(qcel.models.procedures.OptimizationProtocols(),
-                                                                    description="")
+        "Note: These are a dictionary and not a :class:`KeywordSet` object.",
+    )
+    protocols: qcel.models.procedures.OptimizationProtocols = Field(
+        qcel.models.procedures.OptimizationProtocols(), description=""
+    )
 
     # Automatting issue currently
     # description=str(qcel.models.procedures.OptimizationProtocols.__doc__))
@@ -447,27 +476,28 @@ class OptimizationRecord(RecordBase):
     # Results
     energies: List[float] = Field(None, description="The ordered list of energies at each step of the Optimization.")
     final_molecule: ObjectId = Field(
-        None, description="The ``ObjectId`` of the final, optimized Molecule the Optimization procedure converged to.")
+        None, description="The ``ObjectId`` of the final, optimized Molecule the Optimization procedure converged to."
+    )
     trajectory: List[ObjectId] = Field(
         None,
         description="The list of Molecule Id's the Optimization procedure generated at each step of the optimization."
-        "``initial_molecule`` will be the first index, and ``final_molecule`` will be the last index.")
+        "``initial_molecule`` will be the first index, and ``final_molecule`` will be the last index.",
+    )
 
     class Config(RecordBase.Config):
         pass
 
-    @validator('keywords')
+    @validator("keywords")
     def check_keywords(cls, v):
         if v is not None:
             v = recursive_normalizer(v)
         return v
 
-## QCSchema constructors
+    ## QCSchema constructors
 
-    def build_schema_input(self,
-                           initial_molecule: 'Molecule',
-                           qc_keywords: Optional['KeywordSet'] = None,
-                           checks: bool = True) -> 'OptimizationInput':
+    def build_schema_input(
+        self, initial_molecule: "Molecule", qc_keywords: Optional["KeywordSet"] = None, checks: bool = True
+    ) -> "OptimizationInput":
         """
         Creates a OptimizationInput schema.
         """
@@ -480,16 +510,18 @@ class OptimizationRecord(RecordBase):
         qcinput_spec = self.qc_spec.form_schema_object(keywords=qc_keywords, checks=checks)
         qcinput_spec.pop("program", None)
 
-        model = qcel.models.OptimizationInput(id=self.id,
-                                              initial_molecule=initial_molecule,
-                                              keywords=self.keywords,
-                                              extras=self.extras,
-                                              hash_index=self.hash_index,
-                                              input_specification=qcinput_spec,
-                                              protocols=self.protocols)
+        model = qcel.models.OptimizationInput(
+            id=self.id,
+            initial_molecule=initial_molecule,
+            keywords=self.keywords,
+            extras=self.extras,
+            hash_index=self.hash_index,
+            input_specification=qcinput_spec,
+            protocols=self.protocols,
+        )
         return model
 
-## Standard function
+    ## Standard function
 
     def get_final_energy(self) -> float:
         """The final energy of the geometry optimization.
@@ -518,7 +550,7 @@ class OptimizationRecord(RecordBase):
 
         return self.cache["trajectory"]
 
-    def get_molecular_trajectory(self) -> List['Molecule']:
+    def get_molecular_trajectory(self) -> List["Molecule"]:
         """Returns the Molecule at each gradient evaluation in the trajectory.
 
         Returns
@@ -536,7 +568,7 @@ class OptimizationRecord(RecordBase):
 
         return self.cache["molecular_trajectory"]
 
-    def get_initial_molecule(self) -> 'Molecule':
+    def get_initial_molecule(self) -> "Molecule":
         """Returns the initial molecule
 
         Returns
@@ -548,7 +580,7 @@ class OptimizationRecord(RecordBase):
         ret = self.client.query_molecules(id=[self.initial_molecule])
         return ret[0]
 
-    def get_final_molecule(self) -> 'Molecule':
+    def get_final_molecule(self) -> "Molecule":
         """Returns the optimized molecule
 
         Returns
@@ -560,14 +592,11 @@ class OptimizationRecord(RecordBase):
         ret = self.client.query_molecules(id=[self.final_molecule])
         return ret[0]
 
+    ## Show functions
 
-## Show functions
-
-    def show_history(self,
-                     units: str = "kcal/mol",
-                     digits: int = 3,
-                     relative: bool = True,
-                     return_figure: Optional[bool] = None) -> 'plotly.Figure':
+    def show_history(
+        self, units: str = "kcal/mol", digits: int = 3, relative: bool = True, return_figure: Optional[bool] = None
+    ) -> "plotly.Figure":
         """Plots the energy of the trajectory the optimization took.
 
         Parameters
@@ -593,12 +622,7 @@ class OptimizationRecord(RecordBase):
         if relative:
             energies = energies - np.min(energies)
 
-        trace = {
-            "mode": "lines+markers",
-            "x": list(range(1,
-                            len(energies) + 1)),
-            "y": np.around(energies * cf, digits)
-        }
+        trace = {"mode": "lines+markers", "x": list(range(1, len(energies) + 1)), "y": np.around(energies * cf, digits)}
 
         if relative:
             ylabel = f"Relative Energy [{units}]"
@@ -607,15 +631,12 @@ class OptimizationRecord(RecordBase):
 
         custom_layout = {
             "title": "Geometry Optimization",
-            "yaxis": {
-                "title": ylabel,
-                "zeroline": True
-            },
+            "yaxis": {"title": ylabel, "zeroline": True},
             "xaxis": {
                 "title": "Optimization Step",
                 # "zeroline": False,
-                "range": [min(trace["x"]), max(trace["x"])]
-            }
+                "range": [min(trace["x"]), max(trace["x"])],
+            },
         }
 
         return scatter_plot([trace], custom_layout=custom_layout, return_figure=return_figure)

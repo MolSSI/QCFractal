@@ -10,23 +10,25 @@ import sqlalchemy as sa
 
 import os
 import sys
+
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 from migration_helpers import msgpack_migrations
 from qcelemental.util import msgpackext_dumps, msgpackext_loads
 
 # revision identifiers, used by Alembic.
-revision = '8b0cd9accaf2'
-down_revision = '1134312ad4a3'
+revision = "8b0cd9accaf2"
+down_revision = "1134312ad4a3"
 branch_labels = None
 depends_on = None
 
 block_size = 100
 table_name = "base_result"
 
+
 def transformer(old_data):
 
     extras = old_data["extras"]
-    extras.pop("_qcfractal_tags", None) # cleanup old tags
+    extras.pop("_qcfractal_tags", None)  # cleanup old tags
 
     return {"extras_": msgpackext_dumps(extras)}
 

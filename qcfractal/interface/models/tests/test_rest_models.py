@@ -1,6 +1,5 @@
-import pytest
-
 import pydantic
+import pytest
 
 from ..rest_models import QueryFilter
 

@@ -15,12 +15,11 @@ __all__ = ["FireworksAdapter"]
 # This, the __all__, and the imports from qcelemental.models are all to make it so Fireworks returns either the
 # Result, the Optimization, or the FailedOperation objects like all other adapters instead of a dict.
 # In the future, this may be cleaned up but for now, it works
-schema_mapper = {qcschema_output_default: Result,
-                 qcschema_optimization_output_default: Optimization}
+schema_mapper = {qcschema_output_default: Result, qcschema_optimization_output_default: Optimization}
 
 
 class FireworksAdapter(BaseAdapter):
-    def __init__(self, client: Any, logger: Optional[logging.Logger]=None, **kwargs):
+    def __init__(self, client: Any, logger: Optional[logging.Logger] = None, **kwargs):
         BaseAdapter.__init__(self, client, logger, **kwargs)
         self.client.reset(None, require_password=False, max_reset_wo_password=int(1e8))
 
@@ -37,8 +36,10 @@ class FireworksAdapter(BaseAdapter):
                 func=task_spec["spec"]["function"],
                 args=task_spec["spec"]["args"],
                 kwargs=kwargs,
-                stored_data_varname="fw_results"),
-            spec={"_launch_dir": "/tmp/"})
+                stored_data_varname="fw_results",
+            ),
+            spec={"_launch_dir": "/tmp/"},
+        )
         launches = self.client.add_wf(fw)
 
         return list(launches.values())[0], task_spec["id"]
@@ -51,29 +52,25 @@ class FireworksAdapter(BaseAdapter):
         ret = {}
 
         # Pull out completed results that match our queue ids
-        cursor = self.client.launches.find({
-            "fw_id": {
-                "$in": list(self.queue.keys())
+        cursor = self.client.launches.find(
+            {"fw_id": {"$in": list(self.queue.keys())}, "state": {"$in": ["COMPLETED", "FIZZLED"]}},
+            {
+                "action.stored_data.fw_results": True,
+                "action.stored_data._task.args": True,
+                "action.stored_data._exception": True,
+                "_id": False,
+                "fw_id": True,
+                "state": True,
             },
-            "state": {
-                "$in": ["COMPLETED", "FIZZLED"]
-            },
-        }, {
-            "action.stored_data.fw_results": True,
-            "action.stored_data._task.args": True,
-            "action.stored_data._exception": True,
-            "_id": False,
-            "fw_id": True,
-            "state": True
-        })
+        )
 
         for tmp_data in cursor:
             key = self.queue.pop(tmp_data["fw_id"])
             if tmp_data["state"] == "COMPLETED":
                 key_data = tmp_data["action"]["stored_data"]["fw_results"]
-                if key_data['success']:
+                if key_data["success"]:
                     # Cast dict to the Result or Optimization based on the schema
-                    ret[key] = schema_mapper[key_data['schema_name']](**key_data)
+                    ret[key] = schema_mapper[key_data["schema_name"]](**key_data)
                 else:
                     ret[key] = FailedOperation(**key_data)
             else:
@@ -89,6 +86,7 @@ class FireworksAdapter(BaseAdapter):
     def await_results(self) -> bool:
         # Launch all results consecutively
         import fireworks.core.rocket_launcher
+
         fireworks.core.rocket_launcher.rapidfire(self.client, strm_lvl="CRITICAL")
         return True
 

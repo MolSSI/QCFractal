@@ -28,24 +28,10 @@ def torsiondrive_fixture(fractal_compute_server):
     # Geometric options
     torsiondrive_options = {
         "initial_molecule": mol_ret[0],
-        "keywords": {
-            "dihedrals": [[0, 1, 2, 3]],
-            "grid_spacing": [90]
-        },
-        "optimization_spec": {
-            "program": "geometric",
-            "keywords": {
-                "coordsys": "tric",
-            }
-        },
-        "qc_spec": {
-            "driver": "gradient",
-            "method": "UFF",
-            "basis": "",
-            "keywords": None,
-            "program": "rdkit",
-        },
-    } # yapf: disable
+        "keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [90]},
+        "optimization_spec": {"program": "geometric", "keywords": {"coordsys": "tric"}},
+        "qc_spec": {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"},
+    }  # yapf: disable
 
     def spin_up_test(**keyword_augments):
         run_service = keyword_augments.pop("run_service", True)
@@ -59,7 +45,7 @@ def torsiondrive_fixture(fractal_compute_server):
         if ret.meta.n_inserted:  # In case test already submitted
             compute_key = ret.data.ids[0]
             service = client.query_services(procedure_id=compute_key)[0]
-            assert 'WAITING' in service['status']
+            assert "WAITING" in service["status"]
 
         if run_service:
             fractal_compute_server.await_services()
@@ -157,7 +143,7 @@ def test_service_torsiondrive_single(torsiondrive_fixture):
     assert pytest.approx(0.000156553761859271, abs=1e-6) == result.get_final_energies(-90)
     assert pytest.approx(0.000753492556057886, abs=1e-6) == result.get_final_energies(180)
 
-    assert hasattr(result.get_final_molecules()[(-90, )], "symbols")
+    assert hasattr(result.get_final_molecules()[(-90,)], "symbols")
 
 
 @pytest.mark.slow
@@ -206,15 +192,15 @@ def test_service_torsiondrive_option_dihedral_ranges(torsiondrive_fixture):
 
     # The dihedral range should be limited to -150, -90, -60
     final_energies = result.get_final_energies()
-    assert set(final_energies.keys()) == {(-150, ), (-120, ), (-90, ), (-60, )}
-    assert pytest.approx(0.0005683235570009067, abs=1e-6) == final_energies[(-150, )]
-    assert pytest.approx(0.0002170694130912583, abs=1e-6) == final_energies[(-120, )]
-    assert pytest.approx(0.0001565537585121726, abs=1e-6) == final_energies[(-90, )]
-    assert pytest.approx(0.0007991274441437338, abs=1e-6) == final_energies[(-60, )]
+    assert set(final_energies.keys()) == {(-150,), (-120,), (-90,), (-60,)}
+    assert pytest.approx(0.0005683235570009067, abs=1e-6) == final_energies[(-150,)]
+    assert pytest.approx(0.0002170694130912583, abs=1e-6) == final_energies[(-120,)]
+    assert pytest.approx(0.0001565537585121726, abs=1e-6) == final_energies[(-90,)]
+    assert pytest.approx(0.0007991274441437338, abs=1e-6) == final_energies[(-60,)]
 
     # Check final molecules
     final_molecules = result.get_final_molecules()
-    assert set(final_molecules.keys()) == {(-150, ), (-120, ), (-90, ), (-60, )}
+    assert set(final_molecules.keys()) == {(-150,), (-120,), (-90,), (-60,)}
     assert all(hasattr(m, "symbols") for m in final_molecules.values())
 
 
@@ -230,11 +216,11 @@ def test_service_torsiondrive_option_energy_decrease_thresh(torsiondrive_fixture
 
     # the final energies are the same as the default setting, because this molecule is too simple
     final_energies = result.get_final_energies()
-    assert set(final_energies.keys()) == {(-90, ), (-0, ), (90, ), (180, )}
-    assert pytest.approx(0.002597541340221565, abs=1e-6) == final_energies[(0, )]
-    assert pytest.approx(0.000156553761859276, abs=1e-6) == final_energies[(90, )]
-    assert pytest.approx(0.000156553761859271, abs=1e-6) == final_energies[(-90, )]
-    assert pytest.approx(0.000753492556057886, abs=1e-6) == final_energies[(180, )]
+    assert set(final_energies.keys()) == {(-90,), (-0,), (90,), (180,)}
+    assert pytest.approx(0.002597541340221565, abs=1e-6) == final_energies[(0,)]
+    assert pytest.approx(0.000156553761859276, abs=1e-6) == final_energies[(90,)]
+    assert pytest.approx(0.000156553761859271, abs=1e-6) == final_energies[(-90,)]
+    assert pytest.approx(0.000753492556057886, abs=1e-6) == final_energies[(180,)]
 
 
 @pytest.mark.slow
@@ -249,11 +235,11 @@ def test_service_torsiondrive_option_energy_upper_limit(torsiondrive_fixture):
 
     # The energy_upper_limit should limit the range of the scan
     final_energies = result.get_final_energies()
-    assert set(final_energies.keys()) == {(-150, ), (-120, ), (-90, ), (-60, )}
-    assert pytest.approx(0.0005683235570009067, abs=1e-6) == final_energies[(-150, )]
-    assert pytest.approx(0.0002170694130912583, abs=1e-6) == final_energies[(-120, )]
-    assert pytest.approx(0.0001565537585121726, abs=1e-6) == final_energies[(-90, )]
-    assert pytest.approx(0.0007991274441437338, abs=1e-6) == final_energies[(-60, )]
+    assert set(final_energies.keys()) == {(-150,), (-120,), (-90,), (-60,)}
+    assert pytest.approx(0.0005683235570009067, abs=1e-6) == final_energies[(-150,)]
+    assert pytest.approx(0.0002170694130912583, abs=1e-6) == final_energies[(-120,)]
+    assert pytest.approx(0.0001565537585121726, abs=1e-6) == final_energies[(-90,)]
+    assert pytest.approx(0.0007991274441437338, abs=1e-6) == final_energies[(-60,)]
 
 
 @pytest.mark.slow
@@ -264,27 +250,20 @@ def test_service_torsiondrive_option_extra_constraints(torsiondrive_fixture):
     ret = spin_up_test(
         optimization_spec={
             "program": "geometric",
-            "keywords": {
-                "coordsys": "tric",
-                "constraints": {
-                    "freeze": [{
-                        'type': 'xyz',
-                        'indices': [0],
-                    }]
-                }
-            }
-        })
+            "keywords": {"coordsys": "tric", "constraints": {"freeze": [{"type": "xyz", "indices": [0]}]}},
+        }
+    )
 
     result = client.query_procedures(id=ret.ids)[0]
     assert result.status == "COMPLETE"
 
     # The final energies are the same as the default setting, because this molecule is too simple
     final_energies = result.get_final_energies()
-    assert set(final_energies.keys()) == {(-90, ), (-0, ), (90, ), (180, )}
-    assert pytest.approx(0.002597541340221565, abs=1e-6) == final_energies[(0, )]
-    assert pytest.approx(0.000156553761859276, abs=1e-6) == final_energies[(90, )]
-    assert pytest.approx(0.000156553761859271, abs=1e-6) == final_energies[(-90, )]
-    assert pytest.approx(0.000753492556057886, abs=1e-6) == final_energies[(180, )]
+    assert set(final_energies.keys()) == {(-90,), (-0,), (90,), (180,)}
+    assert pytest.approx(0.002597541340221565, abs=1e-6) == final_energies[(0,)]
+    assert pytest.approx(0.000156553761859276, abs=1e-6) == final_energies[(90,)]
+    assert pytest.approx(0.000156553761859271, abs=1e-6) == final_energies[(-90,)]
+    assert pytest.approx(0.000753492556057886, abs=1e-6) == final_energies[(180,)]
 
     # Check final molecules
     hooh = ptl.data.get_molecule("hooh.json")
@@ -348,7 +327,7 @@ def test_service_torsiondrive_get_final_results(torsiondrive_fixture):
     assert result.status == "COMPLETE"
 
     final_result_records = result.get_final_results()
-    assert set(final_result_records.keys()) == {(-90, ), (-0, ), (90, ), (180, )}
+    assert set(final_result_records.keys()) == {(-90,), (-0,), (90,), (180,)}
 
 
 @using_geometric
@@ -363,37 +342,20 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     mol_ret = client.add_molecules([hooh])
 
     # Options
-    service = GridOptimizationInput(**{
-        "keywords": {
-            "preoptimization":
-            True,
-            "scans": [{
-                "type": "distance",
-                "indices": [1, 2],
-                "steps": [-0.1, 0.0],
-                "step_type": "relative"
-            }, {
-                "type": "dihedral",
-                "indices": [0, 1, 2, 3],
-                "steps": [-90, 0],
-                "step_type": "absolute"
-            }]
-        },
-        "optimization_spec": {
-            "program": "geometric",
+    service = GridOptimizationInput(
+        **{
             "keywords": {
-                "coordsys": "tric",
-            }
-        },
-        "qc_spec": {
-            "driver": "gradient",
-            "method": "UFF",
-            "basis": "",
-            "keywords": None,
-            "program": "rdkit",
-        },
-        "initial_molecule": mol_ret[0],
-    }) # yapf: disable
+                "preoptimization": True,
+                "scans": [
+                    {"type": "distance", "indices": [1, 2], "steps": [-0.1, 0.0], "step_type": "relative"},
+                    {"type": "dihedral", "indices": [0, 1, 2, 3], "steps": [-90, 0], "step_type": "absolute"},
+                ],
+            },
+            "optimization_spec": {"program": "geometric", "keywords": {"coordsys": "tric"}},
+            "qc_spec": {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"},
+            "initial_molecule": mol_ret[0],
+        }
+    )  # yapf: disable
 
     ret = client.add_service([service], tag="gridopt", priority="low")
 
@@ -422,8 +384,8 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     assert result.status == "COMPLETE"
 
     assert result.starting_grid == (1, 0)
-    assert pytest.approx(result.get_final_energies((0, 0)), abs=1.e-4) == 0.0010044105443485617
-    assert pytest.approx(result.get_final_energies((1, 1)), abs=1.e-4) == 0.0026440964897817623
+    assert pytest.approx(result.get_final_energies((0, 0)), abs=1.0e-4) == 0.0010044105443485617
+    assert pytest.approx(result.get_final_energies((1, 1)), abs=1.0e-4) == 0.0026440964897817623
 
     assert result.starting_molecule != result.initial_molecule
 
@@ -434,7 +396,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     assert pytest.approx(starting_mol.measure([1, 2])) == 2.488686479260597
 
     # Check tags on individual procedures
-    proc_id = result.grid_optimizations['[0, 0]']
+    proc_id = result.grid_optimizations["[0, 0]"]
 
     # completed tasks should be deleted
     task = client.query_tasks(base_result=proc_id)
@@ -446,7 +408,7 @@ def test_service_gridoptimization_single_opt(fractal_compute_server):
     assert final_result_records["preoptimization"].molecule == result.starting_molecule
 
     # Pull the full history
-    preopt = result.get_history()['preoptimization']
+    preopt = result.get_history()["preoptimization"]
     assert preopt.initial_molecule == result.initial_molecule
     assert preopt.final_molecule == result.starting_molecule
 
@@ -462,31 +424,17 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
     initial_distance = hooh.measure([1, 2])
 
     # Options
-    service = GridOptimizationInput(**{
-        "keywords": {
-            "preoptimization": False,
-            "scans": [{
-                "type": "distance",
-                "indices": [1, 2],
-                "steps": [-0.1, 0.0],
-                "step_type": "relative"
-            }]
-        },
-        "optimization_spec": {
-            "program": "geometric",
+    service = GridOptimizationInput(
+        **{
             "keywords": {
-                "coordsys": "tric",
-            }
-        },
-        "qc_spec": {
-            "driver": "gradient",
-            "method": "UFF",
-            "basis": "",
-            "keywords": None,
-            "program": "rdkit",
-        },
-        "initial_molecule": hooh,
-    }) # yapf: disable
+                "preoptimization": False,
+                "scans": [{"type": "distance", "indices": [1, 2], "steps": [-0.1, 0.0], "step_type": "relative"}],
+            },
+            "optimization_spec": {"program": "geometric", "keywords": {"coordsys": "tric"}},
+            "qc_spec": {"driver": "gradient", "method": "UFF", "basis": "", "keywords": None, "program": "rdkit"},
+            "initial_molecule": hooh,
+        }
+    )  # yapf: disable
 
     ret = client.add_service([service])
     fractal_compute_server.await_services()
@@ -495,8 +443,8 @@ def test_service_gridoptimization_single_noopt(fractal_compute_server):
     result = client.query_procedures(id=ret.ids)[0]
 
     assert result.status == "COMPLETE"
-    assert result.starting_grid == (1, )
-    assert pytest.approx(result.get_final_energies((0, )), abs=1.e-4) == 0.00032145876568280524
+    assert result.starting_grid == (1,)
+    assert pytest.approx(result.get_final_energies((0,)), abs=1.0e-4) == 0.00032145876568280524
 
     assert result.starting_molecule == result.initial_molecule
 
@@ -513,17 +461,19 @@ def test_query_time(fractal_compute_server):
     client = ptl.FractalClient(fractal_compute_server)
 
     import time
+
     t = time.time()
     p = client.query_procedures(procedure="optimization")
     total = time.time() - t
     print(total)
     print(len(p))
-    print('---- per optmization proc: ', total / len(p))
+    print("---- per optmization proc: ", total / len(p))
 
     import time
+
     t = time.time()
     p = client.query_procedures(procedure="torsiondrive")
     total = time.time() - t
     print(total)
     print(len(p))
-    print('---- per Torsion proc: ', total / len(p))
+    print("---- per Torsion proc: ", total / len(p))

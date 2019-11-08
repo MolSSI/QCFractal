@@ -1,13 +1,8 @@
-import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
-from dash.dependencies import Input, Output
 import pandas as pd
 import plotly.graph_objs as go
 from plotly.colors import DEFAULT_PLOTLY_COLORS
 
-import dash_coreui_components as coreui
-from flask import current_app
+import dash_bootstrap_components as dbc
 
 from .connection import get_socket
 
@@ -38,7 +33,7 @@ def list_managers(status=None, modified_after=None):
     df["programs"] = df["programs"].apply(lambda x: ", ".join(sorted(x)))
     df["procedures"] = df["procedures"].apply(lambda x: ", ".join(sorted(x)))
     df.columns = [x.title() for x in cols]
-    df.sort_values('Completed', inplace=True, ascending=False)
+    df.sort_values("Completed", inplace=True, ascending=False)
     return dbc.Table.from_dataframe(df, style={"width": "100%"})
 
 
@@ -54,8 +49,11 @@ def manager_graph(status=None, modified_after=None):
         data["error"] = data["failures"]
         data["running"] = data["submitted"] - data["completed"]
 
-        bar_iter = [("error", DEFAULT_PLOTLY_COLORS[3]), ("running", DEFAULT_PLOTLY_COLORS[2]),
-                    ("completed", DEFAULT_PLOTLY_COLORS[0])]
+        bar_iter = [
+            ("error", DEFAULT_PLOTLY_COLORS[3]),
+            ("running", DEFAULT_PLOTLY_COLORS[2]),
+            ("completed", DEFAULT_PLOTLY_COLORS[0]),
+        ]
 
         data.sort_values("completed", inplace=True, ascending=False)
         for status, color in bar_iter:
@@ -66,14 +64,11 @@ def manager_graph(status=None, modified_after=None):
         layout={
             # "yaxis_type": "log",
             "barmode": "stack",
-            "yaxis": {
-                "title": "Tasks"
-            },
-            "xaxis": {
-                "title": "Cluster"
-            },
-            "margin": _default_margin
-        })
+            "yaxis": {"title": "Tasks"},
+            "xaxis": {"title": "Cluster"},
+            "margin": _default_margin,
+        },
+    )
 
 
 def task_graph():
@@ -84,31 +79,32 @@ def task_graph():
     df = pd.DataFrame(cnts["data"])
 
     df.loc[df["tag"].isna(), "tag"] = "None"
-    order = df.groupby('tag')['count'].sum().sort_values(ascending=False).index
+    order = df.groupby("tag")["count"].sum().sort_values(ascending=False).index
 
-    bar_iter = [("waiting", DEFAULT_PLOTLY_COLORS[0]), ("running", DEFAULT_PLOTLY_COLORS[2]),
-                ("error", DEFAULT_PLOTLY_COLORS[3])]
+    bar_iter = [
+        ("waiting", DEFAULT_PLOTLY_COLORS[0]),
+        ("running", DEFAULT_PLOTLY_COLORS[2]),
+        ("error", DEFAULT_PLOTLY_COLORS[3]),
+    ]
 
     bars = []
     for status, color in bar_iter:
         bar_data = []
         for tag in order:
             matches = df[(df["status"] == status) & (df["tag"] == tag)]
-            bar_data.append(matches['count'].sum())
+            bar_data.append(matches["count"].sum())
 
         bars.append(go.Bar(name=status.title(), x=order, y=bar_data, marker_color=color))
 
-    fig = go.Figure(data=bars,
-                    layout={
-                        "barmode": "stack",
-                        "yaxis_type": "log",
-                        "yaxis": {
-                            "title": "Tasks"
-                        },
-                        "xaxis": {
-                            "title": "Tag"
-                        },
-                        "margin": _default_margin
-                    })
+    fig = go.Figure(
+        data=bars,
+        layout={
+            "barmode": "stack",
+            "yaxis_type": "log",
+            "yaxis": {"title": "Tasks"},
+            "xaxis": {"title": "Tag"},
+            "margin": _default_margin,
+        },
+    )
 
     return fig

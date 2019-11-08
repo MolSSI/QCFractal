@@ -37,14 +37,14 @@ def mean_unsigned_relative_error(value, bench, **kwargs):
 
 # Stats wrapped in a dictionary:
 _stats_dict = {}
-_stats_dict['E'] = signed_error
-_stats_dict['ME'] = mean_signed_error
-_stats_dict['UE'] = unsigned_error
-_stats_dict['MUE'] = mean_unsigned_error
-_stats_dict['URE'] = unsigned_relative_error
-_stats_dict['MURE'] = mean_unsigned_relative_error
+_stats_dict["E"] = signed_error
+_stats_dict["ME"] = mean_signed_error
+_stats_dict["UE"] = unsigned_error
+_stats_dict["MUE"] = mean_unsigned_error
+_stats_dict["URE"] = unsigned_relative_error
+_stats_dict["MURE"] = mean_unsigned_relative_error
 
-_return_series = ['ME', 'MUE', 'MURE', 'WMURE']
+_return_series = ["ME", "MUE", "MURE", "WMURE"]
 
 
 def wrap_statistics(description, ds, value, bench, **kwargs):
@@ -53,10 +53,10 @@ def wrap_statistics(description, ds, value, bench, **kwargs):
         rbench = ds.get_values(name=bench)[bench]
     elif isinstance(bench, (np.ndarray, pd.Series)):
         if len(bench.shape) != 1:
-            raise ValueError('Only 1D numpy arrays can be passed to statistical quantities.')
+            raise ValueError("Only 1D numpy arrays can be passed to statistical quantities.")
         rbench = bench
     else:
-        raise TypeError('Benchmark must be a column of the dataframe or a 1D numpy array.')
+        raise TypeError("Benchmark must be a column of the dataframe or a 1D numpy array.")
 
     if isinstance(value, str):
         rvalue = ds.get_values(name=value)[value]
@@ -81,4 +81,4 @@ def wrap_statistics(description, ds, value, bench, **kwargs):
         return ret
 
     else:
-        raise TypeError('Type {} is not understood for statistical quantities'.format(str(type(value))))
+        raise TypeError("Type {} is not understood for statistical quantities".format(str(type(value))))

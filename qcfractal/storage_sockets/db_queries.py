@@ -30,7 +30,7 @@ class QueryBase:
     def query(self, session, query_key, limit=0, skip=0, include=None, exclude=None, **kwargs):
 
         if query_key not in self._query_method_map:
-            raise TypeError(f'Query type {query_key} is unimplemented for class {self._class_name}')
+            raise TypeError(f"Query type {query_key} is unimplemented for class {self._class_name}")
 
         self.session = session
 
@@ -80,10 +80,10 @@ select {select_str}count(*) from {table_name}
             return ret[0]["count"]
 
     @staticmethod
-    def _raise_missing_attribute(cls, query_key, missing_attribute, amend_msg=''):
+    def _raise_missing_attribute(cls, query_key, missing_attribute, amend_msg=""):
         """Raises error for missing attribute in a message suitable for the REST user"""
 
-        raise AttributeError(f'To query {cls._class_name} for {query_key} ' f'you must provide {missing_attribute}.')
+        raise AttributeError(f"To query {cls._class_name} for {query_key} " f"you must provide {missing_attribute}.")
 
 
 # ----------------------------------------------------------------------------
@@ -91,10 +91,8 @@ select {select_str}count(*) from {table_name}
 
 class TaskQueries(QueryBase):
 
-    _class_name = 'task'
-    _query_method_map = {
-        'counts': '_task_counts',
-    }
+    _class_name = "task"
+    _query_method_map = {"counts": "_task_counts"}
 
     def _task_counts(self):
 
@@ -117,14 +115,15 @@ class DatabaseStatQueries(QueryBase):
     _class_name = "database_stats"
 
     _query_method_map = {
-        'table_count': '_table_count',
-        'database_size': '_database_size',
-        'table_information': '_table_information',
+        "table_count": "_table_count",
+        "database_size": "_database_size",
+        "table_information": "_table_information",
     }
+
     def _table_count(self, table_name=None):
 
         if table_name is None:
-            self._raise_missing_attribute('table_name', 'table name')
+            self._raise_missing_attribute("table_name", "table name")
 
         sql_statement = f"SELECT count(*) from {table_name}"
         return self.execute_query(sql_statement, with_keys=False)[0]
@@ -132,7 +131,7 @@ class DatabaseStatQueries(QueryBase):
     def _database_size(self):
 
         sql_statement = f"SELECT pg_database_size('{self.database_name}')"
-        return self.execute_query(sql_statement, with_keys=True)[0]['pg_database_size']
+        return self.execute_query(sql_statement, with_keys=True)[0]["pg_database_size"]
 
     def _table_information(self):
 
@@ -164,13 +163,11 @@ class ResultQueries(QueryBase):
 
     _class_name = "result"
 
-    _query_method_map = {
-        'count': '_count',
-    }
+    _query_method_map = {"count": "_count"}
 
     def _count(self, groupby: Optional[List[str]] = None):
 
-        available_groupbys = {'result_type', 'status'}
+        available_groupbys = {"result_type", "status"}
 
         return self._base_count("base_result", available_groupbys, groupby=groupby)
 
@@ -179,9 +176,7 @@ class MoleculeQueries(QueryBase):
 
     _class_name = "molecule"
 
-    _query_method_map = {
-        'count': '_count',
-    }
+    _query_method_map = {"count": "_count"}
 
     def _count(self, groupby: Optional[List[str]] = None):
 
@@ -195,20 +190,20 @@ class MoleculeQueries(QueryBase):
 
 class TorsionDriveQueries(QueryBase):
 
-    _class_name = 'torsiondrive'
+    _class_name = "torsiondrive"
 
     _query_method_map = {
-        'initial_molecules': '_get_initial_molecules',
-        'initial_molecules_ids': '_get_initial_molecules_ids',
-        'final_molecules': '_get_final_molecules',
-        'final_molecules_ids': '_get_final_molecules_ids',
-        'return_results': '_get_return_results',
+        "initial_molecules": "_get_initial_molecules",
+        "initial_molecules_ids": "_get_initial_molecules_ids",
+        "final_molecules": "_get_final_molecules",
+        "final_molecules_ids": "_get_final_molecules_ids",
+        "return_results": "_get_return_results",
     }
 
     def _get_initial_molecules_ids(self, torsion_id=None):
 
         if torsion_id is None:
-            self._raise_missing_attribute('initial_molecules_ids', 'torsion drive id')
+            self._raise_missing_attribute("initial_molecules_ids", "torsion drive id")
 
         sql_statement = f"""
                 select initial_molecule from optimization_procedure as opt where opt.id in
@@ -223,7 +218,7 @@ class TorsionDriveQueries(QueryBase):
     def _get_initial_molecules(self, torsion_id=None):
 
         if torsion_id is None:
-            self._raise_missing_attribute('initial_molecules', 'torsion drive id')
+            self._raise_missing_attribute("initial_molecules", "torsion drive id")
 
         sql_statement = f"""
                 select molecule.* from molecule
@@ -238,7 +233,7 @@ class TorsionDriveQueries(QueryBase):
     def _get_final_molecules_ids(self, torsion_id=None):
 
         if torsion_id is None:
-            self._raise_missing_attribute('final_molecules_ids', 'torsion drive id')
+            self._raise_missing_attribute("final_molecules_ids", "torsion drive id")
 
         sql_statement = f"""
                 select final_molecule from optimization_procedure as opt where opt.id in
@@ -253,7 +248,7 @@ class TorsionDriveQueries(QueryBase):
     def _get_final_molecules(self, torsion_id=None):
 
         if torsion_id is None:
-            self._raise_missing_attribute('final_molecules', 'torsion drive id')
+            self._raise_missing_attribute("final_molecules", "torsion drive id")
 
         sql_statement = f"""
                 select molecule.* from molecule
@@ -269,7 +264,7 @@ class TorsionDriveQueries(QueryBase):
         """All return results ids of a torsion drive"""
 
         if torsion_id is None:
-            self._raise_missing_attribute('return_results', 'torsion drive id')
+            self._raise_missing_attribute("return_results", "torsion drive id")
 
         sql_statement = f"""
                 select opt_res.opt_id, result.id as result_id, result.return_result from result
@@ -286,13 +281,13 @@ class TorsionDriveQueries(QueryBase):
 
 class OptimizationQueries(QueryBase):
 
-    _class_name = 'optimization'
-    _exclude = ['molecule_hash', 'molecular_formula', 'result_type']
+    _class_name = "optimization"
+    _exclude = ["molecule_hash", "molecular_formula", "result_type"]
     _query_method_map = {
-        'all_results': '_get_all_results',
-        'final_result': '_get_final_results',
-        'initial_molecule': '_get_initial_molecules',
-        'final_molecule': '_get_final_molecules',
+        "all_results": "_get_all_results",
+        "final_result": "_get_final_results",
+        "initial_molecule": "_get_initial_molecules",
+        "final_molecule": "_get_final_molecules",
     }
 
     def _remove_excluded_keys(self, data):
@@ -304,10 +299,11 @@ class OptimizationQueries(QueryBase):
         Returns list(list) """
 
         if optimization_ids is None:
-            self._raise_missing_attribute('all_results', 'List of optimizations ids')
+            self._raise_missing_attribute("all_results", "List of optimizations ids")
 
         # row_to_json(result.*)
-        sql_statement = text("""
+        sql_statement = text(
+            """
             select * from base_result
             join (
                 select opt_id, result.* from result
@@ -316,7 +312,8 @@ class OptimizationQueries(QueryBase):
                 where traj.opt_id in :optimization_ids
             ) result
             on base_result.id = result.id
-        """)
+        """
+        )
 
         # bind and expand ids list
         sql_statement = sql_statement.bindparams(bindparam("optimization_ids", expanding=True))
@@ -329,7 +326,7 @@ class OptimizationQueries(QueryBase):
         ret = {}
         for rec in query_result:
             self._remove_excluded_keys(rec)
-            key = rec.pop('opt_id')
+            key = rec.pop("opt_id")
             if key not in ret:
                 ret[key] = []
 
@@ -341,9 +338,10 @@ class OptimizationQueries(QueryBase):
         """Return the actual results objects of the best result in each optimization"""
 
         if optimization_ids is None:
-            self._raise_missing_attribute('final_result', 'List of optimizations ids')
+            self._raise_missing_attribute("final_result", "List of optimizations ids")
 
-        sql_statement = text("""
+        sql_statement = text(
+            """
             select * from base_result
             join (
                 select opt_id, result.* from result
@@ -359,7 +357,8 @@ class OptimizationQueries(QueryBase):
                 on result.id = traj.result_id
             ) result
             on base_result.id = result.id
-        """)
+        """
+        )
 
         # bind and expand ids list
         sql_statement = sql_statement.bindparams(bindparam("optimization_ids", expanding=True))
@@ -372,7 +371,7 @@ class OptimizationQueries(QueryBase):
         ret = {}
         for rec in query_result:
             self._remove_excluded_keys(rec)
-            key = rec.pop('opt_id')
+            key = rec.pop("opt_id")
             ret[key] = ResultRecord(**rec)
 
         return ret
@@ -380,14 +379,16 @@ class OptimizationQueries(QueryBase):
     def _get_initial_molecules(self, optimization_ids=None):
 
         if optimization_ids is None:
-            self._raise_missing_attribute('initial_molecule', 'List of optimizations ids')
+            self._raise_missing_attribute("initial_molecule", "List of optimizations ids")
 
-        sql_statement = text("""
+        sql_statement = text(
+            """
                 select opt.id as opt_id, molecule.* from molecule
                 join optimization_procedure as opt
                 on molecule.id = opt.initial_molecule
                 where opt.id in :optimization_ids
-        """)
+        """
+        )
 
         # bind and expand ids list
         sql_statement = sql_statement.bindparams(bindparam("optimization_ids", expanding=True))
@@ -400,7 +401,7 @@ class OptimizationQueries(QueryBase):
         ret = {}
         for rec in query_result:
             self._remove_excluded_keys(rec)
-            key = rec.pop('opt_id')
+            key = rec.pop("opt_id")
             ret[key] = Molecule(**rec)
 
         return ret
@@ -408,14 +409,16 @@ class OptimizationQueries(QueryBase):
     def _get_final_molecules(self, optimization_ids=None):
 
         if optimization_ids is None:
-            self._raise_missing_attribute('final_molecule', 'List of optimizations ids')
+            self._raise_missing_attribute("final_molecule", "List of optimizations ids")
 
-        sql_statement = text("""
+        sql_statement = text(
+            """
                 select opt.id as opt_id, molecule.* from molecule
                 join optimization_procedure as opt
                 on molecule.id = opt.final_molecule
                 where opt.id in :optimization_ids
-        """)
+        """
+        )
 
         # bind and expand ids list
         sql_statement = sql_statement.bindparams(bindparam("optimization_ids", expanding=True))
@@ -428,7 +431,7 @@ class OptimizationQueries(QueryBase):
         ret = {}
         for rec in query_result:
             self._remove_excluded_keys(rec)
-            key = rec.pop('opt_id')
+            key = rec.pop("opt_id")
             ret[key] = Molecule(**rec)
 
         return ret

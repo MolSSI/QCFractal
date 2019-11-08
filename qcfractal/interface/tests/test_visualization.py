@@ -9,12 +9,14 @@ from . import portal
 
 try:
     import plotly
+
     _has_ploty = True
 except ModuleNotFoundError:
     _has_ploty = False
 
 using_plotly = pytest.mark.skipif(
-    _has_ploty is False, reason="Not detecting module 'plotly'. Install package if necessary to enable tests.")
+    _has_ploty is False, reason="Not detecting module 'plotly'. Install package if necessary to enable tests."
+)
 
 
 def live_fractal_or_skip():
@@ -23,12 +25,12 @@ def live_fractal_or_skip():
     First looks for a local staging server, then tries QCArchive.
     """
     try:
-        return portal.FractalClient('localhost:7777', verify=False)
+        return portal.FractalClient("localhost:7777", verify=False)
     except (requests.exceptions.ConnectionError, ConnectionRefusedError):
         print("Failed to connect to localhost")
         try:
             return pytest.xfail("Until QCA is migrated to v0.12.0")
-            requests.get('https://api.qcarchive.molssi.org:443', json={}, timeout=5)
+            requests.get("https://api.qcarchive.molssi.org:443", json={}, timeout=5)
             return portal.FractalClient()
         except (requests.exceptions.ConnectionError, ConnectionRefusedError):
             return pytest.skip("Could not make a connection to central Fractal server")
@@ -51,11 +53,9 @@ def test_plot_dataset(S22Fixture, kind):
 
     client, S22 = S22Fixture
 
-    fig = S22.visualize(method=["b2plyp", "pbe"],
-                        basis=["def2-svp", "def2-TZVP"],
-                        return_figure=True,
-                        bench="S22a",
-                        kind=kind).to_dict()
+    fig = S22.visualize(
+        method=["b2plyp", "pbe"], basis=["def2-svp", "def2-TZVP"], return_figure=True, bench="S22a", kind=kind
+    ).to_dict()
     assert "S22" in fig["layout"]["title"]["text"]
 
 
@@ -66,12 +66,14 @@ def test_plot_dataset_groupby(S22Fixture, kind, groupby):
 
     client, S22 = S22Fixture
 
-    fig = S22.visualize(method=["b2plyp", "b3lyp"],
-                        basis=["def2-svp", "def2-TZVP"],
-                        return_figure=True,
-                        bench="S22a",
-                        kind=kind,
-                        groupby=groupby).to_dict()
+    fig = S22.visualize(
+        method=["b2plyp", "b3lyp"],
+        basis=["def2-svp", "def2-TZVP"],
+        return_figure=True,
+        bench="S22a",
+        kind=kind,
+        groupby=groupby,
+    ).to_dict()
     assert "S22" in fig["layout"]["title"]["text"]
 
 
@@ -81,10 +83,9 @@ def test_plot_qca_examples(S22Fixture):
     client, S22 = S22Fixture
     fig = S22.visualize(method=["B3LYP", "B3LYP-D3", "B3LYP-D3M"], basis=["def2-tzvp"], groupby="D3").to_dict()
     assert "S22" in fig["layout"]["title"]["text"]
-    fig = S22.visualize(method=["B3LYP", "B3LYP-D3", "B2PLYP", "B2PLYP-D3"],
-                        basis="def2-tzvp",
-                        groupby="D3",
-                        kind="violin")
+    fig = S22.visualize(
+        method=["B3LYP", "B3LYP-D3", "B2PLYP", "B2PLYP-D3"], basis="def2-tzvp", groupby="D3", kind="violin"
+    )
     assert "S22" in fig["layout"]["title"]["text"]
 
 
@@ -107,18 +108,15 @@ def test_plot_torsiondrive_dataset(TDDSFixture):
     client, ds = TDDSFixture
 
     ds.visualize("[CH3:4][O:3][c:2]1[cH:1]cccc1", ["B3LYP-D3", "UFF"], units="kJ / mol", return_figure=True)
-    ds.visualize(["[CH3:4][O:3][c:2]1[cH:1]cccc1", "[CH3:4][O:3][c:2]1[cH:1]ccnc1"],
-                 "UFF",
-                 relative=False,
-                 return_figure=True)
+    ds.visualize(
+        ["[CH3:4][O:3][c:2]1[cH:1]cccc1", "[CH3:4][O:3][c:2]1[cH:1]ccnc1"], "UFF", relative=False, return_figure=True
+    )
 
 
 @using_plotly
 def test_plot_torsiondrive_dataset_measured(TDDSFixture):
     client, ds = TDDSFixture
 
-    ds.visualize("[CH3:4][O:3][c:2]1[cH:1]cccc1",
-                 "B3LYP-D3",
-                 units="kJ / mol",
-                 use_measured_angle=True,
-                 return_figure=True)
+    ds.visualize(
+        "[CH3:4][O:3][c:2]1[cH:1]cccc1", "B3LYP-D3", units="kJ / mol", use_measured_angle=True, return_figure=True
+    )

@@ -27,7 +27,7 @@ def nCr(n: int, r: int) -> int:
     return math.factorial(n) / math.factorial(r) / math.factorial(n - r)
 
 
-def register_collection(collection: 'Collection') -> None:
+def register_collection(collection: "Collection") -> None:
     """Registers a collection for use by the factory.
 
     Parameters
@@ -43,7 +43,7 @@ def register_collection(collection: 'Collection') -> None:
     __registered_collections[class_name] = collection
 
 
-def collection_factory(data: Dict[str, Any], client: 'FractalClient'=None) -> 'Collection':
+def collection_factory(data: Dict[str, Any], client: "FractalClient" = None) -> "Collection":
     """Creates a new Collection class from a JSON blob.
 
     Parameters

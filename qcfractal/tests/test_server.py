@@ -11,10 +11,17 @@ import requests
 
 import qcfractal.interface as ptl
 from qcfractal import FractalServer, FractalSnowflake, FractalSnowflakeHandler
-from qcfractal.testing import (await_true, find_open_port, pristine_loop, test_server, using_geometric, using_rdkit,
-                               using_torsiondrive)
+from qcfractal.testing import (
+    await_true,
+    find_open_port,
+    pristine_loop,
+    test_server,
+    using_geometric,
+    using_rdkit,
+    using_torsiondrive,
+)
 
-meta_set = {'errors', 'n_inserted', 'success', 'duplicates', 'error_description', 'validation_errors'}
+meta_set = {"errors", "n_inserted", "success", "duplicates", "error_description", "validation_errors"}
 
 
 def test_server_information(test_server):
@@ -39,7 +46,7 @@ def test_storage_socket(test_server):
         "group": "default",
     }
     # Cast collection type to lower since the server-side does it anyways
-    storage['collection'] = storage['collection'].lower()
+    storage["collection"] = storage["collection"].lower()
 
     r = requests.post(storage_api_addr, json={"meta": {}, "data": storage})
     assert r.status_code == 200, r.reason
@@ -48,14 +55,9 @@ def test_storage_socket(test_server):
     assert pdata["meta"].keys() == meta_set
     assert pdata["meta"]["n_inserted"] == 1
 
-    r = requests.get(storage_api_addr,
-                     json={
-                         "meta": {},
-                         "data": {
-                             "collection": storage["collection"],
-                             "name": storage["name"]
-                         }
-                     })
+    r = requests.get(
+        storage_api_addr, json={"meta": {}, "data": {"collection": storage["collection"], "name": storage["name"]}}
+    )
     print(r.content)
     assert r.status_code == 200, r.reason
 
@@ -85,10 +87,10 @@ def test_storage_socket(test_server):
 
 def test_bad_collection_get(test_server):
     for storage_api_addr in [
-            test_server.get_address() + "collection/1234/entry",
-            test_server.get_address() + "collection/1234/value",
-            test_server.get_address() + "collection/1234/list",
-            test_server.get_address() + "collection/1234/molecule"
+        test_server.get_address() + "collection/1234/entry",
+        test_server.get_address() + "collection/1234/value",
+        test_server.get_address() + "collection/1234/list",
+        test_server.get_address() + "collection/1234/molecule",
     ]:
         r = requests.get(storage_api_addr, json={"meta": {}, "data": {}})
         assert r.status_code == 200, f"{r.reason} {storage_api_addr}"
@@ -102,17 +104,17 @@ def test_bad_collection_post(test_server):
         "something": "else",
         "array": ["54321"],
         "visibility": True,
-        "view_available": False
+        "view_available": False,
     }
     # Cast collection type to lower since the server-side does it anyways
-    storage['collection'] = storage['collection'].lower()
+    storage["collection"] = storage["collection"].lower()
 
     for storage_api_addr in [
-            test_server.get_address() + "collection/1234",
-            test_server.get_address() + "collection/1234/value",
-            test_server.get_address() + "collection/1234/entry",
-            test_server.get_address() + "collection/1234/list",
-            test_server.get_address() + "collection/1234/molecule"
+        test_server.get_address() + "collection/1234",
+        test_server.get_address() + "collection/1234/value",
+        test_server.get_address() + "collection/1234/entry",
+        test_server.get_address() + "collection/1234/list",
+        test_server.get_address() + "collection/1234/molecule",
     ]:
         r = requests.post(storage_api_addr, json={"meta": {}, "data": storage})
         assert r.status_code == 200, r.reason
@@ -173,29 +175,15 @@ def test_snowflake_service():
         # Geometric options
         tdinput = {
             "initial_molecule": [hooh],
-            "keywords": {
-                "dihedrals": [[0, 1, 2, 3]],
-                "grid_spacing": [90]
-            },
-            "optimization_spec": {
-                "program": "geometric",
-                "keywords": {
-                    "coordsys": "tric",
-                }
-            },
-            "qc_spec": {
-                "driver": "gradient",
-                "method": "UFF",
-                "basis": None,
-                "keywords": None,
-                "program": "rdkit",
-            },
+            "keywords": {"dihedrals": [[0, 1, 2, 3]], "grid_spacing": [90]},
+            "optimization_spec": {"program": "geometric", "keywords": {"coordsys": "tric"}},
+            "qc_spec": {"driver": "gradient", "method": "UFF", "basis": None, "keywords": None, "program": "rdkit"},
         }
 
         ret = client.add_service([tdinput])
 
         def geometric_await():
             td = client.query_procedures(id=ret.ids)[0]
-            return td.status == 'COMPLETE'
+            return td.status == "COMPLETE"
 
         assert await_true(60, geometric_await, period=2), client.query_procedures(id=ret.ids)[0]

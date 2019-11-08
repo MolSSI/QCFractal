@@ -20,7 +20,8 @@ __td_api = find_module("torsiondrive")
 def _check_td():
     if __td_api is None:
         raise ModuleNotFoundError(
-            "Unable to find TorsionDriveRecord which must be installed to use the TorsionDriveService")
+            "Unable to find TorsionDriveRecord which must be installed to use the TorsionDriveService"
+        )
 
 
 class TorsionDriveService(BaseService):
@@ -56,16 +57,18 @@ class TorsionDriveService(BaseService):
         from torsiondrive import td_api
 
         # Build the record
-        output = TorsionDriveRecord(**service_input.dict(exclude={"initial_molecule"}),
-                                    initial_molecule=[x.id for x in service_input.initial_molecule],
-                                    provenance={
-                                        "creator": "torsiondrive",
-                                        "version": torsiondrive.__version__,
-                                        "routine": "torsiondrive.td_api"
-                                    },
-                                    final_energy_dict={},
-                                    minimum_positions={},
-                                    optimization_history={})
+        output = TorsionDriveRecord(
+            **service_input.dict(exclude={"initial_molecule"}),
+            initial_molecule=[x.id for x in service_input.initial_molecule],
+            provenance={
+                "creator": "torsiondrive",
+                "version": torsiondrive.__version__,
+                "routine": "torsiondrive.td_api",
+            },
+            final_energy_dict={},
+            minimum_positions={},
+            optimization_history={},
+        )
 
         meta = {"output": output}
 
@@ -83,7 +86,8 @@ class TorsionDriveService(BaseService):
             init_coords=[x.geometry for x in service_input.initial_molecule],
             dihedral_ranges=output.keywords.dihedral_ranges,
             energy_decrease_thresh=output.keywords.energy_decrease_thresh,
-            energy_upper_limit=output.keywords.energy_upper_limit)
+            energy_upper_limit=output.keywords.energy_upper_limit,
+        )
 
         # Build dihedral template
         dihedral_template = []
@@ -94,15 +98,17 @@ class TorsionDriveService(BaseService):
         meta["dihedral_template"] = json.dumps(dihedral_template)
 
         # Build optimization template
-        meta["optimization_template"] = json.dumps({
-            "meta": {
-                "procedure": "optimization",
-                "keywords": output.optimization_spec.keywords,
-                "program": output.optimization_spec.program,
-                "qc_spec": output.qc_spec.dict(),
-                "tag": meta.pop("tag", None)
-            },
-        })
+        meta["optimization_template"] = json.dumps(
+            {
+                "meta": {
+                    "procedure": "optimization",
+                    "keywords": output.optimization_spec.keywords,
+                    "program": output.optimization_spec.program,
+                    "qc_spec": output.qc_spec.dict(),
+                    "tag": meta.pop("tag", None),
+                }
+            }
+        )
 
         # Move around geometric data
         meta["optimization_program"] = output.optimization_spec.program
@@ -135,8 +141,9 @@ class TorsionDriveService(BaseService):
                 ret = complete_tasks[task_id]
 
                 # Lookup molecules
-                mol_keys = self.storage_socket.get_molecules(
-                    id=[ret["initial_molecule"], ret["final_molecule"]])["data"]
+                mol_keys = self.storage_socket.get_molecules(id=[ret["initial_molecule"], ret["final_molecule"]])[
+                    "data"
+                ]
 
                 task_results[key].append((mol_keys[0].geometry, mol_keys[1].geometry, ret["energies"][-1]))
 
@@ -225,6 +232,7 @@ class TorsionDriveService(BaseService):
                 "status": self.status,
                 "minimum_positions": min_positions,
                 "final_energy_dict": final_energy,
-                "optimization_history": history
-            })
+                "optimization_history": history,
+            }
+        )
         return True

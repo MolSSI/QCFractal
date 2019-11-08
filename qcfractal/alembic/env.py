@@ -1,11 +1,8 @@
-
 from logging.config import fileConfig
 
-import yaml
+from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from alembic import context
-from qcfractal.config import FractalConfig
 from qcfractal.storage_sockets.models import Base
 
 # this is the Alembic Config object, which provides
@@ -30,8 +27,8 @@ compare_type = True
 # ... etc.
 
 # Overwrite the ini-file sqlalchemy.url path
-uri = context.get_x_argument(as_dictionary=True).get('uri')
-config.set_main_option('sqlalchemy.url', uri)
+uri = context.get_x_argument(as_dictionary=True).get("uri")
+config.set_main_option("sqlalchemy.url", uri)
 
 
 def run_migrations_offline():
@@ -47,10 +44,7 @@ def run_migrations_offline():
 
     """
     url = config.get_main_option("sqlalchemy.url")
-    context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True,
-        compare_type = compare_type
-    )
+    context.configure(url=url, target_metadata=target_metadata, literal_binds=True, compare_type=compare_type)
 
     with context.begin_transaction():
         context.run_migrations()
@@ -64,16 +58,11 @@ def run_migrations_online():
 
     """
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
+        config.get_section(config.config_ini_section), prefix="sqlalchemy.", poolclass=pool.NullPool
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata,
-            compare_type = compare_type
-        )
+        context.configure(connection=connection, target_metadata=target_metadata, compare_type=compare_type)
 
         with context.begin_transaction():
             context.run_migrations()

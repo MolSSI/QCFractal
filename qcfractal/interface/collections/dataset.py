@@ -1,8 +1,6 @@
 """
 QCPortal Database ODM
 """
-import hashlib
-import json
 import tempfile
 import warnings
 from pathlib import Path
@@ -12,9 +10,10 @@ import numpy as np
 import pandas as pd
 import requests
 from pydantic import Field, validator
+from tqdm import tqdm
+
 from qcelemental import constants
 from qcelemental.models.types import Array
-from tqdm import tqdm
 
 from ..models import Citation, ComputeResponse, ObjectId, ProtoModel
 from ..statistics import wrap_statistics
@@ -39,14 +38,17 @@ class ContributedValues(ProtoModel):
     name: str = Field(..., description="The name of the contributed values.")
     values: Any = Field(..., description="The values in the contributed values.")
     index: Array[str] = Field(
-        ..., description="The entry index for the contributed values, matches the order of the `values` array.")
+        ..., description="The entry index for the contributed values, matches the order of the `values` array."
+    )
     values_structure: Dict[str, Any] = Field(
-        {}, description="A machine readable description of the values structure. Typically not needed.")
+        {}, description="A machine readable description of the values structure. Typically not needed."
+    )
 
     theory_level: Union[str, Dict[str, str]] = Field(..., description="A string representation of the theory level.")
     units: str = Field(..., description="The units of the values, can be any valid QCElemental unit.")
     theory_level_details: Optional[Union[str, Dict[str, Optional[str]]]] = Field(
-        None, description="A detailed reprsentation of the theory level.")
+        None, description="A detailed reprsentation of the theory level."
+    )
 
     citations: Optional[List[Citation]] = Field(None, description="Citations associated with the contributed values.")
     external_url: Optional[str] = Field(None, description="An external URL to the raw contributed values data.")
@@ -54,7 +56,7 @@ class ContributedValues(ProtoModel):
 
     comments: Optional[str] = Field(None, description="Additional comments about the contributed values")
 
-    @validator('values')
+    @validator("values")
     def _make_array(cls, v):
         if isinstance(v, (list, tuple)) and isinstance(v[0], (float, int, str, bool)):
             v = np.array(v)
@@ -75,7 +77,8 @@ class Dataset(Collection):
     df : pd.DataFrame
         The underlying dataframe for the Dataset object
     """
-    def __init__(self, name: str, client: Optional['FractalClient'] = None, **kwargs: Any) -> None:
+
+    def __init__(self, name: str, client: Optional["FractalClient"] = None, **kwargs: Any) -> None:
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -103,6 +106,7 @@ class Dataset(Collection):
         self._view: Optional[DatasetView] = None
         if self.data.view_available:
             from . import RemoteView
+
             self._view = RemoteView(client, self.data.id)
         self._disable_view: bool = False  # for debugging and testing
         self._disable_query_limit: bool = False  # for debugging and testing
@@ -112,11 +116,11 @@ class Dataset(Collection):
         self._column_metadata: Dict[str, Any] = {}
 
         # If this is a brand new dataset, initialize the records and cv fields
-        if self.data.id == 'local':
+        if self.data.id == "local":
             if self.data.records is None:
-                self.data.__dict__['records'] = []
+                self.data.__dict__["records"] = []
             if self.data.contributed_values is None:
-                self.data.__dict__['contributed_values'] = {}
+                self.data.__dict__["contributed_values"] = {}
 
     class DataModel(Collection.DataModel):
 
@@ -147,10 +151,12 @@ class Dataset(Collection):
             path to an hdf5 file representing a view for this dataset
         """
         from . import HDF5View
+
         self._view = HDF5View(path)
 
-    def download(self, local_path: Optional[Union[str, Path]] = None, verify: bool = True,
-                 progress_bar: bool = True) -> None:
+    def download(
+        self, local_path: Optional[Union[str, Path]] = None, verify: bool = True, progress_bar: bool = True
+    ) -> None:
         """
         Download a remote view if available. The dataset will use this view to avoid server queries for calls to:
         - get_entries
@@ -182,20 +188,21 @@ class Dataset(Collection):
         pbar = None
         if progress_bar:
             try:
-                file_length = int(r.headers.get('content-length'))
-                pbar = tqdm(total=file_length, initial=0, unit='B', unit_scale=True)
+                file_length = int(r.headers.get("content-length"))
+                pbar = tqdm(total=file_length, initial=0, unit="B", unit_scale=True)
             except:
                 warnings.warn("Failed to create download progress bar", RuntimeWarning)
 
-        with open(local_path, 'wb') as fd:
+        with open(local_path, "wb") as fd:
             for chunk in r.iter_content(chunk_size=chunk_size):
                 fd.write(chunk)
                 if pbar is not None:
                     pbar.update(chunk_size)
 
         if verify:
-            remote_checksum = self.data.view_metadata['blake2b_checksum']
+            remote_checksum = self.data.view_metadata["blake2b_checksum"]
             from . import HDF5View
+
             local_checksum = HDF5View(local_path).hash()
             if remote_checksum != local_checksum:
                 raise ValueError(f"Checksum verification failed. Expected: {remote_checksum}, Got: {local_checksum}")
@@ -215,9 +222,11 @@ class Dataset(Collection):
         """
         if encoding.lower() == "plaintext":
             from . import PlainTextView
+
             PlainTextView(path).write(self)
         elif encoding.lower() in ["hdf5", "h5"]:
             from . import HDF5View
+
             HDF5View(path).write(self)
         else:
             raise NotImplementedError(f"Unsupported encoding: {encoding}")
@@ -228,10 +237,12 @@ class Dataset(Collection):
         # objects. So what we do is call get_collection with include. But we have to also include collection and
         # name in the query because they are required in the collection DataModel. But we can use these to check that
         # we got back the right data, so that's nice.
-        response = self.client.get_collection(self.__class__.__name__.lower(),
-                                              self.name,
-                                              full_return=False,
-                                              include=["records", "contributed_values", "collection", "name", "id"])
+        response = self.client.get_collection(
+            self.__class__.__name__.lower(),
+            self.name,
+            full_return=False,
+            include=["records", "contributed_values", "collection", "name", "id"],
+        )
         if not (response.data.id == self.data.id and response.data.name == self.name):
             raise ValueError("Got the wrong records and contributed values from the server.")
         # This works because get_collection builds a validated Dataset object
@@ -243,8 +254,9 @@ class Dataset(Collection):
         if self.data.records is None:
             self._get_data_records_from_db()
 
-        ret = pd.DataFrame([[entry.name, entry.molecule_id] for entry in self.data.records],
-                           columns=["name", "molecule_id"])
+        ret = pd.DataFrame(
+            [[entry.name, entry.molecule_id] for entry in self.data.records], columns=["name", "molecule_id"]
+        )
         if subset is None:
             return ret
         else:
@@ -254,7 +266,7 @@ class Dataset(Collection):
         if self._new_molecules or self._new_keywords or self._new_records or self._updated_state:
             raise ValueError("New molecules, keywords, or records detected, run save before submitting new tasks.")
 
-    def _canonical_pre_save(self, client: 'FractalClient') -> None:
+    def _canonical_pre_save(self, client: "FractalClient") -> None:
         self._ensure_contributed_values()
         if self.data.records is None:
             self._get_data_records_from_db()
@@ -265,7 +277,7 @@ class Dataset(Collection):
             del self._new_keywords[k]
         self._updated_state = False
 
-    def _pre_save_prep(self, client: 'FractalClient') -> None:
+    def _pre_save_prep(self, client: "FractalClient") -> None:
         self._canonical_pre_save(client)
 
         # Preps any new molecules introduced to the Dataset before storing data.
@@ -304,8 +316,9 @@ class Dataset(Collection):
             ret = self._entry_index(subset)
         return ret.copy()
 
-    def _molecule_indexer(self, subset: Optional[Union[str, Set[str]]] = None,
-                          force: bool = False) -> Dict[str, ObjectId]:
+    def _molecule_indexer(
+        self, subset: Optional[Union[str, Set[str]]] = None, force: bool = False
+    ) -> Dict[str, ObjectId]:
         """Provides a {index: molecule_id} mapping for a given subset.
 
         Parameters
@@ -322,9 +335,9 @@ class Dataset(Collection):
             if isinstance(subset, str):
                 subset = {subset}
         index = self.get_entries(force=force, subset=subset)
-        #index = index[index.name.isin(subset)]
+        # index = index[index.name.isin(subset)]
 
-        return {row['name']: row['molecule_id'] for row in index.to_dict('records')}
+        return {row["name"]: row["molecule_id"] for row in index.to_dict("records")}
 
     def _add_history(self, **history: Optional[str]) -> None:
         """
@@ -344,15 +357,17 @@ class Dataset(Collection):
 
         self.data.history.add(tuple(new_history))
 
-    def list_values(self,
-                    method: Optional[Union[str, List[str]]] = None,
-                    basis: Optional[Union[str, List[str]]] = None,
-                    keywords: Optional[str] = None,
-                    program: Optional[str] = None,
-                    driver: Optional[str] = None,
-                    name: Optional[Union[str, List[str]]] = None,
-                    native: Optional[bool] = None,
-                    force: bool = False) -> pd.DataFrame:
+    def list_values(
+        self,
+        method: Optional[Union[str, List[str]]] = None,
+        basis: Optional[Union[str, List[str]]] = None,
+        keywords: Optional[str] = None,
+        program: Optional[str] = None,
+        driver: Optional[str] = None,
+        name: Optional[Union[str, List[str]]] = None,
+        native: Optional[bool] = None,
+        force: bool = False,
+    ) -> pd.DataFrame:
         """
         Lists available data that may be queried with get_values.
         Results may be narrowed by providing search keys.
@@ -390,7 +405,7 @@ class Dataset(Collection):
             "keywords": keywords,
             "program": program,
             "name": name,
-            "driver": driver
+            "driver": driver,
         }
 
         if self._use_view(force):
@@ -400,12 +415,12 @@ class Dataset(Collection):
             ret = []
             if native in {True, None}:
                 df = self._list_records(dftd3=False)
-                df['native'] = True
+                df["native"] = True
                 ret.append(df)
 
             if native in {False, None}:
                 df = self._list_contributed_values()
-                df['native'] = False
+                df["native"] = False
                 ret.append(df)
 
             ret = pd.concat(ret)
@@ -426,8 +441,9 @@ class Dataset(Collection):
         return ret
 
     @staticmethod
-    def _filter_records(df: pd.DataFrame,
-                        **spec: Optional[Union[str, bool, List[Union[str, bool]], Tuple]]) -> pd.DataFrame:
+    def _filter_records(
+        df: pd.DataFrame, **spec: Optional[Union[str, bool, List[Union[str, bool]], Tuple]]
+    ) -> pd.DataFrame:
         """
         Helper for filtering records on a spec. Note that `None` is a wildcard while `"None"` matches `None` and NaN.
         """
@@ -451,8 +467,9 @@ class Dataset(Collection):
                 raise TypeError(f"Search type {type(value)} not understood.")
         return ret
 
-    def list_records(self, dftd3: bool = False, pretty: bool = True,
-                     **search: Optional[Union[str, List[str]]]) -> pd.DataFrame:
+    def list_records(
+        self, dftd3: bool = False, pretty: bool = True, **search: Optional[Union[str, List[str]]]
+    ) -> pd.DataFrame:
         """
         Lists specifications of available records, i.e. method, program, basis set, keyword set, driver combinations
         `None` is a wildcard selector. To search for `None`, use `"None"`.
@@ -499,7 +516,7 @@ class Dataset(Collection):
         # Short circuit because merge and apply below require data
         if history.shape[0] == 0:
             ret = history.copy()
-            ret['name'] = None
+            ret["name"] = None
             return ret
 
         # Build out -D3 combos
@@ -518,28 +535,34 @@ class Dataset(Collection):
         # Find the returned subset
         ret = history.copy()
         # Add name column
-        ret['name'] = ret.apply(lambda row: self._canonical_name(program=row["program"],
-                                                                 method=row["method"],
-                                                                 basis=row["basis"],
-                                                                 keywords=row["keywords"],
-                                                                 stoich=row.get("stoichiometry", None),
-                                                                 driver=row["driver"]),
-                                axis=1)
+        ret["name"] = ret.apply(
+            lambda row: self._canonical_name(
+                program=row["program"],
+                method=row["method"],
+                basis=row["basis"],
+                keywords=row["keywords"],
+                stoich=row.get("stoichiometry", None),
+                driver=row["driver"],
+            ),
+            axis=1,
+        )
         if show_dftd3 is False:
             ret = ret[ret["program"] != "dftd3"]
 
         return ret
 
-    def get_values(self,
-                   method: Optional[Union[str, List[str]]] = None,
-                   basis: Optional[Union[str, List[str]]] = None,
-                   keywords: Optional[str] = None,
-                   program: Optional[str] = None,
-                   driver: Optional[str] = None,
-                   name: Optional[Union[str, List[str]]] = None,
-                   native: Optional[bool] = None,
-                   subset: Optional[Union[str, List[str]]] = None,
-                   force: bool = False) -> pd.DataFrame:
+    def get_values(
+        self,
+        method: Optional[Union[str, List[str]]] = None,
+        basis: Optional[Union[str, List[str]]] = None,
+        keywords: Optional[str] = None,
+        program: Optional[str] = None,
+        driver: Optional[str] = None,
+        name: Optional[Union[str, List[str]]] = None,
+        native: Optional[bool] = None,
+        subset: Optional[Union[str, List[str]]] = None,
+        force: bool = False,
+    ) -> pd.DataFrame:
         """
         Obtains values matching the search parameters provided for the expected `return_result` values.
         Defaults to the standard programs and keywords if not provided.
@@ -577,21 +600,25 @@ class Dataset(Collection):
         DataFrame
             A DataFrame of values with columns corresponding to methods and rows corresponding to molecule entries.
         """
-        return self._get_values(method=method,
-                                basis=basis,
-                                keywords=keywords,
-                                program=program,
-                                driver=driver,
-                                name=name,
-                                native=native,
-                                subset=subset,
-                                force=force)
+        return self._get_values(
+            method=method,
+            basis=basis,
+            keywords=keywords,
+            program=program,
+            driver=driver,
+            name=name,
+            native=native,
+            subset=subset,
+            force=force,
+        )
 
-    def _get_values(self,
-                    native: Optional[bool] = None,
-                    force: bool = False,
-                    subset: Optional[Union[str, List[str]]] = None,
-                    **spec: Union[List[str], str, None]) -> pd.DataFrame:
+    def _get_values(
+        self,
+        native: Optional[bool] = None,
+        force: bool = False,
+        subset: Optional[Union[str, List[str]]] = None,
+        **spec: Union[List[str], str, None],
+    ) -> pd.DataFrame:
         ret = []
 
         if subset is None:
@@ -609,7 +636,8 @@ class Dataset(Collection):
             if driver is not None and driver != self.data.default_driver:
                 raise KeyError(
                     f"For native values, driver ({driver}) must be the same as the dataset's default driver "
-                    f"({self.data.default_driver}). Consider using get_records instead.")
+                    f"({self.data.default_driver}). Consider using get_records instead."
+                )
             df = self._get_native_values(subset=subset_set, force=force, **spec_nodriver)
             ret.append(df)
 
@@ -621,14 +649,16 @@ class Dataset(Collection):
 
         return ret_df
 
-    def _get_native_values(self,
-                           subset: Set[str],
-                           method: Optional[Union[str, List[str]]] = None,
-                           basis: Optional[Union[str, List[str]]] = None,
-                           keywords: Optional[str] = None,
-                           program: Optional[str] = None,
-                           name: Optional[Union[str, List[str]]] = None,
-                           force: bool = False) -> pd.DataFrame:
+    def _get_native_values(
+        self,
+        subset: Set[str],
+        method: Optional[Union[str, List[str]]] = None,
+        basis: Optional[Union[str, List[str]]] = None,
+        keywords: Optional[str] = None,
+        program: Optional[str] = None,
+        name: Optional[Union[str, List[str]]] = None,
+        force: bool = False,
+    ) -> pd.DataFrame:
         """
         Obtains records matching the provided search criteria.
         Defaults to the standard programs and keywords if not provided.
@@ -655,7 +685,7 @@ class Dataset(Collection):
         DataFrame
             A DataFrame of the queried parameters
         """
-        au_units = {'energy': 'hartree', 'gradient': 'hartree/bohr', 'hessian': 'hartree/bohr**2'}
+        au_units = {"energy": "hartree", "gradient": "hartree/bohr", "hessian": "hartree/bohr**2"}
 
         # So that datasets with no records do not require a default program and default keywords
         if len(self.list_records()) == 0:
@@ -683,11 +713,9 @@ class Dataset(Collection):
             for query in new_queries:
                 driver = query.pop("driver")
                 qname = query.pop("name")
-                data = self.get_records(query.pop("method").upper(),
-                                        include=["return_result"],
-                                        merge=True,
-                                        subset=subset,
-                                        **query)
+                data = self.get_records(
+                    query.pop("method").upper(), include=["return_result"], merge=True, subset=subset, **query
+                )
                 new_data[qname] = data["return_result"]
                 units[qname] = au_units[driver]
                 query["name"] = qname
@@ -704,13 +732,15 @@ class Dataset(Collection):
         self._update_cache(new_data)
         return self.df.loc[subset, names]
 
-    def _form_queries(self,
-                      method: Optional[Union[str, List[str]]] = None,
-                      basis: Optional[Union[str, List[str]]] = None,
-                      keywords: Optional[str] = None,
-                      program: Optional[str] = None,
-                      stoich: Optional[str] = None,
-                      name: Optional[Union[str, List[str]]] = None) -> pd.DataFrame:
+    def _form_queries(
+        self,
+        method: Optional[Union[str, List[str]]] = None,
+        basis: Optional[Union[str, List[str]]] = None,
+        keywords: Optional[str] = None,
+        program: Optional[str] = None,
+        stoich: Optional[str] = None,
+        name: Optional[Union[str, List[str]]] = None,
+    ) -> pd.DataFrame:
         if name is None:
             _, _, history = self._default_parameters(program, "nan", "nan", keywords, stoich=stoich)
             for k, v in [("method", method), ("basis", basis)]:
@@ -722,22 +752,25 @@ class Dataset(Collection):
             queries = self.list_records(**history, dftd3=True, pretty=False)
         else:
             if any((field is not None for field in {program, method, basis, keywords})):
-                warnings.warn("Name and additional field were provided. Only name will be used as a selector.",
-                              RuntimeWarning)
+                warnings.warn(
+                    "Name and additional field were provided. Only name will be used as a selector.", RuntimeWarning
+                )
             queries = self.list_records(name=name, dftd3=True, pretty=False)
 
         if queries.shape[0] > 10 and self._disable_query_limit is False:
             raise TypeError("More than 10 queries formed, please narrow the search.")
         return queries
 
-    def _visualize(self,
-                   metric,
-                   bench,
-                   query: Dict[str, Union[Optional[str], List[str]]],
-                   groupby: Optional[str] = None,
-                   return_figure=None,
-                   digits=3,
-                   kind="bar") -> 'plotly.Figure':
+    def _visualize(
+        self,
+        metric,
+        bench,
+        query: Dict[str, Union[Optional[str], List[str]]],
+        groupby: Optional[str] = None,
+        return_figure=None,
+        digits=3,
+        kind="bar",
+    ) -> "plotly.Figure":
 
         # Validate query dimensions
         list_queries = [k for k, v in query.items() if isinstance(v, (list, tuple))]
@@ -769,8 +802,7 @@ class Dataset(Collection):
             if groupby not in _valid_groupby:
                 raise KeyError(f"Groupby option {groupby} not understood.")
             if (groupby != "d3") and (groupby not in query):
-                raise KeyError(
-                    f"Groupby option {groupby} not found in query, must provide a search on this parameter.")
+                raise KeyError(f"Groupby option {groupby} not found in query, must provide a search on this parameter.")
 
             if (groupby != "d3") and (not isinstance(query[groupby], (tuple, list))):
                 raise KeyError(f"Groupby option {groupby} must be a list.")
@@ -779,9 +811,7 @@ class Dataset(Collection):
             queries = []
             if groupby == "d3":
                 base = [method.upper().split("-D3")[0] for method in query["method"]]
-                d3types = [
-                    method.upper().replace(b, "").replace("-D", "D") for method, b in zip(query["method"], base)
-                ]
+                d3types = [method.upper().replace(b, "").replace("-D", "D") for method, b in zip(query["method"], base)]
 
                 # Preserve order of first unique appearance
                 seen: Set[str] = set()
@@ -837,17 +867,19 @@ class Dataset(Collection):
             col_names = {}
             for k, v in stat.iteritems():
                 record = self._column_metadata[k]
-                if (groupby == "d3"):
+                if groupby == "d3":
                     record["method"] = record["method"].upper().split("-D3")[0]
 
                 elif groupby:
                     record[groupby] = None
 
-                index_name = self._canonical_name(record["program"],
-                                                  record["method"],
-                                                  record["basis"],
-                                                  record["keywords"],
-                                                  stoich=record.get("stoich"))
+                index_name = self._canonical_name(
+                    record["program"],
+                    record["method"],
+                    record["basis"],
+                    record["keywords"],
+                    stoich=record.get("stoich"),
+                )
 
                 col_names[k] = index_name
 
@@ -867,16 +899,18 @@ class Dataset(Collection):
 
             return violin_plot(series[0], negative=negative, title=title, ylabel=ylabel, return_figure=return_figure)
 
-    def visualize(self,
-                  method: Optional[str] = None,
-                  basis: Optional[str] = None,
-                  keywords: Optional[str] = None,
-                  program: Optional[str] = None,
-                  groupby: Optional[str] = None,
-                  metric: str = "UE",
-                  bench: Optional[str] = None,
-                  kind: str = "bar",
-                  return_figure: Optional[bool] = None) -> 'plotly.Figure':
+    def visualize(
+        self,
+        method: Optional[str] = None,
+        basis: Optional[str] = None,
+        keywords: Optional[str] = None,
+        program: Optional[str] = None,
+        groupby: Optional[str] = None,
+        metric: str = "UE",
+        bench: Optional[str] = None,
+        kind: str = "bar",
+        return_figure: Optional[bool] = None,
+    ) -> "plotly.Figure":
         """
         Parameters
         ----------
@@ -911,13 +945,15 @@ class Dataset(Collection):
 
         return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind)
 
-    def _canonical_name(self,
-                        program: Optional[str] = None,
-                        method: Optional[str] = None,
-                        basis: Optional[str] = None,
-                        keywords: Optional[str] = None,
-                        stoich: Optional[str] = None,
-                        driver: Optional[str] = None) -> str:
+    def _canonical_name(
+        self,
+        program: Optional[str] = None,
+        method: Optional[str] = None,
+        basis: Optional[str] = None,
+        keywords: Optional[str] = None,
+        stoich: Optional[str] = None,
+        driver: Optional[str] = None,
+    ) -> str:
         """
         Attempts to build a canonical name for a DataFrame column
         """
@@ -940,18 +976,19 @@ class Dataset(Collection):
         if stoich:
             if name == "":
                 name = stoich.lower()
-            elif (stoich.lower() != "default"):
+            elif stoich.lower() != "default":
                 name = f"{stoich.lower()}-{name}"
 
         return name
 
-    def _default_parameters(self,
-                            program: Optional[str],
-                            method: str,
-                            basis: Optional[str],
-                            keywords: Optional[str],
-                            stoich: Optional[str] = None
-                            ) -> Tuple[str, Dict[str, Union[str, 'KeywordSet']], Dict[str, str]]:
+    def _default_parameters(
+        self,
+        program: Optional[str],
+        method: str,
+        basis: Optional[str],
+        keywords: Optional[str],
+        stoich: Optional[str] = None,
+    ) -> Tuple[str, Dict[str, Union[str, "KeywordSet"]], Dict[str, str]]:
         """
         Takes raw input parsed parameters and applies defaults to them.
         """
@@ -1012,9 +1049,9 @@ class Dataset(Collection):
 
         molecule_ids = list(set(indexer.values()))
         if not self._use_view(force):
-            molecules: List['Molecule'] = []
+            molecules: List["Molecule"] = []
             for i in range(0, len(molecule_ids), self.client.query_limit):
-                molecules.extend(self.client.query_molecules(id=molecule_ids[i:i + self.client.query_limit]))
+                molecules.extend(self.client.query_molecules(id=molecule_ids[i : i + self.client.query_limit]))
             # XXX: molecules = pd.DataFrame({"molecule_id": molecule_ids, "molecule": molecules}) fails
             #      test_gradient_dataset_get_molecules and I don't know why
             molecules = pd.DataFrame({"molecule_id": molecule.id, "molecule": molecule} for molecule in molecules)
@@ -1036,12 +1073,14 @@ class Dataset(Collection):
 
         return df
 
-    def _get_records(self,
-                     indexer: Dict[Any, ObjectId],
-                     query: Dict[str, Any],
-                     include: Optional[List[str]] = None,
-                     merge: bool = False,
-                     raise_on_plan: Union[str, bool] = False) -> 'pd.Series':
+    def _get_records(
+        self,
+        indexer: Dict[Any, ObjectId],
+        query: Dict[str, Any],
+        include: Optional[List[str]] = None,
+        merge: bool = False,
+        raise_on_plan: Union[str, bool] = False,
+    ) -> "pd.Series":
         """
         Runs a query based on an indexer which is index : molecule_id
 
@@ -1089,7 +1128,7 @@ class Dataset(Collection):
             # Chunk up the queries
             records: List[ResultRecord] = []
             for i in range(0, len(molecules), self.client.query_limit):
-                query_set["molecule"] = molecules[i:i + self.client.query_limit]
+                query_set["molecule"] = molecules[i : i + self.client.query_limit]
                 records.extend(self.client.query_results(**query_set))
 
             if include is None:
@@ -1127,20 +1166,24 @@ class Dataset(Collection):
         else:
             return ret
 
-    def _compute(self,
-                 compute_keys: Dict[str, Union[str, None]],
-                 molecules: Union[List[str], pd.Series],
-                 tag: Optional[str] = None,
-                 priority: Optional[str] = None) -> ComputeResponse:
+    def _compute(
+        self,
+        compute_keys: Dict[str, Union[str, None]],
+        molecules: Union[List[str], pd.Series],
+        tag: Optional[str] = None,
+        priority: Optional[str] = None,
+    ) -> ComputeResponse:
         """
         Internal compute function
         """
 
-        name, dbkeys, history = self._default_parameters(compute_keys["program"],
-                                                         compute_keys["method"],
-                                                         compute_keys["basis"],
-                                                         compute_keys["keywords"],
-                                                         stoich=compute_keys.get("stoich", None))
+        name, dbkeys, history = self._default_parameters(
+            compute_keys["program"],
+            compute_keys["method"],
+            compute_keys["basis"],
+            compute_keys["keywords"],
+            stoich=compute_keys.get("stoich", None),
+        )
 
         self._check_client()
         self._check_state()
@@ -1153,7 +1196,7 @@ class Dataset(Collection):
         for compute_set in composition_planner(**dbkeys):
 
             for i in range(0, len(umols), self.client.query_limit):
-                chunk_mols = umols[i:i + self.client.query_limit]
+                chunk_mols = umols[i : i + self.client.query_limit]
                 ret = self.client.add_compute(**compute_set, molecule=chunk_mols, tag=tag, priority=priority)
 
                 ids.extend(ret.ids)
@@ -1177,13 +1220,15 @@ class Dataset(Collection):
         for column in self.df.columns:
             try:
                 self.df[column] *= constants.conversion_factor(self._column_metadata[column]["units"], value)
-                
+
                 # Cast units to quantities so that `kcal / mol` == `kilocalorie / mole`
                 metadata_quantity = constants.Quantity(self._column_metadata[column]["units"])
                 self_quantity = constants.Quantity(self._units)
                 if metadata_quantity != self_quantity:
-                    warnings.warn(f"Data column '{column}' did not have the same units as the dataset. "
-                                  f"This has been corrected.")
+                    warnings.warn(
+                        f"Data column '{column}' did not have the same units as the dataset. "
+                        f"This has been corrected."
+                    )
                 self._column_metadata[column]["units"] = value
             except ValueError as e:
                 # This is meant to catch pint.errors.DimensionalityError without importing pint, which is too slow
@@ -1219,7 +1264,7 @@ class Dataset(Collection):
         self.data.__dict__["default_benchmark"] = benchmark
         return True
 
-    def add_keywords(self, alias: str, program: str, keyword: 'KeywordSet', default: bool = False) -> bool:
+    def add_keywords(self, alias: str, program: str, keyword: "KeywordSet", default: bool = False) -> bool:
         """
         Adds an option alias to the dataset. Not that keywords are not present
         until a save call has been completed.
@@ -1251,7 +1296,7 @@ class Dataset(Collection):
             self.data.default_keywords[program] = alias
         return True
 
-    def get_keywords(self, alias: str, program: str, return_id: bool = False) -> Union['KeywordSet', str]:
+    def get_keywords(self, alias: str, program: str, return_id: bool = False) -> Union["KeywordSet", str]:
         """Pulls the keywords alias from the server for inspection.
 
         Parameters
@@ -1315,7 +1360,8 @@ class Dataset(Collection):
         key = contrib.name.lower()
         if (key in self.data.contributed_values) and (overwrite is False):
             raise KeyError(
-                "Key '{}' already found in contributed values. Use `overwrite=True` to force an update.".format(key))
+                "Key '{}' already found in contributed values. Use `overwrite=True` to force an update.".format(key)
+            )
 
         self.data.contributed_values[key] = contrib
         self._updated_state = True
@@ -1336,8 +1382,9 @@ class Dataset(Collection):
         self._ensure_contributed_values()
         ret = pd.DataFrame(columns=self.data.history_keys + tuple(["name"]))
 
-        cvs = ((cv_data.name, cv_data.theory_level_details)
-               for (cv_name, cv_data) in self.data.contributed_values.items())
+        cvs = (
+            (cv_data.name, cv_data.theory_level_details) for (cv_name, cv_data) in self.data.contributed_values.items()
+        )
 
         for cv_name, theory_level_details in cvs:
             spec = {"name": cv_name}
@@ -1360,8 +1407,9 @@ class Dataset(Collection):
             return False
 
     def _update_cache(self, new_data: pd.DataFrame) -> None:
-        new_df = pd.DataFrame(index=set(self.df.index) | set(new_data.index),
-                              columns=set(self.df.columns) | set(new_data.columns))
+        new_df = pd.DataFrame(
+            index=set(self.df.index) | set(new_data.index), columns=set(self.df.columns) | set(new_data.columns)
+        )
         new_df.update(new_data)
         new_df.update(self.df)
         self.df = new_df
@@ -1369,7 +1417,7 @@ class Dataset(Collection):
     def _get_contributed_values(self, subset: Set[str], force: bool = False, **spec) -> pd.DataFrame:
 
         cv_list = self.list_values(native=False, force=force).reset_index()
-        queries = self._filter_records(cv_list.rename(columns={'stoichiometry': 'stoich'}), **spec)
+        queries = self._filter_records(cv_list.rename(columns={"stoichiometry": "stoich"}), **spec)
         column_names: List[str] = []
         new_queries = []
 
@@ -1429,8 +1477,9 @@ class Dataset(Collection):
         self._update_cache(new_data)
         return self.df.loc[subset, column_names]
 
-    def get_molecules(self, subset: Optional[Union[str, Set[str]]] = None,
-                      force: bool = False) -> Union[pd.DataFrame, 'Molecule']:
+    def get_molecules(
+        self, subset: Optional[Union[str, Set[str]]] = None, force: bool = False
+    ) -> Union[pd.DataFrame, "Molecule"]:
         """Queries full Molecules from the database.
 
         Parameters
@@ -1453,15 +1502,17 @@ class Dataset(Collection):
         else:
             return df
 
-    def get_records(self,
-                    method: str,
-                    basis: Optional[str] = None,
-                    *,
-                    keywords: Optional[str] = None,
-                    program: Optional[str] = None,
-                    include: Optional[List[str]] = None,
-                    subset: Optional[Union[str, Set[str]]] = None,
-                    merge: bool = False) -> Union[pd.DataFrame, 'ResultRecord']:
+    def get_records(
+        self,
+        method: str,
+        basis: Optional[str] = None,
+        *,
+        keywords: Optional[str] = None,
+        program: Optional[str] = None,
+        include: Optional[List[str]] = None,
+        subset: Optional[Union[str, Set[str]]] = None,
+        merge: bool = False,
+    ) -> Union[pd.DataFrame, "ResultRecord"]:
         """
         Queries full ResultRecord objects from the database.
 
@@ -1506,7 +1557,7 @@ class Dataset(Collection):
         else:
             return df
 
-    def add_entry(self, name: str, molecule: 'Molecule', **kwargs: Dict[str, Any]) -> None:
+    def add_entry(self, name: str, molecule: "Molecule", **kwargs: Dict[str, Any]) -> None:
         """Adds a new entry to the Dataset
 
         Parameters
@@ -1522,14 +1573,16 @@ class Dataset(Collection):
         self._new_molecules[mhash] = molecule
         self._new_records.append({"name": name, "molecule_hash": mhash, **kwargs})
 
-    def compute(self,
-                method: str,
-                basis: Optional[str] = None,
-                *,
-                keywords: Optional[str] = None,
-                program: Optional[str] = None,
-                tag: Optional[str] = None,
-                priority: Optional[str] = None) -> ComputeResponse:
+    def compute(
+        self,
+        method: str,
+        basis: Optional[str] = None,
+        *,
+        keywords: Optional[str] = None,
+        program: Optional[str] = None,
+        tag: Optional[str] = None,
+        priority: Optional[str] = None,
+    ) -> ComputeResponse:
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -1578,8 +1631,9 @@ class Dataset(Collection):
         return list(self.get_entries(subset=subset, force=force)["name"].unique())
 
     # Statistical quantities
-    def statistics(self, stype: str, value: str, bench: Optional[str] = None,
-                   **kwargs: Dict[str, Any]) -> Union[np.ndarray, pd.Series, np.float64]:
+    def statistics(
+        self, stype: str, value: str, bench: Optional[str] = None, **kwargs: Dict[str, Any]
+    ) -> Union[np.ndarray, pd.Series, np.float64]:
         """Provides statistics for various columns in the underlying dataframe.
 
         Parameters

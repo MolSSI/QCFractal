@@ -16,7 +16,7 @@ def test_adapter_single(managed_compute_server):
     client, server, manager = managed_compute_server
 
     reset_server_database(server)
-    manager.heartbeat() # Re-register with server after clear
+    manager.heartbeat()  # Re-register with server after clear
 
     # Add compute
     hooh = ptl.data.get_molecule("hooh.json")
@@ -28,11 +28,9 @@ def test_adapter_single(managed_compute_server):
     assert len(ret) == 1
 
 
-@pytest.mark.parametrize("cores_per_task,memory_per_task,scratch_dir", [
-    (None, None, None),
-    (1, 1, "tmpdir"),
-    (2, 1.9, "tmpdir")
-])  # yapf: disable
+@pytest.mark.parametrize(
+    "cores_per_task,memory_per_task,scratch_dir", [(None, None, None), (1, 1, "tmpdir"), (2, 1.9, "tmpdir")]
+)  # yapf: disable
 @testing.using_psi4
 def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per_task, scratch_dir):
 
@@ -46,29 +44,30 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
         {
             "id": task_id,
             "spec": {
-                "function":
-                "qcengine.compute",
-                "args": [{
-                    "molecule": ptl.data.get_molecule("hooh.json"),
-                    "driver": "energy",
-                    "model": {
-                        "method": "HF",
-                        "basis": "sto-3g"
+                "function": "qcengine.compute",
+                "args": [
+                    {
+                        "molecule": ptl.data.get_molecule("hooh.json"),
+                        "driver": "energy",
+                        "model": {"method": "HF", "basis": "sto-3g"},
+                        "keywords": {},
                     },
-                    "keywords": {},
-                }, "psi4"],
-                "kwargs": {}
+                    "psi4",
+                ],
+                "kwargs": {},
             },
             "parser": "single",
-            "tag": "other"
+            "tag": "other",
         }
     ]
     # Spin up a test queue manager
-    manager = QueueManager(None,
-                           adapter_client,
-                           cores_per_task=cores_per_task,
-                           memory_per_task=memory_per_task,
-                           scratch_directory=scratch_dir)
+    manager = QueueManager(
+        None,
+        adapter_client,
+        cores_per_task=cores_per_task,
+        memory_per_task=memory_per_task,
+        scratch_directory=scratch_dir,
+    )
     # Operate on the adapter since there is no backend QCF Client
     manager.queue_adapter.submit_tasks(tasks)
     manager.queue_adapter.await_results()
@@ -87,7 +86,7 @@ def test_keyword_args_passing(adapter_client_fixture, cores_per_task, memory_per
     if cores_per_task is not None:
         assert provenance["nthreads"] == cores_per_task
     if memory_per_task is not None:
-        assert provenance["memory"] == pytest.approx(memory_per_task, rel=0.1) # Unknown Psi4 memory factor
+        assert provenance["memory"] == pytest.approx(memory_per_task, rel=0.1)  # Unknown Psi4 memory factor
     if scratch_dir is not None:
         assert manager.queue_adapter.qcengine_local_options["scratch_directory"] == scratch_dir
 
@@ -97,7 +96,7 @@ def test_adapter_error_message(managed_compute_server):
     client, server, manager = managed_compute_server
 
     reset_server_database(server)
-    manager.heartbeat() # Re-register with server after clear
+    manager.heartbeat()  # Re-register with server after clear
 
     # HOOH without connectivity, RDKit should fail
     hooh = ptl.data.get_molecule("hooh.json").dict()
@@ -130,7 +129,7 @@ def test_adapter_raised_error(managed_compute_server):
     client, server, manager = managed_compute_server
 
     reset_server_database(server)
-    manager.heartbeat() # Re-register with server after clear
+    manager.heartbeat()  # Re-register with server after clear
 
     # HOOH without connectivity, RDKit should fail
     hooh = ptl.data.get_molecule("hooh.json")

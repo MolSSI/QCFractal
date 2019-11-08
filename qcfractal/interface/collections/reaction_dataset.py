@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
+
 from qcelemental import constants
 
 from ..models import Molecule, ProtoModel
@@ -16,17 +17,19 @@ from .dataset import Dataset
 
 if TYPE_CHECKING:  # pragma: no cover
     from .. import FractalClient  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
-    from ..models import ComputeResponse, ObjectId, ResultRecord
+    from ..models import ComputeResponse
 
 
 class _ReactionTypeEnum(str, Enum):
     """Helper class for locking the reaction type into one or the other"""
-    rxn = 'rxn'
-    ie = 'ie'
+
+    rxn = "rxn"
+    ie = "ie"
 
 
 class ReactionEntry(ProtoModel):
     """Data model for the `reactions` list in Dataset"""
+
     attributes: Dict[str, Union[int, float, str]]  # Might be overloaded key types
     reaction_results: Dict[str, dict]
     name: str
@@ -49,7 +52,8 @@ class ReactionDataset(Dataset):
     rxn_index : pd.Index
         The unrolled reaction index for all reactions in the Dataset
     """
-    def __init__(self, name: str, client: Optional['FractalClient'] = None, ds_type: str = "rxn", **kwargs) -> None:
+
+    def __init__(self, name: str, client: Optional["FractalClient"] = None, ds_type: str = "rxn", **kwargs) -> None:
         """
         Initializer for the Dataset object. If no Portal is supplied or the database name
         is not present on the server that the Portal is connected to a blank database will be
@@ -74,8 +78,14 @@ class ReactionDataset(Dataset):
         records: Optional[List[ReactionEntry]] = None
 
         history: Set[Tuple[str, str, str, Optional[str], Optional[str], str]] = set()
-        history_keys: Tuple[str, str, str, str, str, str] = ("driver", "program", "method", "basis", "keywords",
-                                                             "stoichiometry")
+        history_keys: Tuple[str, str, str, str, str, str] = (
+            "driver",
+            "program",
+            "method",
+            "basis",
+            "keywords",
+            "stoichiometry",
+        )
 
     def _entry_index(self, subset: Optional[List[str]] = None) -> None:
         if self.data.records is None:
@@ -93,11 +103,13 @@ class ReactionDataset(Dataset):
         else:
             return ret.reset_index().set_index("name").loc[subset].reset_index().set_index("index")
 
-    def _molecule_indexer(self,
-                          stoich: Union[str, List[str]],
-                          subset: Optional[Union[str, Set[str]]] = None,
-                          coefficients: bool = False,
-                          force: bool = False) -> Tuple[Dict[Tuple[str, ...], 'ObjectId'], Tuple[str]]:
+    def _molecule_indexer(
+        self,
+        stoich: Union[str, List[str]],
+        subset: Optional[Union[str, Set[str]]] = None,
+        coefficients: bool = False,
+        force: bool = False,
+    ) -> Tuple[Dict[Tuple[str, ...], "ObjectId"], Tuple[str]]:
         """Provides a {index: molecule_id} mapping for a given subset.
 
         Parameters
@@ -130,7 +142,7 @@ class ReactionDataset(Dataset):
 
         names = ("name", "stoichiometry", "idx")
         if coefficients:
-            names = names + ("coefficient", )
+            names = names + ("coefficient",)
 
         ret = {}
         for gb_idx, group in matched_rows.groupby(["name", "stoichiometry"]):
@@ -138,7 +150,7 @@ class ReactionDataset(Dataset):
                 if coefficients:
                     ret[gb_idx + (cnt, row["coefficient"])] = row["molecule"]
                 else:
-                    ret[gb_idx + (cnt, )] = row["molecule"]
+                    ret[gb_idx + (cnt,)] = row["molecule"]
 
         return ret, names
 
@@ -155,7 +167,7 @@ class ReactionDataset(Dataset):
             if s.lower() not in valid_stoich:
                 raise KeyError("Stoichiometry not understood, valid keys are {}.".format(valid_stoich))
 
-    def _pre_save_prep(self, client: 'FractalClient') -> None:
+    def _pre_save_prep(self, client: "FractalClient") -> None:
         self._canonical_pre_save(client)
 
         mol_ret = self._add_molecules_by_dict(client, self._new_molecules)
@@ -171,17 +183,19 @@ class ReactionDataset(Dataset):
 
         self._entry_index()
 
-    def get_values(self,
-                   method: Optional[Union[str, List[str]]] = None,
-                   basis: Optional[Union[str, List[str]]] = None,
-                   keywords: Optional[str] = None,
-                   program: Optional[str] = None,
-                   driver: Optional[str] = None,
-                   stoich: str = "default",
-                   name: Optional[Union[str, List[str]]] = None,
-                   native: Optional[bool] = None,
-                   subset: Optional[Union[str, List[str]]] = None,
-                   force: bool = False) -> pd.DataFrame:
+    def get_values(
+        self,
+        method: Optional[Union[str, List[str]]] = None,
+        basis: Optional[Union[str, List[str]]] = None,
+        keywords: Optional[str] = None,
+        program: Optional[str] = None,
+        driver: Optional[str] = None,
+        stoich: str = "default",
+        name: Optional[Union[str, List[str]]] = None,
+        native: Optional[bool] = None,
+        subset: Optional[Union[str, List[str]]] = None,
+        force: bool = False,
+    ) -> pd.DataFrame:
         """
         Obtains values from the known history from the search paramaters provided for the expected `return_result` values.
         Defaults to the standard programs and keywords if not provided.
@@ -223,41 +237,42 @@ class ReactionDataset(Dataset):
            Contributed (native=False) columns are marked with "(contributed)" and may include units in square brackets
            if their units differ in dimensionality from the ReactionDataset's default units.
         """
-        return self._get_values(method=method,
-                                basis=basis,
-                                keywords=keywords,
-                                program=program,
-                                driver=driver,
-                                stoich=stoich,
-                                name=name,
-                                native=native,
-                                subset=subset,
-                                force=force)
+        return self._get_values(
+            method=method,
+            basis=basis,
+            keywords=keywords,
+            program=program,
+            driver=driver,
+            stoich=stoich,
+            name=name,
+            native=native,
+            subset=subset,
+            force=force,
+        )
 
-    def _get_native_values(self,
-                           subset: Set[str],
-                           method: Optional[str] = None,
-                           basis: Optional[str] = None,
-                           keywords: Optional[str] = None,
-                           program: Optional[str] = None,
-                           stoich: Optional[str] = None,
-                           name: Optional[str] = None,
-                           force: bool = False) -> pd.DataFrame:
+    def _get_native_values(
+        self,
+        subset: Set[str],
+        method: Optional[str] = None,
+        basis: Optional[str] = None,
+        keywords: Optional[str] = None,
+        program: Optional[str] = None,
+        stoich: Optional[str] = None,
+        name: Optional[str] = None,
+        force: bool = False,
+    ) -> pd.DataFrame:
         self._validate_stoich(stoich, subset=subset, force=force)
 
         # So that datasets with no records do not require a default program and default keywords
         if len(self.list_records()) == 0:
             return pd.DataFrame(index=self.get_index(subset))
 
-        queries = self._form_queries(method=method,
-                                     basis=basis,
-                                     keywords=keywords,
-                                     program=program,
-                                     stoich=stoich,
-                                     name=name)
+        queries = self._form_queries(
+            method=method, basis=basis, keywords=keywords, program=program, stoich=stoich, name=name
+        )
 
         stoich_complex = queries.pop("stoichiometry")
-        stoich_monomer = ''.join([x for x in stoich if not x.isdigit()]) + '1'
+        stoich_monomer = "".join([x for x in stoich if not x.isdigit()]) + "1"
 
         def _query_apply_coeffients(stoich, query):
 
@@ -301,7 +316,7 @@ class ReactionDataset(Dataset):
 
                 data = data_complex - data_monomer
 
-                new_data[qname] = data * constants.conversion_factor('hartree', self.units)
+                new_data[qname] = data * constants.conversion_factor("hartree", self.units)
                 query["name"] = qname
                 units[qname] = self.units
         else:
@@ -319,17 +334,19 @@ class ReactionDataset(Dataset):
         self._update_cache(new_data)
         return self.df.loc[subset, names]
 
-    def visualize(self,
-                  method: Optional[str] = None,
-                  basis: Optional[str] = None,
-                  keywords: Optional[str] = None,
-                  program: Optional[str] = None,
-                  stoich: str = "default",
-                  groupby: Optional[str] = None,
-                  metric: str = "UE",
-                  bench: Optional[str] = None,
-                  kind: str = "bar",
-                  return_figure: Optional[bool] = None) -> 'plotly.Figure':
+    def visualize(
+        self,
+        method: Optional[str] = None,
+        basis: Optional[str] = None,
+        keywords: Optional[str] = None,
+        program: Optional[str] = None,
+        stoich: str = "default",
+        groupby: Optional[str] = None,
+        metric: str = "UE",
+        bench: Optional[str] = None,
+        kind: str = "bar",
+        return_figure: Optional[bool] = None,
+    ) -> "plotly.Figure":
         """
         Parameters
         ----------
@@ -365,10 +382,12 @@ class ReactionDataset(Dataset):
 
         return self._visualize(metric, bench, query=query, groupby=groupby, return_figure=return_figure, kind=kind)
 
-    def get_molecules(self,
-                      subset: Optional[Union[str, Set[str]]] = None,
-                      stoich: Union[str, List[str]] = "default",
-                      force: bool = False) -> pd.DataFrame:
+    def get_molecules(
+        self,
+        subset: Optional[Union[str, Set[str]]] = None,
+        stoich: Union[str, List[str]] = "default",
+        force: bool = False,
+    ) -> pd.DataFrame:
         """Queries full Molecules from the database.
 
         Parameters
@@ -396,15 +415,17 @@ class ReactionDataset(Dataset):
 
         return df
 
-    def get_records(self,
-                    method: str,
-                    basis: Optional[str] = None,
-                    *,
-                    keywords: Optional[str] = None,
-                    program: Optional[str] = None,
-                    stoich: Union[str, List[str]] = "default",
-                    include: Optional[List[str]] = None,
-                    subset: Optional[Union[str, Set[str]]] = None) -> Union[pd.DataFrame, 'ResultRecord']:
+    def get_records(
+        self,
+        method: str,
+        basis: Optional[str] = None,
+        *,
+        keywords: Optional[str] = None,
+        program: Optional[str] = None,
+        stoich: Union[str, List[str]] = "default",
+        include: Optional[List[str]] = None,
+        subset: Optional[Union[str, Set[str]]] = None,
+    ) -> Union[pd.DataFrame, "ResultRecord"]:
         """
         Queries the local Portal for the requested keys and stoichiometry.
 
@@ -444,15 +465,14 @@ class ReactionDataset(Dataset):
             name, _, history = self._default_parameters(program, method, basis, keywords, stoich=s)
             if name not in set(self.list_records(stoichiometry=s).reset_index()["name"].unique()):
                 raise KeyError(f"Requested query ({name}) did not match a known record.")
-            history.pop('stoichiometry')
+            history.pop("stoichiometry")
             indexer, names = self._molecule_indexer(stoich=s, subset=subset, force=True)
             df = self._get_records(
                 indexer,
                 history,
                 include=include,
                 merge=False,
-                raise_on_plan=
-                "`get_records` can only be used for non-composite quantities. You likely queried a DFT+D method or similar that requires a combination of DFT and -D. Please query each piece separately."
+                raise_on_plan="`get_records` can only be used for non-composite quantities. You likely queried a DFT+D method or similar that requires a combination of DFT and -D. Please query each piece separately.",
             )
             df = df[0]
             df.index = pd.MultiIndex.from_tuples(df.index, names=names)
@@ -463,16 +483,18 @@ class ReactionDataset(Dataset):
 
         return ret
 
-    def compute(self,
-                method: str,
-                basis: Optional[str] = None,
-                *,
-                keywords: Optional[str] = None,
-                program: Optional[str] = None,
-                stoich: str = "default",
-                ignore_ds_type: bool = False,
-                tag: Optional[str] = None,
-                priority: Optional[str] = None) -> 'ComputeResponse':
+    def compute(
+        self,
+        method: str,
+        basis: Optional[str] = None,
+        *,
+        keywords: Optional[str] = None,
+        program: Optional[str] = None,
+        stoich: str = "default",
+        ignore_ds_type: bool = False,
+        tag: Optional[str] = None,
+        priority: Optional[str] = None,
+    ) -> "ComputeResponse":
         """Executes a computational method for all reactions in the Dataset.
         Previously completed computations are not repeated.
 
@@ -516,9 +538,10 @@ class ReactionDataset(Dataset):
         if (not ignore_ds_type) and (self.data.ds_type.lower() == "ie"):
             if ("-D3" in method.upper()) and stoich.lower() != "default":
                 raise KeyError(
-                    "Please only run -D3 as default at the moment, running with CP could lead to extra computations.")
+                    "Please only run -D3 as default at the moment, running with CP could lead to extra computations."
+                )
 
-            monomer_stoich = ''.join([x for x in stoich if not x.isdigit()]) + '1'
+            monomer_stoich = "".join([x for x in stoich if not x.isdigit()]) + "1"
             tmp_monomer = entry_index[entry_index["stoichiometry"] == monomer_stoich].copy()
 
             ret1 = self._compute(compute_keys, tmp_monomer["molecule"], tag, priority)
@@ -577,10 +600,9 @@ class ReactionDataset(Dataset):
         """
         raise Exception("MPL not avail")
 
+    #        return visualization.Ternary2D(self.df, cvals=cvals)
 
-#        return visualization.Ternary2D(self.df, cvals=cvals)
-
-# Adders
+    # Adders
 
     def parse_stoichiometry(self, stoichiometry: List[Tuple[Union[Molecule, str], float]]) -> Dict[str, float]:
         """
@@ -641,8 +663,10 @@ class ReactionDataset(Dataset):
                     self._new_molecules[molecule_hash] = mol
 
             else:
-                raise TypeError("Dataset: Parse stoichiometry: first value must either be a molecule hash, "
-                                "a molecule str, or a Molecule class.")
+                raise TypeError(
+                    "Dataset: Parse stoichiometry: first value must either be a molecule hash, "
+                    "a molecule str, or a Molecule class."
+                )
 
             mol_hashes.append(molecule_hash)
 
@@ -656,12 +680,14 @@ class ReactionDataset(Dataset):
 
         return ret
 
-    def add_rxn(self,
-                name: str,
-                stoichiometry: Dict[str, List[Tuple[Molecule, float]]],
-                reaction_results: Optional[Dict[str, str]] = None,
-                attributes: Optional[Dict[str, Union[int, float, str]]] = None,
-                other_fields: Optional[Dict[str, Any]] = None) -> ReactionEntry:
+    def add_rxn(
+        self,
+        name: str,
+        stoichiometry: Dict[str, List[Tuple[Molecule, float]]],
+        reaction_results: Optional[Dict[str, str]] = None,
+        attributes: Optional[Dict[str, Union[int, float, str]]] = None,
+        other_fields: Optional[Dict[str, Any]] = None,
+    ) -> ReactionEntry:
         """
         Adds a reaction to a database object.
 
@@ -693,8 +719,10 @@ class ReactionDataset(Dataset):
 
         # Set name
         if name in self.get_index():
-            raise KeyError("Dataset: Name '{}' already exists. "
-                           "Please either delete this entry or call the update function.".format(name))
+            raise KeyError(
+                "Dataset: Name '{}' already exists. "
+                "Please either delete this entry or call the update function.".format(name)
+            )
 
         # Set stoich
         if isinstance(stoichiometry, dict):
@@ -759,11 +787,9 @@ class ReactionDataset(Dataset):
         other_fields = kwargs.pop("other_fields", {})
 
         stoichiometry = self.build_ie_fragments(mol, name=name, **kwargs)
-        return self.add_rxn(name,
-                            stoichiometry,
-                            reaction_results=reaction_results,
-                            attributes=attributes,
-                            other_fields=other_fields)
+        return self.add_rxn(
+            name, stoichiometry, reaction_results=reaction_results, attributes=attributes, other_fields=other_fields
+        )
 
     @staticmethod
     def build_ie_fragments(mol: Molecule, **kwargs) -> Dict[str, List[Tuple[Molecule, float]]]:
@@ -820,7 +846,7 @@ class ReactionDataset(Dataset):
             cp_tmp = []
             for k in range(1, nbody + 1):
                 take_nk = nCr(max_frag - k - 1, nbody - k)
-                sign = ((-1)**(nbody - k))
+                sign = (-1) ** (nbody - k)
                 coef = take_nk * sign
                 for frag in it.combinations(fragment_range, k):
                     if do_default:
@@ -860,5 +886,6 @@ class ReactionDataset(Dataset):
         #     ret["vmfc"] = [(mol, 1.0)]
 
         return ret
+
 
 register_collection(ReactionDataset)

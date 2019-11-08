@@ -1,4 +1,3 @@
-from qcelemental.util import msgpackext_dumps, msgpackext_loads
 from sqlalchemy import and_, inspect
 from sqlalchemy.dialects.postgresql import BYTEA
 from sqlalchemy.ext.associationproxy import ASSOCIATION_PROXY
@@ -7,13 +6,15 @@ from sqlalchemy.ext.hybrid import HYBRID_PROPERTY
 from sqlalchemy.orm import object_session
 from sqlalchemy.types import TypeDecorator
 
+from qcelemental.util import msgpackext_dumps, msgpackext_loads
+
 # from sqlalchemy.ext.orderinglist import ordering_list
 # from sqlalchemy.ext.associationproxy import association_proxy
 # from sqlalchemy.dialects.postgresql import aggregate_order_by
 
 
 class MsgpackExt(TypeDecorator):
-    '''Converts JSON-like data to msgpack with full NumPy Array support.'''
+    """Converts JSON-like data to msgpack with full NumPy Array support."""
 
     impl = BYTEA
 
@@ -28,7 +29,7 @@ class MsgpackExt(TypeDecorator):
 class Base:
     """Base declarative class of all ORM models"""
 
-    db_related_fields = ['result_type', 'base_result_id', '_trajectory', 'collection_type', 'lname']
+    db_related_fields = ["result_type", "base_result_id", "_trajectory", "collection_type", "lname"]
 
     def to_dict(self, exclude=None):
 
@@ -42,9 +43,9 @@ class Base:
         # Add the attributes to the final results
         ret = {k: getattr(self, k) for k in dict_obj}
 
-        if 'extra' in ret:
-            ret.update(ret['extra'])
-            del ret['extra']
+        if "extra" in ret:
+            ret.update(ret["extra"])
+            del ret["extra"]
 
         # transform ids from int into str
         id_fields = self._get_fieldnames_with_DB_ids_()
@@ -73,7 +74,7 @@ class Base:
     def _get_col_types(cls):
 
         # Must use private attributes so that they are not shared by subclasses
-        if hasattr(cls, '__columns') and hasattr(cls, '__hybrids') and hasattr(cls, '__relationships'):
+        if hasattr(cls, "__columns") and hasattr(cls, "__hybrids") and hasattr(cls, "__relationships"):
             return cls.__columns, cls.__hybrids, cls.__relationships
 
         mapper = inspect(cls)
@@ -83,18 +84,18 @@ class Base:
         cls.__relationships = {}
         for k, v in mapper.relationships.items():
             cls.__relationships[k] = {}
-            cls.__relationships[k]['join_class'] = v.argument
-            cls.__relationships[k]['remote_side_column'] = list(v.remote_side)[0]
+            cls.__relationships[k]["join_class"] = v.argument
+            cls.__relationships[k]["remote_side_column"] = list(v.remote_side)[0]
 
         for k, c in mapper.all_orm_descriptors.items():
 
-            if k == '__mapper__':
+            if k == "__mapper__":
                 continue
 
             if c.extension_type == ASSOCIATION_PROXY:
                 continue
 
-            if (c.extension_type == HYBRID_PROPERTY):
+            if c.extension_type == HYBRID_PROPERTY:
                 cls.__hybrids.append(k)
             elif k not in mapper.relationships:
                 cls.__columns.append(k)
@@ -124,16 +125,16 @@ class Base:
             to_del = old_set - new_set
 
             if to_del:
-                session.execute(table.delete().where(
-                    and_(table.c[parent_id_name] == parent_id_val, table.c[child_id_name].in_(to_del))))
-            if to_add:
                 session.execute(
-                    table.insert()\
-                        .values([(parent_id_val, my_id) for my_id in to_add])
+                    table.delete().where(
+                        and_(table.c[parent_id_name] == parent_id_val, table.c[child_id_name].in_(to_del))
+                    )
                 )
+            if to_add:
+                session.execute(table.insert().values([(parent_id_val, my_id) for my_id in to_add]))
 
     def __str__(self):
-        if hasattr(self, 'id'):
+        if hasattr(self, "id"):
             return str(self.id)
         return super.__str__(self)
 

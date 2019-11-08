@@ -7,7 +7,7 @@ import socket
 
 def find_port() -> int:
     sock = socket.socket()
-    sock.bind(('', 0))
+    sock.bind(("", 0))
     host, port = sock.getsockname()
     return port
 
