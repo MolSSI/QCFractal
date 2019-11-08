@@ -2632,11 +2632,9 @@ class SQLAlchemySocket:
         # Calculate table info
         table_size = 0
         index_size = 0
-        counts = {}
         for row in table_info["rows"]:
             table_size += row[2] - row[3] - (row[4] or 0)
             index_size += row[3]
-            counts[row[0]] = row[1]
 
         # Calculate result state info, turns out to be very costly for large databases
         # state_data = self.custom_query("result", "count", groupby={'result_type', 'status'})["data"]
@@ -2646,6 +2644,10 @@ class SQLAlchemySocket:
         #     result_states.setdefault(row["result_type"], {})
         #     result_states[row["result_type"]][row["status"]] = row["count"]
         result_states = {}
+
+        counts = {}
+        for table in ["collection", "molecule", "base_result", "kv_store", "access_log"]:
+            counts[table] = self.custom_query("database_stats", "table_count", table_name=table)["data"][0]
 
         # Build out final data
         data = {

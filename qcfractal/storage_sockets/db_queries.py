@@ -117,9 +117,17 @@ class DatabaseStatQueries(QueryBase):
     _class_name = "database_stats"
 
     _query_method_map = {
+        'table_count': '_table_count',
         'database_size': '_database_size',
         'table_information': '_table_information',
     }
+    def _table_count(self, table_name=None):
+
+        if table_name is None:
+            self._raise_missing_attribute('table_name', 'table name')
+
+        sql_statement = f"SELECT count(*) from {table_name}"
+        return self.execute_query(sql_statement, with_keys=False)[0]
 
     def _database_size(self):
 
