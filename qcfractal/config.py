@@ -79,7 +79,7 @@ class ViewSettings(ConfigSettings):
     """
     HDF5 view settings
     """
-    enable: bool = Field(False, description="Enable frozen-views.")
+    enable: bool = Field(True, description="Enable frozen-views.")
     directory: str = Field(None, description="Location of frozen-view data. If None, defaults to base_folder/views.")
 
 
@@ -159,7 +159,7 @@ class FractalConfig(ConfigSettings):
 
     @classmethod
     def from_base_folder(cls, base_folder):
-        path = Path(base_folder) / "qcfractal_config.yaml"
+        path = Path(base_folder).absolute() / "qcfractal_config.yaml"
         with open(str(path), "r") as handle:
             return cls(**yaml.load(handle.read(), Loader=yaml.FullLoader))
 

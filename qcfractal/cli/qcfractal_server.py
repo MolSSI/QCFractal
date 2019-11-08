@@ -276,6 +276,7 @@ def server_info(args, config):
 def server_start(args, config):
     # check if db not current, ask for upgrade
 
+
     print("Starting a QCFractal server.\n")
 
     print(f"QCFractal server base folder: {config.base_folder}")
