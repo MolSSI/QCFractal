@@ -31,7 +31,7 @@ class QueueStatistics(BaseModel):
     total_failed_tasks: int = 0
     total_worker_walltime: float = 0.0
     total_task_walltime: float = 0.0
-    maximum_possible_walltime: float = 0.0 # maximum_workers * time_delta, experimental
+    maximum_possible_walltime: float = 0.0  # maximum_workers * time_delta, experimental
     active_tasks: int = 0
     active_cores: int = 0
     active_memory: float = 0.0
@@ -43,8 +43,8 @@ class QueueStatistics(BaseModel):
     last_update_time: float = None
 
     def __init__(self, **kwargs):
-        if kwargs.get('last_update_time', None) is None:
-            kwargs['last_update_time'] = time.time()
+        if kwargs.get("last_update_time", None) is None:
+            kwargs["last_update_time"] = time.time()
         super().__init__(**kwargs)
 
     @property
@@ -56,7 +56,7 @@ class QueueStatistics(BaseModel):
         """In Core Hours"""
         return self.max_concurrent_tasks * self.cores_per_task * (time.time() - self.last_update_time) / 3600
 
-    @validator('cores_per_task', pre=True)
+    @validator("cores_per_task", pre=True)
     def cores_per_tasks_none(cls, v):
         if v is None:
             v = 1
@@ -80,22 +80,24 @@ class QueueManager:
         A logger for the QueueManager
     """
 
-    def __init__(self,
-                 client: 'FractalClient',
-                 queue_client: 'BaseAdapter',
-                 logger: Optional[logging.Logger] = None,
-                 max_tasks: int = 200,
-                 queue_tag: str = None,
-                 manager_name: str = "unlabeled",
-                 update_frequency: Union[int, float] = 2,
-                 verbose: bool = True,
-                 server_error_retries: Optional[int] = 1,
-                 stale_update_limit: Optional[int] = 10,
-                 cores_per_task: Optional[int] = None,
-                 memory_per_task: Optional[float] = None,
-                 scratch_directory: Optional[str] = None,
-                 retries: Optional[int] = 2,
-                 configuration: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self,
+        client: "FractalClient",
+        queue_client: "BaseAdapter",
+        logger: Optional[logging.Logger] = None,
+        max_tasks: int = 200,
+        queue_tag: str = None,
+        manager_name: str = "unlabeled",
+        update_frequency: Union[int, float] = 2,
+        verbose: bool = True,
+        server_error_retries: Optional[int] = 1,
+        stale_update_limit: Optional[int] = 10,
+        cores_per_task: Optional[int] = None,
+        memory_per_task: Optional[float] = None,
+        scratch_directory: Optional[str] = None,
+        retries: Optional[int] = 2,
+        configuration: Optional[Dict[str, Any]] = None,
+    ):
         """
         Parameters
         ----------
@@ -146,7 +148,7 @@ class QueueManager:
         if logger:
             self.logger = logger
         else:
-            self.logger = logging.getLogger('QueueManager')
+            self.logger = logging.getLogger("QueueManager")
 
         self.name_data = {"cluster": manager_name, "hostname": socket.gethostname(), "uuid": str(uuid.uuid4())}
         self._name = self.name_data["cluster"] + "-" + self.name_data["hostname"] + "-" + self.name_data["uuid"]
@@ -157,22 +159,25 @@ class QueueManager:
         self.scratch_directory = scratch_directory
         self.retries = retries
         self.configuration = configuration
-        self.queue_adapter = build_queue_adapter(queue_client,
-                                                 logger=self.logger,
-                                                 cores_per_task=self.cores_per_task,
-                                                 memory_per_task=self.memory_per_task,
-                                                 scratch_directory=self.scratch_directory,
-                                                 retries=self.retries,
-                                                 verbose=verbose)
+        self.queue_adapter = build_queue_adapter(
+            queue_client,
+            logger=self.logger,
+            cores_per_task=self.cores_per_task,
+            memory_per_task=self.memory_per_task,
+            scratch_directory=self.scratch_directory,
+            retries=self.retries,
+            verbose=verbose,
+        )
         self.max_tasks = max_tasks
         self.queue_tag = queue_tag
         self.verbose = verbose
 
-        self.statistics = QueueStatistics(max_concurrent_tasks=self.max_tasks,
-                                          cores_per_task=(cores_per_task or 0),
-                                          memory_per_task=(memory_per_task or 0),
-                                          update_frequency=update_frequency
-                                          )
+        self.statistics = QueueStatistics(
+            max_concurrent_tasks=self.max_tasks,
+            cores_per_task=(cores_per_task or 0),
+            memory_per_task=(memory_per_task or 0),
+            update_frequency=update_frequency,
+        )
 
         self.scheduler = None
         self.update_frequency = update_frequency
@@ -223,7 +228,9 @@ class QueueManager:
                 self.max_tasks = self.server_query_limit
                 self.logger.warning(
                     "Max tasks was larger than server query limit of {}, reducing to match query limit.".format(
-                        self.server_query_limit))
+                        self.server_query_limit
+                    )
+                )
             self.heartbeat_frequency = self.server_info["heartbeat_frequency"]
 
             # Tell the server we are up and running
@@ -248,19 +255,15 @@ class QueueManager:
     def _payload_template(self):
         meta = {
             **self.name_data.copy(),
-
             # Version info
             "qcengine_version": qcng.__version__,
             "manager_version": get_information("version"),
-
             # User info
             "username": self.client.username,
-
             # Pull info
             "programs": self.available_programs,
             "procedures": self.available_procedures,
             "tag": self.queue_tag,
-
             # Statistics
             "total_worker_walltime": self.statistics.total_worker_walltime,
             "total_task_walltime": self.statistics.total_task_walltime,
@@ -271,7 +274,7 @@ class QueueManager:
 
         return {"meta": meta, "data": {}}
 
-## Accessors
+    ## Accessors
 
     def name(self) -> str:
         """
@@ -292,7 +295,7 @@ class QueueManager:
         if self.connected() is False:
             raise AttributeError("Manager is not connected to a server, this operations is not available.")
 
-## Start/stop functionality
+    ## Start/stop functionality
 
     def start(self) -> None:
         """
@@ -349,7 +352,7 @@ class QueueManager:
 
         return self.queue_adapter.close()
 
-## Queue Manager functions
+    ## Queue Manager functions
 
     def heartbeat(self) -> None:
         """
@@ -387,7 +390,8 @@ class QueueManager:
         shutdown_string = "Shutdown was successful, {} tasks returned to master queue."
         if self.n_stale_jobs:
             shutdown_string = shutdown_string.format(
-                f"{min(0, nshutdown-self.n_stale_jobs)} active and {nshutdown} stale")
+                f"{min(0, nshutdown-self.n_stale_jobs)} active and {nshutdown} stale"
+            )
         else:
             shutdown_string = shutdown_string.format(nshutdown)
         self.logger.info(shutdown_string)
@@ -422,10 +426,12 @@ class QueueManager:
 
         except Exception as fatal:
             # Non IOError, something has gone very wrong
-            self.logger.error("An error was detected which was not an expected requests-type error. The manager "
-                              "will attempt shutdown as best it can. Please report this error to the QCFractal "
-                              "developers as this block should not be "
-                              "seen outside of debugging modes. Error is as follows\n{}".format(fatal))
+            self.logger.error(
+                "An error was detected which was not an expected requests-type error. The manager "
+                "will attempt shutdown as best it can. Please report this error to the QCFractal "
+                "developers as this block should not be "
+                "seen outside of debugging modes. Error is as follows\n{}".format(fatal)
+            )
 
             try:
                 if allow_shutdown:
@@ -454,8 +460,9 @@ class QueueManager:
 
                 # Case: Over limit
                 else:
-                    self.logger.warning(f"Could not post jobs from {attempts} ago and over attempt limit, marking "
-                                        f"jobs as stale.")
+                    self.logger.warning(
+                        f"Could not post jobs from {attempts} ago and over attempt limit, marking " f"jobs as stale."
+                    )
                     self.n_stale_jobs += len(results)
                     clear_indices.append(index)
                     self._stale_updates_tracked += 1
@@ -465,8 +472,10 @@ class QueueManager:
             self._stale_payload_tracking.pop(index)
 
         # Check stale limiters
-        if self.stale_update_limit is not None and (len(self._stale_payload_tracking) +
-                                                    self._stale_updates_tracked) > self.stale_update_limit:
+        if (
+            self.stale_update_limit is not None
+            and (len(self._stale_payload_tracking) + self._stale_updates_tracked) > self.stale_update_limit
+        ):
             self.logger.error("Exceeded number of stale updates allowed! Attempting to shutdown gracefully...")
 
             # Log all not-quite stale jobs to stale
@@ -511,8 +520,9 @@ class QueueManager:
         self.statistics.active_memory = self.statistics.active_tasks * self.statistics.memory_per_task
 
         timedelta_worker_walltime = time_delta_seconds * self.statistics.active_cores / 3600
-        timedelta_maximum_walltime = (time_delta_seconds * self.statistics.max_concurrent_tasks *
-                                      self.statistics.cores_per_task / 3600)
+        timedelta_maximum_walltime = (
+            time_delta_seconds * self.statistics.max_concurrent_tasks * self.statistics.cores_per_task / 3600
+        )
         self.statistics.total_worker_walltime += timedelta_worker_walltime
         self.statistics.maximum_possible_walltime += timedelta_maximum_walltime
 
@@ -541,14 +551,15 @@ class QueueManager:
                 wall_time_seconds = 0
                 if result.success:
                     n_success += 1
-                    if hasattr(result.provenance, 'wall_time'):
+                    if hasattr(result.provenance, "wall_time"):
                         wall_time_seconds = float(result.provenance.wall_time)
                 else:
-                    error_payload.append(f"Job {key} failed: {result.error.error_type} - "
-                                         f"Msg: {result.error.error_message}")
+                    error_payload.append(
+                        f"Job {key} failed: {result.error.error_type} - " f"Msg: {result.error.error_message}"
+                    )
                     # Try to get the wall time in the most fault-tolerant way
                     try:
-                        wall_time_seconds = float(result.input_data.get('provenance', {}).get('wall_time', 0))
+                        wall_time_seconds = float(result.input_data.get("provenance", {}).get("wall_time", 0))
                     except AttributeError:
                         # Trap the result.input_data is None, but let other attribute errors go
                         if result.input_data is None:
@@ -575,18 +586,22 @@ class QueueManager:
         self.statistics.total_failed_tasks += n_fail
         self.statistics.total_successful_tasks += n_success
         self.statistics.total_task_walltime += task_cpu_hours
-        na_format = ''
-        float_format = ',.2f'
+        na_format = ""
+        float_format = ",.2f"
         if self.statistics.total_completed_tasks == 0:
             task_stats_str = "Task statistics unavailable until first tasks return"
             worker_stats_str = None
         else:
             success_rate = self.statistics.total_successful_tasks / self.statistics.total_completed_tasks * 100
             success_format = float_format
-            task_stats_str = (f"Task Stats: Processed={self.statistics.total_completed_tasks}, "
-                              f"Failed={self.statistics.total_failed_tasks}, "
-                              f"Success={success_rate:{success_format}}%")
-            worker_stats_str = f"Worker Stats (est.): Core Hours Used={self.statistics.total_worker_walltime:{float_format}}"
+            task_stats_str = (
+                f"Task Stats: Processed={self.statistics.total_completed_tasks}, "
+                f"Failed={self.statistics.total_failed_tasks}, "
+                f"Success={success_rate:{success_format}}%"
+            )
+            worker_stats_str = (
+                f"Worker Stats (est.): Core Hours Used={self.statistics.total_worker_walltime:{float_format}}"
+            )
 
             # Handle efficiency calculations
             if log_efficiency:
@@ -598,17 +613,18 @@ class QueueManager:
                     efficiency_of_potential = "(N/A yet)"
                     efficiency_format = na_format
                 else:
-                    efficiency_of_running = (self.statistics.total_task_walltime /
-                                             self.statistics.total_worker_walltime
-                                             * 100)
-                    efficiency_of_potential = (self.statistics.total_worker_walltime /
-                                               self.statistics.maximum_possible_walltime
-                                               * 100)
+                    efficiency_of_running = (
+                        self.statistics.total_task_walltime / self.statistics.total_worker_walltime * 100
+                    )
+                    efficiency_of_potential = (
+                        self.statistics.total_worker_walltime / self.statistics.maximum_possible_walltime * 100
+                    )
                     efficiency_format = float_format
                 worker_stats_str += f", Core Usage Efficiency: {efficiency_of_running:{efficiency_format}}%"
                 if self.verbose:
-                    worker_stats_str += (f", Core Usage vs. Max Resources Requested: "
-                                         f"{efficiency_of_potential:{efficiency_format}}%")
+                    worker_stats_str += (
+                        f", Core Usage vs. Max Resources Requested: " f"{efficiency_of_potential:{efficiency_format}}%"
+                    )
 
         self.logger.info(task_stats_str)
         if worker_stats_str is not None:
@@ -669,35 +685,31 @@ class QueueManager:
         """
 
         from qcfractal import testing
+
         self.logger.info("Testing requested, generating tasks")
-        task_base = json.dumps({
-            "spec": {
-                "function":
-                "qcengine.compute",
-                "args": [{
-                    "molecule": get_molecule("hooh.json").dict(encoding="json"),
-                    "driver": "energy",
-                    "model": {},
-                    "keywords": {},
-                }, "program"],
-                "kwargs": {}
-            },
-            "parser": "single",
-        })
+        task_base = json.dumps(
+            {
+                "spec": {
+                    "function": "qcengine.compute",
+                    "args": [
+                        {
+                            "molecule": get_molecule("hooh.json").dict(encoding="json"),
+                            "driver": "energy",
+                            "model": {},
+                            "keywords": {},
+                        },
+                        "program",
+                    ],
+                    "kwargs": {},
+                },
+                "parser": "single",
+            }
+        )
 
         programs = {
-            "rdkit": {
-                "method": "UFF",
-                "basis": None
-            },
-            "torchani": {
-                "method": "ANI1",
-                "basis": None
-            },
-            "psi4": {
-                "method": "HF",
-                "basis": "sto-3g"
-            },
+            "rdkit": {"method": "UFF", "basis": None},
+            "torchani": {"method": "ANI1", "basis": None},
+            "psi4": {"method": "HF", "basis": "sto-3g"},
         }
         tasks = []
         found_programs = []
@@ -714,7 +726,7 @@ class QueueManager:
                 program_id = program + str(x)
                 task["id"] = program_id
                 task["spec"]["args"][0]["model"] = model
-                task["spec"]["args"][0]["keywords"] = {"e_convergence": (x * 1.e-6 + 1.e-6)}
+                task["spec"]["args"][0]["keywords"] = {"e_convergence": (x * 1.0e-6 + 1.0e-6)}
                 task["spec"]["args"][1] = program
 
                 tasks.append(task)
@@ -748,15 +760,18 @@ class QueueManager:
                         failed_program = program
                         break
                 if failed_program not in fail_report:
-                    fail_report[failed_program] = f"On test {k}:" \
-                                                  f"\nException Type: {result.error.error_type}" \
-                                                  f"\nException Message: {result.error.error_message}"
+                    fail_report[failed_program] = (
+                        f"On test {k}:"
+                        f"\nException Type: {result.error.error_type}"
+                        f"\nException Message: {result.error.error_message}"
+                    )
                 failures += 1
 
         if failures:
             self.logger.error("{}/{} tasks failed!".format(failures, len(results)))
-            self.logger.error(f"A sample error from each program to help:\n" +
-                              "\n".join([e for e in fail_report.values()]))
+            self.logger.error(
+                f"A sample error from each program to help:\n" + "\n".join([e for e in fail_report.values()])
+            )
             return False
         else:
             self.logger.info("All tasks completed successfully!")

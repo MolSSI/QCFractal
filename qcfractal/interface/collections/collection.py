@@ -19,7 +19,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class Collection(abc.ABC):
-    def __init__(self, name: str, client: Optional['FractalClient'] = None, **kwargs: Any):
+    def __init__(self, name: str, client: Optional["FractalClient"] = None, **kwargs: Any):
         """
         Initializer for the Collection objects. If no Portal is supplied or the Collection name
         is not present on the server that the Portal is connected to a blank Collection will be
@@ -40,10 +40,10 @@ class Collection(abc.ABC):
         if (self.client is not None) and not (self.client.__class__.__name__ == "FractalClient"):
             raise TypeError("Expected FractalClient as `client` kwarg, found {}.".format(type(self.client)))
 
-        if 'collection' not in kwargs:
-            kwargs['collection'] = self.__class__.__name__.lower()
+        if "collection" not in kwargs:
+            kwargs["collection"] = self.__class__.__name__.lower()
 
-        kwargs['name'] = name
+        kwargs["name"] = name
 
         # Create the data model
         self.data = self.DataModel(**kwargs)
@@ -59,7 +59,7 @@ class Collection(abc.ABC):
         additional data defined by the Collection
         """
 
-        id: str = 'local'
+        id: str = "local"
         name: str
 
         collection: str
@@ -119,7 +119,7 @@ class Collection(abc.ABC):
         return self.data.name
 
     @classmethod
-    def from_server(cls, client: 'FractalClient', name: str) -> 'Collection':
+    def from_server(cls, client: "FractalClient", name: str) -> "Collection":
         """Creates a new class from a server
 
         Parameters
@@ -147,7 +147,7 @@ class Collection(abc.ABC):
         return cls.from_json(tmp_data.data[0], client=client)
 
     @classmethod
-    def from_json(cls, data: Dict[str, Any], client: 'FractalClient' = None) -> 'Collection':
+    def from_json(cls, data: Dict[str, Any], client: "FractalClient" = None) -> "Collection":
         """Creates a new class from a JSON blob
 
         Parameters
@@ -171,9 +171,11 @@ class Collection(abc.ABC):
         if data["collection"] != class_name:
             raise KeyError(
                 "Attempted to create Collection from JSON with class {}, but found collection type of {}.".format(
-                    class_name, data["collection"]))
+                    class_name, data["collection"]
+                )
+            )
 
-        name = data.pop('name')
+        name = data.pop("name")
         # Allow PyDantic to handle type validation
         ret = cls(name, client=client, **data)
         return ret
@@ -194,13 +196,13 @@ class Collection(abc.ABC):
         """
         data = self.data.dict()
         if filename is not None:
-            with open(filename, 'w') as open_file:
+            with open(filename, "w") as open_file:
                 json.dump(data, open_file)
         else:
             return copy.deepcopy(data)
 
     @abc.abstractmethod
-    def _pre_save_prep(self, client: 'FractalClient'):
+    def _pre_save_prep(self, client: "FractalClient"):
         """
         Additional actions to take before saving, done as the last step before data is written.
 
@@ -215,7 +217,7 @@ class Collection(abc.ABC):
         """
 
     # Setters
-    def save(self, client: Optional['FractalClient'] = None) -> 'ObjectId':
+    def save(self, client: Optional["FractalClient"] = None) -> "ObjectId":
         """Uploads the overall structure of the Collection (indices, options, new molecules, etc)
         to the server.
 
@@ -241,7 +243,7 @@ class Collection(abc.ABC):
         self._pre_save_prep(client)
 
         # Add the database
-        if (self.data.id == self.data.__fields__['id'].default):
+        if self.data.id == self.data.__fields__["id"].default:
             response = client.add_collection(self.data.dict(), overwrite=False, full_return=True)
             if response.meta.success is False:
                 raise KeyError(f"Error adding collection: \n{response.meta.error_description}")
@@ -253,8 +255,7 @@ class Collection(abc.ABC):
 
         return self.data.id
 
-
-### General helpers
+    ### General helpers
 
     @staticmethod
     def _add_molecules_by_dict(client, molecules):
@@ -271,7 +272,7 @@ class Collection(abc.ABC):
 
 
 class BaseProcedureDataset(Collection):
-    def __init__(self, name: str, client: 'FractalClient' = None, **kwargs):
+    def __init__(self, name: str, client: "FractalClient" = None, **kwargs):
         if client is None:
             raise KeyError("{self.__class__.__name__} must initialize with a client.")
 
@@ -289,10 +290,10 @@ class BaseProcedureDataset(Collection):
             pass
 
     @abc.abstractmethod
-    def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> 'ObjectId':
+    def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> "ObjectId":
         pass
 
-    def _pre_save_prep(self, client: 'FractalClient') -> None:
+    def _pre_save_prep(self, client: "FractalClient") -> None:
         pass
 
     def _get_index(self):
@@ -319,7 +320,7 @@ class BaseProcedureDataset(Collection):
         self.data.specs[lname] = spec
         self.save()
 
-    def _get_procedure_ids(self, spec: str, sieve: Optional[List[str]] = None) -> Dict[str, 'ObjectId']:
+    def _get_procedure_ids(self, spec: str, sieve: Optional[List[str]] = None) -> Dict[str, "ObjectId"]:
         """Aquires the
 
         Parameters
@@ -451,11 +452,9 @@ class BaseProcedureDataset(Collection):
 
         return self.client.query_procedures(id=rec_id)[0]
 
-    def compute(self,
-                specification: str,
-                subset: Set[str] = None,
-                tag: Optional[str] = None,
-                priority: Optional[str] = None) -> int:
+    def compute(
+        self, specification: str, subset: Set[str] = None, tag: Optional[str] = None, priority: Optional[str] = None
+    ) -> int:
         """Computes a specification for all entries in the dataset.
 
         Parameters
@@ -521,7 +520,7 @@ class BaseProcedureDataset(Collection):
         # Chunk up the queries
         procedures: List[Dict[str, Any]] = []
         for i in range(0, len(query_ids), self.client.query_limit):
-            chunk_ids = query_ids[i:i + self.client.query_limit]
+            chunk_ids = query_ids[i : i + self.client.query_limit]
             procedures.extend(self.client.query_procedures(id=chunk_ids))
 
         proc_lookup = {x.id: x for x in procedures}
@@ -540,11 +539,13 @@ class BaseProcedureDataset(Collection):
 
         return spec.name
 
-    def status(self,
-               specs: Union[str, List[str]] = None,
-               collapse: bool = True,
-               status: Optional[str] = None,
-               detail: bool = False) -> pd.DataFrame:
+    def status(
+        self,
+        specs: Union[str, List[str]] = None,
+        collapse: bool = True,
+        status: Optional[str] = None,
+        detail: bool = False,
+    ) -> pd.DataFrame:
         """Returns the status of all current specifications.
 
         Parameters
@@ -587,7 +588,7 @@ class BaseProcedureDataset(Collection):
             else:
                 return df
 
-        if status not in [None, 'INCOMPLETE']:
+        if status not in [None, "INCOMPLETE"]:
             raise KeyError("Detailed status is only available for incomplete procedures.")
 
         if not (isinstance(specs, str) or len(specs) == 1):

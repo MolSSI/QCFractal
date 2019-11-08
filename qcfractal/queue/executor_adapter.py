@@ -15,10 +15,7 @@ def _get_future(future):
         return future.result()
     except Exception as e:
         msg = "Caught Executor Error:\n" + traceback.format_exc()
-        ret = FailedOperation(**{"success": False,
-                                 "error": {"error_type":  e.__class__.__name__,
-                                           "error_message": msg}
-                                 })
+        ret = FailedOperation(**{"success": False, "error": {"error_type": e.__class__.__name__, "error_message": msg}})
         return ret
 
 
@@ -28,8 +25,9 @@ class ExecutorAdapter(BaseAdapter):
 
     def __repr__(self):
 
-        return "<ExecutorAdapter client=<{} max_workers={}>>".format(self.client.__class__.__name__,
-                                                                     self.client._max_workers)
+        return "<ExecutorAdapter client=<{} max_workers={}>>".format(
+            self.client.__class__.__name__, self.client._max_workers
+        )
 
     def _submit_task(self, task_spec: Dict[str, Any]) -> Tuple[Hashable, Any]:
         func = self.get_function(task_spec["spec"]["function"])
@@ -55,6 +53,7 @@ class ExecutorAdapter(BaseAdapter):
 
     def await_results(self) -> bool:
         from concurrent.futures import wait
+
         wait(list(self.queue.values()))
 
         return True
@@ -80,11 +79,12 @@ class DaskAdapter(ExecutorAdapter):
 
         # Watch out out for thread unsafe tasks and our own constraints
         task = self.client.submit(
-            func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"], resources={"process": 1})
+            func, *task_spec["spec"]["args"], **task_spec["spec"]["kwargs"], resources={"process": 1}
+        )
         return task_spec["id"], task
 
     def count_running_tasks(self) -> int:
-        if hasattr(self.client.cluster, '_count_active_workers'):
+        if hasattr(self.client.cluster, "_count_active_workers"):
             # Note: This should be right since its counting Dask Workers, and each Dask Worker = 1 task, which we then
             # Multiply by cores_per_task in the manager.
             return self.client.cluster._count_active_workers()
@@ -93,6 +93,7 @@ class DaskAdapter(ExecutorAdapter):
 
     def await_results(self) -> bool:
         from dask.distributed import wait
+
         wait(list(self.queue.values()))
         return True
 

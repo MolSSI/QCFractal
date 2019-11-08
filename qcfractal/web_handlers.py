@@ -36,8 +36,9 @@ class APIHandler(tornado.web.RequestHandler):
             self.content_type = self.request.headers["Content-Type"]
             self.encoding = _valid_encodings[self.content_type]
         except KeyError:
-            raise tornado.web.HTTPError(status_code=401,
-                                        reason=f"Did not understand 'Content-Type': {self.content_type}")
+            raise tornado.web.HTTPError(
+                status_code=401, reason=f"Did not understand 'Content-Type': {self.content_type}"
+            )
 
         # Always reply in the format sent
         self.set_header("Content-Type", self.content_type)
@@ -65,9 +66,8 @@ class APIHandler(tornado.web.RequestHandler):
 
     def on_finish(self):
 
-        exclude_uris = ['/task_queue', '/service_queue', '/queue_manager']
-        if self.api_logger and self.request.method == 'GET' \
-                and self.request.uri not in exclude_uris:
+        exclude_uris = ["/task_queue", "/service_queue", "/queue_manager"]
+        if self.api_logger and self.request.method == "GET" and self.request.uri not in exclude_uris:
 
             extra_params = self.data.copy()
             if self._logging_param_counts:
@@ -314,9 +314,9 @@ class CollectionHandler(APIHandler):
             body_model, response_model = rest_model("collection", "get")
             body = self.parse_bodymodel(body_model)
 
-            cols = self.storage.get_collections(**body.data.dict(),
-                                                include=body.meta.include,
-                                                exclude=body.meta.exclude)
+            cols = self.storage.get_collections(
+                **body.data.dict(), include=body.meta.include, exclude=body.meta.exclude
+            )
             response = response_model(**cols)
 
             self.logger.info("GET: Collections - {} pulls.".format(len(response.data)))
@@ -328,10 +328,9 @@ class CollectionHandler(APIHandler):
             body_model, response_model = rest_model("collection", "get")
 
             body = self.parse_bodymodel(body_model)
-            cols = self.storage.get_collections(**body.data.dict(),
-                                                col_id=int(collection_id),
-                                                include=body.meta.include,
-                                                exclude=body.meta.exclude)
+            cols = self.storage.get_collections(
+                **body.data.dict(), col_id=int(collection_id), include=body.meta.include, exclude=body.meta.exclude
+            )
             response = response_model(**cols)
 
             self.logger.info("GET: Collections - {} pulls.".format(len(response.data)))
@@ -347,7 +346,7 @@ class CollectionHandler(APIHandler):
                     "success": False,
                     "error_description": "Server does not support collection views.",
                     "errors": [],
-                    "msgpacked_cols": []
+                    "msgpacked_cols": [],
                 }
                 self.write(response_model(meta=meta, data=None))
                 self.logger.info("GET: Collections - view request made, but server does not have a view_handler.")
@@ -368,7 +367,8 @@ class CollectionHandler(APIHandler):
             meta["error_description"] = "GET request for view with no collection ID not understood."
             self.write(response_model(meta=meta, data=None))
             self.logger.info(
-                "GET: Collections - collection id is None, but view function is not None (should be unreachable).")
+                "GET: Collections - collection id is None, but view function is not None (should be unreachable)."
+            )
             return
 
     def post(self, collection_id=None, view_function=None):
@@ -421,16 +421,16 @@ class ProcedureHandler(APIHandler):
     _required_auth = "read"
     _logging_param_counts = {"id"}
 
-    def get(self, query_type='get'):
+    def get(self, query_type="get"):
 
         body_model, response_model = rest_model("procedure", query_type)
         body = self.parse_bodymodel(body_model)
 
         try:
-            if query_type == 'get':
+            if query_type == "get":
                 ret = self.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
             else:  # all other queries, like 'best_opt_results'
-                ret = self.storage.custom_query('procedure', query_type, **{**body.data.dict(), **body.meta.dict()})
+                ret = self.storage.custom_query("procedure", query_type, **{**body.data.dict(), **body.meta.dict()})
         except KeyError as e:
             raise tornado.web.HTTPError(status_code=401, reason=str(e))
 
@@ -448,16 +448,16 @@ class OptimizationHandler(APIHandler):
     _required_auth = "read"
     _logging_param_counts = {"id"}
 
-    def get(self, query_type='get'):
+    def get(self, query_type="get"):
 
-        body_model, response_model = rest_model(f"optimization/{query_type}", 'get')
+        body_model, response_model = rest_model(f"optimization/{query_type}", "get")
         body = self.parse_bodymodel(body_model)
 
         try:
-            if query_type == 'get':
+            if query_type == "get":
                 ret = self.storage.get_procedures(**{**body.data.dict(), **body.meta.dict()})
             else:  # all other queries, like 'best_opt_results'
-                ret = self.storage.custom_query('optimization', query_type, **{**body.data.dict(), **body.meta.dict()})
+                ret = self.storage.custom_query("optimization", query_type, **{**body.data.dict(), **body.meta.dict()})
         except KeyError as e:
             raise tornado.web.HTTPError(status_code=401, reason=str(e))
 

@@ -28,7 +28,7 @@ layout = html.Div(
         coreui.AppHeader(
             [
                 coreui.AppNavbarBrand(
-                    full={"src": "/assets/images/logo.png", "width": 140, "height": 25, "alt": "QCArchive Logo"},
+                    full={"src": "/assets/images/logo.png", "width": 140, "height": 25, "alt": "QCArchive Logo"}
                 ),
                 coreui.AppSidebarToggler(id="AppSidebartogglermd", className="d-md-down-none", display="lg"),
             ],

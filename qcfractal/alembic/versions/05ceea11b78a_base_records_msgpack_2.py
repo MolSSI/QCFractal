@@ -10,13 +10,14 @@ import sqlalchemy as sa
 
 import os
 import sys
+
 sys.path.insert(1, os.path.dirname(os.path.abspath(__file__)))
 from migration_helpers import msgpack_migrations
 from qcelemental.util import msgpackext_dumps, msgpackext_loads
 
 # revision identifiers, used by Alembic.
-revision = '05ceea11b78a'
-down_revision = '8b0cd9accaf2'
+revision = "05ceea11b78a"
+down_revision = "8b0cd9accaf2"
 branch_labels = None
 depends_on = None
 

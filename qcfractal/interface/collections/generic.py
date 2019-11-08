@@ -25,6 +25,7 @@ class Generic(Collection):
         This structure validates input, allows server-side validation and data security,
         and will create the information to pass back and forth between server and client.
         """
+
         data: Dict[str, Any] = {}
 
         class Config:

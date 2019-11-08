@@ -107,7 +107,9 @@ class ServiceQueueHandler(APIHandler):
             service_input = service_input.copy(update={"initial_molecule": molecules})
             new_services.append(
                 initialize_service(
-                    self.storage, self.logger, service_input, tag=body.meta.tag, priority=body.meta.priority))
+                    self.storage, self.logger, service_input, tag=body.meta.tag, priority=body.meta.priority
+                )
+            )
 
         ret = self.storage.add_services(new_services)
         ret["data"] = {"ids": ret["data"], "existing": ret["meta"]["duplicates"]}
@@ -157,6 +159,7 @@ class QueueManagerHandler(APIHandler):
     Takes in a data packet the contains the molecule_hash, modelchem and options objects.
     Manages the external queue.
     """
+
     _required_auth = "queue"
 
     def _get_name_from_metadata(self, meta):
@@ -188,9 +191,10 @@ class QueueManagerHandler(APIHandler):
                     else:
                         error = result["error"]
 
-                    logger.warning("Computation key {key} did not complete successfully:\n"
-                                   "error_type: {error_type}\nerror_message: {error_message}".format(
-                                       key=str(key), **error))
+                    logger.warning(
+                        "Computation key {key} did not complete successfully:\n"
+                        "error_type: {error_type}\nerror_message: {error_message}".format(key=str(key), **error)
+                    )
 
                     error_data.append((key, error))
                     task_failures += 1
@@ -204,11 +208,9 @@ class QueueManagerHandler(APIHandler):
                 # Success!
                 else:
                     parser = queue[key].parser
-                    new_results[parser].append({
-                        "result": result,
-                        "task_id": key,
-                        "base_result": queue[key].base_result
-                    })
+                    new_results[parser].append(
+                        {"result": result, "task_id": key, "base_result": queue[key].base_result}
+                    )
                     task_success += 1
 
             except Exception as e:
@@ -218,8 +220,11 @@ class QueueManagerHandler(APIHandler):
                 task_failures += 1
 
         if task_totals:
-            logger.info("QueueManager: Found {} complete tasks ({} successful, {} failed).".format(
-                task_totals, task_success, task_failures))
+            logger.info(
+                "QueueManager: Found {} complete tasks ({} successful, {} failed).".format(
+                    task_totals, task_success, task_failures
+                )
+            )
 
         # Run output parsers
         completed = []
@@ -246,17 +251,20 @@ class QueueManagerHandler(APIHandler):
 
         # Grab new tasks and write out
         new_tasks = self.storage.queue_get_next(
-            name, body.meta.programs, body.meta.procedures, limit=body.data.limit, tag=body.meta.tag)
-        response = response_model(**{
-            "meta": {
-                "n_found": len(new_tasks),
-                "success": True,
-                "errors": [],
-                "error_description": "",
-                "missing": []
-            },
-            "data": new_tasks
-        })
+            name, body.meta.programs, body.meta.procedures, limit=body.data.limit, tag=body.meta.tag
+        )
+        response = response_model(
+            **{
+                "meta": {
+                    "n_found": len(new_tasks),
+                    "success": True,
+                    "errors": [],
+                    "error_description": "",
+                    "missing": [],
+                },
+                "data": new_tasks,
+            }
+        )
         self.write(response)
 
         self.logger.info("QueueManager: Served {} tasks.".format(response.meta.n_found))
@@ -277,17 +285,19 @@ class QueueManagerHandler(APIHandler):
 
         completed = success + error
 
-        response = response_model(**{
-            "meta": {
-                "n_inserted": completed,
-                "duplicates": [],
-                "validation_errors": [],
-                "success": True,
-                "errors": [],
-                "error_description": ""
-            },
-            "data": True
-        })
+        response = response_model(
+            **{
+                "meta": {
+                    "n_inserted": completed,
+                    "duplicates": [],
+                    "validation_errors": [],
+                    "success": True,
+                    "errors": [],
+                    "error_description": "",
+                },
+                "data": True,
+            }
+        )
         self.write(response)
         self.logger.info("QueueManager: Inserted {} complete tasks.".format(len(body.data)))
 
@@ -308,15 +318,18 @@ class QueueManagerHandler(APIHandler):
         name = self._get_name_from_metadata(body.meta)
         op = body.data.operation
         if op == "startup":
-            self.storage.manager_update(name, status="ACTIVE", configuration=body.data.configuration, **body.meta.dict(), log=True)
+            self.storage.manager_update(
+                name, status="ACTIVE", configuration=body.data.configuration, **body.meta.dict(), log=True
+            )
             self.logger.info("QueueManager: New active manager {} detected.".format(name))
 
         elif op == "shutdown":
             nshutdown = self.storage.queue_reset_status(manager=name, reset_running=True)
             self.storage.manager_update(name, returned=nshutdown, status="INACTIVE", **body.meta.dict(), log=True)
 
-            self.logger.info("QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(
-                name, nshutdown))
+            self.logger.info(
+                "QueueManager: Shutdown of manager {} detected, recycling {} incomplete tasks.".format(name, nshutdown)
+            )
 
             ret = {"nshutdown": nshutdown}
 

@@ -29,13 +29,14 @@ def storage_socket_factory(uri, project_name="", logger=None, db_type=None, **kw
 
     if db_type is None:
         # try to find db_type from uri
-        if uri.startswith('postgresql'):
-            db_type = 'sqlalchemy'
+        if uri.startswith("postgresql"):
+            db_type = "sqlalchemy"
         else:
-            raise TypeError('Unknown DB type, uri: {}'.format(uri))
+            raise TypeError("Unknown DB type, uri: {}".format(uri))
 
     if db_type == "sqlalchemy":
         from . import sqlalchemy_socket
+
         return sqlalchemy_socket.SQLAlchemySocket(uri, project=project_name, logger=logger, **kwargs)
     else:
         raise KeyError("DBType {} not understood".format(db_type))

@@ -57,20 +57,14 @@ def unpack_single_task_spec(storage, meta, molecules):
         keyword_set = keyword_set["values"]
 
     # Create the "universal header"
-    task_meta = json.dumps({
-        "driver": meta["driver"],
-        "keywords": keyword_set,
-        "model": {
-            "method": meta["method"],
-            "basis": meta["basis"]
-        },
-        "extras": {
-            "_qcfractal_tags": {
-                "program": meta["program"],
-                "keywords": meta["keywords"]
-            }
+    task_meta = json.dumps(
+        {
+            "driver": meta["driver"],
+            "keywords": keyword_set,
+            "model": {"method": meta["method"], "basis": meta["basis"]},
+            "extras": {"_qcfractal_tags": {"program": meta["program"], "keywords": meta["keywords"]}},
         }
-    })
+    )
 
     tasks = []
     for mol in raw_molecules_query["data"]:

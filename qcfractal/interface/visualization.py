@@ -13,9 +13,9 @@ def _isnotebook():
     """
     try:
         shell = get_ipython().__class__.__name__
-        if shell in ['ZMQInteractiveShell', 'google.colab._shell']:
+        if shell in ["ZMQInteractiveShell", "google.colab._shell"]:
             return True
-        elif shell == 'TerminalInteractiveShell':
+        elif shell == "TerminalInteractiveShell":
             return False
         else:
             return False
@@ -23,7 +23,7 @@ def _isnotebook():
         return False
 
 
-spec = find_spec('plotly')
+spec = find_spec("plotly")
 if spec is None:
     _plotly_found = False
 else:
@@ -37,10 +37,12 @@ def check_plotly():
     """
     if _plotly_found is False:
         raise ModuleNotFoundError(
-            "Plotly is required for this function. Please 'conda install plotly' or 'pip isntall plotly'.")
+            "Plotly is required for this function. Please 'conda install plotly' or 'pip isntall plotly'."
+        )
 
     if _isnotebook():
         import plotly
+
         plotly.offline.init_notebook_mode(connected=True)
 
 
@@ -56,7 +58,7 @@ def _configure_return(figure, filename, return_figure):
         return plotly.offline.iplot(figure, filename=filename)
 
 
-def custom_plot(data: Any, layout: Any, return_figure=True) -> 'plotly.Figure':
+def custom_plot(data: Any, layout: Any, return_figure=True) -> "plotly.Figure":
     """A custom plotly plot where the data and layout are pre-specified
 
     Parameters
@@ -77,7 +79,7 @@ def custom_plot(data: Any, layout: Any, return_figure=True) -> 'plotly.Figure':
     return _configure_return(figure, "qcportal-bar", return_figure)
 
 
-def bar_plot(traces: 'List[Series]', title=None, ylabel=None, return_figure=True) -> 'plotly.Figure':
+def bar_plot(traces: "List[Series]", title=None, ylabel=None, return_figure=True) -> "plotly.Figure":
     """Renders a plotly bar plot
 
     Parameters
@@ -113,12 +115,9 @@ def bar_plot(traces: 'List[Series]', title=None, ylabel=None, return_figure=True
     return _configure_return(figure, "qcportal-bar", return_figure)
 
 
-def violin_plot(traces: 'DataFrame',
-                negative: 'DataFrame' = None,
-                title=None,
-                points=False,
-                ylabel=None,
-                return_figure=True) -> 'plotly.Figure':
+def violin_plot(
+    traces: "DataFrame", negative: "DataFrame" = None, title=None, points=False, ylabel=None, return_figure=True
+) -> "plotly.Figure":
     """Renders a plotly violin plot
 
     Parameters
@@ -167,15 +166,17 @@ def violin_plot(traces: 'DataFrame',
     return _configure_return(figure, "qcportal-violin", return_figure)
 
 
-def scatter_plot(traces: List[Dict[str, Any]],
-                 mode='lines+markers',
-                 title=None,
-                 ylabel=None,
-                 xlabel=None,
-                 xline=True,
-                 yline=True,
-                 custom_layout=None,
-                 return_figure=True) -> 'plotly.Figure':
+def scatter_plot(
+    traces: List[Dict[str, Any]],
+    mode="lines+markers",
+    title=None,
+    ylabel=None,
+    xlabel=None,
+    xline=True,
+    yline=True,
+    custom_layout=None,
+    return_figure=True,
+) -> "plotly.Figure":
     """Renders a plotly scatter plot
 
     Parameters
@@ -213,17 +214,13 @@ def scatter_plot(traces: List[Dict[str, Any]],
         data.append(go.Scatter(**trace))
 
     if custom_layout is None:
-        layout = go.Layout({
-            "title": title,
-            "yaxis": {
-                "title": ylabel,
-                "zeroline": yline
-            },
-            "xaxis": {
-                "title": xlabel,
-                "zeroline": xline
+        layout = go.Layout(
+            {
+                "title": title,
+                "yaxis": {"title": ylabel, "zeroline": yline},
+                "xaxis": {"title": xlabel, "zeroline": xline},
             }
-        })
+        )
     else:
         layout = go.Layout(**custom_layout)
     figure = go.Figure(data=data, layout=layout)

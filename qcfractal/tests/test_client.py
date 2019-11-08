@@ -102,7 +102,7 @@ def test_collection_portal(test_server, encoding):
         "array": ["12345"],
         "visibility": True,
         "view_available": False,
-        "group": "default"
+        "group": "default",
     }
 
     client = ptl.FractalClient(test_server)
@@ -136,16 +136,16 @@ def test_collection_portal(test_server, encoding):
         _ = client.add_collection(db, overwrite=True)
 
     # Test that we cannot use a local key
-    db['id'] = 'local'
-    db['array'] = ["6789"]
+    db["id"] = "local"
+    db["array"] = ["6789"]
     with pytest.raises(KeyError):
         _ = client.add_collection(db, overwrite=True)
 
     # Finally test that we can overwrite
-    db['id'] = db_id
+    db["id"] = db_id
     r = client.add_collection(db, overwrite=True)
     get_db = client.get_collection(db["collection"], db["name"], full_return=True)
-    assert get_db.data[0]['array'] == ["6789"]
+    assert get_db.data[0]["array"] == ["6789"]
 
 
 @pytest.mark.parametrize("encoding", valid_encodings)
@@ -156,7 +156,7 @@ def test_custom_queries(test_server, encoding):
     client._set_encoding(encoding)
 
     # Dummy test, not found
-    ret = client.custom_query('optimization', 'final_result', {'optimization_ids': [1]}, full_return=True)
+    ret = client.custom_query("optimization", "final_result", {"optimization_ids": [1]}, full_return=True)
 
     assert ret.meta.success
     assert ret.meta.n_found == 0

@@ -1,4 +1,5 @@
 from sqlalchemy import JSON, Boolean, Column, ForeignKey, Index, Integer, String
+
 # from sqlalchemy.dialects.postgresql import array_agg
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
@@ -53,11 +54,11 @@ class CollectionORM(Base):
         pass
 
     __table_args__ = (
-        Index('ix_collection_lname', "collection", "lname", unique=True),
-        Index('ix_collection_type', 'collection_type'),
+        Index("ix_collection_lname", "collection", "lname", unique=True),
+        Index("ix_collection_type", "collection_type"),
     )
 
-    __mapper_args__ = {'polymorphic_on': 'collection_type'}
+    __mapper_args__ = {"polymorphic_on": "collection_type"}
 
 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -84,9 +85,9 @@ class ContributedValuesORM(Base):
     """One group of a contibuted values per dataset
     Each dataset can have multiple rows in this table """
 
-    __tablename__ = 'contributed_values'
+    __tablename__ = "contributed_values"
 
-    collection_id = Column(Integer, ForeignKey('collection.id', ondelete="cascade"), primary_key=True)
+    collection_id = Column(Integer, ForeignKey("collection.id", ondelete="cascade"), primary_key=True)
 
     name = Column(String, nullable=False, primary_key=True)
     values = Column(MsgpackExt, nullable=False)
@@ -107,11 +108,11 @@ class ContributedValuesORM(Base):
 class DatasetEntryORM(Base):
     """Association table for many to many"""
 
-    __tablename__ = 'dataset_entry'
+    __tablename__ = "dataset_entry"
 
-    dataset_id = Column(Integer, ForeignKey('dataset.id', ondelete='cascade'), primary_key=True)
-    #TODO: check the cascase_delete with molecule
-    molecule_id = Column(Integer, ForeignKey('molecule.id'), nullable=False)
+    dataset_id = Column(Integer, ForeignKey("dataset.id", ondelete="cascade"), primary_key=True)
+    # TODO: check the cascase_delete with molecule
+    molecule_id = Column(Integer, ForeignKey("molecule.id"), nullable=False)
 
     name = Column(String, nullable=False, primary_key=True)
     comment = Column(String)
@@ -125,16 +126,13 @@ class DatasetORM(CollectionORM, DatasetMixin):
 
     __tablename__ = "dataset"
 
-    id = Column(Integer, ForeignKey('collection.id', ondelete="CASCADE"), primary_key=True)
+    id = Column(Integer, ForeignKey("collection.id", ondelete="CASCADE"), primary_key=True)
 
-    contributed_values_obj = relationship(ContributedValuesORM,
-                                          lazy='selectin',
-                                          cascade="all, delete-orphan")
+    contributed_values_obj = relationship(ContributedValuesORM, lazy="selectin", cascade="all, delete-orphan")
 
-    records_obj = relationship(DatasetEntryORM,
-                               lazy='selectin',  # lazy='noload',
-                               cascade="all, delete-orphan",
-                               backref="dataset")
+    records_obj = relationship(
+        DatasetEntryORM, lazy="selectin", cascade="all, delete-orphan", backref="dataset"  # lazy='noload',
+    )
 
     @hybrid_property
     def contributed_values(self):
@@ -150,7 +148,7 @@ class DatasetORM(CollectionORM, DatasetMixin):
         ret = {}
         try:
             for obj in contributed_values_obj:
-                ret[obj.name.lower()] = obj.to_dict(exclude=['collection_id'])
+                ret[obj.name.lower()] = obj.to_dict(exclude=["collection_id"])
         except Exception as err:
             pass
 
@@ -179,7 +177,7 @@ class DatasetORM(CollectionORM, DatasetMixin):
         ret = []
         try:
             for rec in records_obj:
-                ret.append(rec.to_dict(exclude=['dataset_id']))
+                ret.append(rec.to_dict(exclude=["dataset_id"]))
         except Exception as err:
             # raises exception of first access!!
             pass
@@ -210,9 +208,9 @@ class DatasetORM(CollectionORM, DatasetMixin):
     )
 
     __mapper_args__ = {
-        'polymorphic_identity': 'dataset',
+        "polymorphic_identity": "dataset",
         # to have separate select when querying CollectionORM
-        'polymorphic_load': 'selectin',
+        "polymorphic_load": "selectin",
     }
 
 
@@ -222,9 +220,9 @@ class DatasetORM(CollectionORM, DatasetMixin):
 class ReactionDatasetEntryORM(Base):
     """Association table for many to many"""
 
-    __tablename__ = 'reaction_dataset_entry'
+    __tablename__ = "reaction_dataset_entry"
 
-    reaction_dataset_id = Column(Integer, ForeignKey('reaction_dataset.id', ondelete='cascade'), primary_key=True)
+    reaction_dataset_id = Column(Integer, ForeignKey("reaction_dataset.id", ondelete="cascade"), primary_key=True)
 
     attributes = Column(JSON)
     name = Column(String, nullable=False, primary_key=True)
@@ -240,18 +238,15 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
 
     __tablename__ = "reaction_dataset"
 
-    id = Column(Integer, ForeignKey('collection.id', ondelete="CASCADE"), primary_key=True)
+    id = Column(Integer, ForeignKey("collection.id", ondelete="CASCADE"), primary_key=True)
 
     ds_type = Column(String)
 
-    records_obj = relationship(ReactionDatasetEntryORM,
-                               lazy='selectin',
-                               cascade="all, delete-orphan",
-                               backref="reaction_dataset")
+    records_obj = relationship(
+        ReactionDatasetEntryORM, lazy="selectin", cascade="all, delete-orphan", backref="reaction_dataset"
+    )
 
-    contributed_values_obj = relationship(ContributedValuesORM,
-                                          lazy='selectin',
-                                          cascade="all, delete-orphan")
+    contributed_values_obj = relationship(ContributedValuesORM, lazy="selectin", cascade="all, delete-orphan")
 
     @hybrid_property
     def contributed_values(self):
@@ -264,7 +259,6 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
     @contributed_values.setter
     def contributed_values(self, dict_values):
         return dict_values
-
 
     def update_relations(self, records=None, contributed_values=None, **kwarg):
 
@@ -299,7 +293,7 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
         ret = []
         try:
             for rec in records_obj:
-                ret.append(rec.to_dict(exclude=['reaction_dataset_id']))
+                ret.append(rec.to_dict(exclude=["reaction_dataset_id"]))
         except Exception as err:
             # raises exception of first access!!
             pass
@@ -315,9 +309,9 @@ class ReactionDatasetORM(CollectionORM, DatasetMixin):
     )
 
     __mapper_args__ = {
-        'polymorphic_identity': 'reactiondataset',
+        "polymorphic_identity": "reactiondataset",
         # to have separate select when querying CollectionORM
-        'polymorphic_load': 'selectin',
+        "polymorphic_load": "selectin",
     }
 
 

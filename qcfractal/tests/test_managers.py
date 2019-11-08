@@ -76,7 +76,7 @@ def test_queue_manager_single_tags(compute_adapter_fixture):
         assert manager["submitted"] == value
         assert manager["completed"] == value
         assert manager["username"] == CLIENT_USERNAME
-        assert isinstance(manager['configuration'], dict)
+        assert isinstance(manager["configuration"], dict)
 
 
 @pytest.mark.slow
@@ -104,7 +104,7 @@ def test_queue_manager_log_statistics(compute_adapter_fixture, caplog):
         assert "Task Stats: Processed" in caplog.text
         assert "Core Usage vs. Max Resources" in caplog.text
         # Ensure some kind of stats are being calculated seemingly correctly
-        stats_re = re.search(r'Core Usage Efficiency: (\d+\.\d+)%', caplog.text)
+        stats_re = re.search(r"Core Usage Efficiency: (\d+\.\d+)%", caplog.text)
         assert stats_re is not None and float(stats_re.group(1)) != 0.0
 
     # Clean up capture so it does not flood the output
@@ -223,12 +223,14 @@ def test_queue_manager_heartbeat(compute_adapter_fixture):
     with testing.loop_in_thread() as loop:
 
         # Build server, manually handle IOLoop (no start/stop needed)
-        server = FractalServer(port=testing.find_open_port(),
-                               storage_project_name=server.storage_database,
-                               storage_uri=server.storage_uri,
-                               loop=loop,
-                               ssl_options=False,
-                               heartbeat_frequency=0.1)
+        server = FractalServer(
+            port=testing.find_open_port(),
+            storage_project_name=server.storage_database,
+            storage_uri=server.storage_uri,
+            loop=loop,
+            ssl_options=False,
+            heartbeat_frequency=0.1,
+        )
 
         # Clean and re-init the database
         testing.reset_server_database(server)
@@ -252,8 +254,8 @@ def test_queue_manager_heartbeat(compute_adapter_fixture):
 def test_manager_max_tasks_limiter(compute_adapter_fixture):
     client, server, adapter = compute_adapter_fixture
 
-    manager = queue.QueueManager(client, adapter, queue_tag="stuff", max_tasks=1.e9)
-    assert manager.max_tasks < 1.e9
+    manager = queue.QueueManager(client, adapter, queue_tag="stuff", max_tasks=1.0e9)
+    assert manager.max_tasks < 1.0e9
 
 
 def test_queue_manager_testing():

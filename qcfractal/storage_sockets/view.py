@@ -105,9 +105,9 @@ class ViewHandler:
                 return {"meta": meta, "data": None}
         elif request == "molecule":
             series = view.get_molecules(model["indexes"], keep_serialized=True)
-            df = pd.DataFrame({'molecule': series})
+            df = pd.DataFrame({"molecule": series})
             df.reset_index(inplace=True)
-            meta["msgpacked_cols"].append('molecule')
+            meta["msgpacked_cols"].append("molecule")
         elif request == "value":
             df, units = view.get_values(model["queries"], subset=model["subset"])
             df.reset_index(inplace=True)
@@ -130,7 +130,7 @@ class ViewHandler:
                 # Add any other datatypes that need to be handled specially go here
 
         for col in pack_columns:
-            df[col] = df[col].apply(lambda x: serialize(x, 'msgpack-ext'))
+            df[col] = df[col].apply(lambda x: serialize(x, "msgpack-ext"))
         meta["msgpacked_cols"] += pack_columns
 
         # serialize

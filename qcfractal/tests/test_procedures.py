@@ -26,17 +26,11 @@ def test_compute_queue_stack(fractal_compute_server):
 
     hydrogen_mol_id, helium_mol_id = client.add_molecules([hydrogen, helium])
 
-    kw = ptl.models.KeywordSet(**{"values": {"e_convergence": 1.e-8}})
+    kw = ptl.models.KeywordSet(**{"values": {"e_convergence": 1.0e-8}})
     kw_id = client.add_keywords([kw])[0]
 
     # Add compute
-    compute_args = {
-            "driver": "energy",
-            "method": "HF",
-            "basis": "sto-3g",
-            "keywords": kw_id,
-            "program": "psi4",
-    }
+    compute_args = {"driver": "energy", "method": "HF", "basis": "sto-3g", "keywords": kw_id, "program": "psi4"}
 
     # Ask the server to compute a new computation
     r = client.add_compute("psi4", "HF", "sto-3g", "energy", kw_id, [hydrogen_mol_id, helium])
@@ -56,7 +50,7 @@ def test_compute_queue_stack(fractal_compute_server):
         "program": "psi4",
         "molecule": [hydrogen_mol_id, helium_mol_id],
         "method": compute_args["method"],
-        "basis": compute_args["basis"]
+        "basis": compute_args["basis"],
     }
     results = client.query_results(**results_query, status=None)
 
@@ -77,7 +71,7 @@ def test_compute_queue_stack(fractal_compute_server):
 @testing.using_psi4
 def test_compute_wavefunction(fractal_compute_server):
 
-    psiver = qcng.get_program('psi4').get_version()
+    psiver = qcng.get_program("psi4").get_version()
     if parse_version(psiver) < parse_version("1.4a2.dev160"):
         pytest.skip("Must be used a modern version of Psi4 to execute")
 
@@ -87,14 +81,15 @@ def test_compute_wavefunction(fractal_compute_server):
     # Add a hydrogen and helium molecule
     hydrogen = ptl.Molecule.from_data([[1, 0, 0, -0.5], [1, 0, 0, 0.5]], dtype="numpy", units="bohr")
 
-
     # Ask the server to compute a new computation
-    r = client.add_compute(program="psi4",
-                           driver="energy",
-                           method="HF",
-                           basis="sto-3g",
-                           molecule=hydrogen,
-                           protocols={"wavefunction": "orbitals_and_eigenvalues"})
+    r = client.add_compute(
+        program="psi4",
+        driver="energy",
+        method="HF",
+        basis="sto-3g",
+        molecule=hydrogen,
+        protocols={"wavefunction": "orbitals_and_eigenvalues"},
+    )
 
     fractal_compute_server.await_results()
     assert len(fractal_compute_server.list_current_tasks()) == 0
@@ -126,13 +121,7 @@ def test_procedure_optimization_single(fractal_compute_server):
     # Add compute
     options = {
         "keywords": None,
-        "qc_spec": {
-            "driver": "gradient",
-            "method": "HF",
-            "basis": "sto-3g",
-            "keywords": kw_id,
-            "program": "psi4"
-        },
+        "qc_spec": {"driver": "gradient", "method": "HF", "basis": "sto-3g", "keywords": kw_id, "program": "psi4"},
     }
 
     # Ask the server to compute a new computation
@@ -173,7 +162,7 @@ def test_procedure_optimization_single(fractal_compute_server):
             assert "_qcfractal_tags" not in traj[ind].extras
 
             raw_energy = traj[ind].properties.return_energy
-            assert pytest.approx(raw_energy, 1.e-5) == opt_result.energies[ind]
+            assert pytest.approx(raw_energy, 1.0e-5) == opt_result.energies[ind]
 
         # Check result stdout
         assert "RHF Reference" in traj[0].get_stdout()
@@ -201,15 +190,8 @@ def test_procedure_optimization_protocols(fractal_compute_server):
     # Add compute
     options = {
         "keywords": None,
-        "qc_spec": {
-            "driver": "gradient",
-            "method": "HF",
-            "basis": "sto-3g",
-            "program": "psi4"
-        },
-        "protocols": {
-            "trajectory": "final"
-        }
+        "qc_spec": {"driver": "gradient", "method": "HF", "basis": "sto-3g", "program": "psi4"},
+        "protocols": {"trajectory": "final"},
     }
 
     # Ask the server to compute a new computation

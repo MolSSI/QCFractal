@@ -17,6 +17,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 class TDEntry(ProtoModel):
     """Data model for the `reactions` list in Dataset"""
+
     name: str
     initial_molecules: Set[ObjectId]
     td_keywords: TDKeywords
@@ -43,19 +44,23 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
     def _internal_compute_add(self, spec: Any, entry: Any, tag: str, priority: str) -> ObjectId:
 
-        service = TorsionDriveInput(initial_molecule=entry.initial_molecules,
-                                    keywords=entry.td_keywords,
-                                    optimization_spec=spec.optimization_spec,
-                                    qc_spec=spec.qc_spec)
+        service = TorsionDriveInput(
+            initial_molecule=entry.initial_molecules,
+            keywords=entry.td_keywords,
+            optimization_spec=spec.optimization_spec,
+            qc_spec=spec.qc_spec,
+        )
 
         return self.client.add_service([service], tag=tag, priority=priority).ids[0]
 
-    def add_specification(self,
-                          name: str,
-                          optimization_spec: OptimizationSpecification,
-                          qc_spec: QCSpecification,
-                          description: Optional[str] = None,
-                          overwrite: bool = False) -> None:
+    def add_specification(
+        self,
+        name: str,
+        optimization_spec: OptimizationSpecification,
+        qc_spec: QCSpecification,
+        description: Optional[str] = None,
+        overwrite: bool = False,
+    ) -> None:
         """
         Parameters
         ----------
@@ -72,23 +77,24 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
         """
 
-        spec = TDEntrySpecification(name=name,
-                                    optimization_spec=optimization_spec,
-                                    qc_spec=qc_spec,
-                                    description=description)
+        spec = TDEntrySpecification(
+            name=name, optimization_spec=optimization_spec, qc_spec=qc_spec, description=description
+        )
 
         return self._add_specification(name, spec, overwrite=overwrite)
 
-    def add_entry(self,
-                  name: str,
-                  initial_molecules: List['Molecule'],
-                  dihedrals: List[Tuple[int, int, int, int]],
-                  grid_spacing: List[int],
-                  dihedral_ranges: Optional[List[Tuple[int, int]]] = None,
-                  energy_decrease_thresh: Optional[float] = None,
-                  energy_upper_limit: Optional[float] = None,
-                  attributes: Dict[str, Any] = None,
-                  save: bool = True) -> None:
+    def add_entry(
+        self,
+        name: str,
+        initial_molecules: List["Molecule"],
+        dihedrals: List[Tuple[int, int, int, int]],
+        grid_spacing: List[int],
+        dihedral_ranges: Optional[List[Tuple[int, int]]] = None,
+        energy_decrease_thresh: Optional[float] = None,
+        energy_upper_limit: Optional[float] = None,
+        attributes: Dict[str, Any] = None,
+        save: bool = True,
+    ) -> None:
         """
         Parameters
         ----------
@@ -120,20 +126,24 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
         # Build new objects
         molecule_ids = self.client.add_molecules(initial_molecules)
-        td_keywords = TDKeywords(dihedrals=dihedrals,
-                                 grid_spacing=grid_spacing,
-                                 dihedral_ranges=dihedral_ranges,
-                                 energy_decrease_thresh=energy_decrease_thresh,
-                                 energy_upper_limit=energy_upper_limit)
+        td_keywords = TDKeywords(
+            dihedrals=dihedrals,
+            grid_spacing=grid_spacing,
+            dihedral_ranges=dihedral_ranges,
+            energy_decrease_thresh=energy_decrease_thresh,
+            energy_upper_limit=energy_upper_limit,
+        )
 
         entry = TDEntry(name=name, initial_molecules=molecule_ids, td_keywords=td_keywords, attributes=attributes)
 
         self._add_entry(name, entry, save)
 
-    def counts(self,
-               entries: Union[str, List[str]],
-               specs: Optional[Union[str, List[str]]] = None,
-               count_gradients: bool = False) -> pd.DataFrame:
+    def counts(
+        self,
+        entries: Union[str, List[str]],
+        specs: Optional[Union[str, List[str]]] = None,
+        count_gradients: bool = False,
+    ) -> pd.DataFrame:
         """Counts the number of optimization or gradient evaluations associated with the
         TorsionDrives.
 
@@ -203,14 +213,16 @@ class TorsionDriveDataset(BaseProcedureDataset):
         # ret = pd.DataFrame([ret[x].astype(int) for x in ret.columns]).transpose()
         return ret
 
-    def visualize(self,
-                  entries: Union[str, List[str]],
-                  specs: Union[str, List[str]],
-                  relative: bool = True,
-                  units: str = "kcal / mol",
-                  digits: int = 3,
-                  use_measured_angle: bool = False,
-                  return_figure: Optional[bool] = None) -> 'plotly.Figure':
+    def visualize(
+        self,
+        entries: Union[str, List[str]],
+        specs: Union[str, List[str]],
+        relative: bool = True,
+        units: str = "kcal / mol",
+        digits: int = 3,
+        use_measured_angle: bool = False,
+        return_figure: Optional[bool] = None,
+    ) -> "plotly.Figure":
         """
         Parameters
         ----------
@@ -258,11 +270,13 @@ class TorsionDriveDataset(BaseProcedureDataset):
             for index in entries:
 
                 # Plot the figure using the torsiondrives plotting function
-                fig = self.df.loc[index, spec].visualize(relative=relative,
-                                                         units=units,
-                                                         digits=digits,
-                                                         use_measured_angle=use_measured_angle,
-                                                         return_figure=True)
+                fig = self.df.loc[index, spec].visualize(
+                    relative=relative,
+                    units=units,
+                    digits=digits,
+                    use_measured_angle=use_measured_angle,
+                    return_figure=True,
+                )
 
                 ranges.append(fig.layout.xaxis.range)
                 trace = fig.data[0]  # Pull out the underlying scatterplot
@@ -285,15 +299,12 @@ class TorsionDriveDataset(BaseProcedureDataset):
 
         custom_layout = {
             "title": title,
-            "yaxis": {
-                "title": ylabel,
-                "zeroline": True
-            },
+            "yaxis": {"title": ylabel, "zeroline": True},
             "xaxis": {
                 "title": "Dihedral Angle [degrees]",
                 "zeroline": False,
-                "range": [min(x[0] for x in ranges), max(x[1] for x in ranges)]
-            }
+                "range": [min(x[0] for x in ranges), max(x[1] for x in ranges)],
+            },
         }
 
         return custom_plot(traces, custom_layout, return_figure=return_figure)

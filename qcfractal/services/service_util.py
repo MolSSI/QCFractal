@@ -36,8 +36,9 @@ class TaskManager(ProtoModel):
         if len(self.required_tasks) == 0:
             return True
 
-        task_query = self.storage_socket.get_procedures(id=list(self.required_tasks.values()),
-                                                        include=["status", "error"])
+        task_query = self.storage_socket.get_procedures(
+            id=list(self.required_tasks.values()), include=["status", "error"]
+        )
 
         status_values = set(x["status"] for x in task_query["data"])
         if status_values == {"COMPLETE"}:
@@ -149,7 +150,7 @@ class BaseService(ProtoModel, abc.ABC):
         self.task_manager.tag = self.task_tag
         self.task_manager.priority = self.task_priority
 
-    @validator('task_priority', pre=True)
+    @validator("task_priority", pre=True)
     def munge_priority(cls, v):
         if isinstance(v, str):
             v = PriorityEnum[v.upper()]
@@ -163,6 +164,7 @@ class BaseService(ProtoModel, abc.ABC):
         """
         Initalizes a Service from the API.
         """
+
     @abc.abstractmethod
     def iterate(self):
         """
@@ -170,8 +172,9 @@ class BaseService(ProtoModel, abc.ABC):
         """
 
 
-def expand_ndimensional_grid(dimensions: Tuple[int, ...], seeds: Set[Tuple[int, ...]],
-                             complete: Set[Tuple[int, ...]]) -> List[Tuple[Tuple[int, ...], Tuple[int, ...]]]:
+def expand_ndimensional_grid(
+    dimensions: Tuple[int, ...], seeds: Set[Tuple[int, ...]], complete: Set[Tuple[int, ...]]
+) -> List[Tuple[Tuple[int, ...], Tuple[int, ...]]]:
     """
     Expands an n-dimensional key/value grid.
 

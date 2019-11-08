@@ -9,7 +9,7 @@ from sqlalchemy.sql.expression import func
 from qcelemental.util import msgpackext_dumps, msgpackext_loads
 from qcelemental.testing import compare_recursive
 
-logger = logging.getLogger('alembic')
+logger = logging.getLogger("alembic")
 
 old_type = sa.JSON
 new_type = BYTEA
@@ -40,7 +40,7 @@ def _intermediate_table(table_name, columns, read_columns=None):
     return table, cols
 
 
-def json_to_msgpack_table(table_name, block_size, update_columns,  transformer, read_columns=None):
+def json_to_msgpack_table(table_name, block_size, update_columns, transformer, read_columns=None):
 
     if read_columns is None:
         read_columns = {}
@@ -69,9 +69,9 @@ def json_to_msgpack_table(table_name, block_size, update_columns,  transformer, 
     for block in tqdm.tqdm(range(0, num_records, block_size)):
 
         # Pull chunk to migrate
-        data = connection.execute(sa.select([
-            *read_columns,
-        ], order_by=table.c.id.asc(), offset=block, limit=block_size)).fetchall()
+        data = connection.execute(
+            sa.select([*read_columns], order_by=table.c.id.asc(), offset=block, limit=block_size)
+        ).fetchall()
 
         # Convert chunk to msgpack
         for values in data:
@@ -80,7 +80,7 @@ def json_to_msgpack_table(table_name, block_size, update_columns,  transformer, 
 
             connection.execute(table.update().where(table.c.id == data["id"]).values(**row))
 
-        connection.execute('commit;')
+        connection.execute("commit;")
 
 
 def json_to_msgpack_table_dropcols(table_name, block_size, update_columns):
@@ -106,11 +106,7 @@ def json_to_msgpack_table_altercolumns(table_name, update_columns, nullable_true
 
     logger.info(f"Checking converted columns...")
     # Pull chunk to migrate
-    data = connection.execute(sa.select([
-        table.c.id,
-        *old_columns,
-        *new_columns,
-    ], order_by=table.c.id.asc())).fetchall()
+    data = connection.execute(sa.select([table.c.id, *old_columns, *new_columns], order_by=table.c.id.asc())).fetchall()
     # ], limit=100, order_by=func.random())).fetchall()
 
     col_names = ["id"] + old_names + new_names
@@ -127,7 +123,6 @@ def json_to_msgpack_table_altercolumns(table_name, update_columns, nullable_true
             #     assert compare_recursive(comp_data, row[name])
             # except AssertionError:
             #     assert compare_recursive(comp_data.ravel(), row[name], quiet=True)
-
 
             # try:
             #     print(name, comp_data.dtype, comp_data)
