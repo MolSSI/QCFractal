@@ -1,0 +1,13 @@
+Collection:
+  - example/**/*
+Compute:
+  - qcfractal/queue/**/*
+Database:
+  - qcfractal/storage_sockets/**/*
+Documentation:
+  - docs/**/*
+Interface:
+  - qcfractal/interface/**/*
+Service:
+  - qcfractal/services/**/*
+
