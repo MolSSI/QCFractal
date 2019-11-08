@@ -1177,7 +1177,11 @@ class Dataset(Collection):
         for column in self.df.columns:
             try:
                 self.df[column] *= constants.conversion_factor(self._column_metadata[column]["units"], value)
-                if self._column_metadata[column]["units"] != self._units:
+                
+                # Cast units to quantities so that `kcal / mol` == `kilocalorie / mole`
+                metadata_quantity = constants.Quantity(self._column_metadata[column]["units"])
+                self_quantity = constants.Quantity(self._units)
+                if metadata_quantity != self_quantity:
                     warnings.warn(f"Data column '{column}' did not have the same units as the dataset. "
                                   f"This has been corrected.")
                 self._column_metadata[column]["units"] = value
