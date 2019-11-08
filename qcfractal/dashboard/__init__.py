@@ -20,7 +20,7 @@ except ModuleNotFound:
         "Could not find `dash-coreui-components`, please `conda install dash-coreui-components -c conda-forge` to use the dashboard."
     )
 
-from .layout import layout
 from .app import app
+from .layout import layout
 
 app.layout = layout

@@ -1,13 +1,8 @@
-import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
-from dash.dependencies import Input, Output
 import pandas as pd
 import plotly.graph_objs as go
 from plotly.colors import DEFAULT_PLOTLY_COLORS
 
-import dash_coreui_components as coreui
-from flask import current_app
+import dash_bootstrap_components as dbc
 
 from .connection import get_socket
 

@@ -6,9 +6,9 @@ import numpy as np
 import pytest
 import requests
 
-from qcelemental.util import parse_version
 import qcengine as qcng
 import qcfractal.interface as ptl
+from qcelemental.util import parse_version
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
 

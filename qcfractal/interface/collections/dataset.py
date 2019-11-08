@@ -1,8 +1,6 @@
 """
 QCPortal Database ODM
 """
-import hashlib
-import json
 import tempfile
 import warnings
 from pathlib import Path
@@ -12,9 +10,10 @@ import numpy as np
 import pandas as pd
 import requests
 from pydantic import Field, validator
+from tqdm import tqdm
+
 from qcelemental import constants
 from qcelemental.models.types import Array
-from tqdm import tqdm
 
 from ..models import Citation, ComputeResponse, ObjectId, ProtoModel
 from ..statistics import wrap_statistics

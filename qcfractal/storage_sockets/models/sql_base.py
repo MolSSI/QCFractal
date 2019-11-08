@@ -1,4 +1,3 @@
-from qcelemental.util import msgpackext_dumps, msgpackext_loads
 from sqlalchemy import and_, inspect
 from sqlalchemy.dialects.postgresql import BYTEA
 from sqlalchemy.ext.associationproxy import ASSOCIATION_PROXY
@@ -6,6 +5,8 @@ from sqlalchemy.ext.declarative import as_declarative
 from sqlalchemy.ext.hybrid import HYBRID_PROPERTY
 from sqlalchemy.orm import object_session
 from sqlalchemy.types import TypeDecorator
+
+from qcelemental.util import msgpackext_dumps, msgpackext_loads
 
 # from sqlalchemy.ext.orderinglist import ordering_list
 # from sqlalchemy.ext.associationproxy import association_proxy

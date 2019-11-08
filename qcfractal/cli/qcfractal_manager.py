@@ -11,11 +11,11 @@ from enum import Enum
 from math import ceil
 from typing import List, Optional
 
-import qcengine as qcng
 import tornado.log
 import yaml
 from pydantic import Field, validator
 
+import qcengine as qcng
 import qcfractal
 
 from ..interface.models import AutodocBaseSettings, ProtoModel

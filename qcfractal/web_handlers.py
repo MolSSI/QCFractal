@@ -5,6 +5,7 @@ import json
 
 import tornado.web
 from pydantic import ValidationError
+
 from qcelemental.util import deserialize, serialize
 
 from .interface.models.rest_models import rest_model
@@ -113,7 +114,7 @@ class APIHandler(tornado.web.RequestHandler):
 
         try:
             return model(**self.data)
-        except ValidationError as exc:
+        except ValidationError:
             raise tornado.web.HTTPError(status_code=401, reason="Invalid REST")
 
     def write(self, data):

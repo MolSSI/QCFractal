@@ -8,8 +8,9 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import numpy as np
-import qcelemental as qcel
 from pydantic import Field, constr, validator
+
+import qcelemental as qcel
 
 from ..visualization import scatter_plot
 from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification

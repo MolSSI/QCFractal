@@ -11,7 +11,6 @@ import datetime
 from sqlalchemy import (
     JSON,
     BigInteger,
-    LargeBinary,
     Boolean,
     Column,
     DateTime,
@@ -20,6 +19,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
     String,
 )
 from sqlalchemy.ext.hybrid import hybrid_property

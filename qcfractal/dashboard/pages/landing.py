@@ -1,16 +1,14 @@
-import dash_bootstrap_components as dbc
 import dash_core_components as dcc
-import dash_html_components as html
-from dash.dependencies import Input, Output
 import pandas as pd
-import plotly.graph_objs as go
+from dash.dependencies import Input, Output
 
+import dash_bootstrap_components as dbc
 import dash_coreui_components as coreui
 from flask import current_app
 
-from ..connection import get_socket
 from ..app import app
-from ..dash_models import manager_graph, task_graph, list_managers
+from ..connection import get_socket
+from ..dash_models import list_managers, manager_graph, task_graph
 
 ## Layout
 

@@ -46,8 +46,8 @@ from qcfractal.storage_sockets.models import (
     KVStoreORM,
     MoleculeORM,
     OptimizationProcedureORM,
-    QueueManagerORM,
     QueueManagerLogORM,
+    QueueManagerORM,
     ReactionDatasetORM,
     ResultORM,
     ServerStatsLogORM,
@@ -58,8 +58,6 @@ from qcfractal.storage_sockets.models import (
     VersionsORM,
     WavefunctionStoreORM,
 )
-
-# from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from qcfractal.storage_sockets.storage_utils import add_metadata_template, get_metadata_template
 
 from .models import Base
@@ -662,7 +660,7 @@ class SQLAlchemySocket:
 
             if bulk_ok:
                 # Bulk save, doesn't update fields for speed
-                r = session.bulk_save_objects(orm_molecules)
+                session.bulk_save_objects(orm_molecules)
                 session.commit()
 
                 # Query ID's and reorder based off orm_molecule ordered list

@@ -1,10 +1,8 @@
 from logging.config import fileConfig
 
-import yaml
+from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from alembic import context
-from qcfractal.config import FractalConfig
 from qcfractal.storage_sockets.models import Base
 
 # this is the Alembic Config object, which provides

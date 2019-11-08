@@ -639,7 +639,7 @@ class QueueManager:
 
         try:
             new_tasks = self.client._automodel_request("queue_manager", "get", payload)
-        except IOError as exc:
+        except IOError:
             # TODO something as we didnt successfully get data
             self.logger.warning("Acquisition of new tasks was not successful.")
             return False
