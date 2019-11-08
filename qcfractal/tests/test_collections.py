@@ -1061,6 +1061,7 @@ def test_s22_view_identical(s22_fixture):
     assert_view_identical(ds)
 
 
+@pytest.mark.slow
 def test_view_download_remote(s22_fixture):
     client, ds = s22_fixture
 
@@ -1118,11 +1119,13 @@ def test_contributed_dataset_plaintextview_write(contributed_dataset_fixture, tm
     ds.to_file(tmpdir / "test.tar.gz", "plaintext")
 
 
+@pytest.mark.slow
 def test_s22_dataset_plaintextview_write(s22_fixture, tmpdir):
     _, ds = s22_fixture
     ds.to_file(tmpdir / "test.tar.gz", "plaintext")
 
 
+@pytest.mark.slow
 def test_qm3_dataset_plaintextview_write(qm3_fixture, tmpdir):
     _, ds = qm3_fixture
     ds.to_file(tmpdir / "test.tar.gz", "plaintext")

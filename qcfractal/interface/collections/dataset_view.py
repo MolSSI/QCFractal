@@ -287,7 +287,10 @@ class HDF5View(DatasetView):
 
         with self._write_file() as f:
             # Collection attributes
-            for field in {"name", "collection", "provenance", "tagline", "tags", "id", "history_keys"}:
+            for field in {
+                    "name", "collection", "provenance", "tagline", "tags", "id", "history_keys", "description",
+                    "metadata"
+            }:
                 f.attrs[field] = self._serialize_field(getattr(ds.data, field))
             if ds.client is not None:
                 f.attrs["server_information"] = self._serialize_field(ds.client.server_information())
@@ -370,7 +373,7 @@ class HDF5View(DatasetView):
                 if "stoichiometry" in gv_spec:
                     gv_spec["stoich"] = gv_spec.pop("stoichiometry")
                 dataset_name = self._normalize_hdf5_name(name)
-                df = ds.get_values(**gv_spec, force=True)
+                df = ds.get_values(name=name, force=True, native=True)
                 assert df.shape[1] == 1
 
                 driver = specification["driver"]
@@ -392,16 +395,23 @@ class HDF5View(DatasetView):
                 try:
                     dataspec = driver_dataspec[cv_model.theory_level_details["driver"]]
                 except (KeyError, TypeError):
+                    if isinstance(cv_df[cv_name][0], float):
+                        dataspec = {"dtype": np.dtype("float64"), "shape": default_shape}
+                    elif isinstance(cv_df[cv_name][0], np.ndarray):
+                        dataspec = {"dtype": vlen_double_t, "shape": default_shape}
+                    else:
+                        raise ValueError(
+                            f"Unable to guess data specification for contributed value column named {cv_name}.")
                     warnings.warn(
                         f"Contributed values column {cv_name} does not provide driver in theory_level_details. "
-                        f"Assuming default driver for the dataset ({ds.data.default_driver}).")
-                    dataspec = driver_dataspec[ds.data.default_driver]
+                        f"Inferred {dataspec}.")
 
                 dataset = contributed_group.create_dataset(self._normalize_hdf5_name(cv_name), **dataspec,
                                                            **dataset_kwargs)
-                for field in {
-                        "name", "theory_level", "units", "doi", "comments", "theory_level", "theory_level_details"
-                }:
+                for field in [
+                        "name", "values_structure", "theory_level", "units", "doi", "external_url", "citations",
+                        "comments", "theory_level", "theory_level_details"
+                ]:
                     dataset.attrs[field] = self._serialize_field(getattr(cv_model, field))
 
                 _write_dataset(dataset, cv_df, entry_dset)
