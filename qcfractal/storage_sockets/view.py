@@ -4,7 +4,6 @@ from typing import Any, Dict, Union
 
 import numpy as np
 import pandas as pd
-
 from qcelemental.util.serialization import serialize
 
 from ..interface.collections import HDF5View

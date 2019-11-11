@@ -4,7 +4,6 @@ QCPortal Database ODM
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
-
 import qcelemental as qcel
 
 from ..models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
