@@ -426,9 +426,10 @@ class ParslLauncherSettings(AutodocBaseSettings):
 
 class ParslProviderSettings(SettingsBlocker):
     """
-    Settings for the Parsl Provider class. Valid values for this field are functions of your cluster.scheduler and no
-    linting is done ahead of trying to pass these to Parsl.
-    Please see the docs for the provider information
+    Settings for the Parsl Provider class. Valid values for this field depend on your choice of  cluster.scheduler and
+    are defined in `the Parsl docs for the providers
+    <https://parsl.readthedocs.io/en/stable/userguide/execution.html#execution-providers>`_ with some minor exceptions.
+    The initializer function for the Parsl settings will indicate which
 
     NOTE: The parameters listed here are a special exception for additional features Fractal has engineered or
     options which should be considered for some of the edge cases we have discovered. If you try to set a value
@@ -441,6 +442,14 @@ class ParslProviderSettings(SettingsBlocker):
 
     """
 
+    def __init__(self, **kwargs):
+        if 'nodes_per_block' in kwargs:
+            raise ValueError('``nodes_per_block`` is named ``nodes_per_job`` to keep nomenclature consistent')
+        if 'max_blocks' in kwargs:
+            raise ValueError('``max_blocks`` is set based on ``common.max_workers`` '
+                             'and ``parsl.provider.nodes_per_job``')
+        super().__init__(**kwargs)
+
     partition: str = Field(
         None,
         description="The name of the cluster.scheduler partition being submitted to. Behavior, valid values, and even"
@@ -450,12 +459,17 @@ class ParslProviderSettings(SettingsBlocker):
     )
     launcher: ParslLauncherSettings = Field(
         None,
-        description="The Parsl Launcher do use with your Provider. If left to ``None``, defaults are assumed (check "
+        description="The Parsl Launcher to use with your Provider. If left to ``None``, defaults are assumed (check "
         "the Provider's defaults), otherwise this should be a dictionary requiring the option "
         "``launcher_class`` as a str to specify which Launcher class to load, and the remaining settings "
         "will be passed on to the Launcher's constructor.",
     )
-    _forbidden_set = {"nodes_per_block", "max_blocks", "worker_init", "scheduler_options", "wall_time"}
+    nodes_per_job: int = Field(
+        1,
+        description="The number of nodes to request per job. Maps to the ``nodes_per_block`` setting for Parsl "
+        "providers. We refer to it as ``nodes_per_job`` to be consistant with the term definitions in QCFractal."
+    )
+    _forbidden_set = {"worker_init", "scheduler_options", "wall_time"}
     _forbidden_name = "parsl's provider"
 
 
@@ -830,15 +844,20 @@ def main(args=None):
 
         # Setup the providers
 
+        # Determine the maximum number of blocks
+        if settings.common.max_workers % settings.parsl.provider.nodes_per_job != 0:
+            raise ValueError(f'Maximum number of workers needs to be a multiple of the number of nodes per job.')
+        max_blocks = settings.common.max_workers // settings.parsl.provider.nodes_per_job
+
         # Create one construct to quickly merge dicts with a final check
         common_parsl_provider_construct = {
             "init_blocks": 0,  # Update this at a later time of Parsl
-            "max_blocks": settings.common.max_workers,
+            "max_blocks": max_blocks,
             "walltime": settings.cluster.walltime,
             "scheduler_options": f"{provider_header} " + f"\n{provider_header} ".join(scheduler_opts) + "\n",
-            "nodes_per_block": 1,
+            "nodes_per_block": settings.parsl.provider.nodes_per_job,
             "worker_init": "\n".join(settings.cluster.task_startup_commands),
-            **settings.parsl.provider.dict(skip_defaults=True, exclude={"partition", "launcher"}),
+            **settings.parsl.provider.dict(skip_defaults=True, exclude={"partition", "launcher", "nodes_per_job"}),
         }
         if settings.cluster.scheduler.lower() == "slurm" and "cores_per_node" not in common_parsl_provider_construct:
             common_parsl_provider_construct["cores_per_node"] = settings.common.cores_per_worker
@@ -861,7 +880,7 @@ def main(args=None):
         parsl_executor_construct = {
             "label": "QCFractal_Parsl_{}_Executor".format(settings.cluster.scheduler.title()),
             "cores_per_worker": cores_per_task,
-            "max_workers": settings.common.tasks_per_worker * settings.common.max_workers,
+            "max_workers": settings.common.tasks_per_worker,
             "provider": provider,
             "address": address_by_hostname(),
             **settings.parsl.executor.dict(skip_defaults=True),
