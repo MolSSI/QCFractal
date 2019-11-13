@@ -421,7 +421,7 @@ class ParslLauncherSettings(AutodocBaseSettings):
         return launcher(**self.dict(exclude={"launcher_class"}))
 
     class Config(SettingsCommonConfig):
-        pass
+        extra = "allow"
 
 
 class ParslProviderSettings(SettingsBlocker):
