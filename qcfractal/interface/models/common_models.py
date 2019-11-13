@@ -5,7 +5,6 @@ from enum import Enum
 from typing import Any, Dict, Optional
 
 from pydantic import Field, validator
-
 from qcelemental.models import AutodocBaseSettings, Molecule, ProtoModel, Provenance
 from qcelemental.models.procedures import OptimizationProtocols
 from qcelemental.models.results import ResultProtocols

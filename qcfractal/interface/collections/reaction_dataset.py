@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import pandas as pd
-
 from qcelemental import constants
 
 from ..models import Molecule, ProtoModel
@@ -16,7 +15,7 @@ from .collection_utils import nCr, register_collection
 from .dataset import Dataset
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .. import FractalClient  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    from .. import FractalClient
     from ..models import ComputeResponse
 
 

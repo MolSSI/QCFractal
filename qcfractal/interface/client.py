@@ -15,9 +15,9 @@ from .models import build_procedure
 from .models.rest_models import rest_model
 
 if TYPE_CHECKING:  # pragma: no cover
-    from qcfractal import FractalServer  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    from qcfractal import FractalServer
 
-    from .collections.collection import Collection  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    from .collections.collection import Collection
     from .models import (
         GridOptimizationInput,
         KeywordSet,
@@ -39,7 +39,7 @@ if TYPE_CHECKING:  # pragma: no cover
         ResultGETResponse,
         ServiceQueueGETResponse,
         TaskQueueGETResponse,
-    )  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    )
 
 ### Common docs
 

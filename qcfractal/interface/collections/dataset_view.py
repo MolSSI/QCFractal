@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Any, Dict, Iterator, List, NoReturn, Optional,
 
 import numpy as np
 import pandas as pd
-
 from qcelemental.util.serialization import deserialize, serialize
 
 from ..models import Molecule, ObjectId
@@ -20,9 +19,9 @@ from .dataset import Dataset, MoleculeEntry
 from .reaction_dataset import ReactionDataset, ReactionEntry
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .. import FractalClient  # lgtm [py/unused-import]
-    from ..models.rest_models import CollectionSubresourceGETResponseMeta  # lgtm [py/unused-import]
-    import h5py  # lgtm [py/unused-import]
+    import h5py
+    from .. import FractalClient
+    from ..models.rest_models import CollectionSubresourceGETResponseMeta
 
 
 class DatasetView(abc.ABC):

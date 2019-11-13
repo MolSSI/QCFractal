@@ -4,7 +4,6 @@ QCPortal Database ODM
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import pandas as pd
-
 import qcelemental as qcel
 
 from ..models import ObjectId, OptimizationSpecification, ProtoModel, QCSpecification
@@ -12,7 +11,7 @@ from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
 if TYPE_CHECKING:  # pragma: no cover
-    from ..models import Molecule  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    from ..models import Molecule
 
 
 class OptEntry(ProtoModel):

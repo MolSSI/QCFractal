@@ -4,11 +4,11 @@ Tests the server compute capabilities.
 
 import numpy as np
 import pytest
-import requests
-
 import qcengine as qcng
-import qcfractal.interface as ptl
+import requests
 from qcelemental.util import parse_version
+
+import qcfractal.interface as ptl
 from qcfractal import testing
 from qcfractal.testing import fractal_compute_server
 

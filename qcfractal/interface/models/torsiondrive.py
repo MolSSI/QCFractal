@@ -8,7 +8,6 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 from pydantic import Field, constr, validator
-
 from qcelemental import constants
 
 from ..visualization import scatter_plot
