@@ -198,6 +198,7 @@ class SchedulerEnum(str, Enum):
     sge = "sge"
     moab = "moab"
     lsf = "lsf"
+    cobalt = "cobalt"
 
 
 class AdaptiveCluster(str, Enum):
@@ -792,6 +793,7 @@ def main(args=None):
             "pbs": "TorqueProvider",
             "moab": "TorqueProvider",
             "sge": "GridEngineProvider",
+            "cobalt": "CobaltProvider",
             "lsf": None,
         }
 
@@ -799,7 +801,8 @@ def main(args=None):
             raise ValueError(f"Parsl does not know how to handle cluster of type {settings.cluster.scheduler}.")
 
         # Headers
-        _provider_headers = {"slurm": "#SBATCH", "pbs": "#PBS", "moab": "#PBS", "sge": "#$$", "lsf": None}
+        _provider_headers = {"slurm": "#SBATCH", "pbs": "#PBS", "moab": "#PBS",
+                             "sge": "#$$", "lsf": None, "cobalt": "#COBALT"}
 
         # Import the parsl things we need
         try:
