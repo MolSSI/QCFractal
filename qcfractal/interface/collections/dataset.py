@@ -21,7 +21,7 @@ from .collection import Collection
 from .collection_utils import composition_planner, register_collection
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .. import FractalClient  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    from .. import FractalClient
     from ..models import KeywordSet, Molecule, ResultRecord
     from . import DatasetView
 

@@ -19,9 +19,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from qcelemental.models import (
         OptimizationInput,
         ResultInput,
-    )  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    )
 
-    from .common_models import KeywordSet, Molecule  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    from .common_models import KeywordSet, Molecule
 
 __all__ = ["OptimizationRecord", "ResultRecord", "OptimizationRecord", "RecordBase"]
 
