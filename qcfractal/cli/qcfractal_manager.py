@@ -99,6 +99,10 @@ class CommonManagerSettings(AutodocBaseSettings):
         description="Turn on verbose mode or not. In verbose mode, all messages from DEBUG level and up are shown, "
         "otherwise, defaults are all used for any logger.",
     )
+    nodes_per_job: int = Field(
+        1,
+        description="The number of nodes to request per job. Only used by the Parsl adapter at present"
+    )
 
     class Config(SettingsCommonConfig):
         pass
@@ -443,11 +447,9 @@ class ParslProviderSettings(SettingsBlocker):
     """
 
     def __init__(self, **kwargs):
-        if 'nodes_per_block' in kwargs:
-            raise ValueError('``nodes_per_block`` is named ``nodes_per_job`` to keep nomenclature consistent')
         if 'max_blocks' in kwargs:
             raise ValueError('``max_blocks`` is set based on ``common.max_workers`` '
-                             'and ``parsl.provider.nodes_per_job``')
+                             'and ``common.nodes_per_job``')
         super().__init__(**kwargs)
 
     partition: str = Field(
@@ -464,12 +466,7 @@ class ParslProviderSettings(SettingsBlocker):
         "``launcher_class`` as a str to specify which Launcher class to load, and the remaining settings "
         "will be passed on to the Launcher's constructor.",
     )
-    nodes_per_job: int = Field(
-        1,
-        description="The number of nodes to request per job. Maps to the ``nodes_per_block`` setting for Parsl "
-        "providers. We refer to it as ``nodes_per_job`` to be consistant with the term definitions in QCFractal."
-    )
-    _forbidden_set = {"worker_init", "scheduler_options", "wall_time"}
+    _forbidden_set = {"worker_init", "scheduler_options", "wall_time", "nodes_per_block"}
     _forbidden_name = "parsl's provider"
 
 
@@ -722,6 +719,9 @@ def main(args=None):
     if settings.common.adapter == "pool":
         from concurrent.futures import ProcessPoolExecutor
 
+        # Error if the number of nodes per jobs is more than 1
+        if settings.common.nodes_per_job > 1:
+            raise ValueError('Pool adapters only run on a single local node')
         queue_client = ProcessPoolExecutor(max_workers=settings.common.tasks_per_worker)
 
     elif settings.common.adapter == "dask":
@@ -734,6 +734,11 @@ def main(args=None):
             dask_settings["extra"].append(QCA_RESOURCE_STRING)
         # Scheduler opts
         scheduler_opts = settings.cluster.scheduler_options.copy()
+
+        # Error if the number of nodes per jobs is more than 1
+        if settings.common.nodes_per_job > 1:
+            raise NotImplementedError('Support for >1 node per job is not yet supported by QCFractal + Dask')
+            # TODO (wardlt): Implement multinode jobs in Dask
 
         _cluster_loaders = {
             "slurm": "SLURMCluster",
@@ -845,9 +850,9 @@ def main(args=None):
         # Setup the providers
 
         # Determine the maximum number of blocks
-        if settings.common.max_workers % settings.parsl.provider.nodes_per_job != 0:
+        if settings.common.max_workers % settings.common.nodes_per_job != 0:
             raise ValueError(f'Maximum number of workers needs to be a multiple of the number of nodes per job.')
-        max_blocks = settings.common.max_workers // settings.parsl.provider.nodes_per_job
+        max_blocks = settings.common.max_workers // settings.common.nodes_per_job
 
         # Create one construct to quickly merge dicts with a final check
         common_parsl_provider_construct = {
@@ -855,9 +860,9 @@ def main(args=None):
             "max_blocks": max_blocks,
             "walltime": settings.cluster.walltime,
             "scheduler_options": f"{provider_header} " + f"\n{provider_header} ".join(scheduler_opts) + "\n",
-            "nodes_per_block": settings.parsl.provider.nodes_per_job,
+            "nodes_per_block": settings.common.nodes_per_job,
             "worker_init": "\n".join(settings.cluster.task_startup_commands),
-            **settings.parsl.provider.dict(skip_defaults=True, exclude={"partition", "launcher", "nodes_per_job"}),
+            **settings.parsl.provider.dict(skip_defaults=True, exclude={"partition", "launcher"}),
         }
         if settings.cluster.scheduler.lower() == "slurm" and "cores_per_node" not in common_parsl_provider_construct:
             common_parsl_provider_construct["cores_per_node"] = settings.common.cores_per_worker
