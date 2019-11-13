@@ -19,6 +19,7 @@ from .dataset import Dataset, MoleculeEntry
 from .reaction_dataset import ReactionDataset, ReactionEntry
 
 if TYPE_CHECKING:  # pragma: no cover
+    import h5py
     from .. import FractalClient
     from ..models.rest_models import CollectionSubresourceGETResponseMeta
 

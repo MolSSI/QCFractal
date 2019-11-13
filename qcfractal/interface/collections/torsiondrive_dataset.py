@@ -12,7 +12,7 @@ from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
 if TYPE_CHECKING:  # pragma: no cover
-    pass
+    from ..models import Molecule
 
 
 class TDEntry(ProtoModel):

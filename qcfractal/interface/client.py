@@ -15,7 +15,7 @@ from .models import build_procedure
 from .models.rest_models import rest_model
 
 if TYPE_CHECKING:  # pragma: no cover
-    pass
+    from qcfractal import FractalServer
 
     from .collections.collection import Collection
     from .models import (
