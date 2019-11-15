@@ -6,9 +6,9 @@ import copy
 
 import numpy as np
 import pytest
+from qcelemental.util import msgpackext_dumps, msgpackext_loads
 
 import qcfractal.interface as ptl
-from qcelemental.util import msgpackext_dumps, msgpackext_loads
 from qcfractal.interface.models import GridOptimizationInput, Molecule, TorsionDriveInput
 from qcfractal.testing import fractal_compute_server, recursive_dict_merge, using_geometric, using_rdkit
 

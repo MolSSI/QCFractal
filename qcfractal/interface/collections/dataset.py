@@ -10,10 +10,9 @@ import numpy as np
 import pandas as pd
 import requests
 from pydantic import Field, validator
-from tqdm import tqdm
-
 from qcelemental import constants
 from qcelemental.models.types import Array
+from tqdm import tqdm
 
 from ..models import Citation, ComputeResponse, ObjectId, ProtoModel
 from ..statistics import wrap_statistics
@@ -22,7 +21,7 @@ from .collection import Collection
 from .collection_utils import composition_planner, register_collection
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .. import FractalClient  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    from .. import FractalClient
     from ..models import KeywordSet, Molecule, ResultRecord
     from . import DatasetView
 

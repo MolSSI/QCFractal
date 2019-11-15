@@ -8,11 +8,11 @@ from typing import List
 
 import numpy as np
 import pytest
-
 import qcelemental as qcel
-import qcfractal.interface as ptl
 from qcelemental.models import Molecule, ProtoModel
 from qcengine.testing import is_program_new_enough
+
+import qcfractal.interface as ptl
 from qcfractal import testing
 from qcfractal.testing import df_compare, fractal_compute_server, live_fractal_or_skip
 

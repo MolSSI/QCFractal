@@ -9,10 +9,8 @@ from .collection import BaseProcedureDataset
 from .collection_utils import register_collection
 
 if TYPE_CHECKING:  # pragma: no cover
-    from ..models.gridoptimization import (
-        ScanDimension,
-    )  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
-    from ..models import Molecule  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    from ..models.gridoptimization import ScanDimension
+    from ..models import Molecule
 
 
 class GOEntry(ProtoModel):

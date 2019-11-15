@@ -8,9 +8,8 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Set, Union
 
 import numpy as np
-from pydantic import Field, constr, validator
-
 import qcelemental as qcel
+from pydantic import Field, constr, validator
 
 from ..visualization import scatter_plot
 from .common_models import DriverEnum, ObjectId, ProtoModel, QCSpecification
@@ -20,9 +19,9 @@ if TYPE_CHECKING:  # pragma: no cover
     from qcelemental.models import (
         OptimizationInput,
         ResultInput,
-    )  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    )
 
-    from .common_models import KeywordSet, Molecule  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    from .common_models import KeywordSet, Molecule
 
 __all__ = ["OptimizationRecord", "ResultRecord", "OptimizationRecord", "RecordBase"]
 

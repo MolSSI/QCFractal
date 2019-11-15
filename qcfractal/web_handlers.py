@@ -5,7 +5,6 @@ import json
 
 import tornado.web
 from pydantic import ValidationError
-
 from qcelemental.util import deserialize, serialize
 
 from .interface.models.rest_models import rest_model

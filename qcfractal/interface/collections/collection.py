@@ -14,8 +14,8 @@ import pandas as pd
 from ..models import ProtoModel
 
 if TYPE_CHECKING:  # pragma: no cover
-    from .. import FractalClient  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
-    from ..models import ObjectId  # lgtm[py/unused-import] (https://github.com/Semmle/ql/issues/2014)
+    from .. import FractalClient
+    from ..models import ObjectId
 
 
 class Collection(abc.ABC):
