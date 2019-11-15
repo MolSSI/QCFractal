@@ -235,11 +235,11 @@ class HDF5View(DatasetView):
                         f"Unknown entry class ({entry_group.attrs['model']}) while " f"reading HDF5 entries."
                     )
                 self._entries = pd.DataFrame({field: entry_group[field][()] for field in fields})
-                self._entries.set_index("name")
+                self._entries.set_index("name", inplace=True)
         if subset is None:
             return self._entries.reset_index()
         else:
-            return self._entries.reset_index().loc[subset].reset_index()
+            return self._entries.loc[subset].reset_index()
 
     def write(self, ds: Dataset):
         import h5py
