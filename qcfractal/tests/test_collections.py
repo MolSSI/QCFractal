@@ -1399,3 +1399,36 @@ def test_collection_metadata(fractal_compute_server):
     ds.save()
 
     assert client.get_collection("dataset", ds.name).data.metadata["data_points"] == 133_885
+
+
+def test_list_collection_tags(fractal_compute_server):
+    client = ptl.FractalClient(fractal_compute_server)
+
+    ptl.collections.Dataset("test_list_collection_tags_1", client=client, tags=[]).save()
+    ptl.collections.Dataset("test_list_collection_tags_2", client=client, tags=["t1"]).save()
+    ptl.collections.Dataset("test_list_collection_tags_3", client=client, tags=["t2"]).save()
+    ptl.collections.Dataset("test_list_collection_tags_4", client=client, tags=["t1", "t2"]).save()
+
+    names = list(client.list_collections().reset_index().name)
+    assert "test_list_collection_tags_1" in names
+    assert "test_list_collection_tags_2" in names
+    assert "test_list_collection_tags_3" in names
+    assert "test_list_collection_tags_4" in names
+
+    names = list(client.list_collections(tag="t1").reset_index().name)
+    assert "test_list_collection_tags_1" not in names
+    assert "test_list_collection_tags_2" in names
+    assert "test_list_collection_tags_3" not in names
+    assert "test_list_collection_tags_4" in names
+
+    names = list(client.list_collections(tag=["t1"]).reset_index().name)
+    assert "test_list_collection_tags_1" not in names
+    assert "test_list_collection_tags_2" in names
+    assert "test_list_collection_tags_3" not in names
+    assert "test_list_collection_tags_4" in names
+
+    names = list(client.list_collections(tag=["t1", "t2"]).reset_index().name)
+    assert "test_list_collection_tags_1" not in names
+    assert "test_list_collection_tags_2" in names
+    assert "test_list_collection_tags_3" in names
+    assert "test_list_collection_tags_4" in names
