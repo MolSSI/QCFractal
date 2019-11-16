@@ -114,6 +114,7 @@ class RecordBase(ProtoModel, abc.ABC):
     def check_program(cls, v):
         return v.lower()
 
+
     def __init__(self, **data):
 
         # Set datetime defaults if not automatically available
@@ -126,11 +127,9 @@ class RecordBase(ProtoModel, abc.ABC):
         if self.Config.build_hash_index and (self.hash_index is None):
             self.__dict__["hash_index"] = self.get_hash_index()
 
-    def __str__(self) -> str:
-        return f"{self.__class__.__name__}(id='{self.id}' status='{self.status}')"
+    def __repr_args__(self):
 
-    def __repr__(self) -> str:
-        return f"<{self}>"
+        return [("id", f"{self.id}"), ("status", f"{self.status}")]
 
     ### Serialization helpers
 
