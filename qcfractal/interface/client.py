@@ -484,6 +484,7 @@ class FractalClient(object):
         aslist: bool = False,
         group: Optional[str] = "default",
         show_hidden: bool = False,
+        tag: Optional[Union[str, List[str]]] = None
     ) -> pd.DataFrame:
         """Lists the available collections currently on the server.
 
@@ -496,9 +497,11 @@ class FractalClient(object):
             Returns a canonical list rather than a dataframe.
         group: Optional[str], optional
             Show only collections belonging to a specified group.
-            To explicitly return all datasets, set group=None
+            To explicitly return all collections, set group=None
         show_hidden: bool, optional
-            Show datasets whose visibility flag is set to False. Default: False.
+            Show collections whose visibility flag is set to False. Default: False.
+        tag: Optional[Union[str, List[str]]], optional
+            Show collections whose tags match one of the passed tags. By default, collections are not filtered on tag.
         Returns
         -------
         DataFrame
@@ -509,7 +512,7 @@ class FractalClient(object):
         if collection_type is not None:
             query = {"collection": collection_type.lower()}
 
-        payload = {"meta": {"include": ["name", "collection", "tagline", "visibility", "group"]}, "data": query}
+        payload = {"meta": {"include": ["name", "collection", "tagline", "visibility", "group", "tags"]}, "data": query}
         response: List[Dict[str, Any]] = self._automodel_request("collection", "get", payload, full_return=False)
 
         # Rename collection names
@@ -524,7 +527,13 @@ class FractalClient(object):
             df = df[df["visibility"]]
         if group is not None:
             df = df[df["group"].str.lower() == group.lower()]
-        df.drop(["visibility", "group"], axis=1, inplace=True)
+        if tag is not None:
+            if isinstance(tag, str):
+                tag = [tag]
+            tag = {t.lower() for t in tag}
+            df = df[df.apply(lambda x: len({t.lower() for t in x['tags']} & tag) > 0, axis=1)]
+
+        df.drop(["visibility", "group", "tags"], axis=1, inplace=True)
         if not aslist:
             df.set_index(["collection", "name"], inplace=True)
             df.sort_index(inplace=True)
